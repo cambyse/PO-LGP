@@ -272,7 +272,7 @@ void run(){
     CtrlMsg refs;
     refs.fL = ARR(0., 0., 0.,0.,0.,0.);
     refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = 1.;
     refs.Kd = 1.;

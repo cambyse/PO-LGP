@@ -36,7 +36,7 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
     //-- define controller msg (TODO: read from MT.cfg)
     refs.fL = zeros(6);
     refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = ARR(1.0);
     refs.Kd = ARR(2.5);
@@ -158,7 +158,7 @@ void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T
   refs_zero.qdot=S.ctrl_obs.get()->qdot*0.;
   refs_zero.fL = zeros(6);
   refs_zero.KiFT.clear();
-  refs_zero.J_ft_inv.clear();
+  refs_zero.J_ft_invL.clear();
   refs_zero.u_bias = zeros(q.N);
   refs_zero.Kp = zeros(q.N,q.N);
   refs_zero.Kd = ARR(0.);
@@ -211,7 +211,7 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
   refs_zero.qdot=S.ctrl_obs.get()->qdot*0.;
   refs_zero.fL = zeros(6);
   refs_zero.KiFT.clear();
-  refs_zero.J_ft_inv.clear();
+  refs_zero.J_ft_invL.clear();
   refs_zero.u_bias = zeros(q.N);
   if (sendZeroGains) {
     cout << "sending zero gains" << endl;
