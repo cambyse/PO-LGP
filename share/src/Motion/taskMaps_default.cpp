@@ -202,6 +202,19 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     return;
   }
 
+  if(type==pos1DTMT) {
+    CHECK(fabs(ivec.length()-1.)<1e-10,"vector references must be normalized");
+    arr orientation = conv_vec2arr(ivec);
+    G.kinematicsPos(y, NoArr, body_i);
+    y = ~orientation*y;
+    if(&J) {
+      G.kinematicsPos(NoArr, J, body_i);
+      J = ~orientation*J;
+      J.reshape(1, G.getJointStateDimension());
+    }
+    return;
+  }
+
   if(type==gazeAtTMT){
     CHECK(i>=0, "ref1 is not set!");
     if(ivec.length()<1e-10) ivec.set(0.,0.,-1.);
@@ -283,6 +296,7 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
     case quatDiffTMT: return 4;
     case vecAlignTMT: return 1;
     case gazeAtTMT: return 2;
+    case pos1DTMT: return 1;
     default:  HALT("no such TMT");
   }
 }

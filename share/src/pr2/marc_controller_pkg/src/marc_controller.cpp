@@ -32,6 +32,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   KiFT.clear();
   Ki.clear();
   limits.resize(world.q.N,5).setZero();
+ // J_ft_inv.clear();
 
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
@@ -87,10 +88,10 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
-  err = zeros(3);
+  err = zeros(1);
   int_error = zeros(q.N);
   q_filt = 0.;
-  qd_filt = 0.95;
+  qd_filt = 0.97;
   gamma = 1.;
   velLimitRatio = effLimitRatio = 1.;
 }
@@ -136,13 +137,17 @@ void TreeControllerClass::update() {
     }
 
     u = zeros(q.N);
-    if(Kp.N==1 && Kd.N==1){
+    /*if(Kp.N==1 && Kd.N==1){
       u += Kp_base % (Kp.scalar() * (q_ref - q));
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
     }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
       u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
-    }
+    } else */
+    if(Kp.d0 == q.N && Kp.d1 == q.N && Kd.d0 == q.N && Kd.d1 == q.N) {
+      u += Kp*(q_ref - q);
+      u += Kd*(qdot_ref -qd); //Danny
+    } 
 
     // add integral term
     if(Ki.N==1){
@@ -163,9 +168,21 @@ void TreeControllerClass::update() {
 #if 0
       err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
 #else
+      //TODO: How to allow multiple Tasks? Upper AND Lower bounds simultaneously?
       err *= gamma;
       arr f_obs = J_ft_inv*fL_obs;
-      for(uint i=0;i<f_obs.N;i++) if(f_obs(i) > fL_ref(i)) err(i) += fL_ref(i)-f_obs(i);
+      //Danny
+      for(uint i=0;i<f_obs.N;i++) {
+        if(fL_ref(i) < 0) {
+          if(f_obs(i) < fL_ref(i)) {
+            err(i) += fL_ref(i) - f_obs(i);
+          }
+        } else {
+          if(f_obs(i) > fL_ref(i)) {
+            err(i) += fL_ref(i) - f_obs(i);
+          }
+        }
+      }
 #endif
       u += KiFT * err;
     }
@@ -220,13 +237,13 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   u_bias = conv_stdvec2arr(msg->u_bias);
   fL_ref = conv_stdvec2arr(msg->fL);
   fR_ref = conv_stdvec2arr(msg->fR);
-  J_ft_inv = conv_stdvec2arr(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
+  J_ft_inv = conv_stdvec2arr(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(fL_ref.d0,6);
 #define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kp);
   CP(Kd);
 #undef CP
   Ki = conv_stdvec2arr(msg->Ki);
-  KiFT = conv_stdvec2arr(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, 3);
+  KiFT = conv_stdvec2arr(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, fL_ref.d0);
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
   intLimitRatio = msg->intLimitRatio;
