@@ -14,6 +14,7 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
     , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
     , feedbackController(NULL)
     , q0(realWorld.q)
+    , oldfashioned(true)
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
@@ -95,7 +96,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
@@ -122,39 +123,89 @@ void TaskControllerModule::step(){
   feedbackController->tasks = ctrlTasks();
 
   //-- compute the feedback controller step and iterate to compute a forward reference
-  //now operational space control
-  for(uint tt=0;tt<10;tt++){
-    arr a = feedbackController->operationalSpaceControl();
-    q_model += .001*qdot_model;
-    qdot_model += .001*a;
-    if(fixBase.get()) {
-      qdot_model(trans->qIndex+0) = 0;
-      qdot_model(trans->qIndex+1) = 0;
-      qdot_model(trans->qIndex+2) = 0;
-//      q_model(trans->qIndex+0) = 0;
-//      q_model(trans->qIndex+1) = 0;
-//      q_model(trans->qIndex+2) = 0;
-    }
-    feedbackController->setState(q_model, qdot_model);
-  }
-  if(verbose) feedbackController->reportCurrentState();
-  modelWorld.deAccess();
-  ctrlTasks.deAccess();
-
-  //-- first zero references
   CtrlMsg refs;
-  refs.q =  q_model;
-  refs.qdot = zeros(q_model.N);
-  refs.gamma = 1.;
-  refs.Kp = ARR(1.);
-  refs.Kd = ARR(1.);
-  refs.Ki = ARR(0.2);
-  refs.fL = zeros(6);
-  refs.fR = zeros(6);
-  refs.KiFT.clear();
-  refs.J_ft_inv.clear();
-  refs.u_bias = zeros(q_model.N);
-  refs.intLimitRatio = 0.7;
+  if(oldfashioned){
+
+    //now operational space control
+    for(uint tt=0;tt<10;tt++){
+      arr a = feedbackController->operationalSpaceControl();
+      q_model += .001*qdot_model;
+      qdot_model += .001*a;
+      if(fixBase.get()) {
+        qdot_model(trans->qIndex+0) = 0;
+        qdot_model(trans->qIndex+1) = 0;
+        qdot_model(trans->qIndex+2) = 0;
+        //      q_model(trans->qIndex+0) = 0;
+        //      q_model(trans->qIndex+1) = 0;
+        //      q_model(trans->qIndex+2) = 0;
+      }
+      feedbackController->setState(q_model, qdot_model);
+    }
+    if(verbose) feedbackController->reportCurrentState();
+    modelWorld.deAccess();
+    ctrlTasks.deAccess();
+
+    //-- first zero references
+    refs.q =  q_model;
+    refs.qdot = zeros(q_model.N);
+    refs.gamma = 1.;
+    refs.Kp = ARR(1.);
+    refs.Kd = ARR(1.);
+    refs.Ki = ARR(0.2);
+    refs.fL = zeros(6);
+    refs.fR = zeros(6);
+    refs.KiFT.clear();
+    refs.J_ft_inv.clear();
+    refs.u_bias = zeros(q_model.N);
+    refs.intLimitRatio = 0.7;
+
+    //-- compute the force feedback control coefficients
+    uint count=0;
+    ctrlTasks.readAccess();
+    feedbackController->tasks = ctrlTasks();
+    for(CtrlTask *t : feedbackController->tasks) {
+      if(t->active && t->f_ref.N){
+        count++;
+        if(count!=1) HALT("you have multiple active force control tasks - NIY");
+        t->getForceControlCoeffs(refs.fL, refs.u_bias, refs.KiFT, refs.J_ft_inv, realWorld);
+      }
+    }
+    if(count==1) refs.Kp = .5;
+
+  }else{
+
+    //if there are no tasks, just stabilize
+    if(feedbackController->tasks.N < 1) {
+      TaskMap* qItselfTask = new TaskMap_qItself();
+      CtrlTask* qItselfLaw = new CtrlTask(qItselfTask);
+      qItselfLaw->prec = 10.0;
+      qItselfLaw->setGains(10.0, 1.0);
+      qItselfLaw->setTarget(qItselfLaw->map.phi(modelWorld()), zeros(qItselfLaw->map.dim_phi(modelWorld())));
+      feedbackController->tasks.append(qItselfLaw);
+    }
+
+    arr u0, Kp, Kd;
+    feedbackController->calcOptimalControlProjected(Kp,Kd,u0); // TODO: what happens when changing the LAWs?
+
+    arr K_ft, J_ft_inv, fRef;
+    double gamma;
+    feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
+
+//    this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef, gamma);
+    refs.q =  zeros(q_model.N);
+    refs.qdot = zeros(q_model.N);
+    refs.gamma = gamma;
+    refs.Kp = Kp;
+    refs.Kd = Kd;
+    refs.Ki = ARR(0.);
+    refs.fL = fRef;
+    refs.fR = zeros(6);
+    refs.KiFT = K_ft;
+    refs.J_ft_inv = J_ft_inv;
+    refs.u_bias = u0;
+    refs.intLimitRatio = 0.7;
+
+  }
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {
@@ -163,18 +214,6 @@ void TaskControllerModule::step(){
     refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
   }
 
-  //-- compute the force feedback control coefficients
-  uint count=0;
-  ctrlTasks.readAccess();
-  feedbackController->tasks = ctrlTasks();
-  for(CtrlTask *t : feedbackController->tasks) {
-    if(t->active && t->f_ref.N){
-      count++;
-      if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      t->getForceControlCoeffs(refs.fL, refs.u_bias, refs.KiFT, refs.J_ft_inv, realWorld);
-    }
-  }
-  if(count==1) refs.Kp = .5;
   ctrlTasks.deAccess();
 
   //-- send the computed movement to the robot

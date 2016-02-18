@@ -1866,6 +1866,7 @@ void ors::KinematicWorld::init(const Graph& G) {
       mlr::String jointName;
       bool good = j->ats.get(jointName, "mimic");
       CHECK(good, "something is wrong");
+      if(!jointName.N){ j->mimic=NULL; continue; }
       j->mimic = listFindByName(joints, jointName);
       if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
       j->type = j->mimic->type;

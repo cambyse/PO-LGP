@@ -44,14 +44,14 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   /// @{ @name Parameters that define the linear acceleration control law
   arr y_ref; ///< position reference
   arr v_ref; ///< velocity reference
-  double Pgain; ///< proportional gain
-  double Dgain; ///< derivative gain
+  arr Kp; ///< proportional gain
+  arr Kd; ///< derivative gain
   double maxVel, maxAcc;
   /// @}
 
   /// @{ @name Parameters that define the integral force feedback control law
   arr f_ref;
-  double f_Igain;
+  double f_alpha, f_gamma;
 
   /// Option for metric (difference) in task space: flip sign if scalar product is negative (for quaternion targets)
   bool flipTargetSignOnNegScalarProduct;
@@ -61,12 +61,12 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   arr y, v;
   /// @}
 
-  CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), Pgain(0.5), Dgain(0.9), maxVel(0.5), maxAcc(10.), f_Igain(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
+  CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), maxVel(0.5), maxAcc(10.), f_alpha(0.), f_gamma(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 
-  void setTarget(const arr& yref, const arr& vref=NoArr);
-  void setGains(double Pgain, double Dgain);
+  void setTarget(const arr& yref, const arr& vref=NoArr); //TODO -> setRef
+  void setGains(double Kp, double Kd);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
 
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
@@ -119,6 +119,8 @@ struct FeedbackMotionControl /*: MotionProblem*/ {
   void getCostCoeffs(arr& c, arr& J); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
+  void calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0); ///< returns the linearized control law
+  void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma); ///< returns the force controller coefficients
   void updateConstraintControllers();
   void reportCurrentState();
 
