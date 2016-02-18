@@ -481,7 +481,7 @@ struct Link {
 typedef mlr::Array<ors::Link> LinkTree;
 
 void equationOfMotion(arr& M, arr& F, const LinkTree& tree,  const arr& qd);
-void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
+void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& u);
 void fwdDynamics_aba_nD(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
 void fwdDynamics_aba_1D(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
 void invDynamics(arr& tau, const LinkTree& tree, const arr& qd, const arr& qdd);

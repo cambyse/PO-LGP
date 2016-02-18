@@ -7,7 +7,8 @@
 // ============================================================================
 
 void script1(ActionSwigInterface& S){
-  S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0){ PD=[.1, .9, .5, 10.], prec=10 }");
+  S.setFact("(Control gazeAt endeffKinect endeffR){ PD=[.1, .9, .5, 10.], prec=10 }");
+  S.waitForCondition("(conv Control gazeAt endeffKinect endeffR)");
 
   S.setFact("(PlayFunnySound)");
 
@@ -34,7 +35,7 @@ void script1(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffR base_footprint)");
   S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0)!");
+  S.setFact("(Control gazeAt endeffKinect endeffR)!");
 
   S.setFact("(Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
   S.setFact("(HomingActivity)");
@@ -63,7 +64,7 @@ void forceControl(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffL)");
 
   //-- direct access to the task controller -- a bit awkward, but generic
-  TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->get<Module>());
+  TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(registry().getValue<Module>({"Module","TaskControllerModule"}));
   taskController->verbose = true;
 
 #if 0

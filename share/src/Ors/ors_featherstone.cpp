@@ -1029,7 +1029,14 @@ void ors::equationOfMotion(arr& H, arr& C,
     }
   }
   
-  C *= (double)-1.;
+  //add friction for non-filled joints
+  boolA filled(qd.N);
+  filled=false;
+  for(i=0;i<N;i++){ iq = tree(i).qIndex; if(iq!=-1) filled(iq)=true; }
+  for(i=0;i<qd.N;i++) if(!filled(i)){
+    H(i,i) = 1.;
+    C(i) = -100.*qd(i);
+  }
 }
 
 //===========================================================================
@@ -1037,13 +1044,14 @@ void ors::equationOfMotion(arr& H, arr& C,
 void ors::fwdDynamics_MF(arr& qdd,
                          const ors::LinkTree& tree,
                          const arr& qd,
-                         const arr& tau) {
+                         const arr& u) {
                          
   arr M, Minv, F;
   equationOfMotion(M, F, tree, qd);
   inverse(Minv, M);
+//  inverse_SymPosDef(Minv, M);
   
-  qdd = Minv * (tau + F);
+  qdd = Minv * (u - F);
 }
 
 #else ///MLR_FEATHERSTONE

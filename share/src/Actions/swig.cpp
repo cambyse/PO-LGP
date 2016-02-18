@@ -10,8 +10,9 @@
 #include <pr2/roscom.h>
 #include <Gui/opengl.h>
 #include <csignal>
-#include <Perception/perception.h>
-#include <Perception/kinect2pointCloud.h>
+//#include <Perception/perception.h>
+//#include <Perception/kinect2pointCloud.h>
+#include <Ors/orsviewer.h>
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -47,20 +48,20 @@ struct SwigSystem {
 
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
-//  OrsViewer orsviewer;
+  OrsViewer orsviewer;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
 
 //  PerceptionObjects2Ors percObjs;
-  ImageViewer camview;
+//  ImageViewer camview;
 //  Kinect2PointCloud k2pcl;
 //  PointCloudViewer pclv;
 
   Log _log;
 
   SwigSystem()
-    : camview("modelDepthView"), _log("SwigSystem"){
+    : /*camview("modelDepthView"),*/ _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;

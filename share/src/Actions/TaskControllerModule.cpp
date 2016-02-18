@@ -18,6 +18,8 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
     , useRos(false)
     , syncModelStateWithRos(false)
     , verbose(false) {
+
+  oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -118,15 +120,15 @@ void TaskControllerModule::step(){
   }
 
   //-- copy the tasks to the local controller
-  ctrlTasks.readAccess();
-  modelWorld.writeAccess();
-  feedbackController->tasks = ctrlTasks();
 
   //-- compute the feedback controller step and iterate to compute a forward reference
   CtrlMsg refs;
   if(oldfashioned){
 
     //now operational space control
+    ctrlTasks.readAccess();
+    modelWorld.writeAccess();
+    feedbackController->tasks = ctrlTasks();
     for(uint tt=0;tt<10;tt++){
       arr a = feedbackController->operationalSpaceControl();
       q_model += .001*qdot_model;
@@ -171,8 +173,13 @@ void TaskControllerModule::step(){
       }
     }
     if(count==1) refs.Kp = .5;
+    ctrlTasks.deAccess();
 
   }else{
+
+    ctrlTasks.readAccess();
+    modelWorld.writeAccess();
+    feedbackController->tasks = ctrlTasks();
 
     //if there are no tasks, just stabilize
     if(feedbackController->tasks.N < 1) {
@@ -185,11 +192,16 @@ void TaskControllerModule::step(){
     }
 
     arr u0, Kp, Kd;
-    feedbackController->calcOptimalControlProjected(Kp,Kd,u0); // TODO: what happens when changing the LAWs?
+    feedbackController->calcOptimalControlProjected(Kp, Kd, u0); // TODO: what happens when changing the LAWs?
 
     arr K_ft, J_ft_inv, fRef;
     double gamma;
     feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
+
+    feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
+
+    modelWorld.deAccess();
+    ctrlTasks.deAccess();
 
 //    this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef, gamma);
     refs.q =  zeros(q_model.N);
@@ -213,8 +225,6 @@ void TaskControllerModule::step(){
     refs.qdot(trans->qIndex+1) = qdot_model(trans->qIndex+1);
     refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
   }
-
-  ctrlTasks.deAccess();
 
   //-- send the computed movement to the robot
   if(useRos){

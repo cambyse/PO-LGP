@@ -1530,7 +1530,6 @@ void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
   }
   if(!qdot.N) qdot.resize(q.N).setZero();
   ors::equationOfMotion(M, F, tree, qdot);
-  F *= -1.;
 }
 
 /** @brief return the joint accelerations \f$\ddot q\f$ given the

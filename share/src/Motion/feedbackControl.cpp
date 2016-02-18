@@ -55,6 +55,13 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
   if(&vref) v_ref=vref; else v_ref.resizeAs(y_ref).setZero();
 }
 
+void CtrlTask::setGains(const arr& _Kp, const arr& _Kd) {
+  active=true;
+  Kp = _Kp;
+  Kd = _Kd;
+  if(!prec) prec=100.;
+}
+
 void CtrlTask::setGains(double pgain, double dgain) {
   active=true;
   Kp = ARR(pgain);
@@ -64,45 +71,46 @@ void CtrlTask::setGains(double pgain, double dgain) {
 
 void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
-  active=true;
   double lambda = -decayTime*dampingRatio/log(.1);
-  Kp = ARR(mlr::sqr(1./lambda));
-  Kd = ARR(2.*dampingRatio/lambda);
-  if(!prec) prec=100.;
+  setGains(mlr::sqr(1./lambda), 2.*dampingRatio/lambda);
 }
 
-arr flexiMult(const arr& K, const arr& y){
-  if(K.N==1) return K.scalar()*y;
-  if(K.nd==1) return K%y;
-  return K*y;
+void makeRefsVectors(arr& y_ref, arr& yd_ref, uint n){
+  if(!y_ref.N) y_ref = zeros(n);
+  if(!yd_ref.N==1) yd_ref = zeros(n);
+  if(y_ref.N==1) y_ref.setUni(y_ref.scalar(), n);
+  if(yd_ref.N==1) yd_ref.setUni(yd_ref.scalar(), n);
+  CHECK(y_ref.nd==1 && y_ref.d0==n,"");
+  CHECK(yd_ref.nd==1 && yd_ref.d0==n,"");
 }
 
-arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
-  if(!y_ref.N) y_ref.resizeAs(y).setZero();
-  if(!v_ref.N) v_ref.resizeAs(ydot).setZero();
+void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
+  if(Kp.N==1) Kp = diag(Kp.scalar(), n);
+  if(Kd.N==1) Kd = diag(Kd.scalar(), n);
+  CHECK(Kp.nd==2 && Kp.d0==n && Kp.d1==n,"");
+  CHECK(Kd.nd==2 && Kd.d0==n && Kd.d1==n,"");
+}
+
+arr CtrlTask::get_y_ref(const arr& y){
   this->y = y;
-  this->v = ydot;
   if(flipTargetSignOnNegScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
   if(makeTargetModulo2PI) for(uint i=0;i<y.N;i++){
-      while(y_ref(i) < y(i)-MLR_PI) y_ref(i)+=MLR_2PI;
-      while(y_ref(i) > y(i)+MLR_PI) y_ref(i)-=MLR_2PI;
+    while(y_ref(i) < y(i)-MLR_PI) y_ref(i)+=MLR_2PI;
+    while(y_ref(i) > y(i)+MLR_PI) y_ref(i)-=MLR_2PI;
   }
-  //compute diffs
-  arr y_diff(y);
-  if(y_ref.N==1) {
-    y_diff -= y_ref.scalar();
-  }else if(y_ref.N==y_diff.N) {
-    y_diff -= y_ref;
-  }
-  arr ydot_diff(ydot);
-  if(v_ref.N==1) {
-    ydot_diff -= v_ref.scalar();
-  }else if(v_ref.N==ydot_diff.N) {
-    ydot_diff -= v_ref;
-  }
+  return y_ref;
+}
 
-  arr a = - flexiMult(Kp, y_diff) - flexiMult(Kd, ydot_diff);
+arr CtrlTask::get_ydot_ref(const arr& ydot){
+  this->v = ydot;
+  return v_ref;
+}
+
+arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
+  makeRefsVectors(y_ref, v_ref, y.N);
+  makeGainsMatrices(Kp, Kd, y.N);
+  arr a = Kp*(get_y_ref(y)-y) + Kd*(get_ydot_ref(ydot)-ydot);
 
   //check limits
   double accNorm = length(a);
@@ -303,22 +311,24 @@ void FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u
   arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it? And also symmetric? Furthermore, if H = M^{-1}, this should be calculated more efficiently
   arr a = zeros(this->world.getJointStateDimension());//M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
   u0 = ~M*H*(a-F);
-  arr y, J;
+  arr y, J_y;
   arr tempKp, tempKd;
 
   q0 = q;
   Kp = zeros(world.getJointStateDimension(),world.getJointStateDimension());
   Kd = zeros(world.getJointStateDimension(),world.getJointStateDimension());
-  for(CtrlTask* law : tasks) {
-    law->map.phi(y, J, world);
-    A += ~J*law->prec*J;
-    tempKp = ~J*law->prec*law->Kp;
-    tempKd = ~J*law->prec*law->Kd;
-    u0 += tempKp*(law->y_ref - y + J*q0);
-    u0 += tempKd*law->v_ref;
+  for(CtrlTask* law : tasks) if(law->active){
+    law->map.phi(y, J_y, world);
+    A += ~J_y*law->prec*J_y;
+    makeRefsVectors(law->y_ref, law->v_ref, y.N);
+    makeGainsMatrices(law->Kp, law->Kd, y.N);
+    tempKp = ~J_y*law->prec*law->Kp;
+    tempKd = ~J_y*law->prec*law->Kd;
+    u0 += tempKp*(law->get_y_ref(y) - y + J_y*q0);
+    u0 += tempKd*law->get_ydot_ref(world.qdot);
 //    u0 += ~J*law->getC()*law->getDDotRef(); //TODO: add ydd_ref
-    Kp += tempKp*J;
-    Kd += tempKd*J;
+    Kp += tempKp*J_y;
+    Kd += tempKd*J_y;
   }
   arr invA = inverse(A); //TODO: SymPosDef?
   Kp = M*invA*Kp;
@@ -326,28 +336,47 @@ void FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u
   u0 = M*invA*u0 + F;
 }
 
+void FeedbackMotionControl::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0){
+  arr M, F;
+  world.equationOfMotion(M, F, false);
+
+  arr u = u0 + Kp*world.q + Kd*world.qdot;
+  arr qdd;
+  world.fwdDynamics(qdd, world.qdot, u);
+
+  for(uint tt=0;tt<1;tt++){
+    world.q += .001*world.qdot;
+    world.qdot += .001*qdd;
+  }
+
+  setState(world.q, world.qdot);
+}
+
 void FeedbackMotionControl::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma) {
-  if(this->tasks.N > 0) {
-    CHECK(this->tasks.N == 1, "Multiple force laws not allowed at the moment");
-    for(CtrlTask* law : this->tasks) {
-      DefaultTaskMap& map = dynamic_cast<DefaultTaskMap&>(law->map);
-      ors::Body* body = world.shapes(map.i)->body;
-      ors::Vector vec = world.shapes(map.i)->rel.pos;
-      ors::Shape* lFtSensor = world.getShapeByName("l_ft_sensor");
-      arr y, J, J_ft;
-      law->map.phi(y, J, world);
-      world.kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);
-      J_ft_inv = -~conv_vec2arr(map.ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
-      K_ft = -~J*law->f_alpha;
-      fRef = law->f_ref;
-      gamma = law->f_gamma;
-    }
-  } else {
+  uint nForceTasks=0;
+  for(CtrlTask* law : this->tasks) if(law->active && law->f_ref.N){
+    nForceTasks++;
+    DefaultTaskMap& map = dynamic_cast<DefaultTaskMap&>(law->map);
+    ors::Body* body = world.shapes(map.i)->body;
+    ors::Vector vec = world.shapes(map.i)->rel.pos;
+    ors::Shape* lFtSensor = world.getShapeByName("l_ft_sensor");
+    arr y, J, J_ft;
+    law->map.phi(y, J, world);
+    world.kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);
+    J_ft_inv = -~conv_vec2arr(map.ivec)*inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+    K_ft = -~J*law->f_alpha;
+    fRef = law->f_ref;
+    gamma = law->f_gamma;
+  }
+
+  CHECK(nForceTasks<=1, "Multiple force laws not allowed at the moment");
+  if(!nForceTasks){
     K_ft = zeros(world.getJointStateDimension());
     fRef = ARR(0.0);
     J_ft_inv = zeros(1,6);
     gamma = 0.0;
   }
+
 }
 
 RUN_ON_INIT_BEGIN(CtrlTask)

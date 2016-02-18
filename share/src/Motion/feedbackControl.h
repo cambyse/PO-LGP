@@ -66,9 +66,12 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 
   void setTarget(const arr& yref, const arr& vref=NoArr); //TODO -> setRef
+  void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
 
+  arr get_y_ref(const arr& y);
+  arr get_ydot_ref(const arr& ydot);
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
 
   void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const ors::KinematicWorld& world);
@@ -123,6 +126,8 @@ struct FeedbackMotionControl /*: MotionProblem*/ {
   void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma); ///< returns the force controller coefficients
   void updateConstraintControllers();
   void reportCurrentState();
+
+  void fwdSimulateControlLaw(arr &Kp, arr &Kd, arr &u0);
 
   void setState(const arr& q, const arr& qdot);
 };
