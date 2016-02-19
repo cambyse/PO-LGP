@@ -1,7 +1,7 @@
 BASE   = ../../..
 -include $(BASE)/gofMake/config.mk
 
-MSGFILE = msg/ObjIdentity.msg
+MSGFILE = msg/ObjId.msg
 ROSDIR = /opt/ros/$(ROS_DISTRO)
 OUTPUTDIR = $(BASE)/include/ros_msg
 PKGNAME = obj_id_pkg
