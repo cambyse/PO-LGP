@@ -1,0 +1,16 @@
+BASE   = ../../..
+-include $(BASE)/gofMake/config.mk
+
+MSGFILE = msg/ObjIdentity.msg
+ROSDIR = /opt/ros/$(ROS_DISTRO)
+OUTPUTDIR = $(BASE)/include/ros_msg
+PKGNAME = obj_id_pkg
+
+
+default:
+	python2 $(ROSDIR)/lib/gencpp/gen_cpp.py \
+    	$(MSGFILE) \
+        -p $(PKGNAME) \
+        -e $(ROSDIR)/share/gencpp \
+        -I "std_msgs:$(ROSDIR)/share/std_msgs/msg" \
+        -o $(OUTPUTDIR)
