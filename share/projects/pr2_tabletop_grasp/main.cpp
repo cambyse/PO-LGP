@@ -5,85 +5,54 @@
 #include <Motion/pr2_heuristics.h>
 #include <Motion/phase_optimization.h>
 #include <Optim/opt-constrained.h>
-
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <pr2/rosalvar.h>
 #include <pr2/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <visualization_msgs/MarkerArray.h>
+
 
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
-void TEST(TrajectoryInterface){
-  ors::KinematicWorld world("model.kvg");
+void graspBox(){
+  ors::KinematicWorld world("model_plan.kvg");
+  ors::KinematicWorld world_pr2("model.kvg");
   makeConvexHulls(world.shapes);
+  TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
 
-  TrajectoryInterface *ti = new TrajectoryInterface(world);
-
-  ti->world->gl().resize(800,800);
-  ti->world->gl().add(changeColor2);
-
-  arr q;
-  arr lim;
-  double alpha = 0.8;
-  uintA qIdxList;
-  rnd.clockSeed();
-  lim = ti->world->getLimits();
-
-  /// define the joints that should be used
-  qIdxList.append(ti->world->getJointByName("l_elbow_flex_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_wrist_roll_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_wrist_flex_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_forearm_roll_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_upper_arm_roll_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_shoulder_lift_joint")->qIndex);
-
-
-  for (;;) {
-    q = ti->world->getJointState();
-
-    /// sample a random goal position
-    for (uint i=0;i<qIdxList.d0;i++) {
-      uint qIdx = qIdxList(i);
-      q(qIdx) = lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
-    }
-
-    ti->gotoPosition(q,5.,true);
-    ti->logging("data/",2);
-  }
-
-  ti->~TrajectoryInterface();
-}
-
-void TEST(RecordReplay) {
-  ors::KinematicWorld world("model.kvg");
-  makeConvexHulls(world.shapes);
-
-  TrajectoryInterface *ti = new TrajectoryInterface(world);
-
-  ti->world->gl().resize(800,800);
-  ti->world->gl().add(changeColor2);
-  ti->world->watch(true);
+  ti->world_plan->watch(false);
+  ti->world_pr2->watch(false);
+  ti->world_plan->gl().resize(800,800);
+  ti->world_pr2->gl().resize(800,800);
+  ti->world_pr2->gl().add(changeColor2);
 
   arr X;
-  ti->recordDemonstration(X,10.);
-  cout << X << endl;
-  ti->gotoPosition(X[0]);
-  ti->executeTrajectory(X,10.,true);
-  ti->logging("data/",1);
+  MotionProblem MP(world);
+  Task *t;
+  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-  /// load demo from file
-  arr Y;
-  Y <<FILE("data/Xdes1.dat");
+  t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, "box",NoVector));
+  t->setCostSpecs(50, 50, {0.}, 1e2);
 
-  ti->gotoPosition(Y[0]);
-  ti->executeTrajectory(Y,10.);
+  MotionProblemFunction MPF(MP);
+  X = MP.getInitialization();
+
+  optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+
+  MP.costReport();
+  displayTrajectory(X, 1, world, "planned trajectory");
+
+  ti->gotoPositionPlan(X[0]);
+  ti->executeTrajectoryPlan(X,10.,true,true);
   ti->~TrajectoryInterface();
 }
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-  testTrajectoryInterface();
-//  testRecordReplay();
+//  testTrajectoryInterface();
+  graspBox();
   return 0;
 }
