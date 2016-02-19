@@ -46,6 +46,10 @@ struct TrajectoryInterface {
   /// send zero gains and record trajectory of T seconds
   void recordDemonstration(arr &X_pr2, double T, double dt=0.05, double T_start=2.);
 
+  void moveLeftGripper(double d);
+  void moveRightGripper(double d);
+
+
   /// stop the motion
   void pauseMotion(bool sendZeroGains = false);
 
@@ -53,5 +57,6 @@ struct TrajectoryInterface {
   void logging(mlr::String folder, uint id=0);
 
   /// get robot state
-  void getState(arr& q_plan);
+  void getState(arr& q_pr2);
+  void getStatePlan(arr& q_plan);
 };

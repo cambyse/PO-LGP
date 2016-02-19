@@ -132,10 +132,15 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
   }
 }
 
-void TrajectoryInterface::getState(arr &q_plan) {
+void TrajectoryInterface::getStatePlan(arr &q_plan) {
   arr q_pr2 = S.ctrl_obs.get()->q;
   transferQbetweenTwoWorlds(q_plan,q_pr2,*world_plan,*world_pr2);
 }
+
+void TrajectoryInterface::getState(arr &q_pr2) {
+  q_pr2 = S.ctrl_obs.get()->q;
+}
+
 
 void TrajectoryInterface::gotoPositionPlan(arr x_plan, double T, bool recordData, bool displayTraj) {
   arr x_pr2;
@@ -224,6 +229,19 @@ void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,doub
   S.ctrl_ref.set() = refs;
 }
 
+void TrajectoryInterface::moveLeftGripper(double d) {
+  arr q_pr2;
+  getState(q_pr2);
+  q_pr2(world_pr2->getJointByName("l_gripper_joint")->qIndex) = d;
+  gotoPosition(q_pr2);
+}
+
+void TrajectoryInterface::moveRightGripper(double d) {
+  arr q_pr2;
+  getState(q_pr2);
+  q_pr2(world_pr2->getJointByName("r_gripper_joint")->qIndex) = d;
+  gotoPosition(q_pr2);
+}
 
 void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
   cout << "stopping motion" << endl;
