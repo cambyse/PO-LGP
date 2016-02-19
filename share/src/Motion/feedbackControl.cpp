@@ -123,26 +123,26 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   return a;
 }
 
-void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0, const arr& y, const arr& ydot){
+void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y, const arr& ydot){
   makeRefsVectors(y_ref, v_ref, y.N);
   makeGainsMatrices(Kp, Kd, y.N);
-  a0 = Kp*get_y_ref(y) + Kd*get_ydot_ref(ydot);
+  a0_y = Kp*get_y_ref(y) + Kd*get_ydot_ref(ydot);
   Kp_y = -Kp;
   Kd_y = -Kd;
-  arr a = a0 + Kp_y*y + Kd_y*ydot; //linear law
+  arr a = a0_y + Kp_y*y + Kd_y*ydot; //linear law
   double accNorm = length(a);
 
   //check vel limit -> change a0, no change in gains
   if(maxVel){
     double velRatio = scalarProduct(ydot, a/accNorm)/maxVel;
-    if(velRatio>1.) a0 -= a; //a becomes zero
-    else if(velRatio>.9) a0 -= a*(10.*(velRatio-.9));
+    if(velRatio>1.) a0_y -= a; //a becomes zero
+    else if(velRatio>.9) a0_y -= a*(10.*(velRatio-.9));
   }
 
   //check acc limits -> change all
   if(maxAcc>1e-4 && accNorm>maxAcc){
     double scale = maxAcc/accNorm;
-    a0 *= scale;
+    a0_y *= scale;
     Kp_y *= scale;
     Kd_y *= scale;
   }
