@@ -10,8 +10,9 @@
 #include <pr2/rosalvar.h>
 #include <pr2/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <visualization_msgs/MarkerArray.h>
-
+#include <ros_msg/ObjId.msg>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
 
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
@@ -50,9 +51,28 @@ void graspBox(){
   ti->~TrajectoryInterface();
 }
 
+void obj_id_callback(const MarkerArrayPtr &msg_ma, const ObjIdPtr& msg_oid) {
+  cout << "HERE" << endl;
+  // TODO
+  // convert all of the markerarrays into ors objects
+  // issue command to grasp object with id msg_oid->obj_id
+}
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 //  testTrajectoryInterface();
   graspBox();
+
+  ros::init(argc, argv, "pr2_tabletop_grasp");
+
+  ros::NodeHandle nh;
+
+  message_filters::Subscriber<MarkerArray> cluster_sub(nh, "/tabletop/clusters", 1);
+  message_filters::Subscriber<ros_msg::ObjId> obj_id_sub(nh, "/eyespy/obj_id", 1);
+  TimeSynchronizer<MarkerArray, ros_msg::ObjId> sync(cluster_sub, obj_id_sub, 10);
+  sync.registerCallback(boost::bind(&callback, _1, _2));
+
+  ros::spin();
+
   return 0;
 }
