@@ -30,6 +30,8 @@ void graspBox(){
   ti->world_pr2->gl().resize(800,800);
   ti->world_pr2->gl().add(changeColor2);
 
+  ors::Shape *object = world.getShapeByName("box");
+
   arr X;
   MotionProblem MP(world);
   Task *t;
@@ -37,16 +39,28 @@ void graspBox(){
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, "box",NoVector));
-  t->setCostSpecs(50, 50, {0.}, 1e2);
+  t = MP.addTask("pos1", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+  t->setCostSpecs(70, 80, {0.}, 1e2);
+  t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+  t->setCostSpecs(70, MP.T, {1.}, 1e1);
+  t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+  t->setCostSpecs(70, MP.T, {1.}, 1e1);
+
+  t = MP.addTask("pos2", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+  t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
+
+  /// open gripper
+
+  /// close gripper
+
 
   MotionProblemFunction MPF(MP);
   X = MP.getInitialization();
 
   optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
-  MP.costReport();
-  displayTrajectory(X, 1, world, "planned trajectory");
+  MP.costReport(true);
+  displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
 
   ti->gotoPositionPlan(X[0]);
   ti->executeTrajectoryPlan(X,10.,true,true);
@@ -77,6 +91,7 @@ int main(int argc, char** argv){
 //  testTrajectoryInterface();
   graspBox();
   return 0;
+
   // ros::init(argc, argv, "pr2_tabletop_grasp");
 
   // ros::NodeHandle nh;
