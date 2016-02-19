@@ -53,11 +53,23 @@ void graspBox(){
   ti->~TrajectoryInterface();
 }
 
-void obj_id_callback(const visualization_msgs::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
-  cout << "HERE" << endl;
+// void obj_id_callback(const visualization_msgs::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
+//   cout << "HERE" << endl;
+//   // TODO
+//   // convert all of the markerarrays into ors objects
+//   // issue command to grasp object with id msg_oid->obj_id
+// }
+
+bool update_ma;
+visualization_msgs::MarkerArray ma;
+
+void cluster_callback(const visualization_msgs::MarkerArrayPtr &msg) {
+  // TODO update global variable
+}
+
+void oid_callback(const obj_id_pkg::ObjIdPtr &msg) {
+  // block update of global variable
   // TODO
-  // convert all of the markerarrays into ors objects
-  // issue command to grasp object with id msg_oid->obj_id
 }
 
 int main(int argc, char** argv){
@@ -65,16 +77,19 @@ int main(int argc, char** argv){
 //  testTrajectoryInterface();
   graspBox();
   return 0;
-  ros::init(argc, argv, "pr2_tabletop_grasp");
+  // ros::init(argc, argv, "pr2_tabletop_grasp");
 
-  ros::NodeHandle nh;
+  // ros::NodeHandle nh;
 
-  message_filters::Subscriber<visualization_msgs::MarkerArray> cluster_sub(nh, "/tabletop/clusters", 1);
-  message_filters::Subscriber<obj_id_pkg::ObjId> obj_id_sub(nh, "/eyespy/obj_id", 1);
-  message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, obj_id_sub, 10);
-  sync.registerCallback(boost::bind(&obj_id_callback, _1, _2));
+  // // message_filters::Subscriber<visualization_msgs::MarkerArray> cluster_sub(nh, "/tabletop/clusters", 1);
+  // // message_filters::Subscriber<obj_id_pkg::ObjId> obj_id_sub(nh, "/eyespy/obj_id", 1);
+  // // message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, obj_id_sub, 10);
+  // // sync.registerCallback(boost::bind(&obj_id_callback, _1, _2));
+  
+  // ros::Subscriber cluster_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
+  // ros::Subscriber oid_sub = nh.subscribe("/eyespy/obj_id", 10, oid_callback);
 
-  ros::spin();
+  // ros::spin();
 
   return 0;
 }
