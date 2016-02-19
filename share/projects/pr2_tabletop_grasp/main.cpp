@@ -43,14 +43,16 @@ void graspBox(){
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
   t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-
   t = MP.addTask("pos2", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
   t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
-
-  /// open gripper
-
-  /// close gripper
-
+  t = MP.addTask("limit", new TaskMap_qLimits());
+  t->setCostSpecs(0, MP.T, {0.}, 1e2);
+  ShapeL shaps = {
+    world.getShapeByName("l_forearm_roll_link_0"), world.getShapeByName("table"),
+    world.getShapeByName("l_elbow_flex_link_0"), world.getShapeByName("table")
+  };
+  t = MP.addTask("collision", new ProxyConstraint(pairsPTMT, shapesToShapeIndices(shaps), 0.1));
+  t->setCostSpecs(0., MP.T, {0.}, 1.);
 
   MotionProblemFunction MPF(MP);
   X = MP.getInitialization();
@@ -58,7 +60,8 @@ void graspBox(){
   optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
   MP.costReport(true);
-  displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
+  for (;;)
+    displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
 
   ti->gotoPositionPlan(X[0]);
   ti->executeTrajectoryPlan(X,10.,true,true);
