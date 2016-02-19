@@ -10,10 +10,8 @@
 #include <pr2/rosalvar.h>
 #include <pr2/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <ros_msg/ObjId.h>
-#include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <ros_msg/ObjId.h>
 
 
 void changeColor2(void*){  orsDrawAlpha = 1.; }
@@ -74,37 +72,46 @@ void graspBox(){
 //   // issue command to grasp object with id msg_oid->obj_id
 // }
 
-bool update_ma;
+Mutex mutex;
+bool update_ma = true;
 visualization_msgs::MarkerArray ma;
 
 void cluster_callback(const visualization_msgs::MarkerArrayPtr &msg) {
-  // TODO update global variable
+  cout << "Cluster_callback" << endl;
+  mutex.lock();
+  ma = *msg;
+  mutex.unlock();
 }
 
-void oid_callback(const obj_id_pkg::ObjIdPtr &msg) {
-  // block update of global variable
-  // TODO
+// void oid_callback(const obj_id_pkg::ObjIdPtr &msg) {
+void oid_callback(const std_msgs::String &msg) {
+  cout << "Oid_callback" << endl;
+  mutex.lock();
+  visualization_msgs::MarkerArray marker_array = ma;
+  mutex.unlock();
+
+  // insert actual grasping code
 }
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 //  testTrajectoryInterface();
-  graspBox();
-  return 0;
+  // graspBox();
+  // return 0;
 
-  // ros::init(argc, argv, "pr2_tabletop_grasp");
+  ros::init(argc, argv, "pr2_tabletop_grasp");
 
-  // ros::NodeHandle nh;
+  ros::NodeHandle nh;
 
-  // // message_filters::Subscriber<visualization_msgs::MarkerArray> cluster_sub(nh, "/tabletop/clusters", 1);
-  // // message_filters::Subscriber<obj_id_pkg::ObjId> obj_id_sub(nh, "/eyespy/obj_id", 1);
-  // // message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, obj_id_sub, 10);
-  // // sync.registerCallback(boost::bind(&obj_id_callback, _1, _2));
+  // message_filters::Subscriber<visualization_msgs::MarkerArray> cluster_sub(nh, "/tabletop/clusters", 1);
+  // message_filters::Subscriber<obj_id_pkg::ObjId> obj_id_sub(nh, "/eyespy/obj_id", 1);
+  // message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, obj_id_sub, 10);
+  // sync.registerCallback(boost::bind(&obj_id_callback, _1, _2));
   
-  // ros::Subscriber cluster_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
-  // ros::Subscriber oid_sub = nh.subscribe("/eyespy/obj_id", 10, oid_callback);
+  ros::Subscriber cluster_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
+  ros::Subscriber oid_sub = nh.subscribe("/eyespy/obj_id", 10, oid_callback);
 
-  // ros::spin();
+  ros::spin();
 
   return 0;
 }
