@@ -112,7 +112,7 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   makeGainsMatrices(Kp, Kd, y.N);
   arr a = Kp*(get_y_ref(y)-y) + Kd*(get_ydot_ref(ydot)-ydot);
 
-  //check limits
+  //check vel/acc limits
   double accNorm = length(a);
   if(accNorm<1e-4) return a;
   if(maxAcc>0. && accNorm>maxAcc) a *= maxAcc/accNorm;
@@ -121,6 +121,31 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(velRatio>1.) a.setZero();
   else if(velRatio>.9) a *= 1.-10.*(velRatio-.9);
   return a;
+}
+
+void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0, const arr& y, const arr& ydot){
+  makeRefsVectors(y_ref, v_ref, y.N);
+  makeGainsMatrices(Kp, Kd, y.N);
+  a0 = Kp*get_y_ref(y) + Kd*get_ydot_ref(ydot);
+  Kp_y = -Kp;
+  Kd_y = -Kd;
+  arr a = a0 + Kp_y*y + Kd_y*ydot; //linear law
+  double accNorm = length(a);
+
+  //check vel limit -> change a0, no change in gains
+  if(maxVel){
+    double velRatio = scalarProduct(ydot, a/accNorm)/maxVel;
+    if(velRatio>1.) a0 -= a; //a becomes zero
+    else if(velRatio>.9) a0 -= a*(10.*(velRatio-.9));
+  }
+
+  //check acc limits -> change all
+  if(maxAcc>1e-4 && accNorm>maxAcc){
+    double scale = maxAcc/accNorm;
+    a0 *= scale;
+    Kp_y *= scale;
+    Kd_y *= scale;
+  }
 }
 
 void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
@@ -309,23 +334,25 @@ void FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u
   arr H = inverse(M); //TODO: Other metrics (have significant influence)
 
   arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it? And also symmetric? Furthermore, if H = M^{-1}, this should be calculated more efficiently
-  arr a = zeros(this->world.getJointStateDimension());//M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
+  arr a = zeros(q.N); //M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
   u0 = ~M*H*(a-F);
-  arr y, J_y;
+  arr y, J_y, Kp_y, Kd_y, a0_y;
   arr tempKp, tempKd;
 
   q0 = q;
-  Kp = zeros(world.getJointStateDimension(),world.getJointStateDimension());
-  Kd = zeros(world.getJointStateDimension(),world.getJointStateDimension());
+  Kp = zeros(q.N, q.N);
+  Kd = zeros(q.N, q.N);
   for(CtrlTask* law : tasks) if(law->active){
     law->map.phi(y, J_y, world);
     A += ~J_y*law->prec*J_y;
-    makeRefsVectors(law->y_ref, law->v_ref, y.N);
-    makeGainsMatrices(law->Kp, law->Kd, y.N);
-    tempKp = ~J_y*law->prec*law->Kp;
-    tempKd = ~J_y*law->prec*law->Kd;
-    u0 += tempKp*(law->get_y_ref(y) - y + J_y*q0);
-    u0 += tempKd*law->get_ydot_ref(world.qdot);
+    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*world.qdot);
+//    makeRefsVectors(law->y_ref, law->v_ref, y.N);
+//    makeGainsMatrices(law->Kp, law->Kd, y.N);
+    tempKp = ~J_y*law->prec*Kp_y;
+    tempKd = ~J_y*law->prec*Kd_y;
+    u0 += ~J_y*law->prec*a0_y;
+//    u0 += tempKp*(law->get_y_ref(y) - y + J_y*q0);
+//    u0 += tempKd*law->get_ydot_ref(world.qdot);
 //    u0 += ~J*law->getC()*law->getDDotRef(); //TODO: add ydd_ref
     Kp += tempKp*J_y;
     Kd += tempKd*J_y;

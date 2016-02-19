@@ -46,10 +46,10 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   arr v_ref; ///< velocity reference
   arr Kp; ///< proportional gain
   arr Kd; ///< derivative gain
-  double maxVel, maxAcc;
   /// @}
 
-  /// @{ @name Parameters that define the integral force feedback control law
+  /// @{ @name Parameters that define velocity, acceleration and force limits
+  double maxVel, maxAcc;
   arr f_ref;
   double f_alpha, f_gamma;
 
@@ -72,7 +72,9 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   arr get_y_ref(const arr& y);
   arr get_ydot_ref(const arr& ydot);
+
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
+  void getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0, const arr& y, const arr& ydot);
 
   void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const ors::KinematicWorld& world);
 
