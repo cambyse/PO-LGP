@@ -41,8 +41,8 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
       ors::Joint *j=G(offset)->joints(j_idx);
       for(uint i=0;i<=k;i++){
         ors::Joint *jmatch = G(offset+i)->getJointByBodyNames(j->from->name, j->to->name);
+        if(j->type!=jmatch->type) jmatch=NULL;
         if(!jmatch){ useIt(j_idx) = false; break; }
-        CHECK_EQ(j->type, jmatch->type, "");
         jointMatchLists(i, j_idx) = jmatch;
       }
     }

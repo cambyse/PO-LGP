@@ -12,10 +12,9 @@
 //===========================================================================
 
 void TEST(PickAndPlace){
-  Graph specs("specs.g");
+  Graph specs("specsPush.g");
   KOMO komo(specs);
   arr q=komo.MP->world.getJointState();
-//  q += .3;
   komo.MP->world.setJointState(q);
   komo.reset();
   komo.MP->reportFull(true);

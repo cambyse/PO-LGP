@@ -269,7 +269,7 @@ void ors::Shape::parseAts() {
       mesh.setCappedCylinder(size[3], size[2]);
       break;
     case ors::SSBoxST:
-      HALT("deprecated?")
+      HALT("deprecated?");
       mesh.setSSBox(size[0], size[1], size[2], size[3]);
       break;
     case ors::markerST:
@@ -2235,7 +2235,7 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
   y.resize(1).setZero();
   if(&J) J.resize(1, getJointStateDimension()).setZero();
   double d;
-  for(uint i=0; i<q.N; i++) if(limits(i,1)>limits(i,0)){ //only consider proper limits (non-zero interval)
+  for(uint i=0; i<limits.d0; i++) if(limits(i,1)>limits(i,0)){ //only consider proper limits (non-zero interval)
     double m = margin*(limits(i,1)-limits(i,0));
     d = limits(i, 0) + m - q(i); //lo
     if(d>0.) {  y(0) += d/m;  if(&J) J(0, i)-=1./m;  }
@@ -2455,7 +2455,6 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
   Shape *from=G.shapes(fromId), *to=G.shapes(toId);
   if(symbol==deleteJoint){
     Joint *j = G.getJointByBodies(from->body, to->body);
-//    if(!j) j = G.getJointByBodies(to->body, from->body);
     CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
     delete j;
     return;
@@ -2475,6 +2474,7 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     j->type=jointType;
     j->constrainToZeroVel=true;
     j->B.setDifference(from->body->X, to->body->X);
+    j->A.setZero();
     G.isLinkTree=false;
     return;
   }
@@ -2482,38 +2482,45 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     Joint *j = new Joint(G, from->body, to->body);
     j->type=jointType;
     j->A.setDifference(from->body->X, to->body->X);
+    j->B.setZero();
     G.isLinkTree=false;
     return;
   }
   HALT("shouldn't be here!");
 }
 
-void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious, ors::KinematicWorld& G, bool existsInPrevious){
+void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious, ors::KinematicWorld& G, bool copyFromBodies){
   if(symbol==addJointAtFrom){
     Joint *j = G.getJointByBodies(G.shapes(fromId)->body, G.shapes(toId)->body);
-    if(!j || j->type!=jointType) HALT(""); //return;
-    Joint *jprev = G.getJointByBodies(Gprevious.shapes(fromId)->body, Gprevious.shapes(toId)->body);
-    if(existsInPrevious){
-      CHECK(jprev,"");
-      j->B = jprev->B;
-    }else{
-      CHECK(!jprev,"");
+    if(!j/* || j->type!=jointType*/) HALT("");
+    if(copyFromBodies){
       j->B.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
+    }else{//copy from previous, if exists
+      Joint *jprev = Gprevious.getJointByBodies(Gprevious.shapes(fromId)->body, Gprevious.shapes(toId)->body);
+      if(!jprev || jprev->type!=j->type){//still copy from bodies
+        j->B.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
+      }else{
+        j->B = jprev->B;
+      }
     }
+//    j->A.setZero();
     G.calc_fwdPropagateFrames();
     return;
   }
   if(symbol==addJointAtTo){
     Joint *j = G.getJointByBodies(G.shapes(fromId)->body, G.shapes(toId)->body);
     if(!j || j->type!=jointType) HALT(""); //return;
-    Joint *jprev = G.getJointByBodies(Gprevious.shapes(fromId)->body, Gprevious.shapes(toId)->body);
-    if(existsInPrevious){
-      CHECK(jprev,"");
-      j->A = jprev->A;
-    }else{
-      CHECK(!jprev,"");
+    if(copyFromBodies){
       j->A.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
+    }else{
+      Joint *jprev = Gprevious.getJointByBodies(Gprevious.shapes(fromId)->body, Gprevious.shapes(toId)->body);
+      if(!jprev || jprev->type!=j->type){
+        j->A.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
+      }else{
+        j->A = jprev->A;
+      }
     }
+//    j->B.setZero();
     G.calc_fwdPropagateFrames();
     return;
   }
@@ -2546,6 +2553,7 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
 //  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
   else if(type=="rigidAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
+  else if(type=="rigidAtFrom"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_rigid; }
   else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
   else if(type=="transXYPhiAtFrom"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="transXYPhiZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_transXYPhi; }

@@ -25,6 +25,7 @@ collisionExceptPairs
 MakeJoint
 delete
 rigidAtTo
+rigidAtFrom
 rigidZero
 freeAtTo
 transXYPhiAtFrom

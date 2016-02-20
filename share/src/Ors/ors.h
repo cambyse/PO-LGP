@@ -353,7 +353,7 @@ struct KinematicSwitch{
   KinematicSwitch();
 //  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
-  void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool existsInPrevious);
+  void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool copyFromBodies);
   void write(std::ostream& os) const;
   static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
 

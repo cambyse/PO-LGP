@@ -216,7 +216,7 @@ void MotionProblem::set_x(const arr& x){
 
 void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
   for(ors::KinematicSwitch *sw:switches) if(sw->timeOfApplication<=t){
-    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order), sw->timeOfApplication<t);
+    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order), sw->timeOfApplication==t);
   }
 }
 
