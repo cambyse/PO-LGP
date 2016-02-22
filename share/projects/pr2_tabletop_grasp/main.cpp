@@ -11,7 +11,11 @@
 #include <pr2/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/MarkerArray.h>
+
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
 #include <ros_msg/ObjId.h>
+#include <ros_msg/MarkerArray.h>
 
 
 void changeColor2(void*){  orsDrawAlpha = 1.; }
@@ -75,25 +79,84 @@ void graspBox(){
 //   // issue command to grasp object with id msg_oid->obj_id
 // }
 
-Mutex mutex;
-bool update_ma = true;
-visualization_msgs::MarkerArray ma;
+// Mutex mutex;
+// bool update_ma = true;
+// visualization_msgs::MarkerArray ma;
 
-void cluster_callback(const visualization_msgs::MarkerArrayPtr &msg) {
-  cout << "Cluster_callback" << endl;
-  mutex.lock();
-  ma = *msg;
-  mutex.unlock();
+// void cluster_callback(const visualization_msgs::MarkerArrayPtr &msg) {
+//   cout << "Cluster_callback" << endl;
+//   mutex.lock();
+//   ma = *msg;
+//   mutex.unlock();
+// }
+
+// // void oid_callback(const obj_id_pkg::ObjIdPtr &msg) {
+// void oid_callback(const std_msgs::String &msg) {
+//   cout << "Oid_callback" << endl;
+//   mutex.lock();
+//   visualization_msgs::MarkerArray marker_array = ma;
+//   mutex.unlock();
+
+//   // insert actual grasping code
+// }
+
+// void cluster_callback(const visualization_msgs::MarkerArray &msg) {
+//   obj_id_pkg::MarkerArray ma();
+//   ma.header = msg->markers[0].header;
+//   ma.marker_array = msg;
+// }
+
+struct PR2Grasp {
+  ros::NodeHandle &nh;
+  ros::Subscriber cluster_sub;
+  ros::Publisher cluster_pub;
+  ros::Publisher obj_id_pub;
+
+  message_filters::Subscriber<obj_id_pkg::MarkerArray> *eyespy_cluster_sub;
+  message_filters::Subscriber<obj_id_pkg::ObjId> *eyespy_oid_sub;
+  message_filters::TimeSynchronizer<obj_id_pkg::MarkerArray, obj_id_pkg::ObjId> *eyespy_sync;
+
+  PR2Grasp(ros::NodeHandle &nh_);
+
+  void eyespy_cluster_callback(const visualization_msgs::MarkerArray &msg);
+  void eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid);
+  void run(void);
+};
+
+PR2Grasp::PR2Grasp(ros::NodeHandle &nh_): nh(nh_) {
+  cluster_sub = nh.subscribe("/tabletop/clusters", 10, &PR2Grasp::eyespy_cluster_callback, this);
+  cluster_pub = nh.advertise<obj_id_pkg::MarkerArray>("/eyespy/clusters", 10);
+  obj_id_pub = nh.advertise<obj_id_pkg::ObjId>("/eyespy/obj_id", 10);
+
+  eyespy_cluster_sub = new message_filters::Subscriber<obj_id_pkg::MarkerArray>(nh, "/eyespy/clusters", 10);
+  eyespy_oid_sub = new message_filters::Subscriber<obj_id_pkg::ObjId>(nh, "/eyespy/obj_id", 10);
+  eyespy_sync = new message_filters::TimeSynchronizer<obj_id_pkg::MarkerArray, obj_id_pkg::ObjId>(*eyespy_cluster_sub, *eyespy_oid_sub, 10);
+  // void (PR2Grasp::*callback)(const obj_id_pkg::MarkerArray &, const obj_id_pkg::ObjId &) = &this->eyespy_grasp_callback;
+  // &PR2Grasp::eyespy_grasp_callback;
+  // eyespy_sync->registerCallback(boost::bind(callback, this, _1, _2));
+  // eyespy_sync->registerCallback(boost::bind(this->eyespy_grasp_callback, this, _1, _2));
+  eyespy_sync->registerCallback(boost::bind(&PR2Grasp::eyespy_grasp_callback, this, _1, _2));
 }
 
-// void oid_callback(const obj_id_pkg::ObjIdPtr &msg) {
-void oid_callback(const std_msgs::String &msg) {
-  cout << "Oid_callback" << endl;
-  mutex.lock();
-  visualization_msgs::MarkerArray marker_array = ma;
-  mutex.unlock();
+void PR2Grasp::eyespy_cluster_callback(const visualization_msgs::MarkerArray &msg) {
+  obj_id_pkg::MarkerArray obj_id_ma;
+  obj_id_ma.header = msg.markers[0].header;
+  obj_id_ma.markers = msg.markers;
 
-  // insert actual grasping code
+  cluster_pub.publish(obj_id_ma);
+
+//   obj_id_pkg::ObjId oid;
+//   oid.header = obj_id_ma.header;
+//   oid.obj_id = 1;
+//   obj_id_pub.publish(oid);
+}
+
+void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
+  cout << "hello" << endl;
+}
+
+void PR2Grasp::run(void) {
+  ros::spin();
 }
 
 int main(int argc, char** argv){
@@ -105,16 +168,21 @@ int main(int argc, char** argv){
   ros::init(argc, argv, "pr2_tabletop_grasp");
 
   ros::NodeHandle nh;
+  PR2Grasp pr2grasp(nh);
+  pr2grasp.run();
 
-  // message_filters::Subscriber<visualization_msgs::MarkerArray> cluster_sub(nh, "/tabletop/clusters", 1);
-  // message_filters::Subscriber<obj_id_pkg::ObjId> obj_id_sub(nh, "/eyespy/obj_id", 1);
-  // message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, obj_id_sub, 10);
-  // sync.registerCallback(boost::bind(&obj_id_callback, _1, _2));
+
+  // ros::Subscriber ma_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
+
+//   message_filters::Subscriber<obj_id_pkg::MarkerArray> cluster_sub(nh, "/eyespy/clusters", 1);
+//   message_filters::Subscriber<obj_id_pkg::ObjId> oid_sub(nh, "/eyespy/obj_id", 1);
+//   message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, oid_sub, 10);
+//   sync.registerCallback(boost::bind(&callback, _1, _2));
   
-  ros::Subscriber cluster_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
-  ros::Subscriber oid_sub = nh.subscribe("/eyespy/obj_id", 10, oid_callback);
+  // ros::Subscriber cluster_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
+  // ros::Subscriber oid_sub = nh.subscribe("/eyespy/obj_id", 10, oid_callback);
 
-  ros::spin();
+  // ros::spin();
 
   return 0;
 }
