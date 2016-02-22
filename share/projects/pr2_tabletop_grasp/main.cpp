@@ -31,6 +31,12 @@ void graspBox(){
   ti->world_pr2->gl().add(changeColor2);
 
   ors::Shape *object = world.getShapeByName("box");
+  /// move robot to initial position
+  //  arr q;
+  //  ti->getState(q);
+  //  write(LIST<arr>(q),"q0.dat");
+  //  q << FILE("q0.dat"); q.flatten();
+  //  q(ti->world_pr2->getJointByName("torso_lift_joint")->qIndex) += 0.1;
 
   arr X;
   MotionProblem MP(world);
