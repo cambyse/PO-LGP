@@ -16,7 +16,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 
-void changeColor2(void*){  orsDrawAlpha = 1.; }
+void changeColor2(void*){  orsDrawAlpha = 0.5; }
 
 void graspBox(){
   ors::KinematicWorld world("model_plan.kvg");
@@ -29,6 +29,7 @@ void graspBox(){
   ti->world_plan->gl().resize(800,800);
   ti->world_pr2->gl().resize(800,800);
   ti->world_pr2->gl().add(changeColor2);
+
 
   ors::Shape *object = world.getShapeByName("box");
   /// move robot to initial position
@@ -83,10 +84,58 @@ void obj_id_callback(const visualization_msgs::MarkerArrayConstPtr &msg_ma, cons
   // issue command to grasp object with id msg_oid->obj_id
 }
 
+void TEST(PointCloud) {
+  ors::KinematicWorld world("model_plan.kvg");
+  world.watch(false);
+  world.gl().resize(800,800);
+  world.gl().add(changeColor2);
+
+  ors::Shape *pcShape = new ors::Shape(world,NoBody);
+  pcShape->type = ors::pointCloudST;
+  pcShape->name = "pcShape";
+  uint N=1000;
+  arr scale = eye(3)*0.01;
+  scale(1,1) = .05;
+  scale(2,2) = .1;
+  scale(1,2) = .1;
+  arr points = randn(N,3)*scale+1.;
+  pcShape->mesh.V = points;
+  pcShape->mesh.computeNormals();
+  world.calc_fwdPropagateFrames();
+  world.watch(true);
+
+  /// fit box to pointcloud
+  arr center = sum(points,0)/double(points.d0);
+  center.flatten();
+
+  arr Y,v,W;
+  pca(Y,v,W,points);
+  arr dir = W.col(0); dir.flatten();
+
+  ors::Body *boxBody = new ors::Body(world);
+  boxBody->name = "boxBody";
+  boxBody->type = ors::BodyType::dynamicBT;
+  boxBody->X.pos = center;
+  boxBody->X.rot.setDiff(ors::Vector(1.,0.,0.),dir);
+  ors::Shape *boxShape = new ors::Shape(world,*boxBody);
+  boxShape->type = ors::boxST;
+  boxShape->name = "boxShape";
+  arr size = ARRAY(Y.col(0).max()-Y.col(0).min(),Y.col(1).max()-Y.col(1).min(),Y.col(2).max()-Y.col(2).min(), 0.);
+  memmove(boxShape->size, size.p, 4*sizeof(double));
+  arr color = ARRAY(0.1,0.5,0.1);
+  memmove(boxShape->color, color.p, 3*sizeof(double));
+  world.calc_fwdPropagateFrames();
+  world.watch(true);
+}
+
+void glDrawMesh(void *classP) {
+  ((ors::Mesh*)classP)->glDraw();
+}
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-//  testTrajectoryInterface();
-  graspBox();
+  testPointCloud();
+//  graspBox();
   return 0;
 
   return 0;
