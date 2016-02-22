@@ -18,7 +18,7 @@
 #include <ros_msg/MarkerArray.h>
 
 
-void changeColor2(void*){  orsDrawAlpha = 1.; }
+void changeColor2(void*){  orsDrawAlpha = 0.5; }
 
 void graspBox(){
   ors::KinematicWorld world("model_plan.kvg");
@@ -32,7 +32,14 @@ void graspBox(){
   ti->world_pr2->gl().resize(800,800);
   ti->world_pr2->gl().add(changeColor2);
 
+
   ors::Shape *object = world.getShapeByName("box");
+  /// move robot to initial position
+  //  arr q;
+  //  ti->getState(q);
+  //  write(LIST<arr>(q),"q0.dat");
+  //  q << FILE("q0.dat"); q.flatten();
+  //  q(ti->world_pr2->getJointByName("torso_lift_joint")->qIndex) += 0.1;
 
   arr X;
   MotionProblem MP(world);
@@ -159,30 +166,69 @@ void PR2Grasp::run(void) {
   ros::spin();
 }
 
+void TEST(PointCloud) {
+  ors::KinematicWorld world("model_plan.kvg");
+  world.watch(false);
+  world.gl().resize(800,800);
+  world.gl().add(changeColor2);
+
+  ors::Shape *pcShape = new ors::Shape(world,NoBody);
+  pcShape->type = ors::pointCloudST;
+  pcShape->name = "pcShape";
+  uint N=1000;
+  arr scale = eye(3)*0.01;
+  scale(1,1) = .05;
+  scale(2,2) = .1;
+  scale(1,2) = .1;
+  arr points = randn(N,3)*scale+1.;
+  pcShape->mesh.V = points;
+  pcShape->mesh.computeNormals();
+  world.calc_fwdPropagateFrames();
+  world.watch(true);
+
+  /// fit box to pointcloud
+  arr center = sum(points,0)/double(points.d0);
+  center.flatten();
+
+  arr Y,v,W;
+  pca(Y,v,W,points);
+  arr dir = W.col(0); dir.flatten();
+
+  ors::Body *boxBody = new ors::Body(world);
+  boxBody->name = "boxBody";
+  boxBody->type = ors::BodyType::dynamicBT;
+  boxBody->X.pos = center;
+  boxBody->X.rot.setDiff(ors::Vector(1.,0.,0.),dir);
+  ors::Shape *boxShape = new ors::Shape(world,*boxBody);
+  boxShape->type = ors::boxST;
+  boxShape->name = "boxShape";
+  arr size = ARRAY(Y.col(0).max()-Y.col(0).min(),Y.col(1).max()-Y.col(1).min(),Y.col(2).max()-Y.col(2).min(), 0.);
+  memmove(boxShape->size, size.p, 4*sizeof(double));
+  arr color = ARRAY(0.1,0.5,0.1);
+  memmove(boxShape->color, color.p, 3*sizeof(double));
+  world.calc_fwdPropagateFrames();
+  world.watch(true);
+}
+
+void glDrawMesh(void *classP) {
+  ((ors::Mesh*)classP)->glDraw();
+}
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-//  testTrajectoryInterface();
+
+  // testTrajectoryInterface();
   // graspBox();
   // return 0;
 
-  ros::init(argc, argv, "pr2_tabletop_grasp");
+  // ros::init(argc, argv, "pr2_tabletop_grasp");
 
-  ros::NodeHandle nh;
-  PR2Grasp pr2grasp(nh);
-  pr2grasp.run();
+  // ros::NodeHandle nh;
+  // PR2Grasp pr2grasp(nh);
+  // pr2grasp.run();
 
-
-  // ros::Subscriber ma_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
-
-//   message_filters::Subscriber<obj_id_pkg::MarkerArray> cluster_sub(nh, "/eyespy/clusters", 1);
-//   message_filters::Subscriber<obj_id_pkg::ObjId> oid_sub(nh, "/eyespy/obj_id", 1);
-//   message_filters::TimeSynchronizer<visualization_msgs::MarkerArray, obj_id_pkg::ObjId> sync(cluster_sub, oid_sub, 10);
-//   sync.registerCallback(boost::bind(&callback, _1, _2));
-  
-  // ros::Subscriber cluster_sub = nh.subscribe("/tabletop/clusters", 10, cluster_callback);
-  // ros::Subscriber oid_sub = nh.subscribe("/eyespy/obj_id", 10, oid_callback);
-
-  // ros::spin();
+  testPointCloud();
+  // graspBox();
 
   return 0;
 }
