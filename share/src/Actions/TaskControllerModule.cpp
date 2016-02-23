@@ -16,7 +16,7 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
     , q0(realWorld.q)
     , oldfashioned(true)
     , useRos(false)
-    , syncModelStateWithRos(false)
+    , syncModelStateWithReal(false)
     , verbose(false)
     , useDynSim(true) {
 
@@ -52,13 +52,9 @@ void TaskControllerModule::open(){
 
 
   useRos = mlr::getParameter<bool>("useRos",false);
-  if(useRos) syncModelStateWithRos=true;
+  if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
-  if(useDynSim) {
-    ors::KinematicWorld* dynWorld = new ors::KinematicWorld(realWorld); //TODO maybe change dynSim to accept reference
-    dynSim->initializeSimulation(dynWorld);
-    dynSim->startSimulation();
-  }
+  if(!oldfashioned && !useRos) dynSim->threadLoop();
 
 }
 
@@ -66,46 +62,33 @@ void TaskControllerModule::open(){
 void TaskControllerModule::step(){
   static uint t=0;
   t++;
-  if(syncModelStateWithRos){
-    //-- wait for first q observation!
-    cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-  }
 
   ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation");
 
   //-- read real state
-  if(useRos){
+  if(useRos || !oldfashioned){
     ctrl_obs.waitForNextRevision();
-    pr2_odom.waitForRevisionGreaterThan(0);
+    if(useRos) pr2_odom.waitForRevisionGreaterThan(0);
 
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-      q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+      if(useRos) q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
-      if(syncModelStateWithRos){
+      if(syncModelStateWithReal){
         q_model = q_real;
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
-        cout <<"** GO!" <<endl;
-        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
-        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
-        syncModelStateWithRos = false;
+//        cout <<"** GO!" <<endl;
+//        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
+//        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
       }
+      if(oldfashioned) syncModelStateWithReal = false;
     }else{
+      cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       if(t>20){
         HALT("sync'ing real PR2 with simulated failed")
       }
-    }
-  } else {
-    if(useDynSim) {
-      ctrl_obs.waitForNextRevision();
-      q_real = ctrl_obs.get()->q;
-      qdot_real = ctrl_obs.get()->qdot;
-      realWorld.setJointState(q_real, qdot_real);
-      q_model = q_real;
-      qdot_model = qdot_real;
-      modelWorld.set()->setJointState(q_model, qdot_model); //TODO don't know why this changes the green init robot as well
     }
   }
 
@@ -229,9 +212,9 @@ void TaskControllerModule::step(){
     double gamma;
     feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
-    if(!useDynSim) { //TODO what is, if useROS == true? the modelWorld should be updated from the rosMsg? Maybe then we don't need two worlds
-      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
-    }
+//    if(!useDynSim) { //TODO what is, if useROS == true? the modelWorld should be updated from the rosMsg? Maybe then we don't need two worlds
+//      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
+//    }
 
 
     modelWorld.deAccess();
