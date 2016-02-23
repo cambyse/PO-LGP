@@ -223,15 +223,15 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
     // if(true) {
     // if(zmin > .5) {
     if(zmin > .25) {
-      ors::Shape *pcShape = new ors::Shape(*ti->world_plan, NoBody);
-      pcShape->type = ors::pointCloudST;
-      pcShape->name = STRING("pcShape_"<<nobj);
+      // ors::Shape *pcShape = new ors::Shape(*ti->world_plan, NoBody);
+      // pcShape->type = ors::pointCloudST;
+      // pcShape->name = STRING("pcShape_"<<nobj);
 
-      pcShape->color[0] = colors[nobj][0];
-      pcShape->color[1] = colors[nobj][1];
-      pcShape->color[2] = colors[nobj][2];
-      pcShape->mesh.V = points;
-      pcShape->mesh.computeNormals();
+      // pcShape->color[0] = colors[nobj][0];
+      // pcShape->color[1] = colors[nobj][1];
+      // pcShape->color[2] = colors[nobj][2];
+      // pcShape->mesh.V = points;
+      // pcShape->mesh.computeNormals();
 
       arr center = sum(points,0)/double(points.d0);
       center.flatten();
@@ -299,11 +299,12 @@ void PR2Grasp::graspObject(ors::Shape *object) {
     optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
     MP.costReport(true);
-    for (;;)
+    // for (;;)
       displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
 
     ti->gotoPositionPlan(X[0]);
-    ti->executeTrajectoryPlan(X,10.,true,true);
+    // ti->executeTrajectoryPlan(X,10.,true,true);
+    ti->executeTrajectoryPlan(X,20.,true,true);
     ti->~TrajectoryInterface();
   }
 }
@@ -373,13 +374,13 @@ int main(int argc, char** argv){
   // graspBox();
   // return 0;
 
-  // ros::init(argc, argv, "pr2_tabletop_grasp");
-  // ros::NodeHandle nh;
-  // PR2Grasp pr2grasp(nh);
-  // pr2grasp.run();
+  ros::init(argc, argv, "pr2_tabletop_grasp");
+  ros::NodeHandle nh;
+  PR2Grasp pr2grasp(nh);
+  pr2grasp.run();
 
   // testPointCloud();
-   graspBox();
+   // graspBox();
 
   return 0;
 }
