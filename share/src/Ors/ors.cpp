@@ -2540,9 +2540,13 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
   arr q = to.getJointState();
   uint T = qfrom.d0;
+  uint Nfrom = qfrom.d1;
+
+  if (qfrom.d1==0) {T = 1; Nfrom = qfrom.d0;}
+
   qto = repmat(~q,T,1);
 
-  intA match(qfrom.d1);
+  intA match(Nfrom);
   match = -1;
   for(ors::Joint* jfrom:from.joints){
     ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
@@ -2555,9 +2559,15 @@ void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicW
 
   for(uint i=0;i<match.N;i++) if(match(i)!=-1){
     for(uint t=0;t<T;t++){
-      qto(t, match(i)) = qfrom(t,i);
+      if (qfrom.d1==0) {
+        qto(t, match(i)) = qfrom(i);
+      } else {
+        qto(t, match(i)) = qfrom(t,i);
+      }
     }
   }
+
+  if (qfrom.d1==0) {qto.flatten();}
 }
 
 

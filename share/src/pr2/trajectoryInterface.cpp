@@ -35,6 +35,9 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::K
     qdot = S.ctrl_obs.get()->qdot;
 
     world_pr2->setJointState(q, qdot);
+    arr q_plan;
+    getStatePlan(q_plan);
+    world_plan->setJointState(q_plan,q_plan*0.);
 
     //-- define controller msg
     refs.fL = zeros(6);
