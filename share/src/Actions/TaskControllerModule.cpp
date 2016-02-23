@@ -17,9 +17,11 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
     , oldfashioned(true)
     , useRos(false)
     , syncModelStateWithRos(false)
-    , verbose(false) {
+    , verbose(false)
+    , useDynSim(true) {
 
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
+  useDynSim = mlr::getParameter<bool>("useDynSim", true);
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -48,8 +50,16 @@ void TaskControllerModule::open(){
   modelWorld.deAccess();
 #endif
 
+
   useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos) syncModelStateWithRos=true;
+
+  if(useDynSim) {
+    ors::KinematicWorld* dynWorld = new ors::KinematicWorld(realWorld); //TODO maybe change dynSim to accept reference
+    dynSim->initializeSimulation(dynWorld);
+    dynSim->startSimulation();
+  }
+
 }
 
 
@@ -67,6 +77,7 @@ void TaskControllerModule::step(){
   if(useRos){
     ctrl_obs.waitForNextRevision();
     pr2_odom.waitForRevisionGreaterThan(0);
+
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
@@ -85,6 +96,16 @@ void TaskControllerModule::step(){
       if(t>20){
         HALT("sync'ing real PR2 with simulated failed")
       }
+    }
+  } else {
+    if(useDynSim) {
+      ctrl_obs.waitForNextRevision();
+      q_real = ctrl_obs.get()->q;
+      qdot_real = ctrl_obs.get()->qdot;
+      realWorld.setJointState(q_real, qdot_real);
+      q_model = q_real;
+      qdot_model = qdot_real;
+      modelWorld.set()->setJointState(q_model, qdot_model); //TODO don't know why this changes the green init robot as well
     }
   }
 
@@ -186,9 +207,19 @@ void TaskControllerModule::step(){
       TaskMap* qItselfTask = new TaskMap_qItself();
       CtrlTask* qItselfLaw = new CtrlTask(qItselfTask);
       qItselfLaw->prec = 10.0;
-      qItselfLaw->setGains(10.0, 1.0);
+      qItselfLaw->setGains(10.0, 1.0); //TODO tune those gains
       qItselfLaw->setTarget(qItselfLaw->map.phi(modelWorld()), zeros(qItselfLaw->map.dim_phi(modelWorld())));
       feedbackController->tasks.append(qItselfLaw);
+    }
+
+    //TODO qItself task for joint space stability
+    if(true) {
+      TaskMap* qItselfJointSpaceStabilityTask = new TaskMap_qItself();
+      CtrlTask* qItselfJSStabilityLaw = new CtrlTask(qItselfJointSpaceStabilityTask);
+      qItselfJSStabilityLaw->prec = 10.0;
+      qItselfJSStabilityLaw->setGains(0.0, 5.0); //TODO tune those gains
+      qItselfJSStabilityLaw->setTarget(qItselfJSStabilityLaw->map.phi(modelWorld()), zeros(qItselfJSStabilityLaw->map.dim_phi(modelWorld())));
+      feedbackController->tasks.append(qItselfJSStabilityLaw);
     }
 
     arr u0, Kp, Kd;
@@ -198,7 +229,10 @@ void TaskControllerModule::step(){
     double gamma;
     feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
-    feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
+    if(!useDynSim) { //TODO what is, if useROS == true? the modelWorld should be updated from the rosMsg? Maybe then we don't need two worlds
+      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
+    }
+
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();
@@ -217,17 +251,21 @@ void TaskControllerModule::step(){
     refs.u_bias = u0;
     refs.intLimitRatio = 0.7;
 
+
   }
 
   //-- send base motion command
-  if (!fixBase.get() && trans && trans->qDim()==3) {
-    refs.qdot(trans->qIndex+0) = qdot_model(trans->qIndex+0);
-    refs.qdot(trans->qIndex+1) = qdot_model(trans->qIndex+1);
-    refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
+  if(useRos) {
+    if (!fixBase.get() && trans && trans->qDim()==3) {
+      refs.qdot(trans->qIndex+0) = qdot_model(trans->qIndex+0);
+      refs.qdot(trans->qIndex+1) = qdot_model(trans->qIndex+1);
+      refs.qdot(trans->qIndex+2) = qdot_model(trans->qIndex+2);
+    }
   }
 
+
   //-- send the computed movement to the robot
-  if(useRos){
+  if(useRos || useDynSim){
     ctrl_ref.set() = refs;
   }
 }
