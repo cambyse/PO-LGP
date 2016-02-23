@@ -198,12 +198,8 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
 
   uint nobj = msg_ma->markers.size();
   for(uint obji = 0; obji < nobj; obji++) {
-    ors::Shape *pcShape = new ors::Shape(*ti->world_pr2,NoBody);
-    pcShape->type = ors::pointCloudST;
-    pcShape->name = "pcShape";
 
     uint npoints = msg_ma->markers[obji].points.size();
-    cout << "msg_ma.header" << msg_ma->header << endl;
 
     arr points(npoints, 4);
     for(uint i = 0; i < npoints; i++) {
@@ -211,13 +207,21 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
       points[i] = ARR(p.x, p.y, p.z, 1);
     }
     points = (points * ~ti->world_pr2->getShapeByName("endeffKinect_real")->X.getAffineMatrix()).cols(0, 3);
-    cout << "points.shape:" << points.d0 << " " << points.d1 << endl;
+    cout << "points.shape: " << points.d0 << " " << points.d1 << endl;
+    cout << "points.z.min: " << points.col(2).min() << endl;
 
-    pcShape->color[0] = colors[obji][0];
-    pcShape->color[1] = colors[obji][1];
-    pcShape->color[2] = colors[obji][2];
-    pcShape->mesh.V = points;
-    pcShape->mesh.computeNormals();
+    double zmin = points.col(2).min();
+    if(zmin > .5) {
+      ors::Shape *pcShape = new ors::Shape(*ti->world_pr2,NoBody);
+      pcShape->type = ors::pointCloudST;
+      pcShape->name = STRING("pcShape_"<<obji);
+
+      pcShape->color[0] = colors[obji][0];
+      pcShape->color[1] = colors[obji][1];
+      pcShape->color[2] = colors[obji][2];
+      pcShape->mesh.V = points;
+      pcShape->mesh.computeNormals();
+    }
   }
 
   ti->world_pr2->calc_fwdPropagateFrames();
