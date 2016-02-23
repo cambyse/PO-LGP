@@ -210,7 +210,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
       auto &p = msg_ma->markers[obji].points[i];
       points[i] = ARR(p.x, p.y, p.z, 1);
     }
-    points = (points * ~ti->world_pr2->getShapeByName("endeffKinect")->X.getAffineMatrix()).cols(0, 3);
+    points = (points * ~ti->world_pr2->getShapeByName("endeffKinect_real")->X.getAffineMatrix()).cols(0, 3);
     cout << "points.shape:" << points.d0 << " " << points.d1 << endl;
 
     pcShape->color[0] = colors[obji][0];
