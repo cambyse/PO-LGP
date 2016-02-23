@@ -23,100 +23,12 @@
 
 void changeColor2(void*){  orsDrawAlpha = 0.5; }
 
-void graspBox(){
-  ors::KinematicWorld world("model_plan.kvg");
-  ors::KinematicWorld world_pr2("model.kvg");
-  makeConvexHulls(world.shapes);
-  TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
 
-  ti->world_plan->watch(false);
-  ti->world_pr2->watch(false);
-  ti->world_plan->gl().resize(800,800);
-  ti->world_pr2->gl().resize(800,800);
-  ti->world_pr2->gl().add(changeColor2);
 
-  ors::Shape *object = ti->world_plan->getShapeByName("box");
-  /// move robot to initial position
-  //  arr q;
-  //  ti->getState(q);
-  //  write(LIST<arr>(q),"q0.dat");
-  //  q << FILE("q0.dat"); q.flatten();
-  //  q(ti->world_pr2->getJointByName("torso_lift_joint")->qIndex) += 0.1;
 
-  arr X;
-  MotionProblem MP(*ti->world_plan);
-  Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
-  t->map.order=2; //make this an acceleration task!
-  t->setCostSpecs(0, MP.T, {0.}, 1e-1);
-
-  t = MP.addTask("pos1", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
-  t->setCostSpecs(70, 80, {0.}, 1e2);
-  t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
-  t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
-  t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("pos2", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
-  t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
-  t = MP.addTask("limit", new LimitsConstraint());
-  t->setCostSpecs(0, MP.T, ARR(0.), 1e2);
-  ShapeL shaps = {
-    ti->world_plan->getShapeByName("l_forearm_roll_link_0"), ti->world_plan->getShapeByName("table"),
-    ti->world_plan->getShapeByName("l_elbow_flex_link_0"), ti->world_plan->getShapeByName("table")
-  };
-  t = MP.addTask("collision", new ProxyConstraint(pairsPTMT, shapesToShapeIndices(shaps), 0.1));
-  t->setCostSpecs(0., MP.T, {0.}, 1.);
-
-  MotionProblemFunction MPF(MP);
-  X = MP.getInitialization();
-
-  optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
-
-  MP.costReport(true);
-  for (;;)
-    displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
-
-  ti->gotoPositionPlan(X[0]);
-  ti->executeTrajectoryPlan(X,10.,true,true);
-  ti->~TrajectoryInterface();
-}
-
-// void obj_id_callback(const visualization_msgs::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
-//   cout << "HERE" << endl;
-//   // TODO
-//   // convert all of the markerarrays into ors objects
-//   // issue command to grasp object with id msg_oid->obj_id
-// }
-
-// Mutex mutex;
-// bool update_ma = true;
-// visualization_msgs::MarkerArray ma;
-
-// void cluster_callback(const visualization_msgs::MarkerArrayPtr &msg) {
-//   cout << "Cluster_callback" << endl;
-//   mutex.lock();
-//   ma = *msg;
-//   mutex.unlock();
-// }
-
-// // void oid_callback(const obj_id_pkg::ObjIdPtr &msg) {
-// void oid_callback(const std_msgs::String &msg) {
-//   cout << "Oid_callback" << endl;
-//   mutex.lock();
-//   visualization_msgs::MarkerArray marker_array = ma;
-//   mutex.unlock();
-
-//   // insert actual grasping code
-// }
-
-// void cluster_callback(const visualization_msgs::MarkerArray &msg) {
-//   obj_id_pkg::MarkerArray ma();
-//   ma.header = msg->markers[0].header;
-//   ma.marker_array = msg;
-// }
 
 struct PR2Grasp {
-  ros::NodeHandle &nh;
+  ros::NodeHandle nh;
   ros::Subscriber cluster_sub;
   ros::Publisher cluster_pub;
   ros::Publisher obj_id_pub;
@@ -131,11 +43,12 @@ struct PR2Grasp {
   message_filters::TimeSynchronizer<obj_id_pkg::MarkerArray, obj_id_pkg::ObjId> *eyespy_sync;
 
 
-  ors::KinematicWorld world;
-  ors::KinematicWorld world_pr2;
+//  ors::KinematicWorld world;
+//  ors::KinematicWorld world_pr2;
   TrajectoryInterface *ti;
 
-  PR2Grasp(ros::NodeHandle &nh_);
+//  PR2Grasp(ros::NodeHandle &nh_);
+  PR2Grasp(TrajectoryInterface *_ti);
 
   void eyespy_cluster_callback(const visualization_msgs::MarkerArray &msg);
   // void eyespy_grasp_callback(const object_recognition_msgs::TableArrayConstPtr &msg_ta, const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid);
@@ -143,11 +56,13 @@ struct PR2Grasp {
   bool eyespy_grasp_service(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
   void graspObject(ors::Shape *object);
-
+  void home(void);
   void run(void);
 };
 
-PR2Grasp::PR2Grasp(ros::NodeHandle &nh_): nh(nh_), service_trigger(false), world("model_plan.kvg"), world_pr2("model.kvg") {
+//PR2Grasp::PR2Grasp(ros::NodeHandle &nh_): nh(nh_), service_trigger(false), world("model_plan.kvg"), world_pr2("model.kvg") {
+PR2Grasp::PR2Grasp(TrajectoryInterface *_ti): service_trigger(false), ti(_ti) {
+
   cluster_sub = nh.subscribe("/tabletop/clusters", 10, &PR2Grasp::eyespy_cluster_callback, this);
   cluster_pub = nh.advertise<obj_id_pkg::MarkerArray>("/eyespy/clusters", 10);
   obj_id_pub = nh.advertise<obj_id_pkg::ObjId>("/eyespy/obj_id", 10);
@@ -162,7 +77,7 @@ PR2Grasp::PR2Grasp(ros::NodeHandle &nh_): nh(nh_), service_trigger(false), world
   // eyespy_sync->registerCallback(boost::bind(&PR2Grasp::eyespy_grasp_callback, this, _1, _2, _3));
   eyespy_sync->registerCallback(boost::bind(&PR2Grasp::eyespy_grasp_callback, this, _1, _2));
 
-  ti = new TrajectoryInterface(world, world_pr2);
+//  ti = new TrajectoryInterface(world, world_pr2);
 }
 
 void PR2Grasp::eyespy_cluster_callback(const visualization_msgs::MarkerArray &msg) {
@@ -271,6 +186,8 @@ void PR2Grasp::graspObject(ors::Shape *object) {
   if(object) {
     arr X;
     MotionProblem MP(*ti->world_plan);
+    ti->getStatePlan(MP.x0);
+
     Task *t;
     t = MP.addTask("transitions", new TransitionTaskMap(*ti->world_plan));
     t->map.order=2; //make this an acceleration task!
@@ -299,13 +216,19 @@ void PR2Grasp::graspObject(ors::Shape *object) {
     optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
 
     MP.costReport(true);
-    // for (;;)
-      displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
 
-    ti->gotoPositionPlan(X[0]);
-    // ti->executeTrajectoryPlan(X,10.,true,true);
+    ti->world_plan->watch(true);
+    displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
+    ti->world_plan->watch(true);
+
+
+
+    ti->moveLeftGripper(0.08);
     ti->executeTrajectoryPlan(X,20.,true,true);
-    ti->~TrajectoryInterface();
+    ti->logging("data/",1);
+    ti->moveLeftGripper(0.0);
+    home();
+//    ti->~TrajectoryInterface();
   }
 }
 
@@ -313,6 +236,15 @@ bool PR2Grasp::eyespy_grasp_service(std_srvs::Empty::Request &request, std_srvs:
   cout << "grasp triggered manually" << endl;
   service_trigger = true;
   return true;
+}
+
+void PR2Grasp::home(void) {
+  arr q;
+//    ti->getState(q); //    write(LIST<arr>(q),"q0.dat");
+  q << FILE("q0.dat"); q.flatten();
+  ti->fixTorso=false;
+  ti->gotoPosition(q);
+  ti->fixTorso=true;
 }
 
 void PR2Grasp::run(void) {
@@ -370,14 +302,22 @@ void glDrawMesh(void *classP) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  // testTrajectoryInterface();
-  // graspBox();
-  // return 0;
+//  rosCheckInit("pr2_tabeltop_grasp");
+  ors::KinematicWorld world("model_plan.kvg");
+  ors::KinematicWorld world_pr2("model.kvg");
 
-  ros::init(argc, argv, "pr2_tabletop_grasp");
-  ros::NodeHandle nh;
-  PR2Grasp pr2grasp(nh);
-  pr2grasp.run();
+
+  TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
+
+//  ros::init(argc, argv, "pr2_tabletop_grasp");
+//  ros::NodeHandle nh;
+//  ti->world_plan->watch(true);
+//  cout << ti->world_plan->qdim << endl;
+//  cout << ti->world_plan->getJointState() << endl;
+  PR2Grasp pr2grasp(ti);
+  pr2grasp.home();
+  moduleShutdown().waitForValueGreaterThan(0);
+//  pr2grasp.run();
 
   // testPointCloud();
    // graspBox();

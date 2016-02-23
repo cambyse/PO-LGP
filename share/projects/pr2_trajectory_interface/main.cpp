@@ -48,7 +48,7 @@ void TEST(TrajectoryInterface){
       q(qIdx) = lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
     }
 
-    ti->gotoPosition(q,5.,true);
+    ti->gotoPosition(q,5.,true,true);
     ti->logging("data/",2);
   }
 

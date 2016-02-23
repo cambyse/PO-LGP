@@ -3,12 +3,10 @@
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
-TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::KinematicWorld &world_pr2_) {
-  world_plan = new ors::KinematicWorld(world_plan_);
-  world_plan->q = world_plan_.q;
 
-  world_pr2 = new ors::KinematicWorld(world_pr2_);
-  world_pr2->q = world_pr2_.q;
+TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::KinematicWorld &world_pr2_) {
+  world_plan = &world_plan_;
+  world_pr2 = &world_pr2_;
 
   threadOpenModules(true);
 
@@ -141,6 +139,9 @@ void TrajectoryInterface::getStatePlan(arr &q_plan) {
 }
 
 void TrajectoryInterface::getState(arr &q_pr2) {
+  cout << "1" << endl;
+//  S.ctrl_obs.var->waitForNextRevision();
+  cout << "2" << endl;
   q_pr2 = S.ctrl_obs.get()->q;
 }
 
@@ -236,7 +237,7 @@ void TrajectoryInterface::moveLeftGripper(double d) {
   arr q_pr2;
   getState(q_pr2);
   q_pr2(world_pr2->getJointByName("l_gripper_joint")->qIndex) = d;
-  gotoPosition(q_pr2);
+  gotoPosition(q_pr2,5.,false,true);
 }
 
 void TrajectoryInterface::moveRightGripper(double d) {
