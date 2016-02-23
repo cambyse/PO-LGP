@@ -76,8 +76,8 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
 }
 
 void makeRefsVectors(arr& y_ref, arr& yd_ref, uint n){
-  if(!y_ref.N) y_ref = zeros(n);
-  if(!yd_ref.N==1) yd_ref = zeros(n);
+  if(!y_ref.N) y_ref = zeros(n); //TODO why set it to zeros?
+  if(!yd_ref.N==1) yd_ref = zeros(n); //TODO what is if yd is a vector?
   if(y_ref.N==1) y_ref.setUni(y_ref.scalar(), n);
   if(yd_ref.N==1) yd_ref.setUni(yd_ref.scalar(), n);
   CHECK(y_ref.nd==1 && y_ref.d0==n,"");
@@ -85,6 +85,8 @@ void makeRefsVectors(arr& y_ref, arr& yd_ref, uint n){
 }
 
 void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
+  //TODO why first set it to arr and then here to a matrix? why not directly to a matrix? the dimension
+  // of the task should be available?
   if(Kp.N==1) Kp = diag(Kp.scalar(), n);
   if(Kd.N==1) Kd = diag(Kd.scalar(), n);
   CHECK(Kp.nd==2 && Kp.d0==n && Kp.d1==n,"");
@@ -126,10 +128,10 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
 void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y, const arr& ydot){
   makeRefsVectors(y_ref, v_ref, y.N);
   makeGainsMatrices(Kp, Kd, y.N);
-  a0_y = Kp*get_y_ref(y) + Kd*get_ydot_ref(ydot);
-  Kp_y = -Kp;
-  Kd_y = -Kd;
-  arr a = a0_y + Kp_y*y + Kd_y*ydot; //linear law
+  a0 = Kp*get_y_ref(y) + Kd*get_ydot_ref(ydot);
+  Kp_y = Kp;
+  Kd_y = Kd;
+  arr a = a0 - Kp_y*y - Kd_y*ydot; //linear law
   double accNorm = length(a);
 
   //check vel limit -> change a0, no change in gains
@@ -327,35 +329,50 @@ void FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u
   arr q0, q, qDot;
   world.getJointState(q,qDot);
 
-  //arr H = /*diag(world.getHmetric());//*/0.1*eye(world.getJointStateDimension());
-  //M = H;
-  //F = zeros(world.getJointStateDimension());
-
   arr H = inverse(M); //TODO: Other metrics (have significant influence)
 
   arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it? And also symmetric? Furthermore, if H = M^{-1}, this should be calculated more efficiently
-  arr a = zeros(q.N); //M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
+  arr a = zeros(q.N); //TODO M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
   u0 = ~M*H*(a-F);
   arr y, J_y, Kp_y, Kd_y, a0_y;
-  arr tempKp, tempKd;
+  arr tempJPrec, tempKp;
 
   q0 = q;
   Kp = zeros(q.N, q.N);
   Kd = zeros(q.N, q.N);
   for(CtrlTask* law : tasks) if(law->active){
     law->map.phi(y, J_y, world);
-    A += ~J_y*law->prec*J_y;
-    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*world.qdot);
-//    makeRefsVectors(law->y_ref, law->v_ref, y.N);
-//    makeGainsMatrices(law->Kp, law->Kd, y.N);
-    tempKp = ~J_y*law->prec*Kp_y;
-    tempKd = ~J_y*law->prec*Kd_y;
-    u0 += ~J_y*law->prec*a0_y;
-//    u0 += tempKp*(law->get_y_ref(y) - y + J_y*q0);
-//    u0 += tempKd*law->get_ydot_ref(world.qdot);
+    tempJPrec = ~J_y*law->prec;
+    A += tempJPrec*J_y;
+
+    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*qDot);
+
+    u0 += tempJPrec*a0_y;
+
+    tempKp = tempJPrec*Kp_y;
+
+    u0 += tempKp*(-y + J_y*q0);
+
+    //u0 += ~J*law->getC()*law->getDDotRef(); //TODO: add ydd_ref
+
+    Kp += tempKp*J_y;
+    Kd += tempJPrec*Kd_y*J_y;
+
+    //TODO fix base, fix torso
+
+    /*
+    //law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*world.qdot);
+    makeRefsVectors(law->y_ref, law->v_ref, y.N);
+    makeGainsMatrices(law->Kp, law->Kd, y.N);
+    tempKp = ~J_y*law->prec*law->Kp;
+    tempKd = ~J_y*law->prec*law->Kd;
+    //u0 += ~J_y*law->prec*a0_y;
+    u0 += tempKp*(law->get_y_ref(y) - y + J_y*q0);
+    u0 += tempKd*law->get_ydot_ref(world.qdot);
+    law->v = J_y*qDot;
 //    u0 += ~J*law->getC()*law->getDDotRef(); //TODO: add ydd_ref
     Kp += tempKp*J_y;
-    Kd += tempKd*J_y;
+    Kd += tempKd*J_y;*/
   }
   arr invA = inverse(A); //TODO: SymPosDef?
   Kp = M*invA*Kp;
@@ -367,16 +384,15 @@ void FeedbackMotionControl::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0){
   arr M, F;
   world.equationOfMotion(M, F, false);
 
-  arr u = u0 + Kp*world.q + Kd*world.qdot;
+  arr u = u0 - Kp*world.q - Kd*world.qdot;
   arr qdd;
   world.fwdDynamics(qdd, world.qdot, u);
 
-  for(uint tt=0;tt<1;tt++){
-    world.q += .001*world.qdot;
+  for(uint tt=0;tt<10;tt++){
     world.qdot += .001*qdd;
+    world.q += .001*world.qdot;
+    setState(world.q, world.qdot);
   }
-
-  setState(world.q, world.qdot);
 }
 
 void FeedbackMotionControl::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma) {

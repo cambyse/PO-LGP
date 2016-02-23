@@ -5,6 +5,7 @@
 #include <pr2/roscom.h>
 #include <pr2/rosalvar.h>
 #include <FOL/relationalMachine.h>
+#include <pr2/pr2DynamicSimulation.h>
 
 #ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -34,6 +35,8 @@ struct TaskControllerModule : Module {
   bool useRos;
   bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
   bool verbose;
+  bool useDynSim;
+  DynamicSimulation* dynSim = new DynamicSimulation();
 
 public:
   TaskControllerModule(const char* modelFile=NULL);
