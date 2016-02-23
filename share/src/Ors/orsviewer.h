@@ -41,9 +41,12 @@ struct OrsPathViewer : Module{
     for(uint i=0;i<cs.N;i++) configurations()(i)->copy(*cs(i), true);
     configurations.deAccess();
   }
+  void clear(){
+    listDelete(configurations.set()());
+  }
 
-  OrsPathViewer(const char* varname)
-    : Module("OrsPathViewer", .2),
+  OrsPathViewer(const char* varname, double beatIntervalSec=.2)
+    : Module("OrsPathViewer", beatIntervalSec),
       configurations(this, varname, true){}
   ~OrsPathViewer(){}
   void open();

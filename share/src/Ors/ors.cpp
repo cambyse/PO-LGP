@@ -296,7 +296,7 @@ void ors::Shape::parseAts() {
   //center the mesh:
   if(mesh.V.N){
     Vector c = mesh.center();
-    if(!ats["rel_includes_mesh_center"]){
+    if(c.length()>1e-8 && !ats["rel_includes_mesh_center"]){
       rel.addRelativeTranslation(c);
       ats.append<bool>({"rel_includes_mesh_center"}, {}, new bool(true), true);
     }

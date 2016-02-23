@@ -125,6 +125,7 @@ void TowerProblem_new::setRandom(){
     s->sscCore.setBox();
     s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
     s->mesh.setSSCvx(s->sscCore, s->size[3]);
+    s->mesh_radius = s->mesh.getRadius();
     b->name = s->name;
     //position on grid
     b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);

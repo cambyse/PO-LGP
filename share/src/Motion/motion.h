@@ -43,7 +43,7 @@ struct Task {
 
   Task(TaskMap* m, const TermType& type) : map(*m), type(type), active(true){}
 
-  void setCostSpecs(uint fromTime, uint toTime,
+  void setCostSpecs(int fromTime, uint toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
   bool isActive(uint t){ if(!active || prec.N<=t || !prec(t)) return false; return true; }

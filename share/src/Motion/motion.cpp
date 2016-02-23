@@ -28,12 +28,13 @@
 
 //===========================================================================
 
-void Task::setCostSpecs(uint fromTime,
+void Task::setCostSpecs(int fromTime,
                         uint toTime,
                         const arr& _target,
                         double _prec){
   if(&_target) target = _target; else target = {0.};
-  CHECK(toTime>=fromTime,"");
+  if(fromTime<0) fromTime=0;
+  CHECK((int)toTime>=fromTime,"");
   prec.resize(toTime+1).setZero();
   for(uint t=fromTime;t<=toTime;t++) prec(t) = _prec;
 }

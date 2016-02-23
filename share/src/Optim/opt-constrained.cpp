@@ -188,17 +188,28 @@ void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize
 
       arr AdL = comp_A_x(A, dL_x);
       arr beta;
-      beta = lapack_Ainv_b_sym(tmp, AdL);
-      //reinsert zero rows
-      for(uint i=0;i<lambda.N;i++){
-        if(! ( (tt_x(i)==eqTT) ||
-               (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ) ){
-          beta.insert(i,0.);
-        }
+      bool worked=true;
+      try {
+        beta = lapack_Ainv_b_sym(tmp, AdL);
+      }catch(...){
+        arr sig, eig;
+        lapack_EigenDecomp(tmp, sig, eig);
+        cout <<endl <<"** hessian inversion failed AulaAnyTimeUpdate: " <<sig <<" -- revert to standard update" <<endl;
+        worked=false;
       }
-      lambda -= lambdaStepsize * beta;
-      //bound clipping
-      for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+
+      if(worked){
+        //reinsert zero rows
+        for(uint i=0;i<lambda.N;i++){
+          if(! ( (tt_x(i)==eqTT) ||
+                 (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ) ){
+            beta.insert(i,0.);
+          }
+        }
+        lambda -= lambdaStepsize * beta;
+        //bound clipping
+        for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+      }
     }
   }
 

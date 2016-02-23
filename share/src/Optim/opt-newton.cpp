@@ -85,7 +85,7 @@ OptNewton::StopCriterion OptNewton::step(){
         cout <<endl <<"** hessian inversion failed ... increasing damping **\neigenvalues=" <<sig <<endl;
       }
       double sigmin = sig.min();
-      CHECK(sigmin<0,"");
+      CHECK(sigmin<0,"Hessian inversion failed, but eigenvalues are positive???");
       beta = 2.*beta - sigmin;
       betaChanged=true;
       return stopCriterion=stopNone;

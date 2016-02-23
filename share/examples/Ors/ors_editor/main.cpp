@@ -35,8 +35,8 @@ void TEST(OrsEditor) {
   G >>FILE("z.ors");
 //  makeConvexHulls(G.shapes);
 //  makeSSBoxApproximations(G.shapes);
-  G >>FILE("z.ors");
-  G.watch(true);
+  //G >>FILE("z.ors");
+  //  G.watch(true);
   G.topSort();
   G.checkConsistency();
   G.makeLinkTree();
