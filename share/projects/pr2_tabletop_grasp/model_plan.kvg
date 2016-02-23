@@ -8,17 +8,17 @@ shape endeffKinect(head_tilt_link){ rel=<T t(0 -.05 .12) d(180 0 0 1) d(-90 1 0 
 
 Merge worldTranslationRotation { type=10 }
 Merge torso_lift_joint { type=10 }
-Merge head_pan_joint { type=10 }
-Merge head_tilt_joint { type=10 }
+#Merge head_pan_joint { type=10 }
+#Merge head_tilt_joint { type=10 }
 Merge laser_tilt_mount_joint { type=10 }
 
-Merge r_shoulder_pan_joint { type=10 }
-Merge r_shoulder_lift_joint { type=10 }
-Merge r_upper_arm_roll_joint { type=10 }
-Merge r_elbow_flex_joint { type=10 }
-Merge r_forearm_roll_joint { type=10 }
-Merge r_wrist_flex_joint { type=10 }
-Merge r_wrist_roll_joint { type=10 }
+#Merge r_shoulder_pan_joint { type=10 }
+#Merge r_shoulder_lift_joint { type=10 }
+#Merge r_upper_arm_roll_joint { type=10 }
+#Merge r_elbow_flex_joint { type=10 }
+#Merge r_forearm_roll_joint { type=10 }
+#Merge r_wrist_flex_joint { type=10 }
+#Merge r_wrist_roll_joint { type=10 }
 
 #Merge l_shoulder_pan_joint { type=10 }
 #Merge l_shoulder_lift_joint { type=10 }

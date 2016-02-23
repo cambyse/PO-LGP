@@ -30,13 +30,12 @@ void graspBox(){
   TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
 
   ti->world_plan->watch(false);
-  ti->world_pr2->watch(true);
+  ti->world_pr2->watch(false);
   ti->world_plan->gl().resize(800,800);
   ti->world_pr2->gl().resize(800,800);
   ti->world_pr2->gl().add(changeColor2);
 
-
-  ors::Shape *object = world.getShapeByName("box");
+  ors::Shape *object = ti->world_plan->getShapeByName("box");
   /// move robot to initial position
   //  arr q;
   //  ti->getState(q);
@@ -45,25 +44,25 @@ void graspBox(){
   //  q(ti->world_pr2->getJointByName("torso_lift_joint")->qIndex) += 0.1;
 
   arr X;
-  MotionProblem MP(world);
+  MotionProblem MP(*ti->world_plan);
   Task *t;
   t = MP.addTask("transitions", new TransitionTaskMap(world));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-  t = MP.addTask("pos1", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+  t = MP.addTask("pos1", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
   t->setCostSpecs(70, 80, {0.}, 1e2);
-  t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+  t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+  t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("pos2", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+  t = MP.addTask("pos2", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
   t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
-  t = MP.addTask("limit", new TaskMap_qLimits());
-  t->setCostSpecs(0, MP.T, {0.}, 1e2);
+  t = MP.addTask("limit", new LimitsConstraint());
+  t->setCostSpecs(0, MP.T, ARR(0.), 1e2);
   ShapeL shaps = {
-    world.getShapeByName("l_forearm_roll_link_0"), world.getShapeByName("table"),
-    world.getShapeByName("l_elbow_flex_link_0"), world.getShapeByName("table")
+    ti->world_plan->getShapeByName("l_forearm_roll_link_0"), ti->world_plan->getShapeByName("table"),
+    ti->world_plan->getShapeByName("l_elbow_flex_link_0"), ti->world_plan->getShapeByName("table")
   };
   t = MP.addTask("collision", new ProxyConstraint(pairsPTMT, shapesToShapeIndices(shaps), 0.1));
   t->setCostSpecs(0., MP.T, {0.}, 1.);
@@ -325,14 +324,14 @@ int main(int argc, char** argv){
   // graspBox();
   // return 0;
 
-  ros::init(argc, argv, "pr2_tabletop_grasp");
+//  ros::init(argc, argv, "pr2_tabletop_grasp");
 
-  ros::NodeHandle nh;
-  PR2Grasp pr2grasp(nh);
-  pr2grasp.run();
+//  ros::NodeHandle nh;
+//  PR2Grasp pr2grasp(nh);
+//  pr2grasp.run();
 
   // testPointCloud();
-  // graspBox();
+   graspBox();
 
   return 0;
 }
