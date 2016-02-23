@@ -10,6 +10,8 @@
 #include <pr2/rosalvar.h>
 #include <pr2/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+
+#include <object_recognition_msgs/TableArray.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <std_srvs/Empty.h>
 
@@ -123,8 +125,10 @@ struct PR2Grasp {
 
   bool service_trigger;
 
+  // message_filters::Subscriber<object_recognition_msgs::TableArray> *table_array_sub;
   message_filters::Subscriber<obj_id_pkg::MarkerArray> *eyespy_cluster_sub;
   message_filters::Subscriber<obj_id_pkg::ObjId> *eyespy_oid_sub;
+  // message_filters::TimeSynchronizer<object_recognition_msgs::TableArray, obj_id_pkg::MarkerArray, obj_id_pkg::ObjId> *eyespy_sync;
   message_filters::TimeSynchronizer<obj_id_pkg::MarkerArray, obj_id_pkg::ObjId> *eyespy_sync;
 
 
@@ -135,6 +139,7 @@ struct PR2Grasp {
   PR2Grasp(ros::NodeHandle &nh_);
 
   void eyespy_cluster_callback(const visualization_msgs::MarkerArray &msg);
+  // void eyespy_grasp_callback(const object_recognition_msgs::TableArrayConstPtr &msg_ta, const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid);
   void eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid);
   bool eyespy_grasp_service_callback(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
@@ -148,9 +153,12 @@ PR2Grasp::PR2Grasp(ros::NodeHandle &nh_): nh(nh_), service_trigger(false), world
 
   eyespy_grasp_service = nh.advertiseService("/eyespy/grasp", &PR2Grasp::eyespy_grasp_service_callback, this);
 
+  // table_array_sub = new message_filters::Subscriber<object_recognition_msgs::TableArray>(nh, "/table_array", 10);
   eyespy_cluster_sub = new message_filters::Subscriber<obj_id_pkg::MarkerArray>(nh, "/eyespy/clusters", 10);
   eyespy_oid_sub = new message_filters::Subscriber<obj_id_pkg::ObjId>(nh, "/eyespy/obj_id", 10);
+  // eyespy_sync = new message_filters::TimeSynchronizer<object_recognition_msgs::TableArray, obj_id_pkg::MarkerArray, obj_id_pkg::ObjId>(*table_array_sub, *eyespy_cluster_sub, *eyespy_oid_sub, 10);
   eyespy_sync = new message_filters::TimeSynchronizer<obj_id_pkg::MarkerArray, obj_id_pkg::ObjId>(*eyespy_cluster_sub, *eyespy_oid_sub, 10);
+  // eyespy_sync->registerCallback(boost::bind(&PR2Grasp::eyespy_grasp_callback, this, _1, _2, _3));
   eyespy_sync->registerCallback(boost::bind(&PR2Grasp::eyespy_grasp_callback, this, _1, _2));
 
   ti = new TrajectoryInterface(world,world_pr2);
@@ -173,6 +181,7 @@ void PR2Grasp::eyespy_cluster_callback(const visualization_msgs::MarkerArray &ms
 }
 
 void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
+// void PR2Grasp::eyespy_grasp_callback(const object_recognition_msgs::TableArrayConstPtr &msg_ta, const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
   cout << "eyespy_grasp_callback initiated" << endl;
 
   // ors::KinematicWorld world("model_plan.kvg");
@@ -196,31 +205,31 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
     {1, 1, 1},
   };
 
-  uint nobj = msg_ma->markers.size();
-  for(uint obji = 0; obji < nobj; obji++) {
-
-    uint npoints = msg_ma->markers[obji].points.size();
-
+  uint nobj=0;
+  uint nmarkers = msg_ma->markers.size();
+  for(uint marki = 0; marki < nmarkers; marki++) {
+    uint npoints = msg_ma->markers[marki].points.size();
     arr points(npoints, 4);
     for(uint i = 0; i < npoints; i++) {
-      auto &p = msg_ma->markers[obji].points[i];
+      auto &p = msg_ma->markers[marki].points[i];
       points[i] = ARR(p.x, p.y, p.z, 1);
     }
     points = (points * ~ti->world_pr2->getShapeByName("endeffKinect_real")->X.getAffineMatrix()).cols(0, 3);
-    cout << "points.shape: " << points.d0 << " " << points.d1 << endl;
-    cout << "points.z.min: " << points.col(2).min() << endl;
+    // cout << "points.shape: " << points.d0 << " " << points.d1 << endl;
+    // cout << "points.z.min: " << points.col(2).min() << endl;
 
     double zmin = points.col(2).min();
     if(zmin > .5) {
       ors::Shape *pcShape = new ors::Shape(*ti->world_pr2,NoBody);
       pcShape->type = ors::pointCloudST;
-      pcShape->name = STRING("pcShape_"<<obji);
+      pcShape->name = STRING("pcShape_"<<nobj);
 
-      pcShape->color[0] = colors[obji][0];
-      pcShape->color[1] = colors[obji][1];
-      pcShape->color[2] = colors[obji][2];
+      pcShape->color[0] = colors[nobj][0];
+      pcShape->color[1] = colors[nobj][1];
+      pcShape->color[2] = colors[nobj][2];
       pcShape->mesh.V = points;
       pcShape->mesh.computeNormals();
+      nobj++;
     }
   }
 
