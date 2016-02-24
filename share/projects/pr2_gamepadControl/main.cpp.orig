@@ -168,7 +168,7 @@ void TEST(Gamepad){
 =======
     refs.Kd_gainFactor = 0.;
 >>>>>>> master
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
 
     refs.q=q;
     refs.qdot=zero_qdot;
