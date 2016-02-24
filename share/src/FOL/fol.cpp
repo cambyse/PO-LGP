@@ -103,8 +103,8 @@ bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* s
 /// try to find a fact within 'facts' that is exactly equal to 'literal'
 bool getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue){
   if(!fact->parents.N){
-    CHECK(fact->getValueType()==typeid(Graph),"special literals need Graph type");
-    Graph& graph=fact->V<Graph>();
+    CHECK(fact->getValueType()==typeid(Graph*),"special literals need Graph type");
+    Graph& graph=*fact->V<Graph*>();
     //assume this is a special parent!
     if(fact->keys.last()=="aggregate"){
       NodeL subs = getRuleSubstitutions2(facts, fact, 0);
@@ -227,7 +227,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
 
 /// directly create a new fact
 Node *createNewFact(Graph& facts, const NodeL& symbols){
-  return new Node_typed<bool>(facts, {}, symbols, new bool(true), true);
+  return new Node_typed<bool>(facts, {}, symbols, true);
 }
 
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)

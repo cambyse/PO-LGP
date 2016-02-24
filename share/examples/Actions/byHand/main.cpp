@@ -63,7 +63,7 @@ void forceControl(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffL)");
 
   //-- direct access to the task controller -- a bit awkward, but generic
-  TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(&registry().get<Module>({"Module","TaskControllerModule"}));
+  TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(registry().get<Module*>({"Module","TaskControllerModule"}));
   taskController->verbose = true;
 
 #if 0

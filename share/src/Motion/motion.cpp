@@ -514,7 +514,7 @@ Graph MotionProblem::getReport() {
   for(uint i=0; i<tasks.N; i++) {
     Task *c = tasks(i);
     Graph *g=new Graph();
-    report.append<Graph>({c->name}, {}, g, true);
+    report.append<Graph*>({c->name}, {}, g);
     g->append<double>({"order"}, {}, c->map.order);
     g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->type]));
     g->append<double>({"sqrCosts"}, {}, taskC(i));

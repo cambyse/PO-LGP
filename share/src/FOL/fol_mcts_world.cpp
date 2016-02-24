@@ -46,7 +46,7 @@ void FOL_World::init(istream& is){
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
-  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, new bool(true), true);
+  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
   Graph *params = KB.getValue<Graph>("FOL_World");
   if(params){
@@ -81,7 +81,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- store the old state; make a new state that is child of the old
   if(generateStateTree){
-    Node *new_state = new Node_typed<Graph>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph(), true);
+    Node *new_state = new Node_typed<Graph*>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph());
     new_state->graph().copy(*state, &KB);
     state = &new_state->graph();
     DEBUG(KB.checkConsistency());
@@ -305,7 +305,7 @@ void FOL_World::reset_state(){
   state->isNodeOfParentGraph->keys(0)="STATE";
 
   if(tmp) delete tmp->isNodeOfParentGraph;
-  new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  new Node_typed<Graph*>(KB, {"TMP"}, {}, new Graph());
   tmp   = &KB["TMP"]->graph();
 
   DEBUG(KB.checkConsistency();)
