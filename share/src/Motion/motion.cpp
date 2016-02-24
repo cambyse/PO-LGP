@@ -61,8 +61,8 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
   Task *task = new Task(map, termType);
 
   //-- check for additional continuous parameters
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
+  if(specs->getValueType()==typeid(Graph*)){
+    const Graph* params=specs->V<Graph*>();
     arr time = params->get<arr>("time",{0.,1.});
     task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->get<arr>("target", {}), params->get<double>("scale", {1.}));
   }else{
@@ -273,7 +273,7 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
 
     if(&tt) for(uint i=0;i<y.N;i++) tt.append(task->type);
   }
-  if(&J){
+  if(&J && dimPhi_t){
     Jtmp.reshape(dimPhi_t, Jtmp.N/dimPhi_t);
     if(t<k_order) Jtmp.delColumns(0,(k_order-t)*configurations(0)->q.N); //delete the columns that correspond to the prefix!!
     J.append(Jtmp);

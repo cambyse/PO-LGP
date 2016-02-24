@@ -40,15 +40,15 @@ void FOL_World::init(istream& is){
   FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
 
-  start_state = &KB.get<Graph>("START_STATE");
-  rewardFct = &KB.get<Graph>("REWARD");
+  start_state = KB.get<Graph*>("START_STATE");
+  rewardFct = KB.get<Graph*>("REWARD");
   worldRules = KB.getNodes("Rule");
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
   Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
-  Graph *params = KB.getValue<Graph>("FOL_World");
+  Graph *params = KB.get<Graph*>("FOL_World");
   if(params){
     hasWait = params->get<bool>("hasWait", hasWait);
     gamma = params->get<double>("gamma", gamma);
@@ -120,15 +120,15 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(rewardFct) for(Node *rTerm:*rewardFct){
     if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
     else{
-      CHECK(rTerm->getValueType()==typeid(Graph),"");
+      CHECK(rTerm->getValueType()==typeid(Graph*),"");
       Graph& rCase=rTerm->graph();
 #if 0
       if(rCase.N==1){
-        CHECK(rCase(0)->getValueType()==typeid(Graph),"");
+        CHECK(rCase(0)->getValueType()==typeid(Graph*),"");
         if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
       }
       if(rCase.N>=2){
-        CHECK(rCase.last(-2)->getValueType()==typeid(Graph),"");
+        CHECK(rCase.last(-2)->getValueType()==typeid(Graph*),"");
         CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
         if(rCase.last(-1)->parents(0)==d->rule){
           if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;

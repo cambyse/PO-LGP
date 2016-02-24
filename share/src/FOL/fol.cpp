@@ -281,7 +281,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
           hasEffects=true;
           if(&changes) m->newClone(changes);
         }else
-        #endif
+#endif
         if(!m->hasEqualValue(literal)){
           m->copyValue(literal);
           hasEffects=true;

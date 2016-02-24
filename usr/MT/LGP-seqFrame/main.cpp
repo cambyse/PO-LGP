@@ -61,8 +61,8 @@ void LGPplayer(){
   threadOpenModules(true);
 
   charA cmds={ 'p', '0', '3', '1'};//, 'p', '4', 'p', 's', 'q' };
-  cmds={ /*'2', 'u',*/ '0', 'p', 'u', '1', 'u', '2', 'q' };
-  bool interactive=true;
+  cmds={ /*'2', 'u',*/ '1', 'q', 'u', '1', 'u', '2', 'q' };
+  bool interactive=false;
   bool autoCompute=true;
 
   bool go=true;

@@ -67,7 +67,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
 
   //-- create a task map
   TaskMap *map;
-  const Graph* params=specs->getValue<Graph>();
+  const Graph* params=specs->V<Graph*>();
 //  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
@@ -123,8 +123,8 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
   }
 
   //-- check additional real-valued parameters: order
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
+  if(specs->getValueType()==typeid(Graph*)){
+    const Graph* params=specs->V<Graph*>();
     map->order = params->get<double>("order", 0);
   }
   return map;

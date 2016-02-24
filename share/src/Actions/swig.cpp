@@ -461,7 +461,7 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 
   Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
-  S->RM().append<Graph>({"Task"}, {symbol}, td, true);
+  S->RM().append<Graph*>({"Task"}, {symbol}, td);
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
   S->RM.deAccess();
@@ -483,7 +483,7 @@ void ActionSwigInterface::execScript(const char* filename){
   Graph& script = s->graph();
   int rev=0;
   for(Node* n:script){
-    if(n->parents.N==0 && n->getValueType()==typeid(Graph)){ //interpret as wait
+    if(n->parents.N==0 && n->getValueType()==typeid(Graph*)){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);

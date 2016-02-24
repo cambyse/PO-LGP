@@ -40,7 +40,7 @@ int main(int argc, char ** argv) {
 
     item = kvg.getNode(o1, o2);
     if(item) {
-      subkvg = item->getValue<Graph>();
+      subkvg = item->V<Graph*>();
       subkvg->append("lock", lock);
     }
     else {

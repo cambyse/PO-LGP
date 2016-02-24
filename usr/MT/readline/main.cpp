@@ -58,10 +58,10 @@ const Graph& rndContainer(const Graph& G){
 Graph& rndSubgraph(Graph& G){
   Graph *g=&G;
   while(rnd.uni()<.8){
-    NodeL subgraphs = g->getNodesOfType<Graph>(NULL);
+    NodeL subgraphs = g->getNodesOfType<Graph*>(NULL);
     if(!subgraphs.N) break;
     Node *subgraph=subgraphs.rndElem();
-    if(!subgraph->getValue<Graph>()) break;
+    if(!subgraph->V<Graph*>()) break;
     g = &subgraph->graph();
   }
   return *g;
@@ -80,10 +80,10 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new bool(true), true);
+      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      new Node_typed<Graph>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new Graph(), true);
+      new Node_typed<Graph*>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new Graph());
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();

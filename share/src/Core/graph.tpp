@@ -119,6 +119,11 @@ struct Node_typed : Node {
 #  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
 #endif
 //    return memcmp(itt->value, value, sizeof(T))==0;
+    if(typeid(T)==typeid(Graph*)){
+      Graph *g1=it->V<Graph*>();
+      Graph *g2=V<Graph*>();
+      return *g1==*g2;
+    }
     return itt->value == value;
 #ifdef MLR_CLANG
 #  pragma clang diagnostic pop

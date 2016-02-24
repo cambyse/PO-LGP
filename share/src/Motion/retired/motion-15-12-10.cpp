@@ -96,7 +96,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
 
   //-- create a task map
   TaskMap *map;
-  const Graph* params=specs->getValue<Graph>();
+  const Graph* params=specs->V<Graph*>();
 //  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
@@ -132,8 +132,8 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   map->type=termType;
 
   //-- check additional real-valued parameters: order
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
+  if(specs->getValueType()==typeid(Graph*)){
+    const Graph* params=specs->V<Graph*>();
     map->order = params->V<double>("order", 0);
   }
   return map;
@@ -148,8 +148,8 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterva
   //-- create a task
   Task *task = new Task(map);
   //-- check for additional continuous parameters
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
+  if(specs->getValueType()==typeid(Graph*)){
+    const Graph* params=specs->V<Graph*>();
     arr time = params->V<arr>("time",{0.,1.});
     task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
   }else{
@@ -202,8 +202,8 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
     sw->toId = world.getShapeByName(ref2)->index;
   }
   sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
+  if(specs->getValueType()==typeid(Graph*)){
+    const Graph* params=specs->V<Graph*>();
     sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
   }
   return sw;
@@ -692,7 +692,7 @@ Graph MotionProblem::getReport() {
   for(uint i=0; i<tasks.N; i++) {
     Task *c = tasks(i);
     Graph *g=new Graph();
-    report.append<Graph>({c->name}, {}, g, true);
+    report.append<Graph*>({c->name}, {}, g);
     g->append<double>({"order"}, {}, c->map.order);
     g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
     g->append<double>({"sqrCosts"}, {}, taskC(i));

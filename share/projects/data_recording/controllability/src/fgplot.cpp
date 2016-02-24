@@ -170,7 +170,7 @@ void FGPlots::open(const Graph &k) {
   s->data = new Graph[s->nplots];
   for(uint i = 0; i < s->nplots; i++) {
     cout << "Opening new plot:" << endl;
-    plot_kvg = plot_list(i)->getValue<Graph>();
+    plot_kvg = plot_list(i)->V<Graph*>();
 
     // title {{{
     str = plot_kvg->getValue<String>("title");

@@ -16,7 +16,7 @@ KOMO::KOMO(const Graph& specs) : MP(NULL){
 void KOMO::init(const Graph& _specs){
   specs = _specs;
 
-  Graph &glob = specs.get<Graph>("KOMO");
+  Graph &glob = *specs.get<Graph*>("KOMO");
   uint timeStepsPerPhase=glob.get<double>("T");
   double duration=glob.get<double>("duration");
   uint phases=glob.get<double>("phases", 1);
