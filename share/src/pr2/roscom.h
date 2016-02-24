@@ -25,7 +25,7 @@
 
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
-  arr q, qdot, fL, fR, u_bias, J_ft_inv;
+  arr q, qdot, fL, fR, u_bias, J_ft_invL, J_ft_invR;
   arr Kp, Kd, Ki, KiFT;
   double velLimitRatio, effLimitRatio, intLimitRatio, gamma;
   CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), KiFT(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(0.1){}
@@ -33,7 +33,7 @@ struct CtrlMsg{
           const arr& fL, const arr& fR,
           const arr& u_bias, const arr& J_ft_inv,
           double velLimitRatio, double effLimitRatio, double gamma)
-    :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_inv(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
+    :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_invL(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
 };
 
 void rosCheckInit(const char* module_name="pr2_module");

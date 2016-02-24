@@ -177,7 +177,7 @@ marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
   jointState.Kd = conv_arr2stdvec(ctrl.Kd);
   jointState.Ki = conv_arr2stdvec(ctrl.Ki);
   jointState.KiFT = conv_arr2stdvec(ctrl.KiFT);
-  jointState.J_ft_inv = conv_arr2stdvec(ctrl.J_ft_inv);
+  jointState.J_ft_inv = conv_arr2stdvec(ctrl.J_ft_invL);
   jointState.velLimitRatio = ctrl.velLimitRatio;
   jointState.effLimitRatio = ctrl.effLimitRatio;
   jointState.intLimitRatio = ctrl.intLimitRatio;

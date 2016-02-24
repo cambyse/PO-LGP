@@ -143,7 +143,7 @@ void TEST(Gamepad){
       refs.u_bias = ~J*f_des;
       refs.fL = f_des;
       refs.KiFT = alpha*~J;
-      refs.J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+      refs.J_ft_invL = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
 
       J = inverse_SymPosDef(J*~J)*J;
 
@@ -186,7 +186,7 @@ void TEST(Gamepad){
     }else{
       refs.fL = zeros(6);
       refs.KiFT.clear();
-      refs.J_ft_inv.clear();
+      refs.J_ft_invL.clear();
       refs.u_bias = zeros(q.N);
     }
     refs.Kp = 1.;
