@@ -103,8 +103,8 @@ bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* s
 /// try to find a fact within 'facts' that is exactly equal to 'literal'
 bool getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue){
   if(!fact->parents.N){
-    CHECK(fact->getValueType()==typeid(Graph*),"special literals need Graph type");
-    Graph& graph=*fact->V<Graph*>();
+    CHECK(fact->isGraph(),"special literals need Graph type");
+    Graph& graph=fact->graph();
     //assume this is a special parent!
     if(fact->keys.last()=="aggregate"){
       NodeL subs = getRuleSubstitutions2(facts, fact, 0);

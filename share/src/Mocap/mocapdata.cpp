@@ -280,14 +280,14 @@ void MocapID::load(const char *meta) {
     cout << "No Agents!" << endl;
   else
     for(Node* i: *kvg_agents)
-      s->parseAgentSensor(i->keys(0), *i->V<Graph*>());
+      s->parseAgentSensor(i->keys(0), i->graph());
 
   Graph *kvg_objects = kvg.get<Graph*>("objects");
   if(kvg_objects == nullptr)
     cout << "No Objects!" << endl;
   else
     for(Node *i: *kvg_objects)
-      s->parseObjectSensor(i->keys(0), *i->V<Graph*>());
+      s->parseObjectSensor(i->keys(0), i->graph());
 }
 
 void MocapID::load_json(const char *json) {
@@ -574,11 +574,11 @@ void MocapRec::save() {
 
   // temporal segmentation target
   for(Node *pair: kvgann) {
-    for(Node *lock: *pair->V<Graph*>()) {
+    for(Node *lock: pair->graph()) {
       if(lock->keys(0) == "lock") {
         value.clear();
-        value["on@"] = (uint)*lock->V<Graph*>()->getValue<double>("from");
-        value["off@"] = (uint)*lock->V<Graph*>()->getValue<double>("to");
+        value["on@"] = (uint)lock->graph()->getValue<double>("from");
+        value["off@"] = (uint)lock->graph()->getValue<double>("to");
         root["targets"][pair->keys(0)][pair->keys(1)][pair->keys(2)].append(value);
       }
     }
@@ -605,7 +605,7 @@ MocapLabel &MocapRec::label() { return const_cast<MocapLabel &>(static_cast<cons
 //       || (mid.sensorsof(pair->keys(1)).contains(STRING(sensor2))
 //         && (mid.sensorsof(pair->keys(2)).contains(STRING(sensor1))
 //           || pair->keys(2) == sensor1))))
-//       return *pair->V<Graph*>()->getValue<arr>("ann");
+//       return pair->graph()->getValue<arr>("ann");
 //   return arr();
 // }
 

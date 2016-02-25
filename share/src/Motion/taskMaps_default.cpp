@@ -78,11 +78,11 @@ DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
   else HALT("unknown type " <<Type);
   if(ref1){ ors::Shape *s=G.getShapeByName(ref1); CHECK(s,"shape name '" <<ref1 <<"' does not exist"); i=s->index; }
   if(ref2){ ors::Shape *s=G.getShapeByName(ref2); CHECK(s,"shape name '" <<ref2 <<"' does not exist"); j=s->index; }
-  if(specs->getValueType()==typeid(Graph*)){
-    const Graph* params=specs->V<Graph*>();
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
     Node *it;
-    if((it=params->getNode("vec1"))) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
-    if((it=params->getNode("vec2"))) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+    if((it=params.getNode("vec1"))) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
+    if((it=params.getNode("vec2"))) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
   }
 }
 

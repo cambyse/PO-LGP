@@ -97,7 +97,7 @@ void sMocapGui::set_target(Target target) {
         // interactions.append(rec.ann(target, agent, objsensor));
         // interactions.append(*rec.label().getValue<arr>(STRINGS(Target_to_str(target), agent, objsensor)));
         interactions.append(rec.label().getNode({Target_to_str(target), agent, objsensor})->V<arr>());
-     // interactions.(*rec.kvgann.getNode(agent, objsensor)->V<Graph*>()->getValue<arr>("ann"));
+     // interactions.(*rec.kvgann.getNode(agent, objsensor)->graph().getValue<arr>("ann"));
       }
     }
     interactions.reshape(nagents, nobjectsensors, interactions.N / (nagents * nobjectsensors));

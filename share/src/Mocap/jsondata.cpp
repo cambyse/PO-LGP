@@ -242,12 +242,12 @@ void JsonRec::load(const char *recdir) {
       //   a_targets.append(pair->keys(1));
       // if(!o_targets.contains(pair->keys(2)))
       //   o_targets.append(pair->keys(2));
-      // for(Node *lock: *pair->V<Graph*>()) {
-      //   from = (uint)*lock->V<Graph*>()->getValue<double>("from");
-      //   to = (uint)*lock->V<Graph*>()->getValue<double>("to");
+      // for(Node *lock: pair->graph()) {
+      //   from = (uint)lock->graph()->getValue<double>("from");
+      //   to = (uint)lock->graph()->getValue<double>("to");
       //   ann->subRef(from, to) = 1;
       // }
-      // pair->V<Graph*>()->append("ann", ann);
+      // pair->graph().append("ann", ann);
     }
   }
   // loading annotation, if any..
@@ -270,12 +270,12 @@ void JsonRec::load(const char *recdir) {
     //     a_targets.append(pair->keys(1));
     //   if(!o_targets.contains(pair->keys(2)))
     //     o_targets.append(pair->keys(2));
-    //   for(Node *lock: *pair->V<Graph*>()) {
-    //     from = (uint)*lock->V<Graph*>()->getValue<double>("from");
-    //     to = (uint)*lock->V<Graph*>()->getValue<double>("to");
+    //   for(Node *lock: pair->graph()) {
+    //     from = (uint)lock->graph()->getValue<double>("from");
+    //     to = (uint)lock->graph()->getValue<double>("to");
     //     ann->subRef(from, to) = 1;
     //   }
-    //   pair->V<Graph*>()->append("ann", ann);
+    //   pair->graph().append("ann", ann);
     // }
   // }
   // catch(const char *e) {

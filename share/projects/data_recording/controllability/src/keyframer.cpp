@@ -4149,9 +4149,9 @@ void KeyFramer::load_ann(const String &dir) {
       for(String part1: g4d().id().sensorsof(obj1)) {
         for(String part2: g4d().id().sensorsof(obj2)) {
           ann_ref.referTo(annOf(part1, part2));
-          for(Node *lock: *pair->V<Graph*>()) {
-            from = (uint)*lock->V<Graph*>()->getValue<double>("from");
-            to = (uint)*lock->V<Graph*>()->getValue<double>("to");
+          for(Node *lock: pair->graph()) {
+            from = (uint)lock->graph()->getValue<double>("from");
+            to = (uint)lock->graph()->getValue<double>("to");
             ann_ref.subRef(from, to) = 1;
           }
         }

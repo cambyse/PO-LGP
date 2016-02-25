@@ -483,7 +483,7 @@ void ActionSwigInterface::execScript(const char* filename){
   Graph& script = s->graph();
   int rev=0;
   for(Node* n:script){
-    if(n->parents.N==0 && n->getValueType()==typeid(Graph*)){ //interpret as wait
+    if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);

@@ -61,10 +61,10 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
   Task *task = new Task(map, termType);
 
   //-- check for additional continuous parameters
-  if(specs->getValueType()==typeid(Graph*)){
-    const Graph* params=specs->V<Graph*>();
-    arr time = params->get<arr>("time",{0.,1.});
-    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->get<arr>("target", {}), params->get<double>("scale", {1.}));
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    arr time = params.get<arr>("time",{0.,1.});
+    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params.get<arr>("target", {}), params.get<double>("scale", {1.}));
   }else{
     task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
   }

@@ -5,7 +5,7 @@
 void Activity::associateToExistingFact(Node* fact){
   this->fact = fact;
   for(Node *p:fact->parents) symbols.append(p->keys.last()); //adopt the symbols
-  if(fact->getValueType()==typeid(Graph*)) params.xx_graph_copy(fact->graph()); //copy the parameters (but DON'T become also a subgraph of state!)
+  if(fact->isGraph()) params.xx_graph_copy(fact->graph()); //copy the parameters (but DON'T become also a subgraph of state!)
   configure();
 }
 
@@ -27,10 +27,10 @@ Activity* newActivity(Node *fact){
   while(activitySymbol->parents.N) activitySymbol=activitySymbol->parents(0);
 
   Node *activityParams=fact;
-  while(activityParams->getValueType()!=typeid(Graph*) && activityParams->parents.N) activityParams=activityParams->parents(0);
+  while(!activityParams->isGraph() && activityParams->parents.N) activityParams=activityParams->parents(0);
 
   //-- all other symbols in the literal are added to the params
-  if(activityParams->getValueType()==typeid(Graph*)) for(uint i=1;i<fact->parents.N;i++){
+  if(activityParams->isGraph()) for(uint i=1;i<fact->parents.N;i++){
     CHECK(!activityParams->graph()[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
     new Node_typed<mlr::String>(activityParams->graph(), {STRING("ref"<<i-1)}, {}, mlr::String(fact->parents(i)->keys.last()));
   }

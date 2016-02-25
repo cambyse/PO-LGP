@@ -63,7 +63,6 @@ Graph& rndSubgraph(Graph& G){
     NodeL subgraphs = g->getNodesOfType<Graph*>(NULL);
     if(!subgraphs.N) break;
     Node *subgraph=subgraphs.rndElem();
-    if(!subgraph->getValue<Graph*>()) break;
     g = &subgraph->graph();
   }
   return *g;

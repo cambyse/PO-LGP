@@ -49,7 +49,7 @@ struct Node_typed : Node {
 
   /// directly store pointer to value
   Node_typed(Graph& container, const T& value)
-    : Node(container), value(value), ownsValue(ownsValue) {
+    : Node(typeid(T), container), value(value), ownsValue(ownsValue) {
 //    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
 //    CHECK(!value || ownsValue,"new convention: you need to own all values...");
     if(typeid(T)==typeid(Graph*)) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
@@ -63,7 +63,7 @@ struct Node_typed : Node {
 
   /// directly store pointer to value
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& value)
-    : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
+    : Node(typeid(T), container, keys, parents), value(value), ownsValue(ownsValue) {
 //    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
 //    CHECK(!value || ownsValue,"new convention: you need to own all values...");
     if(typeid(T)==typeid(Graph*)) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set

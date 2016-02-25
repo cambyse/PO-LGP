@@ -120,15 +120,15 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   if(rewardFct) for(Node *rTerm:*rewardFct){
     if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
     else{
-      CHECK(rTerm->getValueType()==typeid(Graph*),"");
+      CHECK(rTerm->isGraph(),"");
       Graph& rCase=rTerm->graph();
 #if 0
       if(rCase.N==1){
-        CHECK(rCase(0)->getValueType()==typeid(Graph*),"");
+        CHECK(rCase(0)->isGraph(),"");
         if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
       }
       if(rCase.N>=2){
-        CHECK(rCase.last(-2)->getValueType()==typeid(Graph*),"");
+        CHECK(rCase.last(-2)->isGraph(),"");
         CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
         if(rCase.last(-1)->parents(0)==d->rule){
           if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;

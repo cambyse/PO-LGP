@@ -183,12 +183,12 @@ void G4Rec::load(const char *recdir) {
     if(!o_targets.contains(pair->keys(2)))
       o_targets.append(pair->keys(2));
 
-    for(Node *lock: *pair->V<Graph*>()) {
-      from = (uint)*lock->V<Graph*>()->getValue<double>("from");
-      to = (uint)*lock->V<Graph*>()->getValue<double>("to");
+    for(Node *lock: pair->graph()) {
+      from = (uint)lock->graph()->getValue<double>("from");
+      to = (uint)lock->graph()->getValue<double>("to");
       ann->subRef(from, to) = 1;
     }
-    // pair->V<Graph*>()->append("ann", ann);
+    // pair->graph().append("ann", ann);
     mlabel.append(pair->keys, {}, ann, false);
   }
 }

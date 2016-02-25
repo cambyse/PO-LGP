@@ -96,7 +96,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
 
   //-- create a task map
   TaskMap *map;
-  const Graph* params=specs->V<Graph*>();
+  const Graph& params = specs->graph();
 //  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
@@ -132,8 +132,8 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   map->type=termType;
 
   //-- check additional real-valued parameters: order
-  if(specs->getValueType()==typeid(Graph*)){
-    const Graph* params=specs->V<Graph*>();
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
     map->order = params->V<double>("order", 0);
   }
   return map;
@@ -148,8 +148,8 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterva
   //-- create a task
   Task *task = new Task(map);
   //-- check for additional continuous parameters
-  if(specs->getValueType()==typeid(Graph*)){
-    const Graph* params=specs->V<Graph*>();
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
     arr time = params->V<arr>("time",{0.,1.});
     task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
   }else{
@@ -202,8 +202,8 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
     sw->toId = world.getShapeByName(ref2)->index;
   }
   sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->getValueType()==typeid(Graph*)){
-    const Graph* params=specs->V<Graph*>();
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
     sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
   }
   return sw;

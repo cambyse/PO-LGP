@@ -1828,11 +1828,11 @@ void ors::KinematicWorld::init(const Graph& G) {
   NodeL bs = G.getNodes("body");
   for(Node *  it:  bs) {
     CHECK_EQ(it->keys(0),"body","");
-    CHECK(it->getValueType()==typeid(Graph*), "bodies must have value Graph");
+    CHECK(it->isGraph(), "bodies must have value Graph");
     
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
-    b->ats.xx_graph_copy(*it->V<Graph*>());
+    b->ats.xx_graph_copy(it->graph());
     b->parseAts();
   }
 
@@ -1840,7 +1840,7 @@ void ors::KinematicWorld::init(const Graph& G) {
   for(Node *it: ss) {
     CHECK_EQ(it->keys(0),"shape","");
     CHECK(it->parents.N<=1,"shapes must have no or one parent");
-    CHECK(it->getValueType()==typeid(Graph*),"shape must have value Graph");
+    CHECK(it->isGraph(),"shape must have value Graph");
     
     Shape *s;
     if(it->parents.N==1){
@@ -1851,7 +1851,7 @@ void ors::KinematicWorld::init(const Graph& G) {
       s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats.xx_graph_copy(*it->V<Graph*>());
+    s->ats.xx_graph_copy(it->graph());
     s->parseAts();
   }
   
@@ -1860,7 +1860,7 @@ void ors::KinematicWorld::init(const Graph& G) {
   for(Node *it: js) {
     CHECK_EQ(it->keys(0),"joint","");
     CHECK_EQ(it->parents.N,2,"joints must have two parents");
-    CHECK(it->getValueType()==typeid(Graph*),"joints must have value Graph");
+    CHECK(it->isGraph(),"joints must have value Graph");
     
     Body *from=listFindByName(bodies, it->parents(0)->keys(1));
     Body *to=listFindByName(bodies, it->parents(1)->keys(1));
@@ -1868,7 +1868,7 @@ void ors::KinematicWorld::init(const Graph& G) {
     CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     if(it->keys.N>1) j->name=it->keys(1);
-    j->ats.xx_graph_copy(*it->V<Graph*>());
+    j->ats.xx_graph_copy(it->graph());
     j->parseAts();
 
     //if the joint is coupled to another:
@@ -2580,11 +2580,11 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
     sw->toId = world.getShapeByName(ref2)->index;
   }
   sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->getValueType()==typeid(Graph*)){
-    const Graph* params=specs->V<Graph*>();
-    sw->timeOfApplication = Tzero + params->get<double>("time",1.)*Tinterval + 1;
-    params->get(sw->jA, "from");
-    params->get(sw->jB, "to");
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    sw->timeOfApplication = Tzero + params.get<double>("time",1.)*Tinterval + 1;
+    params.get(sw->jA, "from");
+    params.get(sw->jB, "to");
   }
   return sw;
 }
