@@ -5,7 +5,7 @@
 void Activity::associateToExistingFact(Node* fact){
   this->fact = fact;
   for(Node *p:fact->parents) symbols.append(p->keys.last()); //adopt the symbols
-  if(fact->getValueType()==typeid(Graph*)) params.copy(fact->graph(), NULL); //copy the parameters (but DON'T become also a subgraph of state!)
+  if(fact->getValueType()==typeid(Graph*)) params.xx_graph_copy(fact->graph()); //copy the parameters (but DON'T become also a subgraph of state!)
   configure();
 }
 

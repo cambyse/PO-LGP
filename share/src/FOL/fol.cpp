@@ -559,7 +559,7 @@ bool forwardChaining_propositional(Graph& KB, Node* q){
     if(!inferred(s->index)){
       inferred(s->index) = true;
       for(Node *child : s->parentOf){ //all objects that involve 's'
-        Node *clause = child->container.isNodeOfParentGraph; //check if child is a literal in a clause
+        const Node *clause = child->container.isNodeOfParentGraph; //check if child is a literal in a clause
         if(clause){ //yes: 's' is a literal in a clause
           CHECK(count(clause->index)>0,"");
           //          if(count(clause->index)>0){ //I think this is always true...

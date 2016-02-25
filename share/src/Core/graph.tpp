@@ -52,11 +52,12 @@ struct Node_typed : Node {
     : Node(container), value(value), ownsValue(ownsValue) {
 //    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
 //    CHECK(!value || ownsValue,"new convention: you need to own all values...");
-    if(typeid(T)==typeid(Graph*)){
-      Node *node = graph().isNodeOfParentGraph;
-      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
-      if(!node) graph().isNodeOfParentGraph = this;
-    }
+    if(typeid(T)==typeid(Graph*)) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+//      CHECK(graph().isNodeOfParentGraph==this,"");
+//      Node *node = graph().isNodeOfParentGraph;
+//      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
+//      if(!node)
+//    }
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -65,11 +66,12 @@ struct Node_typed : Node {
     : Node(container, keys, parents), value(value), ownsValue(ownsValue) {
 //    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
 //    CHECK(!value || ownsValue,"new convention: you need to own all values...");
-    if(typeid(T)==typeid(Graph*)){
-      Node *node = graph().isNodeOfParentGraph;
-      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
-      if(!node) graph().isNodeOfParentGraph = this;
-    }
+    if(typeid(T)==typeid(Graph*)) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+//      CHECK(graph().isNodeOfParentGraph==this,"");
+//      Node *node = graph().isNodeOfParentGraph;
+//      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
+//      if(!node) graph().isNodeOfParentGraph = this;
+//    }
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -93,7 +95,7 @@ struct Node_typed : Node {
     CHECK(itt,"can't assign to wrong type");
 //    CHECK(itt->value,"can't assign to nothing");
     if(typeid(T)==typeid(Graph*)){
-      graph().copy(it->graph(), NULL);
+      graph().xx_graph_copy(it->graph());
     }else{
 //      if(value) delete value;
       value = itt->value;
@@ -150,8 +152,8 @@ struct Node_typed : Node {
   virtual Node* newClone(Graph& container) const {
 //    if(!value) return new Node_typed<T>(container, keys, parents, (T*)NULL, false);
     if(getValueType()==typeid(Graph*)){
-      Graph *g = new Graph();
-      g->copy(*V<Graph*>(), &container);
+      Graph *g = newSubGraph(container, keys, parents)->value;
+      g->xx_graph_copy(*V<Graph*>());
       return g->isNodeOfParentGraph;
     }
     return new Node_typed<T>(container, keys, parents, value);
@@ -261,3 +263,4 @@ template <class T> mlr::Array<T*> Graph::getDerivedValues() {
 //  }
 //  return ret;
 //}
+

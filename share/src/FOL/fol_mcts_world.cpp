@@ -81,8 +81,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- store the old state; make a new state that is child of the old
   if(generateStateTree){
-    Node *new_state = new Node_typed<Graph*>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph());
-    new_state->graph().copy(*state, &KB);
+    Node *new_state = newSubGraph(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph});
+    new_state->graph().xx_graph_copy(*state);
     state = &new_state->graph();
     DEBUG(KB.checkConsistency());
   }
@@ -279,7 +279,8 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  start_state->copy(*state, &KB);
+  if(!start_state) start_state = newSubGraph(KB,{"START_STATE"},state->isNodeOfParentGraph->parents)->value;
+  start_state->xx_graph_copy(*state);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   start_T_step = T_step;
   start_T_real = T_real;
@@ -299,13 +300,12 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-  if(!state) state = new Graph();
-  state->copy(*start_state, &KB);
+  if(!state) state = newSubGraph(KB, {"STATE"}, {})->value;
+  state->xx_graph_copy(*start_state);
   DEBUG(KB.checkConsistency();)
-  state->isNodeOfParentGraph->keys(0)="STATE";
 
   if(tmp) delete tmp->isNodeOfParentGraph;
-  new Node_typed<Graph*>(KB, {"TMP"}, {}, new Graph());
+  newSubGraph(KB, {"TMP"}, {});
   tmp   = &KB["TMP"]->graph();
 
   DEBUG(KB.checkConsistency();)

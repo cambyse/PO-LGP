@@ -17,8 +17,8 @@ void RelationalMachine::init(const char* filename){
   }else{
     LOG(1) <<"No '"<<filename<<"' for initialization given! This might fail!";
   }
-  if(!KB["TMP"])   new Node_typed<Graph*>(KB, {"TMP"}, {}, new Graph());
-  if(!KB["STATE"]) new Node_typed<Graph*>(KB, {"STATE"}, {}, new Graph());
+  if(!KB["TMP"])   newSubGraph(KB, {"TMP"}, {});
+  if(!KB["STATE"]) newSubGraph(KB, {"STATE"}, {});
   state = &KB["STATE"]->graph();
   tmp   = &KB["TMP"]->graph();
 }

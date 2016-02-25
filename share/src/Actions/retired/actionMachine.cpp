@@ -54,7 +54,7 @@ void ActionMachine::open(){
       new Node_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"moving"}, {}, NULL, false);
-      new Node_typed<Graph*>(KB(), {"STATE"}, {}, new Graph());
+      newSubGraph(KB(), {"STATE"}, {});
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
