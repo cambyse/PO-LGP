@@ -36,7 +36,7 @@ struct TaskControllerModule : Module {
   bool syncModelStateWithReal; //< whether the step() should reinit the state from the ros message
   bool verbose;
   bool useDynSim;
-  RTControllerSimulation* dynSim = new RTControllerSimulation();
+  RTControllerSimulation* dynSim;
 
 public:
   TaskControllerModule(const char* modelFile=NULL);

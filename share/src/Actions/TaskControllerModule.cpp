@@ -54,7 +54,10 @@ void TaskControllerModule::open(){
   useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
-  if(!oldfashioned && !useRos) dynSim->threadLoop();
+  if(!oldfashioned && !useRos) {
+    dynSim = new RTControllerSimulation();
+    dynSim->threadLoop();
+  }
 
 }
 
@@ -229,7 +232,7 @@ void TaskControllerModule::step(){
     refs.Ki = ARR(0.);
     refs.fL = fRef;
     refs.fR = zeros(6);
-    refs.KiFT = K_ft;
+    refs.KiFTL = K_ft;
     refs.J_ft_invL = J_ft_inv;
     refs.u_bias = u0;
     refs.intLimitRatio = 0.7;
