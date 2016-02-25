@@ -460,8 +460,9 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   S->RM.writeAccess();
 
   Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
-  Graph *td = new Graph(parameters);
-  S->RM().append<Graph*>({"Task"}, {symbol}, td);
+  
+  Graph& td = newSubGraph(S->RM(), {"Task"}, {symbol})->value;
+  td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
   S->RM.deAccess();

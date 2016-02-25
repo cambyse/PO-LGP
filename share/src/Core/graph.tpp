@@ -52,7 +52,7 @@ struct Node_typed : Node {
     : Node(typeid(T), container), value(value), ownsValue(ownsValue) {
 //    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
 //    CHECK(!value || ownsValue,"new convention: you need to own all values...");
-    if(typeid(T)==typeid(Graph*)) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
 //      CHECK(graph().isNodeOfParentGraph==this,"");
 //      Node *node = graph().isNodeOfParentGraph;
 //      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
@@ -66,7 +66,7 @@ struct Node_typed : Node {
     : Node(typeid(T), container, keys, parents), value(value), ownsValue(ownsValue) {
 //    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
 //    CHECK(!value || ownsValue,"new convention: you need to own all values...");
-    if(typeid(T)==typeid(Graph*)) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
 //      CHECK(graph().isNodeOfParentGraph==this,"");
 //      Node *node = graph().isNodeOfParentGraph;
 //      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
@@ -152,9 +152,9 @@ struct Node_typed : Node {
   virtual Node* newClone(Graph& container) const {
 //    if(!value) return new Node_typed<T>(container, keys, parents, (T*)NULL, false);
     if(getValueType()==typeid(Graph*)){
-      Graph *g = newSubGraph(container, keys, parents)->value;
-      g->xx_graph_copy(*V<Graph*>());
-      return g->isNodeOfParentGraph;
+      Graph& g = newSubGraph(container, keys, parents)->value;
+      g.xx_graph_copy(*V<Graph*>());
+      return g.isNodeOfParentGraph;
     }
     return new Node_typed<T>(container, keys, parents, value);
   }

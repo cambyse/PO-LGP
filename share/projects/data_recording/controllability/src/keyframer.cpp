@@ -666,8 +666,8 @@ void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
   uint fi, fo;
 
   for(auto ctrl: ctrls) {
-    inset = ctrl->get<Graph*>("inset");
-    offset = ctrl->get<Graph*>("offset");
+    inset = &ctrl->get<Graph>("inset");
+    offset = &ctrl->get<Graph>("offset");
 
     fi = *inset->getValue<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
@@ -691,8 +691,8 @@ void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
 
   cout << "#ctrls: " << ctrls.N << endl;
   for(auto ctrl: ctrls) {
-    inset = ctrl->get<Graph*>("inset");
-    offset = ctrl->get<Graph*>("offset");
+    inset = &ctrl->get<Graph>("inset");
+    offset = &ctrl->get<Graph>("offset");
 
     fi = *inset->getValue<double>("fnum");
     posi = inset->getValue<arr>("f_pos");

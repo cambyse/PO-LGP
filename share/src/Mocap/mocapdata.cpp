@@ -275,14 +275,14 @@ void MocapID::load(const char *meta) {
   FILE(meta) >> kvg;
 
   // Loading new meta.kvg into new internal_representation
-  Graph *kvg_agents = kvg.get<Graph*>("agents");
+  Graph *kvg_agents = &kvg.get<Graph>("agents");
   if(kvg_agents == nullptr)
     cout << "No Agents!" << endl;
   else
     for(Node* i: *kvg_agents)
       s->parseAgentSensor(i->keys(0), i->graph());
 
-  Graph *kvg_objects = kvg.get<Graph*>("objects");
+  Graph *kvg_objects = &kvg.get<Graph>("objects");
   if(kvg_objects == nullptr)
     cout << "No Objects!" << endl;
   else
@@ -731,8 +731,8 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /*   // TODO check that the type works for 2 sensors.... */
 /*   // e.g. check that it is not "poses" */
 
-/*   Graph *skvg1 = s->kvg_sensors.get<Graph*>(sensor1); */
-/*   Graph *skvg2 = s->kvg_sensors.get<Graph*>(sensor2); */
+/*   Graph *skvg1 = &s->kvg_sensors.get<Graph>(sensor1); */
+/*   Graph *skvg2 = &s->kvg_sensors.get<Graph>(sensor2); */
 /*   CHECK(s->kvg.getNode(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
 /*   CHECK(skvg1, STRING("Sensor '" << sensor1 << "' does not exist.")); */
 /*   CHECK(skvg2, STRING("Sensor '" << sensor2 << "' does not exist.")); */
@@ -752,8 +752,8 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /* } */
 
 /* arr MocapData::query(const char *type, const char *sensor1, const char *sensor2, uint f) { */
-/*   Graph *skvg1 = s->kvg_sensors.get<Graph*>(sensor1); */
-/*   Graph *skvg2 = s->kvg_sensors.get<Graph*>(sensor2); */
+/*   Graph *skvg1 = &s->kvg_sensors.get<Graph>(sensor1); */
+/*   Graph *skvg2 = &s->kvg_sensors.get<Graph>(sensor2); */
 /*   CHECK(s->kvg.getNode(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
 /*   CHECK(skvg1, STRING("Sensor '" << sensor1 << "' does not exist.")); */
 /*   CHECK(skvg2, STRING("Sensor '" << sensor2 << "' does not exist.")); */

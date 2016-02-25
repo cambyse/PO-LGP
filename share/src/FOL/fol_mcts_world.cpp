@@ -40,15 +40,15 @@ void FOL_World::init(istream& is){
   FILE("z.init") <<KB; //write what was read, just for inspection
   KB.checkConsistency();
 
-  start_state = KB.get<Graph*>("START_STATE");
-  rewardFct = KB.get<Graph*>("REWARD");
+  start_state = &KB.get<Graph>("START_STATE");
+  rewardFct = &KB.get<Graph>("REWARD");
   worldRules = KB.getNodes("Rule");
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
   Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
-  Graph *params = KB.get<Graph*>("FOL_World");
+  Graph *params = &KB.get<Graph>("FOL_World");
   if(params){
     hasWait = params->get<bool>("hasWait", hasWait);
     gamma = params->get<double>("gamma", gamma);
@@ -279,7 +279,7 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  if(!start_state) start_state = newSubGraph(KB,{"START_STATE"},state->isNodeOfParentGraph->parents)->value;
+  if(!start_state) start_state = &newSubGraph(KB,{"START_STATE"},state->isNodeOfParentGraph->parents)->value;
   start_state->xx_graph_copy(*state);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   start_T_step = T_step;
@@ -300,7 +300,7 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-  if(!state) state = newSubGraph(KB, {"STATE"}, {})->value;
+  if(!state) state = &newSubGraph(KB, {"STATE"}, {})->value;
   state->xx_graph_copy(*start_state);
   DEBUG(KB.checkConsistency();)
 
