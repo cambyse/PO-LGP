@@ -28,6 +28,7 @@ int main(int argc,char **argv){
 
   /// init task
   ors::KinematicWorld world(STRING(folder<<"model.kvg"));
+  ors::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
   TaskManager *task;
   if (taskName == "door") {
     task = new DoorTask(world);
@@ -38,13 +39,16 @@ int main(int argc,char **argv){
   }
 
   /// init trajectory interface
-  TrajectoryInterface *mi;
-  if (useRos) mi = new TrajectoryInterface(world);
+  TrajectoryInterface *ti;
+  ti = new TrajectoryInterface(world,world_pr2);
+  ti->world_pr2->gl().update(); ti->world_pr2->gl().resize(800,800);
   world.gl().update(); world.gl().resize(800,800);
 
+
   /// load base trajectory
-  arr Xbase,FLbase,Mbase;
-  Xbase << FILE(STRING(folder<<"/PO_Xref"<<mlr::getParameter<uint>("count")<<".dat"));
+  arr Xbase,Xbase_pr2,FLbase,Mbase;
+  Xbase_pr2 << FILE(STRING(folder<<"/PO_Xref"<<mlr::getParameter<uint>("count")<<".dat"));
+  transferQbetweenTwoWorlds(Xbase,Xbase_pr2,*ti->world_plan,*ti->world_pr2);
   FLbase << FILE(STRING(folder<<"/FLbase.dat"));
   if (useMarker) Mbase << FILE(STRING(folder<<"/mbM"<<mlr::getParameter<uint>("count")<<".dat"));
 
@@ -53,37 +57,43 @@ int main(int argc,char **argv){
 
   task->computeConstraintTime(FLbase,Xbase);
   task->updateVisualization(world,Xbase);
+
   if (visualize) displayTrajectory(Xbase,-1,world,"demonstration");
 
+  /// goto initial position
+  if (useRos) ti->gotoPosition(Xbase_pr2[0],10.);
+
+
   /// initialize model free strategy
-  arr paramLimit;
-  task->getParamLimit(paramLimit);
-  MF_strategy *mfs = new MF_strategy(paramLimit.d0, paramLimit, folder, taskName);
+  arr pLimit;
+  task->getParamLimit(pLimit);
+  MF_strategy *mfs = new MF_strategy(pLimit.d0, pLimit, folder, taskName);
   arr x0;
   arr Xreverse, x, Xn;
   double y, ys;
 
   uint count = 0;
-  if (mlr::getParameter<bool>("MF_restartLearning")) {
+  if (mlr::getParameter<bool>("restartLearning")) {
     /// restart learning
-    x = zeros(paramLimit.d0); x.flatten();
+    x = zeros(pLimit.d0); x.flatten();
     task->transformTrajectory(Xn,x,Xbase);
     x0 = Xn[0];
     if (useRos) {
-      mi->gotoPosition(x0); mi->executeTrajectory(Xn,duration,true);
-      y = task->reward(mi->logFL);
+      ti->gotoPositionPlan(x0); ti->executeTrajectoryPlan(Xn,duration,true);
+      y = task->reward(ti->logFL);
       ys = 1.;
-      mi->logging(folder,count);
-      if (execReverseMotion) {Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
+      ti->logging(folder,count);
+      if (execReverseMotion) {Xreverse = Xn; Xreverse.reverseRows(); ti->executeTrajectoryPlan(Xreverse,duration);}
     } else {
       /// dummy values for simulation
       y = task->reward(Xn);
       ys = 1.;
-      write(LIST<arr>(Xn),STRING(folder<<"X"<<count<<".dat"));
+      transferQbetweenTwoWorlds(Xbase_pr2,Xn,*ti->world_pr2,*ti->world_plan);
+      write(LIST<arr>(Xbase_pr2),STRING(folder<<"Xref"<<count<<".dat"));
+      write(LIST<arr>(Xbase_pr2),STRING(folder<<"X"<<count<<".dat"));
       write(LIST<arr>(FLbase),STRING(folder<<"FL"<<count<<".dat"));
       if (useMarker) write(LIST<arr>(Mbase),STRING(folder<<"M"<<count<<".dat"));
     }
-
     mfs->addDatapoint(x,ARR(y),ARR(ys));
     cout <<"x = "<< x <<"   | y = "<<y<<"   | ys = "<<ys << endl;
     count++;
@@ -92,6 +102,7 @@ int main(int argc,char **argv){
     mfs->load(STRING(folder));
     count = mfs->X.d0;
   }
+
 
   /// learning loop
   for(;;) {
@@ -111,21 +122,28 @@ int main(int argc,char **argv){
     }
     x0 = Xn[0];
 
-    if (useRos&&result) {
+    if (!result) {
+      cout << "result=false" << endl;
+      return 0;
+    }
+
+    if (useRos) {
       /// goto iniitial position
-      mi->gotoPosition(x0);
+      ti->gotoPositionPlan(x0);
       /// execute trajectory on robot
-      mi->executeTrajectory(Xn,duration,true);
+      ti->executeTrajectoryPlan(Xn,duration,true);
       /// evaluate cost functions
-      if (result) result = task->success(mi->logM, Mbase);
-      y = task->reward(mi->logFL);
+      if (result) result = task->success(ti->logM, Mbase);
+      y = task->reward(ti->logFL);
       ys = (result) ?(1.):(-1.);
     } else {
       /// dummy values for debugging
       y = task->reward(Xn);
       ys = (result) ?(1.):(-1.);
-      write(LIST<arr>(Xn),STRING(folder<<"X"<<count<<".dat"));
-      write(LIST<arr>(Xn),STRING(folder<<"Xref"<<count<<".dat"));
+      /// for simulation only
+      transferQbetweenTwoWorlds(Xbase_pr2,Xn,*ti->world_pr2,*ti->world_plan);
+      write(LIST<arr>(Xbase_pr2),STRING(folder<<"Xref"<<count<<".dat"));
+      write(LIST<arr>(Xbase_pr2),STRING(folder<<"X"<<count<<".dat"));
       write(LIST<arr>(FLbase),STRING(folder<<"FL"<<count<<".dat"));
       if (useMarker) write(LIST<arr>(Mbase),STRING(folder<<"M"<<count<<".dat"));
     }
@@ -135,16 +153,16 @@ int main(int argc,char **argv){
 
     /// logging
     mfs->save(folder);
-    if (useRos && result) { mi->logging(folder,count); }
+    if (useRos && result) { ti->logging(folder,count); }
 
     if (result) {
-      if (useRos && execReverseMotion) {Xreverse = Xn; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
+      if (useRos && execReverseMotion) {Xreverse = Xn; Xreverse.reverseRows(); ti->executeTrajectoryPlan(Xreverse,duration);}
     } else {
-      if (useRos) {mi->pauseMotion();}
+      if (useRos) {ti->pauseMotion();}
     }
     count++;
   }
 
-  mi->~TrajectoryInterface();
+  ti->~TrajectoryInterface();
   return 0;
 }

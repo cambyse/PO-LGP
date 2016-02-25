@@ -31,6 +31,8 @@ int main(int argc,char **argv){
 
   /// init task
   ors::KinematicWorld world(STRING(folder<<"model.kvg"));
+  ors::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
+
   TaskManager *task;
   if (taskName == "door") {
     task = new DoorTask(world);
@@ -48,35 +50,38 @@ int main(int argc,char **argv){
   }
 
   /// init trajectory interface
-  TrajectoryInterface *mi;
-  if (useRos) {
-    mi = new TrajectoryInterface(world);
-    mi->world_pr2->gl().update(); mi->world_pr2->gl().resize(400,400);
-  }
+  TrajectoryInterface *ti;
+  ti = new TrajectoryInterface(world,world_pr2);
+  ti->world_pr2->gl().update(); ti->world_pr2->gl().resize(800,800);
   world.gl().update(); world.gl().resize(800,800);
-  arr Xreverse, Xbase, FLbase, Mbase;
+  arr Xreverse, Xbase, Xbase_pr2, FLbase, Mbase;
 
   if (mlr::getParameter<bool>("recordDemonstration")) {
     /// record demonstration
-    mi->recordDemonstration(Xbase,duration);
+    ti->recordDemonstration(Xbase_pr2,duration);
 
     if (visualize) { world.watch(true,"Press Enter to visualize motion"); displayTrajectory(Xbase,-1,world,"demonstration "); world.watch(true,"Press Enter to execute motion"); }
-    mi->gotoPosition(Xbase[0]);
-    mi->executeTrajectory(Xbase,duration,true);
+    ti->gotoPosition(Xbase_pr2[0]);
+    ti->executeTrajectory(Xbase,duration,true);
 
-    Xbase = mi->logX;  FLbase = mi->logFL; Mbase = mi->logM;
+    Xbase_pr2 = ti->logX;  FLbase = ti->logFL; Mbase = ti->logM;
     write(LIST<arr>(Xbase),STRING(folder<<"Xbase.dat")); write(LIST<arr>(FLbase),STRING(folder<<"FLbase.dat"));
     if (useMarker) write(LIST<arr>(Mbase),STRING(folder<<"Mbase.dat"));
-    mi->logging(folderMode,count);
+    ti->logging(folderMode,count);
     count++;
-    if (useRos && execReverseMotion) {Xreverse = Xbase; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
+    if (useRos && execReverseMotion) {Xreverse = Xbase_pr2; Xreverse.reverseRows(); ti->executeTrajectory(Xreverse,duration);}
   } else {
     /// load from file
-    Xbase << FILE(STRING(folder<<mlr::getParameter<mlr::String>("baseFile")<<".dat"));
+    Xbase_pr2 << FILE(STRING(folder<<mlr::getParameter<mlr::String>("baseFile")<<".dat"));
     FLbase << FILE(STRING(folder<<"FLbase.dat"));
     if (useMarker) Mbase << FILE(STRING(folder<<"Mbase.dat"));
     count++;
   }
+
+  /// goto iniitial position
+  transferQbetweenTwoWorlds(Xbase,Xbase_pr2,*ti->world_plan,*ti->world_pr2);
+  if (useRos) ti->gotoPosition(Xbase_pr2[0],10.);
+
 
   /// compute contact phase
   task->computeConstraintTime(FLbase,Xbase);
@@ -87,13 +92,13 @@ int main(int argc,char **argv){
 
   /// setup visualization
   task->updateVisualization(world,Xbase);
-  if (visualize) displayTrajectory(Xbase,-1,world,"demonstration "); world.watch(true,"Press Enter to start motion");
+  if (visualize) displayTrajectory(Xbase,-1,world,"demonstration "); world.watch(true,"Press Enter to start learning");
   MB_strategy mbs(Xbase,world,duration,*task);
 
   for(;;) {
-    cout << "iteration: " << count << endl;
+    cout << "\niteration: " << count << endl;
     /// goto iniitial position
-    if (useRos) mi->gotoPosition(x0);
+    if (useRos) ti->gotoPositionPlan(x0);
 
     /// search for next candidate
     switch (mode) {
@@ -116,23 +121,25 @@ int main(int argc,char **argv){
       world.watch(true,"press enter to execute trajectory");
     }
     /// execute trajectory on robot
-    if (useRos) mi->executeTrajectory(Xn,duration,true);
+    if (useRos) ti->executeTrajectoryPlan(Xn,duration,true);
 
     /// evaluate cost function
     bool result;
     if (useRos) {
-      result = task->success(mi->logM, Mbase);
+      result = task->success(ti->logM, Mbase);
       cout << "result: " << result << endl;
 
       /// logging
       if (result) {
         X = Xn;
-        mi->logging(folderMode,count);
-        if (useRos && execReverseMotion) {Xreverse = X; Xreverse.reverseRows(); mi->executeTrajectory(Xreverse,duration);}
-      } else { mi->pauseMotion(); }
+        ti->logging(folderMode,count);
+        if (useRos && execReverseMotion) {Xreverse = X; Xreverse.reverseRows(); ti->executeTrajectoryPlan(Xreverse,duration);}
+      } else { ti->pauseMotion(); }
     }else{
-      write(LIST<arr>(Xn),STRING(folderMode<<"Xref"<<count<<".dat"));
-      write(LIST<arr>(Xn),STRING(folderMode<<"X"<<count<<".dat"));
+      /// for simulation only
+      transferQbetweenTwoWorlds(Xbase_pr2,Xn,*ti->world_pr2,*ti->world_plan);
+      write(LIST<arr>(Xbase_pr2),STRING(folderMode<<"Xref"<<count<<".dat"));
+      write(LIST<arr>(Xbase_pr2),STRING(folderMode<<"X"<<count<<".dat"));
       write(LIST<arr>(FLbase),STRING(folderMode<<"FL"<<count<<".dat"));
       if (useMarker) write(LIST<arr>(Mbase),STRING(folderMode<<"M"<<count<<".dat"));
 

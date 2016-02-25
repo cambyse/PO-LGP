@@ -14,7 +14,6 @@ void ButtonTask::addConstraints(MotionProblem *MP, const arr &X)
   t = MP->addTask("posC1", new DefaultTaskMap(posTMT,MP->world,"endeffL"));
   t->target = yC1;
   t->prec = prec;
-  cout << prec << endl;
 }
 
 void ButtonTask::addModelConstraints(MotionProblem *MP,arr &target) {
@@ -116,6 +115,7 @@ void ButtonTask::getDofLimit(arr& dofLimit) {
   dofLimit.clear();
   dofLimit.append(~ARR(-0.02,0.02)); // pushing depth
 }
+
 
 bool ButtonTask::transformTrajectoryDof(arr& Xn, const arr& x_dof, arr& Xdemo){
   MotionProblem MP(*world,false);

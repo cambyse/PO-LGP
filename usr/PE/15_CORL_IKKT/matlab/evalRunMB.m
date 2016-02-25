@@ -1,6 +1,6 @@
 clear;
 myDefs;
-folder = ['../data/button2/'];
+folder = ['../data/button4/'];
 files = dir([folder,'*.dat']);
 names = {files.name};
 
@@ -8,7 +8,7 @@ for i=1:length(names)
  load([folder,names{i}]);
 end
 
-T = size(mbXbase,1);
+T = size(Xbase,1);
 
 %% plot model based results over time
 varList = {

@@ -10,37 +10,43 @@
 #include <pr2/rosmacro.h>
 #include <pr2/rosalvar.h>
 #include <pr2/trajectoryInterface.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
-void changeColor2(void*){  orsDrawAlpha = 1.; }
 
 void TEST(TrajectoryInterface){
-  ors::KinematicWorld world("model.kvg");
-  makeConvexHulls(world.shapes);
+  ors::KinematicWorld world_plan("model_plan.kvg");
+  ors::KinematicWorld world_pr2("model.kvg");
+//  makeConvexHulls(world_plan.shapes);
+  TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_pr2);
 
-  TrajectoryInterface *ti = new TrajectoryInterface(world);
+  cout << world_plan.getBodyByName("torso_lift_link")->X << endl;
+  cout << world_pr2.getBodyByName("torso_lift_link")->X << endl;
+  cout << world_plan.getJointByName("torso_lift_joint")->Q<< endl;
+  cout << world_pr2.getJointByName("torso_lift_joint")->Q << endl;
+  cout << world_plan.getJointByName("torso_lift_joint")->A << endl;
+  cout << world_pr2.getJointByName("torso_lift_joint")->A << endl;
+  cout << world_plan.getJointByName("torso_lift_joint")->B << endl;
+  cout << world_pr2.getJointByName("torso_lift_joint")->B << endl;
+  world_pr2.watch(true);
 
-  ti->world->gl().resize(800,800);
-  ti->world->gl().add(changeColor2);
 
   arr q;
   arr lim;
   double alpha = 0.8;
   uintA qIdxList;
   rnd.clockSeed();
-  lim = ti->world->getLimits();
+  lim = ti->world_plan->getLimits();
 
   /// define the joints that should be used
-  qIdxList.append(ti->world->getJointByName("l_elbow_flex_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_wrist_roll_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_wrist_flex_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_forearm_roll_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_upper_arm_roll_joint")->qIndex);
-  qIdxList.append(ti->world->getJointByName("l_shoulder_lift_joint")->qIndex);
+  qIdxList.append(ti->world_plan->getJointByName("l_elbow_flex_joint")->qIndex);
+  qIdxList.append(ti->world_plan->getJointByName("l_wrist_roll_joint")->qIndex);
+  qIdxList.append(ti->world_plan->getJointByName("l_wrist_flex_joint")->qIndex);
+  qIdxList.append(ti->world_plan->getJointByName("l_forearm_roll_joint")->qIndex);
+  qIdxList.append(ti->world_plan->getJointByName("l_upper_arm_roll_joint")->qIndex);
+  qIdxList.append(ti->world_plan->getJointByName("l_shoulder_lift_joint")->qIndex);
 
 
   for (;;) {
-    q = ti->world->getJointState();
+    q = ti->world_plan->getJointState();
 
     /// sample a random goal position
     for (uint i=0;i<qIdxList.d0;i++) {
@@ -48,13 +54,13 @@ void TEST(TrajectoryInterface){
       q(qIdx) = lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
     }
 
-    ti->gotoPosition(q,5.,true);
+    ti->gotoPositionPlan(q,5.,true,true);
     ti->logging("data/",2);
   }
 
   ti->~TrajectoryInterface();
 }
-
+/*
 void TEST(RecordReplay) {
   ors::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
@@ -79,11 +85,11 @@ void TEST(RecordReplay) {
   ti->gotoPosition(Y[0]);
   ti->executeTrajectory(Y,10.);
   ti->~TrajectoryInterface();
-}
+}*/
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   testTrajectoryInterface();
-//  testRecordReplay();
+  //  testRecordReplay();
   return 0;
 }

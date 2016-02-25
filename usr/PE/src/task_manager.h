@@ -8,7 +8,7 @@
 
 struct TaskManager
 {
-  enum TaskType {DOOR=1,GRASP=2};
+  enum TaskType {DOOR=1,GRASP=2,BUTTON=3};
   arr constraintTime;
   arr constraintCP;
   mlr::Array<uint> conStart;
@@ -41,7 +41,7 @@ struct DoorTask:TaskManager {
   void getParamLimit(arr &paramLimit);
   double reward(const arr &Z);
   void getDofLimit(arr &dofLimit) {};
-  bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) {};
+  bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) {return true;};
 
 };
 
@@ -55,12 +55,11 @@ struct GraspTask:TaskManager {
   void getParamLimit(arr &paramLimit);
   double reward(const arr &Z);
   void getDofLimit(arr &dofLimit) {};
-  bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) {};
-
+  bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) {return true;};
 };
 
 struct ButtonTask:TaskManager {
-  ButtonTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = GRASP;}
+  ButtonTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = BUTTON;}
   void addConstraints(MotionProblem *MP, const arr &X);
   void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);

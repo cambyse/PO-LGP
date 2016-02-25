@@ -157,7 +157,9 @@ int main(int argc, char** argv){
   bool useMarker = mlr::getParameter<bool>("useMarker",false);
 
   /// init task
+  ors::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
   ors::KinematicWorld world(STRING(folder<<"model.kvg"));
+
   TaskManager *task;
   if (taskName == "door") {
     task = new DoorTask(world);
@@ -168,16 +170,17 @@ int main(int argc, char** argv){
   }
 
   /// load demo from file
-  arr mfX,mfY,mfYS;
-  mfX<<FILE(STRING(folder<<"mfX.dat"));
-  mfY<<FILE(STRING(folder<<"mfY.dat")); mfY.flatten();
-  mfYS<<FILE(STRING(folder<<"mfYS.dat")); mfYS.flatten();
+  arr peX,peY,peYS;
+  peX<<FILE(STRING(folder<<"PE_X.dat"));
+  peY<<FILE(STRING(folder<<"PE_Y.dat")); peY.flatten();
+  peYS<<FILE(STRING(folder<<"PE_YS.dat")); peYS.flatten();
 
-  uint i = mfY.maxIndex();
-  CHECK(mfYS(i)==1,"");
+  uint i = peY.maxIndex();
+  CHECK(peYS(i)==1,"");
 
-  arr Xbase,FLbase,Mbase;
-  Xbase << FILE(STRING(folder<<"/mfXref"<<i<<".dat"));
+  arr Xbase,Xbase_pr2,FLbase,Mbase;
+  Xbase_pr2 << FILE(STRING(folder<<"/PE_Xref"<<i<<".dat"));
+  transferQbetweenTwoWorlds(Xbase,Xbase_pr2,world,world_pr2);
   FLbase << FILE(STRING(folder<<"/FLbase.dat"));
   if (useMarker) Mbase << FILE(STRING(folder<<"/mbM"<<i<<".dat"));
 
@@ -202,6 +205,7 @@ int main(int argc, char** argv){
   ors::Quaternion rot;
   rot.setDiff(Vector_z,prismatic_dir);
 
+  /// add new joint to world
   ors::Body *b1 = new ors::Body(world);
   b1->name = "b1";
   b1->type = ors::BodyType::dynamicBT;
@@ -241,27 +245,24 @@ int main(int argc, char** argv){
   /// augment trajectory with DOF
   arr Q2;
   Q2 = zeros(Xbase.d0);
-  Q2.subRange(Q2.d0-Q.d0,Q2.d0-1) = Q;
-  cout << Q2 << endl;
+  Q2.subRange(task->conStart(0),task->conEnd(0)-1) = Q;
   Xbase = ~Xbase;
   Xbase.append(Q2);
   Xbase = ~Xbase;
 
-
   /// save kinematic world
-//  world>>FILE(STRING(folder<<"modelaug.ors"));
+  world>>FILE(STRING(folder<<"modelaug.ors"));
 
   ors::KinematicWorld worldaug(STRING(folder<<"modelaug.kvg"));
   /// convert trajectory between two kinematic worlds
-  arr X2;
-  transferQbetweenTwoWorlds(X2,Xbase,worldaug,world);
-
-  write(LIST(X2),STRING(folder<<"Xaug.dat"));
+  arr Xbase_aug;
+  transferQbetweenTwoWorlds(Xbase_aug,Xbase,worldaug,world);
+  write(LIST(Xbase_aug),STRING(folder<<"Xaug.dat"));
   write(LIST(FLbase),STRING(folder<<"FLaug.dat"));
   if (useMarker) write(LIST(Mbase),STRING(folder<<"Maug.dat"));
 
   task->~TaskManager();
-  for(;;) {displayTrajectory(X2, 1, worldaug, "planned trajectory");}
+  for(;;) {displayTrajectory(Xbase_aug, 1, worldaug, "planned trajectory");}
 
   // TODO:
   // copmute external joint value more general with contact times

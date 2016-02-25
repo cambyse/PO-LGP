@@ -14,19 +14,19 @@ int main(int argc,char **argv){
   scenario.costScale = 1e3;
   mf->loadScenarioButton(scenario);
 
-
   InverseMotionProblem IMP(scenario);
   arr param0 = IMP.initParam(InverseMotionProblem::ONES);
   arr param = param0;
 
 //  checkJacobianCP(IMP,param0,1e-2);
-  optConstrained(param,NoArr,IMP,OPT(verbose=1,stopTolerance=1e-5,stepInc=2,aulaMuInc=10,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
+  optConstrained(param,NoArr,IMP,OPT(verbose=1,stopTolerance=1e-4,stepInc=2,aulaMuInc=10,maxStep=-1., constrainedMethod=augmentedLag, stopIters=1000,dampingInc=1.));
   IMP.costReport(param,param0);
   scenario.setParam(param);
 
   for (;;) {
     for (uint i =0;i<scenario.scenes.d0;i++) {
-      mf->execMotion(scenario.scenes(i),NoArr,NoArr,NoArr,true,0);
+      arr x0 = scenario.scenes.last().x0*0. + randn(scenario.scenes.last().x0.d0);
+      mf->execMotion(scenario.scenes(i),NoArr,NoArr,x0,true,0);
     }
   }
 
