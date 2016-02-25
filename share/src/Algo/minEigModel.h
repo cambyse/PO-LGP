@@ -33,6 +33,7 @@ struct MinEigModel : GLDrawer{
 
 
   MinEigModel(DataNeighbored& data, double margin) : data(data), weights(zeros(data.n())), margin(margin), label(0) {}
+  virtual ~MinEigModel(){}
 
   void setPoints(const uintA& points); ///< set the model points (weights initialized to one)
   void setWeightsToOne();    ///< set all weights in pts to 1

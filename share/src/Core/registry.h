@@ -54,8 +54,9 @@ void initRegistry(int argc, char *argv[]);
 // to register a type (instead of general thing/item), use this:
 //
 
-struct Type:RootType {
+struct Type {
   mlr::Array<Type*> parents; //TODO -> remove; replace functionality from registry
+  virtual ~Type(){}
   virtual const std::type_info& typeId() const {NIY}
   virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
   virtual void* newInstance() const {NIY}

@@ -1832,7 +1832,7 @@ void ors::KinematicWorld::init(const Graph& G) {
     
     Body *b=new Body(*this);
     if(it->keys.N>1) b->name=it->keys(1);
-    b->ats.xx_graph_copy(it->graph());
+    b->ats.copy(it->graph());
     b->parseAts();
   }
 
@@ -1851,7 +1851,7 @@ void ors::KinematicWorld::init(const Graph& G) {
       s=new Shape(*this, NoBody);
     }
     if(it->keys.N>1) s->name=it->keys(1);
-    s->ats.xx_graph_copy(it->graph());
+    s->ats.copy(it->graph());
     s->parseAts();
   }
   
@@ -1868,7 +1868,7 @@ void ors::KinematicWorld::init(const Graph& G) {
     CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
     Joint *j=new Joint(*this, from, to);
     if(it->keys.N>1) j->name=it->keys(1);
-    j->ats.xx_graph_copy(it->graph());
+    j->ats.copy(it->graph());
     j->parseAts();
 
     //if the joint is coupled to another:

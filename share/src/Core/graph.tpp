@@ -18,23 +18,6 @@
 
 #include "graph.h"
 
-//////////// taken from http://stackoverflow.com/questions/4532281/how-to-test-whether-class-b-is-derived-from-class-a
-typedef char(&yes)[1];
-typedef char(&no)[2];
-template <typename B, typename D> struct Host {
-  operator B*() const;
-  operator D*();
-};
-template <typename B, typename D> struct MLR_is_base_of {
-  template <typename T>
-  static yes check(D*, T);
-  static no check(B*, int);
-  static const bool value = sizeof(check(Host<B,D>(), int())) == sizeof(yes);
-};
-///////////////STOP
-
-struct RootType { virtual ~RootType() {} }; ///< if types derive from RootType, more tricks are possible
-
 //===========================================================================
 //
 //  typed Node
@@ -43,47 +26,25 @@ struct RootType { virtual ~RootType() {} }; ///< if types derive from RootType, 
 template<class T>
 struct Node_typed : Node {
   T value;
-  bool ownsValue;
 
-  Node_typed():value(NULL), ownsValue(false) { HALT("shouldn't be called, right? You always want to append to a container"); }
+  Node_typed():value(NULL) { HALT("shouldn't be called, right? You always want to append to a container"); }
 
   /// directly store pointer to value
   Node_typed(Graph& container, const T& value)
-    : Node(typeid(T), container), value(value), ownsValue(ownsValue) {
-//    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-//    CHECK(!value || ownsValue,"new convention: you need to own all values...");
+    : Node(typeid(T), container), value(value) {
     if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
-//      CHECK(graph().isNodeOfParentGraph==this,"");
-//      Node *node = graph().isNodeOfParentGraph;
-//      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
-//      if(!node)
-//    }
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& value)
-    : Node(typeid(T), container, keys, parents), value(value), ownsValue(ownsValue) {
-//    CHECK(value || !ownsValue,"you cannot own a NULL value pointer!");
-//    CHECK(!value || ownsValue,"new convention: you need to own all values...");
+    : Node(typeid(T), container, keys, parents), value(value) {
     if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
-//      CHECK(graph().isNodeOfParentGraph==this,"");
-//      Node *node = graph().isNodeOfParentGraph;
-//      CHECK(node==NULL || node==this,"this graph is already a node of a parentgraph -> can't make this a node again");
-//      if(!node) graph().isNodeOfParentGraph = this;
-//    }
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   virtual ~Node_typed(){
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
-//    if(ownsValue) delete value;
-//    value=NULL;
-  }
-
-  virtual bool hasValue() const {
-    return true;
-//    return value!=NULL;
   }
 
   virtual void *getValueDirectly() const {
@@ -93,34 +54,20 @@ struct Node_typed : Node {
   virtual void copyValue(Node *it) {
     Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
-//    CHECK(itt->value,"can't assign to nothing");
     if(typeid(T)==typeid(Graph*)){
-      graph().xx_graph_copy(it->graph());
+      graph().copy(it->graph());
     }else{
-//      if(value) delete value;
       value = itt->value;
     }
-  }
-
-  virtual void takeoverValue(Node *it) {
-    NIY;
-    Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
-    CHECK(itt,"can't assign to wrong type");
-//    CHECK(itt->value,"can't assign to nothing");
-//    if(value) delete value;
-    value = itt->value;
-//    itt->value = NULL;
   }
 
   virtual bool hasEqualValue(Node *it) {
     Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
-//    if(!itt->value || !value) return false;
 #ifdef MLR_CLANG
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
 #endif
-//    return memcmp(itt->value, value, sizeof(T))==0;
     if(typeid(T)==typeid(Graph*)){
       Graph *g1=it->V<Graph*>();
       Graph *g2=V<Graph*>();
@@ -133,27 +80,18 @@ struct Node_typed : Node {
   }
 
   virtual void writeValue(std::ostream &os) const {
-//    if(value){
-      if(typeid(T)==typeid(NodeL)) listWrite(*getValue<NodeL>(), os, " ");
-      else os <<value;
-//    }else{
-//      os <<"<" <<typeid(T).name() <<">";
-//    }
+    if(typeid(T)==typeid(NodeL)) listWrite(*getValue<NodeL>(), os, " ");
+    else os <<value;
   }
   
   virtual const std::type_info& getValueType() const {
     return typeid(T);
   }
   
-  virtual bool is_derived_from_RootType() const {
-    return MLR_is_base_of<RootType, T>::value;
-  }
-  
   virtual Node* newClone(Graph& container) const {
-//    if(!value) return new Node_typed<T>(container, keys, parents, (T*)NULL, false);
     if(getValueType()==typeid(Graph*)){
       Graph& g = newSubGraph(container, keys, parents)->value;
-      g.xx_graph_copy(*V<Graph*>());
+      g.copy(*V<Graph*>());
       return g.isNodeOfParentGraph;
     }
     return new Node_typed<T>(container, keys, parents, value);
@@ -225,42 +163,9 @@ template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
   return ret;
 }
 
-//template<class T> Node *Graph::append(T *x, bool ownsValue) {
-//  return new Node_typed<T>(*this, x, ownsValue);
-//}
-
-//template<class T> Node *Graph::append(const char* key, T *x, bool ownsValue) {
-//  return new Node_typed<T>(*this, {mlr::String(key)}, {}, x, ownsValue);
-//}
-
-//template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, T *x, bool ownsValue) {
-//  return new Node_typed<T>(*this, keys, parents, x, ownsValue);
-//}
-
 template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
   return new Node_typed<T>(*this, keys, parents, x);
 }
 
 
-template <class T> mlr::Array<T*> Graph::getDerivedValues() {
-  mlr::Array<T*> ret;
-  for(Node *n: (*this)) {
-    if(n->is_derived_from_RootType()) {
-      T *val= dynamic_cast<T*>(((Node_typed<RootType>*)n)->value);
-      if(val) ret.append(val);
-    }
-  }
-  return ret;
-}
-
-//template <class T> NodeL Graph::getDerivedNodes() {
-//  NodeL ret;
-//  for(Node *n: (*this)) {
-//    if(n->is_derived_from_RootType()) {
-//      T *val= dynamic_cast<T*>(&((Node_typed<RootType>*)n)->value);
-//      if(val) ret.append(n);
-//    }
-//  }
-//  return ret;
-//}
 
