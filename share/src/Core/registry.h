@@ -88,7 +88,7 @@ typedef mlr::Array<Type*> TypeInfoL;
 inline Node *reg_findType(const char* key) {
   NodeL types = registry().getNodesOfType<Type*>();
   for(Node *ti: types) {
-    if(mlr::String(ti->V<Type*>()->typeId().name())==key) return ti;
+    if(mlr::String(ti->get<Type*>()->typeId().name())==key) return ti;
     for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
   }
   return NULL;
@@ -98,7 +98,7 @@ template<class T>
 Node *reg_findType() {
   NodeL types = registry().getNodesOfType<Type*>();
   for(Node *ti: types) {
-    if(ti->V<Type*>()->typeId()==typeid(T)) return ti;
+    if(ti->get<Type*>()->typeId()==typeid(T)) return ti;
   }
   return NULL;
 }
@@ -111,7 +111,7 @@ Node *reg_findType() {
 
 inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& is) {
   Node *ti = reg_findType(key);
-  if(ti) return ti->V<Type*>()->readIntoNewNode(container, is);
+  if(ti) return ti->get<Type*>()->readIntoNewNode(container, is);
   return NULL;
 }
 
@@ -127,7 +127,7 @@ struct Type_typed:Type {
   Type_typed(const char *userBase, TypeInfoL *container) {
     if(userBase) {
       Node *it=reg_findType<Base>();
-      if(it) parents.append(it->V<Type*>());
+      if(it) parents.append(it->get<Type*>());
     }
     if(container) {
       container->append(this);

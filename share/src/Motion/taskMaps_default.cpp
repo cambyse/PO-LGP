@@ -42,7 +42,7 @@ DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
   Node *it=specs["type"];
   if(it){
-    mlr::String Type=it->V<mlr::String>();
+    mlr::String Type=it->get<mlr::String>();
          if(Type=="pos") type=posTMT;
     else if(Type=="vec") type=vecTMT;
     else if(Type=="quat") type=quatTMT;
@@ -53,10 +53,10 @@ DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
     else if(Type=="gazeAt") type=gazeAtTMT;
     else HALT("unknown type " <<Type);
   }else HALT("no type given");
-  if((it=specs["ref1"])){ auto name=it->V<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
-  if((it=specs["ref2"])){ auto name=it->V<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
-  if((it=specs["vec1"])) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
-  if((it=specs["vec2"])) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+  if((it=specs["ref1"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
+  if((it=specs["ref2"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
+  if((it=specs["vec1"])) ivec = ors::Vector(it->get<arr>());  else ivec.setZero();
+  if((it=specs["vec2"])) jvec = ors::Vector(it->get<arr>());  else jvec.setZero();
 }
 
 DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
@@ -81,8 +81,8 @@ DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
   if(specs->isGraph()){
     const Graph& params = specs->graph();
     Node *it;
-    if((it=params.getNode("vec1"))) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
-    if((it=params.getNode("vec2"))) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+    if((it=params.getNode("vec1"))) ivec = ors::Vector(it->get<arr>());  else ivec.setZero();
+    if((it=params.getNode("vec2"))) jvec = ors::Vector(it->get<arr>());  else jvec.setZero();
   }
 }
 

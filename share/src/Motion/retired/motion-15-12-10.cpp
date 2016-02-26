@@ -101,7 +101,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
-    map = new CollisionConstraint( (params?params->V<double>("margin", 0.1):0.1) );
+    map = new CollisionConstraint( (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="collisionPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -109,7 +109,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="collisionExceptPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -117,12 +117,12 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->V<double>("margin", 0.1):0.1) );
+    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1) map = new TaskMap_qItself(world, ref1);
-    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
+    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->get<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
@@ -134,7 +134,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   //-- check additional real-valued parameters: order
   if(specs->isGraph()){
     const Graph& params = specs->graph();
-    map->order = params->V<double>("order", 0);
+    map->order = params->get<double>("order", 0);
   }
   return map;
 }
@@ -150,8 +150,8 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterva
   //-- check for additional continuous parameters
   if(specs->isGraph()){
     const Graph& params = specs->graph();
-    arr time = params->V<arr>("time",{0.,1.});
-    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
+    arr time = params->get<arr>("time",{0.,1.});
+    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->get<arr>("target", {}), params->get<double>("scale", {1.}));
   }else{
     task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
   }
@@ -204,7 +204,7 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
   sw->timeOfApplication = Tzero + Tinterval + 1;
   if(specs->isGraph()){
     const Graph& params = specs->graph();
-    sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
+    sw->timeOfApplication = Tzero + params->get<double>("time",1.)*Tinterval + 1;
   }
   return sw;
 }

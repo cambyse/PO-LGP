@@ -168,7 +168,7 @@ void testMonteCarlo(){
         //-- find minimal wait time
         double w=1e10;
         for(Node *i:state){
-          if(i->getValueType()==typeid(double)){
+          if(i->isOfType<double>()){
             double wi = *i->getValue<double>();
             if(w>wi) w=wi;
           }
@@ -181,7 +181,7 @@ void testMonteCarlo(){
           //-- subtract w from all times and collect all activities with minimal wait time
           NodeL activities;
           for(Node *i:state){
-            if(i->getValueType()==typeid(double)){
+            if(i->isOfType<double>()){
               double &wi = *i->getValue<double>();
               wi -= w;
               if(fabs(wi)<1e-10) activities.append(i);

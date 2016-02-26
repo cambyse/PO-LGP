@@ -27,8 +27,8 @@ void TEST(Read){
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
   cout <<G["k"]->graph() <<endl;
-//  cout <<G["val"]->graph()(0)->V<double>() <<endl;
-  cout <<G["k"]->graph()["z"]->V<mlr::String>() <<endl;
+//  cout <<G["val"]->graph()(0)->get<double>() <<endl;
+  cout <<G["k"]->graph()["z"]->get<mlr::String>() <<endl;
   cout <<"DONE" <<endl;
 
   G.writeHtml(FILE("z.html"), FILE("example.kvg"));

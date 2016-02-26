@@ -6,7 +6,7 @@
 
 TeleopControlActivity::TeleopControlActivity()
   : Module("TeleopControlActivity", 0.01), taskController(NULL), t2t(NULL){
-  taskController = dynamic_cast<TaskControllerModule*>(registry().getNode({"Module","TaskControllerModule"})->V<Module*>());
+  taskController = dynamic_cast<TaskControllerModule*>(registry().getNode({"Module","TaskControllerModule"})->get<Module*>());
   CHECK(taskController,"that didn't work");
 }
 

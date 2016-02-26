@@ -113,7 +113,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
       if(!j) return NULL;
       map = new TaskMap_qItself(world, j);
     }else if(ref1) map = new TaskMap_qItself(world, ref1);
-    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
+    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->get<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="qZeroVels"){
     map = new TaskMap_qZeroVels();

@@ -116,7 +116,7 @@ struct Access_typed:Access{
     Node *vnode = registry().getNode({"Variable", name});
     v = acc.v;
     var = acc.var;
-    CHECK(vnode && vnode->V<Variable<T>* >()==v,"something's wrong")
+    CHECK(vnode && vnode->get<Variable<T>* >()==v,"something's wrong")
     if(module){
       Node *m = getModuleNode(module);
       new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
@@ -134,7 +134,7 @@ struct Access_typed:Access{
       v = new Variable<T>(name);
       vnode = new Node_typed<Variable<T>* >(registry(), {"Variable", name}, {}, v);
     }else{
-      v = vnode->V<Variable<T>* >();
+      v = vnode->get<Variable<T>* >();
     }
     var=(RevisionedAccessGatedClass*)v;
     if(module){

@@ -41,9 +41,9 @@ Activity* newActivity(Node *fact){
     LOG(3) <<"cannot create activity " <<*fact << "(symbol=" <<*activitySymbol <<", specs=" <<*activityParams <<")";
     return NULL;
   }
-  CHECK(activityType->getValueType()==typeid(Type*),"");
+  CHECK(activityType->isOfType<Type*>(),"");
 
-  Activity *act = (Activity*)(activityType->V<Type*>()->newInstance());
+  Activity *act = (Activity*)(activityType->get<Type*>()->newInstance());
   act->associateToExistingFact(fact);
   return act;
 }

@@ -30,15 +30,15 @@ struct Node_typed : Node {
   Node_typed():value(NULL) { HALT("shouldn't be called, right? You always want to append to a container"); }
 
   /// directly store pointer to value
-  Node_typed(Graph& container, const T& value)
-    : Node(typeid(T), container), value(value) {
+  Node_typed(Graph& container, const T& _value)
+    : Node(typeid(T), &this->value, container), value(_value) {
     if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
-  Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& value)
-    : Node(typeid(T), container, keys, parents), value(value) {
+  Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& _value)
+    : Node(typeid(T), &this->value, container, keys, parents), value(_value) {
     if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
@@ -47,36 +47,16 @@ struct Node_typed : Node {
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_delete(this);
   }
 
-  virtual void *getValueDirectly() const {
-    return (void*)&value;
-  }
-
   virtual void copyValue(Node *it) {
     Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
     CHECK(itt,"can't assign to wrong type");
-    if(typeid(T)==typeid(Graph*)){
-      graph().copy(it->graph());
-    }else{
-      value = itt->value;
-    }
+    value = itt->value;
   }
 
   virtual bool hasEqualValue(Node *it) {
     Node_typed<T> *itt = dynamic_cast<Node_typed<T>*>(it);
-    CHECK(itt,"can't assign to wrong type");
-#ifdef MLR_CLANG
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
-#endif
-    if(typeid(T)==typeid(Graph*)){
-      Graph *g1=it->V<Graph*>();
-      Graph *g2=V<Graph*>();
-      return *g1==*g2;
-    }
-    return itt->value == value;
-#ifdef MLR_CLANG
-#  pragma clang diagnostic pop
-#endif
+    CHECK(itt,"can't compare to wrong type");
+    return value == itt->value;
   }
 
   virtual void writeValue(std::ostream &os) const {
@@ -89,10 +69,10 @@ struct Node_typed : Node {
   }
   
   virtual Node* newClone(Graph& container) const {
-    if(getValueType()==typeid(Graph*)){
-      Graph& g = newSubGraph(container, keys, parents)->value;
-      g.copy(*V<Graph*>());
-      return g.isNodeOfParentGraph;
+    if(isGraph()){
+      Node_typed<Graph> *n = newSubGraph(container, keys, parents);
+      n->value.copy(graph());
+      return n;
     }
     return new Node_typed<T>(container, keys, parents, value);
   }
@@ -123,7 +103,7 @@ template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
 
 template<class T> Node* Graph::getNodeOfType(const char *key) const {
   NodeL nodes = getNodes(key);
-  for(Node* n:nodes) if(n->getValueType()==typeid(T)) return n;
+  for(Node* n:nodes) if(n->isOfType<T>()) return n;
   return NULL;
 }
 
@@ -153,7 +133,7 @@ template<class T> const T& Graph::get(const char *key, const T& defaultValue) co
 
 template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
   mlr::Array<T*> ret;
-  for(Node *n: (*this)) if(n->getValueType()==typeid(T)) {
+  for(Node *n: (*this)) if(n->isOfType<T>()) {
     if(!key) ret.append(n->getValue<T>());
     else for(uint i=0; i<n->keys.N; i++) if(n->keys(i)==key) {
       ret.append(n->getValue<T>());

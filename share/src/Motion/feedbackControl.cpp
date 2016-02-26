@@ -30,15 +30,15 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   Node *it;
   if((it=params["PD"])){
-    arr pd=it->V<arr>();
+    arr pd=it->get<arr>();
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
   } else {
     setGainsAsNatural(3., .7);
   }
-  if((it=params["prec"])) prec = it->V<double>();
-  if((it=params["target"])) y_ref = it->V<arr>();
+  if((it=params["prec"])) prec = it->get<double>();
+  if((it=params["target"])) y_ref = it->get<arr>();
 }
 
 //CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio,

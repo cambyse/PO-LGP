@@ -118,7 +118,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 #if 0
   double rValue=0.;
   if(rewardFct) for(Node *rTerm:*rewardFct){
-    if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
+    if(rTerm->isOfType<double>()) rValue=rTerm->get<double>();
     else{
       CHECK(rTerm->isGraph(),"");
       Graph& rCase=rTerm->graph();
@@ -129,15 +129,15 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       }
       if(rCase.N>=2){
         CHECK(rCase.last(-2)->isGraph(),"");
-        CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
+        CHECK(rCase.last(-1)->isOfType<bool>(),"");
         if(rCase.last(-1)->parents(0)==d->rule){
           if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
         }
       }
 #else
       NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
-      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
-        if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
+      if(rCase.last()->isOfType<double>() && rCase.last()->keys.last()=="count"){
+        if(subs.d0 == rCase.last()->get<double>()) reward += rValue;
       }else{
         if(subs.d0) reward += rValue;
       }
@@ -155,7 +155,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     //-- find minimal wait time
     double w=1e10;
     for(Node *i:*state){
-      if(i->getValueType()==typeid(double)){
+      if(i->isOfType<double>()){
         double wi = *i->getValue<double>();
         if(w>wi) w=wi;
       }
@@ -173,7 +173,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       lastStepDuration=w;
       NodeL terminatingActivities;
       for(Node *i:*state){
-        if(i->getValueType()==typeid(double)){
+        if(i->isOfType<double>()){
           double &wi = *i->getValue<double>(); //this is a double reference!
           wi -= w;
           if(fabs(wi)<1e-10) terminatingActivities.append(i);
@@ -191,9 +191,9 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   }else{ //normal decision
     //first check if probabilistic
     Node *effect = d->rule->graph().last();
-    if(effect->getValueType()==typeid(arr)){
+    if(effect->isOfType<arr>()){
       HALT("probs in decision rules not properly implemented (observation id is not...)");
-      arr p = effect->V<arr>();
+      arr p = effect->get<arr>();
       uint r = sampleMultinomial(p);
       effect = d->rule->graph().elem(-1-p.N+r);
     }
