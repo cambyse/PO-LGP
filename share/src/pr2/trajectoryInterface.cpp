@@ -24,7 +24,7 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::K
       cout <<"LOCAL  joint dimension=" <<world_pr2->q.N <<endl;
 
       if (S.ctrl_obs.get()->q.N==world_pr2->q.N
-         && S.ctrl_obs.get()->qdot.N==world_pr2->q.N)
+          && S.ctrl_obs.get()->qdot.N==world_pr2->q.N)
         break;
     }
 
@@ -86,7 +86,7 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
   mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
-  if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logXref = X_pr2;}
+  if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logM.resize(22); logXref = X_pr2;}
 
   ors::Joint *trans = world_pr2->getJointByName("worldTranslationRotation");
   ors::Joint *torso = world_pr2->getJointByName("torso_lift_joint");
@@ -129,7 +129,9 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
     t = t + mlr::timerRead(true);
 
     world_pr2->setJointState(refs.q);
-//    world_pr2->gl().update();
+    //    world_pr2->gl().update();
+
+    syncMarker();
 
     /// logging
     if (recordData && (s<1.) && ((t-tPrev)>=dtLog)) {
@@ -141,6 +143,15 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
         logFL.append(~S.ctrl_obs.get()->fL);
         logFR.append(~S.ctrl_obs.get()->fR);
         logU.append(~S.ctrl_obs.get()->u_bias);
+
+        if (useMarker) {
+          for (uint i=0;i<21;i++) {
+            ors::Body *body = world_plan->getBodyByName(STRING("marker"<<i));
+            if (body) {
+              logM(i).append(~cat(conv_vec2arr(body->X.pos),conv_quat2arr(body->X.rot)));
+            }
+          }
+        }
       }
     }
   }
@@ -169,13 +180,18 @@ void TrajectoryInterface::syncState() {
 
 void TrajectoryInterface::syncMarker() {
   if (useRos && useMarker) {
-    S.ar_pose_markers.var->waitForNextRevision();
     markers = S.ar_pose_markers.get();
     syncMarkers(*world_pr2,markers);
     syncMarkers(*world_pr2,markers);
     syncMarkers(*world_plan,markers);
     syncMarkers(*world_plan,markers);
   }
+}
+
+void TrajectoryInterface::saveState(mlr::String filename) {
+  arr q_pr2;
+  getState(q_pr2);
+  write(LIST<arr>(q_pr2),filename);
 }
 
 void TrajectoryInterface::getStatePlan(arr &q_plan) {
@@ -188,14 +204,24 @@ void TrajectoryInterface::getState(arr &q_pr2) {
   world_pr2->getJointState(q_pr2);
 }
 
+void TrajectoryInterface::gotoPosition(mlr::String filename, double T, bool recordData, bool displayTraj) {
+  arr q;
+  q << FILE(filename); q.flatten();
+  CHECK_EQ(q.N,world_pr2->getJointStateDimension(),STRING("gotoPosition: wrong joint state dimension"));
+  fixTorso=false;
+  gotoPosition(q,T,recordData,displayTraj);
+  fixTorso=true;
+}
 
 void TrajectoryInterface::gotoPositionPlan(arr x_plan, double T, bool recordData, bool displayTraj) {
+  CHECK_EQ(x_plan.N,world_plan->getJointStateDimension(),STRING("wrong joint state dimension"));
   arr x_pr2;
   transferQbetweenTwoWorlds(x_pr2,x_plan,*world_pr2,*world_plan);
   gotoPosition(x_pr2, T, recordData,displayTraj);
 }
 
 void TrajectoryInterface::gotoPosition(arr x_pr2, double T, bool recordData, bool displayTraj) {
+  CHECK_EQ(x_pr2.N,world_pr2->getJointStateDimension(),STRING("wrong joint state dimension"));
   MotionProblem MP(*world_pr2,false);
   MP.T = 100;
   MP.tau = 0.05;
@@ -329,6 +355,13 @@ void TrajectoryInterface::logging(mlr::String folder, uint id) {
   if (logX.N>0) write(LIST<arr>(logX),STRING(folder<<"X"<<id<<".dat"));
   if (logFL.N>0) write(LIST<arr>(logFL),STRING(folder<<"FL"<<id<<".dat"));
   if (logFR.N>0) write(LIST<arr>(logFR),STRING(folder<<"FR"<<id<<".dat"));
-  if (logM.N>0) write(LIST<arr>(logM),STRING(folder<<"M"<<id<<".dat"));
+  if (useMarker) {
+    for (uint i=0;i<logM.N;i++){
+      if (logM(i).N>0) {
+        write(LIST<arr>(logM(i)),STRING(folder<<"M"<<i<<id<<".dat"));
+      }
+    }
+  }
+
   if (logU.N>0) write(LIST<arr>(logU),STRING(folder<<"U"<<id<<".dat"));
 }

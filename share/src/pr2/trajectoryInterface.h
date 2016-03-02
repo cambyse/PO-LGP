@@ -35,7 +35,8 @@ struct TrajectoryInterface {
   AlvarMarkers markers;
 
   /// logging variables
-  arr logXdes,logXref,logX,logFL,logFR,logT,logU,logM;
+  arr logXdes,logXref,logX,logFL,logFR,logT,logU;
+  arrA logM;
 
   TrajectoryInterface(ors::KinematicWorld &world_, ors::KinematicWorld& world_pr2_);
   ~TrajectoryInterface(){ threadCloseModules(); }
@@ -45,6 +46,7 @@ struct TrajectoryInterface {
   void executeTrajectoryPlan(arr &X_plan, double T, bool recordData = false, bool displayTraj=false);
 
   /// go to robot configuration x
+  void gotoPosition(mlr::String filename, double T=5., bool recordData = false, bool displayTraj=false);
   void gotoPosition(arr x_pr2, double T=5., bool recordData = false, bool displayTraj=false);
   void gotoPositionPlan(arr x_plan, double T=5., bool recordData = false, bool displayTraj=false);
 
@@ -64,6 +66,8 @@ struct TrajectoryInterface {
   /// get robot state
   void syncState();
   void syncMarker();
+
+  void saveState(mlr::String filename);
 
   void getState(arr& q_pr2);
   void getStatePlan(arr& q_plan);

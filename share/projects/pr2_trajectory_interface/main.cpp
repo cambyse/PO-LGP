@@ -15,20 +15,15 @@
 void TEST(TrajectoryInterface){
   ors::KinematicWorld world_plan("model_plan.kvg");
   ors::KinematicWorld world_pr2("model.kvg");
-//  makeConvexHulls(world_plan.shapes);
+
   TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_pr2);
 
-  cout << world_plan.getBodyByName("torso_lift_link")->X << endl;
-  cout << world_pr2.getBodyByName("torso_lift_link")->X << endl;
-  cout << world_plan.getJointByName("torso_lift_joint")->Q<< endl;
-  cout << world_pr2.getJointByName("torso_lift_joint")->Q << endl;
-  cout << world_plan.getJointByName("torso_lift_joint")->A << endl;
-  cout << world_pr2.getJointByName("torso_lift_joint")->A << endl;
-  cout << world_plan.getJointByName("torso_lift_joint")->B << endl;
-  cout << world_pr2.getJointByName("torso_lift_joint")->B << endl;
+  ti->syncMarker();
+  ti->moveRightGripper(0.08);
+//  world_pr2.watch(true);
+  mlr::wait(4.);
+  ti->moveRightGripper(0.0);
   world_pr2.watch(true);
-
-
   arr q;
   arr lim;
   double alpha = 0.8;
@@ -43,7 +38,6 @@ void TEST(TrajectoryInterface){
   qIdxList.append(ti->world_plan->getJointByName("l_forearm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_upper_arm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_shoulder_lift_joint")->qIndex);
-
 
   for (;;) {
     q = ti->world_plan->getJointState();

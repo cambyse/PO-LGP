@@ -1591,8 +1591,8 @@ void ors::KinematicWorld::setShapeNames() {
 /// find body with specific name
 ors::Body* ors::KinematicWorld::getBodyByName(const char* name) const {
   for(Body *b: bodies) if(b->name==name) return b;
-  if(strcmp("glCamera", name)!=0)
-    MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
+//  if(strcmp("glCamera", name)!=0)
+//    MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
 }
 
