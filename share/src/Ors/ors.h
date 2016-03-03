@@ -278,9 +278,11 @@ struct KinematicWorld : GLDrawer{
   void kinematicsVec (arr& y, arr& J, Body *b, const ors::Vector& vec=NoVector) const;
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
-  void jacobianR(arr& J, Body *b) const;
+  void axesMatrix(arr& J, Body *b) const;
   void kinematicsRelPos (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const;
   void kinematicsRelVec (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const;
+  void kinematicsRelRot (arr& y, arr& J, Body *b1, Body *b2) const;
+
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;

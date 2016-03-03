@@ -64,7 +64,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G) {
         arr Ji, Jj, JRj;
         G.kinematicsPos(NoArr, Ji, body_i, &vec_i);
         G.kinematicsPos(NoArr, Jj, body_j, &vec_j);
-        G.jacobianR(JRj, body_j);
+        G.axesMatrix(JRj, body_j);
         J.resize(3, Jj.d1);
         for(uint k=0; k<Jj.d1; k++) {
           ors::Vector vi(Ji(0, k), Ji(1, k), Ji(2, k));

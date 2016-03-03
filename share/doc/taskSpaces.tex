@@ -36,11 +36,11 @@
 \usepackage{fancyvrb}
 \DefineShortVerb{\@}
 
-\newcommand{\pos}{{\textsf{pos}}}
+\newcommand{\pos}{{\textsf{p}}}
 \newcommand{\eff}{{\textsf{eff}}}
-\newcommand{\rot}{{\textsf{rot}}}
-\newcommand{\veC}{{\textsf{vec}}}
-\newcommand{\quat}{{\textsf{quat}}}
+\newcommand{\rotvec}{{\textsf{w}}}
+\newcommand{\veC}{{\textsf{v}}}
+\newcommand{\quat}{{\textsf{q}}}
 \newcommand{\col}{{\textsf{col}}}
 \newcommand{\TR}[2]{T_{{#1}\rightarrow{#2}}}
 \newcommand{\RO}[2]{R_{{#1}\rightarrow{#2}}}
@@ -93,49 +93,86 @@ level) is controlled by the RelationalMachine, see its docu.)
 
 In both cases, defining task spaces is the core.
 
+\section{Basic notation}
+
+We follow the notation in the robotics lecture slides. We enumerate
+all bodies by $i\in\BB$. We typically use $v,w\in\RRR^3$ to denote
+vectors attached to bodies. $\TR{W}{i}$ is the 4-by-4 homogeneous
+transform from world frame to the frame of shape $i$, and $\RO{W}{i}$
+is its rotation matrix only. In the text (not in equations) we
+sometimes write
+$$(i+ v)$$
+where $i$ denotes a body and $v\in\RRR^3$ a relative 3D-vector. The
+rigorous notation for this would be $\TR{W}{i} v$, which is the
+position of $i$ plus the relative displacement $v$.
+
+To numerically evaluate kinematics we assume that, for a certain joint
+configuration $q$, the positions $p_k$ and axes $a_k$ of all joints
+$k\in JJ$ have been precomputed. The boolean expression
+$$[k\prec i] $$ iff joint $k$ is ``below'' body $i$ in the kinematic
+tree, that is, joint $k$ is between root and body $i$ and therefore
+moves it.
+
+Sometimes we write $J_{\cdot k}=...$, which means that the $k$th
+column of $J$ is defined as given.
+
+Let's first define
+\begin{align}
+(A_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ rotational}]~ a_k && \text{axes matrix below $i$}
+\end{align}
+This matrix contains all rotational axes below $i$ as columns and will
+turn out convenient, because it captures all axes that make $i$
+move. Many Jacobians can easily be described using $A_i$. Analogously
+we define
+\begin{align}
+(T_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ prismatic}]~ a_k && \text{prism matrix below $i$}
+\end{align}
+This captures all prismatic joints. Note the following relation to
+Featherstone's notation: In his notation, $h_k\in\RRR^6$ denotes, for
+very joint $k$, how much the joints contributes to rotation and translation,
+expressed in the link frame. The two matrices $A_i$ and $T_i$ together
+express the same, but in world coordinates. While typically axes have
+unit length (and entries of $h$ are zeros or ones), this is not necessary
+in general, allowing for arbitrary scaling of joint configurations $q$
+with these axis (e.g., using degree instead of radial units).
+
+For convenience, for a matrix of 3D columns $A\in\RRR^{n\times 3}$, we write
+$$B = A\times p \iff B_{\cdot k} = A_{\cdot k} \times p$$
+which is the column-wise cross product. Also, we define
+\begin{align}
+(\hat A_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ rotational}]~ a_k \times p_k && \text{axes
+    position matrix below $i$}
+\end{align}
+which could also be written as $\hat A_i = A_i \times P$ if $P$
+contains all axes positions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Task Spaces}
 
-The notation is as in the robotics lecture slides. In particular,
-$\TR{W}{i}$ is the 4-by-4 homogeneous transform from world frame to
-the frame of shape $i$; and $\RO{W}{i}$ is its rotation matrix only.
+\paragraph{Position}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{Position}
-
-\subsubsection{absolute}
-
-parameters: shape index $i$, point offset $v$
-
-$\phi^\pos_{iv}(q) = \TR{W}{i}~ v$
-
-$J^\pos_{iv}(q)_{\cdot k} = [k\prec i]~ a_k \times(\phi^\pos_{iv}(q) - p_k)$
-
-\begin{items}
-\item $a_k,p_k$ are axis and position of joint $k$
-\item $[k\prec i]$ indicates whether joint $k$ is between root and
-shape $i$
-\item $J_{\cdot k}$ is the $k$th column of $J$
-\end{items}
-
-\subsubsection{difference}
-
-parameters: shape indices $i,j$, point offset $v$ in $i$ and $w$ in $j$
-
-$\phi^\pos_{iv-jw}(q) = \phi^\pos_{iv} - \phi^\pos_{jw}$
-$\phi^\pos_{iv-jw}(q) = J^\pos_{iv} - J^\pos_{jw}$
-
-\subsubsection{relative}
-
-parameters: shape indices $i,j$, point offset $v$ in $i$ and $w$ in $j$
-
-$\phi^\pos_{iv|jw}(q) = R_j^\1 (\phi^\pos_{iv} - \phi^\pos_{jw})$
-
-$J^\pos_{iv|jw}(q) = R_j^\1 [J^\pos_{iv}-J^\pos_{jw} - A_j \times (\phi^\pos_{iv} - \phi^\pos_{jw})]$
+\begin{align}
+\phi^\pos_{iv}(q)
+ &= \TR{W}{i}~ v
+ && \text{position of $(i+v)$} \\
+J^\pos_{iv}(q)_{\cdot k}
+ &= [k\prec i]~ a_k \times(\phi^\pos_{iv}(q) - p_k) \\
+J^\pos_{iv}(q)
+ &= A_i \times \phi^\pos_{iv}(q) - \hat A_i \\
+\phi^\pos_{iv-jw}(q)
+ &= \phi^\pos_{iv} - \phi^\pos_{jw}
+ && \text{position difference} \\
+J^\pos_{iv-jw}(q)
+ & = J^\pos_{iv} - J^\pos_{jw} \\
+\phi^\pos_{iv|jw}(q)
+ & = R_j^\1 (\phi^\pos_{iv} - \phi^\pos_{jw})
+ && \text{relative position} \\
+J^\pos_{iv|jw}(q)
+ & = R_j^\1 [J^\pos_{iv}-J^\pos_{jw} - A_j \times (\phi^\pos_{iv} - \phi^\pos_{jw})]
+\end{align}
 
 Derivation: For $y=R p$ the derivative w.r.t.\ a rotation around axis
 $a$ is $y' = R p' + R' p = R p' + a \times R p$. For $y=R^\1 p$ the
@@ -144,66 +181,63 @@ p)$.  (For details see
 \url{http://ipvs.informatik.uni-stuttgart.de/mlr/marc/notes/3d-geometry.pdf})
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Vector}
 
-\subsection{Vector}
-
-\subsubsection{absolute}
-
-parameters: shape index $i$, attached vector $v$
-
-$\phi^\veC_{iv}(q) = \RO{W}{i}~ v$
-
-$J^\veC_{iv}(q) = A_i\times \phi^\veC_{iv}(q)$
-\begin{items}
-\item $A_i$ is a matrix with columns $(A_i)_{\cdot k} = [k \prec i]~
-a_k$ containing the joint axes or zeros
-\item the short notation ``$A\times p$'' means that
-   each \emph{column} in $A$ takes the cross-product with $p$.
-\end{items}
-
-\subsubsection{difference}
-
-parameters: shape indices $i,j$, attached vectors $v$ in $i$ and $w$ in $j$
-
-$\phi^\veC_{iv-jw}(q) = \phi^\veC_{iv} - \phi^\veC_{jw}$
-
-$J^\veC_{iv-jw}(q) = J^\veC_{iv} - J^\veC_{jw}$
-
-\subsubsection{relative}
-
-parameters: shape indices $i,j$, attached vector $v$ in $i$
-
-$\phi^\veC_{iv|j}(q) = R_j^\1 \phi^\veC_{iv}$
-
-$J^\veC_{iv|j}(q) = R_j^\1 [J^\veC_{iv} - A_j \times \phi^\veC_{iv}]$
+\begin{align}
+\phi^\veC_{iv}(q)
+ &= \RO{W}{i}~ v
+ && \text{vector} \\
+J^\veC_{iv}(q)
+ &= A_i\times \phi^\veC_{iv}(q) \\
+\phi^\veC_{iv-jw}(q)
+ &= \phi^\veC_{iv} - \phi^\veC_{jw}
+ && \text{vector difference} \\
+J^\veC_{iv-jw}(q)
+ &= J^\veC_{iv} - J^\veC_{jw} \\
+\phi^\veC_{iv|j}(q)
+ &= R_j^\1 \phi^\veC_{iv}
+ && \text{relative vector} \\
+J^\veC_{iv|j}(q)
+ &= R_j^\1 [J^\veC_{iv} - A_j \times \phi^\veC_{iv}]
+\end{align}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Quaternion}
 
-\subsubsection{absolute}
+See equation (15) in the geometry notes for explaining the jacobian.
+\begin{align}
+\phi^\quat_{i}(q)
+ &= \text{quaternion}(\RO{W}{i})
+ && \text{quaternion $\in\RRR^4$} \\
+J^\quat_{i}(q)_{\cdot k}
+ &= \mat{c}{0 \\ \half (A_i)_{\cdot k}} \circ \phi^\quat_{i}(q)
+ && J^\quat_{i}(q)\in\RRR^{4 \times n} \\
+\phi^\quat_{i-j}(q)
+ &= \phi^\quat_{i} - \phi^\quat_{j}
+ && \text{difference $\in\RRR^4$} \\
+J^\quat_{i-j}(q)
+ &= J^\quat_{i} - J^\quat_{j} \\
+\phi^\quat_{i|j}(q)
+ &= (\phi^\quat_{j})^\1 \circ \phi^\quat_{i}
+ && \text{relative} \\
+J^\quat_{i|j}(q)
+ &= \text{not implemented}
+\end{align}
 
-parameters: shape index $i$
+A relative rotation can also be measured in terms of the 3D rotation
+vector. Lets define
+$$w(r) = \frac{2 \p}{\sin(\p)} \bar r \comma
+\p=\acos(r_0)$$
+as the rotation for a quaternion. We have
+\begin{align}
+\phi^\rotvec_{i|j}(q)
+ &= w(\phi^\quat_{j})^\1 \circ \phi^\quat_{i})
+ && \text{relative rotation vector $\in\RRR^3$} \\
+J^\rotvec_{i|j}(q)
+ &= AJ^\quat_{i} - J^\quat_{j} \\
+\end{align}
 
-$\phi^\quat_{i}(q) = \text{quaternion}(\RO{W}{i})$
-
-$J^\quat_{i}(q) = \text{special}$
-
-\subsubsection{difference}
-
-parameters: shape indices $i,j$
-
-$\phi^\quat_{i-j}(q) = \phi^\quat_{i} - \phi^\quat_{j}$
-
-$J^\quat_{i-j}(q) = J^\quat_{i} - J^\quat_{j}$
-
-\subsubsection{relative}
-
-parameters: shape indices $i,j$
-
-$\phi^\quat_{i|j}(q) = \phi^\quat_{j}^\1 \circ \phi^\quat_{i}$
-
-$J^\quat_{i-j}(q) = \text{not implemented}$
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

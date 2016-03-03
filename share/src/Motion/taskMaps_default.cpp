@@ -112,7 +112,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
       arr Ji, Jj, JRj;
       G.kinematicsPos(NoArr, Ji, body_i, vec_i);
       G.kinematicsPos(NoArr, Jj, body_j, vec_j);
-      G.jacobianR(JRj, body_j);
+      G.axesMatrix(JRj, body_j);
       J.resize(3, Jj.d1);
       for(uint k=0; k<Jj.d1; k++) {
         ors::Vector vi(Ji(0, k), Ji(1, k), Ji(2, k));
@@ -246,8 +246,8 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 
   if(type==quatDiffTMT){
-    ors::Quaternion q_i; if(i>=0) q_i=G.shapes(i)->rel.rot; else q_i.setZero();
-    ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
+//    ors::Quaternion q_i; if(i>=0) q_i=G.shapes(i)->rel.rot; else q_i.setZero();
+//    ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
     G.kinematicsQuat(y, J, body_i);
     if(!body_j){ //relative to world
 //      arr y2 = conv_vec2arr(q_j);

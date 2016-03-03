@@ -36,18 +36,6 @@
 extern Singleton<Graph> registry;
 void initRegistry(int argc, char *argv[]);
 
-//macros to be used in *.cpp files
-
-#define REGISTER_ITEM(T, key, value) \
-  RUN_ON_INIT_BEGIN(key) \
-  new Node_typed<T>(registry(), {#key}, NodeL(), value); \
-  RUN_ON_INIT_END(key)
-
-#define REGISTER_ITEM2(T, key1, key2, value) \
-  RUN_ON_INIT_BEGIN(key1##_##key2) \
-  new Node_typed<T>(registry(), {mlr::String(#key1), mlr::String(#key2)}, NodeL(), value); \
-  RUN_ON_INIT_END(key1##_##key2)
-
 
 //===========================================================================
 //
@@ -155,7 +143,9 @@ struct Type_typed_readable:Type_typed<T,Base> {
 #define KO ,
 
 #define REGISTER_TYPE(T) \
-  REGISTER_ITEM2(Type, Decl_Type, T, Type_typed_readable<T KO void>(NULL,NULL));
+  RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
+  new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), new Type_typed_readable<T KO void>(NULL,NULL)); \
+  RUN_ON_INIT_END(Decl_Type##_##T)
 
 #define REGISTER_TYPE_Key(Key, T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##Key) \
@@ -163,7 +153,9 @@ struct Type_typed_readable:Type_typed<T,Base> {
   RUN_ON_INIT_END(Decl_Type##_##Key)
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
-  REGISTER_ITEM2(Type, Decl_Type, T, Type_typed_readable<T KO Base>(#Base,NULL));
+  RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
+  new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), new Type_typed_readable<T KO Base>(#Base,NULL)); \
+  RUN_ON_INIT_END(Decl_Type##_##T)
 
 
 #endif
