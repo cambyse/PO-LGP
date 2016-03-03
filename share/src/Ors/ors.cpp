@@ -2602,39 +2602,37 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 
 void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
   arr q = to.getJointState();
-  uint T, dim;
-  if(qfrom.d1 > 0) {
-    T = qfrom.d0;
-    qto = repmat(~q,T,1);
-    dim = qfrom.d1;
-  } else {
-    T = 1;
-    qto = q;
-    dim = qfrom.d0;
-  }
+  uint T = qfrom.d0;
+  uint Nfrom = qfrom.d1;
 
-  intA match(dim);
+  if (qfrom.d1==0) {T = 1; Nfrom = qfrom.d0;}
+
+  qto = repmat(~q,T,1);
+
+  intA match(Nfrom);
   match = -1;
   for(ors::Joint* jfrom:from.joints){
-    ors::Joint* jto = to.getJointByName(jfrom->name, false); //OLD: to.getJointByBodyNames(jfrom->from->name, jfrom->to->name); why???
+    ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
       match(jfrom->qIndex+i) = jto->qIndex+i;
     }
   }
-  if(qfrom.d1 > 0) {
-    for(uint i=0;i<match.N;i++) if(match(i)!=-1){
-      for(uint t=0;t<T;t++){
+
+  for(uint i=0;i<match.N;i++) if(match(i)!=-1){
+    for(uint t=0;t<T;t++){
+      if (qfrom.d1==0) {
+        qto(t, match(i)) = qfrom(i);
+      } else {
         qto(t, match(i)) = qfrom(t,i);
       }
     }
-  } else {
-    for(uint i=0;i<match.N;i++) if(match(i)!=-1){
-      qto(match(i)) = qfrom(i);
-    }
   }
+
+  if (qfrom.d1==0) {qto.flatten();}
 }
+
 
 void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
   //TODO: for saveness reasons, the velocities are zeroed.

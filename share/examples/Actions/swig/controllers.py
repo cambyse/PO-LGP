@@ -4,7 +4,10 @@ This module contains the high level controller to manipulate the lock box.
 """
 from __future__ import division
 
-from enum import Enum
+try:
+    from enum import Enum
+except ImportError:
+    from enum34 import Enum
 
 from actions import *
 from utils import SIDE

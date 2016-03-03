@@ -3,9 +3,10 @@
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
-TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
-  world = new ors::KinematicWorld(world_);
-  world->q = world_.q;
+
+TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::KinematicWorld &world_pr2_) {
+  world_plan = &world_plan_;
+  world_pr2 = &world_pr2_;
 
   threadOpenModules(true);
 
@@ -16,13 +17,13 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
   if (useRos) {
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-    for(;;){
+    for (;;) {
       S.ctrl_obs.var->waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
-      cout <<"LOCAL  joint dimension=" <<world->q.N <<endl;
+      cout <<"LOCAL  joint dimension=" <<world_pr2->q.N <<endl;
 
-      if(S.ctrl_obs.get()->q.N==world->q.N
-         && S.ctrl_obs.get()->qdot.N==world->q.N)
+      if (S.ctrl_obs.get()->q.N==world_pr2->q.N
+         && S.ctrl_obs.get()->qdot.N==world_pr2->q.N)
         break;
     }
 
@@ -31,58 +32,70 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_) {
     q = S.ctrl_obs.get()->q;
     qdot = S.ctrl_obs.get()->qdot;
 
-    world->setJointState(q, qdot);
+    world_pr2->setJointState(q, qdot);
+    arr q_plan;
+    getStatePlan(q_plan);
+    world_plan->setJointState(q_plan,q_plan*0.);
 
-    //-- define controller msg (TODO: read from MT.cfg)
+    //-- define controller msg
     refs.fL = zeros(6);
     refs.KiFTL.clear();
     refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
-    refs.Kp = ARR(1.0);
-    refs.Kd = ARR(2.5);
-    refs.Ki = ARR(0.5);
-    refs.fL_gamma = 1.;
+    refs.Kp = ARR(mlr::getParameter<double>("controller/Kp",1.5));
+    refs.Kd = ARR(mlr::getParameter<double>("controller/Kd",2.5));
+    refs.Ki = ARR(mlr::getParameter<double>("controller/Ki",0.));
+    refs.gamma = 1.;
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
-    refs.intLimitRatio = 0.8;
+    refs.intLimitRatio = 0.9;
   }
 }
 
+void TrajectoryInterface::executeTrajectoryPlan(arr &X_plan, double T, bool recordData, bool displayTraj) {
+  /// convert trajectory into pr2 kinematics world
+  arr X_pr2;
+  transferQbetweenTwoWorlds(X_pr2,X_plan,*world_pr2,*world_plan);
+  executeTrajectory(X_pr2, T, recordData,displayTraj);
+}
 
-void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
-{
-  world->watch(true,"Press Enter to display trajectory");
-  displayTrajectory(X,100,*world,"X");
-  world->watch(true,"Press Enter to execute trajectory");
-
+void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordData, bool displayTraj) {
+  if (displayTraj) {
+    world_pr2->watch(true,"Press Enter to visualize motion");
+    displayTrajectory(X_pr2,-1,*world_pr2,"X_pr2");
+    world_pr2->watch(true,"Press Enter to execute motion");
+  }
   /// compute spline for trajectory execution
-  double dt = T/double(X.d0);
+  double dt = T/double(X_pr2.d0);
   cout <<"dt: " << dt << endl;
   cout <<"T: " << T << endl;
   arr Xdot;
-  getVel(Xdot,X,dt);
-  mlr::Spline XS(X.d0,X);
+  getVel(Xdot,X_pr2,dt);
+  mlr::Spline XS(X_pr2.d0,X_pr2);
   mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
-  if (recordData) {logTact.clear(); logXdes.clear(); logXact.clear(); logFLact.clear(); logUact.clear(); logMact.clear();}
+  if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logXref = X_pr2;}
 
-  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
-  ors::Joint *torso = world->getJointByName("torso_lift_joint");
+  ors::Joint *trans = world_pr2->getJointByName("worldTranslationRotation");
+  ors::Joint *torso = world_pr2->getJointByName("torso_lift_joint");
 
   arr q0;
   if (useRos) {
     q0 = S.ctrl_obs.get()->q;
   } else {
-    q0 = world->getJointState();
+    q0 = world_pr2->getJointState();
   }
 
   mlr::timerStart(true);
   double t = 0.;
 
-  while(t<T) {
+  double dtLog = 0.05;
+  double tPrev = -dtLog;
+  while(t<T*1.5) {
     double s = t/T;
-    if (s>1. || s<0.) { break;}
+    if (s>1.) { s=1.;}
+    if (s<0.) { break;}
     /// set next target
     refs.q = XS.eval(s);
     refs.qdot = XdotS.eval(s);
@@ -104,51 +117,71 @@ void TrajectoryInterface::executeTrajectory(arr &X, double T, bool recordData)
 
     t = t + mlr::timerRead(true);
 
-    world->setJointState(refs.q);
-    world->gl().update();
+    world_pr2->setJointState(refs.q);
+//    world_pr2->gl().update();
 
     /// logging
-    if (recordData) {
-        logTact.append(ARR(t));
-        logXdes.append(~refs.q);
-        logXact.append(~S.ctrl_obs.get()->q);
-        logFLact.append(~S.ctrl_obs.get()->fL);
-        logFRact.append(~S.ctrl_obs.get()->fR);
-        logUact.append(~S.ctrl_obs.get()->u_bias);
+    if (recordData && (s<1.) && ((t-tPrev)>=dtLog)) {
+      tPrev = t;
+      logT.append(ARR(t));
+      logXdes.append(~refs.q);
+      logX.append(~S.ctrl_obs.get()->q);
+      logFL.append(~S.ctrl_obs.get()->fL);
+      logFR.append(~S.ctrl_obs.get()->fR);
+      logU.append(~S.ctrl_obs.get()->u_bias);
     }
   }
 }
 
+void TrajectoryInterface::getStatePlan(arr &q_plan) {
+  arr q_pr2 = S.ctrl_obs.get()->q;
+  transferQbetweenTwoWorlds(q_plan,q_pr2,*world_plan,*world_pr2);
+}
 
-void TrajectoryInterface::gotoPosition(arr x, double T, bool recordData) {
-  MotionProblem MP(*world,false);
-  MP.T = 100;
-  MP.tau = 0.05;
-  if (useRos) {
-    MP.world.setJointState(S.ctrl_obs.get()->q);
-  }else{
-    MP.world.setJointState(world->getJointState());
-  }
-
-  Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world), sumOfSqrTT);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
-  t->map.order=2;
-  t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
-
-  t =MP.addTask("posT", new TaskMap_qItself(), sumOfSqrTT);
-  t->setCostSpecs(MP.T-2,MP.T, x, 1e2);
-
-  arr X = MP.getInitialization();
-  OptOptions o;
-  o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
-  optConstrained(X, NoArr, Convert(MP), o);
-
-  executeTrajectory(X,T,recordData);
+void TrajectoryInterface::getState(arr &q_pr2) {
+  cout << "1" << endl;
+//  S.ctrl_obs.var->waitForNextRevision();
+  cout << "2" << endl;
+  q_pr2 = S.ctrl_obs.get()->q;
 }
 
 
-void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T_start) {
+void TrajectoryInterface::gotoPositionPlan(arr x_plan, double T, bool recordData, bool displayTraj) {
+  arr x_pr2;
+  transferQbetweenTwoWorlds(x_pr2,x_plan,*world_pr2,*world_plan);
+  gotoPosition(x_pr2, T, recordData,displayTraj);
+}
+
+void TrajectoryInterface::gotoPosition(arr x_pr2, double T, bool recordData, bool displayTraj) {
+  MotionProblem MP(*world_pr2,false);
+  MP.T = 100;
+  MP.tau = 0.05;
+  if (useRos) {
+    MP.x0 = S.ctrl_obs.get()->q;
+  } else {
+    MP.x0 = world_pr2->getJointState();
+  }
+
+  Task *t;
+  t = MP.addTask("tra", new TransitionTaskMap(*world_pr2));
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_pr2);
+  t->map.order=2;
+  t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
+
+  t =MP.addTask("posT", new TaskMap_qItself());
+  t->setCostSpecs(MP.T-2,MP.T, x_pr2, 1e2);
+
+  MotionProblemFunction MPF(MP);
+  arr X_pr2 = MP.getInitialization();
+  OptOptions o;
+  o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
+  optConstrained(X_pr2, NoArr, Convert(MPF), o);
+
+  executeTrajectory(X_pr2,T,recordData,displayTraj);
+}
+
+
+void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,double T_start) {
   mlr::wait(T_start);
 
   /// send zero gains
@@ -168,9 +201,9 @@ void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T
   refs_zero.intLimitRatio = 1.;
 
   /// fix head joint during recording
-  uint idx = world->getJointByName("head_pan_joint")->qIndex;
+  uint idx = world_pr2->getJointByName("head_pan_joint")->qIndex;
   refs_zero.Kp(idx,idx) = 2.0;
-  idx = world->getJointByName("head_tilt_joint")->qIndex;
+  idx = world_pr2->getJointByName("head_tilt_joint")->qIndex;
   refs_zero.Kp(idx,idx) = 2.0;
 
   S.ctrl_ref.set() = refs_zero;
@@ -182,11 +215,11 @@ void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T
 
   /// record demonstrations
   double t = 0.;
-  X.clear();
+  X_pr2.clear();
   mlr::timerStart(true);
   while(t<T) {
     arr q = S.ctrl_obs.get()->q;
-    X.append(~q);
+    X_pr2.append(~q);
     mlr::wait(dt);
     t = t + mlr::timerRead(true);
   }
@@ -200,6 +233,19 @@ void TrajectoryInterface::recordDemonstration(arr &X,double T,double dt,double T
   S.ctrl_ref.set() = refs;
 }
 
+void TrajectoryInterface::moveLeftGripper(double d) {
+  arr q_pr2;
+  getState(q_pr2);
+  q_pr2(world_pr2->getJointByName("l_gripper_joint")->qIndex) = d;
+  gotoPosition(q_pr2,5.,false,true);
+}
+
+void TrajectoryInterface::moveRightGripper(double d) {
+  arr q_pr2;
+  getState(q_pr2);
+  q_pr2(world_pr2->getJointByName("r_gripper_joint")->qIndex) = d;
+  gotoPosition(q_pr2);
+}
 
 void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
   cout << "stopping motion" << endl;
@@ -221,7 +267,7 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
   refs_zero.fL_gamma = 1.;
   S.ctrl_ref.set() = refs_zero;
 
-  world->watch(true,"press button to continue");
+  world_pr2->watch(true,"press button to continue");
   cout << "continuing motion" << endl;
 
   /// reset gains
@@ -232,12 +278,13 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 
 
 void TrajectoryInterface::logging(mlr::String folder, uint id) {
-  write(LIST<arr>(logXact),STRING(folder<<"Xact"<<id<<".dat"));
+  write(LIST<arr>(logX),STRING(folder<<"X"<<id<<".dat"));
   write(LIST<arr>(logXdes),STRING(folder<<"Xdes"<<id<<".dat"));
-  write(LIST<arr>(logTact),STRING(folder<<"Tdes"<<id<<".dat"));
+  write(LIST<arr>(logXref),STRING(folder<<"Xref"<<id<<".dat"));
+  write(LIST<arr>(logT),STRING(folder<<"T"<<id<<".dat"));
 
-  if (logFLact.N>0) write(LIST<arr>(logFLact),STRING(folder<<"FLact"<<id<<".dat"));
-  if (logFRact.N>0) write(LIST<arr>(logFRact),STRING(folder<<"FRact"<<id<<".dat"));
-  if (logMact.N>0) write(LIST<arr>(logMact),STRING(folder<<"Mact"<<id<<".dat"));
-  if (logUact.N>0) write(LIST<arr>(logUact),STRING(folder<<"Uact"<<id<<".dat"));
+  if (logFL.N>0) write(LIST<arr>(logFL),STRING(folder<<"FL"<<id<<".dat"));
+  if (logFR.N>0) write(LIST<arr>(logFR),STRING(folder<<"FR"<<id<<".dat"));
+  if (logM.N>0) write(LIST<arr>(logM),STRING(folder<<"M"<<id<<".dat"));
+  if (logU.N>0) write(LIST<arr>(logU),STRING(folder<<"U"<<id<<".dat"));
 }
