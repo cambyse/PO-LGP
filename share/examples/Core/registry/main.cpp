@@ -14,7 +14,6 @@ struct Derived:NewType{
 
 REGISTER_TYPE(NewType)
 REGISTER_TYPE(double)
-REGISTER_ITEM(double, mykey, new double(3.), true)
 REGISTER_TYPE_DERIVED(Derived, NewType)
 
 void TEST(Registry){

@@ -17,8 +17,8 @@ void RelationalMachine::init(const char* filename){
   }else{
     LOG(1) <<"No '"<<filename<<"' for initialization given! This might fail!";
   }
-  if(!KB["TMP"])   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
-  if(!KB["STATE"]) new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(), true);
+  if(!KB["TMP"])   newSubGraph(KB, {"TMP"}, {});
+  if(!KB["STATE"]) newSubGraph(KB, {"STATE"}, {});
   state = &KB["STATE"]->graph();
   tmp   = &KB["TMP"]->graph();
 }
@@ -88,14 +88,14 @@ mlr::String RelationalMachine::getState() const{
   return str;
 }
 
-mlr::String RelationalMachine::getRules(){
+mlr::String RelationalMachine::getRules() const{
   NodeL rules = KB.getNodes("Rule");
   mlr::String str;
   listWrite(rules, str, "\n  ", "[]");
   return str;
 }
 
-StringA RelationalMachine::getSymbols(){
+StringA RelationalMachine::getSymbols() const{
   NodeL symbols = getSymbolsOfScope(KB);
   StringA strs(symbols.N);
   for(uint i=0;i<symbols.N;i++){

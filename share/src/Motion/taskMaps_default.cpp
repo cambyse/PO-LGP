@@ -42,7 +42,7 @@ DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
   Node *it=specs["type"];
   if(it){
-    mlr::String Type=it->V<mlr::String>();
+    mlr::String Type=it->get<mlr::String>();
          if(Type=="pos") type=posTMT;
     else if(Type=="vec") type=vecTMT;
     else if(Type=="quat") type=quatTMT;
@@ -53,10 +53,10 @@ DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
     else if(Type=="gazeAt") type=gazeAtTMT;
     else HALT("unknown type " <<Type);
   }else HALT("no type given");
-  if((it=specs["ref1"])){ auto name=it->V<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
-  if((it=specs["ref2"])){ auto name=it->V<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
-  if((it=specs["vec1"])) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
-  if((it=specs["vec2"])) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+  if((it=specs["ref1"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
+  if((it=specs["ref2"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
+  if((it=specs["vec1"])) ivec = ors::Vector(it->get<arr>());  else ivec.setZero();
+  if((it=specs["vec2"])) jvec = ors::Vector(it->get<arr>());  else jvec.setZero();
 }
 
 DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
@@ -78,11 +78,11 @@ DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
   else HALT("unknown type " <<Type);
   if(ref1){ ors::Shape *s=G.getShapeByName(ref1); CHECK(s,"shape name '" <<ref1 <<"' does not exist"); i=s->index; }
   if(ref2){ ors::Shape *s=G.getShapeByName(ref2); CHECK(s,"shape name '" <<ref2 <<"' does not exist"); j=s->index; }
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
     Node *it;
-    if((it=params->getNode("vec1"))) ivec = ors::Vector(it->V<arr>());  else ivec.setZero();
-    if((it=params->getNode("vec2"))) jvec = ors::Vector(it->V<arr>());  else jvec.setZero();
+    if((it=params.getNode("vec1"))) ivec = ors::Vector(it->get<arr>());  else ivec.setZero();
+    if((it=params.getNode("vec2"))) jvec = ors::Vector(it->get<arr>());  else jvec.setZero();
   }
 }
 
@@ -112,7 +112,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
       arr Ji, Jj, JRj;
       G.kinematicsPos(NoArr, Ji, body_i, vec_i);
       G.kinematicsPos(NoArr, Jj, body_j, vec_j);
-      G.jacobianR(JRj, body_j);
+      G.axesMatrix(JRj, body_j);
       J.resize(3, Jj.d1);
       for(uint k=0; k<Jj.d1; k++) {
         ors::Vector vi(Ji(0, k), Ji(1, k), Ji(2, k));
@@ -259,8 +259,8 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 
   if(type==quatDiffTMT){
-    ors::Quaternion q_i; if(i>=0) q_i=G.shapes(i)->rel.rot; else q_i.setZero();
-    ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
+//    ors::Quaternion q_i; if(i>=0) q_i=G.shapes(i)->rel.rot; else q_i.setZero();
+//    ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
     G.kinematicsQuat(y, J, body_i);
     if(!body_j){ //relative to world
 //      arr y2 = conv_vec2arr(q_j);

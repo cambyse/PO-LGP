@@ -15,10 +15,10 @@ TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const char* s1, const cha
 
 TaskMap_GJK::TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact) : exact(exact){
   Node *it;
-  if((it=specs["ref1"])){ auto name=it->V<mlr::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
-  if((it=specs["ref2"])){ auto name=it->V<mlr::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
-//  if((it=specs["vec1"])) vec1 = ors::Vector(it->V<arr>());  else vec1.setZero();
-//  if((it=specs["vec2"])) vec2 = ors::Vector(it->V<arr>());  else vec2.setZero();
+  if((it=specs["ref1"])){ auto name=it->get<mlr::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
+  if((it=specs["ref2"])){ auto name=it->get<mlr::String>(); auto *s=W.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
+//  if((it=specs["vec1"])) vec1 = ors::Vector(it->get<arr>());  else vec1.setZero();
+//  if((it=specs["vec2"])) vec2 = ors::Vector(it->get<arr>());  else vec2.setZero();
 }
 
 void TaskMap_GJK::phi(arr& v, arr& J, const ors::KinematicWorld& W, int t){

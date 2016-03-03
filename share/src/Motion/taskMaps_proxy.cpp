@@ -64,7 +64,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
     } break;
     case allExceptListedPTMT:
       for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
-        if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
+        if(!(shapes.contains(p->a) && shapes.contains(p->b))) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 3;
         }

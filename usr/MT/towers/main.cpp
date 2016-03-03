@@ -79,8 +79,8 @@ struct TowerProgram:ConstrainedProblem{
 void optTowers() {
   ors::KinematicWorld W;
   Graph logicState;
-  Node *touch = new Node_typed<bool>(logicState, {"touch"}, {}, new bool(true), true);
-  Graph& state = (new Node_typed<Graph>(logicState, {"STATE"}, {}, new Graph(), true))->graph();
+  Node *touch = new Node_typed<bool>(logicState, {"touch"}, {}, true);
+  Graph& state = newSubGraph(logicState, {"STATE"}, {})->value;
   //-- add random objects
   uint K=10;
   ors::Body base(W);

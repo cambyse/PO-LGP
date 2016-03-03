@@ -62,7 +62,7 @@ void rewriteGraph(){
       if(pit){
         mlr::String label/*("eff")*/;
         if(eff->parents.N>1) label <<eff->parents(1)->keys(1);
-        if(eff->getValueType()==typeid(bool) && eff->V<bool>()==false) label <<'!';
+        if(eff->isOfType<bool>() && eff->get<bool>()==false) label <<'!';
         nice.append<bool>({label}, {rit, pit}, NULL, false);
       }
     }

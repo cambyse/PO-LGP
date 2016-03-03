@@ -56,9 +56,6 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
 
 //===========================================================================
 
-
-//===========================================================================
-
 TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   if(specs->parents.N<2) return NULL; //these are not task specs
 
@@ -70,12 +67,15 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
 
   //-- create a task map
   TaskMap *map;
-  const Graph* params=specs->getValue<Graph>();
+  const Graph* params=NULL;
+  if(specs->isGraph()) params = &specs->graph();
 //  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
     map = new CollisionConstraint( (params?params->get<double>("margin", 0.1):0.1) );
+  }else if(type=="limitIneq"){
+    map = new LimitsConstraint();
   }else if(type=="collisionPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -92,6 +92,19 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
       shapes.append(s->index);
     }
     map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+  }else if(type=="collisionExcept"){
+    uintA shapes;
+    for(uint i=2;i<specs->parents.N;i++){
+      ors::Shape *s = world.getShapeByName(specs->parents(i)->keys.last());
+      if(!s){
+        ors::Body *b = world.getBodyByName(specs->parents(i)->keys.last());
+        CHECK(b,"No shape or body '" <<specs->parents(i)->keys.last() <<"'");
+        for(ors::Shape *s:b->shapes) shapes.append(s->index);
+      }else{
+        shapes.append(s->index);
+      }
+    }
+    map = new ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
     map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
@@ -100,7 +113,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
       if(!j) return NULL;
       map = new TaskMap_qItself(world, j);
     }else if(ref1) map = new TaskMap_qItself(world, ref1);
-    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
+    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->get<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="qZeroVels"){
     map = new TaskMap_qZeroVels();
@@ -111,9 +124,9 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
   }
 
   //-- check additional real-valued parameters: order
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    map->order = params->get<double>("order", 0);
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    map->order = params.get<double>("order", 0);
   }
   return map;
 }

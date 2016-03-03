@@ -35,6 +35,8 @@ void RelationalMachineModule::open(){
   RM().init("machine.fol");
   RM().state->callbacks.append(new RM_EditCallback(*this));
   RM.deAccess();
+  state.set() = RM.get()->getState();
+  symbols.set() = RM.get()->getSymbols();
   threadStep(1);
 }
 

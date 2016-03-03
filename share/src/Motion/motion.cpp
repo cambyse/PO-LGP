@@ -28,12 +28,13 @@
 
 //===========================================================================
 
-void Task::setCostSpecs(uint fromTime,
+void Task::setCostSpecs(int fromTime,
                         uint toTime,
                         const arr& _target,
                         double _prec){
   if(&_target) target = _target; else target = {0.};
-  CHECK(toTime>=fromTime,"");
+  if(fromTime<0) fromTime=0;
+  CHECK((int)toTime>=fromTime,"");
   prec.resize(toTime+1).setZero();
   for(uint t=fromTime;t<=toTime;t++) prec(t) = _prec;
 }
@@ -60,10 +61,10 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
   Task *task = new Task(map, termType);
 
   //-- check for additional continuous parameters
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    arr time = params->get<arr>("time",{0.,1.});
-    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->get<arr>("target", {}), params->get<double>("scale", {1.}));
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    arr time = params.get<arr>("time",{0.,1.});
+    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params.get<arr>("target", {}), params.get<double>("scale", {1.}));
   }else{
     task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
   }
@@ -216,12 +217,12 @@ void MotionProblem::set_x(const arr& x){
 
 void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
   for(ors::KinematicSwitch *sw:switches) if(sw->timeOfApplication<=t){
-    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order), sw->timeOfApplication<t);
+    sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order), sw->timeOfApplication==t);
   }
 }
 
 void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
-  OpenGL gl;
+  OpenGL gl("MotionProblem display");
   gl.camera.setDefault();
 
   uint num;
@@ -272,7 +273,7 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
 
     if(&tt) for(uint i=0;i<y.N;i++) tt.append(task->type);
   }
-  if(&J){
+  if(&J && dimPhi_t){
     Jtmp.reshape(dimPhi_t, Jtmp.N/dimPhi_t);
     if(t<k_order) Jtmp.delColumns(0,(k_order-t)*configurations(0)->q.N); //delete the columns that correspond to the prefix!!
     J.append(Jtmp);
@@ -409,7 +410,7 @@ void MotionProblem::costReport(bool gnuplt) {
             gall += g;
           }
           taskG(i) += gpos;
-          plotData(t,i) = gall;
+          plotData(t,i) = gpos; //gall;
         }
         if(c->type==eqTT){
           double gpos=0.,gall=0.;
@@ -419,7 +420,7 @@ void MotionProblem::costReport(bool gnuplt) {
             gall += h;
           }
           taskG(i) += gpos;
-          plotData(t,i) = gall;
+          plotData(t,i) = gpos; //all;
         }
         m += d;
       }
@@ -467,7 +468,7 @@ void MotionProblem::costReport(bool gnuplt) {
   fil2 <<"set key autotitle columnheader" <<endl;
   fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
   fil2 <<"plot 'z.costReport' \\" <<endl;
-  for(uint i=1;i<=tasks.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l \\" <<endl;
+  for(uint i=1;i<=tasks.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l lw 3 lc " <<i <<" lt " <<1-((i/10)%2) <<" \\" <<endl;
   if(dualSolution.N) for(uint i=0;i<tasks.N;i++) fil2 <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
   fil2 <<endl;
   fil2.close();
@@ -512,8 +513,7 @@ Graph MotionProblem::getReport() {
   double totalC=0., totalG=0.;
   for(uint i=0; i<tasks.N; i++) {
     Task *c = tasks(i);
-    Graph *g=new Graph();
-    report.append<Graph>({c->name}, {}, g, true);
+    Graph *g = &newSubGraph(report, {c->name}, {})->value;
     g->append<double>({"order"}, {}, c->map.order);
     g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->type]));
     g->append<double>({"sqrCosts"}, {}, taskC(i));
