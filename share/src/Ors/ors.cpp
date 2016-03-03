@@ -2630,7 +2630,7 @@ void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicW
     }
   }
 
-  if (qfrom.d1==0) {qto.flatten();}
+  if (qfrom.d1==0) qto.reshape(qto.N);
 }
 
 
