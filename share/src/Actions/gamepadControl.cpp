@@ -27,10 +27,10 @@ void GamepadControlActivity::step(){
     if(!taskController->feedbackController) return;
     g2t = new Gamepad2Tasks(*taskController->feedbackController);
     ctrlTasks.set() = { g2t->endeffR, g2t->endeffL, g2t->base, g2t->torso, g2t->head, g2t->headAxes, g2t->limits, g2t->coll,  g2t->gripperL, g2t->gripperR };
-    taskController->verbose = true;
+//    taskController->verbose = true;
   }
   arr gamepad = gamepadState.get();
-  bool gamepad_shutdown = g2t->updateTasks(gamepad);
+  g2t->updateTasks(gamepad);
 //  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 }
 

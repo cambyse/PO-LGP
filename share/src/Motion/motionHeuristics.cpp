@@ -478,7 +478,7 @@ void setHomingGoals(MotionProblem& M, uint T){
 
 double keyframeOptimizer(arr& x, MotionProblem& MP, bool x_is_initialized, uint verbose) {
 
-  MotionProblem_EndPoseFunction MF(MP);
+//  MotionProblem_EndPoseFunction MF(MP);
 
   if (!x_is_initialized) x=MP.x0;
 

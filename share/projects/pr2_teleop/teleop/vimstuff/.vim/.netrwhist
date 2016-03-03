@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =4
+let g:netrw_dirhist_1='/home/moep/git/mlr/share/projects/pr2_teleop/teleop'
+let g:netrw_dirhist_2='/home/moep/git/mlr/share/projects/pr2_teleop/teleop/g4mapper'
+let g:netrw_dirhist_3='/home/moep/git/mlr/share/projects/pr2_teleop/teleop'
+let g:netrw_dirhist_4='/home/moep/git/mlr/share/projects/pr2_teleop/teleop/g4mapper'

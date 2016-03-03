@@ -1,4 +1,5 @@
 #include <Geo/geo.h>
+#include <Core/array.h>
 
 //===========================================================================
 //
@@ -34,9 +35,29 @@ void TEST(Basics){
 
 //===========================================================================
 
+void TEST(QuaternionJacobian){
+  for(uint k=0;k<1;k++){
+    ors::Vector z;
+    z.setRandom();
+    VectorFunction f = [&z](arr& y, arr& J, const arr& x){
+//      double l = length(x);
+      ors::Quaternion q(x);
+      y = conv_vec2arr(q*z);
+      if(&J){ J = ~(q.getMatrixJacobian() * conv_vec2arr(z)); }
+    };
+
+    arr x = randn(4);
+    x /= length(x);
+    checkJacobian(f, x, 1e-4, true);
+  }
+}
+
+//===========================================================================
+
 int MAIN(int argc,char **argv){
 
-  testBasics();
+//  testBasics();
+  testQuaternionJacobian();
 
   return 0;
 }

@@ -566,15 +566,13 @@ void ors::KinematicWorld::clear() {
 
 void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
   clear();
-  q = G.q;
-  qdot = G.qdot;
-  qdim = G.qdim;
-  q_agent = G.q_agent;
-  isLinkTree = G.isLinkTree;
 #if 1
   listCopy(proxies, G.proxies);
   for(Body *b:G.bodies) new Body(*this, b);
-  for(Shape *s:G.shapes) new Shape(*this, (s->body?*bodies(s->body->index):NoBody), s, referenceMeshesAndSwiftOnCopy);
+  for(Shape *s:G.shapes){
+    if(referenceMeshesAndSwiftOnCopy) s->mesh.computeNormals(); // the copy references these normals -> if they're not precomputed, you can never display the copy
+    new Shape(*this, (s->body?*bodies(s->body->index):NoBody), s, referenceMeshesAndSwiftOnCopy);
+  }
   for(Joint *j:G.joints){
     Joint *jj=
         new Joint(*this, bodies(j->from->index), bodies(j->to->index), j);
@@ -584,7 +582,17 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
     s->swift = G.s->swift;
     s->swiftIsReference=true;
   }
+  q = G.q;
+  qdot = G.qdot;
+  qdim = G.qdim;
+  q_agent = G.q_agent;
+  isLinkTree = G.isLinkTree;
 #else
+  q = G.q;
+  qdot = G.qdot;
+  qdim = G.qdim;
+  q_agent = G.q_agent;
+  isLinkTree = G.isLinkTree;
   listCopy(proxies, G.proxies);
   listCopy(joints, G.joints);
   for(Joint *j: joints) if(j->mimic){
@@ -1620,7 +1628,7 @@ ors::Joint* ors::KinematicWorld::getJointByBodies(const Body* from, const Body* 
 ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
   Body *f = getBodyByName(from);
   Body *t = getBodyByName(to);
-  if(!f || !t) return 0;
+  if(!f || !t) return NULL;
   return graphGetEdge<Body, Joint>(f, t);
 }
 
@@ -1658,9 +1666,7 @@ OpenGL& ors::KinematicWorld::gl(){
     s->gl = new OpenGL;
     s->gl->add(glStandardScene, 0);
     s->gl->addDrawer(this);
-    s->gl->camera.setPosition(10., -15., 8.);
-    s->gl->camera.focus(0, 0, 1.);
-    s->gl->camera.upright();
+    s->gl->camera.setDefault();
   }
   return *s->gl;
 }
@@ -2445,19 +2451,10 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     return;
   }
   if(symbol==addJointZero){
-//    cout <<"ADD-RIGID from '" <<from->name <<"' to '" <<to->name <<"'" <<endl;
     Joint *j = new Joint(G, from->body, to->body);
-
-    // Keep Object Orientation
-    //    Transformation A = from->X;
-  //  Transformation B = to->X;
-    //A.pos *= 0.;
-   // B.pos *= 0.;
-   // j->A.setDifference(A, B);
     j->type=jointType;
     j->A = from->rel;
     j->B = -to->rel;
-//    j->agent=1;
     G.isLinkTree=false;
     G.calc_fwdPropagateFrames();
     return;

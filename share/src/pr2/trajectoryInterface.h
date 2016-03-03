@@ -29,7 +29,7 @@ struct TrajectoryInterface {
   CtrlMsg refs;
 
   /// logging variables
-  arr logXdes,logXact,logFLact,logTact,logUact,logMact;
+  arr logXdes,logXact,logFLact,logFRact,logTact,logUact,logMact;
 
   TrajectoryInterface(ors::KinematicWorld &world_);
   ~TrajectoryInterface(){ threadCloseModules(); } //threadCloseModules(); }
@@ -38,7 +38,7 @@ struct TrajectoryInterface {
   void executeTrajectory(arr &X, double T, bool recordData = false);
 
   /// go to robot configuration s
-  void gotoPosition(arr x, double T=5.);
+  void gotoPosition(arr x, double T=5., bool recordData = false);
 
   /// send zero gains and record trajectory of T seconds
   void recordDemonstration(arr &X, double T, double dt=0.05, double T_start=2.);

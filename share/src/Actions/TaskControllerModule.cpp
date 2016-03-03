@@ -95,7 +95,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
@@ -178,7 +178,9 @@ void TaskControllerModule::step(){
   ctrlTasks.deAccess();
 
   //-- send the computed movement to the robot
-  ctrl_ref.set() = refs;
+  if(useRos){
+    ctrl_ref.set() = refs;
+  }
 }
 
 void TaskControllerModule::close(){

@@ -1,0 +1,8 @@
+
+
+MotionProblem:
+* Store all results of an evaluation:
+   task-dims for each t
+   phi's for each t
+
+MotionProblemFunction: resolve! kill!

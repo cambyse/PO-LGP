@@ -1,4 +1,4 @@
-#include "plane.h"
+#include <Perception/pclPlaneExtraction.h>
 
 void extractPlanes(pcl::PointCloud<PointT>::Ptr inCloud, pcl::PointCloud<PointT>::Ptr outCloud, std::vector<pcl::ModelCoefficients::Ptr> &outCoefficients, std::vector<pcl::PointIndices::Ptr> &outInliers , uint numPlanes)
 {

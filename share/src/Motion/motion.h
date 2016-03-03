@@ -17,41 +17,16 @@
     -----------------------------------------------------------------  */
 
 
-#ifndef _MT_motion_h
-#define _MT_motion_h
+#pragma once
 
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
+#include "taskMap.h"
 
 /* Notes
   -- transition models: kinematic, non-holonomic (vel = B u), pseudo dynamic, non-hol dynamic (acc = B u), real dynamic
   -- transition costs: vel^2 *tau, acc^2 * tau, u^2 * tau
   */
-
-
-//===========================================================================
-//
-// defines only a map (task space), not yet the costs in this space
-//
-
-struct TaskMap {
-  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
-  uint order;       ///< 0=position, 1=vel, etc
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1) = 0; ///< this needs to be overloaded
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
-  virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
-
-  VectorFunction vf(ors::KinematicWorld& G){
-    return [this, &G](arr& y, arr& J, const arr& x) -> void {
-      G.setJointState(x);
-      phi(y, J, G, -1);
-    };
-  }
-
-  TaskMap():type(sumOfSqrTT),order(0) {}
-  virtual ~TaskMap() {};
-};
-
 
 //===========================================================================
 //
@@ -61,14 +36,14 @@ struct TaskMap {
 
 struct Task {
   TaskMap& map;
+  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
   mlr::String name;
   bool active;
   arr target, prec;  ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
 
-  uint dim_phi(const ors::KinematicWorld& G, uint t){
-    if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
+  bool isActive(uint t){ if(!active || prec.N<=t || !prec(t)) return false; return true; }
 
-  Task(TaskMap* m):map(*m), active(true){} //TODO: require type here!!
+  Task(TaskMap* m, const TermType& type):map(*m), type(type), active(true){} //TODO: require type here!!
 
   void setCostSpecs(uint fromTime, uint toTime,
                     const arr& _target=ARR(0.),
@@ -104,13 +79,10 @@ struct MotionProblem {
   uint k_order; ///< determine the order of the KOMO problem (default 2)
   
   //-- start constraints
-  arr x0, v0; ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
-  arr prefix; ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
+  arr x0;      ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
+  arr prefix;  ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
   arr postfix; ///< fixing the set of statex x[T-k]...x[T] //TODO: remove?
   //TODO: add methods to properly set the prefix given x0,v0?
-
-  //-- stationary parameters
-  arr z0; ///< an initialization of the stationary parameters of the motion problem
 
   //-- return values of an optimizer
   arrA phiMatrix;
@@ -118,6 +90,7 @@ struct MotionProblem {
   mlr::Array<TermTypeA> ttMatrix;
 
   MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
+  ~MotionProblem();
   
   MotionProblem& operator=(const MotionProblem& other);
 
@@ -127,7 +100,7 @@ struct MotionProblem {
   //-- setting costs in a task space
   bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);
   void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);
-  Task* addTask(const char* name, TaskMap *map);
+  Task* addTask(const char* name, TaskMap *map, const TermType& termType);
   //TODO: the following are deprecated; use Task::setCostSpecs instead
 //  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
 //  void setInterpolatingCosts(Task *c,
@@ -135,21 +108,22 @@ struct MotionProblem {
 //                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
-  uint dim_phi(const ors::KinematicWorld& G, uint t);
-  uint dim_g(const ors::KinematicWorld& G, uint t);
-  uint dim_h(const ors::KinematicWorld& G, uint t);
-  StringA getPhiNames(const ors::KinematicWorld& G, uint t);
+  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t); ///< the general task vector and its Jacobian
+  uint dim_phi(uint t);
+  uint dim_g(uint t);
+  uint dim_h(uint t);
+  StringA getPhiNames(uint t);
   void reportFull(bool brief=false);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
-  void setState(const arr& x, const arr& v=NoArr);
+//  void setState(const arr& x, const arr& v=NoArr);
   void activateAllTaskCosts(bool activate=true);
 
   //-- helpers
   arr getH_rate_diag();
   arr getInitialization();
+  void setConfigurationStates(const arr& x);
   void setupConfigurations();
   void temporallyAlignKinematicSwitchesInConfiguration(uint t);
   void displayTrajectory(int steps, const char *tag, double delay=0.);
@@ -182,36 +156,18 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   uint dim_g_h(){ uint d=0; for(uint t=0;t<=MP.T;t++) d += dim_g(t) + dim_h(t); return d; }
 
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+  virtual void set_x(const arr& x){ MP.setConfigurationStates(x); }
+  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { return MP.k_order; }
-  virtual uint dim_x() { return MP.x0.N; }
-  virtual uint dim_z() { return MP.z0.N; }
-  virtual uint dim_phi(uint t){ return MP.dim_phi(MP.world, t); } //transitions plus costs (latter include constraints)
-  virtual uint dim_g(uint t){ return MP.dim_g(MP.world, t); }
-  virtual uint dim_h(uint t){ return MP.dim_h(MP.world, t); }
-  virtual StringA getPhiNames(uint t);
-  virtual arr get_prefix(); //the history states x(-k),..,x(-1)
-  virtual arr get_postfix();
+  virtual uint dim_x() { uint d=0; for(uint t=0; t<=MP.T; t++) d+=dim_x(t); return d; }
+  virtual uint dim_x(uint t) { return MP.configurations(t+MP.k_order)->getJointStateDimension(); }
+  virtual uint dim_phi(uint t){ return MP.dim_phi(t); } //transitions plus costs (latter include constraints)
+  virtual uint dim_g(uint t){ return MP.dim_g(t); }
+  virtual uint dim_h(uint t){ return MP.dim_h(t); }
+  virtual StringA getPhiNames(uint t){ return MP.getPhiNames(t); }
 };
-
-
-//===========================================================================
-//
-// transforming a motion problem description into an end-pose optimization problem only
-//
-
-struct MotionProblem_EndPoseFunction{
-  MotionProblem& MP;
-
-  MotionProblem_EndPoseFunction(MotionProblem& _MP);
-
-  //VectorFunction definitions
-  void Phi(arr& phi, arr& J, TermTypeA& tt, const arr& x);
-  virtual void fv(arr& phi, arr& J, const arr& x);
-};
-
 
 //===========================================================================
 //
@@ -223,5 +179,3 @@ arr reverseTrajectory(const arr& q);
 void getVel(arr& v, const arr& q, double tau);
 void getAcc(arr& a, const arr& q, double tau);
 
-
-#endif

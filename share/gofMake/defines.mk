@@ -256,16 +256,15 @@ endif
 
 ifeq ($(FREENECT),1)
 CXXFLAGS += -DMLR_FREENECT
-CPATH := $(CPATH):/usr/include/libusb-1.0
-LIBS += -lfreenect -lusb-1.0
-endif
-
 ifeq ($(FREENECT_LOC),1)
-CXXFLAGS += -DMLR_FREENECT
 CPATH := $(HOME)/git/libfreenect/include:$(CPATH):/usr/include/libusb-1.0
 LPATH += $(HOME)/git/libfreenect/build/lib
+else
+CPATH := $(CPATH):/usr/include/libusb-1.0
+endif
 LIBS += -lfreenect -lusb-1.0 -lpthread
 endif
+
 
 ifeq ($URGLASER),1)
 CPATH     := $(CPATH):$(LIBPATH)/urg-0.8.16/include/c
@@ -347,6 +346,14 @@ endif
 ifeq ($(G4),1)
 CXXFLAGS += -DG4_INSTALLED
 LIBS += -lG4Track -lusb-1.0
+endif
+
+ifeq ($(PTHREAD),1)
+LIBS += -lpthread
+endif
+
+ifeq ($(X264),1)
+CXXFLAGS += -DX264_INSTALLED
 endif
 
 ifeq ($(ROS),1)

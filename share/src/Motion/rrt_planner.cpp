@@ -45,8 +45,8 @@ namespace ors {
 
 bool ors::sRRTPlanner::isFeasible(const arr& q) {
   arr phi, J_x, J_v;
-  p->problem.setState(q, NoArr);
-  return p->problem.getPhi(phi, J_x, NoTermTypeA, 0, LIST(p->problem.world), p->problem.tau);
+  p->problem.configurations(0)->setJointState(q, NoArr);
+  return p->problem.getPhi(phi, J_x, NoTermTypeA, 0);
 }
 
 bool ors::sRRTPlanner::growTowards(RRT& growing, RRT& passive) {

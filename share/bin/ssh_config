@@ -1,0 +1,30 @@
+# Add the following to your ~/.ssh/config
+
+
+# Autocompletion with ssh
+# Really useful!
+# http://blogs.perl.org/users/smylers/2011/08/ssh-productivity-tips.html
+#ControlMaster auto
+#ControlPath /tmp/ssh_mux_%h_%p_%r
+
+# PR2
+Host pr2 robot bigbird
+	Hostname bigbirdc1
+	User pr2admin
+	Compression yes
+	ForwardX11 yes
+
+Host c1
+	Hostname bigbirdc1
+	User pr2admin
+	Compression yes
+
+Host c2
+	Hostname bigbirdc2
+	User pr2admin
+	Compression yes
+
+Host beaker
+	Hostname beaker
+	User pr2admin
+	Compression yes
