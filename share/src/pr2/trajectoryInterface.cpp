@@ -45,7 +45,7 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::K
     refs.Kp = ARR(mlr::getParameter<double>("controller/Kp",1.5));
     refs.Kd = ARR(mlr::getParameter<double>("controller/Kd",2.5));
     refs.Ki = ARR(mlr::getParameter<double>("controller/Ki",0.));
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
     refs.intLimitRatio = 0.9;
