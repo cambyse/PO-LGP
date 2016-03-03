@@ -42,7 +42,7 @@ void TEST(MeshTools) {
     if(!gl) gl=new OpenGL;
     gl->clear();
     gl->add(drawInit);
-    gl->add(glDrawMesh,&mesh);
+    gl->add(mesh);
     gl->watch();
   }
   if(mlr::checkCmdLineTag("box")){
@@ -107,7 +107,7 @@ void TEST(MeshTools) {
     if(!gl) gl=new OpenGL;
     gl->clear();
     gl->add(drawInit);
-    gl->add(glDrawMesh,&mesh);
+    gl->add(mesh);
     gl->watch();
   }
   if(mlr::checkCmdLineTag("save")){

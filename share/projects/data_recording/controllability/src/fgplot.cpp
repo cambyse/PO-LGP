@@ -259,7 +259,7 @@ void FGPlots::open(const Graph &k) {
     // data {{{
     s->data[i] = plot_kvg->getNodes("data");
     for(auto j: s->data[i])
-      cout << " - data: " << *j->getValue<String>() << endl;
+      cout << " - data: " << j->get<String>() << endl;
     // }}}
 
     s->plots[i].open();

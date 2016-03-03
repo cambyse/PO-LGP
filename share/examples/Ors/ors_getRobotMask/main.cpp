@@ -8,9 +8,9 @@ void TEST(GetRobotMask){
   robot.gl().camera.X = robot.getShapeByName("endeffKinect")->X * robot.gl().camera.X;
 //  robot.gl().watch(); //if commented, glut/gtk is never initiated
   byteA indexRgb, depth;
-  robot.glGetMasks(indexRgb, depth, 580, 480);
-  write_ppm(indexRgb, "z.rgb.ppm");
-  write_ppm(depth, "z.depth.ppm");
+  robot.glGetMasks(580, 480);
+  write_ppm(robot.gl().captureImage, "z.rgb.ppm");
+  write_ppm(robot.gl().captureDepth, "z.depth.ppm");
 }
 
 // ============================================================================

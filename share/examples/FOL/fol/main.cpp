@@ -169,7 +169,7 @@ void testMonteCarlo(){
         double w=1e10;
         for(Node *i:state){
           if(i->isOfType<double>()){
-            double wi = *i->getValue<double>();
+            double wi = i->get<double>();
             if(w>wi) w=wi;
           }
         }
@@ -182,7 +182,7 @@ void testMonteCarlo(){
           NodeL activities;
           for(Node *i:state){
             if(i->isOfType<double>()){
-              double &wi = *i->getValue<double>();
+              double &wi = i->get<double>();
               wi -= w;
               if(fabs(wi)<1e-10) activities.append(i);
             }

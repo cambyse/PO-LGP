@@ -33,7 +33,7 @@ void TEST(KOrderMarkov) {
   //-- print some info on the P
   uint T=P.get_T();
   uint k=P.get_k();
-  uint n=P.dim_x();
+  uint n=P.dim_x(0);
   cout <<"P parameters:"
        <<"\n T=" <<T
        <<"\n k=" <<k

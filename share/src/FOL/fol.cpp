@@ -275,7 +275,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
       for(Node *m:matches){
 #if 0
         if(m->isOfType<double>()){ //TODO: very special HACK: double add up instead of being assigned
-          *m->getValue<double>() += *literal->getValue<double>();
+          m->get<double>() += literal->get<double>();
           hasEffects=true;
           if(&changes) m->newClone(changes);
         }else

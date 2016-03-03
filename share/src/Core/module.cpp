@@ -25,7 +25,7 @@ Singleton<ConditionVariable> moduleShutdown;
 
 void signalhandler(int s){
   int calls = moduleShutdown().incrementValue();
-  cerr <<"\n*** System received signal " <<s <<" -- count=" <<calls;
+  cerr <<"\n*** System received signal " <<s <<" -- count=" <<calls <<endl;
   if(calls==1){
     LOG(0) <<" -- waiting for main loop to break on moduleShutdown().getValue()" <<endl;
   }

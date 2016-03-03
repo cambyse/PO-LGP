@@ -230,10 +230,10 @@ int main(int argc, char **argv) {
       ////kf.getCtrlSeq(ctrls, subj, obj);
       ////kf.getDeltaSeq(deltas, ctrls);
       ////n = deltas.N;
-      ////d = deltas(0)->getValue<arr>("f_dpos")->N;
+      ////d = deltas(0)->get<arr>("f_dpos").N;
       ////query.resize(n, d);
       ////for(uint i = 0; i < n; i++)
-        ////query[i]() = *deltas(i)->getValue<arr>("f_dpos");
+        ////query[i]() = deltas(i)->get<arr>("f_dpos");
       ////cout << "test posterior: " << symb.gmm.P(query) << endl;
       //break;
     //default:

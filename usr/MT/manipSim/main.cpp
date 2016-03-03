@@ -176,8 +176,7 @@ double reward(ors::KinematicWorld& world, Graph& symbols){
   Graph& state =symbols["STATE"]->graph();
 
   for(Node *dep:depthSymbol->parentOf) if(&dep->container==&state){
-    double *d = dep->getValue<double>();
-    CHECK(d,"");
+    double d = dep->get<double>();
     if(*d>depth) depth=*d;
   }
 

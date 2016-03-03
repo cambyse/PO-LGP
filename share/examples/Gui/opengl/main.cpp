@@ -11,9 +11,6 @@
 using namespace std;
 
 
-void glDrawMesh(void *classP) {
-  ((ors::Mesh*)classP)->glDraw();
-}
 
 /************ first test ************/
 
@@ -121,7 +118,7 @@ void TEST(Mesh) {
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   gl.watch();
 }
 
@@ -143,11 +140,11 @@ void TEST(Obj) {
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   gl.watch();
   gl.clear();
   gl.add(draw2,0);
-  gl.add(glDrawMesh,&mesh2);
+  gl.add(mesh2);
   gl.watch();
 }
 

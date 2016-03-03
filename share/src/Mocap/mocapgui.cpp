@@ -365,7 +365,7 @@ bool sMocapGui::clickCallback(OpenGL &gl) {
     if(!labelkvg.getNode(b->name)) {
       cout << "new label!" << endl;
       // labelkvg.append(b->name, new String("test"));
-      labelkvg.append((char*)b->name, new String("test"));
+      labelkvg.append<String>({b->name}, {}, String("test"));
     }
   }
   return true;
