@@ -5,7 +5,7 @@
 //### Level 0 routines
 
 NodeL getLiteralsOfScope(Graph& KB);
-NodeL getSymbolsOfScope(Graph& KB);
+NodeL getSymbolsOfScope(const Graph& KB);
 NodeL getVariables(Node* literal, Graph* varScope);
 uint getNumOfVariables(Node* literal, Graph* varScope);
 Node *getFirstVariable(Node* literal, Graph* varScope);

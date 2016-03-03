@@ -17,7 +17,7 @@ void KOMO::init(const Graph& _specs){
   specs = _specs;
 
   Graph &glob = specs.get<Graph>("KOMO");
-  uint timeSteps=glob.get<double>("T");
+  uint timeStepsPerPhase=glob.get<double>("T");
   double duration=glob.get<double>("duration");
   uint phases=glob.get<double>("phases", 1);
   uint k_order=glob.get<double>("k_order", 2);
@@ -37,6 +37,12 @@ void KOMO::init(const Graph& _specs){
   if(glob["makeConvexHulls"])
     makeConvexHulls(world.shapes);
 
+  if(glob["makeSSBoxes"]){
+    NIY;
+    //for(ors::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    world.gl().watch();
+  }
+
   if(glob["activateAllContacts"])
     for(ors::Shape *s:world.shapes) s->cont=true;
 
@@ -45,11 +51,11 @@ void KOMO::init(const Graph& _specs){
 
   if(MP) delete MP;
   MP = new MotionProblem(world);
-  if(timeSteps>=0) MP->setTiming(timeSteps*phases, duration*phases);
+  if(timeStepsPerPhase>=0) MP->setTiming(timeStepsPerPhase*phases, duration*phases);
   MP->k_order=k_order;
 
 #if 1
-  MP->parseTasks(specs);
+  MP->parseTasks(specs, timeStepsPerPhase);
 #else
   NodeL tasks = specs.getNodes("Task");
   for(Node *t:tasks){
@@ -119,7 +125,7 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
-  cout <<x;
+//  cout <<x;
   if(MP->T){
     optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
   }else{

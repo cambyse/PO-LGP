@@ -6,7 +6,7 @@
 
 GamepadControlActivity::GamepadControlActivity()
   : Module("GamepadControlActivity", 0.01), taskController(NULL), g2t(NULL){
-  taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode({"Module","TaskControllerModule"})->V<Module>());
+  taskController = dynamic_cast<TaskControllerModule*>(registry().getNode({"Module","TaskControllerModule"})->get<Module*>());
   CHECK(taskController,"that didn't work");
 }
 
@@ -30,7 +30,9 @@ void GamepadControlActivity::step(){
 //    taskController->verbose = true;
   }
   arr gamepad = gamepadState.get();
+  ctrlTasks.writeAccess();
   g2t->updateTasks(gamepad);
+  ctrlTasks.deAccess();
 //  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 }
 

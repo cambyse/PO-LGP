@@ -85,7 +85,7 @@ OptNewton::StopCriterion OptNewton::step(){
         cout <<endl <<"** hessian inversion failed ... increasing damping **\neigenvalues=" <<sig <<endl;
       }
       double sigmin = sig.min();
-      CHECK(sigmin<0,"");
+      CHECK(sigmin<0,"Hessian inversion failed, but eigenvalues are positive???");
       beta = 2.*beta - sigmin;
       betaChanged=true;
       return stopCriterion=stopNone;
@@ -139,13 +139,18 @@ OptNewton::StopCriterion OptNewton::step(){
       break;
     } else {
       //reject new point
-      if(o.verbose>1) cout <<" - reject" <<endl <<"\t\t\t\t\t(line search)\t";
-      if(alpha*absMax(Delta)<1e-3*o.stopTolerance || evals>o.stopEvals) break; //WARNING: this may lead to non-monotonicity -> make evals high!
+      if(o.verbose>1) cout <<" - reject" <<flush;
+      if(evals>o.stopEvals){
+        if(o.verbose>1) cout <<" (evals>stopEvals)" <<endl;
+        break; //WARNING: this may lead to non-monotonicity -> make evals high!
+      }
       if(alpha<.01){
         beta*=o.dampingInc;
         alpha*=o.dampingInc*o.dampingInc;
         betaChanged=true;
-        if(o.verbose>1) cout <<"(line search stopped)" <<endl;
+        if(o.verbose>1) cout <<", stop & betaInc" <<endl;
+      }else{
+        if(o.verbose>1) cout <<"\n\t\t\t\t\t(line search)\t" <<flush;
       }
       alpha *= o.stepDec;
     }

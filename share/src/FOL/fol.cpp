@@ -11,15 +11,15 @@ NodeL getLiteralsOfScope(Graph& KB){
 }
 
 /// return all variables (defined by degree=0)
-NodeL getSymbolsOfScope(Graph& KB){
+NodeL getSymbolsOfScope(const Graph& KB){
   NodeL vars;
   vars.anticipateMEM(KB.N);
-  for(Node *i:KB) if(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool)) vars.append(i);
+  for(Node *i:KB) if(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>()) vars.append(i);
   return vars;
 }
 
 Node *getFirstNonSymbolOfScope(Graph& KB){
-  for(Node *i:KB) if( !(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool)) ) return i;
+  for(Node *i:KB) if( !(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>()) ) return i;
   return NULL;
 }
 
@@ -27,7 +27,7 @@ Node *getFirstNonSymbolOfScope(Graph& KB){
 NodeL getVariables(Node* literal, Graph* varScope){
   NodeL vars;
   for(Node *i:literal->parents) if(&i->container==varScope){
-    CHECK(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool),"");
+    CHECK(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>(),"");
     vars.append(i);
   }
   return vars;
@@ -36,7 +36,7 @@ NodeL getVariables(Node* literal, Graph* varScope){
 uint getNumOfVariables(Node* literal, Graph* varScope){
   uint v=0;
   for(Node *i:literal->parents) if(&i->container==varScope){
-    CHECK(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool),"");
+    CHECK(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>(),"");
     v++;
   }
   return v;
@@ -44,7 +44,7 @@ uint getNumOfVariables(Node* literal, Graph* varScope){
 
 Node *getFirstVariable(Node* literal, Graph* varScope){
   for(Node *i:literal->parents) if(&i->container==varScope){
-    CHECK(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool),"");
+    CHECK(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>(),"");
     return i;
   }
   return NULL;
@@ -52,7 +52,7 @@ Node *getFirstVariable(Node* literal, Graph* varScope){
 
 //Node *getFirstSymbol(Node* literal, Graph* varScope){
 //  for(Node *i:literal->parents) if(&i->container!=varScope){
-//    CHECK(i->keys.N>0 && i->parents.N==0 && i->getValueType()==typeid(bool),"");
+//    CHECK(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>(),"");
 //    return i;
 //  }
 //  return NULL;
@@ -69,10 +69,10 @@ bool tuplesAreEqual(NodeL& tuple0, NodeL& tuple1){
 
 bool valuesAreEqual(Node *fact0, Node *fact1, bool booleanMeansExistance){
   if(booleanMeansExistance){
-    if(fact0->getValueType()==typeid(bool) && *((bool*)fact0->getValueDirectly()) && fact1->getValueType()!=typeid(bool)) return true;
-    if(fact1->getValueType()==typeid(bool) && *((bool*)fact1->getValueDirectly()) && fact0->getValueType()!=typeid(bool)) return true;
+    if(fact0->isBoolAndTrue() && !fact1->isOfType<bool>()) return true;
+    if(fact1->isBoolAndTrue() && !fact0->isOfType<bool>()) return true;
   }
-  if(fact0->getValueType()!=fact1->getValueType()) return false;
+  if(fact0->type!=fact1->type) return false;
   if(!fact0->hasEqualValue(fact1)) return false;
   return true;
 }
@@ -103,13 +103,13 @@ bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* s
 /// try to find a fact within 'facts' that is exactly equal to 'literal'
 bool getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue){
   if(!fact->parents.N){
-    CHECK(fact->getValueType()==typeid(Graph),"special literals need Graph type");
-    Graph& graph=fact->V<Graph>();
+    CHECK(fact->isGraph(),"special literals need Graph type");
+    Graph& graph=fact->graph();
     //assume this is a special parent!
     if(fact->keys.last()=="aggregate"){
       NodeL subs = getRuleSubstitutions2(facts, fact, 0);
       if(graph.last()->keys.last()=="count"){
-        if(subs.d0 == graph.last()->V<double>()) return true;
+        if(subs.d0 == graph.last()->get<double>()) return true;
         else return false;
       }else HALT("unknown aggregate mode '" <<graph.last()->keys.last() <<"'");
     }else HALT("unknown special literal key'" <<fact->keys.last() <<"'");
@@ -205,8 +205,8 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
       if(lit_arg==var) value = fact_arg;
       else if(lit_arg!=fact_arg){ match=false; break; }
     }
-    if(match && literal->getValueType()!=typeid(bool)){ //if the literal is boolean, we don't YET check the value (see below)
-      if(fact->getValueType()!=literal->getValueType()) match=false;
+    if(match && !literal->isOfType<bool>()){ //if the literal is boolean, we don't YET check the value (see below)
+      if(fact->type!=literal->type) match=false;
       match = fact->hasEqualValue(literal);
     }
     if(match){
@@ -217,7 +217,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
   }
 
   //for a negative boolean literal, we REMOVE the matches instead of allowing for them
-  if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly()) == false){
+  if(literal->isBoolAndFalse()){
     setMinus(domain, dom);
   }else{
     domain = setSection(domain, dom);
@@ -227,7 +227,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
 
 /// directly create a new fact
 Node *createNewFact(Graph& facts, const NodeL& symbols){
-  return new Node_typed<bool>(facts, {}, symbols, new bool(true), true);
+  return new Node_typed<bool>(facts, {}, symbols, true);
 }
 
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)
@@ -256,9 +256,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
   }
 
   bool trueValue=true; //check if the literal is negated
-  if(literal->getValueType()==typeid(bool)){
-    if(*((bool*)literal->getValueDirectly()) == false) trueValue = false;
-  }
+  if(literal->isBoolAndFalse()) trueValue = false;
 
   bool hasEffects=false;
 
@@ -276,12 +274,12 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
     }else{
       for(Node *m:matches){
 #if 0
-        if(m->getValueType()==typeid(double)){ //TODO: very special HACK: double add up instead of being assigned
+        if(m->isOfType<double>()){ //TODO: very special HACK: double add up instead of being assigned
           *m->getValue<double>() += *literal->getValue<double>();
           hasEffects=true;
           if(&changes) m->newClone(changes);
         }else
-        #endif
+#endif
         if(!m->hasEqualValue(literal)){
           m->copyValue(literal);
           hasEffects=true;
@@ -294,7 +292,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
     //delete all matching facts!
     for(Node *fact:matches){
       hasEffects=true;
-      if(&changes){ Node *it=fact->newClone(changes); if(it->getValueType()==typeid(bool)) it->V<bool>()=false; }
+      if(&changes){ Node *it=fact->newClone(changes); if(it->isOfType<bool>()) it->get<bool>()=false; }
       delete fact;
     }
   }
@@ -342,7 +340,7 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
 
    //-- for relations with 0 free variable, simply check
    for(Node *rel:relations) if(nFreeVars(rel->index)==0){
-     if(rel->getValueType()!=typeid(bool) || rel->V<bool>()==true){ //normal
+     if(!rel->isOfType<bool>() || rel->get<bool>()==true){ //normal
        if(!getEqualFactInKB(facts, rel)){
          if(verbose>2) cout <<"NO POSSIBLE SUBSTITUTIONS (" <<*rel <<" not true)" <<endl;
          return NodeL(); //early failure
@@ -365,7 +363,7 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
    mlr::Array<NodeL> domainsForThisRel(vars.N);
    if(vars.N) domainIsConstrained = false;
    for(Node *rel:relations) if(nFreeVars(rel->index)>0){ //first go through all (non-negated) relations...
-     if(rel->getValueType()!=typeid(bool) || rel->V<bool>()==true){ //normal (not negated boolean)
+     if(!rel->isOfType<bool>() || rel->get<bool>()==true){ //normal (not negated boolean)
        for(auto& d:domainsForThisRel) d.clear();
        NodeL matches = getPotentiallyEqualFactsInKB(facts, rel, varScope, true);
        if(!matches.N){
@@ -410,7 +408,7 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
 
    //-- for negative relations with 1 variable, delete from the domain
    for(Node *rel:relations){
-     if(nFreeVars(rel->index)==1 && rel->getValueType()==typeid(bool) && rel->V<bool>()==false ){
+     if(nFreeVars(rel->index)==1 && rel->isOfType<bool>() && rel->get<bool>()==false ){
        Node *var = getFirstVariable(rel, &varScope);
        if(verbose>3) cout <<"checking literal '" <<*rel <<"'" <<flush;
        removeInfeasibleSymbolsFromDomain(facts, domainOf(var->index), rel, &varScope);
@@ -454,7 +452,7 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
          //           Node *it2 = literal->container(literal->index+2);
          //           feasible = matchingFactsAreEqual(facts, it1, it2, values, &varScope);
          //         }else{
-         if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly())==false){ //deal differently with false literals
+         if(literal->isBoolAndFalse()){ //deal differently with false literals
            feasible = getEqualFactInKB(facts, literal, values, &varScope, false); //check match ignoring value
            feasible = !feasible; //invert result
          }else{ //normal
@@ -505,8 +503,8 @@ bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes
       NodeL subs = getRuleSubstitutions2(state, rule, verbose);
       for(uint s=0;s<subs.d0;s++){
         Node *effect = rule->graph().last();
-        if(effect->getValueType()==typeid(arr)){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
-          arr p = effect->V<arr>();
+        if(effect->isOfType<arr>()){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
+          arr p = effect->get<arr>();
           uint r = sampleMultinomial(p);
           if(decisionObservation) *decisionObservation = (*decisionObservation)*p.N + r; //raise previous decisions to the factor p.N and add current decision
           effect = rule->graph().elem(-1-p.N+r);
@@ -559,7 +557,7 @@ bool forwardChaining_propositional(Graph& KB, Node* q){
     if(!inferred(s->index)){
       inferred(s->index) = true;
       for(Node *child : s->parentOf){ //all objects that involve 's'
-        Node *clause = child->container.isNodeOfParentGraph; //check if child is a literal in a clause
+        const Node *clause = child->container.isNodeOfParentGraph; //check if child is a literal in a clause
         if(clause){ //yes: 's' is a literal in a clause
           CHECK(count(clause->index)>0,"");
           //          if(count(clause->index)>0){ //I think this is always true...
@@ -589,15 +587,15 @@ double evaluateFunction(Graph& func, Graph& state, int verbose){
       if(verbose>2) LOG(0) <<"testing tree term " <<termG <<endl;
       NodeL subs = getRuleSubstitutions2(state, term, 0);
       if(subs.d0){
-        CHECK(termG.last()->getValueType()==typeid(double),"");
-        double fterm = termG.last()->V<double>();
+        CHECK(termG.last()->isOfType<double>(),"");
+        double fterm = termG.last()->get<double>();
         ftree += fterm;
         if(verbose>0) LOG(0) <<"tree term HIT " <<termG <<" with f-value " <<fterm <<endl;
         break;
       }
     }
-    CHECK(treeG.last()->getValueType()==typeid(double),"");
-    f += treeG.last()->V<double>() * ftree;
+    CHECK(treeG.last()->isOfType<double>(),"");
+    f += treeG.last()->get<double>() * ftree;
   }
   return f;
 }

@@ -65,7 +65,7 @@ void modulesReportCycleTimes();
 
 struct Module : Thread{
   Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
-    new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
+    new Node_typed<Module*>(registry(), {"Module", name}, {}, this);
   }
   virtual ~Module(){}
   virtual void step(){ HALT("you should not run a virtual module"); }
@@ -110,6 +110,22 @@ struct Access_typed:Access{
 
 //  Access_typed(const Access_typed<T>& acc) = delete;
 
+  /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
+  Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
+    : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
+    Node *vnode = registry().getNode({"Variable", name});
+    v = acc.v;
+    var = acc.var;
+    CHECK(vnode && vnode->get<Variable<T>* >()==v,"something's wrong")
+    if(module){
+      Node *m = getModuleNode(module);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
+      if(moduleListens) module->listenTo(*var);
+    }else{
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {vnode}, this);
+    }
+  }
+
   /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
   Access_typed(Module* _module, const char* name, bool moduleListens=false, bool requirePreviousExistance=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
@@ -117,33 +133,17 @@ struct Access_typed:Access{
     if(!vnode){
       if(requirePreviousExistance) HALT("you required previous existance of variable 'name'");
       v = new Variable<T>(name);
-      vnode = new Node_typed<Variable<T> >(registry(), {"Variable", name}, {}, v, true);
+      vnode = new Node_typed<Variable<T>* >(registry(), {"Variable", name}, {}, v);
     }else{
-      v = &vnode->V<Variable<T> >();
+      v = vnode->get<Variable<T>* >();
     }
     var=(RevisionedAccessGatedClass*)v;
     if(module){
       Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
       if(moduleListens) module->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
-    }
-  }
-
-  /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
-  Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
-    : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = registry().getNode({"Variable", name});
-    v = acc.v;
-    var = acc.var;
-    CHECK(vnode && &vnode->V<Variable<T> >()==v,"something's wrong")
-    if(module){
-      Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
-      if(moduleListens) module->listenTo(*var);
-    }else{
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {vnode}, this);
     }
   }
 
@@ -212,9 +212,9 @@ struct __##name##__Access:Access_typed<type>{ \
     instantiate the module just by referring to its string name. */
 
 #define REGISTER_MODULE(name) \
-  RUN_ON_INIT_BEGIN(name) \
-  new Node_typed<Type>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL), true); \
-  RUN_ON_INIT_END(name)
+  RUN_ON_INIT_BEGIN(Decl_Module##_##name) \
+  new Node_typed<Type*>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL)); \
+  RUN_ON_INIT_END(Decl_Module##_##name)
 
 
 

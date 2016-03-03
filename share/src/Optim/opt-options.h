@@ -4,7 +4,7 @@
 
 extern uint eval_cost;
 
-enum ConstrainedMethodType { noMethod=0, squaredPenalty, augmentedLag, logBarrier, anyTimeAula };
+enum ConstrainedMethodType { noMethod=0, squaredPenalty, augmentedLag, logBarrier, anyTimeAula, squaredPenaltyFixed };
 
 struct OptOptions {
   uint verbose;

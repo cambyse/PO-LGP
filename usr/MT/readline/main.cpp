@@ -26,8 +26,8 @@ void TEST(Read){
   cout <<"\n** access to individual items:" <<endl;
   cout <<*G["k"] <<endl;
   cout <<G["k"]->graph() <<endl;
-  cout <<G["val"]->V<double>() <<endl;
-  cout <<G["k"]->graph()["z"]->V<mlr::String>() <<endl;
+  cout <<G["val"]->get<double>() <<endl;
+  cout <<G["k"]->graph()["z"]->get<mlr::String>() <<endl;
   cout <<"DONE" <<endl;
 }
 
@@ -60,8 +60,7 @@ Graph& rndSubgraph(Graph& G){
   while(rnd.uni()<.8){
     NodeL subgraphs = g->getNodesOfType<Graph>(NULL);
     if(!subgraphs.N) break;
-    Node *subgraph=subgraphs.rndElem();
-    if(!subgraph->getValue<Graph>()) break;
+    Node *subgraph = subgraphs.rndElem();
     g = &subgraph->graph();
   }
   return *g;
@@ -80,10 +79,10 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new bool(true), true);
+      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      new Node_typed<Graph>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), new Graph(), true);
+      newSubGraph(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();

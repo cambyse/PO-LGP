@@ -46,9 +46,9 @@ void FOL_World::init(istream& is){
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
-  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, new bool(true), true);
+  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
-  Graph *params = KB.getValue<Graph>("FOL_World");
+  Graph *params = &KB.get<Graph>("FOL_World");
   if(params){
     hasWait = params->get<bool>("hasWait", hasWait);
     gamma = params->get<double>("gamma", gamma);
@@ -81,8 +81,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- store the old state; make a new state that is child of the old
   if(generateStateTree){
-    Node *new_state = new Node_typed<Graph>(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph}, new Graph(), true);
-    new_state->graph().copy(*state, &KB);
+    Node *new_state = newSubGraph(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph});
+    new_state->graph().copy(*state);
     state = &new_state->graph();
     DEBUG(KB.checkConsistency());
   }
@@ -118,26 +118,26 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 #if 0
   double rValue=0.;
   if(rewardFct) for(Node *rTerm:*rewardFct){
-    if(rTerm->getValueType()==typeid(double)) rValue=rTerm->V<double>();
+    if(rTerm->isOfType<double>()) rValue=rTerm->get<double>();
     else{
-      CHECK(rTerm->getValueType()==typeid(Graph),"");
+      CHECK(rTerm->isGraph(),"");
       Graph& rCase=rTerm->graph();
 #if 0
       if(rCase.N==1){
-        CHECK(rCase(0)->getValueType()==typeid(Graph),"");
+        CHECK(rCase(0)->isGraph(),"");
         if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
       }
       if(rCase.N>=2){
-        CHECK(rCase.last(-2)->getValueType()==typeid(Graph),"");
-        CHECK(rCase.last(-1)->getValueType()==typeid(bool),"");
+        CHECK(rCase.last(-2)->isGraph(),"");
+        CHECK(rCase.last(-1)->isOfType<bool>(),"");
         if(rCase.last(-1)->parents(0)==d->rule){
           if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
         }
       }
 #else
       NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
-      if(rCase.last()->getValueType()==typeid(double) && rCase.last()->keys.last()=="count"){
-        if(subs.d0 == rCase.last()->V<double>()) reward += rValue;
+      if(rCase.last()->isOfType<double>() && rCase.last()->keys.last()=="count"){
+        if(subs.d0 == rCase.last()->get<double>()) reward += rValue;
       }else{
         if(subs.d0) reward += rValue;
       }
@@ -155,7 +155,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     //-- find minimal wait time
     double w=1e10;
     for(Node *i:*state){
-      if(i->getValueType()==typeid(double)){
+      if(i->isOfType<double>()){
         double wi = *i->getValue<double>();
         if(w>wi) w=wi;
       }
@@ -173,7 +173,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       lastStepDuration=w;
       NodeL terminatingActivities;
       for(Node *i:*state){
-        if(i->getValueType()==typeid(double)){
+        if(i->isOfType<double>()){
           double &wi = *i->getValue<double>(); //this is a double reference!
           wi -= w;
           if(fabs(wi)<1e-10) terminatingActivities.append(i);
@@ -191,9 +191,9 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   }else{ //normal decision
     //first check if probabilistic
     Node *effect = d->rule->graph().last();
-    if(effect->getValueType()==typeid(arr)){
+    if(effect->isOfType<arr>()){
       HALT("probs in decision rules not properly implemented (observation id is not...)");
-      arr p = effect->V<arr>();
+      arr p = effect->get<arr>();
       uint r = sampleMultinomial(p);
       effect = d->rule->graph().elem(-1-p.N+r);
     }
@@ -279,7 +279,8 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  start_state->copy(*state, &KB);
+  if(!start_state) start_state = &newSubGraph(KB,{"START_STATE"},state->isNodeOfParentGraph->parents)->value;
+  start_state->copy(*state);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   start_T_step = T_step;
   start_T_real = T_real;
@@ -299,13 +300,12 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-  if(!state) state = new Graph();
-  state->copy(*start_state, &KB);
+  if(!state) state = &newSubGraph(KB, {"STATE"}, {})->value;
+  state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
-  state->isNodeOfParentGraph->keys(0)="STATE";
 
   if(tmp) delete tmp->isNodeOfParentGraph;
-  new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
+  newSubGraph(KB, {"TMP"}, {});
   tmp   = &KB["TMP"]->graph();
 
   DEBUG(KB.checkConsistency();)

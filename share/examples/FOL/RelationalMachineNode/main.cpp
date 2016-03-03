@@ -16,10 +16,10 @@ struct RelationalMachineNode{
   ros::Subscriber sub_newEffect;
 
   RelationalMachineNode():RM("machine.fol"){
-    pub_state     = nh.advertise<std_msgs::String>("/RelationalMachine/state", 10, true);
-    pub_command   = nh.advertise<std_msgs::String>("/RelationalMachine/command", 10, true);
-    pub_symbols   = nh.advertise<std_msgs::String>("/RelationalMachine/symbols", 10, true);
-    sub_newEffect = nh.subscribe("/RelationalMachine/effect", 1, &RelationalMachineNode::cb_newEffect, this);
+    pub_state     = nh.advertise<std_msgs::String>("/RAP/state", 10, true);
+    pub_command   = nh.advertise<std_msgs::String>("/RAP/command", 10, true);
+    pub_symbols   = nh.advertise<std_msgs::String>("/RAP/symbols", 10, true);
+    sub_newEffect = nh.subscribe("/RAP/effect", 1, &RelationalMachineNode::cb_newEffect, this);
 
     mlr::wait(.1);
     publishSymbols();
@@ -75,8 +75,8 @@ void testIntegratedRM(){
   RelationalMachineModule RM;
   RosCom_Spinner spinner;
 
-  SubscriberConvNoHeader<std_msgs::String, mlr::String, &conv_string2string>("/RelationalMachine/effects", RM.effects);
-//  PublisherConv<std_msgs::String, mlr::String, &conv_string2string>("/RelationalMachine/state", RM.state);
+  SubscriberConvNoHeader<std_msgs::String, mlr::String, &conv_string2string>("/RAP/effects", RM.effects);
+//  PublisherConv<std_msgs::String, mlr::String, &conv_string2string>("/RAP/state", RM.state);
 
   threadOpenModules(true);
   moduleShutdown().waitForValueGreaterThan(0);

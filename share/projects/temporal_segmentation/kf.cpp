@@ -197,7 +197,7 @@ arr KFThresh::query(G4FeatSeq &seq) {
   // for(auto pair: g4d.ann()) {
   //   obj1 = pair->keys(0);
   //   obj2 = pair->keys(1);
-  //   target.referTo(*pair->getValue<Graph>()->getValue<arr>("ann"));
+  //   target.referTo(pair->graph()->getValue<arr>("ann"));
   //   for(String sens1: g4d.id().sensorsof(obj1)) {
   //     for(String sens2: g4d.id().sensorsof(obj2)) {
   //       // TODO how to define features? some type of lambda?

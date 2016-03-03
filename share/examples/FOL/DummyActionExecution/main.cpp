@@ -10,8 +10,8 @@ struct DummyActionExecutionNode {
   ros::Subscriber sub_symbols;
 
   DummyActionExecutionNode(){
-    sub_state   = nh.subscribe("/RelationalMachine/state", 10, &DummyActionExecutionNode::cb_newState, this);
-    sub_symbols = nh.subscribe("/RelationalMachine/symbols", 10, &DummyActionExecutionNode::cb_newSymbols, this);
+    sub_state   = nh.subscribe("/RAP/state", 10, &DummyActionExecutionNode::cb_newState, this);
+    sub_symbols = nh.subscribe("/RAP/symbols", 10, &DummyActionExecutionNode::cb_newSymbols, this);
   }
 
   void cb_newState(const std_msgs::String::ConstPtr& msg);       ///< just for info
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   RosCom_Spinner spinner;
 
   ros::NodeHandle nh;
-  ros::Publisher pub_effect = nh.advertise<std_msgs::String>("/RelationalMachine/effect", 1);
+  ros::Publisher pub_effect = nh.advertise<std_msgs::String>("/RAP/effect", 1);
 
   threadOpenModules(true);
 

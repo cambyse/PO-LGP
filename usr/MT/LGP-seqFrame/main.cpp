@@ -45,7 +45,8 @@ void LGPexample(){
 //===========================================================================
 
 void LGPplayer(){
-  TowerProblem_new towers;
+  SticksProblem towers;
+  makeConvexHulls(towers.world_root.shapes);
 
   ManipulationTree_Node root(towers);
 
@@ -54,43 +55,48 @@ void LGPplayer(){
 
   system("evince z.pdf &");
 
-  OrsViewer poseView;
-  OrsPathViewer seqView("sequence");
+  OrsViewer poseView("pose");
+  OrsPathViewer seqView("sequence", 1.);
   OrsPathViewer pathView("path");
   threadOpenModules(true);
 
-//  charA cmds={ '0', 'p', '3', 'p', '2', 'p', '4', 'p', 's', 'q' };
-  charA cmds={ '1', '4', 'x', 'q' };
+  charA cmds={ 'p', '0', '3', '1'};//, 'p', '4', 'p', 's', 'q' };
+  cmds={ /*'2', 'u',*/ '1', 'q', 'u', '1', 'u', '2', 'q' };
   bool interactive=false;
+  bool autoCompute=true;
 
   bool go=true;
   for(uint s=0;go;s++){
     //-- display stuff
-    if(node->poseProblem.configurations.N)
-      poseView.modelWorld.set() = *node->poseProblem.configurations(0);
-    if(node->seqProblem.configurations.N)
-      seqView.setConfigurations(node->seqProblem.configurations);
-    if(node->pathProblem.configurations.N)
-      pathView.setConfigurations(node->pathProblem.configurations);
+#if 1
+    if(node->poseProblem && node->poseProblem->configurations.N)
+      poseView.modelWorld.set() = *node->poseProblem->configurations(0);
+#else
+    poseView.modelWorld.set() = node->effKinematics;
+#endif
+    if(node->seqProblem && node->seqProblem->configurations.N)
+      seqView.setConfigurations(node->seqProblem->configurations);
+    else seqView.clear();
+    if(node->pathProblem && node->pathProblem->configurations.N)
+      pathView.setConfigurations(node->pathProblem->configurations);
+    else pathView.clear();
 
     root.getGraph().writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
     system("dot -Tpdf z.dot > z.pdf");
 
     //-- query UI
-    if(interactive){
-      cout <<"********************" <<endl;
-      cout <<"NODE:\n" <<*node <<endl;
-      cout <<"--------------------" <<endl;
-      cout <<"\nCHOICES:" <<endl;
-      cout <<"(q) quit" <<endl;
-      cout <<"(u) up" <<endl;
-      cout <<"(p) pose problem" <<endl;
-      cout <<"(s) sequence problem" <<endl;
-      cout <<"(x) path problem" <<endl;
-      uint c=0;
-      for(ManipulationTree_Node* a:node->children){
-        cout <<"(" <<c++ <<") DECISION: " <<*a->folDecision <<endl;
-      }
+    cout <<"********************" <<endl;
+    cout <<"NODE:\n" <<*node <<endl;
+    cout <<"--------------------" <<endl;
+    cout <<"\nCHOICES:" <<endl;
+    cout <<"(q) quit" <<endl;
+    cout <<"(u) up" <<endl;
+    cout <<"(p) pose problem" <<endl;
+    cout <<"(s) sequence problem" <<endl;
+    cout <<"(x) path problem" <<endl;
+    uint c=0;
+    for(ManipulationTree_Node* a:node->children){
+      cout <<"(" <<c++ <<") DECISION: " <<*a->folDecision <<endl;
     }
 
     char cmd='q';
@@ -99,7 +105,14 @@ void LGPplayer(){
 
     if(cmd>='0' && cmd<='9'){
       node = node->children(int(cmd-'0'));
-      if(!node->isExpanded) node->expand();
+      if(!node->isExpanded){
+        node->expand();
+        if(autoCompute){
+          node->solvePoseProblem();
+//          node->solveSeqProblem();
+//          node->solvePathProblem(20);
+        }
+      }
     }else switch(cmd){
       case 'q': go=false; break;
       case 'u': if(node->parent) node = node->parent; break;

@@ -41,8 +41,8 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
       ors::Joint *j=G(offset)->joints(j_idx);
       for(uint i=0;i<=k;i++){
         ors::Joint *jmatch = G(offset+i)->getJointByBodyNames(j->from->name, j->to->name);
+        if(jmatch && j->type!=jmatch->type) jmatch=NULL;
         if(!jmatch){ useIt(j_idx) = false; break; }
-        CHECK_EQ(j->type, jmatch->type, "");
         jointMatchLists(i, j_idx) = jmatch;
       }
     }
@@ -125,8 +125,8 @@ void TaskMap_qZeroVels::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
 
   for(ors::Joint *j:G.last()->joints) if(j->constrainToZeroVel){
     ors::Joint *jmatch = G.last(-2)->getJointByBodyNames(j->from->name, j->to->name);
+    if(jmatch && j->type!=jmatch->type) jmatch=NULL;
     if(jmatch){
-      CHECK_EQ(j->type, jmatch->type, "");
       for(uint i=0;i<j->qDim();i++){
         q_bar(0).append(G.last(-2)->q(jmatch->qIndex+i));
         q_bar(1).append(G.last(-1)->q(j     ->qIndex+i));

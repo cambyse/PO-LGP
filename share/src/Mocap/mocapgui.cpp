@@ -96,8 +96,8 @@ void sMocapGui::set_target(Target target) {
         // cout << "rec.ann.N: " << rec.ann(target, agent, objsensor).N << endl;
         // interactions.append(rec.ann(target, agent, objsensor));
         // interactions.append(*rec.label().getValue<arr>(STRINGS(Target_to_str(target), agent, objsensor)));
-        interactions.append(rec.label().getNode({Target_to_str(target), agent, objsensor})->V<arr>());
-     // interactions.(*rec.kvgann.getNode(agent, objsensor)->getValue<Graph>()->getValue<arr>("ann"));
+        interactions.append(rec.label().getNode({Target_to_str(target), agent, objsensor})->get<arr>());
+     // interactions.(*rec.kvgann.getNode(agent, objsensor)->graph().getValue<arr>("ann"));
       }
     }
     interactions.reshape(nagents, nobjectsensors, interactions.N / (nagents * nobjectsensors));
@@ -147,7 +147,7 @@ void sMocapGui::set_target(Target target) {
       for(uint os2 = 0; os2 < os1; os2++) {
         // arr &&inter = rec.ann(target, objectsensors(os1), objectsensors(os2));
         // arr &inter = *rec.label().getValue<arr>(STRINGS(Target_to_str(target), objectsensors(os1), objectsensors(os2)));
-        arr &inter = rec.label().getNode({Target_to_str(target), objectsensors(os1), objectsensors(os2)})->V<arr>();
+        arr &inter = rec.label().getNode({Target_to_str(target), objectsensors(os1), objectsensors(os2)})->get<arr>();
         if(inter.N)
           interactions[os1*(os1+1)/2 + os2]() = inter;
       }

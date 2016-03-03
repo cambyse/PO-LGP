@@ -123,27 +123,27 @@ template<class V, class E> void makeGridGraph(Graph& G, uint h, uint w){
 double cost(Graph& S){
   double E=0.;
   for(Node *s:S.getNodesOfType<Segment>()){
-    E += s->V<Segment>().beta_len;
+    E += s->get<Segment>().beta_len;
   }
   for(Node *e:S.getNodesOfType<uint>()){
-    E += lambda*e->V<uint>();
+    E += lambda*e->get<uint>();
   }
   return E;
 }
 
 void fuse(Graph& S, Node *ita, Node *itb){
 //  Node *e=S.getEdge(ita,itb);
-  Segment &a=ita->V<Segment>();
-  Segment &b=itb->V<Segment>();
+  Segment &a=ita->get<Segment>();
+  Segment &b=itb->get<Segment>();
   a.X += b.X;
   a.n += b.n;
   a.mu += b.mu;
   a.pix.append(b.pix);
   a.comBeta();
   for(Node *itc:neighbors(itb)) if(itc!=ita){
-    uint nbc = S.getEdge(itb,itc)->V<uint>();
+    uint nbc = S.getEdge(itb,itc)->get<uint>();
     Node *ea=S.getEdge(ita,itc);
-    if(ea) ea->V<uint>() += nbc;
+    if(ea) ea->get<uint>() += nbc;
     else new Node_typed<uint>(S, {}, {ita, itc}, new uint(nbc), true);
   }
   while(itb->parentOf.N) delete itb->parentOf.last();
@@ -166,7 +166,7 @@ void planes(){
   cout <<S <<endl;
   S.writeDot(FILE("z.dot"), false, true);
 
-  for(uint i=0;i<X.d0;i++) S(i)->V<Segment>().pix.append(i);
+  for(uint i=0;i<X.d0;i++) S(i)->get<Segment>().pix.append(i);
   for(uint *e:S.getValuesOfType<uint>()) *e=1;
 
   arr Phi;
@@ -185,8 +185,8 @@ void planes(){
   for(uint k=0;k<10000;k++){
     double Eold = cost(S);
     Node *e = S.getNodesOfType<uint>().rndElem();
-    double deltaE = delta_E_fuse(e->parents(0)->V<Segment>(), e->parents(1)->V<Segment>());
-    deltaE -= lambda*e->V<uint>();
+    double deltaE = delta_E_fuse(e->parents(0)->get<Segment>(), e->parents(1)->get<Segment>());
+    deltaE -= lambda*e->get<uint>();
     if(deltaE<0.){
       fuse(S, e->parents(0), e->parents(1));
       double Enew = cost(S);
