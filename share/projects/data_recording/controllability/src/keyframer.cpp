@@ -176,7 +176,7 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   for(uint i = 0; i < x.d0; i++) {
     for(uint fi = ff; fi < ft; fi++) {
       uint wi = fi - ff;
-      win.referToSubRange(x[i], wi, wi + wlen - 1);
+      win.referToSub(x[i], wi, wi + wlen - 1);
       m = sum(win, 0) / (double)wlen;
       m = ~repmat(m, 1, wlen);
       y(i, fi) = sumOfSqr(win - m);
@@ -666,8 +666,8 @@ void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
   uint fi, fo;
 
   for(auto ctrl: ctrls) {
-    inset = ctrl->getValue<Graph>("inset");
-    offset = ctrl->getValue<Graph>("offset");
+    inset = &ctrl->get<Graph>("inset");
+    offset = &ctrl->get<Graph>("offset");
 
     fi = *inset->getValue<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
@@ -691,8 +691,8 @@ void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
 
   cout << "#ctrls: " << ctrls.N << endl;
   for(auto ctrl: ctrls) {
-    inset = ctrl->getValue<Graph>("inset");
-    offset = ctrl->getValue<Graph>("offset");
+    inset = &ctrl->get<Graph>("inset");
+    offset = &ctrl->get<Graph>("offset");
 
     fi = *inset->getValue<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
@@ -1047,7 +1047,7 @@ void KeyFramer::EM(Graph &kvg, const String &bA, const String &bB, uint wlen) {
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
 
   // TODO compute this using the new data structure..
-  arr c = getCorrPCA(bp1, bp2, wlen, 1).flatten();
+  arr c = getCorrPCA(bp1, bp2, wlen, 1).reshapeFlat();
   arr pAVar = g4d().query("posVar", bA);
   arr qAVar = g4d().query("quatVar", bA);
   arr pBVar = g4d().query("posVar", bB);
@@ -1363,7 +1363,7 @@ void KeyFramer::EM(Graph &kvg, const String &b1, const String &b2, uint wlen) {
   String bp1(STRING(b1 << ":pos")), bp2(STRING(b2 << ":pos"));
   String bo1(STRING(b1 << ":ori")), bo2(STRING(b2 << ":ori"));
 
-  arr c = getCorrPCA(bp1, bp2, wlen, 1).flatten();
+  arr c = getCorrPCA(bp1, bp2, wlen, 1).reshapeFlat();
   arr dpVar = getPosVar(b1, b2, wlen);
   arr dqVar = getQuatVar(bo1, bo2, wlen);
   // }}}
@@ -2350,7 +2350,7 @@ void KeyFramer::EM_c(Graph &kvg, const String &bA, const String &bB) {
   uint T = g4d().numFrames();
   uint ia = g4d().id().digits().findValue(bA);
   uint io = g4d().id().objects().findValue(bB);
-  arr dist = s->indd.sub(0, -1, ia, ia, io, io).flatten();
+  arr dist = s->indd.sub(0, -1, ia, ia, io, io).reshapeFlat();
   // }}}
   // Parameters & other {{{
   arr pi, P;
@@ -2547,7 +2547,7 @@ void KeyFramer::EM_z_with_c(Graph &kvg, const String &subj, const String &obj) {
   uint T = g4d().numFrames();
   uint ia = g4d().id().digits().findValue(subj);
   uint io = g4d().id().objects().findValue(obj);
-  arr dist = s->indd.sub(0, -1, ia, ia, io, io).flatten();
+  arr dist = s->indd.sub(0, -1, ia, ia, io, io).reshapeFlat();
   arr pSpeed = g4d().query("posSmoothSpeed", subj);
   arr qSpeed = g4d().query("quatSmoothSpeed", subj);
 #ifdef with_object_emission
@@ -4149,10 +4149,10 @@ void KeyFramer::load_ann(const String &dir) {
       for(String part1: g4d().id().sensorsof(obj1)) {
         for(String part2: g4d().id().sensorsof(obj2)) {
           ann_ref.referTo(annOf(part1, part2));
-          for(Node *lock: *pair->getValue<Graph>()) {
-            from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
-            to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
-            ann_ref.subRange(from, to) = 1;
+          for(Node *lock: pair->graph()) {
+            from = (uint)lock->graph()->getValue<double>("from");
+            to = (uint)lock->graph()->getValue<double>("to");
+            ann_ref.subRef(from, to) = 1;
           }
         }
       }

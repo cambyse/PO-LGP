@@ -9,9 +9,9 @@ using namespace std;
 #  include <pr2/roscom.h>
 #endif
 
-TaskControllerModule::TaskControllerModule()
+TaskControllerModule::TaskControllerModule(const char* modelFile)
     : Module("TaskControllerModule", .01)
-    , realWorld("../../../data/pr2_model/pr2_model.ors")
+    , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
     , feedbackController(NULL)
     , q0(realWorld.q)
     , useRos(false)
@@ -67,7 +67,7 @@ void TaskControllerModule::step(){
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+      q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
@@ -95,7 +95,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
@@ -131,9 +131,9 @@ void TaskControllerModule::step(){
       qdot_model(trans->qIndex+0) = 0;
       qdot_model(trans->qIndex+1) = 0;
       qdot_model(trans->qIndex+2) = 0;
-      q_model(trans->qIndex+0) = 0;
-      q_model(trans->qIndex+1) = 0;
-      q_model(trans->qIndex+2) = 0;
+//      q_model(trans->qIndex+0) = 0;
+//      q_model(trans->qIndex+1) = 0;
+//      q_model(trans->qIndex+2) = 0;
     }
     feedbackController->setState(q_model, qdot_model);
   }
@@ -154,7 +154,7 @@ void TaskControllerModule::step(){
   refs.KiFT.clear();
   refs.J_ft_inv.clear();
   refs.u_bias = zeros(q_model.N);
-  refs.intLimitRatio = ARR(0.7);
+  refs.intLimitRatio = 0.7;
 
   //-- send base motion command
   if (!fixBase.get() && trans && trans->qDim()==3) {

@@ -30,150 +30,109 @@
 
 //===========================================================================
 //
-/// A k-order cost_feature, inequality or equality constraint,
+/// A k-order sumOfSqr feature, inequality or equality constraint,
 /// optionally rescaled using 'target' and 'prec'
 //
 
 struct Task {
   TaskMap& map;
-  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
+  const TermType type;  ///< element of {sumOfSqr, inequality, equality}
   mlr::String name;
   bool active;
-  arr target, prec;  ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
+  arr target, prec;     ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
 
-  bool isActive(uint t){ if(!active || prec.N<=t || !prec(t)) return false; return true; }
+  Task(TaskMap* m, const TermType& type) : map(*m), type(type), active(true){}
 
-  Task(TaskMap* m, const TermType& type):map(*m), type(type), active(true){} //TODO: require type here!!
-
-  void setCostSpecs(uint fromTime, uint toTime,
+  void setCostSpecs(int fromTime, uint toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
+  bool isActive(uint t){ if(!active || prec.N<=t || !prec(t)) return false; return true; }
+
+  static Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
 };
 
 
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
 
 //===========================================================================
 //
-// a motion problem description
+/// This class allows you to DESCRIBE a motion planning problem, nothing more
 //
 
-/// This class allows you to DESCRIBE a motion planning problem, nothing more
-struct MotionProblem {
-  //engines to compute things
-  ors::KinematicWorld& world;  ///< the original world
-  WorldL configurations;       ///< copies for each time slice; including kinematic switches
+struct MotionProblem : KOrderMarkovFunction{
+  ors::KinematicWorld& world;  ///< the original world, which also defines the 'start conditions'
+  WorldL configurations;       ///< copies for each time slice; including kinematic switches; only these are optimized
   bool useSwift;
   
-  //******* the following three sections are parameters that define the problem
-
-  //-- task cost descriptions
+  /// task cost descriptions
   mlr::Array<Task*> tasks;
 
-  //-- kinematic switches along the motion
+  /// kinematic switches along the motion
   mlr::Array<ors::KinematicSwitch*> switches;
 
   //-- trajectory length and tau
-  uint T; ///< number of time steps
-  double tau; ///< duration of single step
+  uint T;       ///< number of time steps
+  double tau;   ///< duration of single step
   uint k_order; ///< determine the order of the KOMO problem (default 2)
   
-  //-- start constraints
-  arr x0;      ///< fixed start state and velocity [[TODO: remove this and replace by prefix only (redundant...)]]
-  arr prefix;  ///< a set of states PRECEEDING x[0] (having 'negative' time indices) and which influence the control cost on x[0]. NOTE: x[0] is subject to optimization. DEFAULT: constantly equals x0
-  arr postfix; ///< fixing the set of statex x[T-k]...x[T] //TODO: remove?
-  //TODO: add methods to properly set the prefix given x0,v0?
-
   //-- return values of an optimizer
-  arrA phiMatrix;
-  arr dualMatrix;
-  mlr::Array<TermTypeA> ttMatrix;
+  arrA phiMatrix;                  ///< storage of all features in all time slices
+  mlr::Array<TermTypeA> ttMatrix;  ///< storage of all feature-types in all time slices
+  arr dualSolution;                ///< the dual solution computed during constrained optimization
 
-  MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
+  MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift=true);
   ~MotionProblem();
   
   MotionProblem& operator=(const MotionProblem& other);
 
-  //-- setting time aspects
+  /// setting the numer of time steps and total duration in seconds
   void setTiming(uint timeSteps, double duration);
 
   //-- setting costs in a task space
-  bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);
-  void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);
-  Task* addTask(const char* name, TaskMap *map, const TermType& termType);
-  //TODO: the following are deprecated; use Task::setCostSpecs instead
-//  enum TaskCostInterpolationType { constant, finalOnly, final_restConst, early_restConst, final_restLinInterpolated };
-//  void setInterpolatingCosts(Task *c,
-//                             TaskCostInterpolationType inType,
-//                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
+  void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);     ///< read all tasks from a graph
+  bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);           ///< read a single task from a node-spec
+  Task* addTask(const char* name, TaskMap *map, const TermType& termType); ///< manually add a task
 
-  //-- cost infos
-  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t); ///< the general task vector and its Jacobian
+  //-- initialization
+  void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!)
+  arr getInitialization();      ///< this reads out the initial state trajectory after 'setupConfigurations'
+
+  //-- methods accessed by the optimizers
+  void set_x(const arr& x);            ///< set the state trajectory of all configurations
+  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t); ///< read out the general task vector and its Jacobian for time slice t (this is APPENDING to phi and J)
   uint dim_phi(uint t);
   uint dim_g(uint t);
   uint dim_h(uint t);
+  uint get_T() { return T; }
+  uint get_k() { return k_order; }
+  uint dim_x(uint t) { return configurations(t+k_order)->getJointStateDimension(); }
+
+  //-- info on the costs
   StringA getPhiNames(uint t);
   void reportFull(bool brief=false);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
-//  void setState(const arr& x, const arr& v=NoArr);
-  void activateAllTaskCosts(bool activate=true);
-
   //-- helpers
-  arr getH_rate_diag();
-  arr getInitialization();
-  void setConfigurationStates(const arr& x);
-  void setupConfigurations();
   void temporallyAlignKinematicSwitchesInConfiguration(uint t);
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
-  //-- inverse Kinematics
-  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
-
+  /// inverse kinematics problem (which is the special case T=0) returned as a @ConstrainedProblem@
+  /// as input to optimizers
   ConstrainedProblem InvKinProblem(){
     return [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
       this->inverseKinematics(phi, J, H, tt, x);
     };
   }
-
-//  KOrderMarkovFunction PathProblem(){
-//    NIY;
-//  }
+  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
 };
 
-
-//===========================================================================
-//
-// transforming a motion problem description into an optimization problem
-//
-
-struct MotionProblemFunction:KOrderMarkovFunction {
-  MotionProblem& MP;
-
-  MotionProblemFunction(MotionProblem& _P):MP(_P) {}
-
-  uint dim_g_h(){ uint d=0; for(uint t=0;t<=MP.T;t++) d += dim_g(t) + dim_h(t); return d; }
-
-  //KOrderMarkovFunction definitions
-  virtual void set_x(const arr& x){ MP.setConfigurationStates(x); }
-  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t);
-  //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
-  virtual uint get_T() { return MP.T; }
-  virtual uint get_k() { return MP.k_order; }
-  virtual uint dim_x() { uint d=0; for(uint t=0; t<=MP.T; t++) d+=dim_x(t); return d; }
-  virtual uint dim_x(uint t) { return MP.configurations(t+MP.k_order)->getJointStateDimension(); }
-  virtual uint dim_phi(uint t){ return MP.dim_phi(t); } //transitions plus costs (latter include constraints)
-  virtual uint dim_g(uint t){ return MP.dim_g(t); }
-  virtual uint dim_h(uint t){ return MP.dim_h(t); }
-  virtual StringA getPhiNames(uint t){ return MP.getPhiNames(t); }
-};
 
 //===========================================================================
 //
 // basic helpers
 //
 
+arr getH_rate_diag(ors::KinematicWorld& world);
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T);
 arr reverseTrajectory(const arr& q);
 void getVel(arr& v, const arr& q, double tau);

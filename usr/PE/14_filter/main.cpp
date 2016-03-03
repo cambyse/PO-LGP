@@ -31,7 +31,7 @@ int main(int argn, char** argv){
   uint t=0;
   for(;t<range;t++) fil <<y[t] <<endl; //just copy the first 10 pts
 
-  arr y_sub = y.subRange(0,range-1);
+  arr y_sub = y.subRef(0,range-1);
   cout << y.d0-1 << endl;
   for(;t<y.d0-1;t++){
 

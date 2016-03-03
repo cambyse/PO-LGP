@@ -5,7 +5,7 @@ void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   G.getJointState(q);
   if(M.N){
     if(M.nd==1){
-      q=M%q; if(&J) J.setDiag(M);
+      q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
     }else{
       q=M*q; if(&J) J=M;
     }
@@ -24,8 +24,9 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   //-- read out the task variable from the k+1 configurations
   uint offset = G.N-1-k; //G.N might contain more configurations than the order of THIS particular task -> the front ones are not used
   for(uint i=0;i<=k;i++){
-    q_bar(i) = G(offset+i)->q;
-    J_bar(i).setId(q_bar(i).N);
+    phi(q_bar(i), J_bar(i), *G(offset+i), t-k+i);
+//    q_bar(i) = G(offset+i)->q;
+//    J_bar(i).setId(q_bar(i).N);
   }
   bool handleSwitches=false;
   uint qN=q_bar(0).N;
@@ -40,8 +41,8 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
       ors::Joint *j=G(offset)->joints(j_idx);
       for(uint i=0;i<=k;i++){
         ors::Joint *jmatch = G(offset+i)->getJointByBodyNames(j->from->name, j->to->name);
+        if(jmatch && j->type!=jmatch->type) jmatch=NULL;
         if(!jmatch){ useIt(j_idx) = false; break; }
-        CHECK_EQ(j->type, jmatch->type, "");
         jointMatchLists(i, j_idx) = jmatch;
       }
     }
@@ -53,8 +54,10 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
         for(uint i=0;i<=k;i++){
           qidx=jointMatchLists(i,j_idx)->qIndex;
           qdim=jointMatchLists(i,j_idx)->qDim();
-          q_bar_mapped(i).append(q_bar(i).subRange(qidx, qidx+qdim-1));
-          J_bar_mapped(i).append(J_bar(i).subRange(qidx, qidx+qdim-1));
+          if(qdim){
+            q_bar_mapped(i).append(q_bar(i).subRef(qidx, qidx+qdim-1));
+            J_bar_mapped(i).append(J_bar(i).subRef(qidx, qidx+qdim-1));
+          }
         }
       }
     }
@@ -95,6 +98,63 @@ uint TaskMap_qItself::dim_phi(const ors::KinematicWorld& G) {
 
 uint TaskMap_qItself::dim_phi(const WorldL& G, int t){
   if(t<0) return dim_phi(*G.last());
+
+  while(dimPhi.N<=(uint)t) dimPhi.append(UINT_MAX);
+
+  //empirically test the dimension:
+  if(dimPhi(t)==UINT_MAX){
+    arr y;
+    phi(y, NoArr, G, 0.01, t);
+    dimPhi(t) = y.N;
+  }
+
+  return dimPhi(t);
+}
+
+//===========================================================================
+
+void TaskMap_qZeroVels::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
+  CHECK(order==1,"NIY");
+  CHECK(G.N>=order+1,"I need at least " <<order+1 <<" configurations to evaluate");
+  uint k=order;
+
+  double tau2=tau*tau, tau3=tau2*tau;
+  arrA q_bar(k+1), J_bar(k+1);
+  //-- read out the task variable from the k+1 configurations
+  uint offset = G.N-1-k; //G.N might contain more configurations than the order of THIS particular task -> the front ones are not used
+
+  for(ors::Joint *j:G.last()->joints) if(j->constrainToZeroVel){
+    ors::Joint *jmatch = G.last(-2)->getJointByBodyNames(j->from->name, j->to->name);
+    if(jmatch && j->type!=jmatch->type) jmatch=NULL;
+    if(jmatch){
+      for(uint i=0;i<j->qDim();i++){
+        q_bar(0).append(G.last(-2)->q(jmatch->qIndex+i));
+        q_bar(1).append(G.last(-1)->q(j     ->qIndex+i));
+        J_bar(0).append(eyeVec(G.last(-2)->q.N, jmatch->qIndex+i));
+        J_bar(1).append(eyeVec(G.last(-1)->q.N, j     ->qIndex+i));
+      }
+    }
+  }
+  if(!q_bar(0).N){ y.clear(); if(&J) J.clear(); return; }
+  J_bar(0).reshape(q_bar(0).N, J_bar(0).N/q_bar(0).N);
+  J_bar(1).reshape(q_bar(1).N, J_bar(1).N/q_bar(1).N);
+
+  if(k==1)  y = (q_bar(1)-q_bar(0))/tau; //penalize velocity
+  if(k==2)  y = (q_bar(2)-2.*q_bar(1)+q_bar(0))/tau2; //penalize acceleration
+  if(k==3)  y = (q_bar(3)-3.*q_bar(2)+3.*q_bar(1)-q_bar(0))/tau3; //penalize jerk
+  if(&J) {
+    uintA qidx(G.N);
+    qidx(0)=0;
+    for(uint i=1;i<G.N;i++) qidx(i) = qidx(i-1)+G(i-1)->q.N;
+    J = zeros(y.N, qidx.last()+G.last()->q.N);
+    if(k==1){ J.setMatrixBlock(J_bar(1), 0, qidx(offset+1));  J.setMatrixBlock(   -J_bar(0), 0, qidx(offset+0));  J/=tau; }
+    if(k==2){ J.setMatrixBlock(J_bar(2), 0, qidx(offset+2));  J.setMatrixBlock(-2.*J_bar(1), 0, qidx(offset+1));  J.setMatrixBlock(J_bar(0)   , 0, qidx(offset+0));  J/=tau2; }
+    if(k==3){ J.setMatrixBlock(J_bar(3), 0, qidx(offset+3));  J.setMatrixBlock(-3.*J_bar(2), 0, qidx(offset+2));  J.setMatrixBlock(3.*J_bar(1), 0, qidx(offset+1));  J.setMatrixBlock(-J_bar(0), 0, qidx(offset+0));  J/=tau3; }
+  }
+}
+
+uint TaskMap_qZeroVels::dim_phi(const WorldL& G, int t){
+  CHECK(t>=0,"");
 
   while(dimPhi.N<=(uint)t) dimPhi.append(UINT_MAX);
 

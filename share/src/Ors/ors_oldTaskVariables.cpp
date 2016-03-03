@@ -357,7 +357,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       y = conv_vec2arr(c);
       ors.kinematicsPos(NoArr, Ji, bi, irel.pos);
       ors.kinematicsPos(NoArr, Jj, bj, jrel.pos);
-      ors.jacobianR(JRj, bj);
+      ors.axesMatrix(JRj, bj);
       J.resize(3, Jj.d1);
       for(k=0; k<Jj.d1; k++) {
         vi.set(Ji(0, k), Ji(1, k), Ji(2, k));
@@ -383,7 +383,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       y = conv_vec2arr(f.rot.getZ());
       NIY; //TODO: Jacobian?
       break;
-    case rotTVT:       y.resize(3);  ors.jacobianR(J, bi);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
+    case rotTVT:       y.resize(3);  ors.axesMatrix(J, bi);  y.setZero(); break; //the _STATE_ of rot is always zero... the Jacobian not... (hack)
     case qItselfTVT:   ors.getJointState(q, qd);    y = q;   J.setId(q.N);  break;
     case qLinearTVT:   ors.getJointState(q, qd);    y = params * q;   J=params;  break;
     case qSquaredTVT:
@@ -470,8 +470,8 @@ void TaskVariable::updateChange(int t, double tau) {
   CHECK(y.N, "variable needs to be updated before!");
   arr yt, vt;
   if(t!=-1) {
-    yt.referToSubDim(y_trajectory, t);
-    vt.referToSubDim(v_trajectory, t);
+    yt.referToDim(y_trajectory, t);
+    vt.referToDim(v_trajectory, t);
     //y_prec     = y_prec_trajectory(t);
   } else {
     yt.referTo(y_target);

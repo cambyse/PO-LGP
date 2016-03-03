@@ -197,7 +197,7 @@ arr KFThresh::query(G4FeatSeq &seq) {
   // for(auto pair: g4d.ann()) {
   //   obj1 = pair->keys(0);
   //   obj2 = pair->keys(1);
-  //   target.referTo(*pair->getValue<Graph>()->getValue<arr>("ann"));
+  //   target.referTo(pair->graph()->getValue<arr>("ann"));
   //   for(String sens1: g4d.id().sensorsof(obj1)) {
   //     for(String sens2: g4d.id().sensorsof(obj2)) {
   //       // TODO how to define features? some type of lambda?
@@ -306,9 +306,9 @@ arr KFLogitReg::sigma(G4FeatSeq &seq) {
   uint thinning = *seq.params.get<uint>("thinning");
 
   for(uint f_thin = 0; f_thin < seq.nframes_thin; f_thin++)
-    sigma.subRange(f_thin * thinning, (f_thin + 1) * thinning - 1)() = mlr::sigmoid(scalarProduct(beta, seq.data[f_thin]));
+    sigma.subRef(f_thin * thinning, (f_thin + 1) * thinning - 1)() = mlr::sigmoid(scalarProduct(beta, seq.data[f_thin]));
   if(seq.nframes_thin * thinning < seq.nframes)
-    sigma.subRange(seq.nframes_thin * thinning + 1, -1)() = sigma_thin.last();
+    sigma.subRef(seq.nframes_thin * thinning + 1, -1)() = sigma_thin.last();
 
   return sigma;
 }

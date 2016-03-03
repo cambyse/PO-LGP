@@ -54,7 +54,7 @@ void ActionMachine::open(){
       new Node_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"moving"}, {}, NULL, false);
-      new Node_typed<Graph>(KB(), {"STATE"}, {}, new Graph(), true);
+      newSubGraph(KB(), {"STATE"}, {});
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
@@ -218,11 +218,11 @@ void ActionMachine::close(){
 
 void ActionMachine::parseTaskDescription(Graph& td){
   Node *t = td.isNodeOfParentGraph;
-  mlr::String type=td["type"]->V<mlr::String>();
+  mlr::String type=td["type"]->get<mlr::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
   }else if(type=="forceCtrl"){
-    new PushForce(*this, td["ref1"]->V<mlr::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
+    new PushForce(*this, td["ref1"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
   }else{
     DefaultTaskMap *map = new DefaultTaskMap(td, *world);
     CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);

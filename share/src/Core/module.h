@@ -65,7 +65,7 @@ void modulesReportCycleTimes();
 
 struct Module : Thread{
   Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
-    new Node_typed<Module>(registry(), {"Module", name}, {}, this, false);
+    new Node_typed<Module*>(registry(), {"Module", name}, {}, this);
   }
   virtual ~Module(){}
   virtual void step(){ HALT("you should not run a virtual module"); }
@@ -90,6 +90,7 @@ struct Access{
   RevisionedAccessGatedClass *var;   ///< which variable does it access
   Access(const char* _name, Type *_type, Module *_module, RevisionedAccessGatedClass *_var):name(_name), type(_type), module(_module), var(_var){}
   virtual ~Access(){}
+  bool hasNewRevision(){ CHECK(var,"This Access has not been associated to any Variable"); return var->hasNewRevision(); }
   int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)module); }
   int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)module); }
   int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }
@@ -112,36 +113,36 @@ struct Access_typed:Access{
   /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
   Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
     : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = registry().getNode("Variable", name);
+    Node *vnode = registry().getNode({"Variable", name});
     v = acc.v;
     var = acc.var;
-    CHECK(vnode && &vnode->V<Variable<T> >()==v,"something's wrong")
+    CHECK(vnode && vnode->get<Variable<T>* >()==v,"something's wrong")
     if(module){
       Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
       if(moduleListens) module->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {vnode}, this);
     }
   }
 
   /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
   Access_typed(Module* _module, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = registry().getNode("Variable", name);
+    Node *vnode = registry().getNode({"Variable", name});
     if(!vnode){
       v = new Variable<T>(name);
-      vnode = new Node_typed<Variable<T> >(registry(), {"Variable", name}, {}, v, true);
+      vnode = new Node_typed<Variable<T>* >(registry(), {"Variable", name}, {}, v);
     }else{
-      v = &vnode->V<Variable<T> >();
+      v = vnode->get<Variable<T>* >();
     }
     var=(RevisionedAccessGatedClass*)v;
     if(module){
       Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {m,vnode}, this, false);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
       if(moduleListens) module->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T> >(registry(), {"Access", name}, {vnode}, this, false);
+      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {vnode}, this);
     }
   }
 
@@ -210,9 +211,9 @@ struct __##name##__Access:Access_typed<type>{ \
     instantiate the module just by referring to its string name. */
 
 #define REGISTER_MODULE(name) \
-  RUN_ON_INIT_BEGIN(name) \
-  new Node_typed<Type>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL), true); \
-  RUN_ON_INIT_END(name)
+  RUN_ON_INIT_BEGIN(Decl_Module##_##name) \
+  new Node_typed<Type*>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL)); \
+  RUN_ON_INIT_END(Decl_Module##_##name)
 
 
 

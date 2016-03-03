@@ -28,8 +28,8 @@ void run() {
 
   /// create ikmo problem
 //  arr param = trainScenes(0).paramRef;
-//  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.flatten();
-  arr param = ones(trainScenes(0).paramRef.d0,1); param.flatten();
+//  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.reshapeFlat();
+  arr param = ones(trainScenes(0).paramRef.d0,1); param.reshapeFlat();
   param = param/length(param)*mf->costScale;
   param(0)=1.;
 //  param(0)=0.;

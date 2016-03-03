@@ -96,12 +96,12 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
 
   //-- create a task map
   TaskMap *map;
-  const Graph* params=specs->getValue<Graph>();
-//  mlr::String type = specs.V<mlr::String>("type", "pos");
+  const Graph& params = specs->graph();
+//  mlr::String type = specs.get<mlr::String>("type", "pos");
   if(type=="wheels"){
     map = new TaskMap_qItself(world, "worldTranslationRotation");
   }else if(type=="collisionIneq"){
-    map = new CollisionConstraint( (params?params->V<double>("margin", 0.1):0.1) );
+    map = new CollisionConstraint( (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="collisionPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -109,7 +109,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="collisionExceptPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -117,12 +117,12 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->V<double>("margin", 0.1):0.1));
+    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->V<double>("margin", 0.1):0.1) );
+    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1) map = new TaskMap_qItself(world, ref1);
-    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->V<double>()*world.getHmetric()); //world.naturalQmetric()); //
+    else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->get<double>()*world.getHmetric()); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
@@ -132,9 +132,9 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   map->type=termType;
 
   //-- check additional real-valued parameters: order
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    map->order = params->V<double>("order", 0);
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    map->order = params->get<double>("order", 0);
   }
   return map;
 }
@@ -148,10 +148,10 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterva
   //-- create a task
   Task *task = new Task(map);
   //-- check for additional continuous parameters
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    arr time = params->V<arr>("time",{0.,1.});
-    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->V<arr>("target", {}), params->V<double>("scale", {1.}));
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    arr time = params->get<arr>("time",{0.,1.});
+    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params->get<arr>("target", {}), params->get<double>("scale", {1.}));
   }else{
     task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
   }
@@ -174,10 +174,10 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
 
   //-- create switch
   ors::KinematicSwitch *sw= new ors::KinematicSwitch();
-  if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
-//  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
-  else if(type=="rigid"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
-  else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
+  if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
+//  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
+  else if(type=="rigid"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
+  else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
   else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
@@ -202,9 +202,9 @@ ors::KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& wo
     sw->toId = world.getShapeByName(ref2)->index;
   }
   sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->getValueType()==typeid(Graph)){
-    const Graph* params=specs->getValue<Graph>();
-    sw->timeOfApplication = Tzero + params->V<double>("time",1.)*Tinterval + 1;
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    sw->timeOfApplication = Tzero + params->get<double>("time",1.)*Tinterval + 1;
   }
   return sw;
 }
@@ -524,7 +524,7 @@ void MotionProblem::reportFull(bool brief) {
           cout <<' ' <<c->prec(t);
           if(ttMatrix.N){
             cout <<' ' <<ttMatrix(t).elem(m)
-                <<' ' <<sumOfSqr(phiMatrix(t).subRange(m,m+d-1));
+                <<' ' <<sumOfSqr(phiMatrix(t).subRef(m,m+d-1));
           }
           cout <<endl;
         }
@@ -691,8 +691,7 @@ Graph MotionProblem::getReport() {
   double totalC=0., totalG=0.;
   for(uint i=0; i<tasks.N; i++) {
     Task *c = tasks(i);
-    Graph *g=new Graph();
-    report.append<Graph>({c->name}, {}, g, true);
+    Graph *g = &newSupGraph(report, {c->name}, {})->value;
     g->append<double>({"order"}, {}, c->map.order);
     g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
     g->append<double>({"sqrCosts"}, {}, taskC(i));
@@ -811,7 +810,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   arr _phi, _J;
   TermTypeA _tt;
 #ifdef NEWCODE
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.subRange(t,t+k), MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.subRef(t,t+k), MP.tau);
 #else
   MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations, MP.tau);
 #endif

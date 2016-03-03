@@ -51,46 +51,8 @@ void TEST(SimpleImplicitSurfaces) {
 
 //===========================================================================
 
-void TEST(DistanceFunctions) {
-  ors::Transformation t;
-  t.setRandom();
-  ors::Mesh m;
-  OpenGL gl;
-  gl.add(glStandardScene,NULL);
-  gl.add(glDrawMesh,&m);
-
-  mlr::Array<ScalarFunction*> fcts = {
-    new DistanceFunction_Sphere(t, 1.),
-    new DistanceFunction_Box(t, 1., 2., 3.),
-    new DistanceFunction_Cylinder(t, 1., 2.)
-  };
-
-  for(ScalarFunction* f: fcts){
-    //-- check hessian and gradient
-    for(uint i=0;i<1000;i++){
-      arr x(3);
-      rndUniform(x, -5., 5.);
-      bool suc=true;
-      suc &= checkGradient(*f, x, 1e-6);
-      suc &= checkHessian(*f, x, 1e-6);
-      if(!suc){
-        arr g,H;
-        (*f)(g,H,x); //set breakpoint here;
-        HALT("x=" <<x);
-      }
-    }
-
-    //-- display
-    m.setImplicitSurface(*f,-10.,10.,100);
-    gl.watch();
-  }
-}
-
-//===========================================================================
-
 int MAIN(int argc, char **argv){
   testSimpleImplicitSurfaces();
-  testDistanceFunctions();
 
   return 0 ;
 }

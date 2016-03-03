@@ -499,7 +499,7 @@ void plotDrawOpenGL(void *_data) {
           }
         data.mesh.computeNormals();
         glDisable(GL_CULL_FACE);
-        data.mesh.glDraw();
+        data.mesh.glDraw(NoOpenGL);
         glEnable(GL_CULL_FACE);
       } else { //as a grid
         c.blacken(.5);

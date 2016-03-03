@@ -23,7 +23,7 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
 //  new CoreTasks(*s->activity.machine);
 
   s->KB.writeAccess();
-  s->KB().append<Graph>({"STATE"}, {}, new Graph(), true);
+  s->KB().append<Graph*>({"STATE"}, {}, new Graph());
   s->KB().checkConsistency();
   s->KB.deAccess();
 
@@ -107,7 +107,7 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 
   Node *symbol = s->KB().append<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
-  s->KB().append<Graph>({"Task"}, {symbol}, td, true);
+  s->KB().append<Graph*>({"Task"}, {symbol}, td);
   s->KB().checkConsistency();
   //cout <<s->KB() <<endl;
   s->KB.deAccess();

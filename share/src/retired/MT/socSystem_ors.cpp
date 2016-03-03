@@ -479,8 +479,8 @@ void soc::SocSystem_Ors::setx(const arr& x, uint t){
     uint n=x.N/2;
     CHECK_EQ(x.N,2*n, "");
     arr q, v;
-    q.referToSubRange(x, 0, n-1);
-    v.referToSubRange(x, n, 2*n-1);
+    q.referToSub(x, 0, n-1);
+    v.referToSub(x, n, 2*n-1);
     setqv(q, v);
   }
 }

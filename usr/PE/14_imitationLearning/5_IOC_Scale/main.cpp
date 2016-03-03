@@ -120,7 +120,7 @@ struct IOC_DemoCost {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
     if (&Hf) {
       if (useHNorm) {
@@ -306,7 +306,7 @@ void simpleMotion(){
   MP2.makeContactsAttractive=false;
   TaskCost *c1;
 
-  arr idx = linspace(0,T,10); idx.flatten();
+  arr idx = linspace(0,T,10); idx.reshapeFlat();
   cout <<idx << endl;
   for (uint i =1;i<idx.d0;i++) {
     c1 = MP2.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
@@ -339,9 +339,9 @@ void simpleMotion(){
   uint numParam = 2.*(idx.d0-1)+3;
   IOC ioc(demos,numParam,false,false);
 
-  arr w = ones(numParam,1);w.flatten();
+  arr w = ones(numParam,1);w.reshapeFlat();
 //  w=wOpt/sqrt(sumOfSqr(wOpt));
-  //w = fabs(randn(numParam,1)); w.flatten();
+  //w = fabs(randn(numParam,1)); w.reshapeFlat();
 
 //  checkAllGradients(ioc,w,1e-3);
 

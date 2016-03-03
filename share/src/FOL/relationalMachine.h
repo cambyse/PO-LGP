@@ -30,8 +30,8 @@ struct RelationalMachine{
   Node* declareNewSymbol(mlr::String symbolStr);
   mlr::String getKB();
   mlr::String getState() const;
-  mlr::String getRules();
-  StringA getSymbols();
+  mlr::String getRules() const;
+  StringA getSymbols() const;
 };
 
 inline RelationalMachine& operator<<(RelationalMachine& RM, const char* effect){

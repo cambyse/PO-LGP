@@ -125,25 +125,24 @@ void TrajectoryInterface::gotoPosition(arr x, double T, bool recordData) {
   MP.T = 100;
   MP.tau = 0.05;
   if (useRos) {
-    MP.x0 = S.ctrl_obs.get()->q;
+    MP.world.setJointState(S.ctrl_obs.get()->q);
   }else{
-    MP.x0 = world->getJointState();
+    MP.world.setJointState(world->getJointState());
   }
 
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world));
+  t = MP.addTask("tra", new TransitionTaskMap(*world), sumOfSqrTT);
   ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 
-  t =MP.addTask("posT", new TaskMap_qItself());
+  t =MP.addTask("posT", new TaskMap_qItself(), sumOfSqrTT);
   t->setCostSpecs(MP.T-2,MP.T, x, 1e2);
 
-  MotionProblemFunction MPF(MP);
   arr X = MP.getInitialization();
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
-  optConstrained(X, NoArr, Convert(MPF), o);
+  optConstrained(X, NoArr, Convert(MP), o);
 
   executeTrajectory(X,T,recordData);
 }

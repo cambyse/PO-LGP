@@ -96,13 +96,15 @@ struct ConstraintForceTask{
 /**
  * FeedbackMotionControl contains all individual motions/CtrlTasks.
  */
-struct FeedbackMotionControl : MotionProblem {
+struct FeedbackMotionControl /*: MotionProblem*/ {
+  ors::KinematicWorld& world;
   mlr::Array<CtrlTask*> tasks;
   mlr::Array<ConstraintForceTask*> forceTasks;
   CtrlTask qitselfPD;
   arr H_rate_diag;
+  bool useSwift;
 
-  FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift=true);
+  FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift=true);
 
   /// @{ @name adding tasks
   CtrlTask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
@@ -119,6 +121,8 @@ struct FeedbackMotionControl : MotionProblem {
   arr operationalSpaceControl();
   void updateConstraintControllers();
   void reportCurrentState();
+
+  void setState(const arr& q, const arr& qdot);
 };
 
 //===========================================================================

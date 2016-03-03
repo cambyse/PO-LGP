@@ -4,7 +4,7 @@
 #include "ControlActivities.h"
 
 void ControlActivity::configure() {
-  taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
+  taskController = dynamic_cast<TaskControllerModule*>(registry().getNode({"Module","TaskControllerModule"})->get<Module*>());
   CHECK(taskController,"that didn't work");
   configureControl(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
@@ -55,13 +55,13 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, o
     it->keys.last()="type"; //rename ref0 to type
   }
   if((it=specs["type"])){
-    if(it->V<mlr::String>()=="wheels"){
+    if(it->get<mlr::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
-      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->V<double>() : false;
-    }else if (it->V<mlr::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<mlr::String>())->qIndex,
+      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : false;
+    }else if (it->get<mlr::String>()=="qItself") {
+      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->get<mlr::String>())->qIndex,
                                 world.getJointStateDimension());
-      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->V<double>() : true;
+      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : true;
     }else{
       map = new DefaultTaskMap(specs, world);
     }
@@ -69,7 +69,7 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, o
     HALT("need a type (the map type) in the specs");
   }
   task = new CtrlTask(name, *map, specs);
-  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+  if((it=specs["tol"])) stopTolerance=it->get<double>(); else stopTolerance=1e-2;
 }
 
 void FollowReferenceActivity::stepControl(double dt){
@@ -83,7 +83,7 @@ void FollowReferenceActivity::stepControl(double dt){
 }
 
 bool FollowReferenceActivity::isConv(){
-  bool stuck = task->y.N == old_y.N and maxDiff(old_y, task->y) < stopTolerance;
+  bool stuck = (task->y.N == old_y.N) and (maxDiff(old_y, task->y) < stopTolerance);
   stuck_count = stuck ? stuck_count + 1 : 0;
   old_y = task->y;
 
@@ -91,9 +91,7 @@ bool FollowReferenceActivity::isConv(){
            && task->y.N == task->y_ref.N
            && maxDiff(task->y, task->y_ref) < stopTolerance
            && maxDiff(task->v, task->v_ref) < stopTolerance)
-          or
-          (task->y_ref.nd==2
-           && activityTime>=trajectoryDuration)
+          or (task->y_ref.nd==2 && activityTime>=trajectoryDuration)
           or (stuck and stuck_count > 6000));
 }
 
@@ -129,7 +127,7 @@ void HomingActivity::configureControl(const char *name, Graph& specs, ors::Kinem
   task->y_ref=taskController->q0;
 
   Node *it;
-  if(&specs && (it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+  if(&specs && (it=specs["tol"])) stopTolerance=it->get<double>(); else stopTolerance=1e-2;
 
   wheeljoint = world.getJointByName("worldTranslationRotation");
 }

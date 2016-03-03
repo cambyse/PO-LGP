@@ -18,6 +18,7 @@ free
 touch
 eff
 holding
+supports
 
 Board
 Cylin
@@ -51,28 +52,39 @@ DecisionRule Pick {
 DecisionRule Release {
      Hand, Obj, Onto
      { (articulated Obj) (Object Obj) (holding Hand Obj) (Board Onto) }
-     { (articulated Obj)! (free Hand) (holding Hand Obj)! }
+     { (articulated Obj)! (free Hand) (holding Hand Obj)! (supports Onto Obj)}
 }
 
 # =============================================================================
 
-EffectiveKinematicsRule {
+PoseProblemRule {
      Hand, Obj
      { (Pick Hand Obj) }
-     { (EqualZero GJK Hand Obj){ scale=100 }
+     {
+#       (EqualZero GJK Hand Obj){ scale=100 } #this describes touch, nice, but not consistent with others
+       (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
+       (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
        (MakeJoint delete Obj)
-       (MakeJoint rigid Hand Obj)
+       (MakeJoint rigidZero Hand Obj)
+
+       (MinSumOfSqr posDiff endeffWorkspace Obj){ time=[1 1] scale=1e1 }
+       (LowerEqualZero limitIneq){ scale=1e0 time=[0 1] }
+       (LowerEqualZero collisionExcept Hand Obj){ margin=.05 time=[0 1] }
      }
 }
 
-EffectiveKinematicsRule {
+PoseProblemRule {
      Hand, Obj, Onto
      { (Release Hand Obj Onto) }
      { (EqualZero GJK Obj Onto){ target=[0 0 .05] scale=100 }
        (MinSumOfSqr posDiff Obj Onto){ target=[0 0 .5] scale=10 }
        (MakeJoint delete Hand Obj)
-       (MakeJoint transXYPhi Onto Obj)
+       (MakeJoint transXYPhiAtFrom Onto Obj)
        (MinSumOfSqr vec Obj){ vec1=[0 0 1] target=[0 0 1] scale=100}
+
+       (MinSumOfSqr posDiff endeffWorkspace Obj){ time=[1 1] scale=1e1 }
+       (LowerEqualZero limitIneq){ scale=1e0 time=[0 1] }
+       (LowerEqualZero collisionExcept Hand Obj){ margin=.05 time=[0 1] }
      }
 }
 
@@ -81,22 +93,37 @@ EffectiveKinematicsRule {
 SeqProblemRule {
   Hand, Obj
   { (Pick Hand Obj) }
-  { (MinSumOfSqr qItself){ order=1 time=[0 1] scale=1e0 }
+  { (MinSumOfSqr qItself){ order=1 time=[0.1 1] scale=1e0 }
+#    (MinSumOfSqr qZeroVels){ order=1 time=[0 1] scale=1e3 }
     (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
     (MakeJoint delete Obj){ time=1 }
-    (MakeJoint rigidZero Hand Obj){ time=1 }
+#    (MakeJoint rigidZero Hand Obj){ time=1 }
+
+    (MinSumOfSqr posDiff endeffWorkspace Obj){ time=[1 1] scale=1e1 }
+    (LowerEqualZero limitIneq){ scale=1e0 time=[0 1] }
+    (LowerEqualZero collisionExcept Hand Obj){ margin=.05 time=[0 1] }
   }
 }
 
 SeqProblemRule {
   Hand, Obj, Onto
   { (Release Hand Obj Onto) }
-  { (MinSumOfSqr qItself){ order=1 time=[0 1] scale=1e0 }
-    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
-    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
-    (MakeJoint delete Hand Obj){ time=1 }
-    (MakeJoint transXYPhi Onto Obj){ time=1 }
+  {
+#    (MakeJoint delete Hand Obj){ time=0 }
+    (MakeJoint transXYPhiZero Onto Obj){ time=0 from=<T t(0 0 .3)> }
+    (MinSumOfSqr qItself){ order=1 time=[0.1 1] scale=1e0 }
+    (MinSumOfSqr qZeroVels){ order=1  time=[0 1] scale=1e3 }
+    (MinSumOfSqr posDiff Hand Obj){ time=[1 1] scale=1e3 }
+    (MinSumOfSqr quatDiff Hand Obj){ time=[1 1] scale=1e3 }
+#    (EqualZero GJK Obj Onto){ target=[0 0 .05] scale=100 }
+    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1e-1 } #1/2 metre above the thing
+#    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
+
+    (MinSumOfSqr posDiff endeffWorkspace Obj){ time=[1 1] scale=1e1 }
+    (LowerEqualZero limitIneq){ scale=1e0 time=[0 1] }
+    (LowerEqualZero collisionExcept Hand Obj){ margin=.05 time=[0 1] }
+
   }
 }
 
@@ -122,16 +149,17 @@ PathProblemRule {
   { (MinSumOfSqr qItself){ time=[0 1] order=2 Hmetric=1e-1 } #transitions
   #    (EqualZero GJK Obj Onto){ time=[1 1] target=[0 0 .05] scale=100 } #touch
     (MinSumOfSqr pos Obj){ order=1 scale=1e-1 time=[0 0.15] target=[0 0 .1] } # move up
-#    (MinSumOfSqr qItself){ order=1 time=[0.9 1] scale=1e1 } #slow down
+    IhaveADifferentName(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
     (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
     (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
+
     (MakeJoint delete Hand Obj){ time=1 }
-    (MakeJoint rigid Onto Obj){ time=1 }
+    (MakeJoint rigidAtTo Onto Obj){ time=1 }
   }
 }
 
 # =============================================================================
-#EffectiveKinematicsRule {
+#PoseProblemRule {
 #     X, Y
 #     { (touch X Y) }
 #     { (EqualZero GJK X Y) }

@@ -261,7 +261,7 @@ void MocapID::clear() {
 //   if(hsi >= hsitoi.N) {
 //     hsitoiN = hsitoi.N;
 //     hsitoi.resizeCopy(hsi+1);
-//     // hsitoi.subRange(hsitoiN, hsi)() = -1;
+//     // hsitoi.subRef(hsitoiN, hsi)() = -1;
 //   }
 //   hsitoi(hsi) = ind;
 //   itohsi.append(hsi);
@@ -275,19 +275,19 @@ void MocapID::load(const char *meta) {
   FILE(meta) >> kvg;
 
   // Loading new meta.kvg into new internal_representation
-  Graph *kvg_agents = kvg.getValue<Graph>("agents");
+  Graph *kvg_agents = &kvg.get<Graph>("agents");
   if(kvg_agents == nullptr)
     cout << "No Agents!" << endl;
   else
     for(Node* i: *kvg_agents)
-      s->parseAgentSensor(i->keys(0), *i->getValue<Graph>());
+      s->parseAgentSensor(i->keys(0), i->graph());
 
-  Graph *kvg_objects = kvg.getValue<Graph>("objects");
+  Graph *kvg_objects = &kvg.get<Graph>("objects");
   if(kvg_objects == nullptr)
     cout << "No Objects!" << endl;
   else
     for(Node *i: *kvg_objects)
-      s->parseObjectSensor(i->keys(0), *i->getValue<Graph>());
+      s->parseObjectSensor(i->keys(0), i->graph());
 }
 
 void MocapID::load_json(const char *json) {
@@ -574,11 +574,11 @@ void MocapRec::save() {
 
   // temporal segmentation target
   for(Node *pair: kvgann) {
-    for(Node *lock: *pair->getValue<Graph>()) {
+    for(Node *lock: pair->graph()) {
       if(lock->keys(0) == "lock") {
         value.clear();
-        value["on@"] = (uint)*lock->getValue<Graph>()->getValue<double>("from");
-        value["off@"] = (uint)*lock->getValue<Graph>()->getValue<double>("to");
+        value["on@"] = (uint)lock->graph()->getValue<double>("from");
+        value["off@"] = (uint)lock->graph()->getValue<double>("to");
         root["targets"][pair->keys(0)][pair->keys(1)][pair->keys(2)].append(value);
       }
     }
@@ -605,7 +605,7 @@ MocapLabel &MocapRec::label() { return const_cast<MocapLabel &>(static_cast<cons
 //       || (mid.sensorsof(pair->keys(1)).contains(STRING(sensor2))
 //         && (mid.sensorsof(pair->keys(2)).contains(STRING(sensor1))
 //           || pair->keys(2) == sensor1))))
-//       return *pair->getValue<Graph>()->getValue<arr>("ann");
+//       return pair->graph()->getValue<arr>("ann");
 //   return arr();
 // }
 
@@ -626,7 +626,7 @@ uint MocapRec::numFrames(Thickness thickness) const {
 uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(StringA({"bam", bam}))->d2; }
 
 void MocapRec::appendBam(const char *bam, const arr &data) {
-  Node *i = kvg.getNode("bam", bam);
+  Node *i = kvg.getNode({"bam", bam});
 
   if(!i)
     kvg.append<arr>({"bam", bam}, {}, new arr(data), true);
@@ -731,8 +731,8 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /*   // TODO check that the type works for 2 sensors.... */
 /*   // e.g. check that it is not "poses" */
 
-/*   Graph *skvg1 = s->kvg_sensors.getValue<Graph>(sensor1); */
-/*   Graph *skvg2 = s->kvg_sensors.getValue<Graph>(sensor2); */
+/*   Graph *skvg1 = &s->kvg_sensors.get<Graph>(sensor1); */
+/*   Graph *skvg2 = &s->kvg_sensors.get<Graph>(sensor2); */
 /*   CHECK(s->kvg.getNode(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
 /*   CHECK(skvg1, STRING("Sensor '" << sensor1 << "' does not exist.")); */
 /*   CHECK(skvg2, STRING("Sensor '" << sensor2 << "' does not exist.")); */
@@ -752,8 +752,8 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /* } */
 
 /* arr MocapData::query(const char *type, const char *sensor1, const char *sensor2, uint f) { */
-/*   Graph *skvg1 = s->kvg_sensors.getValue<Graph>(sensor1); */
-/*   Graph *skvg2 = s->kvg_sensors.getValue<Graph>(sensor2); */
+/*   Graph *skvg1 = &s->kvg_sensors.get<Graph>(sensor1); */
+/*   Graph *skvg2 = &s->kvg_sensors.get<Graph>(sensor2); */
 /*   CHECK(s->kvg.getNode(type) != NULL, STRING("BAM '" << type << "' does not exist.")); */
 /*   CHECK(skvg1, STRING("Sensor '" << sensor1 << "' does not exist.")); */
 /*   CHECK(skvg2, STRING("Sensor '" << sensor2 << "' does not exist.")); */
@@ -1062,7 +1062,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
       obs += O(t, t);
     }
     if(obs >= TODO) {
-      beta = inverse(TT * O * T) * TT * O * bamis.subRange(f-wlen+1, f);
+      beta = inverse(TT * O * T) * TT * O * bamis.subRef(f-wlen+1, f);
       bamLinCoeffPastis[f_thin]() = beta[1];
       bamLinCoeffPastObsis(f_thin) = 1;
     }
@@ -1076,7 +1076,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
   for(uint f_thin = 0; f_thin < nframes_thin; f_thin++) {
     uint f = (f_thin + 1) * thinning - 1;
     if(f < wlen-1) continue;
-    beta = TTTITT * bamis.subRange(f-wlen+1, f);
+    beta = TTTITT * bamis.subRef(f-wlen+1, f);
     bamLinCoeffPastis[f_thin]() = beta[1];
   }
 #endif

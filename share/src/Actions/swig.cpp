@@ -12,6 +12,7 @@
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
+#include <Ors/orsviewer.h>
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -52,10 +53,12 @@ struct SwigSystem {
   GamepadInterface gamepad;
 
 
-  PerceptionObjects2Ors percObjs;
+
+
+//  PerceptionObjects2Ors percObjs;
   ImageViewer camview;
-  Kinect2PointCloud k2pcl;
-  PointCloudViewer pclv;
+//  Kinect2PointCloud k2pcl;
+//  PointCloudViewer pclv;
 
   Log _log;
 
@@ -83,6 +86,10 @@ struct SwigSystem {
 //      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/r_ft_compensated", wrenchR);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/l_gripper_motor", wrenchL);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
+
+    }else{
+      rosCheckInit("SwigSystem");
+      new RAP_roscom(rmm);
     }
 
     // make the base movable
@@ -453,8 +460,9 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   S->RM.writeAccess();
 
   Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
-  Graph *td = new Graph(parameters);
-  S->RM().append<Graph>({"Task"}, {symbol}, td, true);
+  
+  Graph& td = newSubGraph(S->RM(), {"Task"}, {symbol})->value;
+  td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
   S->RM.deAccess();
@@ -476,7 +484,7 @@ void ActionSwigInterface::execScript(const char* filename){
   Graph& script = s->graph();
   int rev=0;
   for(Node* n:script){
-    if(n->parents.N==0 && n->getValueType()==typeid(Graph)){ //interpret as wait
+    if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);
@@ -490,3 +498,7 @@ void ActionSwigInterface::execScript(const char* filename){
   }
 }
 
+ors::Transformation ActionSwigInterface::getFramePose(const std::string& frame_id) {
+  ors::Transformation frame = S->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
+  return frame;
+}

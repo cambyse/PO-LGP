@@ -13,14 +13,13 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
   int verbose;
 
   MotionProblem MP;
-  MotionProblemFunction MPF;
 
   SwitchConfigurationProgram(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final,
                              Graph& symbolicState,
                              uint microSteps,
                              int verbose)
-    : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world), MPF(MP){
-    ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(MPF) );
+    : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world){
+    ConstrainedProblem::operator=( conv_KOrderMarkovFunction2ConstrainedProblem(MP) );
 
     double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
     double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);
@@ -184,7 +183,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       //pick at time 2*i+1
       ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
       op_pick->symbol = ors::KinematicSwitch::addJointZero;
-      op_pick->jointType = ors::JT_fixed;
+      op_pick->jointType = ors::JT_rigid;
       op_pick->timeOfApplication = tPick(i)+1;
       op_pick->fromId = world.shapes(endeff_index)->index;
       op_pick->toId = world.shapes(idObject(i))->index;
@@ -219,10 +218,10 @@ double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::Kinema
                                  uint microSteps){
   SwitchConfigurationProgram f(world_initial, world_final, symbolicState, microSteps, 0);
 
-  arr x = replicate(f.MP.x0, f.MP.T+1); //we initialize with a constant trajectory!
+  arr x = f.MP.getInitialization();
 //  rndGauss(x,.01,true); //don't initialize at a singular config
 
-  OptConstrained opt(x, NoArr, f, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
+  OptConstrained opt(x, NoArr, f, OPT(verbose=2));
   opt.run();
   f.MP.costReport();
   for(;;) displayTrajectory(x, 1, f.MP.world, f.MP.switches, "planned configs", .02);

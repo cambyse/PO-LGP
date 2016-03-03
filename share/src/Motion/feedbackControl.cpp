@@ -17,6 +17,7 @@
     -----------------------------------------------------------------  */
 
 #include "feedbackControl.h"
+#include <Ors/ors_swift.h>
 
 //===========================================================================
 
@@ -29,15 +30,15 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   : map(map), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   Node *it;
   if((it=params["PD"])){
-    arr pd=it->V<arr>();
+    arr pd=it->get<arr>();
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
   } else {
     setGainsAsNatural(3., .7);
   }
-  if((it=params["prec"])) prec = it->V<double>();
-  if((it=params["target"])) y_ref = it->V<arr>();
+  if((it=params["prec"])) prec = it->get<double>();
+  if((it=params["target"])) y_ref = it->get<arr>();
 }
 
 //CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio,
@@ -78,8 +79,8 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
   if(flipTargetSignOnNegScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
   if(makeTargetModulo2PI) for(uint i=0;i<y.N;i++){
-      while(y_ref(i) < y-MLR_PI) y_ref(i)+=MLR_2PI;
-      while(y_ref(i) > y+MLR_PI) y_ref(i)-=MLR_2PI;
+      while(y_ref(i) < y(i)-MLR_PI) y_ref(i)+=MLR_2PI;
+      while(y_ref(i) > y(i)+MLR_PI) y_ref(i)-=MLR_2PI;
   }
   //compute diffs
   arr y_diff(y);
@@ -177,9 +178,14 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
 //===========================================================================
 
-FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool useSwift)
-  : MotionProblem(_world, useSwift), qitselfPD(NULL) {
-  H_rate_diag = getH_rate_diag();
+FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift)
+  : world(_world), qitselfPD(NULL), useSwift(_useSwift) {
+  computeMeshNormals(world.shapes);
+  if(useSwift) {
+    makeConvexHulls(world.shapes);
+    world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
+  }
+  H_rate_diag = getH_rate_diag(world);
   qitselfPD.name="qitselfPD";
   qitselfPD.setGains(0.,100.);
   qitselfPD.prec=1.;
@@ -225,6 +231,11 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
 
 void FeedbackMotionControl::reportCurrentState(){
   for(CtrlTask* t: tasks) t->reportState(cout);
+}
+
+void FeedbackMotionControl::setState(const arr& q, const arr& qdot){
+  world.setJointState(q, qdot);
+  if(useSwift) world.stepSwift();
 }
 
 void FeedbackMotionControl::updateConstraintControllers(){

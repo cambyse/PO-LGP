@@ -39,9 +39,14 @@ struct CtrlMsg{
 void rosCheckInit(const char* module_name="pr2_module");
 bool rosOk();
 
-//-- ROS -> MLR
-ors::Transformation conv_pose2transformation(const tf::Transform&);
+//-- ROS <--> MLR
+std_msgs::String    conv_string2string(const mlr::String&);
+mlr::String         conv_string2string(const std_msgs::String&);
+std_msgs::String    conv_stringA2string(const StringA& strs);
+ors::Transformation conv_transform2transformation(const tf::Transform&);
 ors::Transformation conv_pose2transformation(const geometry_msgs::Pose&);
+ors::Vector         conv_point2vector(const geometry_msgs::Point& p);
+ors::Quaternion     conv_quaternion2quaternion(const geometry_msgs::Quaternion& q);
 void                conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose);
 arr                 conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped &pose);
 double              conv_time2double(const ros::Time& time);
@@ -119,6 +124,44 @@ struct SubscriberConv {
 };
 
 
+
+//===========================================================================
+//
+// subscribing a message into an MLR-type-Access via a conv_* function
+//
+
+//template<class msg_type, class var_type, var_type conv(const msg_type&)>
+//struct SubscriberConvThreaded : Thread {
+//  Access_typed<var_type>& access;
+//  Access_typed<ors::Transformation> *frame;
+//  ros::NodeHandle *nh;
+//  ros::Subscriber sub;
+//  tf::TransformListener listener;
+//  SubscriberConvThreaded(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
+//    : Thread(STRING("Subscriber_"<<_access.name <<"->" <<_topic_name), .05),
+//      access(_access), frame(_frame) {
+//  }
+//  ~SubscriberConvThreaded(){}
+//  void open(){
+//    nh = new ros::NodeHandle;
+//    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+//    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
+//    cout <<"done" <<endl;
+//  }
+//  void close(){
+//    delete nh;
+//  }
+//  void step(){}
+//  void callback(const typename msg_type::ConstPtr& msg) {
+//    double time=conv_time2double(msg->header.stamp);
+//    access.set( time ) = conv(*msg);
+//    if(frame){
+//      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
+//    }
+//  }
+//};
+
+
 //===========================================================================
 //
 // subscribing a message into an MLR-type-Access via a conv_* function
@@ -160,7 +203,7 @@ struct PublisherConv : Module{
   }
   void open(){
     nh = new ros::NodeHandle;
-    pub = nh->advertise<marc_controller_pkg::JointState>(topic_name, 1);
+    pub = nh->advertise<msg_type>(topic_name, 1);
   }
   void step(){
     pub.publish(conv(access.get()));

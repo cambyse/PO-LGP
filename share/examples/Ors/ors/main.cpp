@@ -33,7 +33,7 @@ void TEST(LoadSave){
 void TEST(Kinematics){
 
   struct MyFct:VectorFunction{
-    enum Mode {Pos, Vec, Quat, RelPos, RelVec} mode;
+    enum Mode {Pos, Vec, Quat, RelPos, RelVec, RelRot} mode;
     ors::KinematicWorld& W;
     ors::Body *b, *b2;
     ors::Vector &vec, &vec2;
@@ -48,6 +48,7 @@ void TEST(Kinematics){
           case Quat:   W.kinematicsQuat(y,J,b); break;
           case RelPos: W.kinematicsRelPos(y,J,b,vec,b2,vec2); break;
           case RelVec: W.kinematicsRelVec(y,J,b,vec,b2); break;
+          case RelRot: W.kinematicsRelRot(y,J,b,b2); break;
         }
       } );
     }
@@ -66,13 +67,14 @@ void TEST(Kinematics){
     vec2.setRandom();
     arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
-//    x/=sqrt(sumOfSqr(x.subRange(0,3)));
+//    x/=sqrt(sumOfSqr(x.subRef(0,3)));
 
     cout <<"kinematicsPos:   "; checkJacobian(MyFct(MyFct::Pos   , G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsRelPos:"; checkJacobian(MyFct(MyFct::RelPos, G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsVec:   "; checkJacobian(MyFct(MyFct::Vec   , G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsRelVec:"; checkJacobian(MyFct(MyFct::RelVec, G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsQuat:  "; checkJacobian(MyFct(MyFct::Quat  , G, b, vec, b2, vec2)(), x, 1e-5);
+    cout <<"kinematicsRelRot:"; checkJacobian(MyFct(MyFct::RelRot, G, b, vec, b2, vec2)(), x, 1e-5);
 
     //checkJacobian(Convert(T1::f_hess, NULL), x, 1e-5);
   }
@@ -558,7 +560,9 @@ int MAIN(int argc,char **argv){
 
   testKinematics();
   testQuaternionKinematics();
+
   return 0;
+
   testLoadSave();
   testCopy();
   testPlayStateSequence();

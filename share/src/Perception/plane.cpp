@@ -35,7 +35,7 @@ void glDrawPlanes(const PlaneA& planes){
     tmp.V.referTo(p.borderPoints);
     tmp.T.referTo(p.borderTris);
     glLineWidth(5);
-    tmp.glDraw();
+    tmp.glDraw(NoOpenGL);
     glPushMatrix();
     ors::Transformation t;
     t.pos.set(p.mean.p);

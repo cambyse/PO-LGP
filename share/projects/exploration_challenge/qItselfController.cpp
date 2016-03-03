@@ -16,7 +16,7 @@ void qItselfController::initialize() {
 }
 
 void qItselfController::terminate() {
-  CONST_INTERFACE->stopFact("(FollowReferenceActivity qItself)");
+  CONST_INTERFACE->stopFact("(Control qItself)");
   _running = false;
 }
 
@@ -30,7 +30,7 @@ void qItselfController::terminate() {
 
 void qItselfController::setGoal(const Eigen::MatrixXd& new_goal) {
   if(_running) {
-    CONST_INTERFACE->stopFact("(FollowReferenceActivity qItself)");
+    CONST_INTERFACE->stopFact("(Control qItself)");
     //CONST_INTERFACE->stopFact(_fact.c_str());
   }
 
@@ -45,8 +45,17 @@ void qItselfController::setGoal(const Eigen::MatrixXd& new_goal) {
 
 std::string qItselfController::_create_fact() const {
   std::stringstream buf;
-  buf << "(FollowReferenceActivity qItself)" <<
-         "{ type=qItself ref1=" << _endeff << " target=[" << _goal(0,0) << "]}";
+  buf << "(Control qItself)" <<
+         "{ ref1=" << _index_vec << " target=[" << _goal << "]}";
   return buf.str();
+}
+
+void qItselfController::setEndeff(const std::string& endeff) {
+    _index_vec = ::Eigen::MatrixXd::Zero(_system->getDof(), 1);
+    std::stringstream ss;
+    ss << CONST_INTERFACE->getJointByName(endeff)["qIndex"];
+    int qi;
+    ss >> qi;
+    _index_vec(qi, 1) = 1;
 }
 

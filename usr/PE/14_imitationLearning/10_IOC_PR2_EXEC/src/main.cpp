@@ -121,8 +121,8 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
 
   //- load motion parameters
   arr param;
-  FILE("data/param") >> param; param.flatten();
-  FILE("data/options") >> options; options.flatten();
+  FILE("data/param") >> param; param.reshapeFlat();
+  FILE("data/options") >> options; options.reshapeFlat();
   double dt = options(0);
   uint T = options(1);
   double contactTime = options(2);

@@ -17,7 +17,7 @@ void KOMO::init(const Graph& _specs){
   specs = _specs;
 
   Graph &glob = specs.get<Graph>("KOMO");
-  uint timeSteps=glob.get<double>("T");
+  uint timeStepsPerPhase=glob.get<double>("T");
   double duration=glob.get<double>("duration");
   uint phases=glob.get<double>("phases", 1);
   uint k_order=glob.get<double>("k_order", 2);
@@ -37,6 +37,12 @@ void KOMO::init(const Graph& _specs){
   if(glob["makeConvexHulls"])
     makeConvexHulls(world.shapes);
 
+  if(glob["makeSSBoxes"]){
+    NIY;
+    //for(ors::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    world.gl().watch();
+  }
+
   if(glob["activateAllContacts"])
     for(ors::Shape *s:world.shapes) s->cont=true;
 
@@ -45,26 +51,25 @@ void KOMO::init(const Graph& _specs){
 
   if(MP) delete MP;
   MP = new MotionProblem(world);
-  if(timeSteps>=0) MP->setTiming(timeSteps*phases, duration*phases);
+  if(timeStepsPerPhase>=0) MP->setTiming(timeStepsPerPhase*phases, duration*phases);
   MP->k_order=k_order;
 
 #if 1
-  MP->parseTasks(specs);
-  if(MP->T) MPF = new MotionProblemFunction(*MP);
+  MP->parseTasks(specs, timeStepsPerPhase);
 #else
   NodeL tasks = specs.getNodes("Task");
   for(Node *t:tasks){
     Graph &T = t->graph();
     TaskMap *map = newTaskMap( T["map"]->graph(), world);
     Task *task = MP->addTask(t->keys.last(), map);
-    map->order = T.V<double>("order", 0);
-    mlr::String type = T.V<mlr::String>("type", STRING("sumOfSqr"));
+    map->order = T.get<double>("order", 0);
+    mlr::String type = T.get<mlr::String>("type", STRING("sumOfSqr"));
     if(type=="sumOfSqr") map->type=sumOfSqrTT;
     else if(type=="inequal") map->type=ineqTT;
     else if(type=="equal") map->type=eqTT;
     else HALT("Task type must be sumOfSqr|ineq|eq");
-    arr time = T.V<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.V<arr>("target", {0.}), T.V<double>("scale", {100.}));
+    arr time = T.get<arr>("time",{0.,1.});
+    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.get<arr>("target", {0.}), T.get<double>("scale", {100.}));
   }
 
   NodeL switches = specs.getNodes("KinematicSwitch");
@@ -72,8 +77,8 @@ void KOMO::init(const Graph& _specs){
     Graph &S = s->graph();
     ors::KinematicSwitch *sw= new ors::KinematicSwitch();
     mlr::String type = S.get<mlr::String>("type");
-    if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_fixed; }
-    else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_fixed; }
+    if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
+    else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
     else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
     else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
     else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
@@ -110,11 +115,7 @@ void KOMO::setFact(const char* fact){
 }
 
 void KOMO::reset(){
-  if(MP->T){
-    x = MP->getInitialization();
-  }else{
-    x=MP->x0;
-  }
+  x = MP->getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 }
 
@@ -124,9 +125,9 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
-  cout <<x;
+//  cout <<x;
   if(MP->T){
-    optConstrained(x, dual, Convert(*MPF), OPT(verbose=2));
+    optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
   }else{
     optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
@@ -142,13 +143,16 @@ Graph KOMO::getReport(){
 
 void KOMO::checkGradients(){
   if(MP->T){
-    checkJacobianCP(Convert(*MPF), x, 1e-4);
+    checkJacobianCP(Convert(*MP), x, 1e-4);
   }else{
     checkJacobianCP(MP->InvKinProblem(), x, 1e-4);
   }
 }
 
 void KOMO::displayTrajectory(double delay){
+#if 1
+  MP->displayTrajectory(1, "KOMO planned trajectory", delay);
+#else
   if(MP->T){
     ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", delay);
   //  orsDrawProxies=true;
@@ -162,6 +166,7 @@ void KOMO::displayTrajectory(double delay){
     world.gl().watch("KOMO InvKin mode");
   }
   // if(wait) MP->world.gl().watch();
+#endif
 }
 
 //===========================================================================
@@ -183,7 +188,6 @@ arr moveTo(ors::KinematicWorld& world,
            double duration){
 
   MotionProblem MP(world);
-  MotionProblemFunction MF(MP);
 
   setTasks(MP, endeff, target, whichAxesToAlign, iterate, timeSteps, duration);
 
@@ -197,10 +201,10 @@ arr moveTo(ors::KinematicWorld& world,
   for(uint k=0;k<iterate;k++){
     mlr::timerStart();
     if(colPrec<0){
-      optConstrained(x, NoArr, Convert(MF), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MF), OPT(verbose=2));
+      optNewton(x, Convert(MP), OPT(verbose=2));
     }
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;

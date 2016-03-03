@@ -261,7 +261,7 @@ void scenario2() {
   cout << "\na[0] before: " << a0 << endl;
   cout << "a[0] after: " << (x[1]+prefix[1]-(2.*x[0]))/(dt*dt) << endl;
 
-  cout << sum((x- xRef.subRange(i,xRef.d0-1))%(x- xRef.subRange(i,xRef.d0-1))) << endl;
+  cout << sum((x- xRef.subRef(i,xRef.d0-1))%(x- xRef.subRef(i,xRef.d0-1))) << endl;
 
   displayTrajectory(x, 1, G, "planned trajectory");
 

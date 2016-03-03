@@ -16,8 +16,8 @@
     if (button & BTN_B)
     {
       cout << "calibrating side" << endl;
-      posesSideR = mid.query(tmpPoses, STRING("/human/rh/index")).subRange(0, 2)-centerpos;
-      posesSideL = mid.query(tmpPoses, STRING("/human/lh/index")).subRange(0, 2)-centerpos;
+      posesSideR = mid.query(tmpPoses, STRING("/human/rh/index")).subRef(0, 2)-centerpos;
+      posesSideL = mid.query(tmpPoses, STRING("/human/lh/index")).subRef(0, 2)-centerpos;
 
     }
     else if (button & BTN_A)
@@ -33,8 +33,8 @@
     else if (button & BTN_Y)
     {
       cout <<"calibrating front gripper"<<endl;
-      posesFrontR = mid.query(tmpPoses, STRING("/human/rh/index")).subRange(0, 2)-centerpos;
-      posesFrontL = mid.query(tmpPoses, STRING("/human/lh/index")).subRange(0, 2)-centerpos;
+      posesFrontR = mid.query(tmpPoses, STRING("/human/rh/index")).subRef(0, 2)-centerpos;
+      posesFrontL = mid.query(tmpPoses, STRING("/human/lh/index")).subRef(0, 2)-centerpos;
     }
     else if (button & BTN_BACK
              && posesSideR.N != 0
@@ -192,12 +192,12 @@ floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& sho
 void G4HutoRoMap::calcparameters(floatA tempData)
 {
 
-  floatA poses_thumb_rh = mid.query(tempData, STRING("/human/rh/thumb")).subRange(0,2);
-  floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRange(0,2);
+  floatA poses_thumb_rh = mid.query(tempData, STRING("/human/rh/thumb")).subRef(0,2);
+  floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).subRef(0,2);
 
   floatA TI_vec = poses_thumb_rh-poses_index_rh;
   // cout<<TI_vec<<endl;
-  floatA quats = mid.query(tempData, STRING("/human/rh/thumb")).subRange(3,6);
+  floatA quats = mid.query(tempData, STRING("/human/rh/thumb")).subRef(3,6);
 
   TI_vec = TI_vec/length(TI_vec);
   // cout<<TI_vec<<endl;
@@ -419,12 +419,12 @@ void G4HutoRoMap::transform(const floatA& poses_raw){
 
   // Gripper
   float dummy = 0;
-  dummy = length(poses_thumb_rh.subRange(0, 2) - poses_index_rh.subRange(0, 2)) ;// * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
+  dummy = length(poses_thumb_rh.subRef(0, 2) - poses_index_rh.subRef(0, 2)) ;// * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
   clip(dummy, 0.f, 0.9f);
   calibrated_gripper_rh.set() = dummy;
 
   dummy = 0;
-  dummy = length(poses_thumb_lh.subRange(0, 2) - poses_index_lh.subRange(0, 2)) ;// *  1./(distlhmaxopen) - distlhminopen/distlhmaxopen ;
+  dummy = length(poses_thumb_lh.subRef(0, 2) - poses_index_lh.subRef(0, 2)) ;// *  1./(distlhmaxopen) - distlhminopen/distlhmaxopen ;
   clip(dummy, 0.f, 0.9f);
   calibrated_gripper_lh.set() = dummy;
 
@@ -455,12 +455,12 @@ void G4HutoRoMap::doinitsendROS( floatA poses_raw)
 
   // Gripper
   float dummy = 0;
-  dummy = length(poses_thumb_rh.subRange(0, 2) - poses_index_rh.subRange(0, 2))-0.05;
+  dummy = length(poses_thumb_rh.subRef(0, 2) - poses_index_rh.subRef(0, 2))-0.05;
   clip(dummy, 0.0f, 0.09f);
   calibrated_gripper_rh.set() = dummy;
 
   dummy = 0;
-  dummy = length(poses_thumb_lh.subRange(0, 2) - poses_index_lh.subRange(0, 2))-0.05;
+  dummy = length(poses_thumb_lh.subRef(0, 2) - poses_index_lh.subRef(0, 2))-0.05;
   clip(dummy, 0.f, 0.09f);
   calibrated_gripper_lh.set() = dummy;
 

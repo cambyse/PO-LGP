@@ -19,8 +19,24 @@ void rosCheckInit(const char* module_name){
   mutex.unlock();
 }
 
+std_msgs::String conv_string2string(const mlr::String& str){
+  std_msgs::String msg;
+  if(str.N) msg.data = str.p;
+  return msg;
+}
 
-ors::Transformation conv_pose2transformation(const tf::Transform &trans){
+mlr::String conv_string2string(const std_msgs::String& msg){
+  return mlr::String(msg.data);
+}
+
+std_msgs::String conv_stringA2string(const StringA& strs){
+  std_msgs::String msg;
+  for(const mlr::String& str:strs)
+    if(str.N){ msg.data += ", ";  msg.data += str.p; }
+  return msg;
+}
+
+ors::Transformation conv_transform2transformation(const tf::Transform &trans){
   ors::Transformation X;
   X.setZero();
   tf::Quaternion q = trans.getRotation();
@@ -40,8 +56,16 @@ ors::Transformation conv_pose2transformation(const geometry_msgs::Pose &pose){
   return X;
 }
 
+ors::Vector conv_point2vector(const geometry_msgs::Point& p){
+  return ors::Vector(p.x, p.y, p.z);
+}
+
+ors::Quaternion conv_quaternion2quaternion(const geometry_msgs::Quaternion& q){
+  return ors::Quaternion(q.w, q.x, q.y, q.z);
+}
+
 void conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped& pose){
-  q.subRange(qIndex, qIndex+3) = conv_pose2transXYPhi(pose);
+  q.subRef(qIndex, qIndex+3) = conv_pose2transXYPhi(pose);
 }
 
 arr conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped& pose){
@@ -70,7 +94,7 @@ ors::Transformation ros_getTransform(const std::string& from, const std::string&
   try{
     tf::StampedTransform transform;
     listener.lookupTransform(from, to, ros::Time(0), transform);
-    X = conv_pose2transformation(transform);
+    X = conv_transform2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -86,7 +110,7 @@ ors::Transformation ros_getTransform(const std::string& from, const std_msgs::He
     tf::StampedTransform transform;
     listener.waitForTransform(from, to.frame_id, to.stamp, ros::Duration(0.05));
     listener.lookupTransform(from, to.frame_id, to.stamp, transform);
-    X = conv_pose2transformation(transform);
+    X = conv_transform2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -94,7 +118,6 @@ ors::Transformation ros_getTransform(const std::string& from, const std_msgs::He
   }
   return X;
 }
-
 
 arr conv_points2arr(const std::vector<geometry_msgs::Point>& pts){
   uint n=pts.size();
@@ -501,5 +524,4 @@ void RosCom_ForceSensorSync::close(){ NICO }
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
-
 

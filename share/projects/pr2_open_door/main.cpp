@@ -103,12 +103,12 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
 
 void initDoor(ors::KinematicWorld &world, arr &marker_pose){
   arr doorMarker = marker_pose[4];
-  arr doorMarkerPos = doorMarker.subRange(0,2);
-  ors::Quaternion doorMarkerQuat = ors::Quaternion(doorMarker.subRange(3,6));
+  arr doorMarkerPos = doorMarker.subRef(0,2);
+  ors::Quaternion doorMarkerQuat = ors::Quaternion(doorMarker.subRef(3,6));
 
   arr wallMarker = marker_pose[17];
-  arr wallMarkerPos = wallMarker.subRange(0,2);
-  ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRange(3,6));
+  arr wallMarkerPos = wallMarker.subRef(0,2);
+  ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRef(3,6));
 
   arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 
