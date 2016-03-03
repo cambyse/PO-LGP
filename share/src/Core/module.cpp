@@ -46,34 +46,18 @@ void signalhandler(int s){
 }
 
 void openModules(){
-  NodeL ms = registry().getNodesOfType<Module*>();
-  for(Node* m:ms){ m->get<Module*>()->open(); }
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node* th:threads){ th->get<Thread*>()->open(); }
 }
 
 void stepModules(){
-  NodeL ms = registry().getNodesOfType<Module*>();
-  for(Node* m:ms){ m->get<Module*>()->step(); }
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node* th:threads){ th->get<Thread*>()->step(); }
 }
 
 void closeModules(){
-  NodeL ms = registry().getNodesOfType<Module*>();
-  for(Node* m:ms){ m->get<Module*>()->close(); }
-}
-
-
-Node* getModuleNode(Module *module){
-  NodeL ms = registry().getNodesOfType<Module*>();
-  for(auto& m:ms){ if(m->get<Module*>()==module) return m; }
-  MLR_MSG("module not found!");
-  return NULL;
-}
-
-Node* getVariable(const char* name){
-  return registry().getNode(name);
-//  NodeL vars = registry().getNodesOfType<RevisionedAccessGatedClass>();
-//  for(auto& v:vars){ if(v->get<RevisionedAccessGatedClass>().name==name) return v; }
-//  MLR_MSG("module not found!");
-//  return NULL;
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node* th:threads){ th->get<Thread*>()->close(); }
 }
 
 RevisionedAccessGatedClassL getVariables(){
@@ -82,34 +66,34 @@ RevisionedAccessGatedClassL getVariables(){
 
 void threadOpenModules(bool waitForOpened, bool setSignalHandler){
   if(setSignalHandler) signal(SIGINT, signalhandler);
-  NodeL mods = registry().getNodesOfType<Module*>();
-  for(Node *m: mods) m->get<Module*>()->threadOpen();
-  if(waitForOpened) for(Node *m: mods) m->get<Module*>()->waitForOpened();
-  for(Node *m: mods){
-    Module *mod=m->get<Module*>();
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node *th: threads) th->get<Thread*>()->threadOpen();
+  if(waitForOpened) for(Node *th: threads) th->get<Thread*>()->waitForOpened();
+  for(Node *th: threads){
+    Thread *mod=th->get<Thread*>();
     if(mod->metronome.ticInterval>=0.) mod->threadLoop();
     //otherwise the module is listening (hopefully)
   }
 }
 
 void threadCloseModules(){
-  NodeL mods = registry().getNodesOfType<Module*>();
-  for(Node *m: mods) m->get<Module*>()->threadClose();
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node *th: threads) th->get<Thread*>()->threadClose();
 }
 
 void threadCancelModules(){
-  NodeL mods = registry().getNodesOfType<Module*>();
-  for(Node *m: mods) m->get<Module*>()->threadCancel();
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node *th: threads) th->get<Thread*>()->threadCancel();
 }
 
 
 void modulesReportCycleTimes(){
   cout <<"Cycle times for all Modules (msec):" <<endl;
-  NodeL mods = registry().getNodesOfType<Module*>();
-  for(Node *m: mods){
-    Module *mod=m->get<Module*>();
-    cout <<std::setw(30) <<mod->name <<" : ";
-    mod->timer.report();
+  NodeL threads = registry().getNodesOfType<Thread*>();
+  for(Node *th: threads){
+    Thread *thread=th->get<Thread*>();
+    cout <<std::setw(30) <<thread->name <<" : ";
+    thread->timer.report();
   }
 }
 

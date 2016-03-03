@@ -63,7 +63,7 @@ void forceControl(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffL)");
 
   //-- direct access to the task controller -- a bit awkward, but generic
-  TaskControllerModule *taskController = dynamic_cast<TaskControllerModule*>(registry().get<Module*>({"Module","TaskControllerModule"}));
+  TaskControllerModule *taskController = getThread<TaskControllerModule>("TaskControllerModule");
   taskController->verbose = true;
 
 #if 0
@@ -98,32 +98,19 @@ void forceControl(ActionSwigInterface& S){
 #include <Gui/opengl.h>
 
 int main(int argc, char** argv) {
-#if 0
-  ors::KinematicWorld W("model.kvg");
-  W.gl().watch();
-  W.gl().camera.setKinect();
-  W.gl().camera.X = W.getShapeByName("endeffKinect")->X;
-  W.gl().camera.X.addRelativeRotationDeg(180,1,0,0);
-  W.gl().watch();
-  return 0;
-#endif
 
-  ActionSwigInterface S;
-  ACCESSname(RelationalMachine, RM)
-  cout <<RM.get()->KB <<endl;
-
-  S.createNewSymbol("wheels");
-  S.createNewSymbol("pos");
-  S.createNewSymbol("vec");
-  S.createNewSymbol("gazeAt");
+  {
+    ActionSwigInterface S;
 
   script1(S);
-//  script3(S);
+//    script3(S);
 //  forceControl(S);
 
-  threadCloseModules();
-  registry().clear();
+    threadCloseModules();
+  }
 
+  cout <<registry() <<endl;
+  registry().clear();
   cout <<"bye bye" <<endl;
   return 0;
 }

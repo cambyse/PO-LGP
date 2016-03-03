@@ -56,14 +56,14 @@ struct SwigSystem {
 
 
 //  PerceptionObjects2Ors percObjs;
-  ImageViewer camview;
+//  ImageViewer camview;
 //  Kinect2PointCloud k2pcl;
 //  PointCloudViewer pclv;
 
   Log _log;
 
   SwigSystem()
-    : camview("modelDepthView"), _log("SwigSystem"){
+    : /*camview("modelDepthView"),*/ _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
@@ -88,8 +88,8 @@ struct SwigSystem {
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
 
     }else{
-      rosCheckInit("SwigSystem");
-      new RAP_roscom(rmm);
+//      rosCheckInit("SwigSystem");
+//      new RAP_roscom(rmm);
     }
 
     // make the base movable
