@@ -18,8 +18,9 @@ struct RTControllerSimulation : Module {
   RTControllerSimulation(double tau=0.01, bool gravity=false) : Module("DynmSim", tau), tau(tau), gravity(gravity) {}
   virtual ~RTControllerSimulation() {}
 
-  virtual void open();
-  virtual void step();
+  void open();
+  void step();
+  void close(){}
 };
 
 #endif // PR2DYNAMICSIMULATION_H
