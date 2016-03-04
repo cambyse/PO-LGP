@@ -199,7 +199,7 @@ Module* System::addModule(const char *dclName, const char *name, Module::StepMod
     MLR_MSG("could not find Decl_Module " <<dclName);
     return NULL;
   }
-  Module *m = (Module*)modReg->getValue<Type>()->newInstance();
+  Module *m = (Module*)modReg->get<Type>().newInstance();
   currentlyCreating = NULL;
   for(Access *a: m->accesses) a->module = m;
   this->append(m);

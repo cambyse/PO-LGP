@@ -156,7 +156,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     double w=1e10;
     for(Node *i:*state){
       if(i->isOfType<double>()){
-        double wi = *i->getValue<double>();
+        double wi = i->get<double>();
         if(w>wi) w=wi;
       }
     }
@@ -174,7 +174,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       NodeL terminatingActivities;
       for(Node *i:*state){
         if(i->isOfType<double>()){
-          double &wi = *i->getValue<double>(); //this is a double reference!
+          double &wi = i->get<double>(); //this is a double reference!
           wi -= w;
           if(fabs(wi)<1e-10) terminatingActivities.append(i);
         }

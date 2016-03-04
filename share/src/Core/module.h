@@ -36,15 +36,17 @@
 #include <Core/thread.h>
 
 struct Access;
-struct Module;
+typedef Thread Module;
+//struct Module;
 typedef mlr::Array<Access*> AccessL;
 typedef mlr::Array<Module*> ModuleL;
 extern Singleton<ConditionVariable> moduleShutdown;
 
 //===========================================================================
 
-Node *getModuleNode(Module*);
 Node *getVariable(const char* name);
+template <class T> T* getVariable(const char* name){  return dynamic_cast<T*>(registry().get<RevisionedAccessGatedClass*>({"Variable",name}));  }
+template <class T> T* getThread(const char* name){  return dynamic_cast<T*>(registry().get<Thread*>({"Thread",name}));  }
 RevisionedAccessGatedClassL getVariables();
 void openModules();
 void stepModules();
@@ -63,15 +65,15 @@ void modulesReportCycleTimes();
     automatically analyze them and instantiate respective variables if
     necessary */
 
-struct Module : Thread{
-  Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
-    new Node_typed<Module*>(registry(), {"Module", name}, {}, this);
-  }
-  virtual ~Module(){}
-  virtual void step(){ HALT("you should not run a virtual module"); }
-  virtual void open(){}
-  virtual void close(){}
-};
+//struct Module : Thread{
+//  Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
+////    new Node_typed<Module*>(registry(), {"Module", name}, {}, this);
+//  }
+//  virtual ~Module(){}
+//  virtual void step(){ HALT("you should not run a virtual module"); }
+//  virtual void open(){}
+//  virtual void close(){}
+//};
 
 inline bool operator==(const Module&,const Module&){ return false; }
 
@@ -86,14 +88,15 @@ inline bool operator==(const Module&,const Module&){ return false; }
 struct Access{
   mlr::String name; ///< name; by default the access' name; redefine to a variable's name to autoconnect
   Type *type;      ///< type; must be the same as the variable's type
-  Module *module;  ///< which module is this a member of
+  Module *thread;  ///< which module is this a member of
   RevisionedAccessGatedClass *var;   ///< which variable does it access
-  Access(const char* _name, Type *_type, Module *_module, RevisionedAccessGatedClass *_var):name(_name), type(_type), module(_module), var(_var){}
+  struct Node* registryNode;
+  Access(const char* _name, Type *_type, Module *_thread, RevisionedAccessGatedClass *_var):name(_name), type(_type), thread(_thread), var(_var){}
   virtual ~Access(){}
   bool hasNewRevision(){ CHECK(var,"This Access has not been associated to any Variable"); return var->hasNewRevision(); }
-  int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)module); }
-  int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)module); }
-  int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)module); }
+  int readAccess(){  CHECK(var,"This Access has not been associated to any Variable"); return var->readAccess((Thread*)thread); }
+  int writeAccess(){ CHECK(var,"This Access has not been associated to any Variable"); return var->writeAccess((Thread*)thread); }
+  int deAccess(){    CHECK(var,"This Access has not been associated to any Variable"); return var->deAccess((Thread*)thread); }
   int waitForNextRevision(){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForNextRevision(); }
   int waitForRevisionGreaterThan(int rev){    CHECK(var,"This Access has not been associated to any Variable"); return var->waitForRevisionGreaterThan(rev); }
 //  double& tstamp(){ CHECK(var,""); return var->data_time; } ///< reference to the data's time. Variable should be locked while accessing this.
@@ -111,73 +114,47 @@ struct Access_typed:Access{
 //  Access_typed(const Access_typed<T>& acc) = delete;
 
   /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
-  Access_typed(Module* _module, const Access_typed<T>& acc, bool moduleListens=false)
-    : Access(acc.name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = registry().getNode({"Variable", name});
+  Access_typed(Module* _thread, const Access_typed<T>& acc, bool moduleListens=false)
+    : Access(acc.name, new Type_typed<T, void>(), _thread, NULL), v(NULL){
     v = acc.v;
     var = acc.var;
-    CHECK(vnode && vnode->get<Variable<T>* >()==v,"something's wrong")
-    if(module){
-      Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
-      if(moduleListens) module->listenTo(*var);
+    if(thread){
+      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {thread->registryNode, v->registryNode}, this);
+      if(moduleListens) thread->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {vnode}, this);
+      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {v->registryNode}, this);
     }
   }
 
   /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
-  Access_typed(Module* _module, const char* name, bool moduleListens=false, bool requirePreviousExistance=false)
-    : Access(name, new Type_typed<T, void>(), _module, NULL), v(NULL){
-    Node *vnode = registry().getNode({"Variable", name});
-    if(!vnode){
-      if(requirePreviousExistance) HALT("you required previous existance of variable 'name'");
+  Access_typed(Module* _thread, const char* name, bool moduleListens=false)
+    : Access(name, new Type_typed<T, void>(), _thread, NULL), v(NULL){
+    RevisionedAccessGatedClass** _var = registry().getValue<RevisionedAccessGatedClass*>({"Variable", name});
+    if(!_var){
       v = new Variable<T>(name);
-      vnode = new Node_typed<Variable<T>* >(registry(), {"Variable", name}, {}, v);
+      var = dynamic_cast<RevisionedAccessGatedClass*>(v);
     }else{
-      v = vnode->get<Variable<T>* >();
+      var = *_var;
+      v = dynamic_cast<Variable<T>*>(var);
+      CHECK(v,"something is wrong");
     }
-    var=(RevisionedAccessGatedClass*)v;
-    if(module){
-      Node *m = getModuleNode(module);
-      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {m,vnode}, this);
-      if(moduleListens) module->listenTo(*var);
+    if(thread){
+      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {thread->registryNode, v->registryNode}, this);
+      if(moduleListens) thread->listenTo(*var);
     }else{
-      new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {vnode}, this);
+      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {v->registryNode}, this);
     }
   }
 
-  ~Access_typed(){ delete type; }
+  ~Access_typed(){ delete type;  delete registryNode; }
   T& operator()(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return v->data; }
   T* operator->(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return &(v->data); }
-  typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)module); } ///< read access to the variable's data
-  typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)module); } ///< write access to the variable's data
-  typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)module); } ///< write access to the variable's data
+  typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)thread); } ///< read access to the variable's data
+  typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)thread); } ///< write access to the variable's data
+  typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)thread); } ///< write access to the variable's data
 };
 
 inline bool operator==(const Access&,const Access&){ return false; }
-
-//===========================================================================
-//
-// old method
-//
-
-template<class T> T* addModule(const char *name, double beat){
-  T *m = new T(name, beat);
-  CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
-  return m;
-}
-
-template<class T> T* addModule(){
-  T *m = new T;
-  CHECK(dynamic_cast<Module*>(m)!=NULL, "this thing is not derived from Module");
-  return m;
-}
-
-template<class T> T* addModule(const char *name, const StringA& accessConnectRules, double beat=0.){
-  NIY;
-  return new T;
-}
 
 
 //===========================================================================
@@ -243,7 +220,7 @@ inline void operator>>(istream&, Module&){ NIY }
 inline void operator<<(ostream& os, const Module& m){ os <<"Module '" <<m.name <<'\''; }
 
 inline void operator>>(istream&, Access&){ NIY }
-inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.module?a.module->name:mlr::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
+inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <<"' from '" <<(a.thread?a.thread->name:mlr::String("NIL")) <<"' to '" << (a.var ? a.var->name : String("??")) <<'\''; }
 
 
 //===========================================================================

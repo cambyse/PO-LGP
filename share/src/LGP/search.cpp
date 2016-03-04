@@ -63,7 +63,7 @@ void runMonteCarlo(Graph& G){
           depth1=fact; break;
         }
         if(depth0 && depth1){
-          *depth0->getValue<double>() = *depth1->getValue<double>() + 1.;
+          depth0->get<double>() = depth1->get<double>() + 1.;
         }
 
         //-- append it to store the decision

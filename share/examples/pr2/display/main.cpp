@@ -4,6 +4,7 @@
 #include <Actions/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Perception/perception.h>
+#include <Ors/orsviewer.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
@@ -18,9 +19,9 @@ int main(int argc, char** argv){
   TaskControllerModule tcm;
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
-  OrsViewer orsviewer;
+  OrsViewer orsviewer("modelWorld", true);
   ImageViewer camview("modelCameraView");
-  ImageViewer depthview("modelDepthView");
+//  ImageViewer depthview("modelDepthView");
 
   if(mlr::getParameter<bool>("useRos", false)){
     rosCheckInit("display");

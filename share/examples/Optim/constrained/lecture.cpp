@@ -25,12 +25,11 @@
 
 void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
 
-  ConstrainedMethodType method = (ConstrainedMethodType)mlr::getParameter<int>("opt/constrainedMethod");
-
-  UnconstrainedProblem UCP(p, method);
+  OptOptions options;
+  UnconstrainedProblem UCP(p, options);
 
   //-- choose constrained method
-  switch(method){
+  switch(options.constrainedMethod){
   case squaredPenalty: UCP.mu=10.; UCP.nu=10.;  break;
   case augmentedLag:   UCP.mu=1.;  UCP.nu=1.;   break;
   case logBarrier:     UCP.muLB=1.;  UCP.nu=1.;   break;
@@ -42,7 +41,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
   if(&x_start) x=x_start;
   else{
     x.setZero();
-    if(method==logBarrier){ } //log barrier needs a feasible starting point
+    if(options.constrainedMethod==logBarrier){ } //log barrier needs a feasible starting point
     else rndUniform(x, -1., 1.);
   }
   //  cout <<std::setprecision(2);
@@ -58,7 +57,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
     checkGradient(UCP, x, 1e-4);
     checkHessian (UCP, x, 1e-4); //will throw errors: no Hessians for g!
 
-    double bla = UCP.lagrangian(NoArr, NoArr, x);
+    UCP.lagrangian(NoArr, NoArr, x);
 
     if(x.N==2){
       displayFunction(UCP);
@@ -74,7 +73,7 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
     evals+=opt.evals;
 
     //upate unconstraint problem parameters
-    switch(method){
+    switch(opt.o.constrainedMethod){
     case squaredPenalty: UCP.mu *= 10;  UCP.nu *= 10;  break;
     case augmentedLag:
       UCP.aulaUpdate(1.);//   UCP.mu *= 2.;

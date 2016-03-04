@@ -43,7 +43,7 @@ void TEST(Sphere) {
   //MeshSetCylinder(mesh,.2,1.);
   //MeshSetCappedCylinder(mesh,.2,1.);
   gl.add(drawInit,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   gl.watch();
   
   getTriangulatedHull(mesh.T,mesh.V);
@@ -64,7 +64,7 @@ void TEST(Meshes) {
   mesh.fuseNearVertices(1e-4);
   mesh.writeTriFile(("z.e2.tri"));
   gl.add(drawInit,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   gl.watch();
 }
 
@@ -72,7 +72,7 @@ void TEST(Meshes2) {
   ors::Mesh mesh1,mesh2;
   OpenGL gl;
   gl.add(drawInit,0);
-  gl.add(glDrawMesh,&mesh1);
+  gl.add(mesh1);
   mesh1.readTriFile(FILE("z.e3.tri"));
   mesh2.readTriFile(FILE("z.e3.tri"));
   uint i,m=0; double my=mesh1.V(m,1);
@@ -88,7 +88,7 @@ void TEST(Meshes3) {
   ors::Mesh mesh;
   OpenGL gl;
   gl.add(drawInit,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   //MeshSetSphere(mesh,0);
   mesh.readTriFile(FILE("z.e4.tri"));
   gl.reportSelects=true;

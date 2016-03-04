@@ -87,8 +87,8 @@ struct SwigSystem {
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
 
     }else{
-      rosCheckInit("SwigSystem");
-      new RAP_roscom(rmm);
+//      rosCheckInit("SwigSystem");
+//      new RAP_roscom(rmm);
     }
 
     // make the base movable

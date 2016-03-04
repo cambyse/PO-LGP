@@ -198,9 +198,9 @@ void planes(){
     arr img(X.d0);  img=-1.;
     uintA seg(X.d0);
     for(Node *sit:S.getNodesOfType<Segment>()){
-      Segment *s = sit->getValue<Segment>();
-      for(uint p:s->pix){
-        img(p) = s->f(Phi[p]);
+      Segment s = sit->get<Segment>();
+      for(uint p:s.pix){
+        img(p) = s.f(Phi[p]);
         seg(p) = sit->index;
       }
     }

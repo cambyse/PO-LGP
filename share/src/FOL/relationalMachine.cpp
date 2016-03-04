@@ -14,8 +14,6 @@ void RelationalMachine::init(const char* filename){
   if(fil.exists()){
     fil >>KB;
     KB.checkConsistency();
-  }else{
-    LOG(1) <<"No '"<<filename<<"' for initialization given! This might fail!";
   }
   if(!KB["TMP"])   newSubGraph(KB, {"TMP"}, {});
   if(!KB["STATE"]) newSubGraph(KB, {"STATE"}, {});

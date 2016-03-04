@@ -171,12 +171,12 @@ void G4Rec::load(const char *recdir) {
       targets.append(pair->keys(0));
 
     if(!agent_targets.getNode(pair->keys(0)))
-      agent_targets.append((char*)pair->keys(0), new StringA());
+      agent_targets.append<StringA>({pair->keys(0)}, {}, StringA());
     if(!object_targets.getNode(pair->keys(0)))
-      object_targets.append((char*)pair->keys(0), new StringA());
+      object_targets.append<StringA>({pair->keys(0)}, {}, StringA());
 
-    StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
-    StringA &o_targets = *object_targets.getValue<StringA>(pair->keys(0));
+    StringA &a_targets = agent_targets.get<StringA>(pair->keys(0));
+    StringA &o_targets = object_targets.get<StringA>(pair->keys(0));
 
     if(!a_targets.contains(pair->keys(1)))
       a_targets.append(pair->keys(1));
@@ -184,11 +184,11 @@ void G4Rec::load(const char *recdir) {
       o_targets.append(pair->keys(2));
 
     for(Node *lock: pair->graph()) {
-      from = (uint)lock->graph()->getValue<double>("from");
-      to = (uint)lock->graph()->getValue<double>("to");
+      from = (uint)lock->graph().get<double>("from");
+      to = (uint)lock->graph().get<double>("to");
       ann->subRef(from, to) = 1;
     }
     // pair->graph().append("ann", ann);
-    mlabel.append(pair->keys, {}, ann, false);
+    mlabel.append<arr*>({pair->keys}, {}, ann);
   }
 }

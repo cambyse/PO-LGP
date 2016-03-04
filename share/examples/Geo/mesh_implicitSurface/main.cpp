@@ -39,7 +39,7 @@ void TEST(SimpleImplicitSurfaces) {
   ors::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
-  gl.add(glDrawMesh,&m);
+  gl.add(m);
 
   mlr::Array<ScalarFunction*> fcts = {&blobby, &sphere, &torus, &cylinder};
 

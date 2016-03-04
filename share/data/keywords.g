@@ -20,6 +20,7 @@ collisionIneq
 collisionPairs
 collisionExcept
 collisionExceptPairs
+wheels
 
 #joint types
 MakeJoint

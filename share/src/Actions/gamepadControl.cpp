@@ -6,7 +6,7 @@
 
 GamepadControlActivity::GamepadControlActivity()
   : Module("GamepadControlActivity", 0.01), taskController(NULL), g2t(NULL){
-  taskController = dynamic_cast<TaskControllerModule*>(registry().getNode({"Module","TaskControllerModule"})->get<Module*>());
+  taskController = getThread<TaskControllerModule>("TaskControllerModule");
   CHECK(taskController,"that didn't work");
 }
 

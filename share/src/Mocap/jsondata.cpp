@@ -220,14 +220,14 @@ void JsonRec::load(const char *recdir) {
             ann.subRef(onat, offat) = 1;
           }
 
-          targetkvg.append("ann", &ann);
+          targetkvg.append<arr*>({"ann"}, {}, &ann);
           // kvgann.append(STRINGS(target, agent, object), &targetkvg);
-          kvgann.append({target, agent, object}, {}, &targetkvg, false);
+          kvgann.append<Graph*>({target, agent, object}, {}, &targetkvg);
         }
       }
 
-      agent_targets.append((char*)target, &a_targets);
-      object_targets.append((char*)target, &o_targets);
+      agent_targets.append<StringA>({target}, {}, a_targets);
+      object_targets.append<StringA>({target}, {}, o_targets);
 
       // ann = new arr(nframes);
       // ann->setZero();
@@ -243,8 +243,8 @@ void JsonRec::load(const char *recdir) {
       // if(!o_targets.contains(pair->keys(2)))
       //   o_targets.append(pair->keys(2));
       // for(Node *lock: pair->graph()) {
-      //   from = (uint)lock->graph()->getValue<double>("from");
-      //   to = (uint)lock->graph()->getValue<double>("to");
+      //   from = (uint)lock->graph()->get<double>("from");
+      //   to = (uint)lock->graph()->get<double>("to");
       //   ann->subRef(from, to) = 1;
       // }
       // pair->graph().append("ann", ann);
@@ -271,8 +271,8 @@ void JsonRec::load(const char *recdir) {
     //   if(!o_targets.contains(pair->keys(2)))
     //     o_targets.append(pair->keys(2));
     //   for(Node *lock: pair->graph()) {
-    //     from = (uint)lock->graph()->getValue<double>("from");
-    //     to = (uint)lock->graph()->getValue<double>("to");
+    //     from = (uint)lock->graph()->get<double>("from");
+    //     to = (uint)lock->graph()->get<double>("to");
     //     ann->subRef(from, to) = 1;
     //   }
     //   pair->graph().append("ann", ann);

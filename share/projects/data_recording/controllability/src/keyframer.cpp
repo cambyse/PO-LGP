@@ -669,10 +669,10 @@ void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
     inset = &ctrl->get<Graph>("inset");
     offset = &ctrl->get<Graph>("offset");
 
-    fi = *inset->getValue<double>("fnum");
+    fi = inset->get<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
 
-    fo = *offset->getValue<double>("fnum");
+    fo = offset->get<double>("fnum");
     poso = offset->getValue<arr>("f_pos");
 
     delta = new Graph();
@@ -694,10 +694,10 @@ void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
     inset = &ctrl->get<Graph>("inset");
     offset = &ctrl->get<Graph>("offset");
 
-    fi = *inset->getValue<double>("fnum");
+    fi = inset->get<double>("fnum");
     posi = inset->getValue<arr>("f_pos");
 
-    fo = *offset->getValue<double>("fnum");
+    fo = offset->get<double>("fnum");
     poso = offset->getValue<arr>("f_pos");
 
     delta = new Graph();
@@ -4150,8 +4150,8 @@ void KeyFramer::load_ann(const String &dir) {
         for(String part2: g4d().id().sensorsof(obj2)) {
           ann_ref.referTo(annOf(part1, part2));
           for(Node *lock: pair->graph()) {
-            from = (uint)lock->graph()->getValue<double>("from");
-            to = (uint)lock->graph()->getValue<double>("to");
+            from = (uint)lock->graph()->get<double>("from");
+            to = (uint)lock->graph()->get<double>("to");
             ann_ref.subRef(from, to) = 1;
           }
         }
