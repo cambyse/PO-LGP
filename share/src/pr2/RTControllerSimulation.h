@@ -7,15 +7,21 @@
 #include <pr2/roscom.h>
 
 struct RTControllerSimulation : Module {
-  ACCESSnew(CtrlMsg, ctrl_ref)
-  ACCESSnew(CtrlMsg, ctrl_obs)
-  ACCESSnew(ors::KinematicWorld, modelWorld)
+  Access_typed<CtrlMsg> ctrl_ref;
+  Access_typed<CtrlMsg> ctrl_obs;
+  Access_typed<ors::KinematicWorld> modelWorld;
 
   ors::KinematicWorld* world;
   double tau;
   bool gravity;
 
-  RTControllerSimulation(double tau=0.01, bool gravity=false) : Module("DynmSim", tau), tau(tau), gravity(gravity) {}
+  RTControllerSimulation(double tau=0.01, bool gravity=false)
+    : Module("DynmSim", tau)
+    , ctrl_ref(this, "ctrl_ref")
+    , ctrl_obs(this, "ctrl_obs")
+    , modelWorld(this, "modelWorld")
+    , tau(tau)
+    , gravity(gravity) {}
   virtual ~RTControllerSimulation() {}
 
   void open();
