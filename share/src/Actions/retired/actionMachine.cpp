@@ -54,7 +54,7 @@ void ActionMachine::open(){
       new Node_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"moving"}, {}, NULL, false);
-      newSubGraph(KB(), {"STATE"}, {});
+      KB().appendSubgraph({"STATE"}, {});
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
@@ -124,7 +124,7 @@ void ActionMachine::step(){
     cout <<"STOP" <<endl;
     KB.writeAccess();
     Node *quitSymbol = KB()["quit"];
-    KB().getNode("STATE")->graph().append<bool>({},{quitSymbol}, NULL, false);
+    KB().get<Graph>("STATE").append<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
 //    moduleShutdown().incrementValue();
   }
@@ -251,7 +251,7 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   Node* convSymbol = KB().getNode("conv");  CHECK(convSymbol,"");
   Node* contactSymbol = KB().getNode("contact");  CHECK(contactSymbol,"");
   Node* timeoutSymbol = KB().getNode("timeout");  CHECK(timeoutSymbol,"");
-  Graph& state = KB().getNode("STATE")->graph();
+  Graph& state = KB().get<Graph>("STATE");
   cout <<"STATE = " <<state <<endl;
   A.readAccess();
   for(Action *a:A()) if(a->active){

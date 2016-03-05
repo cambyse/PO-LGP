@@ -70,7 +70,7 @@ struct Node_typed : Node {
   
   virtual Node* newClone(Graph& container) const {
     if(isGraph()){
-      Node_typed<Graph> *n = newSubGraph(container, keys, parents);
+      Node_typed<Graph> *n = container.appendSubgraph(keys, parents);
       n->value.copy(graph());
       return n;
     }
@@ -101,9 +101,8 @@ template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   n->keys.append(STRING(key));
 }
 
-template<class T> Node* Graph::getNodeOfType(const char *key) const {
-  NodeL nodes = getNodes(key);
-  for(Node* n:nodes) if(n->isOfType<T>()) return n;
+template<class T> Node_typed<T>* Graph::getNodeOfType(const StringA& keys) const {
+  for(Node* n: (*this)) if(n->isOfType<T>() && n->matches(keys)) return dynamic_cast<Node_typed<T>*>(n);
   return NULL;
 }
 

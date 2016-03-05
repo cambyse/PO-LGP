@@ -129,7 +129,7 @@ struct Access_typed:Access{
   /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
   Access_typed(Module* _thread, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _thread, NULL), v(NULL){
-    RevisionedAccessGatedClass** _var = registry().getValue<RevisionedAccessGatedClass*>({"Variable", name});
+    RevisionedAccessGatedClass** _var = registry().find<RevisionedAccessGatedClass*>({"Variable", name});
     if(!_var){
       v = new Variable<T>(name);
       var = dynamic_cast<RevisionedAccessGatedClass*>(v);

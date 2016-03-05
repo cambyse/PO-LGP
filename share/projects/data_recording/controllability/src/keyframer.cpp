@@ -573,7 +573,7 @@ void KeyFramer::testDist(Graph &kvg, const String &a, const String &o) {
 void KeyFramer::getVitSeq(arr &vit, const String &a, const String &o) {
   Graph data_kvg;
   EM_z_with_c(data_kvg, a, o);
-  vit = *data_kvg.getValue<arr>("vit");
+  vit = data_kvg.get<arr>("vit");
 }
 // }}}
 // getVitSeq {{{
@@ -607,7 +607,7 @@ void KeyFramer::vitLogicMachine(Graph &kvg, arr &vit2, const arr &vit) {
 void KeyFramer::getCtrlSeq_old(kvgL &ctrls, const String &a, const String &o) {
   Graph data_kvg;
   EM_z_with_c(data_kvg, a, o);
-  arr *vit = data_kvg.getValue<arr>("vit");
+  arr *vit = data_kvg.find<arr>("vit");
 
   Graph *kf, *feats;
   bool kf_flag = false;
@@ -633,7 +633,7 @@ void KeyFramer::getCtrlSeq_old(kvgL &ctrls, const String &a, const String &o) {
 void KeyFramer::getCtrlSeq(kvgL &ctrls, const String &a, const String &o) {
   Graph data_kvg;
   EM_z_with_c(data_kvg, a, o);
-  arr *vit = data_kvg.getValue<arr>("vit");
+  arr *vit = data_kvg.find<arr>("vit");
 
   Graph *kf;
   bool kf_flag = false;
@@ -670,10 +670,10 @@ void KeyFramer::getDeltaSeq(kvgL &deltas, kvgL ctrls) {
     offset = &ctrl->get<Graph>("offset");
 
     fi = inset->get<double>("fnum");
-    posi = inset->getValue<arr>("f_pos");
+    posi = inset->find<arr>("f_pos");
 
     fo = offset->get<double>("fnum");
-    poso = offset->getValue<arr>("f_pos");
+    poso = offset->find<arr>("f_pos");
 
     delta = new Graph();
     delta->append("fi", new double(fi));
@@ -695,10 +695,10 @@ void KeyFramer::getDeltaCluster(kvgL &deltas, kvgL ctrls) {
     offset = &ctrl->get<Graph>("offset");
 
     fi = inset->get<double>("fnum");
-    posi = inset->getValue<arr>("f_pos");
+    posi = inset->find<arr>("f_pos");
 
     fo = offset->get<double>("fnum");
-    poso = offset->getValue<arr>("f_pos");
+    poso = offset->find<arr>("f_pos");
 
     delta = new Graph();
     delta->append("fi", new double(fi));
@@ -2917,7 +2917,7 @@ void KeyFramer::EM_z_with_c(Graph &kvg, const String &subj, const String &obj) {
   int ind_subj, ind_obj;
   ind_subj = g4d().id().subjects().findValue(subj);
   ind_obj = g4d().id().objects().findValue(obj);
-  kvg.getValue<arr>("vit")->subDim(ind_subj, ind_obj)() = vit;
+  kvg.get<arr>("vit").subDim(ind_subj, ind_obj)() = vit;
 
   Graph *hmm, *plot;
   
@@ -3901,7 +3901,7 @@ void KeyFramer::process(Graph &kvg, const String &name_subj, const String &name_
     ind_sublimb = g4d().id().subjects().findValue(sublimb);
     process(kvg, sublimb, name_obj);
     if(!p_vit)
-      p_vit = kvg.getValue<arr>("vit");
+      p_vit = kvg.find<arr>("vit");
     for(uint f = 0; f < g4d().numFrames(); f++)
       if((*p_vit)(ind_subj, ind_obj, f) == 0)
         (*p_vit)(ind_subj, ind_obj, f) = (*p_vit)(ind_sublimb, ind_obj, f);
@@ -3956,7 +3956,7 @@ void KeyFramer::playScene(Graph &kvg, const StringA &name_subjs, bool record) {
     { .2, 1, 1 }
   };
 
-  arr *p_vit = kvg.getValue<arr>("vit");
+  arr *p_vit = kvg.find<arr>("vit");
 
   for(uint f = 0; f < g4d().numFrames(); f++) {
     for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
@@ -3996,7 +3996,7 @@ void KeyFramer::playScene(Graph &kvg, const String &name_subj, bool record) {
       memcpy(shape->color, col_subj, 3*sizeof(double));
 
   int ind_subj = g4d().id().subjects().findValue(name_subj);
-  arr *p_vit = kvg.getValue<arr>("vit");
+  arr *p_vit = kvg.find<arr>("vit");
   for(uint f = 0; f < g4d().numFrames(); f++) {
     for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
       for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
