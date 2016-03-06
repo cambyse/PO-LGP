@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
     lock->append("from", from_frame);
     lock->append("to", to_frame);
 
-    item = kvg.getNode(o1, o2);
+    item = kvg.getNode({o1, o2});
     if(item) {
       subkvg = &item->graph();
       subkvg->append("lock", lock);

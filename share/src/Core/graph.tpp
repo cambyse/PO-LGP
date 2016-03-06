@@ -101,44 +101,28 @@ template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   n->keys.append(STRING(key));
 }
 
-template<class T> Node_typed<T>* Graph::getNodeOfType(const StringA& keys) const {
-  for(Node* n: (*this)) if(n->isOfType<T>() && n->matches(keys)) return dynamic_cast<Node_typed<T>*>(n);
-  return NULL;
-}
-
 template<class T> T& Graph::get(const char *key) const {
-  Node *n = getNode(key);
-  if(!n) HALT("node '"<< key<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");
-  T* val=n->getValue<T>();
-  if(!val) HALT("node " <<*n <<" does not have type '"<<typeid(T).name() <<"'");
-  return *val;
+  Node *n = findNodeOfType(typeid(T), {key});
+  if(!n) HALT("no node of type '" <<typeid(T).name() <<"' with key '"<< key<< "' found");
+  return n->get<T>();
 }
 
 template<class T> T& Graph::get(const StringA& keys) const {
-  Node *n = getNode(keys);
-  if(!n) HALT("node '"<< keys<< "' does not exist (to retrieve type '"<<typeid(T).name() <<"')");
-  T* val=n->getValue<T>();
-  if(!val) HALT("node " <<*n <<" does not have type '"<<typeid(T).name() <<"'");
-  return *val;
+  Node *n = findNodeOfType(typeid(T), keys);
+  if(!n) HALT("no node of type '" <<typeid(T).name() <<"' with keys '"<< keys<< "' found");
+  return n->get<T>();
 }
 
 template<class T> const T& Graph::get(const char *key, const T& defaultValue) const{
-  Node *n = getNode(key);
+  Node *n = findNodeOfType(typeid(T), {key});
   if(!n) return defaultValue;
-  T* val=n->getValue<T>();
-  if(!val) return defaultValue;
-  return *val;
+  return n->get<T>();
 }
 
 template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
+  NodeL nodes = findNodesOfType(typeid(T), {key});
   mlr::Array<T*> ret;
-  for(Node *n: (*this)) if(n->isOfType<T>()) {
-    if(!key) ret.append(n->getValue<T>());
-    else for(uint i=0; i<n->keys.N; i++) if(n->keys(i)==key) {
-      ret.append(n->getValue<T>());
-      break;
-    }
-  }
+  for(Node *n: nodes) ret.append(n->getValue<T>());
   return ret;
 }
 

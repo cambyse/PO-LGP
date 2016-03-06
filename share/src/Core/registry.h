@@ -77,7 +77,7 @@ inline Node *reg_findType(const char* key) {
   NodeL types = registry().getNodesOfType<Type*>();
   for(Node *ti: types) {
     if(mlr::String(ti->get<Type*>()->typeId().name())==key) return ti;
-    for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
+    if(ti->matches(key)) return ti;
   }
   return NULL;
 }

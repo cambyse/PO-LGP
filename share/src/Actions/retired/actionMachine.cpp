@@ -248,9 +248,9 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   KB().checkConsistency();
   //-- check new successes and fails and add to symbolic state
-  Node* convSymbol = KB().getNode("conv");  CHECK(convSymbol,"");
-  Node* contactSymbol = KB().getNode("contact");  CHECK(contactSymbol,"");
-  Node* timeoutSymbol = KB().getNode("timeout");  CHECK(timeoutSymbol,"");
+  Node* convSymbol = KB()["conv"];  CHECK(convSymbol,"");
+  Node* contactSymbol = KB()["contact"];  CHECK(contactSymbol,"");
+  Node* timeoutSymbol = KB()["timeout"];  CHECK(timeoutSymbol,"");
   Graph& state = KB().get<Graph>("STATE");
   cout <<"STATE = " <<state <<endl;
   A.readAccess();
@@ -326,7 +326,7 @@ void ActionMachine::waitForQuitSymbol() {
   while (cont) {
     KB.waitForNextRevision();
     KB.readAccess();
-    Node* quitSymbol = KB().getNode("quit");
+    Node* quitSymbol = KB()["quit"];
     if(!quitSymbol){
       MLR_MSG("WARNING: no quit symbol!");
       return;

@@ -17,7 +17,7 @@ void TEST(Read){
   G.writeParseInfo(cout);
   cout <<"read graph=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
-//  Node *m = G.getNode("modify");
+//  Node *m = G["modify"];
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
