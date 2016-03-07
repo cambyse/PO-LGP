@@ -57,14 +57,15 @@ struct OrsPathViewer : Module{
 //===========================================================================
 
 struct ComputeCameraView:Module{
-  ACCESSlisten(ors::KinematicWorld, modelWorld)
+  Access_typed<ors::KinematicWorld> modelWorld;
   Access_typed<byteA> cameraView;
   OpenGL gl;
   uint skipFrames, frame;
   ComputeCameraView(uint skipFrames=0)
-    : Module("OrsViewer"),
-      cameraView(this, "cameraView"),
-      skipFrames(skipFrames), frame(0){}
+    : Module("OrsViewer")
+    , modelWorld(this, "modelWorld", true)
+    , cameraView(this, "cameraView")
+    , skipFrames(skipFrames), frame(0){}
   void open();
   void step();
   void close() {}
