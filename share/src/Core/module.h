@@ -190,7 +190,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #define REGISTER_MODULE(name) \
   RUN_ON_INIT_BEGIN(Decl_Module##_##name) \
-  new Node_typed<Type*>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL)); \
+  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), std::make_shared<Type_typed<name, void> >()); \
   RUN_ON_INIT_END(Decl_Module##_##name)
 
 

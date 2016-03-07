@@ -48,7 +48,7 @@ struct Type {
   virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
   virtual void* newInstance() const {NIY}
 //  virtual Type* clone() const {NIY}
-  void write(std::ostream& os) const;
+  void write(std::ostream& os) const {  os <<"Type '" <<typeId().name() <<"' ";  }
   void read(std::istream& is) const {NIY}
 };
 stdPipes(Type)

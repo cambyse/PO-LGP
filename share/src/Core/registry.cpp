@@ -48,13 +48,3 @@ void initRegistry(int argc, char* argv[]){
   mlr::openConfigFile();
   globalThings().cfgFile >>registry();
 }
-
-
-void Type::write(std::ostream& os) const {
-  os <<"Type '" <<typeId().name() <<"' ";
-  if(parents.N) {
-    cout <<"parents=[";
-    for(auto& p: parents) cout <<' ' <<p->typeId().name();
-    cout <<" ]";
-  }
-}
