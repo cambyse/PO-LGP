@@ -31,6 +31,8 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
   coll = new CtrlTask("collisions", new ProxyTaskMap(allPTMT, {0u}, .1), .2, .8, 1., 1.);
   gripperL = new CtrlTask("gripperL", new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
   gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
+  for(CtrlTask* task:{ endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR })
+    task->active=false;
 }
 
 mlr::Array<CtrlTask*> Gamepad2Tasks::getTasks(){
@@ -103,10 +105,10 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 //      if(sel!=up)  MP.world.getShapeByName("mymarker")->rel.pos = pdt->y_ref;
 
       //-- left right: gaze control
-      if(sel==left || sel==right){
-        head->active=true;
-        dynamic_cast<DefaultTaskMap*>(&head->map)->jvec = pdt->y;
-      }
+//      if(sel==left || sel==right){
+//        head->active=true;
+//        dynamic_cast<DefaultTaskMap*>(&head->map)->jvec = pdt->y;
+//      }
       break;
     }
     case 1: { //homing

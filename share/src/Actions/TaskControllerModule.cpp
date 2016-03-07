@@ -10,15 +10,15 @@ using namespace std;
 #endif
 
 TaskControllerModule::TaskControllerModule(const char* modelFile)
-    : Module("TaskControllerModule", .01)
-    , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
-    , feedbackController(NULL)
-    , q0(realWorld.q)
-    , oldfashioned(true)
-    , useRos(false)
-    , syncModelStateWithReal(false)
-    , verbose(false)
-    , useDynSim(true) {
+  : Module("TaskControllerModule", .01)
+  , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
+  , feedbackController(NULL)
+  , q0(realWorld.q)
+  , oldfashioned(true)
+  , useRos(false)
+  , syncModelStateWithReal(false)
+  , verbose(false)
+  , useDynSim(true) {
 
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = mlr::getParameter<bool>("useDynSim", true);
@@ -40,7 +40,7 @@ void TaskControllerModule::open(){
   feedbackController->qitselfPD.y_ref = q0;
   feedbackController->qitselfPD.setGains(0., 10.);
 
-//  mlr::open(fil,"z.TaskControllerModule");
+  //  mlr::open(fil,"z.TaskControllerModule");
 
 #if 1
   modelWorld.writeAccess();
@@ -82,9 +82,9 @@ void TaskControllerModule::step(){
         q_model = q_real;
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
-//        cout <<"** GO!" <<endl;
-//        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
-//        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
+        //        cout <<"** GO!" <<endl;
+        //        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
+        //        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
       }
       if(oldfashioned) syncModelStateWithReal = false;
     }else{
@@ -120,9 +120,9 @@ void TaskControllerModule::step(){
       realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
       Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
       J = inverse_SymPosDef(J*~J)*J;
-//      mlr::arrayBrackets="  ";
-//      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
-//      mlr::arrayBrackets="[]";
+      //      mlr::arrayBrackets="  ";
+      //      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
+      //      mlr::arrayBrackets="[]";
     }
   }
 
@@ -157,14 +157,14 @@ void TaskControllerModule::step(){
     //-- first zero references
     refs.q =  q_model;
     refs.qdot = zeros(q_model.N);
-  refs.fL_gamma = 1.;
+    refs.fL_gamma = 1.;
     refs.Kp = ARR(1.);
     refs.Kd = ARR(1.);
     refs.Ki = ARR(0.2);
     refs.fL = zeros(6);
     refs.fR = zeros(6);
-  refs.KiFTL.clear();
-  refs.J_ft_invL.clear();
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q_model.N);
     refs.intLimitRatio = 0.7;
 
@@ -176,7 +176,7 @@ void TaskControllerModule::step(){
       if(t->active && t->f_ref.N){
         count++;
         if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      t->getForceControlCoeffs(refs.fL, refs.u_bias, refs.KiFTL, refs.J_ft_invL, realWorld);
+        t->getForceControlCoeffs(refs.fL, refs.u_bias, refs.KiFTL, refs.J_ft_invL, realWorld);
       }
     }
     if(count==1) refs.Kp = .5;
@@ -215,15 +215,15 @@ void TaskControllerModule::step(){
     double gamma;
     feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
-//    if(!useDynSim) { //TODO what is, if useROS == true? the modelWorld should be updated from the rosMsg? Maybe then we don't need two worlds
-//      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
-//    }
+    //    if(!useDynSim) { //TODO what is, if useROS == true? the modelWorld should be updated from the rosMsg? Maybe then we don't need two worlds
+    //      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
+    //    }
 
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-//    this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef, gamma);
+    //    this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef, gamma);
     refs.q =  zeros(q_model.N);
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
@@ -257,6 +257,6 @@ void TaskControllerModule::step(){
 }
 
 void TaskControllerModule::close(){
-//  fil.close();
+  //  fil.close();
   delete feedbackController;
 }
