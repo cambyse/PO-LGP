@@ -69,7 +69,7 @@ intV ActionSwigInterface::lit(stringV symbolNames){
 
 void ActionSwigInterface::startActivity(intV literal, dict parameters){
   s->KB.writeAccess();
-  Graph& state=s->KB().getNode("STATE")->graph();
+  Graph& state=s->KB().get<Graph>("STATE");
   NodeL parents;
   for(auto i:literal) parents.append(s->KB().elem(i));
   state.append<bool>({}, parents, NULL, false);
@@ -78,7 +78,7 @@ void ActionSwigInterface::startActivity(intV literal, dict parameters){
 
 void ActionSwigInterface::waitForCondition(intV literal){
   s->KB.readAccess();
-  Graph& state=s->KB().getNode("STATE")->graph();
+  Graph& state=s->KB().get<Graph>("STATE");
   NodeL lit;
   for(auto i:literal) lit.append(s->KB().elem(i));
   s->KB.deAccess();

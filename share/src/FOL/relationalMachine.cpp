@@ -14,11 +14,9 @@ void RelationalMachine::init(const char* filename){
   if(fil.exists()){
     fil >>KB;
     KB.checkConsistency();
-  }else{
-    LOG(1) <<"No '"<<filename<<"' for initialization given! This might fail!";
   }
-  if(!KB["TMP"])   newSubGraph(KB, {"TMP"}, {});
-  if(!KB["STATE"]) newSubGraph(KB, {"STATE"}, {});
+  if(!KB["TMP"])   KB.appendSubgraph({"TMP"}, {});
+  if(!KB["STATE"]) KB.appendSubgraph({"STATE"}, {});
   state = &KB["STATE"]->graph();
   tmp   = &KB["TMP"]->graph();
 }
@@ -65,7 +63,7 @@ bool RelationalMachine::applyEffect(Node* literal, bool fwdChain){
 
 NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
-  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, *tmp, false);
+  forwardChaining_FOL(KB, KB.get<Graph>("STATE"), NULL, *tmp, false);
   LOG(2) <<"  changes=" <<*tmp;
   LOG(2) <<"  new state=\n  " <<getState();
   return *tmp;

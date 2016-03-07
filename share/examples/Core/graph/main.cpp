@@ -18,7 +18,7 @@ void TEST(Read){
   G.writeParseInfo(cout);
   cout <<"read graph=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
-//  Node *m = G.getNode("modify");
+//  Node *m = G["modify"];
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
@@ -85,7 +85,7 @@ void rndModify(Graph& G){
       new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      newSubGraph(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
+      G.appendSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();
@@ -102,17 +102,17 @@ void rndModify(Graph& G){
 void TEST(Random){
   Graph A,B;
 
-  for(uint k=0;k<1000;k++){
+  for(uint k=0;k<10;k++){
     rndModify(rndSubgraph(A));
-    Graph *C = new Graph(rndSubgraph(A));
+    Graph& C = rndSubgraph(A).appendSubgraph({}, {})->value;
 
 //    cout <<"---" <<endl <<A <<endl;
 
     A.checkConsistency();
-    C->checkConsistency();
+    C.checkConsistency();
     B = A;
     B.checkConsistency();
-    if(C->isNodeOfParentGraph) delete C->isNodeOfParentGraph; else delete C;
+    delete C.isNodeOfParentGraph;
     A.checkConsistency();
   }
   A.clear();
@@ -159,11 +159,12 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-//  testRandom();
-  testRead();
+  testRandom();
+//  testRead();
 //  testInit();
 //  testDot();
 
+  testManual();
 //  if(!filename) testManual();
 
   return 0;

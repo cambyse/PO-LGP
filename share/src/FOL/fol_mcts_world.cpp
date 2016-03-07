@@ -81,7 +81,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- store the old state; make a new state that is child of the old
   if(generateStateTree){
-    Node *new_state = newSubGraph(KB, {STRING("STATE"<<count++)}, {state->isNodeOfParentGraph});
+    Node *new_state = KB.appendSubgraph({STRING("STATE"<<count++)}, {state->isNodeOfParentGraph});
     new_state->graph().copy(*state);
     state = &new_state->graph();
     DEBUG(KB.checkConsistency());
@@ -156,7 +156,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     double w=1e10;
     for(Node *i:*state){
       if(i->isOfType<double>()){
-        double wi = *i->getValue<double>();
+        double wi = i->get<double>();
         if(w>wi) w=wi;
       }
     }
@@ -174,7 +174,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       NodeL terminatingActivities;
       for(Node *i:*state){
         if(i->isOfType<double>()){
-          double &wi = *i->getValue<double>(); //this is a double reference!
+          double &wi = i->get<double>(); //this is a double reference!
           wi -= w;
           if(fabs(wi)<1e-10) terminatingActivities.append(i);
         }
@@ -300,19 +300,19 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-  if(!state) state = &newSubGraph(KB, {"STATE"}, {})->value;
+  if(!state) state = &KB.appendSubgraph({"STATE"}, {})->value;
   state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
 
   if(tmp) delete tmp->isNodeOfParentGraph;
-  newSubGraph(KB, {"TMP"}, {});
+  KB.appendSubgraph({"TMP"}, {});
   tmp   = &KB["TMP"]->graph();
 
   DEBUG(KB.checkConsistency();)
   FILE("z.after") <<KB;
 
   //-- forward chain rules
-  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, NoGraph, verbose-3); //, &decisionObservation);
+  forwardChaining_FOL(KB, KB.get<Graph>("STATE"), NULL, NoGraph, verbose-3); //, &decisionObservation);
 
   //-- check for terminal
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);

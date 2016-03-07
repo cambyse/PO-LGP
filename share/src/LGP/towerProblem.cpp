@@ -70,9 +70,8 @@ double TowerProblem::reward(const ors::KinematicWorld& world, const Graph& symbo
   Graph& state =symbols["STATE"]->graph();
 
   for(Node *dep:depthSymbol->parentOf) if(&dep->container==&state){
-    double *d = dep->getValue<double>();
-    CHECK(d,"");
-    if(*d>depth) depth=*d;
+    double d = dep->get<double>();
+    if(d>depth) depth=d;
   }
 
   //-- count supports below

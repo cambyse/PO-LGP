@@ -80,7 +80,7 @@ void optTowers() {
   ors::KinematicWorld W;
   Graph logicState;
   Node *touch = new Node_typed<bool>(logicState, {"touch"}, {}, true);
-  Graph& state = newSubGraph(logicState, {"STATE"}, {})->value;
+  Graph& state = logicState.appendSubgraph({"STATE"}, {})->value;
   //-- add random objects
   uint K=10;
   ors::Body base(W);

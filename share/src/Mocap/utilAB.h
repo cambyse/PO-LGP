@@ -41,7 +41,7 @@ enum_name str_to_ ## enum_name(const char *str) {               \
   if(enum_name ## _kvg.N == 0) {                                \
     enum_name ## _list(ENUM_KVG)                                \
   }                                                             \
-  enum_name *elem = enum_name ## _kvg.getValue<enum_name>(str); \
+  enum_name *elem = enum_name ## _kvg.find<enum_name>(str); \
   return *elem;                                                 \
 }
 

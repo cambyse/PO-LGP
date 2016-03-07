@@ -34,14 +34,13 @@ void TEST(PR2reach){
 
 #define CONSTRAINT
 #ifndef CONSTRAINT
-  t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1), sumOfSqrTT);
+  t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0u}, .1), sumOfSqrTT);
 #else
   t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
 #endif
   t->setCostSpecs(0, MP.T, {0.}, 1.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(MP);
   arr x = MP.getInitialization(); //replicate(MP.x0, MP.T+1);
 
   //-- optimize
@@ -49,10 +48,9 @@ void TEST(PR2reach){
     mlr::timerStart();
     ors::KinematicWorld::setJointStateCount=0;
 #ifndef CONSTRAINT
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., nonStrictSteps=(!k?15:5)));
+    optNewton(x, Convert(MP), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
 #else
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
-//    optConstrained(x, NoArr, Convert(MF), OPT(verbose=2, stopIters=100, maxStep=.5, stepInc=2., allowOverstep=false));
+    optConstrained(x, NoArr, Convert(MP), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
 
     cout <<"** optimization time=" <<mlr::timerRead()
@@ -81,7 +79,7 @@ void TEST(Basics){
 
   //#define CONSTRAINT
   #ifndef CONSTRAINT
-  t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .1), sumOfSqrTT);
+  t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0u}, .1), sumOfSqrTT);
   #else
   t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
   #endif
@@ -96,13 +94,12 @@ void TEST(Basics){
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 
   //gradient check: will fail in case of collisions
   for(uint k=0;k<0;k++){
-    checkJacobian(Convert(MF), x, 1e-4);
+    checkJacobian(Convert(MP), x, 1e-4);
     rndUniform(x,-1.,1.);
   }
 
@@ -110,9 +107,9 @@ void TEST(Basics){
   for(uint k=0;k<5;k++){
     mlr::timerStart();
 #ifndef CONSTRAINT
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, damping=.1));
+    optNewton(x, Convert(MP));
 #else
-    optConstrained(x, NoArr, Convert(MF), OPT(verbose=1, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+    optConstrained(x, NoArr, Convert(MP));
 #endif
     cout <<"** optimization time=" <<mlr::timerRead() <<endl;
     MP.costReport();
@@ -129,8 +126,8 @@ void TEST(Basics){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-//  testPR2reach();
-  testBasics();
+  testPR2reach();
+//  testBasics();
   
   return 0;
 }

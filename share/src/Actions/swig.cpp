@@ -56,14 +56,14 @@ struct SwigSystem {
 
 
 //  PerceptionObjects2Ors percObjs;
-  ImageViewer camview;
+//  ImageViewer camview;
 //  Kinect2PointCloud k2pcl;
 //  PointCloudViewer pclv;
 
   Log _log;
 
   SwigSystem()
-    : camview("modelDepthView"), _log("SwigSystem"){
+    : /*camview("modelDepthView"),*/ _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
@@ -88,8 +88,8 @@ struct SwigSystem {
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
 
     }else{
-      rosCheckInit("SwigSystem");
-      new RAP_roscom(rmm);
+//      rosCheckInit("SwigSystem");
+//      new RAP_roscom(rmm);
     }
 
     // make the base movable
@@ -298,7 +298,7 @@ double ActionSwigInterface::getQDim() {
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
+  Node *symbol = S->RM.get()->KB[symbolName.c_str()];
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -461,7 +461,7 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 
   Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
   
-  Graph& td = newSubGraph(S->RM(), {"Task"}, {symbol})->value;
+  Graph& td = S->RM().appendSubgraph({"Task"}, {symbol})->value;
   td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
@@ -480,7 +480,7 @@ Access_typed<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
 void ActionSwigInterface::execScript(const char* filename){
   FILE(filename) >>S->RM.set()->KB;
 
-  Node *s = S->RM.get()->KB.getNode("Script");
+  Node *s = S->RM.get()->KB["Script"];
   Graph& script = s->graph();
   int rev=0;
   for(Node* n:script){

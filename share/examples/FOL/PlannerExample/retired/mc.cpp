@@ -10,10 +10,10 @@ void TEST(MonteCarlo){
     Graph KB = Gorig;
     KB.checkConsistency();
     Node *Terminate_keyword = KB["Terminate"];
-    Graph& state = KB.getNode("STATE")->graph();
+    Graph& state = KB.get<Graph>("STATE");
     NodeL rules = KB.getNodes("Rule");
     NodeL constants = KB.getNodes("Constant");
-    Graph& terminal = KB.getNode("terminal")->graph();
+    Graph& terminal = KB.get<Graph>("terminal");
 
     for(uint h=0;h<100;h++){
       if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;
@@ -59,7 +59,7 @@ void TEST(MonteCarlo){
         double w=1e10;
         for(Node *i:state){
           if(i->isOfType<double>()){
-            double wi = *i->getValue<double>();
+            double wi = i->get<double>();
             if(w>wi) w=wi;
           }
         }
@@ -72,7 +72,7 @@ void TEST(MonteCarlo){
           NodeL activities;
           for(Node *i:state){
             if(i->isOfType<double>()){
-              double &wi = *i->getValue<double>();
+              double &wi = i->get<double>();
               wi -= w;
               if(fabs(wi)<1e-10) activities.append(i);
             }

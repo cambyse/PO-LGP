@@ -275,7 +275,7 @@ bool applySubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subst, Gr
       for(Node *m:matches){
 #if 0
         if(m->isOfType<double>()){ //TODO: very special HACK: double add up instead of being assigned
-          *m->getValue<double>() += *literal->getValue<double>();
+          m->get<double>() += literal->get<double>();
           hasEffects=true;
           if(&changes) m->newClone(changes);
         }else
@@ -489,7 +489,7 @@ bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, i
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
   CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
-//  Graph& state = KB.getNode("STATE")->graph();
+//  Graph& state = KB.get<Graph>("STATE");
   return forwardChaining_FOL(state, rules, query, changes, verbose, decisionObservation);
 }
 

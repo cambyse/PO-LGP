@@ -94,7 +94,7 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
     }
   }
   
-  MT::Array<infer::Factor> marg(N);
+  mlr::Array<infer::Factor> marg(N);
   uint t;
   for(t=0;t<10;t++){ //LOOP
     if(order==0){
@@ -106,7 +106,7 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
         post(i) = f.P(0);
       }
     //marg.write(cout,"\n  ");
-    //MT::wait();
+    //mlr::wait();
     
     //all messages
       for(i=0;i<N;i++) for(j=0;j<N;j++) if(i!=j && F(i,j)){
@@ -123,7 +123,7 @@ void rndNetBPwithExcludeEchoMessages(uint N,uint n,double connectivity,uint orde
         post(i) = f.P(0);
       }
       //marg.write(cout,"\n  ");
-      //MT::wait();
+      //mlr::wait();
     
       //all messages
       for(i=0;i<N;i++) for(j=0;j<N;j++) if(i!=j && F(i,j)){

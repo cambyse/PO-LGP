@@ -262,7 +262,7 @@ void test_Loading_submeshes()
     ors::Mesh mesh;
     mesh.readObjFile(FILE("chair_back_decomposed.obj"));
     OpenGL gl;
-    gl.add(glDrawMesh, &mesh);
+    gl.add(mesh);
     gl.watch();
 }
 
