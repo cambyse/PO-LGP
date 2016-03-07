@@ -102,7 +102,7 @@ void rndModify(Graph& G){
 void TEST(Random){
   Graph A,B;
 
-  for(uint k=0;k<1000;k++){
+  for(uint k=0;k<10;k++){
     rndModify(rndSubgraph(A));
     Graph& C = rndSubgraph(A).appendSubgraph({}, {})->value;
 
@@ -160,10 +160,11 @@ int MAIN(int argc, char** argv){
   if(argc>=2) filename=argv[1];
 
   testRandom();
-  testRead();
+//  testRead();
 //  testInit();
 //  testDot();
 
+  testManual();
 //  if(!filename) testManual();
 
   return 0;
