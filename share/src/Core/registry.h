@@ -43,28 +43,33 @@ void initRegistry(int argc, char *argv[]);
 //
 
 struct Type {
-  mlr::Array<Type*> parents; //TODO -> remove; replace functionality from registry
   virtual ~Type(){}
   virtual const std::type_info& typeId() const {NIY}
   virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
   virtual void* newInstance() const {NIY}
-  virtual Type* clone() const {NIY}
-  void write(std::ostream& os) const {
-    os <<"Type '" <<typeId().name() <<"' ";
-    if(parents.N) {
-      cout <<"parents=[";
-      for(Type *p: parents) cout <<' ' <<p->typeId().name();
-      cout <<" ]";
-    }
-  }
+//  virtual Type* clone() const {NIY}
+  void write(std::ostream& os) const {  os <<"Type '" <<typeId().name() <<"' ";  }
   void read(std::istream& is) const {NIY}
 };
-stdPipes(Type);
+stdPipes(Type)
+
+template<class T, class Base>
+struct Type_typed : Type {
+  virtual const std::type_info& typeId() const { return typeid(T); }
+  virtual void* newInstance() const { return new T(); }
+//  virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
+};
+
+template<class T, class Base>
+struct Type_typed_readable:Type_typed<T,Base> {
+  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = new Node_typed<T>(container, T()); is >>n->value; return n; }
+//  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
+};
 
 inline bool operator!=(Type& t1, Type& t2){ return t1.typeId() != t2.typeId(); }
 inline bool operator==(Type& t1, Type& t2){ return t1.typeId() == t2.typeId(); }
 
-typedef mlr::Array<Type*> TypeInfoL;
+typedef mlr::Array<std::shared_ptr<Type> > TypeInfoL;
 
 
 //===========================================================================
@@ -74,19 +79,19 @@ typedef mlr::Array<Type*> TypeInfoL;
 
 //-- query existing types
 inline Node *reg_findType(const char* key) {
-  NodeL types = registry().getNodesOfType<Type*>();
+  NodeL types = registry().getNodesOfType<std::shared_ptr<Type> >();
   for(Node *ti: types) {
-    if(mlr::String(ti->get<Type*>()->typeId().name())==key) return ti;
-    for(uint i=0; i<ti->keys.N; i++) if(ti->keys(i)==key) return ti;
+    if(mlr::String(ti->get<std::shared_ptr<Type> >()->typeId().name())==key) return ti;
+    if(ti->matches(key)) return ti;
   }
   return NULL;
 }
 
 template<class T>
 Node *reg_findType() {
-  NodeL types = registry().getNodesOfType<Type*>();
+  NodeL types = registry().getNodesOfType<std::shared_ptr<Type> >();
   for(Node *ti: types) {
-    if(ti->get<Type*>()->typeId()==typeid(T)) return ti;
+    if(ti->get<std::shared_ptr<Type> >()->typeId()==typeid(T)) return ti;
   }
   return NULL;
 }
@@ -99,7 +104,7 @@ Node *reg_findType() {
 
 inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& is) {
   Node *ti = reg_findType(key);
-  if(ti) return ti->get<Type*>()->readIntoNewNode(container, is);
+  if(ti) return ti->get<std::shared_ptr<Type> >()->readIntoNewNode(container, is);
   return NULL;
 }
 
@@ -109,30 +114,6 @@ inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& i
 // typed version
 //
 
-template<class T, class Base>
-struct Type_typed:Type {
-  Type_typed() {}
-  Type_typed(const char *userBase, TypeInfoL *container) {
-    if(userBase) {
-      Node *it=reg_findType<Base>();
-      if(it) parents.append(it->get<Type*>());
-    }
-    if(container) {
-      container->append(this);
-    }
-  }
-  virtual const std::type_info& typeId() const { return typeid(T); }
-  virtual void* newInstance() const { return new T(); }
-  virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
-};
-
-template<class T, class Base>
-struct Type_typed_readable:Type_typed<T,Base> {
-  Type_typed_readable() {}
-  Type_typed_readable(const char *userBase, TypeInfoL *container):Type_typed<T,Base>(userBase, container){}
-  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = new Node_typed<T>(container, T()); is >>n->value; return n; }
-  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
-};
 
 
 //===========================================================================
@@ -144,19 +125,22 @@ struct Type_typed_readable:Type_typed<T,Base> {
 
 #define REGISTER_TYPE(T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), new Type_typed_readable<T KO void>(NULL,NULL)); \
+  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
 #define REGISTER_TYPE_Key(Key, T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##Key) \
-  new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), new Type_typed_readable<T KO void>(NULL,NULL)); \
+  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##Key)
+
+/*
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
   new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), new Type_typed_readable<T KO Base>(#Base,NULL)); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
+*/
 
 #endif
 

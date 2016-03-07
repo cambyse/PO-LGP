@@ -163,7 +163,7 @@ void ors::Body::parseAts() {
   // copy body attributes to shapes 
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
   //TODO check if this works! coupled to the listDelete below
-  Node *it=ats["type"]; if(it){ delete it; /*ats.removeValue(it);*/ ats.index(); }
+  Node *it=ats["type"]; if(it){ delete it; }
   //  listDelete(ats);
 }
 
@@ -606,7 +606,7 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
   listCopy(joints, G.joints);
   for(Joint *j: joints) if(j->mimic){
     mlr::String jointName;
-    bool good = j->ats.getValue<mlr::String>(jointName, "mimic");
+    bool good = j->ats.find<mlr::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
     j->mimic = listFindByName(G.joints, jointName);
     if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
@@ -1802,49 +1802,49 @@ void ors::KinematicWorld::init(const Graph& G) {
   clear();
 
   NodeL bs = G.getNodes("body");
-  for(Node *  it:  bs) {
-    CHECK_EQ(it->keys(0),"body","");
-    CHECK(it->isGraph(), "bodies must have value Graph");
+  for(Node *n:  bs) {
+    CHECK_EQ(n->keys(0),"body","");
+    CHECK(n->isGraph(), "bodies must have value Graph");
     
     Body *b=new Body(*this);
-    if(it->keys.N>1) b->name=it->keys(1);
-    b->ats.copy(it->graph());
+    if(n->keys.N>1) b->name=n->keys(1);
+    b->ats.copy(n->graph(), false, true);
     b->parseAts();
   }
 
   NodeL ss = G.getNodes("shape");
-  for(Node *it: ss) {
-    CHECK_EQ(it->keys(0),"shape","");
-    CHECK(it->parents.N<=1,"shapes must have no or one parent");
-    CHECK(it->isGraph(),"shape must have value Graph");
+  for(Node *n: ss) {
+    CHECK_EQ(n->keys(0),"shape","");
+    CHECK(n->parents.N<=1,"shapes must have no or one parent");
+    CHECK(n->isGraph(),"shape must have value Graph");
     
     Shape *s;
-    if(it->parents.N==1){
-      Body *b = listFindByName(bodies, it->parents(0)->keys(1));
+    if(n->parents.N==1){
+      Body *b = listFindByName(bodies, n->parents(0)->keys(1));
       CHECK(b,"");
       s=new Shape(*this, *b);
     }else{
       s=new Shape(*this, NoBody);
     }
-    if(it->keys.N>1) s->name=it->keys(1);
-    s->ats.copy(it->graph());
+    if(n->keys.N>1) s->name=n->keys(1);
+    s->ats.copy(n->graph(), false, true);
     s->parseAts();
   }
   
   uint nCoupledJoints=0;
   NodeL js = G.getNodes("joint");
-  for(Node *it: js) {
-    CHECK_EQ(it->keys(0),"joint","");
-    CHECK_EQ(it->parents.N,2,"joints must have two parents");
-    CHECK(it->isGraph(),"joints must have value Graph");
+  for(Node *n: js) {
+    CHECK_EQ(n->keys(0),"joint","");
+    CHECK_EQ(n->parents.N,2,"joints must have two parents");
+    CHECK(n->isGraph(),"joints must have value Graph");
     
-    Body *from=listFindByName(bodies, it->parents(0)->keys(1));
-    Body *to=listFindByName(bodies, it->parents(1)->keys(1));
-    CHECK(from,"JOINT: from '" <<it->parents(0)->keys(1) <<"' does not exist ["<<*it <<"]");
-    CHECK(to,"JOINT: to '" <<it->parents(1)->keys(1) <<"' does not exist ["<<*it <<"]");
+    Body *from=listFindByName(bodies, n->parents(0)->keys(1));
+    Body *to=listFindByName(bodies, n->parents(1)->keys(1));
+    CHECK(from,"JOINT: from '" <<n->parents(0)->keys(1) <<"' does not exist ["<<*n <<"]");
+    CHECK(to,"JOINT: to '" <<n->parents(1)->keys(1) <<"' does not exist ["<<*n <<"]");
     Joint *j=new Joint(*this, from, to);
-    if(it->keys.N>1) j->name=it->keys(1);
-    j->ats.copy(it->graph());
+    if(n->keys.N>1) j->name=n->keys(1);
+    j->ats.copy(n->graph(), false, true);
     j->parseAts();
 
     //if the joint is coupled to another:

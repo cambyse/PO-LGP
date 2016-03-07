@@ -225,8 +225,8 @@ void MocapID::sMocapID::parseObjectSensor(const String &sensor, Json::Value prop
 // }
 
 // int MocapID::sMocapID::hsi(const char *sensor) {
-//   uint *hid = kvg_hid.getValue<uint>(sensor);
-//   uint *sid = kvg_sid.getValue<uint>(sensor);
+//   uint *hid = kvg_hid.find<uint>(sensor);
+//   uint *sid = kvg_sid.find<uint>(sensor);
 
 //   return HSI(*hid, *sid);
 // }
@@ -446,7 +446,7 @@ void MocapRec::save() {
   for(const String &sensor: id().object_parts()) {
     // cout << "SENSOR NAME: " << kw.getShapeByName(STRING("sh"<<sensor))->name << endl;
     // cout << "SENSOR ATS: " << kw.getShapeByName(STRING("sh"<<sensor))->ats << endl;
-    // cout << "SENSOR MESH: " << kw.getShapeByName(STRING("sh"<<sensor))->ats.getValue<mlr::FileToken>("mesh")->name << endl;
+    // cout << "SENSOR MESH: " << kw.getShapeByName(STRING("sh"<<sensor))->ats.find<mlr::FileToken>("mesh")->name << endl;
 
     String mesh = kw.getShapeByName(STRING("sh"<<sensor))->ats.get<mlr::FileToken>("mesh").name;
 
@@ -622,7 +622,7 @@ uint MocapRec::numFrames(Thickness thickness) const {
       HALT("No Thickness of this type");
   }
 }
-// uint MocapRec::numDim(const char *bam) { return kvg.getValue<arr>(STRINGS("bam", bam))->d2; }
+// uint MocapRec::numDim(const char *bam) { return kvg.get<arr>(STRINGS("bam", bam)).d2; }
 uint MocapRec::numDim(const char *bam) { return kvg.get<arr>(StringA({"bam", bam})).d2; }
 
 void MocapRec::appendBam(const char *bam, const arr &data) {
@@ -651,14 +651,14 @@ arr MocapRec::query(const char *bam) {
   // if(0 == strcmp(bam, "pose")) {
   //   arr data, dataPos, dataQuat;
 
-  //   dataPos.referTo(*kvg.getValue<arr>(STRINGS("bam", "pos")));
-  //   dataQuat.referTo(*kvg.getValue<arr>(STRINGS("bam", "quat")));
+  //   dataPos.referTo(kvg.get<arr>(STRINGS("bam", "pos")));
+  //   dataQuat.referTo(kvg.get<arr>(STRINGS("bam", "quat")));
   //   data.append(dataPos);
   //   data.append(dataQuat);
   //   data.reshape(nsensors, nframes, 7);
   //   return data;
   // }
-  // return *kvg.getValue<arr>(STRINGS("bam", bam));
+  // return kvg.get<arr>(STRINGS("bam", bam));
   return kvg.get<arr>(StringA({"bam", bam}));
 }
 
@@ -672,8 +672,8 @@ arr MocapRec::query(const char *type, const char *sensor) {
 
   // if(0 == strcmp(type, "pose")) {
   //   arr xPos, xQuat;
-  //   xPos.referTo(*kvg.getValue<arr>("pos"));
-  //   xQuat.referTo(*kvg.getValue<arr>("quat"));
+  //   xPos.referTo(kvg.get<arr>("pos"));
+  //   xQuat.referTo(kvg.get<arr>("quat"));
 
   //   uint nframes = numFrames();
 
@@ -700,8 +700,8 @@ arr MocapRec::query(const char *type, const char *sensor, uint f) {
 
   // if(0 == strcmp(type, "pose")) {
   //   arr x;
-  //   x.append(kvg.getValue<arr>("pos")->subDim(is, f));
-  //   x.append(kvg.getValue<arr>("quat")->subDim(is, f));
+  //   x.append(kvg.get<arr>("pos").subDim(is, f));
+  //   x.append(kvg.get<arr>("quat").subDim(is, f));
   //   return x;
   // }
   arr &x = i->get<arr>();
@@ -742,13 +742,13 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
   
 /*   hid1 = skvg1->get<double>("hid"); */
 /*   sid1 = skvg1->get<double>("sid"); */
-/*   i1 = s->kvg.getValue<arr>("hsitoi")->elem(HSI(hid1, sid1)); */
+/*   i1 = s->kvg.get<arr>("hsitoi").elem(HSI(hid1, sid1)); */
   
 /*   hid2 = skvg2->get<double>("hid"); */
 /*   sid2 = skvg2->get<double>("sid"); */
-/*   i2 = s->kvg.getValue<arr>("hsitoi")->elem(HSI(hid2, sid2)); */
+/*   i2 = s->kvg.get<arr>("hsitoi").elem(HSI(hid2, sid2)); */
 
-/*   return s->kvg.getValue<arr>(type)->subDim(i1, i2); */
+/*   return s->kvg.get<arr>(type).subDim(i1, i2); */
 /* } */
 
 /* arr MocapData::query(const char *type, const char *sensor1, const char *sensor2, uint f) { */
@@ -763,13 +763,13 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
   
 /*   hid1 = skvg1->get<double>("hid"); */
 /*   sid1 = skvg1->get<double>("sid"); */
-/*   i1 = s->kvg.getValue<arr>("hsitoi")->elem(HSI(hid1, sid1)); */
+/*   i1 = s->kvg.get<arr>("hsitoi").elem(HSI(hid1, sid1)); */
   
 /*   hid2 = skvg2->get<double>("hid"); */
 /*   sid2 = skvg2->get<double>("sid"); */
-/*   i2 = s->kvg.getValue<arr>("hsitoi")->elem(HSI(hid2, sid2)); */
+/*   i2 = s->kvg.get<arr>("hsitoi").elem(HSI(hid2, sid2)); */
 
-/*   return s->kvg.getValue<arr>("bam", type)->subDim(i1, i2, f); */
+/*   return s->kvg.get<arr>("bam", type).subDim(i1, i2, f); */
 /* } */
 
 void MocapRec::computeDPos(const char *frame_sensor, const char *sensor) {
@@ -1386,7 +1386,7 @@ void MocapSeq::init(const char *sens1, const char *sens2) {
 }
 
 void MocapSeq::setAnn(const String &target) {
-  // arr &ann = *rec.label().getValue<arr>(STRINGS(target, sensor1, sensor2));
+  // arr &ann = rec.label().get<arr>(STRINGS(target, sensor1, sensor2));
   arr &ann = rec.label().get<arr>({target, sensor1, sensor2});
   if(!ann.N)
     ann_thin.resize(0);

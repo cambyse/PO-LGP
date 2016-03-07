@@ -67,13 +67,15 @@ ors::Transformation ros_getTransform(const std::string& from, const std::string&
 ors::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener);
 
 
+struct SubscriberType { virtual ~SubscriberType() {} }; ///< if types derive from RootType, more tricks are possible
+
 //===========================================================================
 //
 // subscribing a message directly into an Access
 //
 
 template<class msg_type>
-struct Subscriber {
+struct Subscriber : SubscriberType {
   Access_typed<msg_type>& access;
   ros::NodeHandle* nh;
   ros::Subscriber sub;
@@ -96,7 +98,7 @@ struct Subscriber {
 //
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
-struct SubscriberConv {
+struct SubscriberConv : SubscriberType {
   Access_typed<var_type>& access;
   Access_typed<ors::Transformation> *frame;
   ros::NodeHandle *nh;
@@ -104,6 +106,7 @@ struct SubscriberConv {
   tf::TransformListener listener;
   SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
     : access(_access), frame(_frame) {
+    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
     nh = new ros::NodeHandle;
     cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
     sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
@@ -167,12 +170,13 @@ struct SubscriberConv {
 //
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
-struct SubscriberConvNoHeader {
+struct SubscriberConvNoHeader : SubscriberType{
   Access_typed<var_type>& access;
   ros::NodeHandle nh;
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
     : access(_access) {
+    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
     sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
   }
   ~SubscriberConvNoHeader(){}
@@ -195,11 +199,10 @@ struct PublisherConv : Module{
   const char* topic_name;
 
   PublisherConv(const char* _topic_name, Access_typed<var_type>& _access)
-      : Module(STRING("Publisher_"<<_access.name <<"->" <<_topic_name)),
+      : Module(STRING("Publisher_"<<_access.name <<"->" <<_topic_name), -1),
         access(this, _access, true),
-        topic_name(_topic_name){
-//    listenTo(*access.var);
-  }
+        topic_name(_topic_name){}
+  ~PublisherConv(){}
   void open(){
     nh = new ros::NodeHandle;
     pub = nh->advertise<msg_type>(topic_name, 1);

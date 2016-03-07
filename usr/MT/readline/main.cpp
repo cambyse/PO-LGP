@@ -17,7 +17,7 @@ void TEST(Read){
   G.writeParseInfo(cout);
   cout <<"read graph=\n--------------------\n" <<G <<"\n--------------------" <<endl;
 
-//  Node *m = G.getNode("modify");
+//  Node *m = G["modify"];
 //  G.merge(m);
 //  cout <<"'k modify' merged with 'k':" <<*G["k"] <<endl;
 
@@ -82,7 +82,7 @@ void rndModify(Graph& G){
       new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      newSubGraph(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
+      G.appendSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();

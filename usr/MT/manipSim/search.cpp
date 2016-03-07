@@ -16,7 +16,7 @@ void runMonteCarlo(Graph& G){
   Node *papSymbol = G["pap"];
   Node *depthSymbol = G["depth"];
   Graph& state = G["STATE"]->graph();
-  //    Graph& terminal = G.getNode("terminal")->graph();
+  //    Graph& terminal = G.get<Graph>("terminal");
 
   for(uint h=0;h<100;h++){
     if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;

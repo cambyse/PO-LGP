@@ -489,7 +489,7 @@ bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, i
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
   CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
-//  Graph& state = KB.getNode("STATE")->graph();
+//  Graph& state = KB.get<Graph>("STATE");
   return forwardChaining_FOL(state, rules, query, changes, verbose, decisionObservation);
 }
 

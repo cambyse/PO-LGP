@@ -235,8 +235,8 @@ void JsonRec::load(const char *recdir) {
       //   agent_targets.append(target, new StringA());
       // if(!object_targets.getNode(target))
       //   object_targets.append(target, new StringA());
-      // StringA &a_targets = *agent_targets.getValue<StringA>(target);
-      // StringA &o_targets = *object_targets.getValue<StringA>(target);
+      // StringA &a_targets = agent_targets.get<StringA>(target);
+      // StringA &o_targets = object_targets.get<StringA>(target);
 
       // if(!a_targets.contains(pair->keys(1)))
       //   a_targets.append(pair->keys(1));
@@ -264,8 +264,8 @@ void JsonRec::load(const char *recdir) {
     //     agent_targets.append(pair->keys(0), new StringA());
     //   if(!object_targets.getNode(pair->keys(0)))
     //     object_targets.append(pair->keys(0), new StringA());
-    //   StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
-    //   StringA &o_targets = *object_targets.getValue<StringA>(pair->keys(0));
+    //   StringA &a_targets = agent_targets.get<StringA>(pair->keys(0));
+    //   StringA &o_targets = object_targets.get<StringA>(pair->keys(0));
     //   if(!a_targets.contains(pair->keys(1)))
     //     a_targets.append(pair->keys(1));
     //   if(!o_targets.contains(pair->keys(2)))

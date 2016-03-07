@@ -129,7 +129,7 @@ struct Access_typed:Access{
   /// searches for globally registrated variable 'name', checks type equivalence, and becomes an access for '_module'
   Access_typed(Module* _thread, const char* name, bool moduleListens=false)
     : Access(name, new Type_typed<T, void>(), _thread, NULL), v(NULL){
-    RevisionedAccessGatedClass** _var = registry().getValue<RevisionedAccessGatedClass*>({"Variable", name});
+    RevisionedAccessGatedClass** _var = registry().find<RevisionedAccessGatedClass*>({"Variable", name});
     if(!_var){
       v = new Variable<T>(name);
       var = dynamic_cast<RevisionedAccessGatedClass*>(v);
@@ -190,7 +190,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #define REGISTER_MODULE(name) \
   RUN_ON_INIT_BEGIN(Decl_Module##_##name) \
-  new Node_typed<Type*>(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), new Type_typed<name, void>(NULL,NULL)); \
+  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), std::make_shared<Type_typed<name, void> >()); \
   RUN_ON_INIT_END(Decl_Module##_##name)
 
 
