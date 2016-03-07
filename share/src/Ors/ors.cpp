@@ -2679,7 +2679,7 @@ void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::Kinemat
   for_list(ors::Joint, j, to.joints) {
     if(j->qDim()>0) {
       arr *info;
-      info = j->ats.getValue<arr>("gains");
+      info = j->ats.find<arr>("gains");
       if(info) {
         KpTo(j->qIndex,j->qIndex)=info->elem(0);
       }
@@ -2711,7 +2711,7 @@ void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::Kinemat
   for_list(ors::Joint, j, to.joints) {
     if(j->qDim()>0) {
       arr *info;
-      info = j->ats.getValue<arr>("gains");
+      info = j->ats.find<arr>("gains");
       if(info) {
         KdTo(j->qIndex,j->qIndex)=info->elem(1);
       }
