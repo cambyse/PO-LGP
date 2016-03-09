@@ -63,30 +63,33 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::K
   world_pr2->gl().resize(800,800);
 }
 
-void TrajectoryInterface::executeTrajectoryPlan(arr &X_plan, double T, bool recordData, bool displayTraj) {
+void TrajectoryInterface::executeTrajectoryPlan(arr &X_plan, double T, bool recordData, bool displayTraj, bool reverseMotion) {
+  if (recordData) {logXplan = X_plan;}
+
   /// convert trajectory into pr2 kinematics world
   arr X_pr2;
   transferQbetweenTwoWorlds(X_pr2,X_plan,*world_pr2,*world_plan);
-  executeTrajectory(X_pr2, T, recordData,displayTraj);
+  executeTrajectory(X_pr2, T, recordData,displayTraj,reverseMotion);
 }
 
-void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordData, bool displayTraj) {
+void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordData, bool displayTraj, bool reverseMotion) {
+  arr Xref = X_pr2;
+  if (reverseMotion) {Xref.reverseRows();}
   if (displayTraj) {
     world_pr2->watch(true,"Press Enter to visualize motion");
-    displayTrajectory(X_pr2,-1,*world_pr2,"X_pr2");
+    displayTrajectory(Xref,-1,*world_pr2,"Xref");
     world_pr2->watch(true,"Press Enter to execute motion");
   }
   /// compute spline for trajectory execution
-  double dt = T/double(X_pr2.d0);
-  cout <<"dt: " << dt << endl;
-  cout <<"T: " << T << endl;
+  double dt = T/double(Xref.d0);
+  cout <<"Execute trajectory with dt= " << dt << " and T= "<<T << endl;
   arr Xdot;
-  getVel(Xdot,X_pr2,dt);
-  mlr::Spline XS(X_pr2.d0,X_pr2);
+  getVel(Xdot,Xref,dt);
+  mlr::Spline XS(Xref.d0,Xref);
   mlr::Spline XdotS(Xdot.d0,Xdot);
 
   /// clear logging variables
-  if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logM.resize(22); logXref = X_pr2;}
+  if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logM.resize(22); logXref = Xref;}
 
   ors::Joint *trans = world_pr2->getJointByName("worldTranslationRotation");
   ors::Joint *torso = world_pr2->getJointByName("torso_lift_joint");
@@ -124,9 +127,12 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
     }
 
     /// set controller parameter
-    if (useRos) { S.ctrl_ref.set() = refs;}
-
-    t = t + mlr::timerRead(true);
+    if (useRos) {
+      S.ctrl_ref.set() = refs;
+      t = t + mlr::timerRead(true);
+    } else {
+      t = t + 0.1;
+    }
 
     world_pr2->setJointState(refs.q);
     //    world_pr2->gl().update();
@@ -346,22 +352,30 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 }
 
 
-void TrajectoryInterface::logging(mlr::String folder, uint id) {
+void TrajectoryInterface::logging(mlr::String folder, mlr::String name, int id) {
+  mlr::String filename;
+  if (id==-1) {
+    filename = mlr::String(STRING(folder<<"/"<<name<<"_"));
+  }else {
+    filename = mlr::String(STRING(folder<<"/"<<id<<"_"<<name<<"_"));
+    write(LIST<arr>(ARR(id)),STRING(folder<<"id.dat"));
+  }
 
-  write(LIST<arr>(logT),STRING(folder<<"T"<<id<<".dat"));
-  write(LIST<arr>(logXdes),STRING(folder<<"Xdes"<<id<<".dat"));
-  write(LIST<arr>(logXref),STRING(folder<<"Xref"<<id<<".dat"));
+  write(LIST<arr>(logT),STRING(filename<<"T.dat"));
+  write(LIST<arr>(logXdes),STRING(filename<<"Xdes.dat"));
+  write(LIST<arr>(logXref),STRING(filename<<"Xref.dat"));
 
-  if (logX.N>0) write(LIST<arr>(logX),STRING(folder<<"X"<<id<<".dat"));
-  if (logFL.N>0) write(LIST<arr>(logFL),STRING(folder<<"FL"<<id<<".dat"));
-  if (logFR.N>0) write(LIST<arr>(logFR),STRING(folder<<"FR"<<id<<".dat"));
+  if (logX.N>0) write(LIST<arr>(logX),STRING(filename<<"X.dat"));
+  if (logXplan.N>0) write(LIST<arr>(logXplan),STRING(filename<<"Xplan.dat"));
+  if (logFL.N>0) write(LIST<arr>(logFL),STRING(filename<<"FL.dat"));
+  if (logFR.N>0) write(LIST<arr>(logFR),STRING(filename<<"FR.dat"));
   if (useMarker) {
     for (uint i=0;i<logM.N;i++){
       if (logM(i).N>0) {
-        write(LIST<arr>(logM(i)),STRING(folder<<"M"<<i<<id<<".dat"));
+        write(LIST<arr>(logM(i)),STRING(filename<<"M"<<i<<".dat"));
       }
     }
   }
 
-  if (logU.N>0) write(LIST<arr>(logU),STRING(folder<<"U"<<id<<".dat"));
+  if (logU.N>0) write(LIST<arr>(logU),STRING(filename<<"U.dat"));
 }

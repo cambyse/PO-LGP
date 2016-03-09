@@ -104,7 +104,11 @@ struct TaskMap_qItself:TaskMap {
 
 struct TaskMap_qLimits:TaskMap {
   arr limits;
-  TaskMap_qLimits(const arr& _limits=NoArr){ if(&_limits) limits=_limits; } ///< if no limits are provided, they are taken from G's joints' attributes on the first call of phi
+  double margin;
+  TaskMap_qLimits(const arr& _limits=NoArr, double _margin=0.1){
+    margin=_margin;
+    if(&_limits) limits=_limits;
+  } ///< if no limits are provided, they are taken from G's joints' attributes on the first call of phi
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
@@ -185,7 +189,10 @@ struct ProxyConstraint:TaskMap {
 struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint():margin(.05){ type=ineqTT; }
+  LimitsConstraint(uint _margin=0.05){
+    type=ineqTT;
+    margin = _margin;
+  }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
 };
@@ -307,6 +314,22 @@ struct qItselfConstraint:TaskMap {
   virtual uint dim_phi(const ors::KinematicWorld& G){
     if(M.nd==2) return M.d0;
     return G.getJointStateDimension();
+  }
+};
+
+struct qItselfLimit:TaskMap {
+  uint qIdx;
+  double limit_low, limit_high;
+  qItselfLimit(uint _qIdx,double _limit_low, double _limit_high){
+    qIdx=_qIdx;
+    limit_low = _limit_low;
+    limit_high=_limit_high;
+    type=ineqTT;
+  }
+
+  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
+  virtual uint dim_phi(const ors::KinematicWorld& G){
+    return 2;
   }
 };
 

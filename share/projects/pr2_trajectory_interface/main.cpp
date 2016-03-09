@@ -18,12 +18,13 @@ void TEST(TrajectoryInterface){
 
   TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_pr2);
 
-  ti->syncMarker();
-  ti->moveRightGripper(0.08);
+  ti->syncState();
+
+//  ti->syncMarker();
+//  ti->moveRightGripper(0.08);
 //  world_pr2.watch(true);
-  mlr::wait(4.);
-  ti->moveRightGripper(0.0);
-  world_pr2.watch(true);
+//  ti->moveRightGripper(0.0);
+
   arr q;
   arr lim;
   double alpha = 0.8;
@@ -49,7 +50,7 @@ void TEST(TrajectoryInterface){
     }
 
     ti->gotoPositionPlan(q,5.,true,true);
-    ti->logging("data/",2);
+//    ti->logging("data/",2);
   }
 
   ti->~TrajectoryInterface();

@@ -245,3 +245,18 @@ void qItselfConstraint::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t)
     if(&J) J.setId(q.N);
   }
 }
+
+void qItselfLimit::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr q;
+  G.getJointState(q);
+  y.resize(2);
+  y(0) = q(qIdx) - limit_high;
+  y(1) = limit_low - q(qIdx);
+
+  if(&J) {
+    J=zeros(2,G.getJointStateDimension());
+    J(0,qIdx)=1.;
+    J(1,qIdx)=-1.;
+  }
+}
+

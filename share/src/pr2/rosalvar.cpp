@@ -40,7 +40,7 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
       ors::Shape *shape = new ors::Shape(world, *body);
       shape->name = marker_name;
       shape->type = ors::markerST;
-      shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
+      shape->size[0] = .01; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
     }
     setBody(*body, marker);
 
