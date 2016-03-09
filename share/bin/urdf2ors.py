@@ -25,30 +25,38 @@ for link in links:
             elem.attrib['iyz'],
             elem.attrib['izz']),
 
-    elem = link.find("collision/origin")
+    elem = link.find("visual/geometry/mesh")
     if elem is not None:
-        print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'],
-                                         elem.attrib['rpy']),
+        #meshfile = elem.attrib['filename']
+        #meshfile = meshfile.replace("package://pr2_description/meshes/", "")
+        print ' type=3 mesh=\'%s\'' % elem.attrib['filename'],
 
-    elem = link.find("collision/geometry/box")
-    if elem is not None:
-        print ' type=0 size=[%s 0]' % elem.attrib['size'],
+        elem = link.find("visual/origin")
+        if elem is not None:
+            print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'], elem.attrib['rpy']),
 
-    elem = link.find("collision/geometry/sphere")
-    if elem is not None:
-        print ' type=1 size=[0 0 0 %s]' % elem.attrib['radius'],
+        elem = link.find("visual/material/color")
+        if elem is not None:
+            print ' color=[%s]' % elem.attrib['rgba']
 
-    elem = link.find("collision/geometry/cylinder")
-    if elem is not None:
-        print ' type=2 size=[0 0 %s %s]' % (elem.attrib['length'],
-                                             elem.attrib['radius']),
+    # else:
 
-    elem = link.find("collision/geometry/mesh")
-    if elem is not None:
-        meshfile = elem.attrib['filename']
-        meshfile = meshfile.replace("package://pr2_description/meshes/",
-                                    "")
-        print ' type=3 mesh=\'%s\'' % meshfile,
+    #     elem = link.find("collision/origin")
+    #     if elem is not None:
+    #         print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'], elem.attrib['rpy']),
+
+    #     elem = link.find("collision/geometry/box")
+    #     if elem is not None:
+    #         print ' type=0 size=[%s 0]' % elem.attrib['size'],
+
+    #     elem = link.find("collision/geometry/sphere")
+    #     if elem is not None:
+    #         print ' type=1 size=[0 0 0 %s]' % elem.attrib['radius'],
+
+    #     elem = link.find("collision/geometry/cylinder")
+    #     if elem is not None:
+    #         print ' type=2 size=[0 0 %s %s]' % (elem.attrib['length'], elem.attrib['radius']),
+
 
     print '}\n',
 
@@ -94,7 +102,7 @@ for joint in joints:
             if lo is not None:
                 print ' limits=[%s %s]' % (lo, up),
             if vel is not None:
-                print ' ctrl_limits=[%s %s]' % (vel, eff),
+                print ' ctrl_limits=[%s %s 1]' % (vel, eff), #the 3rd value is an acceleration limit
 
         print '}\n',
 

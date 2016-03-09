@@ -243,7 +243,7 @@ void ors::Shape::parseAts() {
   mlr::FileToken fil;
   ats.get(rel, "rel");
   if(ats.get(x, "size"))          { CHECK_EQ(x.N,4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
-  if(ats.get(x, "color"))         { CHECK_EQ(x.N,3,"color=[] needs 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
+  if(ats.get(x, "color"))         { CHECK(x.N>=3,"color=[] needs at least 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.get(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats["contact"])           { cont=true; }
   if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p); }

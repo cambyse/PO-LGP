@@ -159,7 +159,7 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-  testRandom();
+//  testRandom();
 //  testRead();
 //  testInit();
 //  testDot();
