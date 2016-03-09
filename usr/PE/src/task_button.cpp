@@ -2,6 +2,7 @@
 #include <Motion/pr2_heuristics.h>
 #include "traj_factory.h"
 #include "plotUtil.h"
+#include <Motion/phase_optimization.h>
 
 void ButtonTask::addConstraints(MotionProblem *MP, const arr &X)
 {
@@ -29,12 +30,12 @@ void ButtonTask::addModelConstraints(MotionProblem *MP,arr &target) {
 }
 
 void ButtonTask::updateVisualization(ors::KinematicWorld &world,arr &X, arr &Y) {
-  drawLine(world,X,Pdemo1f,"endeffL",0,0,conStart(0));
-  drawLine(world,X,Pdemo1c,"endeffL",2,conStart(0),conEnd(0));
-  drawLine(world,X,Pdemo2f,"endeffL",0,conEnd(0),X.d0);
+  drawLine(world,X,Pdemo1f,"endeffC1",0,0,conStart(0));
+  drawLine(world,X,Pdemo1c,"endeffC1",2,conStart(0),conEnd(0));
+  drawLine(world,X,Pdemo2f,"endeffC1",0,conEnd(0),X.d0);
 
   if (&Y) {
-    drawLine(world,Y,PX1f,"endeffL",1,0,Y.d0);
+    drawLine(world,Y,PX1f,"endeffC1",1,0,Y.d0);
   }
 }
 
@@ -42,7 +43,7 @@ void ButtonTask::computeConstraintTime(const arr &F,const arr &X) {
   constraintTime = zeros(X.d0); constraintTime.flatten();
   for (uint t=0;t<X.d0;t++){
     if (fabs(F(t,2))>7.)
-    constraintTime.subRange(t-3,t) = 1.;
+      constraintTime.subRange(t-3,t) = 1.;
   }
 
   /// compute contact changepoints
@@ -61,47 +62,45 @@ void ButtonTask::computeConstraintTime(const arr &F,const arr &X) {
 }
 
 
-bool ButtonTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
+bool ButtonTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
   arr C1demo;
   TrajFactory tf;
-  tf.compFeatTraj(Xdemo,C1demo,*world,new DefaultTaskMap(posTMT,*world,"endeffL"));
+  tf.compFeatTraj(Xdemo,C1demo,*world,new DefaultTaskMap(posTMT,*world,"endeffC1"));
   arr C1trans = C1demo;
 
-  arr offsetC1 = ARR(x(0),x(1),0.);
-
-  double s;
-  for (uint t=0;t<conStart(0);t++) {
-    s = t/double(conStart(0));
-    C1trans[t] = C1trans[t] +s*offsetC1;
-  }
-  for (uint t=conStart(0);t<conEnd(0);t++) {
-    C1trans[t] = C1trans[t] + offsetC1;
-  }
-  for (uint t=conEnd(0);t<Xdemo.d0;t++) {
-    s = (t-conEnd(0))/double(Xdemo.d0);
-    C1trans[t] = C1trans[t] + (1.-s)*offsetC1;
-  }
+  arr offsetC1 = ARR(theta(0),theta(1),0.);
+  C1trans = C1trans + repmat(~offsetC1,C1trans.d0,1);
 
   MotionProblem MP(*world,false);
   MP.T = Xdemo.d0-1;
   MP.tau = mlr::getParameter<double>("duration")/MP.T;
   MP.x0 = Xdemo[0];
 
-  /// tasks
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
   ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
 
-  t =MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffL"));
-  t->setCostSpecs(0,MP.T, C1trans, 1e3);
+  arr prec = constraintTime*1e3;
+  t = MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));
+  t->target = C1trans;
+  t->prec = prec;
+
+  // final position constraint
+  t = MP.addTask("qT", new TaskMap_qItself());
+  t->setCostSpecs(MP.T,MP.T,Xdemo[Xdemo.d0-1],1e2);
 
   MotionProblemFunction MPF(MP);
-  Xn = Xdemo;
+  arr X = Xdemo;
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0;
-  optConstrained(Xn, NoArr, Convert(MPF), o);
+  optConstrained(X, NoArr, Convert(MPF), o);
+
+  PhaseOptimization P(X,2);
+  arr sOpt = P.getInitialization();
+  optConstrained(sOpt, NoArr, Convert(P),OPT(verbose=0,stopTolerance=mlr::getParameter<double>("phaseOptStopTolerance")));
+  P.getSolution(Xn,sOpt);
   return true;
 }
 
@@ -126,33 +125,46 @@ bool ButtonTask::transformTrajectoryDof(arr& Xn, const arr& x_dof, arr& Xdemo){
   arr prec = constraintTime;
   arr prec_inv = -1.*(prec-1.);
 
+  // get minimum
   arr tmp = Xdemo.col(world->getJointByName("b2_b1")->qIndex); tmp.flatten();
+
   double b2_b1Min = tmp.min();
+  double b2_b1Max = tmp.max();
+
   uint mIdx = tmp.minIndex();
 
   arr param = x_dof + b2_b1Min;
+  world->getJointByName("b2_b1")->limits = ARR(param(0)-1e-5,b2_b1Max+1e-5);
 
   /// tasks
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
-  t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
+  t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
   /// homing trajectory
-  t = MP.addTask("homing_traj", new TaskMap_qItself());
-  t->target = Xdemo;
-  t->prec = prec_inv*1e-2;
+//  t = MP.addTask("homing_traj", new TaskMap_qItself());
+//  t->target = Xdemo;
+//  t->prec = prec_inv*1e-2;
   /// add contact constraint
-  t = MP.addTask("b2_b1_con", new PointEqualityConstraint(MP.world,"endeffL",NoVector,"b1_shape"));
+  t = MP.addTask("b2_b1_con", new PointEqualityConstraint(MP.world,"endeffC1",NoVector,"cp1"));
   t->target = zeros(prec.d0,3);
   t->prec = prec*1.;
-  /// final position constraint
+  /// final dof constraint
   t = MP.addTask("b2_b1_T", new qItselfConstraint(world->getJointByName("b2_b1")->qIndex,world->getJointStateDimension()));
   t->setCostSpecs(mIdx,mIdx,param,1.);
+
+  /// final robot constraint
+  t = MP.addTask("final q", new qItselfConstraint()); //world->getJointByName("b2_b1")->qIndex,world->getJointStateDimension()));
+  t->setCostSpecs(MP.T,MP.T,Xdemo[MP.T-1],1.);
   /// joint fixation constraint
   t = MP.addTask("b2_b1_fix", new qItselfConstraint(world->getJointByName("b2_b1")->qIndex,world->getJointStateDimension()));
   t->target = ARR(0.);
   t->prec = prec_inv;
+  /// q limit constraint
+  t = MP.addTask("q_limit", new qItselfLimit(world->getJointByName("b2_b1")->qIndex, param,1e3));
+  t->setCostSpecs(0.,MP.T,ARR(0.),1e0);
+
 
   MotionProblemFunction MPF(MP);
   Xn = Xdemo;
@@ -161,14 +173,16 @@ bool ButtonTask::transformTrajectoryDof(arr& Xn, const arr& x_dof, arr& Xdemo){
   o.stopTolerance = 1e-4; o.constrainedMethod=anyTimeAula; o.verbose=0;
   o.stepInc = 2.; o.aulaMuInc = 2.; o.maxStep = 1.;
   optConstrained(Xn, NoArr, Convert(MPF), o);
+  MP.costReport(true);
 
-  world->gl().resize(800,800); updateVisualization(*world,Xn); world->gl().update();
+  updateVisualization(*world,Xn); world->gl().update();
+  displayTrajectory(Xn,-1,*world,"");
 
   return true;
 }
 
 
-bool ButtonTask::success(const arr &X, const arr &Y) {
+bool ButtonTask::success(const arrA &X, const arr &Y) {
   bool result;
   cout << "Enter result:  success [1] or failure [0]: "<<endl;
   std::cin >> result;
@@ -178,4 +192,10 @@ bool ButtonTask::success(const arr &X, const arr &Y) {
 double ButtonTask::reward(const arr &Z){
   arr tmp = Z.col(2); tmp.flatten();
   return exp(-sumOfAbs(tmp)/double(tmp.d0)*0.1);
+}
+
+double ButtonTask::cost(const arr& Z){
+  arr tmp;
+  getAcc(tmp,Z,1.);
+  return sumOfSqr(tmp);
 }

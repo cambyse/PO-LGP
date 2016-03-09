@@ -8,150 +8,16 @@
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <pr2/rosalvar.h>
+#include <pr2/trajectoryInterface.h>
+
 #include "../../src/task_manager.h"
 #include "../../src/plotUtil.h"
 #include "../../src/traj_factory.h"
+#include "src/articulation_interface.h"
 
 #include <ros/ros.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <articulation_models/models/factory.h>
-#include <articulation_msgs/TrackMsg.h>
-#include <articulation_msgs/ParamMsg.h>
-#include <articulation_msgs/ModelMsg.h>
-#include <articulation_msgs/ArticulatedObjectMsg.h>
-#include <articulation_msgs/ArticulatedObjectSrv.h>
 
-using namespace articulation_models;
-using namespace articulation_msgs;
-
-
-void detectDOFrot(arr &X, ors::Transformation &T) {
-  ModelMsg model_msg;
-  model_msg.name = "rotational";
-
-
-
-  /// define parameter prior
-  ParamMsg sigma_param;
-  sigma_param.name = "sigma_position";
-  sigma_param.value = 0.001;
-  sigma_param.type = ParamMsg::PRIOR;
-
-  //  sigma_param.name = "sigma_orientation";
-  //  sigma_param.value = 1e-1;
-  //  sigma_param.type = ParamMsg::PRIOR;
-
-  sigma_param.name = "rot_mode";
-  sigma_param.value = 0;
-  sigma_param.type = ParamMsg::PRIOR;
-
-
-  model_msg.params.push_back(sigma_param);
-  model_msg.track.header.stamp = ros::Time();
-  model_msg.track.header.frame_id = "/";
-
-  MultiModelFactory factory;
-
-  double noise = 0.;
-  /// convert trajectory into geometry_msg
-  for (uint i = 0; i < X.d0; i++) {
-    geometry_msgs::Pose pose;
-    pose.position.x = X(i,0) + randn(1)*noise; pose.position.y = X(i,1) + randn(1)*noise; pose.position.z = X(i,2) + randn(1)*noise;
-    pose.orientation.x = 0; pose.orientation.y = 0; pose.orientation.z = 0; pose.orientation.w = 1;
-    model_msg.track.pose.push_back(pose);
-  }
-
-  /// fit model
-  GenericModelPtr model_instance = factory.restoreModel(model_msg);
-  model_instance->fitModel();
-  model_instance->evaluateModel();
-
-  cout << "model class = "<< model_instance->getModelName() << endl;
-  cout << "	radius = "<<model_instance->getParam("rot_radius")<< endl;
-  cout << "	center.x = "<<model_instance->getParam("rot_center.x")<< endl;
-  cout << "	center.y = "<<model_instance->getParam("rot_center.y")<< endl;
-  cout << "	center.z = "<<model_instance->getParam("rot_center.z")<< endl;
-
-  cout << "	rot_axis.x = "<<model_instance->getParam("rot_axis.x")<< endl;
-  cout << "	rot_axis.y = "<<model_instance->getParam("rot_axis.y")<< endl;
-  cout << "	rot_axis.z = "<<model_instance->getParam("rot_axis.z")<< endl;
-  cout << "	rot_axis.w = "<<model_instance->getParam("rot_axis.w")<< endl;
-  cout << "	sigma_position = "<<model_instance->getParam("sigma_position")<< endl;
-  cout << "	sigma_orientation = "<<model_instance->getParam("sigma_orientation")<< endl;
-
-  cout << "	log LH = " << model_instance->getParam("loglikelihood")<< endl;
-
-  T.pos = ors::Vector(model_instance->getParam("rot_center.x"),model_instance->getParam("rot_center.y"),model_instance->getParam("rot_center.z"));
-  T.rot = ors::Quaternion(model_instance->getParam("rot_axis.w"),model_instance->getParam("rot_axis.x"),model_instance->getParam("rot_axis.y"),model_instance->getParam("rot_axis.z"));
-}
-
-void detectDOFtrans(arr &X, ors::Vector &prismatic_dir, arr &Q) {
-  ModelMsg model_msg;
-  model_msg.name = "prismatic";
-
-  /// define parameter prior
-  ParamMsg sigma_param;
-  sigma_param.name = "sigma_position";
-  sigma_param.value = 0.001;
-  sigma_param.type = ParamMsg::PRIOR;
-
-  model_msg.params.push_back(sigma_param);
-  model_msg.track.header.stamp = ros::Time();
-  model_msg.track.header.frame_id = "/";
-
-  MultiModelFactory factory;
-
-  double noise = 0.;
-  /// convert trajectory into geometry_msg
-  for (uint i = 0; i < X.d0; i++) {
-    geometry_msgs::Pose pose;
-    pose.position.x = X(i,0) + randn(1)*noise; pose.position.y = X(i,1) + randn(1)*noise; pose.position.z = X(i,2) + randn(1)*noise;
-    pose.orientation.x = 0; pose.orientation.y = 0; pose.orientation.z = 0; pose.orientation.w = 1;
-    model_msg.track.pose.push_back(pose);
-  }
-
-  /// fit model
-  GenericModelPtr model_instance = factory.restoreModel(model_msg);
-  model_instance->fitModel();
-  model_instance->evaluateModel();
-
-  cout << "model class = "<< model_instance->getModelName() << endl;
-  cout << "	rigid_position.x = "<<model_instance->getParam("rigid_position.x")<< endl;
-  cout << "	rigid_position.y = "<<model_instance->getParam("rigid_position.y")<< endl;
-  cout << "	rigid_position.z = "<<model_instance->getParam("rigid_position.z")<< endl;
-
-  cout << "	rigid_orientation.x = "<<model_instance->getParam("rigid_orientation.x")<< endl;
-  cout << "	rigid_orientation.y = "<<model_instance->getParam("rigid_orientation.y")<< endl;
-  cout << "	rigid_orientation.z = "<<model_instance->getParam("rigid_orientation.z")<< endl;
-  cout << "	rigid_orientation.w = "<<model_instance->getParam("rigid_orientation.w")<< endl;
-
-  cout << "	rigid_height = "<<model_instance->getParam("rigid_height")<< endl;
-  cout << "	rigid_width = "<<model_instance->getParam("rigid_width")<< endl;
-
-  cout << "	prismatic_dir.x = "<<model_instance->getParam("prismatic_dir.x")<< endl;
-  cout << "	prismatic_dir.y = "<<model_instance->getParam("prismatic_dir.y")<< endl;
-  cout << "	prismatic_dir.z = "<<model_instance->getParam("prismatic_dir.z")<< endl;
-  cout << "	sigma_position = "<<model_instance->getParam("sigma_position")<< endl;
-  cout << "	sigma_orientation = "<<model_instance->getParam("sigma_orientation")<< endl;
-
-  cout << "	log LH = " << model_instance->getParam("loglikelihood")<< endl;
-
-  /// set estimated joint configuration trajectory
-  Q.clear();
-  for (uint i=0;i<X.d0;i++) {
-    V_Configuration v = model_instance->getConfiguration(i);
-    Q.append(v(0));
-  }
-
-  prismatic_dir = ors::Vector(model_instance->getParam("prismatic_dir.x"),model_instance->getParam("prismatic_dir.y"),model_instance->getParam("prismatic_dir.z"));
-}
-
-
-
-int main(int argc, char** argv){
-  mlr::initCmdLine(argc, argv);
-  ros::init(argc, argv, "DOFE");
-
+void detectButtonDOF() {
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   bool useMarker = mlr::getParameter<bool>("useMarker",false);
@@ -170,28 +36,25 @@ int main(int argc, char** argv){
   }
 
   /// load demo from file
-  arr peX,peY,peYS;
-  peX<<FILE(STRING(folder<<"PE_X.dat"));
-  peY<<FILE(STRING(folder<<"PE_Y.dat")); peY.flatten();
-  peYS<<FILE(STRING(folder<<"PE_YS.dat")); peYS.flatten();
+  uint i;
+  i << FILE(STRING(folder<<"bestIdx_Param_CBO.dat"));
 
-  uint i = peY.maxIndex();
-  CHECK(peYS(i)==1,"");
-
-  arr Xbase,Xbase_pr2,FLbase,Mbase;
-  Xbase_pr2 << FILE(STRING(folder<<"/PE_Xref"<<i<<".dat"));
-  transferQbetweenTwoWorlds(Xbase,Xbase_pr2,world,world_pr2);
-  FLbase << FILE(STRING(folder<<"/FLbase.dat"));
-  if (useMarker) Mbase << FILE(STRING(folder<<"/mbM"<<i<<".dat"));
+  arr X,XPR2,FLdemo;
+  XPR2 << FILE(STRING(folder<<i<<"_Param_Xref.dat"));
+  transferQbetweenTwoWorlds(X,XPR2,world,world_pr2);
+  FLdemo << FILE(STRING(folder<<"0_Demo_FL.dat"));
 
   /// extract contact point trajectory
   world.gl().update(); world.gl().resize(800,800);
-  task->computeConstraintTime(FLbase,Xbase);
-  task->updateVisualization(world,Xbase);
+  task->computeConstraintTime(FLdemo,X);
+  task->updateVisualization(world,X);
+
+  TrajectoryInterface *ti;
+  ti = new TrajectoryInterface(world,world_pr2);
 
   TrajFactory tf;
   arr yL;
-  tf.compFeatTraj(Xbase,yL,world,new DefaultTaskMap(posTMT,world,"endeffL"));
+  tf.compFeatTraj(X,yL,world,new DefaultTaskMap(posTMT,world,"endeffC1"));
   arr Xcp = yL.rows(task->conStart(0),task->conEnd(0));
 
   /// add DOF to kinematic world
@@ -204,7 +67,6 @@ int main(int argc, char** argv){
 
   ors::Quaternion rot;
   rot.setDiff(Vector_z,prismatic_dir);
-
   /// add new joint to world
   ors::Body *b1 = new ors::Body(world);
   b1->name = "b1";
@@ -233,6 +95,14 @@ int main(int argc, char** argv){
   memmove(b2_shape->color, color.p, 3*sizeof(double));
   world.calc_fwdPropagateFrames();
 
+  ors::Shape *cp1 = new ors::Shape(world,*b1);
+  cp1->name = "cp1";
+  cp1->type = ors::ShapeType::markerST;
+  cp1->rel.pos = ors::Vector(0.,0.,0.);
+  size = ARRAY(0.01,0., 0., 0.);
+  memmove(cp1->size, size.p, 4*sizeof(double));
+  world.calc_fwdPropagateFrames();
+
   ors::Joint *b2_b1 = new ors::Joint(world,b2,b1);
   b2_b1->name = "b2_b1";
   b2_b1->A.pos = ARR(0, 0, .0);
@@ -244,27 +114,35 @@ int main(int argc, char** argv){
 
   /// augment trajectory with DOF
   arr Q2;
-  Q2 = zeros(Xbase.d0);
+  Q2 = zeros(X.d0);
   Q2.subRange(task->conStart(0),task->conEnd(0)-1) = Q;
-  Xbase = ~Xbase;
-  Xbase.append(Q2);
-  Xbase = ~Xbase;
+  X = ~X;   X.append(Q2);   X = ~X;
 
   /// save kinematic world
   world>>FILE(STRING(folder<<"modelaug.ors"));
 
   ors::KinematicWorld worldaug(STRING(folder<<"modelaug.kvg"));
+  TrajectoryInterface *ti2 = new TrajectoryInterface(worldaug,world_pr2);
   /// convert trajectory between two kinematic worlds
-  arr Xbase_aug;
-  transferQbetweenTwoWorlds(Xbase_aug,Xbase,worldaug,world);
-  write(LIST(Xbase_aug),STRING(folder<<"Xaug.dat"));
-  write(LIST(FLbase),STRING(folder<<"FLaug.dat"));
-  if (useMarker) write(LIST(Mbase),STRING(folder<<"Maug.dat"));
+  arr Xaug;
+  transferQbetweenTwoWorlds(Xaug,X,worldaug,world);
+  write(LIST(Xaug),STRING(folder<<"0_Dof_X_Aug.dat"));
+  write(LIST(XPR2),STRING(folder<<"0_Dof_X.dat"));
 
-  task->~TaskManager();
-  for(;;) {displayTrajectory(Xbase_aug, 1, worldaug, "planned trajectory");}
+  worldaug.watch(false);
+  worldaug.gl().resize(800,800);
 
-  // TODO:
-  // copmute external joint value more general with contact times
+  for(;;) {displayTrajectory(Xaug, 1, worldaug, "planned trajectory");}
+}
+
+
+int main(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
+  ros::init(argc, argv, "DOFE");
+
+  detectButtonDOF();
+//  detectDoorDOF();
+
   return 0;
+
 }

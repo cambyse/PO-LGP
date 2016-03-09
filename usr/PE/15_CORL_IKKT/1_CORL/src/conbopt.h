@@ -10,22 +10,26 @@
 #include "/usr/local/MATLAB/R2015a/extern/include/engine.h"
 #define  BUFSIZE 1000
 
-struct MF_strategy
+struct ConBOpt
 {
   Engine *ep;
   arr X, Y, YS;
   uint nParam;
   arr pLimit;
+  mlr::String folder;
+  mlr::String name;
+  arr x0;
+
   char buffer[BUFSIZE+1];
 
   double mu;
-  MF_strategy(uint nParam_, arr &pLimit_, mlr::String folder, mlr::String taskName);
-  ~MF_strategy();
+  ConBOpt(uint nParam_, arr &pLimit_, mlr::String folder_, mlr::String name_);
+  ~ConBOpt();
   void addDatapoint(arr x,arr y, arr ys);
   void evaluate(arr &x);
 
-  void save(mlr::String folder);
-  void load(mlr::String folder);
+  void save(int id=-1);
+  void load(int id=-1);
 
   void sendArrToMatlab(arr &x, mlr::String name);
   void getArrFromMatlab(arr &x, mlr::String name);

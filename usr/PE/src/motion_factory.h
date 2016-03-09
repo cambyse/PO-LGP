@@ -11,18 +11,24 @@
 
 struct MotionFactory {
   void execMotion(Scene &s, arr &x=NoArr, arr &lambda=NoArr, arr &_x0=NoArr, uint vis=0, uint verbose=0,mlr::String name=mlr::String());
-  void loadScenarioTest(Scenario &scenario, bool useConstraints=false);
+  void loadDemonstration(arr &x,arr &lambda, MotionProblem &MP);
+  void readDemoFromFile(const char* name,arr &x,arr &lambda);
+  void writeDemoToFile(const char* name,arr &x,arr &lambda);
+
+  // scenarios
+  void loadScenarioSimple(Scenario &scenario,uint nScenes=1, bool useConstraints=false);
+  void loadScenarioComplex(Scenario &scenario);
+
+
+
+
   void loadScenarioTestRbf(Scenario &scenario);
   void loadScenarioTestFeatSelect(Scenario &scenario);
   void loadScenarioTestDemonstrations(Scenario &scenario);
   void loadScenarioBoxSliding(Scenario &scenario);
   void loadScenarioParamEval(Scenario &scenario, uint type);
 
-  void loadScenarioButton(Scenario &scenario);
-
-  void loadDemonstration(arr &x,arr &lambda, MotionProblem &MP);
-  void readDemoFromFile(const char* name,arr &x,arr &lambda);
-  void writeDemoToFile(const char* name,arr &x,arr &lambda);
+  void loadScenarioButton(Scenario &scenario,ors::KinematicWorld &world);
 };
 
 #endif // MOTION_FACTORY_H

@@ -2,6 +2,8 @@
 #include <Core/util.h>
 
 #include <Gui/plot.h>
+#include <iomanip>
+#include <iostream>
 
 InverseMotionProblem::InverseMotionProblem(Scenario &_scenario):
   scenario(_scenario),
@@ -207,7 +209,7 @@ void InverseMotionProblem::costReport(arr param,arr param0) {
   cout << "# of parameters: " << nP << endl;
   cout << "# of time steps: " << nT << endl;
   if (scenario.scenes(0).optConstraintsParam) {
-    cout << "# of active constraints: " << scenario.scenes(0).lambda.N << endl;
+    cout << "# of active constraints: "  <<scenario.scenes(0).lambda.N << endl;
   }
 
   arr paramRef = scenario.paramGT;
@@ -226,27 +228,30 @@ void InverseMotionProblem::costReport(arr param,arr param0) {
   cout << "-IOC constraints at solution: " << phiSol.subRange(1,phiSol.d0-1) << endl;
 
 
-  cout << "################################################################################" << endl;
-  cout << "Learned param | Ref param | Init param | Learned param (norm) | Ref param (norm)" << endl;
+//  cout << "###########################################################################" << endl;
+  cout << "_________________________________________________________________________________________________" << endl;
+  cout << "|Description         | p result     | p ref        | p init       | p resultN    | p refN       |" << endl;
+  cout << "|--------------------+--------------+--------------+--------------+--------------+--------------|" << endl;
   uint c =0;
   for (uint i=0;i<scenario.scenes(0).MP->tasks.N;i++) {
     if (scenario.scenes(0).MP->tasks(i)->map.type==sumOfSqrTT) {
       if (scenario.weights(i).numParam>1){
         //        cout << "-- Task " << scenes(0).MP->tasks(i)->name << " : " << paramNorm.subRange(c,c+weights(i).numParam-1) << " | \n" << paramRefNorm.subRange(c,c+weights(i).numParam-1) <<  " | \n" << paramRef.subRange(c,c+weights(i).numParam-1) << endl;
-        cout << "-- Task " << scenario.scenes(0).MP->tasks(i)->name << " : " << param.subRange(c,c+scenario.weights(i).numParam-1) << endl;
+        cout << "|  Task " <<std::setw(12)<< scenario.scenes(0).MP->tasks(i)->name << " | " <<std::setw(12)<< param.subRange(c,c+scenario.weights(i).numParam-1) << endl;
       } else {
-        cout << "-- Task " << scenario.scenes(0).MP->tasks(i)->name << " : " << param(c) <<" | " << paramRef(c)<<" | " << param0(c) <<" | "<< paramNorm(c) <<  " | " << paramRefNorm(c) << " | " << endl;
+        cout << "|  Task " <<std::setw(12)<< scenario.scenes(0).MP->tasks(i)->name << " | " <<std::setw(12)<< param(c) <<" | " <<std::setw(12)<< paramRef(c)<<" | "<<std::setw(12) << param0(c) <<" | "<<std::setw(12)<< paramNorm(c) <<  " | " <<std::setw(12)<< paramRefNorm(c) << " | " << endl;
       }
       c = c+scenario.weights(i).numParam;
     }
   }
   write(LIST<arr>(paramRefNorm,paramNorm),"ioc.log");
-  cout << "################################################################################" << endl;
+  cout << "-------------------------------------------------------------------------------------------------" << endl;
+//  cout << "###########################################################################" << endl;
   cout << "param0 " <<param0 << endl;
   cout << "param " <<param << endl;
   cout << "paramNorm " <<paramNorm << endl;
   cout << "paramRefNorm " <<paramRefNorm << endl;
-  cout << "################################################################################" << endl;
+  cout << "###########################################################################" << endl;
 
   // lambda
   if (scenario.scenes(0).optConstraintsParam){
@@ -256,7 +261,7 @@ void InverseMotionProblem::costReport(arr param,arr param0) {
 //      cout << "lambdaDem: "<< scenario.scenes(i).lambdaDem << endl;
     }
   }
-  cout << "################################################################################\n\n" << endl;
+  cout << "##############################################################################\n\n" << endl;
 
 
   // plotting

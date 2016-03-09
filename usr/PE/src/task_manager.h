@@ -18,13 +18,16 @@ struct TaskManager
   arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
   arr PX1f,PX1c,PX2f,PX2c;
   TaskManager() {};
+  uint nParam,nDof;
   virtual void addConstraints(MotionProblem *MP, const arr &X) = 0;
   virtual void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr) = 0;
   virtual void computeConstraintTime(const arr &F,const arr &X) = 0;
-  virtual bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo) = 0;
-  virtual bool transformTrajectoryDof(arr &Xn, const arr &x, arr& Xdemo) = 0;
-  virtual bool success(const arr &X, const arr &Y) = 0;
+  virtual bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo) = 0;
+  virtual bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) = 0;
+  virtual bool success(const arrA &X, const arr &Y) = 0;
   virtual double reward(const arr &Z) = 0;
+  virtual double cost(const arr &Z) = 0;
+
   virtual void getParamLimit(arr &paramLimit) = 0;
   virtual void getDofLimit(arr &dofLimit) = 0;
 
@@ -36,10 +39,11 @@ struct DoorTask:TaskManager {
   void addConstraints(MotionProblem *MP, const arr &X);
   void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
-  bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
-  bool success(const arr &X, const arr &Y);
+  bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo);
+  bool success(const arrA &X, const arr &Y);
   void getParamLimit(arr &paramLimit);
   double reward(const arr &Z);
+  double cost(const arr &Z);
   void getDofLimit(arr &dofLimit) {};
   bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) {return true;};
 
@@ -50,26 +54,32 @@ struct GraspTask:TaskManager {
   void addConstraints(MotionProblem *MP, const arr &X);
   void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
-  bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
-  bool success(const arr &X, const arr &Y);
+  bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo);
+  bool success(const arrA &X, const arr &Y);
   void getParamLimit(arr &paramLimit);
   double reward(const arr &Z);
+  double cost(const arr &Z);
   void getDofLimit(arr &dofLimit) {};
   bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo) {return true;};
 };
 
 struct ButtonTask:TaskManager {
-  ButtonTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = BUTTON;}
+  ButtonTask(ors::KinematicWorld &world_) {
+    world = &world_;//new ors::KinematicWorld(world_);
+    type = BUTTON;
+    nParam = 2;
+    nDof = 1;
+  }
   void addConstraints(MotionProblem *MP, const arr &X);
   void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
-  bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
-  bool success(const arr &X, const arr &Y);
+  bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo);
+  bool success(const arrA &X, const arr &Y);
   void getParamLimit(arr &paramLimit);
   void getDofLimit(arr &dofLimit);
   bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo);
   double reward(const arr &Z);
-
+  double cost(const arr &Z);
   void addModelConstraints(MotionProblem *MP, arr& target);
 };
 

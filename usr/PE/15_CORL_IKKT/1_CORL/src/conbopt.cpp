@@ -1,6 +1,6 @@
-#include "mf_strategy.h"
+#include "conbopt.h"
 
-MF_strategy::MF_strategy(uint nParam_,arr &pLimit_,mlr::String folder,mlr::String taskName):nParam(nParam_),pLimit(pLimit_) {
+ConBOpt::ConBOpt(uint nParam_,arr &pLimit_,mlr::String folder_,mlr::String name_):nParam(nParam_),pLimit(pLimit_),folder(folder_),name(name_) {
   if (!(ep = engOpen(""))) {
     fprintf(stderr, "\nCan't start MATLAB engine\n");
   }
@@ -42,17 +42,19 @@ MF_strategy::MF_strategy(uint nParam_,arr &pLimit_,mlr::String folder,mlr::Strin
       NIY;
       break;
   }
+  x0 = zeros(nParam);
 
   engEvalString(ep, "cbo = conBOpt(n,t,e,bOffset,verbose,optM,ellC,sfC,ellR,sfR,snR)");
   write(LIST<arr>(pLimit),STRING(folder<<"Limit.dat"));
   printf("%s", buffer);
 }
 
-MF_strategy::~MF_strategy(){
+ConBOpt::~ConBOpt(){
   engClose(ep);
 }
 
-void MF_strategy::addDatapoint(arr x, arr y, arr ys){
+void ConBOpt::addDatapoint(arr x, arr y, arr ys){
+  if (ys(0)==0) ys = ARR(-1);
   sendArrToMatlab(x,"x");
   sendArrToMatlab(y,"y");
   sendArrToMatlab(ys,"ys");
@@ -66,35 +68,48 @@ void MF_strategy::addDatapoint(arr x, arr y, arr ys){
   YS.append(~ys);
 }
 
-void MF_strategy::evaluate(arr &x){
+void ConBOpt::evaluate(arr &x) {
+  if (X.N==0) {x = x0; return;}
   engEvalString(ep, "x = cbo.selectNextPoint();");
   getArrFromMatlab(x,"x");
   x.flatten();
 }
 
-void MF_strategy::load(mlr::String folder){
-  X << FILE(STRING(folder<<"X.dat"));
-  Y << FILE(STRING(folder<<"Y.dat"));
-  YS << FILE(STRING(folder<<"YS.dat"));
-  sendArrToMatlab(X,"cbo.X");
-  sendArrToMatlab(Y,"cbo.Y");
-  sendArrToMatlab(YS,"cbo.YS");
+void ConBOpt::load(int id) {
+  X << FILE(STRING(folder<<"/"<<id<<"_"<<name<<"_CBO_X.dat"));
+  Y << FILE(STRING(folder<<"/"<<id<<"_"<<name<<"_CBO_Y.dat"));
+  YS << FILE(STRING(folder<<"/"<<id<<"_"<<name<<"_CBO_YS.dat"));
+//  sendArrToMatlab(X,"cbo.X");
+//  sendArrToMatlab(Y,"cbo.Y");
+//  sendArrToMatlab(YS,"cbo.YS");
+  engEvalString(ep, STRING("load('"<<folder<<"/"<<id<<"_"<<name<<"_CBO.mat');"));
+//  engEvalString(ep, STRING("cbo=c;"));
+
   engEvalString(ep, "cbo.stats()");
+  engEvalString(ep, "cbo");
   cout << buffer << endl;
 }
 
-void MF_strategy::save(mlr::String folder) {
-  write(LIST<arr>(X),STRING(folder<<"X.dat"));
-  write(LIST<arr>(Y),STRING(folder<<"Y.dat"));
-  write(LIST<arr>(YS),STRING(folder<<"YS.dat"));
-  engEvalString(ep, STRING("save('"<<folder<<"conBOpt.mat');"));
+void ConBOpt::save(int id) {
+  write(LIST<arr>(X),STRING(folder<<"/"<<id<<"_"<<name<<"_CBO_X.dat"));
+  write(LIST<arr>(Y),STRING(folder<<"/"<<id<<"_"<<name<<"_CBO_Y.dat"));
+  write(LIST<arr>(YS),STRING(folder<<"/"<<id<<"_"<<name<<"_CBO_YS.dat"));
+  engEvalString(ep, STRING("save('"<<folder<<"/"<<id<<"_"<<name<<"_CBO.mat');"));
+
+  // save max index
+  arr Ytmp = Y;
+  Ytmp += -fabs(Y%(YS-1.))*1e5;
+  uint i = Ytmp.maxIndex();
+  CHECK(YS(i,0)==1,"");
+  i =i+1; //< file indices start with 1
+  write(LIST<arr>(ARR(i)),STRING(folder<<"/bestIdx_"<<name<<"_CBO.dat"));
 }
 
-void MF_strategy::sendArrToMatlab(arr& x, mlr::String name) {
+void ConBOpt::sendArrToMatlab(arr& x, mlr::String name) {
   engEvalString(ep, STRING(std::setprecision(16)<<name<<"=["<<x<<"];"));
 }
 
-void MF_strategy::getArrFromMatlab(arr& x, mlr::String name) {
+void ConBOpt::getArrFromMatlab(arr& x, mlr::String name) {
   x.clear();
   mxArray *x_mat = engGetVariable(ep,name);
   x.resize(mxGetN(x_mat),mxGetM(x_mat));

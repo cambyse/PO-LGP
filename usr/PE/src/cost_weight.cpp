@@ -176,8 +176,10 @@ void CostWeight::compConstraints(arr &gL, arr &gU, arr &gS, arr &JgL, arr &JgU, 
       // TODO: should not become too high
       break;
     case Transition:
+      gL = gL*1e4;
       gS = ARR(param(0));
       if (&JgL){
+        JgL = JgL*1e4;
         JgS = ARR(1.);
       }/*
         gS = ARR(0.);

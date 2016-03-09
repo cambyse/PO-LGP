@@ -21,7 +21,7 @@ classdef conBOpt < handle
   verbose;   % controls the output
   
   t1,t2,yc,ysc2,fcmu,fcs2,yr,sr2,PI,BU,a,fx,x; % variables for plots
-  statBC, statNOF; % variables for stats
+  statBC, statBCR, statNOF; % variables for stats
  end
  
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,6 +114,14 @@ classdef conBOpt < handle
    c.X = [c.X; x];
    c.Y = [c.Y; y];
    c.YS = [c.YS; ys];
+   
+   % update statics
+   Ytmp = c.Y;
+   Ytmp(c.YS==-1) = 0;
+   [~,bcIdx] = max(Ytmp);
+   c.statBC = [c.statBC; c.X(bcIdx,:)];
+   c.statBCR = [c.statBCR; c.Y(bcIdx)];
+   c.statNOF = [c.statNOF; sum(c.YS==-1)];
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -234,11 +242,6 @@ classdef conBOpt < handle
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   function stats(c)
-   Ytmp = c.Y;
-   Ytmp(c.YS==-1) = 0;
-   [~,bcIdx] = max(Ytmp);
-   c.statBC = [c.statBC; c.Y(bcIdx)];
-   c.statNOF = [c.statNOF; sum(c.YS==-1)];
    if (c.verbose>0)
     s = sprintf( '\n### Statistics ###\n');
     s = [s,sprintf( '- amount of samples         : %d\n',length(c.Y))];
@@ -246,8 +249,8 @@ classdef conBOpt < handle
     s = [s,sprintf(['- current candidate         : ',repmat('%6.4f  ',1,c.n),'\n'],c.X(end,:))];
     s = [s,sprintf( '- currend candidate reward  : %f\n',c.Y(end))];
     s = [s,sprintf( '- currend candidate success : %d\n',c.YS(end))];
-    s = [s,sprintf(['- best candidate            : ',repmat('%6.4f  ',1,c.n),'\n'],c.X(bcIdx,:))];
-    s = [s,sprintf( '- best candidate reward     : %f\n',c.statBC(end))];
+    s = [s,sprintf(['- best candidate            : ',repmat('%6.4f  ',1,c.n),'\n'],c.statBC(end,:))];
+    s = [s,sprintf( '- best candidate reward     : %f\n',c.statBCR(end))];
    end
   s
   end

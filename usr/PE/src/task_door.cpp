@@ -3,8 +3,7 @@
 #include "traj_factory.h"
 #include "plotUtil.h"
 
-void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
-{
+void DoorTask::addConstraints(MotionProblem *MP, const arr &X) {
   TrajFactory tf;
   arr yC1,yC2;
   tf.compFeatTraj(X,yC1,MP->world,new DefaultTaskMap(posTMT,MP->world,"endeffC1"));
@@ -47,7 +46,7 @@ void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
   cout << "constraintCP: " << constraintCP << endl;
 }
 
-bool DoorTask::success(const arr &X, const arr &Y) {
+bool DoorTask::success(const arrA& X, const arr &Y) {
   return length(X[X.d0-1] - Y[Y.d0-1])<0.03;
 }
 
@@ -58,7 +57,7 @@ void DoorTask::getParamLimit(arr& paramLimit)
   paramLimit.append(~ARR(-0.06,0.06)); // hand position
 }
 
-bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
+bool DoorTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
   arr C1demo,C2demo,Gdemo;
   TrajFactory tf;
   tf.compFeatTraj(Xdemo,C1demo,*world,new DefaultTaskMap(posTMT,*world,"endeffC1"));
@@ -90,8 +89,8 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     handle->X.addRelativeRotationDeg(-alpha-beta,1.,0.,0.);
 
     double trans = sqrt(d*d-h*h)*0.5;
-    world->getShapeByName("cp1")->rel.pos.y = -trans - x(0) + x(1);
-    world->getShapeByName("cp2")->rel.pos.y = trans +  x(1);
+    world->getShapeByName("cp1")->rel.pos.y = -trans - theta(0) + theta(1);
+    world->getShapeByName("cp2")->rel.pos.y = trans +  theta(1);
 
     CP1.append(~conv_vec2arr(world->getShapeByName("cp1")->X.pos));
     CP2.append(~conv_vec2arr(world->getShapeByName("cp2")->X.pos));
@@ -176,4 +175,10 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
 double DoorTask::reward(const arr &Z){
   return exp(-.05*sumOfAbs(Z)/Z.d0);
+}
+
+double DoorTask::cost(const arr& Z){
+  arr tmp;
+  getAcc(tmp,Z,1.);
+  return sumOfSqr(tmp);
 }

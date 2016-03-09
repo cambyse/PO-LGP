@@ -87,8 +87,10 @@ void Scene::initCosts(bool _optNonlinearParam){
     Jg = unpack(JgP); Jg.special = arr::noneST;
     Jg_JgtP = comp_A_At(JgP);
     Jg_Jgt = unpack(Jg_JgtP); Jg_Jgt.special = arr::noneST;
-    arr Jg_Jgt_I = lapack_inverseSymPosDef(Jg_Jgt);
-    Jgt_JgJgtI_Jg = ~Jg*Jg_Jgt_I*Jg;
+
+//    arr Jg_JgtI2 = lapack_inverseSymPosDef(Jg_Jgt);
+    inverse_SVD(Jg_JgtI,Jg_Jgt);
+    Jgt_JgJgtI_Jg = ~Jg*Jg_JgtI*Jg;
     arr tmp = Jg*~Jx;
     J_Jgt = ~tmp;
   }
@@ -103,7 +105,10 @@ double Scene::compCosts(arr &df, arr &Hf, arr &g, arr &Jg, const arr &w, const a
   arr JgJgtI_Jg_Jt_PHIw;
 
   if (optConstraintsParam) {
-    JgJgtI_Jg_Jt_PHIw = lapack_Ainv_b_sym(Jg_JgtP,comp_A_x(JgP,JP_PHIw));
+    arr Jg_Jt_PHIw = comp_A_x(JgP,JP_PHIw);
+    JgJgtI_Jg_Jt_PHIw = Jg_JgtI*Jg_Jt_PHIw;
+//    JgJgtI_Jg_Jt_PHIw = lapack_Ainv_b_sym(Jg_JgtP,comp_A_x(JgP,JP_PHIw));
+
     J_G_Jt_PHIw = J_G_Jt_PHIw - comp_A_x(J_Jgt,JgJgtI_Jg_Jt_PHIw);
     lambda = -2.*JgJgtI_Jg_Jt_PHIw;
   }

@@ -17,7 +17,7 @@ struct Scene {
   /// variables for the inverse motion problem
   arr PHI, G, lambda;
   arr JxP, JgP, Jx, Jg;
-  arr Jg_JgtP, J_Jgt, Jg_Jgt;
+  arr Jg_JgtP, J_Jgt, Jg_Jgt,Jg_JgtI;
   arr dWdx_dPHI_J_G_Jt_dPHI_dWdx, dPHI_J_Jt_dPHI, Jgt_JgJgtI_Jg;
 
   /// demonstrations

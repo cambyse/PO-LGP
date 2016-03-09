@@ -47,9 +47,9 @@ void GraspTask::computeConstraintTime(const arr &F,const arr &X) {
   cout << "constraintCP: " << constraintCP << endl;
 }
 
-bool GraspTask::success(const arr &X, const arr &Y) {
-  cout << catCol(X,Y) << endl;
-  return length(X[X.d0-1] - Y[Y.d0-1])<0.06;
+bool GraspTask::success(const arrA& X, const arr &Y) {
+//  cout << catCol(X,Y) << endl;
+  return true;//length(X[X.d0-1] - Y[Y.d0-1])<0.06;
 }
 
 void GraspTask::getParamLimit(arr& paramLimit)
@@ -57,7 +57,7 @@ void GraspTask::getParamLimit(arr& paramLimit)
 
 }
 
-bool GraspTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
+bool GraspTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
   arr C1demo,C2demo,Gdemo;
   TrajFactory tf;
   tf.compFeatTraj(Xdemo,C1demo,*world,new DefaultTaskMap(posTMT,*world,"endeffC1"));
@@ -89,8 +89,8 @@ bool GraspTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     handle->X.addRelativeRotationDeg(-alpha-beta,1.,0.,0.);
 
     double trans = sqrt(d*d-h*h)*0.5;
-    world->getShapeByName("cp1")->rel.pos.y = -trans - x(0) + x(1);
-    world->getShapeByName("cp2")->rel.pos.y = trans +  x(1);
+    world->getShapeByName("cp1")->rel.pos.y = -trans - theta(0) + theta(1);
+    world->getShapeByName("cp2")->rel.pos.y = trans +  theta(1);
 
     CP1.append(~conv_vec2arr(world->getShapeByName("cp1")->X.pos));
     CP2.append(~conv_vec2arr(world->getShapeByName("cp2")->X.pos));
@@ -171,4 +171,10 @@ bool GraspTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
 double GraspTask::reward(const arr &Z){
   return exp(-.2*sumOfAbs(Z)/Z.d0);
+}
+
+double GraspTask::cost(const arr& Z){
+  arr tmp;
+  getAcc(tmp,Z,1.);
+  return sumOfSqr(tmp);
 }
