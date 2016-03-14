@@ -75,18 +75,8 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   setGains(mlr::sqr(1./lambda), 2.*dampingRatio/lambda);
 }
 
-void makeRefsVectors(arr& y_ref, arr& yd_ref, uint n){
-  if(!y_ref.N) y_ref = zeros(n); //by convention: no-references = zero references
-  if(!yd_ref.N) yd_ref = zeros(n);
-  if(y_ref.N==1) y_ref.setUni(y_ref.scalar(), n); //by convention: scalar references = const vector references
-  if(yd_ref.N==1) yd_ref.setUni(yd_ref.scalar(), n);
-  CHECK(y_ref.nd==1 && y_ref.d0==n,"");
-  CHECK(yd_ref.nd==1 && yd_ref.d0==n,"");
-}
 
 void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
-  //TODO why first set it to arr and then here to a matrix? why not directly to a matrix? the dimension
-  // of the task should be available? MT: no, they're not. Typically they're only set to be a scalar.
   if(Kp.N==1) Kp = diag(Kp.scalar(), n);
   if(Kd.N==1) Kd = diag(Kd.scalar(), n);
   CHECK(Kp.nd==2 && Kp.d0==n && Kp.d1==n,"");
@@ -101,16 +91,19 @@ arr CtrlTask::get_y_ref(const arr& y){
     while(y_ref(i) < y(i)-MLR_PI) y_ref(i)+=MLR_2PI;
     while(y_ref(i) > y(i)+MLR_PI) y_ref(i)-=MLR_2PI;
   }
+  if(!y_ref.N) return zeros(y.N); //by convention: no-references = zero references
+  if(y_ref.N==1) return consts<double>(y_ref.scalar(), y.N); //by convention: scalar references = const vector references
   return y_ref;
 }
 
 arr CtrlTask::get_ydot_ref(const arr& ydot){
   this->v = ydot;
+  if(!v_ref.N) return zeros(ydot.N);
+  if(v_ref.N==1) return consts<double>(v_ref.scalar(), ydot.N);
   return v_ref;
 }
 
 arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
-  makeRefsVectors(y_ref, v_ref, y.N);
   makeGainsMatrices(Kp, Kd, y.N);
   arr a = Kp*(get_y_ref(y)-y) + Kd*(get_ydot_ref(ydot)-ydot);
 
@@ -126,11 +119,11 @@ arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
 }
 
 void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y, const arr& ydot){
-  makeRefsVectors(y_ref, v_ref, y.N);
-  makeGainsMatrices(Kp, Kd, y.N);
-  a0_y = Kp*get_y_ref(y) + Kd*get_ydot_ref(ydot);
   Kp_y = Kp;
   Kd_y = Kd;
+  makeGainsMatrices(Kp_y, Kd_y, y.N);
+
+  a0_y = Kp_y*get_y_ref(y) + Kd_y*get_ydot_ref(ydot);
   arr a = a0_y - Kp_y*y - Kd_y*ydot; //linear law
   double accNorm = length(a);
 
@@ -171,8 +164,8 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
 }
 
 void CtrlTask::reportState(ostream& os){
-  os <<"  CtrlTask " <<name;
   if(active) {
+    os <<"  CtrlTask " <<name;
     if(y_ref.N==y.N && v_ref.N==v.N){
       os <<":  y_ref=" <<y_ref <<" \ty=" <<y
            <<"  Pterm=(" <<Kp <<'*' <<length(y_ref-y)
@@ -183,8 +176,6 @@ void CtrlTask::reportState(ostream& os){
            <<" Pgain=" <<Kp
            <<" Dgain=" <<Kd <<endl;
     }
-  }else{
-    os <<" -- inactive" <<endl;
   }
 }
 
@@ -221,7 +212,7 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 //===========================================================================
 
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift)
-  : world(_world), qitselfPD(NULL), useSwift(_useSwift) {
+  : world(_world), qitselfPD(NULL, NULL), useSwift(_useSwift) {
   computeMeshNormals(world.shapes);
   if(useSwift) {
     makeConvexHulls(world.shapes);
@@ -310,7 +301,7 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   getCostCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
   if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr A = diag(H_rate_diag);
-  arr a(A.d0); a.setZero();
+  arr a = zeros(A.d0);
   if(qitselfPD.active){
     a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
   }
@@ -322,48 +313,51 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   return q_ddot;
 }
 
-void FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0) {
-  arr M, F;
-  world.equationOfMotion(M, F, false);
+arr FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F) {
+  uint n=F.N;
 
-  arr q0, q, qDot;
-  world.getJointState(q,qDot);
+//  arr q0, q, qDot;
+//  world.getJointState(q,qDot);
 
   arr H = inverse(M); //TODO: Other metrics (have significant influence)
 
   arr A = ~M*H*M; //TODO: The M matrix is symmetric, isn't it? And also symmetric? Furthermore, if H = M^{-1}, this should be calculated more efficiently
-  arr a = zeros(q.N); //TODO M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
+  arr a = zeros(n); //TODO M*eye(world.getJointStateDimension())*5.0*(-qDot);// //TODO: other a possible
   u0 = ~M*H*(a-F);
   arr y, J_y, Kp_y, Kd_y, a0_y;
   arr tempJPrec, tempKp;
 
-  q0 = q;
-  Kp = zeros(q.N, q.N);
-  Kd = zeros(q.N, q.N);
+//  q0 = q;
+  Kp = zeros(n, n);
+  Kd = zeros(n, n);
+  //TODO: add qitselfPD!!
+//  if(qitselfPD.active){
+//    a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
+//  }
   for(CtrlTask* law : tasks) if(law->active){
     law->map.phi(y, J_y, world);
     tempJPrec = ~J_y*law->prec;
     A += tempJPrec*J_y;
 
-    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*qDot);
+    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*world.qdot);
 
     u0 += tempJPrec*a0_y;
 
     tempKp = tempJPrec*Kp_y;
 
-    u0 += tempKp*(-y + J_y*q0);
+    u0 += tempKp*(-y + J_y*world.q);
 
     //u0 += ~J*law->getC()*law->getDDotRef(); //TODO: add ydd_ref
 
     Kp += tempKp*J_y;
     Kd += tempJPrec*Kd_y*J_y;
-
-    //TODO fix base, fix torso //MT: no, don't just fix. Add friction, or set ctrl_limits in the ors file
   }
   arr invA = inverse(A); //TODO: SymPosDef?
   Kp = M*invA*Kp;
   Kd = M*invA*Kd;
   u0 = M*invA*u0 + F;
+
+  return u0 + Kp*world.q + Kd*world.qdot;
 }
 
 void FeedbackMotionControl::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0){

@@ -20,8 +20,10 @@
 #include <Motion/taskMaps.h>
 #include <Hardware/gamepad/gamepad.h>
 
-Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL), endeffL(NULL){
+Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP, const arr& _q0):MP(_MP), q0(_q0), endeffR(NULL), endeffL(NULL){
   if(mlr::getParameter<bool>("oldfashinedTaskControl")){
+    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .2, 1.1, .2, 10.);
+    homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);
     base = new CtrlTask("endeffBase", new TaskMap_qItself(MP.world, "worldTranslationRotation"), .2, .8, 1., 1.);
@@ -33,6 +35,8 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
     gripperL = new CtrlTask("gripperL", new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
     gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
   }else{
+    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .2, 1., .5, .5);
+    homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);
     base = new CtrlTask("endeffBase", new TaskMap_qItself(MP.world, "worldTranslationRotation"), .2, .8, 1., 1.);
@@ -45,15 +49,15 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP):MP(_MP), endeffR(NULL),
     gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
 
     endeffR->setGains(30.,1.);
-    endeffL->setGains(30.,1.); endeffL->maxAcc=.5;
+    endeffL->setGains(30.,1.); //endeffL->maxAcc=.5;
     headAxes->setGains(10.,5.);
   }
-  for(CtrlTask* task:{ endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR })
+  for(CtrlTask* task:{ homing, endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR })
     task->active=false;
 }
 
 mlr::Array<CtrlTask*> Gamepad2Tasks::getTasks(){
-  return { endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR };
+  return { homing, endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR };
 }
 
 double gamepadSignalMap(double x){
@@ -67,7 +71,12 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   MP.qitselfPD.setGains(0., 10.); //nullspace qitself is not used for homing by default
   MP.qitselfPD.active=true;
-//  limits->active=true;
+  MP.qitselfPD.setTarget(MP.world.q);
+
+//  homing->setGains(0., 10.); //nullspace qitself is not used for homing by default
+//  homing->active=true;
+//  homing->setTarget(MP.world.q);
+  //  limits->active=true;
 //  coll->active=true;
 
   if(gamepadState.N<6) return false;
@@ -130,14 +139,17 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
     }
     case 1: { //homing
       cout <<"homing" <<endl;
+      homing->setTarget(q0);
       ors::Joint *j = MP.world.getJointByName("worldTranslationRotation");
-      arr b;
-      base->map.phi(b, NoArr, MP.world);
-      if(b.N && j && j->qDim()){
-        for(uint i=0;i<j->qDim();i++)
-          MP.qitselfPD.y_ref(j->qIndex+i) = b(i);
+      if(j){
+        arr b;
+        base->map.phi(b, NoArr, MP.world);
+        if(b.N && j && j->qDim()){
+          for(uint i=0;i<j->qDim();i++)
+            homing->y_ref(j->qIndex+i) = b(i);
+        }
       }
-      MP.qitselfPD.setGainsAsNatural(2.,1.);
+      homing->active = true;
       break;
     }
     case 4:

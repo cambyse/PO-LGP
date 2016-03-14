@@ -9,6 +9,11 @@ using namespace std;
 #  include <pr2/roscom.h>
 #endif
 
+void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.01){
+  if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
+  lowPass = (1.-rate)*lowPass + rate*signal;
+}
+
 TaskControllerModule::TaskControllerModule(const char* modelFile)
   : Module("TaskControllerModule", .01)
   , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
@@ -16,9 +21,11 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
   , q0(realWorld.q)
   , oldfashioned(true)
   , useRos(false)
+  , isInSyncWithRobot(false)
   , syncModelStateWithReal(false)
-  , verbose(true)
-  , useDynSim(true) {
+  , verbose(false)
+  , useDynSim(true)
+  , noTaskTask(NULL){
 
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = mlr::getParameter<bool>("useDynSim", true);
@@ -82,11 +89,15 @@ void TaskControllerModule::step(){
         q_model = q_real;
         qdot_model = qdot_real;
         modelWorld.set()->setJointState(q_model, qdot_model);
-        //        cout <<"** GO!" <<endl;
-        //        cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
-        //        cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
+        q_history.prepend(q_real); q_history.reshape(q_history.N/q_real.N, q_real.N);
+        if(q_history.d0>5) q_history.resizeCopy(5, q_real.N);
+
+        if(q_history.d0>0) lowPassUpdate(q_lowPass, q_history[0]);
+        if(q_history.d0>1) lowPassUpdate(qdot_lowPass, (q_history[0]-q_history[1])/.01);
+        if(q_history.d0>2) lowPassUpdate(qddot_lowPass, (q_history[0]-2.*q_history[1]+q_history[2])/(.01*.01));
       }
       if(oldfashioned) syncModelStateWithReal = false;
+      isInSyncWithRobot = true;
     }else{
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       if(t>20){
@@ -188,22 +199,24 @@ void TaskControllerModule::step(){
     modelWorld.writeAccess();
     feedbackController->tasks = ctrlTasks();
 
+    //count active tasks:
+    uint ntasks=0;
+    for(CtrlTask *t:feedbackController->tasks) if(t->active) ntasks++;
+
     //if there are no tasks, just stabilize
-    if(false){
-    if(feedbackController->tasks.N < 1) {
-      TaskMap* qItselfTask = new TaskMap_qItself();
-      CtrlTask* qItselfLaw = new CtrlTask(qItselfTask);
-      qItselfLaw->prec = 10.0;
-      qItselfLaw->setGains(10.0, 1.0); //TODO tune those gains
-      qItselfLaw->setTarget(qItselfLaw->map.phi(modelWorld()), zeros(qItselfLaw->map.dim_phi(modelWorld())));
-      feedbackController->tasks.append(qItselfLaw);
-    }
+    if(!ntasks) {
+      if(!noTaskTask) noTaskTask = new CtrlTask("noTaskTask", new TaskMap_qItself());
+      noTaskTask->prec = 10.0;
+      noTaskTask->setGains(10.0, 1.0); //TODO tune those gains
+      noTaskTask->setTarget(modelWorld().q);
+      noTaskTask->active = true;
+      feedbackController->tasks.append(noTaskTask);
     }
 
     //TODO qItself task for joint space stability
     if(false) {
       TaskMap* qItselfJointSpaceStabilityTask = new TaskMap_qItself();
-      CtrlTask* qItselfJSStabilityLaw = new CtrlTask(qItselfJointSpaceStabilityTask);
+      CtrlTask* qItselfJSStabilityLaw = new CtrlTask("qItselfJSStabilityLaw", qItselfJointSpaceStabilityTask);
       qItselfJSStabilityLaw->prec = 10.0;
       qItselfJSStabilityLaw->setGains(0.0, 5.0); //TODO tune those gains
       qItselfJSStabilityLaw->setTarget(qItselfJSStabilityLaw->map.phi(modelWorld()), zeros(qItselfJSStabilityLaw->map.dim_phi(modelWorld())));
@@ -211,7 +224,17 @@ void TaskControllerModule::step(){
     }
 
     arr u0, Kp, Kd;
-    feedbackController->calcOptimalControlProjected(Kp, Kd, u0); // TODO: what happens when changing the LAWs?
+    arr M, F, FplusG;
+    feedbackController->world.equationOfMotion(M, F, false);
+    FplusG = F;
+//    if(model_error_g.N) FplusG += 0.1 * model_error_g;
+    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u0, M, FplusG); // TODO: what happens when changing the LAWs?
+    lowPassUpdate(u_lowPass, u_mean);
+
+    if(qddot_lowPass.N){
+      model_error_g = u_lowPass - M*qddot_lowPass - F;
+      cout <<"model error = " <<sumOfSqr(model_error_g) <<endl;
+    }
 
     arr K_ft, J_ft_inv, fRef;
     double gamma;
@@ -221,7 +244,10 @@ void TaskControllerModule::step(){
     //      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
     //    }
 
-    if(verbose) feedbackController->reportCurrentState();
+    if(verbose){
+      LOG(0) <<"************** Tasks Report **********";
+      feedbackController->reportCurrentState();
+    }
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
@@ -238,8 +264,6 @@ void TaskControllerModule::step(){
     refs.J_ft_invL = J_ft_inv;
     refs.u_bias = u0;
     refs.intLimitRatio = 0.7;
-
-
   }
 
   //-- send base motion command
@@ -253,7 +277,7 @@ void TaskControllerModule::step(){
 
 
   //-- send the computed movement to the robot
-  if(useRos || useDynSim){
+  if(isInSyncWithRobot && (useRos || useDynSim)){
     ctrl_ref.set() = refs;
   }
 }

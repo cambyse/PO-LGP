@@ -61,7 +61,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   arr y, v;
   /// @}
 
-  CtrlTask(TaskMap* map) : map(*map), active(true), prec(100.), maxVel(0.5), maxAcc(10.), f_alpha(0.), f_gamma(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
+  CtrlTask(const char* name, TaskMap* map) : map(*map), name(name), active(true), prec(100.), maxVel(0.5), maxAcc(10.), f_alpha(0.), f_gamma(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 
@@ -91,7 +91,7 @@ struct ConstraintForceTask{
   double desiredForce;
   CtrlTask desiredApproach;
 
-  ConstraintForceTask(TaskMap* m):map(*m), active(true), desiredForce(0.), desiredApproach(m){}
+  ConstraintForceTask(TaskMap* m):map(*m), active(true), desiredForce(0.), desiredApproach("desiredApproach", m){}
 
   void updateConstraintControl(const arr& g, const double& lambda_desired);
 };
@@ -124,7 +124,7 @@ struct FeedbackMotionControl /*: MotionProblem*/ {
   void getCostCoeffs(arr& c, arr& J); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
-  void calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0); ///< returns the linearized control law
+  arr calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F); ///< returns the linearized control law
   void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma); ///< returns the force controller coefficients
   void updateConstraintControllers();
   void reportCurrentState();
