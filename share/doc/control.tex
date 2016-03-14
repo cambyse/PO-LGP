@@ -18,6 +18,9 @@
 \geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
 \renewcommand{\baselinestretch}{1.1}
 
+\newcommand{\rf}{{\text{ref}}}
+\newcommand{\eig}{{\text{eig}}}
+
 \newenvironment{items}{
 \par\small
 \begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
@@ -499,5 +502,79 @@ $$ \ddot y^* = k_p (y^* - y) + k_d (\dot y^*-\dot y) $$
 and send this desired endeff accel to the general controller.
 
 What about $\l^*$??
+
+\section{What do we want?}
+
+\begin{description}
+\item[desired task space acceleration law]
+\begin{align}
+\ddot y^*
+ &= \ddot y_\rf + K_p(y_\rf-y) + K_d (\dot y_\rf -\dot y) + K_{Ip} \int (y_\rf-y) + K_{Id} \int (\dot y_\rf -\dot y)
+\end{align}
+That defines a desired \emph{acceleration}. But if the system was
+precise in enforcing this acceleration it would be
+non-compliant. Note: strictly speaking, if this law says $\ddot y^*=0$
+(e.g., because $K_p$ and $K_d$ are zero), then this is a strict
+statement that should be enforced.
+
+\item[precision/compliance]
+Given a desried $\ddot y^*$, maybe we state that precision along some
+dimensions is not that important. We may capture this with the
+precision matrix $C$. As a convention, perhaps let the
+$\eig(C)\in[0,1]$, and an eigen value of $1$ states full precision,
+while an eigen value of $0$ states full compliance.
+
+This implies an objective term
+$$\norm{J_\phi \ddot q - \ddot y^*}^2_C$$
+
+\item[control costs]
+$$\norm{u}^2_H = \norm{M \ddot q + F}^2_H$$
+
+\item[error on the dynamics level]
+
+We have a model dynamics $u=M \ddot q + F$. Let's relax this and
+assume
+\begin{align}
+u=M \ddot q + F + g
+\end{align}
+for some unknown and variable (slowly changing) $g\in\RRR^n$. This is
+like constant loads on the joints. We may estimate $g$ as a low-pass
+filter. Then,
+\begin{align}
+g = \< u - M \ddot q + F \>_\text{low pass}
+= \< u \> - M \<\ddot q\> + F
+\end{align}
+
+But is this what we want? Does this contradict compliance in the case of
+contact? Assuming contact, we systematically do not accelerate towards
+the contact. This leads to a systematic error in the system equations;
+$g$ is adapted---and converges exactly to the \emph{dual parameter} of
+the constraint. So far so good.
+
+Now, if we use the adapted system dynamics $u=M \ddot q + F + g$ to
+decide on the controls, then we try to compensate for the systematic
+error $g$, that is, we push even harder. In the case of the constraint
+that just won't work and might diverge.
+
+Solutions: Estimate $g$ only in the metric $J_\phi^\T C J_\phi$? Or
+maybe the general objective $\norm{u}^2_H$ will automatically lead to
+non-diverging $u$? The latter is true if $g$ is really used in this
+norm
+$$\norm{u}^2_H = \norm{M \ddot q + F + g}^2_H$$
+Now $u$ will try to avoid pushing agains hard constraints.
+
+Does now the eigenvalues $\eig(C)\in[0,1]$ make sense?
+
+\item[error on task space level]
+
+\item[Measured-force limits]
+
+\item[Limit Energy]
+
+\end{description}
+
+
+
+
 
 \end{document}
