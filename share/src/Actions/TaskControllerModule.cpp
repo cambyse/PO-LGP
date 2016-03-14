@@ -17,7 +17,7 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
   , oldfashioned(true)
   , useRos(false)
   , syncModelStateWithReal(false)
-  , verbose(false)
+  , verbose(true)
   , useDynSim(true) {
 
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
@@ -189,6 +189,7 @@ void TaskControllerModule::step(){
     feedbackController->tasks = ctrlTasks();
 
     //if there are no tasks, just stabilize
+    if(false){
     if(feedbackController->tasks.N < 1) {
       TaskMap* qItselfTask = new TaskMap_qItself();
       CtrlTask* qItselfLaw = new CtrlTask(qItselfTask);
@@ -197,9 +198,10 @@ void TaskControllerModule::step(){
       qItselfLaw->setTarget(qItselfLaw->map.phi(modelWorld()), zeros(qItselfLaw->map.dim_phi(modelWorld())));
       feedbackController->tasks.append(qItselfLaw);
     }
+    }
 
     //TODO qItself task for joint space stability
-    if(true) {
+    if(false) {
       TaskMap* qItselfJointSpaceStabilityTask = new TaskMap_qItself();
       CtrlTask* qItselfJSStabilityLaw = new CtrlTask(qItselfJointSpaceStabilityTask);
       qItselfJSStabilityLaw->prec = 10.0;
@@ -219,7 +221,7 @@ void TaskControllerModule::step(){
     //      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
     //    }
 
-
+    if(verbose) feedbackController->reportCurrentState();
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
