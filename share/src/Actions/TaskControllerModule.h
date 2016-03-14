@@ -23,19 +23,23 @@ struct TaskControllerModule : Module {
   ACCESSnew(bool, fixBase)
   ACCESSnew(arr, pr2_odom)
 
-  //non-protected members
+  ACCESSnew(sensor_msgs::JointState, jointState)
+  ACCESSnew(arr, q_ref)
+
 //private:
   ors::KinematicWorld realWorld;
   FeedbackMotionControl *feedbackController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
-  const arr q0; //< homing pose
+  arr q0; //< homing pose
+  mlr::String robot;
   bool useRos;
+  bool requiresInitialSync;
   bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
   bool verbose;
 
 public:
-  TaskControllerModule(const char* modelFile=NULL);
+  TaskControllerModule(const char* robot="pr2");
   ~TaskControllerModule();
 
   void open();

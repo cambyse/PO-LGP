@@ -223,9 +223,9 @@ struct KinematicWorld : GLDrawer{
   void init(const Graph& G);
 
   /// @name access
-  Body *getBodyByName(const char* name) const;
-  Shape *getShapeByName(const char* name) const;
-  Joint *getJointByName(const char* name) const;
+  Body *getBodyByName(const char* name, bool warnIfNotExist=true) const;
+  Shape *getShapeByName(const char* name, bool warnIfNotExist=true) const;
+  Joint *getJointByName(const char* name, bool warnIfNotExist=true) const;
   Joint *getJointByBodies(const Body* from, const Body* to) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   bool checkUniqueNames() const;

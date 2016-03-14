@@ -7,16 +7,22 @@ using namespace std;
 
 #ifdef MLR_ROS
 #  include <pr2/roscom.h>
+#  include <pr2/baxter.h>
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* modelFile)
+TaskControllerModule::TaskControllerModule(const char* _robot)
     : Module("TaskControllerModule", .01)
-    , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
     , feedbackController(NULL)
-    , q0(realWorld.q)
     , useRos(false)
+    , requiresInitialSync(true)
     , syncModelStateWithRos(false)
     , verbose(false) {
+
+  robot = mlr::getParameter<mlr::String>("robot", _robot);
+  if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter-modifications.ors").p);
+  else HALT("undefined robot '" <<robot <<"'");
+  q0 = realWorld.q;
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -58,16 +64,25 @@ void TaskControllerModule::step(){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
   }
 
-  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation");
+  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
 
   //-- read real state
   if(useRos){
-    ctrl_obs.waitForNextRevision();
-    pr2_odom.waitForRevisionGreaterThan(0);
-    q_real = ctrl_obs.get()->q;
-    qdot_real = ctrl_obs.get()->qdot;
-    if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
+    bool succ=true;
+    if(robot=="pr2"){
+      ctrl_obs.waitForNextRevision();
+      pr2_odom.waitForRevisionGreaterThan(0);
+      q_real = ctrl_obs.get()->q;
+      qdot_real = ctrl_obs.get()->qdot;
       q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    }
+    if(robot=="baxter"){
+      jointState.waitForRevisionGreaterThan(20);
+      q_real = realWorld.q;
+      succ = baxter_update_qReal(q_real, jointState.get(), realWorld);
+      qdot_real = zeros(q_real.N);
+    }
+    if(succ && q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithRos){
         q_model = q_real;
@@ -76,11 +91,13 @@ void TaskControllerModule::step(){
         cout <<"** GO!" <<endl;
         cout <<"REMOTE joint dimension=" <<q_real.N <<endl;
         cout <<"LOCAL  joint dimension=" <<realWorld.q.N <<endl;
+        cout <<"initial joint state=" <<q_model <<endl;
         syncModelStateWithRos = false;
       }
+      requiresInitialSync = false;
     }else{
       if(t>20){
-        HALT("sync'ing real PR2 with simulated failed")
+        HALT("sync'ing real robot with simulated failed")
       }
     }
   }
@@ -95,7 +112,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
@@ -127,7 +144,7 @@ void TaskControllerModule::step(){
     arr a = feedbackController->operationalSpaceControl();
     q_model += .001*qdot_model;
     qdot_model += .001*a;
-    if(fixBase.get()) {
+    if(trans && fixBase.get()) {
       qdot_model(trans->qIndex+0) = 0;
       qdot_model(trans->qIndex+1) = 0;
       qdot_model(trans->qIndex+2) = 0;
@@ -178,8 +195,9 @@ void TaskControllerModule::step(){
   ctrlTasks.deAccess();
 
   //-- send the computed movement to the robot
-  if(useRos){
+  if(useRos && !requiresInitialSync){
     ctrl_ref.set() = refs;
+    q_ref.set() = q_model;
   }
 }
 

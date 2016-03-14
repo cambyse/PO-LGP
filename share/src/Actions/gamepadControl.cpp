@@ -26,7 +26,7 @@ void GamepadControlActivity::step(){
   if(!g2t){
     if(!taskController->feedbackController) return;
     g2t = new Gamepad2Tasks(*taskController->feedbackController);
-    ctrlTasks.set() = { g2t->endeffR, g2t->endeffL, g2t->base, g2t->torso, g2t->head, g2t->headAxes, g2t->limits, g2t->coll,  g2t->gripperL, g2t->gripperR };
+    ctrlTasks.set() = g2t->getTasks();
 //    taskController->verbose = true;
   }
   arr gamepad = gamepadState.get();

@@ -173,6 +173,10 @@ CtrlMsg conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg){
   return CtrlMsg(conv_stdvec2arr(msg.q), conv_stdvec2arr(msg.qdot), conv_stdvec2arr(msg.fL), conv_stdvec2arr(msg.fR), conv_stdvec2arr(msg.u_bias), conv_stdvec2arr(msg.J_ft_inv), msg.velLimitRatio, msg.effLimitRatio, msg.gamma);
 }
 
+arr conv_JointState2arr(const sensor_msgs::JointState& msg){
+  return conv_stdvec2arr(msg.position);
+}
+
 marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
   marc_controller_pkg::JointState jointState;
   if(!ctrl.q.N) return jointState;
@@ -524,4 +528,6 @@ void RosCom_ForceSensorSync::close(){ NICO }
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
+
+
 

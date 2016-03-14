@@ -20,7 +20,9 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
   bool createdNewMarkers = false;
 
   // transform: torso_lift_link is the reference frame_id
-  ors::Transformation refFrame = world.getBodyByName("torso_lift_link")->X;
+  ors::Body *torso = world.getBodyByName("torso_lift_link", false);
+  if(!torso) return; //TODO: make this more general!
+  ors::Transformation refFrame = torso->X;
 
   for (AlvarMarker& marker : markers.markers) {
     mlr::String marker_name = STRING("marker" << marker.id);
