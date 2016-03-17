@@ -99,7 +99,7 @@ void Teleop2Tasks::updateMovement(floatA& cal_pose, arr& old_pos, arr& old_effpo
 
   if(effPos){
     effPos->setTarget(old_effpos);
-    effPos->setCompliance(TODO);
+//    effPos->setCompliance( c_in_this_direction = 1., c_in_other_directions=.1, direction=ARR(.7,.7,0) );
   }
   copy(old_pos, pos);
 }
