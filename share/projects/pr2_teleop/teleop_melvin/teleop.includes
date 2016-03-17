@@ -1,3 +1,2 @@
-g4mapper
-g4taprecon
-pd_executor
+../../../src
+/opt/ros/indigo/include
