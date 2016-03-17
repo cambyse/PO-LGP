@@ -97,7 +97,10 @@ void Teleop2Tasks::updateMovement(floatA& cal_pose, arr& old_pos, arr& old_effpo
   }
   old_effpos +=pos_div;
 
-  if(effPos) effPos->setTarget(old_effpos);
+  if(effPos){
+    effPos->setTarget(old_effpos);
+    effPos->setCompliance(TODO);
+  }
   copy(old_pos, pos);
 }
 
