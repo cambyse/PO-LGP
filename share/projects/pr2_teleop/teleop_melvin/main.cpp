@@ -7,6 +7,7 @@
 #include <Perception/perception.h>
 #include <Hardware/gamepad/gamepad.h>
 #include "calibrator_module.h"
+#include <Ors/orsviewer.h>
 
 // ============================================================================
 
