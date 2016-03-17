@@ -7,7 +7,7 @@
 
 // ============================================================================
 /**
- * A SensorActivityABC (an ABC) listens to sensor data and adds symbols to the relational machine.
+ * A SensorActivity listens to sensor data and adds symbols to the relational machine.
  *
  * Braindump: what kind of sensor stuff
  * - thresholds

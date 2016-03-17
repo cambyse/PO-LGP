@@ -48,7 +48,7 @@ arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::KinematicWorld * G){
 	pj = b->body->X.pos + b->body->X.rot * b->rel.pos;
 	G->jacobianPos(Ji,a->body->index,&a->rel);
 	G->jacobianPos(Jj,b->body->index,&b->rel);
-	G->jacobianR(JRj,b->body->index);
+	G->axesMatrix(JRj,b->body->index);
 	J.resize(3,Jj.d1);
 	for(k=0;k<Jj.d1;k++){
 		vi.set(Ji (0,k),Ji (1,k),Ji (2,k));

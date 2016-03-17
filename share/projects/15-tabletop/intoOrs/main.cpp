@@ -149,8 +149,8 @@ struct Main{
       gl.clear();
       gl.add(glStandardScene, 0);
       gl.add(ors::glDrawGraph, &S.modelWorld());
-//      for(ors::Mesh& m:S.clusters()) gl.add(glDrawMesh, &m);
-      gl.add(glDrawMesh, &S.pointCloud());
+//      for(ors::Mesh& m:S.clusters()) gl.add(m);
+      gl.add(S.pointCloud());
       gl.update();
 
       S.clusters.deAccess();

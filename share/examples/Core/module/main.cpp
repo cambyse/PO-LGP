@@ -57,6 +57,7 @@ void way1(){
 #endif
 
   cout <<"result = " <<s.get() <<endl;
+  delete m;
 
 }
 
@@ -66,15 +67,14 @@ void way1(){
 //
 
 struct MySystem{
-  ACCESSname(arr, x);
-  ACCESSname(double, s);
-  MySystem(){
-    new ComputeSum();
-    //connect(); //this will create the respective variables!
-  }
+  ACCESSname(arr, x)
+  ACCESSname(double, s)
+  ComputeSum cs;
 };
 
 void way2(){
+  cout <<registry() <<endl;
+
   MySystem S;
 
   S.x.set() = {1., 2., 3.};
@@ -108,7 +108,7 @@ void TEST(SystemConnect) {
 //===========================================================================
 
 int MAIN(int argc, char** argv){
-  int mode=1;
+  int mode=0;
   if(argc>1) mode=atoi(argv[1]);
   switch(mode){
     case 0: way0(); way1(); way2(); testSystemConnect(); break;

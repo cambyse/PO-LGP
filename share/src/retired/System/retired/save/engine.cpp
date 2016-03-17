@@ -205,7 +205,7 @@ void Engine::step(Module &m){
 }
 
 void Engine::step(SystemDescription& S){
-  ModuleEntryL modules = S.system.getTypedValues<SystemDescription::ModuleEntry>("Module");
+  ModuleEntryL modules = S.system.getValuesOfType<SystemDescription::ModuleEntry>("Module");
   for(SystemDescription::ModuleEntry *m: modules) step(*m->mod);
 }
 
@@ -213,7 +213,7 @@ void Engine::test(SystemDescription& S){
   CHECK(mode!=threaded,"");
   mode=serial;
   create(S);
-  ModuleEntryL modules = S.system.getTypedValues<SystemDescription::ModuleEntry>("Module");
+  ModuleEntryL modules = S.system.getValuesOfType<SystemDescription::ModuleEntry>("Module");
   for(SystemDescription::ModuleEntry *m: modules) m->mod->test();
 }
 

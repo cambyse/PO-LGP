@@ -72,11 +72,16 @@ void TEST(Logging){
 
 void TEST(Exception){
   try{
-    CHECK_EQ(2,1,"bla")
+    CHECK_EQ(2,1,"two is not equal to one")
   }catch(const char* err){
     LOG(0) <<"Exception caught: " <<err;
   }
 }
+
+void TEST(Paths){
+  std::cout <<mlr::mlrPath("here") <<endl;
+}
+
 
 int MAIN(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
@@ -84,9 +89,10 @@ int MAIN(int argc,char** argv){
   uint double_size=sizeof(double);
   uint long_int_size=sizeof(long);
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
-  
+
+  testPaths();
 //  testString();
-  testParameter();
+//  testParameter();
 //  testTimer();
 //  testLogging();
 //  testException();

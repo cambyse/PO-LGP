@@ -40,8 +40,10 @@ class qItselfController : public ha::Controller {
 
     virtual void setGoal(const Eigen::MatrixXd& new_goal);
 
-    virtual void setEndeff(const std::string& endeff) {
-      _endeff = endeff;  
+    virtual void setEndeff(const std::string& endeff);
+
+    virtual void setIndices(const Eigen::MatrixXd& index_vec) {
+       _index_vec = index_vec;
     }
 
   private:
@@ -49,6 +51,6 @@ class qItselfController : public ha::Controller {
 
     std::string _create_fact() const;
 
-    std::string _endeff;
+    Eigen::MatrixXd _index_vec;
     bool _running;
 };

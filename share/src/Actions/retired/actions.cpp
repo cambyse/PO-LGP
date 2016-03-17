@@ -10,7 +10,7 @@ Action::Action(ActionMachine& actionMachine, const char* name)
   actionMachine.KB.readAccess();
   Node *it = actionMachine.KB().getNode(name);
   if(it && &it->container != &actionMachine.KB()) it=NULL;
-  if(it && it->getValueType()!=typeid(bool)) it=NULL;
+  if(it && !it->isOfType<bool>()) it=NULL;
   actionMachine.KB.deAccess();
   //if(!it) MLR_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
   if(it) symbol=it;

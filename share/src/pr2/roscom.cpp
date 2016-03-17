@@ -19,8 +19,24 @@ void rosCheckInit(const char* module_name){
   mutex.unlock();
 }
 
+std_msgs::String conv_string2string(const mlr::String& str){
+  std_msgs::String msg;
+  if(str.N) msg.data = str.p;
+  return msg;
+}
 
-ors::Transformation conv_pose2transformation(const tf::Transform &trans){
+mlr::String conv_string2string(const std_msgs::String& msg){
+  return mlr::String(msg.data);
+}
+
+std_msgs::String conv_stringA2string(const StringA& strs){
+  std_msgs::String msg;
+  for(const mlr::String& str:strs)
+    if(str.N){ msg.data += ", ";  msg.data += str.p; }
+  return msg;
+}
+
+ors::Transformation conv_transform2transformation(const tf::Transform &trans){
   ors::Transformation X;
   X.setZero();
   tf::Quaternion q = trans.getRotation();
@@ -40,8 +56,16 @@ ors::Transformation conv_pose2transformation(const geometry_msgs::Pose &pose){
   return X;
 }
 
+ors::Vector conv_point2vector(const geometry_msgs::Point& p){
+  return ors::Vector(p.x, p.y, p.z);
+}
+
+ors::Quaternion conv_quaternion2quaternion(const geometry_msgs::Quaternion& q){
+  return ors::Quaternion(q.w, q.x, q.y, q.z);
+}
+
 void conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped& pose){
-  q.subRange(qIndex, qIndex+3) = conv_pose2transXYPhi(pose);
+  q.subRef(qIndex, qIndex+3) = conv_pose2transXYPhi(pose);
 }
 
 arr conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped& pose){
@@ -70,7 +94,7 @@ ors::Transformation ros_getTransform(const std::string& from, const std::string&
   try{
     tf::StampedTransform transform;
     listener.lookupTransform(from, to, ros::Time(0), transform);
-    X = conv_pose2transformation(transform);
+    X = conv_transform2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -86,7 +110,7 @@ ors::Transformation ros_getTransform(const std::string& from, const std_msgs::He
     tf::StampedTransform transform;
     listener.waitForTransform(from, to.frame_id, to.stamp, ros::Duration(0.05));
     listener.lookupTransform(from, to.frame_id, to.stamp, transform);
-    X = conv_pose2transformation(transform);
+    X = conv_transform2transformation(transform);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -94,7 +118,6 @@ ors::Transformation ros_getTransform(const std::string& from, const std_msgs::He
   }
   return X;
 }
-
 
 arr conv_points2arr(const std::vector<geometry_msgs::Point>& pts){
   uint n=pts.size();
@@ -147,7 +170,8 @@ uint16A conv_image2uint16A(const sensor_msgs::Image& msg){
 }
 
 CtrlMsg conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg){
-  return CtrlMsg(conv_stdvec2arr(msg.q), conv_stdvec2arr(msg.qdot), conv_stdvec2arr(msg.fL), conv_stdvec2arr(msg.fR), conv_stdvec2arr(msg.u_bias), conv_stdvec2arr(msg.J_ft_inv), msg.velLimitRatio, msg.effLimitRatio, msg.gamma);
+  return CtrlMsg(conv_stdvec2arr(msg.q), conv_stdvec2arr(msg.qdot), conv_stdvec2arr(msg.fL), conv_stdvec2arr(msg.fR),conv_stdvec2arr(msg.u_bias), conv_stdvec2arr(msg.fL_err), conv_stdvec2arr(msg.fR_err));
+
 }
 
 marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
@@ -156,16 +180,23 @@ marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
   jointState.q = conv_arr2stdvec(ctrl.q);
   jointState.qdot= conv_arr2stdvec(ctrl.qdot);
   jointState.fL = conv_arr2stdvec(ctrl.fL);
+  jointState.fR = conv_arr2stdvec(ctrl.fR);
   jointState.u_bias = conv_arr2stdvec(ctrl.u_bias);
   jointState.Kp = conv_arr2stdvec(ctrl.Kp);
   jointState.Kd = conv_arr2stdvec(ctrl.Kd);
   jointState.Ki = conv_arr2stdvec(ctrl.Ki);
-  jointState.KiFT = conv_arr2stdvec(ctrl.KiFT);
-  jointState.J_ft_inv = conv_arr2stdvec(ctrl.J_ft_inv);
+  jointState.KiFTL = conv_arr2stdvec(ctrl.KiFTL);
+  jointState.KiFTR = conv_arr2stdvec(ctrl.KiFTR);
+  jointState.J_ft_invL = conv_arr2stdvec(ctrl.J_ft_invL);
+  jointState.J_ft_invR = conv_arr2stdvec(ctrl.J_ft_invR);
   jointState.velLimitRatio = ctrl.velLimitRatio;
   jointState.effLimitRatio = ctrl.effLimitRatio;
   jointState.intLimitRatio = ctrl.intLimitRatio;
-  jointState.gamma = ctrl.gamma;
+  jointState.fL_gamma = ctrl.fL_gamma;
+  jointState.fR_gamma = ctrl.fR_gamma;
+  jointState.qd_filt = ctrl.qd_filt;
+  jointState.fL_offset = conv_arr2stdvec(ctrl.fL_offset);
+  jointState.fR_offset = conv_arr2stdvec(ctrl.fR_offset);
   return jointState;
 }
 
@@ -514,7 +545,4 @@ void RosCom_ForceSensorSync::close(){ NICO }
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
-
-
-
 

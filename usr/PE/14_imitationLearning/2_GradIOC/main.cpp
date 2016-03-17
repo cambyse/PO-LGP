@@ -80,7 +80,7 @@ struct IOC_DemoCost {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
 
     if (&Hf) {
@@ -286,7 +286,7 @@ void simpleMotion(){
   IOC ioc(demos,numParam,false,false);
 
 
-  arr w = ones(numParam,1);w.flatten();//fabs(randn(numParam,1)); w.flatten();
+  arr w = ones(numParam,1);w.reshapeFlat();//fabs(randn(numParam,1)); w.reshapeFlat();
 
 //  checkAllGradients(ioc,w,1e-3);
   //  //  return;

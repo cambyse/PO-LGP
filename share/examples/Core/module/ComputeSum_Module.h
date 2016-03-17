@@ -9,9 +9,11 @@ struct ComputeSum : Module {
   ACCESS(double, s); //output
   ACCESS(MyType, i);
 
-  ComputeSum(){}          //replaces old 'open'
+  ComputeSum():Thread("ComputeSum"){}          //replaces old 'open'
   virtual ~ComputeSum(){} //replaces old 'close'
 
-  virtual void step();
-  virtual bool test();
+  void open(){}
+  void close(){}
+  void step();
+  bool test();
 };

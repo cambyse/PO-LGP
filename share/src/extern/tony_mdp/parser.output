@@ -1,9 +1,9 @@
-Terminale, die in Grammatik unbenutzt sind
+Terminals unused in grammar
 
    EOFTOK
 
 
-Grammatik
+Grammar
 
     0 $accept: pomdp_file $end
 
@@ -160,7 +160,7 @@ Grammatik
    92              | %empty
 
 
-Terminale und die Regeln, in denen sie verwendet werden
+Terminals, with rules where they appear
 
 $end (0) 0
 INTTOK (1) 17 21 25 75 78 81 86 88
@@ -191,1356 +191,1353 @@ error (256)
 EOFTOK (258)
 
 
-Nicht-Terminal und die Regeln, in denen sie verwendet werden
+Nonterminals, with rules where they appear
 
 $accept (27)
-    auf der linken Seite: 0
+    on left: 0
 pomdp_file (28)
-    auf der linken Seite: 3, auf der rechten Seite: 0
+    on left: 3, on right: 0
 $@1 (29)
-    auf der linken Seite: 1, auf der rechten Seite: 3
+    on left: 1, on right: 3
 $@2 (30)
-    auf der linken Seite: 2, auf der rechten Seite: 3
+    on left: 2, on right: 3
 preamble (31)
-    auf der linken Seite: 4 5, auf der rechten Seite: 3 4
+    on left: 4 5, on right: 3 4
 param_type (32)
-    auf der linken Seite: 6 7 8 9 10, auf der rechten Seite: 4
+    on left: 6 7 8 9 10, on right: 4
 discount_param (33)
-    auf der linken Seite: 11, auf der rechten Seite: 6
+    on left: 11, on right: 6
 value_param (34)
-    auf der linken Seite: 12, auf der rechten Seite: 7
+    on left: 12, on right: 7
 value_tail (35)
-    auf der linken Seite: 13 14, auf der rechten Seite: 12
+    on left: 13 14, on right: 12
 state_param (36)
-    auf der linken Seite: 16, auf der rechten Seite: 8
+    on left: 16, on right: 8
 $@3 (37)
-    auf der linken Seite: 15, auf der rechten Seite: 16
+    on left: 15, on right: 16
 state_tail (38)
-    auf der linken Seite: 17 18, auf der rechten Seite: 16
+    on left: 17 18, on right: 16
 action_param (39)
-    auf der linken Seite: 20, auf der rechten Seite: 9
+    on left: 20, on right: 9
 $@4 (40)
-    auf der linken Seite: 19, auf der rechten Seite: 20
+    on left: 19, on right: 20
 action_tail (41)
-    auf der linken Seite: 21 22, auf der rechten Seite: 20
+    on left: 21 22, on right: 20
 obs_param (42)
-    auf der linken Seite: 24, auf der rechten Seite: 10
+    on left: 24, on right: 10
 $@5 (43)
-    auf der linken Seite: 23, auf der rechten Seite: 24
+    on left: 23, on right: 24
 obs_param_tail (44)
-    auf der linken Seite: 25 26, auf der rechten Seite: 24
+    on left: 25 26, on right: 24
 start_state (45)
-    auf der linken Seite: 28 29 31 33 34, auf der rechten Seite: 3
+    on left: 28 29 31 33 34, on right: 3
 $@6 (46)
-    auf der linken Seite: 27, auf der rechten Seite: 28
+    on left: 27, on right: 28
 $@7 (47)
-    auf der linken Seite: 30, auf der rechten Seite: 31
+    on left: 30, on right: 31
 $@8 (48)
-    auf der linken Seite: 32, auf der rechten Seite: 33
+    on left: 32, on right: 33
 start_state_list (49)
-    auf der linken Seite: 35 36, auf der rechten Seite: 31 33 35
+    on left: 35 36, on right: 31 33 35
 param_list (50)
-    auf der linken Seite: 37 38, auf der rechten Seite: 3 37
+    on left: 37 38, on right: 3 37
 param_spec (51)
-    auf der linken Seite: 39 40 41, auf der rechten Seite: 37
+    on left: 39 40 41, on right: 37
 trans_prob_spec (52)
-    auf der linken Seite: 42, auf der rechten Seite: 39
+    on left: 42, on right: 39
 trans_spec_tail (53)
-    auf der linken Seite: 44 46 48, auf der rechten Seite: 42
+    on left: 44 46 48, on right: 42
 $@9 (54)
-    auf der linken Seite: 43, auf der rechten Seite: 44
+    on left: 43, on right: 44
 $@10 (55)
-    auf der linken Seite: 45, auf der rechten Seite: 46
+    on left: 45, on right: 46
 $@11 (56)
-    auf der linken Seite: 47, auf der rechten Seite: 48
+    on left: 47, on right: 48
 obs_prob_spec (57)
-    auf der linken Seite: 49, auf der rechten Seite: 40
+    on left: 49, on right: 40
 obs_spec_tail (58)
-    auf der linken Seite: 51 53 55, auf der rechten Seite: 49
+    on left: 51 53 55, on right: 49
 $@12 (59)
-    auf der linken Seite: 50, auf der rechten Seite: 51
+    on left: 50, on right: 51
 $@13 (60)
-    auf der linken Seite: 52, auf der rechten Seite: 53
+    on left: 52, on right: 53
 $@14 (61)
-    auf der linken Seite: 54, auf der rechten Seite: 55
+    on left: 54, on right: 55
 reward_spec (62)
-    auf der linken Seite: 56, auf der rechten Seite: 41
+    on left: 56, on right: 41
 reward_spec_tail (63)
-    auf der linken Seite: 58 60 62 64, auf der rechten Seite: 56
+    on left: 58 60 62 64, on right: 56
 $@15 (64)
-    auf der linken Seite: 57, auf der rechten Seite: 58
+    on left: 57, on right: 58
 $@16 (65)
-    auf der linken Seite: 59, auf der rechten Seite: 60
+    on left: 59, on right: 60
 $@17 (66)
-    auf der linken Seite: 61, auf der rechten Seite: 62
+    on left: 61, on right: 62
 $@18 (67)
-    auf der linken Seite: 63, auf der rechten Seite: 64
+    on left: 63, on right: 64
 ui_matrix (68)
-    auf der linken Seite: 65 66 67, auf der rechten Seite: 48
+    on left: 65 66 67, on right: 48
 u_matrix (69)
-    auf der linken Seite: 68 69 70, auf der rechten Seite: 28 46 53
-    55
+    on left: 68 69 70, on right: 28 46 53 55
 prob_matrix (70)
-    auf der linken Seite: 71 72, auf der rechten Seite: 67 70 71
+    on left: 71 72, on right: 67 70 71
 num_matrix (71)
-    auf der linken Seite: 73 74, auf der rechten Seite: 60 62 64 73
+    on left: 73 74, on right: 60 62 64 73
 state (72)
-    auf der linken Seite: 75 76 77, auf der rechten Seite: 35 36 44
-    46 51 53 58 60 62
+    on left: 75 76 77, on right: 35 36 44 46 51 53 58 60 62
 action (73)
-    auf der linken Seite: 78 79 80, auf der rechten Seite: 44 46 48
-    51 53 55 58 60 62 64
+    on left: 78 79 80, on right: 44 46 48 51 53 55 58 60 62 64
 obs (74)
-    auf der linken Seite: 81 82 83, auf der rechten Seite: 51 58
+    on left: 81 82 83, on right: 51 58
 ident_list (75)
-    auf der linken Seite: 84 85, auf der rechten Seite: 18 22 26 84
+    on left: 84 85, on right: 18 22 26 84
 prob (76)
-    auf der linken Seite: 86 87, auf der rechten Seite: 44 51 71 72
+    on left: 86 87, on right: 44 51 71 72
 number (77)
-    auf der linken Seite: 88 89, auf der rechten Seite: 11 58 73 74
+    on left: 88 89, on right: 11 58 73 74
 optional_sign (78)
-    auf der linken Seite: 90 91 92, auf der rechten Seite: 88 89
+    on left: 90 91 92, on right: 88 89
 
 
-Zustand 0
+State 0
 
     0 $accept: . pomdp_file $end
 
-    $default  reduziere mit Regel 5 (preamble)
+    $default  reduce using rule 5 (preamble)
 
-    pomdp_file  gehe zu Zustand 1 über
-    preamble    gehe zu Zustand 2 über
+    pomdp_file  go to state 1
+    preamble    go to state 2
 
 
-Zustand 1
+State 1
 
     0 $accept: pomdp_file . $end
 
-    $end  schiebe und gehe zu Zustand 3 über
+    $end  shift, and go to state 3
 
 
-Zustand 2
+State 2
 
     3 pomdp_file: preamble . $@1 start_state $@2 param_list
     4 preamble: preamble . param_type
 
-    DISCOUNTTOK  schiebe und gehe zu Zustand 4 über
-    VALUESTOK    schiebe und gehe zu Zustand 5 über
-    STATETOK     schiebe und gehe zu Zustand 6 über
-    ACTIONTOK    schiebe und gehe zu Zustand 7 über
-    OBSTOK       schiebe und gehe zu Zustand 8 über
+    DISCOUNTTOK  shift, and go to state 4
+    VALUESTOK    shift, and go to state 5
+    STATETOK     shift, and go to state 6
+    ACTIONTOK    shift, and go to state 7
+    OBSTOK       shift, and go to state 8
 
-    $default  reduziere mit Regel 1 ($@1)
+    $default  reduce using rule 1 ($@1)
 
-    $@1             gehe zu Zustand 9 über
-    param_type      gehe zu Zustand 10 über
-    discount_param  gehe zu Zustand 11 über
-    value_param     gehe zu Zustand 12 über
-    state_param     gehe zu Zustand 13 über
-    action_param    gehe zu Zustand 14 über
-    obs_param       gehe zu Zustand 15 über
+    $@1             go to state 9
+    param_type      go to state 10
+    discount_param  go to state 11
+    value_param     go to state 12
+    state_param     go to state 13
+    action_param    go to state 14
+    obs_param       go to state 15
 
 
-Zustand 3
+State 3
 
     0 $accept: pomdp_file $end .
 
-    $default  annehmen
+    $default  accept
 
 
-Zustand 4
+State 4
 
    11 discount_param: DISCOUNTTOK . COLONTOK number
 
-    COLONTOK  schiebe und gehe zu Zustand 16 über
+    COLONTOK  shift, and go to state 16
 
 
-Zustand 5
+State 5
 
    12 value_param: VALUESTOK . COLONTOK value_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 17 über
+    COLONTOK  shift, and go to state 17
 
 
-Zustand 6
+State 6
 
    16 state_param: STATETOK . COLONTOK $@3 state_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 18 über
+    COLONTOK  shift, and go to state 18
 
 
-Zustand 7
+State 7
 
    20 action_param: ACTIONTOK . COLONTOK $@4 action_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 19 über
+    COLONTOK  shift, and go to state 19
 
 
-Zustand 8
+State 8
 
    24 obs_param: OBSTOK . COLONTOK $@5 obs_param_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 20 über
+    COLONTOK  shift, and go to state 20
 
 
-Zustand 9
+State 9
 
     3 pomdp_file: preamble $@1 . start_state $@2 param_list
 
-    STARTTOK  schiebe und gehe zu Zustand 21 über
+    STARTTOK  shift, and go to state 21
 
-    $default  reduziere mit Regel 34 (start_state)
+    $default  reduce using rule 34 (start_state)
 
-    start_state  gehe zu Zustand 22 über
+    start_state  go to state 22
 
 
-Zustand 10
+State 10
 
     4 preamble: preamble param_type .
 
-    $default  reduziere mit Regel 4 (preamble)
+    $default  reduce using rule 4 (preamble)
 
 
-Zustand 11
+State 11
 
     6 param_type: discount_param .
 
-    $default  reduziere mit Regel 6 (param_type)
+    $default  reduce using rule 6 (param_type)
 
 
-Zustand 12
+State 12
 
     7 param_type: value_param .
 
-    $default  reduziere mit Regel 7 (param_type)
+    $default  reduce using rule 7 (param_type)
 
 
-Zustand 13
+State 13
 
     8 param_type: state_param .
 
-    $default  reduziere mit Regel 8 (param_type)
+    $default  reduce using rule 8 (param_type)
 
 
-Zustand 14
+State 14
 
     9 param_type: action_param .
 
-    $default  reduziere mit Regel 9 (param_type)
+    $default  reduce using rule 9 (param_type)
 
 
-Zustand 15
+State 15
 
    10 param_type: obs_param .
 
-    $default  reduziere mit Regel 10 (param_type)
+    $default  reduce using rule 10 (param_type)
 
 
-Zustand 16
+State 16
 
    11 discount_param: DISCOUNTTOK COLONTOK . number
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    $default  reduziere mit Regel 92 (optional_sign)
+    $default  reduce using rule 92 (optional_sign)
 
-    number         gehe zu Zustand 25 über
-    optional_sign  gehe zu Zustand 26 über
+    number         go to state 25
+    optional_sign  go to state 26
 
 
-Zustand 17
+State 17
 
    12 value_param: VALUESTOK COLONTOK . value_tail
 
-    REWARDTOK  schiebe und gehe zu Zustand 27 über
-    COSTTOK    schiebe und gehe zu Zustand 28 über
+    REWARDTOK  shift, and go to state 27
+    COSTTOK    shift, and go to state 28
 
-    value_tail  gehe zu Zustand 29 über
+    value_tail  go to state 29
 
 
-Zustand 18
+State 18
 
    16 state_param: STATETOK COLONTOK . $@3 state_tail
 
-    $default  reduziere mit Regel 15 ($@3)
+    $default  reduce using rule 15 ($@3)
 
-    $@3  gehe zu Zustand 30 über
+    $@3  go to state 30
 
 
-Zustand 19
+State 19
 
    20 action_param: ACTIONTOK COLONTOK . $@4 action_tail
 
-    $default  reduziere mit Regel 19 ($@4)
+    $default  reduce using rule 19 ($@4)
 
-    $@4  gehe zu Zustand 31 über
+    $@4  go to state 31
 
 
-Zustand 20
+State 20
 
    24 obs_param: OBSTOK COLONTOK . $@5 obs_param_tail
 
-    $default  reduziere mit Regel 23 ($@5)
+    $default  reduce using rule 23 ($@5)
 
-    $@5  gehe zu Zustand 32 über
+    $@5  go to state 32
 
 
-Zustand 21
+State 21
 
    28 start_state: STARTTOK . COLONTOK $@6 u_matrix
    29            | STARTTOK . COLONTOK STRINGTOK
    31            | STARTTOK . INCLUDETOK COLONTOK $@7 start_state_list
    33            | STARTTOK . EXCLUDETOK COLONTOK $@8 start_state_list
 
-    COLONTOK    schiebe und gehe zu Zustand 33 über
-    INCLUDETOK  schiebe und gehe zu Zustand 34 über
-    EXCLUDETOK  schiebe und gehe zu Zustand 35 über
+    COLONTOK    shift, and go to state 33
+    INCLUDETOK  shift, and go to state 34
+    EXCLUDETOK  shift, and go to state 35
 
 
-Zustand 22
+State 22
 
     3 pomdp_file: preamble $@1 start_state . $@2 param_list
 
-    $default  reduziere mit Regel 2 ($@2)
+    $default  reduce using rule 2 ($@2)
 
-    $@2  gehe zu Zustand 36 über
+    $@2  go to state 36
 
 
-Zustand 23
+State 23
 
    91 optional_sign: MINUSTOK .
 
-    $default  reduziere mit Regel 91 (optional_sign)
+    $default  reduce using rule 91 (optional_sign)
 
 
-Zustand 24
+State 24
 
    90 optional_sign: PLUSTOK .
 
-    $default  reduziere mit Regel 90 (optional_sign)
+    $default  reduce using rule 90 (optional_sign)
 
 
-Zustand 25
+State 25
 
    11 discount_param: DISCOUNTTOK COLONTOK number .
 
-    $default  reduziere mit Regel 11 (discount_param)
+    $default  reduce using rule 11 (discount_param)
 
 
-Zustand 26
+State 26
 
    88 number: optional_sign . INTTOK
    89       | optional_sign . FLOATTOK
 
-    INTTOK    schiebe und gehe zu Zustand 37 über
-    FLOATTOK  schiebe und gehe zu Zustand 38 über
+    INTTOK    shift, and go to state 37
+    FLOATTOK  shift, and go to state 38
 
 
-Zustand 27
+State 27
 
    13 value_tail: REWARDTOK .
 
-    $default  reduziere mit Regel 13 (value_tail)
+    $default  reduce using rule 13 (value_tail)
 
 
-Zustand 28
+State 28
 
    14 value_tail: COSTTOK .
 
-    $default  reduziere mit Regel 14 (value_tail)
+    $default  reduce using rule 14 (value_tail)
 
 
-Zustand 29
+State 29
 
    12 value_param: VALUESTOK COLONTOK value_tail .
 
-    $default  reduziere mit Regel 12 (value_param)
+    $default  reduce using rule 12 (value_param)
 
 
-Zustand 30
+State 30
 
    16 state_param: STATETOK COLONTOK $@3 . state_tail
 
-    INTTOK     schiebe und gehe zu Zustand 39 über
-    STRINGTOK  schiebe und gehe zu Zustand 40 über
+    INTTOK     shift, and go to state 39
+    STRINGTOK  shift, and go to state 40
 
-    state_tail  gehe zu Zustand 41 über
-    ident_list  gehe zu Zustand 42 über
+    state_tail  go to state 41
+    ident_list  go to state 42
 
 
-Zustand 31
+State 31
 
    20 action_param: ACTIONTOK COLONTOK $@4 . action_tail
 
-    INTTOK     schiebe und gehe zu Zustand 43 über
-    STRINGTOK  schiebe und gehe zu Zustand 40 über
+    INTTOK     shift, and go to state 43
+    STRINGTOK  shift, and go to state 40
 
-    action_tail  gehe zu Zustand 44 über
-    ident_list   gehe zu Zustand 45 über
+    action_tail  go to state 44
+    ident_list   go to state 45
 
 
-Zustand 32
+State 32
 
    24 obs_param: OBSTOK COLONTOK $@5 . obs_param_tail
 
-    INTTOK     schiebe und gehe zu Zustand 46 über
-    STRINGTOK  schiebe und gehe zu Zustand 40 über
+    INTTOK     shift, and go to state 46
+    STRINGTOK  shift, and go to state 40
 
-    obs_param_tail  gehe zu Zustand 47 über
-    ident_list      gehe zu Zustand 48 über
+    obs_param_tail  go to state 47
+    ident_list      go to state 48
 
 
-Zustand 33
+State 33
 
    28 start_state: STARTTOK COLONTOK . $@6 u_matrix
    29            | STARTTOK COLONTOK . STRINGTOK
 
-    STRINGTOK  schiebe und gehe zu Zustand 49 über
+    STRINGTOK  shift, and go to state 49
 
-    $default  reduziere mit Regel 27 ($@6)
+    $default  reduce using rule 27 ($@6)
 
-    $@6  gehe zu Zustand 50 über
+    $@6  go to state 50
 
 
-Zustand 34
+State 34
 
    31 start_state: STARTTOK INCLUDETOK . COLONTOK $@7 start_state_list
 
-    COLONTOK  schiebe und gehe zu Zustand 51 über
+    COLONTOK  shift, and go to state 51
 
 
-Zustand 35
+State 35
 
    33 start_state: STARTTOK EXCLUDETOK . COLONTOK $@8 start_state_list
 
-    COLONTOK  schiebe und gehe zu Zustand 52 über
+    COLONTOK  shift, and go to state 52
 
 
-Zustand 36
+State 36
 
     3 pomdp_file: preamble $@1 start_state $@2 . param_list
 
-    $default  reduziere mit Regel 38 (param_list)
+    $default  reduce using rule 38 (param_list)
 
-    param_list  gehe zu Zustand 53 über
+    param_list  go to state 53
 
 
-Zustand 37
+State 37
 
    88 number: optional_sign INTTOK .
 
-    $default  reduziere mit Regel 88 (number)
+    $default  reduce using rule 88 (number)
 
 
-Zustand 38
+State 38
 
    89 number: optional_sign FLOATTOK .
 
-    $default  reduziere mit Regel 89 (number)
+    $default  reduce using rule 89 (number)
 
 
-Zustand 39
+State 39
 
    17 state_tail: INTTOK .
 
-    $default  reduziere mit Regel 17 (state_tail)
+    $default  reduce using rule 17 (state_tail)
 
 
-Zustand 40
+State 40
 
    85 ident_list: STRINGTOK .
 
-    $default  reduziere mit Regel 85 (ident_list)
+    $default  reduce using rule 85 (ident_list)
 
 
-Zustand 41
+State 41
 
    16 state_param: STATETOK COLONTOK $@3 state_tail .
 
-    $default  reduziere mit Regel 16 (state_param)
+    $default  reduce using rule 16 (state_param)
 
 
-Zustand 42
+State 42
 
    18 state_tail: ident_list .
    84 ident_list: ident_list . STRINGTOK
 
-    STRINGTOK  schiebe und gehe zu Zustand 54 über
+    STRINGTOK  shift, and go to state 54
 
-    $default  reduziere mit Regel 18 (state_tail)
+    $default  reduce using rule 18 (state_tail)
 
 
-Zustand 43
+State 43
 
    21 action_tail: INTTOK .
 
-    $default  reduziere mit Regel 21 (action_tail)
+    $default  reduce using rule 21 (action_tail)
 
 
-Zustand 44
+State 44
 
    20 action_param: ACTIONTOK COLONTOK $@4 action_tail .
 
-    $default  reduziere mit Regel 20 (action_param)
+    $default  reduce using rule 20 (action_param)
 
 
-Zustand 45
+State 45
 
    22 action_tail: ident_list .
    84 ident_list: ident_list . STRINGTOK
 
-    STRINGTOK  schiebe und gehe zu Zustand 54 über
+    STRINGTOK  shift, and go to state 54
 
-    $default  reduziere mit Regel 22 (action_tail)
+    $default  reduce using rule 22 (action_tail)
 
 
-Zustand 46
+State 46
 
    25 obs_param_tail: INTTOK .
 
-    $default  reduziere mit Regel 25 (obs_param_tail)
+    $default  reduce using rule 25 (obs_param_tail)
 
 
-Zustand 47
+State 47
 
    24 obs_param: OBSTOK COLONTOK $@5 obs_param_tail .
 
-    $default  reduziere mit Regel 24 (obs_param)
+    $default  reduce using rule 24 (obs_param)
 
 
-Zustand 48
+State 48
 
    26 obs_param_tail: ident_list .
    84 ident_list: ident_list . STRINGTOK
 
-    STRINGTOK  schiebe und gehe zu Zustand 54 über
+    STRINGTOK  shift, and go to state 54
 
-    $default  reduziere mit Regel 26 (obs_param_tail)
+    $default  reduce using rule 26 (obs_param_tail)
 
 
-Zustand 49
+State 49
 
    29 start_state: STARTTOK COLONTOK STRINGTOK .
 
-    $default  reduziere mit Regel 29 (start_state)
+    $default  reduce using rule 29 (start_state)
 
 
-Zustand 50
+State 50
 
    28 start_state: STARTTOK COLONTOK $@6 . u_matrix
 
-    INTTOK      schiebe und gehe zu Zustand 55 über
-    FLOATTOK    schiebe und gehe zu Zustand 56 über
-    UNIFORMTOK  schiebe und gehe zu Zustand 57 über
-    RESETTOK    schiebe und gehe zu Zustand 58 über
+    INTTOK      shift, and go to state 55
+    FLOATTOK    shift, and go to state 56
+    UNIFORMTOK  shift, and go to state 57
+    RESETTOK    shift, and go to state 58
 
-    u_matrix     gehe zu Zustand 59 über
-    prob_matrix  gehe zu Zustand 60 über
-    prob         gehe zu Zustand 61 über
+    u_matrix     go to state 59
+    prob_matrix  go to state 60
+    prob         go to state 61
 
 
-Zustand 51
+State 51
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK . $@7 start_state_list
 
-    $default  reduziere mit Regel 30 ($@7)
+    $default  reduce using rule 30 ($@7)
 
-    $@7  gehe zu Zustand 62 über
+    $@7  go to state 62
 
 
-Zustand 52
+State 52
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK . $@8 start_state_list
 
-    $default  reduziere mit Regel 32 ($@8)
+    $default  reduce using rule 32 ($@8)
 
-    $@8  gehe zu Zustand 63 über
+    $@8  go to state 63
 
 
-Zustand 53
+State 53
 
     3 pomdp_file: preamble $@1 start_state $@2 param_list .
    37 param_list: param_list . param_spec
 
-    TTOK  schiebe und gehe zu Zustand 64 über
-    OTOK  schiebe und gehe zu Zustand 65 über
-    RTOK  schiebe und gehe zu Zustand 66 über
+    TTOK  shift, and go to state 64
+    OTOK  shift, and go to state 65
+    RTOK  shift, and go to state 66
 
-    $default  reduziere mit Regel 3 (pomdp_file)
+    $default  reduce using rule 3 (pomdp_file)
 
-    param_spec       gehe zu Zustand 67 über
-    trans_prob_spec  gehe zu Zustand 68 über
-    obs_prob_spec    gehe zu Zustand 69 über
-    reward_spec      gehe zu Zustand 70 über
+    param_spec       go to state 67
+    trans_prob_spec  go to state 68
+    obs_prob_spec    go to state 69
+    reward_spec      go to state 70
 
 
-Zustand 54
+State 54
 
    84 ident_list: ident_list STRINGTOK .
 
-    $default  reduziere mit Regel 84 (ident_list)
+    $default  reduce using rule 84 (ident_list)
 
 
-Zustand 55
+State 55
 
    86 prob: INTTOK .
 
-    $default  reduziere mit Regel 86 (prob)
+    $default  reduce using rule 86 (prob)
 
 
-Zustand 56
+State 56
 
    87 prob: FLOATTOK .
 
-    $default  reduziere mit Regel 87 (prob)
+    $default  reduce using rule 87 (prob)
 
 
-Zustand 57
+State 57
 
    68 u_matrix: UNIFORMTOK .
 
-    $default  reduziere mit Regel 68 (u_matrix)
+    $default  reduce using rule 68 (u_matrix)
 
 
-Zustand 58
+State 58
 
    69 u_matrix: RESETTOK .
 
-    $default  reduziere mit Regel 69 (u_matrix)
+    $default  reduce using rule 69 (u_matrix)
 
 
-Zustand 59
+State 59
 
    28 start_state: STARTTOK COLONTOK $@6 u_matrix .
 
-    $default  reduziere mit Regel 28 (start_state)
+    $default  reduce using rule 28 (start_state)
 
 
-Zustand 60
+State 60
 
    70 u_matrix: prob_matrix .
    71 prob_matrix: prob_matrix . prob
 
-    INTTOK    schiebe und gehe zu Zustand 55 über
-    FLOATTOK  schiebe und gehe zu Zustand 56 über
+    INTTOK    shift, and go to state 55
+    FLOATTOK  shift, and go to state 56
 
-    $default  reduziere mit Regel 70 (u_matrix)
+    $default  reduce using rule 70 (u_matrix)
 
-    prob  gehe zu Zustand 71 über
+    prob  go to state 71
 
 
-Zustand 61
+State 61
 
    72 prob_matrix: prob .
 
-    $default  reduziere mit Regel 72 (prob_matrix)
+    $default  reduce using rule 72 (prob_matrix)
 
 
-Zustand 62
+State 62
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK $@7 . start_state_list
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    start_state_list  gehe zu Zustand 75 über
-    state             gehe zu Zustand 76 über
+    start_state_list  go to state 75
+    state             go to state 76
 
 
-Zustand 63
+State 63
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK $@8 . start_state_list
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    start_state_list  gehe zu Zustand 77 über
-    state             gehe zu Zustand 76 über
+    start_state_list  go to state 77
+    state             go to state 76
 
 
-Zustand 64
+State 64
 
    42 trans_prob_spec: TTOK . COLONTOK trans_spec_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 78 über
+    COLONTOK  shift, and go to state 78
 
 
-Zustand 65
+State 65
 
    49 obs_prob_spec: OTOK . COLONTOK obs_spec_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 79 über
+    COLONTOK  shift, and go to state 79
 
 
-Zustand 66
+State 66
 
    56 reward_spec: RTOK . COLONTOK reward_spec_tail
 
-    COLONTOK  schiebe und gehe zu Zustand 80 über
+    COLONTOK  shift, and go to state 80
 
 
-Zustand 67
+State 67
 
    37 param_list: param_list param_spec .
 
-    $default  reduziere mit Regel 37 (param_list)
+    $default  reduce using rule 37 (param_list)
 
 
-Zustand 68
+State 68
 
    39 param_spec: trans_prob_spec .
 
-    $default  reduziere mit Regel 39 (param_spec)
+    $default  reduce using rule 39 (param_spec)
 
 
-Zustand 69
+State 69
 
    40 param_spec: obs_prob_spec .
 
-    $default  reduziere mit Regel 40 (param_spec)
+    $default  reduce using rule 40 (param_spec)
 
 
-Zustand 70
+State 70
 
    41 param_spec: reward_spec .
 
-    $default  reduziere mit Regel 41 (param_spec)
+    $default  reduce using rule 41 (param_spec)
 
 
-Zustand 71
+State 71
 
    71 prob_matrix: prob_matrix prob .
 
-    $default  reduziere mit Regel 71 (prob_matrix)
+    $default  reduce using rule 71 (prob_matrix)
 
 
-Zustand 72
+State 72
 
    75 state: INTTOK .
 
-    $default  reduziere mit Regel 75 (state)
+    $default  reduce using rule 75 (state)
 
 
-Zustand 73
+State 73
 
    76 state: STRINGTOK .
 
-    $default  reduziere mit Regel 76 (state)
+    $default  reduce using rule 76 (state)
 
 
-Zustand 74
+State 74
 
    77 state: ASTERICKTOK .
 
-    $default  reduziere mit Regel 77 (state)
+    $default  reduce using rule 77 (state)
 
 
-Zustand 75
+State 75
 
    31 start_state: STARTTOK INCLUDETOK COLONTOK $@7 start_state_list .
    35 start_state_list: start_state_list . state
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    $default  reduziere mit Regel 31 (start_state)
+    $default  reduce using rule 31 (start_state)
 
-    state  gehe zu Zustand 81 über
+    state  go to state 81
 
 
-Zustand 76
+State 76
 
    36 start_state_list: state .
 
-    $default  reduziere mit Regel 36 (start_state_list)
+    $default  reduce using rule 36 (start_state_list)
 
 
-Zustand 77
+State 77
 
    33 start_state: STARTTOK EXCLUDETOK COLONTOK $@8 start_state_list .
    35 start_state_list: start_state_list . state
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    $default  reduziere mit Regel 33 (start_state)
+    $default  reduce using rule 33 (start_state)
 
-    state  gehe zu Zustand 81 über
+    state  go to state 81
 
 
-Zustand 78
+State 78
 
    42 trans_prob_spec: TTOK COLONTOK . trans_spec_tail
 
-    INTTOK       schiebe und gehe zu Zustand 82 über
-    STRINGTOK    schiebe und gehe zu Zustand 83 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 84 über
+    INTTOK       shift, and go to state 82
+    STRINGTOK    shift, and go to state 83
+    ASTERICKTOK  shift, and go to state 84
 
-    trans_spec_tail  gehe zu Zustand 85 über
-    action           gehe zu Zustand 86 über
+    trans_spec_tail  go to state 85
+    action           go to state 86
 
 
-Zustand 79
+State 79
 
    49 obs_prob_spec: OTOK COLONTOK . obs_spec_tail
 
-    INTTOK       schiebe und gehe zu Zustand 82 über
-    STRINGTOK    schiebe und gehe zu Zustand 83 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 84 über
+    INTTOK       shift, and go to state 82
+    STRINGTOK    shift, and go to state 83
+    ASTERICKTOK  shift, and go to state 84
 
-    obs_spec_tail  gehe zu Zustand 87 über
-    action         gehe zu Zustand 88 über
+    obs_spec_tail  go to state 87
+    action         go to state 88
 
 
-Zustand 80
+State 80
 
    56 reward_spec: RTOK COLONTOK . reward_spec_tail
 
-    INTTOK       schiebe und gehe zu Zustand 82 über
-    STRINGTOK    schiebe und gehe zu Zustand 83 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 84 über
+    INTTOK       shift, and go to state 82
+    STRINGTOK    shift, and go to state 83
+    ASTERICKTOK  shift, and go to state 84
 
-    reward_spec_tail  gehe zu Zustand 89 über
-    action            gehe zu Zustand 90 über
+    reward_spec_tail  go to state 89
+    action            go to state 90
 
 
-Zustand 81
+State 81
 
    35 start_state_list: start_state_list state .
 
-    $default  reduziere mit Regel 35 (start_state_list)
+    $default  reduce using rule 35 (start_state_list)
 
 
-Zustand 82
+State 82
 
    78 action: INTTOK .
 
-    $default  reduziere mit Regel 78 (action)
+    $default  reduce using rule 78 (action)
 
 
-Zustand 83
+State 83
 
    79 action: STRINGTOK .
 
-    $default  reduziere mit Regel 79 (action)
+    $default  reduce using rule 79 (action)
 
 
-Zustand 84
+State 84
 
    80 action: ASTERICKTOK .
 
-    $default  reduziere mit Regel 80 (action)
+    $default  reduce using rule 80 (action)
 
 
-Zustand 85
+State 85
 
    42 trans_prob_spec: TTOK COLONTOK trans_spec_tail .
 
-    $default  reduziere mit Regel 42 (trans_prob_spec)
+    $default  reduce using rule 42 (trans_prob_spec)
 
 
-Zustand 86
+State 86
 
    44 trans_spec_tail: action . COLONTOK state COLONTOK state $@9 prob
    46                | action . COLONTOK state $@10 u_matrix
    48                | action . $@11 ui_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 91 über
+    COLONTOK  shift, and go to state 91
 
-    $default  reduziere mit Regel 47 ($@11)
+    $default  reduce using rule 47 ($@11)
 
-    $@11  gehe zu Zustand 92 über
+    $@11  go to state 92
 
 
-Zustand 87
+State 87
 
    49 obs_prob_spec: OTOK COLONTOK obs_spec_tail .
 
-    $default  reduziere mit Regel 49 (obs_prob_spec)
+    $default  reduce using rule 49 (obs_prob_spec)
 
 
-Zustand 88
+State 88
 
    51 obs_spec_tail: action . COLONTOK state COLONTOK obs $@12 prob
    53              | action . COLONTOK state $@13 u_matrix
    55              | action . $@14 u_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 93 über
+    COLONTOK  shift, and go to state 93
 
-    $default  reduziere mit Regel 54 ($@14)
+    $default  reduce using rule 54 ($@14)
 
-    $@14  gehe zu Zustand 94 über
+    $@14  go to state 94
 
 
-Zustand 89
+State 89
 
    56 reward_spec: RTOK COLONTOK reward_spec_tail .
 
-    $default  reduziere mit Regel 56 (reward_spec)
+    $default  reduce using rule 56 (reward_spec)
 
 
-Zustand 90
+State 90
 
    58 reward_spec_tail: action . COLONTOK state COLONTOK state COLONTOK obs $@15 number
    60                 | action . COLONTOK state COLONTOK state $@16 num_matrix
    62                 | action . COLONTOK state $@17 num_matrix
    64                 | action . $@18 num_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 95 über
+    COLONTOK  shift, and go to state 95
 
-    $default  reduziere mit Regel 63 ($@18)
+    $default  reduce using rule 63 ($@18)
 
-    $@18  gehe zu Zustand 96 über
+    $@18  go to state 96
 
 
-Zustand 91
+State 91
 
    44 trans_spec_tail: action COLONTOK . state COLONTOK state $@9 prob
    46                | action COLONTOK . state $@10 u_matrix
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    state  gehe zu Zustand 97 über
+    state  go to state 97
 
 
-Zustand 92
+State 92
 
    48 trans_spec_tail: action $@11 . ui_matrix
 
-    INTTOK       schiebe und gehe zu Zustand 55 über
-    FLOATTOK     schiebe und gehe zu Zustand 56 über
-    UNIFORMTOK   schiebe und gehe zu Zustand 98 über
-    IDENTITYTOK  schiebe und gehe zu Zustand 99 über
+    INTTOK       shift, and go to state 55
+    FLOATTOK     shift, and go to state 56
+    UNIFORMTOK   shift, and go to state 98
+    IDENTITYTOK  shift, and go to state 99
 
-    ui_matrix    gehe zu Zustand 100 über
-    prob_matrix  gehe zu Zustand 101 über
-    prob         gehe zu Zustand 61 über
+    ui_matrix    go to state 100
+    prob_matrix  go to state 101
+    prob         go to state 61
 
 
-Zustand 93
+State 93
 
    51 obs_spec_tail: action COLONTOK . state COLONTOK obs $@12 prob
    53              | action COLONTOK . state $@13 u_matrix
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    state  gehe zu Zustand 102 über
+    state  go to state 102
 
 
-Zustand 94
+State 94
 
    55 obs_spec_tail: action $@14 . u_matrix
 
-    INTTOK      schiebe und gehe zu Zustand 55 über
-    FLOATTOK    schiebe und gehe zu Zustand 56 über
-    UNIFORMTOK  schiebe und gehe zu Zustand 57 über
-    RESETTOK    schiebe und gehe zu Zustand 58 über
+    INTTOK      shift, and go to state 55
+    FLOATTOK    shift, and go to state 56
+    UNIFORMTOK  shift, and go to state 57
+    RESETTOK    shift, and go to state 58
 
-    u_matrix     gehe zu Zustand 103 über
-    prob_matrix  gehe zu Zustand 60 über
-    prob         gehe zu Zustand 61 über
+    u_matrix     go to state 103
+    prob_matrix  go to state 60
+    prob         go to state 61
 
 
-Zustand 95
+State 95
 
    58 reward_spec_tail: action COLONTOK . state COLONTOK state COLONTOK obs $@15 number
    60                 | action COLONTOK . state COLONTOK state $@16 num_matrix
    62                 | action COLONTOK . state $@17 num_matrix
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    state  gehe zu Zustand 104 über
+    state  go to state 104
 
 
-Zustand 96
+State 96
 
    64 reward_spec_tail: action $@18 . num_matrix
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    $default  reduziere mit Regel 92 (optional_sign)
+    $default  reduce using rule 92 (optional_sign)
 
-    num_matrix     gehe zu Zustand 105 über
-    number         gehe zu Zustand 106 über
-    optional_sign  gehe zu Zustand 26 über
+    num_matrix     go to state 105
+    number         go to state 106
+    optional_sign  go to state 26
 
 
-Zustand 97
+State 97
 
    44 trans_spec_tail: action COLONTOK state . COLONTOK state $@9 prob
    46                | action COLONTOK state . $@10 u_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 107 über
+    COLONTOK  shift, and go to state 107
 
-    $default  reduziere mit Regel 45 ($@10)
+    $default  reduce using rule 45 ($@10)
 
-    $@10  gehe zu Zustand 108 über
+    $@10  go to state 108
 
 
-Zustand 98
+State 98
 
    65 ui_matrix: UNIFORMTOK .
 
-    $default  reduziere mit Regel 65 (ui_matrix)
+    $default  reduce using rule 65 (ui_matrix)
 
 
-Zustand 99
+State 99
 
    66 ui_matrix: IDENTITYTOK .
 
-    $default  reduziere mit Regel 66 (ui_matrix)
+    $default  reduce using rule 66 (ui_matrix)
 
 
-Zustand 100
+State 100
 
    48 trans_spec_tail: action $@11 ui_matrix .
 
-    $default  reduziere mit Regel 48 (trans_spec_tail)
+    $default  reduce using rule 48 (trans_spec_tail)
 
 
-Zustand 101
+State 101
 
    67 ui_matrix: prob_matrix .
    71 prob_matrix: prob_matrix . prob
 
-    INTTOK    schiebe und gehe zu Zustand 55 über
-    FLOATTOK  schiebe und gehe zu Zustand 56 über
+    INTTOK    shift, and go to state 55
+    FLOATTOK  shift, and go to state 56
 
-    $default  reduziere mit Regel 67 (ui_matrix)
+    $default  reduce using rule 67 (ui_matrix)
 
-    prob  gehe zu Zustand 71 über
+    prob  go to state 71
 
 
-Zustand 102
+State 102
 
    51 obs_spec_tail: action COLONTOK state . COLONTOK obs $@12 prob
    53              | action COLONTOK state . $@13 u_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 109 über
+    COLONTOK  shift, and go to state 109
 
-    $default  reduziere mit Regel 52 ($@13)
+    $default  reduce using rule 52 ($@13)
 
-    $@13  gehe zu Zustand 110 über
+    $@13  go to state 110
 
 
-Zustand 103
+State 103
 
    55 obs_spec_tail: action $@14 u_matrix .
 
-    $default  reduziere mit Regel 55 (obs_spec_tail)
+    $default  reduce using rule 55 (obs_spec_tail)
 
 
-Zustand 104
+State 104
 
    58 reward_spec_tail: action COLONTOK state . COLONTOK state COLONTOK obs $@15 number
    60                 | action COLONTOK state . COLONTOK state $@16 num_matrix
    62                 | action COLONTOK state . $@17 num_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 111 über
+    COLONTOK  shift, and go to state 111
 
-    $default  reduziere mit Regel 61 ($@17)
+    $default  reduce using rule 61 ($@17)
 
-    $@17  gehe zu Zustand 112 über
+    $@17  go to state 112
 
 
-Zustand 105
+State 105
 
    64 reward_spec_tail: action $@18 num_matrix .
    73 num_matrix: num_matrix . number
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    INTTOK    reduziere mit Regel 92 (optional_sign)
-    FLOATTOK  reduziere mit Regel 92 (optional_sign)
-    $default  reduziere mit Regel 64 (reward_spec_tail)
+    INTTOK    reduce using rule 92 (optional_sign)
+    FLOATTOK  reduce using rule 92 (optional_sign)
+    $default  reduce using rule 64 (reward_spec_tail)
 
-    number         gehe zu Zustand 113 über
-    optional_sign  gehe zu Zustand 26 über
+    number         go to state 113
+    optional_sign  go to state 26
 
 
-Zustand 106
+State 106
 
    74 num_matrix: number .
 
-    $default  reduziere mit Regel 74 (num_matrix)
+    $default  reduce using rule 74 (num_matrix)
 
 
-Zustand 107
+State 107
 
    44 trans_spec_tail: action COLONTOK state COLONTOK . state $@9 prob
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    state  gehe zu Zustand 114 über
+    state  go to state 114
 
 
-Zustand 108
+State 108
 
    46 trans_spec_tail: action COLONTOK state $@10 . u_matrix
 
-    INTTOK      schiebe und gehe zu Zustand 55 über
-    FLOATTOK    schiebe und gehe zu Zustand 56 über
-    UNIFORMTOK  schiebe und gehe zu Zustand 57 über
-    RESETTOK    schiebe und gehe zu Zustand 58 über
+    INTTOK      shift, and go to state 55
+    FLOATTOK    shift, and go to state 56
+    UNIFORMTOK  shift, and go to state 57
+    RESETTOK    shift, and go to state 58
 
-    u_matrix     gehe zu Zustand 115 über
-    prob_matrix  gehe zu Zustand 60 über
-    prob         gehe zu Zustand 61 über
+    u_matrix     go to state 115
+    prob_matrix  go to state 60
+    prob         go to state 61
 
 
-Zustand 109
+State 109
 
    51 obs_spec_tail: action COLONTOK state COLONTOK . obs $@12 prob
 
-    INTTOK       schiebe und gehe zu Zustand 116 über
-    STRINGTOK    schiebe und gehe zu Zustand 117 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 118 über
+    INTTOK       shift, and go to state 116
+    STRINGTOK    shift, and go to state 117
+    ASTERICKTOK  shift, and go to state 118
 
-    obs  gehe zu Zustand 119 über
+    obs  go to state 119
 
 
-Zustand 110
+State 110
 
    53 obs_spec_tail: action COLONTOK state $@13 . u_matrix
 
-    INTTOK      schiebe und gehe zu Zustand 55 über
-    FLOATTOK    schiebe und gehe zu Zustand 56 über
-    UNIFORMTOK  schiebe und gehe zu Zustand 57 über
-    RESETTOK    schiebe und gehe zu Zustand 58 über
+    INTTOK      shift, and go to state 55
+    FLOATTOK    shift, and go to state 56
+    UNIFORMTOK  shift, and go to state 57
+    RESETTOK    shift, and go to state 58
 
-    u_matrix     gehe zu Zustand 120 über
-    prob_matrix  gehe zu Zustand 60 über
-    prob         gehe zu Zustand 61 über
+    u_matrix     go to state 120
+    prob_matrix  go to state 60
+    prob         go to state 61
 
 
-Zustand 111
+State 111
 
    58 reward_spec_tail: action COLONTOK state COLONTOK . state COLONTOK obs $@15 number
    60                 | action COLONTOK state COLONTOK . state $@16 num_matrix
 
-    INTTOK       schiebe und gehe zu Zustand 72 über
-    STRINGTOK    schiebe und gehe zu Zustand 73 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 74 über
+    INTTOK       shift, and go to state 72
+    STRINGTOK    shift, and go to state 73
+    ASTERICKTOK  shift, and go to state 74
 
-    state  gehe zu Zustand 121 über
+    state  go to state 121
 
 
-Zustand 112
+State 112
 
    62 reward_spec_tail: action COLONTOK state $@17 . num_matrix
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    $default  reduziere mit Regel 92 (optional_sign)
+    $default  reduce using rule 92 (optional_sign)
 
-    num_matrix     gehe zu Zustand 122 über
-    number         gehe zu Zustand 106 über
-    optional_sign  gehe zu Zustand 26 über
+    num_matrix     go to state 122
+    number         go to state 106
+    optional_sign  go to state 26
 
 
-Zustand 113
+State 113
 
    73 num_matrix: num_matrix number .
 
-    $default  reduziere mit Regel 73 (num_matrix)
+    $default  reduce using rule 73 (num_matrix)
 
 
-Zustand 114
+State 114
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state . $@9 prob
 
-    $default  reduziere mit Regel 43 ($@9)
+    $default  reduce using rule 43 ($@9)
 
-    $@9  gehe zu Zustand 123 über
+    $@9  go to state 123
 
 
-Zustand 115
+State 115
 
    46 trans_spec_tail: action COLONTOK state $@10 u_matrix .
 
-    $default  reduziere mit Regel 46 (trans_spec_tail)
+    $default  reduce using rule 46 (trans_spec_tail)
 
 
-Zustand 116
+State 116
 
    81 obs: INTTOK .
 
-    $default  reduziere mit Regel 81 (obs)
+    $default  reduce using rule 81 (obs)
 
 
-Zustand 117
+State 117
 
    82 obs: STRINGTOK .
 
-    $default  reduziere mit Regel 82 (obs)
+    $default  reduce using rule 82 (obs)
 
 
-Zustand 118
+State 118
 
    83 obs: ASTERICKTOK .
 
-    $default  reduziere mit Regel 83 (obs)
+    $default  reduce using rule 83 (obs)
 
 
-Zustand 119
+State 119
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs . $@12 prob
 
-    $default  reduziere mit Regel 50 ($@12)
+    $default  reduce using rule 50 ($@12)
 
-    $@12  gehe zu Zustand 124 über
+    $@12  go to state 124
 
 
-Zustand 120
+State 120
 
    53 obs_spec_tail: action COLONTOK state $@13 u_matrix .
 
-    $default  reduziere mit Regel 53 (obs_spec_tail)
+    $default  reduce using rule 53 (obs_spec_tail)
 
 
-Zustand 121
+State 121
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state . COLONTOK obs $@15 number
    60                 | action COLONTOK state COLONTOK state . $@16 num_matrix
 
-    COLONTOK  schiebe und gehe zu Zustand 125 über
+    COLONTOK  shift, and go to state 125
 
-    $default  reduziere mit Regel 59 ($@16)
+    $default  reduce using rule 59 ($@16)
 
-    $@16  gehe zu Zustand 126 über
+    $@16  go to state 126
 
 
-Zustand 122
+State 122
 
    62 reward_spec_tail: action COLONTOK state $@17 num_matrix .
    73 num_matrix: num_matrix . number
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    INTTOK    reduziere mit Regel 92 (optional_sign)
-    FLOATTOK  reduziere mit Regel 92 (optional_sign)
-    $default  reduziere mit Regel 62 (reward_spec_tail)
+    INTTOK    reduce using rule 92 (optional_sign)
+    FLOATTOK  reduce using rule 92 (optional_sign)
+    $default  reduce using rule 62 (reward_spec_tail)
 
-    number         gehe zu Zustand 113 über
-    optional_sign  gehe zu Zustand 26 über
+    number         go to state 113
+    optional_sign  go to state 26
 
 
-Zustand 123
+State 123
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state $@9 . prob
 
-    INTTOK    schiebe und gehe zu Zustand 55 über
-    FLOATTOK  schiebe und gehe zu Zustand 56 über
+    INTTOK    shift, and go to state 55
+    FLOATTOK  shift, and go to state 56
 
-    prob  gehe zu Zustand 127 über
+    prob  go to state 127
 
 
-Zustand 124
+State 124
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs $@12 . prob
 
-    INTTOK    schiebe und gehe zu Zustand 55 über
-    FLOATTOK  schiebe und gehe zu Zustand 56 über
+    INTTOK    shift, and go to state 55
+    FLOATTOK  shift, and go to state 56
 
-    prob  gehe zu Zustand 128 über
+    prob  go to state 128
 
 
-Zustand 125
+State 125
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK . obs $@15 number
 
-    INTTOK       schiebe und gehe zu Zustand 116 über
-    STRINGTOK    schiebe und gehe zu Zustand 117 über
-    ASTERICKTOK  schiebe und gehe zu Zustand 118 über
+    INTTOK       shift, and go to state 116
+    STRINGTOK    shift, and go to state 117
+    ASTERICKTOK  shift, and go to state 118
 
-    obs  gehe zu Zustand 129 über
+    obs  go to state 129
 
 
-Zustand 126
+State 126
 
    60 reward_spec_tail: action COLONTOK state COLONTOK state $@16 . num_matrix
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    $default  reduziere mit Regel 92 (optional_sign)
+    $default  reduce using rule 92 (optional_sign)
 
-    num_matrix     gehe zu Zustand 130 über
-    number         gehe zu Zustand 106 über
-    optional_sign  gehe zu Zustand 26 über
+    num_matrix     go to state 130
+    number         go to state 106
+    optional_sign  go to state 26
 
 
-Zustand 127
+State 127
 
    44 trans_spec_tail: action COLONTOK state COLONTOK state $@9 prob .
 
-    $default  reduziere mit Regel 44 (trans_spec_tail)
+    $default  reduce using rule 44 (trans_spec_tail)
 
 
-Zustand 128
+State 128
 
    51 obs_spec_tail: action COLONTOK state COLONTOK obs $@12 prob .
 
-    $default  reduziere mit Regel 51 (obs_spec_tail)
+    $default  reduce using rule 51 (obs_spec_tail)
 
 
-Zustand 129
+State 129
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs . $@15 number
 
-    $default  reduziere mit Regel 57 ($@15)
+    $default  reduce using rule 57 ($@15)
 
-    $@15  gehe zu Zustand 131 über
+    $@15  go to state 131
 
 
-Zustand 130
+State 130
 
    60 reward_spec_tail: action COLONTOK state COLONTOK state $@16 num_matrix .
    73 num_matrix: num_matrix . number
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    INTTOK    reduziere mit Regel 92 (optional_sign)
-    FLOATTOK  reduziere mit Regel 92 (optional_sign)
-    $default  reduziere mit Regel 60 (reward_spec_tail)
+    INTTOK    reduce using rule 92 (optional_sign)
+    FLOATTOK  reduce using rule 92 (optional_sign)
+    $default  reduce using rule 60 (reward_spec_tail)
 
-    number         gehe zu Zustand 113 über
-    optional_sign  gehe zu Zustand 26 über
+    number         go to state 113
+    optional_sign  go to state 26
 
 
-Zustand 131
+State 131
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs $@15 . number
 
-    MINUSTOK  schiebe und gehe zu Zustand 23 über
-    PLUSTOK   schiebe und gehe zu Zustand 24 über
+    MINUSTOK  shift, and go to state 23
+    PLUSTOK   shift, and go to state 24
 
-    $default  reduziere mit Regel 92 (optional_sign)
+    $default  reduce using rule 92 (optional_sign)
 
-    number         gehe zu Zustand 132 über
-    optional_sign  gehe zu Zustand 26 über
+    number         go to state 132
+    optional_sign  go to state 26
 
 
-Zustand 132
+State 132
 
    58 reward_spec_tail: action COLONTOK state COLONTOK state COLONTOK obs $@15 number .
 
-    $default  reduziere mit Regel 58 (reward_spec_tail)
+    $default  reduce using rule 58 (reward_spec_tail)

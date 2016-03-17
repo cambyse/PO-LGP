@@ -481,6 +481,12 @@ int main(int argc, char **argv)
 
 	printf("Kinect camera test\n");
 
+	int i;
+	for (i=0; i<2048; i++) {
+		float v = i/2048.0;
+		v = powf(v, 3)* 6;
+		t_gamma[i] = v*6*256;
+	}
 
 	g_argc = argc;
 	g_argv = argv;

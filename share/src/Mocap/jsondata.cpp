@@ -42,7 +42,7 @@ void JsonRec::load(const char *recdir) {
   nframes_thin = nframes / thinning;
 
 
-  bool m;
+  //bool m;
   boolA pm(nsensors);
   pm.setZero(false);
   // uint currfnum;
@@ -118,7 +118,7 @@ void JsonRec::load(const char *recdir) {
   dataquatprev = data[0].sub(0, -1, 3, -1);
   for(uint f = 1; f < data.d0; f++) {
     for(uint sid = 0; sid < data.d1; sid++) {
-      dataquat.referToSubRange(data.subDim(f, sid)(), 3, -1);
+      dataquat.referToSub(data.subDim(f, sid)(), 3, -1);
       if(sum(dataquat % dataquatprev[sid]) < 0)
         dataquat *= -1.;
       // if(!length(dataquatprev[sid]) || length(dataquat))
@@ -217,17 +217,17 @@ void JsonRec::load(const char *recdir) {
           for(uint i = 0; root.size(); i++) {
             uint onat = root[i]["on@"].asUInt();
             uint offat = root[i]["off@"].asUInt();
-            ann.subRange(onat, offat) = 1;
+            ann.subRef(onat, offat) = 1;
           }
 
-          targetkvg.append("ann", &ann);
+          targetkvg.append<arr*>({"ann"}, {}, &ann);
           // kvgann.append(STRINGS(target, agent, object), &targetkvg);
-          kvgann.append({target, agent, object}, {}, &targetkvg, false);
+          kvgann.append<Graph*>({target, agent, object}, {}, &targetkvg);
         }
       }
 
-      agent_targets.append((char*)target, &a_targets);
-      object_targets.append((char*)target, &o_targets);
+      agent_targets.append<StringA>({target}, {}, a_targets);
+      object_targets.append<StringA>({target}, {}, o_targets);
 
       // ann = new arr(nframes);
       // ann->setZero();
@@ -235,19 +235,19 @@ void JsonRec::load(const char *recdir) {
       //   agent_targets.append(target, new StringA());
       // if(!object_targets.getNode(target))
       //   object_targets.append(target, new StringA());
-      // StringA &a_targets = *agent_targets.getValue<StringA>(target);
-      // StringA &o_targets = *object_targets.getValue<StringA>(target);
+      // StringA &a_targets = agent_targets.get<StringA>(target);
+      // StringA &o_targets = object_targets.get<StringA>(target);
 
       // if(!a_targets.contains(pair->keys(1)))
       //   a_targets.append(pair->keys(1));
       // if(!o_targets.contains(pair->keys(2)))
       //   o_targets.append(pair->keys(2));
-      // for(Node *lock: *pair->getValue<Graph>()) {
-      //   from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
-      //   to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
-      //   ann->subRange(from, to) = 1;
+      // for(Node *lock: pair->graph()) {
+      //   from = (uint)lock->graph()->get<double>("from");
+      //   to = (uint)lock->graph()->get<double>("to");
+      //   ann->subRef(from, to) = 1;
       // }
-      // pair->getValue<Graph>()->append("ann", ann);
+      // pair->graph().append("ann", ann);
     }
   }
   // loading annotation, if any..
@@ -264,18 +264,18 @@ void JsonRec::load(const char *recdir) {
     //     agent_targets.append(pair->keys(0), new StringA());
     //   if(!object_targets.getNode(pair->keys(0)))
     //     object_targets.append(pair->keys(0), new StringA());
-    //   StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
-    //   StringA &o_targets = *object_targets.getValue<StringA>(pair->keys(0));
+    //   StringA &a_targets = agent_targets.get<StringA>(pair->keys(0));
+    //   StringA &o_targets = object_targets.get<StringA>(pair->keys(0));
     //   if(!a_targets.contains(pair->keys(1)))
     //     a_targets.append(pair->keys(1));
     //   if(!o_targets.contains(pair->keys(2)))
     //     o_targets.append(pair->keys(2));
-    //   for(Node *lock: *pair->getValue<Graph>()) {
-    //     from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
-    //     to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
-    //     ann->subRange(from, to) = 1;
+    //   for(Node *lock: pair->graph()) {
+    //     from = (uint)lock->graph()->get<double>("from");
+    //     to = (uint)lock->graph()->get<double>("to");
+    //     ann->subRef(from, to) = 1;
     //   }
-    //   pair->getValue<Graph>()->append("ann", ann);
+    //   pair->graph().append("ann", ann);
     // }
   // }
   // catch(const char *e) {

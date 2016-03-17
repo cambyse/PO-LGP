@@ -1,6 +1,7 @@
 #include <Perception/kinect2pointCloud.h>
 #include <Perception/modelEnsemble.h>
 #include <Gui/opengl.h>
+#include <Geo/mesh.h>
 
 const double scale=10000.;
 
@@ -16,8 +17,9 @@ static const double colorsTab[6][3] = {
 
 void test(){
   uint16A kinect_depth(FILE("z.kinect_depth"));
-  arr pts;
-  arr cols;
+  ors::Mesh mesh;
+  arr& pts = mesh.V;
+  arr& cols = mesh.C;
   arr costs;
   depthData2pointCloud(pts, kinect_depth);
   cols.resizeAs(pts);
@@ -34,7 +36,7 @@ void test(){
   ModelEnsemble M;
 
   OpenGL gl;
-  gl.add(glDrawPointCloud, &pts);
+  gl.add(mesh);
   gl.addDrawer(&M);
   gl.camera.setKinect();
   gl.camera.setPosition(0., 0., -1.);

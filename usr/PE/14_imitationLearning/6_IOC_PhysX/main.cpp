@@ -136,7 +136,7 @@ struct IOC_DemoCost {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
     if (&Hf) {
       if (useHNorm) {
@@ -393,7 +393,7 @@ void simpleMotion(){
 //  TaskCost *c4 = MP2.addTask("contact_endeff",tm_contact);
 //  c4->map.constraint = false;
 //  //  c4->setCostSpecs(150,200,ARR(0.),1.);
-//  c4->prec = lambdaTraj; c4->prec.flatten();
+//  c4->prec = lambdaTraj; c4->prec.reshapeFlat();
 //  c4->target = lambdaTraj*0.;
 
   TaskCost *c5 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"box","endeff",0.0));
@@ -409,16 +409,16 @@ void simpleMotion(){
   MP2.boxTraj = boxTraj;
   Demonstration* d = new Demonstration(MP2);
   d->x = x;
-  d->lambda = lambdaTraj; d->lambda.flatten();
+  d->lambda = lambdaTraj; d->lambda.reshapeFlat();
   demos.append(d);
 
 
   uint numParam = 5+4;
   IOC ioc(demos,numParam,false,false);
 
-  arr w = ones(numParam,1);w.flatten();
+  arr w = ones(numParam,1);w.reshapeFlat();
   //  w=wOpt/sqrt(sumOfSqr(wOpt));
-  //w = fabs(randn(numParam,1)); w.flatten();
+  //w = fabs(randn(numParam,1)); w.reshapeFlat();
 
     checkAllGradients(ioc,w,1e-3);
     return;

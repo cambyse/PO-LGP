@@ -2,6 +2,7 @@
 #include <Core/array.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Geo/geo.h>
+#include <Geo/mesh.h>
 #include <GL/gl.h>
 
 const double scale=10000.;
@@ -88,7 +89,7 @@ void displayData(){
   uint16A kinect_depth(FILE("z.kinect_depth"));
   arr pts;
   arr cols;
-  mlr::depthData2pointCloud(pts, kinect_depth);
+  depthData2pointCloud(pts, kinect_depth);
   cols.resizeAs(pts);
 
   int width=kinect_depth.d1;

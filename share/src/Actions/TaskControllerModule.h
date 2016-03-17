@@ -5,6 +5,7 @@
 #include <pr2/roscom.h>
 #include <pr2/rosalvar.h>
 #include <FOL/relationalMachine.h>
+#include <pr2/RTControllerSimulation.h>
 
 #ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -30,12 +31,20 @@ struct TaskControllerModule : Module {
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   const arr q0; //< homing pose
+  bool oldfashioned;
   bool useRos;
-  bool syncModelStateWithRos; //< whether the step() should reinit the state from the ros message
+  bool isInSyncWithRobot;
+  bool syncModelStateWithReal; //< whether the step() should reinit the state from the ros message
   bool verbose;
+  bool useDynSim;
+  RTControllerSimulation* dynSim;
+  CtrlTask *noTaskTask;
+
+  arr q_history, q_lowPass, qdot_lowPass, qddot_lowPass, u_lowPass;
+  arr model_error_g;
 
 public:
-  TaskControllerModule();
+  TaskControllerModule(const char* modelFile=NULL);
   ~TaskControllerModule();
 
   void open();

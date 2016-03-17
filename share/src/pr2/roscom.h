@@ -27,23 +27,27 @@
 
 //-- a basic message type for communication with the PR2 controller
 struct CtrlMsg{
-  arr q, qdot, fL, fR, u_bias, J_ft_inv;
-  arr Kp, Kd, Ki, KiFT;
-  double velLimitRatio, effLimitRatio, intLimitRatio, gamma;
-  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), KiFT(ARR(0.)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(0.1){}
+  arr q, qdot, fL, fR, J_ft_invL, J_ft_invR;
+  arr Kp, Kd, Ki,u_bias, KiFTL, KiFTR, fL_offset, fR_offset, fL_err, fR_err;
+  double velLimitRatio, effLimitRatio, intLimitRatio, fL_gamma, fR_gamma, qd_filt;
+  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), u_bias(ARR(0.)),fL_offset(zeros(6)),fR_offset(zeros(6)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(0.1),
+  fL_gamma(0.),fR_gamma(0.),qd_filt(0.97) {}
   CtrlMsg(const arr& q, const arr& qdot,
-          const arr& fL, const arr& fR,
-          const arr& u_bias, const arr& J_ft_inv,
-          double velLimitRatio, double effLimitRatio, double gamma)
-    :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), J_ft_inv(J_ft_inv), velLimitRatio(velLimitRatio), effLimitRatio(effLimitRatio), gamma(gamma){}
+          const arr& fL, const arr& fR, const arr& u_bias, const arr& fL_err, const arr& fR_err)
+    :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), fL_err(fL_err), fR_err(fR_err){}
 };
 
 void rosCheckInit(const char* module_name="pr2_module");
 bool rosOk();
 
-//-- ROS -> MLR
-ors::Transformation conv_pose2transformation(const tf::Transform&);
+//-- ROS <--> MLR
+std_msgs::String    conv_string2string(const mlr::String&);
+mlr::String         conv_string2string(const std_msgs::String&);
+std_msgs::String    conv_stringA2string(const StringA& strs);
+ors::Transformation conv_transform2transformation(const tf::Transform&);
 ors::Transformation conv_pose2transformation(const geometry_msgs::Pose&);
+ors::Vector         conv_point2vector(const geometry_msgs::Point& p);
+ors::Quaternion     conv_quaternion2quaternion(const geometry_msgs::Quaternion& q);
 void                conv_pose2transXYPhi(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose);
 arr                 conv_pose2transXYPhi(const geometry_msgs::PoseWithCovarianceStamped &pose);
 double              conv_time2double(const ros::Time& time);
@@ -67,13 +71,15 @@ ors::Transformation ros_getTransform(const std::string& from, const std::string&
 ors::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener);
 
 
+struct SubscriberType { virtual ~SubscriberType() {} }; ///< if types derive from RootType, more tricks are possible
+
 //===========================================================================
 //
 // subscribing a message directly into an Access
 //
 
 template<class msg_type>
-struct Subscriber {
+struct Subscriber : SubscriberType {
   Access_typed<msg_type>& access;
   ros::NodeHandle* nh;
   ros::Subscriber sub;
@@ -96,7 +102,7 @@ struct Subscriber {
 //
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
-struct SubscriberConv {
+struct SubscriberConv : SubscriberType {
   Access_typed<var_type>& access;
   Access_typed<ors::Transformation> *frame;
   ros::NodeHandle *nh;
@@ -104,6 +110,7 @@ struct SubscriberConv {
   tf::TransformListener listener;
   SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
     : access(_access), frame(_frame) {
+    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
     nh = new ros::NodeHandle;
     cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
     sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
@@ -123,18 +130,57 @@ struct SubscriberConv {
 };
 
 
+
+//===========================================================================
+//
+// subscribing a message into an MLR-type-Access via a conv_* function
+//
+
+//template<class msg_type, class var_type, var_type conv(const msg_type&)>
+//struct SubscriberConvThreaded : Thread {
+//  Access_typed<var_type>& access;
+//  Access_typed<ors::Transformation> *frame;
+//  ros::NodeHandle *nh;
+//  ros::Subscriber sub;
+//  tf::TransformListener listener;
+//  SubscriberConvThreaded(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
+//    : Thread(STRING("Subscriber_"<<_access.name <<"->" <<_topic_name), .05),
+//      access(_access), frame(_frame) {
+//  }
+//  ~SubscriberConvThreaded(){}
+//  void open(){
+//    nh = new ros::NodeHandle;
+//    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+//    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
+//    cout <<"done" <<endl;
+//  }
+//  void close(){
+//    delete nh;
+//  }
+//  void step(){}
+//  void callback(const typename msg_type::ConstPtr& msg) {
+//    double time=conv_time2double(msg->header.stamp);
+//    access.set( time ) = conv(*msg);
+//    if(frame){
+//      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
+//    }
+//  }
+//};
+
+
 //===========================================================================
 //
 // subscribing a message into an MLR-type-Access via a conv_* function
 //
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
-struct SubscriberConvNoHeader {
+struct SubscriberConvNoHeader : SubscriberType{
   Access_typed<var_type>& access;
   ros::NodeHandle nh;
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
     : access(_access) {
+    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
     sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
   }
   ~SubscriberConvNoHeader(){}
@@ -157,11 +203,10 @@ struct PublisherConv : Module{
   const char* topic_name;
 
   PublisherConv(const char* _topic_name, Access_typed<var_type>& _access)
-      : Module(STRING("Publisher_"<<_access.name <<"->" <<_topic_name)),
+      : Module(STRING("Publisher_"<<_access.name <<"->" <<_topic_name), -1),
         access(this, _access, true),
-        topic_name(_topic_name){
-//    listenTo(*access.var);
-  }
+        topic_name(_topic_name){}
+  ~PublisherConv(){}
   void open(){
     nh = new ros::NodeHandle;
     pub = nh->advertise<msg_type>(topic_name, 1);

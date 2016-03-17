@@ -4,7 +4,7 @@ void TrajFactory::transform(const arr &y, const arr &trans, arr &y_trans, double
   CHECK(trans.d0==y.d1,"dimension mismatch");
 
   // compute gaussian weight
-  arr s_eval = linspace(0.,1.,y.d0-1).flatten();
+  arr s_eval = linspace(0.,1.,y.d0-1).reshapeFlat();
   s_mu = s_eval((fabs(s_eval-s_mu)).minIndex());
   arr s = exp(-(s_eval-s_mu)%(s_eval-s_mu)/(2*pow(s_std,2)));
   y_trans = y + repmat(s,1,y.d1)%repmat(~trans,y.d0,1);

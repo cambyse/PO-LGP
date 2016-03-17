@@ -12,6 +12,7 @@
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
+#include <Ors/orsviewer.h>
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -24,7 +25,7 @@ struct SwigSystem {
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
-  ACCESSname(AlvarMarker, ar_pose_markers)
+  ACCESSname(AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
   ACCESSname(arr, pr2_odom)
   ACCESSname(CtrlMsg, ctrl_ref)
@@ -52,15 +53,16 @@ struct SwigSystem {
   GamepadInterface gamepad;
 
 
-  PerceptionObjects2Ors percObjs;
-  ImageViewer camview;
-  Kinect2PointCloud k2pcl;
-  PointCloudViewer pclv;
+//  PerceptionObjects2Ors percObjs;
+//  ImageViewer camview;
+//  Kinect2PointCloud k2pcl;
+//  PointCloudViewer pclv;
+//  AlvarSyncer alvar_syncer;
 
   Log _log;
 
   SwigSystem()
-    : camview("modelDepthView"), _log("SwigSystem"){
+    : /*camview("modelDepthView"),*/ _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
@@ -83,6 +85,10 @@ struct SwigSystem {
 //      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/r_ft_compensated", wrenchR);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/l_gripper_motor", wrenchL);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
+
+    }else{
+//      rosCheckInit("SwigSystem");
+//      new RAP_roscom(rmm);
     }
 
     // make the base movable
@@ -291,7 +297,7 @@ double ActionSwigInterface::getQDim() {
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
+  Node *symbol = S->RM.get()->KB[symbolName.c_str()];
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -453,8 +459,9 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   S->RM.writeAccess();
 
   Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
-  Graph *td = new Graph(parameters);
-  S->RM().append<Graph>({"Task"}, {symbol}, td, true);
+  
+  Graph& td = S->RM().appendSubgraph({"Task"}, {symbol})->value;
+  td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
   S->RM.deAccess();
@@ -472,11 +479,11 @@ Access_typed<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
 void ActionSwigInterface::execScript(const char* filename){
   FILE(filename) >>S->RM.set()->KB;
 
-  Node *s = S->RM.get()->KB.getNode("Script");
+  Node *s = S->RM.get()->KB["Script"];
   Graph& script = s->graph();
   int rev=0;
   for(Node* n:script){
-    if(n->parents.N==0 && n->getValueType()==typeid(Graph)){ //interpret as wait
+    if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);
@@ -490,3 +497,7 @@ void ActionSwigInterface::execScript(const char* filename){
   }
 }
 
+ors::Transformation ActionSwigInterface::getFramePose(const std::string& frame_id) {
+  ors::Transformation frame = S->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
+  return frame;
+}

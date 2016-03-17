@@ -12,23 +12,17 @@
 
 // ============================================================================
 void setBody(ors::Body& body, const AlvarMarker& marker) {
-  body.X.pos.x = marker.pose.pose.position.x;
-  body.X.pos.y = marker.pose.pose.position.y;
-  body.X.pos.z = marker.pose.pose.position.z ;
-  body.X.rot.w = marker.pose.pose.orientation.w;
-  body.X.rot.x = marker.pose.pose.orientation.x;
-  body.X.rot.y = marker.pose.pose.orientation.y;
-  body.X.rot.z = marker.pose.pose.orientation.z;
+  body.X = conv_pose2transformation(marker.pose.pose);
 }
 
 
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
+void syncMarkers(ors::KinematicWorld& world, const AlvarMarkers& markers) {
   bool createdNewMarkers = false;
 
   // transform: torso_lift_link is the reference frame_id
   ors::Transformation refFrame = world.getBodyByName("torso_lift_link")->X;
 
-  for (AlvarMarker& marker : markers.markers) {
+  for (const AlvarMarker& marker : markers.markers) {
     mlr::String marker_name = STRING("marker" << marker.id);
 
     ors::Body *body = world.getBodyByName(marker_name);
@@ -52,12 +46,9 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     T.setZero();
     T.addRelativeRotationDeg(90.,0.,1.,0.);
 
-
-
     body->X = refFrame * T * body->X;
     body->X.addRelativeRotationDeg(-90.,0.,1.,0.);
     body->X.addRelativeRotationDeg(-90.,1.,0.,0.);
-
 
    // while (body->X.rot.getX().theta()  < M_PI / 2. || body->X.rot.getY().theta()  < M_PI / 2.){
   //   body->X.addRelativeRotationDeg(-90.,0.,0.,1.);
@@ -75,8 +66,6 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     world.getShapeByName(marker_name)->X = body->X;
 
   }
-
-
 
   if (createdNewMarkers) {
     world.swiftDelete();

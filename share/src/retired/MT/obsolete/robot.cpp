@@ -523,8 +523,8 @@ FollowTrajectory::updateTaskGoals(ControllerProcess *ctrl){
   TV_lim->active=true;
   ctrl->useBwdMsg=false;
   
-  /*ctrl->bwdMsg_v   .referToSubDim(plan_v, (uint)plan_count);
-    ctrl->bwdMsg_Vinv.referToSubDim(plan_Vinv, (uint)plan_count);
+  /*ctrl->bwdMsg_v   .referToDim(plan_v, (uint)plan_count);
+    ctrl->bwdMsg_Vinv.referToDim(plan_Vinv, (uint)plan_count);
   //if(!(COUNTER%(1 <<plan_scale)))
   plan_count+=plan_speed;
   ctrl->useBwdMsg=true;
@@ -637,8 +637,8 @@ Gamepad::updateTaskGoals(ControllerProcess *ctrl){
        case 512:{ //follow a planned trajectory!
        if((uint)plan_count>=plan_v.d0){ cout <<"trajectory following done..." <<endl;  break; }
     //TV_col->params(0)=.02;
-    v_ref   .referToSubDim(plan_v, (uint)plan_count);
-    Vinv_ref.referToSubDim(plan_Vinv, (uint)plan_count);
+    v_ref   .referToDim(plan_v, (uint)plan_count);
+    Vinv_ref.referToDim(plan_Vinv, (uint)plan_count);
     plan_count+=plan_speed;
     bwdMsgs=true;
     break;

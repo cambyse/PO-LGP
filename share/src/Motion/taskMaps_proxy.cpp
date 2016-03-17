@@ -54,7 +54,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       }
       break;
     case allVsListedPTMT: {
-      if(t && shapes.nd==2) shapes_t.referToSubDim(shapes,t);
+      if(t && shapes.nd==2) shapes_t.referToDim(shapes,t);
       for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
         if(shapes_t.contains(p->a) || shapes_t.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
@@ -64,7 +64,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
     } break;
     case allExceptListedPTMT:
       for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
-        if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
+        if(!(shapes.contains(p->a) && shapes.contains(p->b))) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 3;
         }

@@ -28,7 +28,7 @@ double prior(uint t) {
 double data_loglike(const arr &data, uint t, uint s) {
   int n = s - t;
   arr data_range;
-  data_range.referToSubRange(data, t, s-1); // TODO check the range
+  data_range.referToSub(data, t, s-1); // TODO check the range
   double mean = sum(data_range) / data_range.N;
   arr data_range_mean = data_range - mean;
   double muT = (n * mean) / (1 + n);
@@ -230,10 +230,10 @@ int main(int argc, char **argv) {
       ////kf.getCtrlSeq(ctrls, subj, obj);
       ////kf.getDeltaSeq(deltas, ctrls);
       ////n = deltas.N;
-      ////d = deltas(0)->getValue<arr>("f_dpos")->N;
+      ////d = deltas(0)->get<arr>("f_dpos").N;
       ////query.resize(n, d);
       ////for(uint i = 0; i < n; i++)
-        ////query[i]() = *deltas(i)->getValue<arr>("f_dpos");
+        ////query[i]() = deltas(i)->get<arr>("f_dpos");
       ////cout << "test posterior: " << symb.gmm.P(query) << endl;
       //break;
     //default:

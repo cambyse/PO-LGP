@@ -40,7 +40,7 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const Graph& G){
   //  }
 
   //  for(ors::Joint *j:world->joints){
-  //    if(j->type==ors::JT_fixed)
+  //    if(j->type==ors::JT_rigid)
   //      G.append<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   //    if(j->type==ors::JT_transXYPhi)
   //      G.append<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
@@ -176,8 +176,7 @@ double reward(ors::KinematicWorld& world, Graph& symbols){
   Graph& state =symbols["STATE"]->graph();
 
   for(Node *dep:depthSymbol->parentOf) if(&dep->container==&state){
-    double *d = dep->getValue<double>();
-    CHECK(d,"");
+    double d = dep->get<double>();
     if(*d>depth) depth=*d;
   }
 

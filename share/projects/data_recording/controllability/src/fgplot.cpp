@@ -170,87 +170,87 @@ void FGPlots::open(const Graph &k) {
   s->data = new Graph[s->nplots];
   for(uint i = 0; i < s->nplots; i++) {
     cout << "Opening new plot:" << endl;
-    plot_kvg = plot_list(i)->getValue<Graph>();
+    plot_kvg = &plot_list(i)->graph();
 
     // title {{{
-    str = plot_kvg->getValue<String>("title");
+    str = plot_kvg->find<String>("title");
     if(str) {
       cout << " - title: " << *str << endl;
       s->plots[i].setTitle(*str);
     }
     // }}}
     // lines {{{
-    b = plot_kvg->getValue<bool>("lines");
+    b = plot_kvg->find<bool>("lines");
     if(b) {
       cout << " - lines: " << *b << endl;
       s->plots[i].setLines(*b);
     }
     // }}}
     // points {{{
-    b = plot_kvg->getValue<bool>("points");
+    b = plot_kvg->find<bool>("points");
     if(b) {
       cout << " - points: " << *b << endl;
       s->plots[i].setPoints(*b);
     }
     // }}}
     // domain {{{
-    b = plot_kvg->getValue<bool>("domain");
+    b = plot_kvg->find<bool>("domain");
     if(b) {
       cout << " - domain: " << *b << endl;
       s->plots[i].setDomain(*b);
     }
     // }}}
     // dim3d {{{
-    b = plot_kvg->getValue<bool>("dim3d");
+    b = plot_kvg->find<bool>("dim3d");
     if(b) {
       cout << " - dim3d: " << *b << endl;
       s->plots[i].setDim3D(*b);
     }
     // }}}
     // dataid {{{
-    b = plot_kvg->getValue<bool>("dataid");
+    b = plot_kvg->find<bool>("dataid");
     if(b) {
       cout << " - dataid: " << *b << endl;
       s->plots[i].setDataID(*b);
     }
     // }}}
     // autolegend {{{
-    b = plot_kvg->getValue<bool>("autolegend");
+    b = plot_kvg->find<bool>("autolegend");
     if(b) {
       cout << " - autolegend: " << *b << endl;
       s->plots[i].setAutolegend(*b);
     }
     // }}}
     // hardcopy {{{
-    str = plot_kvg->getValue<String>("hardcopy");
+    str = plot_kvg->find<String>("hardcopy");
     if(str) {
       cout << " - hardcopy: " << *str << endl;
       s->plots[i].setHardcopy(*str);
     }
     // }}}
     // stream {{{
-    d = plot_kvg->getValue<double>("stream");
+    d = plot_kvg->find<double>("stream");
     if(d) {
       cout << " - stream: " << *d << endl;
       s->plots[i].setStream(*d);
     }
     // }}}
     // ymin {{{
-    d = plot_kvg->getValue<double>("ymin");
+    d = plot_kvg->find<double>("ymin");
     if(d) {
       cout << " - ymin: " << *d << endl;
       s->plots[i].setYMin(*d);
     }
     // }}}
     // ymax {{{
-    d = plot_kvg->getValue<double>("ymax");
+    d = plot_kvg->find<double>("ymax");
     if(d) {
       cout << " - ymax: " << *d << endl;
       s->plots[i].setYMax(*d);
     }
     // }}}
     // {{{
-    b = plot_kvg->getValue<bool>("dump");
+    b = plot_kvg->find<bool>("dump");
     if(b) {
       cout << " - dump: " << *b << endl;
       s->plots[i].setDump(*b);
@@ -259,7 +259,7 @@ void FGPlots::open(const Graph &k) {
     // data {{{
     s->data[i] = plot_kvg->getNodes("data");
     for(auto j: s->data[i])
-      cout << " - data: " << *j->getValue<String>() << endl;
+      cout << " - data: " << j->get<String>() << endl;
     // }}}
 
     s->plots[i].open();
@@ -272,8 +272,8 @@ void FGPlots::step(uint t) {
   for(uint i = 0; i < s->nplots; i++) {
     if(s->plots[i].isDim3D()) {
       for(auto j: s->data[i]) {
-        str = j->getValue<String>();
-        data = s->kvg[*str]->getValue<arr>();
+        str = j->find<String>();
+        data = s->kvg[*str]->find<arr>();
         ss.clear() << data->operator()(t, 0) << " "
                     << data->operator()(t, 1) << " "
                     << *str << " "
@@ -286,8 +286,8 @@ void FGPlots::step(uint t) {
     else {
       ss.clear() << t;
       for(auto j: s->data[i]) {
-        str = j->getValue<String>();
-        data = s->kvg[*str]->getValue<arr>();
+        str = j->find<String>();
+        data = s->kvg[*str]->find<arr>();
         if(t < data->N)
           ss << " " << *str << " " << data->elem(t) ;
       }

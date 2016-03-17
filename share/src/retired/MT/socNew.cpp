@@ -204,7 +204,7 @@ void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v
 
   //task message
   arr R, r;
-  //q_1.referToSubRange(x_1, 0, n-1);
+  //q_1.referToSub(x_1, 0, n-1);
   sys.getTaskCosts(R, r, t, NULL);
 
   //v, Vinv are optional bwd messages!

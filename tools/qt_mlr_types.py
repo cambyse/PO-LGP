@@ -117,7 +117,7 @@ def qdump__Node_typed(d, value):
     d.putNumChild(4)
     if d.isExpanded():
         with Children(d):
-            d.putSubItem("value", value["value"].dereference())
+            d.putSubItem("value", value["value"])
             d.putSubItem("parents", value["parents"])
             d.putSubItem("parentOf", value["parentOf"])
             d.putSubItem("index", value["index"])

@@ -185,7 +185,7 @@ void estimateWeighted(Gaussian& g, const arr& X, const arr& W){
   arr X_i;
   for(i=0; i<k; i++){
     Z   += W(i);
-    X_i.referToSubDim(X, i);
+    X_i.referToDim(X, i);
     g.c += W(i) * X_i;
     g.C += W(i) * (X_i ^ X_i);
   }
@@ -285,15 +285,15 @@ void systematicWeightedSamples(arr& X, arr& W, const Gaussian& g){
   W.resize(X.d0);
   arr U, V, d(n), X_i;
   svd(U, V, g.C);
-  X_i.referToSubDim(X, 0);        X_i=g.c;    W(0)=(lambda/(n+lambda));
+  X_i.referToDim(X, 0);        X_i=g.c;    W(0)=(lambda/(n+lambda));
   for(i=0; i<n; i++){
     d.setZero();
     d(i)=sqrt(n+lambda);
     d=U*d;
     //d=U.sub(0, -1, i, i); //i-th column
     //d.resize(n);
-    X_i.referToSubDim(X, 2*i+1);  X_i=g.c+d;  W(2*i+1)=1./(2.*(n+lambda));
-    X_i.referToSubDim(X, 2*i+2);  X_i=g.c-d;  W(2*i+2)=1./(2.*(n+lambda));
+    X_i.referToDim(X, 2*i+1);  X_i=g.c+d;  W(2*i+1)=1./(2.*(n+lambda));
+    X_i.referToDim(X, 2*i+2);  X_i=g.c-d;  W(2*i+2)=1./(2.*(n+lambda));
   }
 }
 
@@ -387,7 +387,7 @@ void backward(Gaussian& x, const Gaussian& y, arr& f, arr& F, arr& Q, double upd
     //cout <<U <<w <<V;
     for(uint k=F.d0; k<w.N; k++){ //eigen vectors with zero eigen value
       CHECK(w(k)<1e-10*scale, "eigen value should be zero!");
-      vk.referToSubDim(Vt, k);
+      vk.referToDim(Vt, k);
       x.C += (1e+0*scale)* (vk^vk);
     }
   }

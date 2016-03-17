@@ -103,12 +103,12 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
 
 void initDoor(ors::KinematicWorld &world, arr &marker_pose){
   arr doorMarker = marker_pose[4];
-  arr doorMarkerPos = doorMarker.subRange(0,2);
-  ors::Quaternion doorMarkerQuat = ors::Quaternion(doorMarker.subRange(3,6));
+  arr doorMarkerPos = doorMarker.subRef(0,2);
+  ors::Quaternion doorMarkerQuat = ors::Quaternion(doorMarker.subRef(3,6));
 
   arr wallMarker = marker_pose[17];
-  arr wallMarkerPos = wallMarker.subRange(0,2);
-  ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRange(3,6));
+  arr wallMarkerPos = wallMarker.subRef(0,2);
+  ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.subRef(3,6));
 
   arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 
@@ -271,13 +271,13 @@ void run(){
     cout <<"t: "<< t <<endl;
     CtrlMsg refs;
     refs.fL = ARR(0., 0., 0.,0.,0.,0.);
-    refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = 1.;
     refs.Kd = 1.;
     refs.Ki = 0.;
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
 
     s = t/duration;
     refs.q=xs.eval(s);

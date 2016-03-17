@@ -44,7 +44,7 @@ typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  new Node_typed<Type>(registry(), {"Activity", key}, {}, new Type_typed<T,void>, true);
+  new Node_typed<Type*>(registry(), {"Activity", key}, {}, new Type_typed<T,void>);
 }
 
 /// create/launch a new activity based on the fact
@@ -65,7 +65,7 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
   }
 
   act->createFactRepresentative(relationalState);
-  registry().getValue<Variable<ActivityL> >("A") -> set()->append(act);
+  registry().find<Variable<ActivityL> >("A") -> set()->append(act);
 }
 */
 

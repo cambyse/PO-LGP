@@ -73,9 +73,9 @@ SwiftInterface::SwiftInterface(const ors::KinematicWorld& world, double _cutoff)
       case ors::meshST: {
         //check if there is a specific swiftfile!
         mlr::String *filename;
-        filename=s->ats.getValue<mlr::String>("swiftfile");
+        filename=s->ats.find<mlr::String>("swiftfile");
         if(!filename)
-          filename=s->body->ats.getValue<mlr::String>("swiftfile");
+          filename=s->body->ats.find<mlr::String>("swiftfile");
         if(filename) {
           r=scene->Add_General_Object(*filename, INDEXshape2swift(s->index), false);
           if(!r) HALT("--failed!");

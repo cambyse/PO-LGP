@@ -69,7 +69,7 @@ void testSliding() {
   c4->map.constraint = false;
   c4->setCostSpecs(MP.T/2,MP.T, ARR(0.) ,1e3);
 
-  MP.x0 = zeros(world.getJointStateDimension(),1);MP.x0.flatten();
+  MP.x0 = zeros(world.getJointStateDimension(),1);MP.x0.reshapeFlat();
   MP.x0(0) = M_PI_2;
 
   MotionProblemFunction MPF(MP);

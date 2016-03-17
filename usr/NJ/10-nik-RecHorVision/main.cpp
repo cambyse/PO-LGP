@@ -366,8 +366,8 @@ void RHV::updateTaskVariables(ControllerModule *ctrl){
 		//ctrl->gui->gl->text.clear() << "dist to target " << norm(x) << " pos " << TV_fNew->y << " targ" << target->X.p;
 		if(recho.bwdMsg_v.d1==2*ctrl->q_reference.N){
 			ctrl->useBwdMsg=true;
-			ctrl->bwdMsg_v   .referToSubDim(recho.bwdMsg_v,   (uint)recho.bwdMsg_count);
-			ctrl->bwdMsg_Vinv.referToSubDim(recho.bwdMsg_Vinv,(uint)recho.bwdMsg_count);
+			ctrl->bwdMsg_v   .referToDim(recho.bwdMsg_v,   (uint)recho.bwdMsg_count);
+			ctrl->bwdMsg_Vinv.referToDim(recho.bwdMsg_Vinv,(uint)recho.bwdMsg_count);
 			cout <<"bwdMsg#"<<recho.bwdMsg_count <<flush;
 			recho.bwdMsg_count++;
 		}else{

@@ -22,8 +22,8 @@ struct CoveringSpheresProblem:ConstrainedProblem {
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& c_r) {
     uint s=c_r.N/4;
     arr c,r;
-    c.referToSubRange(c_r,0,3*s-1); c.reshape(s,3);
-    r.referToSubRange(c_r,3*s,-1); r.reshape(s);
+    c.referToSub(c_r,0,3*s-1); c.reshape(s,3);
+    r.referToSub(c_r,3*s,-1); r.reshape(s);
 
     //f
     double fx = 0.;

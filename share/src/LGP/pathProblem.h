@@ -12,7 +12,6 @@ struct PathProblem:ConstrainedProblem{
   int verbose;
 
   MotionProblem MP;
-  MotionProblemFunction MPF;
 
   PathProblem(const ors::KinematicWorld& world_initial,
               const ors::KinematicWorld& world_final,

@@ -86,25 +86,27 @@ signal.signal(signal.SIGABRT, signal_handler)
 
 
 
-
+def unify(seq):
+    seen = set()
+    return [x for x in seq if not (x in seen or seen.add(x))]
 ###############################################################################
 # Convenient access and autocompletion to shapes, joints, and bodies
 # Just type `s.<tab>` to get a list of all shapes
 def  update_a():
-    _tmp = list(shapes())
+    _tmp = unify(list(shapes()))
     Shapes = namedtuple("Shapes", " ".join(_tmp))
 
     s = Shapes(*_tmp)
 
-    _tmp = list(bodies())
+    _tmp = unify(list(bodies()))
     Bodies = namedtuple("Bodies", " ".join(_tmp))
     b = Bodies(*_tmp)
 
-    _tmp = list(joints())
+    _tmp = unify(list(joints()))
     Joints = namedtuple("Joints", " ".join(_tmp))
     j = Joints(*_tmp)
 
-    _tmp = list(interface.getSymbols())
+    _tmp = unify(list(interface.getSymbols()))
     Symbols = namedtuple("Symbols", " ".join(_tmp))
     S = Symbols(*_tmp)
 
@@ -226,15 +228,21 @@ def remove_facts():
     for symb in symbols:
         interface.stopFact(symb)
 
-def set(lit, param):
+def set_fact(lit, param):
     factstring = (str(lit) + str(param).replace(":","=")).replace("\'","")
     print(factstring)
     interface.setFact(factstring)
 
-def unset(lit):
+def unset_fact(lit):
     factstring = (str(lit) + "!").replace("\'","")
     print(factstring)
     interface.setFact(factstring)
+
+
+###############################################################################
+class SensorActivity(object):
+    def __str__(self):
+        return "(SensorActivity endeffL) { threshold=5 }"
 
 
 ###############################################################################
@@ -523,6 +531,26 @@ class MoveAlongAxisActivity(AllActivity):
     def __str__(self):
         return super(MoveAlongAxisActivity, self).__str__()
 
+class WheelsActivity(Activity):
+    """
+
+    Moves Base to a specified position.
+    """
+    def __init__(self, pos):
+        """
+        :param pos: The position to move relative to current position.
+        :return:
+        """
+        super(WheelsActivity, self).__init__()
+        self.pos = pos
+        self.tolerance = .01
+
+    def __str__(self):
+        return("(FollowReferenceActivity wheels {name})"
+                "{{ type=wheels target={target} tol={tol} PD{gains} }}"
+                .format(name=self.name, target=self.pos,
+                gains=self.natural_gains, tol=self.tolerance))
+
 
 class TiltHead(QItselfActivity):
     """Tilt the head up (positive values) or down (negative values)."""
@@ -804,7 +832,6 @@ def turn_wrist(angle, side=None):
 # High Level Behaviors
 
 
-
 def grabMarker(shape):
     return [{"with": [alignGripperWithShape(shape), lookAtShape(shape)],
             "plan": [moveGripperToShape(shape, [0.10,0,0.0]),
@@ -812,10 +839,43 @@ def grabMarker(shape):
                     ]
             }]
 
+
 def throwToBin():
     return [{"with": [lookAtShape("marker3")],
             "plan": [moveGripperToShape("marker3", offset=[-0.2,0,0.2]),openGripper()]
             }]
+
+
+def turn_marker(shape, degree, pre_grasp_offset=None, grasp_offset=None,
+                plane=None, side=None):
+    if pre_grasp_offset is None:
+        pre_grasp_offset = [0, 0, 0]
+    if grasp_offset is None:
+        grasp_offset = [0, 0, 0]
+    if plane is None:
+        plane = ([1, 0, 0], [0, -1, 0])
+
+    endeff = side2endeff(side)
+
+    return [{"with": gaze_at(endeff),
+             "plan": [(open_gripper(side),
+                       reach(shape, with_=endeff, offset=pre_grasp_offset),
+                       align_gripper_with_plane(*plane, side=side)),
+                      reach(shape, endeff, offset=grasp_offset),
+                      close_gripper(side),
+                      turn_wrist(degree, side),
+                      open_gripper(side)]
+             }]
+
+
+def move_shape(shape, distance, axis, pre_grasp_offset=None, grasp_offset=None,
+               plane=None, side=None):
+    if pre_grasp_offset is None:
+        pre_grasp_offset = [0, 0, 0]
+    if grasp_offset is None:
+        grasp_offset = [0, 0, 0]
+    if plane is None:
+        plane = ([1, 0, 0], [0, -1, 0])
 
 
 

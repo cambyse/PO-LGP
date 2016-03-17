@@ -68,7 +68,7 @@ int main(int argc,char **argv){
 
   /// set initial parameter
   arr param = ARR(-0.06,-0.12);
-  param.flatten();
+  param.reshapeFlat();
 
   uint count = 0;
   arr Xn;

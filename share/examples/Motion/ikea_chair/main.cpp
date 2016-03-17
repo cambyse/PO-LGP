@@ -54,7 +54,7 @@ current = 5-i*2;
 cout << "DIM = "<<G.getJointStateDimension();
  G.glueBodies(G.getBodyByName(actuator),G.getBodyByName(targets(current)));
 
- G.getBodyByName(targets(current))->inLinks(0)->type =ors::JT_fixed;
+ G.getBodyByName(targets(current))->inLinks(0)->type =ors::JT_rigid;
  G.getBodyByName(targets(current))->inLinks(0)->name ="test";
 //G.getJointByName("l_gripper_l_finger_joint")->agent =0;
 // G.getBodyByName(targets(current))->inLinks(0)->qIndex = G.getJointStateDimension();
@@ -262,7 +262,7 @@ void test_Loading_submeshes()
     ors::Mesh mesh;
     mesh.readObjFile(FILE("chair_back_decomposed.obj"));
     OpenGL gl;
-    gl.add(glDrawMesh, &mesh);
+    gl.add(mesh);
     gl.watch();
 }
 

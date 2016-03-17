@@ -37,7 +37,7 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
   for(Joint *j: G->joints)
     if(j->mimic){
     mlr::String jointName;
-    bool good = j->ats.getValue<mlr::String>(jointName, "mimic");
+    bool good = j->ats.find<mlr::String>(jointName, "mimic");
     CHECK(good, "something is wrong");
     j->mimic = listFindByName(G->joints, jointName);
     if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
@@ -90,8 +90,8 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
 //    A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
 //    B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
 //    if(!a || !b) continue;
-//    ag=a->ats.getValue<bool>("glue");
-//    bg=b->ats.getValue<bool>("glue");
+//    ag=a->ats.find<bool>("glue");
+//    bg=b->ats.find<bool>("glue");
 //    if(ag || bg) {
 //      //if(a->index > b->index){ c=a; a=b; b=c; } //order them topolgically
 //      if(graphGetEdge<Body, Joint>(a, b)) continue;  //they are already connected
@@ -298,7 +298,7 @@ uint ors::KinematicWorld::getTouchDimension() {
   uint i=0, j;
 
   // count touchsensors
-  for_list(Type,  n,  bodies) if(ats.getValue<double>(n->ats, "touchsensor", 0)) i++;
+  for_list(Type,  n,  bodies) if(ats.find<double>(n->ats, "touchsensor", 0)) i++;
   td=i;
   return i;
 }
@@ -311,7 +311,7 @@ void ors::KinematicWorld::getTouchState(arr& touch) {
   Body *n;
   uint i=0, j;
   for_list(Type,  n,  bodies) {
-    if(ats.getValue<double>(n->ats, "touchsensor", 0)) {
+    if(ats.find<double>(n->ats, "touchsensor", 0)) {
       touch(i)=pen(n->index);
       i++;
     }
@@ -367,8 +367,8 @@ void ors::KinematicWorld::reportGlue(std::ostream *os) {
     A=proxies(i)->a; a=(A==(uint)-1?NULL:bodies(A));
     B=proxies(i)->b; b=(B==(uint)-1?NULL:bodies(B));
     if(!a || !b) continue;
-    ag=a->ats.getValue<bool>("glue");
-    bg=b->ats.getValue<bool>("glue");
+    ag=a->ats.find<bool>("glue");
+    bg=b->ats.find<bool>("glue");
     if(ag || bg) {
       (*os)
           <<i <<' '

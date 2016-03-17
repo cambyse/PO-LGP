@@ -127,7 +127,7 @@ void OptiRec::load(const char *recdir) {
   dataquatprev = data[0].sub(0, -1, 3, -1);
   for(uint f = 1; f < data.d0; f++) {
     for(uint i = 0; i < data.d1; i++) {
-      dataquat.referToSubRange(data.subDim(f, i)(), 3, -1);
+      dataquat.referToSub(data.subDim(f, i)(), 3, -1);
       if(sum(dataquat % dataquatprev[i]) < 0)
         dataquat *= -1.;
       if(!length(dataquatprev[i]) || length(dataquat))
@@ -210,21 +210,21 @@ void OptiRec::load(const char *recdir) {
 
     if(!agent_targets.getNode(pair->keys(0)))
       // agent_targets.append(pair->keys(0), new StringA());
-      agent_targets.append((char*)pair->keys(0), new StringA());
+      agent_targets.append({pair->keys(0)}, {}, StringA());
     if(!object_targets.getNode(pair->keys(0)))
-      object_targets.append((char*)pair->keys(0), new StringA());
-    StringA &a_targets = *agent_targets.getValue<StringA>(pair->keys(0));
-    StringA &o_targets = *object_targets.getValue<StringA>(pair->keys(0));
+      object_targets.append({pair->keys(0)}, {}, StringA());
+    StringA &a_targets = agent_targets.get<StringA>(pair->keys(0));
+    StringA &o_targets = object_targets.get<StringA>(pair->keys(0));
     if(!a_targets.contains(pair->keys(1)))
       a_targets.append(pair->keys(1));
     if(!o_targets.contains(pair->keys(2)))
       o_targets.append(pair->keys(2));
-    for(Node *lock: *pair->getValue<Graph>()) {
-      from = (uint)*lock->getValue<Graph>()->getValue<double>("from");
-      to = (uint)*lock->getValue<Graph>()->getValue<double>("to");
-      ann->subRange(from, to) = 1;
+    for(Node *lock: pair->graph()) {
+      from = (uint)lock->graph().get<double>("from");
+      to = (uint)lock->graph().get<double>("to");
+      ann->subRef(from, to) = 1;
     }
-    pair->getValue<Graph>()->append("ann", ann);
+    pair->graph().append<arr*>({"ann"}, {}, ann);
   }
 }
 
