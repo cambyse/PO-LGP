@@ -6,6 +6,32 @@ from lxml import etree
 inFile = "z.urdf"
 xmlData = etree.parse(inFile)
 
+def writeShape(link):
+    elem = link.find("origin")
+    if elem is not None:
+        print 'rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'], elem.attrib['rpy']),
+
+    elem = link.find("geometry/box")
+    if elem is not None:
+        print 'type=0 size=[%s 0]' % elem.attrib['size'],
+
+    elem = link.find("geometry/sphere")
+    if elem is not None:
+        print 'type=1 size=[0 0 0 %s]' % elem.attrib['radius'],
+
+    elem = link.find("geometry/cylinder")
+    if elem is not None:
+        print 'type=2 size=[0 0 %s %s]' % (elem.attrib['length'], elem.attrib['radius']),
+
+    elem = link.find("geometry/mesh")
+    if elem is not None:
+        print 'type=3 mesh=\'%s\'' % elem.attrib['filename'],
+
+    elem = link.find("material/color")
+    if elem is not None:
+        print 'color=[%s]' % elem.attrib['rgba'],
+
+
 links = xmlData.findall("/link")
 for link in links:
     name = link.attrib['name']
@@ -13,11 +39,11 @@ for link in links:
 
     elem = link.find("inertial/mass")
     if elem is not None:
-        print ' mass=%s' % elem.attrib['value'],
+        print 'mass=%s' % elem.attrib['value'],
 
     elem = link.find("inertial/inertia")
     if elem is not None:
-        print ' inertiaTensor=[%s %s %s %s %s %s]' % (
+        print 'inertiaTensor=[%s %s %s %s %s %s]' % (
             elem.attrib['ixx'],
             elem.attrib['ixy'],
             elem.attrib['ixz'],
@@ -25,32 +51,22 @@ for link in links:
             elem.attrib['iyz'],
             elem.attrib['izz']),
 
-    elem = link.find("collision/origin")
-    if elem is not None:
-        print ' rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'],
-                                         elem.attrib['rpy']),
+    print '}\n', # end of body
 
-    elem = link.find("collision/geometry/box")
-    if elem is not None:
-        print ' type=0 size=[%s 0]' % elem.attrib['size'],
+    # visual shape
+    visual = link.find("visual")
+    if visual is not None:
+        print 'shape visual (%s) {' % name,
+        writeShape(visual)
+        print '}\n', # end of shape
 
-    elem = link.find("collision/geometry/sphere")
-    if elem is not None:
-        print ' type=1 size=[0 0 0 %s]' % elem.attrib['radius'],
+    # collision shape
+    collision = link.find("collision")
+    if collision is not None:
+        print 'shape collision (%s) { cont,' % name,
+        writeShape(collision)
+        print '}\n', # end of shape
 
-    elem = link.find("collision/geometry/cylinder")
-    if elem is not None:
-        print ' type=2 size=[0 0 %s %s]' % (elem.attrib['length'],
-                                             elem.attrib['radius']),
-
-    elem = link.find("collision/geometry/mesh")
-    if elem is not None:
-        meshfile = elem.attrib['filename']
-        meshfile = meshfile.replace("package://pr2_description/meshes/",
-                                    "")
-        print ' type=3 mesh=\'%s\'' % meshfile,
-
-    print '}\n',
 
 joints = xmlData.findall("/joint")
 for joint in joints:
@@ -94,7 +110,7 @@ for joint in joints:
             if lo is not None:
                 print ' limits=[%s %s]' % (lo, up),
             if vel is not None:
-                print ' ctrl_limits=[%s %s]' % (vel, eff),
+                print ' ctrl_limits=[%s %s 1]' % (vel, eff), #the 3rd value is an acceleration limit
 
         print '}\n',
 
