@@ -92,9 +92,9 @@ void TaskControllerModule::step(){
         q_history.prepend(q_real); q_history.reshape(q_history.N/q_real.N, q_real.N);
         if(q_history.d0>5) q_history.resizeCopy(5, q_real.N);
 
-        if(q_history.d0>0) lowPassUpdate(q_lowPass, q_history[0]);
-        if(q_history.d0>1) lowPassUpdate(qdot_lowPass, (q_history[0]-q_history[1])/.01);
-        if(q_history.d0>2) lowPassUpdate(qddot_lowPass, (q_history[0]-2.*q_history[1]+q_history[2])/(.01*.01));
+//        if(q_history.d0>0) lowPassUpdate(q_lowPass, q_history[0]);
+//        if(q_history.d0>1) lowPassUpdate(qdot_lowPass, (q_history[0]-q_history[1])/.01);
+//        if(q_history.d0>2) lowPassUpdate(qddot_lowPass, (q_history[0]-2.*q_history[1]+q_history[2])/(.01*.01));
       }
       if(oldfashioned) syncModelStateWithReal = false;
       isInSyncWithRobot = true;
@@ -204,11 +204,11 @@ void TaskControllerModule::step(){
     for(CtrlTask *t:feedbackController->tasks) if(t->active) ntasks++;
 
     //if there are no tasks, just stabilize
-    if(!ntasks) {
+    if(false || !ntasks) { //is done in feedbackController->qitself
       if(!noTaskTask) noTaskTask = new CtrlTask("noTaskTask", new TaskMap_qItself());
       noTaskTask->prec = 10.0;
-      noTaskTask->setGains(10.0, 1.0); //TODO tune those gains
-      noTaskTask->setTarget(modelWorld().q);
+      noTaskTask->setGains(.0, 1.0); //TODO tune those gains
+//      noTaskTask->setTarget(modelWorld().q);
       noTaskTask->active = true;
       feedbackController->tasks.append(noTaskTask);
     }
@@ -223,18 +223,30 @@ void TaskControllerModule::step(){
       feedbackController->tasks.append(qItselfJSStabilityLaw);
     }
 
+#if 0
     arr u0, Kp, Kd;
-    arr M, F, FplusG;
+    arr M, F;
     feedbackController->world.equationOfMotion(M, F, false);
-    FplusG = F;
 //    if(model_error_g.N) FplusG += 0.1 * model_error_g;
-    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u0, M, FplusG); // TODO: what happens when changing the LAWs?
-    lowPassUpdate(u_lowPass, u_mean);
+    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u0, M, F);
+//    lowPassUpdate(u_lowPass, u_mean);
 
-    if(qddot_lowPass.N){
-      model_error_g = u_lowPass - M*qddot_lowPass - F;
-      cout <<"model error = " <<sumOfSqr(model_error_g) <<endl;
-    }
+//    if(qddot_lowPass.N){
+//      model_error_g = u_lowPass - M*qddot_lowPass - F;
+//      cout <<"model error = " <<sumOfSqr(model_error_g) <<endl;
+//    }
+#else
+    arr a, Kp, Kd, k;
+    a = feedbackController->getDesiredLinAccLaw(Kp, Kd, k);
+    arr a0 = feedbackController->operationalSpaceControl();
+    cout <<" a=" <<a <<endl <<"a0=" <<a0 <<endl;
+
+    arr M, F;
+    feedbackController->world.equationOfMotion(M, F, false);
+    arr u0 = M*k + F;
+    Kp = M*Kp;
+    Kd = M*Kd;
+#endif
 
     arr K_ft, J_ft_inv, fRef;
     double gamma;

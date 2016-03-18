@@ -22,12 +22,12 @@
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-  : map(*map), name(name), active(true), prec(0.), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+  : map(*map), name(name), active(true), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-  : map(map), name(name), active(true), prec(0.), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+  : map(map), name(name), active(true), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->get<arr>();
@@ -37,7 +37,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   } else {
     setGainsAsNatural(3., .7);
   }
-  if((it=params["prec"])) prec = it->get<double>();
+  if((it=params["prec"])) prec = it->get<arr>();
   if((it=params["target"])) y_ref = it->get<arr>();
 }
 
@@ -46,7 +46,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
 //               const char* iShapeName, const ors::Vector& ivec,
 //               const char* jShapeName, const ors::Vector& jvec,
 //               const arr& params)
-//  : map(*new DefaultTaskMap(type, G, iShapeName, ivec, jShapeName, jvec, params)), name(name), active(true), prec(0.), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
+//  : map(*new DefaultTaskMap(type, G, iShapeName, ivec, jShapeName, jvec, params)), name(name), active(true), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
 //  setGainsAsNatural(decayTime, dampingRatio);
 //}
 
@@ -59,14 +59,14 @@ void CtrlTask::setGains(const arr& _Kp, const arr& _Kd) {
   active=true;
   Kp = _Kp;
   Kd = _Kd;
-  if(!prec) prec=100.;
+  if(!prec.N) prec=ARR(100.);
 }
 
 void CtrlTask::setGains(double pgain, double dgain) {
   active=true;
   Kp = ARR(pgain);
   Kd = ARR(dgain);
-  if(!prec) prec=100.;
+  if(!prec.N) prec=ARR(100.);
 }
 
 void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
@@ -83,24 +83,35 @@ void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
   CHECK(Kd.nd==2 && Kd.d0==n && Kd.d1==n,"");
 }
 
-arr CtrlTask::get_y_ref(const arr& y){
-  this->y = y;
+arr CtrlTask::get_y_ref(const arr& _y){
+  if(&_y) y = _y;
+  if(y_ref.N!=y.N){
+    if(!y_ref.N) y_ref = zeros(y.N); //by convention: no-references = zero references
+    if(y_ref.N==1) y_ref = consts<double>(y_ref.scalar(), y.N); //by convention: scalar references = const vector references
+  }
   if(flipTargetSignOnNegScalarProduct && scalarProduct(y, y_ref) < 0)
     y_ref = -y_ref;
   if(makeTargetModulo2PI) for(uint i=0;i<y.N;i++){
     while(y_ref(i) < y(i)-MLR_PI) y_ref(i)+=MLR_2PI;
     while(y_ref(i) > y(i)+MLR_PI) y_ref(i)-=MLR_2PI;
   }
-  if(!y_ref.N) return zeros(y.N); //by convention: no-references = zero references
-  if(y_ref.N==1) return consts<double>(y_ref.scalar(), y.N); //by convention: scalar references = const vector references
   return y_ref;
 }
 
-arr CtrlTask::get_ydot_ref(const arr& ydot){
-  this->v = ydot;
-  if(!v_ref.N) return zeros(ydot.N);
-  if(v_ref.N==1) return consts<double>(v_ref.scalar(), ydot.N);
+arr CtrlTask::get_ydot_ref(const arr& _ydot){
+  if(&_ydot) this->v = _ydot;
+  if(v_ref.N!=v.N){
+    if(!v_ref.N) v_ref = zeros(v.N);
+    if(v_ref.N==1) v_ref = consts<double>(v_ref.scalar(), v.N);
+  }
   return v_ref;
+}
+
+arr CtrlTask::getC(){
+  uint n=y_ref.N;
+  if(prec.N==1) return diag(prec.scalar(), n);
+  if(prec.nd==1) return diag(prec);
+  return prec;
 }
 
 arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
@@ -189,19 +200,19 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
   if(g<0 && lambda_desired>0.){ //steer towards constraint
     desiredApproach.y_ref=ARR(.05); //set goal to overshoot!
     desiredApproach.setGainsAsNatural(.3, 1.);
-    desiredApproach.prec=1e4;
+    desiredApproach.prec=ARR(1e4);
   }
 
   if(g>-1e-2 && lambda_desired>0.){ //stay in constraint -> constrain dynamics
     desiredApproach.y_ref=ARR(0.);
     desiredApproach.setGainsAsNatural(.05, .7);
-    desiredApproach.prec=1e6;
+    desiredApproach.prec=ARR(1e6);
   }
 
   if(g>-0.02 && lambda_desired==0.){ //release constraint -> softly push out
     desiredApproach.y_ref=ARR(-0.04);
     desiredApproach.setGainsAsNatural(.3, 1.);
-    desiredApproach.prec=1e4;
+    desiredApproach.prec=ARR(1e4);
   }
 
   if(g<=-0.02 && lambda_desired==0.){ //stay out of contact -> constrain dynamics
@@ -221,7 +232,8 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _
   H_rate_diag = getH_rate_diag(world);
   qitselfPD.name="qitselfPD";
   qitselfPD.setGains(0.,100.);
-  qitselfPD.prec=1.;
+  qitselfPD.prec = ARR(1.); //H_rate_diag;
+  qitselfPD.setTarget( world.q );
 }
 
 CtrlTask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
@@ -247,7 +259,7 @@ ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* n
   return t;
 }
 
-void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
+void FeedbackMotionControl::getTaskCoeffs(arr& c, arr& J){
   c.clear();
   if(&J) J.clear();
   arr y, J_y, yddot_des;
@@ -255,8 +267,8 @@ void FeedbackMotionControl::getCostCoeffs(arr& c, arr& J){
     if(t->active && !t->f_ref.N) {
       t->map.phi(y, J_y, world);
       yddot_des = t->getDesiredAcceleration(y, J_y*world.qdot);
-      c.append(::sqrt(t->prec)*(yddot_des /*-Jdot*qdot*/));
-      if(&J) J.append(::sqrt(t->prec)*J_y);
+      c.append(::sqrt(t->prec)%(yddot_des /*-Jdot*qdot*/));
+      if(&J) J.append(::sqrt(t->prec)%J_y);
     }
   }
   if(&J) J.reshape(c.N, world.q.N);
@@ -298,7 +310,7 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
 
 arr FeedbackMotionControl::operationalSpaceControl(){
   arr c, J;
-  getCostCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
+  getTaskCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
   if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr A = diag(H_rate_diag);
   arr a = zeros(A.d0);
@@ -312,6 +324,40 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   arr q_ddot = inverse_SymPosDef(A) * a;
   return q_ddot;
 }
+
+arr FeedbackMotionControl::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
+  uint n=world.q.N;
+
+  arr Kp_y, Kd_y, k_y, C_y;
+  qitselfPD.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
+  C_y = diag(H_rate_diag); //qitselfPD.getC();
+
+  arr A = C_y;
+  Kp = C_y * Kp_y;
+  Kd = C_y * Kp_y;
+  k  = C_y * k_y;
+
+  for(CtrlTask* task : tasks) if(task->active){
+    arr y, J_y;
+    task->map.phi(y, J_y, world);
+    task->getDesiredLinAccLaw(Kp_y, Kd_y, k_y, y, J_y*world.qdot);
+    C_y = task->getC();
+
+    arr JtC_y = ~J_y*C_y;
+
+    A += JtC_y*J_y;
+    Kp += JtC_y*Kp_y*J_y;
+    Kd += JtC_y*Kd_y*J_y;
+    k  += JtC_y*(k_y + Kp_y*(J_y*world.q - y));
+  }
+  arr invA = inverse_SymPosDef(A);
+  Kp = invA*Kp;
+  Kd = invA*Kd;
+  k  = invA*k;
+
+  return k + Kp*world.q + Kd*world.qdot;
+}
+
 
 arr FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F) {
   uint n=F.N;
