@@ -22,7 +22,7 @@
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP, const arr& _q0):MP(_MP), q0(_q0), endeffR(NULL), endeffL(NULL){
   if(mlr::getParameter<bool>("oldfashinedTaskControl")){
-    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .2, 1.1, .2, 10.);
+    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .5, 1., .2, 10.);
     homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);
@@ -35,7 +35,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP, const arr& _q0):MP(_MP)
     gripperL = new CtrlTask("gripperL", new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
     gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
   }else{
-    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .2, 1., .5, .5);
+    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .5, 1., .5, .5);
     homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);

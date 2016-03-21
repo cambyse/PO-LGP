@@ -144,9 +144,9 @@ void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float cal
 
 
   base->setTarget({x_c,y_c,phi_c});
-  fmc.qitselfPD.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
-  fmc.qitselfPD.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
-  fmc.qitselfPD.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
+  fmc.qNullCostRef.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
+  fmc.qNullCostRef.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
+  fmc.qNullCostRef.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
 
 }
 
