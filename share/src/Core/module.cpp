@@ -84,6 +84,7 @@ void threadCloseModules(){
 void threadCancelModules(){
   NodeL threads = registry().getNodesOfType<Thread*>();
   for(Node *th: threads) th->get<Thread*>()->threadCancel();
+  modulesReportCycleTimes();
 }
 
 

@@ -223,17 +223,16 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 //===========================================================================
 
 FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift)
-  : world(_world), qitselfPD(NULL, NULL), useSwift(_useSwift) {
+  : world(_world), qNullCostRef(NULL, NULL), useSwift(_useSwift) {
   computeMeshNormals(world.shapes);
   if(useSwift) {
     makeConvexHulls(world.shapes);
     world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
   }
-  H_rate_diag = getH_rate_diag(world);
-  qitselfPD.name="qitselfPD";
-  qitselfPD.setGains(0.,100.);
-  qitselfPD.prec = ARR(1.); //H_rate_diag;
-  qitselfPD.setTarget( world.q );
+  qNullCostRef.name="qitselfPD";
+  qNullCostRef.setGains(0.,100.);
+  qNullCostRef.prec = getH_rate_diag(world);
+  qNullCostRef.setTarget( world.q );
 }
 
 CtrlTask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
@@ -311,11 +310,11 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
 arr FeedbackMotionControl::operationalSpaceControl(){
   arr c, J;
   getTaskCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
-  if(!c.N && !qitselfPD.active) return zeros(world.q.N,1).reshape(world.q.N);
-  arr A = diag(H_rate_diag);
+  if(!c.N && !qNullCostRef.active) return zeros(world.q.N,1).reshape(world.q.N);
+  arr A = qNullCostRef.getC();
   arr a = zeros(A.d0);
-  if(qitselfPD.active){
-    a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
+  if(qNullCostRef.active){
+    a += qNullCostRef.getC() * qNullCostRef.getDesiredAcceleration(world.q, world.qdot);
   }
   if(c.N){
     A += comp_At_A(J);
@@ -326,15 +325,13 @@ arr FeedbackMotionControl::operationalSpaceControl(){
 }
 
 arr FeedbackMotionControl::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
-  uint n=world.q.N;
-
   arr Kp_y, Kd_y, k_y, C_y;
-  qitselfPD.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
-  C_y = diag(H_rate_diag); //qitselfPD.getC();
+  qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
+  C_y = qNullCostRef.getC();
 
   arr A = C_y;
   Kp = C_y * Kp_y;
-  Kd = C_y * Kp_y;
+  Kd = C_y * Kd_y;
   k  = C_y * k_y;
 
   for(CtrlTask* task : tasks) if(task->active){
@@ -355,7 +352,7 @@ arr FeedbackMotionControl::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
   Kd = invA*Kd;
   k  = invA*k;
 
-  return k + Kp*world.q + Kd*world.qdot;
+  return k - Kp*world.q - Kd*world.qdot;
 }
 
 

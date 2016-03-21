@@ -65,7 +65,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap& map, Graph& params);
 
-  void setTarget(const arr& yref, const arr& vref=NoArr); //TODO -> setRef
+  void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
@@ -105,8 +105,7 @@ struct FeedbackMotionControl /*: MotionProblem*/ {
   ors::KinematicWorld& world;
   mlr::Array<CtrlTask*> tasks;
   mlr::Array<ConstraintForceTask*> forceTasks;
-  CtrlTask qitselfPD;
-  arr H_rate_diag;
+  CtrlTask qNullCostRef;
   bool useSwift;
 
   FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift=true);

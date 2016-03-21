@@ -74,7 +74,7 @@ void checkAnalytics(){
   world.getJointState(q, qdot);
 
   FeedbackMotionControl MP(world, false);
-  MP.qitselfPD.setGains(1.,10.);
+  MP.qNullCostRef.setGains(1.,10.);
   CtrlTask *t=MP.addPDTask("endeff1", .2, .9, posTMT, "handR", NoVector, "rightTarget");
 
   q(18)+=1.1;

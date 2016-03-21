@@ -69,9 +69,9 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState){
 
   for(CtrlTask* pdt:MP.tasks) pdt->active=false;
 
-  MP.qitselfPD.setGains(0., 10.); //nullspace qitself is not used for homing by default
-  MP.qitselfPD.active=true;
-  MP.qitselfPD.setTarget(MP.world.q);
+  MP.qNullCostRef.setGains(0., 10.); //nullspace qitself is not used for homing by default
+  MP.qNullCostRef.active=true;
+  MP.qNullCostRef.setTarget(MP.world.q);
 
 //  homing->setGains(0., 10.); //nullspace qitself is not used for homing by default
 //  homing->active=true;

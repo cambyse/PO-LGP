@@ -123,7 +123,6 @@ void TreeControllerClass::update() {
     iterationsSinceLastMsg++;
   }
 
-
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N
      || velLimitRatio<=0. || velLimitRatio>1.01
@@ -278,7 +277,7 @@ void TreeControllerClass::calcFTintegral(arr& f_err, const arr& f_ref, const arr
   arr f_task = J_ft_inv*f_obs;
 
   for(uint i=0;i<f_task.N;i++) {
-    if(fL_ref(i) < 0) {
+    if(f_ref(i) < 0) {
       if(f_task(i) < f_ref(i)) {
         f_err(i) += f_ref(i) - f_task(i);
       }
