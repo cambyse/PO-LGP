@@ -21,7 +21,7 @@
 #include <Hardware/gamepad/gamepad.h>
 
 Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP, const arr& _q0):MP(_MP), q0(_q0), endeffR(NULL), endeffL(NULL){
-  if(mlr::getParameter<bool>("oldfashinedTaskControl")){
+  if(mlr::getParameter<bool>("oldfashinedTaskControl", true)){
     homing = new CtrlTask("qHoming", new TaskMap_qItself(), .5, 1., .2, 10.);
     homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
@@ -37,7 +37,7 @@ Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP, const arr& _q0):MP(_MP)
   }else{
     homing = new CtrlTask("qHoming", new TaskMap_qItself(), .5, 1., .5, .5);
     homing->setTarget(q0);
-    endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
+    endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), 1., .1, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);
     base = new CtrlTask("endeffBase", new TaskMap_qItself(MP.world, "worldTranslationRotation"), .2, .8, 1., 1.);
     torso = new CtrlTask("torso_lift_link", new DefaultTaskMap(posTMT, MP.world, "torso_lift_link_0"), .2, .8, 1., 1.);

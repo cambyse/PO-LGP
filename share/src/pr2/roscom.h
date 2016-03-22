@@ -77,16 +77,16 @@ struct SubscriberType { virtual ~SubscriberType() {} }; ///< if types derive fro
 template<class msg_type>
 struct Subscriber : SubscriberType {
   Access_typed<msg_type>& access;
-  ros::NodeHandle* nh;
+  ros::NodeHandle nh;
   ros::Subscriber sub;
   Subscriber(const char* topic_name, Access_typed<msg_type>& _access)
     : access(_access) {
-    nh = new ros::NodeHandle;
-    sub  = nh->subscribe( topic_name, 1, &Subscriber::callback, this);
-  }
-  ~Subscriber(){
-    nh->shutdown();
-    delete nh;
+    if(mlr::getParameter<bool>("useRos")){
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(msg_type).name() <<"> ..." <<std::flush;
+      sub  = nh.subscribe( topic_name, 1, &Subscriber::callback, this);
+      cout <<"done" <<endl;
+    }
   }
   void callback(const typename msg_type::ConstPtr& msg) { access.set() = *msg; }
 };
@@ -101,20 +101,17 @@ template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConv : SubscriberType {
   Access_typed<var_type>& access;
   Access_typed<ors::Transformation> *frame;
-  ros::NodeHandle *nh;
+  ros::NodeHandle nh;
   ros::Subscriber sub;
   tf::TransformListener listener;
   SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
     : access(_access), frame(_frame) {
-    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
-    nh = new ros::NodeHandle;
-    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
-    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
-    cout <<"done" <<endl;
-  }
-  ~SubscriberConv(){
-    nh->shutdown();
-    delete nh;
+    if(mlr::getParameter<bool>("useRos")){
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      sub = nh.subscribe(topic_name, 1, &SubscriberConv::callback, this);
+      cout <<"done" <<endl;
+    }
   }
   void callback(const typename msg_type::ConstPtr& msg) {
     double time=conv_time2double(msg->header.stamp);
@@ -124,44 +121,6 @@ struct SubscriberConv : SubscriberType {
     }
   }
 };
-
-
-
-//===========================================================================
-//
-// subscribing a message into an MLR-type-Access via a conv_* function
-//
-
-//template<class msg_type, class var_type, var_type conv(const msg_type&)>
-//struct SubscriberConvThreaded : Thread {
-//  Access_typed<var_type>& access;
-//  Access_typed<ors::Transformation> *frame;
-//  ros::NodeHandle *nh;
-//  ros::Subscriber sub;
-//  tf::TransformListener listener;
-//  SubscriberConvThreaded(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
-//    : Thread(STRING("Subscriber_"<<_access.name <<"->" <<_topic_name), .05),
-//      access(_access), frame(_frame) {
-//  }
-//  ~SubscriberConvThreaded(){}
-//  void open(){
-//    nh = new ros::NodeHandle;
-//    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
-//    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
-//    cout <<"done" <<endl;
-//  }
-//  void close(){
-//    delete nh;
-//  }
-//  void step(){}
-//  void callback(const typename msg_type::ConstPtr& msg) {
-//    double time=conv_time2double(msg->header.stamp);
-//    access.set( time ) = conv(*msg);
-//    if(frame){
-//      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, listener);
-//    }
-//  }
-//};
 
 
 //===========================================================================
@@ -176,10 +135,13 @@ struct SubscriberConvNoHeader : SubscriberType{
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
     : access(_access) {
-    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
-    sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+    if(mlr::getParameter<bool>("useRos")){
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+      cout <<"done" <<endl;
+    }
   }
-  ~SubscriberConvNoHeader(){}
   void callback(const typename msg_type::ConstPtr& msg) {
     access.set() = conv(*msg);
   }
@@ -194,26 +156,24 @@ struct SubscriberConvNoHeader : SubscriberType{
 template<class msg_type, class var_type, msg_type conv(const var_type&)>
 struct PublisherConv : Module{
   Access_typed<var_type> access;
-  ros::NodeHandle *nh;
+  ros::NodeHandle nh;
   ros::Publisher pub;
   const char* topic_name;
+  bool useRos;
 
   PublisherConv(const char* _topic_name, Access_typed<var_type>& _access)
       : Module(STRING("Publisher_"<<_access.name <<"->" <<_topic_name), -1),
         access(this, _access, true),
-        topic_name(_topic_name){}
-  ~PublisherConv(){}
+        topic_name(_topic_name){
+    useRos = mlr::getParameter<bool>("useRos");
+  }
   void open(){
-    nh = new ros::NodeHandle;
-    pub = nh->advertise<msg_type>(topic_name, 1);
+    if(useRos) pub = nh.advertise<msg_type>(topic_name, 1);
   }
   void step(){
-    pub.publish(conv(access.get()));
+    if(useRos) pub.publish(conv(access.get()));
   }
-  void close(){
-    // nh->shutdown(); //why does this throw an error???
-    delete nh;
-  }
+  void close(){}
 };
 
 //===========================================================================
@@ -279,9 +239,10 @@ options. (In their constructor?)
 //END_MODULE()
 
 struct RosCom_Spinner:Module{
-  RosCom_Spinner():Module("RosCom_Spinner", .001){}
-  void open(){ rosCheckInit(); }
-  void step(){ ros::spinOnce(); }
+  bool useRos;
+  RosCom_Spinner():Module("RosCom_Spinner", .001){ useRos = mlr::getParameter<bool>("useRos"); }
+  void open(){ if(useRos) rosCheckInit(); }
+  void step(){ if(useRos) ros::spinOnce(); }
   void close(){}
 };
 
