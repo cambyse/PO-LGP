@@ -3,7 +3,7 @@
 #include <Core/array.h>
 //#include <System/engine.h>
 #include <pr2/roscom.h>
-#include <pr2/rosalvar.h>
+#include <pr2/subscribeAlvarMarkers.h>
 #include <Hardware/gamepad/gamepad.h>
 
 #include "actions.h"

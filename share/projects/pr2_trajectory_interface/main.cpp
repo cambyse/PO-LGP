@@ -8,7 +8,7 @@
 
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
-#include <pr2/rosalvar.h>
+#include <pr2/subscribeAlvarMarkers.h>
 #include <pr2/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 

@@ -78,16 +78,23 @@ struct SubscriberType { virtual ~SubscriberType() {} }; ///< if types derive fro
 template<class msg_type>
 struct Subscriber : SubscriberType {
   Access_typed<msg_type>& access;
-  ros::NodeHandle* nh;
+  ros::NodeHandle* nh; //TODO: make non-pointer
   ros::Subscriber sub;
   Subscriber(const char* topic_name, Access_typed<msg_type>& _access)
     : access(_access) {
-    nh = new ros::NodeHandle;
-    sub  = nh->subscribe( topic_name, 1, &Subscriber::callback, this);
+    if(mlr::getParameter<bool>("useRos")){
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      nh = new ros::NodeHandle;
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      sub  = nh->subscribe( topic_name, 1, &Subscriber::callback, this);
+      cout <<"done" <<endl;
+    }
   }
   ~Subscriber(){
-    nh->shutdown();
-    delete nh;
+    if(mlr::getParameter<bool>("useRos")){
+      nh->shutdown();
+      delete nh;
+    }
   }
   void callback(const typename msg_type::ConstPtr& msg) { access.set() = *msg; }
 };
@@ -107,15 +114,19 @@ struct SubscriberConv : SubscriberType {
   tf::TransformListener listener;
   SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
     : access(_access), frame(_frame) {
-    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
-    nh = new ros::NodeHandle;
-    cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
-    sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
-    cout <<"done" <<endl;
+    if(mlr::getParameter<bool>("useRos")){
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      nh = new ros::NodeHandle;
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
+      cout <<"done" <<endl;
+    }
   }
   ~SubscriberConv(){
-    nh->shutdown();
-    delete nh;
+    if(mlr::getParameter<bool>("useRos")){
+      nh->shutdown();
+      delete nh;
+    }
   }
   void callback(const typename msg_type::ConstPtr& msg) {
     double time=conv_time2double(msg->header.stamp);
@@ -177,8 +188,10 @@ struct SubscriberConvNoHeader : SubscriberType{
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
     : access(_access) {
-    registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
-    sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+    if(mlr::getParameter<bool>("useRos")){
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      sub = nh.subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+    }
   }
   ~SubscriberConvNoHeader(){}
   void callback(const typename msg_type::ConstPtr& msg) {

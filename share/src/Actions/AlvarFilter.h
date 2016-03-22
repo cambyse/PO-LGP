@@ -23,7 +23,7 @@
 #include <Core/module.h>
 #include <Core/array.h>
 #include <pr2/roscom.h>
-#include <pr2/rosalvar.h>
+#include <pr2/subscribeAlvarMarkers.h>
 
 #include <visualization_msgs/MarkerArray.h>
 

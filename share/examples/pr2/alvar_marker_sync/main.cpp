@@ -1,7 +1,7 @@
 //#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <pr2/rosalvar.h>
+#include <pr2/subscribeAlvarMarkers.h>
 
 // =================================================================================================
 struct MySystem {
