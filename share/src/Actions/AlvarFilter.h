@@ -23,16 +23,24 @@
 #include <Core/module.h>
 #include <Core/array.h>
 #include <pr2/roscom.h>
+#include <pr2/rosalvar.h>
+
 #include <visualization_msgs/MarkerArray.h>
 
 #include <vector>
 
-struct ClusterFilter : Module{
-  ACCESSnew(std::vector<Cluster>, tracked_clusters)
-  ACCESSnew(visualization_msgs::MarkerArray, tabletop_clusters)
 
-  std::vector<Cluster> raw_clusters;
-  std::vector<Cluster> old_clusters;
+struct AlvarFilter : Module{
+  ACCESSname(AlvarMarkers, ar_pose_markers)
+
+  ACCESSname(AlvarMarkers, ar_pose_markers_tracked)
+
+  AlvarMarkers raw_markers;
+  AlvarMarkers old_markers;
+
+  // Convert them into our data
+  std::vector<mlrAlvar> raw_markers_poses;
+  std::vector<mlrAlvar> old_markers_poses;
 
   double relevance_decay_factor = 0.9;
   double relevance_threshold = 0.25;
@@ -47,15 +55,16 @@ struct ClusterFilter : Module{
   Hungarian *ha;
   arr costs;
 
-  ClusterFilter();
- // virtual ~ClusterFilter();
+  AlvarFilter();
+ // virtual ~AlvarFilter();
 
   virtual void open();
   virtual void step();
   virtual void close();
 
   // Main filtering functions
-  void convertMessage(const visualization_msgs::MarkerArray& msg);
+  void convertMessage(const AlvarMarkers& markers);
   void createCostMatrix(arr& costs);
+
 
 };

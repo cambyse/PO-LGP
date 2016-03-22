@@ -17,39 +17,33 @@
     -----------------------------------------------------------------  */
 
 
-#include "ClusterFilterActivity.h"
+#include "AlvarFilter.h"
 #include <unordered_set>
 
-ClusterFilter::ClusterFilter():
-    Module("ClusterFilter", 0){}
+AlvarFilter::AlvarFilter():
+    Module("AlvarFilter", 0){}
 
 
-void ClusterFilter::open(){
-  ros::init(mlr::argc, mlr::argv, "cluster_filter", ros::init_options::NoSigintHandler);
+void AlvarFilter::open(){
+  ros::init(mlr::argc, mlr::argv, "alvar_filter", ros::init_options::NoSigintHandler);
   nh = new ros::NodeHandle;
-
-  // FIX ME - we cannot subscribe directly, due to a race condition with waitForNextRevision below...
-  //  Subscriber<visualization_msgs::MarkerArray> sub_markers("/tabletop/clusters", tabletop_clusters);
-
-  pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
-  std::cout << "Opening cluster filter. " << std::endl;
+  std::cout << "Opening Alvar filter. " << std::endl;
 }
 
-void ClusterFilter::close(){
+void AlvarFilter::close(){
   nh->shutdown();
   delete nh;
 }
 
-void ClusterFilter::step(){
+void AlvarFilter::step(){
   std::cout << "Step." << std::endl;
 
-  tabletop_clusters.waitForNextRevision();
+  ar_pose_markers.waitForNextRevision();
 
-  convertMessage(tabletop_clusters.get());
+  raw_markers = ar_pose_markers.get();
+  old_markers = ar_pose_markers_tracked.get();
 
-  old_clusters = tracked_clusters.get();
-
-  if ((old_clusters.size() == 0) && (raw_clusters.size() == 0))
+  if ((old_markers.size() == 0) && (raw_markers.size() == 0))
       return;
 
   createCostMatrix(costs);
@@ -143,24 +137,25 @@ void ClusterFilter::step(){
   delete ha;
 }
 
+void AlvarFilter::convertMessage(const AlvarMarkers& markers) {
+  // go through currently provided markers
+  raw_markers.clear();
 
-void ClusterFilter::convertMessage(const visualization_msgs::MarkerArray& msg) {
-  // go through currently provided clusters
-  raw_clusters.clear();
-
-  //std::cout << "Markers found: " << msg.markers.size() << std::endl;
-  for(auto & marker : msg.markers){
-    Cluster new_cluster = conv_Marker2Cluster(marker);
-    raw_clusters.push_back(new_cluster);
+  for(auto & marker : markers){
+    mlrAlvar new_marker;
+    new_marker.id = marker.id;
+    new_marker.ros_alvar = marker;
+    new_marker.pos = conv_
+    raw_markers.push_back(new_marker);
   }
 }
 
 
-void ClusterFilter::createCostMatrix(arr& costs){
+void AlvarFilter::createCostMatrix(arr& costs){
 
   // 3 cases:
-  int num_old = old_clusters.size();
-  int num_new = raw_clusters.size();
+  int num_old = old_markers.size();
+  int num_new = raw_markers.size();
   int dims = std::max(num_old, num_new);
 
   if (dims == 0)
@@ -171,7 +166,7 @@ void ClusterFilter::createCostMatrix(arr& costs){
   {
     for (int j = 0; j < num_old; j++)
     {
-      costs(i,j) = length(raw_clusters[i].mean - old_clusters[j].mean);
+      costs(i,j) = length(raw_clusters[i].mean - raw_markers[j].mean);
       //std::cout << "Clusters: " << i << ' ' << j << "   dist: " << costs(i,j) << std::endl;
     }
   }
@@ -187,5 +182,7 @@ void ClusterFilter::createCostMatrix(arr& costs){
   //std::cout << "Cost created." << std::endl;
 }
 
-REGISTER_MODULE(ClusterFilter)
+
+
+REGISTER_MODULE(AlvarFilter)
 
