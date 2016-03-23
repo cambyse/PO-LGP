@@ -26,7 +26,7 @@
 
 
 
-void rosCheckInit(const char* module_name="pr2_module");
+void rosCheckInit(const char* node_name="pr2_module");
 bool rosOk();
 
 //-- ROS <--> MLR
@@ -269,10 +269,14 @@ options. (In their constructor?)
 //BEGIN_MODULE(RosCom_Spinner)
 //END_MODULE()
 
-struct RosCom_Spinner:Module{
-  RosCom_Spinner():Module("RosCom_Spinner", .001){}
-  void open(){ rosCheckInit(); }
-  void step(){ ros::spinOnce(); }
+struct RosCom_Spinner:Module{\
+  bool useRos;
+  RosCom_Spinner(const char* nodeName="MLRnode"):Module("RosCom_Spinner", .001){
+    useRos = mlr::getParameter<bool>("useRos");
+    if(useRos) rosCheckInit(nodeName);
+  }
+  void open(){}
+  void step(){ if(useRos) ros::spinOnce(); }
   void close(){}
 };
 
