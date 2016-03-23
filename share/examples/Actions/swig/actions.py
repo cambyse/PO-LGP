@@ -86,25 +86,27 @@ signal.signal(signal.SIGABRT, signal_handler)
 
 
 
-
+def unify(seq):
+    seen = set()
+    return [x for x in seq if not (x in seen or seen.add(x))]
 ###############################################################################
 # Convenient access and autocompletion to shapes, joints, and bodies
 # Just type `s.<tab>` to get a list of all shapes
 def  update_a():
-    _tmp = list(shapes())
+    _tmp = unify(list(shapes()))
     Shapes = namedtuple("Shapes", " ".join(_tmp))
 
     s = Shapes(*_tmp)
 
-    _tmp = list(bodies())
+    _tmp = unify(list(bodies()))
     Bodies = namedtuple("Bodies", " ".join(_tmp))
     b = Bodies(*_tmp)
 
-    _tmp = list(joints())
+    _tmp = unify(list(joints()))
     Joints = namedtuple("Joints", " ".join(_tmp))
     j = Joints(*_tmp)
 
-    _tmp = list(interface.getSymbols())
+    _tmp = unify(list(interface.getSymbols()))
     Symbols = namedtuple("Symbols", " ".join(_tmp))
     S = Symbols(*_tmp)
 
@@ -226,12 +228,12 @@ def remove_facts():
     for symb in symbols:
         interface.stopFact(symb)
 
-def set(lit, param):
+def set_fact(lit, param):
     factstring = (str(lit) + str(param).replace(":","=")).replace("\'","")
     print(factstring)
     interface.setFact(factstring)
 
-def unset(lit):
+def unset_fact(lit):
     factstring = (str(lit) + "!").replace("\'","")
     print(factstring)
     interface.setFact(factstring)
