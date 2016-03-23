@@ -176,7 +176,7 @@ void TrajectoryInterface::gotoPosition(arr x_pr2, double T, bool recordData, boo
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
   optConstrained(X_pr2, NoArr, Convert(MP), o);
 
-  executeTrajectory(X_pr2,T,recordData,displayTraj);
+  executeTrajectory(X_pr2, T, recordData, displayTraj);
 }
 
 
