@@ -109,7 +109,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-//    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
@@ -173,6 +173,39 @@ void TaskControllerModule::step(){
     modelWorld.writeAccess();
     taskController->tasks = ctrlTasks();
 
+//    //count active tasks:
+//    uint ntasks=0;
+//    for(CtrlTask *t:feedbackController->tasks) if(t->active) ntasks++;
+
+//    //if there are no tasks, just stabilize
+//    if(true || !ntasks) { //is done in feedbackController->qitself
+//      if(!noTaskTask) noTaskTask = new CtrlTask("noTaskTask", new TaskMap_qItself());
+//      noTaskTask->prec = 10.0;
+//      noTaskTask->setGains(.0, 1.0); //TODO tune those gains
+//      //      noTaskTask->setTarget(modelWorld().q);
+//      noTaskTask->active = true;
+//      feedbackController->tasks.append(noTaskTask);
+//    }
+
+//    //TODO qItself task for joint space stability
+//    if(false) {
+//      TaskMap* qItselfJointSpaceStabilityTask = new TaskMap_qItself();
+//      CtrlTask* qItselfJSStabilityLaw = new CtrlTask("qItselfJSStabilityLaw", qItselfJointSpaceStabilityTask);
+//      qItselfJSStabilityLaw->prec = 10.0;
+//      qItselfJSStabilityLaw->setGains(0.0, 5.0); //TODO tune those gains
+//      qItselfJSStabilityLaw->setTarget(qItselfJSStabilityLaw->map.phi(modelWorld()), zeros(qItselfJSStabilityLaw->map.dim_phi(modelWorld())));
+//      feedbackController->tasks.append(qItselfJSStabilityLaw);
+//    }
+
+#if 0
+
+    arr u_bias, Kp, Kd;
+    arr M, F;
+    feedbackController->world.equationOfMotion(M, F, false);
+    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u_bias, M, F); // TODO: what happens when changing the LAWs?
+
+#else
+
     //compute desired acceleration law in q-space
     arr a, Kp, Kd, k;
     a = taskController->getDesiredLinAccLaw(Kp, Kd, k);
@@ -184,6 +217,8 @@ void TaskControllerModule::step(){
     Kp = M*Kp;
     Kd = M*Kd;
 
+    checkNan(u_bias);
+
     //-- compute the error between expected change in velocity and true one
     if(!a_last.N) a_last = a;
     if(!qdot_last.N) qdot_last = qdot_real;
@@ -193,7 +228,9 @@ void TaskControllerModule::step(){
     if(!aErrorIntegral.N) aErrorIntegral = a_err;
     else aErrorIntegral += a_err;
     // add integral error to control bias
-    u_bias -= .2 * M * aErrorIntegral;
+    u_bias -= .01 * M * aErrorIntegral;
+
+#endif
 
     // F/T limit control
     arr K_ft, J_ft_inv, fRef;
@@ -223,7 +260,6 @@ void TaskControllerModule::step(){
     refs.J_ft_invL = J_ft_inv;
     refs.u_bias = u_bias;
     refs.intLimitRatio = 0.7;
-
   }
 
   //-- send base motion command

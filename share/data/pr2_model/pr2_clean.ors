@@ -26,8 +26,8 @@ body r_gripper_l_finger_tip_link { pose=<T 0.93928 -0.17305 0.790675 -0.707107 0
 body r_gripper_r_finger_tip_link { pose=<T 0.93928 -0.20295 0.790675 -0.707107 0 0.707107 0 > mass=0.04419  }
 body l_gripper_l_finger_tip_link { pose=<T 0.93928 0.20295 0.790675 -0.707107 0 -0.707107 0 > mass=0.04419  }
 body l_gripper_r_finger_tip_link { pose=<T 0.93928 0.17305 0.790675 -0.707107 0 0.707107 0 > mass=0.04419  }
-body r_gripper_l_finger_tip_frame { pose=<T 0.93928 -0.20295 0.790675 0.707107 -2.29851e-17 -2.29851e-17 0.707107 > mass=0.05 } #MT: we need mass!
-body l_gripper_l_finger_tip_frame { pose=<T 0.93928 0.17305 0.790675 0.707107 -2.29851e-17 -2.29851e-17 0.707107 > mass=0.05 } #MT: we need mass!
+body r_gripper_l_finger_tip_frame { pose=<T 0.93928 -0.20295 0.790675 0.707107 -2.29851e-17 -2.29851e-17 0.707107 >  }
+body l_gripper_l_finger_tip_frame { pose=<T 0.93928 0.17305 0.790675 0.707107 -2.29851e-17 -2.29851e-17 0.707107 >  }
 
 shape base_link_0 (base_footprint){ type=3 rel=<T -0.112036 0.00178614 0.316049 1 0 0 0 >  mass=116  inertiaTensor=[ 5.65223 -0.00971993 1.29399 5.66947 -0.00737958 3.6832 ]  mesh='base_v0/base_L.stl'  rel_includes_mesh_center=true  }
 shape base_footprint (base_footprint){ type=0 rel=<T 0 0 0.071 1 0 0 0 >  mass=1  inertiaTensor=[ 0.01 0 0 0.01 0 0.01 ]  size=[ 0.001 0.001 0.001 0 ]  rel_includes_mesh_center=true  }

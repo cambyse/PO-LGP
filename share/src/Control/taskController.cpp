@@ -371,7 +371,7 @@ arr TaskController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const
 //  }
   for(CtrlTask* law : tasks) if(law->active){
     law->map.phi(y, J_y, world);
-    tempJPrec = ~J_y*law->prec;
+    tempJPrec = ~J_y*law->getC();
     A += tempJPrec*J_y;
 
     law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*world.qdot);
