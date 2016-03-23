@@ -1741,8 +1741,8 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
       S.setJointState(x[0], x[1]);
       arr M,Minv,F;
       S.equationOfMotion(M, F, gravity);
-      //inverse_SymPosDef(Minv, M);
-      Minv = inverse(M); //TODO why does symPosDef fail?
+      inverse_SymPosDef(Minv, M);
+      //Minv = inverse(M); //TODO why does symPosDef fail?
       y = Minv * (Bu - F);
     }
   } eqn(*this, Bu_control, gravity);
