@@ -39,13 +39,13 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::K
 
     //-- define controller msg
     refs.fL = zeros(6);
-    refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = ARR(mlr::getParameter<double>("controller/Kp",1.5));
     refs.Kd = ARR(mlr::getParameter<double>("controller/Kd",2.5));
     refs.Ki = ARR(mlr::getParameter<double>("controller/Ki",0.));
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
     refs.velLimitRatio = .1;
     refs.effLimitRatio = 1.;
     refs.intLimitRatio = 0.9;
@@ -163,15 +163,15 @@ void TrajectoryInterface::gotoPosition(arr x_pr2, double T, bool recordData, boo
   }
 
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world), sumOfSqrTT);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  t = MP.addTask("tra", new TransitionTaskMap(*world_pr2), sumOfSqrTT);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_pr2);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 
   t =MP.addTask("posT", new TaskMap_qItself(), sumOfSqrTT);
   t->setCostSpecs(MP.T-2,MP.T, x_pr2, 1e2);
 
-  arr X = MP.getInitialization();
+  arr X_pr2 = MP.getInitialization();
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
   optConstrained(X_pr2, NoArr, Convert(MP), o);
@@ -188,13 +188,13 @@ void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,doub
   refs_zero.q = S.ctrl_obs.get()->q;
   refs_zero.qdot=S.ctrl_obs.get()->qdot*0.;
   refs_zero.fL = zeros(6);
-  refs_zero.KiFT.clear();
-  refs_zero.J_ft_inv.clear();
+  refs_zero.KiFTL.clear();
+  refs_zero.J_ft_invL.clear();
   refs_zero.u_bias = zeros(q.N);
   refs_zero.Kp = zeros(q.N,q.N);
   refs_zero.Kd = ARR(0.);
   refs_zero.Ki = ARR(0.);
-  refs_zero.gamma = 1.;
+  refs_zero.fL_gamma = 1.;
   refs_zero.velLimitRatio = .1;
   refs_zero.effLimitRatio = 1.;
   refs_zero.intLimitRatio = 1.;
@@ -254,8 +254,8 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
   refs_zero.q = S.ctrl_obs.get()->q;
   refs_zero.qdot=S.ctrl_obs.get()->qdot*0.;
   refs_zero.fL = zeros(6);
-  refs_zero.KiFT.clear();
-  refs_zero.J_ft_inv.clear();
+  refs_zero.KiFTL.clear();
+  refs_zero.J_ft_invL.clear();
   refs_zero.u_bias = zeros(q.N);
   if (sendZeroGains) {
     cout << "sending zero gains" << endl;
@@ -263,7 +263,7 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
     refs_zero.Kd = ARR(0.);
     refs_zero.Ki = ARR(0.);
   }
-  refs_zero.gamma = 1.;
+  refs_zero.fL_gamma = 1.;
   S.ctrl_ref.set() = refs_zero;
 
   world_pr2->watch(true,"press button to continue");

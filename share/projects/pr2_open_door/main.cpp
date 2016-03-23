@@ -271,13 +271,13 @@ void run(){
     cout <<"t: "<< t <<endl;
     CtrlMsg refs;
     refs.fL = ARR(0., 0., 0.,0.,0.,0.);
-    refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = 1.;
     refs.Kd = 1.;
     refs.Ki = 0.;
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
 
     s = t/duration;
     refs.q=xs.eval(s);

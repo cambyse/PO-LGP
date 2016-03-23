@@ -29,9 +29,12 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   Kp_base.resize(world.q.N).setZero();
   Kd_base.resize(world.q.N).setZero();
   Kp=Kd=ARR(1.);
-  KiFT.clear();
+  KiFTL.clear();
+  KiFTR.clear();
   Ki.clear();
   limits.resize(world.q.N,5).setZero();
+  J_ft_invL.clear();
+  J_ft_invR.clear();
 
   //read out gain parameters from ors data structure
   { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
@@ -50,9 +53,9 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
       ROS_joints(j->qIndex) = pr2_joint;
       q(j->qIndex) = pr2_joint->position_;
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' matched in pr2 '" <<pr2_joint->joint_->name.c_str()
-		      <<"' \tq=" <<q(j->qIndex)
-		      <<" \tgains=" <<Kp_base(j->qIndex) <<' '<<Kd_base(j->qIndex)
-		      <<" \tlimits=" <<limits[j->qIndex]).p);
+                      <<"' \tq=" <<q(j->qIndex)
+                      <<" \tgains=" <<Kp_base(j->qIndex) <<' '<<Kd_base(j->qIndex)
+                      <<" \tlimits=" <<limits[j->qIndex]).p);
     }else{
       ROS_INFO("%s",STRING("Joint '" <<j->name <<"' not matched in pr2").p);
     }
@@ -87,11 +90,15 @@ void TreeControllerClass::starting(){
   q_ref = q;
   qdot_ref = zeros(q.N);
   u_bias = zeros(q.N);
-  err = zeros(3);
+  fL_err = zeros(1);
+  fR_err = zeros(1);
   int_error = zeros(q.N);
   q_filt = 0.;
-  qd_filt = 0.95;
-  gamma = 1.;
+  qd_filt = 0.97;
+  fL_gamma = 0.;
+  fR_gamma = 0.;
+  fL_offset = zeros(6);
+  fR_offset = zeros(6);
   velLimitRatio = effLimitRatio = 1.;
 }
 
@@ -116,7 +123,6 @@ void TreeControllerClass::update() {
     iterationsSinceLastMsg++;
   }
 
-
   //-- PD on q_ref
   if(q_ref.N!=q.N || qdot_ref.N!=qd.N || u_bias.N!=q.N
      || velLimitRatio<=0. || velLimitRatio>1.01
@@ -124,7 +130,7 @@ void TreeControllerClass::update() {
     //cout <<'#' <<flush; //hashes indicate that q_ref has wrong size...
     if(!msgBlock){
       ROS_INFO("%s",STRING("*** q_ref, qdot_ref or u_bias have wrong dimension, or vel/eff limit ratios outside (0,1]"
-			   <<q.N <<' ' <<q_ref.N <<' ' <<qdot_ref.N <<' ' <<u_bias.N <<' ' <<velLimitRatio <<' ' <<effLimitRatio).p);
+                           <<q.N <<' ' <<q_ref.N <<' ' <<qdot_ref.N <<' ' <<u_bias.N <<' ' <<velLimitRatio <<' ' <<effLimitRatio).p);
       msgBlock=1000;
     }else{
       msgBlock--;
@@ -142,6 +148,9 @@ void TreeControllerClass::update() {
     }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
       u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
+    } else if(Kp.d0 == q.N && Kp.d1 == q.N && Kd.d0 == q.N && Kd.d1 == q.N) {
+      u += Kp*(q_ref - q);
+      u += Kd*(qdot_ref - qd);
     }
 
     // add integral term
@@ -155,28 +164,30 @@ void TreeControllerClass::update() {
 
     u += u_bias;
 
+
     // torque PD for left ft sensor
-    //double ft_norm = length(fL_obs);
-    if (/*ft_norm<2. ||*/ !KiFT.N) {   // no contact or Ki gain -> don't use the integral term
-      err = err*0.;              // reset integral error
+      //TODO: How to allow multiple Tasks? Upper AND Lower bounds simultaneously?
+    if (!KiFTL.N) {   // no contact or Ki gain -> don't use the integral term
+      fL_err = fL_err*0.;              // reset integral error
     } else {
-#if 0
-      err = gamma*err + (fL_ref - J_ft_inv*fL_obs);
-#else
-      err *= gamma;
-      arr f_obs = J_ft_inv*fL_obs;
-      for(uint i=0;i<f_obs.N;i++) if(f_obs(i) > fL_ref(i)) err(i) += fL_ref(i)-f_obs(i);
-#endif
-      u += KiFT * err;
+      calcFTintegral(fL_err,fL_ref,fL_obs,J_ft_invL,fL_gamma);
+      u += KiFTL * fL_err;
+    }
+    // torque PD for right ft sensor
+    if (!KiFTR.N) {   // no contact or Ki gain -> don't use the integral term
+      fR_err = fR_err*0.;              // reset integral error
+    } else {
+      calcFTintegral(fR_err,fR_ref,fR_obs,J_ft_invR,fR_gamma);
+      u += KiFTR * fR_err;
     }
 
     //-- command efforts to KDL
     for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
-	/*double velM = marginMap(qd(i), -velLimitRatio*limits(i,2), velLimitRatio*limits(i,2), .1);
-	  //clip(velM, -1., 1.)
+        /*double velM = marginMap(qd(i), -velLimitRatio*limits(i,2), velLimitRatio*limits(i,2), .1);
+          //clip(velM, -1., 1.)
       if(velM<0. && u(i)<0.) u(i)*=(1.+velM); //decrease effort close to velocity margin
       if(velM>0. && u(i)>0.) u(i)*=(1.-velM); //decrease effort close to velocity margin
-	*/
+        */
       clip(u(i), -effLimitRatio*limits(i,3), effLimitRatio*limits(i,3));
       ROS_joints(i)->commanded_effort_ = u(i);
       ROS_joints(i)->enforceLimits();
@@ -204,9 +215,10 @@ void TreeControllerClass::update() {
   jointStateMsg.fL = conv_arr2stdvec(fL_obs);
   jointStateMsg.fR = conv_arr2stdvec(fR_obs);
   jointStateMsg.u_bias = conv_arr2stdvec(u);
+  jointStateMsg.fL_err = conv_arr2stdvec(fL_err);
+  jointStateMsg.fR_err = conv_arr2stdvec(fR_err);
 
   jointState_publisher.publish(jointStateMsg);
-
 }
 
 /// Controller stopping in realtime
@@ -220,32 +232,62 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   u_bias = conv_stdvec2arr(msg->u_bias);
   fL_ref = conv_stdvec2arr(msg->fL);
   fR_ref = conv_stdvec2arr(msg->fR);
-  J_ft_inv = conv_stdvec2arr(msg->J_ft_inv); if (J_ft_inv.N>0) J_ft_inv.reshape(3,6);
+  J_ft_invL = conv_stdvec2arr(msg->J_ft_invL); if (J_ft_invL.N>0) J_ft_invL.reshape(fL_ref.d0,6);
+  J_ft_invR = conv_stdvec2arr(msg->J_ft_invR); if (J_ft_invR.N>0) J_ft_invR.reshape(fR_ref.d0,6);
 #define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
   CP(Kp);
   CP(Kd);
 #undef CP
   Ki = conv_stdvec2arr(msg->Ki);
-  KiFT = conv_stdvec2arr(msg->KiFT);             if (KiFT.N>0) KiFT.reshape(q_ref.N, 3);
+
+  KiFTR = conv_stdvec2arr(msg->KiFTR);             if (KiFTR.N>0) KiFTR.reshape(q_ref.N, fR_ref.d0);
+  KiFTL = conv_stdvec2arr(msg->KiFTL);             if (KiFTL.N>0) KiFTL.reshape(q_ref.N, fL_ref.d0);
+  fR_offset = conv_stdvec2arr(msg->fR_offset);
+  fL_offset = conv_stdvec2arr(msg->fL_offset);
+
   velLimitRatio = msg->velLimitRatio;
   effLimitRatio = msg->effLimitRatio;
   intLimitRatio = msg->intLimitRatio;
-  gamma = msg->gamma;
+  fR_gamma = msg->fR_gamma;
+  fL_gamma = msg->fL_gamma;
+  qd_filt = msg->qd_filt;
+
   mutex.unlock();
 }
 
 void TreeControllerClass::l_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
   const geometry_msgs::Vector3 &f=msg->wrench.force;
   const geometry_msgs::Vector3 &t=msg->wrench.torque;
-  fL_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
+  fL_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z) - fL_offset;
 }
 
 void TreeControllerClass::r_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg){
   const geometry_msgs::Vector3 &f=msg->wrench.force;
   const geometry_msgs::Vector3 &t=msg->wrench.torque;
-  fR_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z);
+  fR_obs = ARR(f.x, f.y, f.z, t.x, t.y, t.z) - fR_offset;
 }
 
+void TreeControllerClass::calcFTintegral(arr& f_err, const arr& f_ref, const arr& f_obs, const arr& J_ft_inv, const double& f_gamma){
+  // check if f_err has same dimension as f_ref, otherwise reset to zero
+  if (f_err.N != f_ref.N) {
+    f_err = zeros(f_ref.N);
+  }
+
+  f_err *= f_gamma;
+  arr f_task = J_ft_inv*f_obs;
+
+  for(uint i=0;i<f_task.N;i++) {
+    if(f_ref(i) < 0) {
+      if(f_task(i) < f_ref(i)) {
+        f_err(i) += f_ref(i) - f_task(i);
+      }
+    } else {
+      if(f_task(i) > f_ref(i)) {
+        f_err(i) += f_ref(i) - f_task(i);
+      }
+    }
+  }
+}
 } // namespace
 
 PLUGINLIB_DECLARE_CLASS(marc_controller_pkg, TreeControllerPlugin, marc_controller_ns::TreeControllerClass, pr2_controller_interface::Controller)

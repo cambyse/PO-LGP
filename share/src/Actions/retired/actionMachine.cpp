@@ -187,7 +187,7 @@ void ActionMachine::step(){
   s->refs.fL = zeros(6);
   s->refs.fR = zeros(6);
   s->refs.Ki.clear();
-  s->refs.J_ft_inv.clear();
+  s->refs.J_ft_invL.clear();
   s->refs.u_bias = zeros(s->q.N);
 
   //-- compute the force feedback control coefficients
@@ -196,7 +196,7 @@ void ActionMachine::step(){
     if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
       count++;
       if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_invL, *world);
     }
   }
   if(count==1) s->refs.Kp = .5;
@@ -208,7 +208,7 @@ void ActionMachine::step(){
   //-- send the computed movement to the robot
   s->refs.q =  s->q;
   s->refs.qdot = zeros(s->q.N);
-  s->refs.gamma = 1.;
+  s->refs.fL_gamma = 1.;
   ctrl_ref.set() = s->refs;
 }
 

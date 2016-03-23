@@ -30,7 +30,7 @@ Teleop2Tasks::Teleop2Tasks(FeedbackMotionControl& _MP):fmc(_MP){
   fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,fmc.world, "endeffForceL",NoVector,"base_footprint"));
   fc->y_ref ={0.8,0.5,1.};
   fc->f_ref = {15.,15.,15.};
-  fc->f_Igain = .075;
+  fc->f_alpha = .075;
   fc->active = true;
 
   int jointID = fmc.world.getJointByName("r_gripper_joint")->qIndex;
@@ -144,9 +144,9 @@ void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float cal
 
 
   base->setTarget({x_c,y_c,phi_c});
-  fmc.qitselfPD.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
-  fmc.qitselfPD.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
-  fmc.qitselfPD.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
+  fmc.qNullCostRef.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
+  fmc.qNullCostRef.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
+  fmc.qNullCostRef.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
 
 }
 

@@ -225,7 +225,7 @@ struct KinematicWorld : GLDrawer{
   /// @name access
   Body *getBodyByName(const char* name) const;
   Shape *getShapeByName(const char* name) const;
-  Joint *getJointByName(const char* name) const;
+  Joint *getJointByName(const char* name, bool verbose = true) const;
   Joint *getJointByBodies(const Body* from, const Body* to) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
   bool checkUniqueNames() const;
@@ -332,7 +332,7 @@ struct KinematicWorld : GLDrawer{
   void stepSwift();
   void stepPhysx(double tau);
   void stepOde(double tau);
-  void stepDynamics(const arr& u_control, double tau, double dynamicNoise);
+  void stepDynamics(const arr& u_control, double tau, double dynamicNoise = 0.0, bool gravity = true);
 
   /// @name I/O
   void write(std::ostream& os) const;
@@ -420,6 +420,11 @@ double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
                                double discountTorques=1.);  //friction coefficient
 
 void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
 
 //===========================================================================
 // routines using external interfaces.
@@ -456,7 +461,7 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be 
 namespace ors {
 struct Link {
   int type;
-  int index;
+  int qIndex;
   int parent;
   ors::Transformation
   X, A, Q;
@@ -469,7 +474,7 @@ struct Link {
   void setFeatherstones();
   void updateFeatherstones();
   void write(ostream& os) const {
-    os <<"*type=" <<type <<" index=" <<index <<" parent=" <<parent <<endl
+    os <<"*type=" <<type <<" index=" <<qIndex <<" parent=" <<parent <<endl
        <<" XAQ=" <<X <<A <<Q <<endl
        <<" cft=" <<com <<force <<torque <<endl
        <<" mass=" <<mass <<inertia <<endl;
@@ -479,7 +484,7 @@ struct Link {
 typedef mlr::Array<ors::Link> LinkTree;
 
 void equationOfMotion(arr& M, arr& F, const LinkTree& tree,  const arr& qd);
-void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
+void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& u);
 void fwdDynamics_aba_nD(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
 void fwdDynamics_aba_1D(arr& qdd, const LinkTree& tree, const arr& qd, const arr& tau);
 void invDynamics(arr& tau, const LinkTree& tree, const arr& qd, const arr& qdd);

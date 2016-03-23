@@ -551,44 +551,43 @@ counteracting $F$ of generating the null reference.
 
 \item[Optimal acceleration law] We compute the optimal acceperation
   $\ddot q^*$ in its 1st order Taylor approximation w.r.t.\ $q$ and
-  $\dot q$. For brevity of derivation we consider the null cost reference
-  as another task law:
+  $\dot q$:
 \begin{align}
 \ddot y^*
  &= \ddot y^\rf + K_p(y^\rf-y) + K_d (\dot y^\rf -\dot y) \\
  &\approx \ddot y^\rf + K_p y^\rf - K_p (J(q-q_0)+y_0) + K_d \dot y^\rf - K_d J \dot q \\
  &= k - K_p J q - K_d J \dot q \comma k = \ddot y^\rf + K_p y^\rf+ K_d \dot y^\rf + K_p (J q_0 - y_0) \\
-\ddot q^*
- &= \argmin_{\ddot q} \norm{J \ddot q - \ddot y^*}^2_C \\
-\ddot q^*
- &= (J^\T C J)^\1 [J^\T C \ddot y^*] \\
- &\approx (J^\T C J)^\1 [J^\T C (k' - K_p J q - K_d J \dot q)] \\
- &= \bar K_p q + \bar K_d \dot q + \bar k  \label{eqProjGains}\\
-\bar K_p
- &= - (J^\T C J)^\1 J^\T C K_p J \\
-\bar K_d
- &= - (J^\T C J)^\1 J^\T C K_d J \\
-\bar k
- &= ~ (J^\T C J)^\1 J^\T C k'
-\end{align}
-
-To explicitly include the null cost reference we replace
-$$\mat{cc}{H & 0 \\ 0 & C} \gets C \comma \mat{c}{\Id \\ J} \gets
-J ~.$$
-The terms additively decompose as follows:
-\begin{align}
+\ddot q_0^*
+ &= k^q - K^q_p q - K^q_d \dot q
+\comma k^q = \ddot q_0^\rf + K^q_p q_0^\rf+ K^q_d \dot q_0^\rf \\
 \ddot q^*
  &= \argmin_{\ddot q} \norm{\ddot q - \ddot q_0^*}^2_H + \norm{J \ddot q - \ddot y^*}^2_C \\
- &\approx \bar K_p q + \bar K_d \dot q + \bar k  \label{eqProjGains}\\
+ &= (H + J^\T C J)^\1 [H \ddot q_0^* + J^\T C \ddot y^*] \\
+ &\approx \bar k - \bar K_p q - \bar K_d \dot q  \label{eqProjGains}\\
 \bar K_p
- &= - (H + J^\T C J)^\1 [H K^q_p + J^\T C K_p J] \\
+ &= (H + J^\T C J)^\1 [H K^q_p + J^\T C K_p J] \\
 \bar K_d
- &= - (H + J^\T C J)^\1 [H K^q_d + J^\T C K_d J] \\
+ &= (H + J^\T C J)^\1 [H K^q_d + J^\T C K_d J] \\
 \bar k
- &= ~ (H + J^\T C J)^\1 [H k^q + J^\T C k'] \\
+ &= ~ (H + J^\T C J)^\1 [H k^q + J^\T C k] \\
 k^q
  &= \ddot q_0^\rf + K_p q_0^\rf+ K_d \dot q_0^\rf
+%% \ddot q^*
+%%  &= \argmin_{\ddot q} \norm{J \ddot q - \ddot y^*}^2_C \\
+%% \ddot q^*
+%%  &= (J^\T C J)^\1 [J^\T C \ddot y^*] \\
+%%  &\approx (J^\T C J)^\1 [J^\T C (k - K_p J q - K_d J \dot q)] \\
+%%  &= \bar k - \bar K_p q - \bar K_d \dot q  \label{eqProjGains}\\
+%% \bar K_p
+%%  &= (J^\T C J)^\1 J^\T C K_p J \\
+%% \bar K_d
+%%  &= (J^\T C J)^\1 J^\T C K_d J \\
+%% \bar k
+%%  &= ~ (J^\T C J)^\1 J^\T C k
 \end{align}
+
+%% $$\mat{cc}{H & 0 \\ 0 & C} \gets C \comma \mat{c}{\Id \\ J} \gets
+%% J ~.$$
 
 \item[Transfer to controls] Given an optimal acceleration law and the
   system dynamics, we choose:
@@ -654,7 +653,7 @@ $g$ to the $\ddot y^\rf$.
 Alternatively, we may define $g$ as integral error in the task space
 and add it to $\ddot y^\rf$.
 
-In both cases, $g$ adds to $k'$, showing that it adds to $\ddot q^*$
+In both cases, $g$ adds to $k$, showing that it adds to $\ddot q^*$
 as $(H + J^\T C J)^\1 J^\T C g$.
 
 The matrix $C$ controls compliance.

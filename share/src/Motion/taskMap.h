@@ -9,6 +9,8 @@ struct TaskMap {
   virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
   virtual uint dim_phi(const WorldL& G, int t){ return dim_phi(*G.last()); }
 
+  arr phi(const ors::KinematicWorld& G){ arr y; phi(y,NoArr,G); return y; }
+
   VectorFunction vf(ors::KinematicWorld& G){
     return [this, &G](arr& y, arr& J, const arr& x) -> void {
       G.setJointState(x);

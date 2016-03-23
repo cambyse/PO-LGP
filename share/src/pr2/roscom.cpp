@@ -170,7 +170,8 @@ uint16A conv_image2uint16A(const sensor_msgs::Image& msg){
 }
 
 CtrlMsg conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg){
-  return CtrlMsg(conv_stdvec2arr(msg.q), conv_stdvec2arr(msg.qdot), conv_stdvec2arr(msg.fL), conv_stdvec2arr(msg.fR), conv_stdvec2arr(msg.u_bias), conv_stdvec2arr(msg.J_ft_inv), msg.velLimitRatio, msg.effLimitRatio, msg.gamma);
+  return CtrlMsg(conv_stdvec2arr(msg.q), conv_stdvec2arr(msg.qdot), conv_stdvec2arr(msg.fL), conv_stdvec2arr(msg.fR),conv_stdvec2arr(msg.u_bias), conv_stdvec2arr(msg.fL_err), conv_stdvec2arr(msg.fR_err));
+
 }
 
 marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
@@ -179,16 +180,23 @@ marc_controller_pkg::JointState conv_CtrlMsg2JointState(const CtrlMsg& ctrl){
   jointState.q = conv_arr2stdvec(ctrl.q);
   jointState.qdot= conv_arr2stdvec(ctrl.qdot);
   jointState.fL = conv_arr2stdvec(ctrl.fL);
+  jointState.fR = conv_arr2stdvec(ctrl.fR);
   jointState.u_bias = conv_arr2stdvec(ctrl.u_bias);
   jointState.Kp = conv_arr2stdvec(ctrl.Kp);
   jointState.Kd = conv_arr2stdvec(ctrl.Kd);
   jointState.Ki = conv_arr2stdvec(ctrl.Ki);
-  jointState.KiFT = conv_arr2stdvec(ctrl.KiFT);
-  jointState.J_ft_inv = conv_arr2stdvec(ctrl.J_ft_inv);
+  jointState.KiFTL = conv_arr2stdvec(ctrl.KiFTL);
+  jointState.KiFTR = conv_arr2stdvec(ctrl.KiFTR);
+  jointState.J_ft_invL = conv_arr2stdvec(ctrl.J_ft_invL);
+  jointState.J_ft_invR = conv_arr2stdvec(ctrl.J_ft_invR);
   jointState.velLimitRatio = ctrl.velLimitRatio;
   jointState.effLimitRatio = ctrl.effLimitRatio;
   jointState.intLimitRatio = ctrl.intLimitRatio;
-  jointState.gamma = ctrl.gamma;
+  jointState.fL_gamma = ctrl.fL_gamma;
+  jointState.fR_gamma = ctrl.fR_gamma;
+  jointState.qd_filt = ctrl.qd_filt;
+  jointState.fL_offset = conv_arr2stdvec(ctrl.fL_offset);
+  jointState.fR_offset = conv_arr2stdvec(ctrl.fR_offset);
   return jointState;
 }
 
