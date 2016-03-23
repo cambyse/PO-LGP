@@ -16,14 +16,14 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 struct Teleop2Tasks{
-  FeedbackMotionControl& fmc;
+  TaskController& fmc;
   CtrlTask *effPosR, *gripperR, *effOrientationR;
   CtrlTask *effPosL, *gripperL, *effOrientationL;
   CtrlTask *base, *fc;
-  Teleop2Tasks(FeedbackMotionControl& _MP);
+  Teleop2Tasks(TaskController& _MP);
   mlr::Array<CtrlTask*> getTasks();
   void deactivateTasks();
   void updateTasks( floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive);

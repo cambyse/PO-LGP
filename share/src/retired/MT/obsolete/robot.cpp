@@ -61,7 +61,7 @@ void ControllerProcess::open(){
     mlr::String sfile;
     mlr::getParameter<mlr::String>(sfile, "orsFile");
     ors <<FILE(sfile);
-  } else ors <<FILE(STRING(getenv("MLR") <<"/configurations/schunk_clean.ors"));
+  } else ors <<FILE(STRING(getenv("MLR") <<"/data/configurations/schunk_clean.ors"));
   
   ors.calcBodyFramesFromJoints();
   ors.getJointState(q_reference, v_reference);

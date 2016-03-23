@@ -35,9 +35,9 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->feedbackController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
-  s->feedbackController.qitselfPD.y_ref = s->q;
-  s->feedbackController.qitselfPD.setGains(.0,10.);
+  s->taskController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
+  s->taskController.qitselfPD.y_ref = s->q;
+  s->taskController.qitselfPD.setGains(.0,10.);
 
   { // read machine.fol
     mlr::FileToken fil("machine.fol");
@@ -86,14 +86,14 @@ void ActionMachine::step(){
 
     ctrl_obs.waitForNextRevision();
     cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
-    cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
+    cout <<"LOCAL  joint dimension=" <<s->taskController.world.q.N <<endl;
 
-    if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
-       && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N){ //all is good
+    if(ctrl_obs.get()->q.N==s->taskController.world.q.N
+       && ctrl_obs.get()->qdot.N==s->taskController.world.q.N){ //all is good
       //-- set current state
       s->q = ctrl_obs.get()->q;
       s->qdot = ctrl_obs.get()->qdot;
-      s->feedbackController.setState(s->q, s->qdot);
+      s->taskController.setState(s->q, s->qdot);
       cout <<"** GO!" <<endl;
       initStateFromRos = false;
     }else{
@@ -104,11 +104,11 @@ void ActionMachine::step(){
   }
 
   if(!(t%5))
-    s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
+    s->taskController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   // Sync alvar marker
   AlvarMarkers markers = ar_pose_marker.get();
-  syncMarkers(s->feedbackController.world, markers);
+  syncMarkers(s->taskController.world, markers);
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
 //  transition();
@@ -171,14 +171,14 @@ void ActionMachine::step(){
 
   //-- compute the feedback controller step and iterate to compute a forward reference
   //first collect all tasks of all actions into the feedback controller:
-  s->feedbackController.tasks.clear();
-  for(Action *a : A()) for(CtrlTask *t:a->tasks) s->feedbackController.tasks.append(t);
+  s->taskController.tasks.clear();
+  for(Action *a : A()) for(CtrlTask *t:a->tasks) s->taskController.tasks.append(t);
   //now operational space control
   for(uint tt=0;tt<10;tt++){
-    arr a = s->feedbackController.operationalSpaceControl();
+    arr a = s->taskController.operationalSpaceControl();
     s->q += .001*s->qdot;
     s->qdot += .001*a;
-    s->feedbackController.setState(s->q, s->qdot);
+    s->taskController.setState(s->q, s->qdot);
   }
 
   //-- first zero references

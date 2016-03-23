@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include "motion.h"
-#include "taskMaps.h"
+#include <Motion/taskMaps.h>
 
 /**
  * @file
@@ -99,16 +98,16 @@ struct ConstraintForceTask{
 //===========================================================================
 
 /**
- * FeedbackMotionControl contains all individual motions/CtrlTasks.
+ * TaskController contains all individual motions/CtrlTasks.
  */
-struct FeedbackMotionControl /*: MotionProblem*/ {
+struct TaskController {
   ors::KinematicWorld& world;
   mlr::Array<CtrlTask*> tasks;
   mlr::Array<ConstraintForceTask*> forceTasks;
   CtrlTask qNullCostRef;
   bool useSwift;
 
-  FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift=true);
+  TaskController(ors::KinematicWorld& _world, bool _useSwift=true);
 
   /// @{ @name adding tasks
   CtrlTask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);

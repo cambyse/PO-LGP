@@ -24,8 +24,8 @@ void GamepadControlActivity::open(){
 
 void GamepadControlActivity::step(){
   if(!g2t){
-    if(!taskController->feedbackController) return;
-    g2t = new Gamepad2Tasks(*taskController->feedbackController, taskController->q0);
+    if(!taskController->taskController) return;
+    g2t = new Gamepad2Tasks(*taskController->taskController, taskController->q0);
     ctrlTasks.set() = g2t->getTasks();
 //    taskController->verbose = true;
   }

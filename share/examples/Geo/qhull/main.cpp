@@ -131,7 +131,7 @@ void drawInit(void*){
 /*
 void TEST(FCinOrs){
   ors::KinematicWorld C;
-  C <<FILE("../../configurations/forceClosureTest.ors");
+  C <<FILE("../../data/configurations/forceClosureTest.ors");
 
   OpenGL gl;
   gl.add(drawInit,0);

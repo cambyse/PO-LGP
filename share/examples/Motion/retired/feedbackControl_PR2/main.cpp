@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
@@ -214,7 +214,7 @@ void executeTrajectoryWholeBody(String scene){
   MObject goalMO_R(&world, mlr::String("Rgoal"), MObject::GOAL , 0.0005, dirL);
   MObject goalMO_L(&world, mlr::String("Lgoal"), MObject::GOAL , 0.0005, dirR);
 
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
   CtrlTask *taskPosR, *taskVecR, *taskHome, *taskLimits; //, *taskCol
   CtrlTask *taskPosL, *taskVecL;
   //double regularization = 1e-2;
@@ -438,7 +438,7 @@ void executeTrajectoryRightArm(String scene){
 
   MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0005, dirL);
 
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
   CtrlTask *taskPosR, *taskVecR, *qitself;
   //double regularization = 1e-2;
 

@@ -1,5 +1,5 @@
 #include "actions.h"
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include "actionMachine_internal.h"
 
 //===========================================================================
@@ -17,7 +17,7 @@ Action::Action(ActionMachine& actionMachine, const char* name)
 }
 
 Action::~Action(){
-//  for (CtrlTask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
+//  for (CtrlTask *t : tasks) actionMachine.s->taskController.tasks.removeValue(t);
   listDelete(tasks);
 }
 
