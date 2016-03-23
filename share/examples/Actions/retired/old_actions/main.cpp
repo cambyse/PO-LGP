@@ -209,7 +209,7 @@ void test_record() {
 
   Action *t = new Relax(*activity.machine, "relax");
   core->active = false;
-  activity.machine->s->feedbackController.useSwift=false;
+  activity.machine->s->taskController.useSwift=false;
   activity.ctrl_obs.waitForNextRevision();
   cout << "\nStart relax " << endl;
 
@@ -218,7 +218,7 @@ void test_record() {
     arr q = activity.ctrl_obs.get()->q;
     arr qdot = activity.ctrl_obs.get()->qdot;
     arr x = conv_vec2arr(activity.machine->s->world.getShapeByName("endeffR")->X.pos);
-    activity.machine->s->feedbackController.setState(q,qdot);
+    activity.machine->s->taskController.setState(q,qdot);
     activity.machine->s->q = q;
     activity.machine->s->qdot = qdot;
 

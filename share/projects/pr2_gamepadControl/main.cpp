@@ -1,5 +1,5 @@
 #include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
@@ -44,7 +44,7 @@ void TEST(Gamepad){
   world.gl().addDrawer(&world_pr2);
   world.gl().add(changeColor2);
 
-  FeedbackMotionControl MP(world, true);
+  TaskController MP(world, true);
   MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);

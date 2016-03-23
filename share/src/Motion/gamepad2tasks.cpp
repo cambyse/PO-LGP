@@ -20,7 +20,7 @@
 #include <Motion/taskMaps.h>
 #include <Hardware/gamepad/gamepad.h>
 
-Gamepad2Tasks::Gamepad2Tasks(FeedbackMotionControl& _MP, const arr& _q0):MP(_MP), q0(_q0), endeffR(NULL), endeffL(NULL){
+Gamepad2Tasks::Gamepad2Tasks(TaskController& _MP, const arr& _q0):MP(_MP), q0(_q0), endeffR(NULL), endeffL(NULL){
   if(mlr::getParameter<bool>("oldfashinedTaskControl")){
     homing = new CtrlTask("qHoming", new TaskMap_qItself(), .2, 1.1, .2, 10.);
     homing->setTarget(q0);

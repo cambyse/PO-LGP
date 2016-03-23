@@ -1,7 +1,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Optim/optimization.h>
 #include <Core/util.h>
 //#include <Perception/videoEncoder.h>
@@ -157,7 +157,7 @@ void OnlineSubmodularity(const double tableW, const double tableL, ors::Kinemati
   ofstream data(STRING("data-"<<num<<".dat"));
 
 
-  FeedbackMotionControl MC(world);
+  TaskController MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

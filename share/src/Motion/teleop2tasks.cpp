@@ -20,7 +20,7 @@
 #include <Motion/taskMaps.h>
 #include <Hardware/gamepad/gamepad.h>
 
-Teleop2Tasks::Teleop2Tasks(FeedbackMotionControl& _MP):fmc(_MP){
+Teleop2Tasks::Teleop2Tasks(TaskController& _MP):fmc(_MP){
   effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT, fmc.world,"endeffR",NoVector,"base_footprint"));
   effPosR->y_ref = {0.8, -.5, 1.};
 
@@ -144,9 +144,9 @@ void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float cal
 
 
   base->setTarget({x_c,y_c,phi_c});
-  fmc.qitselfPD.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
-  fmc.qitselfPD.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
-  fmc.qitselfPD.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
+  fmc.qNullCostRef.y_ref(trans->qIndex+0) = base->y_ref(trans->qIndex+0);
+  fmc.qNullCostRef.y_ref(trans->qIndex+1) = base->y_ref(trans->qIndex+1);
+  fmc.qNullCostRef.y_ref(trans->qIndex+2) = base->y_ref(trans->qIndex+2);
 
 }
 

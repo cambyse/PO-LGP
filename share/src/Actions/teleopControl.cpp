@@ -24,8 +24,8 @@ void TeleopControlActivity::open(){
 
 void TeleopControlActivity::step(){
   if(!t2t){
-    if(!taskController->feedbackController) return;
-    t2t = new Teleop2Tasks(*taskController->feedbackController);
+    if(!taskController->taskController) return;
+    t2t = new Teleop2Tasks(*taskController->taskController);
     t2t->deactivateTasks();
     ctrlTasks.set() = t2t->getTasks();
     taskController->verbose = true;

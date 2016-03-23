@@ -16,8 +16,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include "feedbackControl.h"
+#include "taskController.h"
 #include <Ors/ors_swift.h>
+#include <Motion/motion.h>
 
 //===========================================================================
 
@@ -40,15 +41,6 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   if((it=params["prec"])) prec = it->get<arr>();
   if((it=params["target"])) y_ref = it->get<arr>();
 }
-
-//CtrlTask::CtrlTask(const char* name, double decayTime, double dampingRatio,
-//               DefaultTaskMapType type, const ors::KinematicWorld& G,
-//               const char* iShapeName, const ors::Vector& ivec,
-//               const char* jShapeName, const ors::Vector& jvec,
-//               const arr& params)
-//  : map(*new DefaultTaskMap(type, G, iShapeName, ivec, jShapeName, jvec, params)), name(name), active(true), Pgain(0.), Dgain(0.), flipTargetScalarProduct(false){
-//  setGainsAsNatural(decayTime, dampingRatio);
-//}
 
 void CtrlTask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;
@@ -222,7 +214,7 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
 //===========================================================================
 
-FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _useSwift)
+TaskController::TaskController(ors::KinematicWorld& _world, bool _useSwift)
   : world(_world), qNullCostRef(NULL, NULL), useSwift(_useSwift) {
   computeMeshNormals(world.shapes);
   if(useSwift) {
@@ -235,11 +227,11 @@ FeedbackMotionControl::FeedbackMotionControl(ors::KinematicWorld& _world, bool _
   qNullCostRef.setTarget( world.q );
 }
 
-CtrlTask* FeedbackMotionControl::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
+CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
   return tasks.append(new CtrlTask(name, map, decayTime, dampingRatio, 1., 1.));
 }
 
-CtrlTask* FeedbackMotionControl::addPDTask(const char* name,
+CtrlTask* TaskController::addPDTask(const char* name,
                                          double decayTime, double dampingRatio,
                                          DefaultTaskMapType type,
                                          const char* iShapeName, const ors::Vector& ivec,
@@ -248,7 +240,7 @@ CtrlTask* FeedbackMotionControl::addPDTask(const char* name,
                                    decayTime, dampingRatio, 1., 1.));
 }
 
-ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* name, TaskMap *map){
+ConstraintForceTask* TaskController::addConstraintForceTask(const char* name, TaskMap *map){
   ConstraintForceTask *t = new ConstraintForceTask(map);
   t->name=name;
   t->desiredApproach.name=STRING(name <<"_PD");
@@ -258,7 +250,7 @@ ConstraintForceTask* FeedbackMotionControl::addConstraintForceTask(const char* n
   return t;
 }
 
-void FeedbackMotionControl::getTaskCoeffs(arr& c, arr& J){
+void TaskController::getTaskCoeffs(arr& c, arr& J){
   c.clear();
   if(&J) J.clear();
   arr y, J_y, yddot_des;
@@ -273,16 +265,16 @@ void FeedbackMotionControl::getTaskCoeffs(arr& c, arr& J){
   if(&J) J.reshape(c.N, world.q.N);
 }
 
-void FeedbackMotionControl::reportCurrentState(){
+void TaskController::reportCurrentState(){
   for(CtrlTask* t: tasks) t->reportState(cout);
 }
 
-void FeedbackMotionControl::setState(const arr& q, const arr& qdot){
+void TaskController::setState(const arr& q, const arr& qdot){
   world.setJointState(q, qdot);
   if(useSwift) world.stepSwift();
 }
 
-void FeedbackMotionControl::updateConstraintControllers(){
+void TaskController::updateConstraintControllers(){
   arr y;
   for(ConstraintForceTask* t: forceTasks){
     if(t->active){
@@ -292,7 +284,7 @@ void FeedbackMotionControl::updateConstraintControllers(){
   }
 }
 
-arr FeedbackMotionControl::getDesiredConstraintForces(){
+arr TaskController::getDesiredConstraintForces(){
   arr Jl(world.q.N, 1);
   Jl.setZero();
   arr y, J_y;
@@ -307,7 +299,7 @@ arr FeedbackMotionControl::getDesiredConstraintForces(){
   return Jl;
 }
 
-arr FeedbackMotionControl::operationalSpaceControl(){
+arr TaskController::operationalSpaceControl(){
   arr c, J;
   getTaskCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
   if(!c.N && !qNullCostRef.active) return zeros(world.q.N,1).reshape(world.q.N);
@@ -324,7 +316,7 @@ arr FeedbackMotionControl::operationalSpaceControl(){
   return q_ddot;
 }
 
-arr FeedbackMotionControl::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
+arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
   arr Kp_y, Kd_y, k_y, C_y;
   qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
   C_y = qNullCostRef.getC();
@@ -356,7 +348,7 @@ arr FeedbackMotionControl::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
 }
 
 
-arr FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F) {
+arr TaskController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F) {
   uint n=F.N;
 
 //  arr q0, q, qDot;
@@ -403,7 +395,7 @@ arr FeedbackMotionControl::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0
   return u0 + Kp*world.q + Kd*world.qdot;
 }
 
-void FeedbackMotionControl::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0){
+void TaskController::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0){
   arr M, F;
   world.equationOfMotion(M, F, false);
 
@@ -418,7 +410,7 @@ void FeedbackMotionControl::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0){
   }
 }
 
-void FeedbackMotionControl::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma) {
+void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma) {
   uint nForceTasks=0;
   for(CtrlTask* law : this->tasks) if(law->active && law->f_ref.N){
     nForceTasks++;

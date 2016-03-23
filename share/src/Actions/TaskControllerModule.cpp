@@ -1,13 +1,7 @@
 #include "TaskControllerModule.h"
-#include <Motion/pr2_heuristics.h>
+//#include <pr2/rosalvar.h> //todo: don't deal with the markers here! ObjectFilter..
 #include <Gui/opengl.h>
-#include <iostream> 
-#include <fstream> 
-using namespace std; 
 
-#ifdef MLR_ROS
-#  include <pr2/roscom.h>
-#endif
 
 void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
@@ -17,7 +11,7 @@ void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
 TaskControllerModule::TaskControllerModule(const char* modelFile)
   : Module("TaskControllerModule", .01)
   , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
-  , feedbackController(NULL)
+  , taskController(NULL)
   , q0(realWorld.q)
   , oldfashioned(true)
   , useRos(false)
@@ -40,13 +34,13 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
   modelWorld.set() = realWorld;
-  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
+  taskController = new TaskController(modelWorld.set()(), true);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController->qNullCostRef.y_ref = q0;
-  feedbackController->qNullCostRef.setGains(0., 10.);
-  feedbackController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
+  taskController->qNullCostRef.y_ref = q0;
+  taskController->qNullCostRef.setGains(0., 1.);
+  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", 1.)*modelWorld.get()->getHmetric();
 
 #if 1
   modelWorld.writeAccess();
@@ -106,11 +100,11 @@ void TaskControllerModule::step(){
   }
 
   //-- sync the model world with the AlvarMarkers
-  modelWorld.writeAccess();
-  AlvarMarkers alvarMarkers = ar_pose_marker.get();
-  syncMarkers(modelWorld(), alvarMarkers);
-  syncMarkers(realWorld, alvarMarkers);
-  modelWorld.deAccess();
+//  modelWorld.writeAccess();
+//  AlvarMarkers alvarMarkers = ar_pose_marker.get();
+//  syncMarkers(modelWorld(), alvarMarkers);
+//  syncMarkers(realWorld, alvarMarkers);
+//  modelWorld.deAccess();
 
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
@@ -126,9 +120,9 @@ void TaskControllerModule::step(){
     //now operational space control
     ctrlTasks.readAccess();
     modelWorld.writeAccess();
-    feedbackController->tasks = ctrlTasks();
+    taskController->tasks = ctrlTasks();
     for(uint tt=0;tt<10;tt++){
-      arr a = feedbackController->operationalSpaceControl();
+      arr a = taskController->operationalSpaceControl();
       q_model += .001*qdot_model;
       qdot_model += .001*a;
       if(fixBase.get()) {
@@ -139,9 +133,9 @@ void TaskControllerModule::step(){
         //      q_model(trans->qIndex+1) = 0;
         //      q_model(trans->qIndex+2) = 0;
       }
-      feedbackController->setState(q_model, qdot_model);
+      taskController->setState(q_model, qdot_model);
     }
-    if(verbose) feedbackController->reportCurrentState();
+    if(verbose) taskController->reportCurrentState();
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
@@ -162,8 +156,8 @@ void TaskControllerModule::step(){
     //-- compute the force feedback control coefficients
     uint count=0;
     ctrlTasks.readAccess();
-    feedbackController->tasks = ctrlTasks();
-    for(CtrlTask *t : feedbackController->tasks) {
+    taskController->tasks = ctrlTasks();
+    for(CtrlTask *t : taskController->tasks) {
       if(t->active && t->f_ref.N){
         count++;
         if(count!=1) HALT("you have multiple active force control tasks - NIY");
@@ -177,15 +171,15 @@ void TaskControllerModule::step(){
 
     ctrlTasks.readAccess();
     modelWorld.writeAccess();
-    feedbackController->tasks = ctrlTasks();
+    taskController->tasks = ctrlTasks();
 
     //compute desired acceleration law in q-space
     arr a, Kp, Kd, k;
-    a = feedbackController->getDesiredLinAccLaw(Kp, Kd, k);
+    a = taskController->getDesiredLinAccLaw(Kp, Kd, k);
 
     //translate to motor torques
     arr M, F;
-    feedbackController->world.equationOfMotion(M, F, false);
+    taskController->world.equationOfMotion(M, F, false);
     arr u_bias = M*k + F;
     Kp = M*Kp;
     Kd = M*Kd;
@@ -204,12 +198,12 @@ void TaskControllerModule::step(){
     // F/T limit control
     arr K_ft, J_ft_inv, fRef;
     double gamma;
-    feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
+    taskController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
 
     if(verbose){
       LOG(0) <<"************** Tasks Report **********";
-      feedbackController->reportCurrentState();
+      taskController->reportCurrentState();
     }
 
 //    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
@@ -248,5 +242,5 @@ void TaskControllerModule::step(){
 }
 
 void TaskControllerModule::close(){
-  delete feedbackController;
+  delete taskController;
 }
