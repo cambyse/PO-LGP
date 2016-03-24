@@ -44,7 +44,7 @@ int main(int argc, char** argv){
     mlr::wait(2.);
 
     tcm.ctrlTasks.set() = {};
-    tcm.feedbackController->qNullCostRef.prec *= .1;
+    tcm.taskController->qNullCostRef.prec *= .1;
     task.prec = ARR(0., 0., 100.);
 
     moduleShutdown().waitForValueGreaterThan(0);
