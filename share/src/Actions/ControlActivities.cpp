@@ -1,4 +1,4 @@
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Actions/TaskControllerModule.h>
 #include "SensorActivities.h"
 #include "ControlActivities.h"
@@ -89,8 +89,8 @@ bool FollowReferenceActivity::isConv(){
 
   return ((task->y_ref.nd == 1
            && task->y.N == task->y_ref.N
-           && maxDiff(task->y, task->y_ref) < stopTolerance
-           && maxDiff(task->v, task->v_ref) < stopTolerance)
+           && maxDiff(task->y, task->get_y_ref(NoArr)) < stopTolerance
+           && maxDiff(task->v, task->get_ydot_ref(NoArr)) < stopTolerance)
           or (task->y_ref.nd==2 && activityTime>=trajectoryDuration)
           or (stuck and stuck_count > 6000));
 }

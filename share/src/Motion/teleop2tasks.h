@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 struct Teleop2Tasks{
   //data of previous loop cycle
@@ -40,11 +40,11 @@ struct Teleop2Tasks{
   int old_button = 0;
 
   bool initialised = false;
-  FeedbackMotionControl& fmc;
+  TaskController& fmc;
   CtrlTask *effPosR, *gripperR, *effOrientationR;
   CtrlTask *effPosL, *gripperL, *effOrientationL;
   CtrlTask *base, *fc;
-  Teleop2Tasks(FeedbackMotionControl& _MP);
+  Teleop2Tasks(TaskController& _MP);
   mlr::Array<CtrlTask*> getTasks();
   void updateMovement(floatA& cal_pose, arr& old_pos, arr& old_effPos, CtrlTask *effPos);
   void deactivateTasks();

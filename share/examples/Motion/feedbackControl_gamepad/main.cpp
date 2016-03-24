@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -26,7 +26,7 @@ void TEST(Simulator){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
   MP.qitselfPD.y_ref = q;
   MP.qitselfPD.active=false;
   MP.H_rate_diag = pr2_reasonable_W(world);

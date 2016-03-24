@@ -17,6 +17,7 @@
 #include <Core/array.h>
 #include <Geo/geo.h>
 #include <Ors/ors.h>
+#include <Control/ctrlMsg.h>
 #include <ros_msg/JointState.h>
 
 
@@ -25,19 +26,9 @@
 // utils
 //
 
-//-- a basic message type for communication with the PR2 controller
-struct CtrlMsg{
-  arr q, qdot, fL, fR, J_ft_invL, J_ft_invR;
-  arr Kp, Kd, Ki,u_bias, KiFTL, KiFTR, fL_offset, fR_offset, fL_err, fR_err;
-  double velLimitRatio, effLimitRatio, intLimitRatio, fL_gamma, fR_gamma, qd_filt;
-  CtrlMsg():Kp(ARR(1.)), Kd(ARR(1.)), Ki(ARR(0.)), u_bias(ARR(0.)),fL_offset(zeros(6)),fR_offset(zeros(6)), velLimitRatio(1.), effLimitRatio(1.), intLimitRatio(0.1),
-  fL_gamma(0.),fR_gamma(0.),qd_filt(0.97) {}
-  CtrlMsg(const arr& q, const arr& qdot,
-          const arr& fL, const arr& fR, const arr& u_bias, const arr& fL_err, const arr& fR_err)
-    :q(q), qdot(qdot), fL(fL), fR(fR), u_bias(u_bias), fL_err(fL_err), fR_err(fR_err){}
-};
 
-void rosCheckInit(const char* module_name="pr2_module");
+
+void rosCheckInit(const char* node_name="pr2_module");
 bool rosOk();
 
 //-- ROS <--> MLR
@@ -282,10 +273,14 @@ options. (In their constructor?)
 //BEGIN_MODULE(RosCom_Spinner)
 //END_MODULE()
 
-struct RosCom_Spinner:Module{
-  RosCom_Spinner():Module("RosCom_Spinner", .001){}
-  void open(){ rosCheckInit(); }
-  void step(){ ros::spinOnce(); }
+struct RosCom_Spinner:Module{\
+  bool useRos;
+  RosCom_Spinner(const char* nodeName="MLRnode"):Module("RosCom_Spinner", .001){
+    useRos = mlr::getParameter<bool>("useRos");
+    if(useRos) rosCheckInit(nodeName);
+  }
+  void open(){}
+  void step(){ if(useRos) ros::spinOnce(); }
   void close(){}
 };
 

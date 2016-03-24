@@ -15,13 +15,15 @@ struct RTControllerSimulation : Module {
   double tau;
   bool gravity;
 
-  RTControllerSimulation(double tau=0.01, bool gravity=false)
-    : Module("DynmSim", tau)
-    , ctrl_ref(this, "ctrl_ref")
-    , ctrl_obs(this, "ctrl_obs")
-    , modelWorld(this, "modelWorld")
-    , tau(tau)
-    , gravity(gravity) {}
+  uint stepCount;
+  double systematicErrorSdv;
+  arr systematicError;
+
+  //controller internals
+  arr Kp_base, Kd_base, limits;
+  arr I_term;
+
+  RTControllerSimulation(double tau=0.01, bool gravity=false, double _systematicErrorSdv=0.);
   virtual ~RTControllerSimulation() {}
 
   void open();

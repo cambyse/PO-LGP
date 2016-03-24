@@ -1,15 +1,9 @@
 #include "TaskControllerModule.h"
-#include <Motion/pr2_heuristics.h>
+//#include <pr2/rosalvar.h> //todo: don't deal with the markers here! ObjectFilter..
 #include <Gui/opengl.h>
-#include <iostream> 
-#include <fstream> 
-using namespace std; 
 
-#ifdef MLR_ROS
-#  include <pr2/roscom.h>
-#endif
 
-void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.01){
+void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
   lowPass = (1.-rate)*lowPass + rate*signal;
 }
@@ -17,7 +11,7 @@ void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.01){
 TaskControllerModule::TaskControllerModule(const char* modelFile)
   : Module("TaskControllerModule", .01)
   , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
-  , feedbackController(NULL)
+  , taskController(NULL)
   , q0(realWorld.q)
   , oldfashioned(true)
   , useRos(false)
@@ -27,8 +21,9 @@ TaskControllerModule::TaskControllerModule(const char* modelFile)
   , useDynSim(true)
   , noTaskTask(NULL){
 
+  useRos = mlr::getParameter<bool>("useRos",false);
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
-  useDynSim = mlr::getParameter<bool>("useDynSim", true);
+  useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -39,15 +34,13 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
   modelWorld.set() = realWorld;
-  feedbackController = new FeedbackMotionControl(modelWorld.set()(), true);
+  taskController = new TaskController(modelWorld.set()(), true);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
-  feedbackController->H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(modelWorld.set()());
-  feedbackController->qitselfPD.y_ref = q0;
-  feedbackController->qitselfPD.setGains(0., 10.);
-
-  //  mlr::open(fil,"z.TaskControllerModule");
+  taskController->qNullCostRef.y_ref = q0;
+  taskController->qNullCostRef.setGains(0., 1.);
+  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", 1.)*modelWorld.get()->getHmetric();
 
 #if 1
   modelWorld.writeAccess();
@@ -57,15 +50,14 @@ void TaskControllerModule::open(){
   modelWorld.deAccess();
 #endif
 
-
-  useRos = mlr::getParameter<bool>("useRos",false);
   if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
   if(!oldfashioned && !useRos) {
-    dynSim = new RTControllerSimulation();
+    dynSim = new RTControllerSimulation(0.01, false, 1.);
     dynSim->threadLoop();
   }
 
+  dataFiles.open({"q", "qdot", "qddot", "q_low", "qdot_low", "qddot_low", "qddot_des"});
 }
 
 
@@ -80,6 +72,7 @@ void TaskControllerModule::step(){
     ctrl_obs.waitForNextRevision();
     if(useRos) pr2_odom.waitForRevisionGreaterThan(0);
 
+    qdot_last = qdot_real;
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
@@ -107,11 +100,11 @@ void TaskControllerModule::step(){
   }
 
   //-- sync the model world with the AlvarMarkers
-  modelWorld.writeAccess();
-  AlvarMarkers alvarMarkers = ar_pose_marker.get();
-  syncMarkers(modelWorld(), alvarMarkers);
-  syncMarkers(realWorld, alvarMarkers);
-  modelWorld.deAccess();
+//  modelWorld.writeAccess();
+//  AlvarMarkers alvarMarkers = ar_pose_marker.get();
+//  syncMarkers(modelWorld(), alvarMarkers);
+//  syncMarkers(realWorld, alvarMarkers);
+//  modelWorld.deAccess();
 
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
@@ -120,25 +113,6 @@ void TaskControllerModule::step(){
 #endif
   }
 
-  //-- code to output force signals
-  if(false){
-    ors::Shape *ftL_shape = realWorld.getShapeByName("endeffForceL");
-    arr fLobs = ctrl_obs.get()->fL;
-    arr uobs =  ctrl_obs.get()->u_bias;
-    if(fLobs.N && uobs.N){
-      arr Jft, J;
-      realWorld.kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
-      realWorld.kinematicsPos_wrtFrame(NoArr, Jft, ftL_shape->body, ftL_shape->rel.pos, realWorld.getShapeByName("l_ft_sensor"));
-      Jft = inverse_SymPosDef(Jft*~Jft)*Jft;
-      J = inverse_SymPosDef(J*~J)*J;
-      //      mlr::arrayBrackets="  ";
-      //      fil <<t <<' ' <<zeros(3) <<' ' <<Jft*fLobs << " " <<J*uobs << endl;
-      //      mlr::arrayBrackets="[]";
-    }
-  }
-
-  //-- copy the tasks to the local controller
-
   //-- compute the feedback controller step and iterate to compute a forward reference
   CtrlMsg refs;
   if(oldfashioned){
@@ -146,9 +120,9 @@ void TaskControllerModule::step(){
     //now operational space control
     ctrlTasks.readAccess();
     modelWorld.writeAccess();
-    feedbackController->tasks = ctrlTasks();
+    taskController->tasks = ctrlTasks();
     for(uint tt=0;tt<10;tt++){
-      arr a = feedbackController->operationalSpaceControl();
+      arr a = taskController->operationalSpaceControl();
       q_model += .001*qdot_model;
       qdot_model += .001*a;
       if(fixBase.get()) {
@@ -159,9 +133,9 @@ void TaskControllerModule::step(){
         //      q_model(trans->qIndex+1) = 0;
         //      q_model(trans->qIndex+2) = 0;
       }
-      feedbackController->setState(q_model, qdot_model);
+      taskController->setState(q_model, qdot_model);
     }
-    if(verbose) feedbackController->reportCurrentState();
+    if(verbose) taskController->reportCurrentState();
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
@@ -182,8 +156,8 @@ void TaskControllerModule::step(){
     //-- compute the force feedback control coefficients
     uint count=0;
     ctrlTasks.readAccess();
-    feedbackController->tasks = ctrlTasks();
-    for(CtrlTask *t : feedbackController->tasks) {
+    taskController->tasks = ctrlTasks();
+    for(CtrlTask *t : taskController->tasks) {
       if(t->active && t->f_ref.N){
         count++;
         if(count!=1) HALT("you have multiple active force control tasks - NIY");
@@ -197,61 +171,83 @@ void TaskControllerModule::step(){
 
     ctrlTasks.readAccess();
     modelWorld.writeAccess();
-    feedbackController->tasks = ctrlTasks();
+    taskController->tasks = ctrlTasks();
 
-    //count active tasks:
-    uint ntasks=0;
-    for(CtrlTask *t:feedbackController->tasks) if(t->active) ntasks++;
+//    //count active tasks:
+//    uint ntasks=0;
+//    for(CtrlTask *t:feedbackController->tasks) if(t->active) ntasks++;
 
-    //if there are no tasks, just stabilize
-    if(!ntasks) {
-      if(!noTaskTask) noTaskTask = new CtrlTask("noTaskTask", new TaskMap_qItself());
-      noTaskTask->prec = 10.0;
-      noTaskTask->setGains(10.0, 1.0); //TODO tune those gains
-      noTaskTask->setTarget(modelWorld().q);
-      noTaskTask->active = true;
-      feedbackController->tasks.append(noTaskTask);
-    }
+//    //if there are no tasks, just stabilize
+//    if(true || !ntasks) { //is done in feedbackController->qitself
+//      if(!noTaskTask) noTaskTask = new CtrlTask("noTaskTask", new TaskMap_qItself());
+//      noTaskTask->prec = 10.0;
+//      noTaskTask->setGains(.0, 1.0); //TODO tune those gains
+//      //      noTaskTask->setTarget(modelWorld().q);
+//      noTaskTask->active = true;
+//      feedbackController->tasks.append(noTaskTask);
+//    }
 
-    //TODO qItself task for joint space stability
-    if(false) {
-      TaskMap* qItselfJointSpaceStabilityTask = new TaskMap_qItself();
-      CtrlTask* qItselfJSStabilityLaw = new CtrlTask("qItselfJSStabilityLaw", qItselfJointSpaceStabilityTask);
-      qItselfJSStabilityLaw->prec = 10.0;
-      qItselfJSStabilityLaw->setGains(0.0, 5.0); //TODO tune those gains
-      qItselfJSStabilityLaw->setTarget(qItselfJSStabilityLaw->map.phi(modelWorld()), zeros(qItselfJSStabilityLaw->map.dim_phi(modelWorld())));
-      feedbackController->tasks.append(qItselfJSStabilityLaw);
-    }
+//    //TODO qItself task for joint space stability
+//    if(false) {
+//      TaskMap* qItselfJointSpaceStabilityTask = new TaskMap_qItself();
+//      CtrlTask* qItselfJSStabilityLaw = new CtrlTask("qItselfJSStabilityLaw", qItselfJointSpaceStabilityTask);
+//      qItselfJSStabilityLaw->prec = 10.0;
+//      qItselfJSStabilityLaw->setGains(0.0, 5.0); //TODO tune those gains
+//      qItselfJSStabilityLaw->setTarget(qItselfJSStabilityLaw->map.phi(modelWorld()), zeros(qItselfJSStabilityLaw->map.dim_phi(modelWorld())));
+//      feedbackController->tasks.append(qItselfJSStabilityLaw);
+//    }
 
-    arr u0, Kp, Kd;
-    arr M, F, FplusG;
+#if 0
+
+    arr u_bias, Kp, Kd;
+    arr M, F;
     feedbackController->world.equationOfMotion(M, F, false);
-    FplusG = F;
-//    if(model_error_g.N) FplusG += 0.1 * model_error_g;
-    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u0, M, FplusG); // TODO: what happens when changing the LAWs?
-    lowPassUpdate(u_lowPass, u_mean);
+    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u_bias, M, F); // TODO: what happens when changing the LAWs?
 
-    if(qddot_lowPass.N){
-      model_error_g = u_lowPass - M*qddot_lowPass - F;
-      cout <<"model error = " <<sumOfSqr(model_error_g) <<endl;
-    }
+#else
 
+    //compute desired acceleration law in q-space
+    arr a, Kp, Kd, k;
+    a = taskController->getDesiredLinAccLaw(Kp, Kd, k);
+
+    //translate to motor torques
+    arr M, F;
+    taskController->world.equationOfMotion(M, F, false);
+    arr u_bias = M*k + F;
+    Kp = M*Kp;
+    Kd = M*Kd;
+
+    checkNan(u_bias);
+
+    //-- compute the error between expected change in velocity and true one
+    if(!a_last.N) a_last = a;
+    if(!qdot_last.N) qdot_last = qdot_real;
+    arr a_err = (qdot_real - qdot_last)/.01 - a_last;
+    a_last = a;
+    // integrate this error
+    if(!aErrorIntegral.N) aErrorIntegral = a_err;
+    else aErrorIntegral += a_err;
+    // add integral error to control bias
+    u_bias -= .01 * M * aErrorIntegral;
+
+#endif
+
+    // F/T limit control
     arr K_ft, J_ft_inv, fRef;
     double gamma;
-    feedbackController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
+    taskController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
-    //    if(!useDynSim) { //TODO what is, if useROS == true? the modelWorld should be updated from the rosMsg? Maybe then we don't need two worlds
-    //      feedbackController->fwdSimulateControlLaw(Kp, Kd, u0);
-    //    }
 
     if(verbose){
       LOG(0) <<"************** Tasks Report **********";
-      feedbackController->reportCurrentState();
+      taskController->reportCurrentState();
     }
+
+//    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
+
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    //    this->sendCommand(u0, Kp, Kd, K_ft, J_ft_inv, fRef, gamma);
     refs.q =  zeros(q_model.N);
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
@@ -262,7 +258,7 @@ void TaskControllerModule::step(){
     refs.fR = zeros(6);
     refs.KiFTL = K_ft;
     refs.J_ft_invL = J_ft_inv;
-    refs.u_bias = u0;
+    refs.u_bias = u_bias;
     refs.intLimitRatio = 0.7;
   }
 
@@ -275,7 +271,6 @@ void TaskControllerModule::step(){
     }
   }
 
-
   //-- send the computed movement to the robot
   if(isInSyncWithRobot && (useRos || useDynSim)){
     ctrl_ref.set() = refs;
@@ -283,6 +278,5 @@ void TaskControllerModule::step(){
 }
 
 void TaskControllerModule::close(){
-  //  fil.close();
-  delete feedbackController;
+  delete taskController;
 }

@@ -210,7 +210,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     if(&J) {
       G.kinematicsPos(NoArr, J, body_i);
       J = ~orientation*J;
-      J.reshape(1, G.getJointStateDimension());
+      J.reshape(1, J.N);
     }
     return;
   }

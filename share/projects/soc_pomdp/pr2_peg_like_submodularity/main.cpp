@@ -1,5 +1,5 @@
 #include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 //#include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -67,7 +67,7 @@ void switchToNormal(void*){
 void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String> active_joints,const double tableW, const double tableL, ors::KinematicWorld& world,ors::KinematicWorld& world_plan, int num, const arr target, int type,const arr &center){
 
     ofstream data(STRING("data-"<<num<<".dat"));
-    FeedbackMotionControl MP(world, true); // true means using swift
+    TaskController MP(world, true); // true means using swift
     MP.H_rate_diag = pr2_reasonable_W(world);
   ////////////////////////////////////////////////////////////////////////////////////////
   // PLANNING

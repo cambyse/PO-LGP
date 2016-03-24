@@ -18,6 +18,9 @@
 \geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
 \renewcommand{\baselinestretch}{1.1}
 
+\newcommand{\rf}{{\text{ref}}}
+\newcommand{\eig}{{\text{eig}}}
+
 \newenvironment{items}{
 \par\small
 \begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
@@ -499,5 +502,172 @@ $$ \ddot y^* = k_p (y^* - y) + k_d (\dot y^*-\dot y) $$
 and send this desired endeff accel to the general controller.
 
 What about $\l^*$??
+
+\section{What do we want?}
+
+\begin{description}
+\item[desired task space acceleration law]
+\begin{align}
+\ddot y^*
+ &= \ddot y^\rf + K_p(y^\rf-y) + K_d (\dot y^\rf -\dot y) + K_{Ip} \int (y^\rf-y) + K_{Id} \int (\dot y^\rf -\dot y)
+\end{align}
+That defines a desired \emph{acceleration}. But if the system was
+precise in enforcing this acceleration it would be
+non-compliant. Note: strictly speaking, if this law says $\ddot y^*=0$
+(e.g., because $K_p$ and $K_d$ are zero), then this is a strict
+(non-compliant) statement.
+
+\item[precision/compliance]
+Given a desried $\ddot y^*$, the precision along some
+dimensions may not that important. We may capture this with the
+precision (or compliance) matrix $C$. As a convention, let the
+$\eig(C)\in[0,1]$, and an eigenvalue of $1$ states full precision,
+while an eigen value of $0$ states full compliance.
+
+This implies an objective term
+$$\norm{J_\phi \ddot q - \ddot y^*}^2_C$$
+
+\item[Null cost reference] Typically one defines control costs
+  $\norm{u}^2_H = \norm{M \ddot q + F}^2_H$. However, this becomes
+  semantically tricky. When defining what is 'desired' I propose to
+  stay on the level of accelerations. So we have a desired ('null')
+  acceleration law
+\begin{align}
+\ddot q_0^*
+ &= \ddot q_0^\rf + K^q_p (q_0^\rf-q) + K^q_d (\dot q_0^\rf -\dot q)
+\end{align}
+and consider costs
+$$\norm{\ddot q - \ddot q_0^*}^2_H ~.$$ Note that, by appropriate
+choices of parameters, the typical control cost can be
+mimicked. However, the semantics is somewhat different. For instance,
+setting $K^q_d$ and $\dot q_0^\rf$ implies that we want to damp
+motion, and choosing controls $u$ that implement this daming are at
+\emph{null costs}. Equally, for non-zero $F$ and $\ddot q_0^*=0$,
+applying controls that ensure zero acceleration are at \emph{null
+  costs}. That's we I call it \emph{null cost reference}. This is
+rather different to generally penalize $\norm{u}^2_H$, which would
+imply costs for any controls $u$, even if they just implement
+counteracting $F$ of generating the null reference.
+
+\item[Optimal acceleration law] We compute the optimal acceperation
+  $\ddot q^*$ in its 1st order Taylor approximation w.r.t.\ $q$ and
+  $\dot q$:
+\begin{align}
+\ddot y^*
+ &= \ddot y^\rf + K_p(y^\rf-y) + K_d (\dot y^\rf -\dot y) \\
+ &\approx \ddot y^\rf + K_p y^\rf - K_p (J(q-q_0)+y_0) + K_d \dot y^\rf - K_d J \dot q \\
+ &= k - K_p J q - K_d J \dot q \comma k = \ddot y^\rf + K_p y^\rf+ K_d \dot y^\rf + K_p (J q_0 - y_0) \\
+\ddot q_0^*
+ &= k^q - K^q_p q - K^q_d \dot q
+\comma k^q = \ddot q_0^\rf + K^q_p q_0^\rf+ K^q_d \dot q_0^\rf \\
+\ddot q^*
+ &= \argmin_{\ddot q} \norm{\ddot q - \ddot q_0^*}^2_H + \norm{J \ddot q - \ddot y^*}^2_C \\
+ &= (H + J^\T C J)^\1 [H \ddot q_0^* + J^\T C \ddot y^*] \\
+ &\approx \bar k - \bar K_p q - \bar K_d \dot q  \label{eqProjGains}\\
+\bar K_p
+ &= (H + J^\T C J)^\1 [H K^q_p + J^\T C K_p J] \\
+\bar K_d
+ &= (H + J^\T C J)^\1 [H K^q_d + J^\T C K_d J] \\
+\bar k
+ &= ~ (H + J^\T C J)^\1 [H k^q + J^\T C k] \\
+k^q
+ &= \ddot q_0^\rf + K_p q_0^\rf+ K_d \dot q_0^\rf
+%% \ddot q^*
+%%  &= \argmin_{\ddot q} \norm{J \ddot q - \ddot y^*}^2_C \\
+%% \ddot q^*
+%%  &= (J^\T C J)^\1 [J^\T C \ddot y^*] \\
+%%  &\approx (J^\T C J)^\1 [J^\T C (k - K_p J q - K_d J \dot q)] \\
+%%  &= \bar k - \bar K_p q - \bar K_d \dot q  \label{eqProjGains}\\
+%% \bar K_p
+%%  &= (J^\T C J)^\1 J^\T C K_p J \\
+%% \bar K_d
+%%  &= (J^\T C J)^\1 J^\T C K_d J \\
+%% \bar k
+%%  &= ~ (J^\T C J)^\1 J^\T C k
+\end{align}
+
+%% $$\mat{cc}{H & 0 \\ 0 & C} \gets C \comma \mat{c}{\Id \\ J} \gets
+%% J ~.$$
+
+\item[Transfer to controls] Given an optimal acceleration law and the
+  system dynamics, we choose:
+\begin{align}
+\ddot q^*
+ &= \bar K_p q + \bar K_d \dot q + \bar k \\
+u^*
+ &= M \ddot q^* + F \\
+ &= M \bar K_p q + M \bar K_d \dot q + M \bar k + F
+\end{align}
+Note again, only here, the system dynamics enter. The specification of
+the optimal acceleration law is independent of the dynamics. (Unless
+$H$ and $\ddot q^\rf$ are chosen in relation to $M$ and $F$ to mimick
+typical control costs---but we explicitly avoid this to make desired
+system behavior somewhat less dependent on (possibly inaccurate)
+dynamics models).
+
+
+\item[Error correction of system dynamics]
+
+The optimal acceleration law gives an explicit desired
+acceleration. We may estimate the control error by a low pass filter
+on the acceleration errors. There are two options:
+
+Let $\<\ddot q^*\>$ be a low pass filter of the desired accellerations
+$\ddot q^*(q,\dot q)$; and $\<\ddot q\>$ a low pass of the actual true
+accelerations. We may define $g = \<\ddot q\> - \<\ddot q^*\>$ and
+control
+$$u=M (\ddot q^* + g) + F ~.$$
+
+Or we may assume system dynamics
+\begin{align}
+u=M \ddot q + F + g
+\end{align}
+for some unknown and variable (slowly changing) $g\in\RRR^n$ which
+reflects constant loads on the joints. We may estimate $g$ as a
+low-pass filter,
+\begin{align}
+g
+&= \< u - M \ddot q - F \>_\text{low pass}
+ = \< u \> - M \<\ddot q\> - F \\
+&= \<M \ddot q^* + F + g\> - M \<\ddot q\> - F \\
+&= M~ [ \< \ddot q^* + g\> - \<\ddot q\>]
+\end{align}
+which is puzzlingly different to the above. ($M$ is obvious, but the rest?)
+
+\item[Compliant error correction of system dynamics]
+
+The above describes a scheme that corrects any errors from the desired
+acceleration. However, in the case of contact, and desired compliance,
+we do not \emph{want} to enforce exact reference following along
+certain dimensions. E.g., in the case of a contact we systematically
+do not accelerate towards, leading to a systematic error in the system
+equations, an adaptation of $g$, and perhaps divergence.
+
+\item[Error correction on task space level]
+
+Let $\<\ddot y^*\>$ be a low pass filter of the desired task space
+accellerations and $\<\ddot y\>$ a low pass of the actual true
+accelerations. We may define $g=\<\ddot y\> - \<\ddot y^*\>$ and add
+$g$ to the $\ddot y^\rf$.
+
+Alternatively, we may define $g$ as integral error in the task space
+and add it to $\ddot y^\rf$.
+
+In both cases, $g$ adds to $k$, showing that it adds to $\ddot q^*$
+as $(H + J^\T C J)^\1 J^\T C g$.
+
+The matrix $C$ controls compliance.
+
+
+
+\item[Measured-force limits]
+
+\item[Limit Energy]
+
+\end{description}
+
+
+
+
 
 \end{document}

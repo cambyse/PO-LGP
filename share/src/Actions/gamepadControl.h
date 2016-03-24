@@ -2,7 +2,7 @@
 
 #include "activity.h"
 #include <pr2/roscom.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 // ============================================================================
 

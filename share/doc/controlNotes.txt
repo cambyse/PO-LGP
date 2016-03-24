@@ -1,0 +1,25 @@
+* Adaptive control: compare offset between low-pass filtered real
+  acceleration and desired acceleration; integrate (low-pass
+  filtered); this defines an offset (a linear regression); add
+
+  Problem: enforces exact acceleration control, which contradicts
+  compliance
+
+  Maybe solution: measure the error with the metric J K_p J^T, which
+  is the compliance metric
+
+* Use a low-pass filtered velocity in the task maps to cut the tas
+  velocities
+
+* In the formal formulation, assume a single large task space (block
+  diagonal metric -> independent tasks)
+
+* What is it that we actually want in the task spaces? Conventional:
+  desired acceleration. BUT that contradicts compliance. Actually we
+  want desired acceleration w.r.t. compliance metric K in task
+  space. That metric we called prec so far. So we should specify
+  compliances in this, not in K_p! (Why? Because of the natural gains:
+  K_p and K_d should be coupled to ensure the desired motion profile
+  behavior)
+
+

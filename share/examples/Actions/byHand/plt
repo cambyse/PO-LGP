@@ -1,0 +1,15 @@
+set style data lines
+do for [i=1:7] {
+    set style line i linewidth 3
+}
+plot \
+ 'z/qddot' us 14 lw 5,\
+ 'z/qddot_low' us 14,\
+ 'z/qddot_des' us 14,\
+
+
+# 'z/q_low' us 14 lw 2,\
+# 'z/qdot_low' us 14 lw 2,\
+
+# 'z/q' us 14 lw 3,\
+# 'z/qdot' us 14 lw 4,\

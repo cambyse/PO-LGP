@@ -79,13 +79,13 @@ void threadOpenModules(bool waitForOpened, bool setSignalHandler){
 void threadCloseModules(){
   NodeL threads = registry().getNodesOfType<Thread*>();
   for(Node *th: threads) th->get<Thread*>()->threadClose();
+  modulesReportCycleTimes();
 }
 
 void threadCancelModules(){
   NodeL threads = registry().getNodesOfType<Thread*>();
   for(Node *th: threads) th->get<Thread*>()->threadCancel();
 }
-
 
 void modulesReportCycleTimes(){
   cout <<"Cycle times for all Modules (msec):" <<endl;

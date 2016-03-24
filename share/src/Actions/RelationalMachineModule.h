@@ -22,16 +22,3 @@ struct RelationalMachineModule : Module{
   void close();
 };
 
-struct RAP_roscom{
-  RelationalMachineModule &RMM;
-
-  PublisherConv<std_msgs::String, StringA, conv_stringA2string> pub_symbols;
-  PublisherConv<std_msgs::String, mlr::String, conv_string2string> pub_state;
-  PublisherConv<std_msgs::String, mlr::String, conv_string2string> pub_effectsProcessed;
-
-  RAP_roscom(RelationalMachineModule &RMM):
-    RMM(RMM),
-    pub_symbols("/RAP/symbols",RMM.symbols),
-    pub_state("/RAP/state",RMM.state),
-    pub_effectsProcessed("/RAP/effectsProcessed",RMM.effects){}
-};

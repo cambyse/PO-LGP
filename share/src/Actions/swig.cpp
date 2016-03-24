@@ -8,6 +8,7 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <pr2/rosalvar.h>
 #include <pr2/roscom.h>
+#include <pr2/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>
@@ -52,6 +53,9 @@ struct SwigSystem {
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
+  RosCom_Spinner spinner;
+  ServiceRAP rapservice;
+
 
 //  PerceptionObjects2Ors percObjs;
 //  ImageViewer camview;
@@ -62,12 +66,11 @@ struct SwigSystem {
   Log _log;
 
   SwigSystem()
-    : /*camview("modelDepthView"),*/ _log("SwigSystem"){
+    : /*camview("modelDepthView"),*/ spinner("SwigSystem"), _log("SwigSystem"){
 
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
       rosCheckInit("SwigSystem");
-      new RosCom_Spinner();
       //addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.05);
       //addModule<ROSSUB_perceptionObjects>(NULL, /*Module::loopWithBeat,*/ 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
