@@ -6,14 +6,14 @@ bool rosOk(){
   return ros::ok();
 }
 
-void rosCheckInit(const char* module_name){
+void rosCheckInit(const char* node_name){
 // TODO make static variables to singleton
   static Mutex mutex;
   static bool inited = false;
 
   mutex.lock();
   if(!inited) {
-    ros::init(mlr::argc, mlr::argv, module_name, ros::init_options::NoSigintHandler);
+    ros::init(mlr::argc, mlr::argv, node_name, ros::init_options::NoSigintHandler);
     inited = true;
   }
   mutex.unlock();
