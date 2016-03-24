@@ -1,20 +1,24 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <pr2/roscom.h>
+#include <pr2/subscribeTabletop.h>
 
-#include <Actions/ClusterFilterActivity.h>
+#include <pr2/perceptionCollection.h>
+
+#include <Algo/perceptionFilter.h>
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-  rosCheckInit("filter");
+  rosCheckInit("tester");
 
-  ACCESSname(visualization_msgs::MarkerArray, tabletop_clusters)
+  SubscribeTabletop subscriber;
 
-  Subscriber<visualization_msgs::MarkerArray>  sub_markers("/tabletop/clusters", tabletop_clusters);
+  Collector data_collector;
 
-  ClusterFilter cf;
+  Filter myFilter;
 
   RosCom_Spinner spinner;
+
   threadOpenModules(true);
 
   moduleShutdown().waitForValueGreaterThan(0);

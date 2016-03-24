@@ -85,7 +85,7 @@ struct Subscriber : SubscriberType {
     if(mlr::getParameter<bool>("useRos")){
       registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
       nh = new ros::NodeHandle;
-      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      cout <<"subscibing to topic '" <<topic_name <<" ..." <<std::flush;
       sub  = nh->subscribe( topic_name, 1, &Subscriber::callback, this);
       cout <<"done" <<endl;
     }
