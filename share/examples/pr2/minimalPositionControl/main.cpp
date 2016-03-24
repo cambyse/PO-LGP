@@ -28,7 +28,7 @@ int main(int argc, char** argv){
     threadOpenModules(true);
 
     CtrlTask task("endeffL", new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, 1., 1.);
-    task.setGains(10.,1.);
+//    task.setGains(10.,1.);
     task.map.phi(task.y, NoArr, tcm.modelWorld.get()());
     task.y_ref = task.y;
     tcm.ctrlTasks.set() = { &task };
@@ -43,9 +43,10 @@ int main(int argc, char** argv){
 
     mlr::wait(2.);
 
-    tcm.ctrlTasks.set() = {};
-    tcm.taskController->qNullCostRef.prec *= .1;
+//    tcm.ctrlTasks.set() = {};
+//    tcm.taskController->qNullCostRef.prec *= .1;
     task.prec = ARR(0., 0., 100.);
+    task.Kp = ARR(0., 0., 10.);
 
     moduleShutdown().waitForValueGreaterThan(0);
 

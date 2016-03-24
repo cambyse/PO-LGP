@@ -123,7 +123,7 @@ struct TaskController {
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
   arr calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F); ///< returns the linearized control law
-  arr getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &u0); ///< returns the linearized control law
+  arr getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &u0, arr& JCJ); ///< returns the linearized control law
   void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma); ///< returns the force controller coefficients
   void updateConstraintControllers();
   void reportCurrentState();

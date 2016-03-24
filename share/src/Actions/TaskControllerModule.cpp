@@ -109,7 +109,7 @@ void TaskControllerModule::step(){
   //-- display the model world (and in same gl, also the real world)
   if(!(t%5)){
 #if 1
-    modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
+    //modelWorld.set()->watch(false, STRING("model world state t="<<(double)t/100.));
 #endif
   }
 
@@ -183,8 +183,8 @@ void TaskControllerModule::step(){
 #else
 
     //compute desired acceleration law in q-space
-    arr a, Kp, Kd, k;
-    a = taskController->getDesiredLinAccLaw(Kp, Kd, k);
+    arr a, Kp, Kd, k, JCJ;
+    a = taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
 
     //translate to motor torques
     arr M, F;
@@ -201,7 +201,7 @@ void TaskControllerModule::step(){
     arr a_err = (qdot_real - qdot_last)/.01 - a_last;
     a_last = a;
     // integrate this error
-    if(!aErrorIntegral.N) aErrorIntegral = a_err;
+    if(!aErrorIntegral.N) aErrorIntegral = JCJ * a_err;
     else aErrorIntegral += a_err;
     // add integral error to control bias
     u_bias -= .01 * M * aErrorIntegral;

@@ -71,6 +71,8 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
 void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
   if(Kp.N==1) Kp = diag(Kp.scalar(), n);
   if(Kd.N==1) Kd = diag(Kd.scalar(), n);
+  if(Kp.nd==1) Kp = diag(Kp);
+  if(Kd.nd==1) Kd = diag(Kd);
   CHECK(Kp.nd==2 && Kp.d0==n && Kp.d1==n,"");
   CHECK(Kd.nd==2 && Kd.d0==n && Kd.d1==n,"");
 }
@@ -316,15 +318,16 @@ arr TaskController::operationalSpaceControl(){
   return q_ddot;
 }
 
-arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
+arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ) {
   arr Kp_y, Kd_y, k_y, C_y;
   qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
-  C_y = qNullCostRef.getC();
+  arr H = qNullCostRef.getC();
 
-  arr A = C_y;
-  Kp = C_y * Kp_y;
-  Kd = C_y * Kd_y;
-  k  = C_y * k_y;
+  Kp = H * Kp_y;
+  Kd = H * Kd_y;
+  k  = H * k_y;
+
+  JCJ = zeros(world.q.N, world.q.N);
 
   for(CtrlTask* task : tasks) if(task->active){
     arr y, J_y;
@@ -334,12 +337,12 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
 
     arr JtC_y = ~J_y*C_y;
 
-    A += JtC_y*J_y;
+    JCJ += JtC_y*J_y;
     Kp += JtC_y*Kp_y*J_y;
     Kd += JtC_y*Kd_y*J_y;
     k  += JtC_y*(k_y + Kp_y*(J_y*world.q - y));
   }
-  arr invA = inverse_SymPosDef(A);
+  arr invA = inverse_SymPosDef(H + JCJ);
   Kp = invA*Kp;
   Kd = invA*Kd;
   k  = invA*k;
