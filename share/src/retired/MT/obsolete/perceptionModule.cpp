@@ -357,7 +357,7 @@ bool getShapeParamsFromEvidence(arr& params, arr& points, const uint& type, cons
 
 void PerceptionModule::open(){
   ifstream fil;
-  mlr::open(fil, "../../configurations/calib_P");
+  mlr::open(fil, "../../data/configurations/calib_P");
   Pl.readTagged(fil, "PL");
   Pr.readTagged(fil, "PR");
   fil.close();

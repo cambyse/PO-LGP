@@ -1,16 +1,14 @@
 #pragma once
 
 #include <Core/module.h>
-#include <Motion/feedbackControl.h>
-#include <pr2/roscom.h>
-#include <pr2/rosalvar.h>
-#include <FOL/relationalMachine.h>
-#include <pr2/RTControllerSimulation.h>
+#include <Control/ctrlMsg.h>
+#include <Control/taskController.h>
+#include <Control/RTControllerSimulation.h>
+//#include <pr2/roscom.h>
 
 #ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #endif
-
 
 struct SetOfDataFiles{
   mlr::Array<ofstream*> files;
@@ -41,14 +39,14 @@ struct TaskControllerModule : Module {
   ACCESSnew(mlr::Array<CtrlTask*>, ctrlTasks)
   ACCESSnew(mlr::String, effects)
   ACCESSnew(ors::KinematicWorld, modelWorld)
-  ACCESSnew(AlvarMarkers, ar_pose_marker)
+//  ACCESSnew(AlvarMarkers, ar_pose_marker)
   ACCESSnew(bool, fixBase)
   ACCESSnew(arr, pr2_odom)
 
   //non-protected members
 //private:
   ors::KinematicWorld realWorld;
-  FeedbackMotionControl *feedbackController;
+  TaskController *taskController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   const arr q0; //< homing pose

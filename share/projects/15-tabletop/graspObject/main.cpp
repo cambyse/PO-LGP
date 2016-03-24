@@ -12,7 +12,7 @@
 #include <tf/transform_listener.h>
 #include <Motion/taskMaps.h>
 #include <Actions/taskCtrlActivities.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 
 struct GazeTask : ControlActivity {

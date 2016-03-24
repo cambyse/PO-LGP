@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 #include <Actions/actions.h>
 #include <pr2/roscom.h>
@@ -20,9 +20,9 @@ struct PDExecutor: Module {
   ACCESS(arrf, poses_rh);
   ACCESS(arrf, poses_lh);
 
-  // FeedbackMotionControl stuff
+  // TaskController stuff
   ors::KinematicWorld world;
-  FeedbackMotionControl fmc;
+  TaskController fmc;
   arr q, qdot;
 
   bool started, useros;

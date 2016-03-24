@@ -100,7 +100,7 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
   est_target->X.pos.z  = est;
 
 
-  FeedbackMotionControl MC(world);
+  TaskController MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

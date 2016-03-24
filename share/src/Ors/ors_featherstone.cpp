@@ -335,7 +335,7 @@ void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
       link.X.setZero();
       link.Q.setZero();
     }
-    link.mass=body->mass;
+    link.mass=body->mass; CHECK(link.mass>0. || link.qIndex==-1, "a moving link without mass -> this will diverge");
     link.inertia=body->inertia;
     link.force=body->force;
     link.torque=body->torque;

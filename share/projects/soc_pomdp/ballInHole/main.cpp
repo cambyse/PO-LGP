@@ -2,7 +2,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Optim/optimization.h>
 //#include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
@@ -203,7 +203,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  FeedbackMotionControl MC(world,false);
+  TaskController MC(world,false);
   //MC.nullSpacePD.active=false;
   MC.qitselfPD.active=true;
 
