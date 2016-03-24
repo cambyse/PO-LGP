@@ -7,3 +7,9 @@ pd_executor/pd_executor_module.h
 main.cpp
 MT.cfg
 g4mapping.kvg
+../../../src/Actions/teleopControl.cpp
+../../../src/Actions/teleopControl.h
+../../../src/Motion/teleop2tasks.cpp
+../../../src/Motion/teleop2tasks.h
+calibrator_module.cpp
+calibrator_module.h

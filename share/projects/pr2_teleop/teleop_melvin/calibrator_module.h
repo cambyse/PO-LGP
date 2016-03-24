@@ -11,7 +11,7 @@
 struct G4HutoRoMap:Module{
   ACCESS(bool, initmapper)
 
-  ACCESS(floatA, g4_poses)
+  ACCESS(floatA, g4_data)
   ACCESS(arr, gamepadState)
 
   ACCESS(floatA, calibrated_pose_rh)
@@ -25,6 +25,10 @@ struct G4HutoRoMap:Module{
   ACCESS(floatA, ftdata)
 
   /////////////////////INIT////////////////////
+  bool teleop = false;
+  int counter = 0;
+
+  bool initialised = false;
   bool initphase = true;
   floatA  poselhthumbmaxopen  , poselhindexmaxopen, poselhthumbminopen  , poselhindexminopen;
   float distlhmaxopen = 0.1;
@@ -72,7 +76,7 @@ struct G4HutoRoMap:Module{
   void calcparameters(floatA a);
   bool decayed=true;
 
-  void transform(const floatA& a);
+  //void transform(const floatA& a);
   void open();
   void step();
   void close();

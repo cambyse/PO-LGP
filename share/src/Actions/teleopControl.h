@@ -12,8 +12,9 @@ struct TeleopControlActivity : Activity, Module {
   ACCESSnew(mlr::Array<CtrlTask*>, ctrlTasks)
 //  ACCESSname(arr, gamepadState)
   ACCESSname(arr, pr2_odom)
-
+  ACCESS(arr, gamepadState)
   ACCESS(bool, initmapper)
+
 
   // calibrated_pose is pos + orientation (quaternion)
   ACCESS(floatA, calibrated_pose_rh)

@@ -282,7 +282,7 @@ void MocapID::load(const char *meta) {
     for(Node* i: *kvg_agents)
       s->parseAgentSensor(i->keys(0), i->graph());
 
-  Graph *kvg_objects = &kvg.get<Graph>("objects");
+  Graph *kvg_objects = kvg.find<Graph>("objects");
   if(kvg_objects == nullptr)
     cout << "No Objects!" << endl;
   else

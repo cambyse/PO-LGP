@@ -3,6 +3,8 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <std_msgs/ColorRGBA.h>
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Float32.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/WrenchStamped.h>
@@ -48,10 +50,12 @@ arr                 conv_points2arr(const std::vector<geometry_msgs::Point>& pts
 arr                 conv_colors2arr(const std::vector<std_msgs::ColorRGBA>& pts);
 CtrlMsg             conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg);
 ors::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::MarkerArray& markers);
+std_msgs::Float32MultiArray conv_floatA2Float32Array(const floatA&);
 
 //-- MLR -> ROS
 std::vector<geometry_msgs::Point> conv_arr2points(const arr& pts);
 marc_controller_pkg::JointState   conv_CtrlMsg2JointState(const CtrlMsg& ctrl);
+floatA conv_Float32Array2FloatA(const std_msgs::Float32MultiArray&);
 
 //-- get transformations
 ors::Transformation ros_getTransform(const std::string& from, const std::string& to, tf::TransformListener& listener);
