@@ -7,10 +7,10 @@
 
 struct RelationalMachineModule : Module{
   ACCESSlisten(mlr::String, effects)
-  ACCESSnew(ActivityL, A)
-  ACCESSnew(mlr::String, state)
-  ACCESSnew(StringA, symbols)
-  ACCESSnew(RelationalMachine, RM)
+  ACCESS(ActivityL, A)
+  ACCESS(mlr::String, state)
+  ACCESS(StringA, symbols)
+  ACCESS(RelationalMachine, RM)
 
   Log _log;
 

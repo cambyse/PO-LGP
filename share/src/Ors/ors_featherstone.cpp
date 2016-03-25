@@ -1035,7 +1035,7 @@ void ors::equationOfMotion(arr& H, arr& C,
   for(i=0;i<N;i++){ iq = tree(i).qIndex; if(iq!=-1) filled(iq)=true; }
   for(i=0;i<qd.N;i++) if(!filled(i)){
     H(i,i) = 1.;
-    C(i) = -100.*qd(i);
+//    C(i) = -100.*qd(i);
   }
 }
 

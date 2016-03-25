@@ -563,15 +563,15 @@ counteracting $F$ of generating the null reference.
 \ddot q^*
  &= \argmin_{\ddot q} \norm{\ddot q - \ddot q_0^*}^2_H + \norm{J \ddot q - \ddot y^*}^2_C \\
  &= (H + J^\T C J)^\1 [H \ddot q_0^* + J^\T C \ddot y^*] \\
- &\approx \bar k - \bar K_p q - \bar K_d \dot q  \label{eqProjGains}\\
+ &\approx
+ \bar k - \bar K_p q - \bar K_d \dot q \\
+ &= \bar K_p (q_\rf - q) - \bar K_d \dot q \comma q_\rf = \bar K_p^\1 \bar k  \label{eqProjGains}\\
 \bar K_p
  &= (H + J^\T C J)^\1 [H K^q_p + J^\T C K_p J] \\
 \bar K_d
  &= (H + J^\T C J)^\1 [H K^q_d + J^\T C K_d J] \\
 \bar k
- &= ~ (H + J^\T C J)^\1 [H k^q + J^\T C k] \\
-k^q
- &= \ddot q_0^\rf + K_p q_0^\rf+ K_d \dot q_0^\rf
+ &= ~ (H + J^\T C J)^\1 [H k^q + J^\T C k]
 %% \ddot q^*
 %%  &= \argmin_{\ddot q} \norm{J \ddot q - \ddot y^*}^2_C \\
 %% \ddot q^*

@@ -132,6 +132,8 @@ void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y
   arr a = a0_y - Kp_y*y - Kd_y*ydot; //linear law
   double accNorm = length(a);
 
+  return;
+
   //check vel limit -> change a0, no change in gains
   if(maxVel){
     double velRatio = scalarProduct(ydot, a/accNorm)/maxVel;

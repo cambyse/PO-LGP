@@ -8,8 +8,8 @@
 #include <Motion/taskMaps.h>
 
 struct MySystem {
-  ACCESS(CtrlMsg, ctrl_ref)
-  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(CtrlMsg, ctrl_obs)
   PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState> *mcp;
   MySystem(){
     if(mlr::getParameter<bool>("useRos", false)){

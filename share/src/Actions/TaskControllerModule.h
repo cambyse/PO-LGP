@@ -34,14 +34,17 @@ struct SetOfDataFiles{
 /// the problem is defined by the list of CtrlTasks
 struct TaskControllerModule : Module {
   //protected access points
-  ACCESSnew(CtrlMsg, ctrl_ref) //< the message send to the RTController
-  ACCESSnew(CtrlMsg, ctrl_obs) //< the message received from the RTController
-  ACCESSnew(mlr::Array<CtrlTask*>, ctrlTasks)
-  ACCESSnew(mlr::String, effects)
-  ACCESSnew(ors::KinematicWorld, modelWorld)
-//  ACCESSnew(AlvarMarkers, ar_pose_marker)
-  ACCESSnew(bool, fixBase)
-  ACCESSnew(arr, pr2_odom)
+  ACCESS(arr, ctrl_q_real)
+  ACCESS(arr, ctrl_q_ref)
+
+  ACCESS(CtrlMsg, ctrl_ref) //< the message send to the RTController
+  ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
+  ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESS(mlr::String, effects)
+  ACCESS(ors::KinematicWorld, modelWorld)
+//  ACCESS(AlvarMarkers, ar_pose_marker)
+  ACCESS(bool, fixBase)
+  ACCESS(arr, pr2_odom)
 
   //non-protected members
 //private:

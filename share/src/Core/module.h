@@ -165,7 +165,7 @@ inline bool operator==(const Access&,const Access&){ return false; }
 
 #if 1
 
-#define ACCESS(type, name)\
+#define ACCESSold(type, name)\
 struct __##name##__Access:Access_typed<type>{ \
   __##name##__Access():Access_typed<type>(NULL, #name){} \
 } name;
@@ -177,7 +177,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #endif
 
-#define ACCESSnew(type, name) Access_typed<type> name = Access_typed<type>(this, #name);
+#define ACCESS(type, name) Access_typed<type> name = Access_typed<type>(this, #name);
 #define ACCESSlisten(type, name) Access_typed<type> name = Access_typed<type>(this, #name, true);
 #define ACCESSname(type, name) Access_typed<type> name = Access_typed<type>(NULL, #name);
 

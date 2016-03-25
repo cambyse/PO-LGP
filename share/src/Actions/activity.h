@@ -72,7 +72,7 @@ void newActivity(Graph& relationalState, const StringA& symbols, const Graph& pa
 //===========================================================================
 
 struct ActivitySpinnerModule : Module{
-  ACCESSnew(ActivityL, A)
+  ACCESS(ActivityL, A)
 
   ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
 

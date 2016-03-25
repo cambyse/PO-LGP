@@ -56,6 +56,31 @@ struct OrsPathViewer : Module{
 
 //===========================================================================
 
+struct OrsPoseViewer : Module{
+  mlr::Array<Access_typed<arr>*> poses; ///< poses to be watched
+  //-- internal (private)
+  OpenGL gl;
+  WorldL copies;
+
+  void setWorld(const ors::KinematicWorld& world){
+    for(ors::KinematicWorld *w: copies) w->copy(world, true);
+  }
+
+  OrsPoseViewer(const StringA& poseVarNames, double beatIntervalSec=.2)
+    : Module("OrsPoseViewer", beatIntervalSec){
+    for(const String& varname: poseVarNames){
+      poses.append( new Access_typed<arr>(this, varname, true) );
+      copies.append( new ors::KinematicWorld() );
+    }
+  }
+  ~OrsPoseViewer(){}
+  void open();
+  void step();
+  void close() {}
+};
+
+//===========================================================================
+
 struct ComputeCameraView:Module{
   Access_typed<ors::KinematicWorld> modelWorld;
   Access_typed<byteA> cameraView;

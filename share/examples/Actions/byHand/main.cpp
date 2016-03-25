@@ -7,8 +7,8 @@
 // ============================================================================
 
 void script1(ActionSwigInterface& S){
-  S.setFact("(Control gazeAt endeffKinect endeffR){ PD=[.1, .9, .5, 10.], prec=[10] }");
-  S.waitForCondition("(conv Control gazeAt endeffKinect endeffR)");
+//  S.setFact("(Control gazeAt endeffKinect endeffR){ PD=[.1, .9, .5, 10.], prec=[10] }");
+//  S.waitForCondition("(conv Control gazeAt endeffKinect endeffR)");
 
   S.setFact("(PlayFunnySound)");
 

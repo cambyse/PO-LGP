@@ -50,6 +50,7 @@ struct SwigSystem {
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
   OrsViewer orsviewer;
+  OrsPoseViewer controlview;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
@@ -66,8 +67,11 @@ struct SwigSystem {
   Log _log;
 
   SwigSystem()
-    : /*camview("modelDepthView"),*/ spinner("SwigSystem"), _log("SwigSystem"){
+    : controlview({"ctrl_q_real", "ctrl_q_ref"}), /*camview("modelDepthView"),*/
+      spinner("SwigSystem"), _log("SwigSystem"){
 
+    computeMeshNormals(tcm.realWorld.shapes);
+    controlview.setWorld(tcm.realWorld);
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
       rosCheckInit("SwigSystem");

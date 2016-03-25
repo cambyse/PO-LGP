@@ -266,8 +266,8 @@ struct RosCom_Spinner:Module{
 /// This module syncs the controller state and refs with the real time hardware controller (marc_controller_...)
 //struct RosCom_ControllerSync:Module{
 //  struct sRosCom_ControllerSync *s;
-//  ACCESSnew(CtrlMsg, ctrl_ref)
-//  ACCESSnew(CtrlMsg, ctrl_obs)
+//  ACCESS(CtrlMsg, ctrl_ref)
+//  ACCESS(CtrlMsg, ctrl_obs)
 //  RosCom_ControllerSync():Module("RosCom_ControllerSync", listenFirst){}
 //  void open();
 //  void step();

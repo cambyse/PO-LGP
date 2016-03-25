@@ -53,7 +53,7 @@ void TaskControllerModule::open(){
   if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
   if(!oldfashioned && !useRos) {
-    dynSim = new RTControllerSimulation(0.01, false, 1.);
+    dynSim = new RTControllerSimulation(0.01, false, 0.);
     dynSim->threadLoop();
   }
 
@@ -69,12 +69,13 @@ void TaskControllerModule::step(){
 
   //-- read real state
   if(useRos || !oldfashioned){
-    ctrl_obs.waitForNextRevision();
-    if(useRos) pr2_odom.waitForRevisionGreaterThan(0);
+    ctrl_obs.waitForRevisionGreaterThan(0);
+    if(useRos)  pr2_odom.waitForRevisionGreaterThan(0);
 
     qdot_last = qdot_real;
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
+    ctrl_q_real.set() = q_real;
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
       if(useRos) q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
@@ -138,6 +139,8 @@ void TaskControllerModule::step(){
     if(verbose) taskController->reportCurrentState();
     modelWorld.deAccess();
     ctrlTasks.deAccess();
+
+    ctrl_q_ref.set() = q_model;
 
     //-- first zero references
     refs.q =  q_model;
@@ -204,7 +207,7 @@ void TaskControllerModule::step(){
     if(!aErrorIntegral.N) aErrorIntegral = JCJ * a_err;
     else aErrorIntegral += a_err;
     // add integral error to control bias
-    u_bias -= .01 * M * aErrorIntegral;
+//    u_bias -= .01 * M * aErrorIntegral;
 
 #endif
 
@@ -224,7 +227,17 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    refs.q =  zeros(q_model.N);
+    arr q_ref = pseudoInverse(Kp)*(u_bias-Kp*q_real);
+    clip(q_ref, -.2, .2);
+    q_ref += q_real;
+    ctrl_q_ref.set() = q_ref;
+
+#if 1
+    refs.q = zeros(q_model.N);
+#else
+    refs.q =  q_ref; //zeros(q_model.N);
+    u_bias =0.; //-= Kp*q_ref;
+#endif
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
     refs.Kp = Kp;

@@ -33,7 +33,7 @@ struct PerceptionObjects2Ors : Module{
   tf::TransformListener listener;
 
   ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESSnew(ors::KinematicWorld, modelWorld)
+  ACCESS(ors::KinematicWorld, modelWorld)
   PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){}
   void open(){}
   void step(){
