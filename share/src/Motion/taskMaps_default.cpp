@@ -225,7 +225,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
     // jvec := where in the target shape should we look. If jvec is not set,
     //         this is a vector in world coordinates
 
-    ors::Vector vec_i = G.shapes(i)->rel.rot*ivec;
+    ors::Vector vec_i = G.shapes(i)->rel*ivec;
     ors::Vector vec_xi = G.shapes(i)->rel.rot*Vector_x;
     ors::Vector vec_yi = G.shapes(i)->rel.rot*Vector_y;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;

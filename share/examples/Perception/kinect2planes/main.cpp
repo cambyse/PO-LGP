@@ -5,7 +5,7 @@
 #include <Perception/kinect2pointCloud.h>
 #include <Algo/dataNeighbored.h>
 #include <Perception/modelEnsemble.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 void glDrawAxes(void*);
 

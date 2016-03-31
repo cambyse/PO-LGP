@@ -22,13 +22,20 @@
 
 //===========================================================================
 
+CtrlTask::CtrlTask(const char* name, TaskMap* map)
+  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(1.), maxAcc(10.), f_alpha(0.), f_gamma(0.),
+    flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+}
+
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-  : map(*map), name(name), active(true), maxVel(maxVel), maxAcc(maxAcc), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(maxVel), maxAcc(maxAcc), f_alpha(0.), f_gamma(0.),
+    flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-  : map(map), name(name), active(true), maxVel(1.), maxAcc(10.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+  : map(map), name(name), active(true), prec(ARR(100.)), maxVel(1.), maxAcc(10.), f_alpha(0.), f_gamma(0.),
+    flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->get<arr>();
@@ -41,6 +48,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
   if((it=params["prec"])) prec = it->get<arr>();
   if((it=params["target"])) y_ref = it->get<arr>();
 }
+
 
 void CtrlTask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;

@@ -3,7 +3,7 @@
 #include <Control/taskController.h>
 
 #include <Actions/actions.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 // ============================================================================
 struct PDExecutor: Module {

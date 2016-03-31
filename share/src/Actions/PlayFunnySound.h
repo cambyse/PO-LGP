@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activity.h"
-//#include <pr2/roscom.h>
+//#include <RosCom/roscom.h>
 
 // ============================================================================
 

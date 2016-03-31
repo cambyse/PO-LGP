@@ -2,7 +2,7 @@
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 
 // ============================================================================
 

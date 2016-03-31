@@ -4,9 +4,9 @@
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/actions.h>
-#include <pr2/actionMachine.h>
+#include <RosCom/roscom.h>
+#include <RosCom/actions.h>
+#include <RosCom/actionMachine.h>
 
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>

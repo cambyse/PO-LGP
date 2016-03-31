@@ -1,13 +1,12 @@
 #pragma once
 
 #include <tf/transform_listener.h>
+#include <tf/tf.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <std_msgs/ColorRGBA.h>
 #include <std_msgs/Float32MultiArray.h>
-#include <std_msgs/Float32.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <sensor_msgs/Image.h>
-#include <geometry_msgs/WrenchStamped.h>
 #include <std_msgs/String.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -78,7 +77,7 @@ struct Subscriber : SubscriberType {
     : access(_access) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
-      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
       cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(msg_type).name() <<"> ..." <<std::flush;
       sub  = nh->subscribe( topic_name, 1, &Subscriber::callback, this);
       cout <<"done" <<endl;
@@ -98,17 +97,28 @@ struct Subscriber : SubscriberType {
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConv : SubscriberType {
-  Access_typed<var_type>& access;
+  Access_typed<var_type> access;
   Access_typed<ors::Transformation> *frame;
   ros::NodeHandle *nh;
   ros::Subscriber sub;
   tf::TransformListener *listener;
   SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<ors::Transformation> *_frame=NULL)
-    : access(_access), frame(_frame) {
+    : access(NULL, _access), frame(_frame) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
       listener = new tf::TransformListener;
-      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
+      cout <<"done" <<endl;
+    }
+  }
+  SubscriberConv(const char* topic_name, const char* var_name, Access_typed<ors::Transformation> *_frame=NULL)
+    : access(NULL, var_name), frame(_frame) {
+    if(mlr::getParameter<bool>("useRos")){
+      nh = new ros::NodeHandle;
+      listener = new tf::TransformListener;
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
       cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
       sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
       cout <<"done" <<endl;
@@ -135,19 +145,30 @@ struct SubscriberConv : SubscriberType {
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConvNoHeader : SubscriberType{
-  Access_typed<var_type>& access;
+  Access_typed<var_type> access;
   ros::NodeHandle *nh;
   ros::Subscriber sub;
   SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
-    : access(_access) {
+    : access(NULL, _access) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
-      registry().append<SubscriberType*>({"Subscriber", topic_name}, {_access.registryNode}, this);
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
       cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
       sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
       cout <<"done" <<endl;
     }
   }
+  SubscriberConvNoHeader(const char* topic_name, const char* var_name)
+    : access(NULL, var_name) {
+    if(mlr::getParameter<bool>("useRos")){
+      nh = new ros::NodeHandle;
+      registry().append<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
+      cout <<"done" <<endl;
+    }
+  }
+
   ~SubscriberConvNoHeader(){
     delete nh;
   }
@@ -177,6 +198,14 @@ struct PublisherConv : Module{
     if(mlr::getParameter<bool>("useRos"))
       nh = new ros::NodeHandle;
   }
+  PublisherConv(const char* _topic_name, const char* var_name)
+      : Module(STRING("Publisher_"<<var_name <<"->" <<_topic_name), -1),
+        access(this, var_name, true),
+        nh(NULL),
+        topic_name(_topic_name){
+    if(mlr::getParameter<bool>("useRos"))
+      nh = new ros::NodeHandle;
+  }
   void open(){
     if(nh) pub = nh->advertise<msg_type>(topic_name, 1);
   }
@@ -188,38 +217,6 @@ struct PublisherConv : Module{
 //    delete nh;
   }
 };
-
-//===========================================================================
-//
-// maybe useful for expensive conversion: a subscriber module
-//
-
-//template<class msg_type>
-//struct SubscriberModule : Module {
-//  Access_typed<msg_type> access;
-//  ros::NodeHandle* nh;
-//  ros::Subscriber sub;
-//  const char* topic_name;
-//  Subscriber(const char* topic_name, const char* var_name, ModuleL& S=NoModuleL)
-//    : Module(STRING("Subscriber_"<<topic_name <<"->" <<var_name), S, loopWithBeat, .01),
-//      access(this, var_name),
-//      topic_name(topic_name) {}
-//  void open() {
-//    nh = new ros::NodeHandle;
-//    sub  = nh->subscribe( topic_name, 1, &Subscriber<msg_type>::callback, this);
-//  }
-//  void step() {}
-//  void close() {
-//    nh->shutdown();
-//    delete nh;
-//  }
-//  void callback(const typename msg_type::ConstPtr& msg) { access.set() = *msg; }
-//};
-
-//===========================================================================
-//
-// OLD
-//
 
 
 //===========================================================================
@@ -243,13 +240,8 @@ struct SoftHandMsg{
 //
 // modules
 //
-/* TODO: allow modules to set default loopWithBeat, listenFirst, etc
-options. (In their constructor?)
-*/
 //===========================================================================
 /// This module only calls ros:spinOnce() in step() and loops full speed -- to sync the process with the ros server
-//BEGIN_MODULE(RosCom_Spinner)
-//END_MODULE()
 
 struct RosCom_Spinner:Module{
   bool useRos;
@@ -262,17 +254,6 @@ struct RosCom_Spinner:Module{
   void close(){}
 };
 
-//===========================================================================
-/// This module syncs the controller state and refs with the real time hardware controller (marc_controller_...)
-//struct RosCom_ControllerSync:Module{
-//  struct sRosCom_ControllerSync *s;
-//  ACCESS(CtrlMsg, ctrl_ref)
-//  ACCESS(CtrlMsg, ctrl_obs)
-//  RosCom_ControllerSync():Module("RosCom_ControllerSync", listenFirst){}
-//  void open();
-//  void step();
-//  void close();
-//};
 
 // Helper function so sync ors with the real PR2
 /**

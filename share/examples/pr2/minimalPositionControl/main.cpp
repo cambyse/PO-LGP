@@ -1,6 +1,6 @@
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Actions/gamepadControl.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>
 

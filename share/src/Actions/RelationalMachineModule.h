@@ -3,7 +3,7 @@
 #include <Core/module.h>
 #include <FOL/relationalMachine.h>
 #include <Actions/activity.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 struct RelationalMachineModule : Module{
   ACCESSlisten(mlr::String, effects)

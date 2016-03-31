@@ -1,8 +1,8 @@
 //#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <std_msgs/String.h>
 
 

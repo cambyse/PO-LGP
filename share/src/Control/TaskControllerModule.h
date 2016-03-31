@@ -4,7 +4,7 @@
 #include <Control/ctrlMsg.h>
 #include <Control/taskController.h>
 #include <Control/RTControllerSimulation.h>
-//#include <pr2/roscom.h>
+//#include <RosCom/roscom.h>
 
 #ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>

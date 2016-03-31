@@ -2,13 +2,13 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <pr2/rosalvar.h>
-#include <pr2/roscom.h>
-#include <pr2/serviceRAP.h>
+#include <RosCom/rosalvar.h>
+#include <RosCom/roscom.h>
+#include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>

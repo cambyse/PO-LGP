@@ -8,6 +8,6 @@ DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors Perception
 # comment/uncomment to disable/enable ROS
 ROS = 1
 # CXXFLAGS = -DWITH_ROS
-DEPEND += pr2 Actions
+DEPEND += RosCom Actions
 
 include $(BASE)/gofMake/generic.mk

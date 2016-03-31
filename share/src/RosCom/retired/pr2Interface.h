@@ -3,11 +3,11 @@
 
 #include <Core/module.h>
 #include <Core/array.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Ors/ors.h>
-#include <pr2/pr2DynamicSimulation.h>
+#include <RosCom/pr2DynamicSimulation.h>
 #include <Control/taskSpaceController.h>
-#include <pr2/rosalvar.h>
+#include <RosCom/rosalvar.h>
 
 struct PR2Interface : Module {
   ACCESS(CtrlMsg, ctrl_ref)

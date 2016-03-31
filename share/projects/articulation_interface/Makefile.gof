@@ -4,7 +4,7 @@ BASE = ../..
 OBJS = main.o
 PLIB = 1
 ROS = 1
-DEPEND = Geo Optim Core Hardware_gamepad Motion Ors Gui pr2
+DEPEND = Geo Optim Core Hardware_gamepad Motion Ors Gui RosCom
 
 CPATHS += ../../../../../rosbuild_ws/sandbox/articulation/articulation_models/include/
 CPATHS += ../../../../../rosbuild_ws/sandbox/articulation/articulation_msgs/msg_gen/cpp/include/

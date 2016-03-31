@@ -1,8 +1,8 @@
 //#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <pr2/rosalvar.h>
-#include <Actions/TaskControllerModule.h>
+#include <RosCom/rosalvar.h>
+#include <Control/TaskControllerModule.h>
 
 // =================================================================================================
 struct MySystem {

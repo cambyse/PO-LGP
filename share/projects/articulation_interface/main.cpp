@@ -4,9 +4,9 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <Control/taskController.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
-#include <pr2/rosalvar.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
+#include <RosCom/rosalvar.h>
 
 
 #include <ros/ros.h>
