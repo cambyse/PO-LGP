@@ -46,15 +46,14 @@ struct TaskControllerModule : Module {
   ACCESS(bool, fixBase)
   ACCESS(arr, pr2_odom)
 
-  ACCESSnew(sensor_msgs::JointState, jointState)
-  ACCESSnew(arr, q_ref)
+  ACCESS(sensor_msgs::JointState, jointState)
 
 //private:
   ors::KinematicWorld realWorld;
   TaskController *taskController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
-  const arr q0; //< homing pose
+  arr q0; //< homing pose
   mlr::String robot;
   bool oldfashioned;
   bool useRos;

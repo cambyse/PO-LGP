@@ -10,9 +10,10 @@ int main(int argc, char** argv){
   rosCheckInit("minimalPositionControl");
 
   {
-    TaskControllerModule tcm(mlr::mlrPath("data/baxter_model/baxter.ors"));
+    TaskControllerModule tcm("baxter");
     GamepadInterface gamepad;
-    OrsViewer view;
+//    OrsViewer view;
+    OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
     SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub1("/marc_rt_controller/jointState", "ctrl_obs");
     PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pub1("/marc_rt_controller/jointReference", "ctrl_ref");
     SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       sub2("/robot_pose_ekf/odom_combined", "pr2_odom");
@@ -30,14 +31,14 @@ int main(int argc, char** argv){
                   new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position.map.phi(position.y, NoArr, tcm.modelWorld.get()()); //get the current value
-    position.y_ref = position.y + ARR(.1, 0., 0.);; //set a target
+    position.y_ref = position.y + ARR(.3, 0., 0.);; //set a target
 
     CtrlTask align1("align",
                     new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "endeffR", Vector_z, NULL, Vector_x),
-                    1., .8, 1., 1.);
+                    1., 1., 1., 1.);
     CtrlTask align2("align",
                     new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "endeffR", Vector_y, NULL, Vector_x),
-                    1., .8, 1., 1.);
+                    1., 1., 1., 1.);
 
     //-- tell the controller to take care of them
     tcm.ctrlTasks.set() = { &position, &align1, &align2 };

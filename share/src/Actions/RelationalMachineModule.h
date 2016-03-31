@@ -20,5 +20,13 @@ struct RelationalMachineModule : Module{
   void open();
   void step();
   void close();
+
+  //'scripting' interfaces
+  ConditionVariable stopWaiting;
+  void newSymbol(const char* symbol);
+  void setFact(const char* fact);
+  void waitForCondition(const char* query);
+  void runScript(const char* filename);
 };
+
 

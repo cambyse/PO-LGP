@@ -1,7 +1,7 @@
 #include "TaskControllerModule.h"
 //#include <RosCom/rosalvar.h> //todo: don't deal with the markers here! ObjectFilter..
 #include <Gui/opengl.h>
-
+#include <RosCom/baxter.h>
 
 void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
@@ -24,7 +24,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
 
   robot = mlr::getParameter<mlr::String>("robot", _robot);
   if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
-  else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter-modifications.ors").p);
+  else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
   else HALT("undefined robot '" <<robot <<"'");
   q0 = realWorld.q;
 
@@ -33,7 +33,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
 TaskControllerModule::~TaskControllerModule(){
 }
 
-void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
+void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
@@ -139,7 +139,7 @@ void TaskControllerModule::step(){
       arr a = taskController->operationalSpaceControl();
       q_model += .001*qdot_model;
       qdot_model += .001*a;
-      if(fixBase.get()) {
+      if(trans && fixBase.get()) {
         qdot_model(trans->qIndex+0) = 0;
         qdot_model(trans->qIndex+1) = 0;
         qdot_model(trans->qIndex+2) = 0;
@@ -277,7 +277,6 @@ void TaskControllerModule::step(){
   //-- send the computed movement to the robot
   if(!requiresInitialSync && (useRos || useDynSim)){
     ctrl_ref.set() = refs;
-    q_ref.set() = q_model;
   }
 }
 
