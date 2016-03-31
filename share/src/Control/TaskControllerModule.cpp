@@ -190,28 +190,34 @@ void TaskControllerModule::step(){
     taskController->tasks = ctrlTasks();
 
 #if 0
-
     arr u_bias, Kp, Kd;
     arr M, F;
     feedbackController->world.equationOfMotion(M, F, false);
     arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u_bias, M, F); // TODO: what happens when changing the LAWs?
-
 #else
 
-    //compute desired acceleration law in q-space
+    //-- compute desired acceleration law in q-space
     arr a, Kp, Kd, k, JCJ;
     a = taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+    checkNan(k);
 
-    //translate to motor torques
+    //-- limit the step
+    arr q_step = pseudoInverse(Kp)*(k-Kp*q_real);
+    clip(q_step, -.1, .1);
+    arr q_ref = q_real + q_step;
+
+    //-- translate to motor torques
+#if 0
     arr M, F;
     taskController->world.equationOfMotion(M, F, false);
-    arr u_bias = M*k + F;
+//    arr u_bias = M*k + F;
     Kp = M*Kp;
     Kd = M*Kd;
-
-    checkNan(u_bias);
+    checkNan(Kp);
+#endif
 
     //-- compute the error between expected change in velocity and true one
+#if 0
     if(!a_last.N) a_last = a;
     if(!qdot_last.N) qdot_last = qdot_real;
     arr a_err = (qdot_real - qdot_last)/.01 - a_last;
@@ -220,8 +226,8 @@ void TaskControllerModule::step(){
     if(!aErrorIntegral.N) aErrorIntegral = JCJ * a_err;
     else aErrorIntegral += a_err;
     // add integral error to control bias
-//    u_bias -= .01 * M * aErrorIntegral;
-
+    u_bias -= .01 * M * aErrorIntegral;
+#endif
 #endif
 
     // F/T limit control
@@ -240,30 +246,22 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    arr q_ref = pseudoInverse(Kp)*(u_bias-Kp*q_real);
-    clip(q_ref, -.2, .2);
-    q_ref += q_real;
-    ctrl_q_ref.set() = q_ref;
-
-#if 1
-    refs.q = zeros(q_model.N);
-#else
-    refs.q =  q_ref; //zeros(q_model.N);
-    u_bias =0.; //-= Kp*q_ref;
-#endif
+    refs.q = q_ref;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
     refs.Kp = Kp;
     refs.Kd = Kd;
-    refs.Ki = ARR(0.);
+    refs.Ki.clear();
     refs.fL = fRef;
     refs.fR = zeros(6);
     refs.KiFTL = K_ft;
     refs.J_ft_invL = J_ft_inv;
-    refs.u_bias = u_bias;
+    refs.u_bias = zeros(q_ref.N); //u_bias;
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;
   }
+
+  ctrl_q_ref.set() = refs.q;
 
   //-- send base motion command
   if(useRos) {

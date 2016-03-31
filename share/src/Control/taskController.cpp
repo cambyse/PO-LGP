@@ -328,7 +328,7 @@ arr TaskController::operationalSpaceControl(){
   return q_ddot;
 }
 
-arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ) {
+arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ, arr& JCKJ) {
   arr Kp_y, Kd_y, k_y, C_y;
   qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
   arr H = qNullCostRef.getC();
@@ -337,7 +337,8 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ) {
   Kd = H * Kd_y;
   k  = H * k_y;
 
-  JCJ = zeros(world.q.N, world.q.N);
+  if(&JCJ) JCJ = zeros(world.q.N, world.q.N);
+  if(&JCKJ) JCKJ = zeros(world.q.N, world.q.N);
 
   for(CtrlTask* task : tasks) if(task->active){
     arr y, J_y;
@@ -347,7 +348,8 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ) {
 
     arr JtC_y = ~J_y*C_y;
 
-    JCJ += JtC_y*J_y;
+    if(&JCJ) JCJ += JtC_y*J_y;
+    if(&JCKJ) JCKJ += JtC_y*Kp_y*J_y;
     Kp += JtC_y*Kp_y*J_y;
     Kd += JtC_y*Kd_y*J_y;
     k  += JtC_y*(k_y + Kp_y*(J_y*world.q - y));

@@ -123,7 +123,7 @@ bool FollowReferenceActivity::isConv(){
 
 void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   map = new TaskMap_qItself;
-  task = new CtrlTask(name, map, 2., 1., 1., 1.);
+  task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;
 
   Node *it;
