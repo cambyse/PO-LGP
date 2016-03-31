@@ -1579,24 +1579,24 @@ void ors::KinematicWorld::setShapeNames() {
 }
 
 /// find body with specific name
-ors::Body* ors::KinematicWorld::getBodyByName(const char* name) const {
+ors::Body* ors::KinematicWorld::getBodyByName(const char* name, bool warnIfNotExist) const {
   for(Body *b: bodies) if(b->name==name) return b;
   if(strcmp("glCamera", name)!=0)
-  MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
+  if(warnIfNotExist) MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
 }
 
 /// find shape with specific name
-ors::Shape* ors::KinematicWorld::getShapeByName(const char* name) const {
+ors::Shape* ors::KinematicWorld::getShapeByName(const char* name, bool warnIfNotExist) const {
   for(Shape *s: shapes) if(s->name==name) return s;
-  MLR_MSG("cannot find Shape named '" <<name <<"' in Graph");
+  if(warnIfNotExist) MLR_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find shape with specific name
-ors::Joint* ors::KinematicWorld::getJointByName(const char* name, bool verbose) const {
+ors::Joint* ors::KinematicWorld::getJointByName(const char* name, bool warnIfNotExist) const {
   for(Joint *j: joints) if(j->name==name) return j;
-  if(verbose) MLR_MSG("cannot find Joint named '" <<name <<"' in Graph");
+  if(warnIfNotExist) MLR_MSG("cannot find Joint named '" <<name <<"' in Graph");
   return NULL;
 }
 
@@ -1795,8 +1795,8 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 void ors::KinematicWorld::read(std::istream& is) {
   Graph G(is);
   G.checkConsistency();
-  init(G);
 //  cout <<"***KVG:\n" <<G <<endl;
+  init(G);
 }
 void ors::KinematicWorld::init(const Graph& G) {
   clear();

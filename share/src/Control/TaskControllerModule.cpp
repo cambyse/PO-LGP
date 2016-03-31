@@ -8,22 +8,26 @@ void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   lowPass = (1.-rate)*lowPass + rate*signal;
 }
 
-TaskControllerModule::TaskControllerModule(const char* modelFile)
+TaskControllerModule::TaskControllerModule(const char* _robot)
   : Module("TaskControllerModule", .01)
-  , realWorld(modelFile?modelFile:mlr::mlrPath("data/pr2_model/pr2_model.ors").p)
   , taskController(NULL)
-  , q0(realWorld.q)
   , oldfashioned(true)
   , useRos(false)
-  , isInSyncWithRobot(false)
+  , requiresInitialSync(true)
   , syncModelStateWithReal(false)
   , verbose(false)
-  , useDynSim(true)
-  , noTaskTask(NULL){
+  , useDynSim(true){
 
   useRos = mlr::getParameter<bool>("useRos",false);
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
+
+  robot = mlr::getParameter<mlr::String>("robot", _robot);
+  if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter-modifications.ors").p);
+  else HALT("undefined robot '" <<robot <<"'");
+  q0 = realWorld.q;
+
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -65,10 +69,12 @@ void TaskControllerModule::step(){
   static uint t=0;
   t++;
 
-  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation");
+  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
 
   //-- read real state
   if(useRos || !oldfashioned){
+    bool succ=true;
+    if(robot=="pr2"){
     ctrl_obs.waitForRevisionGreaterThan(0);
     if(useRos)  pr2_odom.waitForRevisionGreaterThan(0);
 
@@ -76,6 +82,13 @@ void TaskControllerModule::step(){
     q_real = ctrl_obs.get()->q;
     qdot_real = ctrl_obs.get()->qdot;
     ctrl_q_real.set() = q_real;
+}
+    if(robot=="baxter"){
+      jointState.waitForRevisionGreaterThan(20);
+      q_real = realWorld.q;
+      succ = baxter_update_qReal(q_real, jointState.get(), realWorld);
+      qdot_real = zeros(q_real.N);
+    }
     if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
       if(useRos) q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
       realWorld.setJointState(q_real, qdot_real);
@@ -89,13 +102,13 @@ void TaskControllerModule::step(){
         if(q_history.d0>0) lowPassUpdate(q_lowPass, q_history[0]);
         if(q_history.d0>1) lowPassUpdate(qdot_lowPass, (q_history[0]-q_history[1])/.01);
         if(q_history.d0>2) lowPassUpdate(qddot_lowPass, (q_history[0]-2.*q_history[1]+q_history[2])/(.01*.01));
+        if(oldfashioned) syncModelStateWithReal = false;
       }
-      if(oldfashioned) syncModelStateWithReal = false;
-      isInSyncWithRobot = true;
+      requiresInitialSync = false;
     }else{
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       if(t>20){
-        HALT("sync'ing real PR2 with simulated failed")
+        HALT("sync'ing real robot with simulated failed")
       }
     }
   }
@@ -262,8 +275,9 @@ void TaskControllerModule::step(){
   }
 
   //-- send the computed movement to the robot
-  if(isInSyncWithRobot && (useRos || useDynSim)){
+  if(!requiresInitialSync && (useRos || useDynSim)){
     ctrl_ref.set() = refs;
+    q_ref.set() = q_model;
   }
 }
 
