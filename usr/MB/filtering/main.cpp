@@ -2,6 +2,7 @@
 #include <Gui/opengl.h>
 #include <pr2/roscom.h>
 #include <pr2/subscribeTabletop.h>
+#include <pr2/subscribeAlvarMarkers.h>
 
 #include <pr2/perceptionCollection.h>
 
@@ -11,7 +12,9 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   rosCheckInit("tester");
 
-  SubscribeTabletop subscriber;
+  SubscribeTabletop tabletop_subscriber;
+
+  SubscribeAlvar alvar_subscriber;
 
   Collector data_collector;
 

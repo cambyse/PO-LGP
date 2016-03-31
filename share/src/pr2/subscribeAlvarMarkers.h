@@ -4,17 +4,14 @@
 #include <pr2/rosmacro.h>
 #include <Ors/ors.h>
 
-#ifdef MLR_ROS
-
 #ifdef MLR_ROS_INDIGO
   #include <ar_track_alvar_msgs/AlvarMarkers.h>
-  using namespace ar_track_alvar_msgs;
+  namespace ar = ar_track_alvar_msgs;
 #endif
 #if MLR_ROS_GROOVY
   #include <ar_track_alvar/AlvarMarkers.h>
-  using namespace ar_track_alvar;
+  namespace ar = ar_track_alvar;
 #endif
-
 
 //===========================================================================
 /// Generic subscriber to the AR maker alvar
@@ -36,21 +33,28 @@
 /**
  * Set the transformation of the body to the transformation of the alvar maker.
  */
-void setBody(ors::Body& body, const AlvarMarker& marker);
+void setBody(ors::Body& body, const ar::AlvarMarker& marker);
 
 /**
  * Sync all markers from the msg with the ors world.
  *
  * Note: this never deletes old markers.
  */
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+void syncMarkers(ors::KinematicWorld& world, ar::AlvarMarkers& markers);
 
-#else
 
-class AlvarMarker{};
-typedef mlr::Array<AlvarMarker> AlvarMarkers;
+struct SubscribeAlvar{
+  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
+  Subscriber<ar::AlvarMarkers> sub;
 
-void setBody(ors::Body& body, const AlvarMarker& marker);
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers);
+  SubscribeAlvar()
+    : sub("/ar_pose_marker", ar_pose_markers) {
+  }
+  ~SubscribeAlvar(){
+  }
 
-#endif
+};
+
+
+
+

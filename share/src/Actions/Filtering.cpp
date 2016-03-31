@@ -50,7 +50,6 @@ Hungarian::Hungarian(const arr& cost_matrix)
 
 Hungarian::~Hungarian(){}
 
-
 void Hungarian::minimize()
 {
   covered_rows = covered_cols = zeros(dim);

@@ -23,7 +23,8 @@ struct Filter : Module{
   Filter();
 
   ros::NodeHandle* nh;
-  ros::Publisher pub;
+  ros::Publisher tabletop_pub;
+  ros::Publisher alvar_pub;
 
   virtual void open();
   virtual void step();

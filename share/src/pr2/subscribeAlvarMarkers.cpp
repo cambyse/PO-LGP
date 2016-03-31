@@ -1,7 +1,5 @@
 #include "subscribeAlvarMarkers.h"
 
-#ifdef MLR_ROS
-
 // ============================================================================
 // void ROSMODULE_markers::step() {
 //   modelWorld.writeAccess();
@@ -71,7 +69,3 @@ void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {
     world.swiftDelete();
   }
 }
-#else
-void setBody(ors::Body& body, const AlvarMarker& marker) {}
-void syncMarkers(ors::KinematicWorld& world, AlvarMarkers& markers) {}
-#endif
