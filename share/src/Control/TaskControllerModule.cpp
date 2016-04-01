@@ -74,23 +74,22 @@ void TaskControllerModule::step(){
   //-- read real state
   if(useRos || !oldfashioned){
     bool succ=true;
-    if(robot=="pr2"){
-    ctrl_obs.waitForRevisionGreaterThan(0);
-    if(useRos)  pr2_odom.waitForRevisionGreaterThan(0);
-
     qdot_last = qdot_real;
-    q_real = ctrl_obs.get()->q;
-    qdot_real = ctrl_obs.get()->qdot;
-    ctrl_q_real.set() = q_real;
-}
+    if(robot=="pr2"){
+      ctrl_obs.waitForRevisionGreaterThan(0);
+      if(useRos)  pr2_odom.waitForRevisionGreaterThan(0);
+      q_real = ctrl_obs.get()->q;
+      qdot_real = ctrl_obs.get()->qdot;
+      q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    }
     if(robot=="baxter"){
       jointState.waitForRevisionGreaterThan(20);
       q_real = realWorld.q;
       succ = baxter_update_qReal(q_real, jointState.get(), realWorld);
       qdot_real = zeros(q_real.N);
     }
-    if(q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
-      if(useRos) q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    ctrl_q_real.set() = q_real;
+    if(succ && q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithReal){
         q_model = q_real;
