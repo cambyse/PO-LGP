@@ -1511,7 +1511,7 @@ void ors::KinematicWorld::inertia(arr& M) {
 }
 
 void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
-  static ors::LinkTree tree; //TODO: HACK!!
+  ors::LinkTree tree; //TODO: HACK!! Danny: Why was there a static? This fails if there are more than 2 worlds
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
   if(gravity){
@@ -1520,7 +1520,6 @@ void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
   }
   if(!qdot.N) qdot.resize(q.N).setZero();
   ors::equationOfMotion(M, F, tree, qdot);
-  F *= -1.;
 }
 
 /** @brief return the joint accelerations \f$\ddot q\f$ given the
@@ -1580,24 +1579,24 @@ void ors::KinematicWorld::setShapeNames() {
 }
 
 /// find body with specific name
-ors::Body* ors::KinematicWorld::getBodyByName(const char* name) const {
+ors::Body* ors::KinematicWorld::getBodyByName(const char* name, bool warnIfNotExist) const {
   for(Body *b: bodies) if(b->name==name) return b;
   if(strcmp("glCamera", name)!=0)
-    MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
+  if(warnIfNotExist) MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
   return 0;
 }
 
 /// find shape with specific name
-ors::Shape* ors::KinematicWorld::getShapeByName(const char* name) const {
+ors::Shape* ors::KinematicWorld::getShapeByName(const char* name, bool warnIfNotExist) const {
   for(Shape *s: shapes) if(s->name==name) return s;
-  MLR_MSG("cannot find Shape named '" <<name <<"' in Graph");
+  if(warnIfNotExist) MLR_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find shape with specific name
-ors::Joint* ors::KinematicWorld::getJointByName(const char* name) const {
+ors::Joint* ors::KinematicWorld::getJointByName(const char* name, bool warnIfNotExist) const {
   for(Joint *j: joints) if(j->name==name) return j;
-  MLR_MSG("cannot find Joint named '" <<name <<"' in Graph");
+  if(warnIfNotExist) MLR_MSG("cannot find Joint named '" <<name <<"' in Graph");
   return NULL;
 }
 
@@ -1727,12 +1726,13 @@ void ors::KinematicWorld::stepOde(double tau){
 #endif
 }
 
-void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double dynamicNoise){
+void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double dynamicNoise, bool gravity){
 
   struct DiffEqn:VectorFunction{
     ors::KinematicWorld &S;
     const arr& Bu;
-    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu):S(_S), Bu(_Bu){
+    bool gravity;
+    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu, bool _gravity):S(_S), Bu(_Bu), gravity(_gravity){
       VectorFunction::operator=( [this](arr& y, arr& J, const arr& x) -> void {
         this->fv(y, J, x);
       } );
@@ -1740,11 +1740,12 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
     void fv(arr& y, arr& J, const arr& x){
       S.setJointState(x[0], x[1]);
       arr M,Minv,F;
-      S.equationOfMotion(M, F);
+      S.equationOfMotion(M, F, gravity);
       inverse_SymPosDef(Minv, M);
+      //Minv = inverse(M); //TODO why does symPosDef fail?
       y = Minv * (Bu - F);
     }
-  } eqn(*this, Bu_control);
+  } eqn(*this, Bu_control, gravity);
 
 #if 0
   arr M,Minv,F;
@@ -1794,8 +1795,8 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 void ors::KinematicWorld::read(std::istream& is) {
   Graph G(is);
   G.checkConsistency();
-  init(G);
 //  cout <<"***KVG:\n" <<G <<endl;
+  init(G);
 }
 void ors::KinematicWorld::init(const Graph& G) {
   clear();
@@ -1855,6 +1856,7 @@ void ors::KinematicWorld::init(const Graph& G) {
       mlr::String jointName;
       bool good = j->ats.get(jointName, "mimic");
       CHECK(good, "something is wrong");
+      if(!jointName.N){ j->mimic=NULL; continue; }
       j->mimic = listFindByName(joints, jointName);
       if(!j->mimic) HALT("The joint '" <<*j <<"' is declared coupled to '" <<jointName <<"' -- but that doesn't exist!");
       j->type = j->mimic->type;
@@ -2601,9 +2603,13 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
 void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
   arr q = to.getJointState();
   uint T = qfrom.d0;
+  uint Nfrom = qfrom.d1;
+
+  if (qfrom.d1==0) {T = 1; Nfrom = qfrom.d0;}
+
   qto = repmat(~q,T,1);
 
-  intA match(qfrom.d1);
+  intA match(Nfrom);
   match = -1;
   for(ors::Joint* jfrom:from.joints){
     ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
@@ -2616,11 +2622,171 @@ void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicW
 
   for(uint i=0;i<match.N;i++) if(match(i)!=-1){
     for(uint t=0;t<T;t++){
-      qto(t, match(i)) = qfrom(t,i);
+      if (qfrom.d1==0) {
+        qto(t, match(i)) = qfrom(i);
+      } else {
+        qto(t, match(i)) = qfrom(t,i);
+      }
+    }
+  }
+
+  if (qfrom.d1==0) qto.reshape(qto.N);
+}
+
+
+void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+  //TODO: for saveness reasons, the velocities are zeroed.
+  arr qDot;
+  qDot = zeros(to.getJointStateDimension());
+  uint T, dim;
+  if(qDotFrom.d1 > 0) {
+    T = qDotFrom.d0;
+    qDotTo = repmat(~qDot,T,1);
+    dim = qDotFrom.d1;
+  } else {
+    T = 1;
+    qDotTo = qDot;
+    dim = qDotFrom.d0;
+  }
+
+  intA match(dim);
+  match = -1;
+  for(ors::Joint* jfrom:from.joints){
+    ors::Joint* jto = to.getJointByName(jfrom->name, false); //OLD: to.getJointByBodyNames(jfrom->from->name, jfrom->to->name); why???
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+  if(qDotFrom.d1 > 0) {
+    for(uint i=0;i<match.N;i++) if(match(i)!=-1){
+      for(uint t=0;t<T;t++){
+        qDotTo(t, match(i)) = qDotFrom(t,i);
+      }
+    }
+  } else {
+    for(uint i=0;i<match.N;i++) if(match(i)!=-1){
+      qDotTo(match(i)) = qDotFrom(i);
+    }
+  }
+
+}
+
+void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+  KpTo = zeros(to.getJointStateDimension(),to.getJointStateDimension());
+  //use Kp gains from ors file for toWorld, if there are no entries of this joint in fromWorld
+  for_list(ors::Joint, j, to.joints) {
+    if(j->qDim()>0) {
+      arr *info;
+      info = j->ats.find<arr>("gains");
+      if(info) {
+        KpTo(j->qIndex,j->qIndex)=info->elem(0);
+      }
+    }
+  }
+
+  intA match(KpFrom.d0);
+  match = -1;
+  for(ors::Joint* jfrom : from.joints){
+    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+
+  for(uint i=0;i<match.N;i++) {
+    for(uint j=0;j<match.N;j++){
+      KpTo(match(i), match(j)) = KpFrom(i,j);
     }
   }
 }
 
+void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from) {
+  KdTo = zeros(to.getJointStateDimension(),to.getJointStateDimension());
+
+  //use Kd gains from ors file for toWorld, if there are no entries of this joint in fromWorld
+  for_list(ors::Joint, j, to.joints) {
+    if(j->qDim()>0) {
+      arr *info;
+      info = j->ats.find<arr>("gains");
+      if(info) {
+        KdTo(j->qIndex,j->qIndex)=info->elem(1);
+      }
+    }
+  }
+
+  intA match(KdFrom.d0);
+  match = -1;
+  for(ors::Joint* jfrom : from.joints){
+    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+
+  for(uint i=0;i<match.N;i++) {
+    for(uint j=0;j<match.N;j++){
+      KdTo(match(i), match(j)) = KdFrom(i,j);
+    }
+  }
+}
+
+
+void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+  u0To = zeros(to.getJointStateDimension());
+
+  intA match(u0From.d0);
+  match = -1;
+  for(ors::Joint* jfrom : from.joints){
+    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+
+  for(uint i=0;i<match.N;i++) {
+    u0To(match(i)) = u0From(i);
+  }
+}
+
+
+void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+  uint numberOfColumns = KI_ft_From.d1;
+  if(KI_ft_From.d1 == 0) {
+    numberOfColumns = 1;
+    KI_ft_To = zeros(to.getJointStateDimension());
+  } else {
+    KI_ft_To = zeros(to.getJointStateDimension(), KI_ft_From.d1);
+  }
+
+  intA match(KI_ft_From.d0);
+  match = -1;
+  for(ors::Joint* jfrom : from.joints){
+    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+    if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
+    CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
+    for(uint i=0; i<jfrom->qDim(); i++){
+      match(jfrom->qIndex+i) = jto->qIndex+i;
+    }
+  }
+
+  for(uint i=0;i<match.N;i++) {
+    for(uint j=0;j < numberOfColumns;j++){
+      if(numberOfColumns > 1) {
+        KI_ft_To(match(i), j) = KI_ft_From(i,j);
+      } else {
+        KI_ft_To(match(i)) = KI_ft_From(i);
+      }
+    }
+  }
+}
 
 //===========================================================================
 //-- template instantiations
@@ -2635,8 +2801,3 @@ template ors::Shape* listFindByName(const mlr::Array<ors::Shape*>&,const char*);
 template mlr::Array<ors::Joint*>::Array();
 #endif
 /** @} */
-
-
-
-
-

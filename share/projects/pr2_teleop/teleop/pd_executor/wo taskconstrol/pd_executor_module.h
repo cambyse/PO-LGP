@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 //#ifdef WITH_ROS
   #include <Actions/actions.h>
-  #include <pr2/roscom.h>
+  #include <RosCom/roscom.h>
 //#endif
 
 // ============================================================================
@@ -25,9 +25,9 @@ struct PDExecutor: Module {
   ACCESS(floatA, poses_lh);
 
   ACCESS(bool, initmapper);  
-  // FeedbackMotionControl stuff
+  // TaskController stuff
   ors::KinematicWorld world;
-  FeedbackMotionControl fmc;
+  TaskController fmc;
   arr q, qdot;
 
   bool inited, useros;

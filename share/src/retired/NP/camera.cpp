@@ -47,7 +47,7 @@ CameraModule::CameraModule():Process("BumblebeeProcess"){
 void CameraModule::open(){
   s->cam = new np::Bumblebee2();
   ifstream fil;
-  mlr::open(fil,"../../configurations/camera.cfg");
+  mlr::open(fil,"../../data/configurations/camera.cfg");
   calib.read(fil);
   step();
 };

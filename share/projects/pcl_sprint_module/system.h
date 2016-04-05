@@ -11,7 +11,7 @@
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 #include "methods.h"
 

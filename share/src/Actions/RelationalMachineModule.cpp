@@ -22,8 +22,9 @@ struct RM_EditCallback:GraphEditCallback{
   }
 };
 
-RelationalMachineModule::RelationalMachineModule():Module("RelationalMachineModule"),
-  _log("RelationalMachineModule"){
+RelationalMachineModule::RelationalMachineModule()
+  : Module("RelationalMachineModule"),
+    _log("RelationalMachineModule", 1, 1){
 }
 
 RelationalMachineModule::~RelationalMachineModule(){
@@ -31,7 +32,7 @@ RelationalMachineModule::~RelationalMachineModule(){
 
 void RelationalMachineModule::open(){
   RM.writeAccess();
-  RM().KB <<FILE(STRING(getenv("HOME")<<"/git/mlr/share/data/keywords.g"));
+  RM().KB <<FILE(mlr::mlrPath("data/keywords.g"));
   RM().init("machine.fol");
   RM().state->callbacks.append(new RM_EditCallback(*this));
   RM.deAccess();
@@ -88,3 +89,41 @@ void RelationalMachineModule::step(){
   }
 }
 
+//========================================================================================
+
+void RelationalMachineModule::newSymbol(const char* symbol){
+  RM.set()->declareNewSymbol(symbol);
+}
+
+void RelationalMachineModule::setFact(const char* fact){
+  effects.set()() <<fact <<", ";
+  threadStep();
+  state.waitForNextRevision(); //TODO: is this robust?
+}
+
+void RelationalMachineModule::waitForCondition(const char* query){
+  for(;;){
+    if(RM.get()->queryCondition(query)) return;
+    if(stopWaiting.getValue()>0) return;
+    state.waitForNextRevision();
+  }
+}
+
+void RelationalMachineModule::runScript(const char* filename){
+  FILE(filename) >>RM.set()->KB;
+
+  Graph& script = RM.get()->KB.getNode("Script")->graph();
+  int rev=0;
+  for(Node* n:script){
+    if(n->parents.N==0 && n->isGraph()){ //interpret as wait
+      for(;;){
+        if(allFactsHaveEqualsInScope(*RM.get()->state, n->graph())) break;
+        rev=RM.waitForRevisionGreaterThan(rev);
+      }
+    }else{ //interpret as set fact
+      RM.set()->applyEffect(n, true);
+//      S->rmm->threadStep();
+//      S->effects.set()() <<"(go)"; //just trigger that the RM module steps
+    }
+  }
+}

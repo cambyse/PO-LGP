@@ -1,9 +1,9 @@
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
@@ -271,13 +271,13 @@ void run(){
     cout <<"t: "<< t <<endl;
     CtrlMsg refs;
     refs.fL = ARR(0., 0., 0.,0.,0.,0.);
-    refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = 1.;
     refs.Kd = 1.;
     refs.Ki = 0.;
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
 
     s = t/duration;
     refs.q=xs.eval(s);

@@ -135,6 +135,7 @@ floatA CORDtranstoRo(const floatA& input,floatA centera)
   return {(float)PosToRobot.x,(float)PosToRobot.y,(float)PosToRobot.z,(float)OrToRobot.w,
         (float)OrToRobot.x,(float)OrToRobot.y,(float)OrToRobot.z};
 }
+
 floatA transcenter(const floatA& tempData,const floatA& ref )
 {
   floatA TtempData(tempData);
@@ -294,15 +295,19 @@ void G4HutoRoMap::step(){
 
   //////////////////////////////////InPut Check////////////////////////////
   arr gpstate = gamepadState.get();
+
   CHECK(gpstate.N, "ERROR: No GamePad found");
   int button = gpstate(0);
-  floatA tempData = g4_poses.get();
+
+//  floatA tempData = g4_data.get();
+  floatA data = g4_data.get();
+  floatA tempData = data.resizeCopy(6,7);
   floatA temp;
 
 
-  if(tempData.N == 0)
+  if(tempData.N == 0){
     return;
-
+  }
   // discard lost frames
   if (length(tempData.row(0)) == 0 || length(tempData.row(1)) == 0 ||
       length(tempData.row(3)) == 0 || length(tempData.row(4)) == 0 ||
@@ -326,13 +331,15 @@ void G4HutoRoMap::step(){
 
   ///////////////////////////////////////////////////////////////////////
 
-  if(button & BTN_X)
+  if(button & BTN_X && !initialised)
+  //if(!teleop && counter>20)
   {
+    teleop=true;
     initphase = false;
     cout<<"---------TELEOP IS LIVE--------------"<<endl;
     initmapper.set() = initphase;
+    initialised = true;
   }
-
   decayed =true;
 
   doinitsendROS(tempData);
@@ -396,7 +403,7 @@ floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index,b
 
   return {(float)quat.w, (float)quat.x, (float)quat.y, (float)quat.z};
 }
-
+/*
 void G4HutoRoMap::transform(const floatA& poses_raw){
 
   floatA cal_pose_rh, cal_pose_lh;
@@ -432,7 +439,7 @@ void G4HutoRoMap::transform(const floatA& poses_raw){
   calibrated_pose_rh.set() = cal_pose_rh;
   calibrated_pose_lh.set() = cal_pose_lh;
 }
-
+*/
 void G4HutoRoMap::doinitsendROS( floatA poses_raw)
 {
   floatA cal_pose_rh, cal_pose_lh;

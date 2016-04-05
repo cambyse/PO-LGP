@@ -12,7 +12,7 @@ void g4_main();
 void create_thread();
 void *thread_main(void *);
 
-const char *src_cfg = "../../../configurations/g4_source_configuration.g4c";
+const char *src_cfg = "../../../data/configurations/g4_source_configuration.g4c";
 
 int main(int argc, char **argv) {
   if(argc == 1) // run non-threaded

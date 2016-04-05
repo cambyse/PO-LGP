@@ -124,7 +124,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicW
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  FeedbackMotionControl MC(world);
+  TaskController MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

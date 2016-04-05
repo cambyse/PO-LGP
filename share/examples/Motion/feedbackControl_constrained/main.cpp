@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Motion/taskMaps.h>
 
 void reach(){
@@ -7,7 +7,7 @@ void reach(){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  FeedbackMotionControl MP(world, true);
+  TaskController MP(world, true);
   MP.addPDTask("endeff1", .3, .8, posTMT, "handR", NoVector, "rightTarget");
 //  CtrlTask *t = MP.addPDTask("endeff1", .1, .8, posTMT, "handL");
 //  t->y_ref=ARR(0,-.5,1);

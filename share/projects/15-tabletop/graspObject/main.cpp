@@ -1,6 +1,6 @@
 #include <Core/util.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
 //#include <System/engine.h>
@@ -12,7 +12,7 @@
 #include <tf/transform_listener.h>
 #include <Motion/taskMaps.h>
 #include <Actions/taskCtrlActivities.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 
 struct GazeTask : ControlActivity {

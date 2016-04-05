@@ -16,16 +16,38 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 struct Teleop2Tasks{
-  FeedbackMotionControl& fmc;
+  //data of previous loop cycle
+  //position
+  arr old_pos_rh;
+  arr old_pos_lh;
+  arr old_effpos_r;
+  arr old_effpos_l;
+
+  //bools to deactivate movement on certain axis
+  bool move_x = true;
+  bool move_y = true;
+  bool move_z = true;
+  bool rotate = false;
+
+  bool move_lh_x = true;
+  bool move_lh_y = true;
+  bool move_lh_z = true;
+
+  //used to get only one button press out of one button press
+  int old_button = 0;
+
+  bool initialised = false;
+  TaskController& fmc;
   CtrlTask *effPosR, *gripperR, *effOrientationR;
   CtrlTask *effPosL, *gripperL, *effOrientationL;
   CtrlTask *base, *fc;
-  Teleop2Tasks(FeedbackMotionControl& _MP);
+  Teleop2Tasks(TaskController& _MP);
   mlr::Array<CtrlTask*> getTasks();
+  void updateMovement(floatA& cal_pose, arr& old_pos, arr& old_effPos, CtrlTask *effPos);
   void deactivateTasks();
-  void updateTasks( floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive);
+  void updateTasks( floatA cal_pose_rh, floatA cal_pose_lh, float calibrated_gripper_lh, float calibrated_gripper_rh, arr drive, int button);
 };
 

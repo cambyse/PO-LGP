@@ -2,12 +2,13 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <pr2/subscribeAlvarMarkers.h>
-#include <pr2/roscom.h>
+#include <RosCom/rosalvar.h>
+#include <RosCom/roscom.h>
+#include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>
@@ -25,7 +26,7 @@ struct SwigSystem {
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
-  ACCESSname(AlvarMarker, ar_pose_markers)
+  ACCESSname(AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
   ACCESSname(arr, pr2_odom)
   ACCESSname(CtrlMsg, ctrl_ref)
@@ -49,26 +50,30 @@ struct SwigSystem {
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
   OrsViewer orsviewer;
+  OrsPoseViewer controlview;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
-
+  RosCom_Spinner spinner;
+  ServiceRAP rapservice;
 
 
 //  PerceptionObjects2Ors percObjs;
 //  ImageViewer camview;
 //  Kinect2PointCloud k2pcl;
 //  PointCloudViewer pclv;
+//  AlvarSyncer alvar_syncer;
 
   Log _log;
 
   SwigSystem()
-    : /*camview("modelDepthView"),*/ _log("SwigSystem"){
+    : controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld), /*camview("modelDepthView"),*/
+      spinner("SwigSystem"), _log("SwigSystem"){
 
+    computeMeshNormals(tcm.realWorld.shapes);
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
       rosCheckInit("SwigSystem");
-      new RosCom_Spinner();
       //addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.05);
       //addModule<ROSSUB_perceptionObjects>(NULL, /*Module::loopWithBeat,*/ 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
@@ -320,8 +325,9 @@ bool  ActionSwigInterface::isTrue(const stringV& literals){
 }
 
 void ActionSwigInterface::setFact(const char* fact){
-  S->effects.set()() <<fact <<", ";
-  S->state.waitForNextRevision(); //TODO: is this robust?
+  S->rmm.setFact(fact);
+//  S->effects.set()() <<fact <<", ";
+//  S->state.waitForNextRevision(); //TODO: is this robust?
 }
 
 void ActionSwigInterface::stopFact(const char* fact){
@@ -430,13 +436,8 @@ void ActionSwigInterface::waitForQuitSymbol(){
   waitForCondition(stringV({"quit"}));
 }
 
-int ActionSwigInterface::createNewSymbol(std::string symbolName){
-#if 1
-  Node *symbol = S->RM.set()->declareNewSymbol(symbolName.c_str());
-#else
-  Item *symbol = S->RM.set()->append<bool>(symbolName.c_str(), NULL, false);
-#endif
-  return symbol->index;
+void ActionSwigInterface::createNewSymbol(std::string symbolName){
+  S->rmm.newSymbol(symbolName.c_str());
 }
 
 stringV ActionSwigInterface::getSymbols() {

@@ -3,7 +3,7 @@
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/WrenchStamped.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <tf/transform_datatypes.h>
 
 

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <Hardware/gamepad/gamepad.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 #include <Mocap/mocapdata.h>
 #include <Actions/actions.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 // ============================================================================
 struct PDExecutor: Module {
@@ -16,9 +16,9 @@ struct PDExecutor: Module {
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
 
-  // FeedbackMotionControl stuff
+  // TaskController stuff
   ors::KinematicWorld world;
-  FeedbackMotionControl fmc;
+  TaskController fmc;
   arr q, qdot;
 
   bool started, useros;

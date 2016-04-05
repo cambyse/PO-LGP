@@ -1,7 +1,6 @@
 #include <Ors/ors.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Motion/motion.h>
-#include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -185,7 +184,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0005, dir);
 
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
   CtrlTask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
   double regularization = 1e-3;
 

@@ -1,6 +1,6 @@
 #include <Core/util.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <Perception/perception.h>
@@ -33,7 +33,7 @@ struct PerceptionObjects2Ors : Module{
   tf::TransformListener listener;
 
   ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESSnew(ors::KinematicWorld, modelWorld)
+  ACCESS(ors::KinematicWorld, modelWorld)
   PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){}
   void open(){}
   void step(){

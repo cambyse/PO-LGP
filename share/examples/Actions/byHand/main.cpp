@@ -1,13 +1,14 @@
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 
 // ============================================================================
 
 void script1(ActionSwigInterface& S){
-  S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0){ PD=[.1, .9, .5, 10.], prec=10 }");
+  S.setFact("(Control gazeAt endeffKinect endeffR){ PD=[.5, .8, 1., 1.] }");
+  S.waitForCondition("(conv Control gazeAt endeffKinect endeffR)");
 
   S.setFact("(PlayFunnySound)");
 
@@ -34,7 +35,7 @@ void script1(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffR base_footprint)");
   S.setFact("(Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!");
 
-  S.setFact("(Control gazeAt endeffKinect r_gripper_palm_link_0)!");
+  S.setFact("(Control gazeAt endeffKinect endeffR)!");
 
   S.setFact("(Control wheels){ target=[0, 0, 0], PD=[.5, .9, .5, 10.]}");
   S.setFact("(HomingActivity)");
@@ -101,12 +102,14 @@ int main(int argc, char** argv) {
 
   {
     ActionSwigInterface S;
+//    S.setVerbose(true);
 
-  script1(S);
+    script1(S);
 //    script3(S);
 //  forceControl(S);
 
     threadCloseModules();
+    modulesReportCycleTimes();
   }
 
   cout <<registry() <<endl;

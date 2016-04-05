@@ -55,21 +55,23 @@ Merge l_gripper_r_finger_link_0 { contact }
 Merge l_gripper_l_finger_tip_link_0 { contact }
 Merge l_gripper_r_finger_tip_link_0 { contact }
 
+Merge worldTranslationRotation { gains=[1 1] ctrl_limits=[1 1 1] }
+
 ## TORS0
 Merge torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] }
 
 ## HEAD
-Merge head_pan_joint {    gains=[20 2] }
-Merge head_tilt_joint {   q=.4 gains=[60 4] }
+Merge head_pan_joint {    ctrl_H=.1 gains=[20 2] }
+Merge head_tilt_joint {   q=.4 ctrl_H=.1 gains=[60 4] }
 
 ## RIGHT
-Merge r_shoulder_pan_joint { q=-1   gains=[150 10]  }
-Merge r_shoulder_lift_joint { q=.5   gains=[150 10] }
-Merge r_upper_arm_roll_joint { q=-1   gains=[30 4] }
-Merge r_elbow_flex_joint {  q=-2  gains=[30 4] }
-Merge r_forearm_roll_joint { q=-1.5  gains=[10 2] }
-Merge r_wrist_flex_joint { q=-.5 gains=[6 2] }
-Merge r_wrist_roll_joint { q=-.5  gains=[12 2] }
+Merge r_shoulder_pan_joint { q=-1   gains=[200 20]  }
+Merge r_shoulder_lift_joint { q=.5   gains=[160 10] }
+Merge r_upper_arm_roll_joint { q=-1   gains=[80 4] }
+Merge r_elbow_flex_joint {  q=-2  gains=[70 4] }
+Merge r_forearm_roll_joint { q=-1.5  gains=[10 1] }
+Merge r_wrist_flex_joint { q=-.5 gains=[30 1] }
+Merge r_wrist_roll_joint { q=-.5  gains=[15 1] }
 
 ## LEFT
 Merge l_shoulder_pan_joint {   q=1   gains=[200 20] }
@@ -85,10 +87,12 @@ Merge r_gripper_l_finger_joint { q=.1 }
 Merge l_gripper_l_finger_joint { q=.1 }
 Merge r_gripper_joint {  gains=[1000 1] q=.01 }
 Merge l_gripper_joint {  gains=[1000 1] q=.01 }
+Merge r_gripper_l_finger_tip_frame { mass=.05 }
+Merge l_gripper_l_finger_tip_frame { mass=.05 }
 
 ## FT sensors
 shape r_ft_sensor (r_wrist_roll_link){ rel=<T t(.01 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=4 color=[1 0 0] size=[.0 .0 .0356 .02] }
-shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=4 color=[1 0 0] size=[.0 .0 .0356 .0002] }
+shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=4 color=[1 0 0] size=[.0 .0 .0356 .02] }
 Merge r_wrist_roll_joint{ to=<T t(.0356 0 0)> }
 Merge l_wrist_roll_joint{ to=<T t(.0356 0 0)> }
 
@@ -98,6 +102,7 @@ shape endeffHead(head_tilt_link){ rel=<T  d(-90 0 0 1) t(.08 0 .12) d(-90 0 1 0)
 shape endeffWorkspace(torso_lift_link){ rel=<T d(90 0 1 0) t(.7 0 -.1) d(-90 0 0 1) > type=5 color=[1 0 0] size=[.1 0 0 0] }
 
 shape endeffKinect(head_tilt_link){ rel=<T t(0 -.05 .12) d(180 0 0 1) d(-90 1 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffKinect_real(head_tilt_link){ rel=<T t(-0.0175 0.147067 0.291953) d(180 0 0 1) d(-90 1 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 shape endeffLaser(laser_tilt_mount_link){ rel=<T t(0 -.03 .03) d(180 0 0 1) d(-90 1 0 0)> type=5 color=[1 1 1] size=[.1 0 0 0]}
 
 shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}

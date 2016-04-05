@@ -58,7 +58,7 @@ struct ActionSwigInterface{
   void waitForQuitSymbol();
 
   //-- methods to define new symbols
-  int createNewSymbol(string symbolName);
+  void createNewSymbol(string symbolName);
 
   //-- methods to define tasks/actions
   int defineNewTaskSpaceControlAction(string symbolName, const stringV& parentSymbols, const dict& parameters=dict());

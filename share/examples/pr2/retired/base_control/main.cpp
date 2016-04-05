@@ -1,11 +1,11 @@
 #include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <Algo/spline.h>
 

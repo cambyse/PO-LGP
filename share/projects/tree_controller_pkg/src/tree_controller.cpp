@@ -46,7 +46,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
 
   /// init ORS
   world = new ors::KinematicWorld("scene");
-  MP = new FeedbackMotionControl(*world,false);
+  MP = new TaskController(*world,false);
   tau_control = 0.001;
 
   /// Initialize PD Controller

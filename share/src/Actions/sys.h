@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include <Actions/RelationalMachineModule.h>
 
 void createSymbolsForShapes(RelationalMachine& RM, const ors::KinematicWorld& world);

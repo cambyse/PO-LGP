@@ -16,12 +16,15 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 struct Gamepad2Tasks{
-  FeedbackMotionControl& MP;
-  CtrlTask *endeffR, *endeffL, *base, *torso, *head, *headAxes, *limits, *coll,  *gripperL, *gripperR;
-  Gamepad2Tasks(FeedbackMotionControl& _MP);
+  TaskController& MP;
+  const arr q0;
+  mlr::String robot;
+  CtrlTask *homing, *endeffR, *endeffL, *base, *torso, *head, *headAxes, *limits, *coll,  *gripperL, *gripperR;
+
+  Gamepad2Tasks(TaskController& _MP, const arr& q0);
   mlr::Array<CtrlTask*> getTasks();
   bool updateTasks(arr& gamepadState);
 };

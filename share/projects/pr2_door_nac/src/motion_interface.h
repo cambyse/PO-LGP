@@ -6,8 +6,8 @@
 //#include <System/engine.h>
 #include <Actions/actionMachine.h>
 #include <Actions/actions.h>
-#include <pr2/roscom.h>
-#include <pr2/subscribeAlvarMarkers.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosalvar.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 ROSSUB("/robot_pose_ekf/odom_combined", geometry_msgs::PoseWithCovarianceStamped , pr2_odom)

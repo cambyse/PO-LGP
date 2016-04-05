@@ -2,11 +2,11 @@
 #include <Geo/geo.h>
 #include <Gui/opengl.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
-#include <pr2/subscribeAlvarMarkers.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
+#include <RosCom/rosalvar.h>
 
 
 #include <ros/ros.h>

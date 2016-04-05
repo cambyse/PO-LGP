@@ -1,5 +1,5 @@
 #include "teleopControl.h"
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include <Motion/teleop2tasks.h>
 
 //===========================================================================
@@ -24,18 +24,21 @@ void TeleopControlActivity::open(){
 
 void TeleopControlActivity::step(){
   if(!t2t){
-    if(!taskController->feedbackController) return;
-    t2t = new Teleop2Tasks(*taskController->feedbackController);
+    if(!taskController->taskController) return;
+    t2t = new Teleop2Tasks(*taskController->taskController);
     t2t->deactivateTasks();
     ctrlTasks.set() = t2t->getTasks();
-    taskController->verbose = true;
+    taskController->verbose = false;
   }
 //  arr Teleop = TeleopState.get();
 //  t2t->updateTasks(calibrated_pose_rh.get(), calibrated_pose_lh.get(), calibrated_gripper_lh.get(), calibrated_gripper_rh.get(), drive.get());
 //  if(step_count>10 && Teleop_shutdown) moduleShutdown().incrementValue();
 
   if(!initmapper.get()){
-    t2t->updateTasks(calibrated_pose_rh.get(), calibrated_pose_lh.get(), calibrated_gripper_lh.get(), calibrated_gripper_rh.get(), drive.get());
+    arr gpstate = gamepadState.get();
+    CHECK(gpstate.N, "ERROR: No GamePad found");
+    t2t->updateTasks(calibrated_pose_rh.get(), calibrated_pose_lh.get(), calibrated_gripper_lh.get(), calibrated_gripper_rh.get(), drive.get(),gpstate(0));
+    //t2t->updateTasks(calibrated_pose_rh.get(), calibrated_pose_lh.get(), calibrated_gripper_lh.get(), calibrated_gripper_rh.get(), drive.get(),0);
   }else{
     t2t->deactivateTasks();
   }

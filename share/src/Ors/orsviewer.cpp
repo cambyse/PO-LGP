@@ -50,6 +50,34 @@ void OrsPathViewer::step(){
 
 //===========================================================================
 
+void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
+void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
+
+void OrsPoseViewer::open() {
+  gl.add(glStandardScene, 0);
+  gl.camera.setDefault();
+
+  gl.add(changeColor2);
+  for(uint i=0;i<copies.N;i++){
+    gl.add(*copies(i));
+    gl.add(changeColor);
+  }
+  gl.add(changeColor2);
+}
+
+void OrsPoseViewer::step(){
+  gl.lock.writeLock();
+  for(uint i=0;i<copies.N;i++){
+    arr q=poses(i)->get();
+    if(q.N==copies(i)->getJointStateDimension())
+      copies(i)->setJointState(q);
+  }
+  gl.lock.unlock();
+  gl.update("PoseViewer", false, false, true);
+}
+
+//===========================================================================
+
 void ComputeCameraView::open(){
   gl.add(glStandardLight);
   gl.addDrawer(&modelWorld.set()());

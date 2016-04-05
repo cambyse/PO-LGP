@@ -1,15 +1,15 @@
 #include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <std_msgs/String.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/rosmacro.h>
 
 
 struct MySystem{
