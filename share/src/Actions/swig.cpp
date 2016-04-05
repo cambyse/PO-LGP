@@ -15,6 +15,15 @@
 #include <Perception/kinect2pointCloud.h>
 #include <Ors/orsviewer.h>
 
+#ifdef MLR_ROS_INDIGO
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  namespace ar = ar_track_alvar_msgs;
+#endif
+#if MLR_ROS_GROOVY
+  #include <ar_track_alvar/AlvarMarkers.h>
+  namespace ar = ar_track_alvar;
+#endif
+
 // ============================================================================
 struct SwigSystem* _g_swig;
 
@@ -26,7 +35,7 @@ struct SwigSystem {
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
-  ACCESSname(AlvarMarkers, ar_pose_markers)
+  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
   ACCESSname(arr, pr2_odom)
   ACCESSname(CtrlMsg, ctrl_ref)
@@ -58,7 +67,7 @@ struct SwigSystem {
   ServiceRAP rapservice;
 
 
-//  PerceptionObjects2Ors percObjs;
+//  PerceptionObjects2Ors percObjsnan;
 //  ImageViewer camview;
 //  Kinect2PointCloud k2pcl;
 //  PointCloudViewer pclv;
@@ -80,7 +89,7 @@ struct SwigSystem {
 
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-      new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+      new Subscriber<ar::AlvarMarkers>("/ar_pose_marker", (Access_typed<ar::AlvarMarkers>&)ar_pose_markers);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
       new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
 
