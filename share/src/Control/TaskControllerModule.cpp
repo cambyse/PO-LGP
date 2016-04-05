@@ -1,5 +1,4 @@
 #include "TaskControllerModule.h"
-//#include <RosCom/rosalvar.h> //todo: don't deal with the markers here! ObjectFilter..
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
