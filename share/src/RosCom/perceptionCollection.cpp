@@ -1,5 +1,5 @@
-#include <pr2/roscom.h>
-#include <pr2/perceptionCollection.h>
+#include <RosCom/roscom.h>
+#include <RosCom/perceptionCollection.h>
 
 Collector::Collector():
     Module("Collector", 0){}
@@ -96,9 +96,3 @@ FilterObject conv_Alvar2FilterObject(const ar::AlvarMarker& marker)
   return new_object;
 }
 
-/*
- * Header header
-uint32 id
-uint32 confidence
-geometry_msgs/PoseStamped pose
-*/

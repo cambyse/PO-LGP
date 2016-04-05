@@ -1,10 +1,10 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <pr2/roscom.h>
-#include <pr2/subscribeTabletop.h>
-#include <pr2/subscribeAlvarMarkers.h>
+#include <RosCom/roscom.h>
+#include <RosCom/subscribeTabletop.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 
-#include <pr2/perceptionCollection.h>
+#include <RosCom/perceptionCollection.h>
 
 #include <Algo/perceptionFilter.h>
 

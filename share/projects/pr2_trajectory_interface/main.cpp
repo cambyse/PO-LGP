@@ -8,7 +8,7 @@
 
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 

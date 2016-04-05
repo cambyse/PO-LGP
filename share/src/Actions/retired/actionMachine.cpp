@@ -4,7 +4,7 @@
 //#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <FOL/fol.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;

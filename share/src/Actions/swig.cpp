@@ -6,7 +6,7 @@
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/roscom.h>
 #include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>

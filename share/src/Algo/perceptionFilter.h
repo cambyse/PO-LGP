@@ -2,7 +2,7 @@
 
 #include <Core/module.h>
 #include <Core/array.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 #include <Algo/hungarian.h>
 #include <Algo/filterObject.h>

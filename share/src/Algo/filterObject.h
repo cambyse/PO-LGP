@@ -42,7 +42,6 @@ struct Alvar {
   std::string frame_id;
 };
 
-
 struct Plane {
   Plane() {}
   Plane(arr mean,

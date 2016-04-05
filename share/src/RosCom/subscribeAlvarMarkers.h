@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <Ors/ors.h>
 
 #ifdef MLR_ROS_INDIGO
@@ -40,21 +40,21 @@ void setBody(ors::Body& body, const ar::AlvarMarker& marker);
  *
  * Note: this never deletes old markers.
  */
-void syncMarkers(ors::KinematicWorld& world, ar::AlvarMarkers& markers);
+void syncMarkers(ors::KinematicWorld& world, const ar::AlvarMarkers& markers);
 
-
-struct SubscribeAlvar{
-  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
-  Subscriber<ar::AlvarMarkers> sub;
-
-  SubscribeAlvar()
-    : sub("/ar_pose_marker", ar_pose_markers) {
+struct AlvarSyncer : Module {
+  Access_typed<ors::KinematicWorld> modelWorld;
+  Access_typed<ar::AlvarMarkers> ar_pose_markers;
+  AlvarSyncer() :
+    Module("AlvarSyncer"),
+    modelWorld(this, "modelWorld", true),
+    ar_pose_markers(this, "ar_pose_markers") {};
+  void open() {};
+  void step() {
+    syncMarkers(modelWorld.set(), ar_pose_markers.get());
   }
-  ~SubscribeAlvar(){
-  }
-
+  void close() {};
 };
-
 
 
 
