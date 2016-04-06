@@ -35,7 +35,7 @@ Gamepad2Tasks::Gamepad2Tasks(TaskController& _MP, const arr& _q0):MP(_MP), q0(_q
     gripperL = new CtrlTask("gripperL", new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
     gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
   }else{
-    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .5, 1., .5, .5);
+    homing = new CtrlTask("qHoming", new TaskMap_qItself(), .5, 1., .05, .5);
     homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), 1., .1, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);
@@ -48,8 +48,8 @@ Gamepad2Tasks::Gamepad2Tasks(TaskController& _MP, const arr& _q0):MP(_MP), q0(_q
     gripperL = new CtrlTask("gripperL", new TaskMap_qItself(MP.world.getJointByName("l_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
     gripperR = new CtrlTask("gripperR", new TaskMap_qItself(MP.world.getJointByName("r_gripper_joint")->qIndex, MP.world.getJointStateDimension()), 2., .8, 1., 1.);
 
-    endeffR->setGains(30.,1.);
-    endeffL->setGains(30.,1.); //endeffL->maxAcc=.5;
+    endeffR->setGains(10.,1.);
+    endeffL->setGains(10.,1.); //endeffL->maxAcc=.5;
     headAxes->setGains(10.,5.);
   }
   for(CtrlTask* task:{ homing, endeffR, endeffL, base, torso, head, headAxes, limits, coll, gripperL, gripperR })

@@ -39,8 +39,8 @@ void TaskControllerModule::open(){
   modelWorld.get()->getJointState(q_model, qdot_model);
 
   taskController->qNullCostRef.y_ref = q0;
-  taskController->qNullCostRef.setGains(0., 1.);
-  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", 1.)*modelWorld.get()->getHmetric();
+  taskController->qNullCostRef.setGains(0., .2);
+  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", .1)*modelWorld.get()->getHmetric();
 
 #if 1
   modelWorld.writeAccess();
@@ -207,7 +207,7 @@ void TaskControllerModule::step(){
     if(!aErrorIntegral.N) aErrorIntegral = JCJ * a_err;
     else aErrorIntegral += a_err;
     // add integral error to control bias
-//    u_bias -= .01 * M * aErrorIntegral;
+    u_bias -= .01 * M * aErrorIntegral;
 
 #endif
 
@@ -228,7 +228,7 @@ void TaskControllerModule::step(){
     ctrlTasks.deAccess();
 
     arr q_ref = pseudoInverse(Kp)*(u_bias-Kp*q_real);
-    clip(q_ref, -.2, .2);
+    clip(q_ref, -.01, .01);
     q_ref += q_real;
     ctrl_q_ref.set() = q_ref;
 
