@@ -1,0 +1,155 @@
+\documentclass[10pt,fleqn,twoside]{article}
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage[round]{natbib}
+\bibliographystyle{abbrvnat}
+%\usepackage[german]{babel}
+%\usepackage[utf8]{inputenc}
+
+\usepackage{fancyvrb}
+\DefineShortVerb{\@}
+\fvset{numbers=left,xleftmargin=5ex}
+
+\graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
+\usepackage{geometry}
+\geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+\renewcommand{\baselinestretch}{1.1}
+
+\newcommand{\rf}{{\text{ref}}}
+\newcommand{\eig}{{\text{eig}}}
+
+\newenvironment{items}{
+\par\small
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
+%\input{../../../doc/macros}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Practical Course Robotics}
+\author{Marc Toussaint}
+
+\begin{document}
+\maketitle
+
+{\small\tableofcontents }
+
+\section{Introduction}
+
+\section{Setting up your work environment}
+
+\paragraph{Ubuntu}
+\begin{itemize}
+\item fresh Ubuntu 14.3.3. (?)
+\item ros-indigo-desktop
+\item qtcreator (learn 'new project' and 'include paths')
+\end{itemize}
+
+\paragraph{git \& code}
+\begin{itemize}
+\item gitlab account; access to @mlr_students@
+\item branch baxter
+\item compile
+\item folder share/teaching/RoboticsPractical
+\item create own folder @groupX@
+\end{itemize}
+
+\paragraph{Baxter}
+
+\paragraph{ssh login}
+\begin{itemize}
+\item start script on baxter
+\end{itemize}
+
+\section{Plan}
+
+\subsection{Milestone 1: Pick-and-place}
+
+Target: The robot perceives objects on the table (= segment,
+localize). The robot grasps them and puts them into a bin.
+
+\subsubsection{Subproblem: Basic Motion}
+
+Learn how to use our code to generate targets in various task
+spaces. Learn how create @CtrlTask@s directly in C++. Optionally, have
+a look at the much mroe abstract RAP interface.
+
+\subsubsection{Lecture: Basic Motion revisited}
+\begin{itemize}
+\item Task spaces, general problem
+\item linear acceleration laws in task spaces
+\item maths to project them down to configuration space
+\item Discuss (practial is later): impedance, stiffness
+\end{itemize}
+
+\subsubsection{Subproblem: Segmenting \& tracking objects}
+
+Understand how the @tabletop@ ROS packages can extract planes (the
+table) and point cloud clusters on top of the plane. Learn how the
+objects are imported in our system.
+
+\subsubsection{Lecture: Basic perception}
+\begin{itemize}
+\item The pain of computer vision...
+\item Keep it simple: point clouds, planes, clusters, markers
+\item Practical packages
+\end{itemize}
+
+\subsubsection{Subproblem: Pick \& Place}
+
+Realize the whole pick-and-place scenario. Core issues are
+\begin{itemize}
+\item Designing the motion tasks
+\item Sequening, ideally failure detection \& reaction
+\end{itemize}
+
+
+
+
+\subsection{Milestone 2: System Identification, Machine Learning \&
+  Compliant Optimal Control}
+
+Target: The robot is controlled on the lowest level, sending direct
+'torques' (or alike). Using system identification (ML) we learnt a
+perfect model of both, the dynamics and the observations. Using
+Bayesian filtering we can perfectly track the state---giving nice and
+smooth velocity estimates. The robot 'intelligently' explores its
+state-space to collect data for the previous tasks.
+
+\subsubsection{Lecture: Dynamics Basics; and motivation}
+
+\begin{itemize}
+\item Dynamics \& optimal control revisited
+\item Compliance, impedance control, manipulation \& teleoperation
+\item (Do we have F/T sensors?)
+\item caveats of real robots: 'non-Markovian', sticktion, time lag,
+  gear clearance
+\end{itemize}
+
+\subsubsection{Subproblem: Collect data, formulate model, ML}
+
+Think about motion patterns to collect data. Formulate models for the
+robot dynamics as well as observation model. Apply ML.
+
+\subsubsection{Subproblem: Use the model for (extended/unscented)
+  Kalman filtering of the state}
+
+
+\subsubsection{Subproblem: Use the model to translate desired
+  $q$-accelerations directly to torques}
+
+
+
+\subsection{Define your own project!}
+
+\end{document}
