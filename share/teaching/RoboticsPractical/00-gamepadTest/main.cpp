@@ -14,7 +14,7 @@ int main(int argc, char** argv){
 
   Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm;
+  TaskControllerModule tcm("baxter");
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
 

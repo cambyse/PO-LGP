@@ -5,6 +5,7 @@
 #include <Actions/RelationalMachineModule.h>
 #include <Actions/ActivitySpinnerModule.h>
 #include <RosCom/serviceRAP.h>
+#include <RosCom/baxter.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
@@ -13,6 +14,8 @@ int main(int argc, char** argv){
   rosCheckInit("minimalPositionControl");
 
   {
+    Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+
     //-- setup a more complex 'system', mainly composed of the TaskController and the RelationalMachine
     TaskControllerModule tcm("baxter");
     RelationalMachineModule rm;
@@ -20,9 +23,12 @@ int main(int argc, char** argv){
 
     GamepadInterface gamepad;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
-    SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub1("/marc_rt_controller/jointState", "ctrl_obs");
-    PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pub1("/marc_rt_controller/jointReference", "ctrl_ref");
-    SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       sub2("/robot_pose_ekf/odom_combined", "pr2_odom");
+
+    SendPositionCommandsToBaxter spctb;
+    if(mlr::getParameter<bool>("useRos")){
+      new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
+    }
+
     ServiceRAP rapservice;
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
