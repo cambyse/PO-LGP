@@ -19,12 +19,13 @@ int main(int argc, char** argv){
   GamepadControlActivity gpc;
 
   OrsViewer view;
-  RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
   if(mlr::getParameter<bool>("useRos")){
-    SendPositionCommandsToBaxter spctb;
+    new SendPositionCommandsToBaxter;
     new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
   }
+
+  RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
   threadOpenModules(true);
 
