@@ -70,7 +70,7 @@ NodeL RelationalMachine::fwdChainRules(){
 }
 
 Node* RelationalMachine::declareNewSymbol(mlr::String symbolStr){
-  Node *it = KB.readNode(symbolStr, false, false);
+  Node *it = KB.readNode(symbolStr);
   return it;
 }
 

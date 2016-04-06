@@ -2,10 +2,10 @@
 #include <std_msgs/String.h>
 #include <FOL/relationalMachine.h>
 #include <Core/thread.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Actions/RelationalMachineModule.h>
 #include <mlr_srv/StringString.h>
-#include <pr2/serviceRAP.h>
+#include <RosCom/serviceRAP.h>
 
 struct RelationalMachineNode{
   RWLock RM_lock;

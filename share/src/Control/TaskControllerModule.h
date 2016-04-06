@@ -4,7 +4,7 @@
 #include <Control/ctrlMsg.h>
 #include <Control/taskController.h>
 #include <Control/RTControllerSimulation.h>
-//#include <pr2/roscom.h>
+//#include <RosCom/roscom.h>
 
 #ifdef MLR_ROS
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -46,21 +46,22 @@ struct TaskControllerModule : Module {
   ACCESS(bool, fixBase)
   ACCESS(arr, pr2_odom)
 
-  //non-protected members
+  ACCESS(sensor_msgs::JointState, jointState)
+
 //private:
   ors::KinematicWorld realWorld;
   TaskController *taskController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
-  const arr q0; //< homing pose
+  arr q0; //< homing pose
+  mlr::String robot;
   bool oldfashioned;
   bool useRos;
-  bool isInSyncWithRobot;
+  bool requiresInitialSync;
   bool syncModelStateWithReal; //< whether the step() should reinit the state from the ros message
   bool verbose;
   bool useDynSim;
   RTControllerSimulation* dynSim;
-  CtrlTask *noTaskTask;
 
   arr q_history, qdot_last, a_last, q_lowPass, qdot_lowPass, qddot_lowPass, aErrorIntegral, u_lowPass;
   arr model_error_g;
@@ -68,7 +69,7 @@ struct TaskControllerModule : Module {
   SetOfDataFiles dataFiles;
 
 public:
-  TaskControllerModule(const char* modelFile=NULL);
+  TaskControllerModule(const char* robot="pr2");
   ~TaskControllerModule();
 
   void open();

@@ -55,12 +55,14 @@ Merge l_gripper_r_finger_link_0 { contact }
 Merge l_gripper_l_finger_tip_link_0 { contact }
 Merge l_gripper_r_finger_tip_link_0 { contact }
 
+Merge worldTranslationRotation { gains=[1 1] ctrl_limits=[1 1 1] }
+
 ## TORS0
 Merge torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] }
 
 ## HEAD
-Merge head_pan_joint {    gains=[20 2] }
-Merge head_tilt_joint {   q=.4 gains=[60 4] }
+Merge head_pan_joint {    ctrl_H=.1 gains=[20 2] }
+Merge head_tilt_joint {   q=.4 ctrl_H=.1 gains=[60 4] }
 
 ## RIGHT
 Merge r_shoulder_pan_joint { q=-1   gains=[200 20]  }

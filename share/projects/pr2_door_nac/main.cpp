@@ -6,7 +6,7 @@
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 //#include <System/engine.h>
 #include <Motion/pr2_heuristics.h>
 #include "src/plotUtil.h"

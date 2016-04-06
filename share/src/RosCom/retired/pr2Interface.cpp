@@ -1,8 +1,8 @@
 #include "pr2Interface.h"
 
 #include <stdlib.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <Core/module.h>
 #include <Gui/opengl.h>
 #include <Core/util.h>

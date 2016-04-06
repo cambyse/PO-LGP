@@ -3,7 +3,7 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <Hardware/G4/G4.h>
 #include <Hardware/G4/module_G4Display.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 
 int main(int argc, char **argv)

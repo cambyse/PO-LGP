@@ -3,7 +3,7 @@
 #include <Core/module.h>
 #include <FOL/relationalMachine.h>
 #include <Actions/activity.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 struct RelationalMachineModule : Module{
   ACCESSlisten(mlr::String, effects)
@@ -20,5 +20,13 @@ struct RelationalMachineModule : Module{
   void open();
   void step();
   void close();
+
+  //'scripting' interfaces
+  ConditionVariable stopWaiting;
+  void newSymbol(const char* symbol);
+  void setFact(const char* fact);
+  void waitForCondition(const char* query);
+  void runScript(const char* filename);
 };
+
 

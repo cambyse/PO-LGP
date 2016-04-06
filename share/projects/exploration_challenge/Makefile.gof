@@ -4,7 +4,7 @@ OBJS = main.o  MLRFactory.o  OpSpaceController.o  pr2ControlSet.o  pr2System.o  
 
 ROS = 1
 EIGEN = 1
-DEPEND = Core pr2 Actions Geo
+DEPEND = Core RosCom Actions Geo
 
 LIBS += -lhybrid_automaton
 CPATH := $(CPATH):$(HOME)/BLA/rswin/hybrid_automaton/include

@@ -62,16 +62,14 @@ struct OrsPoseViewer : Module{
   OpenGL gl;
   WorldL copies;
 
-  void setWorld(const ors::KinematicWorld& world){
-    for(ors::KinematicWorld *w: copies) w->copy(world, true);
-  }
-
-  OrsPoseViewer(const StringA& poseVarNames, double beatIntervalSec=.2)
+  OrsPoseViewer(const StringA& poseVarNames, ors::KinematicWorld& world, double beatIntervalSec=.2)
     : Module("OrsPoseViewer", beatIntervalSec){
     for(const String& varname: poseVarNames){
       poses.append( new Access_typed<arr>(this, varname, true) );
       copies.append( new ors::KinematicWorld() );
     }
+    computeMeshNormals(world.shapes);
+    for(ors::KinematicWorld *w: copies) w->copy(world, true);
   }
   ~OrsPoseViewer(){}
   void open();

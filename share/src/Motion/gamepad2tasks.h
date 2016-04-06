@@ -21,6 +21,7 @@
 struct Gamepad2Tasks{
   TaskController& MP;
   const arr q0;
+  mlr::String robot;
   CtrlTask *homing, *endeffR, *endeffL, *base, *torso, *head, *headAxes, *limits, *coll,  *gripperL, *gripperR;
 
   Gamepad2Tasks(TaskController& _MP, const arr& q0);

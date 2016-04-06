@@ -1,8 +1,8 @@
 #pragma once
 #include <Core/thread.h>
 #include <Control/taskController.h>
-// #include <pr2/actionMachine.h>
-// #include <pr2/actions.h>
+// #include <RosCom/actionMachine.h>
+// #include <RosCom/actions.h>
 #include <Mocap/mocapdata.h>
 
 // ============================================================================

@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 
 struct DummyActionExecutionNode {

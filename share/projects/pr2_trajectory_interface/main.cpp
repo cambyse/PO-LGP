@@ -6,10 +6,10 @@
 #include <Motion/phase_optimization.h>
 #include <Optim/opt-constrained.h>
 
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
-#include <pr2/rosalvar.h>
-#include <pr2/trajectoryInterface.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
+#include <RosCom/rosalvar.h>
+#include <RosCom/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 void changeColor2(void*){  orsDrawAlpha = 1.; }

@@ -50,8 +50,8 @@ void OrsPathViewer::step(){
 
 //===========================================================================
 
-void changeColor(void*){  orsDrawColors=false; glColor(.8, 1., .8, .5); }
-void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=.8; }
+void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
+void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void OrsPoseViewer::open() {
   gl.add(glStandardScene, 0);

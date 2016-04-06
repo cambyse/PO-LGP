@@ -2,13 +2,13 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <pr2/rosalvar.h>
-#include <pr2/roscom.h>
-#include <pr2/serviceRAP.h>
+#include <RosCom/rosalvar.h>
+#include <RosCom/roscom.h>
+#include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>
@@ -67,11 +67,10 @@ struct SwigSystem {
   Log _log;
 
   SwigSystem()
-    : controlview({"ctrl_q_real", "ctrl_q_ref"}), /*camview("modelDepthView"),*/
+    : controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld), /*camview("modelDepthView"),*/
       spinner("SwigSystem"), _log("SwigSystem"){
 
     computeMeshNormals(tcm.realWorld.shapes);
-    controlview.setWorld(tcm.realWorld);
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
       rosCheckInit("SwigSystem");
@@ -326,8 +325,9 @@ bool  ActionSwigInterface::isTrue(const stringV& literals){
 }
 
 void ActionSwigInterface::setFact(const char* fact){
-  S->effects.set()() <<fact <<", ";
-  S->state.waitForNextRevision(); //TODO: is this robust?
+  S->rmm.setFact(fact);
+//  S->effects.set()() <<fact <<", ";
+//  S->state.waitForNextRevision(); //TODO: is this robust?
 }
 
 void ActionSwigInterface::stopFact(const char* fact){
@@ -436,13 +436,8 @@ void ActionSwigInterface::waitForQuitSymbol(){
   waitForCondition(stringV({"quit"}));
 }
 
-int ActionSwigInterface::createNewSymbol(std::string symbolName){
-#if 1
-  Node *symbol = S->RM.set()->declareNewSymbol(symbolName.c_str());
-#else
-  Item *symbol = S->RM.set()->append<bool>(symbolName.c_str(), NULL, false);
-#endif
-  return symbol->index;
+void ActionSwigInterface::createNewSymbol(std::string symbolName){
+  S->rmm.newSymbol(symbolName.c_str());
 }
 
 stringV ActionSwigInterface::getSymbols() {

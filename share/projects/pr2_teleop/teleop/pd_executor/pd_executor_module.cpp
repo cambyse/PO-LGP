@@ -4,7 +4,7 @@
 
 
 //#ifdef WITH_ROS
-  //  #include <pr2/roscom.h>
+  //  #include <RosCom/roscom.h>
 //#endif
 
 // ############################################################################

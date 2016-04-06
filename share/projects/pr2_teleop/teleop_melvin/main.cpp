@@ -1,8 +1,8 @@
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <ros/ros.h>
 #include <Actions/teleopControl.h>
-#include <Actions/TaskControllerModule.h>
-#include <pr2/roscom.h>
+#include <Control/TaskControllerModule.h>
+#include <RosCom/roscom.h>
 #include <Core/module.h>
 #include <Perception/perception.h>
 #include <Hardware/gamepad/gamepad.h>

@@ -2,13 +2,13 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Motion/motion.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Core/util.h>
 #include <Gui/plot.h>
 
 #include <Hardware/gamepad/gamepad.h>
 
-#include <pr2/pr2Interface.h>
+#include <RosCom/pr2Interface.h>
 #include <Control/taskSpaceController.h>
 
 void changeAlpha(void*){  orsDrawAlpha = 1.; }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <Ors/ors.h>
 
 #ifdef MLR_ROS_INDIGO
