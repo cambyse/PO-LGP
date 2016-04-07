@@ -15,7 +15,7 @@
 
 \usepackage{fancyvrb}
 \DefineShortVerb{\@}
-\fvset{numbers=left,xleftmargin=5ex}
+\fvset{numbers=none,xleftmargin=5ex}
 
 \graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
 \usepackage{geometry}
@@ -58,9 +58,12 @@
 \begin{itemize}
 \item install fresh Ubuntu 14.04.4 LTS
 \item google 'ros install indigo'; copy\&paste steps; install package
-  ros-indigo-desktop
-\item install packages: synaptic, git, qtcreator,
-  ros-indigo-alvar-msgs, ros-baxter-...
+  @ros-indigo-desktop@
+\item install packages:
+
+  @sudo apt-get install synaptic git qtcreator
+
+  @sudo apt-get install ros-indigo-ar-track-alvar-msgs ros-indigo-baxter-core-msgs@
 \item create ssh key:
 \begin{Verbatim}
 cd
