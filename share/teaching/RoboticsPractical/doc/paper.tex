@@ -48,33 +48,78 @@
 
 \section{Setting up your work environment}
 
-\paragraph{Ubuntu}
+\paragraph{Prelimiminaries}
 \begin{itemize}
-\item fresh Ubuntu 14.3.3.
-\item install ROS indigo desktop (google). Package name:
+\item You need a gitlab account; access to @mlr_students@
+\item Connect to the local mlr-robolab WIFI
+\end{itemize}
+
+\paragraph{Install from a fresh Ubuntu}
+\begin{itemize}
+\item install fresh Ubuntu 14.04.4 LTS
+\item google 'ros install indigo'; copy\&paste steps; install package
   ros-indigo-desktop
-\item install qtcreator (learn 'new project' and 'include paths')
-\item Connect to the mlr-robolab WLAN
+\item install packages: synaptic, git, qtcreator,
+  ros-indigo-alvar-msgs, ros-baxter-...
+\item create ssh key:
+\begin{Verbatim}
+cd
+ssh-keygen
+cat .ssh/id_rsa.pub
+\end{Verbatim}
+\item enter ssh key in gitlab: gitlab start page; profile settings;
+  ssh keys; copy\&paste the key (without linebreaks!!!); 'Add key'
+\item in gitlab go to the project page; see the ssh URL ending with ...git
+\item checkout our code
+\begin{Verbatim}
+cd
+mkdir git
+cd git
+git clone <SSH-GIT-URL>
+\end{Verbatim}
+\item Install the code dependency ubuntu packages: 
+\begin{Verbatim}
+cd ~/git/mlr/install
+./INSTALL_ALL_UBUNTU_PACKAGES.sh
+\end{Verbatim}
+Trouble shooting: read the README.md in ~/git/mlr
+\item configure code and test make:
+\begin{Verbatim}
+cd ~/git/mlr/share/
+git checkout baxter
+cp gofMake/config.mk.default gofMake/config.mk
+bin/createMakefileLinks.sh
+cd src/Ors
+make
+\end{Verbatim}
+\item goto project page and test make
+\begin{Verbatim}
+cd ~/git/mlr/share/teaching/RoboticsPractical/01-...
+make
+\end{Verbatim}
+Test starting to run @./x.exe@
 \end{itemize}
 
-\paragraph{git \& code}
+\paragraph{Make the baxter move}
 \begin{itemize}
-\item gitlab account; access to @mlr_students@
-\item checkout branch baxter
-\item read the README.md in the repository
-\item try to compile share/src/Ors
-\item folder share/teaching/RoboticsPractical
-\item all documentation in ./doc
-\item compile the examples
-\item create own folder @groupX@
+\item setup the WIFI connection to the baxters ros server
+
+@source ~/git/mlr/share/bin/baxterwifisetup@
+
+\item In a project folder, try to run @./x.exe -useRos 1@
 \end{itemize}
 
-\paragraph{Baxter}
 
-\paragraph{ssh login}
+\paragraph{Get comfortable}
 \begin{itemize}
-\item start script on baxter
+\item put all extra documentation useful for others in text files in
+  ./doc
+\item use qtcreater; learn create 'new project' (using 'import
+  existing project' for a path with makefile); learn to set 'include paths'
+\item create own folder @groupX@, maybe own branch
 \end{itemize}
+
+
 
 \section{Plan}
 
