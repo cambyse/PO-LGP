@@ -25,6 +25,14 @@
 \newcommand{\rf}{{\text{ref}}}
 \newcommand{\eig}{{\text{eig}}}
 
+\newenvironment{items}[1][9]{
+\par\setlength{\unitlength}{1pt}\fontsize{#1}{#1}\linespread{1.2}\selectfont
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
 %% \newenvironment{items}{
 %% \par\small
 %% \begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
@@ -61,7 +69,7 @@
   @ros-indigo-desktop@
 \item install packages:
 
-  @sudo apt-get install synaptic git qtcreator
+  @sudo apt-get install synaptic git qtcreator@
 
   @sudo apt-get install ros-indigo-ar-track-alvar-msgs ros-indigo-baxter-core-msgs@
 \item create ssh key:
@@ -117,8 +125,23 @@ Test starting to run @./x.exe@
 \begin{itemize}
 \item put all extra documentation useful for others in text files in
   ./doc
-\item use qtcreater; learn create 'new project' (using 'import
-  existing project' for a path with makefile); learn to set 'include paths'
+\item Use qtcreater. You need to be able to:
+\begin{items}
+\item Create a new 'project' that uses the makefile: 'New Project' ->
+  'Import Existing Project' -> select the project path (with the
+  makefile)
+\item Enable and use auto completion and code browsing: add include
+  paths to PROJECTNAME.includes, especially @../../../src@. Test it
+  with 'right mouse' on symbols
+\item Know how to use the debugger
+\item Create a symbolic link
+  @.gdbinit -> git/mlr/tools/qt_mlr_types.py@
+  That will enable pretty printing of mlr data structures in the
+  debugger
+\item Optionally, import our coding style: Options -> C++ ->
+  Import... 
+  @git/mlr/tools/qt_coding_style.xml@
+\end{items}
 \item create own folder @groupX@, maybe own branch
 \end{itemize}
 
@@ -131,19 +154,65 @@ Test starting to run @./x.exe@
 Target: The robot perceives objects on the table (= segment,
 localize). The robot grasps them and puts them into a bin.
 
+\subsubsection{Lecture: Basic Motion revisited}
+
+\begin{itemize}
+\item Task spaces, general problem:
+\begin{items}
+\item A task space is defined by a task map $\phi: q \mapsto y$
+\item In each task space we have a desired behavior (\emph{linear
+  acceleration laws}, 2nd order
+  differential equation) $\ddot y^* = \dots$. This is usually a PD behavior,
+  optionally with max velocity and acceleration.
+\item The desired task behaviors are 'projected down' to $q$-space
+  using the operational space control objective. That defines a
+  desired $\ddot q^*$.
+\end{items}
+\item There is three ways to send this to the robot
+\begin{items}
+\item directly, using the dynamics equation $u = M \ddot q + F$. But
+  it is computationally not feasible/desirable to have ALL of the
+  above computations in a 1kHz real-time loop
+\item A 1st-order Taylor approximation of $\ddot q^* \dot= -K_p q -
+  K_d \dot q + q_0$. (We try this).
+
+Both of the above are very hard if the dynamics model is inprecise!
+Later we will test these, with a well learned model from data.
+
+\item Forward simulate $\ddot q^*$ (just integrating the differential
+  equation). That defines a $q^\text{ref}(t)$. Send this to the
+  existing position controller of the robot.
+\end{items}
+\item Discuss (practial is later): impedance, stiffness
+
+\item How is this reflected in the code?
+\begin{items}
+\item $\phi$: @TaskMap@
+\item $\ddot y^* = \dots$: @CtrlTask@
+\item Computing $\ddot q^*$: @TaskController@
+\item Sending it to the robot and threading the computation:
+  @TaskControllerModule::step@
+\end{items}
+\end{itemize}
+
+
 \subsubsection{Subproblem: Basic Motion}
 
 Learn how to use our code to generate targets in various task
 spaces. Learn how create @CtrlTask@s directly in C++. Optionally, have
-a look at the much mroe abstract RAP interface.
+a look at the much more abstract RAP interface.
 
-\subsubsection{Lecture: Basic Motion revisited}
+Concretely:
 \begin{itemize}
-\item Task spaces, general problem
-\item linear acceleration laws in task spaces
-\item maths to project them down to configuration space
-\item Discuss (practial is later): impedance, stiffness
+\item What are task spaces? Read the @share/doc/taskSpaces.pdf@!
+\item Make the robot do funny things, like point the hands at each
+  other, etc.
+\item Think of positioning and orienting the gripper to grasp a
+  box. Define the grasp center, and grasp orientation.
 \end{itemize}
+
+
+
 
 \subsubsection{Subproblem: Segmenting \& tracking objects}
 
