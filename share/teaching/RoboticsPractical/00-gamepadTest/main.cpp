@@ -21,7 +21,7 @@ int main(int argc, char** argv){
   OrsViewer view;
 
   if(mlr::getParameter<bool>("useRos")){
-    new SendPositionCommandsToBaxter;
+    new SendPositionCommandsToBaxter();
     new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
   }
 

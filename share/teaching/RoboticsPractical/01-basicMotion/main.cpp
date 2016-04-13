@@ -18,8 +18,9 @@ int main(int argc, char** argv){
     GamepadInterface gamepad;
 //    OrsViewer view;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
-    SendPositionCommandsToBaxter spctb;
+
     if(mlr::getParameter<bool>("useRos")){
+      new SendPositionCommandsToBaxter();
       new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
     }
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
