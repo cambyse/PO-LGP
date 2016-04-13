@@ -33,21 +33,18 @@ Merge left_w2 { q=-0.5 }
 ## extra shapes to mimick pr2
 
 body base_footprint { mass=100 }
-shape base_footprint(base_footprint) { type=5 } #marker
+shape base_footprint(base_footprint) { type=5 size=[.1 0 0 0] } #marker
 joint (base_footprint base){ type=10 A=<T t(0 0 1)> }
 
 shape torso_lift_link_0 (base) { type=5 size=[.3 .3 .3 0] }
 
 ## extra shapes
 #shape endeffBase(torso_lift_link){ rel=<T d(90 0 1 0) t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-shape endeffHead(head){ rel=<T  d(-90 0 0 1) d(-15 1 0 0)> type=5 color=[1 0 0] size=[1.1 0 0 0]}
+shape endeffHead(head){ rel=<T  d(-90 0 0 1) d(-15 1 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 #shape endeffWorkspace(torso_lift_link){ rel=<T d(90 0 1 0) t(.7 0 -.1) d(-90 0 0 1) > type=5 color=[1 0 0] size=[.1 0 0 0] }
 
-#shape endeffKinect(head_tilt_link){ rel=<T t(0 -.05 .12) d(180 0 0 1) d(-90 1 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-#shape endeffLaser(laser_tilt_mount_link){ rel=<T t(0 -.03 .03) d(180 0 0 1) d(-90 1 0 0)> type=5 color=[1 1 1] size=[.1 0 0 0]}
+shape endeffL(left_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.4 0 0 0]}
+shape endeffR(right_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.4 0 0 0]}
 
-shape endeffL(left_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-shape endeffR(right_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
-
-#shape endeffForceL(l_wrist_roll_link){ rel=<T t(.20 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=5 color=[0 1 1] size=[.1 0 0 0]}
-#shape endeffForceR(r_wrist_roll_link){ rel=<T t(.20 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=5 color=[0 1 1] size=[.1 0 0 0]}
+shape ellbowL(left_lower_shoulder){ rel=<T d(180 1 0 0) t(0 0 .4)> type=5 color=[1 0 0] size=[.4 0 0 0]}
+shape ellbowR(right_lower_shoulder){ rel=<T d(180 1 0 0) t(0 0 .4)> type=5 color=[1 0 0] size=[.4 0 0 0]}

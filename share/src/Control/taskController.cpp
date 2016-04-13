@@ -117,8 +117,10 @@ arr CtrlTask::getC(){
 }
 
 arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
-  makeGainsMatrices(Kp, Kd, y.N);
-  arr a = Kp*(get_y_ref(y)-y) + Kd*(get_ydot_ref(ydot)-ydot);
+  arr Kp_y = Kp;
+  arr Kd_y = Kd;
+  makeGainsMatrices(Kp_y, Kd_y, y.N);
+  arr a = Kp_y*(get_y_ref(y)-y) + Kd_y*(get_ydot_ref(ydot)-ydot);
 
   //check vel/acc limits
   double accNorm = length(a);
