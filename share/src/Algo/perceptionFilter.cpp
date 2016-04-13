@@ -97,8 +97,6 @@ geometry_msgs::Pose conv_FilterObject2AlvarVis(const FilterObject& object)
 
 void Filter::step()
 {
-  std::cout << "Filter step" << std::endl;
-
   perceptual_inputs.waitForNextRevision();
 
   FilterObjects perceptualInputs = perceptual_inputs.get();
@@ -207,7 +205,7 @@ void Filter::step()
   if (ar_markers.poses.size() > 0)
     alvar_pub.publish(ar_markers);
 
-  std::cout << "Set the database: " << filteredInputs.N << ' ' << alvar_count << ' ' << cluster_count << std::endl;
+  //std::cout << "Set the database: " << filteredInputs.N << ' ' << alvar_count << ' ' << cluster_count << std::endl;
 
 }
 
