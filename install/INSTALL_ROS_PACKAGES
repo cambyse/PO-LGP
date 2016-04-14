@@ -9,4 +9,5 @@ ros-indigo-desktop \
 ros-indigo-object-recognition-ros-visualization \
 ros-indigo-object-recognition-tabletop \
 ros-indigo-baxter-core-msgs \
+ros-indigo-baxter-tools \
 ros-indigo-pr2-mechanism-msgs

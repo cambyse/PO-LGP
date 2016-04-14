@@ -40,8 +40,10 @@ void testLinReg(const char *datafile=NULL) {
   }else{
     y_grid.reshape(31,31);
     FILE("z.model") <<~y_grid;
-    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, false, "z.pdf");
   }
+
+  mlr::wait();
 }
 
 //===========================================================================
