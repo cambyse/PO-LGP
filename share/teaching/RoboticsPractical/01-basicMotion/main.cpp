@@ -7,7 +7,7 @@
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-
+  rosCheckInit("minimalPositionControl");
 
   {
 
@@ -16,12 +16,8 @@ int main(int argc, char** argv){
     TaskControllerModule tcm("baxter");
     GamepadInterface gamepad;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
-
-    if(mlr::getParameter<bool>("useRos")){
-      rosCheckInit("minimalPositionControl");
-      new SendPositionCommandsToBaxter();
-      new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
-    }
+    SendPositionCommandsToBaxter spctb;
+    Subscriber<sensor_msgs::JointState> sub("/robot/joint_states", jointState);
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
     tcm.verbose = true;
@@ -39,12 +35,12 @@ int main(int argc, char** argv){
     position.y_ref = position.y + ARR(.3, 0., 0.);; //set a target
 
     CtrlTask align1("align",
-                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "ellbowR", Vector_z, NULL, Vector_y),
+                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "elbowR", Vector_z, NULL, Vector_y),
                     1., 1., 1., 1.);
     align1.y_ref = {-1.};
 
     CtrlTask align2("align",
-                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "ellbowL", Vector_z, "ellbowR", Vector_z),
+                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "elbowL", Vector_z, "elbowR", Vector_z),
                     1., 1., 1., 1.);
     align2.y_ref = {-1.};
 
@@ -52,7 +48,7 @@ int main(int argc, char** argv){
     tcm.ctrlTasks.set() = { /*&position,*/ /*&align1,*/ &align2 };
 
 
-    mlr::wait(15.);
+    mlr::wait(5.);
 //    moduleShutdown().waitForValueGreaterThan(0);
 
     //-- create a homing with
