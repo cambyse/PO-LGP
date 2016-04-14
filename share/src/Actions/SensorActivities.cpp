@@ -1,6 +1,5 @@
 #include "SensorActivities.h"
 #include <Control/TaskControllerModule.h>
-#include <RosCom/roscom.h>
 
 // ============================================================================
 
