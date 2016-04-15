@@ -1,6 +1,6 @@
 #include "gamepadControl.h"
 #include <Control/TaskControllerModule.h>
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 
 //===========================================================================
 

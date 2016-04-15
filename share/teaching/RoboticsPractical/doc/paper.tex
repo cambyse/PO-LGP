@@ -1,0 +1,277 @@
+\documentclass[10pt,fleqn,twoside]{article}
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage[round]{natbib}
+\bibliographystyle{abbrvnat}
+%\usepackage[german]{babel}
+%\usepackage[utf8]{inputenc}
+
+\usepackage{fancyvrb}
+\DefineShortVerb{\@}
+\fvset{numbers=none,xleftmargin=5ex}
+
+\graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
+\usepackage{geometry}
+\geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+\renewcommand{\baselinestretch}{1.1}
+
+\newcommand{\rf}{{\text{ref}}}
+\newcommand{\eig}{{\text{eig}}}
+
+\newenvironment{items}[1][9]{
+\par\setlength{\unitlength}{1pt}\fontsize{#1}{#1}\linespread{1.2}\selectfont
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
+%% \newenvironment{items}{
+%% \par\small
+%% \begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+%% \topsep0pt \parsep0ex \itemsep3pt}
+%% }{
+%% \end{list}
+%% }
+
+%\input{../../../doc/macros}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Practical Course Robotics}
+\author{Marc Toussaint}
+
+\begin{document}
+\maketitle
+
+{\small\tableofcontents }
+
+\section{Introduction}
+
+\section{Setting up your work environment}
+
+\paragraph{Prelimiminaries}
+\begin{itemize}
+\item You need a gitlab account; access to @mlr_students@
+\item Connect to the local mlr-robolab WIFI
+\end{itemize}
+
+\paragraph{Install from a fresh Ubuntu}
+\begin{itemize}
+\item install fresh Ubuntu 14.04.4 LTS
+\item google 'ros install indigo'; copy\&paste steps; install package
+  @ros-indigo-desktop@
+\item install packages:
+
+  @sudo apt-get install synaptic git qtcreator@
+
+  @sudo apt-get install ros-indigo-ar-track-alvar-msgs ros-indigo-baxter-core-msgs@
+\item create ssh key:
+\begin{Verbatim}
+cd
+ssh-keygen
+cat .ssh/id_rsa.pub
+\end{Verbatim}
+\item enter ssh key in gitlab: gitlab start page; profile settings;
+  ssh keys; copy\&paste the key (without linebreaks!!!); 'Add key'
+\item in gitlab go to the project page; see the ssh URL ending with ...git
+\item checkout our code
+\begin{Verbatim}
+cd
+mkdir git
+cd git
+git clone <SSH-GIT-URL>
+\end{Verbatim}
+\item Install the code dependency ubuntu packages: 
+\begin{Verbatim}
+cd ~/git/mlr/install
+./INSTALL_ALL_UBUNTU_PACKAGES.sh
+\end{Verbatim}
+Trouble shooting: read the README.md in ~/git/mlr
+\item configure code and test make:
+\begin{Verbatim}
+cd ~/git/mlr/share/
+git checkout baxter
+cp gofMake/config.mk.default gofMake/config.mk
+bin/createMakefileLinks.sh
+cd src/Ors
+make
+\end{Verbatim}
+\item goto project page and test make
+\begin{Verbatim}
+cd ~/git/mlr/share/teaching/RoboticsPractical/01-...
+make
+\end{Verbatim}
+Test starting to run @./x.exe@
+\end{itemize}
+
+\paragraph{Make the baxter move}
+\begin{itemize}
+\item setup the WIFI connection to the baxters ros server
+
+@source ~/git/mlr/share/bin/baxterwifisetup@
+
+\item In a project folder, try to run @./x.exe -useRos 1@
+\end{itemize}
+
+
+\paragraph{Get comfortable}
+\begin{itemize}
+\item put all extra documentation useful for others in text files in
+  ./doc
+\item Use qtcreater. You need to be able to:
+\begin{items}
+\item Create a new 'project' that uses the makefile: 'New Project' ->
+  'Import Existing Project' -> select the project path (with the
+  makefile)
+\item Enable and use auto completion and code browsing: add include
+  paths to PROJECTNAME.includes, especially @../../../src@. Test it
+  with 'right mouse' on symbols
+\item Know how to use the debugger
+\item Create a symbolic link
+  @.gdbinit -> git/mlr/tools/qt_mlr_types.py@
+  That will enable pretty printing of mlr data structures in the
+  debugger
+\item Optionally, import our coding style: Options -> C++ ->
+  Import... 
+  @git/mlr/tools/qt_coding_style.xml@
+\end{items}
+\item create own folder @groupX@, maybe own branch
+\end{itemize}
+
+
+
+\section{Plan}
+
+\subsection{Milestone 1: Pick-and-place}
+
+Target: The robot perceives objects on the table (= segment,
+localize). The robot grasps them and puts them into a bin.
+
+\subsubsection{Lecture: Basic Motion revisited}
+
+\begin{itemize}
+\item Task spaces, general problem:
+\begin{items}
+\item A task space is defined by a task map $\phi: q \mapsto y$
+\item In each task space we have a desired behavior (\emph{linear
+  acceleration laws}, 2nd order
+  differential equation) $\ddot y^* = \dots$. This is usually a PD behavior,
+  optionally with max velocity and acceleration.
+\item The desired task behaviors are 'projected down' to $q$-space
+  using the operational space control objective. That defines a
+  desired $\ddot q^*$.
+\end{items}
+\item There is three ways to send this to the robot
+\begin{items}
+\item directly, using the dynamics equation $u = M \ddot q + F$. But
+  it is computationally not feasible/desirable to have ALL of the
+  above computations in a 1kHz real-time loop
+\item A 1st-order Taylor approximation of $\ddot q^* \dot= -K_p q -
+  K_d \dot q + q_0$. (We try this).
+
+Both of the above are very hard if the dynamics model is inprecise!
+Later we will test these, with a well learned model from data.
+
+\item Forward simulate $\ddot q^*$ (just integrating the differential
+  equation). That defines a $q^\text{ref}(t)$. Send this to the
+  existing position controller of the robot.
+\end{items}
+\item Discuss (practial is later): impedance, stiffness
+
+\item How is this reflected in the code?
+\begin{items}
+\item $\phi$: @TaskMap@
+\item $\ddot y^* = \dots$: @CtrlTask@
+\item Computing $\ddot q^*$: @TaskController@
+\item Sending it to the robot and threading the computation:
+  @TaskControllerModule::step@
+\end{items}
+\end{itemize}
+
+
+\subsubsection{Subproblem: Basic Motion}
+
+Learn how to use our code to generate targets in various task
+spaces. Learn how create @CtrlTask@s directly in C++. Optionally, have
+a look at the much more abstract RAP interface.
+
+Concretely:
+\begin{itemize}
+\item What are task spaces? Read the @share/doc/taskSpaces.pdf@!
+\item Make the robot do funny things, like point the hands at each
+  other, etc.
+\item Think of positioning and orienting the gripper to grasp a
+  box. Define the grasp center, and grasp orientation.
+\end{itemize}
+
+
+
+
+\subsubsection{Subproblem: Segmenting \& tracking objects}
+
+Understand how the @tabletop@ ROS packages can extract planes (the
+table) and point cloud clusters on top of the plane. Learn how the
+objects are imported in our system.
+
+\subsubsection{Lecture: Basic perception}
+\begin{itemize}
+\item The pain of computer vision...
+\item Keep it simple: point clouds, planes, clusters, markers
+\item Practical packages
+\end{itemize}
+
+\subsubsection{Subproblem: Pick \& Place}
+
+Realize the whole pick-and-place scenario. Core issues are
+\begin{itemize}
+\item Designing the motion tasks
+\item Sequening, ideally failure detection \& reaction
+\end{itemize}
+
+
+
+
+\subsection{Milestone 2: System Identification, Machine Learning \&
+  Compliant Optimal Control}
+
+Target: The robot is controlled on the lowest level, sending direct
+'torques' (or alike). Using system identification (ML) we learnt a
+perfect model of both, the dynamics and the observations. Using
+Bayesian filtering we can perfectly track the state---giving nice and
+smooth velocity estimates. The robot 'intelligently' explores its
+state-space to collect data for the previous tasks.
+
+\subsubsection{Lecture: Dynamics Basics; and motivation}
+
+\begin{itemize}
+\item Dynamics \& optimal control revisited
+\item Compliance, impedance control, manipulation \& teleoperation
+\item (Do we have F/T sensors?)
+\item caveats of real robots: 'non-Markovian', sticktion, time lag,
+  gear clearance
+\end{itemize}
+
+\subsubsection{Subproblem: Collect data, formulate model, ML}
+
+Think about motion patterns to collect data. Formulate models for the
+robot dynamics as well as observation model. Apply ML.
+
+\subsubsection{Subproblem: Use the model for (extended/unscented)
+  Kalman filtering of the state}
+
+
+\subsubsection{Subproblem: Use the model to translate desired
+  $q$-accelerations directly to torques}
+
+
+
+\subsection{Define your own project!}
+
+\end{document}

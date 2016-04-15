@@ -18,8 +18,6 @@ Script {
   wait{ (conv Control pos endeffR base_footprint) }
   (Control pos endeffL base_footprint)!, (Control pos endeffR base_footprint)!, (conv Control pos endeffL base_footprint)!, (conv Control pos endeffR base_footprint)!, (Control wheels)!, (conv Control wheels)!
 
-  (Control gazeAt endeffKinect endeffR)!
-
   (HomingActivity)
   wait{ (conv HomingActivity) }
 }
