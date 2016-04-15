@@ -6,14 +6,18 @@
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
+#include <RosCom/spinner.h>
 #include <RosCom/rosalvar.h>
-#include <RosCom/roscom.h>
 #include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Ors/orsviewer.h>
+
+#ifdef MLR_ROS
+#  include <RosCom/roscom.h>
+#endif
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -26,8 +30,10 @@ struct SwigSystem {
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
+#ifdef MLR_ROS
   ACCESSname(AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
+#endif
   ACCESSname(arr, pr2_odom)
   ACCESSname(CtrlMsg, ctrl_ref)
   ACCESSname(CtrlMsg, ctrl_obs)
@@ -73,11 +79,12 @@ struct SwigSystem {
     computeMeshNormals(tcm.realWorld.shapes);
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
-      rosCheckInit("SwigSystem");
+//      rosCheckInit("SwigSystem");
       //addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.05);
       //addModule<ROSSUB_perceptionObjects>(NULL, /*Module::loopWithBeat,*/ 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
 
+#ifdef MLR_ROS
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
       new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
@@ -91,6 +98,7 @@ struct SwigSystem {
 //      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/r_ft_compensated", wrenchR);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/l_gripper_motor", wrenchL);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
+#endif
 
     }else{
 //      rosCheckInit("SwigSystem");

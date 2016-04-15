@@ -33,6 +33,8 @@ struct SetOfDataFiles{
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
 struct TaskControllerModule : Module {
+  struct sTaskControllerModule *s;
+
   //protected access points
   ACCESS(arr, ctrl_q_real)
   ACCESS(arr, ctrl_q_ref)
@@ -42,11 +44,8 @@ struct TaskControllerModule : Module {
   ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
   ACCESS(mlr::String, effects)
   ACCESS(ors::KinematicWorld, modelWorld)
-//  ACCESS(AlvarMarkers, ar_pose_marker)
   ACCESS(bool, fixBase)
   ACCESS(arr, pr2_odom)
-
-  ACCESS(sensor_msgs::JointState, jointState)
 
 //private:
   ors::KinematicWorld realWorld;
