@@ -4,6 +4,8 @@
 #include <Ors/orsviewer.h>
 #include <RosCom/baxter.h>
 
+#include <Actions/PlayFunnySound.h>
+
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
@@ -22,8 +24,9 @@ int main(int argc, char** argv){
     TaskControllerModule tcm("baxter");
 //    OrsViewer view;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
-    SendPositionCommandsToBaxter spctb;
+
     if(mlr::getParameter<bool>("useRos")){
+      new SendPositionCommandsToBaxter();
       new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
     }
 
@@ -33,8 +36,7 @@ int main(int argc, char** argv){
 
     Filter myFilter;
 
-    ACCESSname(visualization_msgs::MarkerArray, objects)
-    Subscriber<visualization_msgs::MarkerArray> sub_objects("/tabletop/tracked_clusters", objects);
+    ACCESSname(FilterObjects, object_database)
 
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
@@ -59,7 +61,6 @@ int main(int argc, char** argv){
     //-- tell the controller to take care of them
     tcm.ctrlTasks.set() = { &position, &position1}; //, &align2 };
 
-
     mlr::wait(5.);
 
     tcm.ctrlTasks.set()->clear();
@@ -68,87 +69,96 @@ int main(int argc, char** argv){
      * Time to find and poke the interesting object.
      */
 
-    visualization_msgs::MarkerArray clusters = objects.get();
-
-    // While there are no objects found, keep looking.
-    while (clusters.markers.size() == 0 )
+    while (1)
     {
-      clusters = objects.get();
-      ROS_INFO("No objects found.");
-      mlr::wait(1);
-    }
-
-    double min_dist = 99999;
-    int min_id = -1;
-
-    for (int i = 0; i < clusters.markers.size(); i++)
-    {
-      visualization_msgs::Marker marker = clusters.markers[i];
-      double dist = length(ARR(marker.points[0].x, marker.points[0].y, marker.points[0].z));
-      if (dist < min_dist)
+      FilterObjects filter_objects = object_database.get();
+      FilterObjects clusters;
+      for (const FilterObject fo : filter_objects)
       {
-        min_dist = dist;
-        min_id = i;
+          if (fo.type == FilterObject::FilterObjectType::cluster)
+          {
+            clusters.append(fo);
+          }
       }
-    }
+      if (clusters.N == 0)
+      {
+        std::cout << "No clusters found" << std::endl;
+        mlr::wait(1.);
+        continue;
+      }
 
-    if (min_id == -1)
-      exit(0);
+      double min_dist = 99999;
+      int min_id = -1;
 
+      for (uint i = 0; i < clusters.N; i++)
+      {
+        FilterObject::Cluster cluster = clusters(i);
+        double dist = length(cluster.mean);
+        if (dist < min_dist)
+        {
+          min_dist = dist;
+          min_id = i;
+        }
+      }
 
-    // Get point of interest
-    visualization_msgs::Marker first_cluster = clusters.markers[min_id];
-
-
-    // Convert that point into a position relative to the base_footprint.
-    tf::Vector3 pointToPoke(first_cluster.points[0].x, first_cluster.points[0].y, first_cluster.points[0].z);
-
-    tf::TransformListener listener;
-    tf::StampedTransform baseTransform;
-    try{
-      listener.waitForTransform("/reference/base", first_cluster.header.frame_id, ros::Time(0), ros::Duration(1.0));
-      listener.lookupTransform("/reference/base", first_cluster.header.frame_id, ros::Time(0), baseTransform);
-    }
-    catch (tf::TransformException &ex) {
-        ROS_ERROR("%s",ex.what());
-        ros::Duration(1.0).sleep();
+      if (min_id == -1)
         exit(0);
+
+
+      // Get point of interest
+      FilterObject::Cluster first_cluster = clusters(min_id);
+
+
+      // Convert that point into a position relative to the base_footprint.
+      tf::Vector3 pointToPoke(first_cluster.mean(0), first_cluster.mean(1), first_cluster.mean(2));
+
+      tf::TransformListener listener;
+      tf::StampedTransform baseTransform;
+      try{
+        listener.waitForTransform("/reference/base", first_cluster.frame_id, ros::Time(0), ros::Duration(1.0));
+        listener.lookupTransform("/reference/base", first_cluster.frame_id, ros::Time(0), baseTransform);
+      }
+      catch (tf::TransformException &ex) {
+          ROS_ERROR("%s",ex.what());
+          ros::Duration(1.0).sleep();
+          exit(0);
+      }
+
+      std::cout << "Point to poke, relative to the camera: " << pointToPoke.getX();
+      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+
+      // Convert into base frame, for clarity
+      pointToPoke = baseTransform * pointToPoke;
+
+      std::cout << "Point to poke, relative to base: " << pointToPoke.getX();
+      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+
+      /*
+       * Now we know where we want to poke. Let's poke!
+       *  Using FOL, poke the object.
+       *  This is currently equivalent to setting the position of the end effector and the point as equivalent.
+       */
+
+      CtrlTask position2("endeffR", //name
+                    new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
+                    1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
+      position2.map.phi(position2.y, NoArr, tcm.modelWorld.get()()); //get the current value
+      position2.y_ref = ARR(pointToPoke.getX(), pointToPoke.getY(), pointToPoke.getZ()+1); //set a target
+
+      //-- tell the controller to take care of them
+      tcm.ctrlTasks.set() = { &position2 };
+
+      mlr::wait(5);
+
+      PlayFunnySoundActivity* pfs = new PlayFunnySoundActivity;
+      pfs->open();
+      mlr::wait(2);
+      delete pfs;
+
+      tcm.ctrlTasks.set() = { &position1 };
+
+      mlr::wait(10);
     }
-
-    std::cout << "Point to poke, relative to the camera: " << pointToPoke.getX();
-    std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
-
-    // Convert into base frame, for clarity
-    pointToPoke = baseTransform * pointToPoke;
-
-    std::cout << "Point to poke, relative to base: " << pointToPoke.getX();
-    std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
-
-    /*
-     * Now we know where we want to poke. Let's poke!
-     *  Using FOL, poke the object.
-     *  This is currently equivalent to setting the position of the end effector and the point as equivalent.
-     */
-
-    CtrlTask position2("endeffR", //name
-                  new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
-                  1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
-    position2.map.phi(position2.y, NoArr, tcm.modelWorld.get()()); //get the current value
-    position2.y_ref = ARR(pointToPoke.getX(), pointToPoke.getY(), pointToPoke.getZ()+1); //set a target
-
-    //-- tell the controller to take care of them
-    tcm.ctrlTasks.set() = { &position2 };
-
-    mlr::wait(10);
-    //-- create a homing with
-    CtrlTask homing("homing",
-                  new TaskMap_qItself(),
-                  .5, 1., .2, 10.);
-    homing.y_ref = tcm.q0;
-
-    tcm.ctrlTasks.set() = { &homing };
-
-    mlr::wait(10);
 //    moduleShutdown().waitForValueGreaterThan(0);
 
     threadCloseModules();
