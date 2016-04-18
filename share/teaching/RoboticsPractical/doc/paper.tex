@@ -199,7 +199,7 @@ Later we will test these, with a well learned model from data.
 \subsubsection{Subproblem: Basic Motion}
 
 Learn how to use our code to generate targets in various task
-spaces. Learn how create @CtrlTask@s directly in C++. Optionally, have
+spaces. Learn how to create @CtrlTask@s directly in C++. Optionally, have
 a look at the much more abstract RAP interface.
 
 Concretely:
@@ -211,6 +211,27 @@ Concretely:
   box. Define the grasp center, and grasp orientation.
 \end{itemize}
 
+\subsubsection{Exercise: Develop your own scripting interface}
+
+The reason I chose to let you first use the direct interface
+(directly creating @CtrlTask@s) is:
+\begin{items}
+\item This interface is very close to the maths. There is a rather
+  literal relation between the things you define and objectives in the
+  optimization problem.
+\item This interface is rather transparent: the @CtrlTask@s define the
+  objective, the @TaskController@ computes the reference acceleration,
+  this is integrated and send to the robot.
+\end{items}
+However, using the interface in practice will lead to ugly spaghetti
+code.
+
+\textbf{Exercise:} Develop your own personal abstraction interface;
+maybe some class that contains methods like @homing()@ or
+@moveToRelative(char* obj, char* relativeObj, const arr& offset)@ or
+something like that. Think about how to deal with the real time issue
+(e.g., waiting till convergence or timeout) and whether the interface
+allows to do multiple things at the same time.
 
 
 
