@@ -30,7 +30,16 @@ cleanLocks: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
 	@find $(BASE) -type f -name '.lastMake' -delete -print
 
+cleanDepends: force
+	@find $(BASE) -type f -name 'Makefile.dep' -delete -print
+
 cleanAll: $(src_paths:%=cleanPath/%) $(exa_paths:%=cleanPath/%) cleanLocks
+
+cleanStart: force
+	@read -p " *** WARNING: This will rm ALL local files/changes (e.g. project/temporary/data files) - abort if you don't want to continue" yn
+	git clean -f -d -x
+	cp gofMake/config.mk.default gofMake/config.mk
+	bin/createMakefileLinks.sh
 
 cleanCmake:
 	@find . -type f \( -name 'CMakeCache.txt' -or -name 'CTestTestfile.cmake' -or -name 'cmake_install.cmake' \) -print -delete
@@ -100,5 +109,3 @@ cleanPath/%: %
 	@-$(MAKE) -C $* -f Makefile.gof clean --no-print-directory
 
 force:
-
-#include gofMake/generic.mk

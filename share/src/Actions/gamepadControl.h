@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activity.h"
-#include <RosCom/roscom.h>
+#include <Control/ctrlMsg.h>
 #include <Control/taskController.h>
 
 // ============================================================================

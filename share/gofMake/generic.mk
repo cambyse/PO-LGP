@@ -13,7 +13,7 @@ BASE_REAL = $(shell realpath $(BASE))
 # load user options from the local make-config
 #
 ################################################################################
--include $(BASE)/gofMake/config.mk
+include $(BASE)/gofMake/config.mk
 -include $(BASE)/gofMake/z.mk
 
 
@@ -95,7 +95,7 @@ endif
 # load defines for linking to external libs
 #
 ################################################################################
--include $(BASE)/gofMake/defines.mk
+include $(BASE)/gofMake/defines.mk
 
 
 ################################################################################
@@ -125,7 +125,7 @@ SWIG_FLAGS=-c++ -python $(SWIG_INCLUDE)
 
 ################################################################################
 #
-# depending on a local component
+# depending on a local components
 #
 ################################################################################
 
@@ -160,9 +160,10 @@ export MSVC_LPATH
 
 default: $(OUTPUT)
 
-clean:
+clean: force
 	rm -f $(OUTPUT) $(OBJS) $(PREOBJS) callgrind.out.* .lastMake $(CLEAN)
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
+	@find $(BASE) -type f -name '.lastMake' -delete -print
 	@rm -f $(MODULE_NAME)_wrap.* $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 
 cleanLocks: force
@@ -246,17 +247,11 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 
 %.exe: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
-#	@echo $(PWD:$(BASE_REAL)/%=%/$@)
 
 ## this RULE only applies to $(NAME).so
 ## other %.so files are created by calling make in their directory
 $(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
-
-#%_test.so: $(PREOBJS) $(BUILDS) $(OBJS)
-#	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
-#	rm $(BASE)/lib/$(NAME).so
-#	ln -s -r $(NAME).so $(BASE)/lib/$(NAME).so
 
 %.lib: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -static ### $(SHAREFLAG)
@@ -278,7 +273,6 @@ endif
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
-#	@echo $(PWD:$(BASE_REAL)/%=%/$<)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -339,10 +333,11 @@ runPath/%: %
 makePythonPath/%: %
 	make --directory=$< pywrapper
 
+$(BASE)/gofMake/config.mk: $(BASE)/gofMake/config.mk.default
+	cp $< $@
+
 zip::
 	cd ..;  rm -f $(NAME).tgz;  tar cvzf $(NAME).tgz $(NAME) --dereference --exclude-vcs --exclude-from tar.exclude --exclude-from $(NAME)/tar.exclude
 
 
 force:	;
-
-# vim:ft=make:

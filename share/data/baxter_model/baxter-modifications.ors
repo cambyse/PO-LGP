@@ -1,4 +1,4 @@
-Include = 'baxter_clean.ors'
+qInclude = 'baxter-clean.ors'
 Delete shape visual
 #Delete shape collision
 
