@@ -1,12 +1,13 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 
 #include <RosCom/perceptionCollection.h>
 
-#include <Algo/perceptionFilter.h>
+#include <RosCom/perceptionFilter.h>
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);

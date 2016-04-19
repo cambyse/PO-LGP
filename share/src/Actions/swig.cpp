@@ -32,7 +32,7 @@ struct SwigSystem {
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
 #ifdef MLR_ROS
-  ACCESSname(AlvarMarkers, ar_pose_markers)
+  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
 #endif
   ACCESSname(arr, pr2_odom)
