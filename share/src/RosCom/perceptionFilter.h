@@ -5,7 +5,7 @@
 #include <RosCom/roscom.h>
 
 #include <Algo/hungarian.h>
-#include <Algo/filterObject.h>
+#include <RosCom/filterObject.h>
 
 struct Filter : Module{
   ACCESSname(FilterObjects, perceptual_inputs)

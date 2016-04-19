@@ -50,13 +50,13 @@ visualization_msgs::Marker conv_FilterObject2Marker(const FilterObject& object)
 {
   visualization_msgs::Marker new_marker;
   new_marker.type = visualization_msgs::Marker::POINTS;
-  new_marker.points = conv_arr2points(object.Cluster::points);
+  new_marker.points = conv_arr2points(dynamic_cast<const Cluster&>(object).points);
   new_marker.id = object.id;
   new_marker.scale.x = .001;
   new_marker.scale.y = .001;
   new_marker.lifetime = ros::Duration(0.5);
   new_marker.header.stamp = ros::Time(0.);
-  new_marker.header.frame_id = object.Cluster::frame_id;
+  new_marker.header.frame_id = dynamic_cast<const Cluster&>(object).frame_id;
 
   new_marker.color.a = object.relevance;
   new_marker.color.r = (double)((new_marker.id*10000)%97)/97;
@@ -69,14 +69,8 @@ visualization_msgs::Marker conv_FilterObject2Marker(const FilterObject& object)
 ar::AlvarMarker conv_FilterObject2Alvar(const FilterObject& object)
 {
   ar::AlvarMarker new_marker;
-  new_marker.header.frame_id = object.Alvar::frame_id;
-  new_marker.pose.pose.position.x = object.Alvar::position(0);
-  new_marker.pose.pose.position.y = object.Alvar::position(1);
-  new_marker.pose.pose.position.z = object.Alvar::position(2);
-  new_marker.pose.pose.orientation.x = object.Alvar::quaternion.x;
-  new_marker.pose.pose.orientation.y = object.Alvar::quaternion.y;
-  new_marker.pose.pose.orientation.z = object.Alvar::quaternion.z;
-  new_marker.pose.pose.orientation.w = object.Alvar::quaternion.w;
+  new_marker.header.frame_id = dynamic_cast<const Alvar&>(object).frame_id;
+  new_marker.pose.pose = conv_transformation2pose(object.transform);
   new_marker.id = object.id;
   return new_marker;
 }
@@ -84,13 +78,7 @@ ar::AlvarMarker conv_FilterObject2Alvar(const FilterObject& object)
 geometry_msgs::Pose conv_FilterObject2AlvarVis(const FilterObject& object)
 {
   geometry_msgs::Pose new_marker;
-  new_marker.position.x = object.Alvar::position(0);
-  new_marker.position.y = object.Alvar::position(1);
-  new_marker.position.z = object.Alvar::position(2);
-  new_marker.orientation.x = object.Alvar::quaternion.x;
-  new_marker.orientation.y = object.Alvar::quaternion.y;
-  new_marker.orientation.z = object.Alvar::quaternion.z;
-  new_marker.orientation.w = object.Alvar::quaternion.w;
+  new_marker = conv_transformation2pose(object.transform);
   return new_marker;
 }
 
@@ -123,7 +111,7 @@ void Filter::step()
     matchedSubsetFromPerceptualInputs.clear();
     for (uint i = 0; i < perceptualInputs.N; i++)
     {
-      if (perceptualInputs(i).type == type)
+      if (perceptualInputs(i)->type == type)
       {
         matchedSubsetFromPerceptualInputs.append(perceptualInputs(i));
       }
@@ -135,7 +123,7 @@ void Filter::step()
       if (matched_objects(i) == 1)
         continue;
 
-      if (objectDatabase(i).type == type)
+      if (objectDatabase(i)->type == type)
       {
         matchedSubsetFromDatabase.append(objectDatabase(i));
         matched_objects(i) = 1;
@@ -182,17 +170,17 @@ void Filter::step()
 
   for (uint i = 0; i < filteredInputs.N; i++)
   {
-    switch ( filteredInputs(i).type )
+    switch ( filteredInputs(i)->type )
     {
       case FilterObject::FilterObjectType::alvar:
         alvar_count++;
-        ar_markers.poses.push_back(conv_FilterObject2AlvarVis(filteredInputs(i)));
-        ar_markers.header.frame_id = filteredInputs(i).Alvar::frame_id;
+        ar_markers.poses.push_back(conv_FilterObject2AlvarVis(*filteredInputs(i)));
+        ar_markers.header.frame_id = dynamic_cast<Alvar*>(filteredInputs(i))->frame_id;
         //ar_markers.markers.push_back(conv_FilterObject2AlvarVis(filteredInputs(i)));
         break;
       case FilterObject::FilterObjectType::cluster:
         cluster_count++;
-        cluster_markers.markers.push_back(conv_FilterObject2Marker(filteredInputs(i)));
+        cluster_markers.markers.push_back(conv_FilterObject2Marker(*filteredInputs(i)));
         break;
       default:
         break;
@@ -229,8 +217,8 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
     if ( i >= num_new )
     {
       //std::cout<< "Existed before, doesn't now." << std::endl;
-      FilterObject new_obj = database(col);
-      new_obj.relevance *= relevance_decay_factor;
+      FilterObject *new_obj = database(col);
+      new_obj->relevance *= relevance_decay_factor;
       new_objects.append(new_obj);
     }
     else
@@ -238,24 +226,24 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
       if ( ( col < num_old ) && (costs(i, col) < distance_threshold) )// Existed before
       {
         //std::cout<< "Existed before, does now" << std::endl;
-        FilterObject new_obj = perceps(i);
-        new_obj.id = database(col).id;
+        FilterObject *new_obj = perceps(i);
+        new_obj->id = database(col)->id;
         new_objects.append( new_obj );
       }
       else // This didn't exist before. Add it in
       {
         //std::cout<< "Didn't exist before, or not close enough." << std::endl;
-        FilterObject new_obj = perceps(i);
-        if (new_obj.type != FilterObject::FilterObjectType::alvar)
+        FilterObject *new_obj = perceps(i);
+        if (new_obj->type != FilterObject::FilterObjectType::alvar)
         {
-          new_obj.id = maxId;
+          new_obj->id = maxId;
           maxId++;
         }
         new_objects.append(new_obj);
         //std::cout << "Didn't exist before. Col >= num_old: " << col << ' ' << num_old << std::endl;
       }
     }
-    matched_ids.insert(new_objects(i).id);
+    matched_ids.insert(new_objects(i)->id);
     //std::cout << "Assigning \t" << i << "\tMatches:\t" << matched_ids(i).id << "\t Relevance: " << perceps(i).relevance << std::endl;
   }
 
@@ -263,10 +251,10 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   for ( uint i = 0; i < num_old; ++i )
   {
     //std::cout << "Seeing if: " << old_clusters.at(i).id << " exists." << std::endl;
-    if ( matched_ids.find(database(i).id) == matched_ids.end() )
+    if ( matched_ids.find(database(i)->id) == matched_ids.end() )
     {
-      FilterObject new_obj = database(i);
-      new_obj.relevance *= relevance_decay_factor;
+      FilterObject *new_obj = database(i);
+      new_obj->relevance *= relevance_decay_factor;
       new_objects.append(new_obj);
       //std::cout << "Assigning old\t" << old_clusters.at(i).id << "\t Relevance: " << new_tracks.at(new_tracks.size() - 1).relevance << std::endl;
     }
@@ -276,7 +264,7 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   uint count = new_objects.N;
   for ( uint i = 0; i < count; ++i )
   {
-    if(new_objects(i).relevance > relevance_threshold)
+    if(new_objects(i)->relevance > relevance_threshold)
     {
       cleaned.append(new_objects(i));
     }
@@ -298,7 +286,7 @@ arr Filter::createCostMatrix(const FilterObjects& newObjects, const FilterObject
   {
     for (uint j = 0; j < num_old; ++j)
     {
-      costs(i,j) = newObjects(i).idMatchingCost(oldObjects(j));
+      costs(i,j) = newObjects(i)->idMatchingCost(*oldObjects(j));
     }
   }
 
