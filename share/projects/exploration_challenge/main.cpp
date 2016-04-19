@@ -25,6 +25,8 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                Eigen::VectorXd approach_op_pos,
                                Eigen::MatrixXd approach_op_rot_matrix){
     MLRFactoryParams p;
+    p.endeff = "endeffR";
+    p.gripper = "r_gripper_joint";
     std::cout<<"generating pull push automaton"<<std::endl;
 
     //do we use an approach pose to initialize the interaction?
@@ -155,6 +157,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     //Grasp
     ha::ControlMode::Ptr grasp_cm(new ha::ControlMode());
     ha::ControlSwitch::Ptr grasp_cs(new ha::ControlSwitch());
+    p.grasp_strength = .1;
     mlr_factory->CreateGraspCMAndCS(p, grasp_cm, grasp_cs, "Grasp");
 
     //add controlmode and switch to HA
@@ -357,9 +360,11 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     //Create  Mode
     //ungrasp
     ha::ControlMode::Ptr ungrasp_cm(new ha::ControlMode());
-    ha::ControlSwitch::Ptr ungrasp_pressure_cs(new ha::ControlSwitch());
-    ha::ControlSwitch::Ptr ungrasp_time_cs(new ha::ControlSwitch());
-    //_ha_factory->CreateUngraspCMAndCS(ungrasp_cm, ungrasp_pressure_cs, ungrasp_time_cs, "Ungrasp", _gripper_type);
+    //ha::ControlSwitch::Ptr ungrasp_pressure_cs(new ha::ControlSwitch());
+    ha::ControlSwitch::Ptr ungrasp_cs(new ha::ControlSwitch());
+    //mlr_factory->CreateUngraspCMAndCS(ungrasp_cm, ungrasp_pressure_cs, ungrasp_time_cs, "Ungrasp", _gripper_type);
+    p.grasp_strength = 1;
+    mlr_factory->CreateGraspCMAndCS(p, ungrasp_cm, ungrasp_cs, "Ungrasp");
 
     //add controlmode and switch to HA
     actuate_affordance_ha->addControlSwitchAndMode(push_left_cm->getName(), push_left_force_exceeded_cs, ungrasp_cm);
@@ -419,8 +424,8 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
 
 
     //add controlmode and switch to HA
-    actuate_affordance_ha->addControlSwitchAndMode(ungrasp_cm->getName(), ungrasp_pressure_cs, move_towards_retreat_cm);
-    actuate_affordance_ha->addControlSwitch(ungrasp_cm->getName(), ungrasp_time_cs, move_towards_retreat_cm->getName());
+    actuate_affordance_ha->addControlSwitchAndMode(ungrasp_cm->getName(), ungrasp_cs, move_towards_retreat_cm);
+    //actuate_affordance_ha->addControlSwitch(ungrasp_cm->getName(), ungrasp_cs, move_towards_retreat_cm->getName());
 
     /////////////////////////////////////////////////////////////
     // Create  Mode
@@ -432,7 +437,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     Eigen::MatrixXd home_config_js_arm = Eigen::MatrixXd(num_dof_arm, 1);
    //home_config_js_arm << 0.0, -0.447759, 0.01341, 2.79048, 1.0711, 0.485972, -0.119184;
     home_config_js_arm << 0.0, -0.14, 0.0, 2.18, 0.0, 0.2, -0.13;
-    //_ha_factory->CreateGoToHomeCMAndConvergenceCSArm(goto_home_cm, goto_home_convergence_cs, goto_home_name, home_config_js_arm);
+    mlr_factory->CreateGoToHomeCMAndConvergenceCSArm(p, goto_home_cm, goto_home_convergence_cs, goto_home_name);
 
     //add controlmode and switch to HA
     actuate_affordance_ha->addControlSwitchAndMode(move_towards_retreat_cm->getName(), move_towards_retreat_convergence_cs, goto_home_cm);
@@ -510,8 +515,8 @@ int main(int argc, char** argv) {
   approach_op_rot_matrix << 1, 0, 0, 
                             0, 1, 0, 
                             0, 0, 1;
-//  createPullAndPushAtPoseHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix, retreat_op_pos, retreat_op_rot_matrix, approach_op_pos, approach_op_rot_matrix );
-  createSimpleHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix);
+  createPullAndPushAtPoseHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix, retreat_op_pos, retreat_op_rot_matrix, approach_op_pos, approach_op_rot_matrix );
+  //createSimpleHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix);
   hybrid_automaton->setSystem(system);
   hybrid_automaton->initialize(.0);
   double t = 0.;

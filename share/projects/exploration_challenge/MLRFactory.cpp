@@ -39,7 +39,7 @@ ha::Controller::Ptr MLRFactory::createGraspController(const ha::HybridAutomatonA
     MLRFactoryParams& p = (MLRFactoryParams&) params;
     qItselfController::Ptr close_gripper(new qItselfController());
     close_gripper->setSystem(system);
-    close_gripper->setEndeff(p.endeff);
+    close_gripper->setEndeff(p.gripper);
     ::Eigen::MatrixXd goal(1, 1);
     goal(0, 0) = params.grasp_strength;
     close_gripper->setGoal(goal);

@@ -56,6 +56,6 @@ void qItselfController::setEndeff(const std::string& endeff) {
     ss << CONST_INTERFACE->getJointByName(endeff)["qIndex"];
     int qi;
     ss >> qi;
-    _index_vec(qi, 1) = 1;
+    _index_vec(qi, 0) = 1;
 }
 

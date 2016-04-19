@@ -263,6 +263,7 @@ ifeq ($(HYBRID_AUTOMATON),1)
 CXXFLAGS += -DMT_HYBRID_AUTOMATON
 LIBS += -lhybrid_automaton -ltinyxml
 CPATH := $(CPATH):/home/johannes/src/rswin/hybrid_automaton/include
+LPATH := $(LPATH):/home/johannes/src/rswin/hybrid_automaton/build
 endif
 
 ifeq ($(FREENECT),1)

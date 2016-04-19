@@ -2,8 +2,8 @@ BASE = ../..
 
 OBJS = main.o  MLRFactory.o  OpSpaceController.o  pr2ControlSet.o  pr2System.o  qItselfController.o  util.o
 
-ROS = 1
 EIGEN = 1
+HYBRID_AUTOMATON=1
 DEPEND = Core RosCom Actions Geo
 
 LIBS += -lhybrid_automaton
