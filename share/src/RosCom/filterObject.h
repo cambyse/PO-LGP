@@ -34,6 +34,10 @@ private:
 
 
 struct Cluster:FilterObject {
+  arr mean;
+  arr points;
+  std::string frame_id;
+
   Cluster(arr mean,
           arr points,
           std::string frame_id):
@@ -55,10 +59,6 @@ struct Cluster:FilterObject {
     this->transform = obj.transform;
   }
 
-  arr mean;
-  arr points;
-  std::string frame_id;
-
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=cluster) return -1.;
     return length(this->mean - dynamic_cast<const Cluster*>(&other)->mean);
@@ -67,12 +67,22 @@ struct Cluster:FilterObject {
 };
 
 struct Alvar:FilterObject {
+  std::string frame_id;
+
   Alvar(std::string frame_id):
       frame_id(frame_id)
   {
     this->type = FilterObjectType::alvar;
   }
-  std::string frame_id;
+
+  Alvar(const Alvar &obj)
+  {
+    this->frame_id = obj.frame_id;
+    this->type = obj.type;
+    this->relevance = obj.relevance;
+    this->id = obj.id;
+    this->transform = obj.transform;
+  }
 
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=alvar) return -1.;
