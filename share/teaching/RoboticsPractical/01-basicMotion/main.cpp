@@ -1,4 +1,5 @@
-//#include <RosCom/roscom.h>
+#include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>

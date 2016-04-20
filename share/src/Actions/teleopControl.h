@@ -1,8 +1,8 @@
 #pragma once
 
 #include "activity.h"
-#include <RosCom/roscom.h>
 #include <Control/taskController.h>
+#include <Control/ctrlMsg.h>
 
 // ============================================================================
 

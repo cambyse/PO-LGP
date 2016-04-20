@@ -1,34 +1,29 @@
 #!/bin/bash
 
-# install ubuntu packages
 sudo apt-get install \
 bison \
 build-essential \
 cmake \
+autoconf \
 doxygen \
 fabric \
 flex \
-freeglut3-dev \
 g++ \
 gcc \
 gfortran \
 git-core \
 gnuplot \
+liblapack-dev \
+libf2c2-dev \
+freeglut3-dev \
+libglew-dev \
 graphviz-dev \
 libann-dev \
 libcv-dev \
 libcvaux-dev \
-libdc1394-22-dev \
-libf2c2-dev \
-libglew-dev \
-libgtest-dev \
-libgtkglext1-dev \
 libhighgui-dev \
-liblapack-dev \
 libplib-dev \
 libqhull-dev \
-libsdl1.2-dev \
-libx11-dev \
 libx11-dev \
 libxi-dev \
 libxmu-dev \
@@ -39,22 +34,8 @@ python-unittest2 \
 realpath \
 regexxer \
 swig2.0 \
-tcl8.5-dev \
-tk-dev \
-tk8.5-dev \
 libfreenect-dev \
-libavcodec-extra-54 \
-libqt4-dev-bin \
 libusb-dev \
 libusb-1.0-0-dev \
-libavcodec-extra-53 \
-libavdevice-dev \
-libavfilter-dev \
-libx264-dev \
 portaudio19-dev
 
-# install google test
-cd /usr/src/gtest
-sudo cmake .
-sudo make
-#sudo ln -s -f /usr/src/gtest/libgtest.a /home/lib/lib/

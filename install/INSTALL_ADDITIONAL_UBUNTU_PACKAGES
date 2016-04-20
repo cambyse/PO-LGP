@@ -1,6 +1,22 @@
+#!/bin/bash
+
 synaptic \
 qtcreator \
 
-ros-indigo-object-recognition-ros-visualization
-ros-indigo-object-recognition-tabletop
 
+libgtkglext1-dev \
+libgtest-dev \
+tcl8.5-dev \
+tk-dev \
+tk8.5-dev \
+
+libqt4-dev-bin \
+
+libdc1394-22-dev \
+libavcodec-extra-53 \
+libavcodec-extra-54 \
+libavdevice-dev \
+libavfilter-dev \
+libx264-dev \
+
+libsdl1.2-dev \
