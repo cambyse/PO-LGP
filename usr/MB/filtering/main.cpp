@@ -2,12 +2,12 @@
 #include <Gui/opengl.h>
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
+
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
-
 #include <RosCom/perceptionCollection.h>
-
 #include <RosCom/perceptionFilter.h>
+#include <RosCom/publishDatabase.h>
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
@@ -20,6 +20,8 @@ int main(int argc, char** argv){
   Collector data_collector;
 
   Filter myFilter;
+
+  PublishDatabase myPublisher;
 
   RosCom_Spinner spinner;
 

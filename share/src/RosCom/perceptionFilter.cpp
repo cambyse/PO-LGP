@@ -18,69 +18,6 @@
 
 #include <unordered_set>
 #include "perceptionFilter.h"
-#include <geometry_msgs/PoseArray.h>
-
-#ifdef MLR_ROS_GROOVY
-  #include <ar_track_alvar/AlvarMarkers.h>
-  namespace ar = ar_track_alvar;
-#else // Assuming INDIGO or later
-  #include <ar_track_alvar_msgs/AlvarMarkers.h>
-  namespace ar = ar_track_alvar_msgs;
-#endif
-
-
-Filter::Filter():
-    Module("Filter", 0){}
-
-void Filter::open(){
-  ros::init(mlr::argc, mlr::argv, "cluster_filter", ros::init_options::NoSigintHandler);
-  nh = new ros::NodeHandle;
-  tabletop_pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
-  //alvar_pub = nh->advertise<ar::AlvarMarkers>("/tracked_ar_pose_marker", 1);
-  alvar_pub = nh->advertise<geometry_msgs::PoseArray>("/tracked_ar_pose_marker", 1);
-}
-
-void Filter::close()
-{
-  nh->shutdown();
-  delete nh;
-}
-
-visualization_msgs::Marker conv_FilterObject2Marker(const FilterObject& object)
-{
-  visualization_msgs::Marker new_marker;
-  new_marker.type = visualization_msgs::Marker::POINTS;
-  new_marker.points = conv_arr2points(dynamic_cast<const Cluster&>(object).points);
-  new_marker.id = object.id;
-  new_marker.scale.x = .001;
-  new_marker.scale.y = .001;
-  new_marker.lifetime = ros::Duration(0.5);
-  new_marker.header.stamp = ros::Time(0.);
-  new_marker.header.frame_id = dynamic_cast<const Cluster&>(object).frame_id;
-
-  new_marker.color.a = object.relevance;
-  new_marker.color.r = (double)((new_marker.id*10000)%97)/97;
-  new_marker.color.g = (double)((new_marker.id*10000)%91)/91;
-  new_marker.color.b = (double)((new_marker.id*10000)%89)/89;
-
-  return new_marker;
-}
-
-ar::AlvarMarker conv_FilterObject2Alvar(const FilterObject& object)
-{
-  ar::AlvarMarker new_marker;
-  new_marker.header.frame_id = dynamic_cast<const Alvar&>(object).frame_id;
-  new_marker.pose.pose = conv_transformation2pose(object.transform);
-  new_marker.id = object.id;
-  return new_marker;
-}
-
-geometry_msgs::Pose conv_FilterObject2AlvarVis(const FilterObject& object)
-{
-  geometry_msgs::Pose new_marker;
-  new_marker = conv_transformation2pose(object.transform);
-  return new_marker;
-}
 
 
 void Filter::step()
@@ -138,13 +75,24 @@ void Filter::step()
 
     // Run Hungarian algorithm
     ha = new Hungarian(arr(costs));
-    ha->minimize();
 
     // Now we have the optimal matching. Assign values.
     FilterObjects assignedObjects = assign(matchedSubsetFromPerceptualInputs, matchedSubsetFromDatabase);
 
     for (uint i = 0; i < assignedObjects.N; i++)
       filteredInputs.append(assignedObjects(i));
+
+    for (FilterObject* fo : matchedSubsetFromPerceptualInputs)
+    {
+      if (filteredInputs.contains(fo) == 0)
+        delete fo;
+    }
+
+    for (FilterObject* fo : matchedSubsetFromDatabase)
+    {
+      if (filteredInputs.contains(fo) == 0)
+        delete fo;
+    }
 
     delete ha;
   }
@@ -160,41 +108,6 @@ void Filter::step()
 
   // Set the access.
   object_database.set() = filteredInputs;
-
-
-  visualization_msgs::MarkerArray cluster_markers;
-  //ar::AlvarMarkers ar_markers;
-  geometry_msgs::PoseArray ar_markers;
-
-  int alvar_count = 0, cluster_count = 0;
-
-  for (uint i = 0; i < filteredInputs.N; i++)
-  {
-    switch ( filteredInputs(i)->type )
-    {
-      case FilterObject::FilterObjectType::alvar:
-        alvar_count++;
-        ar_markers.poses.push_back(conv_FilterObject2AlvarVis(*filteredInputs(i)));
-        ar_markers.header.frame_id = dynamic_cast<Alvar*>(filteredInputs(i))->frame_id;
-        //ar_markers.markers.push_back(conv_FilterObject2AlvarVis(filteredInputs(i)));
-        break;
-      case FilterObject::FilterObjectType::cluster:
-        cluster_count++;
-        cluster_markers.markers.push_back(conv_FilterObject2Marker(*filteredInputs(i)));
-        break;
-      default:
-        break;
-    }
-  }
-  if (cluster_markers.markers.size() > 0)
-    tabletop_pub.publish(cluster_markers);
-
-  //if (ar_markers.markers.size() > 0)
-  if (ar_markers.poses.size() > 0)
-    alvar_pub.publish(ar_markers);
-
-  //std::cout << "Set the database: " << filteredInputs.N << ' ' << alvar_count << ' ' << cluster_count << std::endl;
-
 }
 
 FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& database)
@@ -248,18 +161,15 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   }
 
   // For each of the old objects, update the relevance factor.
-  for ( uint i = 0; i < num_old; ++i )
+  for ( uint i = 0; i < database.N; ++i )
   {
-    //std::cout << "Seeing if: " << old_clusters.at(i).id << " exists." << std::endl;
     if ( matched_ids.find(database(i)->id) == matched_ids.end() )
     {
       FilterObject *new_obj = database(i);
       new_obj->relevance *= relevance_decay_factor;
-      new_objects.append(new_obj);
-      //std::cout << "Assigning old\t" << old_clusters.at(i).id << "\t Relevance: " << new_tracks.at(new_tracks.size() - 1).relevance << std::endl;
+      new_objects.append(new_obj);      
     }
   }
-
   FilterObjects cleaned;
   uint count = new_objects.N;
   for ( uint i = 0; i < count; ++i )
