@@ -1,4 +1,5 @@
 #include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>
@@ -9,7 +10,8 @@
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
-#include <Algo/perceptionFilter.h>
+#include <RosCom/perceptionFilter.h>
+#include <RosCom/filterObject.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
@@ -73,9 +75,9 @@ int main(int argc, char** argv){
     {
       FilterObjects filter_objects = object_database.get();
       FilterObjects clusters;
-      for (const FilterObject fo : filter_objects)
+      for (FilterObject* fo : filter_objects)
       {
-          if (fo.type == FilterObject::FilterObjectType::cluster)
+          if (fo->type == FilterObject::FilterObjectType::cluster)
           {
             clusters.append(fo);
           }
@@ -92,8 +94,7 @@ int main(int argc, char** argv){
 
       for (uint i = 0; i < clusters.N; i++)
       {
-        FilterObject::Cluster cluster = clusters(i);
-        double dist = length(cluster.mean);
+        double dist = length(dynamic_cast<Cluster*>(clusters(i))->mean);
         if (dist < min_dist)
         {
           min_dist = dist;
@@ -106,17 +107,16 @@ int main(int argc, char** argv){
 
 
       // Get point of interest
-      FilterObject::Cluster first_cluster = clusters(min_id);
-
+      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
 
       // Convert that point into a position relative to the base_footprint.
-      tf::Vector3 pointToPoke(first_cluster.mean(0), first_cluster.mean(1), first_cluster.mean(2));
+      tf::Vector3 pointToPoke(first_cluster->mean(0), first_cluster->mean(1), first_cluster->mean(2));
 
       tf::TransformListener listener;
       tf::StampedTransform baseTransform;
       try{
-        listener.waitForTransform("/reference/base", first_cluster.frame_id, ros::Time(0), ros::Duration(1.0));
-        listener.lookupTransform("/reference/base", first_cluster.frame_id, ros::Time(0), baseTransform);
+        listener.waitForTransform("/reference/base", first_cluster->frame_id, ros::Time(0), ros::Duration(1.0));
+        listener.lookupTransform("/reference/base", first_cluster->frame_id, ros::Time(0), baseTransform);
       }
       catch (tf::TransformException &ex) {
           ROS_ERROR("%s",ex.what());
