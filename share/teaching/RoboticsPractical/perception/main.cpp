@@ -12,6 +12,7 @@
 #include <RosCom/perceptionCollection.h>
 #include <RosCom/perceptionFilter.h>
 #include <RosCom/filterObject.h>
+#include <RosCom/publishDatabase.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
@@ -39,6 +40,7 @@ int main(int argc, char** argv){
     Filter myFilter;
 
     ACCESSname(FilterObjects, object_database)
+    PublishDatabase myPublisher;
 
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
@@ -73,7 +75,13 @@ int main(int argc, char** argv){
 
     while (1)
     {
+      object_database.readAccess();
       FilterObjects filter_objects = object_database.get();
+      if (filter_objects.N == 0)
+      {
+        object_database.deAccess();
+        continue;
+      }
       FilterObjects clusters;
       for (FilterObject* fo : filter_objects)
       {
@@ -105,37 +113,41 @@ int main(int argc, char** argv){
       if (min_id == -1)
         exit(0);
 
-
-//      // Get point of interest
-//      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
+      // Get point of interest
+      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
+      Cluster copy = *first_cluster;
+      object_database.deAccess();
 
 //      // Convert that point into a position relative to the base_footprint.
-//      tf::Vector3 pointToPoke(first_cluster->mean(0), first_cluster->mean(1), first_cluster->mean(2));
+      tf::Vector3 pointToPoke(copy.mean(0), copy.mean(1), copy.mean(2));
 
-//      tf::TransformListener listener;
-//      tf::StampedTransform baseTransform;
-//      try{
-//        listener.waitForTransform("/reference/base", first_cluster->frame_id, ros::Time(0), ros::Duration(1.0));
-//        listener.lookupTransform("/reference/base", first_cluster->frame_id, ros::Time(0), baseTransform);
-//      }
-//      catch (tf::TransformException &ex) {
-//          ROS_ERROR("%s",ex.what());
-//          ros::Duration(1.0).sleep();
-//          exit(0);
-//      }
+      tf::TransformListener listener;
+      tf::StampedTransform baseTransform;
+      try{
+        listener.waitForTransform("/base", copy.frame_id, ros::Time(0), ros::Duration(1.0));
+        listener.lookupTransform("/base", copy.frame_id, ros::Time(0), baseTransform);
+      }
+      catch (tf::TransformException &ex) {
+          ROS_ERROR("%s",ex.what());
+          ros::Duration(1.0).sleep();
+          exit(0);
+      }
 
-//      std::cout << "Point to poke, relative to the camera: " << pointToPoke.getX();
-//      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+      std::cout << "Point to poke, relative to the camera: " << pointToPoke.getX();
+      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
 
-//      // Convert into base frame, for clarity
-//      pointToPoke = baseTransform * pointToPoke;
+      // Convert into base frame, for clarity
+      pointToPoke = baseTransform * pointToPoke;
 
-//      std::cout << "Point to poke, relative to base: " << pointToPoke.getX();
-//      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+      std::cout << "Point to poke, relative to base: " << pointToPoke.getX();
+      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
 
-      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
+//      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
+      ors::Vector orsPoint = copy.frame * ors::Vector(copy.mean);
 
-      ors::Vector pointToPoke = first_cluster->transform * first_cluster->mean;
+      std::cout << "Point to poke, relative to base: " << orsPoint.x;
+      std::cout << ' ' << orsPoint.y << ' ' << orsPoint.z << std::endl;
+
 
       /*
        * Now we know where we want to poke. Let's poke!
@@ -147,7 +159,8 @@ int main(int argc, char** argv){
                     new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
                     1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
       position2.map.phi(position2.y, NoArr, tcm.modelWorld.get()()); //get the current value
-      position2.y_ref = ARR(pointToPoke.x, pointToPoke.y, pointToPoke.z+1); //set a target
+      position2.y_ref = ARR(orsPoint.x, orsPoint.y, orsPoint.z+1); //set a target
+      //position2.y_ref = ARR(pointToPoke.getX(), pointToPoke.getY(), pointToPoke.getZ()+1); //set a target
 
       //-- tell the controller to take care of them
       tcm.ctrlTasks.set() = { &position2 };
