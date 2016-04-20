@@ -106,32 +106,36 @@ int main(int argc, char** argv){
         exit(0);
 
 
-      // Get point of interest
+//      // Get point of interest
+//      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
+
+//      // Convert that point into a position relative to the base_footprint.
+//      tf::Vector3 pointToPoke(first_cluster->mean(0), first_cluster->mean(1), first_cluster->mean(2));
+
+//      tf::TransformListener listener;
+//      tf::StampedTransform baseTransform;
+//      try{
+//        listener.waitForTransform("/reference/base", first_cluster->frame_id, ros::Time(0), ros::Duration(1.0));
+//        listener.lookupTransform("/reference/base", first_cluster->frame_id, ros::Time(0), baseTransform);
+//      }
+//      catch (tf::TransformException &ex) {
+//          ROS_ERROR("%s",ex.what());
+//          ros::Duration(1.0).sleep();
+//          exit(0);
+//      }
+
+//      std::cout << "Point to poke, relative to the camera: " << pointToPoke.getX();
+//      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+
+//      // Convert into base frame, for clarity
+//      pointToPoke = baseTransform * pointToPoke;
+
+//      std::cout << "Point to poke, relative to base: " << pointToPoke.getX();
+//      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+
       Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
 
-      // Convert that point into a position relative to the base_footprint.
-      tf::Vector3 pointToPoke(first_cluster->mean(0), first_cluster->mean(1), first_cluster->mean(2));
-
-      tf::TransformListener listener;
-      tf::StampedTransform baseTransform;
-      try{
-        listener.waitForTransform("/reference/base", first_cluster->frame_id, ros::Time(0), ros::Duration(1.0));
-        listener.lookupTransform("/reference/base", first_cluster->frame_id, ros::Time(0), baseTransform);
-      }
-      catch (tf::TransformException &ex) {
-          ROS_ERROR("%s",ex.what());
-          ros::Duration(1.0).sleep();
-          exit(0);
-      }
-
-      std::cout << "Point to poke, relative to the camera: " << pointToPoke.getX();
-      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
-
-      // Convert into base frame, for clarity
-      pointToPoke = baseTransform * pointToPoke;
-
-      std::cout << "Point to poke, relative to base: " << pointToPoke.getX();
-      std::cout << ' ' << pointToPoke.getY() << ' ' << pointToPoke.getZ() << std::endl;
+      ors::Vector pointToPoke = first_cluster->transform * first_cluster->mean;
 
       /*
        * Now we know where we want to poke. Let's poke!
@@ -143,7 +147,7 @@ int main(int argc, char** argv){
                     new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
                     1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
       position2.map.phi(position2.y, NoArr, tcm.modelWorld.get()()); //get the current value
-      position2.y_ref = ARR(pointToPoke.getX(), pointToPoke.getY(), pointToPoke.getZ()+1); //set a target
+      position2.y_ref = ARR(pointToPoke.x, pointToPoke.y, pointToPoke.z+1); //set a target
 
       //-- tell the controller to take care of them
       tcm.ctrlTasks.set() = { &position2 };

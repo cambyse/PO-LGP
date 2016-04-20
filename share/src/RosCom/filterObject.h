@@ -13,6 +13,7 @@ struct FilterObject {
   uint id;
   double relevance = 1;
   ors::Transformation transform;
+  ors::Transformation frame;
   FilterObjectType type;
   FilterObject(){}
   virtual ~FilterObject(){}
@@ -57,6 +58,7 @@ struct Cluster:FilterObject {
     this->relevance = obj.relevance;
     this->id = obj.id;
     this->transform = obj.transform;
+    this->frame = obj.frame;
   }
 
   virtual double idMatchingCost(const FilterObject& other){
@@ -82,6 +84,7 @@ struct Alvar:FilterObject {
     this->relevance = obj.relevance;
     this->id = obj.id;
     this->transform = obj.transform;
+    this->frame = obj.frame;
   }
 
   virtual double idMatchingCost(const FilterObject& other){
