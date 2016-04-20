@@ -20,7 +20,7 @@ int main(int argc, char** argv){
     Subscriber<sensor_msgs::JointState> sub("/robot/joint_states", jointState);
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
-    tcm.verbose = true;
+    //    tcm.verbose = true;
 
     threadOpenModules(true);
 
