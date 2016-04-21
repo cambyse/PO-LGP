@@ -180,6 +180,12 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
   K_I = f_alpha*~J;
 }
 
+bool CtrlTask::isConverged(double tolerance){
+  return (y.N && y.N==y_ref.N && v.N==v_ref.N
+          && maxDiff(y, y_ref)<tolerance
+          && maxDiff(v, v_ref)<tolerance);
+}
+
 void CtrlTask::reportState(ostream& os){
   if(active) {
     os <<"  CtrlTask " <<name;
