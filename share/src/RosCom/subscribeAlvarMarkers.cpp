@@ -1,6 +1,15 @@
-#include "rosalvar.h"
+#include "subscribeAlvarMarkers.h"
 
 #ifdef MLR_ROS
+
+#ifdef MLR_ROS_INDIGO
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  namespace ar = ar_track_alvar_msgs;
+#endif
+#if MLR_ROS_GROOVY
+  #include <ar_track_alvar/AlvarMarkers.h>
+  namespace ar = ar_track_alvar;
+#endif
 
 // ============================================================================
 // void ROSMODULE_markers::step() {
@@ -11,12 +20,12 @@
 // }
 
 // ============================================================================
-void setBody(ors::Body& body, const AlvarMarker& marker) {
+void setBody(ors::Body& body, const ar::AlvarMarker& marker) {
   body.X = conv_pose2transformation(marker.pose.pose);
 }
 
 
-void syncMarkers(ors::KinematicWorld& world, const AlvarMarkers& markers) {
+void syncMarkers(ors::KinematicWorld& world, const ar::AlvarMarkers& markers) {
   bool createdNewMarkers = false;
 
   // transform: torso_lift_link is the reference frame_id
@@ -24,7 +33,7 @@ void syncMarkers(ors::KinematicWorld& world, const AlvarMarkers& markers) {
   if(!torso) return; //TODO: make this more general!
   ors::Transformation refFrame = torso->X;
 
-  for (const AlvarMarker& marker : markers.markers) {
+  for (const ar::AlvarMarker& marker : markers.markers) {
     mlr::String marker_name = STRING("marker" << marker.id);
 
     ors::Body *body = world.getBodyByName(marker_name);
