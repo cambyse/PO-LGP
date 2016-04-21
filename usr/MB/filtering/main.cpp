@@ -14,15 +14,15 @@ int main(int argc, char** argv){
   rosCheckInit("tester");
 
   SubscribeTabletop tabletop_subscriber;
-
+  mlr::wait(3);
   SubscribeAlvar alvar_subscriber;
-
+  mlr::wait(3);
   Collector data_collector;
-
+  mlr::wait(3);
   Filter myFilter;
-
+  mlr::wait(3);
   PublishDatabase myPublisher;
-
+  mlr::wait(3);
   RosCom_Spinner spinner;
 
   threadOpenModules(true);

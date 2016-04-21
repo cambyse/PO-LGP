@@ -5,8 +5,6 @@
 #include <Ors/orsviewer.h>
 #include <RosCom/baxter.h>
 
-#include <Actions/PlayFunnySound.h>
-
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
@@ -25,7 +23,7 @@ int main(int argc, char** argv){
     Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
     TaskControllerModule tcm("baxter");
-//    OrsViewer view;
+    OrsViewer view;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
 
     if(mlr::getParameter<bool>("useRos")){
@@ -34,7 +32,6 @@ int main(int argc, char** argv){
     }
 
     SubscribeTabletop tabletop_subscriber;
-
     Collector data_collector;
 
     Filter myFilter;
@@ -54,18 +51,18 @@ int main(int argc, char** argv){
                   new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position.map.phi(position.y, NoArr, tcm.modelWorld.get()()); //get the current value
-    position.y_ref = position.y + ARR(0.2, 0.5, 0.3); //set a target
+    position.y_ref = position.y + ARR(0.2, 0.7, 0.3); //set a target
 
     CtrlTask position1("endeffR", //name
                   new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position1.map.phi(position1.y, NoArr, tcm.modelWorld.get()()); //get the current value
-    position1.y_ref = position1.y + ARR(0.2, -0.5, 0.3); //set a target
+    position1.y_ref = position1.y + ARR(0.2, -0.7, 0.3); //set a target
 
     //-- tell the controller to take care of them
     tcm.ctrlTasks.set() = { &position, &position1}; //, &align2 };
 
-    mlr::wait(5.);
+    mlr::wait(10.);
 
     tcm.ctrlTasks.set()->clear();
 
@@ -77,11 +74,6 @@ int main(int argc, char** argv){
     {
       object_database.readAccess();
       FilterObjects filter_objects = object_database.get();
-      if (filter_objects.N == 0)
-      {
-        object_database.deAccess();
-        continue;
-      }
       FilterObjects clusters;
       for (FilterObject* fo : filter_objects)
       {
@@ -94,11 +86,12 @@ int main(int argc, char** argv){
       {
         std::cout << "No clusters found" << std::endl;
         mlr::wait(1.);
+        object_database.deAccess();
         continue;
       }
 
       double min_dist = 99999;
-      int min_id = -1;
+      int min_index = -1;
 
       for (uint i = 0; i < clusters.N; i++)
       {
@@ -106,15 +99,12 @@ int main(int argc, char** argv){
         if (dist < min_dist)
         {
           min_dist = dist;
-          min_id = i;
+          min_index = i;
         }
       }
 
-      if (min_id == -1)
-        exit(0);
-
       // Get point of interest
-      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_id));
+      Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_index));
       Cluster copy = *first_cluster;
       object_database.deAccess();
 
@@ -140,11 +130,6 @@ int main(int argc, char** argv){
       tcm.ctrlTasks.set() = { &position2 };
 
       mlr::wait(5);
-
-      PlayFunnySoundActivity* pfs = new PlayFunnySoundActivity;
-      pfs->open();
-      mlr::wait(2);
-      delete pfs;
 
       tcm.ctrlTasks.set() = { &position1 };
 
