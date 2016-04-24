@@ -222,7 +222,7 @@ void ActionMachine::parseTaskDescription(Graph& td){
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
   }else if(type=="forceCtrl"){
-    new PushForce(*this, td["ref1"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
+    new PushForce(*this, td["sym2"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
   }else{
     DefaultTaskMap *map = new DefaultTaskMap(td, *world);
     CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);

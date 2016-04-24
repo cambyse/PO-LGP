@@ -30,6 +30,10 @@
  */
 
 
+struct CtrlTask;
+typedef mlr::Array<CtrlTask*> CtrlTaskL;
+
+
 //===========================================================================
 /**
  * A CtrlTask defines a motion in operational space.
@@ -62,8 +66,9 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   CtrlTask(const char* name, TaskMap* map);
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
-  CtrlTask(const char* name, TaskMap& map, Graph& params);
+  CtrlTask(const char* name, TaskMap& map, const Graph& params);
 
+  void set(const Graph& params);
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);

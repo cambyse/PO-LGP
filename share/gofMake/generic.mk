@@ -170,6 +170,10 @@ cleanLocks: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
 	@find $(BASE) -type f -name '.lastMake' -delete -print
 
+cleanAll: clean
+	@find $(BASE) -type f \( -name '*.o' -or -name '*.so' -or -name '*.exe' \)  -delete -print
+
+
 depend: generate_Makefile.dep
 
 info: force

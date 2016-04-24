@@ -1,7 +1,7 @@
 Script {
   (Control pos endeffL obj1){ target=[0 0 .3], PD=[1., .8, 1., 1.] }
   (Control vecAlign endeffL obj1){ vec1=[1 0 0] vec2=[0 0 -1] target=[1], PD=[1., .8, 1., 1.] }
-  (Control qItself){ ref1="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
+  (Control qItself){ sym2="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
   wait{ (conv Control pos endeffL obj1) (conv Control vecAlign endeffL obj1) }
 
   (Control pos endeffL obj1)!, (conv Control pos endeffL obj1)!, (conv Control vecAlign endeffL obj1)!
@@ -9,7 +9,7 @@ Script {
   wait{ (conv Control pos endeffL obj1) }
 
   (Control qItself)!, (conv Control qItself)!
-  (Control qItself){ ref1="l_gripper_l_finger_joint" target=[.0], PD=[1., .8, 1., 1.] }
+  (Control qItself){ sym2="l_gripper_l_finger_joint" target=[.0], PD=[1., .8, 1., 1.] }
   wait{ (conv Control qItself) }
 
   (Control pos endeffL obj1)!, (conv Control pos endeffL obj1)!, (conv Control vecAlign endeffL obj1)!
@@ -21,7 +21,7 @@ Script {
   wait{ (conv Control pos endeffL obj1) }
 
   (Control qItself)!, (conv Control qItself)!
-  (Control qItself){ ref1="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
+  (Control qItself){ sym2="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
   wait{ (conv Control qItself) }
 
 
@@ -59,7 +59,7 @@ Script1 {
 Script2 {
   hand  (Control pos endeffL obj1){ target=[0 0 .3], PD=[1., .8, 1., 1.] }
   align (Control vecAlign endeffL obj1){ vec1=[1 0 0] vec2=[0 0 -1] target=[1], PD=[1., .8, 1., 1.] }
-  grip  (Control qItself){ ref1="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
+  grip  (Control qItself){ sym2="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
   wait{ (conv hand) (conv align) }
 
   (hand)! #conv also deleted by destructor of activity!
@@ -67,7 +67,7 @@ Script2 {
   wait{ (conv hand) }
 
   (Control qItself)!, (conv Control qItself)!
-  (Control qItself){ ref1="l_gripper_l_finger_joint" target=[.0], PD=[1., .8, 1., 1.] }
+  (Control qItself){ sym2="l_gripper_l_finger_joint" target=[.0], PD=[1., .8, 1., 1.] }
   wait{ (conv Control qItself) }
 
   (Control pos endeffL obj1)!, (conv Control pos endeffL obj1)!, (conv Control vecAlign endeffL obj1)!
@@ -79,7 +79,7 @@ Script2 {
   wait{ (conv Control pos endeffL obj1) }
 
   (Control qItself)!, (conv Control qItself)!
-  (Control qItself){ ref1="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
+  (Control qItself){ sym2="l_gripper_l_finger_joint" target=[.1], PD=[1., .8, 1., 1.] }
   wait{ (conv Control qItself) }
 
 

@@ -19,10 +19,6 @@ struct Activity {
   Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
 
-  //-- 'callbacks' that are called from the RelationalMachine if something changes
-  void associateToExistingFact(Node *fact);
-  //void createFactRepresentative(Graph& state); this is never used
-
   /// configure yourself from the 'symbols' and 'params'
   virtual void configure(){}
 
@@ -50,24 +46,6 @@ template<class T> void registerActivity(const char* key){
 /// create/launch a new activity based on the fact
 Activity* newActivity(Node *fact);
 
-/// create/launch a new activity based on the type, symbols and params; adds a fact to relationalState
-/* This is never used. Also: implement this by first creating the fact, then calling newActivity(fact) and checking the type
-template<class T>
-void newActivity(Graph& relationalState, const StringA& symbols, const Graph& params){
-  Activity *act = dynamic_cast<Activity*>(new T);
-  act->symbols = symbols;
-  act->params = params;
-
-  //-- add refs to specs for other symbols
-  for(uint i=1;i<symbols.N;i++){
-    CHECK(!act->params[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
-    new Node_typed<mlr::String>(act->params, {STRING("ref"<<i-1)}, {}, new mlr::String(symbols(i)), true);
-  }
-
-  act->createFactRepresentative(relationalState);
-  registry().find<Variable<ActivityL> >("A") -> set()->append(act);
-}
-*/
 
 //===========================================================================
 
@@ -80,7 +58,6 @@ struct ActivitySpinnerModule : Module{
   void step(){
     A.readAccess();
     for(Activity *act:A()) act->activitySpinnerStep(0.01);
-//    for(Activity *act:A()) act->write(cout);
     A.deAccess();
   }
   void close(){}
