@@ -6,7 +6,7 @@
 #include <Motion/pr2_heuristics.h>
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 
 
 #include <ros/ros.h>
