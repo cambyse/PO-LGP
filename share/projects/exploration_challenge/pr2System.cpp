@@ -42,10 +42,10 @@ int pr2System::getDof() const {
     //const_cast<pr2System*>(this)->ctrl_obs.waitForNextRevision();
     if(frame_id == "l_wrist_ft_sensor" or 
        frame_id == "ee") {
-      //return(conv_arr2eigen(const_cast<pr2System*>(this)->ctrl_obs.get()->fL));
+      return(std2eigen(interface.getForceLeft()));
     }
     else if(frame_id == "r_wrist_ft_sensor") {
-      //return(conv_arr2eigen(const_cast<pr2System*>(this)->ctrl_obs.get()->fR));  
+      return(std2eigen(interface.getForceRight()));
     }
     else {
       HALT(frame_id << " is not a valid FT sensor frame.");

@@ -7,7 +7,7 @@
 
 #define CONST_INTERFACE const_cast<ActionSwigInterface*>(&(boost::dynamic_pointer_cast<const pr2System>(_system)->interface))
 
-OpSpaceController::OpSpaceController() : Controller(), _running(false) {}
+OpSpaceController::OpSpaceController() : Controller(), _pos_fact("-"), _rot_fact("-"), _running(false) {}
 
 void OpSpaceController::initialize() {
   _create_facts();
@@ -38,7 +38,7 @@ void OpSpaceController::setGoal(const Eigen::MatrixXd& new_goal) {
 
   _goal = new_goal;
   _create_facts();
-  cout << _goal << endl;
+  //cout << _goal << endl;
 
   if(_running) {
       CONST_INTERFACE->stopFact(_pos_fact.c_str());
