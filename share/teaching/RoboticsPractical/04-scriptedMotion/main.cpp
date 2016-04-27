@@ -19,6 +19,9 @@ int main(int argc, char** argv){
     auto grip  = baxter.task(GRAPH("map=qItself ref1=l_gripper_l_finger_joint target=[.1] PD=[1., .8, 1., 1.]"));
     baxter.waitConv({pos, align});
 
+    mlr::wait(3.);
+    baxter.reportPerceptionObjects();
+
     baxter.modify(pos, GRAPH("target=[0 0 .1] PD=[3., 1., 1., 1.]"));
     baxter.waitConv({pos, align});
 

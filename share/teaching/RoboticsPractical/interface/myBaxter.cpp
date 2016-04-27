@@ -10,15 +10,28 @@
 #include <RosCom/serviceRAP.h>
 #include <RosCom/baxter.h>
 
+#include <RosCom/subscribeTabletop.h>
+#include <RosCom/perceptionCollection.h>
+#include <RosCom/perceptionFilter.h>
+#include <RosCom/filterObject.h>
+#include <RosCom/publishDatabase.h>
+
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
+  ACCESSname(FilterObjects, object_database)
 
   TaskControllerModule tcm;
 //  RelationalMachineModule rm;
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
+  SubscribeTabletop tabletop_subscriber;
+  Collector data_collector;
+  Filter myFilter;
+  PublishDatabase myPublisher;
+
   GamepadInterface gamepad;
+  OrsViewer view;
   OrsPoseViewer ctrlView;
   SendPositionCommandsToBaxter spctb;
   Subscriber<sensor_msgs::JointState> sub;
@@ -108,6 +121,49 @@ void MyBaxter::waitConv(const CtrlTaskL& tasks){
     for(CtrlTask *t:tasks) if(!t->isConverged()){ allConv=false; break; }
     if(allConv) return;
   }
+}
+
+uint MyBaxter::reportPerceptionObjects(){
+  s->object_database.readAccess();
+  FilterObjects clusters;
+  uint n=0;
+  for(FilterObject* fo : s->object_database()){
+    fo->write(cout);
+    cout <<endl;
+    n++;
+  }
+  s->object_database.deAccess();
+  /*
+  if (clusters.N == 0)
+  {
+    std::cout << "No clusters found" << std::endl;
+    mlr::wait(1.);
+    object_database.deAccess();
+    continue;
+  }
+
+  double min_dist = 99999;
+  int min_index = -1;
+
+  for (uint i = 0; i < clusters.N; i++)
+  {
+    double dist = length(dynamic_cast<Cluster*>(clusters(i))->mean);
+    if (dist < min_dist)
+    {
+      min_dist = dist;
+      min_index = i;
+    }
+  }
+
+  // Get point of interest
+  Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_index));
+  Cluster copy = *first_cluster;
+  object_database.deAccess();
+
+  ors::Vector orsPoint = copy.frame * ors::Vector(copy.mean);
+*/
+  return n;
+
 }
 
 arr MyBaxter::q0(){

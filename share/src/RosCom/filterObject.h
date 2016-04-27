@@ -15,10 +15,16 @@ struct FilterObject {
   ors::Transformation transform;
   ors::Transformation frame;
   FilterObjectType type;
-  FilterObject(){}
+  FilterObject(){
+    transform.setZero();
+    frame.setZero();
+  }
   virtual ~FilterObject(){}
 
   virtual double idMatchingCost(const FilterObject& other) = 0;
+  virtual void write(ostream& os) const{
+    os <<" trans=" <<transform <<" frame=" <<frame;
+  }
 
 private:
   std::map<FilterObjectType, std::string> m = {
@@ -31,8 +37,6 @@ private:
   //  virtual void mergeWithInputObject(const FilterObject& o);
 
 };
-
-
 
 struct Cluster:FilterObject {
   arr mean;
@@ -64,6 +68,11 @@ struct Cluster:FilterObject {
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=cluster) return -1.;
     return length(this->mean - dynamic_cast<const Cluster*>(&other)->mean);
+  }
+
+  virtual void write(ostream& os) const{
+    os <<"Cluster_" <<id <<": mean=" <<mean;
+    FilterObject::write(os);
   }
 
 };

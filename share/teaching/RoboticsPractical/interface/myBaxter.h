@@ -31,6 +31,10 @@ struct MyBaxter{
   void stop(const CtrlTaskL& tasks);
   void waitConv(const CtrlTaskL& tasks);
 
+  //-- get object information
+  uint reportPerceptionObjects();
+
+
   //-- info
   arr q0();
 };
