@@ -497,20 +497,22 @@ int main(int argc, char** argv) {
 
   ha::HybridAutomaton::Ptr hybrid_automaton(new ha::HybridAutomaton());
 
+//  hybrid_automaton->setVerbose(true);
+
   Eigen::Vector3d goal_op_pos;
-  goal_op_pos << .5, .5, .5;
+  goal_op_pos << .7, .0, .7;
   Eigen::Matrix3d goal_op_rot_matrix;
   goal_op_rot_matrix << 1, 0, 0, 
                         0, 1, 0, 
                         0, 0, 1;
   Eigen::MatrixXd retreat_op_pos(3, 1);
-  retreat_op_pos << .3, .3, .3;
+  retreat_op_pos << .3, .3, .7;
   Eigen::MatrixXd retreat_op_rot_matrix(3, 3);
   retreat_op_rot_matrix << 1, 0, 0,
                            0, 1, 0,
                            0, 0, 1;
   Eigen::VectorXd approach_op_pos(3);
-  approach_op_pos << .3, .3, .3;
+  approach_op_pos << .3, .3, .7;
   Eigen::MatrixXd approach_op_rot_matrix(3, 3);
   approach_op_rot_matrix << 1, 0, 0, 
                             0, 1, 0, 
@@ -524,6 +526,7 @@ int main(int argc, char** argv) {
     t += .01;
     hybrid_automaton->step(t);
     //std::cout << hybrid_automaton->getCurrentControlMode()->getName() << std::endl;
+
     //std::cout << "JC active: " << bigger->isActive() << std::endl;
     //std::cout << "Sensor value: " << bigger->getSensor()->getCurrentValue() << std::endl;
     mlr::wait(.1);

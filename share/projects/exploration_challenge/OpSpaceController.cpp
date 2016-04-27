@@ -53,12 +53,12 @@ void OpSpaceController::_create_facts() {
 
   std::stringstream buf1;
   buf1 << "(Control pos)" <<
-         "{ ref1=" << _endeff << " target=[" << _goal.block<3, 1>(0, 3) << "]}";
+         "{ ref1=" << _endeff << " target=[" << _goal.block<3, 1>(0, 3) << " ] }";
   _pos_fact = buf1.str();
 
   std::stringstream buf2;
   buf2 << "(Control quat)" <<
-         "{ ref1=" << _endeff << " target=[" << ARRAY(trans.rot) << "]}";
+         "{ ref1=" << _endeff << " target=[ " << trans.rot.w << " " << trans.rot.x << " " << trans.rot.y << " " << trans.rot.z << " ] }";
   _rot_fact = buf2.str();
 }
 
