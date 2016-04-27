@@ -1,13 +1,14 @@
 INSTALL
 """""""
 
-1. Get the hybrid_automaton lib
+1. Get the hybrid_automaton lib (with the correct branch...)
 
 $ git clone git@animal.ipvs.uni-stuttgart.de:exploration-challenge:rswin
 $ cd rswin/hybrid_automaton
+$ git checkout haf_abstract
 $ mkdir build
 $ cd build
-$ cmake ..
+$ cmake -DCMAKE_BUILD_TYPE=Debug ..
 $ make
 
 2. set the paths for include/lib for the hybrid automaton in the
@@ -18,4 +19,6 @@ i.e. ~/src/rswin/hybrid_automaton/include and ~/src/rswin/hybrid_automaton/build
 
 $ make
 
-4. done.
+4. run it
+
+$ ./x.exe
