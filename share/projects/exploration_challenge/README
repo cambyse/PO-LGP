@@ -1,0 +1,21 @@
+INSTALL
+"""""""
+
+1. Get the hybrid_automaton lib
+
+$ git clone git@animal.ipvs.uni-stuttgart.de:exploration-challenge:rswin
+$ cd rswin/hybrid_automaton
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+
+2. set the paths for include/lib for the hybrid automaton in the
+mlr/share/projects/exploration_challenge/makefile to the appropriate locations,
+i.e. ~/src/rswin/hybrid_automaton/include and ~/src/rswin/hybrid_automaton/build
+
+3. build the project
+
+$ make
+
+4. done.
