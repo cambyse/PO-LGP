@@ -7,10 +7,11 @@
 
 #define CONST_INTERFACE const_cast<ActionSwigInterface*>(&(boost::dynamic_pointer_cast<const pr2System>(_system)->interface))
 
-qItselfController::qItselfController() : Controller(), _running(false) {}
+qItselfController::qItselfController() : Controller(), _fact("-"),_running(false), _endeff("-") {}
 
 void qItselfController::initialize() {
-  _fact = _create_fact();
+  this->setGoal(Eigen::MatrixXd(1, 1));
+  _fact = this->_create_fact();
   CONST_INTERFACE->setFact(_fact.c_str());
   _running = true;
 }
@@ -46,16 +47,17 @@ void qItselfController::setGoal(const Eigen::MatrixXd& new_goal) {
 std::string qItselfController::_create_fact() const {
   std::stringstream buf;
   buf << "(Control qItself)" <<
-         "{ ref1=" << _index_vec << " target=[" << _goal << "]}";
+         "{ ref1=" << _endeff << " target=[" << _goal << "]}";
   return buf.str();
 }
 
 void qItselfController::setEndeff(const std::string& endeff) {
-    _index_vec = ::Eigen::MatrixXd::Zero(_system->getDof(), 1);
-    std::stringstream ss;
-    ss << CONST_INTERFACE->getJointByName(endeff)["qIndex"];
-    int qi;
-    ss >> qi;
-    _index_vec(qi, 0) = 1;
+    _endeff = endeff;
+//    _index_vec = ::Eigen::MatrixXd::Zero(_system->getDof(), 1);
+//    std::stringstream ss;
+//    ss << CONST_INTERFACE->getJointByName(endeff)["qIndex"];
+//    int qi;
+//    ss >> qi;
+//    _index_vec(qi, 0) = 1;
 }
 

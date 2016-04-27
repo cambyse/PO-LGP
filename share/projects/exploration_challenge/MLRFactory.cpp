@@ -40,6 +40,7 @@ ha::Controller::Ptr MLRFactory::createGraspController(const ha::HybridAutomatonA
     qItselfController::Ptr close_gripper(new qItselfController());
     close_gripper->setSystem(system);
     close_gripper->setEndeff(p.gripper);
+    close_gripper->setName(name);
     ::Eigen::MatrixXd goal(1, 1);
     goal(0, 0) = params.grasp_strength;
     close_gripper->setGoal(goal);
@@ -64,8 +65,10 @@ ha::Controller::Ptr MLRFactory::createSubjointSpaceController(const ha::HybridAu
                                                           bool is_relative) {
     qItselfController::Ptr ctrl(new qItselfController());
     ctrl->setSystem(system);
-    ctrl->setIndices(index_vec);
+    //ctrl->setIndices(index_vec);
+    ctrl->setEndeff("-");
     ctrl->setGoal(goal_js);
+    ctrl->setName(name);
     return ctrl;
 }
 

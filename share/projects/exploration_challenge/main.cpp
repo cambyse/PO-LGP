@@ -523,10 +523,10 @@ int main(int argc, char** argv) {
   for(uint i=0; i<10000; ++i) {
     t += .01;
     hybrid_automaton->step(t);
-    std::cout << hybrid_automaton->getCurrentControlMode()->getName() << std::endl;
+    //std::cout << hybrid_automaton->getCurrentControlMode()->getName() << std::endl;
     //std::cout << "JC active: " << bigger->isActive() << std::endl;
     //std::cout << "Sensor value: " << bigger->getSensor()->getCurrentValue() << std::endl;
-    mlr::wait(.01);
+    mlr::wait(.1);
   }
 
   hybrid_automaton->terminate();
