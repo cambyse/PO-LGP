@@ -107,7 +107,9 @@ void Filter::step()
   }
 
   // Set the access.
-  object_database.set() = filteredInputs;
+  object_database.writeAccess();
+  object_database() = filteredInputs;
+  object_database.deAccess();
 }
 
 FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& database)

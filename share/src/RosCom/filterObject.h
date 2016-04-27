@@ -33,9 +33,6 @@ private:
     std::make_pair(FilterObjectType::plane, "plane")
   };
 
-  //  virtual bool idIsConfident();
-  //  virtual void mergeWithInputObject(const FilterObject& o);
-
 };
 
 struct Cluster:FilterObject {
