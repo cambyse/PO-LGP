@@ -72,6 +72,7 @@ CtrlTask* MyBaxter::task(const Graph& specs){
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
+  t->reportState(cout);
   return t;
 }
 
@@ -164,6 +165,31 @@ uint MyBaxter::reportPerceptionObjects(){
 */
   return n;
 
+}
+
+
+ors::Vector MyBaxter::closestCluster(){
+  s->object_database.readAccess();
+
+  ors::Vector toReturn(0,0,0);
+
+  double max_dist = DBL_MIN;
+  for(FilterObject* fo : s->object_database())
+  {
+    if (fo->type == FilterObject::FilterObjectType::cluster)
+    {
+      ors::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
+      double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
+      if (max_dist < dist)
+      {
+        max_dist = dist;
+        toReturn = mean;
+      }
+    }
+  }
+  s->object_database.deAccess();
+
+  return toReturn;
 }
 
 arr MyBaxter::q0(){

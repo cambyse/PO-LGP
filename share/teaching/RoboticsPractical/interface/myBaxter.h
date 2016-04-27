@@ -34,6 +34,8 @@ struct MyBaxter{
   //-- get object information
   uint reportPerceptionObjects();
 
+  //-- get position closest cluster
+  ors::Vector closestCluster();
 
   //-- info
   arr q0();
