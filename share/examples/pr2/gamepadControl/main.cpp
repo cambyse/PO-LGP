@@ -1,12 +1,13 @@
 #include <Core/module.h>
 #include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>
 
 #include <sensor_msgs/JointState.h>
-#include <pr2/baxter.h>
+//#include <pr2/baxter.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
@@ -24,7 +25,7 @@ int main(int argc, char** argv){
   TaskControllerModule tcm;
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
-  SendPositionCommandsToBaxter sender;
+  //SendPositionCommandsToBaxter sender;
   OrsViewer view;
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
   if(mlr::getParameter<bool>("useRos")){

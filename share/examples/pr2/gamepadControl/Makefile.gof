@@ -4,6 +4,6 @@ BASE = ../../..
 OBJS = main.o
 PLIB = 1
 ROS = 1
-DEPEND = Core RosCom Actions Hardware_gamepad Ors Motion
+DEPEND = Core RosCom Actions Hardware_gamepad Ors Motion Control
 
 include $(BASE)/gofMake/generic.mk
