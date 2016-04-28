@@ -24,14 +24,20 @@ void Filter::step()
 {
   perceptual_inputs.waitForNextRevision();
 
-  FilterObjects perceptualInputs = perceptual_inputs.get();
-  FilterObjects objectDatabase = object_database.get();
+  perceptual_inputs.writeAccess();
+  object_database.writeAccess();
+
+  FilterObjects perceptualInputs = perceptual_inputs();
+  FilterObjects objectDatabase = object_database();
 
 
   // If empty inputs, do nothing.
   if (perceptualInputs.N == 0)
+  {
+    object_database.deAccess();
+    perceptual_inputs.deAccess();
     return;
-
+  }
 
   FilterObjects filteredInputs;
   FilterObjects matchedSubsetFromDatabase, matchedSubsetFromPerceptualInputs;
@@ -107,9 +113,9 @@ void Filter::step()
   }
 
   // Set the access.
-  object_database.writeAccess();
   object_database() = filteredInputs;
   object_database.deAccess();
+  perceptual_inputs.deAccess();
 }
 
 FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& database)

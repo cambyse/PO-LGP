@@ -1,3 +1,5 @@
+#define REPORT 1
+
 #include "myBaxter.h"
 
 #include <RosCom/roscom.h>
@@ -72,7 +74,9 @@ CtrlTask* MyBaxter::task(const Graph& specs){
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
+#ifdef REPORT
   t->reportState(cout);
+#endif
   return t;
 }
 
@@ -89,12 +93,18 @@ CtrlTask*MyBaxter::task(const char* name,
   t->y_ref = target;
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
+#ifdef REPORT
+  t->reportState(cout);
+#endif
   return t;
 }
 
 CtrlTask* MyBaxter::modify(CtrlTask* t, const Graph& specs){
   s->tcm.ctrlTasks.writeAccess();
   t->set(specs);
+#ifdef REPORT
+  t->reportState(cout);
+#endif
   s->tcm.ctrlTasks.deAccess();
   return t;
 }
@@ -102,6 +112,10 @@ CtrlTask* MyBaxter::modify(CtrlTask* t, const Graph& specs){
 CtrlTask* MyBaxter::modifyTarget(CtrlTask* t, const arr& target){
   s->tcm.ctrlTasks.writeAccess();
   t->y_ref = target;
+
+#ifdef REPORT
+  t->reportState(cout);
+#endif
   s->tcm.ctrlTasks.deAccess();
   return t;
 }
@@ -134,37 +148,7 @@ uint MyBaxter::reportPerceptionObjects(){
     n++;
   }
   s->object_database.deAccess();
-  /*
-  if (clusters.N == 0)
-  {
-    std::cout << "No clusters found" << std::endl;
-    mlr::wait(1.);
-    object_database.deAccess();
-    continue;
-  }
-
-  double min_dist = 99999;
-  int min_index = -1;
-
-  for (uint i = 0; i < clusters.N; i++)
-  {
-    double dist = length(dynamic_cast<Cluster*>(clusters(i))->mean);
-    if (dist < min_dist)
-    {
-      min_dist = dist;
-      min_index = i;
-    }
-  }
-
-  // Get point of interest
-  Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_index));
-  Cluster copy = *first_cluster;
-  object_database.deAccess();
-
-  ors::Vector orsPoint = copy.frame * ors::Vector(copy.mean);
-*/
   return n;
-
 }
 
 
