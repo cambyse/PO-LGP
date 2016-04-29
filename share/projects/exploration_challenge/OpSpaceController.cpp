@@ -1,5 +1,6 @@
 #include "OpSpaceController.h"
 #include "pr2System.h"
+#include "util.h"
 #include <Eigen/Dense>
 #include <string>
 #include <sstream>
@@ -27,7 +28,7 @@ void OpSpaceController::terminate() {
 }
 
 ::Eigen::MatrixXd OpSpaceController::relativeGoalToAbsolute(const Eigen::MatrixXd& goalRel) const {
-  return _goal + goalRel;  
+  return _system->getFramePose(_endeff) + goalRel;
 }
 
 void OpSpaceController::setGoal(const Eigen::MatrixXd& new_goal) {
@@ -47,18 +48,24 @@ void OpSpaceController::setGoal(const Eigen::MatrixXd& new_goal) {
 }
 
 void OpSpaceController::_create_facts() {
-  ors::Transformation trans;
-  trans.setAffineMatrix(_goal.data());
+  ::Eigen::MatrixXd goal = _goal;
+  if(this->getGoalIsRelative())
+      goal = relativeGoalToAbsolute(_goal);
 
+  ors::Transformation trans;
+  trans.setAffineMatrix(eigen2mt(goal).p);
 
   std::stringstream buf1;
-  buf1 << "(Control pos)" <<
-         "{ ref1=" << _endeff << " target=[" << _goal.block<3, 1>(0, 3) << " ] }";
+  std::stringstream buf2;
+
+  buf1 << "(Control pos)";
+  buf2 << "(Control quat)";
+
+  buf1 << "{ ref1=" << _endeff << " target=[" << trans.pos.x << " " << trans.pos.y << " " << trans.pos.z << " ] }";
   _pos_fact = buf1.str();
 
-  std::stringstream buf2;
-  buf2 << "(Control quat)" <<
-         "{ ref1=" << _endeff << " target=[ " << trans.rot.w << " " << trans.rot.x << " " << trans.rot.y << " " << trans.rot.z << " ] }";
+  buf2 <<  "{ ref1=" << _endeff << " target=[ " << trans.rot.w << " " << trans.rot.x << " " << trans.rot.y << " " << trans.rot.z << " ] }";
   _rot_fact = buf2.str();
+
 }
 
