@@ -312,11 +312,19 @@ double ActionSwigInterface::getQDim() {
 }
 
 doubleV ActionSwigInterface::getForceLeft() {
+#ifdef MLR_ROS
     return conv_arr2stdvec(S->ctrl_obs.get()->fL);
+#else
+    return std::vector<double>({0., 0., 0., 0., 0., 0.});
+#endif
 }
 
 doubleV ActionSwigInterface::getForceRight() {
+#ifdef MLR_ROS
     return conv_arr2stdvec(S->ctrl_obs.get()->fR);
+#else
+    return std::vector<double>({0., 0., 0., 0., 0., 0.});
+#endif
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
