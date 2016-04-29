@@ -21,7 +21,7 @@
 #include <Hardware/gamepad/gamepad.h>
 
 Gamepad2Tasks::Gamepad2Tasks(TaskController& _MP, const arr& _q0)
-  : MP(_MP),
+  : MP(_MP), q0(_q0),
     endeffR(NULL), endeffL(NULL), base(NULL), torso(NULL), head(NULL), headAxes(NULL), limits(NULL), coll(NULL), gripperL(NULL), gripperR(NULL){
 
   robot = mlr::getParameter<mlr::String>("robot", "pr2");
@@ -31,8 +31,8 @@ Gamepad2Tasks::Gamepad2Tasks(TaskController& _MP, const arr& _q0)
     homing->setTarget(q0);
     endeffR = new CtrlTask("endeffR", new DefaultTaskMap(posTMT, MP.world, "endeffR", NoVector, "base_footprint"), .5, .8, 1., 1.);
     endeffL = new CtrlTask("endeffL", new DefaultTaskMap(posTMT, MP.world, "endeffL", NoVector, "base_footprint"), .5, .8, 1., 1.);
-    //  base = new CtrlTask("endeffBase", new TaskMap_qItself(MP.world, "worldTranslationRotation"), .2, .8, 1., 1.);
-    //  torso = new CtrlTask("torso_lift_link", new DefaultTaskMap(posTMT, MP.world, "torso_lift_link_0"), .2, .8, 1., 1.);
+    base = new CtrlTask("endeffBase", new TaskMap_qItself(MP.world, "worldTranslationRotation"), .2, .8, 1., 1.);
+    torso = new CtrlTask("torso_lift_link", new DefaultTaskMap(posTMT, MP.world, "torso_lift_link_0"), .2, .8, 1., 1.);
     head = new CtrlTask("endeffHead", new DefaultTaskMap(gazeAtTMT, MP.world, "endeffHead", Vector_z, "base_footprint"), .5, 1., 1., 1.);
     if(robot=="pr2") headAxes = new CtrlTask("endeffHead", new TaskMap_qItself(MP.world, "head_pan_joint", "head_tilt_joint"), .5, 1., 1., 1.);
     if(robot=="baxter") headAxes = new CtrlTask("endeffHead", new TaskMap_qItself(MP.world, "head_pan"), .5, 1., 1., 1.);
