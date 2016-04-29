@@ -82,8 +82,8 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
         double ft_epsilon = 7;
 
         //epsilon in operational space for the convergence condition
-        double pos_epsilon_os_linear = 0.02;
-        double pos_epsilon_os_angular = 0.04;
+        p._pos_epsilon_os_linear = 0.02;
+        p._pos_epsilon_os_angular = 0.04;
 
         mlr_factory->CreateGoToCMConvergenceCSAndMaxForceCS(p,
                                                             move_towards_approach_cm,
@@ -186,7 +186,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                                         ha::JumpCondition::NORM_L2,
                                                         false,
                                                         true,
-                                                        .01,
+                                                        ft_epsilon,
                                                         true);
 
 
@@ -232,7 +232,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                                             ha::JumpCondition::NORM_L2,
                                                             false,
                                                             true,
-                                                            10.0,//ft_epsilon,
+                                                            ft_epsilon,
                                                             articulate_relative);
 
         actuate_affordance_ha->addControlSwitchAndMode(unrotate_cm->getName(),unrotate_convergence_cs, push_down_cm);
@@ -258,7 +258,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                                         ha::JumpCondition::NORM_L2,
                                                         false,
                                                         true,
-                                                        20.0,//ft_epsilon,
+                                                        ft_epsilon,
                                                         articulate_relative);
 
     actuate_affordance_ha->addControlSwitchAndMode(push_down_cm->getName(),push_down_force_exceeded_cs, pull_cm);
@@ -497,7 +497,7 @@ int main(int argc, char** argv) {
 
   ha::HybridAutomaton::Ptr hybrid_automaton(new ha::HybridAutomaton());
 
-//  hybrid_automaton->setVerbose(true);
+  hybrid_automaton->setVerbose(false);
 
   Eigen::Vector3d goal_op_pos;
   goal_op_pos << .7, .0, .7;
