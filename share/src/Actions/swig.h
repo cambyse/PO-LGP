@@ -35,6 +35,8 @@ struct ActionSwigInterface{
   dict getShapeByName (string shapeName);
   dict getJointByName (string jointName);
   int getQIndex(string jointName);
+  doubleV getForceLeft();
+  doubleV getForceRight();
 
   //-- symbolic state access
   stringV getSymbols();
