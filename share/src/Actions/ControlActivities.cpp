@@ -59,8 +59,7 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, o
       map = new TaskMap_qItself(world, "worldTranslationRotation");
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : false;
     }else if (it->get<mlr::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->get<mlr::String>())->qIndex,
-                                world.getJointStateDimension());
+      map = new TaskMap_qItself(world, specs["ref1"]->get<mlr::String>());
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : true;
     }else{
       map = new DefaultTaskMap(specs, world);
