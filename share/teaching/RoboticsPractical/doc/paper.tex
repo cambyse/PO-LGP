@@ -291,29 +291,50 @@ state-space to collect data for the previous tasks.
 @rostopic echo <name>@ to show what is currently published in a
 topic. In our case, an interesting topic name is @/robot/limb/left/joint...@
 
-@rostopic ???@ to actually send a topic from command line [[Matt,
-    explicitly give an example]]
+@rostopic pub <topic_name> <message_type> <message>@ to actually send a 
+topic from command line.
 
-\item[From a simple main.cpp] Here is a minimalistic program that sends a
-  command [[Matt: add includes, check that it works]]
+For example, the following would send torques of 0 to the joints of Baxter's
+right arm. The @-r 100@ means that I want to keep publishing that message at
+ 100 Hz.
+
 \begin{code}
 \begin{Verbatim}
-int main(int argn, char** argv){
-  ros::init(argn, argv, "my_node", ros::init_options::NoSigintHandler);
+rostopic pub /robot/limb/right/joint_command baxter_core_msgs/JointCommand
+"{mode: 3, command: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], names: ['right_w0',
+'right_w1', 'right_w2', 'right_e0', 'right_e1', 'right_s0', 'right_s1']}" 
+-r 100
+\end{Verbatim}
+\end{code}
+
+\item[From a simple main.cpp] Here is a minimalistic program that publishes a
+  command.
+\begin{code}
+\begin{Verbatim}
+#include <ros/ros.h>
+#include <baxter_core_msgs/JointCommand.h>
+
+int main(int argc, char** argv){
+  ros::init(argc, argv, "my_node", ros::init_options::NoSigintHandler);
 
   ros::NodeHandle nh;
   ros::Publisher pub = nh.advertise<baxter_core_msgs::JointCommand>(
                                        "robot/limb/left/joint_command", 1);
 
   baxter_core_msgs::JointCommand msg;
-  msg.mode = 1;
-  msg.command = { 0., 0,0,0,0,0,0};
-  msg.names = { "left_s0", "left_s1", "left_e0", "left_e1",
-                                          "left_w0", "left_w1", "left_w2" };
+  msg.mode = baxter_core_msgs::JointCommand::POSITION_MODE;
+  msg.command = { 0, 0, 0, 0, 0, 0, 0 };
+  msg.names = { "left_s0", "left_s1", "left_e0", "left_e1", "left_w0", "left_w1", "left_w2" };
 
-  pub.publish(msg);
-  ros::spin();
+  for ( uint i = 0; i < 1000; i++ )
+  {
+    pub.publish(msg);
+    ros::spinOnce();
+    ros::Duration(0.05).sleep();
+  }
+  return 0;
 }
+
 \end{Verbatim}
 \end{code}
 
