@@ -1,5 +1,6 @@
 #include <Core/util.h>
 #include "../interface/myBaxter.h"
+#include <Control/taskController.h>
 
 // =================================================================================================
 
@@ -18,12 +19,22 @@ int main(int argc, char** argv){
     auto posR   = baxter.task(GRAPH("map=pos ref1=endeffR ref2=base_footprint target=[0.6 -0.6 1.3] PD=[1., .8, 1., 1.]"));
     auto align = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=obj1 vec1=[1 0 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 1.]"));
     auto grip  = baxter.task(GRAPH("map=qItself ref1=l_gripper_l_finger_joint target=[.1] PD=[1., .8, 1., 1.]"));
-    baxter.waitConv({posL, posR, align});
+
+    while (! posL->isConverged() ) {
+      baxter.reportJointState();
+      mlr::wait(0.05);
+    }
+
+    baxter.waitConv({posR, align});
 
     mlr::wait(3.);
 
     baxter.reportPerceptionObjects();
     ors::Vector closest_vec = baxter.closestCluster();
+
+    if (closest_vec.length() == 0)
+      closest_vec.set(0.5, 0.6, 1);
+
     arr closest = ARR(closest_vec.x, closest_vec.y, closest_vec.z);
 
     baxter.modify(posL, GRAPH("PD=[3., 1., 1., 1.]"));

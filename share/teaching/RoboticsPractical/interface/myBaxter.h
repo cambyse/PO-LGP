@@ -33,6 +33,7 @@ struct MyBaxter{
 
   //-- get object information
   uint reportPerceptionObjects();
+  void reportJointState();
 
   //-- get position closest cluster
   ors::Vector closestCluster();
