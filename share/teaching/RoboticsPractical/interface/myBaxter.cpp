@@ -152,13 +152,15 @@ uint MyBaxter::reportPerceptionObjects(){
 }
 
 void MyBaxter::reportJointState(){
-  sensor_msgs::JointState js = s->jointState.get();
+  if(mlr::getParameter<bool>("useRos"))
+  {
+    sensor_msgs::JointState js = s->jointState.get();
 
-  std::cout << "Joint header: " << js.header.seq << std::endl;
-  for (uint i = 0; i < js.name.size(); ++i){
-    std::cout << "\tJoint: " << js.name[i] << "\tPosition: " << js.position[i] << "\tEffort: " << js.effort[i] << std::endl;
+    std::cout << "Joint header: " << js.header.seq << std::endl;
+    for (uint i = 0; i < js.name.size(); ++i){
+      std::cout << "\tJoint: " << js.name[i] << "\tPosition: " << js.position[i] << "\tEffort: " << js.effort[i] << std::endl;
+    }
   }
-
 }
 
 ors::Vector MyBaxter::closestCluster(){
