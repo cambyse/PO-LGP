@@ -48,7 +48,7 @@ void FOL_World::init(istream& is){
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
   Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
-  Graph *params = &KB.get<Graph>("FOL_World");
+  Graph *params = KB.find<Graph>("FOL_World");
   if(params){
     hasWait = params->get<bool>("hasWait", hasWait);
     gamma = params->get<double>("gamma", gamma);
