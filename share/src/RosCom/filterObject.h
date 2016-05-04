@@ -64,11 +64,13 @@ struct Cluster:FilterObject {
 
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=cluster) return -1.;
-    return length(this->mean - dynamic_cast<const Cluster*>(&other)->mean);
+    ors::Vector diff = (this->frame * ors::Vector(this->mean)) -
+                      (dynamic_cast<const Cluster*>(&other)->frame * ors::Vector(dynamic_cast<const Cluster*>(&other)->mean));
+    return diff.length();
   }
 
   virtual void write(ostream& os) const{
-    os <<"Cluster_" <<id <<": mean=" <<mean;
+    os <<"cluster_" <<id <<": mean=" <<mean;
     FilterObject::write(os);
   }
 
@@ -95,10 +97,14 @@ struct Alvar:FilterObject {
 
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=alvar) return -1.;
-    ors::Vector dist = this->transform.pos - dynamic_cast<const Alvar*>(&other)->transform.pos;
+    ors::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const Alvar*>(&other)->frame * dynamic_cast<const Alvar*>(&other)->transform.pos);
     return dist.length();
   }
 
+//  virtual void write(ostream& os) const{
+//    os <<"alvar" <<id <<": mean=" <<mean;
+//    FilterObject::write(os);
+//  }
 };
 
 //struct Plane:FilterObject {

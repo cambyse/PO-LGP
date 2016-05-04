@@ -37,6 +37,7 @@ struct MyBaxter{
 
   //-- get position closest cluster
   ors::Vector closestCluster();
+  ors::Vector arPose();
 
   //-- info
   arr q0();

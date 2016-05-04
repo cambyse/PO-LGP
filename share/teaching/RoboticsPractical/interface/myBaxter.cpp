@@ -12,6 +12,7 @@
 #include <RosCom/serviceRAP.h>
 #include <RosCom/baxter.h>
 
+#include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/perceptionCollection.h>
 #include <RosCom/perceptionFilter.h>
@@ -28,6 +29,7 @@ struct MyBaxter_private{
 
   RosInit rosInit;
   SubscribeTabletop tabletop_subscriber;
+  SubscribeAlvar alvar_subscriber;
   Collector data_collector;
   Filter myFilter;
   PublishDatabase myPublisher;
@@ -189,6 +191,25 @@ ors::Vector MyBaxter::closestCluster(){
 
 arr MyBaxter::q0(){
   return s->tcm.q0;
+}
+
+ors::Vector MyBaxter::arPose(){
+  s->object_database.readAccess();
+
+  ors::Vector toReturn(0,0,0);
+
+  for(FilterObject* fo : s->object_database())
+  {
+    if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
+    {
+      ors::Transformation pos = fo->frame * fo->transform;
+      toReturn = pos.pos;
+      std::cout << toReturn << std::endl;
+    }
+  }
+  s->object_database.deAccess();
+
+  return toReturn;
 }
 
 //RelationalMachineModule& MyBaxter::rm(){

@@ -32,7 +32,7 @@ void Filter::step()
 
 
   // If empty inputs, do nothing.
-  if (perceptualInputs.N == 0)
+  if (perceptualInputs.N == 0 && objectDatabase.N == 0)
   {
     object_database.deAccess();
     perceptual_inputs.deAccess();
