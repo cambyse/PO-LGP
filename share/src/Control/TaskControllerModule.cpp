@@ -43,7 +43,7 @@ void TaskControllerModule::open(){
   modelWorld.get()->getJointState(q_model, qdot_model);
 
   taskController->qNullCostRef.y_ref = q0;
-  taskController->qNullCostRef.setGains(0., .2);
+  taskController->qNullCostRef.setGains(0., 1.);
   taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", .1)*modelWorld.get()->getHmetric();
 
 #if 1
@@ -80,7 +80,8 @@ void TaskControllerModule::step(){
       if(useRos)  pr2_odom.waitForRevisionGreaterThan(0);
       q_real = ctrl_obs.get()->q;
       qdot_real = ctrl_obs.get()->qdot;
-      q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+      arr pr2_odom_copy = pr2_odom.get();
+      if(q_real.N==realWorld.q.N && pr2_odom_copy.N==3) q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom_copy;
     }
     if(robot=="baxter"){
       jointState.waitForRevisionGreaterThan(20);
@@ -152,13 +153,19 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
+    arr Kp, Kd, k, JCJ;
+    taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+
+    Kp = .01 * JCJ;
+    Kp += .2*diag(ones(Kp.d0));
+
     ctrl_q_ref.set() = q_model;
 
     //-- first zero references
     refs.q =  q_model;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = 1.;
-    refs.Kp = ARR(1.);
+    refs.Kp = ARR(1.); //Kp;
     refs.Kd = ARR(1.);
     refs.Ki = ARR(0.2);
     refs.fL = zeros(6);
@@ -167,6 +174,7 @@ void TaskControllerModule::step(){
     refs.J_ft_invL.clear();
     refs.u_bias = zeros(q_model.N);
     refs.intLimitRatio = 0.7;
+    refs.qd_filt = .99;
 
     //-- compute the force feedback control coefficients
     uint count=0;
@@ -245,17 +253,21 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    arr q_ref = pseudoInverse(Kp)*(u_bias-Kp*q_real);
-    clip(q_ref, -.01, .01);
-    q_ref += q_real;
-    ctrl_q_ref.set() = q_ref;
-
-#if 1
-    refs.q = zeros(q_model.N);
+#if 1 //like oldfashioned
+    refs.q =  q_ref;
+    refs.qdot = zeros(q_model.N);
+    refs.fL_gamma = 1.;
+    refs.Kp = ARR(1.);
+    refs.Kd = ARR(1.);
+    refs.Ki = ARR(0.5);
+    refs.fL = zeros(6);
+    refs.fR = zeros(6);
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
+    refs.u_bias = zeros(q_model.N);
+    refs.intLimitRatio = 0.7;
 #else
-    refs.q =  q_ref; //zeros(q_model.N);
-    u_bias =0.; //-= Kp*q_ref;
-#endif
+    refs.q =  q_ref;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
     refs.Kp = Kp;
@@ -268,6 +280,7 @@ void TaskControllerModule::step(){
     refs.u_bias = zeros(q_ref.N); //u_bias;
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;
+#endif
   }
 
   ctrl_q_ref.set() = refs.q;
