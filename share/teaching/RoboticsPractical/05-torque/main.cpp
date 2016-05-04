@@ -19,7 +19,6 @@ int main(int argc, char** argv){
     auto posR   = baxter.task(GRAPH("map=pos ref1=endeffR ref2=base_footprint target=[0.6 -0.6 1.3] PD=[1., .8, 1., 1.]"));
     auto alignL = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=obj1 vec1=[1 0 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 1.]"));
     auto alignR = baxter.task(GRAPH("map=vecAlign ref1=endeffR ref2=obj1 vec1=[1 0 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 1.]"));
-    auto grip  = baxter.task(GRAPH("map=qItself ref1=l_gripper_l_finger_joint target=[.1] PD=[1., .8, 1., 1.]"));
 
     baxter.waitConv({posL, posR, alignL, alignR});
 
@@ -40,23 +39,27 @@ int main(int argc, char** argv){
     baxter.modifyTarget(posR, closest + ARR(0.02, 0.05, -.07));
     baxter.waitConv({posR, alignR});
 
-    mlr::wait(3.);
-    baxter.modifyTarget(grip, {0.});
-    baxter.waitConv({posR, alignR, grip});
+    mlr::wait(2.);
 
-    baxter.modifyTarget(posR, closest + ARR(0., 0., .3));
+    baxter.modifyTarget(posR, closest + ARR(0.02, 0.05, -.08));
     baxter.waitConv({posR, alignR});
 
-    baxter.modifyTarget(posR, closest + ARR(0., -0.5, .3));
-    baxter.waitConv({posR, alignR});
+    baxter.reportJointState();
+    baxter.disablePosControl();
 
-    baxter.modifyTarget(grip, {.1});
-    baxter.waitConv({posR, alignR, grip});
+    // Send it 0 torques for 1 second
+    for (uint i = 0; i < 100; i++)
+    {
+      baxter.publishTorque(ARR(0.,0.,0.,0.,0.,0.,0.));
+      mlr::wait(0.01);
+    }
+    baxter.enablePosControl();
 
     auto home = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
     baxter.modifyTarget(home, baxter.q0());
-    baxter.stop({posR, posR, alignR, alignL, grip});
+    baxter.stop({posL, posR, alignR, alignL});
     baxter.waitConv({home});
+
   }
 
   cout <<"bye bye" <<endl;

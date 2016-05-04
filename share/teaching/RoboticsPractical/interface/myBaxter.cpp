@@ -19,6 +19,8 @@
 #include <RosCom/filterObject.h>
 #include <RosCom/publishDatabase.h>
 
+#include <baxter_core_msgs/JointCommand.h>
+
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
   ACCESSname(FilterObjects, object_database)
@@ -42,6 +44,9 @@ struct MyBaxter_private{
 //  ServiceRAP rapservice;
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
+  ros::NodeHandle* nh;
+  ros::Publisher pub;
+
   MyBaxter_private()
     : jointState(NULL, "jointState"),
       tcm("baxter"),
@@ -52,11 +57,15 @@ struct MyBaxter_private{
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
 //    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
-
+    if(mlr::getParameter<bool>("useRos")){
+      nh = new ros::NodeHandle;
+      pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
+    }
     threadOpenModules(true);
   }
 
   ~MyBaxter_private(){
+    delete nh;
     threadCloseModules();
   }
 };
@@ -210,6 +219,31 @@ ors::Vector MyBaxter::arPose(){
   s->object_database.deAccess();
 
   return toReturn;
+}
+
+
+void MyBaxter::publishTorque(arr command)
+{
+  if(mlr::getParameter<bool>("useRos")){
+    baxter_core_msgs::JointCommand msg;
+    msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
+    msg.names = { "right_s0", "right_s1", "right_e0", "right_e1", "right_w0", "right_w1", "right_w2" };
+    if (command.N != 7)
+    {
+      std::cout << "Incorrect command length: " << command.N << "!=7" << std::endl;
+      exit(-1);
+    }
+    msg.command = { command(0), command(1), command(2), command(3), command(4), command(5), command(6) };
+    s->pub.publish(msg);
+  }
+}
+
+void MyBaxter::disablePosControl(){
+  s->spctb.enable = false;
+}
+
+void MyBaxter::enablePosControl(){
+  s->spctb.enable = true;
 }
 
 //RelationalMachineModule& MyBaxter::rm(){

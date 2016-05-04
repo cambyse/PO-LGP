@@ -39,6 +39,11 @@ struct MyBaxter{
   ors::Vector closestCluster();
   ors::Vector arPose();
 
+  void disablePosControl();
+  void enablePosControl();
+
+  void publishTorque(arr command);
+
   //-- info
   arr q0();
 };
