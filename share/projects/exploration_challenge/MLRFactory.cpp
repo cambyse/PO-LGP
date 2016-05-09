@@ -106,6 +106,7 @@ ha::Controller::Ptr MLRFactory::createOperationalSpaceController(const ha::Hybri
                                                              const Eigen::MatrixXd &goal_op_rot_matrix,
                                                              bool is_relative) {
     MLRFactoryParams& p = (MLRFactoryParams&) params;
+    OpSpaceController::Ptr ctrl(new OpSpaceController());
     Eigen::MatrixXd bin_home_frame;
     bin_home_frame.resize(4,4);
     bin_home_frame.setIdentity();
@@ -113,9 +114,11 @@ ha::Controller::Ptr MLRFactory::createOperationalSpaceController(const ha::Hybri
     {
         bin_home_frame.block(0,0,3,3) = goal_op_rot_matrix;
     }
+    else {
+        ctrl->setOnlyDisplacement(true);
+    }
     bin_home_frame.block(0,3,3,1) = goal_op_translation;
 
-    OpSpaceController::Ptr ctrl(new OpSpaceController());
     ctrl->setSystem(system);
 
     //Endeffector Frame Controller
