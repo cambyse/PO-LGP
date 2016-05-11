@@ -257,11 +257,19 @@ const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
 }
 
 void MyBaxter::disablePosControl(){
-  s->spctb.enable = false;
+  s->spctb.enablePositionControlR = false;
 }
 
 void MyBaxter::enablePosControl(){
-  s->spctb.enable = true;
+  s->spctb.enablePositionControlR = true;
+}
+
+void MyBaxter::enableTotalTorqueMode(){
+  s->spctb.totalTorqueModeR = true;
+}
+
+void MyBaxter::disableTotalTorqueMode(){
+  s->spctb.totalTorqueModeR = false;
 }
 
 //RelationalMachineModule& MyBaxter::rm(){
