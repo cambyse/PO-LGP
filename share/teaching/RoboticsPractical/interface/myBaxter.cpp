@@ -176,6 +176,10 @@ void MyBaxter::reportJointState(){
   }
 }
 
+arr MyBaxter::getEfforts(){
+  return baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+}
+
 ors::Vector MyBaxter::closestCluster(){
   s->object_database.readAccess();
 
