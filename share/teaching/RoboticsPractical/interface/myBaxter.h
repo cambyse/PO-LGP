@@ -49,6 +49,10 @@ struct MyBaxter{
 
   const ors::KinematicWorld& getKinematicWorld();
 
+  arr getJointLimits();
+  double getCollisionScalar();
+
+
   //-- info
   arr q0();
 };

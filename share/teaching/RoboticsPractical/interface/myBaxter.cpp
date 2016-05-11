@@ -59,7 +59,7 @@ struct MyBaxter_private{
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
 //    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
-    if(mlr::getParameter<bool>("useRos")){
+    if(mlr::getParameter<bool>("useRos", false)){
       nh = new ros::NodeHandle;
       pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
     }
@@ -165,7 +165,7 @@ uint MyBaxter::reportPerceptionObjects(){
 }
 
 void MyBaxter::reportJointState(){
-  if(mlr::getParameter<bool>("useRos"))
+  if(mlr::getParameter<bool>("useRos", false))
   {
     sensor_msgs::JointState js = s->jointState.get();
 
@@ -229,31 +229,26 @@ ors::Vector MyBaxter::arPose(){
 
 
 void MyBaxter::publishTorque(const arr& u, const char* prefix){
-#if 0
-  if(mlr::getParameter<bool>("useRos")){
-    baxter_core_msgs::JointCommand msg;
-    msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
-    msg.names = { "right_s0", "right_s1", "right_e0", "right_e1", "right_w0", "right_w1", "right_w2" };
-    if (u.N != 7)
-    {
-      std::cout << "Incorrect command length: " << u.N << "!=7" << std::endl;
-      exit(-1);
-    }
-    msg.command = { u(0), u(1), u(2), u(3), u(4), u(5), u(6) };
-    s->pub.publish(msg);
-  }
-#else
   if(mlr::getParameter<bool>("useRos")){
     cout <<"SENDING TORQUES: " <<u <<endl;
     baxter_core_msgs::JointCommand msg = conv_qRef2baxterMessage(u, s->tcm.realWorld, prefix);
     msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
     s->pub.publish(msg);
   }
-#endif
 }
 
 const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
   return s->tcm.realWorld;
+}
+
+arr MyBaxter::getJointLimits(){
+  return s->tcm.realWorld.getLimits();
+}
+
+double MyBaxter::getCollisionScalar(){
+  arr y;
+  s->tcm.modelWorld.get()->kinematicsProxyCost(y, NoArr);
+  return y.scalar();
 }
 
 void MyBaxter::disablePosControl(){
