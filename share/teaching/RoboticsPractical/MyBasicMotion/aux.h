@@ -1,4 +1,22 @@
-    //-- create three tasks
+#include <MyBaxter.h>
+
+
+void fct(){
+
+
+
+
+
+    //        bax.tcmBax.verbose = true;
+
+    //        threadOpenModules(true);
+
+    //        Access_typed<arr> ctrl_q_ref(NULL, "ctrl_q_ref");
+    //        ctrl_q_ref.waitForRevisionGreaterThan(10); //wait a few steps (e.g. to ensure sync with real bot)
+
+
+
+//-- create three tasks
 //    CtrlTask position("endeffL", //name
 //                  new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
 //                  1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
@@ -115,3 +133,6 @@
     tcm.ctrlTasks.set() = { &grasp};
 
     mlr::wait(3.);
+
+
+}

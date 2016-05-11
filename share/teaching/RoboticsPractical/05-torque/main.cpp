@@ -47,7 +47,12 @@ int main(int argc, char** argv){
     baxter.reportJointState();
     baxter.disablePosControl();
 
+    //-- compute torques
+    arr y,J;
+    posR->map.phi(y, J, baxter.getKinematicWorld());
+
     // Send it 0 torques for 1 second
+<<<<<<< HEAD
 //    for (uint i = 0; i < 100; i++)
 //    {
 //      baxter.publishTorque(ARR(0.,0.,0.,0.,0.,0.,0.));
@@ -64,6 +69,11 @@ int main(int argc, char** argv){
     {
         baxter.publishTorque(u);
         mlr::wait(0.01);
+=======
+    for (uint i = 0; i < 100; i++) {
+      baxter.publishTorque(~J * ARR(0.,0.,-5.));
+      mlr::wait(0.01);
+>>>>>>> fad5fe11381802036344ba5784615ec3583e1029
     }
     baxter.enablePosControl();
 
