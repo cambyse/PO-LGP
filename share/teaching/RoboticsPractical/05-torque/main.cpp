@@ -36,12 +36,12 @@ int main(int argc, char** argv){
     baxter.modifyTarget(posR, closest + ARR(0.02, 0.05, .3));
     baxter.waitConv({posR, alignR});
 
-    baxter.modifyTarget(posR, closest + ARR(0.02, 0.05, -.07));
+    baxter.modifyTarget(posR, closest + ARR(0.1, 0.12, -.07));
     baxter.waitConv({posR, alignR});
 
     mlr::wait(2.);
 
-    baxter.modifyTarget(posR, closest + ARR(0.02, 0.05, -.08));
+    baxter.modifyTarget(posR, closest + ARR(0.1, 0.12, -.08));
     baxter.waitConv({posR, alignR});
 
     baxter.reportJointState();
@@ -52,8 +52,8 @@ int main(int argc, char** argv){
     posR->map.phi(y, J, baxter.getKinematicWorld());
 
     // Send it 0 torques for 1 second
-    for (uint i = 0; i < 100; i++) {
-      baxter.publishTorque(~J * ARR(0.,0.,-5.));
+    for (uint i = 0; i < 200; i++) {
+      baxter.publishTorque(~J * ARR(0.,0.,-10.));
       mlr::wait(0.01);
     }
     baxter.enablePosControl();
