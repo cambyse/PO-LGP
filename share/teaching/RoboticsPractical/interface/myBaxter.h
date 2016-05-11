@@ -42,7 +42,9 @@ struct MyBaxter{
   void disablePosControl();
   void enablePosControl();
 
-  void publishTorque(arr command);
+  void publishTorque(const arr& u, const char* prefix="right_");
+
+  const ors::KinematicWorld& getKinematicWorld();
 
   //-- info
   arr q0();

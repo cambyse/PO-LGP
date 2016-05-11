@@ -21,6 +21,8 @@
 
 #include <baxter_core_msgs/JointCommand.h>
 
+baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
+
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
   ACCESSname(FilterObjects, object_database)
@@ -222,20 +224,32 @@ ors::Vector MyBaxter::arPose(){
 }
 
 
-void MyBaxter::publishTorque(arr command)
-{
+void MyBaxter::publishTorque(const arr& u, const char* prefix){
+#if 0
   if(mlr::getParameter<bool>("useRos")){
     baxter_core_msgs::JointCommand msg;
     msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
     msg.names = { "right_s0", "right_s1", "right_e0", "right_e1", "right_w0", "right_w1", "right_w2" };
-    if (command.N != 7)
+    if (u.N != 7)
     {
-      std::cout << "Incorrect command length: " << command.N << "!=7" << std::endl;
+      std::cout << "Incorrect command length: " << u.N << "!=7" << std::endl;
       exit(-1);
     }
-    msg.command = { command(0), command(1), command(2), command(3), command(4), command(5), command(6) };
+    msg.command = { u(0), u(1), u(2), u(3), u(4), u(5), u(6) };
     s->pub.publish(msg);
   }
+#else
+  if(mlr::getParameter<bool>("useRos")){
+    cout <<"SENDING TORQUES: " <<u <<endl;
+    baxter_core_msgs::JointCommand msg = conv_qRef2baxterMessage(u, s->tcm.realWorld, prefix);
+    msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
+    s->pub.publish(msg);
+  }
+#endif
+}
+
+const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
+  return s->tcm.realWorld;
 }
 
 void MyBaxter::disablePosControl(){
