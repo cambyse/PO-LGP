@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include "../interface/myBaxter.h"
 #include <Control/taskController.h>
-
+#include <robot_state.h>
 // =================================================================================================
 
 int main(int argc, char** argv){
@@ -48,10 +48,22 @@ int main(int argc, char** argv){
     baxter.disablePosControl();
 
     // Send it 0 torques for 1 second
-    for (uint i = 0; i < 100; i++)
+//    for (uint i = 0; i < 100; i++)
+//    {
+//      baxter.publishTorque(ARR(0.,0.,0.,0.,0.,0.,0.));
+//      mlr::wait(0.01);
+//    }
+
+    arr f_ref = {0., 0., -5.};
+    arr u, J;
+
+    posR->map.phi(NoArr, J, baxter.getKinematicWorld());
+    u = ~J*f_ref;
+
+    for (uint i = 0; i<100; i++)
     {
-      baxter.publishTorque(ARR(0.,0.,0.,0.,0.,0.,0.));
-      mlr::wait(0.01);
+        baxter.publishTorque(u);
+        mlr::wait(0.01);
     }
     baxter.enablePosControl();
 
@@ -61,7 +73,7 @@ int main(int argc, char** argv){
     baxter.waitConv({home});
 
   }
-
+kinematic
   cout <<"bye bye" <<endl;
   return 0;
 }
