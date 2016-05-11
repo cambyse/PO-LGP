@@ -1,5 +1,6 @@
 #include <Core/module.h>
 #include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
