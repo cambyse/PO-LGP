@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include "../interface/myBaxter.h"
 #include <Control/taskController.h>
-#include <robot_state.h>
+
 // =================================================================================================
 
 int main(int argc, char** argv){
@@ -21,8 +21,6 @@ int main(int argc, char** argv){
     auto alignR = baxter.task(GRAPH("map=vecAlign ref1=endeffR ref2=obj1 vec1=[1 0 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 1.]"));
 
     baxter.waitConv({posL, posR, alignL, alignR});
-
-    mlr::wait(3.);
 
     baxter.reportPerceptionObjects();
     ors::Vector closest_vec = baxter.arPose();
@@ -52,33 +50,9 @@ int main(int argc, char** argv){
     posR->map.phi(y, J, baxter.getKinematicWorld());
 
     // Send it 0 torques for 1 second
-<<<<<<< HEAD
-<<<<<<< HEAD
-//    for (uint i = 0; i < 100; i++)
-//    {
-//      baxter.publishTorque(ARR(0.,0.,0.,0.,0.,0.,0.));
-//      mlr::wait(0.01);
-//    }
-
-    arr f_ref = {0., 0., -5.};
-    arr u, J;
-
-    posR->map.phi(NoArr, J, baxter.getKinematicWorld());
-    u = ~J*f_ref;
-
-    for (uint i = 0; i<100; i++)
-    {
-        baxter.publishTorque(u);
-        mlr::wait(0.01);
-=======
-    for (uint i = 0; i < 100; i++) {
-      baxter.publishTorque(~J * ARR(0.,0.,-5.));
-=======
     for (uint i = 0; i < 200; i++) {
       baxter.publishTorque(~J * ARR(0.,0.,-10.));
->>>>>>> 972f69cae1a8cfc7a0cdfda05a2b2e00b389c009
       mlr::wait(0.01);
->>>>>>> fad5fe11381802036344ba5784615ec3583e1029
     }
     baxter.enablePosControl();
 
@@ -88,7 +62,8 @@ int main(int argc, char** argv){
     baxter.waitConv({home});
 
   }
-kinematic
+
   cout <<"bye bye" <<endl;
   return 0;
 }
+
