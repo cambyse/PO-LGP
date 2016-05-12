@@ -35,6 +35,7 @@ struct MyBaxter{
   uint reportPerceptionObjects();
   void reportJointState();
   arr getEfforts();
+  arr getJointState();
 
   //-- get position closest cluster
   ors::Vector closestCluster();

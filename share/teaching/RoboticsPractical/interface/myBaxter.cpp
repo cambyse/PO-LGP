@@ -180,6 +180,10 @@ arr MyBaxter::getEfforts(){
   return baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
 }
 
+arr MyBaxter::getJointState(){
+  return s->tcm.realWorld.q;
+}
+
 ors::Vector MyBaxter::closestCluster(){
   s->object_database.readAccess();
 
