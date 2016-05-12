@@ -22,8 +22,6 @@ int main(int argc, char** argv){
 
     baxter.waitConv({posL, posR, alignL, alignR});
 
-    mlr::wait(3.);
-
     baxter.reportPerceptionObjects();
     ors::Vector closest_vec = baxter.arPose();
 
@@ -68,3 +66,4 @@ int main(int argc, char** argv){
   cout <<"bye bye" <<endl;
   return 0;
 }
+

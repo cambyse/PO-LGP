@@ -47,7 +47,7 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
   modelWorld.set() = realWorld;
-  taskController = new TaskController(modelWorld.set()(), true);
+  taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 

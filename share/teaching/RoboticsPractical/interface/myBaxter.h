@@ -12,6 +12,7 @@ struct MyBaxter{
   struct MyBaxter_private* s;
 
   CtrlTaskL activeTasks;
+  ors::KinematicWorld testWorld;
 
   MyBaxter();
   ~MyBaxter();
@@ -36,6 +37,7 @@ struct MyBaxter{
   void reportJointState();
   arr getEfforts();
   arr getJointState();
+  double setTestJointState(const arr& q);
 
   //-- get position closest cluster
   ors::Vector closestCluster();

@@ -75,6 +75,7 @@ struct MyBaxter_private{
 
 MyBaxter::MyBaxter()
   : s(new MyBaxter_private){
+    testWorld = s->tcm.realWorld;
 }
 
 MyBaxter::~MyBaxter(){
@@ -177,7 +178,15 @@ void MyBaxter::reportJointState(){
 }
 
 arr MyBaxter::getEfforts(){
-  return baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+    return baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+}
+
+double MyBaxter::setTestJointState(const arr &q){
+    testWorld.setJointState(q);
+    arr y;
+   testWorld.kinematicsProxyCost(y, NoArr);
+   testWorld.gl("testWorld").update();
+   return y.scalar();
 }
 
 arr MyBaxter::getJointState(){
