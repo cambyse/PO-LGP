@@ -54,7 +54,8 @@ struct MyBaxter_private{
       tcm("baxter"),
       rosInit("MyBaxter"),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
-      sub("/robot/joint_states", jointState)
+      sub("/robot/joint_states", jointState),
+      spctb(tcm.realWorld)
   {
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
