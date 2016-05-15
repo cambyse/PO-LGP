@@ -128,12 +128,13 @@ void ors::Body::parseAts() {
   if(ats["kinematic"])   type=kinematicBT;
   if(ats.get(d,"dyntype")) type=(BodyType)d;
 
-  // SHAPE handling
+  // SHAPE handling //TODO: remove this code!
   Node* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
   item = ats.getNode("meshes");
   if(item){
+    HALT("this is deprecated");
     mlr::FileToken *file = item->getValue<mlr::FileToken>();
     CHECK(file,"somethings wrong");
 
@@ -147,8 +148,8 @@ void ors::Body::parseAts() {
         Shape *s = new Shape(world, *this);
         s->mesh.parsing_pos_start = parsing_pos(0);
         s->mesh.parsing_pos_end = parsing_pos(1);
-        s->mesh.readObjFile(file->getIs());
-        s->mesh.makeConvexHull();
+	//TODO: use Shape::parseAts instead of doing the same things here again!!
+        s->mesh.readObjFile(file->getIs()); 
         s->type=meshST;
       }
     }
