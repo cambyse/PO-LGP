@@ -17,14 +17,26 @@ extern _RacerBalancingBenchmark RacerBalancingBenchmark;
 
 struct DynFct:VectorFunction{
   Racer& R;
-  DynFct(Racer& _R):R(_R){ NIY }
+  DynFct(Racer& _R):R(_R){
+    VectorFunction::operator=(
+      [this](arr& y, arr& J, const arr& x) -> void {
+        return fv(y, J, x);
+      }
+    );
+  }
   DynFct& operator()(){ return *this; }
   void fv(arr& y, arr& J, const arr& q__q_dot);
 };
 
 struct ObsFct:VectorFunction{
   Racer& R;
-  ObsFct(Racer& _R):R(_R){ NIY }
+  ObsFct(Racer& _R):R(_R){
+    VectorFunction::operator=(
+      [this](arr& y, arr& J, const arr& x) -> void {
+        return fv(y, J, x);
+      }
+    );
+  }
   ObsFct& operator()(){ return *this; }
   void fv(arr& y, arr& J, const arr& q__q_dot);
 };

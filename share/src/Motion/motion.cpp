@@ -77,11 +77,11 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
 MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
     : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2)
 {
-  computeMeshNormals(world.shapes);
   if(useSwift) {
-    makeConvexHulls(world.shapes);
-    world.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
+    makeConvexHulls(originalWorld.shapes);
+    originalWorld.swift().setCutoff(2.*mlr::getParameter<double>("swiftCutoff", 0.11));
   }
+  computeMeshNormals(originalWorld.shapes);
   setTiming(mlr::getParameter<uint>("timeSteps", 50), mlr::getParameter<double>("duration", 5.));
 }
 
@@ -90,7 +90,8 @@ MotionProblem::~MotionProblem(){
 }
 
 MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
-  world = const_cast<ors::KinematicWorld&>(other.world);
+  HALT("does the following work and make sense?");
+  world = other.world; //const_cast<const ors::KinematicWorld&>(other.world);
   useSwift = other.useSwift;
   tasks = other.tasks;
   T = other.T;

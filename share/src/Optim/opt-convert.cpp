@@ -123,6 +123,15 @@ ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
   };
 }
 
+ConstrainedProblem conv_linearlyReparameterize(const ConstrainedProblem& f, const arr& B){
+  return [&f, &B](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& z){
+    arr x = B*z;
+    f(phi, J, H, tt, x);
+    if(&J) J = comp_A_x(J,B);
+    if(&H && H.N) NIY;
+  };
+}
+
 ScalarFunction conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f) {
   return conv_VectorFunction2ScalarFunction(
         [&f](arr& y, arr& J, const arr& x) -> void {
@@ -283,9 +292,13 @@ VectorFunction conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f)
   };
 }
 
+
 //===========================================================================
 
 RUN_ON_INIT_BEGIN()
-  mlr::Array<TermType>::memMove=true;
+mlr::Array<TermType>::memMove=true;
+
+
+
 RUN_ON_INIT_END()
 

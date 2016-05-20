@@ -27,10 +27,17 @@ struct KOMO{
   ors::KinematicWorld world;
   struct MotionProblem *MP;
   arr x, dual;
+  arr z, splineB;
 
+  KOMO();
   KOMO(const Graph& specs);
   void init(const Graph& specs);
   void setFact(const char* fact);
+  void setMoveTo(ors::KinematicWorld& world, //in initial state
+                 ors::Shape& endeff,         //endeffector to be moved
+                 ors::Shape &target,         //target shape
+                 byte whichAxesToAlign=0);   //bit coded options to align axes
+  void setSpline(uint splineT);
   void reset();
   void step();
   void run();

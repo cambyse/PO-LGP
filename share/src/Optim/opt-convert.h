@@ -28,6 +28,9 @@ ScalarFunction     conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction
 VectorFunction     conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f);
 ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f);
 
+/// this takes a constrained problem over $x$ and re-represents it over $z$ where $x=Bz$
+ConstrainedProblem conv_linearlyReparameterize(const ConstrainedProblem& f, const arr& B);
+
 /// A struct that allows to convert one function type into another, even when given as argument
 struct Convert {
   KOrderMarkovFunction *kom;

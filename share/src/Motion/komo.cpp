@@ -1,11 +1,25 @@
 #include "komo.h"
 #include "motion.h"
+#include <Algo/spline.h>
 #include <iomanip>
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 
 //===========================================================================
+
+void setTasks(MotionProblem& MP,
+              ors::Shape &endeff,
+              ors::Shape& target,
+              byte whichAxesToAlign,
+              uint iterate,
+              int timeSteps,
+              double duration);
+
+//===========================================================================
+
+KOMO::KOMO() : MP(NULL){
+}
 
 KOMO::KOMO(const Graph& specs) : MP(NULL){
   init(specs);
@@ -54,59 +68,7 @@ void KOMO::init(const Graph& _specs){
   if(timeStepsPerPhase>=0) MP->setTiming(timeStepsPerPhase*phases, duration*phases);
   MP->k_order=k_order;
 
-#if 1
   MP->parseTasks(specs, timeStepsPerPhase);
-#else
-  NodeL tasks = specs.getNodes("Task");
-  for(Node *t:tasks){
-    Graph &T = t->graph();
-    TaskMap *map = newTaskMap( T["map"]->graph(), world);
-    Task *task = MP->addTask(t->keys.last(), map);
-    map->order = T.get<double>("order", 0);
-    mlr::String type = T.get<mlr::String>("type", STRING("sumOfSqr"));
-    if(type=="sumOfSqr") map->type=sumOfSqrTT;
-    else if(type=="inequal") map->type=ineqTT;
-    else if(type=="equal") map->type=eqTT;
-    else HALT("Task type must be sumOfSqr|ineq|eq");
-    arr time = T.get<arr>("time",{0.,1.});
-    task->setCostSpecs(time(0)*timeSteps, time(1)*timeSteps, T.get<arr>("target", {0.}), T.get<double>("scale", {100.}));
-  }
-
-  NodeL switches = specs.getNodes("KinematicSwitch");
-  for(Node *s:switches){
-    Graph &S = s->graph();
-    ors::KinematicSwitch *sw= new ors::KinematicSwitch();
-    mlr::String type = S.get<mlr::String>("type");
-    if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
-    else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
-    else if(type=="transXYPhi"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
-    else if(type=="free"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
-    else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
-    sw->timeOfApplication = S.get<double>("timeOfApplication")*timeSteps+1;
-    sw->fromId = world.getShapeByName(S.get<mlr::String>("from"))->index;
-    sw->toId = world.getShapeByName(S.get<mlr::String>("to"))->index;
-    MP->switches.append(sw);
-  }
-
-  if(MP->T){
-    MPF = new MotionProblemFunction(*MP);
-  }else{
-    LOG(0) <<"InvKin mode";
-    TaskMap *map = new TaskMap_qItself();
-    Task *task = MP->addTask("InvKinTransition", map);
-    map->order = 0;
-    map->type=sumOfSqrTT;
-    task->setCostSpecs(0, 0, MP->x0, 1./(MP->tau*MP->tau));
-  }
-#endif
-
-#if 0
-  reset();
-  arr y,J;
-  TermTypeA tt;
-  MP->inverseKinematics(y,J,tt,x);
-  MP->reportFull();
-#endif
 }
 
 void KOMO::setFact(const char* fact){
@@ -114,9 +76,31 @@ void KOMO::setFact(const char* fact){
   MP->parseTask(specs.last());
 }
 
+void KOMO::setMoveTo(ors::KinematicWorld& world, ors::Shape& endeff, ors::Shape& target, byte whichAxesToAlign){
+  if(MP) delete MP;
+  MP = new MotionProblem(world);
+
+  setTasks(*MP, endeff, target, whichAxesToAlign, 1, -1, -1.);
+  reset();
+}
+
+void KOMO::setSpline(uint splineT){
+  mlr::Spline S;
+  S.setUniformNonperiodicBasis(MP->T, splineT, 2);
+  uint n=MP->dim_x(0);
+  splineB = zeros(S.basis.d0*n, S.basis.d1*n);
+  for(uint i=0;i<S.basis.d0;i++) for(uint j=0;j<S.basis.d1;j++)
+    splineB.setMatrixBlock(S.basis(i,j)*eye(n,n), i*n, j*n);
+  z = pseudoInverse(splineB)* x;
+}
+
 void KOMO::reset(){
   x = MP->getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
+  if(splineB.N){
+    z = pseudoInverse(splineB)* x;
+  }
+
 }
 
 void KOMO::step(){
@@ -127,7 +111,16 @@ void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
 //  cout <<x;
   if(MP->T){
-    optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
+    if(!splineB.N)
+      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
+    else{
+      arr a,b,c,d,e;
+      ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
+      P0(a,b,c,NoTermTypeA, x);
+      ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
+      P(a,b,NoArr,NoTermTypeA,z);
+      optConstrained(z, dual, P, OPT(verbose=2));
+    }
   }else{
     optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
@@ -143,7 +136,13 @@ Graph KOMO::getReport(){
 
 void KOMO::checkGradients(){
   if(MP->T){
-    checkJacobianCP(Convert(*MP), x, 1e-4);
+    if(!splineB.N)
+      checkJacobianCP(Convert(*MP), x, 1e-4);
+    else{
+      ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
+      ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
+      checkJacobianCP(P, z, 1e-4);
+    }
   }else{
     checkJacobianCP(MP->InvKinProblem(), x, 1e-4);
   }
@@ -171,14 +170,6 @@ void KOMO::displayTrajectory(double delay){
 
 //===========================================================================
 
-void setTasks(MotionProblem& MP,
-              ors::Shape &endeff,
-              ors::Shape& target,
-              byte whichAxesToAlign,
-              uint iterate,
-              int timeSteps,
-              double duration);
-
 arr moveTo(ors::KinematicWorld& world,
            ors::Shape &endeff,
            ors::Shape& target,
@@ -190,6 +181,7 @@ arr moveTo(ors::KinematicWorld& world,
   MotionProblem MP(world);
 
   setTasks(MP, endeff, target, whichAxesToAlign, iterate, timeSteps, duration);
+
 
   //-- create the Optimization problem (of type kOrderMarkov)
   arr x = MP.getInitialization();
