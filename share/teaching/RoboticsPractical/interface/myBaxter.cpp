@@ -5,7 +5,6 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
-#include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
@@ -38,7 +37,6 @@ struct MyBaxter_private{
   Filter myFilter;
   PublishDatabase myPublisher;
 
-  GamepadInterface gamepad;
   OrsViewer view;
   OrsPoseViewer ctrlView;
   SendPositionCommandsToBaxter spctb;
@@ -54,8 +52,8 @@ struct MyBaxter_private{
       tcm("baxter"),
       rosInit("MyBaxter"),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
-      sub("/robot/joint_states", jointState),
-      spctb(tcm.realWorld)
+      spctb(tcm.realWorld),
+      sub("/robot/joint_states", jointState)
   {
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
