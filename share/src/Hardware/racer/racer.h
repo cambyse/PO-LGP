@@ -6,9 +6,10 @@ struct Racer;
 struct _RacerBalancingBenchmark:ScalarFunction{
   uint T;
   bool display;
+  double exploration;
   double noise;
   double theta0;
-  bool fixRandomSeed;
+  int fixedRandomSeed;
   _RacerBalancingBenchmark();
   virtual double fs(arr& g, arr& H, const arr& x);
 };
