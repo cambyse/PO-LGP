@@ -22,9 +22,14 @@
 
 void Filter::step()
 {
-  perceptual_inputs.waitForNextRevision();
+  int rev = perceptual_inputs.writeAccess();
 
-  perceptual_inputs.writeAccess();
+  if (rev == revision){
+    perceptual_inputs.deAccess();
+    return;
+  }
+  revision = rev;
+
   object_database.writeAccess();
 
   FilterObjects perceptualInputs = perceptual_inputs();
