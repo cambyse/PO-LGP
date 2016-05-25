@@ -5,43 +5,41 @@
 #include <Ors/ors.h>
 #include <RosCom/filterObject.h>
 
-//#include <Control/TaskControllerModule.h>
-//#include <RosCom/baxter.h>
-//#include <RosCom/spinner.h>
-//#include <Ors/orsviewer.h>
-//#include <RosCom/subscribeAlvarMarkers.h>
-//#include <RosCom/perceptionCollection.h>
-//#include <RosCom/perceptionFilter.h>
-//#include <RosCom/publishDatabase.h>
 #include <unordered_map>
 
 
-struct Lockbox{
-  Lockbox(){}
-  ~Lockbox(){}
+struct Lockbox:Module{
 
   ACCESSname(FilterObjects, object_database)
 
-//  TaskControllerModule tcm;
+  Lockbox() : Module("lockbox", -1){
+    threadOpenModules(true);
+  }
+  ~Lockbox(){
+    threadCloseModules();
+  }
 
-//  RosInit rosInit;
-//  SubscribeAlvar alvar_subscriber;
-//  Collector data_collector;
-//  Filter myFilter;
-//  PublishDatabase myPublisher;
-
-//  OrsViewer view;
-//  OrsPoseViewer ctrlView;
-//  RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
-
-  std::unordered_map<uint, ors::Transformation> joint_origins;
-  std::unordered_map<uint, ors::Transformation> joint_positions;
+  bool getAbsoluteJointTransform(const uint joint, ors::Transformation& diff);
 
   bool getJointTransform(const uint joint, ors::Transformation& diff);
-  bool getJointPosition(const uint joint, double position);
+  bool getJointPosition(const uint joint, double& position);
 
-  ors::Transformation fixed_alvar;
+  void open();
+  void step();
+  void close();
 
-  void readJointPositions();
+
+  std::unordered_map<uint, arr> offsets = {
+    std::make_pair(1, ARR(0., 0, 0.05)),
+    std::make_pair(2, ARR(0., 0, 0)),
+    std::make_pair(3, ARR(0., 0, 0)),
+    std::make_pair(4, ARR(0., 0, 0)),
+    std::make_pair(5, ARR(-0.1, 0.05, 0.05))
 };
 
+private:
+  ors::Transformation fixed_alvar;
+  std::unordered_map<uint, ors::Transformation> joint_origins;
+  std::unordered_map<uint, ors::Transformation> joint_positions;
+  void readJointPositions();
+};

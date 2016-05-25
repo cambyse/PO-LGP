@@ -1,4 +1,4 @@
-#define REPORT 1
+#define REPORT 0
 
 #include "myBaxter.h"
 
@@ -31,7 +31,7 @@ struct MyBaxter_private{
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
-  SubscribeTabletop tabletop_subscriber;
+//  SubscribeTabletop tabletop_subscriber;
   SubscribeAlvar alvar_subscriber;
   Collector data_collector;
   Filter myFilter;
@@ -41,7 +41,6 @@ struct MyBaxter_private{
   OrsPoseViewer ctrlView;
   SendPositionCommandsToBaxter spctb;
   Subscriber<sensor_msgs::JointState> sub;
-//  ServiceRAP rapservice;
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
   ros::NodeHandle* nh;
