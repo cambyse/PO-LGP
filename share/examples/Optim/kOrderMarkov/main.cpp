@@ -44,32 +44,24 @@ void TEST(KOrderMarkov) {
   arr x(T+1,n);
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    if(P.isConstrained()){
-      checkJacobianCP(Convert(P),  x, 1e-3);
-    }else{
-      checkGradient(Convert(P),  x, 1e-3);
-    }
+    checkJacobianCP(Convert(P),  x, 1e-3);
   }
 
   //-- optimize
   rndUniform(x,-1.,1.);
   arr K;
   if(P.hasKernel()) K = buildKernelMatrix(P);
-  if(P.isConstrained()){
-    optConstrained(x, NoArr, Convert(P) );
-  }else{
-    Convert sf(P);
-    OptNewton opt(x, sf);
-    if(K.N) opt.additionalRegularizer=&K;
-    opt.run();
-  }
+  optConstrained(x, NoArr, Convert(P) );
 
   write(LIST<arr>(x),"z.output");
-  gnuplot("plot 'z.output' us 1,'z.output' us 2,'z.output' us 3", true, true);
+  mlr::String plt = "plot 'z.output' us 1";
+  for(uint i=1;i<n;i++) plt <<", '' us " <<i+1;
+  gnuplot(plt, true, true);
 }
   
 int MAIN(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
+
   testKOrderMarkov();
 
   return 0;
