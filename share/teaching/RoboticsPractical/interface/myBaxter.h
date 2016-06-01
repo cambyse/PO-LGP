@@ -38,6 +38,8 @@ struct MyBaxter{
   arr getEfforts();
   arr getJointState();
   double setTestJointState(const arr& q);
+  void getEquationOfMotion(arr& M, arr& F);
+
 
   //-- get position closest cluster
   ors::Vector closestCluster();

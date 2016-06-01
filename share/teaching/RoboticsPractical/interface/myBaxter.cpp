@@ -183,11 +183,15 @@ arr MyBaxter::getEfforts(){
 }
 
 double MyBaxter::setTestJointState(const arr &q){
-    testWorld.setJointState(q);
-    arr y;
-   testWorld.kinematicsProxyCost(y, NoArr);
-   testWorld.gl("testWorld").update();
-   return y.scalar();
+  testWorld.setJointState(q);
+  arr y;
+  testWorld.kinematicsProxyCost(y, NoArr);
+  testWorld.gl("testWorld").update();
+  return y.scalar();
+}
+
+void MyBaxter::getEquationOfMotion(arr& M, arr& F){
+  testWorld.equationOfMotion(M, F);
 }
 
 arr MyBaxter::getJointState(){
