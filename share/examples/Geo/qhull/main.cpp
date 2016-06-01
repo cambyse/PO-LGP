@@ -178,7 +178,7 @@ int MAIN(int argc, char *argv[]){
   cout <<"QHull version = " <<qhullVersion() <<endl;
 
   testConvexHull();
-  //testForceClosure();
+  testForceClosure();
   //testFCinOrs();
 
   return 0;
