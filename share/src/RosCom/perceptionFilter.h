@@ -29,5 +29,6 @@ private:
   arr createCostMatrix(const FilterObjects& perceptualInputs, const FilterObjects& objectDatabase);
   FilterObjects assign(const FilterObjects& perceps, const FilterObjects& database);
 
+  int revision = -1;
 };
 
