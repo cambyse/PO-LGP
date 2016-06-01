@@ -26,7 +26,7 @@ bool Lockbox::getJointTransform(const uint joint, ors::Transformation &diff)
   return true;
 }
 
-bool Lockbox::getAbsoluteJointTransform(const uint joint, ors::Transformation &diff)
+bool Lockbox::getAbsoluteJointTransform(const uint joint, ors::Transformation &tf)
 {
   if ( joint_positions.count(joint) == 0 )
   {
@@ -34,9 +34,22 @@ bool Lockbox::getAbsoluteJointTransform(const uint joint, ors::Transformation &d
     return false;
   }
 
-  diff = joint_positions.at(joint);
+  tf = joint_positions.at(joint);
   return true;
 }
+
+bool Lockbox::getOriginalJointTransform(const uint joint, ors::Transformation &orig)
+{
+  if ( joint_origins.count(joint) == 0 )
+  {
+    std::cout << "Joint: " << joint << " doesn't exist!" << std::endl;
+    return false;
+  }
+
+  orig = joint_origins.at(joint);
+  return true;
+}
+
 
 void Lockbox::readJointPositions(){
   object_database.readAccess();

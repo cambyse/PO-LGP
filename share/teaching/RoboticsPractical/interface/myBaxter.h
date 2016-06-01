@@ -55,7 +55,11 @@ struct MyBaxter{
   arr getJointLimits();
   double getCollisionScalar();
 
+  void grip();
+  void grip(const bool toGrip);
 
   //-- info
   arr q0();
+
+  bool isGripping = false;
 };

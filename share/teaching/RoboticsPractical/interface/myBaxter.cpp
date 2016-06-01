@@ -278,6 +278,36 @@ void MyBaxter::disableTotalTorqueMode(){
   s->spctb.totalTorqueModeR = false;
 }
 
+void MyBaxter::grip(){
+  auto grip = MyBaxter::task(GRAPH(" map=qItself PD=[1., 0.8, 1.0, 10.]"));
+
+  arr q = s->tcm.realWorld.q;
+
+  ors::Joint *j = s->spctb.baxterModel.getJointByName("l_gripper_l_finger_joint");
+
+  isGripping = !isGripping;
+
+  isGripping ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
+
+  std::cout << "Gripping: " << isGripping << std::endl;
+  modifyTarget(grip, q);
+
+  uint count = 0;
+  while( std::abs(50 * (s->tcm.realWorld.q(j->qIndex)) - q(j->qIndex)) > 0.1) {
+    count++;
+    if (count > 3000)
+      break;
+    mlr::wait(0.01);
+  }
+  stop({grip});
+}
+
+void MyBaxter::grip(const bool toGrip)
+{
+  isGripping = !toGrip;
+  this->grip();
+}
+
 //RelationalMachineModule& MyBaxter::rm(){
 //  return s->rm;
 //}
