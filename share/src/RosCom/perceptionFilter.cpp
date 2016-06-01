@@ -19,22 +19,29 @@
 #include <unordered_set>
 #include "perceptionFilter.h"
 
+void Filter::open()
+{
+  this->listenTo(*perceptual_inputs.var);
+}
+void Filter::close(){
+  this->stopListenTo(*perceptual_inputs.var);
+}
 
 void Filter::step()
 {
-  int rev = perceptual_inputs.writeAccess();
+//  int rev = perceptual_inputs.writeAccess();
 
-  if (rev == revision){
-    perceptual_inputs.deAccess();
-    return;
-  }
-  revision = rev;
+//  if (rev == revision){
+//    perceptual_inputs.deAccess();
+//    return;
+//  }
+//  revision = rev;
 
+  perceptual_inputs.writeAccess();
   object_database.writeAccess();
 
   FilterObjects perceptualInputs = perceptual_inputs();
   FilterObjects objectDatabase = object_database();
-
 
   // If empty inputs, do nothing.
   if (perceptualInputs.N == 0 && objectDatabase.N == 0)
@@ -153,7 +160,8 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
       {
         //std::cout<< "Existed before, does now" << std::endl;
         FilterObject *new_obj = perceps(i);
-        new_obj->id = database(col)->id;
+        if (new_obj->type != FilterObject::FilterObjectType::alvar)
+          new_obj->id = database(col)->id;
         new_objects.append( new_obj );
       }
       else // This didn't exist before. Add it in

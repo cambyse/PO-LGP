@@ -10,14 +10,14 @@ struct Filter : Module{
   ACCESSname(FilterObjects, perceptual_inputs)
   ACCESSname(FilterObjects, object_database)
 
-  Filter():Module("Filter", 0){}
+  Filter():Module("Filter", -1){}
 
-  virtual void open(){}
+  virtual void open();
   virtual void step();
-  virtual void close(){}
+  virtual void close();
 
 private:
-  double relevance_decay_factor = 0.9;
+  double relevance_decay_factor = 0.99;
   double relevance_threshold = 0.25;
   double distance_threshold = 0.5;
 
