@@ -16,8 +16,8 @@ void agumentDataWithF(mlr::String filename){
   for(uint i=0;i<D.d0;i++){
     if(!(i%10)) cout <<i <<endl;
     const arr& Di = D[i];
-    arr q = Di.subRef(0,16);
-    arr u = Di.subRef(17,-1);
+    arr q = Di.refRange(0,16);
+    arr u = Di.refRange(17,-1);
     W.setJointState(q);
     W.gl().update();
     arr M,F;
@@ -35,17 +35,10 @@ void display(const char* filename){
   uint n=D.d0;
   CHECK_EQ(D.d1, 3*17,"");
 
-  arr Dt = ~D;
-  arr Xt,Yt,Ft;
-  for(uint i=0;i<5;i++)  Xt.append(Dt[     4+2*i]); //4 = left_s1
-  for(uint i=0;i<5;i++)  Ft.append(Dt[  17+4+2*i]);
-  for(uint i=0;i<5;i++)  Yt.append(Dt[2*17+4+2*i]);
-  Xt.reshape(5,n);
-  Ft.reshape(5,n);
-  Yt.reshape(5,n);
-  arr X = ~Xt;
-  arr F = ~Ft;
-  arr Y = ~Yt;
+  uintA cols={4u,6,8,10,12,14};
+  arr X = D.sub(0,-1,cols);
+  arr F = D.sub(0,-1,cols+17u);
+  arr Y = D.sub(0,-1,cols+34u);
 
   arr Xp,v,W;
   pca(Xp, v, W, X, 1);

@@ -28,7 +28,7 @@ double prior(uint t) {
 double data_loglike(const arr &data, uint t, uint s) {
   int n = s - t;
   arr data_range;
-  data_range.referToSub(data, t, s-1); // TODO check the range
+  data_range.referToRange(data, t, s-1); // TODO check the range
   double mean = sum(data_range) / data_range.N;
   arr data_range_mean = data_range - mean;
   double muT = (n * mean) / (1 + n);
