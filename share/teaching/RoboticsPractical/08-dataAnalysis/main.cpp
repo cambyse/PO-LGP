@@ -1,0 +1,73 @@
+#include <Core/util.h>
+#include <Ors/ors.h>
+#include <Gui/opengl.h>
+
+// =================================================================================================
+
+void agumentDataWithF(mlr::String filename){
+  arr D = FILE(filename);
+
+  ors::KinematicWorld W("rawbaxter.ors");
+
+  filename <<"_Faugmented";
+  ofstream fil(filename);
+  cout <<"output = '" <<filename <<"'" <<endl;
+
+  for(uint i=0;i<D.d0;i++){
+    if(!(i%10)) cout <<i <<endl;
+    const arr& Di = D[i];
+    arr q = Di.subRef(0,16);
+    arr u = Di.subRef(17,-1);
+    W.setJointState(q);
+    W.gl().update();
+    arr M,F;
+    W.equationOfMotion(M, F);
+
+    fil <<q <<' ' <<F <<' ' <<u <<endl;
+  }
+  fil.close();
+}
+
+// =================================================================================================
+
+void display(const char* filename){
+  arr D = FILE(filename);
+  uint n=D.d0;
+  CHECK_EQ(D.d1, 3*17,"");
+
+  arr Dt = ~D;
+  arr Xt,Yt,Ft;
+  for(uint i=0;i<5;i++)  Xt.append(Dt[     4+2*i]); //4 = left_s1
+  for(uint i=0;i<5;i++)  Ft.append(Dt[  17+4+2*i]);
+  for(uint i=0;i<5;i++)  Yt.append(Dt[2*17+4+2*i]);
+  Xt.reshape(5,n);
+  Ft.reshape(5,n);
+  Yt.reshape(5,n);
+  arr X = ~Xt;
+  arr F = ~Ft;
+  arr Y = ~Yt;
+
+  arr Xp,v,W;
+  pca(Xp, v, W, X, 1);
+
+  for(uint i=0;i<n;i++){
+    cout <<Xp[i] <<' ' <<F[i] <<' ' <<Y[i] <<endl;
+  }
+}
+
+// =================================================================================================
+
+int main(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
+
+  mlr::String filename="../data/dataTraining_100x10.txt_Faugmented";
+  if(mlr::argc>1) filename=mlr::argv[1];
+  cout <<"Processing file '" <<filename <<"'" <<endl;
+
+  //================================================================
+
+//  augmentDataWithF(filename);
+  display(filename);
+
+  return 0;
+}

@@ -179,7 +179,13 @@ void MyBaxter::reportJointState(){
 }
 
 arr MyBaxter::getEfforts(){
-    return baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+  arr u;
+  for(;;){
+    u = baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+    if(fabs(u(0))>1e-10) return u;
+    s->jointState.waitForNextRevision();
+  }
+  return u;
 }
 
 double MyBaxter::setTestJointState(const arr &q){
