@@ -225,11 +225,12 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
 }
 
 void SwiftInterface::pushToSwift(const ors::KinematicWorld& world) {
-  CHECK_EQ(INDEXshape2swift.N,world.shapes.N,"the number of shapes has changed");
+  //CHECK_EQ(INDEXshape2swift.N,world.shapes.N,"the number of shapes has changed");
+  CHECK(INDEXshape2swift.N <= world.shapes.N, "the number of shapes has changed");
   ors::Matrix rot;
   for_list(ors::Shape,  s,  world.shapes) {
     rot = s->X.rot.getMatrix();
-    if(INDEXshape2swift(s->index)!=-1) {
+    if(s->index<INDEXshape2swift.N && INDEXshape2swift(s->index)!=-1) {
       scene->Set_Object_Transformation(INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
       if(!s->cont) scene->Deactivate(INDEXshape2swift(s->index));
       //else         scene->Activate( INDEXshape2swift(s->index) );

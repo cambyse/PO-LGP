@@ -47,7 +47,7 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
   modelWorld.set() = realWorld;
-  taskController = new TaskController(modelWorld.set()(), true);
+  taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
@@ -91,7 +91,7 @@ void TaskControllerModule::step(){
       qdot_real = ctrl_obs.get()->qdot;
       arr pr2odom = pr2_odom.get();
       if(pr2odom.N==3)
-        q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2odom;
+        q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
     }
     if(robot=="baxter"){
 #ifdef MLR_ROS

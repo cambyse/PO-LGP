@@ -214,12 +214,12 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
     // task 1: POSITION
-    yPos_target = yNext.subRef(0,2);
+    yPos_target = yNext.refRange(0,2);
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
 
     // task  2: ORIENTATION
-    yVec_target = yNext.subRef(3,5);
+    yVec_target = yNext.refRange(3,5);
     Phi.append((yVec - yVec_target)/ fVec_deviation);
     PhiJ.append(JVec / fVec_deviation);
 

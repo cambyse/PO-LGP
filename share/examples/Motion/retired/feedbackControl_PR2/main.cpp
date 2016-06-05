@@ -286,10 +286,10 @@ void executeTrajectoryWholeBody(String scene){
       arr yNext, ydNext;
       amexL->iterate(state);
       amexL->getNextState(yNext,ydNext);
-      taskPosL->y_ref = yNext.subRef(0,2);
-      taskPosL->v_ref = ydNext.subRef(0,2);
-      taskVecL->y_ref = yNext.subRef(3,5);
-      taskVecL->v_ref = ydNext.subRef(3,5);
+      taskPosL->y_ref = yNext.refRange(0,2);
+      taskPosL->v_ref = ydNext.refRange(0,2);
+      taskVecL->y_ref = yNext.refRange(3,5);
+      taskVecL->v_ref = ydNext.refRange(3,5);
 
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
@@ -297,10 +297,10 @@ void executeTrajectoryWholeBody(String scene){
 
       amexR->iterate(state);
       amexR->getNextState(yNext,ydNext);
-      taskPosR->y_ref = yNext.subRef(0,2);
-      taskPosR->v_ref = ydNext.subRef(0,2);
-      taskVecR->y_ref = yNext.subRef(3,5);
-      taskVecR->v_ref = ydNext.subRef(3,5);
+      taskPosR->y_ref = yNext.refRange(0,2);
+      taskPosR->v_ref = ydNext.refRange(0,2);
+      taskVecR->y_ref = yNext.refRange(3,5);
+      taskVecR->v_ref = ydNext.refRange(3,5);
 
 #if VISUALIZE
       current_dir = state;
@@ -504,15 +504,15 @@ void executeTrajectoryRightArm(String scene){
       arr yNext, ydNext;
       amexR->iterate(state);
       amexR->getNextState(yNext,ydNext);
-      taskPosR->y_ref = yNext.subRef(0,2);
-      taskPosR->v_ref = ydNext.subRef(0,2);
-      taskVecR->y_ref = yNext.subRef(3,5);
-      taskVecR->v_ref = ydNext.subRef(3,5);
+      taskPosR->y_ref = yNext.refRange(0,2);
+      taskPosR->v_ref = ydNext.refRange(0,2);
+      taskVecR->y_ref = yNext.refRange(3,5);
+      taskVecR->v_ref = ydNext.refRange(3,5);
 
 //      taskPosR->y_ref = goalMO.position;
-//      taskPosR->v_ref = 0.;//ydNext.subRef(0,2);
-//      taskVecR->y_ref = goalMO.orientation;//yNext.subRef(3,5);
-//      taskVecR->v_ref = 0.;//ydNext.subRef(3,5);
+//      taskPosR->v_ref = 0.;//ydNext.refRange(0,2);
+//      taskVecR->y_ref = goalMO.orientation;//yNext.refRange(3,5);
+//      taskVecR->v_ref = 0.;//ydNext.refRange(3,5);
 
 
 #if VISUALIZE

@@ -154,7 +154,7 @@ uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(configurations.subRef(t,t+k_order), t); //counts also constraints
+      m += c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
   }
   return m;
 }
@@ -163,7 +163,7 @@ uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->type==ineqTT && c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(configurations.subRef(t,t+k_order), t);
+      m += c->map.dim_phi(configurations.refRange(t,t+k_order), t);
   }
   return m;
 }
@@ -172,7 +172,7 @@ uint MotionProblem::dim_h(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->type==eqTT && c->active && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(configurations.subRef(t,t+k_order), t);
+      m += c->map.dim_phi(configurations.refRange(t,t+k_order), t);
   }
   return m;
 }
@@ -208,7 +208,7 @@ void MotionProblem::set_x(const arr& x){
     uint s = t+k_order;
     uint x_dim = configurations(s)->getJointStateDimension();
     temporallyAlignKinematicSwitchesInConfiguration(t); //this breaks the jacobian check
-    if(x.nd==1) configurations(s)->setJointState(x.subRef(x_count, x_count+x_dim-1));
+    if(x.nd==1) configurations(s)->setJointState(x.refRange(x_count, x_count+x_dim-1));
     else        configurations(s)->setJointState(x[t]);
     if(useSwift) configurations(s)->stepSwift();
     x_count += x_dim;
@@ -255,7 +255,7 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
   arr y, Jy, Jtmp;
   uint dimPhi_t=0;
   for(Task *task: tasks) if(task->active && task->prec.N>t && task->prec(t)){
-    task->map.phi(y, (&J?Jy:NoArr), configurations.subRef(t,t+k_order), tau, t);
+    task->map.phi(y, (&J?Jy:NoArr), configurations.refRange(t,t+k_order), tau, t);
     if(!y.N) continue;
     dimPhi_t += y.N;
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
@@ -296,7 +296,7 @@ StringA MotionProblem::getPhiNames(uint t){
   uint m=0;
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->type==sumOfSqrTT) {
-      uint d = c->map.dim_phi(configurations.subRef(t,t+k_order), t); //counts also constraints
+      uint d = c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_f" <<i;
@@ -306,7 +306,7 @@ StringA MotionProblem::getPhiNames(uint t){
   }
   for(Task *c: tasks) if(c->active && c->prec.N>t && c->prec(t)){
     if(c->type==ineqTT) {
-      uint d = c->map.dim_phi(configurations.subRef(t,t+k_order), t); //counts also constraints
+      uint d = c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_g" <<i;
@@ -335,7 +335,7 @@ void MotionProblem::reportFull(bool brief) {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       if(!c->isActive(t)) continue;
-      uint d=c->map.dim_phi(configurations.subRef(t,t+k_order), t);
+      uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
       if(brief){
         if(d){
           cout <<"  " <<t <<' ' <<d
@@ -345,7 +345,7 @@ void MotionProblem::reportFull(bool brief) {
           cout <<' ' <<c->prec(t);
           if(ttMatrix.N){
             cout <<' ' <<ttMatrix(t).elem(m)
-                <<' ' <<sumOfSqr(phiMatrix(t).subRef(m,m+d-1));
+                <<' ' <<sumOfSqr(phiMatrix(t).refRange(m,m+d-1));
           }
           cout <<endl;
         }
@@ -396,7 +396,7 @@ void MotionProblem::costReport(bool gnuplt) {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       if(!c->isActive(t)) continue;
-      uint d=c->map.dim_phi(configurations.subRef(t,t+k_order), t);
+      uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
       if(ttMatrix.N) for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
       if(d){
         if(c->type==sumOfSqrTT){
@@ -491,7 +491,7 @@ Graph MotionProblem::getReport() {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       if(!c->isActive(t)) continue;
-      uint d=c->map.dim_phi(configurations.subRef(t,t+k_order), t);
+      uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
       for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
       if(d){
         if(c->type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));

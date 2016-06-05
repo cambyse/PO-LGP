@@ -137,8 +137,8 @@ void MotionPlanner::step() {
       } break;
       case sMotionPlanner::AICO_noinit: {
         //enforce zero velocity start/end vel
-        if (!s->sys.isKinematic()) x0.subRef(x0.N/2,-1) = 0.;
-        if (!s->sys.isKinematic()) xT.subRef(xT.N/2,-1) = 0.;
+        if (!s->sys.isKinematic()) x0.refRange(x0.N/2,-1) = 0.;
+        if (!s->sys.isKinematic()) xT.refRange(xT.N/2,-1) = 0.;
 
         //don't reuse AICO when plan in motion primitive has been cleared
         if(s->aico && m->get_q_plan(this).N==0){

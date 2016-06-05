@@ -128,12 +128,13 @@ void ors::Body::parseAts() {
   if(ats["kinematic"])   type=kinematicBT;
   if(ats.get(d,"dyntype")) type=(BodyType)d;
 
-  // SHAPE handling
+  // SHAPE handling //TODO: remove this code!
   Node* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
   item = ats.getNode("meshes");
   if(item){
+    HALT("this is deprecated");
     mlr::FileToken *file = item->getValue<mlr::FileToken>();
     CHECK(file,"somethings wrong");
 
@@ -147,8 +148,8 @@ void ors::Body::parseAts() {
         Shape *s = new Shape(world, *this);
         s->mesh.parsing_pos_start = parsing_pos(0);
         s->mesh.parsing_pos_end = parsing_pos(1);
-        s->mesh.readObjFile(file->getIs());
-        s->mesh.makeConvexHull();
+	//TODO: use Shape::parseAts instead of doing the same things here again!!
+        s->mesh.readObjFile(file->getIs()); 
         s->type=meshST;
       }
     }
@@ -1226,7 +1227,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
           uint offset = (j->type==JT_free)?3:0;
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
           Jrot = crossProduct(Jrot, conv_vec2arr(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
-          Jrot /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q.refRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
         }
       }
@@ -1402,7 +1403,7 @@ void ors::KinematicWorld::axesMatrix(arr& J, Body *b) const {
         if(j->type==JT_quatBall || j->type==JT_free) {
           uint offset = (j->type==JT_free)?3:0;
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
-          Jrot /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q.refRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
         }
         //all other joints: J=0 !!

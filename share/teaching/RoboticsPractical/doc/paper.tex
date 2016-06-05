@@ -33,6 +33,8 @@
 \end{list}
 }
 
+\newenvironment{code}{\footnotesize}{}
+
 %% \newenvironment{items}{
 %% \par\small
 %% \begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
@@ -278,6 +280,77 @@ state-space to collect data for the previous tasks.
 \item caveats of real robots: 'non-Markovian', sticktion, time lag,
   gear clearance
 \end{itemize}
+
+\subsubsection{Directly communicating ROS}
+
+\begin{description}
+\item[Command line tools]
+
+@rostopic list@ to list all topics in the network
+
+@rostopic echo <name>@ to show what is currently published in a
+topic. In our case, an interesting topic name is @/robot/limb/left/joint...@
+
+@rostopic pub <topic_name> <message_type> <message>@ to actually send a 
+topic from command line.
+
+For example, the following would send torques of 0 to the joints of Baxter's
+right arm. The @-r 100@ means that I want to keep publishing that message at
+ 100 Hz.
+
+\begin{code}
+\begin{Verbatim}
+rostopic pub /robot/limb/right/joint_command baxter_core_msgs/JointCommand
+"{mode: 3, command: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], names: ['right_w0',
+'right_w1', 'right_w2', 'right_e0', 'right_e1', 'right_s0', 'right_s1']}" 
+-r 100
+\end{Verbatim}
+\end{code}
+
+\item[From a simple main.cpp] Here is a minimalistic program that publishes a
+  command.
+\begin{code}
+\begin{Verbatim}
+#include <ros/ros.h>
+#include <baxter_core_msgs/JointCommand.h>
+
+int main(int argc, char** argv){
+  ros::init(argc, argv, "my_node", ros::init_options::NoSigintHandler);
+
+  ros::NodeHandle nh;
+  ros::Publisher pub = nh.advertise<baxter_core_msgs::JointCommand>(
+                                       "robot/limb/left/joint_command", 1);
+
+  baxter_core_msgs::JointCommand msg;
+  msg.mode = baxter_core_msgs::JointCommand::POSITION_MODE;
+  msg.command = { 0, 0, 0, 0, 0, 0, 0 };
+  msg.names = { "left_s0", "left_s1", "left_e0", "left_e1", "left_w0", "left_w1", "left_w2" };
+
+  for ( uint i = 0; i < 1000; i++ )
+  {
+    pub.publish(msg);
+    ros::spinOnce();
+    ros::Duration(0.05).sleep();
+  }
+  return 0;
+}
+
+\end{Verbatim}
+\end{code}
+
+\item[Interferences with our code] In our code, ros::init is done by the little
+  @RosInit@ object; @ros::spin@ is done by a thread called
+  @RosSpinner@. So these you have to drop.
+
+  Another issues is that, in our old code,
+  @SendPositionCommandsToBaxter@ permanently sends position commands
+  to the baxter (with 100Hz is sends the pose computed
+  by the TaskControllerModule and displayed in green). One has to
+  turn this of, e.g., by adding a flag to
+  @SendPositionCommandsToBaxter@ on whether to really send.
+\end{description}
+
+
 
 \subsubsection{Subproblem: Collect data, formulate model, ML}
 

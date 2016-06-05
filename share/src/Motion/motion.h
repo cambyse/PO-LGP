@@ -46,7 +46,7 @@ struct Task {
   void setCostSpecs(int fromTime, uint toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
-  bool isActive(uint t){ if(!active || prec.N<=t || !prec(t)) return false; return true; }
+  bool isActive(uint t){ return (active && prec.N>t && prec(t)); }
 
   static Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
 };

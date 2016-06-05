@@ -19,11 +19,12 @@
 #include "taskController.h"
 #include <Ors/ors_swift.h>
 #include <Motion/motion.h>
+#include <Motion/taskMaps.h>
 
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map)
-  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(1.), maxAcc(10.), f_alpha(0.), f_gamma(0.),
+  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(0.), maxAcc(0.), f_alpha(0.), f_gamma(0.),
     flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
 }
 
@@ -33,22 +34,24 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
-CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-  : map(map), name(name), active(true), prec(ARR(100.)), maxVel(1.), maxAcc(10.), f_alpha(0.), f_gamma(0.),
+CtrlTask::CtrlTask(const char* name, TaskMap& map, const Graph& params)
+  : map(map), name(name), active(true), prec(ARR(100.)), maxVel(0.), maxAcc(0.), f_alpha(0.), f_gamma(0.),
     flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+  if(!params["PD"]) setGainsAsNatural(3., .7);
+  set(params);
+}
+
+void CtrlTask::set(const Graph& params){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->get<arr>();
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
-  } else {
-    setGainsAsNatural(3., .7);
   }
   if((it=params["prec"])) prec = it->get<arr>();
   if((it=params["target"])) y_ref = it->get<arr>();
 }
-
 
 void CtrlTask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;
@@ -178,6 +181,12 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
   f_des = f_ref;
   J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
   K_I = f_alpha*~J;
+}
+
+bool CtrlTask::isConverged(double tolerance){
+  return (y.N && y.N==y_ref.N && v.N==v_ref.N
+          && maxDiff(y, y_ref)<tolerance
+          && maxDiff(v, v_ref)<tolerance);
 }
 
 void CtrlTask::reportState(ostream& os){

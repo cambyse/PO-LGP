@@ -41,20 +41,20 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWor
 DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
   Node *it=specs["type"];
-  if(it){
-    mlr::String Type=it->get<mlr::String>();
-         if(Type=="pos") type=posTMT;
-    else if(Type=="vec") type=vecTMT;
-    else if(Type=="quat") type=quatTMT;
-    else if(Type=="posDiff") type=posDiffTMT;
-    else if(Type=="vecDiff") type=vecDiffTMT;
-    else if(Type=="quatDiff") type=quatDiffTMT;
-    else if(Type=="vecAlign") type=vecAlignTMT;
-    else if(Type=="gazeAt") type=gazeAtTMT;
-    else HALT("unknown type " <<Type);
-  }else HALT("no type given");
-  if((it=specs["ref1"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
-  if((it=specs["ref2"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
+  if(!it) it=specs["map"];
+  if(!it) HALT("no type given");
+  mlr::String Type=it->get<mlr::String>();
+  if(Type=="pos") type=posTMT;
+  else if(Type=="vec") type=vecTMT;
+  else if(Type=="quat") type=quatTMT;
+  else if(Type=="posDiff") type=posDiffTMT;
+  else if(Type=="vecDiff") type=vecDiffTMT;
+  else if(Type=="quatDiff") type=quatDiffTMT;
+  else if(Type=="vecAlign") type=vecAlignTMT;
+  else if(Type=="gazeAt") type=gazeAtTMT;
+  else HALT("unknown type " <<Type);
+  if((it=specs["sym2"]) || (it=specs["ref1"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); i=s->index; }
+  if((it=specs["sym3"]) || (it=specs["ref2"])){ auto name=it->get<mlr::String>(); auto *s=G.getShapeByName(name); CHECK(s,"shape name '" <<name <<"' does not exist"); j=s->index; }
   if((it=specs["vec1"])) ivec = ors::Vector(it->get<arr>());  else ivec.setZero();
   if((it=specs["vec2"])) jvec = ors::Vector(it->get<arr>());  else jvec.setZero();
 }
@@ -216,7 +216,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 
   if(type==gazeAtTMT){
-    CHECK(i>=0, "ref1 is not set!");
+    CHECK(i>=0, "sym2 is not set!");
     if(ivec.length()<1e-10) ivec.set(0.,0.,-1.);
 
     // i    := index of shape to look with (i.e. the shape with the camera)
