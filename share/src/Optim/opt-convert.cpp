@@ -17,6 +17,7 @@
     -----------------------------------------------------------------  */
 
 #include "opt-convert.h"
+#include "KOMO_Problem.h"
 
 //the Convert is essentially only a ``garbage collector'', creating all the necessary conversion objects and then deleting them on destruction
 Convert::Convert(const ScalarFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { sf=p; }
@@ -269,48 +270,6 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 #endif
 }
 
-struct KOMO_ConstrainedProblem : ConstrainedProblem{
-  KOMO_Problem& KOMO;
-  uintA variableDimensions, varDimIntegral;
-  uintA featureTimes;
-  TermTypeA featureTypes;
-  arrA J_KOMO, H_KOMO;
-
-  KOMO_ConstrainedProblem(KOMO_Problem& P) : KOMO(P){
-    KOMO.getStructure(variableDimensions, featureTimes, featureTypes);
-    varDimIntegral = integral(variableDimensions);
-
-    ConstrainedProblem::operator=( [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void{
-      return f(phi, J, H, tt, x);
-    } );
-  }
-
-
-  void f(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x){
-    KOMO.phi(phi, J_KOMO, H_KOMO, tt, x);
-
-    //-- construct a row-shifed J from the array of featureJs
-    if(&J){
-      uint k=KOMO.get_k();
-      uint dim_xmax = max(variableDimensions);
-      RowShiftedPackedMatrix *Jaux = auxRowShifted(J, phi.N, (k+1)*dim_xmax, x.N);
-      J.setZero();
-
-      //loop over features
-      for(uint i=0; i<phi.N; i++) {
-        arr& Ji = J_KOMO(i);
-        CHECK(Ji.N<=J.d1,"");
-//        J.refRange(i, 0, J_KOMO(i).N-1) = J_KOMO(i);
-        memmove(&J(i,0), Ji.p, Ji.sizeT*Ji.N);
-        uint t=featureTimes(i);
-        if(t<=k) Jaux->rowShift(i) = 0;
-        else Jaux->rowShift(i) =  varDimIntegral(t-k-1);
-      }
-
-      Jaux->computeColPatches(true);
-    }
-  }
-};
 
 ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f){
   return [&f](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {

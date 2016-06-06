@@ -19,7 +19,6 @@
 #pragma once
 
 #include "optimization.h"
-#include "KOMO_Problem.h"
 
 //-- basic converters
 ScalarFunction     conv_cstylefs2ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data);
