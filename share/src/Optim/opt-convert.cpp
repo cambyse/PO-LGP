@@ -39,7 +39,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 double conv_VectorFunction_ScalarFunction(VectorFunction f, arr& g, arr& H, const arr& x){
   arr y,J;
   f(y, (&g?J:NoArr), x);
-  //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+  //  if(J.special==arr::RowShiftedST) J = unpack(J);
   if(&g){ g = comp_At_x(J, y); g *= 2.; }
   if(&H){ H = comp_At_A(J); H *= 2.; }
   return sumOfSqr(y);
@@ -106,7 +106,7 @@ ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
   return [&f](arr& g, arr& H, const arr& x) -> double {
     arr y,J;
     f(y, (&g?J:NoArr), x);
-    //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+    //  if(J.special==arr::RowShiftedST) J = unpack(J);
     if(&g){ g = comp_At_x(J, y); g *= 2.; }
     if(&H){ H = comp_At_A(J); H *= 2.; }
     return sumOfSqr(y);
@@ -144,9 +144,9 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   //resizing things:
   phi.resize(dim_phi).setZero();
-  RowShiftedPackedMatrix *Jaux;
+  RowShifted *Jaux;
   if(&J){
-    Jaux = auxRowShifted(J, dim_phi, (k+1)*dim_xmax, x.N);
+    Jaux = makeRowShifted(J, dim_phi, (k+1)*dim_xmax, x.N);
     J.setZero();
   }
   if(&tt) tt.resize(dim_phi).setZero();
@@ -205,9 +205,9 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   //resizing things:
   phi.resize(dim_phi).setZero();
-  RowShiftedPackedMatrix *Jaux;
+  RowShifted *Jaux;
   if(&J){
-    Jaux = auxRowShifted(J, dim_phi, (k+1)*n, _x.N);
+    Jaux = makeRowShifted(J, dim_phi, (k+1)*n, _x.N);
     J.setZero();
   }
   if(&tt) tt.resize(dim_phi).setZero();

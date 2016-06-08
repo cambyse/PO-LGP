@@ -41,8 +41,8 @@ void testGraphProblem() {
   //-- optimize
   rndUniform(x,-1.,1.);
   arr K;
-  optConstrained(x, NoArr, C ); //slow, because structure not exploited
-//  optConstrained(x, NoArr, C2 ); //fast, using KOMO structure
+//  optConstrained(x, NoArr, C ); //slow, because structure not exploited
+  optConstrained(x, NoArr, C2 ); //fast, using KOMO structure
 
   write(LIST<arr>(x),"z.output");
   mlr::String plt = "plot 'z.output' us 1";

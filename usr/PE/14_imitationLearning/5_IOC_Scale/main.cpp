@@ -51,7 +51,7 @@ struct IOC_DemoCost {
       }
       if(idx.contains(i)) {
         JgP.delRows(j);
-        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+        ((RowShifted*)JgP.aux)->rowShift.remove(j);
         j--;
       }
       j++;

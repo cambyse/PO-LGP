@@ -75,7 +75,6 @@ def qdump__mlr__Array(d, value):
                 i = i+1
             d.putSubItem("p", p)
             d.putSubItem("reference", value["reference"])
-            d.putSubItem("special", value["special"])
             d.putSubItem("aux", value["aux"])
             
 def qdump__Node_typed(d, value):
