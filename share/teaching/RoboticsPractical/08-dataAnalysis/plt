@@ -1,0 +1,2 @@
+#splot 'z' us 1:2:3 t 's0', '' us 1:2:4 t 's1'
+plot 'z' us 1:2 t 's0', '' us 1:3 t 's1'

@@ -231,10 +231,10 @@ double soc::LQG::stepGeneral(){
       q_phase[t+1]() = A[t]*q_phase[t] + a[t] + B[t]*u;
     }else{
       q_phase.reshape(T+1, 2, n);
-      q_phase.subDim(t+1, 1)
-        = ((double)1.-convergenceRate)*q_phase.subDim(t+1, 1)
-        + convergenceRate*(q_phase.subDim(t, 1) + a[t].sub(n, -1) + B[t].sub(n, -1, 0, -1)*u);
-      q_phase.subDim(t+1, 0) = q_phase.subDim(t, 0) + tau*q_phase.subDim(t+1, 1);
+      q_phase.refDim(t+1, 1)
+        = ((double)1.-convergenceRate)*q_phase.refDim(t+1, 1)
+        + convergenceRate*(q_phase.refDim(t, 1) + a[t].sub(n, -1) + B[t].sub(n, -1, 0, -1)*u);
+      q_phase.refDim(t+1, 0) = q_phase.refDim(t, 0) + tau*q_phase.refDim(t+1, 1);
       q_phase.reshape(T+1, 2*n);
     }
   }

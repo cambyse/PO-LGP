@@ -1,4 +1,4 @@
-#define REPORT 0
+//#define REPORT 0
 
 #include "myBaxter.h"
 
@@ -52,8 +52,7 @@ struct MyBaxter_private{
       rosInit("MyBaxter"),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
       spctb(tcm.realWorld),
-      sub("/robot/joint_states", jointState)
-  {
+      sub("/robot/joint_states", jointState) {
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
 //    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
@@ -83,6 +82,20 @@ MyBaxter::~MyBaxter(){
 CtrlTask* MyBaxter::task(const Graph& specs){
   TaskMap *map = TaskMap::newTaskMap(specs, s->tcm.modelWorld.get()());
   CtrlTask* t = new CtrlTask("noname", *map, specs);
+  map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
+  activeTasks.append(t);
+  s->tcm.ctrlTasks.set() = activeTasks;
+#ifdef REPORT
+  t->reportState(cout);
+#endif
+  return t;
+}
+
+CtrlTask* MyBaxter::task(const char* name,
+                         TaskMap* map,
+                         double decayTime, double dampingRatio, double maxVel, double maxAcc){
+
+  CtrlTask* t = new CtrlTask(name, map, decayTime, dampingRatio, maxVel, maxAcc);
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
@@ -164,8 +177,7 @@ uint MyBaxter::reportPerceptionObjects(){
 }
 
 void MyBaxter::reportJointState(){
-  if(mlr::getParameter<bool>("useRos", false))
-  {
+  if(s->nh){
     sensor_msgs::JointState js = s->jointState.get();
 
     std::cout << "Joint header: " << js.header.seq << std::endl;
@@ -176,8 +188,19 @@ void MyBaxter::reportJointState(){
 }
 
 arr MyBaxter::getEfforts(){
-    return baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+  arr u;
+  for(;;){
+    u = baxter_getEfforts(s->jointState.get(), s->tcm.realWorld);
+    if(fabs(u(0))>1e-10) return u;
+    s->jointState.waitForNextRevision();
+  }
+  return u;
 }
+
+void MyBaxter::getState(arr& q, arr& qdot, arr& u){
+  baxter_get_q_qdot_u(q, qdot, u, s->jointState.get(), s->tcm.realWorld);
+}
+
 
 double MyBaxter::setTestJointState(const arr &q){
   testWorld.setJointState(q);
@@ -244,7 +267,7 @@ ors::Vector MyBaxter::arPose(){
 
 
 void MyBaxter::publishTorque(const arr& u, const char* prefix){
-  if(mlr::getParameter<bool>("useRos")){
+  if(s->nh){
     cout <<"SENDING TORQUES: " <<u <<endl;
     baxter_core_msgs::JointCommand msg = conv_qRef2baxterMessage(u, s->tcm.realWorld, prefix);
     msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
@@ -266,24 +289,28 @@ double MyBaxter::getCollisionScalar(){
   return y.scalar();
 }
 
+TaskControllerModule& MyBaxter::getTaskControllerModule(){
+  return s->tcm;
+}
+
 void MyBaxter::disablePosControl(){
-  s->spctb.enablePositionControlR = false;
+  s->spctb.enablePositionControlL = false;
 }
 
 void MyBaxter::enablePosControl(){
-  s->spctb.enablePositionControlR = true;
+  s->spctb.enablePositionControlL = true;
 }
 
 void MyBaxter::enableTotalTorqueMode(){
-  s->spctb.totalTorqueModeR = true;
+  s->spctb.totalTorqueModeL = true;
 }
 
 void MyBaxter::disableTotalTorqueMode(){
-  s->spctb.totalTorqueModeR = false;
+  s->spctb.totalTorqueModeL = false;
 }
 
 void MyBaxter::grip(){
-  auto grip = MyBaxter::task(GRAPH(" map=qItself PD=[1., 0.8, 1.0, 10.]"));
+  auto grip = MyBaxter::task(GRAPH(" map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
 
   arr q = s->tcm.realWorld.q;
 
@@ -294,12 +321,13 @@ void MyBaxter::grip(){
   isGripping ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
 
   std::cout << "Gripping: " << isGripping << std::endl;
+
   modifyTarget(grip, q);
 
   uint count = 0;
   while( std::abs(50 * (s->tcm.realWorld.q(j->qIndex)) - q(j->qIndex)) > 0.1) {
     count++;
-    if (count > 3000)
+    if (count > 500)
       break;
     mlr::wait(0.01);
   }

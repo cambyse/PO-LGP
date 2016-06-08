@@ -20,6 +20,9 @@ struct MyBaxter{
   //-- add & modify tasks
   CtrlTask* task(const Graph& specs);
   CtrlTask* task(const char* name,
+                 TaskMap* map,
+                 double decayTime, double dampingRatio, double maxVel, double maxAcc);
+  CtrlTask* task(const char* name,
                  DefaultTaskMapType type,
                  const char* iShapeName, const ors::Vector& ivec,
                  const char* jShapeName, const ors::Vector& jvec,
@@ -37,6 +40,7 @@ struct MyBaxter{
   void reportJointState();
   arr getEfforts();
   arr getJointState();
+  void getState(arr& q, arr& qdot, arr& u);
   double setTestJointState(const arr& q);
   void getEquationOfMotion(arr& M, arr& F);
 
@@ -60,8 +64,9 @@ struct MyBaxter{
   void grip();
   void grip(const bool toGrip);
 
+  //-- inner access
+  struct TaskControllerModule& getTaskControllerModule();
+
   //-- info
   arr q0();
-
-  bool isGripping = false;
 };

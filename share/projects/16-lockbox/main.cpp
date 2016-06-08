@@ -8,94 +8,167 @@
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
+  MyBaxter baxter;
+
+  mlr::wait(3.);
+
+  //    auto home = baxter.task(GRAPH(" map=qItself PD=[1., 0.8, 1.0, 10.]"));
+  //    baxter.modifyTarget(home, baxter.q0());
+  //    baxter.waitConv({home});
+  //    baxter.stop({home});
+
+
+  auto endL   = baxter.task(GRAPH("map=pos ref1=endeffL ref2=base_footprint target=[0.6 0.45 1.4] PD=[1., .8, 1., 1.]"));
+  auto endR   = baxter.task(GRAPH("map=pos ref1=endeffR ref2=base_footprint target=[0.6 -0.8 1.5] PD=[1., .8, 1., 1.]"));
+  auto alignT = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[1 0 0] target=[1] PD=[1., .8, 1., 1.]"));
+  auto alignRT = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 1.]"));
+  auto wristT   = baxter.task(GRAPH("map=vecAlign ref1=wristL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., .8, 1., 1.]"));
+  auto elbowL   = baxter.task(GRAPH("map=vecAlign ref1=elbowL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., .8, 1., 5.]"));
+
+  baxter.grip(0);
+
+  baxter.waitConv({alignRT, alignT, endR, endL});
+  baxter.stop({alignT, alignRT, wristT, elbowL, endR, endL});
+
+  mlr::wait(3.);
+
+  arr js = baxter.getJointState();
+  std::cout << js << std::endl;
+
+  Lockbox lockbox(&baxter);
+
+  mlr::wait(1.);
+
+
+//  for (uint joint = 1; joint < 6; ++joint)
+//  {
+//    auto alignZ = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[1 0 0] target=[1] PD=[1., .8, 1., 1.] prec=[50]"));
+//    auto alignZ2 = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 1.] prec=[50]"));
+//    auto alignZ3 = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=[0 1 0] target=[1] PD=[1., .8, 1., 1.] prec=[50]"));
+
+//    ors::Transformation tf;
+//    tf.setZero();
+//    tf.addRelativeTranslation(-0.1, 0.05, 0);
+//    lockbox.moveToAlvar(joint, tf, 1, 50.);
+//    baxter.stop({alignZ, alignZ2, alignZ3});
+//    mlr::wait(1.);
+//    baxter.disablePosControl();
+
+//    lockbox.getAbsoluteJointTransform(joint, tf);
+//    lockbox.joint_origins.at(joint) = tf;
+
+//    baxter.enablePosControl();
+//    mlr::wait(1.);
+//    lockbox.moveRelative(ors::Vector(-0.1, 0, 0), 1, 100);
+//  }
+
+  auto homer = baxter.task(GRAPH(" map=qItself PD=[1, 1., 1, 5.] prec=[100.]"));
+  baxter.modifyTarget(homer, js);
+  baxter.waitConv({homer});
+  baxter.stop({homer});
+
+  while(1)
   {
-    MyBaxter baxter;
-
-    mlr::wait(3.);
-    auto home = baxter.task(GRAPH(" map=qItself PD=[1., 0.8, 1.0, 10.]"));
-    baxter.modifyTarget(home, baxter.q0());
-    baxter.waitConv({home});
-    baxter.stop({home});
-
-    baxter.grip(0);
-
-
-    auto endL   = baxter.task(GRAPH("map=pos ref1=endeffL ref2=base_footprint target=[0.7 0.2 1.6] PD=[1., .8, 1., 1.]"));
-    auto endR   = baxter.task(GRAPH("map=pos ref1=endeffR ref2=base_footprint target=[0.6 -0.8 1.5] PD=[1., .8, 1., 1.]"));
-    auto alignT = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[1 0 0] target=[1] PD=[1., .8, 1., 1.]"));
-    auto alignRT = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[0 1 0] target=[1] PD=[1., .8, 1., 1.]"));
-    auto wristT   = baxter.task(GRAPH("map=vecAlign ref1=wristL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., .8, 1., 1.]"));
-    auto elbowL   = baxter.task(GRAPH("map=vecAlign ref1=elbowL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., .8, 1., 5.]"));
-
-    endL->prec = ARR(75.);
-    baxter.waitConv({alignRT, alignT, endR, endL});
-    mlr::wait(3.);
-
-    baxter.stop({wristT, elbowL, alignT, endR, endL});
-
-    arr js = baxter.getJointState();
-    Lockbox lockbox;
-    mlr::wait(3.);
-
-    ors::Transformation tf;
-    while(1)
+    for(uint joint = 1; joint < 6; ++joint)
     {
-      for(uint joint = 1; joint < 6; ++joint)
+      double position;
+
+      if (lockbox.getJointPosition(joint, position))
       {
-        std::cout << "Joint: " << joint << std::endl;
-        if (lockbox.getAbsoluteJointTransform(joint, tf))
-        {
-          auto alignR = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[1 0 0] target=[1] PD=[1., .8, 1., 1.]"));
-          auto wristR   = baxter.task(GRAPH("map=vecAlign ref1=wristL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., .8, 1., 1.]"));
+        std::cout << joint << ": " << position << std::endl;
 
-          ors::Vector pos = tf.pos;
-          //pos += ors::Vector(lockbox.offsets.at(joint)(0),lockbox.offsets.at(joint)(1), lockbox.offsets.at(joint)(2));
+        baxter.grip(0);
 
+        lockbox.moveJointToPosition(joint, 0.5);
+        /*
+        auto alignR = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[0 0 1] target=[0] PD=[1., .8, 1., 5.] prec=[1]"));
+        auto alignR2 = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 5.] prec=[1]"));
+        auto alignR3 = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=[1 0 0] target=[0] PD=[1., .8, 1., 5.] prec=[1]"));
 
-          baxter.grip(0);
-          mlr::String pd = STRING("PD=[1., .8, 1., 1.]");
-          mlr::String str = STRING(
-                              "map=pos ref1=endeffL ref2=base_footprint target=["
-                              << pos.x - 0.2 << ' ' << pos.y << ' ' << pos.z
-                              << "] " << pd);
+        ors::Transformation offset_tf;
+        offset_tf.setZero();
+        offset_tf.addRelativeTranslation(-0.2, 0.05, 0);
+        lockbox.moveToAlvar(joint, offset_tf, 1.2, 50);
+        baxter.waitConv({alignR, alignR2, alignR3});
 
-
-          std::cout << "\t" << str << std::endl;
-
-          auto posR = baxter.task(GRAPH(str));
-          posR->prec = ARR(75.);
-          baxter.waitConv({posR, alignR});
-          mlr::wait(2.);
-
-          ors::Vector off = pos + ors::Vector(lockbox.offsets.at(joint)(0),lockbox.offsets.at(joint)(1), lockbox.offsets.at(joint)(2));
-
-          baxter.modifyTarget(posR, ARR(off.x - 0.1, off.y, off.z));
-          baxter.waitConv({posR, alignR});
-
-          mlr::wait(2.);
-
-          baxter.modifyTarget(posR, ARR(off.x - 0.03, off.y, off.z));
-          baxter.waitConv({posR, alignR});
-
-          baxter.grip(1);
-          baxter.grip(0);
-
-          mlr::wait(2.);
-          baxter.modifyTarget(posR, ARR(off.x - 0.1, off.y, off.z));
-          baxter.waitConv({posR, alignR});
-
-          baxter.stop({posR, alignR, wristR});
-
-          auto homer = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
-
-          baxter.modifyTarget(homer, js);
-          baxter.waitConv({homer});
-          baxter.stop({homer});
-          mlr::wait(3.);
-        }
+        baxter.disablePosControl();
         mlr::wait(1.);
+        lockbox.update = false;
+        baxter.enablePosControl();
+        mlr::wait(1.);
+
+        offset_tf.setZero();
+        offset_tf.addRelativeTranslation(-0.08, 0, 0);
+        lockbox.moveToJointStub(joint, offset_tf, 1, 50);
+        lockbox.moveToJointStub(joint, offset_tf, 1, 0.1);
+        baxter.waitConv({alignR, alignR2, alignR3});
+
+
+        offset_tf.setZero();
+        lockbox.moveToJointStub(joint, offset_tf, 1, 50);
+        lockbox.moveToJointStub(joint, offset_tf, 1, 1);
+        baxter.waitConv({alignR, alignR2, alignR3});
+
+
+
+//        lockbox.moveRelative(-offset_tf.pos, 1, 1);
+//        lockbox.moveRelative(-offset_tf.pos, 1, 0.1);
+//        mlr::wait(2.);
+
+        baxter.grip(1);
+
+        baxter.stop({alignR, alignR2, alignR3});
+
+        ors::Quaternion rot = lockbox.end_orientations.at(joint);
+        ors::Quaternion initial; initial.setRpy(-MLR_PI/2, 0, 0);
+        rot = rot * initial;
+
+        ors::Vector xVec = rot.getMatrix() * ors::Vector(1, 0, 0);
+        ors::Vector yVec = rot.getMatrix() * ors::Vector(0, 1, 0);
+        ors::Vector zVec = rot.getMatrix() * ors::Vector(0, 0, 1);
+
+
+        auto alignX = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=["
+                                               << xVec.x << ' ' << xVec.y << ' ' << xVec.z
+                                               << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+        auto alignY = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=["
+                                               << yVec.x << ' ' << yVec.y << ' ' << yVec.z
+                                               << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+        auto alignZ = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=["
+                                               << zVec.x << ' ' << zVec.y << ' ' << zVec.z
+                                               << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+        lockbox.moveRelative(lockbox.end_offsets.at(joint), 0.8, 1000);
+
+   //     lockbox.moveRelative(lockbox.end_offsets.at(joint), 0.8, 30);
+        mlr::wait(2.);
+
+        alignX->prec = ARR(50);
+        alignY->prec = ARR(50);
+        alignZ->prec = ARR(50);
+        baxter.waitConv({alignX, alignY, alignZ});
+
+        baxter.grip(0);
+//        mlr::wait(2.);
+
+        ors::Vector away = rot * ors::Vector(-.1, 0, 0);
+        lockbox.moveRelative(away, 0.8, 100);
+        mlr::wait(2.);
+        baxter.stop({alignX, alignY, alignZ});
+        */
+
+        auto homer = baxter.task(GRAPH(" map=qItself PD=[1, 1., .2, 5.] prec=[100.]"));
+        baxter.modifyTarget(homer, js);
+        baxter.waitConv({homer});
+        baxter.stop({homer});
+
+        lockbox.update = true;
       }
     }
+    std::cout << std::endl;
+    mlr::wait(0.25);
   }
 
   cout <<"bye bye" <<endl;

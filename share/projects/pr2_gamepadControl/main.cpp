@@ -84,7 +84,7 @@ void TEST(Gamepad){
     cout <<"** GO!" <<endl;
     q = ctrl_obs.get()->q;
     qdot = ctrl_obs.get()->qdot;
-    q.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    q.refRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
     //arr fL_base = fL_obs.get();
     MP.setState(q, qdot);
   }
@@ -106,7 +106,7 @@ void TEST(Gamepad){
     //get joint state
     if(useRos){
       arr q_real =ctrl_obs.get()->q;
-      q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+      q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
 
       world_pr2.setJointState(q_real, ctrl_obs.get()->qdot);
       fLobs = ctrl_obs.get()->fL;
