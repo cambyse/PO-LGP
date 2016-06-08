@@ -27,17 +27,21 @@ int main(int argc, char** argv){
 
     // Send it 0 torques for 1 second
     sound().addNote(12, .5, 0.);
-    TaskControllerModule& TCM = baxter.getTaskControllerModule();
+//    TaskControllerModule& TCM = baxter.getTaskControllerModule();
 //    TCM.oldfashioned = false;
-    CtrlMsg refs;
-    arr q, qdot, u;
+//    CtrlMsg refs;
+    arr q0, q, qdot, u;
 //    TCM.ctrl_ref.waitForNextRevision();
+    double kp = mlr::getParameter<double>("kp");
+    double kd = mlr::getParameter<double>("kd");
+    baxter.getState(q0, qdot, u);
     for (uint i = 0; i < 1000; i++) {
 #if 0
-      refs = TCM.ctrl_ref.get();
+//      refs = TCM.ctrl_ref.get();
       baxter.getState(q, qdot, u);
 
-      arr a = refs.Kp * (refs.q-q) + refs.Kd * qdot;
+//      arr a = refs.Kp * (refs.q-q) + refs.Kd * qdot;
+      arr a = kp * (q0-q) - kd * qdot;
 
       //-- translate to motor torques
       arr M, F;
