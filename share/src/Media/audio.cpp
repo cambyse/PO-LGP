@@ -31,7 +31,11 @@ void SineSound::changeAmp(uint i, float amp){
   mutex.unlock();
 }
 
-void SineSound::reset(){ notes.clear(); }
+void SineSound::reset(){
+  mutex.lock();
+  notes.clear();
+  mutex.unlock();
+}
 
 void SineSound::clean(){
   mutex.lock();

@@ -93,7 +93,7 @@ void TaskControllerModule::step(){
       if(pr2odom.N==3)
         q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
     }
-    if(robot=="baxter"){
+    if(robot=="baxter" && useRos){
 #ifdef MLR_ROS
       s->jointState.waitForRevisionGreaterThan(20);
       q_real = realWorld.q;

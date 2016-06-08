@@ -37,6 +37,7 @@ struct MyBaxter{
   void reportJointState();
   arr getEfforts();
   arr getJointState();
+  void getState(arr& q, arr& qdot, arr& u);
   double setTestJointState(const arr& q);
   void getEquationOfMotion(arr& M, arr& F);
 
@@ -57,6 +58,8 @@ struct MyBaxter{
   arr getJointLimits();
   double getCollisionScalar();
 
+  //-- inner access
+  struct TaskControllerModule& getTaskControllerModule();
 
   //-- info
   arr q0();

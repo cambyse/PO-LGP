@@ -21,6 +21,7 @@
 
 #include <baxter_core_msgs/JointCommand.h>
 
+
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
 
 struct MyBaxter_private{
@@ -54,9 +55,8 @@ struct MyBaxter_private{
       tcm("baxter"),
       rosInit("MyBaxter"),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
-      sub("/robot/joint_states", jointState),
-      spctb(tcm.realWorld)
-  {
+      spctb(tcm.realWorld),
+      sub("/robot/joint_states", jointState) {
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
 //    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
@@ -167,8 +167,7 @@ uint MyBaxter::reportPerceptionObjects(){
 }
 
 void MyBaxter::reportJointState(){
-  if(mlr::getParameter<bool>("useRos", false))
-  {
+  if(s->nh){
     sensor_msgs::JointState js = s->jointState.get();
 
     std::cout << "Joint header: " << js.header.seq << std::endl;
@@ -187,6 +186,11 @@ arr MyBaxter::getEfforts(){
   }
   return u;
 }
+
+void MyBaxter::getState(arr& q, arr& qdot, arr& u){
+  baxter_get_q_qdot_u(q, qdot, u, s->jointState.get(), s->tcm.realWorld);
+}
+
 
 double MyBaxter::setTestJointState(const arr &q){
   testWorld.setJointState(q);
@@ -253,7 +257,7 @@ ors::Vector MyBaxter::arPose(){
 
 
 void MyBaxter::publishTorque(const arr& u, const char* prefix){
-  if(mlr::getParameter<bool>("useRos")){
+  if(s->nh){
     cout <<"SENDING TORQUES: " <<u <<endl;
     baxter_core_msgs::JointCommand msg = conv_qRef2baxterMessage(u, s->tcm.realWorld, prefix);
     msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
@@ -273,6 +277,10 @@ double MyBaxter::getCollisionScalar(){
   arr y;
   s->tcm.modelWorld.get()->kinematicsProxyCost(y, NoArr);
   return y.scalar();
+}
+
+TaskControllerModule& MyBaxter::getTaskControllerModule(){
+  return s->tcm;
 }
 
 void MyBaxter::disablePosControl(){
