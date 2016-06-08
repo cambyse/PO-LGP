@@ -4,6 +4,15 @@
 
 // =================================================================================================
 
+void printJointIndices(){
+  ors::KinematicWorld W("rawbaxter.ors");
+  for(ors::Joint *j:W.joints){
+    cout <<j->qIndex <<' ' <<j->qDim() <<' ' <<j->name <<endl;
+  }
+}
+
+// =================================================================================================
+
 void agumentDataWithF(mlr::String filename){
   arr D = FILE(filename);
 
@@ -59,8 +68,9 @@ int main(int argc, char** argv){
 
   //================================================================
 
+  printJointIndices();
 //  augmentDataWithF(filename);
-  display(filename);
+//  display(filename);
 
   return 0;
 }
