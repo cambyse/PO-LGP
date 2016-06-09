@@ -620,6 +620,46 @@ void TEST(RowShifted){
 
 //===========================================================================
 
+void sparseProduct(arr& y, arr& A, const arr& x);
+
+void TEST(Sparse){
+  cout <<"\n*** Sparse\n";
+
+
+  arr A(5,10), B(10);
+  rndInteger(A,0,3);
+  rndInteger(B,0,3);
+  cout <<"A=\n" <<A <<"\nB=\n" <<B <<"\nA*B=\n" <<A*B <<endl;
+
+  cout <<"A sparsity=" <<A.sparsity() <<endl;
+  cout <<"B sparsity=" <<B.sparsity() <<endl;
+
+  A.makeSparse();
+  B.makeSparse();
+
+
+  cout <<"A=\n" <<A <<"\nB=\n" <<B <<endl;
+//  cout <<"\nA*B=\n" <<A*B <<endl;
+  arr y;
+  sparseProduct(y, A, B);
+  cout <<"A*B=\n" <<y <<endl;
+
+  for(uint k=0;k<100;k++){
+    arr A(10,20);
+    arr B(20);
+    rndInteger(A,0,3);
+    rndInteger(B,0,3);
+    arr C = A*B;
+    A.makeSparse();
+//    B.makeSparse();
+    arr D;
+    sparseProduct(D, A, B);
+    CHECK_EQ(C, D, "");
+  }
+}
+
+//===========================================================================
+
 void TEST(EigenValues){
   rnd.clockSeed();
   arr C(30,8);
@@ -662,6 +702,9 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
+  testSparse();
+  return 0;
+
   testBasics();
   testCheatSheet();
   testInitializationList();
@@ -679,6 +722,7 @@ int MAIN(int argc, char *argv[]){
   testDeterminant();
   testEigenValues();;
   testRowShifted();
+  testSparse();
   testInverse();
   testMM();
   testSVD();
