@@ -1,6 +1,7 @@
 #include <Core/util.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
+#include <Algo/MLcourse.h>
 
 // =================================================================================================
 
@@ -15,6 +16,8 @@ void printJointIndices(){
 
 void agumentDataWithF(mlr::String filename){
   arr D = FILE(filename);
+  uint n=D.d0;
+  CHECK_EQ(D.d1, 2*17,"");
 
   ors::KinematicWorld W("rawbaxter.ors");
 
@@ -22,7 +25,7 @@ void agumentDataWithF(mlr::String filename){
   ofstream fil(filename);
   cout <<"output = '" <<filename <<"'" <<endl;
 
-  for(uint i=0;i<D.d0;i++){
+  for(uint i=0;i<n;i++){
     if(!(i%10)) cout <<i <<endl;
     const arr& Di = D[i];
     arr q = Di.refRange(0,16);
@@ -59,18 +62,66 @@ void display(const char* filename){
 
 // =================================================================================================
 
+void fitModel(const char* filename){
+  arr D = FILE(filename);
+  CHECK_EQ(D.d1, 3*17,"");
+
+  D.reshape(10, D.d0/10, D.d1);
+  D = sum(D, 0) / 10.;
+
+  uintA cols={4u,6,8,10,12,14};
+  arr X = D.sub(0,-1,cols);
+  arr F = D.sub(0,-1,cols+17u);
+  arr Y = D.sub(0,-1,cols+34u);
+  X = catCol(X,F);
+
+  arr Phi0 = makeFeatures(X, constFT);
+  RidgeRegression R0(Phi0, Y, 1e-6);
+  arr s0=sqrt( R0.getMultiOutputSquaredErrors(Phi0, Y) );
+
+  arr Phi1 = makeFeatures(X, cubicFT);
+  RidgeRegression R1(Phi1, Y, 1e-6);
+  arr s1=sqrt( R1.getMultiOutputSquaredErrors(Phi1, Y) );
+
+  cout <<"\nRelative Errors: " <<s1/s0 <<endl;
+
+  cout <<"Output Sdv = " <<sqrt(R0.sigmaSqr) <<endl;
+  cout <<"Relative error (sdv) = " <<sqrt(R1.sigmaSqr)/sqrt(R0.sigmaSqr) <<endl;
+
+
+  cout <<"----- CV -------" <<endl;
+  //-- CV
+  struct myCV:CrossValidation {
+    virtual void  train(const arr& X, const arr& y, double lambda, arr& beta){
+      RidgeRegression R(X, y, lambda, NoArr, 0);
+      beta = R.beta;
+    }
+
+    virtual double test(const arr& X, const arr& y, const arr& beta){
+      return ( sumOfSqr(X*beta-y)/y.N );
+    }
+  } CV;
+
+  CV.crossValidateMultipleLambdas(Phi1, Y, {1., 1e-2, 1e-4, 1e-6}, 10, true);
+  CV.plot();
+
+}
+
+// =================================================================================================
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  mlr::String filename="../data/dataTraining_100x10.txt_Faugmented";
+  mlr::String filename="../data/dataTrainingNew.txt_Faugmented";
   if(mlr::argc>1) filename=mlr::argv[1];
   cout <<"Processing file '" <<filename <<"'" <<endl;
 
   //================================================================
 
-  printJointIndices();
-//  augmentDataWithF(filename);
+//  printJointIndices();
+//  agumentDataWithF(filename);
 //  display(filename);
+  fitModel(filename);
 
   return 0;
 }

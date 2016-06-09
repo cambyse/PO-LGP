@@ -36,7 +36,7 @@ int main(int argc, char** argv){
     double kd = mlr::getParameter<double>("kd");
     baxter.getState(q0, qdot, u);
     for (uint i = 0; i < 1000; i++) {
-#if 0
+#if 1
 //      refs = TCM.ctrl_ref.get();
       baxter.getState(q, qdot, u);
 
@@ -50,7 +50,7 @@ int main(int argc, char** argv){
       arr u = M*a; // + F;
       cout <<u <<endl;
 
-//      baxter.publishTorque(u, "right_");
+      baxter.publishTorque(u, "right_");
 #else
       baxter.publishTorque(~J * ARR(0.,0.,0.), "right_");
 #endif
