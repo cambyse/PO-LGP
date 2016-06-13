@@ -17,13 +17,15 @@ int main(int argc, char** argv){
 
     baxter.waitConv({posR/*, alignR*/});
 
+    baxter.disablePosControl();
+
+    mlr::wait(1.);
 
     //-- compute torques
     arr y,J;
     posR->map.phi(y, J, baxter.getKinematicWorld());
-    baxter.disablePosControl();
 
-    mlr::wait(1.);
+
 
     // Send it 0 torques for 1 second
     sound().addNote(12, .5, 0.);
@@ -54,7 +56,7 @@ int main(int argc, char** argv){
 #else
       baxter.publishTorque(~J * ARR(0.,0.,0.), "right_");
 #endif
-      mlr::wait(0.001);
+      mlr::wait(0.005);
     }
 //    TCM.oldfashioned = true;
     sound().reset();
