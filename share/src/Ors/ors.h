@@ -358,7 +358,7 @@ struct KinematicSwitch{
   void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool copyFromBodies);
   void write(std::ostream& os) const;
   static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
-
+  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
 };
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace

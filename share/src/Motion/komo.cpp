@@ -18,6 +18,11 @@ void setTasks(MotionProblem& MP,
 
 //===========================================================================
 
+#define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
+
+//===========================================================================
+
+
 KOMO::KOMO() : MP(NULL){
 }
 
@@ -31,9 +36,9 @@ void KOMO::init(const Graph& _specs){
   specs = _specs;
 
   Graph &glob = specs.get<Graph>("KOMO");
-  uint timeStepsPerPhase=glob.get<double>("T");
+  stepsPerPhase=glob.get<double>("T");
   double duration=glob.get<double>("duration");
-  uint phases=glob.get<double>("phases", 1);
+  phases=glob.get<double>("phases", 1);
   uint k_order=glob.get<double>("k_order", 2);
 
   if(glob["model"]){
@@ -65,15 +70,197 @@ void KOMO::init(const Graph& _specs){
 
   if(MP) delete MP;
   MP = new MotionProblem(world);
-  if(timeStepsPerPhase>=0) MP->setTiming(timeStepsPerPhase*phases, duration*phases);
+  if(stepsPerPhase>=0) MP->setTiming(stepsPerPhase*phases, duration*phases);
   MP->k_order=k_order;
 
-  MP->parseTasks(specs, timeStepsPerPhase);
+  MP->parseTasks(specs, stepsPerPhase);
 }
 
 void KOMO::setFact(const char* fact){
   specs.readNode(STRING(fact));
   MP->parseTask(specs.last());
+}
+
+void KOMO::setModel(const Graph& model,
+                    bool meldFixedJoints, bool makeConvexHulls, bool makeSSBoxes, bool activateAllContacts){
+
+  world.init(model);
+
+  if(meldFixedJoints){
+    world.meldFixedJoints();
+    world.removeUselessBodies();
+  }
+
+  if(makeConvexHulls)
+    ::makeConvexHulls(world.shapes);
+
+  if(makeSSBoxes){
+    NIY;
+    //for(ors::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    world.gl().watch();
+  }
+
+  if(activateAllContacts)
+    for(ors::Shape *s:world.shapes) s->cont=true;
+
+  world.swift().initActivations(world);
+  FILE("z.komo.model") <<world;
+}
+
+void KOMO::setTiming(uint _phases, uint _stepsPerPhase, double durationPerPhase, uint k_order){
+  if(MP) delete MP;
+  MP = new MotionProblem(world);
+  phases = _phases;
+  stepsPerPhase = _stepsPerPhase;
+  if(stepsPerPhase>=0) MP->setTiming(stepsPerPhase*phases, durationPerPhase*phases);
+  MP->k_order=k_order;
+}
+
+//===========================================================================
+//
+// task specs
+//
+
+Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType type, const arr& target, double prec, uint order){
+  map->order = order;
+  Task *task = new Task(map, type);
+  task->name <<map->shortTag();
+  if(endTime>double(phases)+1e-10) LOG(-1) <<"beyond the time!";
+  task->setCostSpecs((startTime<0.?0:STEP(startTime)+order), (endTime<0.?MP->T+1:STEP(endTime)), target, prec);
+  MP->tasks.append(task);
+  return task;
+}
+
+Task *KOMO::setTask(double startTime, double endTime, const char* mapSpecs, TermType type, const arr& target, double prec, uint order){
+  TaskMap *map = TaskMap::newTaskMap(Graph(mapSpecs), world);
+  return setTask(startTime, endTime, map, type, target, prec, order);
+}
+
+void KOMO::setKinematicSwitch(double time, const char* type, const char* ref1, const char* ref2){
+  ors::KinematicSwitch *sw = ors::KinematicSwitch::newSwitch(type, ref1, ref2, world, STEP(time) );
+  MP->switches.append(sw);
+}
+
+void KOMO::setHoming(double startTime, double endTime, double prec){
+  setTask(startTime, endTime, new TaskMap_qItself(), sumOfSqrTT, world.q, prec);
+}
+
+void KOMO::setSquaredQAccelerations(double startTime, double endTime, double prec){
+  CHECK(MP->k_order>=2,"");
+  setTask(startTime, endTime, new TransitionTaskMap(MP->world), sumOfSqrTT, NoArr, prec, 2);
+}
+
+void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
+  CHECK(MP->k_order>=1,"");
+  auto *map = new TransitionTaskMap(MP->world);
+  setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
+  map->velCoeff = 1.;
+}
+
+void KOMO::setHoldStill(double startTime, double endTime, const char* joint, double prec){
+  setTask(startTime, endTime, new TaskMap_qItself(world, joint), sumOfSqrTT, NoArr, prec, 1);
+}
+
+void KOMO::setPosition(double startTime, double endTime, const char* shape, const char* shapeRel, TermType type, const arr& target, double prec){
+#if 0
+  mlr::String map;
+  map <<"map=pos ref1="<<shape;
+  if(shapeRel) map <<" ref2=" <<shapeRel;
+  setTask(startTime, endTime, map, type, target, prec);
+#else
+  setTask(startTime, endTime, new DefaultTaskMap(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
+#endif
+}
+
+void KOMO::setLastTaskToBeVelocity(){
+  MP->tasks.last()->map.order = 1; //set to be velocity!
+}
+
+void KOMO::setGrasp(double time, const char* graspRef, const char* endeffRef, const char* object){
+//#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
+  setTask(time-.1, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
+
+  setTask(time-.1, time, new DefaultTaskMap(posDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
+  setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
+//#    (MinSumOfSqr posDiff Hand Obj){ time=[.98 1] scale=1e3 }
+//#    (MinSumOfSqr quatDiff Hand Obj){ time=[.98 1] scale=1e3 }
+
+  setKinematicSwitch(time, "delete", object, NULL);
+  setKinematicSwitch(time, "rigidZero", graspRef, object);
+//#    (MakeJoint delete Obj){ time=1 }
+//#    (MakeJoint rigidZero Hand Obj){ time=1 }
+
+  if(stepsPerPhase>2) //otherwise: no velocities
+    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1);
+//#    (MinSumOfSqr pos Obj){ order=1 scale=1e-1 time=[0 0.15] target=[0 0 .1] } # move up
+}
+
+void KOMO::setPlace(double time, const char* graspRef, const char* endeffRef, const char* object, const char* placeRef){
+  if(stepsPerPhase>2) //otherwise: no velocities
+    setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1);
+
+  setTask(time-.02, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e3);
+//#    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
+
+  setTask(time-.02, time, new DefaultTaskMap(vecTMT, world, object, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e2);
+//#    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
+
+  setKinematicSwitch(time, "delete", graspRef, object);
+  setKinematicSwitch(time, "rigidAtTo", placeRef, object);
+//#    (MakeJoint delete Hand Obj){ time=1 }
+//#    (MakeJoint rigidAtTo Onto Obj){ time=1 }
+}
+
+void KOMO::setSlowAround(double time, double delta){
+  if(stepsPerPhase>2) //otherwise: no velocities
+    setTask(time-.02, time+.02, new TaskMap_qItself(), sumOfSqrTT, NoArr, 1e1, 1);
+//#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
+}
+
+void KOMO::setAlign(double startTime, double endTime, const char* shape, const arr& whichAxis, const char* shapeRel, const arr& whichAxisRel, TermType type, const arr& target, double prec){
+#if 0
+  mlr::String map;
+  map <<"map=vecAlign ref1="<<shape;
+  if(whichAxis) map <<" vec1=[" <<whichAxis <<']';
+  if(shapeRel) map <<" ref2=" <<shapeRel <<" vec2=" <<;
+  if(whichAxisRel) map <<" vec2=[" <<whichAxisRel <<']';
+  setTask(startTime, endTime, map, type, target, prec);
+#else
+  setTask(startTime, endTime, new DefaultTaskMap(vecAlignTMT, world, shape, ors::Vector(whichAxis), shapeRel, ors::Vector(whichAxisRel)), type, target, prec);
+#endif
+
+}
+
+void KOMO::setCollisions(bool hardConstraint, double margin, double prec){
+  if(hardConstraint){ //interpreted as hard constraint (default)
+    setTask(0., -1., new CollisionConstraint(margin), ineqTT, NoArr, prec);
+  }else{ //cost term
+    setTask(0., -1., new ProxyTaskMap(allPTMT, {0u}, margin), sumOfSqrTT, NoArr, prec);
+  }
+}
+
+//===========================================================================
+//
+// config
+//
+
+
+void KOMO::setConfigFromFile(){
+  Graph model;
+  FILE(mlr::getParameter<mlr::String>("KOMO/modelfile")) >>model;
+  setModel(
+        model,
+        mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
+        mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
+        mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
+        mlr::getParameter<bool>("KOMO/activateAllContact", false)
+        );
+  setTiming(
+        mlr::getParameter<uint>("KOMO/phases"),
+        mlr::getParameter<uint>("KOMO/stepsPerPhase"),
+        mlr::getParameter<double>("KOMO/durationPerPhase", 5.),
+        mlr::getParameter<uint>("KOMO/k_order", 2)
+        );
 }
 
 void KOMO::setMoveTo(ors::KinematicWorld& world, ors::Shape& endeff, ors::Shape& target, byte whichAxesToAlign){
@@ -271,4 +458,6 @@ void setTasks(MotionProblem& MP,
 }
 
 //===========================================================================
+
+
 

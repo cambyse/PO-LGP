@@ -19,6 +19,7 @@
 #pragma once
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
+#include <Motion/taskMaps.h>
 
 //===========================================================================
 
@@ -29,14 +30,53 @@ struct KOMO{
   arr x, dual;
   arr z, splineB;
 
+  uint phases, stepsPerPhase;
+
   KOMO();
+
+  //-- specs gives as logic expressions
   KOMO(const Graph& specs);
   void init(const Graph& specs);
   void setFact(const char* fact);
+
+  //-- manual specs helpers
+  //-- setup
+  void setConfigFromFile();
+  void setModel(const Graph& model=NoGraph,
+                bool meldFixedJoints=true, bool makeConvexHulls=true, bool makeSSBoxes=false, bool activateAllContacts=false);
+  void setTiming(uint _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2);
+  void setSinglePoseOptim(double duration=5.){ setTiming(1, 1, duration, 1); }
+  void setSequenceOptim(uint frames, double duration=5.){ setTiming(frames, 1, duration, 1); }
+
+
+  //-- tasks (cost/constraint terms) low-level
+  struct Task* setTask(double startTime, double endTime, TaskMap* map, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
+  struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
+  void setKinematicSwitch(double time, const char *type, const char* ref1, const char* ref2);
+
+  //-- tasks (cost/constraint terms) mid-level
+  void setHoming(double startTime=0., double endTime=-1., double prec=1e-3);
+  void setSquaredQAccelerations(double startTime=-1., double endTime=-1., double prec=1.);
+  void setSquaredQVelocities(double startTime=-1., double endTime=-1., double prec=1.);
+  void setHoldStill(double startTime, double endTime, const char* joint, double prec=1e2);
+  void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
+  void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), TermType type=sumOfSqrTT, const arr& target=ARR(1.), double prec=1e2);
+  void setLastTaskToBeVelocity();
+  void setCollisions(bool hardConstraint, double margin=.05, double prec=1.);
+
+
+  //-- tasks (cost/constraint terms) high-level
+  void setGrasp(double time, const char* graspRef, const char* endeffRef, const char* object);
+  void setPlace(double time, const char* graspRef, const char* endeffRef, const char* object, const char* placeRef);
+  void setSlowAround(double time, double delta);
+
+
   void setMoveTo(ors::KinematicWorld& world, //in initial state
                  ors::Shape& endeff,         //endeffector to be moved
                  ors::Shape &target,         //target shape
                  byte whichAxesToAlign=0);   //bit coded options to align axes
+
+  //-- optimization macros
   void setSpline(uint splineT);
   void reset();
   void step();

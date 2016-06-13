@@ -28,18 +28,19 @@
 /// defines a transition cost vector, which is q.N-dimensional and captures
 /// accelerations or velocities over consecutive time steps
 struct TransitionTaskMap:TaskMap {
-  double velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
+  double posCoeff, velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
   arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
   TransitionTaskMap(const ors::KinematicWorld& G);
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
   virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
+  virtual mlr::String shortTag(){ return STRING("TransitionTaskMap_"<<velCoeff<<'_'<<accCoeff); }
 };
 
 //===========================================================================
 
 enum DefaultTaskMapType {
-  noTMT,      ///< non-initialization
+  noTMT=0,    ///< non-initialization
   posTMT,     ///< 3D position of reference
   vecTMT,     ///< 3D vec (orientation)
   quatTMT,    ///< 4D quaterion
@@ -50,6 +51,7 @@ enum DefaultTaskMapType {
   gazeAtTMT,  ///< 2D orthogonality measure of object relative to camera plane
   pos1DTMT
 };
+extern const char* DefaultTaskMapType2String[];
 
 struct DefaultTaskMap:TaskMap {
   DefaultTaskMapType type;
@@ -70,10 +72,8 @@ struct DefaultTaskMap:TaskMap {
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
+  virtual mlr::String shortTag(){ return STRING("DefaultTaskMap_"<<DefaultTaskMapType2String[type]<<'_'<<i <<'_' <<j); }
 };
-
-//===========================================================================
-
 
 //===========================================================================
 

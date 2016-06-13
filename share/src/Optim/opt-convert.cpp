@@ -130,6 +130,9 @@ ScalarFunction conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f)
   );
 }
 
+#define TT T //(T+1)
+#define tlT (t<T) //(t<=T)
+
 void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) {
 #if 1
   //set state
@@ -138,9 +141,9 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   uint T=f.get_T();
   uint k=f.get_k();
   uint dim_phi=0;
-  for(uint t=0; t<=T; t++) dim_phi += f.dim_phi(t);
+  for(uint t=0; tlT; t++) dim_phi += f.dim_phi(t);
   uint dim_xmax = 0;
-  for(uint t=0; t<=T; t++){ uint d=f.dim_x(t); if(d>dim_xmax) dim_xmax=d; }
+  for(uint t=0; tlT; t++){ uint d=f.dim_x(t); if(d>dim_xmax) dim_xmax=d; }
 
   //resizing things:
   phi.resize(dim_phi).setZero();
@@ -154,7 +157,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   //loop over time t
   uint Jshift=0;
   uint M=0;
-  for(uint t=0; t<=T; t++) {
+  for(uint t=0; tlT; t++) {
     uint dimxbar = 0;
     for(int s=(int)t-k;s<=(int)t;s++) if(s>=0) dimxbar += f.dim_x(s);
 
@@ -199,7 +202,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   x.referTo(_x);
   x.reshape(T+1-x_post.d0, n);
   uint dim_phi=0;
-  for(uint t=0; t<=T; t++) dim_phi+=f.dim_phi(t);
+  for(uint t=0; tlT; t++) dim_phi+=f.dim_phi(t);
   CHECK(x.nd==2 && x.d1==n && x.d0==T+1-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
 
@@ -214,7 +217,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   //loop over time t
   uint M=0;
-  for(uint t=0; t<=T; t++) {
+  for(uint t=0; tlT; t++) {
     uint dimphi_t = f.dim_phi(t);
 //    uint dimg_t   = f.dim_g(t);
 //    uint dimh_t   = f.dim_h(t);

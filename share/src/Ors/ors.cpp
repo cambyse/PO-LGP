@@ -1835,9 +1835,9 @@ void ors::KinematicWorld::init(const Graph& G) {
   uint nCoupledJoints=0;
   NodeL js = G.getNodes("joint");
   for(Node *n: js) {
-    CHECK_EQ(n->keys(0),"joint","");
-    CHECK_EQ(n->parents.N,2,"joints must have two parents");
-    CHECK(n->isGraph(),"joints must have value Graph");
+    CHECK_EQ(n->keys(0),"joint","joints must be declared as joint: specs=" <<*n <<' ' <<n->index);
+    CHECK_EQ(n->parents.N,2,"joints must have two parents: specs=" <<*n <<' ' <<n->index);
+    CHECK(n->isGraph(),"joints must have value Graph: specs=" <<*n <<' ' <<n->index);
     
     Body *from=listFindByName(bodies, n->parents(0)->keys(1));
     Body *to=listFindByName(bodies, n->parents(1)->keys(1));
@@ -2505,10 +2505,10 @@ void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious,
 }
 
 void ors::KinematicSwitch::write(std::ostream& os) const{
-  os <<"  symbol=" <<symbol <<endl;
-  os <<"  jointType=" <<jointType <<endl;
-  os <<"  timeOfApplication=" <<timeOfApplication <<endl;
-  os <<"  fromId=" <<fromId <<endl;
+  os <<"  timeOfApplication=" <<timeOfApplication;
+  os <<"  symbol=" <<symbol;
+  os <<"  jointType=" <<jointType;
+  os <<"  fromId=" <<fromId;
   os <<"  toId=" <<toId <<endl;
 }
 
@@ -2525,7 +2525,18 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
 
   if(tt!="MakeJoint") return NULL;
+  ors::KinematicSwitch* sw = newSwitch(tt, ref1, ref2, world, Tinterval, Tzero);
 
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    sw->timeOfApplication = Tzero + params.get<double>("time",1.)*Tinterval + 1;
+    params.get(sw->jA, "from");
+    params.get(sw->jB, "to");
+  }
+  return sw;
+}
+
+ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
   //-- create switch
   ors::KinematicSwitch *sw= new ors::KinematicSwitch();
   if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
@@ -2558,12 +2569,6 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
     sw->toId = world.getShapeByName(ref2)->index;
   }
   sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->isGraph()){
-    const Graph& params = specs->graph();
-    sw->timeOfApplication = Tzero + params.get<double>("time",1.)*Tinterval + 1;
-    params.get(sw->jA, "from");
-    params.get(sw->jB, "to");
-  }
   return sw;
 }
 

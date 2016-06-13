@@ -16,6 +16,7 @@ struct TaskMap_qItself:TaskMap {
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t);
   virtual uint dim_phi(const ors::KinematicWorld& G);
   virtual uint dim_phi(const WorldL& G, int t);
+  virtual mlr::String shortTag(){ return STRING("qItself_" <<M.d0); }
 private:
   uintA dimPhi;
 };

@@ -20,6 +20,7 @@ struct TaskMap {
 
   TaskMap():order(0) {}
   virtual ~TaskMap() {}
+  virtual mlr::String shortTag(){ NIY; }
 
   static TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world); ///< creates a task map based on specs
   static TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world); ///< creates a task map based on specs

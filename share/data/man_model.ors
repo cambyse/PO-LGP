@@ -48,9 +48,8 @@ joint (upWristR dnWristR) { A=<T t(0 0 .075) d( 90 0 1 0) d(140 1 0 0)> B=<T d(-
 joint (upWristL dnWristL) { A=<T t(0 0 .075) d(-90 0 1 0) d(140 1 0 0)> B=<T d( 90 0 1 0) t(0 0 .075)>  }
 joint (dnWristR ddnWristR){ A=<T t(0 0 .075) d( 90 0 0 1)> B=<T d(-90 0 0 1) t(0 0 .03)>  }
 joint (dnWristL ddnWristL){ A=<T t(0 0 .075) d(-90 0 0 1)> B=<T d( 90 0 0 1) t(0 0 .03)>  }
-joint (ddnWristR handR)   { A=<T t(0 0 .045)> B=<T t(0 0 .075)>  }
-joint (ddnWristL handL)   { A=<T t(0 0 .045)> B=<T t(0 0 .075)>  }
-
+joint (ddnWristR handR)   { A=<T t(0 0 .045)> B=<T t(0 0 .075) d(180 0 1 0)>  }
+joint (ddnWristL handL)   { A=<T t(0 0 .045)> B=<T t(0 0 .075) d(180 0 1 0)>  }
 
 ## legs
 

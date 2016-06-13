@@ -18,6 +18,19 @@
 
 #include "taskMaps.h"
 
+const char* DefaultTaskMapType2String[] = {
+"no",      ///< non-initialization
+"pos",     ///< 3D position of reference
+"vec",     ///< 3D vec (orientation)
+"quat",    ///< 4D quaterion
+"posDiff", ///< the difference of two positions (NOT the relative position)
+"vecDiff", ///< the difference of two vectors (NOT the relative position)
+"quatDiff",///< the difference of 2 quaternions (NOT the relative quaternion)
+"vecAlign",///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
+"gazeAt",  ///< 2D orthogonality measure of object relative to camera plane
+"pos1D"
+};
+
 DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type,
                                int iShape, const ors::Vector& _ivec,
                                int jShape, const ors::Vector& _jvec)

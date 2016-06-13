@@ -108,7 +108,7 @@ struct MotionProblem : KOrderMarkovFunction{
 
   //-- info on the costs
   StringA getPhiNames(uint t);
-  void reportFull(bool brief=false);
+  void reportFull(bool brief=false, ostream& os=std::cout);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
