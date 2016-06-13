@@ -17,13 +17,15 @@ int main(int argc, char** argv){
 
     baxter.waitConv({posR/*, alignR*/});
 
+    baxter.disablePosControl();
+
+    mlr::wait(1.);
 
     //-- compute torques
     arr y,J;
     posR->map.phi(y, J, baxter.getKinematicWorld());
-    baxter.disablePosControl();
 
-    mlr::wait(1.);
+
 
     // Send it 0 torques for 1 second
     sound().addNote(12, .5, 0.);
@@ -36,7 +38,7 @@ int main(int argc, char** argv){
     double kd = mlr::getParameter<double>("kd");
     baxter.getState(q0, qdot, u);
     for (uint i = 0; i < 1000; i++) {
-#if 0
+#if 1
 //      refs = TCM.ctrl_ref.get();
       baxter.getState(q, qdot, u);
 
@@ -50,11 +52,11 @@ int main(int argc, char** argv){
       arr u = M*a; // + F;
       cout <<u <<endl;
 
-//      baxter.publishTorque(u, "right_");
+      baxter.publishTorque(u, "right_");
 #else
       baxter.publishTorque(~J * ARR(0.,0.,0.), "right_");
 #endif
-      mlr::wait(0.001);
+      mlr::wait(0.005);
     }
 //    TCM.oldfashioned = true;
     sound().reset();
