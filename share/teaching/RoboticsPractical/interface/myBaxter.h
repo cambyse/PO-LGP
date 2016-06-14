@@ -64,6 +64,8 @@ struct MyBaxter{
   void grip();
   void grip(const bool toGrip);
 
+  bool isGripping = false;
+
   //-- inner access
   struct TaskControllerModule& getTaskControllerModule();
 

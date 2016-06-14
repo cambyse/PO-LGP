@@ -181,8 +181,8 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 
   if(type==vecAlignTMT) {
-    CHECK(fabs(ivec.length()-1.)<1e-10,"vector references must be normalized");
-    CHECK(fabs(jvec.length()-1.)<1e-10,"vector references must be normalized");
+    CHECK(fabs(ivec.length()-1.)<1e-5,"vector references must be normalized");
+    CHECK(fabs(jvec.length()-1.)<1e-5,"vector references must be normalized");
     ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel.rot*ivec;
     ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel.rot*jvec;
     arr zi,Ji,zj,Jj;

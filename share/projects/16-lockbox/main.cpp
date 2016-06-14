@@ -10,7 +10,7 @@ int main(int argc, char** argv){
 
   MyBaxter baxter;
 
-  mlr::wait(3.);
+//  mlr::wait(5.);
 
   //    auto home = baxter.task(GRAPH(" map=qItself PD=[1., 0.8, 1.0, 10.]"));
   //    baxter.modifyTarget(home, baxter.q0());
@@ -37,7 +37,28 @@ int main(int argc, char** argv){
 
   Lockbox lockbox(&baxter);
 
-  mlr::wait(1.);
+  mlr::wait(5.);
+
+  for (uint joint = 1; joint < 6; ++joint)
+  {
+    ors::Transformation tf; tf.setZero();
+    tf.addRelativeTranslation(-0.1, 0.05, 0);
+    tf.appendTransformation(lockbox.joint_origins.at(joint));
+    lockbox.moveAbsolute(tf);
+//    lockbox.moveToJoint(joint, tf);
+    baxter.disablePosControl();
+    mlr::wait(2.);
+    lockbox.update = false;
+    lockbox.joint_origins.at(joint) = lockbox.joint_tfs.at(joint);
+    cout << "Joint: " << joint << endl;
+    cout << "\t" << lockbox.joint_origins.at(joint);
+    lockbox.update = true;
+    baxter.enablePosControl();
+
+    lockbox.moveRelative(ors::Vector(-0.1, 0, 0), 1, 100);
+
+  }
+
 
 
 //  for (uint joint = 1; joint < 6; ++joint)
@@ -49,8 +70,11 @@ int main(int argc, char** argv){
 //    ors::Transformation tf;
 //    tf.setZero();
 //    tf.addRelativeTranslation(-0.1, 0.05, 0);
-//    lockbox.moveToAlvar(joint, tf, 1, 50.);
+//    lockbox.update = false;
+//    lockbox.moveAbsolute(lockbox.joint_origins.at(joint).pos + tf.pos, 1, 50.);
+//    //lockbox.moveToAlvar(joint, tf, 1, 50.);
 //    baxter.stop({alignZ, alignZ2, alignZ3});
+//    lockbox.update = true;
 //    mlr::wait(1.);
 //    baxter.disablePosControl();
 
@@ -79,7 +103,7 @@ int main(int argc, char** argv){
 
         baxter.grip(0);
 
-        lockbox.moveJointToPosition(joint, 0.5);
+        lockbox.moveJointToPosition(joint, 1);
         /*
         auto alignR = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[0 0 1] target=[0] PD=[1., .8, 1., 5.] prec=[1]"));
         auto alignR2 = baxter.task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 -1] target=[1] PD=[1., .8, 1., 5.] prec=[1]"));
