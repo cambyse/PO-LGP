@@ -198,7 +198,11 @@ arr MyBaxter::getEfforts(){
 }
 
 void MyBaxter::getState(arr& q, arr& qdot, arr& u){
-  baxter_get_q_qdot_u(q, qdot, u, s->jointState.get(), s->tcm.realWorld);
+  for(;;){
+    baxter_get_q_qdot_u(q, qdot, u, s->jointState.get(), s->tcm.realWorld);
+    if(fabs(q(0))>1e-10) return;
+    s->jointState.waitForNextRevision();
+  }
 }
 
 
@@ -268,7 +272,7 @@ ors::Vector MyBaxter::arPose(){
 
 void MyBaxter::publishTorque(const arr& u, const char* prefix){
   if(s->nh){
-    cout <<"SENDING TORQUES: " <<u <<endl;
+    //cout <<"SENDING TORQUES: " <<u <<endl;
     baxter_core_msgs::JointCommand msg = conv_qRef2baxterMessage(u, s->tcm.realWorld, prefix);
     msg.mode = baxter_core_msgs::JointCommand::TORQUE_MODE;
     s->pub.publish(msg);
