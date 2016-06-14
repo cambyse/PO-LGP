@@ -55,7 +55,7 @@ struct KOMO{
   void setKinematicSwitch(double time, const char *type, const char* ref1, const char* ref2);
 
   //-- tasks (cost/constraint terms) mid-level
-  void setHoming(double startTime=0., double endTime=-1., double prec=1e-3);
+  void setHoming(double startTime=0., double endTime=-1., double prec=1e-1);
   void setSquaredQAccelerations(double startTime=-1., double endTime=-1., double prec=1.);
   void setSquaredQVelocities(double startTime=-1., double endTime=-1., double prec=1.);
   void setHoldStill(double startTime, double endTime, const char* joint, double prec=1e2);

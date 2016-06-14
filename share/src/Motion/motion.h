@@ -79,6 +79,8 @@ struct MotionProblem : KOrderMarkovFunction{
   mlr::Array<TermTypeA> ttMatrix;  ///< storage of all feature-types in all time slices
   arr dualSolution;                ///< the dual solution computed during constrained optimization
 
+  struct OpenGL *gl; //internal only: used in 'displayTrajectory'
+
   MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift=true);
   ~MotionProblem();
   

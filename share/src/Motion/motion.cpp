@@ -78,7 +78,7 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
 //===========================================================================
 
 MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
-    : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2)
+    : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2), gl(NULL)
 {
   if(useSwift) {
     makeConvexHulls(originalWorld.shapes);
@@ -89,6 +89,7 @@ MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
 }
 
 MotionProblem::~MotionProblem(){
+  if(gl) delete gl;
   listDelete(configurations);
 }
 
@@ -226,8 +227,10 @@ void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
 }
 
 void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
-  OpenGL gl("MotionProblem display");
-  gl.camera.setDefault();
+  if(!gl){
+    gl = new OpenGL ("MotionProblem display");
+    gl->camera.setDefault();
+  }
 
   bool watch = (steps==-1);
   if(steps==1 || steps==-1){
@@ -237,19 +240,19 @@ void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
   }
 
   for(uint t=0; t<T; t+=steps) {
-    gl.clear();
-    gl.add(glStandardScene, 0);
-    gl.addDrawer(configurations(t+k_order));
+    gl->clear();
+    gl->add(glStandardScene, 0);
+    gl->addDrawer(configurations(t+k_order));
     if(delay<0.){
       if(delay<-10.) FILE("z.graph") <<*configurations(t+k_order);
-      gl.watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      gl->watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
     }else{
-      gl.update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      gl->update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
       if(delay) mlr::wait(delay);
     }
   }
   if(watch)
-    gl.watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
+    gl->watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
 }
 
 void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
