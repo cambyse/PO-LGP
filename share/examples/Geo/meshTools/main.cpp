@@ -24,9 +24,10 @@ void TEST(MeshTools) {
   cout <<USAGE <<endl;
 
   mlr::String file;
-  if(mlr::argc==2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
+  if(mlr::argc>=2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
   else file="../../Gui/opengl/base-male-nude.obj"; //m494.off
 
+  cout <<"FILE=" <<file <<endl;
   OpenGL *gl=NULL;
 
   ors::Mesh mesh;
