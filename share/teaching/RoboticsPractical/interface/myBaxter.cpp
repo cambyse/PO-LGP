@@ -13,6 +13,7 @@
 
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
+#include "RosCom/subscribeOptitrack.h"
 #include <RosCom/perceptionCollection.h>
 #include <RosCom/perceptionFilter.h>
 #include <RosCom/filterObject.h>
@@ -27,12 +28,15 @@ struct MyBaxter_private{
   ACCESSname(FilterObjects, object_database)
 
   TaskControllerModule tcm;
+
 //  RelationalMachineModule rm;
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
 //  SubscribeTabletop tabletop_subscriber;
   SubscribeAlvar alvar_subscriber;
+  SubscribeOptitrack optitrack_subscriber;
+  Optitrack op;
   Collector data_collector;
   Filter myFilter;
   PublishDatabase myPublisher;
@@ -60,6 +64,7 @@ struct MyBaxter_private{
       nh = new ros::NodeHandle;
       pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
     }
+    tcm.useRos = false;
     threadOpenModules(true);
   }
 
