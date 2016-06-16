@@ -7,20 +7,17 @@ void getCam(){
   rosCheckInit();
   Access_typed<byteA> rightArmCam(NULL, "rightArmCam");
 
+  RosInit rosInit;
+  ImageViewer viewer("rightArmCam");
+  SubscriberConvNoHeader<sensor_msgs::Image, byteA, &conv_image2byteA> sub("/cameras/right_hand_camera/image", rightArmCam);
   RosCom_Spinner spinner;
-  ImageViewer viewer("kinect_rgb");
 
   threadOpenModules(true);
 
-  SubscriberConvNoHeader<sensor_msgs::Image, byteA, &conv_image2byteA> sub("/camera/left_hand_camera/image", rightArmCam);
-
-  for(uint i=0;i<100;i++){
-    rightArmCam.waitForNextRevision();
-    cout <<'.' <<flush;
-//    mlr::wait(.1);
-  }
+  moduleShutdown().waitForValueGreaterThan(0);
 
   threadCloseModules();
+
   modulesReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
