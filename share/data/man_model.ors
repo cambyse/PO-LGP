@@ -41,8 +41,8 @@ body dnWristR { type=2 mass=.01 size=[.1 .1 .1 .055] }
 body dnWristL { type=2 mass=.01 size=[.1 .1 .1 .055] }
 body ddnWristR{ type=2 mass=.01 size=[.5 .5 .04 .05] }
 body ddnWristL{ type=2 mass=.01 size=[.5 .5 .04 .05] }
-body handR    { type=0 mass=.01 size=[.075 .02 .075 .075] }
-body handL    { type=0 mass=.01 size=[.075 .02 .075 .075] }
+body handR    { type=9 mass=.01 size=[.075 .0 .075 .02] }
+body handL    { type=9 mass=.01 size=[.075 .0 .075 .02] }
 
 joint (upWristR dnWristR) { A=<T t(0 0 .075) d( 90 0 1 0) d(140 1 0 0)> B=<T d(-90 0 1 0) t(0 0 .075)>  }
 joint (upWristL dnWristL) { A=<T t(0 0 .075) d(-90 0 1 0) d(140 1 0 0)> B=<T d( 90 0 1 0) t(0 0 .075)>  }
@@ -59,8 +59,8 @@ body lup  { mass=1 size=[.15 .15 .26 .11] type=2 }
 body rup  { mass=1 size=[.15 .15 .26 .11] type=2 } 
 body ldn  { mass=1 size=[.15 .15 .45 .09] type=2 } 
 body rdn  { mass=1 size=[.15 .15 .45 .09] type=2 } 
-body lfoot{ mass=1 size=[.15 .45 .075 .11] type=0 } 
-body rfoot{ mass=1 size=[.15 .45 .075 .11] type=0 fixed }
+body lfoot{ mass=1 size=[.15 .45 .05 .02] type=9 }
+body rfoot{ mass=1 size=[.15 .45 .05 .02] type=9 fixed }
 
 joint (waist lhip) { A=<T t(-.15 0 -.08) d(90 0 0 1)> B=<T d(90 0 0 1) t(0 0 -.015)>  }
 joint (waist rhip) { A=<T t(+.15 0 -.08) d(90 0 0 1)> B=<T d(90 0 0 1) t(0 0 -.015)>  }

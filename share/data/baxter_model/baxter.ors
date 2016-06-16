@@ -1,6 +1,6 @@
 Include = 'baxter-clean.ors'
 
-Delete shape visual
+#Delete shape visual
 #Delete shape collision
 
 #Delete shape collision (head)

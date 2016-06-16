@@ -247,7 +247,7 @@ void ors::Shape::parseAts() {
   if(ats.get(x, "color"))         { CHECK(x.N>=3,"color=[] needs at least 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.get(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats["contact"])           { cont=true; }
-  if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p); }
+  if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p, fil.name); }
   if(ats.get(d, "meshscale"))  { mesh.scale(d); }
 
   //create mesh for basic shapes
