@@ -42,8 +42,8 @@ struct KOMO{
   //-- manual specs helpers
   //-- setup
   void setConfigFromFile();
-  void setModel(const Graph& model=NoGraph,
-                bool meldFixedJoints=true, bool makeConvexHulls=true, bool makeSSBoxes=false, bool activateAllContacts=false);
+  void setModel(const ors::KinematicWorld& W,
+                bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
   void setTiming(uint _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2);
   void setSinglePoseOptim(double duration=5.){ setTiming(1, 1, duration, 1); }
   void setSequenceOptim(uint frames, double duration=5.){ setTiming(frames, 1, duration, 1); }
@@ -66,10 +66,12 @@ struct KOMO{
 
 
   //-- tasks (cost/constraint terms) high-level
-  void setGrasp(double time, const char* graspRef, const char* endeffRef, const char* object);
-  void setPlace(double time, const char* graspRef, const char* endeffRef, const char* object, const char* placeRef);
+  void setGrasp(double time, const char* endeffRef, const char* object);
+  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef);
   void setSlowAround(double time, double delta);
 
+  //-- tasks - logic level
+  void setAbstractTask(uint phase, const NodeL& facts);
 
   void setMoveTo(ors::KinematicWorld& world, //in initial state
                  ors::Shape& endeff,         //endeffector to be moved

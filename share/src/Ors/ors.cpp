@@ -387,7 +387,7 @@ void makeSSBoxApproximations(ShapeL& shapes){
 }
 
 void computeMeshNormals(ShapeL& shapes){
-  for(ors::Shape *s: shapes) if(!s->mesh.Vn.N) s->mesh.computeNormals();
+  for(ors::Shape *s: shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) s->mesh.computeNormals();
 }
 
 
@@ -2525,7 +2525,7 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
 
   if(tt!="MakeJoint") return NULL;
-  ors::KinematicSwitch* sw = newSwitch(tt, ref1, ref2, world, Tinterval, Tzero);
+  ors::KinematicSwitch* sw = newSwitch(type, ref1, ref2, world, Tinterval, Tzero);
 
   if(specs->isGraph()){
     const Graph& params = specs->graph();
@@ -2549,10 +2549,11 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, c
   else if(type=="freeAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
-  sw->fromId = world.getShapeByName(ref1)->index;
+  ors::Shape *fromShape = world.getShapeByName(ref1);
+  sw->fromId = fromShape->index;
   if(!ref2){
     CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
-    ors::Body *b = world.shapes(sw->fromId)->body;
+    ors::Body *b = fromShape->body;
     if(b->inLinks.N==1){
 //      CHECK_EQ(b->outLinks.N, 0, "");
       sw->toId = sw->fromId;

@@ -39,3 +39,6 @@ OpSpaceRot
 # Actions
 conv
 
+## Syntactic keywords
+QUIT
+Terminate

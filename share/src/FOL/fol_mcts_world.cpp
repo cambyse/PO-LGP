@@ -371,3 +371,17 @@ void FOL_World::setState(Graph *s){
   state = s;
   CHECK(state->isNodeOfParentGraph && &s->isNodeOfParentGraph->container==&KB,"");
 }
+
+
+void FOL_World::addAgent(const char* name){
+//  Node* n = new Node_typed<bool>(KB, {name}, {}, true); //already exists in kinematic part
+  Node* n = KB[name];
+  new Node_typed<bool>(*state, {}, {KB["agent"], n}, true);
+  new Node_typed<bool>(*state, {}, {KB["free"], n}, true);
+}
+
+void FOL_World::addObject(const char* name){
+//  Node* n = new Node_typed<bool>(KB, {name}, {}, true);
+  Node* n = KB[name];
+  new Node_typed<bool>(*state, {}, {KB["object"], n}, true);
+}

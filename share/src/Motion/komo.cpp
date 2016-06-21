@@ -81,18 +81,20 @@ void KOMO::setFact(const char* fact){
   MP->parseTask(specs.last());
 }
 
-void KOMO::setModel(const Graph& model,
+void KOMO::setModel(const ors::KinematicWorld& W,
                     bool meldFixedJoints, bool makeConvexHulls, bool makeSSBoxes, bool activateAllContacts){
 
-  world.init(model);
+  world.copy(W);
 
   if(meldFixedJoints){
     world.meldFixedJoints();
     world.removeUselessBodies();
   }
 
-  if(makeConvexHulls)
+  if(makeConvexHulls){
     ::makeConvexHulls(world.shapes);
+  }
+  computeMeshNormals(world.shapes);
 
   if(makeSSBoxes){
     NIY;
@@ -176,8 +178,10 @@ void KOMO::setLastTaskToBeVelocity(){
   MP->tasks.last()->map.order = 1; //set to be velocity!
 }
 
-void KOMO::setGrasp(double time, const char* graspRef, const char* endeffRef, const char* object){
+void KOMO::setGrasp(double time, const char* endeffRef, const char* object){
 //#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
+//  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
+  mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.last()->to->shapes.scalar()->name;
   setTask(time-.1, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
 
   setTask(time-.1, time, new DefaultTaskMap(posDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
@@ -195,7 +199,8 @@ void KOMO::setGrasp(double time, const char* graspRef, const char* endeffRef, co
 //#    (MinSumOfSqr pos Obj){ order=1 scale=1e-1 time=[0 0.15] target=[0 0 .1] } # move up
 }
 
-void KOMO::setPlace(double time, const char* graspRef, const char* endeffRef, const char* object, const char* placeRef){
+void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef){
+  mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.scalar()->to->shapes.scalar()->name;
   if(stepsPerPhase>2) //otherwise: no velocities
     setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1);
 
@@ -214,7 +219,19 @@ void KOMO::setPlace(double time, const char* graspRef, const char* endeffRef, co
 void KOMO::setSlowAround(double time, double delta){
   if(stepsPerPhase>2) //otherwise: no velocities
     setTask(time-.02, time+.02, new TaskMap_qItself(), sumOfSqrTT, NoArr, 1e1, 1);
-//#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
+  //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
+}
+
+void KOMO::setAbstractTask(uint phase, const NodeL& facts){
+  CHECK(phase<phases,"");
+  for(Node *n:facts){
+    if(!n->parents.N) continue;
+    StringL keys;
+    for(Node *p:n->parents) keys.append(&p->keys.last());
+    if(*keys(0)=="grasping"){
+      setGrasp(double(phase)+1., *keys(1), *keys(2));
+    }
+  }
 }
 
 void KOMO::setAlign(double startTime, double endTime, const char* shape, const arr& whichAxis, const char* shapeRel, const arr& whichAxisRel, TermType type, const arr& target, double prec){
@@ -246,10 +263,11 @@ void KOMO::setCollisions(bool hardConstraint, double margin, double prec){
 
 
 void KOMO::setConfigFromFile(){
-  Graph model;
-  FILE(mlr::getParameter<mlr::String>("KOMO/modelfile")) >>model;
+//  Graph model;
+//  FILE(mlr::getParameter<mlr::String>("KOMO/modelfile")) >>model;
+  ors::KinematicWorld W(mlr::getParameter<mlr::String>("KOMO/modelfile"));
   setModel(
-        model,
+        W,
         mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
         mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
         mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
@@ -287,7 +305,6 @@ void KOMO::reset(){
   if(splineB.N){
     z = pseudoInverse(splineB)* x;
   }
-
 }
 
 void KOMO::step(){
@@ -296,7 +313,6 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
-//  cout <<x;
   if(MP->T){
     if(!splineB.N)
       optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
@@ -309,11 +325,11 @@ void KOMO::run(){
       optConstrained(z, dual, P, OPT(verbose=2));
     }
   }else{
+    HALT("deprecated")
     optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
   cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-  //    checkJacobian(Convert(MF), x, 1e-5);
   MP->costReport(false);
 }
 

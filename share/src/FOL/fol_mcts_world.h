@@ -82,7 +82,14 @@ struct FOL_World:MCTS_Environment{
   void write_state(ostream&);
   void set_state(mlr::String&);
 
+  //-- helpers
+  void addAgent(const char* name);
+  void addObject(const char* name);
+
   //-- internal access
   Graph* getState();
   void setState(Graph*);
+
+  void write(std::ostream& os) const{ os <<KB; }
 };
+stdOutPipe(FOL_World)
