@@ -21,19 +21,32 @@ def control(q):
     #                   std_msgs.String)
     u = dict()
     u['left_s0'] =  0.0
-    u['left_s1'] =  -1.0
+    u['left_s1'] = -1.0
+    u['left_e0'] =  0.0
+    u['left_e1'] =  1.0
+    u['left_w0'] =  0.0
+    u['left_w1'] = -1.0
+    u['left_w2'] =  0.0
+
+    #thread.start_new_thread(disable_gravity, ())
+
+    for i in range(75):
+     #   pub.publish("")
+        apply_force(u)
+        t.sleep(0.01)
+
+    # Reset position
+    u['left_s0'] =  0.0
+    u['left_s1'] =  0.0
     u['left_e0'] =  0.0
     u['left_e1'] =  0.0
     u['left_w0'] =  0.0
     u['left_w1'] =  0.0
     u['left_w2'] =  0.0
+    apply_force(u)
 
-    #thread.start_new_thread(disable_gravity, ())
-
-    for i in range(100):
-     #   pub.publish("")
-        apply_force(u)
-        t.sleep(0.01)
+def reset():
+    limb.move_to_joint_positions(startpos_4)
 
 if __name__ == "__main__":
     # Initialise such that it registers somehow or something, I don't know...
@@ -46,6 +59,7 @@ if __name__ == "__main__":
     startpos_1 = dict()
     startpos_2 = dict()
     startpos_3 = dict()
+    startpos_4 = dict()
 
     # Get gripper
     left_gripper = Gripper('left')
@@ -74,15 +88,33 @@ if __name__ == "__main__":
     startpos_3['left_w0'] = -3.0418839023767754
     startpos_3['left_w1'] =  0.24505343086469483
     startpos_3['left_w2'] = -3.0583741958465436
+    #startpos_3['left_e1'] = 1.0
+    #startpos_3['left_w1'] = 1.0
+
+    startpos_4['left_w0'] = -3.0426508927707183
+    startpos_4['left_w1'] = -0.6181942575178218
+    startpos_4['left_w2'] = -0.1917475984856767
+    startpos_4['left_e0'] = -2.9786071948765023
+    startpos_4['left_e1'] = -0.05062136600021865
+    startpos_4['left_s0'] = -0.5971020216843973
+    startpos_4['left_s1'] =  1.0465583925348236
+
+    startpos_5['left_w0'] = -0.7834806874124751
+    startpos_5['left_w1'] = -0.3857961681531816
+    startpos_5['left_w2'] = -2.6349954983901696
+    startpos_5['left_e0'] = -2.5713352956929247
+    startpos_5['left_e1'] =  0.25732527716777814
+    startpos_5['left_s0'] = -0.45674277959288195
+    startpos_5['left_s1'] =  1.04272344056511
+
 
     # Move right arm to those positions
-    limb.move_to_joint_positions(startpos_3)
-    left_gripper.command_position(90)
-    t.sleep(2)
-    left_gripper.command_position(50)
+    limb.move_to_joint_positions(startpos_5)
+    #left_gripper.command_position(100)
+    print("Gripper open")
+    #left_gripper.command_position(50)
     print("Look out")
-    t.sleep(2)
-    control(1)
+    #control(1)
 
     print limb.joint_angles()
 
