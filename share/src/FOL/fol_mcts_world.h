@@ -83,6 +83,7 @@ struct FOL_World:MCTS_Environment{
   void set_state(mlr::String&);
 
   //-- helpers
+  void addFact(const StringA& symbols);
   void addAgent(const char* name);
   void addObject(const char* name);
 

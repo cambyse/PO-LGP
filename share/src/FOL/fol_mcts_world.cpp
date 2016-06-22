@@ -5,7 +5,7 @@
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
-    os <<"WAIT()";
+    os <<"(WAIT)";
   }else{
 #if 0
     os <<"RULE '" <<rule->keys(1) <<"' SUB ";
@@ -384,4 +384,10 @@ void FOL_World::addObject(const char* name){
 //  Node* n = new Node_typed<bool>(KB, {name}, {}, true);
   Node* n = KB[name];
   new Node_typed<bool>(*state, {}, {KB["object"], n}, true);
+}
+
+void FOL_World::addFact(const StringA& symbols){
+  NodeL parents;
+  for(const mlr::String& s:symbols) parents.append(KB[s]);
+  new Node_typed<bool>(*state, {}, parents, true);
 }

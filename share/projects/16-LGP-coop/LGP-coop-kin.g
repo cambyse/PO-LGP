@@ -7,22 +7,22 @@ Include = '../../data/man_model.ors'
 
 Merge  waist { X=<T t(1.5 0. 1.) d(-90 0 0 1)> }
 
-body table{ type=9, X=<T t(.7 0 .8)>, size=[1. .8 .04 .02], color=[.3 .3 .5] fixed, contact }
+body tableC{ type=9, X=<T t(.7 0 .8)>, size=[1. .8 .04 .02], color=[.3 .3 .5] fixed, contact }
 body tableL{ type=9, X=<T t(.2 .7 .8)>, size=[2. .6 .04 .02], color=[.3 .5 .3] fixed, contact }
 body tableR{ type=9, X=<T t(.2 -.7 .8)>, size=[2. .6 .04 .02], color=[.3 .5 .3] fixed, contact }
 
 #body obj1 { size=[.06 .06 .1 .02] type=9 contact }
-#joint (table obj1) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
+#joint (tableC obj1) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 #shape shape1 (obj1) { type=5 rel=<T t(0 0 .1)>size=[.4 0 0 0] }
 
 #body Handle { type=9 size=[.03 .3 .15 .02] contact }
-#joint (table Handle) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
+#joint (tableC Handle) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 
 #body Long1 { type=9 size=[.03 .3 .1 .02] contact }
-#joint (table Long1) { from=<T t(.2 .2 0)> to=<T t(0 0 .1)> type=10 }
+#joint (tableC Long1) { from=<T t(.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 
 #body Long2 { type=9 size=[.03 .3 .1 .02] contact }
-#joint (table Long2) { from=<T t(.2 -.2 0)> to=<T t(0 0 .1)> type=10 }
+#joint (tableC Long2) { from=<T t(.2 -.2 0)> to=<T t(0 0 .1)> type=10 }
 
 #shape aLong2 (Long1) { type=5 }
 
@@ -50,13 +50,13 @@ joint baxterGraspJointR(left_wrist baxterGraspRefL){ A=<T d(-90 0 1 0) d(-90 0 0
 
 Include = '../../data/toolbox/toolbox.ors'
 
-joint (table /toolbox/handle) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 }
-joint (table /toolbox/side_front) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(-90 0 0 1) t(0 -.212 0)> type=10 }
-joint (table /toolbox/side_back) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(90 0 0 1) t(0. -.212 0)> type=10 }
-joint (table /toolbox/side_left) { from=<T t(0 0 .04) t(0 0 .12)> to=<T t(.0 -.147 .12)> type=10 }
-joint (table /toolbox/side_right) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(180 0 0 1) t(.0 -.147 0)> type=10 }
-joint (table /toolbox/floor_left) { from=<T t(0 0 .04)> to=<T t(.0 .069 .004) d(90 1 0 0)> type=10 }
-joint (table /toolbox/floor_right) { from=<T t(0 0 .04)> to=<T d(180 0 0 1) t(.0 .069 .004) d(90 1 0 0)> type=10 }
+joint (tableC /toolbox/handle) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 }
+joint (tableC /toolbox/side_front) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(-90 0 0 1) t(0 -.212 0)> type=10 }
+joint (tableC /toolbox/side_back) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(90 0 0 1) t(0. -.212 0)> type=10 }
+joint (tableC /toolbox/side_left) { from=<T t(0 0 .04) t(0 0 .12)> to=<T t(.0 -.147 .12)> type=10 }
+joint (tableC /toolbox/side_right) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(180 0 0 1) t(.0 -.147 0)> type=10 }
+joint (tableC /toolbox/floor_left) { from=<T t(0 0 .04)> to=<T t(.0 .069 .004) d(90 1 0 0)> type=10 }
+joint (tableC /toolbox/floor_right) { from=<T t(0 0 .04)> to=<T d(180 0 0 1) t(.0 .069 .004) d(90 1 0 0)> type=10 }
 
 
 Include = '../../data/screwdriver/screwdriver.ors'

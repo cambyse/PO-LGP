@@ -2,7 +2,7 @@ Include = '../../../share/data/keywords.g'
 Include = 'LGP-coop-kin.g'
 
 FOL_World{
-  hasWait=false
+  hasWait=true
 }
 
 ## activities
@@ -16,6 +16,7 @@ placingScrew
 ## basic predicates
 agent
 object
+table
 
 busy     # involved in an ongoing (durative) activity
 free     # agent hand is free
@@ -75,7 +76,7 @@ DecisionRule activate_placing {
 Rule {
   X, Y, Z,
   { (Terminate placing X Y Z) }
-  { (Terminate placing X Y Z)! (placing X Y)! (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+  { (Terminate placing X Y Z)! (placing X Y Z)! (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
 }
 
 

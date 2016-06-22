@@ -200,7 +200,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object){
 }
 
 void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef){
-  mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.scalar()->to->shapes.scalar()->name;
+  mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.last()->to->shapes.scalar()->name;
   if(stepsPerPhase>2) //otherwise: no velocities
     setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1);
 
@@ -230,6 +230,9 @@ void KOMO::setAbstractTask(uint phase, const NodeL& facts){
     for(Node *p:n->parents) keys.append(&p->keys.last());
     if(*keys(0)=="grasping"){
       setGrasp(double(phase)+1., *keys(1), *keys(2));
+    }
+    if(*keys(0)=="placing"){
+      setPlace(double(phase)+1., *keys(1), *keys(2), *keys(3));
     }
   }
 }
