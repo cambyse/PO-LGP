@@ -1,9 +1,11 @@
 #! /usr/bin/env python2
 # Import python modules
 import rospy as rp
+import argparse
 import baxter_interface as bax
 import time as t
-#import thread
+import thread
+import alvar_marker_test
 #import os
 from baxter_interface import Gripper
 import numpy as np
@@ -83,6 +85,16 @@ def control(features, w):
 def reset():
     limb.move_to_joint_positions(startpos)
 
+def init_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--simulate', help="Don't use any ros connections, just simulate.", type=bool, default=0)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    print(type(limb.joint_angles()))
+    args = init_parser()
+
+    # Start alvar listener thread thingy
+    if (args.simulate == 0):
+        thread.start_new_thread(alvar_marker_test.listener, ())
     print('All done')
