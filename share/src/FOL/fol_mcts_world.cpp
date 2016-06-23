@@ -46,6 +46,7 @@ void FOL_World::init(istream& is){
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
+  Wait_keyword = KB["WAIT"];            CHECK(Wait_keyword, "You need to declare the WAIT keyword");
   Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
   Graph *params = KB.find<Graph>("FOL_World");
@@ -94,21 +95,31 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
   if(verbose>2){ cout <<"*** decision = ";  d->write(cout); cout <<endl; }
 
-  //-- remove the old decision-fact, if exists
-#if 0
-  if(lastDecisionInState) delete lastDecisionInState;
-#else
+  //-- remove state annotations from state, if exists
   for(uint i=state->N;i--;){
     Node *n=state->elem(i);
-    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
+    if(n->keys.N) delete n;
   }
-#endif
+
+  //-- remove the old decision-fact, if exists (Obsolete - implicit in the above)
+//#if 0
+//  if(lastDecisionInState) delete lastDecisionInState;
+//#else
+//  for(uint i=state->N;i--;){
+//    Node *n=state->elem(i);
+//    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
+//  }
+//#endif
 
   //-- add the decision as a fact
   if(!d->waitDecision){
     NodeL decisionTuple = {d->rule};
     decisionTuple.append(d->substitution);
     lastDecisionInState = createNewFact(*state, decisionTuple);
+    lastDecisionInState->keys.append("decision");
+  }else{
+    lastDecisionInState = createNewFact(*state, {Wait_keyword});
+    lastDecisionInState->keys.append("decision");
   }
 
   //-- check for rewards

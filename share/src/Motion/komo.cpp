@@ -181,9 +181,10 @@ void KOMO::setLastTaskToBeVelocity(){
 void KOMO::setGrasp(double time, const char* endeffRef, const char* object){
 //#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
-  mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.last()->to->shapes.scalar()->name;
-  setTask(time-.1, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
+  ors::Body *endeff = world.getShapeByName(endeffRef)->body;
+  mlr::String& graspRef = endeff->outLinks.last()->to->shapes.scalar()->name;
 
+  setTask(time-.1, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
   setTask(time-.1, time, new DefaultTaskMap(posDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
   setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 //#    (MinSumOfSqr posDiff Hand Obj){ time=[.98 1] scale=1e3 }
@@ -194,15 +195,19 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object){
 //#    (MakeJoint delete Obj){ time=1 }
 //#    (MakeJoint rigidZero Hand Obj){ time=1 }
 
-  if(stepsPerPhase>2) //otherwise: no velocities
-    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1);
+  if(stepsPerPhase>2){ //otherwise: no velocities
+    setTask(time-.2, time-.05, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
 //#    (MinSumOfSqr pos Obj){ order=1 scale=1e-1 time=[0 0.15] target=[0 0 .1] } # move up
+  }
 }
 
 void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef){
   mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.last()->to->shapes.scalar()->name;
-  if(stepsPerPhase>2) //otherwise: no velocities
+  if(stepsPerPhase>2){ //otherwise: no velocities
     setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1);
+    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
+  }
 
   setTask(time-.02, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e3);
 //#    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
@@ -226,13 +231,19 @@ void KOMO::setAbstractTask(uint phase, const NodeL& facts){
   CHECK(phase<phases,"");
   for(Node *n:facts){
     if(!n->parents.N) continue;
-    StringL keys;
-    for(Node *p:n->parents) keys.append(&p->keys.last());
-    if(*keys(0)=="grasping"){
-      setGrasp(double(phase)+1., *keys(1), *keys(2));
+    StringL symbols;
+    for(Node *p:n->parents) symbols.append(&p->keys.last());
+//    if(*symbols(0)=="grasping"){
+//      setGrasp(double(phase)+1., *symbols(1), *symbols(2));
+//    }
+//    if(*symbols(0)=="placing"){
+//      setPlace(double(phase)+1., *symbols(1), *symbols(2), *symbols(3));
+//    }
+    if(n->keys.N && n->keys.last()=="komoGrasp"){
+      setGrasp(double(phase)+1., *symbols(0), *symbols(1));
     }
-    if(*keys(0)=="placing"){
-      setPlace(double(phase)+1., *keys(1), *keys(2), *keys(3));
+    if(n->keys.N && n->keys.last()=="komoPlace"){
+      setPlace(double(phase)+1., *symbols(0), *symbols(1), *symbols(2));
     }
   }
 }

@@ -55,7 +55,7 @@ struct FOL_World:MCTS_Environment{
   Node *lastDecisionInState; ///< the literal that represents the last decision in the state
   Graph *rewardFct; ///< the reward function within the KB (is a subgraph item of KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
-  Node *Terminate_keyword, *Quit_keyword, *Quit_literal;
+  Node *Terminate_keyword, *Quit_keyword, *Wait_keyword, *Quit_literal;
   int verbose;
   int verbFil;
   ofstream fil;

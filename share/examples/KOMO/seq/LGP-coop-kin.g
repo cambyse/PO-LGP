@@ -15,14 +15,14 @@ body tableR{ type=9, X=<T t(.2 -.7 .8)>, size=[2. .6 .04 .02], color=[.3 .5 .3] 
 #joint (table obj1) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 #shape shape1 (obj1) { type=5 rel=<T t(0 0 .1)>size=[.4 0 0 0] }
 
-#body Handle { type=9 size=[.03 .3 .15 .02] contact }
-#joint (table Handle) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
+body Handle { type=9 size=[.03 .3 .15 .02] contact }
+joint (table Handle) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 
-#body Long1 { type=9 size=[.03 .3 .1 .02] contact }
-#joint (table Long1) { from=<T t(.2 .2 0)> to=<T t(0 0 .1)> type=10 }
+body Long1 { type=9 size=[.03 .3 .1 .02] contact }
+joint (table Long1) { from=<T t(.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 
-#body Long2 { type=9 size=[.03 .3 .1 .02] contact }
-#joint (table Long2) { from=<T t(.2 -.2 0)> to=<T t(0 0 .1)> type=10 }
+body Long2 { type=9 size=[.03 .3 .1 .02] contact }
+joint (table Long2) { from=<T t(.2 -.2 0)> to=<T t(0 0 .1)> type=10 }
 
 #shape aLong2 (Long1) { type=5 }
 

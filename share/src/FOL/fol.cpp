@@ -2,15 +2,15 @@
 
 #define DEBUG(x) x
 
-/// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0)
+/// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0, keys.N=0)
 NodeL getLiteralsOfScope(Graph& KB){
   NodeL state;
   state.anticipateMEM(KB.N);
-  for(Node *i:KB) if(i->keys.N==0 && i->parents.N>0) state.append(i);
+  for(Node *i:KB) if(i->parents.N>0) state.append(i);
   return state;
 }
 
-/// return all variables (defined by degree=0)
+/// return all variables (defined by keys.N>0, degree=0, isBoolean)
 NodeL getSymbolsOfScope(const Graph& KB){
   NodeL vars;
   vars.anticipateMEM(KB.N);
@@ -50,14 +50,6 @@ Node *getFirstVariable(Node* literal, Graph* varScope){
   return NULL;
 }
 
-//Node *getFirstSymbol(Node* literal, Graph* varScope){
-//  for(Node *i:literal->parents) if(&i->container!=varScope){
-//    CHECK(i->keys.N>0 && i->parents.N==0 && i->isOfType<bool>(),"");
-//    return i;
-//  }
-//  return NULL;
-//}
-
 /// check if these are literally equal (all arguments are identical, be they vars or consts) -- fact1 is only a tuple, not an node of the graph
 bool tuplesAreEqual(NodeL& tuple0, NodeL& tuple1){
   if(tuple0.N!=tuple1.N) return false;
@@ -77,7 +69,7 @@ bool valuesAreEqual(Node *fact0, Node *fact1, bool booleanMeansExistance){
   return true;
 }
 
-/// check if these are literally equal (all arguments are identical, be they vars or consts)
+/// two facts are exactly equal (tuplesAreEqual (vars or consts), keys are equal, valuesAreEqual)
 bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
   if(!tuplesAreEqual(fact0->parents,fact1->parents)) return false;
   if(fact0->keys!=fact1->keys) return false;
@@ -85,7 +77,7 @@ bool factsAreEqual(Node* fact0, Node* fact1, bool checkAlsoValue){
   return true;
 }
 
-/// check match, where all variables of literal are replaced by subst(var->index)
+/// after substituting subst in literal it becomes equal to fact [ignoreSubst ignores all variables in literal]
 bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst){
   if(fact->parents.N!=literal->parents.N) return false;
   if(fact->keys!=literal->keys) return false;

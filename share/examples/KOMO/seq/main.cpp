@@ -23,17 +23,17 @@ void TEST(Cooperation){
     komo.setSquaredQVelocities();
   }
 
-  komo.setGrasp(1., "humanGraspRefR", "handR", "Long1" );
+  komo.setGrasp(1., "handR", "Long1" );
   komo.setHoldStill(1., 2., "humanGraspJointR");
-  komo.setPlace(2., "humanGraspRefR", "handR", "Long1", "table" );
+  komo.setPlace(2., "handR", "Long1", "table" );
 
   komo.setHoldStill(1., 2., "baxterGraspJointR");
-  komo.setGrasp(1., "baxterGraspRefR", "baxterR", "Handle" );
-  komo.setPlace(2., "baxterGraspRefR", "baxterR", "Handle", "Long1" );
+  komo.setGrasp(1., "baxterR", "Handle" );
+  komo.setPlace(2., "baxterR", "Handle", "Long1" );
 
-  komo.setGrasp(2., "humanGraspRefL", "handL", "Long2" );
+  komo.setGrasp(2., "handL", "Long2" );
   komo.setHoldStill(2., 3., "humanGraspJointL");
-  komo.setPlace(3., "humanGraspRefL", "handL", "Long2", "Handle" );
+  komo.setPlace(3., "handL", "Long2", "Handle" );
 
   komo.reset();
   komo.MP->reportFull(true, FILE("z.problem"));

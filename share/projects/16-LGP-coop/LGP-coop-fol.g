@@ -62,9 +62,9 @@ DecisionRule activate_grasping {
 Rule {
   X, Y
   { (Terminate grasping X Y) }
-  { (Terminate grasping X Y)! (grasping X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
-  { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
-  p=[.9 0.1]
+  { (Terminate grasping X Y)! (grasping X Y)! komoGrasp(X Y) (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
+#  { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
+#  p=[.9 0.1]
 }
 
 DecisionRule activate_placing {
@@ -76,7 +76,7 @@ DecisionRule activate_placing {
 Rule {
   X, Y, Z,
   { (Terminate placing X Y Z) }
-  { (Terminate placing X Y Z)! (placing X Y Z)! (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+  { (Terminate placing X Y Z)! (placing X Y Z)! komoPlace(X Y Z) (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
 }
 
 
