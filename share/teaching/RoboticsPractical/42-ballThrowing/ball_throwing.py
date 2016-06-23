@@ -3,7 +3,7 @@
 import rospy as rp
 import argparse
 import baxter_interface as bax
-import time as t
+import time
 import thread
 import alvar_marker_test
 #import os
@@ -30,57 +30,58 @@ startpos['left_s1'] =  1.04272344056511
 #    '/robot/limb/left/suppress_gravity_compensation', 'std_msgs/Empty'])
 
 # u: force
-def apply_force(u):
-    limb.set_joint_velocities(u)
 
 
-def mk_np_array(u):
-    na = np.array([u['left_w0'],
-                    u['left_w1'],
-                    u['left_w2'],
-                    u['left_e0'],
-                    u['left_e1'],
-                    u['left_s0'],
-                    u['left_s1']])
+def dict2npa(u):
+    na = np.array([u['left_w1'],
+                   u['left_e1'],
+                   u['left_s1']])
     return na
 
+def npa2dict(u)
+    return {'left_w0': 0,
+            'left_w1': u[0],
+            'left_w2': 0,
+            'left_e0': 0,
+            'left_e1': u[1],
+            'left_s0': 0,
+            'left_s1': u[2]}
 
-def features():
+def features(t):
     u = mk_np_array(limb.joint_efforts())
     v = mk_np_array(limb.joint_velocities())
     p = mk_np_array(limb.joint_angles())
 
-    return np.concatenate((u, v, p))
+    #return np.concatenate((u, v, p))
+    return np.ones(6) * t
+
+def control(features, W):
+    ub = lb = 0.8
+
+    v = np.dot(W, features) + np.random.randn(3)
+    v_dict = npa2dict(v)
+
+    limits = {'left_w0': range(-3.059 * lb, 3.059 * ub),
+            'left_w1': range(-1.5708 * lb, 2.094 * ub),
+            'left_w2': range( -3.059 * lb, 3.059 * ub),
+            'left_e0': range(-3.05418 * lb, 3.05418 * ub),
+            'left_e1': range(-0.05 * lb, 2.618 * ub),
+            'left_s0': range(-1.70168 * lb, 1.70168 * ub),
+            'left_s1': range(-2.147 * lb, 1.047 * ub)}
+
+    for key, value in limits.items:
+        if not limb.joint_angle[key] in value:
+            v_dict[key] = 0
+
+    return v_dict
 
 
-def control(features, w):
-    u = dict()
-
-
-    u['left_s0'] =  0.0
-    u['left_s1'] = -1.0
-    u['left_e0'] =  0.0
-    u['left_e1'] =  1.0
-    u['left_w0'] =  0.0
-    u['left_w1'] = -1.0
-    u['left_w2'] =  0.0
-
-    #thread.start_new_thread(disable_gravity, ())
-
-    for i in range(75):
-     #   pub.publish("")
-        apply_force(u)
-        t.sleep(0.01)
-
-    # Reset position
-    u['left_s0'] =  0.0
-    u['left_s1'] =  0.0
-    u['left_e0'] =  0.0
-    u['left_e1'] =  0.0
-    u['left_w0'] =  0.0
-    u['left_w1'] =  0.0
-    u['left_w2'] =  0.0
-    apply_force(u)
+def start(E, T): 
+    for e in range(E):
+        for t in range(T):
+            v = control(features(t), W)
+            limb.set_joint_velocities(v)
+            time.sleep(0.01)
 
 def reset():
     limb.move_to_joint_positions(startpos)
