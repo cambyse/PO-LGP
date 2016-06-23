@@ -32,15 +32,18 @@ int main(int argc, char** argv){
 //    TaskControllerModule& TCM = baxter.getTaskControllerModule();
 //    TCM.oldfashioned = false;
 //    CtrlMsg refs;
-    arr q0, q, qdot, u;
+    arr q0, q, qdot, u, qdot_filtered;
 //    TCM.ctrl_ref.waitForNextRevision();
     double kp = mlr::getParameter<double>("kp");
     double kd = mlr::getParameter<double>("kd");
     baxter.getState(q0, qdot, u);
+    qdot_filtered = zeros(q0.N);
     for (uint i = 0; i < 1000; i++) {
 #if 1
 //      refs = TCM.ctrl_ref.get();
       baxter.getState(q, qdot, u);
+
+//      qdot_filtered = .9*qdot_filtered + .1*qdot;
 
 //      arr a = refs.Kp * (refs.q-q) + refs.Kd * qdot;
       arr a = kp * (q0-q) - kd * qdot;
