@@ -42,13 +42,11 @@ def features(t):
     return np.ones(6) * t
 
 def control(features, W):
-    ub = lb = 0.8
-
     v = np.dot(W, features) + np.random.randn(3)
     v_dict = npa2dict(v)
 
     for key, value in limits.items:
-        if not limb.joint_angle[key] in value:
+        if limb.joint_angle[key] < value[0] or limb.joint_angle[key] > value[1]:
             v_dict[key] = 0
 
     return v_dict
@@ -99,21 +97,23 @@ if __name__ == "__main__":
     startpos['left_e1'] =  0.25732527716777814
     startpos['left_s0'] = -0.45674277959288195
     startpos['left_s1'] =  1.04272344056511
+    ub = lb = 0.8
+
     
-    limits = {'left_w0': range(-3.059 * lb, 3.059 * ub),
-            'left_w1': range(-1.5708 * lb, 2.094 * ub),
-            'left_w2': range( -3.059 * lb, 3.059 * ub),
-            'left_e0': range(-3.05418 * lb, 3.05418 * ub),
-            'left_e1': range(-0.05 * lb, 2.618 * ub),
-            'left_s0': range(-1.70168 * lb, 1.70168 * ub),
-            'left_s1': range(-2.147 * lb, 1.047 * ub)}
+    limits = {'left_w0': [-3.059 * lb, 3.059 * ub],
+            'left_w1': [-1.5708 * lb, 2.094 * ub],
+            'left_w2': [ -3.059 * lb, 3.059 * ub],
+            'left_e0': [-3.05418 * lb, 3.05418 * ub],
+            'left_e1': [-0.05 * lb, 2.618 * ub],
+            'left_s0': [-1.70168 * lb, 1.70168 * ub],
+            'left_s1': [-2.147 * lb, 1.047 * ub]}
 
     args = init_parser()
 
     # Start alvar listener thread thingy
     print("Simulate value", args.simulate)
     if (args.simulate):
-
+        print("Simulation.")
     else:
         thread.start_new_thread(alvar_marker_test.listener, ())
         # Initialise such that it registers somehow or something, I don't know...
