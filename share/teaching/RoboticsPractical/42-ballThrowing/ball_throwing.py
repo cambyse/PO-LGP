@@ -61,10 +61,7 @@ def expected_policy_reward(samples, T, W):
             limb.set_joint_velocities(v)
             time.sleep(0.01)
 
-
-
-
-        episod_reward.append(1000000)
+        episod_reward.append(-alvar_marker_test.get_sq_dist())
 
     episod_rewards = np.array(episod_reward)
     return np.sum(episod_rewards)/episod_rewards.size
