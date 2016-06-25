@@ -1,15 +1,15 @@
 #! /usr/bin/env python2
 # Import python modules
+import sys
 import rospy as rp
 import argparse
 import baxter_interface as bax
 import time
-import thread
-import alvar_marker_test
 #import os
 from baxter_interface import Gripper
 import numpy as np
-
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point, Pose
 
 #def disable_gravity():
 #    os.execv('/opt/ros/indigo/bin/rostopic', ['rostopic', 'pub', '-r', '10',
@@ -34,9 +34,9 @@ def npa2dict(u):
             'left_s1': u[2]}
 
 def features(t):
-    u = mk_np_array(limb.joint_efforts())
-    v = mk_np_array(limb.joint_velocities())
-    p = mk_np_array(limb.joint_angles())
+    u = dict2npa(limb.joint_efforts())
+    v = dict2npa(limb.joint_velocities())
+    p = dict2npa(limb.joint_angles())
 
     #return np.concatenate((u, v, p))
     return np.ones(6) * t
@@ -45,36 +45,49 @@ def control(features, W):
     v = np.dot(W, features) + np.random.randn(3)
     v_dict = npa2dict(v)
 
-    for key, value in limits.items:
-        if limb.joint_angle[key] < value[0] or limb.joint_angle[key] > value[1]:
+    for key, value in limits.items():
+        if limb.joint_angle(key) < value[0] or limb.joint_angle(key) > value[1]:
             v_dict[key] = 0
 
     return v_dict
 
-def expected_policy_reward(samples, T, W):
-    episod_rewards = []
-    for e in range(samples):
-        for t in range(T):
-            v = control(features(t), W)
-            limb.set_joint_velocities(v)
-            time.sleep(0.01)
+def expected_policy_reward(T, W, time_step=10):
+    reward = -1000
+    
+    for t in range(T/time_step):
+        v = control(features(t), W)
+        send_sigal(limb.set_joint_velocities, v, time_step)
 
-        episod_reward.append(-alvar_marker_test.get_sq_dist())
+    c = raw_input('Measure distance? (m)')
+    if c == 'm':
+        while True:
+            sd = get_sq_dist()
+            if sd:
+                reward = -sd
+                print('R = ' + str(reward))
 
-    episod_rewards = np.array(episod_reward)
-    return np.sum(episod_rewards)/episod_rewards.size
+            c = raw_input('Ok? (o)')
+            if c == 'o':
+                break
 
-def start(E, T, W):
-    er_prev = 0
+    return reward
+
+def start(T, W):
+    er_prev = -10000
 
     while True:
         noise = np.random.randn(W.shape[0], W.shape[1])
-        er = expected_policy_reward(1, T, W + noise)
+        er = expected_policy_reward(T, W + noise)
 
         if er > er_prev:
             er_prev = er
             W += noise
 
+        send_sigal(limb.set_joint_positions, startpos, 2000)
+        print(W)
+        c = raw_input('Quit? (q)')
+        if c == 'q':
+            break
 
 def reset():
     limb.move_to_joint_positions(startpos)
@@ -86,17 +99,43 @@ def init_parser():
     parser.set_defaults(simulate=False)
     return parser.parse_args()
 
+markers = dict()
+keys = [10, 11]
+
+def callback(data):
+    markers[data.id] = data.pose.position
+    #rospy.loginfo(rospy.get_caller_id() + 'msg: %s', data.points)
+
+''' Returns squared distance of the two markers defined in keys.
+    Returns -1 in case of insufficient data.'''
+def get_sq_dist():
+
+    if keys[0] not in markers.keys() or keys[1] not in markers.keys() :
+        print('Insufficient data.')
+        print('Needed:', keys)
+        print('Available:', markers.keys())
+        return None
+    else:
+        marker1 = markers[keys[0]]
+        marker2 = markers[keys[1]]
+        return (marker2.x - marker1.x)**2 + (marker2.y - marker1.y)**2
+
+def send_sigal(func, joints, duration, hz=100):
+    for t in range(duration*hz):
+        func(joints)
+        time.sleep(1/hz)
+
 
 if __name__ == "__main__":
     # Get joint startpos_1
     startpos = dict()
-    startpos['left_w0'] = -0.7834806874124751
-    startpos['left_w1'] = -0.3857961681531816
-    startpos['left_w2'] = -2.6349954983901696
-    startpos['left_e0'] = -2.5713352956929247
-    startpos['left_e1'] =  0.25732527716777814
-    startpos['left_s0'] = -0.45674277959288195
-    startpos['left_s1'] =  1.04272344056511
+    startpos['left_w0'] = -3.0418839023767754 
+    startpos['left_w1'] = -0.49585928968396
+    startpos['left_w2'] = -0.13537380453088776
+    startpos['left_e0'] = -3.0372819600131193
+    startpos['left_e1'] = 0.12041749184900498
+    startpos['left_s0'] = -0.5104321071688714
+    startpos['left_s1'] = 0.965640905973868
     ub = lb = 0.8
 
     
@@ -115,13 +154,14 @@ if __name__ == "__main__":
     if (args.simulate):
         print("Simulation.")
     else:
-        thread.start_new_thread(alvar_marker_test.listener, ())
         # Initialise such that it registers somehow or something, I don't know...
-        rp.init_node('Hello_Baxter')
+        rp.init_node('Ball')
+        rp.Subscriber('visualization_marker', Marker, callback)
         limb = bax.Limb('left')
         left_gripper = Gripper('left')
+    
+    send_sigal(limb.set_joint_positions, startpos, 3000)
+    W0 = (np.random.rand(3, 6))
+    start(1000, W0)
 
     print('All done')
-
-
-

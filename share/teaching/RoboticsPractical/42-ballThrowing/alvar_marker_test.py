@@ -5,7 +5,7 @@ from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point, Pose
 
 markers = dict()
-keys = [1, 2]
+keys = [1, 4]
 
 def callback(data):
     markers[data.id] = data.pose.position
@@ -28,3 +28,6 @@ def get_sq_dist():
         marker1 = markers[keys[0]]
         marker2 = markers[keys[1]]
         return (marker2.x - marker1.x)**2 + (marker2.y - marker1.y)**2
+
+if __name__ == '__main__':
+    listener()
