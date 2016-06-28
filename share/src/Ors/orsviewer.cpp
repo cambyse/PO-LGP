@@ -42,10 +42,11 @@ void OrsPathViewer::step(){
   uint T=configurations().N;
   if(t>=T) t=0;
   if(T) copy.copy(*configurations()(t), true);
-  t++;
   configurations.deAccess();
   copy.gl().lock.unlock();
-  if(T) copy.gl().update(STRING(" (time " <<t <<'/' <<T <<')').p, false, false, true);
+  if(T)
+    copy.gl().update(STRING(" (time " <<tprefix+int(t) <<'/' <<tprefix+int(T) <<')').p, false, false, true);
+  t++;
 }
 
 //===========================================================================

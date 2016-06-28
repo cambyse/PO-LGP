@@ -30,7 +30,8 @@ struct KOMO{
   arr x, dual;
   arr z, splineB;
 
-  uint phases, stepsPerPhase;
+  double maxPhase;
+  uint stepsPerPhase;
 
   KOMO();
 
@@ -44,7 +45,7 @@ struct KOMO{
   void setConfigFromFile();
   void setModel(const ors::KinematicWorld& W,
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
-  void setTiming(uint _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2);
+  void setTiming(double _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2);
   void setSinglePoseOptim(double duration=5.){ setTiming(1, 1, duration, 1); }
   void setSequenceOptim(uint frames, double duration=5.){ setTiming(frames, 1, duration, 1); }
 
@@ -52,12 +53,14 @@ struct KOMO{
   //-- tasks (cost/constraint terms) low-level
   struct Task* setTask(double startTime, double endTime, TaskMap* map, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
   struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
-  void setKinematicSwitch(double time, const char *type, const char* ref1, const char* ref2);
+  void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const ors::Transformation& jFrom=NoTransformation, const ors::Transformation& jTo=NoTransformation);
 
   //-- tasks (cost/constraint terms) mid-level
-  void setHoming(double startTime=0., double endTime=-1., double prec=1e-1);
+  void setHoming(double startTime=-1., double endTime=-1., double prec=1e-1);
   void setSquaredQAccelerations(double startTime=-1., double endTime=-1., double prec=1.);
   void setSquaredQVelocities(double startTime=-1., double endTime=-1., double prec=1.);
+  void setSquaredFixJointVelocities(double startTime=-1., double endTime=-1., double prec=1.);
+
   void setHoldStill(double startTime, double endTime, const char* joint, double prec=1e2);
   void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
   void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), TermType type=sumOfSqrTT, const arr& target=ARR(1.), double prec=1e2);
@@ -66,12 +69,12 @@ struct KOMO{
 
 
   //-- tasks (cost/constraint terms) high-level
-  void setGrasp(double time, const char* endeffRef, const char* object);
-  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef);
+  void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false);
+  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false);
   void setSlowAround(double time, double delta);
 
   //-- tasks - logic level
-  void setAbstractTask(uint phase, const NodeL& facts);
+  void setAbstractTask(double phase, const NodeL& facts, bool effKinMode=false);
 
   void setMoveTo(ors::KinematicWorld& world, //in initial state
                  ors::Shape& endeff,         //endeffector to be moved

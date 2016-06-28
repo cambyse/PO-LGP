@@ -37,9 +37,9 @@ struct Coop{
   OrsPathViewer seqView;
   OrsPathViewer pathView;
 
-  bool autoCompute = true;
+  bool autoCompute = false;
 
-  Coop() : poseView("pose"), seqView("sequence", 1.), pathView("path"){}
+  Coop();
 
   void prepareKin();
   void prepareFol();

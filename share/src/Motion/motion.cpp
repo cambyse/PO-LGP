@@ -107,8 +107,9 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   return *this;
 }
 
-void MotionProblem::setTiming(uint timeSteps, double duration){
-  T = timeSteps;
+void MotionProblem::setTiming(uint steps, double duration){
+  T = steps;
+  CHECK(T, "deprecated");
   if(T) tau = duration/T; else tau=duration;
 //  setupConfigurations();
 }
@@ -381,7 +382,13 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
   }
 
   os <<"  SWITCHES: " <<switches.N <<endl;
-  for(ors::KinematicSwitch *sw:switches) os <<*sw;
+  for(ors::KinematicSwitch *sw:switches){
+    if(sw->timeOfApplication+k_order<configurations.N)
+      os <<sw->shortTag(configurations(sw->timeOfApplication+k_order));
+    else
+      os <<sw->shortTag(NULL);
+  }
+
 }
 
 void MotionProblem::costReport(bool gnuplt) {

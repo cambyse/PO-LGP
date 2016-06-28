@@ -56,7 +56,7 @@ Rule {
 DecisionRule activate_grasping {
   X, Y
   { (grasping X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
-  { (grasping X Y)=5.0 (busy X) (busy Y) }
+  { (grasping X Y)=1.0 (busy X) (busy Y) }
 }
 
 Rule {

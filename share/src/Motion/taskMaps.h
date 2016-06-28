@@ -30,11 +30,14 @@
 struct TransitionTaskMap:TaskMap {
   double posCoeff, velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
   arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
-  TransitionTaskMap(const ors::KinematicWorld& G);
+  double H_rate;  ///< cost rate (per TIME, not step), given as scalar, will be multiplied by Joint->H (given in ors file)
+  bool fixJointsOnly;
+  TransitionTaskMap(const ors::KinematicWorld& G, bool fixJointsOnly=false);
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
   virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
-  virtual mlr::String shortTag(){ return STRING("TransitionTaskMap_"<<velCoeff<<'_'<<accCoeff); }
+  virtual uint dim_phi(const WorldL& G, int t);
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("TransitionTaskMap_fix"<<fixJointsOnly <<"_pos" <<posCoeff <<"_vel" <<velCoeff<<"_acc"<<accCoeff); }
 };
 
 //===========================================================================
@@ -72,7 +75,7 @@ struct DefaultTaskMap:TaskMap {
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
-  virtual mlr::String shortTag(){ return STRING("DefaultTaskMap_"<<DefaultTaskMapType2String[type]<<'_'<<i <<'_' <<j); }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("DefaultTaskMap_"<<DefaultTaskMapType2String[type]<<'_'<<(i<0?"WORLD":G.shapes(i)->name) <<'_' <<(j<0?"WORLD":G.shapes(j)->name)); }
 };
 
 //===========================================================================

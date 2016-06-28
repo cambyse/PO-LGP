@@ -477,15 +477,15 @@ NodeL getRuleSubstitutions2(Graph& facts, Node *rule, int verbose){
  }
 
 
-bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, int verbose, int *decisionObservation){
+bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, int verbose, int *samplingObservation){
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
   CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
 //  Graph& state = KB.get<Graph>("STATE");
-  return forwardChaining_FOL(state, rules, query, changes, verbose, decisionObservation);
+  return forwardChaining_FOL(state, rules, query, changes, verbose, samplingObservation);
 }
 
-bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes, int verbose, int *decisionObservation){
+bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes, int verbose, int *samplingObservation){
 
   for(;;){
     DEBUG(state.isNodeOfParentGraph->container.checkConsistency();)
@@ -498,7 +498,8 @@ bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes
         if(effect->isOfType<arr>()){ //TODO: THIS IS SAMPLING!!! SOMEHOW MAKE THIS CLEAR/transparent/optional or so
           arr p = effect->get<arr>();
           uint r = sampleMultinomial(p);
-          if(decisionObservation) *decisionObservation = (*decisionObservation)*p.N + r; //raise previous decisions to the factor p.N and add current decision
+          if(samplingObservation) *samplingObservation = (*samplingObservation)*p.N + r; //raise previous samplings to the factor p.N and add current sampling
+          //TODO: also return sampleProbability?
           effect = rule->graph().elem(-1-p.N+r);
         }
         if(verbose>0){ cout <<"*** applying" <<*effect <<" SUBS"; listWrite(subs[s], cout); cout <<endl; }

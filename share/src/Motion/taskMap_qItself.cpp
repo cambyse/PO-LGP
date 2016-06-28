@@ -1,7 +1,7 @@
 #include <climits>
 #include "taskMap_qItself.h"
 
-TaskMap_qItself::TaskMap_qItself(const arr& _M) : moduloTwoPi(true) { if(&_M) M=_M; }
+TaskMap_qItself::TaskMap_qItself(const arr& _M, bool relative_q0) : moduloTwoPi(true), relative_q0(relative_q0) { if(&_M) M=_M; }
 
 TaskMap_qItself::TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true) { M=zeros(1,qN); M(0,singleQ)=1.; }
 
@@ -30,6 +30,11 @@ TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* joint
 
 void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   G.getJointState(q);
+  if(relative_q0){
+    for(ors::Joint* j:G.joints)
+      if(j->q0 && j->qDim()==1)
+        q(j->qIndex) -= j->q0;
+  }
   if(M.N){
     if(M.nd==1){
       q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
@@ -151,7 +156,7 @@ void TaskMap_qZeroVels::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   uint offset = G.N-1-k; //G.N might contain more configurations than the order of THIS particular task -> the front ones are not used
 
   for(ors::Joint *j:G.last()->joints) if(j->constrainToZeroVel){
-    ors::Joint *jmatch = G.last(-2)->getJointByBodyNames(j->from->name, j->to->name);
+    ors::Joint *jmatch = G.last(-2)->getJointByBodyIndices(j->from->index, j->to->index);
     if(jmatch && j->type!=jmatch->type) jmatch=NULL;
     if(jmatch){
       for(uint i=0;i<j->qDim();i++){
@@ -193,4 +198,32 @@ uint TaskMap_qZeroVels::dim_phi(const WorldL& G, int t){
   }
 
   return dimPhi(t);
+}
+
+//===========================================================================
+
+mlr::Array<ors::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnly){
+  mlr::Array<ors::Joint*> matchingJoints;
+  mlr::Array<ors::Joint*> matches(G.N);
+  bool matchIsGood;
+
+  for(ors::Joint *j:G.last()->joints) if(!zeroVelJointsOnly || j->constrainToZeroVel){
+    matches.setZero();
+    matches.last() = j;
+    matchIsGood=true;
+
+    for(uint k=0;k<G.N-1;k++){ //go through other configs
+//      ors::Joint *jmatch = G(k)->getJointByBodyIndices(j->from->index, j->to->index);
+      ors::Joint *jmatch = G(k)->getJointByBodyNames(j->from->name, j->to->name);
+      if(!jmatch || j->type!=jmatch->type || j->constrainToZeroVel!=jmatch->constrainToZeroVel){
+        matchIsGood=false;
+        break;
+      }
+      matches(k) = jmatch;
+    }
+
+    if(matchIsGood) matchingJoints.append(matches);
+  }
+  matchingJoints.reshape(matchingJoints.N/G.N, G.N);
+  return matchingJoints;
 }

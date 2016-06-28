@@ -25,13 +25,13 @@ FOL_World::FOL_World()
     : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
       state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
       generateStateTree(false),
-      lastStepDuration(0.), lastStepProbability(1.), count(0) {}
+      lastStepReward(0.), lastStepDuration(0.), lastStepProbability(1.), lastStepObservation(0), count(0) {}
 
 FOL_World::FOL_World(istream& is)
     : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
       state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
       generateStateTree(false),
-      lastStepDuration(0.), lastStepProbability(1.), count(0) {
+      lastStepReward(0.), lastStepDuration(0.), lastStepProbability(1.), lastStepObservation(0), count(0) {
   init(is);
 }
 
@@ -76,9 +76,12 @@ FOL_World::~FOL_World(){
 }
 
 std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
-  double reward=0.;
+  lastStepReward = -stepCost;
+  lastStepDuration = 0.;
+  lastStepProbability = 1.;
+  lastStepObservation = 0;
+
   T_step++;
-  reward -= stepCost;
 
   //-- store the old state; make a new state that is child of the old
   if(generateStateTree){
@@ -124,39 +127,9 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   //-- check for rewards
   if(rewardFct){
-    reward += evaluateFunction(*rewardFct, *state, verbose-3);
-
-#if 0
-  double rValue=0.;
-  if(rewardFct) for(Node *rTerm:*rewardFct){
-    if(rTerm->isOfType<double>()) rValue=rTerm->get<double>();
-    else{
-      CHECK(rTerm->isGraph(),"");
-      Graph& rCase=rTerm->graph();
-#if 0
-      if(rCase.N==1){
-        CHECK(rCase(0)->isGraph(),"");
-        if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
-      }
-      if(rCase.N>=2){
-        CHECK(rCase.last(-2)->isGraph(),"");
-        CHECK(rCase.last(-1)->isOfType<bool>(),"");
-        if(rCase.last(-1)->parents(0)==d->rule){
-          if(allFactsHaveEqualsInScope(*state, rCase(0)->graph())) reward += rValue;
-        }
-      }
-#else
-      NodeL subs = getRuleSubstitutions2(*state, rTerm, 0);
-      if(rCase.last()->isOfType<double>() && rCase.last()->keys.last()=="count"){
-        if(subs.d0 == rCase.last()->get<double>()) reward += rValue;
-      }else{
-        if(subs.d0) reward += rValue;
-      }
-#endif
-    }
-#endif
+    lastStepReward += evaluateFunction(*rewardFct, *state, verbose-3);
   }else{
-    if(successEnd) reward += 100.;
+    if(successEnd) lastStepReward += 100.;
   }
 
   //-- apply effects of decision
@@ -175,12 +148,12 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
     if(w==1e10){
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
-      reward -= 10.*timeCost;
+      lastStepReward -= 10.*timeCost;
       lastStepDuration=10.;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
       T_real += w;
-      reward -= w*timeCost; //cost per real time
+      lastStepReward -= w*timeCost; //cost per real time
       lastStepDuration=w;
       NodeL terminatingActivities;
       for(Node *i:*state){
@@ -206,15 +179,18 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
       HALT("probs in decision rules not properly implemented (observation id is not...)");
       arr p = effect->get<arr>();
       uint r = sampleMultinomial(p);
+      lastStepProbability = p(r);
+      lastStepObservation = lastStepObservation*p.N + r; //raise previous observations to the factor p.N and add current decision
       effect = d->rule->graph().elem(-1-p.N+r);
+    }else{
+      lastStepProbability = 1.;
     }
     if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(d->substitution, cout); cout <<endl; }
     applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
   }
 
   //-- generic world transitioning
-  int decisionObservation = 0;
-  forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &decisionObservation);
+  forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &lastStepObservation);
 
   //-- check for QUIT
 //  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
@@ -225,21 +201,21 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   //-- delete decision fact again
   //if(decision) delete decision;
 
-  if(deadEnd) reward -= deadEndCost;
+  if(deadEnd) lastStepReward -= deadEndCost;
 
   if(verbose>2){ cout <<"*** post-state = "; state->write(cout, " "); cout <<endl; }
   if(verbFil){
       fil <<"--\n  T_step=" <<T_step;
       fil <<"\n  decision="; d->write(fil);
       fil <<"\n  T_real=" <<T_real;
-      fil <<"\n  observation=" <<decisionObservation;
-      fil <<"\n  reward=" <<reward;
+      fil <<"\n  observation=" <<lastStepObservation;
+      fil <<"\n  reward=" <<lastStepReward;
       fil <<"\n  state="; state->write(fil," ","{}"); fil <<endl;
   }
 
-  R_total += reward;
+  R_total += lastStepReward;
 
-  return {Handle(new Observation(decisionObservation)), reward};
+  return { Handle(new Observation(lastStepObservation)), lastStepReward };
 }
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){

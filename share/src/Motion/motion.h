@@ -87,7 +87,7 @@ struct MotionProblem : KOrderMarkovFunction{
   MotionProblem& operator=(const MotionProblem& other);
 
   /// setting the numer of time steps and total duration in seconds
-  void setTiming(uint timeSteps, double duration);
+  void setTiming(uint steps, double duration);
 
   //-- setting costs in a task space
   void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);     ///< read all tasks from a graph

@@ -61,8 +61,10 @@ struct FOL_World:MCTS_Environment{
   ofstream fil;
   bool generateStateTree;
 
+  double lastStepReward;
   double lastStepDuration;
   double lastStepProbability;
+  int lastStepObservation;
   long count;
 
   FOL_World();
@@ -70,7 +72,7 @@ struct FOL_World:MCTS_Environment{
   virtual ~FOL_World();
   void init(istream& fil);
 
-  virtual std::pair<Handle, double> transition(const Handle& action);
+  virtual std::pair<Handle, double> transition(const Handle& action); //returns (observation, reward)
   virtual const std::vector<Handle> get_actions();
   virtual const Handle get_state();
   virtual bool is_terminal_state() const;

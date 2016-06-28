@@ -127,6 +127,7 @@ struct Joint {
   Transformation X;     ///< joint pose in world coordinates (same as from->X*A)
   Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
   arr limits;           ///< joint limits (lo, up, [maxvel, maxeffort])
+  double q0;            ///< joint null position
   double H;             ///< control cost factor
   Graph ats;    ///< list of any-type attributes
   
@@ -135,7 +136,7 @@ struct Joint {
   Joint(const Joint &j);
   void operator=(const Joint& j) {
     qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1l:0l); agent=j.agent; constrainToZeroVel=j.constrainToZeroVel;
-    name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
+    name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; q0=j.q0; H=j.H;
     ats=j.ats;
     locker=j.locker;
   }
@@ -228,6 +229,8 @@ struct KinematicWorld : GLDrawer{
   Joint *getJointByName(const char* name, bool warnIfNotExist=true) const;
   Joint *getJointByBodies(const Body* from, const Body* to) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
+  Joint *getJointByBodyIndices(uint ifrom, uint ito) const;
+
   bool checkUniqueNames() const;
   void setShapeNames();
   void prefixNames();
@@ -356,9 +359,10 @@ struct KinematicSwitch{
 //  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
   void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool copyFromBodies);
+  mlr::String shortTag(const KinematicWorld* G) const;
   void write(std::ostream& os) const;
   static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
-  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
+  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0, const ors::Transformation& jFrom=NoTransformation, const ors::Transformation& jTo=NoTransformation);
 };
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace

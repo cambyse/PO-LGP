@@ -1,9 +1,11 @@
 
 #include "code.h"
 
+Coop::Coop() : poseView("pose"), seqView("sequence", 1., -1), pathView("path", .1, -2){}
+
 void Coop::prepareKin(){
   kin.init("LGP-coop-kin.g");
-//  kin.watch();
+  //  kin.watch();
 
   tableC = kin.getBodyByName("tableC");
   tableL = kin.getBodyByName("tableL");
@@ -46,10 +48,10 @@ void Coop::prepareFol(){
   fol.addObject("screwbox");
   fol.addFact({"table","tableC"});
   fol.addFact({"table","tableL"});
-//  fol.addFact({"table","tableR"});
+  fol.addFact({"table","tableR"});
 //  fol.addAgent("baxterL");
   fol.addAgent("baxterR");
-//  fol.addAgent("handL");
+  fol.addAgent("handL");
   fol.addAgent("handR");
 
   FILE("z.fol") <<fol;
