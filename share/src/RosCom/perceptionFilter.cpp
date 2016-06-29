@@ -21,21 +21,14 @@
 
 void Filter::open()
 {
-  this->listenTo(*perceptual_inputs.var);
+  this->listenTo(*perceptual_inputs.var); //MT: ah -> do this in the constructor of the access instead
 }
+
 void Filter::close(){
   this->stopListenTo(*perceptual_inputs.var);
 }
 
-void Filter::step()
-{
-//  int rev = perceptual_inputs.writeAccess();
-
-//  if (rev == revision){
-//    perceptual_inputs.deAccess();
-//    return;
-//  }
-//  revision = rev;
+void Filter::step(){
 
   perceptual_inputs.writeAccess();
   object_database.writeAccess();
@@ -44,8 +37,7 @@ void Filter::step()
   FilterObjects objectDatabase = object_database();
 
   // If empty inputs, do nothing.
-  if (perceptualInputs.N == 0 && objectDatabase.N == 0)
-  {
+  if (perceptualInputs.N == 0 && objectDatabase.N == 0) {
     object_database.deAccess();
     perceptual_inputs.deAccess();
     return;
@@ -64,22 +56,18 @@ void Filter::step()
 
     // Grab the subset from the inputs matching this type
     matchedSubsetFromPerceptualInputs.clear();
-    for (uint i = 0; i < perceptualInputs.N; i++)
-    {
-      if (perceptualInputs(i)->type == type)
-      {
+    for (uint i = 0; i < perceptualInputs.N; i++) {
+      if (perceptualInputs(i)->type == type) {
         matchedSubsetFromPerceptualInputs.append(perceptualInputs(i));
       }
     }
 
     // Find all matching object of this type
-    for (uint i = 0; i < objectDatabase.N; i++)
-    {
+    for (uint i = 0; i < objectDatabase.N; i++) {
       if (matched_objects(i) == 1)
         continue;
 
-      if (objectDatabase(i)->type == type)
-      {
+      if (objectDatabase(i)->type == type) {
         matchedSubsetFromDatabase.append(objectDatabase(i));
         matched_objects(i) = 1;
       }
@@ -100,14 +88,12 @@ void Filter::step()
     for (uint i = 0; i < assignedObjects.N; i++)
       filteredInputs.append(assignedObjects(i));
 
-    for (FilterObject* fo : matchedSubsetFromPerceptualInputs)
-    {
+    for (FilterObject* fo : matchedSubsetFromPerceptualInputs) {
       if (filteredInputs.contains(fo) == 0)
         delete fo;
     }
 
-    for (FilterObject* fo : matchedSubsetFromDatabase)
-    {
+    for (FilterObject* fo : matchedSubsetFromDatabase) {
       if (filteredInputs.contains(fo) == 0)
         delete fo;
     }
@@ -116,10 +102,8 @@ void Filter::step()
   }
 
   // Add in any unmatched objects
-  for (uint i = 0; i < objectDatabase.N; i++)
-  {
-    if (matched_objects(i) == 0)
-    {
+  for (uint i = 0; i < objectDatabase.N; i++) {
+    if (matched_objects(i) == 0) {
       filteredInputs.append(objectDatabase(i));
     }
   }
@@ -138,8 +122,7 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   uint num_old = database.N;
   uint num_new = perceps.N;
 
-  for (uint i = 0; i < ha->starred.dim(0); ++i )
-  {
+  for (uint i = 0; i < ha->starred.dim(0); ++i ) {
     uint col = ha->starred[i]().maxIndex();
     // 3 cases:
     // 1) Existed before, no longer exists. If i > num_new
@@ -147,29 +130,22 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
     // 3) Didn't exist before. This happens iff col >= num_old
 
     // Existed before, doesn't exist now.
-    if ( i >= num_new )
-    {
+    if ( i >= num_new ) {
       //std::cout<< "Existed before, doesn't now." << std::endl;
       FilterObject *new_obj = database(col);
       new_obj->relevance *= relevance_decay_factor;
       new_objects.append(new_obj);
-    }
-    else
-    {
-      if ( ( col < num_old ) && (costs(i, col) < distance_threshold) )// Existed before
-      {
+    } else {
+      if ( ( col < num_old ) && (costs(i, col) < distance_threshold) ) { // Existed before
         //std::cout<< "Existed before, does now" << std::endl;
         FilterObject *new_obj = perceps(i);
         if (new_obj->type != FilterObject::FilterObjectType::alvar)
           new_obj->id = database(col)->id;
         new_objects.append( new_obj );
-      }
-      else // This didn't exist before. Add it in
-      {
+      } else { // This didn't exist before. Add it in
         //std::cout<< "Didn't exist before, or not close enough." << std::endl;
         FilterObject *new_obj = perceps(i);
-        if (new_obj->type != FilterObject::FilterObjectType::alvar)
-        {
+        if (new_obj->type != FilterObject::FilterObjectType::alvar) {
           new_obj->id = maxId;
           maxId++;
         }
@@ -182,10 +158,8 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   }
 
   // For each of the old objects, update the relevance factor.
-  for ( uint i = 0; i < database.N; ++i )
-  {
-    if ( matched_ids.find(database(i)->id) == matched_ids.end() )
-    {
+  for ( uint i = 0; i < database.N; ++i ) {
+    if ( matched_ids.find(database(i)->id) == matched_ids.end() ) {
       FilterObject *new_obj = database(i);
       new_obj->relevance *= relevance_decay_factor;
       new_objects.append(new_obj);      
@@ -193,10 +167,8 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   }
   FilterObjects cleaned;
   uint count = new_objects.N;
-  for ( uint i = 0; i < count; ++i )
-  {
-    if(new_objects(i)->relevance > relevance_threshold)
-    {
+  for ( uint i = 0; i < count; ++i ) {
+    if(new_objects(i)->relevance > relevance_threshold) {
       cleaned.append(new_objects(i));
     }
   }
@@ -213,24 +185,16 @@ arr Filter::createCostMatrix(const FilterObjects& newObjects, const FilterObject
   arr costs = ones(dims, dims) * -1.0;
 
   // Assign costs
-  for (uint i = 0; i < num_new; ++i)
-  {
-    for (uint j = 0; j < num_old; ++j)
-    {
-      costs(i,j) = newObjects(i)->idMatchingCost(*oldObjects(j));
-    }
+  for (uint i=0; i<num_new; ++i) for (uint j=0; j<num_old; ++j) {
+    costs(i,j) = newObjects(i)->idMatchingCost(*oldObjects(j));
   }
 
   // For every element that hasn't been set, set the costs to the max.
   double max_costs = costs.max();
 
-  for (uint i = 0; i < dims; ++i)
-  {
-    for (uint j = 0; j < dims; ++j)
-    {
-      if (( i >= num_new ) || ( j >= num_old ))
-        costs(i,j) = max_costs;
-    }
+  for (uint i=0; i<dims; ++i) for (uint j=0; j<dims; ++j) {
+    if (( i >= num_new ) || ( j >= num_old ))
+      costs(i,j) = max_costs;
   }
   return costs;
 }
