@@ -1,11 +1,10 @@
-#define REPORT 1
+//#define REPORT 0
 
 #include "myBaxter.h"
 
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
-#include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
@@ -14,13 +13,13 @@
 
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
+#include "RosCom/subscribeOptitrack.h"
 #include <RosCom/perceptionCollection.h>
 #include <RosCom/perceptionFilter.h>
 #include <RosCom/filterObject.h>
 #include <RosCom/publishDatabase.h>
 
 #include <baxter_core_msgs/JointCommand.h>
-
 
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
 
@@ -33,18 +32,18 @@ struct MyBaxter_private{
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
-  SubscribeTabletop tabletop_subscriber;
+//  SubscribeTabletop tabletop_subscriber;
   SubscribeAlvar alvar_subscriber;
+  SubscribeOptitrack optitrack_subscriber;
+  Optitrack op;
   Collector data_collector;
   Filter myFilter;
   PublishDatabase myPublisher;
 
-  GamepadInterface gamepad;
   OrsViewer view;
   OrsPoseViewer ctrlView;
   SendPositionCommandsToBaxter spctb;
   Subscriber<sensor_msgs::JointState> sub;
-//  ServiceRAP rapservice;
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
   ros::NodeHandle* nh;
@@ -64,6 +63,7 @@ struct MyBaxter_private{
       nh = new ros::NodeHandle;
       pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
     }
+    //tcm.useRos = false;
     threadOpenModules(true);
   }
 
@@ -86,6 +86,34 @@ MyBaxter::~MyBaxter(){
 CtrlTask* MyBaxter::task(const Graph& specs){
   TaskMap *map = TaskMap::newTaskMap(specs, s->tcm.modelWorld.get()());
   CtrlTask* t = new CtrlTask("noname", *map, specs);
+  map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
+  activeTasks.append(t);
+  s->tcm.ctrlTasks.set() = activeTasks;
+#ifdef REPORT
+  t->reportState(cout);
+#endif
+  return t;
+}
+
+CtrlTask* MyBaxter::task(const char* name,
+                         TaskMap* map){
+
+  CtrlTask* t = new CtrlTask(name, map);
+  map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
+  activeTasks.append(t);
+  s->tcm.ctrlTasks.set() = activeTasks;
+#ifdef REPORT
+  t->reportState(cout);
+#endif
+  return t;
+}
+
+
+CtrlTask* MyBaxter::task(const char* name,
+                         TaskMap* map,
+                         double decayTime, double dampingRatio, double maxVel, double maxAcc){
+
+  CtrlTask* t = new CtrlTask(name, map, decayTime, dampingRatio, maxVel, maxAcc);
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
@@ -273,6 +301,10 @@ const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
   return s->tcm.realWorld;
 }
 
+const ors::KinematicWorld& MyBaxter::getModelWorld(){
+  return s->tcm.modelWorld.get();
+}
+
 arr MyBaxter::getJointLimits(){
   return s->tcm.realWorld.getLimits();
 }
@@ -301,6 +333,42 @@ void MyBaxter::enableTotalTorqueMode(){
 
 void MyBaxter::disableTotalTorqueMode(){
   s->spctb.totalTorqueModeR = false;
+}
+
+void MyBaxter::grip(){
+  grip(!isGripping);
+}
+
+void MyBaxter::grip(const bool toGrip, const bool sim){
+  auto grip = MyBaxter::task(GRAPH(" map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
+
+  arr q = s->tcm.ctrl_q_ref.get(); //s->tcm.realWorld.q;
+
+  ors::Joint *j = s->spctb.baxterModel.getJointByName("l_gripper_l_finger_joint");
+
+  isGripping = toGrip;
+
+  isGripping ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
+
+  std::cout << "Gripping: " << isGripping << std::endl;
+
+  modifyTarget(grip, q);
+
+  uint count = 0;
+  arr pos;
+  do
+  {
+    count++;
+    if (count > 500)
+      break;
+    mlr::wait(0.01);
+    if (sim)
+      pos = s->tcm.modelWorld.get()().q;
+    else
+      pos = s->tcm.realWorld.q;
+
+  } while( std::abs(50 * pos(j->qIndex) - q(j->qIndex)) > 0.1);
+  stop({grip});
 }
 
 //RelationalMachineModule& MyBaxter::rm(){
