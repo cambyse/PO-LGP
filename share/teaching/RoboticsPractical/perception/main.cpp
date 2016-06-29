@@ -21,6 +21,7 @@ int main(int argc, char** argv){
   {
 
     OrsViewer view;
+    SubscribeAlvar alvar_subscriber;
     SubscribeTabletop tabletop_subscriber;
     Collector data_collector;
 
@@ -33,6 +34,40 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
+    while(1)
+    {
+      object_database.readAccess();
+      FilterObjects filter_objects = object_database();
+      FilterObjects alvars;
+      alvars.clear();
+      for (FilterObject* fo : filter_objects)
+      {
+          if (fo->type == FilterObject::FilterObjectType::alvar)
+          {
+            alvars.append(fo);
+          }
+      }
+      if (alvars.N == 0)
+      {
+        std::cout << "No alvars found" << std::endl;
+        mlr::wait(.05);
+        object_database.deAccess();
+        object_database.waitForNextRevision();
+        continue;
+     }
+      else
+      {
+        cout << "Alvars found: ";
+        for (uint i = 0; i < alvars.N; i++)
+        {
+          cout << alvars(i)->id << ' ' ;
+        }
+        cout << endl;
+      }
+      mlr::wait(.05);
+      object_database.deAccess();
+      object_database.waitForNextRevision();
+    }
     moduleShutdown().waitForValueGreaterThan(0);
 
     threadCloseModules();
