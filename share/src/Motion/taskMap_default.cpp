@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-#include "taskMaps.h"
+#include "taskMap_default.h"
 
 const char* DefaultTaskMapType2String[] = {
 "no",      ///< non-initialization
@@ -317,9 +317,3 @@ uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
 
 //===========================================================================
 
-void TaskMap_qLimits::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
-  if(!limits.N) limits=G.getLimits();
-  G.kinematicsLimitsCost(y, J, limits);
-}
-
-//===========================================================================

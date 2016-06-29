@@ -40,3 +40,4 @@ private:
 //===========================================================================
 
 mlr::Array<ors::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnly);
+mlr::Array<ors::Joint*> getSwitchedJoints(const ors::KinematicWorld& G0, const ors::KinematicWorld& G1, int verbose=0);

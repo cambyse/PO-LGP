@@ -45,7 +45,7 @@ struct KOMO{
   void setConfigFromFile();
   void setModel(const ors::KinematicWorld& W,
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
-  void setTiming(double _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2);
+  void setTiming(double _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
   void setSinglePoseOptim(double duration=5.){ setTiming(1, 1, duration, 1); }
   void setSequenceOptim(uint frames, double duration=5.){ setTiming(frames, 1, duration, 1); }
 

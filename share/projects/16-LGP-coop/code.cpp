@@ -113,7 +113,7 @@ bool Coop::execChoice(mlr::String& cmd){
   else if(cmd=="u"){ if(node->parent) node = node->parent; }
   else if(cmd=="p") node->solvePoseProblem();
   else if(cmd=="s") node->solveSeqProblem();
-  else if(cmd=="x") node->solvePathProblem(20);
+  else if(cmd=="x") node->solvePathProblem(10);
   else{
     int choice;
     cmd >>choice;

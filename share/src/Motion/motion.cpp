@@ -335,7 +335,7 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
   os <<"  T=" <<T <<endl;
   os <<"  tau=" <<tau <<endl;
   os <<"  k_order=" <<k_order <<endl;
-  os <<"  TASKS (time idx name order type target scale ttMatrix phiMatrix):" <<endl;
+  os <<"  TASKS (time idx dim name order type target scale ttMatrix phiMatrix):" <<endl;
 
   if(!configurations.N) setupConfigurations();
 
@@ -348,10 +348,10 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
       uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
       if(brief){
         if(d){
-          os <<"  " <<t <<' ' <<d
+          os <<"  " <<t <<' ' <<i <<' ' <<d
               <<' ' <<std::setw(10) <<c->name
              <<' ' <<c->map.order <<' ' <<c->type <<' ';
-          os <<"xx";
+          if(c->target.N<5) os <<'[' <<c->target <<']'; else os<<"[..]";
           os <<' ' <<c->prec(t);
           if(ttMatrix.N){
             os <<' ' <<ttMatrix(t).elem(m)

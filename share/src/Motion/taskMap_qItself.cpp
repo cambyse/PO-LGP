@@ -31,9 +31,7 @@ TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* joint
 void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   G.getJointState(q);
   if(relative_q0){
-    for(ors::Joint* j:G.joints)
-      if(j->q0 && j->qDim()==1)
-        q(j->qIndex) -= j->q0;
+    for(ors::Joint* j:G.joints) if(j->q0 && j->qDim()==1) q(j->qIndex) -= j->q0;
   }
   if(M.N){
     if(M.nd==1){
@@ -213,8 +211,7 @@ mlr::Array<ors::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnl
     matchIsGood=true;
 
     for(uint k=0;k<G.N-1;k++){ //go through other configs
-//      ors::Joint *jmatch = G(k)->getJointByBodyIndices(j->from->index, j->to->index);
-      ors::Joint *jmatch = G(k)->getJointByBodyNames(j->from->name, j->to->name);
+      ors::Joint *jmatch = G(k)->getJointByBodyIndices(j->from->index, j->to->index);
       if(!jmatch || j->type!=jmatch->type || j->constrainToZeroVel!=jmatch->constrainToZeroVel){
         matchIsGood=false;
         break;
@@ -226,4 +223,31 @@ mlr::Array<ors::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnl
   }
   matchingJoints.reshape(matchingJoints.N/G.N, G.N);
   return matchingJoints;
+}
+
+//===========================================================================
+
+mlr::Array<ors::Joint*> getSwitchedJoints(const ors::KinematicWorld& G0, const ors::KinematicWorld& G1, int verbose){
+  mlr::Array<ors::Joint*> switchedJoints;
+
+  for(ors::Joint *j1:G1.joints) {
+    ors::Joint *j0 = G0.getJointByBodyIndices(j1->from->index, j1->to->index);
+    if(!j0 || j0->type!=j1->type){
+      if(G0.bodies(j1->to->index)->inLinks.N==1){ //out-body had (in G0) one inlink...
+        j0 = G0.bodies(j1->to->index)->inLinks.scalar();
+        switchedJoints.append({j0,j1});
+      }
+    }
+  }
+  switchedJoints.reshape(switchedJoints.N/2, 2);
+
+  if(verbose){
+    for(uint i=0;i<switchedJoints.d0;i++){
+      cout <<"Switch: "
+          <<switchedJoints(i,0)->from->name <<'-' <<switchedJoints(i,0)->to->name
+         <<" -> " <<switchedJoints(i,1)->from->name <<'-' <<switchedJoints(i,1)->to->name <<endl;
+    }
+  }
+
+  return switchedJoints;
 }

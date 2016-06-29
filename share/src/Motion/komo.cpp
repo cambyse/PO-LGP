@@ -106,16 +106,17 @@ void KOMO::setModel(const ors::KinematicWorld& W,
     world.gl().watch();
   }
 
-  if(activateAllContacts)
+  if(activateAllContacts){
     for(ors::Shape *s:world.shapes) s->cont=true;
+    world.swift().initActivations(world);
+  }
 
-  world.swift().initActivations(world);
   FILE("z.komo.model") <<world;
 }
 
-void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhase, uint k_order){
+void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhase, uint k_order, bool useSwift){
   if(MP) delete MP;
-  MP = new MotionProblem(world);
+  MP = new MotionProblem(world, useSwift);
   maxPhase = _phases;
   stepsPerPhase = _stepsPerPhase;
   if(stepsPerPhase>=0) MP->setTiming(stepsPerPhase*maxPhase, durationPerPhase*maxPhase);
@@ -132,7 +133,8 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
   map->order = order;
   Task *task = new Task(map, type);
   task->name <<map->shortTag(MP->world);
-  if(endTime>double(maxPhase)+1e-10) LOG(-1) <<"beyond the time!";
+  if(endTime>double(maxPhase)+1e-10)
+    LOG(-1) <<"beyond the time!";
   uint tFrom = (startTime<0.?0:STEP(startTime)+order);
   uint tTo = (endTime<0.?MP->T:STEP(endTime));
   if(tFrom>tTo && tFrom-tTo<=order) tFrom=tTo;
@@ -204,13 +206,13 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   setTask(time-.1, time, new DefaultTaskMap(posDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
   setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 #else
-  setTask(time-.1, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
-  setTask(time-.1, time, new DefaultTaskMap(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
+  setTask(time, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
+  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 //  setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 
   //-- object needs to be static (this enforces q-states of new joints to adopt object pose)
-  setTask(time-.1, time+.1, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
-  setTask(time-.1, time+.1, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+  setTask(time, time, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
 #endif
   //#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
 //#    (MinSumOfSqr posDiff Hand Obj){ time=[.98 1] scale=1e3 }
@@ -226,7 +228,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 //#    (MakeJoint rigidZero Hand Obj){ time=1 }
 
   if(stepsPerPhase>2){ //otherwise: no velocities
-    setTask(time-.2, time-.05, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(time-.15, time, new DefaultTaskMap(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
     setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
 //#    (MinSumOfSqr pos Obj){ order=1 scale=1e-1 time=[0 0.15] target=[0 0 .1] } # move up
   }
@@ -235,11 +237,11 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode){
   if(stepsPerPhase>2){ //otherwise: no velocities
     setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1);
-    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
+    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
   }
 //  time += .5;
 
-  setTask(time-.02, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e-1);
+  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e-1);
 //#    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
 
   setTask(time-.02, time, new DefaultTaskMap(vecTMT, world, object, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e2);

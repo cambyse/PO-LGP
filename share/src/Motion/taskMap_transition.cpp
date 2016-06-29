@@ -1,4 +1,5 @@
-#include "taskMaps.h"
+#include "taskMap_transition.h"
+#include "taskMap_qItself.h"
 
 TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G, bool fixJointsOnly)
   : fixJointsOnly(fixJointsOnly){
@@ -18,7 +19,6 @@ TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G, bool fixJoint
 }
 
 uint TransitionTaskMap::dim_phi(const WorldL& G, int t){
-
   bool handleSwitches=fixJointsOnly;
   uint qN=G(0)->q.N;
   for(uint i=0;i<G.N;i++) if(G(i)->q.N!=qN){ handleSwitches=true; break; }
@@ -28,7 +28,7 @@ uint TransitionTaskMap::dim_phi(const WorldL& G, int t){
     return G.last()->getJointStateDimension();
   }else{
 //    for(uint i=0;i<G.N;i++) cout <<i <<' ' <<G(i)->joints.N <<' ' <<G(i)->q.N <<' ' <<G(i)->getJointStateDimension() <<endl;
-    mlr::Array<ors::Joint*> matchingJoints = getMatchingJoints(G, fixJointsOnly);
+    mlr::Array<ors::Joint*> matchingJoints = getMatchingJoints(G.sub(-1-order,-1), fixJointsOnly);
     uint ydim=0;
     for(uint i=0;i<matchingJoints.d0;i++){
 //      cout <<i <<' ' <<matchingJoints(i,0)->qIndex <<' ' <<matchingJoints(i,0)->qDim() <<' ' <<matchingJoints(i,0)->name <<endl;
@@ -83,8 +83,10 @@ void TransitionTaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
         J[j->qIndex+i] *= h*j->H;
     }
   }else{ //with switches
-    mlr::Array<ors::Joint*> matchingJoints = getMatchingJoints(G, fixJointsOnly);
+    mlr::Array<ors::Joint*> matchingJoints = getMatchingJoints(G.sub(-1-order,-1), fixJointsOnly);
     double h = H_rate*sqrt(tau), tau2=tau*tau;
+
+//    getSwitchedJoints(*G.elem(-2), *G.elem(-1), true);
 
     uint ydim=0;
     uintA qidx(G.N);

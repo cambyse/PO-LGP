@@ -22,70 +22,10 @@
 
 #include "taskMap_qItself.h"
 #include "taskMap_GJK.h"
+#include "taskMap_transition.h"
+#include "taskMap_default.h"
+#include "taskMap_qLimits.h"
 
-//===========================================================================
-
-/// defines a transition cost vector, which is q.N-dimensional and captures
-/// accelerations or velocities over consecutive time steps
-struct TransitionTaskMap:TaskMap {
-  double posCoeff, velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
-  arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
-  double H_rate;  ///< cost rate (per TIME, not step), given as scalar, will be multiplied by Joint->H (given in ors file)
-  bool fixJointsOnly;
-  TransitionTaskMap(const ors::KinematicWorld& G, bool fixJointsOnly=false);
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
-  virtual uint dim_phi(const WorldL& G, int t);
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("TransitionTaskMap_fix"<<fixJointsOnly <<"_pos" <<posCoeff <<"_vel" <<velCoeff<<"_acc"<<accCoeff); }
-};
-
-//===========================================================================
-
-enum DefaultTaskMapType {
-  noTMT=0,    ///< non-initialization
-  posTMT,     ///< 3D position of reference
-  vecTMT,     ///< 3D vec (orientation)
-  quatTMT,    ///< 4D quaterion
-  posDiffTMT, ///< the difference of two positions (NOT the relative position)
-  vecDiffTMT, ///< the difference of two vectors (NOT the relative position)
-  quatDiffTMT,///< the difference of 2 quaternions (NOT the relative quaternion)
-  vecAlignTMT,///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
-  gazeAtTMT,  ///< 2D orthogonality measure of object relative to camera plane
-  pos1DTMT
-};
-extern const char* DefaultTaskMapType2String[];
-
-struct DefaultTaskMap:TaskMap {
-  DefaultTaskMapType type;
-  int i, j;               ///< which shapes does it refer to?
-  ors::Vector ivec, jvec; ///< additional position or vector
-  intA referenceIds; ///< the shapes it refers to DEPENDENT on time
-
-  DefaultTaskMap(DefaultTaskMapType type,
-                 int iShape=-1, const ors::Vector& ivec=NoVector,
-                 int jShape=-1, const ors::Vector& jvec=NoVector);
-
-  DefaultTaskMap(DefaultTaskMapType type, const ors::KinematicWorld& G,
-                 const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                 const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
-
-  DefaultTaskMap(const Graph &parameters, const ors::KinematicWorld& G);
-  DefaultTaskMap(const Node *parameters, const ors::KinematicWorld& G);
-
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G);
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("DefaultTaskMap_"<<DefaultTaskMapType2String[type]<<'_'<<(i<0?"WORLD":G.shapes(i)->name) <<'_' <<(j<0?"WORLD":G.shapes(j)->name)); }
-};
-
-//===========================================================================
-
-struct TaskMap_qLimits:TaskMap {
-  arr limits;
-  TaskMap_qLimits(const arr& _limits=NoArr){ if(&_limits) limits=_limits; } ///< if no limits are provided, they are taken from G's joints' attributes on the first call of phi
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
-};
 
 //===========================================================================
 
