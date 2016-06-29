@@ -34,41 +34,20 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
-    while(1)
-    {
-      object_database.readAccess();
-      FilterObjects filter_objects = object_database();
-      FilterObjects alvars;
-      alvars.clear();
-      for (FilterObject* fo : filter_objects)
-      {
-          if (fo->type == FilterObject::FilterObjectType::alvar)
-          {
-            alvars.append(fo);
-          }
-      }
-      if (alvars.N == 0)
-      {
-        std::cout << "No alvars found" << std::endl;
-        mlr::wait(.05);
-        object_database.deAccess();
-        object_database.waitForNextRevision();
-        continue;
-     }
-      else
-      {
-        cout << "Alvars found: ";
-        for (uint i = 0; i < alvars.N; i++)
-        {
-          cout << alvars(i)->id << ' ' ;
-        }
-        cout << endl;
-      }
-      mlr::wait(.05);
-      object_database.deAccess();
+    for(;!moduleShutdown().getValue();){
       object_database.waitForNextRevision();
+      object_database.readAccess();
+
+      uint i=0;
+      cout <<"-------------------" <<endl;
+      for(FilterObject* fo : object_database()){
+        cout <<"Object " <<i++ <<' ';
+        fo->write(cout);
+        cout <<endl;
+      }
+
+      object_database.deAccess();
     }
-    moduleShutdown().waitForValueGreaterThan(0);
 
     threadCloseModules();
   }

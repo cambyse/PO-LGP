@@ -10,7 +10,7 @@ struct Filter : Module{
   ACCESSname(FilterObjects, perceptual_inputs)
   ACCESSname(FilterObjects, object_database)
 
-  Filter():Module("Filter", -1){}
+  Filter():Module("Filter", -1.){} //MT: so this is listening to accesses - but the accesses are not initialized as listeners?
 
   virtual void open();
   virtual void step();
