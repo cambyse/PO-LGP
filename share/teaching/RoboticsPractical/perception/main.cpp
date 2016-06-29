@@ -27,7 +27,7 @@ int main(int argc, char** argv){
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
 
     if(mlr::getParameter<bool>("useRos")){
-      new SendPositionCommandsToBaxter();
+      new SendPositionCommandsToBaxter(tcm.realWorld);
       new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
     }
 
