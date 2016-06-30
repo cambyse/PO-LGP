@@ -59,18 +59,14 @@ def control(features, W):
 
     return v_dict
 
-'''Applies velocity according to the model.
-   Probably should be renamed, though.'''
-def apply_velocity(t, features, W):
-
 ''' Throws the Hacky Sack one time with T seconds,
-    using W as weight matrix and a fixed time_step'''
+    using W as weight matrix and a fixed time_step '''
 def expected_policy_reward(T, W, time_step=5):
     reward = -1000
     limit = 15
     
     # Does all time step except for ${limit}
-    while t in range(T/time_step - limit):
+    for t in range(T/time_step - limit):
         v = control(features(t), W)
         send_signal(limb.set_joint_velocities, v, time_step)
 
@@ -143,6 +139,11 @@ def start(T, W):
         c = raw_input('Quit? (q)')
         if c == 'q':
             break
+        else:
+            while True:
+                c = raw_input('Start? (s)')
+                if c == 's':
+                    break
 
 '''Argument Parser'''
 def init_parser():
