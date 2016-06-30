@@ -109,17 +109,22 @@ def expected_policy_reward(T, W, time_step=5):
 def start(T, W):
     # Initially VERY low optimum so that every real reward is better
     er_opt = -10000
+    std_dev_init = 0.1
+    std_dev = std_dev_init
 
     # Learn until we interrupt
     while True:
         # Sample new (gaussian) noise and throw the ball to get the reward.
         noise = np.random.randn(W.shape[0], W.shape[1])
-        er = expected_policy_reward(T, W + 0.1 * noise)
+        er = expected_policy_reward(T, W + std_dev * noise)
 
         # If the reward is better than our current optimum, remember this W.
         if er > er_opt:
-            er_prev = er
-            W += 0.1 * noise
+            er_opt = er
+            W += std_dev * noise
+            std_dev = std_dev_init
+        else:
+            std_dev = std_dev * 2
 
         # Move arm back to start position
         send_signal(limb.set_joint_positions, startpos, 2000)
