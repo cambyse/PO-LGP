@@ -7,14 +7,14 @@
 #include <RosCom/filterObject.h>
 
 struct Filter : Module{
-  ACCESSname(FilterObjects, perceptual_inputs)
-  ACCESSname(FilterObjects, object_database)
+  Access_typed<FilterObjects> perceptual_inputs;
+  Access_typed<FilterObjects> object_database;
 
-  Filter():Module("Filter", -1.){} //MT: so this is listening to accesses - but the accesses are not initialized as listeners?
+  Filter();
 
-  virtual void open();
+  virtual void open(){}
   virtual void step();
-  virtual void close();
+  virtual void close(){}
 
 private:
   double relevance_decay_factor = 0.99;
