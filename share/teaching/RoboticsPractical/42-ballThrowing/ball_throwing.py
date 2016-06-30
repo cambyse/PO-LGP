@@ -5,7 +5,6 @@ import rospy as rp
 import argparse
 import baxter_interface as bax
 import time
-#import os
 from baxter_interface import Gripper
 import numpy as np
 from visualization_msgs.msg import Marker
@@ -55,7 +54,7 @@ def control(features, W):
 
 def expected_policy_reward(T, W, time_step=5):
     reward = -1000
-    limit = 30
+    limit = 15
     
     for t in range(T/time_step - limit):
         v = control(features(t), W)
@@ -63,8 +62,8 @@ def expected_policy_reward(T, W, time_step=5):
 
     left_gripper.command_position(100)
 
-    for t in range(3):
-        v = control(features(t), limit)
+    for t in range(limit):
+        v = control(features(t), W)
         send_signal(limb.set_joint_velocities, v, time_step)
 
     send_signal(limb.set_joint_velocities, zero_velocity, 1)
@@ -189,19 +188,20 @@ if __name__ == "__main__":
         limb = bax.Limb('left')
         left_gripper = Gripper('left')
     
-    send_signal(limb.set_joint_positions, startpos, 1500)
-    while True:
+        send_signal(limb.set_joint_positions, startpos, 1500)
         while True:
-            c = raw_input('Hacky Sack (y)')
-            if c == 'y':
+            left_gripper.command_position(100)
+            while True:
+                c = raw_input('Hacky Sack (y)')
+                if c == 'y':
+                    break
+            left_gripper.command_position(5)
+
+
+            c = raw_input('Start? (s)')
+            if c == 's':
                 break
-        left_gripper.command_position(5)
-
-
-        c = raw_input('Start? (s)')
-        if c == 's':
-            break
-    W0 = (np.random.rand(3, 6) * 2 - 1)
-    start(250, W0)
+        W0 = (np.random.rand(3, 6) * 2 - 1)
+        start(250, W0)
 
     print('All done')
