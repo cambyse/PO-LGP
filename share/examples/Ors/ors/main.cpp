@@ -558,8 +558,7 @@ void TEST(InverseKinematics) {
 
 int MAIN(int argc,char **argv){
 
-  testKinematics();
-  testQuaternionKinematics();
+  testInverseKinematics();
 
   return 0;
 
