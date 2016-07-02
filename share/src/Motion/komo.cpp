@@ -5,6 +5,8 @@
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
+#include <Motion/taskMap_FixAttachedObjects.h>
+#include <Motion/taskMap_AboveBox.h>
 
 //===========================================================================
 
@@ -176,7 +178,13 @@ void KOMO::setSquaredFixJointVelocities(double startTime, double endTime, double
   map->velCoeff = 1.;
 }
 
+void KOMO::setSquaredFixSwitchVelocities(double startTime, double endTime, double prec){
+  CHECK(MP->k_order>=1,"");
+  setTask(startTime, endTime, new FixAttachedObjectsTaskMap(), sumOfSqrTT, NoArr, prec, 1);
+}
+
 void KOMO::setHoldStill(double startTime, double endTime, const char* joint, double prec){
+  CHECK(MP->k_order>=1,"");
   setTask(startTime, endTime, new TaskMap_qItself(world, joint), sumOfSqrTT, NoArr, prec, 1);
 }
 
@@ -211,8 +219,8 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 //  setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 
   //-- object needs to be static (this enforces q-states of new joints to adopt object pose)
-  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
-  setTask(time, time, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+//  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+//  setTask(time, time, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
 #endif
   //#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
 //#    (MinSumOfSqr posDiff Hand Obj){ time=[.98 1] scale=1e3 }
@@ -247,9 +255,11 @@ void KOMO::setPlace(double time, const char* endeffRef, const char* object, cons
   setTask(time-.02, time, new DefaultTaskMap(vecTMT, world, object, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e2);
 //#    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
 
+  setTask(time, time, new TaskMap_AboveBox(world, object, placeRef), ineqTT, NoArr, 1e2);
+
   //-- object needs to be static (this enforces q-states of new joints to adopt object pose)
-  setTask(time +1./stepsPerPhase, time +1./stepsPerPhase, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
-  setTask(time +1./stepsPerPhase, time +1./stepsPerPhase, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+//  setTask(time +1./stepsPerPhase, time +1./stepsPerPhase, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+//  setTask(time +1./stepsPerPhase, time +1./stepsPerPhase, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
 
 #if 0
   mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.last()->to->shapes.scalar()->name;

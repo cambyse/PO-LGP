@@ -60,6 +60,8 @@ struct KOMO{
   void setSquaredQAccelerations(double startTime=-1., double endTime=-1., double prec=1.);
   void setSquaredQVelocities(double startTime=-1., double endTime=-1., double prec=1.);
   void setSquaredFixJointVelocities(double startTime=-1., double endTime=-1., double prec=1.);
+  void setSquaredFixSwitchVelocities(double startTime=-1., double endTime=-1., double prec=1.);
+
 
   void setHoldStill(double startTime, double endTime, const char* joint, double prec=1e2);
   void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);

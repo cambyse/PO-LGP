@@ -7,7 +7,7 @@
 /// defines a transition cost vector, which is q.N-dimensional and captures
 /// accelerations or velocities over consecutive time steps
 struct FixAttachedObjectsTaskMap:TaskMap {
-  FixAttachedObjectsTaskMap(const ors::KinematicWorld& G, bool fixJointsOnly=false);
+  FixAttachedObjectsTaskMap(){}
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of order 1"); }
   virtual uint dim_phi(const ors::KinematicWorld& G){ HALT("can only be of order 1"); }

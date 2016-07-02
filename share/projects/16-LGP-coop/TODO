@@ -1,7 +1,8 @@
 
 * Implement FixAttachedObjects TaskMap: For every object O that is attached to a new joint, compute the relative vel to the previous parent, and the relative vel to the new parent. Both should be zero. (Is there a difficulty with quat velocities? modulo?...)
+(DONE, mostly:)
 
-1. Variant: constrain the vel to be zero.
+1. Variant: constrain the vel to be zero. (DONE)
 
 * Implement poseTMT, which is quat+pos 
 
