@@ -64,17 +64,17 @@ void scenario2() {
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c = P.addTask("transition", 	new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
 
-  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
@@ -147,16 +147,16 @@ void scenario3() {
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c = P.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
@@ -269,23 +269,23 @@ void scenario4() {
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("transition", 	new TransitionTaskMap(G));
+  c = P.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new DefaultTaskMap(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
-    c = P.addTask("orientation", new DefaultTaskMap(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
+    c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
     c->setCostSpecs(P.T, P.T,
                             {1.,0.,0.}, 1e3,
                             {0.,0.,0.}, 1e-3);

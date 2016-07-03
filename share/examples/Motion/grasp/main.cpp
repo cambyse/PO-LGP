@@ -33,7 +33,7 @@ void TEST(GraspHeuristic){
     threeStepGraspHeuristic(xT, P, s->index, 2);
 
     Task *c;
-    c = P.addTask("transition", new TransitionTaskMap(G), sumOfSqrTT);
+    c = P.addTask("transition", new TaskMap_Transition(G), sumOfSqrTT);
     c->map.order=2; //make this an acceleration task!
     c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 

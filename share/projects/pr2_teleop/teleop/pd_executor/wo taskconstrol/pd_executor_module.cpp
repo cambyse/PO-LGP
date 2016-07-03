@@ -34,7 +34,7 @@ PDExecutor::PDExecutor()
   }
 
   if(mlr::getParameter<bool>("useCollisions", false)) {
-    collision = fmc.addPDTask("collision", 0.1, 5.8, new ProxyTaskMap(allPTMT, {0u}, .1));
+    collision = fmc.addPDTask("collision", 0.1, 5.8, new TaskMap_Proxy(allPTMT, {0u}, .1));
   }
 
   if(mlr::getParameter<bool>("usePositionR", false)) {

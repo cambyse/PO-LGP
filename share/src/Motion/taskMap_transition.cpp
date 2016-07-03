@@ -1,7 +1,7 @@
 #include "taskMap_transition.h"
 #include "taskMap_qItself.h"
 
-TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G, bool fixJointsOnly)
+TaskMap_Transition::TaskMap_Transition(const ors::KinematicWorld& G, bool fixJointsOnly)
   : fixJointsOnly(fixJointsOnly){
   posCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/posCoeff",.0);
   velCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/velCoeff",.0);
@@ -18,7 +18,7 @@ TransitionTaskMap::TransitionTaskMap(const ors::KinematicWorld& G, bool fixJoint
   H_rate_diag = H_rate*H_diag;
 }
 
-uint TransitionTaskMap::dim_phi(const WorldL& G, int t){
+uint TaskMap_Transition::dim_phi(const WorldL& G, int t){
   bool handleSwitches=fixJointsOnly;
   uint qN=G(0)->q.N;
   for(uint i=0;i<G.N;i++) if(G(i)->q.N!=qN){ handleSwitches=true; break; }
@@ -39,7 +39,7 @@ uint TransitionTaskMap::dim_phi(const WorldL& G, int t){
   return uint(-1);
 }
 
-void TransitionTaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
+void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   if(G.last()->q_agent!=0){ //we're referring to a graph set to non-zero agent!
     uint n=G.last()->getJointStateDimension();
     CHECK(n!=H_rate_diag.N,"just checking...");

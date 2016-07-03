@@ -27,7 +27,7 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
-    CtrlTask task("endeffL", new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, 1., 1.);
+    CtrlTask task("endeffL", new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, 1., 1.);
 //    task.setGains(10.,1.);
     task.map.phi(task.y, NoArr, tcm.modelWorld.get()());
     task.y_ref = task.y;

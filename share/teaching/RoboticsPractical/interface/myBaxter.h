@@ -20,7 +20,7 @@ struct MyBaxter{
   //-- add & modify tasks
   CtrlTask* task(const Graph& specs);
   CtrlTask* task(const char* name,
-                 DefaultTaskMapType type,
+                 TaskMap_DefaultType type,
                  const char* iShapeName, const ors::Vector& ivec,
                  const char* jShapeName, const ors::Vector& jvec,
                  const arr& target,

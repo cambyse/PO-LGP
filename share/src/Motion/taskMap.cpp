@@ -65,7 +65,7 @@ TaskMap *TaskMap::newTaskMap(const Graph& params, const ors::KinematicWorld& wor
   }else if(type=="limitIneq"){
     map = new LimitsConstraint();
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, params.get<double>("margin", 0.1) );
+    map = new TaskMap_Proxy(allPTMT, {0u}, params.get<double>("margin", 0.1) );
   }else if(type=="collisionPairs"){
     uintA shapes;
     NIY;
@@ -111,7 +111,7 @@ TaskMap *TaskMap::newTaskMap(const Graph& params, const ors::KinematicWorld& wor
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, params.get<mlr::String>("ref1"), params.get<mlr::String>("ref2"), true);
   }else{
-    map = new DefaultTaskMap(params, world);
+    map = new TaskMap_Default(params, world);
   }
 
   map->order = params.get<double>("order", 0);
@@ -170,7 +170,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
     }
     map = new ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
+    map = new TaskMap_Proxy(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1 && ref2){
       ors::Joint *j=world.getJointByBodyNames(ref1, ref2);
@@ -184,7 +184,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
   }else{
-    map = new DefaultTaskMap(specs, world);
+    map = new TaskMap_Default(specs, world);
   }
 
   //-- check additional real-valued parameters: order

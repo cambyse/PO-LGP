@@ -48,13 +48,13 @@ int main(int argc, char** argv){
 
     //-- create three tasks
     CtrlTask position("endeffL", //name
-                  new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
+                  new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position.map.phi(position.y, NoArr, tcm.modelWorld.get()()); //get the current value
     position.y_ref = position.y + ARR(0.2, 0.7, 0.3); //set a target
 
     CtrlTask position1("endeffR", //name
-                  new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
+                  new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position1.map.phi(position1.y, NoArr, tcm.modelWorld.get()()); //get the current value
     position1.y_ref = position1.y + ARR(0.2, -0.7, 0.3); //set a target
@@ -121,7 +121,7 @@ int main(int argc, char** argv){
        */
 
       CtrlTask position2("endeffR", //name
-                    new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
+                    new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffR", NoVector, "base_footprint"), //map
                     1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
       position2.map.phi(position2.y, NoArr, tcm.modelWorld.get()()); //get the current value
       position2.y_ref = ARR(orsPoint.x, orsPoint.y, orsPoint.z+1); //set a target

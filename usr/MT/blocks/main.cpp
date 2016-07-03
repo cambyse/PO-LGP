@@ -64,7 +64,7 @@ int main(int argc,char** argv){
     c->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{
     c = MP.addTask("collision",
-                   new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
+                   new TaskMap_Default(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
     c->setCostSpecs(0, MP.T, {0.}, 1e-0);
   }
 

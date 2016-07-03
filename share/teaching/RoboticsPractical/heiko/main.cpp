@@ -32,8 +32,8 @@ int main(int argc, char** argv){
                 MyBaxter baxter;
 
                 auto qItself = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
-                CtrlTask posR("endeffR", new DefaultTaskMap(posTMT, baxter.getKinematicWorld_Model(), "endeffR", NoVector, "base_footprint"), 1., 1., 1., 1.);
-                CtrlTask posL("endeffL", new DefaultTaskMap(posTMT, baxter.getKinematicWorld_Model(), "endeffL", NoVector, "base_footprint"), 1., 1., 1., 1.);
+                CtrlTask posR("endeffR", new TaskMap_Default(posTMT, baxter.getKinematicWorld_Model(), "endeffR", NoVector, "base_footprint"), 1., 1., 1., 1.);
+                CtrlTask posL("endeffL", new TaskMap_Default(posTMT, baxter.getKinematicWorld_Model(), "endeffL", NoVector, "base_footprint"), 1., 1., 1., 1.);
 
                 std::ofstream data("data.cv");
                 arr q_noise = arr(17);

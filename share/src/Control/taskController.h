@@ -119,7 +119,7 @@ struct TaskController {
   CtrlTask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
   CtrlTask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
-                    DefaultTaskMapType type,
+                    TaskMap_DefaultType type,
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                     const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);

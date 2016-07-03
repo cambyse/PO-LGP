@@ -18,7 +18,7 @@
 
 #include "taskMap_default.h"
 
-const char* DefaultTaskMapType2String[] = {
+const char* TaskMap_DefaultType2String[] = {
 "no",      ///< non-initialization
 "pos",     ///< 3D position of reference
 "vec",     ///< 3D vec (orientation)
@@ -31,7 +31,7 @@ const char* DefaultTaskMapType2String[] = {
 "pos1D"
 };
 
-DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type,
+TaskMap_Default::TaskMap_Default(TaskMap_DefaultType _type,
                                int iShape, const ors::Vector& _ivec,
                                int jShape, const ors::Vector& _jvec)
   :type(_type), i(iShape), j(jShape){
@@ -39,7 +39,7 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type,
   if(&_jvec) jvec=_jvec; else jvec.setZero();
 }
 
-DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWorld &G,
+TaskMap_Default::TaskMap_Default(TaskMap_DefaultType _type, const ors::KinematicWorld &G,
                                const char* iShapeName, const ors::Vector& _ivec,
                                const char* jShapeName, const ors::Vector& _jvec)
   :type(_type), i(-1), j(-1){
@@ -51,7 +51,7 @@ DefaultTaskMap::DefaultTaskMap(DefaultTaskMapType _type, const ors::KinematicWor
   if(&_jvec) jvec=_jvec; else jvec.setZero();
 }
 
-DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
+TaskMap_Default::TaskMap_Default(const Graph& specs, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
   Node *it=specs["type"];
   if(!it) it=specs["map"];
@@ -72,7 +72,7 @@ DefaultTaskMap::DefaultTaskMap(const Graph& specs, const ors::KinematicWorld& G)
   if((it=specs["vec2"])) jvec = ors::Vector(it->get<arr>());  else jvec.setZero();
 }
 
-DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
+TaskMap_Default::TaskMap_Default(const Node *specs, const ors::KinematicWorld& G)
   :type(noTMT), i(-1), j(-1){
   CHECK(specs->parents.N>1,"");
 //  mlr::String& tt=specs->parents(0)->keys.last();
@@ -100,7 +100,7 @@ DefaultTaskMap::DefaultTaskMap(const Node *specs, const ors::KinematicWorld& G)
 }
 
 
-void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMap_Default::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   if(t>=0 && referenceIds.N){
     if(referenceIds.nd==1){  i=referenceIds(t); j=-1; }
     if(referenceIds.nd==2){  i=referenceIds(t,0); j=referenceIds(t,1); }
@@ -299,7 +299,7 @@ void DefaultTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   HALT("no such TVT");
 }
 
-uint DefaultTaskMap::dim_phi(const ors::KinematicWorld& G) {
+uint TaskMap_Default::dim_phi(const ors::KinematicWorld& G) {
   switch(type) {
     case posTMT: return 3;
     case vecTMT: return 3;

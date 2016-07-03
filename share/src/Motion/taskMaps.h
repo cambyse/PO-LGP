@@ -43,7 +43,7 @@ enum PTMtype {
 //===========================================================================
 
 /// Proxy task variable
-struct ProxyTaskMap:TaskMap {
+struct TaskMap_Proxy:TaskMap {
   /// @name data fields
   PTMtype type;
   uintA shapes,shapes2;
@@ -51,12 +51,12 @@ struct ProxyTaskMap:TaskMap {
   bool useCenterDist;
   bool useDistNotCost;
 
-  ProxyTaskMap(PTMtype _type,
+  TaskMap_Proxy(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
                bool _useCenterDist=false,
                bool _useDistNotCost=false);
-  virtual ~ProxyTaskMap() {}
+  virtual ~TaskMap_Proxy() {}
   
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
@@ -75,7 +75,7 @@ struct CollisionConstraint:TaskMap {
 //===========================================================================
 
 struct ProxyConstraint:TaskMap {
-  ProxyTaskMap proxyCosts;
+  TaskMap_Proxy proxyCosts;
   ProxyConstraint(PTMtype _type,
                   uintA _shapes,
                   double _margin=.02,
@@ -149,7 +149,7 @@ struct PointEqualityConstraint:TaskMap {
   PointEqualityConstraint(const ors::KinematicWorld &G,
                           const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
                           const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector){
-    DefaultTaskMap dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
+    TaskMap_Default dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
     i=dummy.i;
     j=dummy.j;
     ivec=dummy.ivec;

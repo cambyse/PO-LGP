@@ -164,26 +164,26 @@ void KOMO::setHoming(double startTime, double endTime, double prec){
 
 void KOMO::setSquaredQAccelerations(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=2,"");
-  setTask(startTime, endTime, new TransitionTaskMap(MP->world), sumOfSqrTT, NoArr, prec, 2);
+  setTask(startTime, endTime, new TaskMap_Transition(MP->world), sumOfSqrTT, NoArr, prec, 2);
 }
 
 void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
-  auto *map = new TransitionTaskMap(MP->world);
+  auto *map = new TaskMap_Transition(MP->world);
   setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
   map->velCoeff = 1.;
 }
 
 void KOMO::setSquaredFixJointVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
-  auto *map = new TransitionTaskMap(MP->world, true);
+  auto *map = new TaskMap_Transition(MP->world, true);
   setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
   map->velCoeff = 1.;
 }
 
 void KOMO::setSquaredFixSwitchVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
-  setTask(startTime, endTime, new FixAttachedObjectsTaskMap(), sumOfSqrTT, NoArr, prec, 1);
+  setTask(startTime, endTime, new TaskMap_FixSwichedObjects(), sumOfSqrTT, NoArr, prec, 1);
 }
 
 void KOMO::setHoldStill(double startTime, double endTime, const char* joint, double prec){
@@ -198,7 +198,7 @@ void KOMO::setPosition(double startTime, double endTime, const char* shape, cons
   if(shapeRel) map <<" ref2=" <<shapeRel;
   setTask(startTime, endTime, map, type, target, prec);
 #else
-  setTask(startTime, endTime, new DefaultTaskMap(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
+  setTask(startTime, endTime, new TaskMap_Default(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
 #endif
 }
 
@@ -211,15 +211,15 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 
   //-- position the hand & graspRef
   //hand upright
-  setTask(time, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
+  setTask(time, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
 
   //hand center at object center (could be replaced by touch)
-  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
+  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 
   //hand grip axis orthogonal to object length axis
-  setTask(time, time, new DefaultTaskMap(vecAlignTMT, world, endeffRef, Vector_x, object, Vector_x), sumOfSqrTT, NoArr, 1e1);
+//  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, endeffRef, Vector_x, object, Vector_x), sumOfSqrTT, NoArr, 1e1);
   //hand grip axis orthogonal to object length axis
-  setTask(time, time, new DefaultTaskMap(vecAlignTMT, world, endeffRef, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
+//  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, endeffRef, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
 
   //hand touches object
 //  ors::Shape *endeffShape = world.getShapeByName(endeffRef)->body->shapes.first();
@@ -232,22 +232,22 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   setKinematicSwitch(time, true, "freeZero", endeffRef, object);
 
   if(stepsPerPhase>2){ //velocities down and up
-    setTask(time-.15, time, new DefaultTaskMap(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
-    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
+    setTask(time-.15, time, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(time, time+.15, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
   }
 }
 
 void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode){
   if(stepsPerPhase>2){ //velocities down and up
-    setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
-    setTask(time, time+.15, new DefaultTaskMap(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
+    setTask(time-.15, time, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(time, time+.15, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
   }
 
   //place roughly at center ;-(
-//  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e-1);
+//  setTask(time, time, new TaskMap_Default(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e-1);
 
   //place upright
-  setTask(time-.02, time, new DefaultTaskMap(vecTMT, world, object, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e2);
+  setTask(time-.02, time, new TaskMap_Default(vecTMT, world, object, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e2);
 
   //place inside box support
   setTask(time, time, new TaskMap_AboveBox(world, object, placeRef), ineqTT, NoArr, 1e2);
@@ -295,7 +295,7 @@ void KOMO::setAlign(double startTime, double endTime, const char* shape, const a
   if(whichAxisRel) map <<" vec2=[" <<whichAxisRel <<']';
   setTask(startTime, endTime, map, type, target, prec);
 #else
-  setTask(startTime, endTime, new DefaultTaskMap(vecAlignTMT, world, shape, ors::Vector(whichAxis), shapeRel, ors::Vector(whichAxisRel)), type, target, prec);
+  setTask(startTime, endTime, new TaskMap_Default(vecAlignTMT, world, shape, ors::Vector(whichAxis), shapeRel, ors::Vector(whichAxisRel)), type, target, prec);
 #endif
 
 }
@@ -304,7 +304,7 @@ void KOMO::setCollisions(bool hardConstraint, double margin, double prec){
   if(hardConstraint){ //interpreted as hard constraint (default)
     setTask(0., -1., new CollisionConstraint(margin), ineqTT, NoArr, prec);
   }else{ //cost term
-    setTask(0., -1., new ProxyTaskMap(allPTMT, {0u}, margin), sumOfSqrTT, NoArr, prec);
+    setTask(0., -1., new TaskMap_Proxy(allPTMT, {0u}, margin), sumOfSqrTT, NoArr, prec);
   }
 }
 
@@ -488,7 +488,7 @@ void setTasks(MotionProblem& MP,
 
   Task *t;
 
-  t = MP.addTask("transitions", new TransitionTaskMap(MP.world), sumOfSqrTT);
+  t = MP.addTask("transitions", new TaskMap_Transition(MP.world), sumOfSqrTT);
   if(timeSteps!=0){
     t->map.order=2; //make this an acceleration task!
   }else{
@@ -506,11 +506,11 @@ void setTasks(MotionProblem& MP,
     t = MP.addTask("collisionConstraints", new CollisionConstraint(margin), ineqTT);
     t->setCostSpecs(0, MP.T, {0.}, 1.);
   }else{ //cost term
-    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0u}, margin), sumOfSqrTT);
+    t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, margin), sumOfSqrTT);
     t->setCostSpecs(0, MP.T, {0.}, colPrec);
   }
 
-  t = MP.addTask("endeff_pos", new DefaultTaskMap(posTMT, endeff.index, NoVector, target.index, NoVector), sumOfSqrTT);
+  t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, endeff.index, NoVector, target.index, NoVector), sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
 
 
@@ -519,7 +519,7 @@ void setTasks(MotionProblem& MP,
     axis.setZero();
     axis(i)=1.;
     t = MP.addTask(STRING("endeff_align_"<<i),
-                   new DefaultTaskMap(vecAlignTMT, endeff.index, axis, target.index, axis),
+                   new TaskMap_Default(vecAlignTMT, endeff.index, axis, target.index, axis),
                    sumOfSqrTT);
     t->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
   }

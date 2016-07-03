@@ -13,7 +13,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   //-- setup the motion problem
   Task *pos =
       P.addTask("position",
-                   new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+                   new TaskMap_Default(posTMT, world, "endeff", NoVector));
   pos->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
@@ -56,7 +56,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 
   CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
-                    new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+                    new TaskMap_Default(posTMT, world, "endeff", NoVector));
   pd_y->prec = 10.;
 
   CtrlTask *pd_x=

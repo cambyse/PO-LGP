@@ -159,7 +159,7 @@ void simpleMotion(){
   arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
 
-  c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 25);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);

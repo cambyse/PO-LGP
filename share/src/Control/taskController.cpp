@@ -165,7 +165,7 @@ void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y
 
 void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
   //-- get necessary Jacobians
-  DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(&map);
+  TaskMap_Default *m = dynamic_cast<TaskMap_Default*>(&map);
   CHECK(m,"this only works for the default position task map");
   CHECK(m->type==posTMT,"this only works for the default positioni task map");
   CHECK(m->i>=0,"this only works for the default position task map");
@@ -256,10 +256,10 @@ CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double d
 
 CtrlTask* TaskController::addPDTask(const char* name,
                                          double decayTime, double dampingRatio,
-                                         DefaultTaskMapType type,
+                                         TaskMap_DefaultType type,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec){
-  return tasks.append(new CtrlTask(name, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec),
+  return tasks.append(new CtrlTask(name, new TaskMap_Default(type, world, iShapeName, ivec, jShapeName, jvec),
                                    decayTime, dampingRatio, 1., 1.));
 }
 
@@ -440,7 +440,7 @@ void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, doubl
   uint nForceTasks=0;
   for(CtrlTask* law : this->tasks) if(law->active && law->f_ref.N){
     nForceTasks++;
-    DefaultTaskMap& map = dynamic_cast<DefaultTaskMap&>(law->map);
+    TaskMap_Default& map = dynamic_cast<TaskMap_Default&>(law->map);
     ors::Body* body = world.shapes(map.i)->body;
     ors::Vector vec = world.shapes(map.i)->rel.pos;
     ors::Shape* lFtSensor = world.getShapeByName("l_ft_sensor");

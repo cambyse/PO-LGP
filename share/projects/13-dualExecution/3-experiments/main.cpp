@@ -14,16 +14,16 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
 
   //-- setup the motion problem
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t = MP.addTask("transitions", new TaskMap_Transition(world));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 
   Task *pos = MP.addTask("position",
-                            new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+                            new TaskMap_Default(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  Task *vel = MP.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+  Task *vel = MP.addTask("position_vel", new TaskMap_Default(posTMT, world, "endeff", NoVector));
   vel->map.order=1;
   vel->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
@@ -74,7 +74,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
   //position PD task
   CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
-                   new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
+                   new TaskMap_Default(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task

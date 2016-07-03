@@ -224,7 +224,7 @@ void ActionMachine::parseTaskDescription(Graph& td){
   }else if(type=="forceCtrl"){
     new PushForce(*this, td["sym2"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
   }else{
-    DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+    TaskMap_Default *map = new TaskMap_Default(td, *world);
     CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
     task->active=false;
     new FollowReference(*this, t->parents(0)->keys.last(), task);

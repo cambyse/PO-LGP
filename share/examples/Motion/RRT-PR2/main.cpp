@@ -15,7 +15,7 @@ SET_LOG(main, DEBUG);
 arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr& start) {
   MotionProblem P(G);
   Task *c;
-  c = P.addTask("transition", new TransitionTaskMap(G));
+  c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
@@ -23,12 +23,12 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = mlr::getParameter<uintA>("agent_shapes");
-  c = P.addTask("proxyColls", new ProxyTaskMap(allVsListedPTMT, shapes, .01, true));
+  c = P.addTask("proxyColls", new TaskMap_Proxy(allVsListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T,  {0.}, col_prec);
 
-  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), pos_prec);
-  c = P.addTask("position_vel", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position_vel", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e1);
 
@@ -43,13 +43,13 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   // create MotionProblem
   MotionProblem P(G);
   Task *c;
-  c = P.addTask("transition", new TransitionTaskMap(G));
+  c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = mlr::getParameter<uintA>("agent_shapes");
-  c = P.addTask("proxyColls", new ProxyTaskMap(allVsListedPTMT, shapes, .01, true));
+  c = P.addTask("proxyColls", new TaskMap_Proxy(allVsListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, 1e-0);
 //  c->threshold = 0;
 
@@ -66,18 +66,18 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
   MotionProblem P(G);
   P.T = init_trajectory.d0-1;
   Task *c;
-  c = P.addTask("transition", new TransitionTaskMap(G));
+  c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
-  c = P.addTask("proxyColls", new ProxyTaskMap(allVsListedPTMT, shapes, .01, true));
+  c = P.addTask("proxyColls", new TaskMap_Proxy(allVsListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, 1e1);
 
-  c = P.addTask("position", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
-  c = P.addTask("position_vel", new DefaultTaskMap(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position_vel", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e2);
 
