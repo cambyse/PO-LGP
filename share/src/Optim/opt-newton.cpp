@@ -76,11 +76,16 @@ OptNewton::StopCriterion OptNewton::step(){
     if(isRowShifted(R)) R = unpack(R);
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
+    bool inversionFailed=false;
     try {
       Delta = lapack_Ainv_b_sym(R, -gx);
     }catch(...){
-      arr sig, eig;
-      lapack_EigenDecomp(R, sig, eig);
+      inversionFailed=true;
+    }
+    if(inversionFailed){
+//      arr sig, eig;
+//      lapack_EigenDecomp(R, sig, eig);
+      arr sig = lapack_kSmallestEigenValues_sym(R, 3);
       if(o.verbose>0){
         cout <<endl <<"** hessian inversion failed ... increasing damping **\neigenvalues=" <<sig <<endl;
       }

@@ -3,16 +3,16 @@
 
 TaskMap_qItself::TaskMap_qItself(const arr& _M, bool relative_q0) : moduloTwoPi(true), relative_q0(relative_q0) { if(&_M) M=_M; }
 
-TaskMap_qItself::TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true) { M=zeros(1,qN); M(0,singleQ)=1.; }
+TaskMap_qItself::TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true), relative_q0(false) { M=zeros(1,qN); M(0,singleQ)=1.; }
 
 TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, ors::Joint* j)
-  : moduloTwoPi(true)  {
+  : moduloTwoPi(true), relative_q0(false)  {
   M = zeros(j->qDim(), G.getJointStateDimension() );
   M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
 }
 
 TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName)
-  : moduloTwoPi(true)  {
+  : moduloTwoPi(true), relative_q0(false)  {
   ors::Joint *j = G.getJointByName(jointName);
   if(!j) return;
   M = zeros(j->qDim(), G.getJointStateDimension() );
@@ -20,7 +20,7 @@ TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* joint
 }
 
 TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName1, const char* jointName2)
-  : moduloTwoPi(true)  {
+  : moduloTwoPi(true), relative_q0(false)  {
   ors::Joint *j1 = G.getJointByName(jointName1);
   ors::Joint *j2 = G.getJointByName(jointName2);
   M = zeros(j1->qDim() + j2->qDim(), G.getJointStateDimension() );
@@ -28,19 +28,40 @@ TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* joint
   M.setMatrixBlock(eye(j2->qDim()), j1->qDim(), j2->qIndex);
 }
 
+TaskMap_qItself::TaskMap_qItself(uintA _selectedBodies, bool relative_q0)
+  : selectedBodies(_selectedBodies), moduloTwoPi(true), relative_q0(relative_q0){
+}
+
 void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
-  G.getJointState(q);
-  if(relative_q0){
-    for(ors::Joint* j:G.joints) if(j->q0 && j->qDim()==1) q(j->qIndex) -= j->q0;
-  }
-  if(M.N){
-    if(M.nd==1){
-      q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
+  if(!selectedBodies.N){
+    G.getJointState(q);
+    if(relative_q0){
+      for(ors::Joint* j:G.joints) if(j->q0 && j->qDim()==1) q(j->qIndex) -= j->q0;
+    }
+    if(M.N){
+      if(M.nd==1){
+        q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
+      }else{
+        q=M*q; if(&J) J=M;
+      }
     }else{
-      q=M*q; if(&J) J=M;
+      if(&J) J.setId(q.N);
     }
   }else{
-    if(&J) J.setId(q.N);
+    uint n=dim_phi(G);
+    q.resize(n);
+    if(&J) J.resize(n, G.q.N).setZero();
+    uint m=0;
+    for(uint b:selectedBodies){
+      ors::Joint *j = G.bodies.elem(b)->inLinks.scalar();
+      for(uint k=0;k<j->qDim();k++){
+        q(m) = G.q.elem(j->qIndex+k);
+        if(relative_q0) q(m) -= j->q0;
+        if(&J) J(m,j->qIndex+k) = 1.;
+        m++;
+      }
+    }
+    CHECK_EQ(n,m,"");
   }
 }
 
@@ -62,6 +83,7 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   uint qN=q_bar(0).N;
   for(uint i=0;i<=k;i++) if(q_bar(i).N!=qN){ handleSwitches=true; break; }
   if(handleSwitches){
+    CHECK(!selectedBodies.N,"doesn't work for this...")
     uint nJoints = G(offset)->joints.N;
     JointL jointMatchLists(k+1, nJoints); //for each joint of [0], find if the others have it
     jointMatchLists.setZero();
@@ -122,6 +144,11 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
 
 
 uint TaskMap_qItself::dim_phi(const ors::KinematicWorld& G) {
+  if(selectedBodies.N){
+    uint n=0;
+    for(uint b:selectedBodies) n+=G.bodies.elem(b)->inLinks.scalar()->qDim();
+    return n;
+  }
   if(M.nd==2) return M.d0;
   return G.getJointStateDimension();
 }

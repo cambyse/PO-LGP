@@ -45,6 +45,7 @@ int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   orsDrawAlpha = 1.;
+//  orsDrawCores = true;
   coop();
 
   return 0;

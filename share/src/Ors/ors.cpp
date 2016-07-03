@@ -267,7 +267,10 @@ void ors::Shape::parseAts() {
       break;
     case ors::cappedCylinderST:
       CHECK(size[3]>1e-10,"");
-      mesh.setCappedCylinder(size[3], size[2]);
+//      mesh.setCappedCylinder(size[3], size[2]);
+      sscCore.setBox();
+      sscCore.scale(0., 0., size[2]);
+      mesh.setSSCvx(sscCore, size[3]);
       break;
     case ors::SSBoxST:
       HALT("deprecated?");
@@ -278,6 +281,9 @@ void ors::Shape::parseAts() {
     case ors::meshST:
     case ors::pointCloudST:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
+      sscCore = mesh;
+      sscCore.makeConvexHull();
+      size[3]=0.;
       break;
     case ors::ssCvxST:
       CHECK(size[3]>1e-10,"");
@@ -296,14 +302,14 @@ void ors::Shape::parseAts() {
 
   //center the mesh:
   if(mesh.V.N){
-    Vector c = mesh.center();
-    if(c.length()>1e-8 && !ats["rel_includes_mesh_center"]){
-      rel.addRelativeTranslation(c);
-      ats.append<bool>({"rel_includes_mesh_center"}, {}, true);
-    }
+//    Vector c = mesh.center();
+//    if(c.length()>1e-8 && !ats["rel_includes_mesh_center"]){
+//      rel.addRelativeTranslation(c);
+//      ats.append<bool>({"rel_includes_mesh_center"}, {}, true);
+//    }
     mesh_radius = mesh.getRadius();
     mesh.getBox(size[0], size[1], size[2]);
-    size[3]=0.;
+//    size[3]=0.;
   }
 
   //add inertia to the body
@@ -389,7 +395,10 @@ void makeSSBoxApproximations(ShapeL& shapes){
 }
 
 void computeMeshNormals(ShapeL& shapes){
-  for(ors::Shape *s: shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) s->mesh.computeNormals();
+  for(ors::Shape *s: shapes){
+    if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) s->mesh.computeNormals();
+    if(s->sscCore.V.d0!=s->sscCore.Vn.d0 || s->sscCore.T.d0!=s->sscCore.Tn.d0) s->sscCore.computeNormals();
+  }
 }
 
 

@@ -44,7 +44,7 @@ void Coop::prepareFol(){
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
 //  for(ors::Body *b:box) fol.addObject(b->name);
-  fol.addObject("screwdriver");
+  fol.addObject("screwdriverHandle");
   fol.addObject("screwbox");
   fol.addFact({"table","tableC"});
   fol.addFact({"table","tableL"});

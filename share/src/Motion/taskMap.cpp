@@ -15,10 +15,6 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
       for(uint i=0;i<G.N;i++) qidx+=G(i)->q.N;
       J = zeros(y.N, qidx);
       J.setMatrixBlock(J_bar, 0, qidx-J_bar.d1);
-//      J[G.N-1]() = J_bar;
-//      arr tmp(J);
-//      tensorPermutation(J, tmp, TUP(1u,0u,2u));
-//      J.reshape(y.N,- G.N*J_bar.d1);
     }
     return;
   }

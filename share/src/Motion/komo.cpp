@@ -7,6 +7,7 @@
 #include <Gui/opengl.h>
 #include <Motion/taskMap_FixAttachedObjects.h>
 #include <Motion/taskMap_AboveBox.h>
+#include <Motion/taskMap_GJK.h>
 
 //===========================================================================
 
@@ -156,7 +157,9 @@ void KOMO::setKinematicSwitch(double time, bool before, const char* type, const 
 }
 
 void KOMO::setHoming(double startTime, double endTime, double prec){
-  setTask(startTime, endTime, new TaskMap_qItself(NoArr, true), sumOfSqrTT, NoArr, prec); //world.q, prec);
+  uintA bodies;
+  for(ors::Joint *j:MP->world.joints) if(j->qDim()>0) bodies.append(j->to->index);
+  setTask(startTime, endTime, new TaskMap_qItself(bodies, true), sumOfSqrTT, NoArr, prec); //world.q, prec);
 }
 
 void KOMO::setSquaredQAccelerations(double startTime, double endTime, double prec){
@@ -207,77 +210,58 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
 
   //-- position the hand & graspRef
-#if 0
-  ors::Body *endeff = world.getShapeByName(endeffRef)->body;
-  mlr::String& graspRef = endeff->outLinks.last()->to->shapes.scalar()->name;
-  setTask(time-.1, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
-  setTask(time-.1, time, new DefaultTaskMap(posDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
-  setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, graspRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
-#else
-  setTask(time, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);
+  //hand upright
+  setTask(time, time, new DefaultTaskMap(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
+
+  //hand center at object center (could be replaced by touch)
   setTask(time, time, new DefaultTaskMap(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
-//  setTask(time-.1, time, new DefaultTaskMap(quatDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
 
-  //-- object needs to be static (this enforces q-states of new joints to adopt object pose)
-//  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
-//  setTask(time, time, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
-#endif
-  //#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
-//#    (MinSumOfSqr posDiff Hand Obj){ time=[.98 1] scale=1e3 }
-//#    (MinSumOfSqr quatDiff Hand Obj){ time=[.98 1] scale=1e3 }
+  //hand grip axis orthogonal to object length axis
+  setTask(time, time, new DefaultTaskMap(vecAlignTMT, world, endeffRef, Vector_x, object, Vector_x), sumOfSqrTT, NoArr, 1e1);
+  //hand grip axis orthogonal to object length axis
+  setTask(time, time, new DefaultTaskMap(vecAlignTMT, world, endeffRef, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
 
-  setKinematicSwitch(time, true, "delete", object, NULL); //disconnect object from table
-#if 0
-  setKinematicSwitch(time, false, "rigidZero", graspRef, object); //connect graspRef with object
-#else
-  setKinematicSwitch(time, true, "freeZero", endeffRef, object); //connect graspRef with object
-#endif
-//#    (MakeJoint delete Obj){ time=1 }
-//#    (MakeJoint rigidZero Hand Obj){ time=1 }
+  //hand touches object
+//  ors::Shape *endeffShape = world.getShapeByName(endeffRef)->body->shapes.first();
+//  setTask(time, time, new TaskMap_GJK(endeffShape, world.getShapeByName(object), false), eqTT, NoArr, 1e3);
 
-  if(stepsPerPhase>2){ //otherwise: no velocities
+
+  //disconnect object from table
+  setKinematicSwitch(time, true, "delete", object, NULL);
+  //connect graspRef with object
+  setKinematicSwitch(time, true, "freeZero", endeffRef, object);
+
+  if(stepsPerPhase>2){ //velocities down and up
     setTask(time-.15, time, new DefaultTaskMap(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
     setTask(time, time+.15, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
-//#    (MinSumOfSqr pos Obj){ order=1 scale=1e-1 time=[0 0.15] target=[0 0 .1] } # move up
   }
 }
 
 void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode){
-  if(stepsPerPhase>2){ //otherwise: no velocities
-    setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1);
+  if(stepsPerPhase>2){ //velocities down and up
+    setTask(time-.15, time, new DefaultTaskMap(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
     setTask(time, time+.15, new DefaultTaskMap(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
   }
-//  time += .5;
 
-  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e-1);
-//#    (MinSumOfSqr posDiff Obj Onto){ time=[1 1] target=[0 0 .2] scale=1000 } #1/2 metre above the thing
+  //place roughly at center ;-(
+//  setTask(time, time, new DefaultTaskMap(posDiffTMT, world, object, NoVector, placeRef, NoVector), sumOfSqrTT, {0.,0.,.1}, 1e-1);
 
+  //place upright
   setTask(time-.02, time, new DefaultTaskMap(vecTMT, world, object, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e2);
-//#    (MinSumOfSqr vec Obj){ time=[1 1] vec1=[0 0 1] target=[0 0 1] scale=100} #upright
 
+  //place inside box support
   setTask(time, time, new TaskMap_AboveBox(world, object, placeRef), ineqTT, NoArr, 1e2);
 
-  //-- object needs to be static (this enforces q-states of new joints to adopt object pose)
-//  setTask(time +1./stepsPerPhase, time +1./stepsPerPhase, new DefaultTaskMap(posDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
-//  setTask(time +1./stepsPerPhase, time +1./stepsPerPhase, new DefaultTaskMap(quatDiffTMT, world, object), sumOfSqrTT, NoArr, 1e3, 1);
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, false, "delete", endeffRef, object);
 
-#if 0
-  mlr::String& graspRef = world.getShapeByName(endeffRef)->body->outLinks.last()->to->shapes.scalar()->name;
-  setKinematicSwitch(time, true, "delete", graspRef, object); //disconnect object from grasp ref
-#else
-  setKinematicSwitch(time, false, "delete", endeffRef, object); //disconnect object from grasp ref
-#endif
-
-  //#    (MakeJoint delete Hand Obj){ time=1 }
+  //connect object to table
   if(!effKinMode){
-    setKinematicSwitch(time, false, "rigidAtTo", placeRef, object); //connect object to table
-    //#    (MakeJoint rigidAtTo Onto Obj){ time=1 }
+    setKinematicSwitch(time, false, "rigidAtTo", placeRef, object);
   }else{
-//    setKinematicSwitch(time, "rigidZero", placeRef, object); //connect object to table
     ors::Transformation rel = 0;
     rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
-    setKinematicSwitch(time, false, "transXYPhiZero", placeRef, object, rel ); //connect object to table
-    //#    (MakeJoint transXYPhiZero Onto Obj){ time=0 from=<T t(0 0 .3)> }
+    setKinematicSwitch(time, false, "transXYPhiZero", placeRef, object, rel );
   }
 }
 

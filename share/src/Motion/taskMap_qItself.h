@@ -6,6 +6,7 @@
 
 struct TaskMap_qItself:TaskMap {
   arr M;            ///< optionally, the task map is M*q or M%q (linear in q)
+  uintA selectedBodies; ///< optionally, select only a subset of joints, indicated by the BODIES! indices
   bool moduloTwoPi; ///< if false, consider multiple turns of a joint as different q values (Default: true)
   bool relative_q0; ///< if true, absolute values are given relative to Joint::q0
 
@@ -14,6 +15,8 @@ struct TaskMap_qItself:TaskMap {
   TaskMap_qItself(const ors::KinematicWorld& G, ors::Joint* j);
   TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName);
   TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName1, const char* jointName2);
+
+  TaskMap_qItself(uintA _selectedBodies, bool relative_q0=false);
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t);
