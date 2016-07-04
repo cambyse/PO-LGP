@@ -27,7 +27,8 @@ def npa2dict(u):
 
 def features(t, T=150.0):
     s = T * np.sin(t / T * np.pi)
-    phi = np.array([s, s, s])
+    x,y,z,w = limb.endpoint_pose()["orientation"]
+    phi = np.array([t, s, x, z])
     #phi = np.array([t, s, t, s, t, s])
     return phi
 
