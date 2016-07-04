@@ -25,21 +25,16 @@ def npa2dict(u):
             'left_s0': 0,
             'left_s1': u[2]}
 
-def features(t):
-    '''
-    u = dict2npa(limb.joint_efforts())
-    v = dict2npa(limb.joint_velocities())
-    p = dict2npa(limb.joint_angles())
-
-    #return np.concatenate((u, v, p))
-    '''
-    t2 = t * t
-    phi = np.array([t, t2, t, t2, t, t2])
+#todo: 1: Ausgangspos vor Measure, 2: quit nach hacky sack, 3: quit, next in
+# eine Abfrage
+def features(t, T=150.0):
+    s = T * np.sin(t / T * np.pi)
+    phi = np.array([s, s, s])
+    #phi = np.array([t, s, t, s, t, s])
     return phi
 
 def control(features, W):
-    v = np.dot(W, features) + np.random.randn(3)
-
+    v = np.dot(W, features)
     # Now, all joint forces are positive
     v_dict = npa2dict(np.abs(v))
     
@@ -69,6 +64,10 @@ def expected_policy_reward(T, W, time_step=5):
     for t in range(T/time_step - limit):
         v = control(features(t), W)
         send_signal(limb.set_joint_velocities, v, time_step)
+        
+        x, y, z, w = limb.endpoint_pose()["orientation"]
+        if x > 0.005:
+            break
 
     # Open the gripper to release the hacky sack
     left_gripper.command_position(100)
@@ -76,7 +75,7 @@ def expected_policy_reward(T, W, time_step=5):
     # Should do ${limit} more time steps.
     # The basic idea is to keep moving while baxter
     # opens his grippers.
-    for t in range(T/time_step - limit, T/time_step):
+    for t in range(limit):
         v = control(features(t), W)
         send_signal(limb.set_joint_velocities, v, time_step)
 
@@ -102,10 +101,10 @@ def expected_policy_reward(T, W, time_step=5):
     return reward
 
 ''' Start the learning process '''
-def start(T, W):
+def policy_search(T, W):
     # Initially VERY low optimum so that every real reward is better
     er_opt = -10000
-    std_dev_init = 0.1
+    std_dev_init = 0.5
     std_dev = std_dev_init
 
     # Learn until we interrupt
@@ -234,6 +233,7 @@ if __name__ == "__main__":
         left_gripper = Gripper('left')
     
         send_signal(limb.set_joint_positions, startpos, 1500)
+
         while True:
             left_gripper.command_position(100)
             while True:
@@ -246,7 +246,7 @@ if __name__ == "__main__":
             c = raw_input('Start? (s)')
             if c == 's':
                 break
-        W0 = (np.random.rand(3, 6) * 2 - 1)
-        start(250, W0)
+        W0 = np.random.rand(3, features(0).size)
+        policy_search(250, W0)
 
     print('All done')
