@@ -25,8 +25,6 @@ def npa2dict(u):
             'left_s0': 0,
             'left_s1': u[2]}
 
-#todo: 1: Ausgangspos vor Measure, 2: quit nach hacky sack, 3: quit, next in
-# eine Abfrage
 def features(t, T=150.0):
     s = T * np.sin(t / T * np.pi)
     phi = np.array([s, s, s])
@@ -83,6 +81,11 @@ def expected_policy_reward(T, W, time_step=5):
     # (hopefully quite fast)
     send_signal(limb.set_joint_velocities, zero_velocity, 1)
 
+    time.sleep(2)
+ 
+    # Move arm back to start position
+    send_signal(limb.set_joint_positions, startpos, 2000)
+
     # Don't measure distance if camera can't see the hacky sack
     c = raw_input('Measure distance? (m)')
     if c == 'm':
@@ -106,12 +109,16 @@ def policy_search(T, W):
     er_opt = -10000
     std_dev_init = 0.5
     std_dev = std_dev_init
+    v_continue = 1
 
     # Learn until we interrupt
-    while True:
+    while v_continue:
         # Sample new (gaussian) noise and throw the ball to get the reward.
         noise = np.random.randn(W.shape[0], W.shape[1])
         er = expected_policy_reward(T, W + std_dev * noise)
+
+        # Move arm back to start position
+        send_signal(limb.set_joint_positions, startpos, 2000)
 
         # If the reward is better than our current optimum, remember this W.
         if er > er_opt:
@@ -121,10 +128,10 @@ def policy_search(T, W):
         else:
             std_dev = std_dev * 2
 
-        # Move arm back to start position
-        send_signal(limb.set_joint_positions, startpos, 2000)
+        print(W)
 
         # Wait for the hacky sack being between the gripper
+        left_gripper.command_position(100)
         while True:
             c = raw_input('Hacky Sack (y)')
             if c == 'y':
@@ -132,17 +139,15 @@ def policy_search(T, W):
 
         # Grip if the hacky sack is in the right position.
         left_gripper.command_position(5)
-        print(W)
-
+        
         # Stop if user input asks to
-        c = raw_input('Quit? (q)')
-        if c == 'q':
-            break
-        else:
-            while True:
-                c = raw_input('Start? (s)')
-                if c == 's':
-                    break
+        while True:
+            c = raw_input('Start? (s) Quit? (q)')
+            if c == 's':
+                break
+            elif c == 'q':
+                v_continue = 0
+                break
 
 '''Argument Parser'''
 def init_parser():
