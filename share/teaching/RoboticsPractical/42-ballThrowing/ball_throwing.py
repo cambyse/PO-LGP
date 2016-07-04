@@ -1,4 +1,5 @@
 #! /usr/bin/env python2
+# TODO: Just change one value of the weight vector
 # Import python modules
 import sys
 import rospy as rp
