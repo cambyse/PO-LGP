@@ -9,6 +9,15 @@
 #include <sensor_msgs/JointState.h>
 //#include <pr2/baxter.h>
 
+#include <Motion/komo.h>
+
+struct Poser{
+  KOMO komo;
+  Poser(ors::KinematicWorld& W)
+    : komo(){
+
+  }
+};
 
 
 // =================================================================================================
@@ -56,7 +65,7 @@ int main(int argc, char** argv){
 
   mlr::wait(3.);
 
-//  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForValueGreaterThan(0);
 
   threadCloseModules();
 

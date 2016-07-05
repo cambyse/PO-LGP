@@ -37,7 +37,7 @@ int main(int argc, char** argv){
     }
     if(robot=="baxter"){
       new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
-      new SendPositionCommandsToBaxter();
+      new SendPositionCommandsToBaxter(tcm.modelWorld.get());
     }
   }
 

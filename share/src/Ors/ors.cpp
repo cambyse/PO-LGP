@@ -302,11 +302,11 @@ void ors::Shape::parseAts() {
 
   //center the mesh:
   if(mesh.V.N){
-//    Vector c = mesh.center();
-//    if(c.length()>1e-8 && !ats["rel_includes_mesh_center"]){
-//      rel.addRelativeTranslation(c);
-//      ats.append<bool>({"rel_includes_mesh_center"}, {}, true);
-//    }
+    Vector c = mesh.center();
+    if(c.length()>1e-8 && !ats["rel_includes_mesh_center"]){
+      rel.addRelativeTranslation(c);
+      ats.append<bool>({"rel_includes_mesh_center"}, {}, true);
+    }
     mesh_radius = mesh.getRadius();
     mesh.getBox(size[0], size[1], size[2]);
 //    size[3]=0.;
