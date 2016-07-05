@@ -15,10 +15,6 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
       for(uint i=0;i<G.N;i++) qidx+=G(i)->q.N;
       J = zeros(y.N, qidx);
       J.setMatrixBlock(J_bar, 0, qidx-J_bar.d1);
-//      J[G.N-1]() = J_bar;
-//      arr tmp(J);
-//      tensorPermutation(J, tmp, TUP(1u,0u,2u));
-//      J.reshape(y.N, G.N*J_bar.d1);
     }
     return;
   }
@@ -52,6 +48,74 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
     J.reshape(y.N, G.N*J_bar(0).d1);
 #endif
   }
+}
+
+//===========================================================================
+
+TaskMap *TaskMap::newTaskMap(const Graph& params, const ors::KinematicWorld& world){
+  //-- get tags
+  mlr::String& type=params.get<mlr::String>("map");
+
+  //-- create a task map
+  TaskMap *map;
+  if(type=="wheels"){
+    map = new TaskMap_qItself(world, "worldTranslationRotation");
+  }else if(type=="collisionIneq"){
+    map = new CollisionConstraint( params.get<double>("margin", 0.1) );
+  }else if(type=="limitIneq"){
+    map = new LimitsConstraint();
+  }else if(type=="proxy"){
+    map = new TaskMap_Proxy(allPTMT, {0u}, params.get<double>("margin", 0.1) );
+  }else if(type=="collisionPairs"){
+    uintA shapes;
+    NIY;
+//    for(uint i=2;i<params->parents.N;i++){
+//      ors::Shape *s = world.getShapeByName(params->parents(i)->keys.last());
+//      CHECK(s,"No Shape '" <<params->parents(i)->keys.last() <<"'");
+//      shapes.append(s->index);
+//    }
+//    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+  }else if(type=="collisionExceptPairs"){
+    uintA shapes;
+    NIY;
+//    for(uint i=2;i<params->parents.N;i++){
+//      ors::Shape *s = world.getShapeByName(params->parents(i)->keys.last());
+//      CHECK(s,"No Shape '" <<params->parents(i)->keys.last() <<"'");
+//      shapes.append(s->index);
+//    }
+//    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+  }else if(type=="collisionExcept"){
+    uintA shapes;
+    NIY;
+//    for(uint i=2;i<params->parents.N;i++){
+//      ors::Shape *s = world.getShapeByName(params->parents(i)->keys.last());
+//      if(!s){
+//        ors::Body *b = world.getBodyByName(params->parents(i)->keys.last());
+//        CHECK(b,"No shape or body '" <<params->parents(i)->keys.last() <<"'");
+//        for(ors::Shape *s:b->shapes) shapes.append(s->index);
+//      }else{
+//        shapes.append(s->index);
+//      }
+//    }
+//    map = new ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+  }else if(type=="qItself"){
+    if(params["ref1"] && params["ref2"]){
+      ors::Joint *j=world.getJointByBodyNames(params.get<mlr::String>("ref1"), params.get<mlr::String>("ref2"));
+      if(!j) return NULL;
+      map = new TaskMap_qItself(world, j);
+    }else if(params["ref1"]) map = new TaskMap_qItself(world, params.get<mlr::String>("ref1"));
+    else if(params["Hmetric"]) map = new TaskMap_qItself(params.get<double>("Hmetric")*world.getHmetric()); //world.naturalQmetric()); //
+    else map = new TaskMap_qItself();
+  }else if(type=="qZeroVels"){
+    map = new TaskMap_qZeroVels();
+  }else if(type=="GJK"){
+    map = new TaskMap_GJK(world, params.get<mlr::String>("ref1"), params.get<mlr::String>("ref2"), true);
+  }else{
+    map = new TaskMap_Default(params, world);
+  }
+
+  map->order = params.get<double>("order", 0);
+  return map;
 }
 
 //===========================================================================
@@ -106,7 +170,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
     }
     map = new ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
+    map = new TaskMap_Proxy(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1 && ref2){
       ors::Joint *j=world.getJointByBodyNames(ref1, ref2);
@@ -120,7 +184,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const ors::KinematicWorld& world
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
   }else{
-    map = new DefaultTaskMap(specs, world);
+    map = new TaskMap_Default(specs, world);
   }
 
   //-- check additional real-valued parameters: order

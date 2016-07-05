@@ -3,11 +3,36 @@
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 
+#ifdef MLR_ROS
 
-TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::KinematicWorld &world_pr2_) {
+#include "roscom.h"
+#include "spinner.h"
+
+struct sTrajectoryInterface{
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(CtrlMsg, ctrl_obs)
+  PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState> pub;
+  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub;
+  RosCom_Spinner spinner;
+
+  sTrajectoryInterface():
+    pub("/marc_rt_controller/jointReference", ctrl_ref),
+    sub("/marc_rt_controller/jointState", ctrl_obs) {
+  }
+};
+#else
+struct sTrajectoryInterface{
+  ACCESSname(CtrlMsg, ctrl_ref)
+  ACCESSname(CtrlMsg, ctrl_obs)
+};
+#endif
+
+TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::KinematicWorld &world_pr2_)
+  : S(NULL){
   world_plan = &world_plan_;
   world_pr2 = &world_pr2_;
 
+  S = new sTrajectoryInterface();
   threadOpenModules(true);
 
   useRos = mlr::getParameter<bool>("useRos");
@@ -18,19 +43,19 @@ TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::K
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for (;;) {
-      S.ctrl_obs.var->waitForNextRevision();
-      cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
+      S->ctrl_obs.var->waitForNextRevision();
+      cout <<"REMOTE joint dimension=" <<S->ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<world_pr2->q.N <<endl;
 
-      if (S.ctrl_obs.get()->q.N==world_pr2->q.N
-         && S.ctrl_obs.get()->qdot.N==world_pr2->q.N)
+      if (S->ctrl_obs.get()->q.N==world_pr2->q.N
+         && S->ctrl_obs.get()->qdot.N==world_pr2->q.N)
         break;
     }
 
     //-- set current state
     cout <<"** GO!" <<endl;
-    q = S.ctrl_obs.get()->q;
-    qdot = S.ctrl_obs.get()->qdot;
+    q = S->ctrl_obs.get()->q;
+    qdot = S->ctrl_obs.get()->qdot;
 
     world_pr2->setJointState(q, qdot);
     arr q_plan;
@@ -82,7 +107,7 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
 
   arr q0;
   if (useRos) {
-    q0 = S.ctrl_obs.get()->q;
+    q0 = S->ctrl_obs.get()->q;
   } else {
     q0 = world_pr2->getJointState();
   }
@@ -113,7 +138,7 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
     }
 
     /// set controller parameter
-    if (useRos) { S.ctrl_ref.set() = refs;}
+    if (useRos) { S->ctrl_ref.set() = refs;}
 
     t = t + mlr::timerRead(true);
 
@@ -125,24 +150,24 @@ void TrajectoryInterface::executeTrajectory(arr &X_pr2, double T, bool recordDat
       tPrev = t;
       logT.append(ARR(t));
       logXdes.append(~refs.q);
-      logX.append(~S.ctrl_obs.get()->q);
-      logFL.append(~S.ctrl_obs.get()->fL);
-      logFR.append(~S.ctrl_obs.get()->fR);
-      logU.append(~S.ctrl_obs.get()->u_bias);
+      logX.append(~S->ctrl_obs.get()->q);
+      logFL.append(~S->ctrl_obs.get()->fL);
+      logFR.append(~S->ctrl_obs.get()->fR);
+      logU.append(~S->ctrl_obs.get()->u_bias);
     }
   }
 }
 
 void TrajectoryInterface::getStatePlan(arr &q_plan) {
-  arr q_pr2 = S.ctrl_obs.get()->q;
+  arr q_pr2 = S->ctrl_obs.get()->q;
   transferQbetweenTwoWorlds(q_plan,q_pr2,*world_plan,*world_pr2);
 }
 
 void TrajectoryInterface::getState(arr &q_pr2) {
   cout << "1" << endl;
-//  S.ctrl_obs.var->waitForNextRevision();
+//  S->ctrl_obs.var->waitForNextRevision();
   cout << "2" << endl;
-  q_pr2 = S.ctrl_obs.get()->q;
+  q_pr2 = S->ctrl_obs.get()->q;
 }
 
 
@@ -157,14 +182,14 @@ void TrajectoryInterface::gotoPosition(arr x_pr2, double T, bool recordData, boo
   MP.T = 100;
   MP.tau = 0.05;
   if (useRos) {
-    MP.world.setJointState(S.ctrl_obs.get()->q);
+    MP.world.setJointState(S->ctrl_obs.get()->q);
   }else{
     MP.world.setJointState(world_pr2->getJointState());
   }
 
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world_pr2), sumOfSqrTT);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_pr2);
+  t = MP.addTask("tra", new TaskMap_Transition(*world_pr2), sumOfSqrTT);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_pr2);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 
@@ -185,8 +210,8 @@ void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,doub
 
   /// send zero gains
   CtrlMsg refs_zero;
-  refs_zero.q = S.ctrl_obs.get()->q;
-  refs_zero.qdot=S.ctrl_obs.get()->qdot*0.;
+  refs_zero.q = S->ctrl_obs.get()->q;
+  refs_zero.qdot=S->ctrl_obs.get()->qdot*0.;
   refs_zero.fL = zeros(6);
   refs_zero.KiFTL.clear();
   refs_zero.J_ft_invL.clear();
@@ -205,7 +230,7 @@ void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,doub
   idx = world_pr2->getJointByName("head_tilt_joint")->qIndex;
   refs_zero.Kp(idx,idx) = 2.0;
 
-  S.ctrl_ref.set() = refs_zero;
+  S->ctrl_ref.set() = refs_zero;
 
   mlr::wait(3.);
   cout << "//////////////////////////////////////////////////////////////////" << endl;
@@ -217,7 +242,7 @@ void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,doub
   X_pr2.clear();
   mlr::timerStart(true);
   while(t<T) {
-    arr q = S.ctrl_obs.get()->q;
+    arr q = S->ctrl_obs.get()->q;
     X_pr2.append(~q);
     mlr::wait(dt);
     t = t + mlr::timerRead(true);
@@ -227,9 +252,9 @@ void TrajectoryInterface::recordDemonstration(arr &X_pr2,double T,double dt,doub
   cout << "//////////////////////////////////////////////////////////////////" << endl;
 
   /// reset gains
-  refs.q = S.ctrl_obs.get()->q;
-  refs.qdot=S.ctrl_obs.get()->qdot*0.;
-  S.ctrl_ref.set() = refs;
+  refs.q = S->ctrl_obs.get()->q;
+  refs.qdot=S->ctrl_obs.get()->qdot*0.;
+  S->ctrl_ref.set() = refs;
 }
 
 void TrajectoryInterface::moveLeftGripper(double d) {
@@ -251,8 +276,8 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
 
   /// send zero gains
   CtrlMsg refs_zero = refs;
-  refs_zero.q = S.ctrl_obs.get()->q;
-  refs_zero.qdot=S.ctrl_obs.get()->qdot*0.;
+  refs_zero.q = S->ctrl_obs.get()->q;
+  refs_zero.qdot=S->ctrl_obs.get()->qdot*0.;
   refs_zero.fL = zeros(6);
   refs_zero.KiFTL.clear();
   refs_zero.J_ft_invL.clear();
@@ -264,15 +289,15 @@ void TrajectoryInterface::pauseMotion(bool sendZeroGains) {
     refs_zero.Ki = ARR(0.);
   }
   refs_zero.fL_gamma = 1.;
-  S.ctrl_ref.set() = refs_zero;
+  S->ctrl_ref.set() = refs_zero;
 
   world_pr2->watch(true,"press button to continue");
   cout << "continuing motion" << endl;
 
   /// reset gains
-  refs.q = S.ctrl_obs.get()->q;
-  refs.qdot=S.ctrl_obs.get()->qdot*0.;
-  S.ctrl_ref.set() = refs;
+  refs.q = S->ctrl_obs.get()->q;
+  refs.qdot=S->ctrl_obs.get()->qdot*0.;
+  S->ctrl_ref.set() = refs;
 }
 
 

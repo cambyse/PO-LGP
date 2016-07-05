@@ -119,7 +119,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
     }
     map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
-    map = new ProxyTaskMap(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
+    map = new TaskMap_Proxy(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){
     if(ref1) map = new TaskMap_qItself(world, ref1);
     else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->get<double>()*world.getHmetric()); //world.naturalQmetric()); //
@@ -127,7 +127,7 @@ TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world){
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
   }else{
-    map = new DefaultTaskMap(specs, world);
+    map = new TaskMap_Default(specs, world);
   }
   map->type=termType;
 
@@ -524,7 +524,7 @@ void MotionProblem::reportFull(bool brief) {
           cout <<' ' <<c->prec(t);
           if(ttMatrix.N){
             cout <<' ' <<ttMatrix(t).elem(m)
-                <<' ' <<sumOfSqr(phiMatrix(t).subRef(m,m+d-1));
+                <<' ' <<sumOfSqr(phiMatrix(t).refRange(m,m+d-1));
           }
           cout <<endl;
         }
@@ -810,7 +810,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const
   arr _phi, _J;
   TermTypeA _tt;
 #ifdef NEWCODE
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.subRef(t,t+k), MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.refRange(t,t+k), MP.tau);
 #else
   MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations, MP.tau);
 #endif

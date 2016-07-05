@@ -1,11 +1,11 @@
 #include "InnerCostFunction.h"
 SimpleICF::SimpleICF(ors::KinematicWorld world) {
-    TaskMap *tm = new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.));
+    TaskMap *tm = new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.));
     Task *c = new Task(tm);
     c->name = "pos_right_hand";
     taskCosts.append(c);
 
-    TaskMap *tm2 = new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.));
+    TaskMap *tm2 = new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 1., 0.));
     Task *c2 = new Task(tm2);
     c2->name = "vec_right_hand";
     taskCosts.append(c2);
@@ -44,9 +44,9 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
 //      taskCosts.append();
 //    }
 //    //  Task *c;
-//    //  c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+//    //  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 //    //  c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
-//    //  c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
+//    //  c = MP.addTask("vec_right_hand", new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
 //    //  c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
 //    //  c = MP.addTask("final_vel", new TaskMap_qItself());
 //    //  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));

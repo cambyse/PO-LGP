@@ -35,33 +35,33 @@ void TEST(PickAndPlace){
   ors::Shape *tar = G.getShapeByName("target");
 
   Task *t;
-  t = MP.addTask("_MinSumOfSqr_qItself", new TransitionTaskMap(G), sumOfSqrTT);
+  t = MP.addTask("_MinSumOfSqr_qItself", new TaskMap_Transition(G), sumOfSqrTT);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, {}, 1e0);
 
-  t = MP.addTask("_MinSumOfSqr_posDiff_graspRef_obj1",  new DefaultTaskMap(posDiffTMT, grasp->index, NoVector, obj->index, NoVector), sumOfSqrTT);
+  t = MP.addTask("_MinSumOfSqr_posDiff_graspRef_obj1",  new TaskMap_Default(posDiffTMT, grasp->index, NoVector, obj->index, NoVector), sumOfSqrTT);
   t->setCostSpecs(pickTime-1, pickTime, {}, 1e3);
 
-  t = MP.addTask("_MinSumOfSqr_quatDiff_graspRef_obj1", new DefaultTaskMap(quatDiffTMT, grasp->index, NoVector, obj->index), sumOfSqrTT);
+  t = MP.addTask("_MinSumOfSqr_quatDiff_graspRef_obj1", new TaskMap_Default(quatDiffTMT, grasp->index, NoVector, obj->index), sumOfSqrTT);
   t->setCostSpecs(pickTime-1, pickTime, {}, 1e3);
 
   t = MP.addTask("_MinSumOfSqr_qItself", new TaskMap_qItself(), sumOfSqrTT);
   t->map.order=1; //make this a velocity variable!
   t->setCostSpecs(pickTime-1, pickTime, {}, 1e1);
 
-  t = MP.addTask("_MinSumOfSqr_pos_obj1", new DefaultTaskMap(posTMT, obj->index), sumOfSqrTT);
+  t = MP.addTask("_MinSumOfSqr_pos_obj1", new TaskMap_Default(posTMT, obj->index), sumOfSqrTT);
   t->map.order=1; //make this a velocity variable!
   t->setCostSpecs(pickTime+3, pickTime+5, {0.,0.,.5}, 1e1);
 
   //target
-  t = MP.addTask("_MinSumOfSqr_posDiff_obj1_target", new DefaultTaskMap(posDiffTMT, obj->index, NoVector, tar->index), sumOfSqrTT);
+  t = MP.addTask("_MinSumOfSqr_posDiff_obj1_target", new TaskMap_Default(posDiffTMT, obj->index, NoVector, tar->index), sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, {}, 1e3);
 
   t = MP.addTask("_MinSumOfSqr_qItself", new TaskMap_qItself(), sumOfSqrTT);
   t->map.order=1; //make this a velocity variable!
   t->setCostSpecs(MP.T, MP.T, {}, 1e1);
 
-  t = MP.addTask("_MinSumOfSqr_quatDiff_obj1_target", new DefaultTaskMap(quatDiffTMT, grasp->index, NoVector, tar->index), sumOfSqrTT);
+  t = MP.addTask("_MinSumOfSqr_quatDiff_obj1_target", new TaskMap_Default(quatDiffTMT, grasp->index, NoVector, tar->index), sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, ARR(1.,0.,0.,0.), 1e3);
 
   // zero grasp joint motion during holding
@@ -75,7 +75,7 @@ void TEST(PickAndPlace){
   for(uint time=pickTime+1;time<placeTime;time++) t->prec(time)=1e3;
 
 
-////  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .05));
+////  c = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0}, .05));
   ShapeL shaps = {
     obj, grasp,
     obj, G.getShapeByName("endeff"),

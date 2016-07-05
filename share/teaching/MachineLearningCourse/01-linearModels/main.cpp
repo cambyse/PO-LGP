@@ -39,9 +39,11 @@ void testLinReg(const char *datafile=NULL) {
     gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
   }else{
     y_grid.reshape(31,31);
-    FILE("z.model") <<y_grid;
-    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+    FILE("z.model") <<~y_grid;
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, false, "z.pdf");
   }
+
+  mlr::wait();
 }
 
 //===========================================================================
@@ -58,21 +60,26 @@ void test2Class() {
   arr beta = logisticRegression2Class(Phi, y);
   
   arr X_grid,y_grid,p_grid;
-  X_grid.setGrid(2,-2,3,50);
+  X_grid.setGrid(X.d1,-2,3,50);
   Phi = makeFeatures(X_grid,readFromCfgFileFT, X);
   y_grid = Phi*beta;
   
   p_grid=exp(y_grid);
   for(uint i=0; i<p_grid.N; i++) p_grid(i) = p_grid(i)/(p_grid(i)+1.);
   
-  y_grid.reshape(51,51);
-  p_grid.reshape(51,51);
-  
-  mlr::arrayBrackets="  ";
-  FILE("z.train") <<catCol(X, y);
-  FILE("z.model") <<p_grid;
-  gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
-  gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
+  if(X.d1==1){
+    FILE("z.train") <<catCol(X, y);
+    FILE("z.model") <<catCol(X_grid, p_grid, y_grid);
+    gnuplot("plot 'z.train' us 1:2 w p, 'z.model' us 1:2 w l, 'z.model' us 1:3 w l", true, false, "z.pdf");
+  }
+  if(X.d1==2){
+    y_grid.reshape(51,51);
+    p_grid.reshape(51,51);
+    FILE("z.train") <<catCol(X, y);
+    FILE("z.model") <<~p_grid;
+    gnuplot("load 'plt.contour'", true, false, "z.pdf");
+    gnuplot("load 'plt.contour2'", true, false, "z.pdf");
+  }
 }
 
 //===========================================================================
@@ -97,25 +104,36 @@ void TEST(MultiClass){
   FILE("z.train") <<catCol(X, label, y, p_pred);
   
   arr X_grid,p_grid;
-  X_grid.setGrid(2,-2,3,50);
+  X_grid.setGrid(X.d1,-2,3,50);
   Phi = makeFeatures(X_grid,readFromCfgFileFT,X);
   p_grid = exp(Phi*beta);
   for(uint i=0; i<p_grid.d0; i++) p_grid[i]() /= sum(p_grid[i]);
-  p_grid = ~p_grid;
-  p_grid.reshape(p_grid.d0,51,51);
-  
-  FILE("z.model1") <<p_grid[0];
-  FILE("z.model2") <<p_grid[1];
-  if(y.d1==3){
-    FILE("z.model3") <<p_grid[2];
-    gnuplot("load 'plt.contourMulti'; pause mouse", false, true, "z.pdf");
-    gnuplot("load 'plt.contourMulti2'; pause mouse", false, true, "z.pdf");
+
+
+  if(X.d1==1){
+    FILE("z.train") <<catCol(X,y);
+    FILE("z.model") <<catCol(X_grid,p_grid);
+    gnuplot("plot \
+            'z.train' us 1:2 w p, 'z.train' us 1:3 w p, 'z.train' us 1:4 w p, \
+            'z.model' us 1:2 w l, 'z.model' us 1:3 w l, 'z.model' us 1:4 w l", true, false, "z.pdf");
   }
-  if(y.d1==4){
-    FILE("z.model3") <<p_grid[2];
-    FILE("z.model4") <<p_grid[3];
-    gnuplot("load 'plt.contourM4'; pause mouse", false, true, "z.pdf");
-    gnuplot("load 'plt.contourM4_2'; pause mouse", false, true, "z.pdf");
+  if(X.d1==2){
+    p_grid = ~p_grid;
+    p_grid.reshape(p_grid.d0,51,51);
+
+    FILE("z.model1") <<~p_grid[0];
+    FILE("z.model2") <<~p_grid[1];
+    if(y.d1==3){
+      FILE("z.model3") <<~p_grid[2];
+      gnuplot("load 'plt.contourMulti'; pause mouse", false, true, "z.pdf");
+      gnuplot("load 'plt.contourMulti2'; pause mouse", false, true, "z.pdf");
+    }
+    if(y.d1==4){
+      FILE("z.model3") <<~p_grid[2];
+      FILE("z.model4") <<~p_grid[3];
+      gnuplot("load 'plt.contourM4'; pause mouse", false, true, "z.pdf");
+      gnuplot("load 'plt.contourM4_2'; pause mouse", false, true, "z.pdf");
+    }
   }
 }
 
@@ -173,7 +191,7 @@ void exercise1() {
     gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l", false, true, "z.pdf");
   } else {
     y_grid.reshape(31,31);
-    FILE("z.model") <<y_grid;
+    FILE("z.model") <<~y_grid;
     gnuplot("splot [-3:3][-3:3] 'z.train' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l", false, true, "z.pdf");
   }
 }
@@ -228,9 +246,10 @@ int main(int argc, char *argv[]) {
     case 4:  testCV();  break;
     case 5:  exercise1();  break;
     case 6:  exercise2();  break;
-      break;
+    break;
   }
-  
+
+  mlr::wait(.01);
   return 0;
 }
 

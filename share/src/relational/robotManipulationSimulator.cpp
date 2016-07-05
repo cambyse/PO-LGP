@@ -131,7 +131,7 @@ void controlledStep(ors::KinematicWorld *C, TaskController &FM, const char* text
   double tau=.01;
   arr q, qdot;
   C->getJointState(q, qdot);
-  FM.qitselfPD.y_ref = q0;
+  FM.qNullCostRef.y_ref = q0;
   arr a = FM.operationalSpaceControl();
   q += tau*qdot;
   qdot += tau*a;
@@ -248,7 +248,7 @@ void RobotManipulationSimulator::simulate(uint t, const char* message) {
   String msg_string(message);
 #ifdef NEW_FEEDBACK_CONTROL
   TaskController MP(*this, false);
-  MP.qitselfPD.prec=0.;
+  MP.qNullCostRef.prec=0.;
   for(; t--;) controlledStep(this, MP, msg_string);
 #else
   arr q;
@@ -1222,7 +1222,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   uint t;
   TaskController MP(*this, false);
   CtrlTask *o = MP.addPDTask("obj", .2, 1.5, posTMT, obj_dropped1);
-  CtrlTask *c = MP.addPDTask("collision", .5, 2., new ProxyTaskMap(allPTMT, {}, {.02}));
+  CtrlTask *c = MP.addPDTask("collision", .5, 2., new TaskMap_Proxy(allPTMT, {}, {.02}));
   c->prec = 1.;
 //  CtrlTask *r =  MP.addPDTask("q-pose", .5, 1., new TaskMap_qItself());
 //  r->prec = 1.;

@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 
     mlr::wait(.2);
 
-    CtrlTask task("endeffL", new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, .0, 0.);
+    CtrlTask task("endeffL", new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, .0, 0.);
 //    task.setGains(20.,2.);
     task.map.phi(task.y, NoArr, tcm.modelWorld.get()());
     task.y_ref = task.y;

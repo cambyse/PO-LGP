@@ -40,16 +40,16 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   Task *t;
 
 
-  t = P.addTask("transitions", new TransitionTaskMap(world));
+  t = P.addTask("transitions", new TaskMap_Transition(world));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, P.T, {0.}, 1e0);
 
-  t = P.addTask("final_vel", new TransitionTaskMap(world));
+  t = P.addTask("final_vel", new TaskMap_Transition(world));
   t->map.order=1; //make this an acceleration task!
   t->setCostSpecs(P.T-4, P.T, {0.}, 1e2);
 
 
-  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(P.T, P.T, {0.}, 1e3);
  // pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
 
@@ -161,7 +161,7 @@ void OnlineSubmodularity(const double tableW, const double tableL, ors::Kinemati
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-  PDtask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
+  PDtask *pd_y =  MC.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task

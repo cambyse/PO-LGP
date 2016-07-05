@@ -579,7 +579,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
         copy(mesh.V,Vfloat);
         mesh.V.reshape(g.convexMesh->getNbVertices(),3);
         mesh.makeConvexHull();
-        mesh.glDraw();
+        mesh.glDraw(NoOpenGL);
 #else
         s->mesh.glDraw();
 #endif

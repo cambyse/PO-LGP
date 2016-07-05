@@ -1,5 +1,4 @@
 #include "TaskControllerModule.h"
-//#include <RosCom/rosalvar.h> //todo: don't deal with the markers here! ObjectFilter..
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
@@ -8,8 +7,17 @@ void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   lowPass = (1.-rate)*lowPass + rate*signal;
 }
 
+#ifdef MLR_ROS
+struct sTaskControllerModule{
+   ACCESSname(sensor_msgs::JointState, jointState)
+};
+#else
+struct sTaskControllerModule{};
+#endif
+
 TaskControllerModule::TaskControllerModule(const char* _robot)
   : Module("TaskControllerModule", .01)
+  , s(NULL)
   , taskController(NULL)
   , oldfashioned(true)
   , useRos(false)
@@ -18,6 +26,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , verbose(false)
   , useDynSim(true){
 
+  s = new sTaskControllerModule();
   useRos = mlr::getParameter<bool>("useRos",false);
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
@@ -38,7 +47,7 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
   modelWorld.set() = realWorld;
-  taskController = new TaskController(modelWorld.set()(), true);
+  taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
@@ -80,13 +89,16 @@ void TaskControllerModule::step(){
       if(useRos)  pr2_odom.waitForRevisionGreaterThan(0);
       q_real = ctrl_obs.get()->q;
       qdot_real = ctrl_obs.get()->qdot;
-      arr pr2_odom_copy = pr2_odom.get();
-      if(q_real.N==realWorld.q.N && pr2_odom_copy.N==3) q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2_odom_copy;
+      arr pr2odom = pr2_odom.get();
+      if(q_real.N==realWorld.q.N && pr2odom.N==3)
+        q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
     }
     if(robot=="baxter"){
-      jointState.waitForRevisionGreaterThan(20);
+#ifdef MLR_ROS
+      s->jointState.waitForRevisionGreaterThan(20);
       q_real = realWorld.q;
-      succ = baxter_update_qReal(q_real, jointState.get(), realWorld);
+      succ = baxter_update_qReal(q_real, s->jointState.get(), realWorld);
+#endif
       qdot_real = zeros(q_real.N);
     }
     ctrl_q_real.set() = q_real;

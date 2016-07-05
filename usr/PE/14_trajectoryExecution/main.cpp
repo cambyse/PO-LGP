@@ -112,15 +112,15 @@ void executeTrajectory(String scene, ControlType cType){
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, goal, 1e4);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
-  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   c->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
-//  c = P.addTask("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+//  c = P.addTask("contact", new TaskMap_Default(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
 //  c->setCostSpecs(0, P.T, {0.}, 1e0);
 
 

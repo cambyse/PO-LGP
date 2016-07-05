@@ -2,29 +2,16 @@
 
 #include <Core/array.h>
 #include <Ors/ors.h>
-#include <RosCom/roscom.h>
-#include <RosCom/rosmacro.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
+#include <Control/ctrlMsg.h>
+#include <Core/module.h>
 
 struct MySystem {
-  ACCESSname(CtrlMsg, ctrl_ref)
-  ACCESSname(CtrlMsg, ctrl_obs)
-  PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState> *mcp;
-  MySystem(){
-    if(mlr::getParameter<bool>("useRos", false)){
-      rosCheckInit();
-      new RosCom_Spinner();
-      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
-      mcp = new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-//      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> ("/marc_rt_controller/jointState", ctrl_obs);
-//      new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          ("/marc_rt_controller/jointReference", ctrl_ref);
-    }
-  }
 };
 
 struct TrajectoryInterface {
-  MySystem S;
+  struct sTrajectoryInterface *S;
   arr q,qdot;
   ors::KinematicWorld *world_pr2;
   ors::KinematicWorld *world_plan;

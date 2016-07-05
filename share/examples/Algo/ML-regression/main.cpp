@@ -1,6 +1,8 @@
 #include <Algo/MLcourse.h>
 #include <Gui/plot.h>
 
+bool plotDev=true;
+
 //===========================================================================
 
 void testLinReg(const char *datafile=NULL) {
@@ -37,12 +39,11 @@ void testLinReg(const char *datafile=NULL) {
 
   if(X.d1==1){
     plotGnuplot();
-    plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
-    //plotFunction(X_grid, y_grid);
+    if(plotDev) plotFunctionPrecision(X_grid, y_grid, y_grid+s_grid, y_grid-s_grid);
+    else plotFunction(X_grid, y_grid);
     plotPoints(X,y);
     plot(true);
   }
-  FILE("z.model") <<~y_grid;
 
   //-- gnuplot
   mlr::arrayBrackets="  ";
@@ -51,13 +52,19 @@ void testLinReg(const char *datafile=NULL) {
 //    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
 //  }
   if(X.d1==2){
-    FILE("z.model") <<y_grid.reshape(31,31);
-    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
-    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
-    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
-                   'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
-                   'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
-                   'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+    if(plotDev){
+      FILE("z.model") <<~y_grid.reshape(31,31);
+      FILE("z.model_s") <<~(y_grid+s_grid).reshape(31,31);
+      FILE("z.model__s") <<~(y_grid-s_grid).reshape(31,31);
+      gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 1 pt 3,\
+                     'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
+                     'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
+                     'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
+    }else{
+      FILE("z.model") <<~y_grid.reshape(31,31);
+      gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 1 pt 3,\
+                     'z.model' matrix us ($1/5-3):($2/5-3):3 w l"), false, true, "z.pdf");
+    }
   }
 }
 
@@ -102,7 +109,6 @@ void testRobustRegression(const char *datafile=NULL) {
     plotPoints(X,y);
     plot(true);
   }
-  FILE("z.model") <<~y_grid;
 
   //-- gnuplot
   mlr::arrayBrackets="  ";
@@ -111,10 +117,10 @@ void testRobustRegression(const char *datafile=NULL) {
 //    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
 //  }
   if(X.d1==2){
-    FILE("z.model") <<y_grid.reshape(31,31);
-    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
-    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
-    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
+    FILE("z.model") <<~y_grid.reshape(31,31);
+    FILE("z.model_s") <<~(y_grid+s_grid).reshape(31,31);
+    FILE("z.model__s") <<~(y_grid-s_grid).reshape(31,31);
+    gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 1 pt 3,\
                    'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
                    'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
                    'z.model__s' matrix us ($1/5-3):($2/5-3):3 w l; pause mouse"), false, true, "z.pdf");
@@ -154,7 +160,6 @@ void testKernelReg(const char *datafile=NULL) {
     plotPoints(X,y);
     plot(true);
   }
-  FILE("z.model") <<~y_grid;
 
   //-- gnuplot
   mlr::arrayBrackets="  ";
@@ -163,9 +168,9 @@ void testKernelReg(const char *datafile=NULL) {
 //    gnuplot(STRING("plot [-3:3] '" <<datafile <<"' us 1:2 w p,'z.model' us 1:2 w l"), false, true,"z.pdf");
 //  }
   if(X.d1==2){
-    FILE("z.model") <<y_grid.reshape(31,31);
-    FILE("z.model_s") <<(y_grid+s_grid).reshape(31,31);
-    FILE("z.model__s") <<(y_grid-s_grid).reshape(31,31);
+    FILE("z.model") <<~y_grid.reshape(31,31);
+    FILE("z.model_s") <<~(y_grid+s_grid).reshape(31,31);
+    FILE("z.model__s") <<~(y_grid-s_grid).reshape(31,31);
     gnuplot(STRING("splot [-3:3][-3:3] '" <<datafile <<"' w p ps 2 pt 4,\
                    'z.model' matrix us ($1/5-3):($2/5-3):3 w l,\
                    'z.model_s' matrix us ($1/5-3):($2/5-3):3 w l,\
@@ -216,7 +221,7 @@ void test2Class() {
 //  }
   if(X.d1==2){
     FILE("z.train") <<catCol(X, y);
-    FILE("z.model") <<p_grid.reshape(51,51);
+    FILE("z.model") <<~p_grid.reshape(51,51);
     gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
     gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
   }
@@ -248,7 +253,7 @@ void TEST(KernelLogReg){
   if(X.d1==2){
     mlr::arrayBrackets="  ";
     FILE("z.train") <<catCol(X, y);
-    FILE("z.model") <<p_grid.reshape(51,51);
+    FILE("z.model") <<~p_grid.reshape(51,51);
     gnuplot("load 'plt.contour'; pause mouse", false, true, "z.pdf");
     gnuplot("load 'plt.contour2'; pause mouse", false, true, "z.pdf");
   }
@@ -353,8 +358,7 @@ void exercise1() {
     FILE("z.model") <<catCol(X_grid, y_grid);
     gnuplot("plot 'z.train' us 1:2 w p,'z.model' us 1:2 w l", false, true, "z.pdf");
   } else {
-    y_grid.reshape(31,31);
-    FILE("z.model") <<y_grid;
+    FILE("z.model") <<~y_grid.reshape(31,31);
     gnuplot("splot [-3:3][-3:3] 'z.train' w p, 'z.model' matrix us ($1/5-3):($2/5-3):3 w l", false, true, "z.pdf");
   }
 }
@@ -404,6 +408,8 @@ int main(int argc, char *argv[]) {
   uint seed = mlr::getParameter<uint>("seed", 0);
   if(!seed)  rnd.clockSeed();
   else rnd.seed(seed);
+
+  plotDev = mlr::getParameter<bool>("plotDev", true);
 
   switch(mlr::getParameter<uint>("mode",1)) {
     case 1:  testLinReg();  break;

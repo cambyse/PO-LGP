@@ -19,7 +19,7 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
 
   //-- create tasks for optimization problem
   Task *c;
-  c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
 
 //  c = MP.addTask("qLimits", new TaskMap_qLimits());

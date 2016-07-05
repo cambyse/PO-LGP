@@ -261,7 +261,7 @@ void MocapID::clear() {
 //   if(hsi >= hsitoi.N) {
 //     hsitoiN = hsitoi.N;
 //     hsitoi.resizeCopy(hsi+1);
-//     // hsitoi.subRef(hsitoiN, hsi)() = -1;
+//     // hsitoi.refRange(hsitoiN, hsi)() = -1;
 //   }
 //   hsitoi(hsi) = ind;
 //   itohsi.append(hsi);
@@ -700,15 +700,15 @@ arr MocapRec::query(const char *type, const char *sensor, uint f) {
 
   // if(0 == strcmp(type, "pose")) {
   //   arr x;
-  //   x.append(kvg.get<arr>("pos").subDim(is, f));
-  //   x.append(kvg.get<arr>("quat").subDim(is, f));
+  //   x.append(kvg.get<arr>("pos").refDim(is, f));
+  //   x.append(kvg.get<arr>("quat").refDim(is, f));
   //   return x;
   // }
   arr &x = i->get<arr>();
   if(x.nd == 2)
     // return ARR(x(is, f));
     return {x(is, f)};
-  return x.subDim(is, f);
+  return x.refDim(is, f);
 }
 
 arr MocapRec::query(const char *type, const StringA &sensors) {
@@ -748,7 +748,7 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /*   sid2 = skvg2->get<double>("sid"); */
 /*   i2 = s->kvg.get<arr>("hsitoi").elem(HSI(hid2, sid2)); */
 
-/*   return s->kvg.get<arr>(type).subDim(i1, i2); */
+/*   return s->kvg.get<arr>(type).refDim(i1, i2); */
 /* } */
 
 /* arr MocapData::query(const char *type, const char *sensor1, const char *sensor2, uint f) { */
@@ -769,7 +769,7 @@ arr MocapRec::query(const char *type, const StringA &sensors, uint f) {
 /*   sid2 = skvg2->get<double>("sid"); */
 /*   i2 = s->kvg.get<arr>("hsitoi").elem(HSI(hid2, sid2)); */
 
-/*   return s->kvg.get<arr>("bam", type).subDim(i1, i2, f); */
+/*   return s->kvg.get<arr>("bam", type).refDim(i1, i2, f); */
 /* } */
 
 void MocapRec::computeDPos(const char *frame_sensor, const char *sensor) {
@@ -1062,7 +1062,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
       obs += O(t, t);
     }
     if(obs >= TODO) {
-      beta = inverse(TT * O * T) * TT * O * bamis.subRef(f-wlen+1, f);
+      beta = inverse(TT * O * T) * TT * O * bamis.refRange(f-wlen+1, f);
       bamLinCoeffPastis[f_thin]() = beta[1];
       bamLinCoeffPastObsis(f_thin) = 1;
     }
@@ -1076,7 +1076,7 @@ void MocapRec::computeLinCoeffPast(const char *type, const char *sensor) {
   for(uint f_thin = 0; f_thin < nframes_thin; f_thin++) {
     uint f = (f_thin + 1) * thinning - 1;
     if(f < wlen-1) continue;
-    beta = TTTITT * bamis.subRef(f-wlen+1, f);
+    beta = TTTITT * bamis.refRange(f-wlen+1, f);
     bamLinCoeffPastis[f_thin]() = beta[1];
   }
 #endif

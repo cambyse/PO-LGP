@@ -50,20 +50,20 @@ bool ControlActivity::isConv(){
 void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   stuck_count = 0;
   Node *it;
-  if((it=specs["ref0"])){
+  if((it=specs["sym1"])){
     CHECK(!specs["type"], "can't specify type twice");
-    it->keys.last()="type"; //rename ref0 to type
+    it->keys.last()="type"; //rename sym1 to type
   }
   if((it=specs["type"])){
     if(it->get<mlr::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : false;
     }else if (it->get<mlr::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->get<mlr::String>())->qIndex,
+      map = new TaskMap_qItself(world.getJointByName(specs["sym2"]->get<mlr::String>())->qIndex,
                                 world.getJointStateDimension());
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : true;
     }else{
-      map = new DefaultTaskMap(specs, world);
+      map = new TaskMap_Default(specs, world);
     }
   }else{
     HALT("need a type (the map type) in the specs");
@@ -99,7 +99,7 @@ bool FollowReferenceActivity::isConv(){
 
 //PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double _timeOut)
 //    : Action(actionMachine, "controlForce") {
-//  DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
+//  TaskMap_Default *m = new TaskMap_Default(posTMT, actionMachine.s->world, "endeffForceL");
 //  CtrlTask *task = new CtrlTask(
 //                     STRING("MoveEffTo_" << effName),
 //                     m,
