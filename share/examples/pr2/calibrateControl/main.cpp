@@ -85,6 +85,8 @@ void recordData() {
     }
   }
 
+  rnd.clockSeed();
+
   Poser pose(tcm.realWorld);
 
   threadOpenModules(true);
@@ -97,25 +99,20 @@ void recordData() {
   CtrlTask task("qItself", &map, 1., 1., 1., 10.);
   tcm.ctrlTasks.set() = { &task };
 
-  for(uint i=0;i<10;i++){
-    q0 = pose.getPose();
+  arr Q,U;
 
+  for(uint j=0;j<1000;j++){
+    // sample new pose
+    q0 = pose.getPose();
     tcm.ctrlTasks.writeAccess();
     task.setTarget(q0);
     tcm.ctrlTasks.deAccess();
-
     mlr::wait(6.);
-  
+    CtrlMsg obs;
 
-  CtrlMsg obs;
-
-  arr Q,U;
-  for(;;) {
-    // sample new goal:
-    //
     // read out state and save to file
     arr Qi,Ui;
-    for (uint i=0;i<5;i++) {
+    for (uint i=0;i<10;i++) {
       obs = ctrl_obs.get();
       Qi.append(~obs.q);
       Ui.append(~obs.u_bias);
@@ -126,7 +123,6 @@ void recordData() {
     Q.append(~Qi);
     U.append(~Ui);
 
-    cout << Q << endl;
     write(LIST<arr>(Q),STRING("Q.dat"));
     write(LIST<arr>(U),STRING("U.dat"));
   }
@@ -137,37 +133,20 @@ void recordData() {
 
   cout <<"bye bye" <<endl;
 }
+
 // =================================================================================================
 arr makeGravityCompFeatures(arr &X) {
   arr Phi,Phi_1,Phi_2,Phi_3,Phi_4;
 
   ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
 
-  arr phi_t;
-  for (uint t = 0; t<X.d0; t++) {
-    phi_t.clear();
-    world.setJointState(X[t],X[t]*0.);
 
-    arr M,F;
-    world.equationOfMotion(M,F);
-    phi_t.append(F);
-
-    Phi_1.append(~phi_t);
-  }
-
-  // add quadratic features
-  Phi_2 = makeFeatures(X,quadraticFT);
-  Phi = catCol(Phi_1,Phi_2);
-
-  // add sin/cos features
-  Phi = catCol(Phi,sin(X));
-  Phi = catCol(Phi,cos(X));
 
   return Phi;
 }
 // =================================================================================================
 void learnModel() {
-  arr X,Phi,Y;
+  arr X,Phi,Y,Z;
   arr beta;
 
   //provide virtual train and test routines for CV
@@ -181,19 +160,49 @@ void learnModel() {
     };
   } cv;
 
-  // define which model to learn [0: right arm, 1: left arm]
-//  uint model = 0;
+  // define which joints to learn [l or r]
+  String arm = "r";
+  StringA joints = {"_elbow_flex_joint","_wrist_roll_joint","_wrist_flex_joint","_forearm_roll_joint",
+                   "_upper_arm_roll_joint","_shoulder_lift_joint","_shoulder_pan_joint"};
+  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
 
-  //load the data, split in input and output
-  X <<FILE("Q.dat");
-  Y <<FILE("U.dat");
+  // load the data, split in input and output
+  Z <<FILE("data/Q1.dat");
+  Y <<FILE("data/U1.dat");
 
-  for (uint i=11;i<12;i++) {
+  // select the relevant joints
+  arr T = zeros(joints.N,Z.d1);
+  for (uint i=0;i<joints.N;i++) {
+    T(i,world.getJointByName(STRING(arm<<joints(i)))->qIndex) = 1;
+  }
+  X = Z*~T;
+
+  Phi = makeFeatures(X,quadraticFT);
+  // add sin/cos features
+  Phi = catCol(Phi,sin(X));
+  Phi = catCol(Phi,cos(X));
+
+  // add dynamics features
+  arr Phi_tmp;
+  arr phi_t;
+  for (uint t = 0; t<Z.d0; t++) {
+    phi_t.clear();
+    world.setJointState(Z[t],Z[t]*0.);
+
+    arr M,F;
+    world.equationOfMotion(M,F);
+    phi_t.append(T*F);
+
+    Phi_tmp.append(~phi_t);
+  }
+  Phi = catCol(Phi,Phi_tmp);
+
+
+
+  for (uint i=0;i<joints.N;i++) {
     arr y;
-    y = Y.col(i);
-
+    y = Y.col(world.getJointByName(STRING(arm<<joints(i)))->qIndex);
     //cross valide
-    Phi = makeGravityCompFeatures(X);
     cv.crossValidateMultipleLambdas(Phi, y,
                                     ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5),
                                     10, false);
