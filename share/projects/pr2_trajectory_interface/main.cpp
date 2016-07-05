@@ -7,7 +7,7 @@
 #include <Optim/opt-constrained.h>
 
 #include <RosCom/roscom.h>
-#include <RosCom/rosmacro.h>
+//#include <RosCom/rosmacro.h>
 #include <RosCom/rosalvar.h>
 #include <RosCom/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -90,7 +90,6 @@ void TEST(TrajectoryInterface){
   qIdxList.append(ti->world_plan->getJointByName("l_forearm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_upper_arm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_shoulder_lift_joint")->qIndex);
-
 
   for (;;) {
     q = ti->world_plan->getJointState();
