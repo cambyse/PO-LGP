@@ -1,5 +1,5 @@
 #include "Connection.h"
-
+#include <Core/util.h>
 
 
 Connection* Connection::getConnection() {
@@ -11,6 +11,7 @@ Connection* Connection::getConnection() {
 }
 
 Connection::Connection() {
+  mlr::String DEVICE = mlr::getParameter<mlr::String>("usbDevice","/dev/ttyACM0");
 
   if (!openConnection(DEVICE)) {
 

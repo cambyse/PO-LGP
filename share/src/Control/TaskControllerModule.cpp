@@ -1,5 +1,4 @@
 #include "TaskControllerModule.h"
-//#include <RosCom/rosalvar.h> //todo: don't deal with the markers here! ObjectFilter..
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
@@ -48,13 +47,13 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
   modelWorld.set() = realWorld;
-  taskController = new TaskController(modelWorld.set()(), true);
+  taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
 
   taskController->qNullCostRef.y_ref = q0;
   taskController->qNullCostRef.setGains(0., 1.);
-  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", 1.)*modelWorld.get()->getHmetric();
+  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", .1)*modelWorld.get()->getHmetric();
 
 #if 1
   modelWorld.writeAccess();
@@ -91,8 +90,8 @@ void TaskControllerModule::step(){
       q_real = ctrl_obs.get()->q;
       qdot_real = ctrl_obs.get()->qdot;
       arr pr2odom = pr2_odom.get();
-      if(pr2odom.N==3)
-        q_real.subRef(trans->qIndex, trans->qIndex+2) = pr2odom;
+      if(q_real.N==realWorld.q.N && pr2odom.N==3)
+        q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
     }
     if(robot=="baxter"){
 #ifdef MLR_ROS
@@ -166,13 +165,19 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
+    arr Kp, Kd, k, JCJ;
+    taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+
+    Kp = .01 * JCJ;
+    Kp += .2*diag(ones(Kp.d0));
+
     ctrl_q_ref.set() = q_model;
 
     //-- first zero references
     refs.q =  q_model;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = 1.;
-    refs.Kp = ARR(1.);
+    refs.Kp = ARR(1.); //Kp;
     refs.Kd = ARR(1.);
     refs.Ki = ARR(0.2);
     refs.fL = zeros(6);
@@ -181,6 +186,7 @@ void TaskControllerModule::step(){
     refs.J_ft_invL.clear();
     refs.u_bias = zeros(q_model.N);
     refs.intLimitRatio = 0.7;
+    refs.qd_filt = .99;
 
     //-- compute the force feedback control coefficients
     uint count=0;
@@ -259,7 +265,21 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    refs.q = q_ref;
+#if 1 //like oldfashioned
+    refs.q =  q_ref;
+    refs.qdot = zeros(q_model.N);
+    refs.fL_gamma = 1.;
+    refs.Kp = ARR(1.);
+    refs.Kd = ARR(1.);
+    refs.Ki = ARR(0.5);
+    refs.fL = zeros(6);
+    refs.fR = zeros(6);
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
+    refs.u_bias = zeros(q_model.N);
+    refs.intLimitRatio = 0.7;
+#else
+    refs.q =  q_ref;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
     refs.Kp = Kp;
@@ -272,6 +292,7 @@ void TaskControllerModule::step(){
     refs.u_bias = zeros(q_ref.N); //u_bias;
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;
+#endif
   }
 
   ctrl_q_ref.set() = refs.q;

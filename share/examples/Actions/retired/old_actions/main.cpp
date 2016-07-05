@@ -84,7 +84,7 @@ void TEST(FollowTrajectory) {
   arr q = interpolate_trajectory({.6, -.5, 1.2}, {.6, .6, 1.2}, 100);
 
   // then construct a space in which to execute
-  TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructor requires a 'world' is ugly!
+  TaskMap *t = new TaskMap_Default(posTMT, activity.machine->s->world, "endeffR"); //that the constructor requires a 'world' is ugly!
 
   // then the action
   Action *a = new FollowReferenceInTaskSpace(*activity.machine, "my_follow_task", t, q, 5.);
@@ -103,15 +103,15 @@ void TEST(Push) {
 
   Action *a, *b;
 
-  b = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(vecTMT, *activity.machine->world, "endeffL", Vector_x),
+  b = new FollowReference(*activity.machine, "moving", new TaskMap_Default(vecTMT, *activity.machine->world, "endeffL", Vector_x),
                           {1./MLR_SQRT2, 0, -1./MLR_SQRT2}, {}, -1., .5, .9, .1, 10., 100., -1.);
 
-  a = new FollowReference(*activity.machine, "moving", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
+  a = new FollowReference(*activity.machine, "moving", new TaskMap_Default(posTMT, *activity.machine->world, "endeffL"),
                           {.7, .3, .7}, {}, -1., .5, .9, .1, 10.);
 
   activity.machine->waitForActionCompletion(a);
 
-  a = new FollowReference(*activity.machine, "orientation", new DefaultTaskMap(posTMT, *activity.machine->world, "endeffL"),
+  a = new FollowReference(*activity.machine, "orientation", new TaskMap_Default(posTMT, *activity.machine->world, "endeffL"),
                           {.7, .3, .5}, {}, -1., .5, .9, .05, 10.);
 
   activity.machine->waitForActionCompletion(a);
@@ -255,7 +255,7 @@ void test_replay() {
   mlr::wait(3.);
 
   // 2. execute trajectory
-  TaskMap *t = new DefaultTaskMap(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
+  TaskMap *t = new TaskMap_Default(posTMT, activity.machine->s->world, "endeffR"); //that the constructure requires a 'world' is ugly!
   Action *a = new FollowReferenceInTaskSpace(*activity.machine, "replay task", t, trajX, 10.);
   cout <<"Execute trajectory" <<endl;
   mlr::wait(10.);

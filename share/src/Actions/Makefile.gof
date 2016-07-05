@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).so _swig.so
+OUTPUT := $(BASE)/lib/$(NAME).so swig_wrap.cxx _swig.so
 
 ROS = 1
 

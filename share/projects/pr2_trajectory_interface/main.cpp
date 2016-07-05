@@ -1,4 +1,4 @@
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
@@ -7,8 +7,8 @@
 #include <Optim/opt-constrained.h>
 
 #include <RosCom/roscom.h>
-//#include <RosCom/rosmacro.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/rosmacro.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
@@ -28,17 +28,17 @@ void graspBox(){
   arr X;
   MotionProblem MP(*ti->world_plan);
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t = MP.addTask("transitions", new TaskMap_Transition(world));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-  t = MP.addTask("pos1", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+  t = MP.addTask("pos1", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
   t->setCostSpecs(70, 80, {0.}, 1e2);
-  t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+  t = MP.addTask("rot1", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+  t = MP.addTask("rot2", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("pos2", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+  t = MP.addTask("pos2", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
   t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
   t = MP.addTask("limit", new LimitsConstraint());
   t->setCostSpecs(0, MP.T, ARR(0.), 1e2);
@@ -90,6 +90,7 @@ void TEST(TrajectoryInterface){
   qIdxList.append(ti->world_plan->getJointByName("l_forearm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_upper_arm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_shoulder_lift_joint")->qIndex);
+
 
   for (;;) {
     q = ti->world_plan->getJointState();

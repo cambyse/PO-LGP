@@ -2,7 +2,7 @@
 
 void threadedRun() {
   struct MySystem{
-    ACCESS(arr, gamepadState);
+    ACCESSname(arr, gamepadState);
     GamepadInterface gamepad;
     MySystem(){
     }

@@ -230,7 +230,7 @@ void soc::bayesianDynamicControl(SocSystemAbstraction& sys, arr& x, const arr& x
 
   //task message
   arr R, r, q_1;
-  q_1.referToSub(x_1, 0, n-1);
+  q_1.referToRange(x_1, 0, n-1);
   sys.getTaskCosts(R, r, q_1, t);
 
   //v, Vinv are optional bwd messages!

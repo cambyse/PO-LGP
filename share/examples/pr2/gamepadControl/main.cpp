@@ -7,7 +7,7 @@
 #include <Ors/orsviewer.h>
 
 #include <sensor_msgs/JointState.h>
-//#include <pr2/baxter.h>
+#include <RosCom/baxter.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
@@ -25,8 +25,8 @@ int main(int argc, char** argv){
   TaskControllerModule tcm;
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
-  //SendPositionCommandsToBaxter sender;
-  OrsViewer view;
+//  OrsViewer view;
+  OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
   if(mlr::getParameter<bool>("useRos")){
     mlr::String robot = mlr::getParameter<mlr::String>("robot", "pr2");
@@ -37,6 +37,7 @@ int main(int argc, char** argv){
     }
     if(robot=="baxter"){
       new Subscriber<sensor_msgs::JointState> ("/robot/joint_states", jointState);
+      new SendPositionCommandsToBaxter(tcm.modelWorld.get());
     }
   }
 

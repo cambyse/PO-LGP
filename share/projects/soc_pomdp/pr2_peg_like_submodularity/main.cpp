@@ -1,4 +1,4 @@
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Control/taskController.h>
 //#include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
@@ -134,7 +134,7 @@ void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String>
   est_target->X.pos.x = target(0);
 
 
-  PDtask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
+  PDtask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target", NoVector));
 
   //pd_y->setTarget(ARR(target(0),target(1),target(2)));
   pd_y->prec = 10.;

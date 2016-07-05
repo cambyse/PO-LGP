@@ -6,7 +6,7 @@
 #include <Motion/pr2_heuristics.h>
 
 #include "simulator.h"
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 
 void TEST(Simulator){
   struct MySystem{

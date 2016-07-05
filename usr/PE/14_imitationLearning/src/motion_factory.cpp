@@ -21,10 +21,10 @@ void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint ve
   cout << "x0: " << s.MP->x0 << endl;
 
 //  Task *t;
-//  t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+//  t = s.MP->addTask("tra", new TaskMap_Transition(*s.world));
 //  t->map.order=1;
 //  t->setCostSpecs(0, s.MP->T, ARR(0.), 1.);
-//  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+//  ((TaskMap_Transition*)&t->map)->H_rate_diag = 1.;
 
   s.MP->phiMatrix.clear();
   s.MP->ttMatrix.clear();
@@ -137,21 +137,21 @@ void MotionFactory::createScene0(Scene &s, mlr::Array<CostWeight> &weights, uint
   uint pC = 0;
   // transition costs
   Task *t;
-  t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+  t = s.MP->addTask("tra", new TaskMap_Transition(*s.world));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, s.MP->T, ARR(0.), param(pC));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = 1.;
   weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension()));
   pC++;
 
   // task costs
-  t =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  t =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   t->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(s.MP->T),1,3));
   pC++;
 
 //  param.append(1e2);
-//  t =s.MP->addTask("vec", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+//  t =s.MP->addTask("vec", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
 //  t->setCostSpecs(s.MP->T,s.MP->T,{0.,0.,-1.},param(pC));
 //  weights.append(CostWeight(CostWeight::Dirac,1,ARR(s.MP->T),1,3));
 //  pC++;
@@ -298,10 +298,10 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
   uint pC = 0;
   // transition costs
   Task *t;
-  t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+  t = s.MP->addTask("tra", new TaskMap_Transition(*s.world));
   t->map.order=1;
   t->setCostSpecs(0, s.MP->T, ARR(0.), param(pC));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = 1.;
   weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,N,ARR(0.1,1e2)));
   pC++;
 
@@ -312,34 +312,34 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 
   /// tasks
   // first contact with door
-  t = s.MP->addTask("posC", new DefaultTaskMap(posTMT, *s.world, "endeffL",NoVector));
+  t = s.MP->addTask("posC", new TaskMap_Default(posTMT, *s.world, "endeffL",NoVector));
   t->setCostSpecs(C, C, conv_vec2arr(s.world->getShapeByName("handle")->X.pos), param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,3));
   pC++;
 
-  t = s.MP->addTask("vecC", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t = s.MP->addTask("vecC", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
   t->setCostSpecs(C, C, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,1));
   pC++;
 
-  t = s.MP->addTask("vecC2", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t = s.MP->addTask("vecC2", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
   t->setCostSpecs(C-10, C-10, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(C-10),1,1));
   pC++;
 
-  t = s.MP->addTask("vecC3", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t = s.MP->addTask("vecC3", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
   t->setCostSpecs(C+10, C+10, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(C+10),1,1));
   pC++;
 
   ors::Vector dir = ors::Vector(0.,-.7,0.2); dir.normalize();
-  t = s.MP->addTask("vecF", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
+  t = s.MP->addTask("vecF", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
   t->setCostSpecs(U, U, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(U),1,1));
   pC++;
 
 //  // handle down
-////  t = s.MP->addTask("vecU", new DefaultTaskMap(vecTMT, *s.world, "endeffL", ors::Vector(0.,0.,1.)));
+////  t = s.MP->addTask("vecU", new TaskMap_Default(vecTMT, *s.world, "endeffL", ors::Vector(0.,0.,1.)));
 ////  t->setCostSpecs(U, U, xDemTaskVec[U], param(pC));
 ////  weights.append(CostWeight(CostWeight::Dirac,1,ARR(U),1,3));
 ////  pC++;
@@ -349,7 +349,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(F),1,1));
   pC++;
 
-//  t = s.MP->addTask("posC2", new DefaultTaskMap(posTMT, *s.world, "endeffL",NoVector));
+//  t = s.MP->addTask("posC2", new TaskMap_Default(posTMT, *s.world, "endeffL",NoVector));
 //  t->setCostSpecs(U, U, xDemTaskPos[0]*3., param(pC));
 //  weights.append(CostWeight(CostWeight::Dirac,1,ARR(C),1,3));
 //  pC++;
@@ -427,7 +427,7 @@ void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   // task costs
   TaskCost *c;
-  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::Gaussian,1,ARR(s.MP->T,0.5),s.MP->T,3));
   weights.last().compWeights(w,NoArr,NoArr,ARR(param(pC)),true);
@@ -515,7 +515,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   // task costs
 //  TaskCost *c;
-//  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+//  c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
 //  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
 //  weights.append(CostWeight(CostWeight::Gaussian,2,ARR(1.),s.MP->T,3,ARR(1e0,1e3)));
 //  weights.last().compWeights(w,NoArr,NoArr,ARR(param(pC),param(pC+1)),true);
@@ -524,7 +524,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
 //  pC=pC+2;
 
   TaskCost *c;
-  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::RBF,20,ARR(20,70.,s.MP->T,0.05),s.MP->T,3,ARR(1e0,1e2)));
   weights.last().compWeights(w,NoArr,NoArr,param.subRef(pC,pC+19),true);
@@ -611,7 +611,7 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   // task costs
   TaskCost *c;
-  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
 //  c->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
   c->prec.subRef(param(pC+1),param(pC+1)+3)=param(pC);
@@ -767,24 +767,24 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   uint stay = 5;
   TaskCost *c;
-  c =s.MP->addTask("posT", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("posT", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(s.MP->T,s.MP->T, objPosT, param(N++));
 
-  c =s.MP->addTask("posC", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("posC", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(contactTime,contactTime, objPos0, param(N++));
 
-  c =s.MP->addTask("vecT", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =s.MP->addTask("vecT", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
   c->setCostSpecs(s.MP->T,s.MP->T, xDemTaskVec[s.MP->T], param(N++));
   cout << "xDemTaskVec[s.MP->T]: "<< xDemTaskVec[s.MP->T] << endl;
 
-  c =s.MP->addTask("vecC", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =s.MP->addTask("vecC", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
   c->setCostSpecs(contactTime,contactTime, xDemTaskVec[s.MP->T], param(N++));
 
-  c =s.MP->addTask("velT", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("velT", new TaskMap_Default(posTMT, grasp->index) );
   c->map.order = 1;
   c->setCostSpecs(s.MP->T-stay,s.MP->T, zeros(3), param(N++));
 
-  c =s.MP->addTask("velC", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("velC", new TaskMap_Default(posTMT, grasp->index) );
   c->map.order = 1;
   c->setCostSpecs(contactTime-stay,contactTime+stay, zeros(3), param(N++));
 
@@ -809,18 +809,18 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   //  /*arr costGrid = linspace(50.,double(xDem.d0-1),5); costGrid.reshapeFlat();
   //  cout << "costGrid"<<costGrid << endl;
-  //  c =s.MP->addTask("posC", new DefaultTaskMap(posTMT, grasp->index) );
+  //  c =s.MP->addTask("posC", new TaskMap_Default(posTMT, grasp->index) );
   //  c->setCostSpecs(contactTime,contactTime+3, objPosT, param(N++));
-  //  c =s.MP->addTask("vel", new DefaultTaskMap(qItselfTMT,*s.world) );
+  //  c =s.MP->addTask("vel", new TaskMap_Default(qItselfTMT,*s.world) );
   //  c->map.order = 1.;
   //  c->setCostSpecs(s.MP->T, s.MP->T, zeros(s.world->getJointStateDimension()), param(N++));
   //  for (uint idx=0;idx<costGrid.d0;idx++) {
-  //    c = s.MP->addTask(STRING("pos"<<idx),new DefaultTaskMap(posTMT, grasp->index) );
+  //    c = s.MP->addTask(STRING("pos"<<idx),new TaskMap_Default(posTMT, grasp->index) );
   //    c->setCostSpecs(costGrid(idx),costGrid(idx), xDemTaskPos[costGrid(idx)], 1e2);
   //    param.append(ARR(1.));
   //    c->active=true;
 
-  //    c =s.MP->addTask(STRING("vec"<<idx), new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  //    c =s.MP->addTask(STRING("vec"<<idx), new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
   //    c->setCostSpecs(costGrid(idx),costGrid(idx), xDemTaskVec[costGrid(idx)], 1e2);
   //    param.append(ARR(1.));
   //    c->active=true;
@@ -901,12 +901,12 @@ void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   // task costs
   TaskCost *c;
-  c =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(s.MP->T,s.MP->T,conv_vec2arr(tar->X.pos),param(pC));
   weights.append(CostWeight(CostWeight::Dirac,1,ARR(s.MP->T),1,3));
   pC++;
 
-//  c =s.MP->addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
+//  c =s.MP->addTask("pos2", new TaskMap_Default(posTMT, grasp->index) );
 //  s.MP->setInterpolatingCosts(c, MotionProblem::constant,conv_vec2arr(tar->X.pos),0.);
   //  c->setCostSpecs(s.MP->T*0.5,s.MP->T*0.5, conv_vec2arr(tar->X.pos), param(N));
 //  c->prec(s.MP->T*0.5) = param(N);
