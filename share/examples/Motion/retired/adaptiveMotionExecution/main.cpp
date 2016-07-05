@@ -75,30 +75,30 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("transition", 	new TransitionTaskMap(world));
+  c = P.addTask("transition", 	new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
-    c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 0.)));
+    c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 0.)));
     c->setCostSpecs(P.T, P.T,
                             {0.,0.,1.}, 1e4,
                             {0.,0.,0.}, 1e-3);
   }
 
   if (useCollAvoid) {
-//    c = P.addTask("collision", new DefaultTaskMap(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
+//    c = P.addTask("collision", new TaskMap_Default(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
 //    c->setCostSpecs(0, P.T, {0.}, 1e0);
   }
 
@@ -214,12 +214,12 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
     // task 1: POSITION
-    yPos_target = yNext.subRef(0,2);
+    yPos_target = yNext.refRange(0,2);
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
 
     // task  2: ORIENTATION
-    yVec_target = yNext.subRef(3,5);
+    yVec_target = yNext.refRange(3,5);
     Phi.append((yVec - yVec_target)/ fVec_deviation);
     PhiJ.append(JVec / fVec_deviation);
 

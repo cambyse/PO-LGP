@@ -1,4 +1,4 @@
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
@@ -44,7 +44,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   world.getBodyByName("target")->X.pos.z = height + 0.1;
 
 
-  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target", NoVector));
   pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
 
 
@@ -130,7 +130,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
     cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-    CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+    CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target"));
     pd_y->prec = 10.;
 
     //joint space PD task
@@ -251,7 +251,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-  CtrlTask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
@@ -432,7 +432,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
 
 
-  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task

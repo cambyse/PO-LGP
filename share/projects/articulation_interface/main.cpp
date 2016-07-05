@@ -6,7 +6,7 @@
 #include <Motion/pr2_heuristics.h>
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 
 
 #include <ros/ros.h>
@@ -93,13 +93,13 @@ int main(int argc, char** argv){
   cout <<"joint dimensionality=" <<q.N <<endl;
 
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
   double contactT = MP.T/2.;
   // position task maps
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeffL", NoVector, "target",NoVector));
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeffL", NoVector, "target",NoVector));
   t->setCostSpecs(contactT-10., contactT, {0.}, 1e2);
   t = MP.addTask("door_joint", new TaskMap_qItself(G.getJointByName("frame_door")->qIndex, G.getJointStateDimension()));
   t->setCostSpecs(MP.T, MP.T, {-.7}, 1e2);

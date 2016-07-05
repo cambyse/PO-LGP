@@ -26,7 +26,7 @@ void TrajFactory::compJointTraj(const arr &xInit, const arr &y, arr &x, MotionPr
   MP.tasks.clear();
   MP.setState(xInit[0]);
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(MP.world));
+  t = MP.addTask("tra", new TaskMap_Transition(MP.world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
   t =  MP.addTask("t",tm);

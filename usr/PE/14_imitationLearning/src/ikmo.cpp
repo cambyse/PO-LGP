@@ -198,7 +198,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
     PHI = PHI_T;
   } else {
     PHI.clear(); JxP.clear(); JgP.clear(); JhP.clear();
-    RowShiftedPackedMatrix *J_T_aux = (RowShiftedPackedMatrix*)J_T.aux;
+    RowShifted *J_T_aux = (RowShifted*)J_T.aux;
 
     uintA f;
     tt.findValues(f,sumOfSqrTT);
@@ -212,9 +212,9 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
     uint xC = 0;
     uint gC = 0;
     uint hC = 0;
-    RowShiftedPackedMatrix *Jx_aux = auxRowShifted(JxP, xN, J_T.d1, J_T_aux->real_d1);
-    RowShiftedPackedMatrix *Jg_aux = auxRowShifted(JgP, gN, J_T.d1, J_T_aux->real_d1);
-//    RowShiftedPackedMatrix *Jh_aux = auxRowShifted(JhP, hN, J_T.d1, J_T_aux->real_d1);
+    RowShifted *Jx_aux = makeRowShifted(JxP, xN, J_T.d1, J_T_aux->real_d1);
+    RowShifted *Jg_aux = makeRowShifted(JgP, gN, J_T.d1, J_T_aux->real_d1);
+//    RowShifted *Jh_aux = makeRowShifted(JhP, hN, J_T.d1, J_T_aux->real_d1);
 
     for (uint i= 0;i<tt.d0;i++){
       switch (tt(i)) {
@@ -274,7 +274,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 //      }
 //      if(idx.contains(i)) {
 //        JgP.delRows(j);
-//        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+//        ((RowShifted*)JgP.aux)->rowShift.remove(j);
 //        j--;
 //      }
 //      j++;

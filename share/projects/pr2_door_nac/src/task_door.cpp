@@ -7,15 +7,15 @@ void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
 {
   TrajFactory tf;
   arr yC1,yC2;
-  tf.compFeatTraj(X,yC1,MP->world,new DefaultTaskMap(posTMT,MP->world,"endeffC1"));
-  tf.compFeatTraj(X,yC2,MP->world,new DefaultTaskMap(posTMT,MP->world,"endeffC2"));
+  tf.compFeatTraj(X,yC1,MP->world,new TaskMap_Default(posTMT,MP->world,"endeffC1"));
+  tf.compFeatTraj(X,yC2,MP->world,new TaskMap_Default(posTMT,MP->world,"endeffC2"));
 
   arr prec = constraintTime*1e3;
   Task *t;
-  t = MP->addTask("posC1", new DefaultTaskMap(posTMT,MP->world,"endeffC1"));
+  t = MP->addTask("posC1", new TaskMap_Default(posTMT,MP->world,"endeffC1"));
   t->target = yC1;
   t->prec = prec;
-  t = MP->addTask("posC2", new DefaultTaskMap(posTMT,MP->world,"endeffC2"));
+  t = MP->addTask("posC2", new TaskMap_Default(posTMT,MP->world,"endeffC2"));
   t->target = yC2;
   t->prec = prec;
 
@@ -35,7 +35,7 @@ void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
   for (uint t=0;t<F.d0;t++){
     if(fabs(F(t,5))> mlr::getParameter<double>("contact_threshold")) {
 //      constraintTime(t) = 1.;
-      constraintTime.subRef(t-5,t) = 1.;
+      constraintTime.refRange(t-5,t) = 1.;
     }
   }
   constraintCP = ARR(constraintTime.findValue(1.),F.d0); constraintCP.reshapeFlat();
@@ -52,8 +52,8 @@ bool DoorTask::success(const arr &X, const arr &Y) {
 bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   arr C1demo,C2demo,Gdemo;
   TrajFactory tf;
-  tf.compFeatTraj(Xdemo,C1demo,*world,new DefaultTaskMap(posTMT,*world,"endeffC1"));
-  tf.compFeatTraj(Xdemo,C2demo,*world,new DefaultTaskMap(posTMT,*world,"endeffC2"));
+  tf.compFeatTraj(Xdemo,C1demo,*world,new TaskMap_Default(posTMT,*world,"endeffC1"));
+  tf.compFeatTraj(Xdemo,C2demo,*world,new TaskMap_Default(posTMT,*world,"endeffC2"));
   tf.compFeatTraj(Xdemo,Gdemo,*world,new TaskMap_qItself(*world,"l_gripper_joint"));
 
   arr C1trans = C1demo;
@@ -113,14 +113,14 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
   //--tasks
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world));
+  t = MP.addTask("tra", new TaskMap_Transition(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
 
-  t =MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));
+  t =MP.addTask("posC1", new TaskMap_Default(posTMT,*world,"endeffC1"));
   t->setCostSpecs(0,MP.T, C1trans, 1e3);
-  t =MP.addTask("posC2", new DefaultTaskMap(posTMT,*world,"endeffC2"));
+  t =MP.addTask("posC2", new TaskMap_Default(posTMT,*world,"endeffC2"));
   t->setCostSpecs(0,MP.T, C2trans, 1e3);
 
 

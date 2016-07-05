@@ -4,8 +4,7 @@
 
 using namespace Ipopt;
 
-int main(int argv, char* argc[])
-{
+void orig(){
   // Create a new instance of your nlp 
   //  (use a SmartPtr, not raw)
   SmartPtr<TNLP> mynlp = new MyNLP();
@@ -28,7 +27,7 @@ int main(int argv, char* argc[])
   status = app->Initialize();
   if (status != Solve_Succeeded) {
     printf("\n\n*** Error during initialization!\n");
-    return (int) status;
+    return;
   }
 
   // Ask Ipopt to solve the problem
@@ -44,6 +43,10 @@ int main(int argv, char* argc[])
   // As the SmartPtrs go out of scope, the reference count
   // will be decremented and the objects will automatically 
   // be deleted.
+}
 
-  return (int) status;
+int main(int argn, char** argv){
+  orig();
+
+  return 0;
 }

@@ -1,0 +1,5 @@
+BASE = ../../..
+
+DEPEND = Motion Core Geo Ors Gui Optim
+
+include $(BASE)/gofMake/generic.mk

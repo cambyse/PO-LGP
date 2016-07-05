@@ -1,4 +1,4 @@
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
@@ -46,12 +46,12 @@ int main(int argc, char** argv){
   arr x = MP.getInitialization();
 
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t = MP.addTask("transitions", new TaskMap_Transition(world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 // position task maps
-t = MP.addTask("position", new DefaultTaskMap(posTMT, world, "endeff_soft_hand", NoVector, "target",NoVector));
+t = MP.addTask("position", new TaskMap_Default(posTMT, world, "endeff_soft_hand", NoVector, "target",NoVector));
 t->setCostSpecs(MP.T, MP.T, {0.}, 1e2);
 
 optConstrained(x, NoArr, Convert(MF), OPT(verbose=0,stopTolerance = 1e-3));

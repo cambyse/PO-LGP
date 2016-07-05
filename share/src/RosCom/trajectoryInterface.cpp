@@ -188,8 +188,8 @@ void TrajectoryInterface::gotoPosition(arr x_pr2, double T, bool recordData, boo
   }
 
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world_pr2), sumOfSqrTT);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_pr2);
+  t = MP.addTask("tra", new TaskMap_Transition(*world_pr2), sumOfSqrTT);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_pr2);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 

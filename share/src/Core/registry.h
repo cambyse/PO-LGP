@@ -133,14 +133,11 @@ inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& i
   new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##Key)
 
-/*
-
 #define REGISTER_TYPE_DERIVED(T, Base) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), new Type_typed_readable<T KO Base>(#Base,NULL)); \
+  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO Base> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
-*/
 
 #endif
 

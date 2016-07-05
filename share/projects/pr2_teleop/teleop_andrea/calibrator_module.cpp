@@ -100,23 +100,23 @@ void Calibrator::calibrate() {
   arrf p_open, p_closed;
   float dist_open, dist_closed;
 
-  p_side_rh = mid.query(posesSide, STRING("/human/rh/index")).subRef(0, 2);
-  p_side_lh = mid.query(posesSide, STRING("/human/lh/index")).subRef(0, 2);
+  p_side_rh = mid.query(posesSide, STRING("/human/rh/index")).refRange(0, 2);
+  p_side_lh = mid.query(posesSide, STRING("/human/lh/index")).refRange(0, 2);
   center = .5f * (p_side_rh + p_side_lh);
   radius = .5f * length(p_side_rh - p_side_lh);
 
 // Older calibration code
 //   // RIGHT HAND
 //   // ===========================================================================
-//   p_front = mid.query(posesFront, STRING("rh:index")).subRef(0, 2);
-//   p_side = mid.query(posesSide, STRING("rh:index")).subRef(0, 2);
+//   p_front = mid.query(posesFront, STRING("rh:index")).refRange(0, 2);
+//   p_side = mid.query(posesSide, STRING("rh:index")).refRange(0, 2);
 
 //   // assuming the first three coordinates are position
 //   diff = p_side - p_front;
 //   height = .5 * (p_front(2) + p_side(2));
 
-//   p_front_xy = p_front.subRef(0, 1);
-//   p_side_xy = p_side.subRef(0, 1);
+//   p_front_xy = p_front.refRange(0, 1);
+//   p_side_xy = p_side.refRange(0, 1);
 
 //   // assuming the first 2 coordinates are x-y
 //   dist = length(diff);
@@ -126,20 +126,20 @@ void Calibrator::calibrate() {
 //   orth(1) = diff(0);
 
 //   center_xy = .5f * (p_front_xy + p_side_xy - orth * dist);
-//   center_rh.subRef(0, 1) = center_xy;
+//   center_rh.refRange(0, 1) = center_xy;
 //   center_rh(2) = height;
 
 //   // LEFT HAND
 //   // ===========================================================================
-//   p_front = mid.query(posesFront, STRING("lh:index")).subRef(0, 2);
-//   p_side = mid.query(posesSide, STRING("lh:index")).subRef(0, 2);
+//   p_front = mid.query(posesFront, STRING("lh:index")).refRange(0, 2);
+//   p_side = mid.query(posesSide, STRING("lh:index")).refRange(0, 2);
 
 //   // assuming the first three coordinates are position
 //   diff = p_side - p_front;
 //   height = .5 * (p_front(2) + p_side(2));
 
-//   p_front_xy = p_front.subRef(0, 1);
-//   p_side_xy = p_side.subRef(0, 1);
+//   p_front_xy = p_front.refRange(0, 1);
+//   p_side_xy = p_side.refRange(0, 1);
 
 //   // assuming the first 2 coordinates are x-y
 //   dist = length(diff);
@@ -149,7 +149,7 @@ void Calibrator::calibrate() {
 //   orth(1) = -diff(0);
 
 //   center_xy = .5f * (p_front_xy + p_side_xy - orth * dist);
-//   center_lh.subRef(0, 1) = center_xy;
+//   center_lh.refRange(0, 1) = center_xy;
 //   center_lh(2) = height;
 
   // RIGHT GRIPPER

@@ -5,7 +5,7 @@
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <RosCom/roscom.h>
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
