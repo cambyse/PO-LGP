@@ -19,7 +19,7 @@ void coop(){
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
 //  cmds={ "1", "1", "0", "x", "q" };
-  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "s", "q" }; //screwdriver 'hand over'
+  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "x", "q" }; //screwdriver 'hand over'
   bool interactive = mlr::getParameter<bool>("intact", false);
 
   for(uint s=0;;s++){

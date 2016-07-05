@@ -558,7 +558,7 @@ ors::KinematicWorld::KinematicWorld():s(NULL),q_agent(0),isLinkTree(false) {
 ors::KinematicWorld::KinematicWorld(const ors::KinematicWorld& other):s(NULL),q_agent(0),isLinkTree(false)  {
   bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true;
   s=new sKinematicWorld;
-  *this = other;
+  copy( other );
 }
 
 ors::KinematicWorld::KinematicWorld(const char* filename):s(NULL),q_agent(0),isLinkTree(false)  {

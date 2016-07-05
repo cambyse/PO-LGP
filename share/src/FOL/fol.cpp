@@ -1,6 +1,6 @@
 #include "fol.h"
 
-#define DEBUG(x) x
+#define DEBUG(x) //x
 
 /// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0, keys.N=0)
 NodeL getLiteralsOfScope(Graph& KB){

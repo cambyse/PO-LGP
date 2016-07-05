@@ -6,6 +6,7 @@ Coop::Coop() : poseView("pose"), seqView("sequence", 1., -1), pathView("path", .
 void Coop::prepareKin(){
   kin.init("LGP-coop-kin.g");
   //  kin.watch();
+  computeMeshNormals(kin.shapes);
 
   tableC = kin.getBodyByName("tableC");
   tableL = kin.getBodyByName("tableL");
@@ -113,7 +114,7 @@ bool Coop::execChoice(mlr::String& cmd){
   else if(cmd=="u"){ if(node->parent) node = node->parent; }
   else if(cmd=="p") node->solvePoseProblem();
   else if(cmd=="s") node->solveSeqProblem();
-  else if(cmd=="x") node->solvePathProblem(10);
+  else if(cmd=="x") node->solvePathProblem(20);
   else{
     int choice;
     cmd >>choice;

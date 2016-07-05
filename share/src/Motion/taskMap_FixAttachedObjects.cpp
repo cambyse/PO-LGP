@@ -12,13 +12,16 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
   //TODO: so far this only fixes switched objects to zero pose vel
   //better: constrain to zero relative velocity with BOTH, pre-attached and post-attached
   CHECK(order==1,"");
-  CHECK(G.N==2,"");
 
   arr yi, Ji;
   uint M=7;
   mlr::Array<ors::Joint*> switchedJoints = getSwitchedJoints(*G.elem(-2), *G.elem(-1));
   y.resize(M*switchedJoints.d0);
-  if(&J) J.resize(M*switchedJoints.d0, G.elem(-2)->q.N+G.elem(-1)->q.N);
+  if(&J){
+    uint xbarDim=0;
+    for(auto& W:G) xbarDim+=W->q.N;
+    J.resize(M*switchedJoints.d0, xbarDim).setZero();
+  }
   for(uint i=0;i<switchedJoints.d0;i++){
     ors::Joint *j0 = switchedJoints(i,0);    CHECK(&j0->world==G.elem(-2),"");
     ors::Joint *j1 = switchedJoints(i,1);    CHECK(&j1->world==G.elem(-1),"");
