@@ -34,6 +34,7 @@ struct KOMO{
   uint stepsPerPhase;
 
   KOMO();
+  ~KOMO();
 
   //-- specs gives as logic expressions
   KOMO(const Graph& specs);
@@ -68,6 +69,7 @@ struct KOMO{
   void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), TermType type=sumOfSqrTT, const arr& target=ARR(1.), double prec=1e2);
   void setLastTaskToBeVelocity();
   void setCollisions(bool hardConstraint, double margin=.05, double prec=1.);
+  void setLimits(bool hardConstraint, double margin=.05, double prec=1.);
 
 
   //-- tasks (cost/constraint terms) high-level

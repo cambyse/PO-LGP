@@ -33,6 +33,10 @@ double height(ors::Shape* s){
 KOMO::KOMO() : MP(NULL){
 }
 
+KOMO::~KOMO(){
+  if(MP) delete MP;
+}
+
 KOMO::KOMO(const Graph& specs) : MP(NULL){
   init(specs);
 //  reset();
@@ -305,6 +309,15 @@ void KOMO::setCollisions(bool hardConstraint, double margin, double prec){
     setTask(0., -1., new CollisionConstraint(margin), ineqTT, NoArr, prec);
   }else{ //cost term
     setTask(0., -1., new TaskMap_Proxy(allPTMT, {0u}, margin), sumOfSqrTT, NoArr, prec);
+  }
+}
+
+void KOMO::setLimits(bool hardConstraint, double margin, double prec){
+  if(hardConstraint){ //interpreted as hard constraint (default)
+    setTask(0., -1., new LimitsConstraint(margin), ineqTT, NoArr, prec);
+  }else{ //cost term
+    NIY;
+//    setTask(0., -1., new TaskMap_Proxy(allPTMT, {0u}, margin), sumOfSqrTT, NoArr, prec);
   }
 }
 
