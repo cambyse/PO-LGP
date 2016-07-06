@@ -10,9 +10,7 @@
 #include <RosCom/rosmacro.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/trajectoryInterface.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
-void changeColor2(void*){  orsDrawAlpha = 1.; }
 /*
 void graspBox(){
 
@@ -65,6 +63,7 @@ void graspBox(){
 
 void TEST(TrajectoryInterface){
   ors::KinematicWorld world("model_plan.kvg");
+  ors::KinematicWorld world_plan("model_plan.kvg");
   ors::KinematicWorld world_pr2("model.kvg");
   makeConvexHulls(world.shapes);
   TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
@@ -75,6 +74,17 @@ void TEST(TrajectoryInterface){
   ti->world_pr2->gl().resize(800,800);
   ti->world_pr2->gl().add(changeColor2);
 
+
+  for (uint i=7;i<20;i++) {
+    cout << i << endl;
+    world_pr2.watch(true);
+    ti->syncState();
+    ti->saveState(STRING("q"<<i<<".dat"));
+  }
+  ti->syncMarker();
+  ti->moveRightGripper(0.08);
+  world_pr2.watch(true);
+  ti->moveRightGripper(0.0);
 
   arr q;
   arr lim;
@@ -91,18 +101,18 @@ void TEST(TrajectoryInterface){
   qIdxList.append(ti->world_plan->getJointByName("l_upper_arm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_shoulder_lift_joint")->qIndex);
 
-
   for (;;) {
     q = ti->world_plan->getJointState();
 
     /// sample a random goal position
     for (uint i=0;i<qIdxList.d0;i++) {
       uint qIdx = qIdxList(i);
-      q(qIdx) = lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
+      q(qIdx) = 0.;//lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
     }
 
-    ti->gotoPositionPlan(q,5.,true,true);
-    ti->logging("data/",2);
+
+    ti->gotoPositionPlan(q,15.,true,true);
+//    ti->logging("data/",2);
   }
 
   ti->~TrajectoryInterface();
@@ -137,6 +147,6 @@ void TEST(RecordReplay) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   testTrajectoryInterface();
-//  testRecordReplay();
+  //  testRecordReplay();
   return 0;
 }

@@ -1,0 +1,43 @@
+Include = '../../../../share/data/pr2_model/pr2_model.ors'
+Include = '../../../../share/data/pr2_model/pr2_modifications.ors'
+
+
+# FIX unused joints
+Merge r_shoulder_pan_joint {type=10 limits =[]}
+Merge r_shoulder_pan_joint {type=10 limits =[]}
+Merge r_shoulder_lift_joint {type=10 limits =[]}
+Merge r_upper_arm_roll_joint {type=10 limits =[]}
+Merge r_elbow_flex_joint {type=10 limits =[]}
+Merge r_forearm_roll_joint {type=10 limits =[]}
+Merge r_wrist_flex_joint {type=10 limits =[]}
+Merge r_wrist_roll_joint {type=10 limits =[]}
+Merge r_gripper_joint {type=10  limits =[]}
+Merge l_gripper_joint {type=10  limits =[]}
+Merge head_pan_joint {type=10 limits =[]}
+Merge head_tilt_joint {type=10 limits =[]}
+Merge laser_tilt_mount_joint {type=10 limits=[]}
+Merge r_gripper_l_finger_joint {type=10 limits=[]}
+Merge r_gripper_r_finger_joint {type=10 limits=[]}
+#Merge l_gripper_l_finger_joint {type=10 q=.79 limits=[]}
+Merge l_gripper_l_finger_joint {q=.3 }
+Merge l_gripper_r_finger_joint {q=.3 }
+Merge torso_lift_joint {type=10 limits=[]}
+Merge worldTranslationRotation {type=10 limits=[]}
+
+shape endeffL(l_wrist_roll_link){ rel=<T t(.18 0 0)> type=5 color=[1 0 0] size=[.05 0 0 0]}
+shape endeffC1(l_gripper_r_finger_tip_link){rel=<T t(0 .02 -.02)> type=5 color=[.5 0 0] size=[.05 0 0 0]}
+shape endeffC2(l_gripper_l_finger_tip_link){rel=<T t(0 -.02 .02)> type=5 color=[0 .5 0] size=[.05 0 0 0]}
+
+
+body door_frame {  type=4 size=[0. 0. 1.98 0.0085] }
+body door { type=0 size=[.038 .86 1.98 0.] color=[1. 1. 1.] fixed, contact}
+body handle { type=0 size=[.014 .138 .029 0.] color=[0. 0. 0.] fixed, contact}
+
+joint world_door(world door_frame) { A=<T t(.8 1. 0.99) > type=10}
+joint frame_door(door_frame door) { A=<T t(0 0. 0.) > B=<T t(0 -0.4385 .0)> type=2 }
+joint door_handle(door handle) { A=<T t(-0.04 -0.35 0.07) d(180 0 0 1)> B=<T t(0 -0.049 .0)> type=0 limits=[ -0.5 0.5 ] }
+
+shape cp1(handle) { rel=<T t(0.0 -0.03 0.025)>  type=1 size=[.1 .1 .1 .01] color=[0.5 0 0] fixed, }
+shape cp2(handle) { rel=<T t(0.0 -0.03 -0.025)>  type=1 size=[.1 .1 .1 .01] color=[0 .5 0] fixed, }
+
+body glCamera { X=<T -3.94282 5.75143 4.90094 0.308341 0.178559 -0.482801 -0.799967>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }

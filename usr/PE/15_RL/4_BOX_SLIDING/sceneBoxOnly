@@ -1,0 +1,26 @@
+body BASE { mass=3.6  }
+
+body glCamera { X=<T 5.37831 -7.10912 5.96183 0.825669 0.461015 0.163458 0.281104>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }
+
+body table{ type=0, X=<T t(0 -0.45 .5)>, size=[1. 1. .1 .1], color=[.8 .5 .3] fixed, contact }
+shape leg1(table) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.08 .08 .6 0] color=[0.5 0.3 0.15] }
+shape leg2(table) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.08 .08 .6 0] color=[0.5 0.3 0.15] }
+shape leg3(table) { rel=<T t(.3 .3 -.3)>  type=0 size=[.08 .08 .6 0] color=[0.5 0.3 0.15] }
+shape leg4(table) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.08 .08 .6 0] color=[0.5 0.3 0.15] }
+
+body box{ type=0, size=[.15 .15 .15 0], color=[.2 .2 .8] fixed contact}
+shape boxP1(box) { rel=<T t(-0.075 0.058 0)> type=1 size=[0.1 0.1 0.1 .005] color=[0 1 0] }
+shape boxP2(box) { rel=<T t(-0.075 -0.058 0)> type=1 size=[0.1 0.1 0.1 .005] color=[1 0 0] }
+
+joint table_box (table box){ A=<T t(-.3 0.2 0.125) d(0.1 0 0 1)> type=8 q=0}
+
+#body boxTarget { type=0, size=[.000017 .000017 .08 0], color=[1 0 0] fixed}
+body boxTarget { type=0, size=[.017 .017 .017 0], color=[1 0 0] fixed}
+joint table_boxTarget (table boxTarget){ A=<T t(0 -0. 0.125) d(.1 0 0 1)> type=10 q=0}
+body boxTargetVis { type=0, size=[.17 .17 .001 0], color=[.2 .8 .2] fixed}
+joint table_boxTargetVis (table boxTargetVis){ A=<T t(.2 -0.1 0.05) d(.1 0 0 1)> type=10 q=0}
+body boxTargetVis2 { type=0, size=[.13 .13 .0011 0], color=[.8 .5 .3] fixed}
+joint table_boxTargetVis2 (table boxTargetVis2){ A=<T t(.2 -0.1 0.05) d(.1 0 0 1)> type=10 q=0}
+
+shape preContactRef(box) { rel=<T t(-0.2 0 0.1) d(30 0 1 0)> type=5 size=[0.1 0.1 0.1 .005] color=[0 1 0] }
+body preContact {  type=5 size=[0.1 0.1 0.1 .005] color=[1 1 0] }
