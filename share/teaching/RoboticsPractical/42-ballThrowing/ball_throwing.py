@@ -10,6 +10,7 @@ from baxter_interface import Gripper
 import numpy as np
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point, Pose
+from time import gmtime, strftime
 
 def dict2npa(u):
     na = np.array([u['left_w1'],
@@ -59,7 +60,7 @@ def control(features, W):
 def expected_policy_reward(T, W, time_step=5):
     reward = -1000
     limit = 15
-    
+
     # Does all time step except for ${limit}
     for t in range(T/time_step - limit):
         v = control(features(t), W)
@@ -102,6 +103,16 @@ def expected_policy_reward(T, W, time_step=5):
             c = raw_input('Ok? (o)')
             if c == 'o':
                 break
+
+    # Now write the latest measurements to the file. Should I add the position where it hit?
+    # That's a bit tricky, since (a) the position of the marker might has changed and (b) the
+    # marker that was used as target in round 1 could be the marker for the ball in round 2
+    for line in W:
+        for w in line:
+            f.write(str(w))
+            f.write(', ')
+    f.write(str(reward))
+    f.write('\n')
 
     return reward
 
@@ -191,6 +202,11 @@ def send_signal(func, joints, duration, hz=100):
 
 
 if __name__ == "__main__":
+    # Create a file; one new file for each execution
+    filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
+    f = open(filename, 'w')
+    f.write('# Format: Weights reward\n')
+
     # Get joint startpos_1
     startpos = dict()
     startpos['left_w0'] = -0.0625097171063306
@@ -256,4 +272,6 @@ if __name__ == "__main__":
         W0 = np.random.rand(3, features(0).size)
         policy_search(250, W0)
 
+    # Don't forget to close the file
+    f.close()
     print('All done')
