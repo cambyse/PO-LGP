@@ -205,7 +205,6 @@ if __name__ == "__main__":
     # Create a file; one new file for each execution
     filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
     f = open(filename, 'w')
-    f.write('# Format: Weights reward\n')
 
     # Get joint startpos_1
     startpos = dict()
