@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "traj_factory.h"
 #include "scene.h"
 
 struct MotionFactory {
@@ -18,8 +19,8 @@ struct MotionFactory {
   // scenarios
   void loadScenarioSimple(Scenario &scenario,uint nScenes=1, bool useConstraints=false);
   void loadScenarioComplex(Scenario &scenario);
-
-
+  void loadScenarioButton(Scenario &scenario,ors::KinematicWorld &world);
+  void loadScenarioVelocity(Scenario &scenario);
 
 
   void loadScenarioTestRbf(Scenario &scenario);
@@ -27,8 +28,6 @@ struct MotionFactory {
   void loadScenarioTestDemonstrations(Scenario &scenario);
   void loadScenarioBoxSliding(Scenario &scenario);
   void loadScenarioParamEval(Scenario &scenario, uint type);
-
-  void loadScenarioButton(Scenario &scenario,ors::KinematicWorld &world);
 };
 
 #endif // MOTION_FACTORY_H

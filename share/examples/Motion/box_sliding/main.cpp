@@ -7,17 +7,11 @@
 #include <iomanip>
 #include <Ors/ors_swift.h>
 
-
-//===========================================================================
-
 void box1(arr &y){
   ors::KinematicWorld world("box.ors");
 //  world.meldFixedJoints();
 //  world.removeUselessBodies();
 //  makeConvexHulls(world.shapes);
-
-
-
   // set some visualization properties
   world.getJointByName("table_box")->A.pos = ors::Vector(y.subRange(0,2));
   world.getJointByName("table_box")->A.rot.setRad(y(3)*M_PI/180);
@@ -70,13 +64,13 @@ void box1(arr &y){
   t = MP.addTask("vecT", new DefaultTaskMap(vecAlignTMT, world, "box", ors::Vector(0.,1.,0), "boxTarget",ors::Vector(0.,1.,0)));
   t->setCostSpecs(MP.T,MP.T, {1.}, param(pC));pC++;
   t = MP.addTask("posC1", new DefaultTaskMap(posTMT, world, "endeffL", NoVector));
-  t->setCostSpecs(conT-5,conT, ARRAY(world.getShapeByName("boxP1")->X.pos), param(pC));pC++;
+  t->setCostSpecs(conT-5,conT, conv_vec2arr(world.getShapeByName("boxP1")->X.pos), param(pC));pC++;
   t = MP.addTask("posC2", new DefaultTaskMap(posTMT, world, "endeffM", NoVector));
-  t->setCostSpecs(conT-5,conT, ARRAY(world.getShapeByName("boxP2")->X.pos), param(pC));pC++;
+  t->setCostSpecs(conT-5,conT, conv_vec2arr(world.getShapeByName("boxP2")->X.pos), param(pC));pC++;
   t = MP.addTask("posPre", new DefaultTaskMap(posTMT, world, "endeffM", NoVector));
-  t->setCostSpecs(conT-70,conT-70, ARRAY(world.getShapeByName("preContact")->X.pos), param(pC));pC++;
+  t->setCostSpecs(conT-70,conT-70, conv_vec2arr(world.getShapeByName("preContact")->X.pos), param(pC));pC++;
   t = MP.addTask("rotPre", new DefaultTaskMap(vecAlignTMT, world, "endeffC", ors::Vector(0.,0.,1.),"preContact",ors::Vector(1.,0.,0.)));
-  t->setCostSpecs(conT-70,conT-70, ARRAY(1.), param(pC));pC++;
+  t->setCostSpecs(conT-70,conT-70, ARR(1.), param(pC));pC++;
 
   // constraints
   t = MP.addTask("contact1", new PointEqualityConstraint(world, "endeffL",NoVector, "boxP1",NoVector));
@@ -119,7 +113,7 @@ void box1(arr &y){
 
 
 int main(int argc,char** argv){
-  MT::initCmdLine(argc,argv);
+  mlr::initCmdLine(argc,argv);
 
   arr targets;
   targets << FILE("targets");

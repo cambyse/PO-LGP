@@ -56,6 +56,10 @@ struct TrajectoryInterface {
   void gotoPosition(arr x_pr2, double T=5., bool recordData = false, bool displayTraj=false);
   void gotoPositionPlan(arr x_plan, double T=5., bool recordData = false, bool displayTraj=false);
 
+  /// goto start position of trajectory and execute it
+//  void gotoPosAndExecTraj()
+//  void gotoPosAndExecTrajPlan()
+
   /// send zero gains and record trajectory of T seconds
   void recordDemonstration(arr &X_pr2, double T, double dt=0.05, double T_start=2.);
 

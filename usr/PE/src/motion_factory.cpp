@@ -23,10 +23,12 @@ void MotionFactory::execMotion(Scene &s, arr &x, arr &lambda, arr &_x0, uint vis
   if (mlr::getParameter<bool>("IMP/loadDemoFromFile") && name.N>0) {
     readDemoFromFile(name,xx,ll);
   } else {
-    xx = repmat(~s.MP->x0,s.MP->T+1,1);
-    OptOptions o; o.verbose=_verbose; o.stopTolerance=mlr::getParameter<double>("MP/stopTolerance"); o.stopIters=100; o.aulaMuInc=1.1; o.maxStep=1.;
-
+    xx = s.MP->getInitialization();//repmat(~s.MP->x0,s.MP->T+1,1);
+    OptOptions o; o.verbose=_verbose; o.stopTolerance=1e-2; o.stopIters=100; o.aulaMuInc=1.01; o.maxStep=1.;
+//    optConstrained(xx, ll, Convert(MPF), o);
+    o.stopTolerance=mlr::getParameter<double>("MP/stopTolerance");
     optConstrained(xx, ll, Convert(MPF), o);
+
     s.MP->costReport(false);
     writeDemoToFile(name,xx,ll);
   }
@@ -674,72 +676,79 @@ void MotionFactory::loadScenarioButton(Scenario &scenario,ors::KinematicWorld &w
 
   uint bIdx,id;
   bIdx << FILE(STRING(folder<<"/bestIdx_Dof_CBO.dat"));
-  id << FILE(STRING(folder<<"/id.dat"));
+  id << FILE(STRING(folder<<"/Dof_id.dat"));
   arr cboX;
   cboX << FILE(STRING(folder<<id<<"_Dof_CBO_X.dat"));
 
   s.world = &world;
   s.MP = new MotionProblem(*s.world,false);
 
-
   /// load demo from file
-  bIdx = 16;
-//  s.xDem = FILE(STRING(folder<<"16_Dof_Xplan.dat"));
   s.xDem = FILE(STRING(folder<<bIdx<<"_Dof_Xplan.dat"));
   s.MP->T = s.xDem.d0-1;
   s.MP->tau = duration/s.MP->T;
   s.x0 = s.xDem[0];
 
+  /// compute feature trajectories
+  TrajFactory tf;
+  arr posC1,velC1,cp1;
+  tf.compFeatTraj(s.xDem,posC1,*s.world,new DefaultTaskMap(posTMT,*s.world,"endeffC1"));
+  tf.compFeatTraj(s.xDem,cp1,*s.world,new DefaultTaskMap(posTMT,*s.world,"cp1"));
+  getVel(velC1,posC1-cp1,s.MP->tau);
+
   arr conTime = FILE(STRING(folder<<"constraintTime.dat")); conTime.flatten();
   arr conTime_inv = -1.*(conTime-1.);
 
   uint b2_b1_idx = s.world->getJointByName("b2_b1")->qIndex;
+
   arr tmp = s.xDem.col(b2_b1_idx); tmp.flatten();
   double b2_b1Min = tmp.min();
+  double b2_b1Max = tmp.max();
+
   uint mIdx = tmp.minIndex();
 
-  double bParam = cboX(bIdx-1,0) + b2_b1Min;
+  double bParam = -0.01078487 + cboX(bIdx-1,0);//b2_b1Min-0.005;//cboX(bIdx-1,0);// + b2_b1Min;
 
 
   mlr::Array<uint> conStart;
   conStart << FILE(STRING(folder<<"conStart.dat"));
   mlr::Array<uint> conEnd = FILE(STRING(folder<<"conEnd.dat"));
 
-  arr param = ARR(1e-1,1e1,1e1,1e1);//,1e1,1e1);//,1e1,1e1,1e1);
+  arr param = ARR(1e-1,1e1,1e1,1e1,1e1,1e1,1e0,1e0);
   // transition costs
   Task *t;
   t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
-  t->map.order = 1;
+  t->map.order = 2;
   t->target = ARR(0.);
   ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
-  scenario.weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension(),ARR(1e-2,1e-2)));
+  scenario.weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension(),ARR(5e-2,5e-2)));
 
   s.optConstraintsParam = true;
   // add features
   arr tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,tmp7,tmp8,tmp9;
 
   // orientation at contact start, downwards
-//  s.world->setJointState(s.xDem[conStart(0)]);
-//  s.world->kinematicsVec(tmp1,NoArr,s.world->getShapeByName("endeffC1")->body,ors::Vector(1.,0.,0.));
-//  tmp1 += 1e-1*randn(3);
-//  tmp1 = tmp1/length(tmp1);
-//  t =s.MP->addTask("vecConStart", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp1)) );
-//  t->target = ARR(1.);
-//  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conStart(0),conStart(0)),1,1));
-//  // orientation at contact end, downwards
-//  s.world->setJointState(s.xDem[conEnd(0)]);
-//  s.world->kinematicsVec(tmp2,NoArr,s.world->getShapeByName("endeffC1")->body,ors::Vector(1.,0.,0.));
-//  tmp2 += 1e0*randn(3);
-//  tmp2 = tmp2/length(tmp2);
-//  t = s.MP->addTask("vecConEnd", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp2)) );
-//  t->target = ARR(1.);
-//  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conEnd(0),conEnd(0)),1,1));
+  s.world->setJointState(s.xDem[conStart(0)]);
+  s.world->kinematicsVec(tmp1,NoArr,s.world->getShapeByName("endeffC1")->body,ors::Vector(1.,0.,0.));
+  tmp1 += 1e-1*randn(3);
+  tmp1 = tmp1/length(tmp1);
+  t =s.MP->addTask("vecConStart", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp1)) );
+  t->target = ARR(1.);
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conStart(0),conStart(0)),1,1));
+  // orientation at contact end, downwards
+  s.world->setJointState(s.xDem[conEnd(0)]);
+  s.world->kinematicsVec(tmp2,NoArr,s.world->getShapeByName("endeffC1")->body,ors::Vector(1.,0.,0.));
+  tmp2 += 1e0*randn(3);
+  tmp2 = tmp2/length(tmp2);
+  t = s.MP->addTask("vecConEnd", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp2)) );
+  t->target = ARR(1.);
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conEnd(0),conEnd(0)),1,1));
   // pre contact position
   uint preconT = conStart(0)-10;
   s.world->setJointState(s.xDem[preconT]);
   t =s.MP->addTask("posPreCon", new DefaultTaskMap(posTMT, *s.world,"endeffC1") );
   t->map.phi(tmp3,NoArr,*s.world);
-  t->target = conv_vec2arr(tmp3+1e-1*randn(3));
+  t->target = conv_vec2arr(tmp3+1e-2*randn(3));
   scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(preconT,preconT),1,3));
   // post contact position
   uint postconT = conEnd(0)+10;
@@ -753,12 +762,25 @@ void MotionFactory::loadScenarioButton(Scenario &scenario,ors::KinematicWorld &w
   t = s.MP->addTask("posFinal", new DefaultTaskMap(posTMT, *s.world,"endeffC1") );
   t->map.phi(tmp5,NoArr,*s.world);
   t->target = conv_vec2arr(tmp5+1e-2*randn(3));
-  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T,s.MP->T),1,3));
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T-20,s.MP->T),1,3));
+  // contact velocity start
+  s.MP->world.setJointState(s.xDem[conStart(0)]);
+  t =s.MP->addTask("velCStart", new DefaultTaskMap(posTMT, *s.world,"endeffC1",NoVector,"cp1") );
+  t->map.order=1;
+  t->target = velC1[conStart(0)];//ARR(0.,0.,0.);//conv_vec2arr(tmp6+1e-5*randn(3));
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conStart(0),conStart(0)),1,3));
+  // contact velocity end
+  s.MP->world.setJointState(s.xDem[mIdx]);
+  t =s.MP->addTask("velCEnd", new DefaultTaskMap(posTMT, *s.world,"endeffC1",NoVector,"cp1") );
+  t->map.order=1;
+  t->target = velC1[mIdx];// ARR(0.,0.,0.);//conv_vec2arr(tmp7+1e-5*randn(3));
+  scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(mIdx,mIdx),1,3));
+
 
   s.world->setJointState(s.xDem[0]);
   // constraint button target position
   t = s.MP->addTask("dof_target", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
-  t->setCostSpecs(mIdx,mIdx, ARR(bParam), 1.);
+  t->setCostSpecs(mIdx-10,mIdx+10, ARR(bParam), 1.);
   // constraint button position before and after manipulation
   t = s.MP->addTask("dof_fixation", new qItselfConstraint(b2_b1_idx, s.world->getJointStateDimension()));
   t->target = ARR(s.xDem(0,b2_b1_idx));
@@ -767,7 +789,7 @@ void MotionFactory::loadScenarioButton(Scenario &scenario,ors::KinematicWorld &w
   t = s.MP->addTask("contact", new PointEqualityConstraint(*s.world, "endeffC1",NoVector, "cp1",NoVector));
   t->setCostSpecs(conStart,conEnd, ARR(0.), 1.);
   // dof limits
-  t = s.MP->addTask("q_limit", new qItselfLimit(s.world->getJointByName("b2_b1")->qIndex, bParam,s.xDem(0,b2_b1_idx)));
+  t = s.MP->addTask("q_limit", new qItselfLimit(s.world->getJointByName("b2_b1")->qIndex, min(ARR(bParam,b2_b1Min)),max(ARR(bParam,b2_b1Max))));// bParam,s.xDem(0,b2_b1_idx)));
   t->setCostSpecs(conStart,conEnd, ARR(0.), 1.);
 
   s.world->setJointState(s.xDem[0]);
@@ -775,9 +797,63 @@ void MotionFactory::loadScenarioButton(Scenario &scenario,ors::KinematicWorld &w
   scenario.scenes.append(s);
   scenario.paramGT = param;
   scenario.setParam(param);
-//  execMotion(s,x,lambda,NoArr,mlr::getParameter<uint>("IMP/visDemo"),1);
+  //  execMotion(s,x,lambda,NoArr,mlr::getParameter<uint>("IMP/visDemo"),1);
 
   scenario.setParam(ones(param.d0)); // reset parameters
 
   param = param/sum(param)*scenario.costScale;
+}
+
+void MotionFactory::loadScenarioVelocity(Scenario& scenario) {
+  for (uint iS=0;iS<1;iS++) {
+    Scene s;
+
+    /// create world and motion problem
+    s.world = new ors::KinematicWorld("sceneTest");
+    s.world->swift();
+
+    s.world->getBodyByName("targetE")->X.pos += ors::Vector(0.,0.,0.2)*iS;
+
+    s.MP = new MotionProblem(*s.world,false);
+    s.MP->useSwift=true;
+    s.MP->T = 50;
+    s.MP->tau = 0.01;
+    s.x0 = s.world->getJointState();
+
+    ors::Shape *grasp = s.world->getShapeByName("endeff");
+    ors::Body *targetE = s.world->getBodyByName("targetE");
+
+
+    arr param = ARR(1e-1,1e2,1e1);
+    param = param/sum(param)*scenario.costScale;
+
+    // transition costs
+    Task *t;
+    t = s.MP->addTask("tra", new TransitionTaskMap(*s.world));
+    t->map.order=2;
+    t->target = ARR(0.);
+    ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+    if (iS==0) scenario.weights.append(CostWeight(CostWeight::Transition,1,ARR(0.),s.MP->T,s.world->getJointStateDimension()));
+
+    t =s.MP->addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+    t->target = conv_vec2arr(targetE->X.pos);
+    if (iS==0) scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T-3,s.MP->T),1,3));
+
+    t =s.MP->addTask("vel", new DefaultTaskMap(posTMT, grasp->index) );
+    t->map.order = 1;
+    t->target = ARR(0.,0.,0.);
+    if (iS==0) scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T*.5-5,s.MP->T*.5+5),1,3));
+
+    scenario.scenes.append(s);
+    scenario.paramGT = param;
+    scenario.setParam(param);
+
+    arr x,lambda;
+    execMotion(s,x,lambda,NoArr,mlr::getParameter<uint>("IMP/visDemo"));
+    cout << "lambda: " << lambda << endl;
+
+    scenario.scenes.last().xDem = x;
+    scenario.scenes.last().lambdaDem = lambda;
+    scenario.setParam(ones(param.d0)); // reset parameters
+  }
 }

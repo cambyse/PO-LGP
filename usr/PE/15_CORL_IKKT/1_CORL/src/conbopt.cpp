@@ -14,15 +14,15 @@ ConBOpt::ConBOpt(uint nParam_,arr &pLimit_,mlr::String folder_,mlr::String name_
   engEvalString(ep, "startup;");
   engEvalString(ep, "seed = 1");
   engEvalString(ep, "e=0;");
-  engEvalString(ep, "bOffset = 0.1;");
+  engEvalString(ep, "bOffset = 0.15;");
   engEvalString(ep, "verbose = 1;");
   engEvalString(ep, "optM = 2;");
 
-  engEvalString(ep, STRING("ellC = "<<mlr::getParameter<double>("ellC")<<";"));
-  engEvalString(ep, STRING("sfC = "<<mlr::getParameter<double>("sfC")<<";"));
-  engEvalString(ep, STRING("ellR = "<<mlr::getParameter<double>("ellR")<<";"));
-  engEvalString(ep, STRING("sfR = "<<mlr::getParameter<double>("sfR")<<";"));
-  engEvalString(ep, STRING("snR = "<<mlr::getParameter<double>("snR")<<";"));
+  engEvalString(ep, STRING("ellC = "<<mlr::getParameter<double>(STRING(name<<"/ellC"))<<";"));
+  engEvalString(ep, STRING("sfC = "<<mlr::getParameter<double>(STRING(name<<"/sfC"))<<";"));
+  engEvalString(ep, STRING("ellR = "<<mlr::getParameter<double>(STRING(name<<"/ellR"))<<";"));
+  engEvalString(ep, STRING("sfR = "<<mlr::getParameter<double>(STRING(name<<"/sfR"))<<";"));
+  engEvalString(ep, STRING("snR = "<<mlr::getParameter<double>(STRING(name<<"/snR"))<<";"));
   engEvalString(ep, STRING("n = "<<nParam<<";"));
   engEvalString(ep, "m = 200;");
 
@@ -58,6 +58,7 @@ void ConBOpt::addDatapoint(arr x, arr y, arr ys){
   sendArrToMatlab(x,"x");
   sendArrToMatlab(y,"y");
   sendArrToMatlab(ys,"ys");
+  cout << buffer << endl;
   engEvalString(ep, "cbo.addDataPoint(x,y,ys);");
   if (X.d0>0) engEvalString(ep, "cbo.plot();");
   engEvalString(ep, "cbo.stats()");

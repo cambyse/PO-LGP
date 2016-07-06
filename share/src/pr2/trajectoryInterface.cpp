@@ -358,7 +358,7 @@ void TrajectoryInterface::logging(mlr::String folder, mlr::String name, int id) 
     filename = mlr::String(STRING(folder<<"/"<<name<<"_"));
   }else {
     filename = mlr::String(STRING(folder<<"/"<<id<<"_"<<name<<"_"));
-    write(LIST<arr>(ARR(id)),STRING(folder<<"id.dat"));
+    write(LIST<arr>(ARR(id)),STRING(folder<<name<<"_id.dat"));
   }
 
   write(LIST<arr>(logT),STRING(filename<<"T.dat"));

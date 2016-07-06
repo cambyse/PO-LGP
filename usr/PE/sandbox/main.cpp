@@ -6,7 +6,7 @@
 #include <iomanip>
 
 
-#include "/usr/local/MATLAB/R2015a/extern/include/engine.h"
+#include "/usr/local/MATLAB/R2016a/extern/include/engine.h"
 #define  BUFSIZE 512
 
 void TEST(Matrices) {
@@ -257,19 +257,21 @@ void TEST(PR2) {
   ors::KinematicWorld world("pr2.kvg");
   world.getBodyByName("point1")->X = world.getShapeByName("head_mount_kinect_rgb_link")->X;
   world.calc_fwdPropagateFrames();
+
+  arr q;
+  world.getJointState(q);
+  q(world.getJointByName("worldTranslationRotation")->qIndex) += 0.5;
+  world.setJointState(q);
+
+  TaskMap *tm = new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "base_footprint");
+  arr y;
+  tm->phi(y,NoArr,world);
+  cout << y << endl;
   world.watch(true);
 
 }
 
-int main(int argc,char** argv){
-  mlr::initCmdLine(argc,argv);
-  //  testMatrices();
-  //  testGradCheck();
-  //  testMatlab();
-  //  testMatlabGP();
-  //  testTransformation();
-  //  testPointCloud();
-  //  testPR2();
+void TEST(contactCP) {
   arr A = {0.,0.,0.,1.,1.,1.,0.,0.,1.,1.,0.};
   arr Ad; Ad.resizeAs(A); Ad.setZero();
 
@@ -285,10 +287,32 @@ int main(int argc,char** argv){
   cout << Ad << endl;
   cout << idxContactStart << endl;
   cout << idxContactRelease << endl;
+}
 
+void TEST(GLcamera) {
+  ors::KinematicWorld world("pr2.kvg");
+  world.watch(false);
+  world.gl().resize(800,800);
+  world.gl().camera.X.pos = ors::Vector(7.54819, 0.0245368, 2.91587 );
+  world.gl().camera.X.rot = ors::Quaternion(0.544337, 0.4411, 0.400758, 0.590357);
+  world.watch(true);
+  cout << world.gl().camera.X.pos << endl;
+  cout << world.gl().camera.X.rot << endl;
+}
+
+int main(int argc,char** argv){
+  mlr::initCmdLine(argc,argv);
+//    testMatrices();
+  //  testGradCheck();
+  //  testMatlab();
+  //  testMatlabGP();
+  //  testTransformation();
+  //  testPointCloud();
+  //  testPR2();
+  //  testcontactCP();
+  //  testGLcamera();
   return 0;
 }
 
 //    cout << "Enter result:  success [1] or failure [0]: "<<endl;
 //    std::cin >> result;
-
