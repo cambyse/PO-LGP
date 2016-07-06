@@ -12,12 +12,10 @@
 #include "pr2GamepadController.h"
 
 struct MySystem {
-  ACCESSname(byteA, rgb_leftEye)
-
-  /*
   ACCESSname(CtrlMsg, ctrl_obs)
   ACCESSname(arr, gamepadState)
 
+  ACCESSname(byteA, kinect_rgb)
   ACCESSname(uint16A, kinect_depth)
   ACCESSname(ors::Transformation, kinect_frame)
 
@@ -31,33 +29,32 @@ struct MySystem {
   ACCESSname(byteA, rgb_rightEye)
   ACCESSname(byteA, rgb_leftArm)
   ACCESSname(byteA, rgb_rightArm)
-Module::loopWithBeat
+
   GamepadInterface gamepad;
-*/
+
   MySystem(){
     if(mlr::getParameter<bool>("useRos", true)){
       new RosCom_Spinner();
-//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
-//      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
-      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/left/image_rect_color", rgb_leftEye);
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
+//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/left/image_rect_color", rgb_leftEye);
 //      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/right/image_rect_color", rgb_rightEye);
 //      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/l_forearm_cam/image_rect_color", rgb_leftArm);
 //      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/r_forearm_cam/image_rect_color", rgb_rightArm);
-//      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
-//      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
+      new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
+      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
 
     }
-
-//    new KinectDepthPacking();
-//    new ImageViewer("kinect_rgb");
-//    new ImageViewer("kinect_depthRgb");
+    new KinectDepthPacking();
+    new ImageViewer("kinect_rgb");
+    new ImageViewer("kinect_depthRgb");
 //    new ImageViewer("rgb_leftArm");
 //    new ImageViewer("rgb_rightArm");
-    new ImageViewer("rgb_leftEye");
+//    new ImageViewer("rgb_leftEye");
 //    new ImageViewer("rgb_rightEye");
-//    new Kinect2PointCloud();
-//    new PointCloudViewer();
-//    addModule<Pr2GamepadController>(NULL, .01);
+    new Kinect2PointCloud();
+    new PointCloudViewer();
+//    addModule<Pr2GamepadController>(NULL, /*Module::loopWithBeat,*/ .01);
     cout <<"SYSTEM=" <<registry() <<endl;
 
   }
@@ -66,7 +63,7 @@ Module::loopWithBeat
 void TEST(Sensors){
 
   MySystem S;
-/*
+
   ors::KinematicWorld world("model.kvg");
   OpenGL gl;
   gl.setClearColors(1., 1., 1., 1.);
@@ -144,7 +141,6 @@ void TEST(Sensors){
   threadCloseModules();
   modulesReportCycleTimes();
   cout <<"bye bye" <<endl;
-  */
 }
 
 int main(int argc, char** argv){

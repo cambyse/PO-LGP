@@ -24,7 +24,7 @@
 #include "engine.h"
 #include "engine_internal.h"
 
-Singleton<OrsEngine> SingleEngine;
+Singleton<Engine> SingleEngine;
 
 System& NoSystem = *((System*)NULL);
 
@@ -311,18 +311,18 @@ void System::write(ostream& os) const{
 //
 
 
-OrsEngine& engine(){  return SingleEngine(); }
+Engine& engine(){  return SingleEngine(); }
 
-OrsEngine::OrsEngine(): mode(none), system(NULL), shutdown(0) {
+Engine::Engine(): mode(none), system(NULL), shutdown(0) {
   acc = new EventController;
 };
 
-OrsEngine::~OrsEngine(){
+Engine::~Engine(){
   //acc -> dumpEventList();
   delete acc;
 }
 
-void OrsEngine::open(System& S, bool waitForOpened){
+void Engine::open(System& S, bool waitForOpened){
   system = &S;
 
   //S.connect();
@@ -350,19 +350,19 @@ void OrsEngine::open(System& S, bool waitForOpened){
   }
 }
 
-void OrsEngine::step(System &S){
+void Engine::step(System &S){
   if(&S) system=&S;
   for(Module *m: S) step(*m);
 }
 
-void OrsEngine::step(Module &m, bool threadedOnly){
+void Engine::step(Module &m, bool threadedOnly){
   if(threadedOnly && mode!=threaded) return;
   if(mode==none) MLR_MSG("ommiting stepping: no step mode");
   if(mode==threaded) m.threadStep();
   if(mode==serial)   m.step();
 }
 
-void OrsEngine::test(System& S){
+void Engine::test(System& S){
   if(&S) system=&S;
   CHECK(mode!=threaded,"");
   mode=serial;
@@ -371,7 +371,7 @@ void OrsEngine::test(System& S){
   close(S);
 }
 
-void OrsEngine::close(System& S){
+void Engine::close(System& S){
   if(&S) system=&S;
   for(Module *m: *system){
     if(mode==threaded) m->threadClose();
@@ -379,34 +379,34 @@ void OrsEngine::close(System& S){
   }
 }
 
-void OrsEngine::cancel(System& S){
+void Engine::cancel(System& S){
   if(&S) system=&S;
   for(Module *m: *system){
     if(mode==threaded) m->threadCancel();
   }
 }
 
-void OrsEngine::enableAccessLog(){
+void Engine::enableAccessLog(){
   acc->enableEventLog = true;
 }
 
-void OrsEngine::dumpAccessLog(){
+void Engine::dumpAccessLog(){
   acc->dumpEventList();
 }
 
-void OrsEngine::blockAllAccesses(){
+void Engine::blockAllAccesses(){
   acc->blockMode.setValue(2);
 }
 
-void OrsEngine::unblockAllAccesses(){
+void Engine::unblockAllAccesses(){
   acc->blockMode.setValue(0);
 }
 
-void OrsEngine::stepToNextAccess(){
+void Engine::stepToNextAccess(){
   acc->blockMode.setValue(1, true);
 }
 
-void OrsEngine::stepToNextWriteAccess(){
+void Engine::stepToNextWriteAccess(){
   acc->blockMode.setValue(1, true);
 }
 
