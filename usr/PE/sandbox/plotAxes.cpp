@@ -30,9 +30,9 @@ void drawFrame(void* classP){
   cout << "y Vector: " << y << endl;
   cout << "z Vector: " << z << endl;
   // X,Y,Z - R,G,B
-  arr draw1 = cat(~conv_vec2arr(p),~conv_vec2arr(p+0.3*xx),~ARR(2.,0.,0.));
-  arr draw2 = cat(~conv_vec2arr(p),~conv_vec2arr(p+0.3*yy),~ARR(5.,0.,0.));
-  arr draw3 = cat(~conv_vec2arr(p),~conv_vec2arr(p+0.3*zz),~ARR(0.,0.,0.));
+  arr draw1 = cat(~ARR(p),~ARR(p+0.3*xx),~ARR(2.,0.,0.));
+  arr draw2 = cat(~ARR(p),~ARR(p+0.3*yy),~ARR(5.,0.,0.));
+  arr draw3 = cat(~ARR(p),~ARR(p+0.3*zz),~ARR(0.,0.,0.));
   cout << draw1 << endl;
   world.gl().add(drawFrame,&draw1);
   world.gl().add(drawFrame,&draw2);
@@ -46,9 +46,9 @@ void drawFrame(void* classP){
   world.kinematicsVec(z,NoArr,world.getBodyByName("r_wrist_roll_link"),&zV);
 
   // X,Y,Z - R,G,B
-  arr draw4 = cat(~conv_vec2arr(p2),~conv_vec2arr(p2+0.3*x),~ARR(2.,0.,0.));
-  arr draw5 = cat(~conv_vec2arr(p2),~conv_vec2arr(p2+0.3*y),~ARR(5.,0.,0.));
-  arr draw6 = cat(~conv_vec2arr(p2),~conv_vec2arr(p2+0.3*z),~ARR(0.,0.,0.));
+  arr draw4 = cat(~ARR(p2),~ARR(p2+0.3*x),~ARR(2.,0.,0.));
+  arr draw5 = cat(~ARR(p2),~ARR(p2+0.3*y),~ARR(5.,0.,0.));
+  arr draw6 = cat(~ARR(p2),~ARR(p2+0.3*z),~ARR(0.,0.,0.));
   world.gl().add(drawFrame,&draw4);
   world.gl().add(drawFrame,&draw5);
   world.gl().add(drawFrame,&draw6);

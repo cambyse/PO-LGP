@@ -25,7 +25,7 @@
 
 
 struct DynamicMovementPrimitives {
-  DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_);
+  DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_, double lambda_=1e-7);
   ~DynamicMovementPrimitives();
 
   void trainDMP();
@@ -35,6 +35,7 @@ struct DynamicMovementPrimitives {
   void reset();
   void changeGoal(const arr &goal_);
 
+  double lambda; // regularization parameter
   double tau; // Time constant, T = 0.5/tau
   double T; // Motion time [s]
   double dt; // Time step rate [s]
@@ -63,12 +64,12 @@ struct DynamicMovementPrimitives {
 
   arr y_ref; // Reference trajectory
 
+  arr PHI; // basis function activation
+
   // bookkeeping
   arr y_bk;
   arr yd_bk;
   arr x_bk;
-
-
 };
 
 #endif // DYNAMICMOVEMENTPRIMITIVES_H

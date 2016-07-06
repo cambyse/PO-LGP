@@ -42,15 +42,17 @@ class qItselfController : public ha::Controller {
 
     virtual void setEndeff(const std::string& endeff);
 
-    virtual void setIndices(const Eigen::MatrixXd& index_vec) {
-       _index_vec = index_vec;
-    }
+//    virtual void setIndices(const Eigen::MatrixXd& index_vec) {
+//       _index_vec = index_vec;
+//    }
 
   private:
     std::string _fact;
 
     std::string _create_fact() const;
 
-    Eigen::MatrixXd _index_vec;
+    //Eigen::MatrixXd _index_vec;
     bool _running;
+
+    std::string _endeff;
 };

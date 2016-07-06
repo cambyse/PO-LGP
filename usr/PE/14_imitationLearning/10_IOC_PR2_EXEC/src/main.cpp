@@ -1,12 +1,12 @@
 #include <Ors/ors.h>
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/taskMap_transition.h>
+#include <Motion/taskMaps.h>
+
+
+
 #include <Ors/ors_swift.h>
-#include <Core/array-vector.h>
+
 
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
@@ -133,7 +133,7 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   world->setJointState(q0);
 
 
-  arr refFrame = conv_vec2arr(world->getBodyByName("torso_lift_link")->X.pos);
+  arr refFrame = ARR(world->getBodyByName("torso_lift_link")->X.pos);
   ors::Quaternion refFrameQuat = world->getBodyByName("torso_lift_link")->X.rot;
   ors::Quaternion objQuat = refFrameQuat*markerQuat;
   arr markerOffset = objQuat.getArr()*{0.126,0.0,0.0415};

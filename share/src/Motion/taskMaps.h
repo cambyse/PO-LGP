@@ -69,6 +69,7 @@ struct CollisionConstraint:TaskMap {
   CollisionConstraint(double _margin=.1):margin(_margin){}
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("CollisionConstraint"); }
 };
 
 
@@ -90,9 +91,10 @@ struct ProxyConstraint:TaskMap {
 struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint():margin(.05){}
+  LimitsConstraint(double _margin=.05):margin(_margin){}
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("LimitsConstraint"); }
 };
 
 //===========================================================================

@@ -77,8 +77,8 @@ int main(int argc,char** argv){
   engEvalString(ep, "[t1 t2] = ndgrid(linspace(-5,5,m),linspace(-5,5,m));");
   engEvalString(ep, "t = [t1(:) t2(:)];");
   engEvalString(ep, "cbo = conBOpt(n,t,e,bOffset,verbose,optM,ellC,sfC,ellR,sfR,snR)");
-  engEvalString(ep, "cbo.addDataPoint(x,y,ys);");
 
+  engEvalString(ep, "cbo.addDataPoint(x,y,ys);");
 
   /// run algorithm
   for (uint i=0;i<nIter;i++) {
