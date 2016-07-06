@@ -141,7 +141,12 @@ void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y
   Kd_y = Kd;
   makeGainsMatrices(Kp_y, Kd_y, y.N);
 
-  a0_y = Kp_y*get_y_ref(y) + Kd_y*get_ydot_ref(ydot);
+  arr y_delta = get_y_ref(y) - y;
+  double y_delta_length = length(y_delta);
+  if(maxVel && y_delta_length>maxVel)
+    y_delta *= maxVel/y_delta_length;
+
+  a0_y = Kp_y*(y+y_delta) + Kd_y*get_ydot_ref(ydot);
   arr a = a0_y - Kp_y*y - Kd_y*ydot; //linear law
   double accNorm = length(a);
 

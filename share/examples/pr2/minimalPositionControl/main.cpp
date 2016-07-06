@@ -17,7 +17,8 @@ int main(int argc, char** argv){
 
     TaskControllerModule tcm;
     GamepadInterface gamepad;
-    OrsViewer view;
+//    OrsViewer view;
+    OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
     SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub1("/marc_rt_controller/jointState", ctrl_obs);
     PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pub1("/marc_rt_controller/jointReference", ctrl_ref);
     SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       sub2("/robot_pose_ekf/odom_combined", pr2_odom);
@@ -27,26 +28,32 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
-    CtrlTask task("endeffL", new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, 1., 1.);
-//    task.setGains(10.,1.);
+    mlr::wait(.2);
+
+    CtrlTask task("endeffL", new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), 1., .8, .0, 0.);
+//    task.setGains(20.,2.);
     task.map.phi(task.y, NoArr, tcm.modelWorld.get()());
     task.y_ref = task.y;
     tcm.ctrlTasks.set() = { &task };
 
+    mlr::wait(1.);
+
+    task.y_ref = task.y + ARR(.2, 0., 0.);
+
+    ofstream fil("z.task");
+    for(uint t=0;t<50;t++){
+      fil <<mlr::realTime() <<' ' <<task.y <<endl;
+      mlr::wait(.1);
+    }
+
+    task.y_ref -= ARR(.2, 0., 0.);
+
     mlr::wait(2.);
 
-    task.y_ref = task.y + ARR(.1, 0., 0.);
-
-    mlr::wait(2.);
-
-    task.y_ref -= ARR(.1, 0., 0.);
-
-    mlr::wait(2.);
-
-//    tcm.ctrlTasks.set() = {};
-//    tcm.taskController->qNullCostRef.prec *= .1;
-    task.prec = ARR(0., 0., 100.);
-    task.Kp = ARR(0., 0., 10.);
+////    tcm.ctrlTasks.set() = {};
+////    tcm.taskController->qNullCostRef.prec *= .1;
+    task.prec = ARR(0., 100., 0.);
+//    task.Kp = ARR(0., 20., 0.);
 
     moduleShutdown().waitForValueGreaterThan(0);
 
