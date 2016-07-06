@@ -1,5 +1,5 @@
 #include <Core/util.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <set>
@@ -64,12 +64,12 @@ struct Tracker{
     list<Cluster> tracked_clusters;
     set<int> id_set;
     double relevance_decay_factor = 0.9;
-    double relevance_threshold = 0.01;
+    double relevance_threshold = 0.1;
 
     //----methods----//
     Tracker():threshold(.1){
         nh = new ros::NodeHandle;
-        sub = nh->subscribe( "/tabletop/clusters", 1, &Tracker::callback, this);
+        sub = nh->subscribe( "/tabletop/filtered_clusters", 1, &Tracker::callback, this);
         pub = nh->advertise<visualization_msgs::MarkerArray>("/tabletop/tracked_clusters", 1);
     }
     ~Tracker(){
@@ -122,9 +122,7 @@ struct Tracker{
                 cluster_it = next_it;
                 break;
             }
-            // make all cluster inactive
-            cluster_it->active = false;
-
+            // show cluster
             visualization_msgs::Marker new_marker;
             new_marker.type = visualization_msgs::Marker::POINTS;
             new_marker.points = conv_arr2points(cluster_it->points);
@@ -134,13 +132,21 @@ struct Tracker{
             new_marker.lifetime = ros::Duration(0.5);
             new_marker.header.stamp = ros::Time(0.);
             new_marker.header.frame_id = cluster_it->frame_id;
-
-            new_marker.color.a = 1.0; // Don't forget to set the alpha!
-            new_marker.color.r = (double)((new_marker.id*10000)%97)/97;
-            new_marker.color.g = (double)((new_marker.id*10000)%91)/91;
-            new_marker.color.b = (double)((new_marker.id*10000)%89)/89;
+            if(cluster_it->active) {
+                new_marker.color.a = 1.0; // Don't forget to set the alpha!
+                new_marker.color.r = (double)((new_marker.id*10000)%97)/97;
+                new_marker.color.g = (double)((new_marker.id*10000)%91)/91;
+                new_marker.color.b = (double)((new_marker.id*10000)%89)/89;
+            } else {
+                new_marker.color.a = 1.0; // Don't forget to set the alpha!
+                new_marker.color.r = cluster_it->relevance;
+                new_marker.color.g = cluster_it->relevance;
+                new_marker.color.b = cluster_it->relevance;
+            }
             marker_array.markers.push_back(new_marker);
 
+            // make cluster inactive in increment iterator
+            cluster_it->active = false;
             ++cluster_it;
         }
 

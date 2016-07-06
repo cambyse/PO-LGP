@@ -315,6 +315,8 @@ class ActionSwigInterface(_object):
     def getShapeByName(self, *args): return _swig.ActionSwigInterface_getShapeByName(self, *args)
     def getJointByName(self, *args): return _swig.ActionSwigInterface_getJointByName(self, *args)
     def getQIndex(self, *args): return _swig.ActionSwigInterface_getQIndex(self, *args)
+    def getForceLeft(self): return _swig.ActionSwigInterface_getForceLeft(self)
+    def getForceRight(self): return _swig.ActionSwigInterface_getForceRight(self)
     def getSymbols(self): return _swig.ActionSwigInterface_getSymbols(self)
     def getSymbolInteger(self, *args): return _swig.ActionSwigInterface_getSymbolInteger(self, *args)
     def str2lit(self, *args): return _swig.ActionSwigInterface_str2lit(self, *args)

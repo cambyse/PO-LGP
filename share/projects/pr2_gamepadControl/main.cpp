@@ -1,10 +1,10 @@
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/gamepad2tasks.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 
@@ -44,7 +44,7 @@ void TEST(Gamepad){
   world.gl().addDrawer(&world_pr2);
   world.gl().add(changeColor2);
 
-  FeedbackMotionControl MP(world, true);
+  TaskController MP(world, true);
   MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
   Gamepad2Tasks j2t(MP);
@@ -84,7 +84,7 @@ void TEST(Gamepad){
     cout <<"** GO!" <<endl;
     q = ctrl_obs.get()->q;
     qdot = ctrl_obs.get()->qdot;
-    q.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    q.refRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
     //arr fL_base = fL_obs.get();
     MP.setState(q, qdot);
   }
@@ -106,7 +106,7 @@ void TEST(Gamepad){
     //get joint state
     if(useRos){
       arr q_real =ctrl_obs.get()->q;
-      q_real.subRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+      q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
 
       world_pr2.setJointState(q_real, ctrl_obs.get()->qdot);
       fLobs = ctrl_obs.get()->fL;
@@ -142,8 +142,8 @@ void TEST(Gamepad){
 
       refs.u_bias = ~J*f_des;
       refs.fL = f_des;
-      refs.KiFT = alpha*~J;
-      refs.J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
+      refs.KiFTL = alpha*~J;
+      refs.J_ft_invL = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
 
       J = inverse_SymPosDef(J*~J)*J;
 
@@ -185,15 +185,15 @@ void TEST(Gamepad){
 #endif
     }else{
       refs.fL = zeros(6);
-      refs.KiFT.clear();
-      refs.J_ft_inv.clear();
+      refs.KiFTL.clear();
+      refs.J_ft_invL.clear();
       refs.u_bias = zeros(q.N);
     }
     refs.Kp = 1.;
     if(mode==2) refs.Kp = .1;
     refs.Kd = 1.;
     refs.Ki = 0.;
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
 
     refs.q=q;
     refs.qdot=zero_qdot;

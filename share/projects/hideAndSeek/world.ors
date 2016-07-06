@@ -1,0 +1,15 @@
+body block1 { X=<T t(-5 -5 1)> type=0 size=[6 6 2 0] color=[.0 .0 .0] }
+body block2 { X=<T t( 5 -5 1)> type=0 size=[6 6 2 0] color=[.0 .0 .0] }
+body block3 { X=<T t(-5  5 1)> type=0 size=[6 6 2 0] color=[.0 .0 .0] }
+body block4 { X=<T t( 5  5 1)> type=0 size=[6 6 2 0] color=[.0 .0 .0] }
+
+body robot1 { type=4  X=<T t(0 0 1)> size=[0 0 .3 .5] color=[1 0 0] }
+
+body robot2 { type=4  X=<T t(0 1 1)> size=[0 0 .3 .5] color=[1 0 0] }
+
+body world{}
+
+joint (world robot1) { type=8 from=<T t(0 0 1)> }
+joint (world robot2) { type=8 from=<T t(0 1 1)> }
+
+shape kinect(robot1){ rel=<T d(90 1 0 0) t(0 0 -.5) > type=5 size=[.1 0 0 0] }

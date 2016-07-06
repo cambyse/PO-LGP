@@ -29,15 +29,23 @@ struct JointState_
     , fL()
     , fR()
     , u_bias()
-    , J_ft_inv()
+    , J_ft_invL()
+    , J_ft_invR()
     , Kp()
     , Kd()
     , Ki()
-    , KiFT()
+    , KiFTL()
+    , KiFTR()
+    , fR_offset()
+    , fL_offset()
+    , fL_err()
+    , fR_err()
     , velLimitRatio(0.0)
     , effLimitRatio(0.0)
     , intLimitRatio(0.0)
-    , gamma(0.0)  {
+    , fL_gamma(0.0)
+    , fR_gamma(0.0)
+    , qd_filt(0.0)  {
     }
   JointState_(const ContainerAllocator& _alloc)
     : q(_alloc)
@@ -45,15 +53,23 @@ struct JointState_
     , fL(_alloc)
     , fR(_alloc)
     , u_bias(_alloc)
-    , J_ft_inv(_alloc)
+    , J_ft_invL(_alloc)
+    , J_ft_invR(_alloc)
     , Kp(_alloc)
     , Kd(_alloc)
     , Ki(_alloc)
-    , KiFT(_alloc)
+    , KiFTL(_alloc)
+    , KiFTR(_alloc)
+    , fR_offset(_alloc)
+    , fL_offset(_alloc)
+    , fL_err(_alloc)
+    , fR_err(_alloc)
     , velLimitRatio(0.0)
     , effLimitRatio(0.0)
     , intLimitRatio(0.0)
-    , gamma(0.0)  {
+    , fL_gamma(0.0)
+    , fR_gamma(0.0)
+    , qd_filt(0.0)  {
     }
 
 
@@ -73,8 +89,11 @@ struct JointState_
    typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _u_bias_type;
   _u_bias_type u_bias;
 
-   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _J_ft_inv_type;
-  _J_ft_inv_type J_ft_inv;
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _J_ft_invL_type;
+  _J_ft_invL_type J_ft_invL;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _J_ft_invR_type;
+  _J_ft_invR_type J_ft_invR;
 
    typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Kp_type;
   _Kp_type Kp;
@@ -85,8 +104,23 @@ struct JointState_
    typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _Ki_type;
   _Ki_type Ki;
 
-   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _KiFT_type;
-  _KiFT_type KiFT;
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _KiFTL_type;
+  _KiFTL_type KiFTL;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _KiFTR_type;
+  _KiFTR_type KiFTR;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _fR_offset_type;
+  _fR_offset_type fR_offset;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _fL_offset_type;
+  _fL_offset_type fL_offset;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _fL_err_type;
+  _fL_err_type fL_err;
+
+   typedef std::vector<double, typename ContainerAllocator::template rebind<double>::other >  _fR_err_type;
+  _fR_err_type fR_err;
 
    typedef double _velLimitRatio_type;
   _velLimitRatio_type velLimitRatio;
@@ -97,8 +131,14 @@ struct JointState_
    typedef double _intLimitRatio_type;
   _intLimitRatio_type intLimitRatio;
 
-   typedef double _gamma_type;
-  _gamma_type gamma;
+   typedef double _fL_gamma_type;
+  _fL_gamma_type fL_gamma;
+
+   typedef double _fR_gamma_type;
+  _fR_gamma_type fR_gamma;
+
+   typedef double _qd_filt_type;
+  _qd_filt_type qd_filt;
 
 
 
@@ -177,12 +217,12 @@ struct MD5Sum< ::marc_controller_pkg::JointState_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "44c0d29ca9b2cbe661011ab4cc27f812";
+    return "4ec705db118ea046086309dff89dc165";
   }
 
   static const char* value(const ::marc_controller_pkg::JointState_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x44c0d29ca9b2cbe6ULL;
-  static const uint64_t static_value2 = 0x61011ab4cc27f812ULL;
+  static const uint64_t static_value1 = 0x4ec705db118ea046ULL;
+  static const uint64_t static_value2 = 0x086309dff89dc165ULL;
 };
 
 template<class ContainerAllocator>
@@ -206,15 +246,23 @@ float64[] qdot\n\
 float64[] fL\n\
 float64[] fR\n\
 float64[] u_bias\n\
-float64[] J_ft_inv\n\
+float64[] J_ft_invL\n\
+float64[] J_ft_invR\n\
 float64[] Kp\n\
 float64[] Kd\n\
 float64[] Ki\n\
-float64[] KiFT\n\
+float64[] KiFTL\n\
+float64[] KiFTR\n\
+float64[] fR_offset\n\
+float64[] fL_offset\n\
+float64[] fL_err\n\
+float64[] fR_err\n\
 float64 velLimitRatio\n\
 float64 effLimitRatio\n\
 float64 intLimitRatio\n\
-float64 gamma\n\
+float64 fL_gamma\n\
+float64 fR_gamma\n\
+float64 qd_filt\n\
 ";
   }
 
@@ -238,15 +286,23 @@ namespace serialization
       stream.next(m.fL);
       stream.next(m.fR);
       stream.next(m.u_bias);
-      stream.next(m.J_ft_inv);
+      stream.next(m.J_ft_invL);
+      stream.next(m.J_ft_invR);
       stream.next(m.Kp);
       stream.next(m.Kd);
       stream.next(m.Ki);
-      stream.next(m.KiFT);
+      stream.next(m.KiFTL);
+      stream.next(m.KiFTR);
+      stream.next(m.fR_offset);
+      stream.next(m.fL_offset);
+      stream.next(m.fL_err);
+      stream.next(m.fR_err);
       stream.next(m.velLimitRatio);
       stream.next(m.effLimitRatio);
       stream.next(m.intLimitRatio);
-      stream.next(m.gamma);
+      stream.next(m.fL_gamma);
+      stream.next(m.fR_gamma);
+      stream.next(m.qd_filt);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -295,11 +351,17 @@ struct Printer< ::marc_controller_pkg::JointState_<ContainerAllocator> >
       s << indent << "  u_bias[" << i << "]: ";
       Printer<double>::stream(s, indent + "  ", v.u_bias[i]);
     }
-    s << indent << "J_ft_inv[]" << std::endl;
-    for (size_t i = 0; i < v.J_ft_inv.size(); ++i)
+    s << indent << "J_ft_invL[]" << std::endl;
+    for (size_t i = 0; i < v.J_ft_invL.size(); ++i)
     {
-      s << indent << "  J_ft_inv[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.J_ft_inv[i]);
+      s << indent << "  J_ft_invL[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.J_ft_invL[i]);
+    }
+    s << indent << "J_ft_invR[]" << std::endl;
+    for (size_t i = 0; i < v.J_ft_invR.size(); ++i)
+    {
+      s << indent << "  J_ft_invR[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.J_ft_invR[i]);
     }
     s << indent << "Kp[]" << std::endl;
     for (size_t i = 0; i < v.Kp.size(); ++i)
@@ -319,11 +381,41 @@ struct Printer< ::marc_controller_pkg::JointState_<ContainerAllocator> >
       s << indent << "  Ki[" << i << "]: ";
       Printer<double>::stream(s, indent + "  ", v.Ki[i]);
     }
-    s << indent << "KiFT[]" << std::endl;
-    for (size_t i = 0; i < v.KiFT.size(); ++i)
+    s << indent << "KiFTL[]" << std::endl;
+    for (size_t i = 0; i < v.KiFTL.size(); ++i)
     {
-      s << indent << "  KiFT[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.KiFT[i]);
+      s << indent << "  KiFTL[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.KiFTL[i]);
+    }
+    s << indent << "KiFTR[]" << std::endl;
+    for (size_t i = 0; i < v.KiFTR.size(); ++i)
+    {
+      s << indent << "  KiFTR[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.KiFTR[i]);
+    }
+    s << indent << "fR_offset[]" << std::endl;
+    for (size_t i = 0; i < v.fR_offset.size(); ++i)
+    {
+      s << indent << "  fR_offset[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.fR_offset[i]);
+    }
+    s << indent << "fL_offset[]" << std::endl;
+    for (size_t i = 0; i < v.fL_offset.size(); ++i)
+    {
+      s << indent << "  fL_offset[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.fL_offset[i]);
+    }
+    s << indent << "fL_err[]" << std::endl;
+    for (size_t i = 0; i < v.fL_err.size(); ++i)
+    {
+      s << indent << "  fL_err[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.fL_err[i]);
+    }
+    s << indent << "fR_err[]" << std::endl;
+    for (size_t i = 0; i < v.fR_err.size(); ++i)
+    {
+      s << indent << "  fR_err[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.fR_err[i]);
     }
     s << indent << "velLimitRatio: ";
     Printer<double>::stream(s, indent + "  ", v.velLimitRatio);
@@ -331,8 +423,12 @@ struct Printer< ::marc_controller_pkg::JointState_<ContainerAllocator> >
     Printer<double>::stream(s, indent + "  ", v.effLimitRatio);
     s << indent << "intLimitRatio: ";
     Printer<double>::stream(s, indent + "  ", v.intLimitRatio);
-    s << indent << "gamma: ";
-    Printer<double>::stream(s, indent + "  ", v.gamma);
+    s << indent << "fL_gamma: ";
+    Printer<double>::stream(s, indent + "  ", v.fL_gamma);
+    s << indent << "fR_gamma: ";
+    Printer<double>::stream(s, indent + "  ", v.fR_gamma);
+    s << indent << "qd_filt: ";
+    Printer<double>::stream(s, indent + "  ", v.qd_filt);
   }
 };
 

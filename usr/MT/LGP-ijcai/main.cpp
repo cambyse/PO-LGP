@@ -27,19 +27,19 @@ void ijcaiExperiment(){
     uint repeat;
     for(repeat=0;repeat<200;repeat++){
       //generate a new 'symbolic node' (here by fully unrolling)
-      ManipulationTree_Node *node = new ManipulationTree_Node(root, NoHandle);
+      ManipulationTree_Node *node = new ManipulationTree_Node(towers, root, NoHandle);
       mlr::timerRead(true);
       runMonteCarlo(node->fol.KB);
       MCTS_time += mlr::timerRead(true);
 
       //generate the respective effective pose problem
       EffectivePoseProblem effectivePoseProblem(node->effKinematics, node->fol.KB, *root->folState, *node->folState, 0);
-      node->effPoseCost = effectivePoseProblem.optimize(node->effPose);
+      node->poseCost = effectivePoseProblem.optimize(node->pose);
       double rx = towers.psi(node->effKinematics, node->fol.KB);
       lev1_time += mlr::timerRead(true);
-      cout <<"fx=" <<node->effPoseCost <<endl;
+      cout <<"fx=" <<node->poseCost <<endl;
       cout <<"reward=" <<rx <<endl;
-      node->effPoseReward = rx-node->effPoseCost;
+      node->effPoseReward = rx-node->poseCost;
       world_display=node->effKinematics;
       world_display.gl().update();
     }
@@ -132,8 +132,8 @@ int main(int argc,char **argv){
 //  rnd.clockSeed();
   rnd.seed(mlr::getParameter<int>("seed",0));
 
-//  ijcaiExperiment();
-  newMethod();
+  ijcaiExperiment();
+//  newMethod();
 
   return 0;
 }

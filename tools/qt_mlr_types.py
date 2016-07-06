@@ -76,7 +76,6 @@ def qdump__mlr__Array(d, value):
             d.putSubItem("p", p)
             d.putSubItem("reference", value["reference"])
             d.putSubItem("special", value["special"])
-            d.putSubItem("aux", value["aux"])
             
 def qdump__Node_typed(d, value):
     keys_N = value["keys"]["N"]
@@ -117,7 +116,7 @@ def qdump__Node_typed(d, value):
     d.putNumChild(4)
     if d.isExpanded():
         with Children(d):
-            d.putSubItem("value", value["value"].dereference())
+            d.putSubItem("value", value["value"])
             d.putSubItem("parents", value["parents"])
             d.putSubItem("parentOf", value["parentOf"])
             d.putSubItem("index", value["index"])

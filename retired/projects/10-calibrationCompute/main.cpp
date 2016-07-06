@@ -44,7 +44,7 @@ struct MyOptimizationProblem:public OptimizationProblem{
     x0 = x;
 
     //-- ors
-    C.init("../../configurations/schunk.ors");
+    C.init("../../data/configurations/schunk.ors");
     bodyIndex=C.getBodyByName("m9")->index;
     rel.setText("<t(-.04 -.025 -0.18)>");
     gl.add(glStandardScene,&C);

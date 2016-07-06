@@ -3,7 +3,7 @@
 #include <Core/module.h>
 
 struct G4Poller: Module {
-  ACCESS(floatA, poses)
+  ACCESS(floatA, g4_poses)
 
   G4Poller();
 

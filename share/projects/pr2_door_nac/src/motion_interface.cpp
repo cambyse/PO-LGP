@@ -106,13 +106,13 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
     }
 
     refs.fL = zeros(6);
-    refs.KiFT.clear();
-    refs.J_ft_inv.clear();
+    refs.KiFTL.clear();
+    refs.J_ft_invL.clear();
     refs.u_bias = zeros(q.N);
     refs.Kp = 2.0;
     refs.Kd = 1.2;
     refs.Ki = .5;
-    refs.gamma = 1.;
+    refs.fL_gamma = 1.;
     refs.velLimitRatio = .2;
     refs.effLimitRatio = 1.;
     refs.intLimitRatio = 0.8;
@@ -151,8 +151,8 @@ void Motion_Interface::gotoPosition(arr x)
 
 
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  t = MP.addTask("tra", new TaskMap_Transition(*world));
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 
@@ -177,13 +177,13 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
   refs.fL = zeros(6);
-  refs.KiFT.clear();
-  refs.J_ft_inv.clear();
+  refs.KiFTL.clear();
+  refs.J_ft_invL.clear();
   refs.u_bias = zeros(q.N);
   refs.Kp = zeros(q.N,q.N); // = 0.;
   refs.Kd = 0.;
   refs.Ki.clear();
-  refs.gamma = 1.;
+  refs.fL_gamma = 1.;
   refs.velLimitRatio = .1;
   refs.effLimitRatio = 1.;
   refs.intLimitRatio = 1.5;
@@ -238,8 +238,8 @@ void Motion_Interface::stopMotion(bool sendZeroGains)
   refs.q = S.ctrl_obs.get()->q;
   refs.qdot=S.ctrl_obs.get()->qdot*0.;
   refs.fL = zeros(6);
-  refs.KiFT.clear();
-  refs.J_ft_inv.clear();
+  refs.KiFTL.clear();
+  refs.J_ft_invL.clear();
   refs.u_bias = zeros(q.N);
   if (sendZeroGains) {
     cout << "sending zero gains" << endl;
@@ -251,7 +251,7 @@ void Motion_Interface::stopMotion(bool sendZeroGains)
     refs.Kd =  ARR(1.2);
     refs.Ki = ARR(.3);
   }
-  refs.gamma = 1.;
+  refs.fL_gamma = 1.;
   refs.velLimitRatio = .1;
   refs.effLimitRatio = 1.;
   refs.intLimitRatio = 1.;

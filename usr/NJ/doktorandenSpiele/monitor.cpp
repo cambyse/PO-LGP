@@ -29,7 +29,7 @@ void Monitor::open(){
 #endif
   
   //-- ors
-  ors <<FILE("../../../share/configurations/schunk.ors");
+  ors <<FILE("../../../share/data/configurations/schunk.ors");
   ors.calcNodeFramesFromEdges();
 
 #ifdef MLR_QT

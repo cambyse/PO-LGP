@@ -16,7 +16,7 @@ void OrsGraph2RelationalGraph(Graph& G, ors::KinematicWorld& W){
   }
 
   for(ors::Joint *j:world->joints){
-    if(j->type==ors::JT_fixed)
+    if(j->type==ors::JT_rigid)
       G.append<bool>({"rigid"}, {G(j->from->index), G(j->to->index)}, NULL, false);
     if(j->type==ors::JT_transXYPhi)
       G.append<bool>({"support"}, {G(j->from->index), G(j->to->index)}, NULL, false);

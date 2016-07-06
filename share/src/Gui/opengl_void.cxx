@@ -67,8 +67,8 @@ struct sOpenGL {
 
 void OpenGL::postRedrawEvent(bool){}
 void OpenGL::processEvents(){}
-void OpenGL::enterEventLoop(){}
-void OpenGL::exitEventLoop(){}
+//void OpenGL::enterEventLoop(){}
+//void OpenGL::exitEventLoop(){}
 void OpenGL::resize(int w,int h){}
 
 void initGlEngine(){}

@@ -1,22 +1,78 @@
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/gamepad2tasks.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/phase_optimization.h>
 #include <Optim/opt-constrained.h>
 
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
-#include <pr2/rosalvar.h>
-#include <pr2/trajectoryInterface.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
+#include <RosCom/subscribeAlvarMarkers.h>
+#include <RosCom/trajectoryInterface.h>
 
+/*
+void graspBox(){
+
+
+  ors::Shape *object = ti->world_plan->getShapeByName("box");
+  /// move robot to initial position
+  //  arr q;
+  //  ti->getState(q);
+  //  write(LIST<arr>(q),"q0.dat");
+  //  q << FILE("q0.dat"); q.flatten();
+  //  q(ti->world_pr2->getJointByName("torso_lift_joint")->qIndex) += 0.1;
+
+  arr X;
+  MotionProblem MP(*ti->world_plan);
+  Task *t;
+  t = MP.addTask("transitions", new TaskMap_Transition(world));
+  t->map.order=2; //make this an acceleration task!
+  t->setCostSpecs(0, MP.T, {0.}, 1e-1);
+
+  t = MP.addTask("pos1", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+  t->setCostSpecs(70, 80, {0.}, 1e2);
+  t = MP.addTask("rot1", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+  t->setCostSpecs(70, MP.T, {1.}, 1e1);
+  t = MP.addTask("rot2", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+  t->setCostSpecs(70, MP.T, {1.}, 1e1);
+  t = MP.addTask("pos2", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+  t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
+  t = MP.addTask("limit", new LimitsConstraint());
+  t->setCostSpecs(0, MP.T, ARR(0.), 1e2);
+  ShapeL shaps = {
+    ti->world_plan->getShapeByName("l_forearm_roll_link_0"), ti->world_plan->getShapeByName("table"),
+    ti->world_plan->getShapeByName("l_elbow_flex_link_0"), ti->world_plan->getShapeByName("table")
+  };
+  t = MP.addTask("collision", new ProxyConstraint(pairsPTMT, shapesToShapeIndices(shaps), 0.1));
+  t->setCostSpecs(0., MP.T, {0.}, 1.);
+
+  MotionProblemFunction MPF(MP);
+  X = MP.getInitialization();
+
+  optConstrained(X, NoArr, Convert(MPF), OPT(verbose=2, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+
+  MP.costReport(true);
+  for (;;)
+    displayTrajectory(X, 1, *ti->world_plan, "planned trajectory");
+
+  ti->gotoPositionPlan(X[0]);
+  ti->executeTrajectoryPlan(X,10.,true,true);
+  ti->~TrajectoryInterface();
+}*/
 
 void TEST(TrajectoryInterface){
+  ors::KinematicWorld world("model_plan.kvg");
   ors::KinematicWorld world_plan("model_plan.kvg");
   ors::KinematicWorld world_pr2("model.kvg");
+  makeConvexHulls(world.shapes);
+  TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
 
-  TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_pr2);
+  ti->world_plan->watch(false);
+  ti->world_pr2->watch(false);
+  ti->world_plan->gl().resize(800,800);
+  ti->world_pr2->gl().resize(800,800);
+  ti->world_pr2->gl().add(changeColor2);
 
 
   for (uint i=7;i<20;i++) {

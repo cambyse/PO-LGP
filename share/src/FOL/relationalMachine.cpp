@@ -14,11 +14,9 @@ void RelationalMachine::init(const char* filename){
   if(fil.exists()){
     fil >>KB;
     KB.checkConsistency();
-  }else{
-    LOG(1) <<"No '"<<filename<<"' for initialization given! This might fail!";
   }
-  if(!KB["TMP"])   new Node_typed<Graph>(KB, {"TMP"}, {}, new Graph, true);
-  if(!KB["STATE"]) new Node_typed<Graph>(KB, {"STATE"}, {}, new Graph(), true);
+  if(!KB["TMP"])   KB.appendSubgraph({"TMP"}, {});
+  if(!KB["STATE"]) KB.appendSubgraph({"STATE"}, {});
   state = &KB["STATE"]->graph();
   tmp   = &KB["TMP"]->graph();
 }
@@ -65,14 +63,14 @@ bool RelationalMachine::applyEffect(Node* literal, bool fwdChain){
 
 NodeL RelationalMachine::fwdChainRules(){
   tmp->clear();
-  forwardChaining_FOL(KB, KB.getNode("STATE")->graph(), NULL, *tmp, false);
+  forwardChaining_FOL(KB, KB.get<Graph>("STATE"), NULL, *tmp, false);
   LOG(2) <<"  changes=" <<*tmp;
   LOG(2) <<"  new state=\n  " <<getState();
   return *tmp;
 }
 
 Node* RelationalMachine::declareNewSymbol(mlr::String symbolStr){
-  Node *it = KB.readNode(symbolStr, false, false);
+  Node *it = KB.readNode(symbolStr);
   return it;
 }
 
@@ -88,14 +86,14 @@ mlr::String RelationalMachine::getState() const{
   return str;
 }
 
-mlr::String RelationalMachine::getRules(){
+mlr::String RelationalMachine::getRules() const{
   NodeL rules = KB.getNodes("Rule");
   mlr::String str;
   listWrite(rules, str, "\n  ", "[]");
   return str;
 }
 
-StringA RelationalMachine::getSymbols(){
+StringA RelationalMachine::getSymbols() const{
   NodeL symbols = getSymbolsOfScope(KB);
   StringA strs(symbols.N);
   for(uint i=0;i<symbols.N;i++){

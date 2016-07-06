@@ -1,6 +1,6 @@
 #include <Core/util.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/PointCloud2.h>
 //#include <System/engine.h>
@@ -12,19 +12,19 @@
 #include <tf/transform_listener.h>
 #include <Motion/taskMaps.h>
 #include <Actions/taskCtrlActivities.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 
 struct GazeTask : ControlActivity {
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world){
-    map = new DefaultTaskMap(gazeAtTMT, world, "endeffHead", ors::Vector(0.,0.,-1.), "testObject");
+    map = new TaskMap_Default(gazeAtTMT, world, "endeffHead", ors::Vector(0.,0.,-1.), "testObject");
     task = new CtrlTask(name, *map, specs);
   }
 };
 
 struct GraspTask : ControlActivity {
   virtual void configure2(const char *name, Graph& specs, ors::KinematicWorld& world){
-    map = new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "testObject");
+    map = new TaskMap_Default(posTMT, world, "endeffR", NoVector, "testObject");
     task = new CtrlTask(name, *map, specs);
   }
 };

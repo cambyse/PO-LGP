@@ -27,7 +27,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   P.T = horizon;
   x = P.getInitialization();
 
-  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target", NoVector));
+  Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeffR", NoVector));//, "target", NoVector));
   pos->setCostSpecs(P.T, P.T,conv_vec2arr(target->X.pos), 1e3);
 
 
@@ -100,11 +100,11 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
   est_target->X.pos.z  = est;
 
 
-  FeedbackMotionControl MC(world);
+  TaskController MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-  CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target"));
+  CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector));//, "target"));
   pd_y->prec = 10.;
   pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
 

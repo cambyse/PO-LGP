@@ -3,7 +3,7 @@
 #include "object_detector.h"
 #include <pcl/visualization/pcl_visualizer.h>
 
-#include "plane.h"
+#include <Perception/pclPlaneExtraction.h>
 #include "object.h"
 #include "dataStructures.h"
 #include "ros.h"

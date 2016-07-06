@@ -18,100 +18,14 @@
 
 #pragma once
 
-#include "motion.h"
+#include "taskMap.h"
 
-//===========================================================================
+#include "taskMap_qItself.h"
+#include "taskMap_GJK.h"
+#include "taskMap_transition.h"
+#include "taskMap_default.h"
+#include "taskMap_qLimits.h"
 
-/// creates a task map based on specs
-TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world);
-TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world);
-
-//===========================================================================
-
-/// defines a transition cost vector, which is q.N-dimensional and captures
-/// accelerations or velocities over consecutive time steps
-struct TransitionTaskMap:TaskMap {
-  double velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
-  arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
-  TransitionTaskMap(const ors::KinematicWorld& G);
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
-};
-
-//===========================================================================
-
-enum DefaultTaskMapType {
-  noTMT,      ///< non-initialization
-  posTMT,     ///< 3D position of reference
-  vecTMT,     ///< 3D vec (orientation)
-  quatTMT,    ///< 4D quaterion
-  posDiffTMT, ///< the difference of two positions (NOT the relative position)
-  vecDiffTMT, ///< the difference of two vectors (NOT the relative position)
-  quatDiffTMT,///< the difference of 2 quaternions (NOT the relative quaternion)
-  vecAlignTMT,///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
-  gazeAtTMT   ///< 2D orthogonality measure of object relative to camera plane
-};
-
-struct DefaultTaskMap:TaskMap {
-  DefaultTaskMapType type;
-  int i, j;               ///< which shapes does it refer to?
-  ors::Vector ivec, jvec; ///< additional position or vector
-  intA referenceIds; ///< the shapes it refers to DEPENDENT on time
-
-  DefaultTaskMap(DefaultTaskMapType type,
-                 int iShape=-1, const ors::Vector& ivec=NoVector,
-                 int jShape=-1, const ors::Vector& jvec=NoVector);
-
-  DefaultTaskMap(DefaultTaskMapType type, const ors::KinematicWorld& G,
-                 const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                 const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
-
-  DefaultTaskMap(const Graph &parameters, const ors::KinematicWorld& G);
-  DefaultTaskMap(const Node *parameters, const ors::KinematicWorld& G);
-
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G);
-};
-
-//===========================================================================
-
-struct TaskMap_qItself:TaskMap {
-  arr M;            ///< optionally, the task map is M*q or M%q (linear in q)
-  bool moduloTwoPi; ///< if false, consider multiple turns of a joint as different q values (Default: true)
-
-  TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true) { M=zeros(1,qN); M(0,singleQ)=1.; } ///< The singleQ parameter generates a matrix M that picks out a single q value
-  TaskMap_qItself(const arr& _M=NoArr) : moduloTwoPi(true) { if(&_M) M=_M; }                     ///< Specifying NoArr returns q; specifying a vector M returns M%q; specifying a matrix M returns M*q
-  TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName)
-    : moduloTwoPi(true)  {
-    ors::Joint *j = G.getJointByName(jointName);
-    M = zeros(j->qDim(), G.getJointStateDimension() );
-    M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
-  }
-  TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName, const char* jointName2)
-    : moduloTwoPi(true)  {
-    ors::Joint *j1 = G.getJointByName(jointName);
-    ors::Joint *j2 = G.getJointByName(jointName2);
-    M = zeros(j1->qDim() + j2->qDim(), G.getJointStateDimension() );
-    M.setMatrixBlock(eye(j1->qDim()), 0, j1->qIndex);
-    M.setMatrixBlock(eye(j2->qDim()), j1->qDim(), j2->qIndex);
-  }
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G);
-};
-
-//===========================================================================
-
-struct TaskMap_qLimits:TaskMap {
-  arr limits;
-  double margin;
-  TaskMap_qLimits(const arr& _limits=NoArr, double _margin=0.1){
-    margin=_margin;
-    if(&_limits) limits=_limits;
-  } ///< if no limits are provided, they are taken from G's joints' attributes on the first call of phi
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
-};
 
 //===========================================================================
 
@@ -129,7 +43,7 @@ enum PTMtype {
 //===========================================================================
 
 /// Proxy task variable
-struct ProxyTaskMap:TaskMap {
+struct TaskMap_Proxy:TaskMap {
   /// @name data fields
   PTMtype type;
   uintA shapes,shapes2;
@@ -137,12 +51,12 @@ struct ProxyTaskMap:TaskMap {
   bool useCenterDist;
   bool useDistNotCost;
 
-  ProxyTaskMap(PTMtype _type,
+  TaskMap_Proxy(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
                bool _useCenterDist=false,
                bool _useDistNotCost=false);
-  virtual ~ProxyTaskMap() {};
+  virtual ~TaskMap_Proxy() {}
   
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
@@ -152,29 +66,17 @@ struct ProxyTaskMap:TaskMap {
 
 struct CollisionConstraint:TaskMap {
   double margin;
-  CollisionConstraint(double _margin=.1):margin(_margin){ type=ineqTT; }
+  CollisionConstraint(double _margin=.1):margin(_margin){}
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("CollisionConstraint"); }
 };
 
-//===========================================================================
-
-struct TaskMap_GJK:TaskMap{
-  int i, j;               ///< which shapes does it refer to?
-//  ors::Vector vec1, vec2; ///< additional position or vector
-  bool exact;
-
-  TaskMap_GJK(const ors::Shape *s1, const ors::Shape *s2, bool exact);
-  TaskMap_GJK(const ors::KinematicWorld& W, const char* s1, const char* s2, bool exact);
-  TaskMap_GJK(const ors::KinematicWorld& W, const Graph& specs, bool exact);
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& W, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return 3; }
-};
 
 //===========================================================================
 
 struct ProxyConstraint:TaskMap {
-  ProxyTaskMap proxyCosts;
+  TaskMap_Proxy proxyCosts;
   ProxyConstraint(PTMtype _type,
                   uintA _shapes,
                   double _margin=.02,
@@ -189,12 +91,10 @@ struct ProxyConstraint:TaskMap {
 struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint(uint _margin=0.05){
-    type=ineqTT;
-    margin = _margin;
-  }
+  LimitsConstraint(double _margin=.05):margin(_margin){}
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("LimitsConstraint"); }
 };
 
 //===========================================================================
@@ -205,13 +105,11 @@ struct PairCollisionConstraint:TaskMap {
   intA referenceIds; ///< the shapes it refers to DEPENDENT on time
   PairCollisionConstraint(double _margin)
     : i(-1), j(-1), margin(_margin){
-    type=ineqTT;
   }
   PairCollisionConstraint(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin=.02)
     : i(G.getShapeByName(iShapeName)->index),
       j(G.getShapeByName(jShapeName)->index),
       margin(_margin) {
-    type=ineqTT;
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
@@ -225,7 +123,7 @@ struct PlaneConstraint:TaskMap {
   arr planeParams;  ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
   PlaneConstraint(const ors::KinematicWorld& G, const char* iShapeName, const arr& _planeParams)
-    : i(G.getShapeByName(iShapeName)->index), planeParams(_planeParams){ type=ineqTT; }
+    : i(G.getShapeByName(iShapeName)->index), planeParams(_planeParams){}
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
@@ -238,7 +136,6 @@ struct ConstraintStickiness:TaskMap {
   TaskMap& map;
   ConstraintStickiness(TaskMap& _map)
     : map(_map) {
-    type=sumOfSqrTT;
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
@@ -254,12 +151,11 @@ struct PointEqualityConstraint:TaskMap {
   PointEqualityConstraint(const ors::KinematicWorld &G,
                           const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
                           const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector){
-    DefaultTaskMap dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
+    TaskMap_Default dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
     i=dummy.i;
     j=dummy.j;
     ivec=dummy.ivec;
     jvec=dummy.jvec;
-    type=eqTT;
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
@@ -276,7 +172,6 @@ struct ContactEqualityConstraint:TaskMap {
     : i(G.getShapeByName(iShapeName)->index),
       j(G.getShapeByName(jShapeName)->index),
       margin(_margin) {
-    type=eqTT;
   }
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){
@@ -307,29 +202,13 @@ struct VelAlignConstraint:TaskMap {
 struct qItselfConstraint:TaskMap {
   arr M;
 
-  qItselfConstraint(uint singleQ, uint qN){ M=zeros(1,qN); M(0,singleQ)=1.; type=eqTT; }
-  qItselfConstraint(const arr& _M=NoArr){ if(&_M) M=_M; type=eqTT;}
+  qItselfConstraint(uint singleQ, uint qN){ M=zeros(1,qN); M(0,singleQ)=1.; }
+  qItselfConstraint(const arr& _M=NoArr){ if(&_M) M=_M; }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){
     if(M.nd==2) return M.d0;
     return G.getJointStateDimension();
-  }
-};
-
-struct qItselfLimit:TaskMap {
-  uint qIdx;
-  double limit_low, limit_high;
-  qItselfLimit(uint _qIdx,double _limit_low, double _limit_high){
-    qIdx=_qIdx;
-    limit_low = _limit_low;
-    limit_high=_limit_high;
-    type=ineqTT;
-  }
-
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
-  virtual uint dim_phi(const ors::KinematicWorld& G){
-    return 2;
   }
 };
 

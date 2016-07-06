@@ -3,7 +3,7 @@
 #include <hybrid_automaton/System.h>
 #include <Eigen/Dense>
 #include <Ors/ors.h>
-#include <pr2/roscom.h>
+//#include <RosCom/roscom.h>
 #include <Actions/swig.h>
 
 class pr2System : public ha::System {

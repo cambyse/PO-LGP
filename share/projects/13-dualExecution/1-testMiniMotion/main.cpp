@@ -10,11 +10,11 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   //-- setup the motion problem
   Task *c;
   c = P.addTask("position",
-                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+                   new TaskMap_Default(posTMT, G, "endeff", NoVector));
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
   c = P.addTask("position",
-                   new DefaultTaskMap(posTMT, G, "endeff", NoVector));
+                   new TaskMap_Default(posTMT, G, "endeff", NoVector));
 c->map.order=1;
   c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e1);
 

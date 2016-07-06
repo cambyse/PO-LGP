@@ -110,7 +110,7 @@ Camera::~Camera(){
 void Camera::open(){
   s->cam = new Bumblebee();
   ifstream fil;
-  mlr::open(fil,"../../configurations/camera.cfg");
+  mlr::open(fil,"../../data/configurations/camera.cfg");
   s->calib.read(fil);
   step();
 };

@@ -90,7 +90,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
         }else{
           feasible = getEqualFactInKB(facts, literal, values, &varScope);
           if(!feasible){ //when literal is a negative boolean literal and we don't find a match, we interpret this as feasible!
-            if(literal->getValueType()==typeid(bool) && *((bool*)literal->getValueDirectly()) == false)
+            if(literal->isBoolAndFalse())
               feasible=true;
           }
         }
@@ -123,7 +123,7 @@ NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose
 //TODO: it*->literal*
 bool matchingFactsAreEqual(Graph& facts, Node *it1, Node *it2, const NodeL& subst, Graph* subst_scope){
   CHECK(&it1->container==&it2->container,"");
-  if(it1->getValueType()!=it2->getValueType()) return false;
+  if(it1->type!=it2->type) return false;
   if(it1->parents(0)!=it2->parents(0)) return false;
 
   Node *m1=getEqualFactInKB(facts, it1, subst, subst_scope, false);

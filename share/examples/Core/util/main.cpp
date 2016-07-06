@@ -79,7 +79,7 @@ void TEST(Exception){
 }
 
 void TEST(Paths){
-  std::cout <<mlr::mlrCorePath <<endl;
+  std::cout <<mlr::mlrPath("here") <<endl;
 }
 
 

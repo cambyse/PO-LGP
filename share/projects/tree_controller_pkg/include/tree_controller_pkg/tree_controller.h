@@ -4,7 +4,7 @@
 #include <std_srvs/Empty.h>
 #include <pr2_mechanism_model/tree.h>
 #include <Ors/ors.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <Algo/MLcourse.h>
 #include <tree_controller_pkg/SetVecTarget.h>
 #include <tree_controller_pkg/GetVecTarget.h>
@@ -44,7 +44,7 @@ private:
   KDL::JntArray jnt_efforts_;
 
   // Ors related variables
-  FeedbackMotionControl* MP;
+  TaskController* MP;
   ors::KinematicWorld* world;
   CtrlTask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;

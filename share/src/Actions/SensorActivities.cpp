@@ -1,6 +1,5 @@
 #include "SensorActivities.h"
-#include <Actions/TaskControllerModule.h>
-#include <pr2/roscom.h>
+#include <Control/TaskControllerModule.h>
 
 // ============================================================================
 
@@ -28,7 +27,7 @@ void SensorActivity::activitySpinnerStep(double dt) {
 void SensorActivity::configureSensor(Graph& specs) {
   Node *it;
   if((it=specs["threshold"])) {
-    _threshold = it->V<double>();
+    _threshold = it->get<double>();
   }
   else {
     _threshold = 5.;

@@ -21,14 +21,14 @@ int main(int argc,char** argv){
 
   //-- setup the motion problem
   Task *c;
-  c = MP.addTask("transitions", new TransitionTaskMap(G));
+  c = MP.addTask("transitions", new TaskMap_Transition(G), sumOfSqrTT);
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("position", new DefaultTaskMap(posDiffTMT, G, "endeff", NoVector, "target"));
+  c = MP.addTask("position", new TaskMap_Default(posDiffTMT, G, "endeff", NoVector, "target"), sumOfSqrTT);
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  c = MP.addTask("quat", new DefaultTaskMap(quatDiffTMT, G, "endeff", NoVector, "target"));
+  c = MP.addTask("quat", new TaskMap_Default(quatDiffTMT, G, "endeff", NoVector, "target"), sumOfSqrTT);
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 //  c = MP.addTask("q_vel", new TaskMap_qItself());
@@ -36,10 +36,9 @@ int main(int argc,char** argv){
 //  c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(MP);
-  uint T=MF.get_T();
-  uint k=MF.get_k();
-  uint n=MF.dim_x();
+  uint T=MP.get_T();
+  uint k=MP.get_k();
+  uint n=MP.dim_x(0);
   cout <<"Problem parameters:"
       <<"\n T=" <<T
      <<"\n k=" <<k
@@ -51,23 +50,23 @@ int main(int argc,char** argv){
   //gradient check
   for(uint k=0;k<0;k++){
     rndUniform(x,-1.,1.);
-    checkJacobian(Convert(MF), x, 1e-5);
+    checkJacobian(Convert(MP), x, 1e-5);
     /* Why the gradient check fails:
      * When final velocity is conditioned: the Jacobian w.r.t. the final time slice depends on the final configuration -- in motion.cpp:231
      * the Hessian is not used to estimate the velocity gradient -- that's an approximation! For small velocities (optimized traj) it should still be ok.
      * When collisions are conditions: the Jacobian is in principle approximate. */
   }
 
-  for(uint t=0;t<=T;t++) x[t]() = MP.x0;
+  x = MP.getInitialization();
 
   //evaluation test
-  //  cout <<"fx = " <<evaluateVF(Convert(MF), x) <<endl;
+  //  cout <<"fx = " <<evaluateVF(Convert(MP), x) <<endl;
 
   //  OpenGL costs(STRING("PHI ("<<F.dim_phi(0)<<" tasks)"), 3*T+10, 3*F.dim_phi(0)+10 );
   //-- optimize
   for(uint k=0;k<5;k++){
     mlr::timerStart();
-    optNewton(x, Convert(MF), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrictSteps=(!k?15:5)));
+    optNewton(x, Convert(MP), OPT(verbose=2, stopIters=20, maxStep=1., stepInc=2., nonStrictSteps=(!k?15:5)));
 
     cout <<"** optimization time=" <<mlr::timerRead() <<endl;
     MP.costReport();

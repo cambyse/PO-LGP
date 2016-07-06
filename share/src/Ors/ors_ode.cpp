@@ -233,7 +233,7 @@ OdeInterface::OdeInterface(ors::KinematicWorld &_C):C(_C) {
   for(ors::Body *n: C.bodies) {
     for_list(ors::Joint,  e,  n->inLinks) {
       switch(e->type) {
-        case ors::JT_fixed:
+        case ors::JT_rigid:
           jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
           dJointAttach(jointF, bodies(e->from->index), bodies(e->to->index));
           dJointSetFixed(jointF);
@@ -556,7 +556,7 @@ void OdeInterface::exportStateToOde() {
       dxJointUniversal* uj=(dxJointUniversal*)joints(e->index);
       dxJointSlider* sj=(dxJointSlider*)joints(e->index);
       switch(e->type) { //16. Mar 06 (hh)
-        case ors::JT_fixed:
+        case ors::JT_rigid:
           break;
         case ors::JT_hingeX:
           CP4(hj->qrel, (e->A.rot*e->B.rot).p());
@@ -621,7 +621,7 @@ void OdeInterface::addJointForce(ors::Joint *e, double f1, double f2) {
     case ors::JT_hingeX:
       dJointAddHingeTorque(joints(e->index), -f1);
       break;
-    case ors::JT_fixed: // no torque
+    case ors::JT_rigid: // no torque
       break;
     case ors::JT_universal:
       dJointAddUniversalTorques(joints(e->index), -f1, -f2);
@@ -642,7 +642,7 @@ void OdeInterface::addJointForce(doubleA& x) {
         dJointAddHingeTorque(joints(e->index), -x(n));
         n++;
         break;
-      case ors::JT_fixed: // no torque
+      case ors::JT_rigid: // no torque
         break;
       case ors::JT_universal:
         dJointAddUniversalTorques(joints(e->index), -x(n), -x(n+1));
@@ -668,7 +668,7 @@ void OdeInterface::setMotorVel(const arr& qdot, double maxF) {
         dJointSetAMotorParam(motors(e->index), dParamFMax, maxF);
         n++;
         break;
-      case ors::JT_fixed:
+      case ors::JT_rigid:
         break;
       case ors::JT_universal:
         n+=2;

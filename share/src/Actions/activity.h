@@ -18,14 +18,17 @@ struct Activity {
 
   Activity():fact(NULL), activityTime(0.){}
   virtual ~Activity(){}
-  void associateToExistingFact(Node *fact);
-  void createFactRepresentative(Graph& state);
 
   /// configure yourself from the 'symbols' and 'params'
   virtual void configure(){}
+
   /// the activity spinner runs with 100Hz and calls this for all activities -- use only for
   /// non-computational heavy quick updates. Computationally heavy things should be threaded!
   virtual void activitySpinnerStep(double dt){ activityTime += dt; }
+
+  //-- 'responses' of activities
+  void setEffect(const char* effect);
+  void terminate();
 
   void write(ostream& os) const { os <<"Activity (" <<symbols <<"){" <<params <<"} (t=" <<activityTime <<") "; if(fact) os <<*fact; else os <<"()"; }
 };
@@ -37,33 +40,17 @@ typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  new Node_typed<Type>(registry(), {"Activity", key}, {}, new Type_typed<T,void>, true);
+  new Node_typed<Type*>(registry(), {"Activity", key}, {}, new Type_typed<T,void>);
 }
 
 /// create/launch a new activity based on the fact
 Activity* newActivity(Node *fact);
 
-/// create/launch a new activity based on the type, symbols and params; adds a fact to relationalState
-template<class T>
-void newActivity(Graph& relationalState, const StringA& symbols, const Graph& params){
-  Activity *act = dynamic_cast<Activity*>(new T);
-  act->symbols = symbols;
-  act->params = params;
-
-  //-- add refs to specs for other symbols
-  for(uint i=1;i<symbols.N;i++){
-    CHECK(!act->params[STRING("ref"<<i-1)], "can't specify ref"<<i-1<<" both, as symbols and as parameter");
-    new Node_typed<mlr::String>(act->params, {STRING("ref"<<i-1)}, {}, new mlr::String(symbols(i)), true);
-  }
-
-  act->createFactRepresentative(relationalState);
-  registry().getValue<Variable<ActivityL> >("A") -> set()->append(act);
-}
 
 //===========================================================================
 
 struct ActivitySpinnerModule : Module{
-  ACCESSnew(ActivityL, A)
+  ACCESS(ActivityL, A)
 
   ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
 
@@ -71,7 +58,6 @@ struct ActivitySpinnerModule : Module{
   void step(){
     A.readAccess();
     for(Activity *act:A()) act->activitySpinnerStep(0.01);
-//    for(Activity *act:A()) act->write(cout);
     A.deAccess();
   }
   void close(){}

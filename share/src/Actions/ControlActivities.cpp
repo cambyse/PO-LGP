@@ -1,10 +1,10 @@
-#include <Motion/feedbackControl.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/taskController.h>
+#include <Control/TaskControllerModule.h>
 #include "SensorActivities.h"
 #include "ControlActivities.h"
 
 void ControlActivity::configure() {
-  taskController = dynamic_cast<TaskControllerModule*>(&registry().getNode("Module","TaskControllerModule")->V<Module>());
+  taskController = getThread<TaskControllerModule>("TaskControllerModule");
   CHECK(taskController,"that didn't work");
   configureControl(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
@@ -50,26 +50,26 @@ bool ControlActivity::isConv(){
 void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
   stuck_count = 0;
   Node *it;
-  if((it=specs["ref0"])){
+  if((it=specs["sym1"])){
     CHECK(!specs["type"], "can't specify type twice");
-    it->keys.last()="type"; //rename ref0 to type
+    it->keys.last()="type"; //rename sym1 to type
   }
   if((it=specs["type"])){
-    if(it->V<mlr::String>()=="wheels"){
+    if(it->get<mlr::String>()=="wheels"){
       map = new TaskMap_qItself(world, "worldTranslationRotation");
-      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->V<double>() : false;
-    }else if (it->V<mlr::String>()=="qItself") {
-      map = new TaskMap_qItself(world.getJointByName(specs["ref1"]->V<mlr::String>())->qIndex,
+      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : false;
+    }else if (it->get<mlr::String>()=="qItself") {
+      map = new TaskMap_qItself(world.getJointByName(specs["sym2"]->get<mlr::String>())->qIndex,
                                 world.getJointStateDimension());
-      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->V<double>() : true;
+      dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : true;
     }else{
-      map = new DefaultTaskMap(specs, world);
+      map = new TaskMap_Default(specs, world);
     }
   }else{
     HALT("need a type (the map type) in the specs");
   }
   task = new CtrlTask(name, *map, specs);
-  if((it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+  if((it=specs["tol"])) stopTolerance=it->get<double>(); else stopTolerance=1e-2;
 }
 
 void FollowReferenceActivity::stepControl(double dt){
@@ -89,8 +89,8 @@ bool FollowReferenceActivity::isConv(){
 
   return ((task->y_ref.nd == 1
            && task->y.N == task->y_ref.N
-           && maxDiff(task->y, task->y_ref) < stopTolerance
-           && maxDiff(task->v, task->v_ref) < stopTolerance)
+           && maxDiff(task->y, task->get_y_ref(NoArr)) < stopTolerance
+           && maxDiff(task->v, task->get_ydot_ref(NoArr)) < stopTolerance)
           or (task->y_ref.nd==2 && activityTime>=trajectoryDuration)
           or (stuck and stuck_count > 6000));
 }
@@ -99,7 +99,7 @@ bool FollowReferenceActivity::isConv(){
 
 //PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double _timeOut)
 //    : Action(actionMachine, "controlForce") {
-//  DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
+//  TaskMap_Default *m = new TaskMap_Default(posTMT, actionMachine.s->world, "endeffForceL");
 //  CtrlTask *task = new CtrlTask(
 //                     STRING("MoveEffTo_" << effName),
 //                     m,
@@ -127,7 +127,7 @@ void HomingActivity::configureControl(const char *name, Graph& specs, ors::Kinem
   task->y_ref=taskController->q0;
 
   Node *it;
-  if(&specs && (it=specs["tol"])) stopTolerance=it->V<double>(); else stopTolerance=1e-2;
+  if(&specs && (it=specs["tol"])) stopTolerance=it->get<double>(); else stopTolerance=1e-2;
 
   wheeljoint = world.getJointByName("worldTranslationRotation");
 }

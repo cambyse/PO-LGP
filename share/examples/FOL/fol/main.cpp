@@ -33,12 +33,12 @@ void testFolLoadFile(){
 
 
   G.checkConsistency();
-  Node *sub = new Node_typed<Graph>(G, new Graph, true);
+  Node *sub = G.appendSubgraph({}, {});
   sub->graph().isNodeOfParentGraph = sub;
   G.checkConsistency();
-  new Node_typed<bool>(sub->graph(), {}, {s, consts(0)}, NULL, false);
+  new Node_typed<bool>(sub->graph(), {}, {s, consts(0)}, true);
   G.checkConsistency();
-  new Node_typed<bool>(sub->graph(), {}, {s, consts(2)}, NULL, false);
+  new Node_typed<bool>(sub->graph(), {}, {s, consts(2)}, true);
   G.checkConsistency();
 }
 
@@ -49,7 +49,7 @@ void testFolFwdChaining(){
 
   FILE("fol.kvg") >>G;
 
-  Graph& state = G.getNode("STATE")->graph();
+  Graph& state = G.get<Graph>("STATE");
 
   cout <<"INIT STATE = " <<state <<endl;
 
@@ -81,7 +81,7 @@ void testFolSubstitution(){
 
   NodeL rules = KB.getNodes("Rule");
   NodeL constants = KB.getNodes("Constant");
-  Graph& state = KB.getNode("STATE")->graph();
+  Graph& state = KB.get<Graph>("STATE");
 
   for(Node* rule:rules){
     cout <<"*** RULE: " <<*rule <<endl;
@@ -102,8 +102,8 @@ void testFolSubstitution(){
 void testFolFunction(){
   Graph KB(FILE("functionTest.g"));
 
-  Graph& state = KB.getNode("STATE")->graph();
-  Graph& func = KB.getNode("func")->graph();
+  Graph& state = KB.get<Graph>("STATE");
+  Graph& func = KB.get<Graph>("func");
 
   cout <<"f=" <<evaluateFunction(func, state, 3) <<endl;
 }
@@ -120,9 +120,9 @@ void testMonteCarlo(){
     Graph KB = Gorig;
     KB.checkConsistency();
     Node *Terminate_keyword = KB["Terminate"];
-    Graph& state = KB.getNode("STATE")->graph();
+    Graph& state = KB.get<Graph>("STATE");
     NodeL rules = KB.getNodes("Rule");
-    Graph& terminal = KB.getNode("terminal")->graph();
+    Graph& terminal = KB.get<Graph>("terminal");
 
     for(uint h=0;h<100;h++){
       if(verbose>2) cout <<"****************** " <<k <<" MonteCarlo rollout step " <<h <<endl;
@@ -168,8 +168,8 @@ void testMonteCarlo(){
         //-- find minimal wait time
         double w=1e10;
         for(Node *i:state){
-          if(i->getValueType()==typeid(double)){
-            double wi = *i->getValue<double>();
+          if(i->isOfType<double>()){
+            double wi = i->get<double>();
             if(w>wi) w=wi;
           }
         }
@@ -181,8 +181,8 @@ void testMonteCarlo(){
           //-- subtract w from all times and collect all activities with minimal wait time
           NodeL activities;
           for(Node *i:state){
-            if(i->getValueType()==typeid(double)){
-              double &wi = *i->getValue<double>();
+            if(i->isOfType<double>()){
+              double &wi = i->get<double>();
               wi -= w;
               if(fabs(wi)<1e-10) activities.append(i);
             }
@@ -191,7 +191,7 @@ void testMonteCarlo(){
           //-- for all these activities call the terminate operator
           for(Node *act:activities){
             Node *predicate = act->parents(0);
-            Node *rule = KB.getChild(Terminate_keyword, predicate);
+            Node *rule = KB.getEdge(Terminate_keyword, predicate);
             if(!rule) HALT("No termination rule for '" <<*predicate <<"'");
             Node *effect = rule->graph().last();
             NodeL vars = getSymbolsOfScope(rule->graph());

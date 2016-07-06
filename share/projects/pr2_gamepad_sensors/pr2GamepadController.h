@@ -8,7 +8,7 @@ struct Pr2GamepadController:Module{
 
   ors::KinematicWorld world;
   arr q, qdot, zero_qdot;
-  FeedbackMotionControl *MP;
+  TaskController *MP;
   ors::Shape *ftL_shape;
   ors::Joint *trans;
   Gamepad2Tasks *j2t;
@@ -24,7 +24,7 @@ struct Pr2GamepadController:Module{
     trans=world.getJointByName("worldTranslationRotation");
     ftL_shape=world.getShapeByName("endeffL");
 
-    MP = new FeedbackMotionControl(world, true);
+    MP = new TaskController(world, true);
     MP->qitselfPD.y_ref = q;
     MP->H_rate_diag = pr2_reasonable_W(world);
     j2t = new Gamepad2Tasks(*MP);

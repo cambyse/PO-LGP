@@ -30,7 +30,7 @@ void run() {
   /// create ikmo problem
   arr param = trainScenes(0).paramRef;
 //  arr param = ARR(1.,1e2);
-//  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.flatten();
+//  arr param = fabs(randn(trainScenes(0).paramRef.d0,1)); param.reshapeFlat();
 //  param = 0.*param + 1e0;
   cout << "Parameter initialization: " << param << endl;
 
@@ -62,9 +62,9 @@ void run() {
 
   /// 2. Define parameter and start point
   cout << "Number of parameters: " << mf->numParam << endl;
-  arr w = ones(mf->numParam,1);w.flatten();
+  arr w = ones(mf->numParam,1);w.reshapeFlat();
   w(1)=15.;
-//  arr w = fabs(randn(mf->numParam,1))*1e-1; w.flatten();
+//  arr w = fabs(randn(mf->numParam,1))*1e-1; w.reshapeFlat();
 //  arr w =  trainScenes(0).paramRef;
 //  w = w/sqrt(sumOfSqr(w));
   arr dual;
@@ -78,7 +78,7 @@ void run() {
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-7));
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-9));
 
-  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.1;
+  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRef(1,w.d0-1))*0.1;
   ioc.costReport(w);
 
   /// 3. Evaluate code on test scenarios

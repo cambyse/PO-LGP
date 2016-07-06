@@ -1,4 +1,4 @@
-//#include <pr2/actionMachine.h>
+//#include <RosCom/actionMachine.h>
 //#include "manipSim.h"
 #include <Ors/ors.h>
 #include <FOL/fol.h>
@@ -16,7 +16,7 @@ void runMonteCarlo(Graph& G){
   Node *papSymbol = G["pap"];
   Node *depthSymbol = G["depth"];
   Graph& state = G["STATE"]->graph();
-  //    Graph& terminal = G.getNode("terminal")->graph();
+  //    Graph& terminal = G.get<Graph>("terminal");
 
   for(uint h=0;h<100;h++){
     if(verbose>2) cout <<"****************** MonteCarlo rollout step " <<h <<endl;
@@ -63,11 +63,11 @@ void runMonteCarlo(Graph& G){
           depth1=fact; break;
         }
         if(depth0 && depth1){
-          *depth0->getValue<double>() = *depth1->getValue<double>() + 1.;
+          depth0->get<double>() = depth1->get<double>() + 1.;
         }
 
         //-- append it to store the decision
-        actionSequence.append({d.first->keys(1)}, cat({papSymbol}, d.second), new bool(true), true);
+        actionSequence.append({d.first->keys(1)}, cat({papSymbol}, d.second), true);
       }
     }
 

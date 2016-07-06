@@ -20,6 +20,18 @@
 
 #include "optimization.h"
 
+//-- basic converters
+ScalarFunction     conv_cstylefs2ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data);
+VectorFunction     conv_cstylefv2VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data);
+ScalarFunction     conv_VectorFunction2ScalarFunction(const VectorFunction& f);
+ScalarFunction     conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f);
+VectorFunction     conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f);
+ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f);
+ConstrainedProblem conv_KOMO2ConstrainedProblem(struct KOMO_Problem& f);
+
+/// this takes a constrained problem over $x$ and re-represents it over $z$ where $x=Bz$
+ConstrainedProblem conv_linearlyReparameterize(const ConstrainedProblem& f, const arr& B);
+
 /// A struct that allows to convert one function type into another, even when given as argument
 struct Convert {
   KOrderMarkovFunction *kom;
@@ -29,10 +41,12 @@ struct Convert {
   ScalarFunction sf;
   VectorFunction vf;
   ConstrainedProblem cpm;
+  struct KOMO_ConstrainedProblem* komo;
 
   Convert(const ScalarFunction&);
   Convert(const VectorFunction&);
   Convert(KOrderMarkovFunction&);
+  Convert(KOMO_Problem&);
   Convert(double(*fs)(arr*, const arr&, void*),void *data);
   Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data);
   ~Convert();
@@ -42,9 +56,3 @@ struct Convert {
   operator KOrderMarkovFunction&();
 };
 
-//-- low level converters
-ScalarFunction convert_cstylefs_ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data);
-VectorFunction convert_cstylefv_VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data);
-ScalarFunction convert_VectorFunction_ScalarFunction(const VectorFunction& f);
-VectorFunction convert_KOrderMarkovFunction_VectorFunction(KOrderMarkovFunction& f);
-ConstrainedProblem convert_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f);

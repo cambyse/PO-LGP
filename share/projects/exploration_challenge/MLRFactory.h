@@ -11,6 +11,7 @@ typedef std::shared_ptr<MLRFactory> MLRFactoryPtr;
 class MLRFactoryParams : public ha::HybridAutomatonAbstractParams {
 public:
     std::string endeff;
+    std::string gripper;
 };
 
 class MLRFactory : public ha::HybridAutomatonAbstractFactory {

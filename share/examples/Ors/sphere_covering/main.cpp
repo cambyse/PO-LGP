@@ -24,8 +24,8 @@ struct CoveringSpheresProblem:ConstrainedProblem {
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& cr) {
     uint s=cr.N/4;
     arr c,r;
-    c.referToSubRange(cr,0,3*s-1); c.reshape(s,3);
-    r.referToSubRange(cr,3*s,-1); r.reshape(s);
+    c.referToRange(cr,0,3*s-1); c.reshape(s,3);
+    r.referToRange(cr,3*s,-1); r.reshape(s);
 
     //f
     double fac = 1.;
@@ -98,8 +98,8 @@ void TEST(CoveringSphere){
 
   ors::KinematicWorld G;
   arr c,r;
-  c.referToSubRange(cr,0,3*s-1); c.reshape(s,3);
-  r.referToSubRange(cr,3*s,-1); r.reshape(s);
+  c.referToRange(cr,0,3*s-1); c.reshape(s,3);
+  r.referToRange(cr,3*s,-1); r.reshape(s);
   for(uint j=0;j<s;j++) if(r(j)>1e-3){
     ors::Shape *s = new ors::Shape(G, NoBody);
     s->type = ors::sphereST;

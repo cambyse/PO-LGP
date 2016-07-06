@@ -29,8 +29,8 @@ void run() {
   mf->createScenes(mlr::getParameter<uint>("scene"),trainScenes,testScenes,numDem,visDemo);
 
   /// 2. Optimize the parameters
-  arr w = ones(mf->numParam,1);w.flatten();
-//  arr w = fabs(randn(mf->numParam,1)); w.flatten();
+  arr w = ones(mf->numParam,1);w.reshapeFlat();
+//  arr w = fabs(randn(mf->numParam,1)); w.reshapeFlat();
 //  arr w =  trainScenes(0).paramRef;
   if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = 0;
 
@@ -58,7 +58,7 @@ void run() {
   /// 3. Evaluate code on test scenarios
   w = fabs(w);
   if (!mlr::getParameter<bool>("learnTransitionCost")) {
-    w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.01;
+    w(0) = sumOfAbs(w.subRef(1,w.d0-1))*0.01;
   }
 
   /// 4. Save Parameter into file

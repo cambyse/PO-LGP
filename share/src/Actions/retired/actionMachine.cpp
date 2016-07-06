@@ -4,7 +4,7 @@
 //#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <FOL/fol.h>
-#include <pr2/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;
@@ -35,9 +35,9 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->feedbackController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
-  s->feedbackController.qitselfPD.y_ref = s->q;
-  s->feedbackController.qitselfPD.setGains(.0,10.);
+  s->taskController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
+  s->taskController.qitselfPD.y_ref = s->q;
+  s->taskController.qitselfPD.setGains(.0,10.);
 
   { // read machine.fol
     mlr::FileToken fil("machine.fol");
@@ -54,7 +54,7 @@ void ActionMachine::open(){
       new Node_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
 //new Node_typed<bool>(KB(), {"moving"}, {}, NULL, false);
-      new Node_typed<Graph>(KB(), {"STATE"}, {}, new Graph(), true);
+      KB().appendSubgraph({"STATE"}, {});
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
@@ -86,14 +86,14 @@ void ActionMachine::step(){
 
     ctrl_obs.waitForNextRevision();
     cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
-    cout <<"LOCAL  joint dimension=" <<s->feedbackController.world.q.N <<endl;
+    cout <<"LOCAL  joint dimension=" <<s->taskController.world.q.N <<endl;
 
-    if(ctrl_obs.get()->q.N==s->feedbackController.world.q.N
-       && ctrl_obs.get()->qdot.N==s->feedbackController.world.q.N){ //all is good
+    if(ctrl_obs.get()->q.N==s->taskController.world.q.N
+       && ctrl_obs.get()->qdot.N==s->taskController.world.q.N){ //all is good
       //-- set current state
       s->q = ctrl_obs.get()->q;
       s->qdot = ctrl_obs.get()->qdot;
-      s->feedbackController.setState(s->q, s->qdot);
+      s->taskController.setState(s->q, s->qdot);
       cout <<"** GO!" <<endl;
       initStateFromRos = false;
     }else{
@@ -104,11 +104,11 @@ void ActionMachine::step(){
   }
 
   if(!(t%5))
-    s->feedbackController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
+    s->taskController.world.watch(false, STRING("local operational space controller state t="<<(double)t/100.));
 
   // Sync alvar marker
   AlvarMarkers markers = ar_pose_marker.get();
-  syncMarkers(s->feedbackController.world, markers);
+  syncMarkers(s->taskController.world, markers);
 
   //-- do the logic of transitioning between actions, stopping/sequencing them, querying their state
 //  transition();
@@ -124,7 +124,7 @@ void ActionMachine::step(){
     cout <<"STOP" <<endl;
     KB.writeAccess();
     Node *quitSymbol = KB()["quit"];
-    KB().getNode("STATE")->graph().append<bool>({},{quitSymbol}, NULL, false);
+    KB().get<Graph>("STATE").append<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
 //    moduleShutdown().incrementValue();
   }
@@ -171,14 +171,14 @@ void ActionMachine::step(){
 
   //-- compute the feedback controller step and iterate to compute a forward reference
   //first collect all tasks of all actions into the feedback controller:
-  s->feedbackController.tasks.clear();
-  for(Action *a : A()) for(CtrlTask *t:a->tasks) s->feedbackController.tasks.append(t);
+  s->taskController.tasks.clear();
+  for(Action *a : A()) for(CtrlTask *t:a->tasks) s->taskController.tasks.append(t);
   //now operational space control
   for(uint tt=0;tt<10;tt++){
-    arr a = s->feedbackController.operationalSpaceControl();
+    arr a = s->taskController.operationalSpaceControl();
     s->q += .001*s->qdot;
     s->qdot += .001*a;
-    s->feedbackController.setState(s->q, s->qdot);
+    s->taskController.setState(s->q, s->qdot);
   }
 
   //-- first zero references
@@ -187,7 +187,7 @@ void ActionMachine::step(){
   s->refs.fL = zeros(6);
   s->refs.fR = zeros(6);
   s->refs.Ki.clear();
-  s->refs.J_ft_inv.clear();
+  s->refs.J_ft_invL.clear();
   s->refs.u_bias = zeros(s->q.N);
 
   //-- compute the force feedback control coefficients
@@ -196,7 +196,7 @@ void ActionMachine::step(){
     if(a->active && a->tasks.N && a->tasks(0)->f_ref.N){
       count++;
       if(count!=1) HALT("you have multiple active force control tasks - NIY");
-      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_inv, *world);
+      a->tasks(0)->getForceControlCoeffs(s->refs.fL, s->refs.u_bias, s->refs.Ki, s->refs.J_ft_invL, *world);
     }
   }
   if(count==1) s->refs.Kp = .5;
@@ -208,7 +208,7 @@ void ActionMachine::step(){
   //-- send the computed movement to the robot
   s->refs.q =  s->q;
   s->refs.qdot = zeros(s->q.N);
-  s->refs.gamma = 1.;
+  s->refs.fL_gamma = 1.;
   ctrl_ref.set() = s->refs;
 }
 
@@ -218,13 +218,13 @@ void ActionMachine::close(){
 
 void ActionMachine::parseTaskDescription(Graph& td){
   Node *t = td.isNodeOfParentGraph;
-  mlr::String type=td["type"]->V<mlr::String>();
+  mlr::String type=td["type"]->get<mlr::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
   }else if(type=="forceCtrl"){
-    new PushForce(*this, td["ref1"]->V<mlr::String>(), td["target"]->V<arr>(), td["timeOut"]->V<double>());
+    new PushForce(*this, td["sym2"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
   }else{
-    DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+    TaskMap_Default *map = new TaskMap_Default(td, *world);
     CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
     task->active=false;
     new FollowReference(*this, t->parents(0)->keys.last(), task);
@@ -248,10 +248,10 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   KB.writeAccess();
   KB().checkConsistency();
   //-- check new successes and fails and add to symbolic state
-  Node* convSymbol = KB().getNode("conv");  CHECK(convSymbol,"");
-  Node* contactSymbol = KB().getNode("contact");  CHECK(contactSymbol,"");
-  Node* timeoutSymbol = KB().getNode("timeout");  CHECK(timeoutSymbol,"");
-  Graph& state = KB().getNode("STATE")->graph();
+  Node* convSymbol = KB()["conv"];  CHECK(convSymbol,"");
+  Node* contactSymbol = KB()["contact"];  CHECK(contactSymbol,"");
+  Node* timeoutSymbol = KB()["timeout"];  CHECK(timeoutSymbol,"");
+  Graph& state = KB().get<Graph>("STATE");
   cout <<"STATE = " <<state <<endl;
   A.readAccess();
   for(Action *a:A()) if(a->active){
@@ -326,7 +326,7 @@ void ActionMachine::waitForQuitSymbol() {
   while (cont) {
     KB.waitForNextRevision();
     KB.readAccess();
-    Node* quitSymbol = KB().getNode("quit");
+    Node* quitSymbol = KB()["quit"];
     if(!quitSymbol){
       MLR_MSG("WARNING: no quit symbol!");
       return;

@@ -33,15 +33,13 @@ void TEST(GraspHeuristic){
     threeStepGraspHeuristic(xT, P, s->index, 2);
 
     Task *c;
-    c = P.addTask("transition", new TransitionTaskMap(G));
+    c = P.addTask("transition", new TaskMap_Transition(G), sumOfSqrTT);
     c->map.order=2; //make this an acceleration task!
     c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-    MotionProblemFunction F(P);
+    sineProfile(x, P.world.getJointState(), xT, P.T);
 
-    sineProfile(x, P.x0, xT, P.T);
-
-    optNewton(x, Convert(F), OPT(verbose=2, stopIters=20, damping=1e-3, maxStep=1.));
+    optNewton(x, Convert(P), OPT(verbose=2, stopIters=20, damping=1e-3, maxStep=1.));
     //costs.displayRedBlue(~sqr(P.costMatrix), false, 3);
     P.costReport();
     write(LIST<arr>(x),"z.output");
@@ -64,7 +62,7 @@ void TEST(GraspHeuristic){
     s->size[3] = rnd.uni(.02,.07);
     s->mesh.clear();
 
-    P.x0 = P.world.q;
+    //P.x0 = P.world.q;
     G.gl().watch();
   }
   

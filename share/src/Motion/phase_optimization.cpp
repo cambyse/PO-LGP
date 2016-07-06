@@ -14,8 +14,8 @@ arr PhaseOptimization::get_postfix() {
 }
 
 arr PhaseOptimization::getInitialization(){
-  arr s0 = linspace(0,1,T-1);s0.flatten();
-  s0 = s0.subRange(1,s0.d0-2); // remove 0 and 1 from optimization variables
+  arr s0 = linspace(0,1,T-1);s0.reshapeFlat();
+  s0 = s0.refRange(1,s0.d0-2); // remove 0 and 1 from optimization variables
   return s0;
 }
 

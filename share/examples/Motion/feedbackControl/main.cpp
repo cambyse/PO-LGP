@@ -1,10 +1,10 @@
 #include <Ors/ors.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 
 // ============================================================================
 // helper function to execute the motion problem
 
-void run(FeedbackMotionControl& MP, ors::KinematicWorld& world) {
+void run(TaskController& MP, ors::KinematicWorld& world) {
   arr q, qdot;
   world.getJointState(q, qdot);
 
@@ -26,7 +26,7 @@ void run(FeedbackMotionControl& MP, ors::KinematicWorld& world) {
 
 void test_reach() {
   ors::KinematicWorld world("man.ors");
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
 
   MP.addPDTask("endeff1", .2, .8, posTMT, "handR", NoVector, "rightTarget");
   MP.addPDTask("endeff2", .2, .8, posTMT, "handL", NoVector, "leftTarget");
@@ -38,7 +38,7 @@ void test_reach() {
 
 void test_quatTMT() {
   ors::KinematicWorld world("man.ors");
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
 
   auto effOrientationL = MP.addPDTask("orientationL", 1., .8, quatTMT, "handL", {0, 0, 0});
   effOrientationL->y_ref = ARR(1, 0, 0, 0);
@@ -53,7 +53,7 @@ void test_quatTMT() {
 
 void test_qSingleTMT() {
   ors::KinematicWorld world("man.ors");
-  FeedbackMotionControl MP(world, false);
+  TaskController MP(world, false);
 
   int jointID = world.getJointByBodyNames("waist", "back")->qIndex;
   auto task = MP.addPDTask("rotateArm", .3, .8, new TaskMap_qItself(jointID, world.q.N));
@@ -73,8 +73,8 @@ void checkAnalytics(){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  FeedbackMotionControl MP(world, false);
-  MP.qitselfPD.setGains(1.,10.);
+  TaskController MP(world, false);
+  MP.qNullCostRef.setGains(1.,10.);
   CtrlTask *t=MP.addPDTask("endeff1", .2, .9, posTMT, "handR", NoVector, "rightTarget");
 
   q(18)+=1.1;

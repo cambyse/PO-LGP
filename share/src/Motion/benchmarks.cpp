@@ -12,9 +12,8 @@ void setTasks(MotionProblem& MP,
 struct sPR2EndPoseProblem{
   ors::KinematicWorld world;
   MotionProblem MP;
-  MotionProblemFunction MPF;
   sPR2EndPoseProblem()
-    :world ("model.kvg"), MP(world), MPF(MP){}
+    :world ("model.kvg"), MP(world){}
 };
 
 PR2EndPoseProblem::PR2EndPoseProblem()
@@ -24,21 +23,21 @@ PR2EndPoseProblem::PR2EndPoseProblem()
 
   setTasks(s.MP, *s.world.getShapeByName("endeff"), *s.world.getShapeByName("target"), 0, 1, 0, 5.);
 
-  ConstrainedProblem::operator=( convert_KOrderMarkovFunction_ConstrainedProblem(s.MPF) );
+  ConstrainedProblem::operator=( conv_KOrderMarkovFunction2ConstrainedProblem(s.MP) );
 }
 
 arr PR2EndPoseProblem::getInitialization(){
-  arr x = replicate(s.MP.x0, s.MP.T+1); //we initialize with a constant trajectory!
+  arr x = s.MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
   return x;
 }
 
 void PR2EndPoseProblem::report(){
   s.MP.costReport();
-  s.MP.world.watch(true);
+  s.world.watch(true);
 }
 
 void PR2EndPoseProblem::setState(const arr& x){
-  s.MP.world.setJointState(x);
+  s.world.setJointState(x);
 }
 

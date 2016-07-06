@@ -1,23 +1,25 @@
 //#include <System/engine.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <pr2/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
+#include <Control/TaskControllerModule.h>
 
 // =================================================================================================
 struct MySystem {
-  // Access Variables
-  ACCESSname(CtrlMsg, ctrl_obs)
-  ACCESSname(CtrlMsg, ctrl_ref)
-  ACCESSname(AlvarMarkers, ar_pose_markers)
+  ACCESSname(AlvarMarkers, ar_pose_markers);
 
   MySystem() {
+    // This is for ros communication
     new RosCom_Spinner();
-    new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
-    new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-    //addModule<ROSSUB_ar_pose_marker>(NULL /*,Module::listenFirst*/ );
-    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
 
-    //connect();
+    // This is here to get the PR2 model
+    new TaskControllerModule(); 
+
+    // This syncs the ors graph
+    new AlvarSyncer();
+
+    // This reads the ros topic and updates the variable
+    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&) ar_pose_markers);
   }
 };
 
@@ -29,21 +31,10 @@ int main(int argc, char** argv){
   rosCheckInit("nodeName");
   bool useRos = true;
 
-  ors::KinematicWorld world("model.kvg");
   MySystem system;
   threadOpenModules(true);
 
-  initialSyncJointStateWithROS(world, system.ctrl_obs, useRos);
   for (int i = 0; true; i++) {
-    syncJointStateWitROS(world, system.ctrl_obs, useRos);
-
-    AlvarMarkers markers = system.ar_pose_markers.get();
-    syncMarkers(world, markers);
-
-    // world.calc_fwdPropagateFrames();
-    // world.calc_fwdPropagateShapeFrames();
-
-    world.gl().update(STRING("frame " << i), false, false, false);
     mlr::wait(0.01);
   }
 

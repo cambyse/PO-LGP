@@ -4,7 +4,7 @@
 #include <Hardware/G4/G4.h>
 
 struct G4Printer: Module{
-  ACCESS(floatA, poses);
+  ACCESS(floatA, g4_poses);
 
   G4Printer();
 

@@ -2,16 +2,23 @@
 
 #include <FOL/fol.h>
 #include <Ors/ors.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <pr2/rosalvar.h>
-#include <pr2/roscom.h>
+#include <RosCom/subscribeAlvarMarkers.h>
+#include <RosCom/spinner.h>
+#include <RosCom/roscom.h>
+#include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
+#include <Ors/orsviewer.h>
+
+#ifdef MLR_ROS
+#  include <RosCom/roscom.h>
+#endif
 
 // ============================================================================
 struct SwigSystem* _g_swig;
@@ -24,8 +31,10 @@ struct SwigSystem {
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
-  ACCESSname(AlvarMarker, ar_pose_markers)
+#ifdef MLR_ROS
+  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
+#endif
   ACCESSname(arr, pr2_odom)
   ACCESSname(CtrlMsg, ctrl_ref)
   ACCESSname(CtrlMsg, ctrl_obs)
@@ -48,31 +57,38 @@ struct SwigSystem {
   TaskControllerModule tcm;
   RelationalMachineModule rmm;
   OrsViewer orsviewer;
+  OrsPoseViewer controlview;
   ActivitySpinnerModule aspin;
   GamepadInterface gamepad;
 
+  RosCom_Spinner spinner;
+  ServiceRAP rapservice;
 
-  PerceptionObjects2Ors percObjs;
-  ImageViewer camview;
-  Kinect2PointCloud k2pcl;
-  PointCloudViewer pclv;
+
+//  PerceptionObjects2Ors percObjs;
+//  ImageViewer camview;
+//  Kinect2PointCloud k2pcl;
+//  PointCloudViewer pclv;
+//  AlvarSyncer alvar_syncer;
 
   Log _log;
 
   SwigSystem()
-    : camview("modelDepthView"), _log("SwigSystem"){
+    : controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld), /*camview("modelDepthView"),*/
+      spinner("SwigSystem"), _log("SwigSystem"){
 
+    computeMeshNormals(tcm.realWorld.shapes);
     if(mlr::getParameter<bool>("useRos",false)){
       cout <<"*** USING ROS" <<endl;
-      rosCheckInit("SwigSystem");
-      new RosCom_Spinner();
+//      rosCheckInit("SwigSystem");
       //addModule<ROSSUB_ar_pose_marker>(NULL, /*Module::loopWithBeat,*/ 0.05);
       //addModule<ROSSUB_perceptionObjects>(NULL, /*Module::loopWithBeat,*/ 0.02);
       // addModule<RosCom_ForceSensorSync>(NULL, /*Module::loopWithBeat,*/ 1.);
 
+#ifdef MLR_ROS
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-      new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+      new Subscriber<ar::AlvarMarkers>("/ar_pose_marker", (Access_typed<ar::AlvarMarkers>&)ar_pose_markers);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
       new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
 
@@ -83,6 +99,11 @@ struct SwigSystem {
 //      new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/r_ft_compensated", wrenchR);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/l_gripper_motor", wrenchL);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft/r_gripper_motor", wrenchR);
+#endif
+
+    }else{
+//      rosCheckInit("SwigSystem");
+//      new RAP_roscom(rmm);
     }
 
     // make the base movable
@@ -250,6 +271,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
      qj(i) = q(joint->qIndex+i);
   }
   D["q"] = STRING(qj);
+  D["qIndex"] = STRING(joint->qIndex);
   D["axis"] = STRING('[' << joint->axis << ']');
   S->modelWorld.deAccess();
   return D;
@@ -290,8 +312,24 @@ double ActionSwigInterface::getQDim() {
   return qdim;
 }
 
+doubleV ActionSwigInterface::getForceLeft() {
+#ifdef MLR_ROS
+    return conv_arr2stdvec(S->ctrl_obs.get()->fL);
+#else
+    return std::vector<double>({0., 0., 0., 0., 0., 0.});
+#endif
+}
+
+doubleV ActionSwigInterface::getForceRight() {
+#ifdef MLR_ROS
+    return conv_arr2stdvec(S->ctrl_obs.get()->fR);
+#else
+    return std::vector<double>({0., 0., 0., 0., 0., 0.});
+#endif
+}
+
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){
-  Node *symbol = S->RM.get()->KB.getNode(symbolName.c_str());
+  Node *symbol = S->RM.get()->KB[symbolName.c_str()];
   CHECK(symbol,"The symbol name '" <<symbolName <<"' is not defined");
   return symbol->index;
 }
@@ -313,8 +351,9 @@ bool  ActionSwigInterface::isTrue(const stringV& literals){
 }
 
 void ActionSwigInterface::setFact(const char* fact){
-  S->effects.set()() <<fact <<", ";
-  S->state.waitForNextRevision(); //TODO: is this robust?
+  S->rmm.setFact(fact);
+//  S->effects.set()() <<fact <<", ";
+//  S->state.waitForNextRevision(); //TODO: is this robust?
 }
 
 void ActionSwigInterface::stopFact(const char* fact){
@@ -423,13 +462,8 @@ void ActionSwigInterface::waitForQuitSymbol(){
   waitForCondition(stringV({"quit"}));
 }
 
-int ActionSwigInterface::createNewSymbol(std::string symbolName){
-#if 1
-  Node *symbol = S->RM.set()->declareNewSymbol(symbolName.c_str());
-#else
-  Item *symbol = S->RM.set()->append<bool>(symbolName.c_str(), NULL, false);
-#endif
-  return symbol->index;
+void ActionSwigInterface::createNewSymbol(std::string symbolName){
+  S->rmm.newSymbol(symbolName.c_str());
 }
 
 stringV ActionSwigInterface::getSymbols() {
@@ -453,8 +487,9 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
   S->RM.writeAccess();
 
   Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
-  Graph *td = new Graph(parameters);
-  S->RM().append<Graph>({"Task"}, {symbol}, td, true);
+  
+  Graph& td = S->RM().appendSubgraph({"Task"}, {symbol})->value;
+  td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
   S->RM.deAccess();
@@ -472,11 +507,11 @@ Access_typed<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
 void ActionSwigInterface::execScript(const char* filename){
   FILE(filename) >>S->RM.set()->KB;
 
-  Node *s = S->RM.get()->KB.getNode("Script");
+  Node *s = S->RM.get()->KB["Script"];
   Graph& script = s->graph();
   int rev=0;
   for(Node* n:script){
-    if(n->parents.N==0 && n->getValueType()==typeid(Graph)){ //interpret as wait
+    if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
         if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);

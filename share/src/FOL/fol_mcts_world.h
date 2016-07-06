@@ -55,14 +55,16 @@ struct FOL_World:MCTS_Environment{
   Node *lastDecisionInState; ///< the literal that represents the last decision in the state
   Graph *rewardFct; ///< the reward function within the KB (is a subgraph item of KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
-  Node *Terminate_keyword, *Quit_keyword, *Quit_literal;
+  Node *Terminate_keyword, *Quit_keyword, *Wait_keyword, *Quit_literal;
   int verbose;
   int verbFil;
   ofstream fil;
   bool generateStateTree;
 
+  double lastStepReward;
   double lastStepDuration;
   double lastStepProbability;
+  int lastStepObservation;
   long count;
 
   FOL_World();
@@ -70,7 +72,7 @@ struct FOL_World:MCTS_Environment{
   virtual ~FOL_World();
   void init(istream& fil);
 
-  virtual std::pair<Handle, double> transition(const Handle& action);
+  virtual std::pair<Handle, double> transition(const Handle& action); //returns (observation, reward)
   virtual const std::vector<Handle> get_actions();
   virtual const Handle get_state();
   virtual bool is_terminal_state() const;
@@ -82,7 +84,15 @@ struct FOL_World:MCTS_Environment{
   void write_state(ostream&);
   void set_state(mlr::String&);
 
+  //-- helpers
+  void addFact(const StringA& symbols);
+  void addAgent(const char* name);
+  void addObject(const char* name);
+
   //-- internal access
   Graph* getState();
   void setState(Graph*);
+
+  void write(std::ostream& os) const{ os <<KB; }
 };
+stdOutPipe(FOL_World)

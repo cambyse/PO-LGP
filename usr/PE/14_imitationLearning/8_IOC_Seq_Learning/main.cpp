@@ -31,8 +31,8 @@ void run() {
 
   /// 2. Define parameter and start point
 
-//  arr w = ones(mf->numParam,1)*1e2;w.flatten();
-  arr w = fabs(randn(mf->numParam,1))*1e0; w.flatten();
+//  arr w = ones(mf->numParam,1)*1e2;w.reshapeFlat();
+  arr w = fabs(randn(mf->numParam,1))*1e0; w.reshapeFlat();
 //  arr w =  trainScenes(0).paramRef;
 //  w = w/sqrt(sumOfSqr(w));
   arr dual;
@@ -44,7 +44,7 @@ void run() {
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-7));
   optConstrained(w,dual,ioc,OPT(verbose=verbose,stopTolerance=1e-9));
 
-  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRange(1,w.d0-1))*0.1;
+  if (!mlr::getParameter<bool>("learnTransitionCost")) w(0) = sumOfAbs(w.subRef(1,w.d0-1))*0.1;
   ioc.costReport(w);
 
   /// 3. Evaluate code on test scenarios

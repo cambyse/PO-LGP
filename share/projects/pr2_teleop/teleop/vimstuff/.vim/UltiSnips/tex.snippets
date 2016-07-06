@@ -1,0 +1,187 @@
+# My own (La)TeX snippets
+
+# Generate a LaTeX document
+snippet "d(ocument)?" "document template" br
+\documentclass[${2:11pt, a4paper}]{${1:article}}
+\usepackage[utf8]{inputenc}
+% configure languages, last one is active by default
+\usepackage[english,ngerman]{babel}
+\usepackage[babel, german=quotes]{csquotes}
+% bibliography support (require biblatex and biber)
+\usepackage[backend=biber,style=numeric-comp]{biblatex}
+\addbibresource{gappy.bib}
+% graphics support (I always need that)
+\usepackage{graphicx}
+% TiKz support (I often need that)
+\usepackage{tikz}
+% better table style
+\usepackage{booktabs}
+% better typography, improves font-expansion, reduces hyphenation
+\usepackage{microtype}
+% better font
+\usepackage{cmbright}
+\usepackage{MnSymbol}
+% color support
+\usepackage{color}
+\definecolor{DarkGreen}{rgb}{0,0.5,0}
+\definecolor{DarkBlue}{rgb}{0,0,0.3}
+%%%%%%%%%%%%%%%%%%%
+% listing support
+\usepackage{listings}
+% numbers=none,left
+\lstset{numbers=none, numberstyle=\tiny, numbersep=5pt}
+% configure C++ style
+\lstset{language=C++, keywordstyle=\color{blue}, commentstyle=\color{DarkGreen}, stringstyle=\color{red}, basicstyle=\ttfamily\small, inputencoding=utf8 }
+% enable automatic linebreaks of long lines using nice arrow symbols (this required MnSymbol)
+\lstset{prebreak=\raisebox{0ex}[0ex][0ex] {\ensuremath{\rhookswarrow}}}
+\lstset{postbreak=\raisebox{0ex}[0ex][0ex] {\ensuremath{\rcurvearrowse\space}}}
+\lstset{breaklines=true, breakatwhitespace=true}
+%%%%%%%%%%%%%%%%%%%
+
+\author{Gerhard Gappmeier \\ ascolab GmbH}
+\title{${3:Title}}
+
+\begin{document}
+
+\tableofcontents
+
+\section{Introduction}
+\label{sec:introduction}
+
+${0:Add your text here}
+
+\end{document}
+endsnippet
+
+# create a Beamer frame
+snippet frame "a beamer frame" b
+\begin{frame}{${1:title}}
+$0
+\end{frame}
+endsnippet
+
+snippet latex "latex"
+\LaTeX
+endsnippet
+
+snippet lst "lstlisting" !b
+\begin{lstlisting}[style=${1:algebra},caption=${2:title},label=lst:${3:label}]
+    $0
+\end{lstlisting}
+endsnippet
+
+snippet alg "Algebra" !b
+algebra ${3:name}
+sorts $3, elem, pos
+ops empty:                  -> $3
+    front, last: $3       -> pos
+sets
+    $3 = #$\{(a_1 \dots a_n, p_0 \dots p_n) | n \geq 0, a_i \in elem, p_i \in POS, p_i \neq p_j falls i \neq j\}$#
+    pos  = POS
+functions
+    empty = (<>, <p0>)
+end $3.
+endsnippet
+
+snippet if "if ... then ... end if" !b
+if ${1:condition} then ${2:statement} end if;
+endsnippet
+
+snippet for "for i:=1 to n do" !b
+for ${1:i}:=${2:1} to ${3:n} do
+    $0
+end for;
+endsnippet
+
+snippet rec "record" !b
+${1:name} = record
+  $0
+end record;
+endsnippet
+
+snippet e "emph" w
+\emph{${1:${VISUAL:text}}}
+endsnippet
+
+snippet lorem "lorum pisum" !b
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore
+magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd
+gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing
+elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et
+accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit
+amet.
+endsnippet
+
+snippet paramtable "parameter table"
+\begin{table}[ht]
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Name} & \textbf{Type} & \textbf{Description} \\
+k\midrule
+\textbf{Request} & & \\
+header   & RequestHeader & The \code{RequestHeader} as described in section
+\ref{sub:request_header}. \\
+${3:name}   & ${4:type} & ${5:description}.  \\
+\midrule
+\textbf{Response} & & \\
+header   & ResponseHeader & The \code{ResponseHeader} as described in section
+\ref{sub:response_header}. \\
+\bottomrule
+\end{tabularx}
+\caption{${1:title}}
+\label{tbl:${2:${1/(\w+)|\W+/(?1:\L$0\E:_)/g}}}
+\end{table}
+endsnippet
+
+snippet service "add service sections"
+\subsection{${1:Service Name} Service}
+\label{sub:${1/(\w+)|\W+/(?1:\L$0\E:_)/g}}
+
+\subsubsection{Description}
+
+This service ${2:...}.
+
+\subsubsection{Parameters}
+
+Table \ref{tbl:${1/(\w+)|\W+/(?1:\L$0\E:_)/g}_service_parameters} defines the parameters for the service.
+
+\begin{table}[H]
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Name} & \textbf{Type} & \textbf{Description} \\\\
+\midrule
+\textbf{Request} & & \\\\
+header   & RequestHeader & The \code{RequestHeader} as described in section
+\ref{sub:request_header}. \\\\
+${3:name}   & ${4:type} & ${5:description}.  \\\\
+\midrule
+\textbf{Response} & & \\\\
+header   & ResponseHeader & The \code{ResponseHeader} as described in section
+\ref{sub:response_header}. \\\\
+\bottomrule
+\end{tabularx}
+\caption{$1 Service Parameters}
+\label{tbl:${1/(\w+)|\W+/(?1:\L$0\E:_)/g}_service_parameters}
+\end{table}
+
+\subsubsection{Examples}
+
+Listings \ref{lst:req_${1/(\w+)|\W+/(?1:\L$0\E:_)/g}} and \ref{lst:res_${1/(\w+)|\W+/(?1:\L$0\E:_)/g}} show example requests and
+responses for this service.
+
+\begin{lstlisting}[caption=$1 Request Example,label=lst:req_${1/(\w+)|\W+/(?1:\L$0\E:_)/g}]
+{
+    "header": { "rqid": 1, "op": "${1/.*/\l$0/g}" },
+    "collection": "contacts",
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=$1 Response Example,label=lst:res_${1/(\w+)|\W+/(?1:\L$0\E:_)/g}]
+{
+    "header": { "result": 0, "rqid": 1 }
+}
+\end{lstlisting}
+
+% subsection $1 (end)
+endsnippet
+

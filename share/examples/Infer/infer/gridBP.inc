@@ -16,7 +16,7 @@ void gridBP(arr& post, const arr& evid, const arr& coupling){
     for(k=0;k<n;k++) if(evid(i,j,k)>max){ max=evid(i,j,k); img(i,j)=k; }
   }
   write_ppm(img,"z.ppm");
-  MT::wait();
+  mlr::wait();
 
   //-- generate RVs
   infer::VariableList V(h,w);
@@ -114,7 +114,7 @@ void gridBP(arr& post, const arr& evid, const arr& coupling){
     //display
     for(i=0;i<h;i++) for(j=0;j<w;j++) img(i,j) = post.subDim(i,j).maxIndex();
     write_ppm(img,"z.ppm");
-    MT::wait();
+    mlr::wait();
     //break;
   }
   listDelete(MhoriRight);

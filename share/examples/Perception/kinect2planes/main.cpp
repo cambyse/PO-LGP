@@ -1,10 +1,11 @@
 #include <Gui/opengl.h>
 #include <Hardware/kinect/kinect.h>
 #include <Perception/perception.h>
+#include <Perception/plane.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Algo/dataNeighbored.h>
 #include <Perception/modelEnsemble.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 
 void glDrawAxes(void*);
 
@@ -15,7 +16,7 @@ struct PointCloud2DataNeighbored:Module{
   Access_typed<DataNeighbored> data;
 
   PointCloud2DataNeighbored()
-    : Module("PointCloud2DataNeighbored", -1.),
+    : Module("PointCloud2DataNeighbored"),
       kinect_points(this, "kinect_points", true),
       data(this, "data"){}
 
@@ -24,7 +25,10 @@ struct PointCloud2DataNeighbored:Module{
   void step(){
     data.writeAccess();
     data->setData(kinect_points.get());
-    data->setGridNeighborhood(480, 640);
+    if(data->X.d0!=480*640){ data.deAccess(); return; }
+    if(!data->N.N){
+      data->setGridNeighborhood(480, 640, false);
+    }
     arr costs = data->X.col(2).reshape(data->X.d0);
     for(auto& z:costs) if(z<0.) z=0.; //points with negative depth get cost zero
     costs *= costs;
@@ -41,35 +45,39 @@ struct PlaneFitter:Module{
   Access_typed<DataNeighbored> data;
   Access_typed<arr> kinect_points;
   Access_typed<arr> kinect_pointColors;
+  Access_typed<PlaneA> planes_now;
   ModelEnsemble M;
-  OpenGL gl;
-  arr pts;
-  arr cols;
 
   PlaneFitter()
     : Module("PlaneFitter", -1.),
       data(this, "data", true),
       kinect_points(this, "kinect_points"),
       kinect_pointColors(this, "kinect_pointColors"),
-      gl("planefitter",640,480){}
+      planes_now(this, "planes_now"){}
 
-  void open(){
-    gl.add(glDrawPointCloud, &pts);
-    gl.addDrawer(&M);
-    gl.camera.setKinect();
-  }
-
+  void open(){}
   void close(){}
+
   void step(){
-    pts = kinect_points.get();
-    cols = kinect_pointColors.get();
-    M.addNewRegionGrowingModel(data.set());
-//    M.models.last()->colorPixelsWithWeights(cols);
+    if(data.get()->X.d0!=640*480) return;
+    listDelete(M.models);
+    for(uint k=0;k<10;k++) M.addNewRegionGrowingModel(data.set());
     M.reoptimizeModels(data.set());
-//    M.reestimateVert();
     M.report();
-    gl.update();
     cout <<"#models=" <<M.models.N <<endl;
+    planes_now.writeAccess();
+    planes_now().clear();
+    for(MinEigModel* m:M.models){
+      Plane &p=planes_now().append();
+      p.mean = m->mean;
+      p.normal = m->eig.x_lo;
+      p.borderPoints = m->convexHull.V;
+      p.borderTris = m->convexHull.T;
+      p.inlierPoints = m->getInliers();
+      p.label = m->label;
+    }
+    planes_now.deAccess();
+
   }
 
 };
@@ -81,35 +89,34 @@ void TEST(Kinect2Planes){
   ACCESSname(uint16A, kinect_depth);
   ACCESSname(ors::Transformation, kinect_frame)
 
-  if(mlr::getParameter<bool>("useRos", true)){
+  uint kinectSource = mlr::getParameter<uint>("kinectSource", 0);
+  if(kinectSource==0){
+    new KinectThread;
+  }else if(kinectSource==1){
     new RosCom_Spinner();
     new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
     new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
-  }else{
-    if(mlr::getParameter<bool>("useFile", false)){
-      new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
-    }else{
-      new KinectThread;
-    }
-  }
+  }else if(kinectSource==2){
+    new FileReplay<uint16A>("../regionGrowing/z.kinect_depth", "kinect_depth", .2);
+  } else HALT("");
 
-  ImageViewer iv("kinect_rgb");
+//  ImageViewer iv("kinect_rgb");
   Kinect2PointCloud k2pcl;
   PointCloudViewer pclv;
   PointCloud2DataNeighbored pts2data;
   PlaneFitter planeFitter;
-
+  AllViewer view;
 
   threadOpenModules(true);
 
-#if 1
+#if 0
   for(uint t=0;t<100;t++){
     if(moduleShutdown().getValue()>0) break;
     pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;
   }
 #else
-  mlr::wait(3.);
+  moduleShutdown().waitForValueGreaterThan(0);
 #endif
 
   threadCloseModules();

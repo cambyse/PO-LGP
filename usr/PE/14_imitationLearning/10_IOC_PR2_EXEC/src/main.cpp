@@ -121,8 +121,8 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
 
   //- load motion parameters
   arr param;
-  FILE("data/param") >> param; param.flatten();
-  FILE("data/options") >> options; options.flatten();
+  FILE("data/param") >> param; param.reshapeFlat();
+  FILE("data/options") >> options; options.reshapeFlat();
   double dt = options(0);
   uint T = options(1);
   double contactTime = options(2);
@@ -204,18 +204,18 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   uint N = 1;//world->getJointStateDimension();
   uint stay = 5;
   TaskCost *c;
-  c =MP->addTask("posT", new DefaultTaskMap(posTMT, grasp->index) );
+  c =MP->addTask("posT", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(MP->T,MP->T, objPosT, param(N++));
-  c =MP->addTask("posC", new DefaultTaskMap(posTMT, grasp->index) );
+  c =MP->addTask("posC", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(contactTime,contactTime, objPos0, param(N++));
-  c =MP->addTask("vecT", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =MP->addTask("vecT", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
   c->setCostSpecs(MP->T,MP->T, xDemTaskVec, param(N++));
-  c =MP->addTask("vecC", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =MP->addTask("vecC", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
   c->setCostSpecs(contactTime,contactTime, xDemTaskVec, param(N++));
-  c =MP->addTask("velT", new DefaultTaskMap(posTMT, grasp->index) );
+  c =MP->addTask("velT", new TaskMap_Default(posTMT, grasp->index) );
   c->map.order = 1;
   c->setCostSpecs(MP->T-stay,MP->T, zeros(3), param(N++));
-  c =MP->addTask("velC", new DefaultTaskMap(posTMT, grasp->index) );
+  c =MP->addTask("velC", new TaskMap_Default(posTMT, grasp->index) );
   c->map.order = 1;
   c->setCostSpecs(contactTime-stay,contactTime+stay, zeros(3), param(N++));
   TaskMap *tm_contact = new PairCollisionConstraint(*world,"wall1","drawer1",0.02);

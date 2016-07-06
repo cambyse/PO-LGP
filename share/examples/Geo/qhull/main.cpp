@@ -4,6 +4,7 @@
 #include <Gui/plot.h>
 #include <qhull/qhull_a.h>
 #include <Optim/optimization.h>
+#include <Geo/qhull.h>
 
 //===========================================================================
 //
@@ -130,7 +131,7 @@ void drawInit(void*){
 /*
 void TEST(FCinOrs){
   ors::KinematicWorld C;
-  C <<FILE("../../configurations/forceClosureTest.ors");
+  C <<FILE("../../data/configurations/forceClosureTest.ors");
 
   OpenGL gl;
   gl.add(drawInit,0);
@@ -163,22 +164,21 @@ void TEST(FCinOrs){
 
 //===========================================================================
 
-void TEST(Speed){
-  uint N=20,D=2;
-  arr X(N,D);
-  mlr::timerReset();
-  for(uint i=0;i<100;i++){
-    rndUniform(X,-1.,1.,false);
-    distanceToConvexHull(X,origin,&p,&V,true);
-  }
-
-}
+// void TEST(Speed){
+//   uint N=20,D=2;
+//   arr X(N,D);
+//   mlr::timerReset();
+//   for(uint i=0;i<100;i++){
+//     rndUniform(X,-1.,1.,false);
+//     distanceToConvexHull(X,origin,&p,&V,true);
+//   }
+// }
 
 int MAIN(int argc, char *argv[]){
   cout <<"QHull version = " <<qhullVersion() <<endl;
 
   testConvexHull();
-  //testForceClosure();
+  testForceClosure();
   //testFCinOrs();
 
   return 0;

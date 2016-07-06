@@ -120,13 +120,13 @@ double KLD(const BinaryPairFG &B, const BinaryPairFG &F){
   double D = 0.;
   for(i=0; i<E; i++){  degree(B.edges(i, 0))++;  degree(B.edges(i, 1))++;  }
   for(i=0; i<E; i++){
-    b.referToSubDim(B.f_ij, i);
-    f.referToSubDim(F.f_ij, i);
+    b.referToDim(B.f_ij, i);
+    f.referToDim(F.f_ij, i);
     for(x=0; x<2; x++) for(y=0; y<2; y++)  D += b(x, y) * log(b(x, y)/f(x, y));
   }
   for(i=0; i<N; i++){
-    b.referToSubDim(B.f_i, i);
-    f.referToSubDim(F.f_i, i);
+    b.referToDim(B.f_i, i);
+    f.referToDim(F.f_i, i);
     for(x=0; x<2; x++) D += (1.-degree(i)) * b(x) * log(b(x)/f(x));
   }
   return D;

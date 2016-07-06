@@ -11,22 +11,35 @@ vecDiff
 vecAlign
 quat
 quatDiff
+gazeAt
 qItself
+qZeroVels
 GJK
+limitIneq
 collisionIneq
 collisionPairs
+collisionExcept
 collisionExceptPairs
+wheels
 
 #joint types
 MakeJoint
 delete
-rigid
+rigidAtTo
+rigidAtFrom
 rigidZero
-free
-transXYPhi
+freeAtTo
+transXYPhiAtFrom
+transXYPhiZero
 
 # from Johannes
 OpSpacePos
 OpSpaceRot
 
+# Actions
+conv
 
+## Syntactic keywords
+QUIT
+WAIT
+Terminate
