@@ -111,6 +111,9 @@ def expected_policy_reward(T, W, time_step=5):
         for w in line:
             f.write(str(w))
             f.write(', ')
+    f.write(x)
+    f.write(', ')
+    f.write(y)
     f.write(str(reward))
     f.write('\n')
 
@@ -202,6 +205,8 @@ def get_sq_dist():
     else:
         marker1 = markers[keys[0]]
         marker2 = markers[keys[1]]
+        x = marker1.x
+        y = marker1.y
         return (marker2.x - marker1.x)**2 + (marker2.y - marker1.y)**2
 
 ''' Sends a signal to the robot for ${duration} seconds with
@@ -227,6 +232,15 @@ if __name__ == "__main__":
     startpos['left_e1'] =  1.0745535419137324
     startpos['left_s0'] = -0.5518495884417776
     startpos['left_s1'] =  0.7374612637759127
+
+    startpos_r = dict()
+    startpos_r['right_w0'] = 0.10354370318226543 
+    startpos_r['right_w1'] = 1.727262367158976
+    startpos_r['right_w2'] = 3.0257771041039785
+    startpos_r['right_e0'] = 0.24428644047075213
+    startpos_r['right_e1'] = 0.006135923151541655
+    startpos_r['right_s0'] = 0.7102331047909466
+    startpos_r['right_s1'] = -0.9303593478525034
 
     ub = lb = 0.7
 
@@ -254,6 +268,10 @@ if __name__ == "__main__":
             }
 
     args = init_parser()
+
+    # Move right arm to start position
+    limb_r = bax.Limb('right')
+    send_signal(limb_r.set_joint_positions, startpos_r, 100)
 
     # Start alvar listener thread thingy
     print("Simulate value", args.simulate)
