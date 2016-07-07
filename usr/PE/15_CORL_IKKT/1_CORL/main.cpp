@@ -7,7 +7,7 @@
 #include <Motion/phase_optimization.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <pr2/trajectoryInterface.h>
+#include <RosCom/trajectoryInterface.h>
 
 #include "src/conbopt.h"
 #include "../../src/task_manager.h"
