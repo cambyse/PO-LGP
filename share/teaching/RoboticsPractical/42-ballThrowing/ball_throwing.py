@@ -1,5 +1,4 @@
 #! /usr/bin/env python2
-# TODO: Just change one value of the weight vector
 # Import python modules
 import sys
 import rospy as rp
@@ -11,6 +10,7 @@ import numpy as np
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point, Pose
 from time import gmtime, strftime
+import random
 
 def dict2npa(u):
     na = np.array([u['left_w1'],
@@ -127,7 +127,18 @@ def policy_search(T, W):
     # Learn until we interrupt
     while v_continue:
         # Sample new (gaussian) noise and throw the ball to get the reward.
-        noise = np.random.randn(W.shape[0], W.shape[1])
+        #noise = np.random.randn(W.shape[0], W.shape[1])
+
+        random_noise = np.random.randn(W.shape[1])
+        num = random.sample(range(W.shape[1]))
+        noise = np.array([]).reshape(0, W.shape[1])
+        zeros = np.zeros(W.shape[1])
+        for i in range(W.shape[0]):
+            if i == num:
+                noise = np.vstack([noise, random_noise])
+            else:
+                noise = np.vstack([noise, zeros])
+
         er = expected_policy_reward(T, W + std_dev * noise)
 
         # Move arm back to start position
@@ -205,6 +216,7 @@ if __name__ == "__main__":
     # Create a file; one new file for each execution
     filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
     f = open(filename, 'w')
+    f.write('# Format: weights, reward\n')
 
     # Get joint startpos_1
     startpos = dict()
