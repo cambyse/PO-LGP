@@ -111,9 +111,6 @@ def expected_policy_reward(T, W, time_step=5):
         for w in line:
             f.write(str(w))
             f.write(', ')
-    f.write(x)
-    f.write(', ')
-    f.write(y)
     f.write(str(reward))
     f.write('\n')
 
@@ -205,8 +202,6 @@ def get_sq_dist():
     else:
         marker1 = markers[keys[0]]
         marker2 = markers[keys[1]]
-        x = marker1.x
-        y = marker1.y
         return (marker2.x - marker1.x)**2 + (marker2.y - marker1.y)**2
 
 ''' Sends a signal to the robot for ${duration} seconds with
@@ -218,11 +213,6 @@ def send_signal(func, joints, duration, hz=100):
 
 
 if __name__ == "__main__":
-    # Create a file; one new file for each execution
-    filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
-    f = open(filename, 'w')
-    f.write('# Format: weights, reward\n')
-
     # Get joint startpos_1
     startpos = dict()
     startpos['left_w0'] = -0.0625097171063306
@@ -283,6 +273,20 @@ if __name__ == "__main__":
         rp.Subscriber('visualization_marker', Marker, callback)
         limb = bax.Limb('left')
         left_gripper = Gripper('left')
+        
+        # Create a file; one new file for each execution
+        filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
+        f = open(filename, 'w')
+        f.write('# Format: weights, reward\n')
+        f.write('+ ')
+        while not pos:
+            pos = markers[11]
+            time.sleep(0.01)
+
+        f.write(pos.x)
+        f.write(', ')
+        f.write(pos.y)
+        f.write('\n')
     
         send_signal(limb.set_joint_positions, startpos, 1500)
 
