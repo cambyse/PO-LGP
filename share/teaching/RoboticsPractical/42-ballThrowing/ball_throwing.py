@@ -112,6 +112,10 @@ def expected_policy_reward(T, W, time_step=5):
             f.write(str(w))
             f.write(', ')
     f.write(str(reward))
+    f.write(', ')
+    f.write(str(marker1.x))
+    f.write(', ')
+    f.write(str(marker1.y))
     f.write('\n')
 
     return reward
@@ -130,7 +134,7 @@ def policy_search(T, W):
         #noise = np.random.randn(W.shape[0], W.shape[1])
 
         random_noise = np.random.randn(W.shape[1])
-        num = random.sample(range(W.shape[1]))
+        num = random.sample(range(W.shape[1]), 1)[0]
         noise = np.array([]).reshape(0, W.shape[1])
         zeros = np.zeros(W.shape[1])
         for i in range(W.shape[0]):
@@ -259,10 +263,6 @@ if __name__ == "__main__":
 
     args = init_parser()
 
-    # Move right arm to start position
-    limb_r = bax.Limb('right')
-    send_signal(limb_r.set_joint_positions, startpos_r, 100)
-
     # Start alvar listener thread thingy
     print("Simulate value", args.simulate)
     if (args.simulate):
@@ -273,19 +273,31 @@ if __name__ == "__main__":
         rp.Subscriber('visualization_marker', Marker, callback)
         limb = bax.Limb('left')
         left_gripper = Gripper('left')
+
+        # Move right arm to start position
+        limb_r = bax.Limb('right')
+        send_signal(limb_r.set_joint_positions, startpos_r, 1500)
         
         # Create a file; one new file for each execution
         filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
         f = open(filename, 'w')
         f.write('# Format: weights, reward\n')
         f.write('+ ')
-        while not pos:
-            pos = markers[11]
+        pos = 0
+        while not 11 in markers:
+            print markers.keys()
             time.sleep(0.01)
 
-        f.write(pos.x)
+        while True:
+            pos = markers[11]
+            print pos
+            c = raw_input('Position Okay? (o)')
+            if c == 'o':
+                break
+
+        f.write(str(pos.x))
         f.write(', ')
-        f.write(pos.y)
+        f.write(str(pos.y))
         f.write('\n')
     
         send_signal(limb.set_joint_positions, startpos, 1500)
