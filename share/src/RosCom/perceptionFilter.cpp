@@ -19,14 +19,10 @@
 #include <unordered_set>
 #include "perceptionFilter.h"
 
-void Filter::open()
-{
-  this->listenTo(*perceptual_inputs.var); //MT: ah -> do this in the constructor of the access instead
-}
-
-void Filter::close(){
-  this->stopListenTo(*perceptual_inputs.var);
-}
+Filter::Filter():Module("filter", -1),
+  perceptual_inputs(this, "perceptual_inputs", true),
+  object_database(this, "object_database", false)
+{}
 
 void Filter::step(){
 
