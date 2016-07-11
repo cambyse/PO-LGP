@@ -17,16 +17,16 @@ for arg in sys.argv[1:]:
                 #print(D)
 
 def discard_far_points(x, D, eps):
-    D_close = np.array([]).reshape(0, 13)
+    D_close = np.array([]).reshape(0, 15)
     
     for i in range(D.shape[0]):
-        if np.linalg.norm(D[i, :-1] - x) < eps:
+        if np.linalg.norm(D[i, :-3] - x) < eps:
             D_close = np.vstack([D_close, D[i,:]])
 
     return D_close
 
 def kNN(x, D, k):
-    nbrs = NearestNeighbors(n_neighbors=k, algorithm='ball_tree').fit(D[:,:-1])
+    nbrs = NearestNeighbors(n_neighbors=k, algorithm='ball_tree').fit(D[:,:-3])
     distances, indices = nbrs.kneighbors(x)
     return D[indices][0]
 
@@ -34,7 +34,7 @@ def kNN(x, D, k):
 def estimate_gradient(x, D, k): 
     k = min(D.shape[0], k)
 
-    X, y = np.hsplit(kNN(x, D, k), [-1])
+    X, pos, y = np.hsplit(kNN(x, D, k), [-3, -1])
     rreg = linear_model.LinearRegression()
     print(X)
     rreg.fit (X, y)

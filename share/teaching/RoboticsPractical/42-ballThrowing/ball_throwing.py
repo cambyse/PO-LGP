@@ -30,8 +30,7 @@ def npa2dict(u):
 def features(t, T=150.0):
     s = T * np.sin(t / T * np.pi)
     x,y,z,w = limb.endpoint_pose()["orientation"]
-    phi = np.array([t, s, x, z])
-    #phi = np.array([t, s, t, s, t, s])
+    phi = np.array([t, s, x])
     return phi
 
 def control(features, W):
@@ -120,6 +119,10 @@ def expected_policy_reward(T, W, time_step=5):
 
     return reward
 
+def discrete_dist_sample(values, probabilities, size=1):
+    bins = np.add.accumulate(probabilities)
+    return values[np.digitize(np.random.random_sample(size), bins)]
+
 ''' Start the learning process '''
 def policy_search(T, W):
     # Initially VERY low optimum so that every real reward is better
@@ -127,23 +130,30 @@ def policy_search(T, W):
     std_dev_init = 0.5
     std_dev = std_dev_init
     v_continue = 1
+    count = np.zeros(W.shape[0])
 
     # Learn until we interrupt
     while v_continue:
         # Sample new (gaussian) noise and throw the ball to get the reward.
         #noise = np.random.randn(W.shape[0], W.shape[1])
 
-        random_noise = np.random.randn(W.shape[1])
-        num = random.sample(range(W.shape[1]), 1)[0]
-        noise = np.array([]).reshape(0, W.shape[1])
-        zeros = np.zeros(W.shape[1])
-        for i in range(W.shape[0]):
-            if i == num:
-                noise = np.vstack([noise, random_noise])
-            else:
-                noise = np.vstack([noise, zeros])
-
-        er = expected_policy_reward(T, W + std_dev * noise)
+        #random_noise = np.random.randn(W.shape[1])
+        #num = random.sample(range(W.shape[1]), 1)[0]
+        #noise = np.array([]).reshape(0, W.shape[1])
+        #zeros = np.zeros(W.shape[1])
+        #for i in range(W.shape[0]):
+        #    if i == num:
+        #        noise = np.vstack([noise, random_noise])
+        #    else:
+        #        noise = np.vstack([noise, zeros])
+        
+        #er = expected_policy_reward(T, W + std_dev * noise)
+        
+        pos = discrete_dist_sample(np.arange(W.shape[0]),
+                count/np.sum(count))[0] 
+        W[pos,:] += std_dev * np.random.randn(W.shape[1])
+        count[pos] += 1
+        er = expected_policy_reward(T, W)
 
         # Move arm back to start position
         send_signal(limb.set_joint_positions, startpos, 2000)
