@@ -30,7 +30,7 @@ def npa2dict(u):
 def features(t, T=150.0):
     s = T * np.sin(t / T * np.pi)
     x,y,z,w = limb.endpoint_pose()["orientation"]
-    phi = np.array([t, s, x])
+    phi = np.array([t, s, x, z])
     return phi
 
 def control(features, W):
@@ -81,12 +81,14 @@ def expected_policy_reward(T, W, time_step=5):
 
     # Decelerate so that the joints get to a resting position
     # (hopefully quite fast)
-    send_signal(limb.set_joint_velocities, zero_velocity, 1)
+    send_signal(limb.set_joint_velocities, zero_velocity, 100)
 
     time.sleep(2)
  
     # Move arm back to start position
     send_signal(limb.set_joint_positions, startpos, 2000)
+
+    marker1 = 0
 
     # Don't measure distance if camera can't see the hacky sack
     c = raw_input('Measure distance? (m)')
@@ -94,7 +96,7 @@ def expected_policy_reward(T, W, time_step=5):
         # Measure until the camera catched both alvar markers
         # This is checked by waiting for an 'o'
         while True:
-            sd = get_sq_dist()
+            sd, marker1 = get_sq_dist()
             if sd:
                 reward = -sd
                 print('R = ' + str(reward))
@@ -106,16 +108,18 @@ def expected_policy_reward(T, W, time_step=5):
     # Now write the latest measurements to the file. Should I add the position where it hit?
     # That's a bit tricky, since (a) the position of the marker might has changed and (b) the
     # marker that was used as target in round 1 could be the marker for the ball in round 2
-    for line in W:
-        for w in line:
-            f.write(str(w))
-            f.write(', ')
-    f.write(str(reward))
-    f.write(', ')
-    f.write(str(marker1.x))
-    f.write(', ')
-    f.write(str(marker1.y))
-    f.write('\n')
+    if marker1:
+        for line in W:
+            for w in line:
+                f.write(str(w))
+                f.write(', ')
+        f.write(str(reward))
+        f.write(', ')
+        f.write(str(marker1.x))
+        f.write(', ')
+        f.write(str(marker1.y))
+        f.write('\n')
+        marker1 = 0
 
     return reward
 
@@ -130,43 +134,57 @@ def policy_search(T, W):
     std_dev_init = 0.5
     std_dev = std_dev_init
     v_continue = 1
-    count = np.zeros(W.shape[0])
+    count = np.ones(W.shape[0])
 
     # Learn until we interrupt
     while v_continue:
         # Sample new (gaussian) noise and throw the ball to get the reward.
-        #noise = np.random.randn(W.shape[0], W.shape[1])
+        noise = np.random.randn(W.shape[0], W.shape[1])
 
-        #random_noise = np.random.randn(W.shape[1])
+        random_noise = np.random.randn(W.shape[1])
+        prob = 1.0 / count
+        prob = prob / np.sum(prob)
         #num = random.sample(range(W.shape[1]), 1)[0]
-        #noise = np.array([]).reshape(0, W.shape[1])
-        #zeros = np.zeros(W.shape[1])
-        #for i in range(W.shape[0]):
-        #    if i == num:
-        #        noise = np.vstack([noise, random_noise])
-        #    else:
-        #        noise = np.vstack([noise, zeros])
+        num = discrete_dist_sample(np.arange(W.shape[1]),
+                prob)[0] 
+        print ("Changing angle %i." % num)
+        count[num] = count[num] + 1
+        noise = np.array([]).reshape(0, W.shape[1])
+        zeros = np.zeros(W.shape[1])
+        for i in range(W.shape[0]):
+            if i == num:
+                noise = np.vstack([noise, random_noise])
+            else:
+                noise = np.vstack([noise, zeros])
+       
+        er = expected_policy_reward(T, W + std_dev * noise)
         
-        #er = expected_policy_reward(T, W + std_dev * noise)
+        '''
+        random_noise = np.random.randn(W.shape[1])
+        noise = np.array([]).reshape(0, W.shape[1])
+        zeros = np.zeros(W.shape[1])
+        for i in range(W.shape[0]):
+            if i == pos:
+                noise = np.vstack([noise, random_noise])
+            else:
+                noise = np.vstack([noise, zeros])
         
-        pos = discrete_dist_sample(np.arange(W.shape[0]),
-                count/np.sum(count))[0] 
-        W[pos,:] += std_dev * np.random.randn(W.shape[1])
+        # W[pos,:] += std_dev * np.random.randn(W.shape[1])
+
         count[pos] += 1
         er = expected_policy_reward(T, W)
-
-        # Move arm back to start position
-        send_signal(limb.set_joint_positions, startpos, 2000)
+        '''
 
         # If the reward is better than our current optimum, remember this W.
         if er > er_opt:
             er_opt = er
             W += std_dev * noise
             std_dev = std_dev_init
+            print(">>> NEW WEIGHT VECTOR <<<")
         else:
-            std_dev = std_dev * 2
+            std_dev = std_dev * 1.1
 
-        print(W)
+        print('W = {}'.format(W))
 
         # Wait for the hacky sack being between the gripper
         left_gripper.command_position(100)
@@ -186,14 +204,6 @@ def policy_search(T, W):
             elif c == 'q':
                 v_continue = 0
                 break
-
-'''Argument Parser'''
-def init_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--simulate', help="Don't use any ros\
-            connections, just simulate.", action='store_true', dest='simulate')
-    parser.set_defaults(simulate=False)
-    return parser.parse_args()
 
 markers = dict()
 keys = [10, 11]
@@ -216,7 +226,7 @@ def get_sq_dist():
     else:
         marker1 = markers[keys[0]]
         marker2 = markers[keys[1]]
-        return (marker2.x - marker1.x)**2 + (marker2.y - marker1.y)**2
+        return ((marker2.x - marker1.x)**2 + (marker2.y - marker1.y)**2, marker1)
 
 ''' Sends a signal to the robot for ${duration} seconds with
     a frequency of ${hz}. Calls ${func}. '''
@@ -227,6 +237,8 @@ def send_signal(func, joints, duration, hz=100):
 
 
 if __name__ == "__main__":
+    marker1 = 0
+
     # Get joint startpos_1
     startpos = dict()
     startpos['left_w0'] = -0.0625097171063306
@@ -271,61 +283,55 @@ if __name__ == "__main__":
             'left_s1': 0.0
             }
 
-    args = init_parser()
-
     # Start alvar listener thread thingy
-    print("Simulate value", args.simulate)
-    if (args.simulate):
-        print("Simulation.")
-    else:
-        # Initialise such that it registers somehow or something, I don't know...
-        rp.init_node('Ball')
-        rp.Subscriber('visualization_marker', Marker, callback)
-        limb = bax.Limb('left')
-        left_gripper = Gripper('left')
+    # Initialise such that it registers somehow or something, I don't know...
+    rp.init_node('Ball')
+    rp.Subscriber('visualization_marker', Marker, callback)
+    limb = bax.Limb('left')
+    left_gripper = Gripper('left')
 
+    # Create a file; one new file for each execution
+    filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
+    f = open(filename, 'w')
+    f.write('# Format: weights, reward\n')
+    f.write('+ ')
+    pos = 0
+    while not 11 in markers:
+        print markers.keys()
         # Move right arm to start position
         limb_r = bax.Limb('right')
-        send_signal(limb_r.set_joint_positions, startpos_r, 1500)
-        
-        # Create a file; one new file for each execution
-        filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
-        f = open(filename, 'w')
-        f.write('# Format: weights, reward\n')
-        f.write('+ ')
-        pos = 0
-        while not 11 in markers:
-            print markers.keys()
-            time.sleep(0.01)
-
-        while True:
-            pos = markers[11]
-            print pos
-            c = raw_input('Position Okay? (o)')
-            if c == 'o':
-                break
-
-        f.write(str(pos.x))
-        f.write(', ')
-        f.write(str(pos.y))
-        f.write('\n')
+        send_signal(limb_r.set_joint_positions, startpos_r, 2000)
     
-        send_signal(limb.set_joint_positions, startpos, 1500)
+        time.sleep(0.5)
 
+    while True:
+        pos = markers[11]
+        print pos
+        c = raw_input('Position Okay? (o)')
+        if c == 'o':
+            break
+
+    f.write(str(pos.x))
+    f.write(', ')
+    f.write(str(pos.y))
+    f.write('\n')
+    
+    send_signal(limb.set_joint_positions, startpos, 2000)
+
+    while True:
+        left_gripper.command_position(100)
         while True:
-            left_gripper.command_position(100)
-            while True:
-                c = raw_input('Hacky Sack (y)')
-                if c == 'y':
-                    break
-            left_gripper.command_position(5)
-
-
-            c = raw_input('Start? (s)')
-            if c == 's':
+            c = raw_input('Hacky Sack (y)')
+            if c == 'y':
                 break
-        W0 = np.random.rand(3, features(0).size)
-        policy_search(250, W0)
+        left_gripper.command_position(5)
+
+
+        c = raw_input('Start? (s)')
+        if c == 's':
+            break
+    W0 = np.random.rand(3, features(0).size)
+    policy_search(250, W0)
 
     # Don't forget to close the file
     f.close()
