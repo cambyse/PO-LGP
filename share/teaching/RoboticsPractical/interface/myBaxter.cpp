@@ -50,6 +50,7 @@ struct MyBaxter_private{
     : jointState(NULL, "jointState"),
       tcm("baxter"),
       rosInit("MyBaxter"),
+      data_collector(!mlr::getParameter<bool>("useRos", false)),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
       spctb(tcm.realWorld),
       sub("/robot/joint_states", jointState) {

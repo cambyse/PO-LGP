@@ -76,7 +76,7 @@ int main(int argc, char** argv){
     // - q_ref(lockbox_joint) = lockbox_joint->limits(1)
 
     auto move_joint = baxter.task("move_joint", new qItselfConstraint(kw.getJointByName(name)->qIndex, kw.getJointStateDimension()), 1, .8, 1, 1);
-    baxter.modify(move_joint, GRAPH("prec=[1]"));
+  //  baxter.modify(move_joint, GRAPH("prec=[1]"));
 
     //baxter.task(GRAPH("map=qItself PD=[1., 0.8, 1.0, 10.]"));
 
