@@ -153,7 +153,6 @@ void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G
   for(ors::Proxy *p: G.proxies){
     if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
       G.kinematicsProxyConstraint(y, J, p, margin);
-      cout << y << endl;
       break;
     }
   }
@@ -244,3 +243,5 @@ void qItselfConstraint::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t)
     if(&J) J.setId(q.N);
   }
 }
+
+

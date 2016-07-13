@@ -194,7 +194,7 @@ void MyBaxter::homing(){
 CtrlTask* MyBaxter::goToPosition(const char* frame1, const char* frame2, arr pos, double timeScale){
     //--go to position
     CtrlTask *position = new CtrlTask("endeffL", //name
-        new DefaultTaskMap(posTMT, tcmBax.modelWorld.get()(), frame1, NoVector, frame2), //map
+        new TaskMap_Default(posTMT, tcmBax.modelWorld.get()(), frame1, NoVector, frame2), //map
                          timeScale, 0.8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
 
         position->map.phi(position->y, NoArr, tcmBax.modelWorld.get()()); //get the current value
@@ -223,8 +223,8 @@ void MyBaxter::changePosition(CtrlTask* position, arr pos){
 
 CtrlTask* MyBaxter::align(char *name, char* frame1, ors::Vector vec1, char* frame2, ors::Vector vec2, double ref){
     CtrlTask *align = new CtrlTask(name,
-        //new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "endeffL", Vector_x, "shape1", Vector_z),
-        new DefaultTaskMap(vecAlignTMT, tcmBax.modelWorld.get()(), frame1, vec1, frame2, vec2),
+        //new TaskMap_Default(vecAlignTMT, tcm.modelWorld.get()(), "endeffL", Vector_x, "shape1", Vector_z),
+        new TaskMap_Default(vecAlignTMT, tcmBax.modelWorld.get()(), frame1, vec1, frame2, vec2),
                         1., .8, 1., 1.);
     align->y_ref = {ref};
     set.append(align);

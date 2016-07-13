@@ -17,14 +17,12 @@
     -----------------------------------------------------------------  */
 
 #include "opt-convert.h"
+#include "KOMO_Problem.h"
 
 //the Convert is essentially only a ``garbage collector'', creating all the necessary conversion objects and then deleting them on destruction
-Convert::Convert(const ScalarFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { sf=p; }
-Convert::Convert(const VectorFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { vf=p; }
-//Convert::Convert(QuadraticFunction& p){ sf=&p; }
-//Convert::Convert(VectorChainFunction& p) { vcf=&p; }
-//Convert::Convert(QuadraticChainFunction& p) { qcf=&p; }
-Convert::Convert(KOrderMarkovFunction& p):kom(&p), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { }
+Convert::Convert(const ScalarFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { sf=p; }
+Convert::Convert(const VectorFunction& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { vf=p; }
+Convert::Convert(KOrderMarkovFunction& p):kom(&p), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { }
 Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data):kom(NULL), cstyle_fs(fs), cstyle_fv(NULL), data(data) {  }
 Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data):kom(NULL), cstyle_fs(NULL), cstyle_fv(fv), data(data) {  }
 
@@ -41,7 +39,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 double conv_VectorFunction_ScalarFunction(VectorFunction f, arr& g, arr& H, const arr& x){
   arr y,J;
   f(y, (&g?J:NoArr), x);
-  //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+  //  if(J.special==arr::RowShiftedST) J = unpack(J);
   if(&g){ g = comp_At_x(J, y); g *= 2.; }
   if(&H){ H = comp_At_A(J); H *= 2.; }
   return sumOfSqr(y);
@@ -76,14 +74,6 @@ Convert::operator VectorFunction() {
   return vf;
 }
 
-Convert::operator ConstrainedProblem() {
-  if(!cpm) {
-    if(kom) cpm = conv_KOrderMarkovFunction2ConstrainedProblem(*kom);
-  }
-  if(!cpm) HALT("");
-  return cpm;
-}
-
 Convert::operator KOrderMarkovFunction&() {
   if(!kom) {
 // #ifndef libRoboticsCourse
@@ -116,10 +106,19 @@ ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
   return [&f](arr& g, arr& H, const arr& x) -> double {
     arr y,J;
     f(y, (&g?J:NoArr), x);
-    //  if(J.special==arr::RowShiftedPackedMatrixST) J = unpack(J);
+    //  if(J.special==arr::RowShiftedST) J = unpack(J);
     if(&g){ g = comp_At_x(J, y); g *= 2.; }
     if(&H){ H = comp_At_A(J); H *= 2.; }
     return sumOfSqr(y);
+  };
+}
+
+ConstrainedProblem conv_linearlyReparameterize(const ConstrainedProblem& f, const arr& B){
+  return [&f, &B](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& z){
+    arr x = B*z;
+    f(phi, J, H, tt, x);
+    if(&J) J = comp_A_x(J,B);
+    if(&H && H.N) NIY;
   };
 }
 
@@ -131,6 +130,9 @@ ScalarFunction conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f)
   );
 }
 
+#define TT T //(T+1)
+#define tlT (t<T) //(t<=T)
+
 void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) {
 #if 1
   //set state
@@ -139,15 +141,15 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   uint T=f.get_T();
   uint k=f.get_k();
   uint dim_phi=0;
-  for(uint t=0; t<=T; t++) dim_phi += f.dim_phi(t);
+  for(uint t=0; tlT; t++) dim_phi += f.dim_phi(t);
   uint dim_xmax = 0;
-  for(uint t=0; t<=T; t++){ uint d=f.dim_x(t); if(d>dim_xmax) dim_xmax=d; }
+  for(uint t=0; tlT; t++){ uint d=f.dim_x(t); if(d>dim_xmax) dim_xmax=d; }
 
   //resizing things:
   phi.resize(dim_phi).setZero();
-  RowShiftedPackedMatrix *Jaux;
+  RowShifted *Jaux;
   if(&J){
-    Jaux = auxRowShifted(J, dim_phi, (k+1)*dim_xmax, x.N);
+    Jaux = makeRowShifted(J, dim_phi, (k+1)*dim_xmax, x.N);
     J.setZero();
   }
   if(&tt) tt.resize(dim_phi).setZero();
@@ -155,7 +157,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   //loop over time t
   uint Jshift=0;
   uint M=0;
-  for(uint t=0; t<=T; t++) {
+  for(uint t=0; tlT; t++) {
     uint dimxbar = 0;
     for(int s=(int)t-k;s<=(int)t;s++) if(s>=0) dimxbar += f.dim_x(s);
 
@@ -200,22 +202,22 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
   x.referTo(_x);
   x.reshape(T+1-x_post.d0, n);
   uint dim_phi=0;
-  for(uint t=0; t<=T; t++) dim_phi+=f.dim_phi(t);
+  for(uint t=0; tlT; t++) dim_phi+=f.dim_phi(t);
   CHECK(x.nd==2 && x.d1==n && x.d0==T+1-x_post.d0,"");
   CHECK(x_pre.nd==2 && x_pre.d1==n && x_pre.d0==k,"prefix is of wrong dim");
 
   //resizing things:
   phi.resize(dim_phi).setZero();
-  RowShiftedPackedMatrix *Jaux;
+  RowShifted *Jaux;
   if(&J){
-    Jaux = auxRowShifted(J, dim_phi, (k+1)*n, _x.N);
+    Jaux = makeRowShifted(J, dim_phi, (k+1)*n, _x.N);
     J.setZero();
   }
   if(&tt) tt.resize(dim_phi).setZero();
 
   //loop over time t
   uint M=0;
-  for(uint t=0; t<=T; t++) {
+  for(uint t=0; tlT; t++) {
     uint dimphi_t = f.dim_phi(t);
 //    uint dimg_t   = f.dim_g(t);
 //    uint dimh_t   = f.dim_h(t);
@@ -271,6 +273,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 #endif
 }
 
+
 ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f){
   return [&f](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
     conv_KOrderMarkovFunction_ConstrainedProblem(f, phi, J, H, tt, x);
@@ -283,9 +286,25 @@ VectorFunction conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f)
   };
 }
 
+
+//===========================================================================
+
+Convert::Convert(KOMO_Problem& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) {
+  komo = new KOMO_ConstrainedProblem(p);
+}
+
+Convert::operator ConstrainedProblem() {
+  if(!cpm) {
+    if(kom) cpm = conv_KOrderMarkovFunction2ConstrainedProblem(*kom);
+    if(komo) return *komo;
+  }
+  if(!cpm) HALT("");
+  return cpm;
+}
+
+
 //===========================================================================
 
 RUN_ON_INIT_BEGIN()
-  mlr::Array<TermType>::memMove=true;
+mlr::Array<TermType>::memMove=true;
 RUN_ON_INIT_END()
-

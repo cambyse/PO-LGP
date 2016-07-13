@@ -63,7 +63,7 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, o
                                 world.getJointStateDimension());
       dynamic_cast<TaskMap_qItself*>(map)->moduloTwoPi = specs["moduloTwoPi"] ? specs["moduloTwoPi"]->get<double>() : true;
     }else{
-      map = new DefaultTaskMap(specs, world);
+      map = new TaskMap_Default(specs, world);
     }
   }else{
     HALT("need a type (the map type) in the specs");
@@ -99,7 +99,7 @@ bool FollowReferenceActivity::isConv(){
 
 //PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double _timeOut)
 //    : Action(actionMachine, "controlForce") {
-//  DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
+//  TaskMap_Default *m = new TaskMap_Default(posTMT, actionMachine.s->world, "endeffForceL");
 //  CtrlTask *task = new CtrlTask(
 //                     STRING("MoveEffTo_" << effName),
 //                     m,

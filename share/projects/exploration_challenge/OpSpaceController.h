@@ -43,6 +43,9 @@ class OpSpaceController : public ha::Controller {
     virtual void setEndeff(const std::string& endeff) {
       _endeff = endeff;  
     }
+    virtual void setOnlyDisplacement(bool only_displacement) {
+      _only_displacement = only_displacement;
+    }
 
   private:
     std::string _pos_fact;
@@ -52,4 +55,5 @@ class OpSpaceController : public ha::Controller {
 
     std::string _endeff;
     bool _running;
+    bool _only_displacement;
 };

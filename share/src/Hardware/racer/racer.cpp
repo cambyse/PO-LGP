@@ -3,7 +3,7 @@
 #include <Geo/geo.h>
 #include <Gui/opengl.h>
 
-//void drawEnv(void*);
+void drawEnv(void*);
 
 Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   q.resize(2).setZero();
@@ -208,7 +208,7 @@ void Racer::stepDynamicsAcc(double u_acc){
 OpenGL& Racer::gl(){
   if(!_gl){
     _gl = new OpenGL;
-    //  _gl.add(drawEnv, this);
+    _gl->add(drawEnv, this);
     _gl->add(Racer::glStaticDraw, this);
     _gl->camera.setPosition(0., -20., 5.);
     _gl->camera.focus(0, 0, .2);
@@ -237,14 +237,14 @@ void Racer::glDraw(){
   f.addRelativeTranslation(0., 0., l);
   f.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
-  glColor(.2,.2,.2);
-  glDrawBox(.01, .05, 2.*l);
+  glColor(.2,.2,.8);
+  glDrawBox(.02, .10, 2.*l);
   //sensor
   f.addRelativeTranslation(0., 0., lC-l);
   f.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
-  glColor(.1,.2,.2);
-  glDrawBox(.02, .05, .03);
+  glColor(.8,.2,.2);
+  glDrawBox(.05, .05, .03);
   glLoadIdentity();
 #endif
 }

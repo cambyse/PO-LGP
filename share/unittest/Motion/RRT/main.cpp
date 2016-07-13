@@ -34,7 +34,7 @@ RRTPlannerTest::RRTPlannerTest() {
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = {P.world.getBodyByName("endeff")->shapes(0)->index};
-  Task *c = P.addTask("proxyColls", new ProxyTaskMap(allVersusListedPTMT, shapes, .01, true));
+  Task *c = P.addTask("proxyColls", new TaskMap_Proxy(allVersusListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, 1e-0);
   c->threshold = 0;
 

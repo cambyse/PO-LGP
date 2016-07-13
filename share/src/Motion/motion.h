@@ -79,13 +79,15 @@ struct MotionProblem : KOrderMarkovFunction{
   mlr::Array<TermTypeA> ttMatrix;  ///< storage of all feature-types in all time slices
   arr dualSolution;                ///< the dual solution computed during constrained optimization
 
+  struct OpenGL *gl; //internal only: used in 'displayTrajectory'
+
   MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift=true);
   ~MotionProblem();
   
   MotionProblem& operator=(const MotionProblem& other);
 
   /// setting the numer of time steps and total duration in seconds
-  void setTiming(uint timeSteps, double duration);
+  void setTiming(uint steps, double duration);
 
   //-- setting costs in a task space
   void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);     ///< read all tasks from a graph
@@ -108,7 +110,7 @@ struct MotionProblem : KOrderMarkovFunction{
 
   //-- info on the costs
   StringA getPhiNames(uint t);
-  void reportFull(bool brief=false);
+  void reportFull(bool brief=false, ostream& os=std::cout);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 

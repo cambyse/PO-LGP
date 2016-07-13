@@ -30,18 +30,18 @@ int main(int argc, char** argv){
 
     //-- create three tasks
     CtrlTask position("endeffL", //name
-                  new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
+                  new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position.map.phi(position.y, NoArr, tcm.modelWorld.get()()); //get the current value
     position.y_ref = position.y + ARR(.3, 0., 0.);; //set a target
 
     CtrlTask align1("align",
-                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "elbowR", Vector_z, NULL, Vector_y),
+                    new TaskMap_Default(vecAlignTMT, tcm.modelWorld.get()(), "elbowR", Vector_z, NULL, Vector_y),
                     1., 1., 1., 1.);
     align1.y_ref = {-1.};
 
     CtrlTask align2("align",
-                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "elbowL", Vector_z, "elbowR", Vector_z),
+                    new TaskMap_Default(vecAlignTMT, tcm.modelWorld.get()(), "elbowL", Vector_z, "elbowR", Vector_z),
                     1., 1., 1., 1.);
     align2.y_ref = {-1.};
 

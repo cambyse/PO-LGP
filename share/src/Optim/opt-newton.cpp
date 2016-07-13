@@ -69,18 +69,23 @@ OptNewton::StopCriterion OptNewton::step(){
   //compute Delta
   arr R=Hx;
   if(beta) { //Levenberg Marquardt damping
-    if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
+    if(isRowShifted(R)) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
     else for(uint i=0; i<R.d0; i++) R(i,i) += beta;
   }
   if(additionalRegularizer) {
-    if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
+    if(isRowShifted(R)) R = unpack(R);
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
+    bool inversionFailed=false;
     try {
       Delta = lapack_Ainv_b_sym(R, -gx);
     }catch(...){
-      arr sig, eig;
-      lapack_EigenDecomp(R, sig, eig);
+      inversionFailed=true;
+    }
+    if(inversionFailed){
+//      arr sig, eig;
+//      lapack_EigenDecomp(R, sig, eig);
+      arr sig = lapack_kSmallestEigenValues_sym(R, 3);
       if(o.verbose>0){
         cout <<endl <<"** hessian inversion failed ... increasing damping **\neigenvalues=" <<sig <<endl;
       }

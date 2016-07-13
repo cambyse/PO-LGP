@@ -121,12 +121,12 @@ CtrlTask* MyBaxter::task(const char* name,
 }
 
 CtrlTask*MyBaxter::task(const char* name,
-                        DefaultTaskMapType type,
+                        TaskMap_DefaultType type,
                         const char* iShapeName, const ors::Vector& ivec,
                         const char* jShapeName, const ors::Vector& jvec,
                         const arr& target,
                         double decayTime, double dampingRatio, double maxVel, double maxAcc){
-  TaskMap *map = new DefaultTaskMap(type, s->tcm.modelWorld.get()(),
+  TaskMap *map = new TaskMap_Default(type, s->tcm.modelWorld.get()(),
                                     iShapeName, ivec, jShapeName, jvec);
   CtrlTask* t = new CtrlTask(name, map, decayTime, dampingRatio, maxVel, maxAcc);
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value

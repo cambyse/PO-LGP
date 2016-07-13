@@ -2,8 +2,8 @@
 #define TRAJ_OPTIMIZER_h
 
 #include <Motion/motion.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
+#include <Motion/taskMaps.h>
+
 enum BM_TYPE {CIRCLE, EIGHT, STAR};
 
 struct TrajOptimizer {

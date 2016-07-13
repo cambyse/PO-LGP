@@ -30,15 +30,15 @@ void TEST(Stickiness){
   //-- setup the motion problem
   Task *t;
 
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t = MP.addTask("final_vel", new TaskMap_Transition(G));
   t->map.order=1; //make this an acceleration task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
   if(hardConstraint){
@@ -48,7 +48,7 @@ void TEST(Stickiness){
     Task *sticky = MP.addTask("collisionStickiness", new ConstraintStickiness(t->map));
     sticky->setCostSpecs(0, MP.T, {0.}, 1.e1);
   }else{
-    t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {}, {.1}));
+    t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {}, {.1}));
     t->setCostSpecs(0, MP.T, {0.}, 1.);
   }
 
@@ -74,16 +74,16 @@ void TEST(EqualityConstraints){
 
   //-- setup the motion problem
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t = MP.addTask("final_vel", new TaskMap_Transition(G));
   t->map.order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
 #if 1
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 #else
   t = MP.addTask("position", new PointEqualityConstraint(G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
@@ -118,18 +118,18 @@ void TEST(ClosedKinematicChain){
 
   //-- setup the motion problem
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+  t = MP.addTask("final_vel", new TaskMap_Transition(G));
   t->map.order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
   t = MP.addTask("ballEqCon", new PointEqualityConstraint(G, "endeff1", NoVector, "endeff2", NoVector));
   t->setCostSpecs(0, MP.T, {0.}, 1.);
 
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff1", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff1", NoVector, NULL, G.getBodyByName("target")->X.pos));
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 
@@ -166,15 +166,15 @@ void TEST(ContactConstraint){
 
   //-- setup the motion problem
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-//  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+//  t = MP.addTask("final_vel", new TaskMap_Transition(G));
 //  t->map.order=1; //make this a velocity task!
 //  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
-//  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+//  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
 //  t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
   t = MP.addTask("collision", new PairCollisionConstraint(G, "table", "endeff", 0.01));
@@ -211,15 +211,15 @@ void TEST(VelConstraint){
 
   //-- setup the motion problem
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=1; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e1);
 
-//  t = MP.addTask("final_vel", new TransitionTaskMap(G));
+//  t = MP.addTask("final_vel", new TaskMap_Transition(G));
 //  t->map.order=1; //make this a velocity task!
 //  t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e2);
 
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 //  t = MP.addTask("collision", new PairCollisionConstraint(G, "table", "endeff", 0.1));
@@ -256,11 +256,11 @@ void TEST(qItselfConstraint){
 
   //-- setup the motion problem
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(G));
+  t = MP.addTask("transitions", new TaskMap_Transition(G));
   t->map.order=1; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e1);
 
-  t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, G.getBodyByName("target")->X.pos));
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
   t = MP.addTask("qItself", new qItselfConstraint(3,G.getJointStateDimension()));

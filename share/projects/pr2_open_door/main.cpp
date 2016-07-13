@@ -40,10 +40,10 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   uint pC = 0;
   // transition costs
   Task *t;
-  t =MP.addTask("tra", new TransitionTaskMap(world));
+  t =MP.addTask("tra", new TaskMap_Transition(world));
   t->map.order=1;
   t->setCostSpecs(0,MP.T, ARR(0.), param(pC));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = 1.;
   pC++;
 
   // time points
@@ -53,24 +53,24 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
 
   /// tasks
   // first contact with door
-  t =MP.addTask("posC", new DefaultTaskMap(posTMT, world, "endeffL",NoVector));
+  t =MP.addTask("posC", new TaskMap_Default(posTMT, world, "endeffL",NoVector));
   t->setCostSpecs(C, C, conv_vec2arr(world.getShapeByName("handle")->X.pos), param(pC));
   pC++;
 
-  t =MP.addTask("vecC", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t =MP.addTask("vecC", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
   t->setCostSpecs(C, C, ARR(1.), param(pC));
   pC++;
 
-  t =MP.addTask("vecC2", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t =MP.addTask("vecC2", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
   t->setCostSpecs(C-10, C-10, ARR(1.), param(pC));
   pC++;
 
-  t =MP.addTask("vecC3", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t =MP.addTask("vecC3", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
   t->setCostSpecs(C+10, C+10, ARR(1.), param(pC));
   pC++;
 
   ors::Vector dir = ors::Vector(0.,-.7,0.2); dir.normalize();
-  t =MP.addTask("vecF", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
+  t =MP.addTask("vecF", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
   t->setCostSpecs(U, U, ARR(1.), param(pC));
   pC++;
 

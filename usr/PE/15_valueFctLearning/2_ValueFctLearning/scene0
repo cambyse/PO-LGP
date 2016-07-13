@@ -1,0 +1,11 @@
+body stem { X=<T t(0 0 1)>  type=2 size=[0.1 0.1 2 .1] fixed, }
+
+body arm1 { type=2 size=[0.1 0.1 1 .1]  }
+
+joint (stem arm1) { A=<T t(0 0 1) d(90 0 1 0)> B=<T t(0 0 .5)> }
+
+shape endeff(arm1){ type=1 rel=<T t(0 0 .7)> color=[1 0 0] size=[.3 0 0 .05] contact}
+
+body target { X=<T t(0 1.2 2.0)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed }
+
+body glCamera { X=<T 0 0 16.70632 0 0 0 0>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }

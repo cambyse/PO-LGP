@@ -115,7 +115,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
 
 
-  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector));//, "target"));
   pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
   pd_y->prec = 10.;
 

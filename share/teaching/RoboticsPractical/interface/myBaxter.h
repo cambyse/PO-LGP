@@ -25,7 +25,7 @@ struct MyBaxter{
   CtrlTask* task(const char* name,
                  TaskMap* map);
   CtrlTask* task(const char* name,
-                 DefaultTaskMapType type,
+                 TaskMap_DefaultType type,
                  const char* iShapeName, const ors::Vector& ivec,
                  const char* jShapeName, const ors::Vector& jvec,
                  const arr& target,

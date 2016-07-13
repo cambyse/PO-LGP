@@ -24,7 +24,7 @@ PDExecutor::PDExecutor()
   }
 
   if(mlr::getParameter<bool>("useCollisions", false)) {
-    collisions = fmc.addPDTask("collisions", .5, 1.5, new ProxyTaskMap(allPTMT, {0u}, .1));
+    collisions = fmc.addPDTask("collisions", .5, 1.5, new TaskMap_Proxy(allPTMT, {0u}, .1));
     // collisions->y_ref.setZero();
     // collisions->v_ref.setZero();
     // collisions->maxVel = -1;
@@ -68,8 +68,8 @@ PDExecutor::PDExecutor()
   }
 
   if(mlr::getParameter<bool>("useHead", false)) {
-    effHead = fmc.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, fmc.world, "endeffHead", Vector_x, "base_footprint"));
-    // effHead = fmc.addPDTask("endeffHead", 2., .8, new DefaultTaskMap(gazeAtTMT, fmc.world, "endeffHead", Vector_x));
+    effHead = fmc.addPDTask("endeffHead", 2., .8, new TaskMap_Default(gazeAtTMT, fmc.world, "endeffHead", Vector_x, "base_footprint"));
+    // effHead = fmc.addPDTask("endeffHead", 2., .8, new TaskMap_Default(gazeAtTMT, fmc.world, "endeffHead", Vector_x));
     effHead_ref = nullptr;
   }
 
@@ -234,7 +234,7 @@ void PDExecutor::teleop() {
 }
 
 void PDExecutor::trackHead() {
-    if(effHead && effHead_ref) dynamic_cast<DefaultTaskMap*>(&effHead->map)->jvec = effHead_ref->y;
+    if(effHead && effHead_ref) dynamic_cast<TaskMap_Default*>(&effHead->map)->jvec = effHead_ref->y;
 }
 
 void PDExecutor::rigidTransf(arrf &pose) {

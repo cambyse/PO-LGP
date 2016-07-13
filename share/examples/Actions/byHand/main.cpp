@@ -69,7 +69,7 @@ void forceControl(ActionSwigInterface& S){
 
 #if 0
   // directly generate a push task
-  TaskMap *map = new DefaultTaskMap(posTMT, taskController->modelWorld.get(), "endeffForceL");
+  TaskMap *map = new TaskMap_Default(posTMT, taskController->modelWorld.get(), "endeffForceL");
   CtrlTask *task = new CtrlTask("Push", map, 1., .8, 1., 1.);
   task->f_ref = ARR(0, 0, -7);
   task->f_Igain = .003;

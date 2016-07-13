@@ -271,6 +271,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
      qj(i) = q(joint->qIndex+i);
   }
   D["q"] = STRING(qj);
+  D["qIndex"] = STRING(joint->qIndex);
   D["axis"] = STRING('[' << joint->axis << ']');
   S->modelWorld.deAccess();
   return D;
@@ -309,6 +310,22 @@ doubleV ActionSwigInterface::getV() {
 double ActionSwigInterface::getQDim() {
   int qdim = S->modelWorld.get()->getJointStateDimension();
   return qdim;
+}
+
+doubleV ActionSwigInterface::getForceLeft() {
+#ifdef MLR_ROS
+    return conv_arr2stdvec(S->ctrl_obs.get()->fL);
+#else
+    return std::vector<double>({0., 0., 0., 0., 0., 0.});
+#endif
+}
+
+doubleV ActionSwigInterface::getForceRight() {
+#ifdef MLR_ROS
+    return conv_arr2stdvec(S->ctrl_obs.get()->fR);
+#else
+    return std::vector<double>({0., 0., 0., 0., 0., 0.});
+#endif
 }
 
 int ActionSwigInterface::getSymbolInteger(std::string symbolName){

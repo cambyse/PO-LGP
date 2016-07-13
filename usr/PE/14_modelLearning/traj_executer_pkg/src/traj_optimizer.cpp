@@ -42,14 +42,14 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0, arr &x) {
   //-- create tasks for optimization problem
   TaskCost *c;
 
-  c = MP.addTask("final_vel", new DefaultTaskMap(qItselfTMT,world));
+  c = MP.addTask("final_vel", new TaskMap_Default(qItselfTMT,world));
   MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
   c->map.order=1;
 
-  c = MP.addTask("position_right_hand", new DefaultTaskMap(qItselfTMT,world));
+  c = MP.addTask("position_right_hand", new TaskMap_Default(qItselfTMT,world));
   c->setCostSpecs(MP.T, MP.T, _goal, 1e5);
 
-  //  c = MP.addTask("limits", new DefaultTaskMap(qLimitsTMT,world));
+  //  c = MP.addTask("limits", new TaskMap_Default(qLimitsTMT,world));
   //  c->setCostSpecs(0, MP.T, ARR(0.), 1e5);
   //  c->map.order=1;
 
@@ -199,12 +199,12 @@ void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
     }
   }
 
-  c = MP.addTask("pos", new DefaultTaskMap(posTMT,world,"endeffR"));
+  c = MP.addTask("pos", new TaskMap_Default(posTMT,world,"endeffR"));
   c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
   c->target = traj; // set traj
   c->prec.subRef(0,20)=0.;
 
-  c = MP.addTask("q_limit",new DefaultTaskMap(qLimitsTMT,world));
+  c = MP.addTask("q_limit",new TaskMap_Default(qLimitsTMT,world));
   c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
 
 

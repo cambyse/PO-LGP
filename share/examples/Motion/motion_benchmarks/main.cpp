@@ -59,11 +59,11 @@ void circle_BM(){
   arr traj = catCol(traj0(0)+0.*x_traj,traj0(1)+y_traj-radius,traj0(2)+x_traj);
 
   Task *c;
-  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c = MP.addTask("transitions", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
+  c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
   //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
   c->setCostSpecs(0, MP.T, traj, 1e4);
   c->target = traj;
@@ -163,11 +163,11 @@ void star_BM(){
 
 
   Task *c;
-  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c = MP.addTask("transitions", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
+  c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
 //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
@@ -268,11 +268,11 @@ void eight_BM(){
   MP.T = traj.d0-1;
 
   Task *c;
-  c = MP.addTask("transitions", new TransitionTaskMap(world));
+  c = MP.addTask("transitions", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("circle_pos", new DefaultTaskMap(posTMT,world,"endeffR"));
+  c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
 //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;

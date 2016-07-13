@@ -26,7 +26,7 @@ void TEST(GraspHeuristic){
     threeStepGraspHeuristic(xT, MP, s->index, 2);
 
     Task *c;
-    c = MP.addTask("transition", new TransitionTaskMap(G));
+    c = MP.addTask("transition", new TaskMap_Transition(G));
     c->map.order=2; //make this an acceleration task!
     c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
@@ -77,7 +77,7 @@ void TEST(PickAndPlace){
 
   threeStepGraspHeuristic(xT, MP, G.getShapeByName("target1")->index, 2);
   Task *t;
-  t = MP.addTask("transition", new TransitionTaskMap(G));
+  t = MP.addTask("transition", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
@@ -105,14 +105,14 @@ void TEST(PickAndPlace){
   MP.x0 = x[MP.T-1];
 
   Task *c;
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "target1", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "target1", ors::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
+  c = MP.addTask("collision", new TaskMap_Proxy(allPTMT, uintA(0), .04));
   c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   //initialize trajectory
@@ -135,14 +135,14 @@ void TEST(PickAndPlace){
   listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, uintA(0), .04));
+  c = MP.addTask("collision", new TaskMap_Proxy(allPTMT, uintA(0), .04));
   c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   //initialize trajectory

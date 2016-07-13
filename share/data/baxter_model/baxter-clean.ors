@@ -29,9 +29,9 @@ shape visual (head){ type=3 size=[1 1 1 1] rel=<T -0.0055038 -0.000139031 -0.093
 shape collision (head){ type=1 size=[0 0 0 0.001] rel=<T 2.72449e-17 0 -0.1227 0.063474 -0.704252 -0.704252 0.063474 >  cont,  }
 shape visual (head){ type=0 size=[0.218 0.16 0.001 0] rel=<T -0.0157421 1.40048e-14 -0.119839 0.154854 -0.689942 -0.689942 0.154854 >  color=[ 0 0 0 1 ]  }
 shape visual (base){ type=1 size=[0 0 0 0.001] rel=<T 0.11 0 0.75 1 0 0 0 >  color=[ 0.8 0.3 0.3 0.3 ]  }
-shape collision (base){ type=1 size=[0 0 0 0.22] rel=<T 0.04 -0.04 0.75 1 0 0 0 >  cont,  }
+#shape collision (base){ type=1 size=[0 0 0 0.22] rel=<T 0.04 -0.04 0.75 1 0 0 0 >  cont,  }
 shape visual (base){ type=1 size=[0 0 0 0.001] rel=<T 0.11 0 0.75 1 0 0 0 >  color=[ 0.8 0.3 0.3 0.3 ]  }
-shape collision (base){ type=1 size=[0 0 0 0.22] rel=<T 0.04 0.04 0.75 1 0 0 0 >  cont,  }
+#shape collision (base){ type=1 size=[0 0 0 0.22] rel=<T 0.04 0.04 0.75 1 0 0 0 >  cont,  }
 shape visual (right_upper_shoulder){ type=3 size=[1 1 1 1] rel=<T 0.204968 -0.000259649 -0.0560219 -0.707107 0 -0.707107 0 >  mesh='meshes/upper_shoulder/S0.STL'  color=[ 0.5 0.1 0.1 1 ]  rel_includes_mesh_center,  }
 shape collision (right_upper_shoulder){ type=2 size=[0 0 0.2722 0.06] rel=<T 0.152112 -1.33336e-18 3.36804e-17 -0.707107 0 -0.707107 0 >  cont,  rel_includes_mesh_center,  }
 shape visual (right_lower_shoulder){ type=3 size=[1 1 1 1] rel=<T 6.04869e-05 -2.01515e-05 -0.0561637 -0.707107 0 -0.707107 0 >  mesh='meshes/lower_shoulder/S1.STL'  color=[ 0.5 0.1 0.1 1 ]  rel_includes_mesh_center,  }

@@ -97,7 +97,7 @@ int main(int argc, char** argv){
 
   MotionProblem MP(world);
   Task *task;
-  task = MP.addTask("transitions", new TransitionTaskMap(world));
+  task = MP.addTask("transitions", new TaskMap_Transition(world));
   task->map.order=2;
   task->setCostSpecs(0, MP.T, ARR(0.), 1e0);
   task = MP.addTask("position", new TaskMap_qItself(world,"worldTranslationRotation"));
