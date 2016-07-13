@@ -1,4 +1,4 @@
-body lockbox { X=<T d(225 0 0 1) t(-.75 0 1.5)> }
+body lockbox { X=<T d(250 0 0 1) t(-1. 0 1.5)> }
 #shape back (lockbox) { type=0 size=[.02 .6 .6 0] rel=<T t(0 0 .3) d(90 0 0 1)> fixed }
 #shape front (lockbox) { type=0 size=[.02 .3 .6 0] rel=<T t(0 0 .3) d(90 0 0 1) t(-.2 -.15 0)> fixed }
 #shape front_bottom (lockbox) { type=0 size=[.02 .3 .1 0] rel=<T t(0 0 .05) d(90 0 0 1) t(-.2 .15 0)> fixed }

@@ -1,5 +1,5 @@
 Include = 'baxter-clean.ors'
-#Include = '../lockboxNew.ors'
+Include = '../lockboxNew.ors'
 Delete shape visual
 #Delete shape collision
 
