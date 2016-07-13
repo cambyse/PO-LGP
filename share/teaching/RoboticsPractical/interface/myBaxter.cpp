@@ -13,7 +13,6 @@
 
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
-#include "RosCom/subscribeOptitrack.h"
 #include <RosCom/perceptionCollection.h>
 #include <RosCom/perceptionFilter.h>
 #include <RosCom/filterObject.h>
@@ -32,10 +31,8 @@ struct MyBaxter_private{
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
-//  SubscribeTabletop tabletop_subscriber;
+  SubscribeTabletop tabletop_subscriber;
   SubscribeAlvar alvar_subscriber;
-  SubscribeOptitrack optitrack_subscriber;
-  Optitrack op;
   Collector data_collector;
   Filter myFilter;
   PublishDatabase myPublisher;
