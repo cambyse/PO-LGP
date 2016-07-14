@@ -1,0 +1,46 @@
+Required Ubuntu packages for python: 
+    python-dateutil                     for time.sleep -- needed for periodic execution
+    python-matplotlib                   for the plot of rewards
+    python-matplotlib-data              also for the plot
+    python-numpy                        for the arrays, matrices, ...
+    python-tk                           for the plot; to spawn a window
+    python-scikits-learn                for the offline-learning package
+    ipython                             recommended for the offline learner
+    ros-indigo-visualization-msgs       for the alvar marker
+    ros-indigo-geometry-msgs            for the quaternion (needed for the pose of the endeffector)
+
+Setup:
+    run ./setup.sh, also installs required packages.
+
+Execution of ball_throwing.py:
+    0) Depending on the position, you might want to turn off the second light switch from top; I would recommend using rviz to see if the reflection allows to track the alvar markers without any problems. Also, position the Alvar marker '11' (the symmetric one) at the position where Baxter should throw at.
+
+    1) Make sure you are connected via LAN -- otherwise, there is too much interference due to the Alvar tracker.
+
+    2) Make sure you sourced both /opt/ros/indogo/setup.bash and ~/git/mlr/share/bin/baxterlansetup
+
+    3) Execute 'rosrun baxter_tools camera_control.py -o right_hand_camera -r 1280x800 && roslaunch ar_track_alvar wristR.launch'. The first command sets the resolution of the right-hand camera to 1280x800, which is required for a good Alvar tracking. The second one launches a node that publishes all positions of Alvar markers the right-hand camera can see. NOTE: this is a BLOCKING call, so I would recommend using a different terminal for the remainder and redo step 2 on it, otherwise (appending a '&' to the command) might cause interference with the output and the service is harder to stop later. Using a blocking call, it can be stopped using just CTRL+c.
+
+    4) In the folder this document is located, execute './ball_throwing.py'.
+        4.1) The robot will now move its right arm to a position where the camera can see the ground and wait until Alvar marker 11 (the symmetric one) has been found by the camera and returns position coordinates. Once the camera found the marker, it will print the position and ask if it's okay. If you still want to change the position of the marker, do so NOW, as the file takes THIS datum and writes it as target coordinate. Once you are satisfied with the markers position, press Enter to reload the coordinates, enter 'o' on your keyboard and press enter to continue with the next step.
+        4.2) The robot now moves its left arm to a starting position. Once it got there, it waits for the Hacky Sack. Hold it between the grippers of the left arm and then press 'y' on the keyboard, followed by return, to close the gripper and let the robot hold the Hacky Sack.
+        4.3) Get into a safe distance from the robot (for your own safety, the robot wasn't following Asimovs robot laws when this was written), press 'y' and then return.
+        4.4) Now the robot throws the hacky sack. Wait until its left arm it at the starting position again, then go to the position where it landed and place the second Alvar marker (10) on that spot.
+        4.5.1) If the Hacky Sack landed at a position where the right-hand camera can see it (this can easily be checked e.g. by using rviz), press 'm' and then enter to measure the distance. The program will now print the measured squared distance. If you think those values are valid, press 'o' and enter, otherwise force the robot to re-measure by pressing just enter. If the robot shows numbers in squared brackets, e.g. '[11]', this means that not all the required Alvar markers were spotted yet and you should probably check why this is. During testing, this often was an issue with lighting and resulting reflections on the ground.
+        4.5.2) If the Hacky Sack landed at a position where the right-hand camera can NOT see it, just press return when the programm asks if you want to measure the distance.
+        4.6) Now the robot reasks for the Hacky Sack. Hold it between its grippers and press 'y' and enter. Now the robot asks if you want to start or quit. On pressing 's', the robot rethrows the Hacky Sack and you might just go back to step 4.3). If you want to quit, press 'q' and then return. In that case, you don't have to hold the Hacky Sack in position when the programm asks you to.
+
+    5) Now as the program finished, it should show a plot with your rewards. The x-axis shows the count number, the y-axis the reward.
+
+    6) Once you're done looking at the plot, you can close the window and the program terminates. You might want to look at the new data file in this directory that contains information on the weight matrix, the x- and y-position and the reward after each throw. The file has the current date in the name, so it should be easy to locate.
+
+Execution of offline_learning.py:
+    1) Open a terminal in this folder and type in 'ipython'.
+    
+    2) Type in 'run offline_learning.py <filename>', where '<filename>' is the name of the data file (e.g. ball-throwing-data-2016-07-11_15-32-54 or example_data)
+
+    3) Create a target weight vector as 1D array, e.g. 'target = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2])', which holds the weight vector you want the gradient of.
+
+    4) Think of a number of points you want to use for the gradient estimation and store it as k, e.g. 'k = 4'
+
+    5) Type in 'estimate_gradient(target, D, k)'. The program should print: (1) the used points, (2) the gradient.
