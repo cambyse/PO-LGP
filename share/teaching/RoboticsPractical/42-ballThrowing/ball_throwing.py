@@ -159,22 +159,6 @@ def policy_search(T, W):
        
         er = expected_policy_reward(T, W + std_dev * noise)
         
-        '''
-        random_noise = np.random.randn(W.shape[1])
-        noise = np.array([]).reshape(0, W.shape[1])
-        zeros = np.zeros(W.shape[1])
-        for i in range(W.shape[0]):
-            if i == pos:
-                noise = np.vstack([noise, random_noise])
-            else:
-                noise = np.vstack([noise, zeros])
-        
-        # W[pos,:] += std_dev * np.random.randn(W.shape[1])
-
-        count[pos] += 1
-        er = expected_policy_reward(T, W)
-        '''
-
         # If the reward is better than our current optimum, remember this W.
         if er > er_opt:
             er_opt = er
