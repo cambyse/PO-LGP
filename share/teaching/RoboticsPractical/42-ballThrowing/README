@@ -12,7 +12,7 @@ Required Ubuntu packages for python:
     gnuplot-qt                          for showing the gnuplot plots
 
 Setup:
-    run ./setup.sh, also installs required packages.
+    run ./setup.sh as root, this also installs required packages.
 
 Execution of ball_throwing.py:
     0) Depending on the position, you might want to turn off the second light switch from top; I would recommend using rviz to see if the reflection allows to track the Alvar markers without any problems. Also, position the Alvar marker '11' (the symmetric one) at the position where Baxter should throw at.
