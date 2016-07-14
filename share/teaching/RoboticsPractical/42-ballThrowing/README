@@ -8,6 +8,8 @@ Required Ubuntu packages for python:
     ipython                             recommended for the offline learner
     ros-indigo-visualization-msgs       for the Alvar marker
     ros-indigo-geometry-msgs            for the quaternion (needed for the pose of the endeffector)
+    gnuplot                             for plot viewing
+    gnuplot-qt                          for showing the gnuplot plots
 
 Setup:
     run ./setup.sh, also installs required packages.
@@ -44,3 +46,6 @@ Execution of offline_learning.py:
     4) Think of a number of points you want to use for the gradient estimation and store it as k, e.g. 'k = 4'
 
     5) Type in 'estimate_gradient(target, D, k)'. The program should print: (1) the used points, (2) the gradient.
+
+Watch all availlable reward plots:
+    1) Open a terminal in this folder, enter './gnuplot.sh'

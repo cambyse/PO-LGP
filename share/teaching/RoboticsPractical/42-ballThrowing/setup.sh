@@ -18,4 +18,6 @@ sudo apt-get install python-dateutil\
     python-scikits-learn\
     ipython\
     ros-indigo-visualization-msgs\
-    ros-indigo-geometry-msgs
+    ros-indigo-geometry-msgs\
+    gnuplot\
+    gnuplot-qt
