@@ -5,9 +5,9 @@ do
     # Create gnuplot readable file
     if [[ ! -f ${file}.gnuplot ]]
     then
-        rewards=$(cat ${file} | grep -v ^# | grep -v ^+ | sed -e s/^.*,//)
+        rewards=$(cat ${file} | grep -v ^# | grep -v ^+ | sed -e s/^.*,//g)
         let num=0
-        for reward in rewards
+        for reward in ${rewards}
         do
             let num=${num}+1
             echo "${num} ${reward}" >> ${file}.gnuplot
@@ -15,5 +15,5 @@ do
     fi
 
     # Then plot it
-    gnuplot -e "plot '${file}' using 1:2 w l" -p
+    gnuplot -e "plot '${file}.gnuplot' using 1:2 w l" -p
 done
