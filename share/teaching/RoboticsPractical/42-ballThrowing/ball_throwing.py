@@ -281,7 +281,7 @@ if __name__ == "__main__":
     filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
     f = open(filename, 'w')
     f.write('# Format: weights, reward\n')
-    f.write('+ ')
+    f.write('# ')
     pos = 0
      send_signal(limb_r.set_joint_positions, startpos_r, 2000)
     while not 11 in markers:
