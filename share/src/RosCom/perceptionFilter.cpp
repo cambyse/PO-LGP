@@ -19,13 +19,11 @@
 #include <unordered_set>
 #include "perceptionFilter.h"
 
-void Filter::open()
-{
-  this->listenTo(*perceptual_inputs.var);
-}
-void Filter::close(){
-  this->stopListenTo(*perceptual_inputs.var);
-}
+Filter::Filter()
+    : Module("Filter", -1),
+        perceptual_inputs(this, "perceptual_inputs", true),
+        object_database(this, "object_database")
+{}
 
 void Filter::step()
 {
@@ -57,7 +55,11 @@ void Filter::step()
   arr matched_objects = zeros(objectDatabase.N);
 
   // For each type of inputs, run the algorithm.
-  for (auto const& type : {FilterObject::FilterObjectType::alvar, FilterObject::FilterObjectType::cluster, FilterObject::FilterObjectType::plane})
+  for (auto const& type : { FilterObject::FilterObjectType::alvar,
+                            FilterObject::FilterObjectType::cluster,
+                            FilterObject::FilterObjectType::plane,
+                            FilterObject::FilterObjectType::optitrackbody,
+                            FilterObject::FilterObjectType::optitrackmarker })
   {
     matchedSubsetFromDatabase.clear();
     matchedSubsetFromPerceptualInputs.clear();
@@ -200,7 +202,6 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
       cleaned.append(new_objects(i));
     }
   }
-
   return cleaned;
 }
 

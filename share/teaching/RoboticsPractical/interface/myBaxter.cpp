@@ -33,12 +33,13 @@ struct MyBaxter_private{
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
+  Filter myFilter;
+
 //  SubscribeTabletop tabletop_subscriber;
   SubscribeAlvar alvar_subscriber;
   SubscribeOptitrack optitrack_subscriber;
   Optitrack op;
   Collector data_collector;
-  Filter myFilter;
   PublishDatabase myPublisher;
 
   OrsViewer view;
