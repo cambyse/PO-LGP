@@ -44,6 +44,7 @@ struct MyBaxter{
   arr getJointState();
   void getState(arr& q, arr& qdot, arr& u);
   double setTestJointState(const arr& q);
+  double updateLockbox(const ors::Transformation& tf);
   void getEquationOfMotion(arr& M, arr& F);
 
 

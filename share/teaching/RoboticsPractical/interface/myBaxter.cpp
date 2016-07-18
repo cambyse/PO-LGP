@@ -25,6 +25,7 @@ baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const o
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
   ACCESSname(FilterObjects, object_database)
+  ACCESSname(ors::KinematicWorld, modelWorld)
 
   TaskControllerModule tcm;
 //  RelationalMachineModule rm;
@@ -162,7 +163,7 @@ CtrlTask* MyBaxter::modifyTarget(CtrlTask* t, const arr& target){
 }
 
 void MyBaxter::stop(const CtrlTaskL& tasks){
-  for(CtrlTask *t:tasks) activeTasks.removeValue(t);
+  for(CtrlTask *t:tasks) { activeTasks.removeValue(t); t->active = false;}
   s->tcm.ctrlTasks.set() = activeTasks;
   for(CtrlTask *t:tasks){
     delete &t->map;
@@ -229,6 +230,56 @@ double MyBaxter::setTestJointState(const arr &q){
   testWorld.gl("testWorld").update();
   return y.scalar();
 }
+
+double MyBaxter::updateLockbox(const ors::Transformation& tf){
+//  ors::Body* lb = s->tcm.realWorld.getBodyByName("lockbox");
+
+//  lb->X = tf;
+
+//  s->modelWorld.set()->calc_fwdPropagateFrames();
+  s->tcm.realWorld.getBodyByName("lockbox")->X = tf;
+  s->tcm.realWorld.calc_fwdPropagateFrames();
+
+  s->modelWorld.set()->getBodyByName("lockbox")->X = tf;
+  s->modelWorld.set()->calc_fwdPropagateFrames();
+
+  s->tcm.modelWorld.set()->getBodyByName("lockbox")->X = tf;
+  s->tcm.modelWorld.set()->calc_fwdPropagateFrames();
+
+  //s->tcm.realWorld.calc_fwdPropagateFrames();
+
+  for (auto kw : s->ctrlView.copies)
+  {
+    kw->getBodyByName("lockbox")->X = tf;
+    kw->calc_fwdPropagateFrames();
+  }
+//  s->ctrlView.copies(0)->calc_fwdPropagateShapeFrames();
+ // s->tcm.realWorld.calc_fwdPropagateShapeFrames();
+
+//  s->modelWorld.set()->getBodyByName("lockbox")->X = tf;
+
+//        arr qdot = s->modelWorld.get()->qdot;
+
+//        s->tcm.realWorld.setJointState(q, qdot);
+//        s->tcm.modelWorld.set()->setJointState(q, qdot);
+
+
+
+//        s->tcm.ctrl_q_real.set() = q;
+//        s->tcm.ctrl_q_ref.set() = q;
+//        s->tcm.q_real = q;
+//        s->tcm.q_model = q;
+//        s->tcm.q0 = q;
+
+//        s->tcm.modelWorld.set()->gl("testWindow").update();
+//  arr qdot = s->modelWorld.get()->qdot;
+//  s->tcm.realWorld.q = q;
+//  s->tcm.realWorld.gl("modelWorld").update();
+  arr y;
+  s->tcm.realWorld.kinematicsProxyCost(y, NoArr);
+  return y.scalar();
+}
+
 
 void MyBaxter::getEquationOfMotion(arr& M, arr& F){
   testWorld.equationOfMotion(M, F);
@@ -338,18 +389,14 @@ void MyBaxter::grip(){
 }
 
 void MyBaxter::grip(const bool toGrip, const bool sim){
-  auto grip = MyBaxter::task(GRAPH(" map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
-
-  arr q = s->tcm.ctrl_q_ref.get(); //s->tcm.realWorld.q;
-
-  ors::Joint *j = s->spctb.baxterModel.getJointByName("l_gripper_l_finger_joint");
-
+  arr q = s->tcm.modelWorld.get()->q;
+  ors::Joint *j = s->tcm.modelWorld.get()->getJointByName("l_gripper_l_finger_joint");
   isGripping = toGrip;
-
   isGripping ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
 
   std::cout << "Gripping: " << isGripping << std::endl;
 
+  auto grip = task(GRAPH("map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
   modifyTarget(grip, q);
 
   uint count = 0;
@@ -361,7 +408,7 @@ void MyBaxter::grip(const bool toGrip, const bool sim){
       break;
     mlr::wait(0.01);
     if (sim)
-      pos = s->tcm.modelWorld.get()().q;
+      pos = s->tcm.modelWorld.get()->q;
     else
       pos = s->tcm.realWorld.q;
 

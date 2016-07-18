@@ -1,4 +1,4 @@
-body lockbox { X=<T d(250 0 0 1) t(-1. 0 1.5)> }
+body lockbox { }
 #shape back (lockbox) { type=0 size=[.02 .6 .6 0] rel=<T t(0 0 .3) d(90 0 0 1)> fixed }
 #shape front (lockbox) { type=0 size=[.02 .3 .6 0] rel=<T t(0 0 .3) d(90 0 0 1) t(-.2 -.15 0)> fixed }
 #shape front_bottom (lockbox) { type=0 size=[.02 .3 .1 0] rel=<T t(0 0 .05) d(90 0 0 1) t(-.2 .15 0)> fixed }
@@ -18,34 +18,26 @@ shape right (lockbox) { type=0 size=[.02 .18 .95 0] rel=<T d(90 0 0 1) t(.485 .1
 body door { type=0 size=[.02 .3 .17 0] color=[.6 .2 .2] }
 joint lockbox_door (lockbox door){ type=0 axis=[0 0 1] A=<T t(.0 .025 .31)> B=<T t(0 .15 0)> limits=[0 -1.58] }
 shape door_marker (door){ type=0 size=[.005 .045 .045 0] rel=<T t(.0125 -.0375 0)> }
-body door_handle { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] }
-joint lockbox_door_handle (door door_handle) {type=10 A=<T d(90 0 1 0) t(.0 .08 0.04)>  }
+shape door_handle (door) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 1 0) t(.0 .08 0.04)>  }
 
 body bar { type=4 size=[.0 .0 .3 .025] color=[.2 .6 .2] }
 joint lockbox_bar (lockbox bar){ type=3 axis=[0 0 1] A=<T t(0.0 0.2 .07)> limits=[0 .08]}
 shape lockbox_bar_marker (bar){ type=0 size=[.005 .045 .045 0] rel=<T t(.0275 0 -0.05)> }
-body bar_handle { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] }
-joint lockbox_bar_handle (bar bar_handle) {type=10 A=<T d(90 0 0 1) t(.0 -.0425 0.08) d(90 1 0 0)>  }
+shape bar_handle (bar) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 0 1) t(.0 -.0425 0.08) d(90 1 0 0)> }
 
 body wheel { type=4 size=[.0 .0 .02 .15] color=[.2 .2 .6] }
 joint lockbox_wheel (lockbox wheel){ type=0 axis=[0 0 -1] A=<T t(0.0 0.2 -.145) d(90 0 1 0)> limits=[0 -1.58}
 shape wheel_marker (wheel){ type=0 size=[.005 .045 .045 0] rel=<T d(90 0 -1 0) t(.013 0.0725 0.0725)> }
-body wheel_handle { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] }
-joint lockbox_wheel_handle (wheel wheel_handle) {type=10 A=<T d(135 0 0 1) t(.0 .08 0.04) >  }
+shape wheel_handle (wheel) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(135 0 0 1) t(.0 .08 0.04)> }
 
 
 body bar2 { type=4 size=[.0 .0 .3 .025] color=[.2 .6 .2] }
 joint lockbox_bar2 (lockbox bar2){ type=3 axis=[0 0 -1] A=<T t(0.0 -0.1 -.145) d(90 1 0 0)> limits=[0. 0.08]}
 shape lockbox_bar2_marker (bar2){ type=0 size=[.005 .045 .045 0] rel=<T t(.0275 0 -0.05)> }
-body bar2_handle { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] }
-joint lockbox_bar2_handle (bar2 bar2_handle) {type=10 A=<T d(90 0 0 1) t(.0 -.05 0.08) d(90 1 0 0)>  }
-
+shape bar2_handle (bar2) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 0 1) t(.0 -.05 0.08) d(90 1 0 0)> }
 
 body door2 { type=0 size=[.02 .2 .3 0] color=[.6 .2 .2] }
 joint lockbox_door2 (lockbox door2){ type=0 axis=[0 1 0] A=<T t(.0 -.265 -.335)> limit=[-.5 .5 0 0 0] B=<T t(0 .0 .15) > limits=[0 .75]}
 shape door2_marker (door2){ type=0 size=[.01 .05 .05 0] rel=<T t(.02 .06 .11)> }
-body door2_handle { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] }
-joint lockbox_door2_handle (door2 door2_handle) {type=10 A=<T d(90 0 1 0) d(90 0 0 1) t(-.05 .08 0.04)>  }
-
-
+shape door2_handle (door2){ type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 1 0) d(90 0 0 1) t(-.05 .08 0.04)> }
 
