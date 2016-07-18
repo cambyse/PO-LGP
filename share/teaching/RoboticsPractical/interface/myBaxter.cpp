@@ -28,7 +28,6 @@ struct MyBaxter_private{
   ACCESSname(FilterObjects, object_database)
 
   TaskControllerModule tcm;
-
 //  RelationalMachineModule rm;
 //  ActivitySpinnerModule aspin;
 
@@ -65,7 +64,7 @@ struct MyBaxter_private{
       nh = new ros::NodeHandle;
       pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
     }
-    tcm.useRos = false;
+    //tcm.useRos = false;
     threadOpenModules(true);
   }
 
@@ -96,6 +95,20 @@ CtrlTask* MyBaxter::task(const Graph& specs){
 #endif
   return t;
 }
+
+CtrlTask* MyBaxter::task(const char* name,
+                         TaskMap* map){
+
+  CtrlTask* t = new CtrlTask(name, map);
+  map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
+  activeTasks.append(t);
+  s->tcm.ctrlTasks.set() = activeTasks;
+#ifdef REPORT
+  t->reportState(cout);
+#endif
+  return t;
+}
+
 
 CtrlTask* MyBaxter::task(const char* name,
                          TaskMap* map,
@@ -289,6 +302,10 @@ const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
   return s->tcm.realWorld;
 }
 
+const ors::KinematicWorld& MyBaxter::getModelWorld(){
+  return s->tcm.modelWorld.get();
+}
+
 arr MyBaxter::getJointLimits(){
   return s->tcm.realWorld.getLimits();
 }
@@ -304,29 +321,33 @@ TaskControllerModule& MyBaxter::getTaskControllerModule(){
 }
 
 void MyBaxter::disablePosControl(){
-  s->spctb.enablePositionControlL = false;
+  s->spctb.enablePositionControlR = false;
 }
 
 void MyBaxter::enablePosControl(){
-  s->spctb.enablePositionControlL = true;
+  s->spctb.enablePositionControlR = true;
 }
 
 void MyBaxter::enableTotalTorqueMode(){
-  s->spctb.totalTorqueModeL = true;
+  s->spctb.totalTorqueModeR = true;
 }
 
 void MyBaxter::disableTotalTorqueMode(){
-  s->spctb.totalTorqueModeL = false;
+  s->spctb.totalTorqueModeR = false;
 }
 
 void MyBaxter::grip(){
+  grip(!isGripping);
+}
+
+void MyBaxter::grip(const bool toGrip, const bool sim){
   auto grip = MyBaxter::task(GRAPH(" map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
 
-  arr q = s->tcm.realWorld.q;
+  arr q = s->tcm.ctrl_q_ref.get(); //s->tcm.realWorld.q;
 
   ors::Joint *j = s->spctb.baxterModel.getJointByName("l_gripper_l_finger_joint");
 
-  isGripping = !isGripping;
+  isGripping = toGrip;
 
   isGripping ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
 
@@ -335,19 +356,20 @@ void MyBaxter::grip(){
   modifyTarget(grip, q);
 
   uint count = 0;
-  while( std::abs(50 * (s->tcm.realWorld.q(j->qIndex)) - q(j->qIndex)) > 0.1) {
+  arr pos;
+  do
+  {
     count++;
     if (count > 500)
       break;
     mlr::wait(0.01);
-  }
-  stop({grip});
-}
+    if (sim)
+      pos = s->tcm.modelWorld.get()().q;
+    else
+      pos = s->tcm.realWorld.q;
 
-void MyBaxter::grip(const bool toGrip)
-{
-  isGripping = !toGrip;
-  this->grip();
+  } while( std::abs(50 * pos(j->qIndex) - q(j->qIndex)) > 0.1);
+  stop({grip});
 }
 
 //RelationalMachineModule& MyBaxter::rm(){

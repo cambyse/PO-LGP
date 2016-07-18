@@ -6,19 +6,15 @@
 #include <Algo/hungarian.h>
 #include <RosCom/filterObject.h>
 
-struct Filter : Module {
+struct Filter : Module{
   Access_typed<FilterObjects> perceptual_inputs;
   Access_typed<FilterObjects> object_database;
 
-//    ACCESSname(FilterObjects, perceptual_inputs)
-//    ACCESSname(FilterObjects, object_database)
+  Filter():Module("Filter", -1){}
 
-
-  Filter();
-  virtual ~Filter() {}
-  virtual void open(){}
+  virtual void open();
   virtual void step();
-  virtual void close(){}
+  virtual void close();
 
 private:
   double relevance_decay_factor = 0.99;

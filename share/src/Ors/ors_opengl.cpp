@@ -455,16 +455,28 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
   arr x, x0;
   uint t, i;
   C.getJointState(x0);
+  arr lim = C.getLimits();
   C.gl().pressedkey=0;
+  const int steps = 200;
   for(i=x0.N; i--;) {
     x=x0;
-    for(t=0; t<20; t++) {
+    const double upper_lim = lim(i,1);
+    const double lower_lim = lim(i,0);
+    const double delta = upper_lim - lower_lim;
+    const double center = lower_lim + delta / 2;
+    const double offset = acos( 2 * (x0(i) - center) / delta );
+
+    for(t=0; t<steps; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       if(ino && ino->pollForModification()) return;
-      x(i)=x0(i) + .5*sin(MLR_2PI*t/20);
+      if (lim(i,0)==lim(i,1))
+        break;
+
+      x(i)= center + (delta*(0.5*cos(MLR_2PI*t/steps + offset)));
+      // Joint limits
       C.setJointState(x);
       C.gl().update(STRING("joint = " <<i), false, false, true);
-      mlr::wait(0.01);
+      mlr::wait(1/steps);
     }
   }
   C.setJointState(x0);

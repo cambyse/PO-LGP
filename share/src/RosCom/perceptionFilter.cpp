@@ -19,21 +19,12 @@
 #include <unordered_set>
 #include "perceptionFilter.h"
 
-Filter::Filter()
-    : Module("Filter", -1),
-        perceptual_inputs(this, "perceptual_inputs", true),
-        object_database(this, "object_database")
+Filter::Filter():Module("filter", -1),
+  perceptual_inputs(this, "perceptual_inputs", true),
+  object_database(this, "object_database", false)
 {}
 
-void Filter::step()
-{
-//  int rev = perceptual_inputs.writeAccess();
-
-//  if (rev == revision){
-//    perceptual_inputs.deAccess();
-//    return;
-//  }
-//  revision = rev;
+void Filter::step(){
 
   perceptual_inputs.writeAccess();
   object_database.writeAccess();
@@ -202,6 +193,7 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
       cleaned.append(new_objects(i));
     }
   }
+
   return cleaned;
 }
 

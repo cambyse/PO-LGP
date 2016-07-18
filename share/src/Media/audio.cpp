@@ -128,4 +128,6 @@ Audio::~Audio(){
 
 
 #else //PORTAUDIO
+Audio::Audio(SineSound& S){ MLR_MSG("This is a fake Audio interface"); }
+Audio::~Audio(){}
 #endif

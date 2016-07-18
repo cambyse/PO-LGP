@@ -23,6 +23,8 @@ struct MyBaxter{
                  TaskMap* map,
                  double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask* task(const char* name,
+                 TaskMap* map);
+  CtrlTask* task(const char* name,
                  DefaultTaskMapType type,
                  const char* iShapeName, const ors::Vector& ivec,
                  const char* jShapeName, const ors::Vector& jvec,
@@ -57,12 +59,13 @@ struct MyBaxter{
   void publishTorque(const arr& u, const char* prefix="right_");
 
   const ors::KinematicWorld& getKinematicWorld();
+  const ors::KinematicWorld& getModelWorld();
 
   arr getJointLimits();
   double getCollisionScalar();
 
   void grip();
-  void grip(const bool toGrip);
+  void grip(const bool grip, const bool sim = false);
 
   bool isGripping = false;
 
