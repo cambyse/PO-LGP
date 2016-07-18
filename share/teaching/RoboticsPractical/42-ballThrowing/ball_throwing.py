@@ -10,6 +10,7 @@ import numpy as np
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point, Pose
 from time import gmtime, strftime
+from matplotlib import pyplot as plt
 import random
 
 def dict2npa(u):
@@ -30,7 +31,7 @@ def npa2dict(u):
 def features(t, T=150.0):
     s = T * np.sin(t / T * np.pi)
     x,y,z,w = limb.endpoint_pose()["orientation"]
-    phi = np.array([t, s, x, z])
+    phi = np.array([t, s, x, 1])
     return phi
 
 def control(features, W):
@@ -159,21 +160,7 @@ def policy_search(T, W):
        
         er = expected_policy_reward(T, W + std_dev * noise)
         
-        '''
-        random_noise = np.random.randn(W.shape[1])
-        noise = np.array([]).reshape(0, W.shape[1])
-        zeros = np.zeros(W.shape[1])
-        for i in range(W.shape[0]):
-            if i == pos:
-                noise = np.vstack([noise, random_noise])
-            else:
-                noise = np.vstack([noise, zeros])
-        
-        # W[pos,:] += std_dev * np.random.randn(W.shape[1])
-
-        count[pos] += 1
-        er = expected_policy_reward(T, W)
-        '''
+        rewards.append(er)
 
         # If the reward is better than our current optimum, remember this W.
         if er > er_opt:
@@ -212,7 +199,6 @@ keys = [10, 11]
 def callback(data):
     # Just store the position of the marker.
     markers[data.id] = data.pose.position
-    #rospy.loginfo(rospy.get_caller_id() + 'msg: %s', data.points)
 
 ''' Returns squared distance of the two markers defined in keys.
     Returns -1 in case of insufficient data.'''
@@ -237,7 +223,8 @@ def send_signal(func, joints, duration, hz=100):
 
 
 if __name__ == "__main__":
-    marker1 = 0
+    # Data for the plot
+    rewards = []
 
     # Get joint startpos_1
     startpos = dict()
@@ -294,8 +281,9 @@ if __name__ == "__main__":
     filename = 'ball-throwing-data-' + strftime ("%Y-%m-%d_%H-%M-%S", gmtime())
     f = open(filename, 'w')
     f.write('# Format: weights, reward\n')
-    f.write('+ ')
+    f.write('# ')
     pos = 0
+     send_signal(limb_r.set_joint_positions, startpos_r, 2000)
     while not 11 in markers:
         print markers.keys()
         # Move right arm to start position
@@ -335,4 +323,12 @@ if __name__ == "__main__":
 
     # Don't forget to close the file
     f.close()
+
+    # And prepare the plot
+    plt.plot(range(len(rewards)), rewards, label='Rewards', linewidth=5)
+    plt.title('Rewards')
+    plt.xlabel('Execution')
+    plt.ylabel('Reward')
+    plt.legend()
+    plt.show()
     print('All done')

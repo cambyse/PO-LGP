@@ -5,7 +5,7 @@ import csv
 from sklearn import linear_model
 from sklearn.neighbors import NearestNeighbors 
 
-D = np.array([]).reshape(0, 13)
+D = np.array([]).reshape(0, 15)
 
 """Read data file and imports data as array"""
 for arg in sys.argv[1:]: 
