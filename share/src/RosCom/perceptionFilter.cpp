@@ -24,6 +24,8 @@ Filter::Filter():Module("filter", -1),
   object_database(this, "object_database", false)
 {}
 
+Filter::~Filter(){}
+
 void Filter::step(){
 
   perceptual_inputs.writeAccess();

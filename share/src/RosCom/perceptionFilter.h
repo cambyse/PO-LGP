@@ -10,11 +10,12 @@ struct Filter : Module{
   Access_typed<FilterObjects> perceptual_inputs;
   Access_typed<FilterObjects> object_database;
 
-  Filter():Module("Filter", -1){}
+  Filter();
+  ~Filter();
 
-  virtual void open();
+  virtual void open(){}
   virtual void step();
-  virtual void close();
+  virtual void close(){}
 
 private:
   double relevance_decay_factor = 0.99;
