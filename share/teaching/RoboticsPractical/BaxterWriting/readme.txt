@@ -20,4 +20,7 @@ should be used instead of
 - void writeLetterSim(ofstream& myfile, arr delta_y, arr nrSteps, arr force, CtrlTask &pos_eeL, arr q0);
 
 that simulates the writing using inverse kinematics.
+
+A video of Baxter writing using configurations simulated in position control can be found at:
+https://youtu.be/c_P74Go2uUA
 	
