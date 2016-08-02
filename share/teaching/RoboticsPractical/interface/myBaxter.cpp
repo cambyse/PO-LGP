@@ -11,14 +11,8 @@
 #include <RosCom/serviceRAP.h>
 #include <RosCom/baxter.h>
 
-#include <RosCom/subscribeAlvarMarkers.h>
-#include <RosCom/subscribeTabletop.h>
-#include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
-#include <RosCom/publishDatabase.h>
-
 #include <baxter_core_msgs/JointCommand.h>
+#include <RosCom/filterObject.h>
 
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
 
@@ -28,16 +22,9 @@ struct MyBaxter_private{
   ACCESSname(ors::KinematicWorld, modelWorld)
 
   TaskControllerModule tcm;
-//  RelationalMachineModule rm;
-//  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
-  SubscribeTabletop tabletop_subscriber;
-  SubscribeAlvar alvar_subscriber;
-  Collector data_collector;
-  Filter myFilter;
-  PublishDatabase myPublisher;
-
+//  SubscribeTabletop tabletop_subscriber;
   OrsViewer view;
   OrsPoseViewer ctrlView;
   SendPositionCommandsToBaxter spctb;
@@ -51,7 +38,6 @@ struct MyBaxter_private{
     : jointState(NULL, "jointState"),
       tcm("baxter"),
       rosInit("MyBaxter"),
-      data_collector(!mlr::getParameter<bool>("useRos", false)),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
       spctb(tcm.realWorld),
       sub("/robot/joint_states", jointState) {
@@ -232,26 +218,37 @@ double MyBaxter::setTestJointState(const arr &q){
 }
 
 double MyBaxter::updateLockbox(const ors::Transformation& tf){
-//  ors::Body* lb = s->tcm.realWorld.getBodyByName("lockbox");
-
-//  lb->X = tf;
-
-//  s->modelWorld.set()->calc_fwdPropagateFrames();
   s->tcm.realWorld.getBodyByName("lockbox")->X = tf;
+  for (auto shape : s->tcm.realWorld.getBodyByName("lockbox")->shapes)
+    shape->X = tf;
+
   s->tcm.realWorld.calc_fwdPropagateFrames();
+  s->tcm.realWorld.calc_fwdPropagateShapeFrames();
 
   s->modelWorld.set()->getBodyByName("lockbox")->X = tf;
+  for (auto shape : s->modelWorld.set()->getBodyByName("lockbox")->shapes)
+    shape->X = tf;
+
   s->modelWorld.set()->calc_fwdPropagateFrames();
+  s->modelWorld.set()->calc_fwdPropagateShapeFrames();
 
   s->tcm.modelWorld.set()->getBodyByName("lockbox")->X = tf;
+  for (auto shape : s->tcm.modelWorld.set()->getBodyByName("lockbox")->shapes)
+    shape->X = tf;
+
   s->tcm.modelWorld.set()->calc_fwdPropagateFrames();
+  s->tcm.modelWorld.set()->calc_fwdPropagateShapeFrames();
 
   //s->tcm.realWorld.calc_fwdPropagateFrames();
 
   for (auto kw : s->ctrlView.copies)
   {
     kw->getBodyByName("lockbox")->X = tf;
+    for (auto shape : kw->getBodyByName("lockbox")->shapes)
+      shape->X = tf;
+
     kw->calc_fwdPropagateFrames();
+    kw->calc_fwdPropagateShapeFrames();
   }
 //  s->ctrlView.copies(0)->calc_fwdPropagateShapeFrames();
  // s->tcm.realWorld.calc_fwdPropagateShapeFrames();
@@ -280,6 +277,14 @@ double MyBaxter::updateLockbox(const ors::Transformation& tf){
   return y.scalar();
 }
 
+
+void MyBaxter::setRealWorld(arr& q)
+{
+//  cout << "Before: " << s->tcm.realWorld.q << endl;
+  s->tcm.realWorld.setJointState(q);
+  s->tcm.ctrl_q_real.set() = q;
+
+}
 
 void MyBaxter::getEquationOfMotion(arr& M, arr& F){
   testWorld.equationOfMotion(M, F);

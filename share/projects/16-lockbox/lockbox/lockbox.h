@@ -9,21 +9,28 @@
 #include "../interface/myBaxter.h"
 #include <unordered_map>
 
+#include <RosCom/subscribeAlvarMarkers.h>
+#include <RosCom/subscribeTabletop.h>
+#include <RosCom/perceptionCollection.h>
+#include <RosCom/perceptionFilter.h>
+#include <RosCom/filterObject.h>
+#include <RosCom/publishDatabase.h>
+
 struct Lockbox:Module{
 
-  ACCESSname(FilterObjects, object_database)
+  Access_typed<FilterObjects> object_database;
 
-  Lockbox(MyBaxter* baxter) : Module("lockbox", -1){
-    threadOpenModules(true);
-    myBaxter = baxter;
-  }
-  ~Lockbox(){
-    threadCloseModules();
-  }
+  SubscribeAlvar alvar_subscriber;
+  Collector data_collector;
+  Filter myFilter;
+  PublishDatabase myPublisher;
 
-  void open();
-  void step();
-  void close();
+  Lockbox(MyBaxter* baxter);
+  ~Lockbox();
+
+  void open(){}
+  void step(){}
+  void close(){}
 
   // New methods
   void initializeJoints();
@@ -32,12 +39,17 @@ struct Lockbox:Module{
 
   void fixJoint(const uint joint, const bool fix);
 
+  void update();
+  bool updatedJointPose(const uint joint_num, arr& new_q);
+
   std::unordered_map<uint, mlr::String> joint_to_ors_joint;
   std::unordered_map<uint, mlr::String> joint_to_handle;
-
+  std::unordered_map<uint, mlr::String> joint_name;
 
   MyBaxter* myBaxter;
 
-  bool update = true;
-  bool simulate = false;
+//  bool update = true;
+  bool usingRos = false;
+
+  ors::KinematicWorld lockbox_world;
 };

@@ -47,6 +47,7 @@ struct MyBaxter{
   double updateLockbox(const ors::Transformation& tf);
   void getEquationOfMotion(arr& M, arr& F);
 
+  void setRealWorld(arr& q);
 
   //-- get position closest cluster
   ors::Vector closestCluster();
