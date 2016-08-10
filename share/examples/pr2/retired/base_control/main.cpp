@@ -1,4 +1,4 @@
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
@@ -97,7 +97,7 @@ int main(int argc, char** argv){
 
   MotionProblem MP(world);
   Task *task;
-  task = MP.addTask("transitions", new TransitionTaskMap(world));
+  task = MP.addTask("transitions", new TaskMap_Transition(world));
   task->map.order=2;
   task->setCostSpecs(0, MP.T, ARR(0.), 1e0);
   task = MP.addTask("position", new TaskMap_qItself(world,"worldTranslationRotation"));

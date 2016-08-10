@@ -125,7 +125,7 @@ void testDraw(){
   s.gl.watch();
 }
 
-void TestMove(){
+void TestDynamics(){
   RacerState s;
   for (uint t=0; t<400000; t++){
     s.gl.text.clear() <<t <<" ; " <<s.q(0) << " ; " <<s.q(1);
@@ -136,7 +136,7 @@ void TestMove(){
 
 int main(int argc,char **argv){
 //  testDraw();
-  TestMove();
+  TestDynamics();
 
   return 0;
 }

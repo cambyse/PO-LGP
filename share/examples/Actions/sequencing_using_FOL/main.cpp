@@ -9,18 +9,18 @@
 
 // ============================================================================
 struct MySystem {
-  ACCESS(bool, quitSignal)
-  ACCESS(RelationalMachine, RM)
-  ACCESS(mlr::String, effects)
-  ACCESS(mlr::String, state)
-  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESSname(bool, quitSignal)
+  ACCESSname(RelationalMachine, RM)
+  ACCESSname(mlr::String, effects)
+  ACCESSname(mlr::String, state)
+  ACCESSname(ors::KinematicWorld, modelWorld)
 
   TaskControllerModule *tcm;
 
   MySystem(){
-    tcm = addModule<TaskControllerModule>(NULL, /*Module::loopWithBeat,*/ .01);
-    addModule<ActivitySpinnerModule>(NULL, /*Module::loopWithBeat,*/ .01);
-    addModule<RelationalMachineModule>(NULL /*,Module::listenFirst*/ );
+    tcm = addModule<TaskControllerModule>(NULL, .01);
+    addModule<ActivitySpinnerModule>(NULL, .01);
+    addModule<RelationalMachineModule>(NULL );
 
     new GamepadInterface;
     if(mlr::getParameter<bool>("useRos",false)){

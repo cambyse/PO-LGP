@@ -1,0 +1,58 @@
+
+Include = '../../../data/pr2_model/pr2_clean.ors'
+Include = '../../../data/pr2_model/pr2_modifications.ors'
+
+
+shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+shape endeffR(r_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
+
+shape endeffC1(l_gripper_r_finger_tip_link){rel=<T t(0.0145 .015 -.02)> type=5 color=[.5 0 0] size=[.02 0 0 0]}
+shape endeffC2(l_gripper_l_finger_tip_link){rel=<T t(0.0145 -.015 .02) d(180 0 1 0)> type=5 color=[0 .5 0] size=[.02 0 0 0]}
+
+## BASE
+Merge worldTranslationRotation { type=10 }
+
+## TORS0
+Merge torso_lift_joint { type=10 }
+
+## HEAD
+Merge head_pan_joint { type=10 }
+Merge head_tilt_joint { type=10 }
+Merge laser_tilt_mount_joint { type=10 }
+
+## RIGHT
+Merge r_shoulder_pan_joint { type=10 }
+Merge r_shoulder_lift_joint { type=10 }
+Merge r_upper_arm_roll_joint { type=10 }
+Merge r_elbow_flex_joint { type=10 }
+Merge r_forearm_roll_joint { type=10 }
+Merge r_wrist_flex_joint { type=10 }
+Merge r_wrist_roll_joint { type=10 }
+
+## LEFT
+#Merge l_shoulder_pan_joint { type=10 }
+#Merge l_shoulder_lift_joint { type=10 }
+#Merge l_upper_arm_roll_joint { type=10 }
+#Merge l_elbow_flex_joint { type=10 }
+#Merge l_forearm_roll_joint { type=10 }
+#Merge l_wrist_flex_joint { type=10 }
+#Merge l_wrist_roll_joint { type=10 }
+
+## GRIPPERS
+Merge r_gripper_joint { type=10 }
+Merge r_gripper_l_finger_joint { type=10 }
+Merge r_gripper_r_finger_joint { type=10 }
+Merge r_gripper_l_finger_tip_joint { type=10 }
+Merge r_gripper_r_finger_tip_joint { type=10 }
+Merge l_gripper_joint { type=10 }
+Merge l_gripper_l_finger_joint { type=10 }
+Merge l_gripper_r_finger_joint { type=10 }
+Merge l_gripper_l_finger_tip_joint { type=10 }
+Merge l_gripper_r_finger_tip_joint { type=10 }
+
+
+## BUTTON
+body stand { X=<T t(.6 0.2 .3)>  type=4 size=[0. 0. 0.6 0.085] color=[0 0 0] }
+body button {  type=4 size=[0 0 0.2 0.07] color=[1. 0. 0.]  }
+joint stand_button(stand button) { A=<T t(0 0. 0.) > B=<T t(0 0 .3)> type=5 }
+shape cp1(button) {type= 5 rel=<T t(0 0 0.1)> color=[0 0 1] size=[.1 0 0 0]}

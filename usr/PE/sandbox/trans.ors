@@ -1,0 +1,11 @@
+
+body base { X=<T t(0 0 0)>  type=0 size=[0.1 0.1 0.2 1.0] fixed }
+
+body trans1 { X=<T t(0.5 1 0.5) d(-90 0 1 0)>  type=0 size=[0.1 0.1 0.2 1.0] fixed }
+
+body trans2 { type=0 size=[0.1 0.1 0.2 1.0] fixed }
+body marker {type=0 size=[0.1 0.1 0.2 1.0] fixed }
+body marker2 {type=0 size=[0.1 0.1 0.2 1.0] fixed }
+
+joint tt(trans1 trans2) {A=<T t(0 0 0) d(90 0 1 0)> type=10}
+joint tm(trans2 marker) {B=<T t(1 -.5 0.2) d(180 1 0 0)> type=10}

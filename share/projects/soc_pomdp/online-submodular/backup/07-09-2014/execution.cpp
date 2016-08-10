@@ -34,12 +34,12 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   //-- setup the motion problem
 
 
-  //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  //Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeff", NoVector, "target", NoVector));
   //pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
   //MODIFY the target location relatively to the height +0.12 = 0.1 + 0.02 (0.02 is table width).
   world.getBodyByName("target")->X.pos.z = height + 0.12;
 
-  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeff", NoVector, "target", NoVector));
   pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
 
 
@@ -115,7 +115,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-  CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
+  CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task

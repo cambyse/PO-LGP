@@ -128,12 +128,13 @@ void ors::Body::parseAts() {
   if(ats["kinematic"])   type=kinematicBT;
   if(ats.get(d,"dyntype")) type=(BodyType)d;
 
-  // SHAPE handling
+  // SHAPE handling //TODO: remove this code!
   Node* item;
   // a mesh which consists of multiple convex sub meshes creates multiple
   // shapes that belong to the same body
   item = ats.getNode("meshes");
   if(item){
+    HALT("this is deprecated");
     mlr::FileToken *file = item->getValue<mlr::FileToken>();
     CHECK(file,"somethings wrong");
 
@@ -147,8 +148,8 @@ void ors::Body::parseAts() {
         Shape *s = new Shape(world, *this);
         s->mesh.parsing_pos_start = parsing_pos(0);
         s->mesh.parsing_pos_end = parsing_pos(1);
-        s->mesh.readObjFile(file->getIs());
-        s->mesh.makeConvexHull();
+	//TODO: use Shape::parseAts instead of doing the same things here again!!
+        s->mesh.readObjFile(file->getIs()); 
         s->type=meshST;
       }
     }
@@ -246,7 +247,7 @@ void ors::Shape::parseAts() {
   if(ats.get(x, "color"))         { CHECK(x.N>=3,"color=[] needs at least 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.get(d, "type"))       { type=(ShapeType)(int)d;}
   if(ats["contact"])           { cont=true; }
-  if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p); }
+  if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p, fil.name); }
   if(ats.get(d, "meshscale"))  { mesh.scale(d); }
 
   //create mesh for basic shapes
@@ -266,7 +267,10 @@ void ors::Shape::parseAts() {
       break;
     case ors::cappedCylinderST:
       CHECK(size[3]>1e-10,"");
-      mesh.setCappedCylinder(size[3], size[2]);
+//      mesh.setCappedCylinder(size[3], size[2]);
+      sscCore.setBox();
+      sscCore.scale(0., 0., size[2]);
+      mesh.setSSCvx(sscCore, size[3]);
       break;
     case ors::SSBoxST:
       HALT("deprecated?");
@@ -277,6 +281,9 @@ void ors::Shape::parseAts() {
     case ors::meshST:
     case ors::pointCloudST:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
+      sscCore = mesh;
+      sscCore.makeConvexHull();
+      size[3]=0.;
       break;
     case ors::ssCvxST:
       CHECK(size[3]>1e-10,"");
@@ -301,6 +308,8 @@ void ors::Shape::parseAts() {
       ats.append<bool>({"rel_includes_mesh_center"}, {}, true);
     }
     mesh_radius = mesh.getRadius();
+    mesh.getBox(size[0], size[1], size[2]);
+//    size[3]=0.;
   }
 
   //add inertia to the body
@@ -386,7 +395,10 @@ void makeSSBoxApproximations(ShapeL& shapes){
 }
 
 void computeMeshNormals(ShapeL& shapes){
-  for(ors::Shape *s: shapes) if(!s->mesh.Vn.N) s->mesh.computeNormals();
+  for(ors::Shape *s: shapes){
+    if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) s->mesh.computeNormals();
+    if(s->sscCore.V.d0!=s->sscCore.Vn.d0 || s->sscCore.T.d0!=s->sscCore.Tn.d0) s->sscCore.computeNormals();
+  }
 }
 
 
@@ -398,7 +410,7 @@ void computeMeshNormals(ShapeL& shapes){
 bool always_unlocked(void*) { return false; }
 
 ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
-  : world(G), index(0), qIndex(UINT_MAX), from(f), to(t), mimic(NULL), agent(0), constrainToZeroVel(false), H(1.) {
+  : world(G), index(0), qIndex(UINT_MAX), from(f), to(t), mimic(NULL), agent(0), constrainToZeroVel(false), q0(0.), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
   index=world.joints.N;
@@ -423,7 +435,7 @@ ors::Joint::~Joint() {
 }
 
 void ors::Joint::reset() { 
-  listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); H=1.; type=JT_none; 
+  listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); q0=0.; H=1.; type=JT_none;
   locker=NULL;
 }
 
@@ -441,10 +453,11 @@ void ors::Joint::parseAts() {
   if(ats.get(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
   if(type==JT_rigid && !Q.isZero()){ A.appendTransformation(Q); Q.setZero(); }
   if(ats.get(d, "q")){
+    q0=d;
     if(type==JT_hingeX) Q.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_rigid)  A.addRelativeRotationRad(d, 1., 0., 0.);
     if(type==JT_transX) Q.addRelativeTranslation(d, 0., 0.);
-  }
+  }else q0=0.;
   if(ats.get(d, "agent")) agent=(uint)d;
   if(ats["fixed"]) agent=UINT_MAX;
   //axis
@@ -462,7 +475,7 @@ void ors::Joint::parseAts() {
   //limit
   arr ctrl_limits;
   ats.get(limits, "limits");
-  if(limits.N && type!=JT_rigid){
+  if(limits.N && type!=JT_rigid && !mimic){
     CHECK_EQ(limits.N,2*qDim(), "parsed limits have wrong dimension");
   }
   ats.get(ctrl_limits, "ctrl_limits");
@@ -476,6 +489,7 @@ void ors::Joint::parseAts() {
 }
 
 uint ors::Joint::qDim() {
+  if(mimic) return 0;
   if(type>=JT_hingeX && type<=JT_transZ) return 1;
   if(type==JT_transXY) return 2;
   if(type==JT_transXYPhi) return 3;
@@ -544,7 +558,7 @@ ors::KinematicWorld::KinematicWorld():s(NULL),q_agent(0),isLinkTree(false) {
 ors::KinematicWorld::KinematicWorld(const ors::KinematicWorld& other):s(NULL),q_agent(0),isLinkTree(false)  {
   bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true;
   s=new sKinematicWorld;
-  *this = other;
+  copy( other );
 }
 
 ors::KinematicWorld::KinematicWorld(const char* filename):s(NULL),q_agent(0),isLinkTree(false)  {
@@ -1226,7 +1240,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
           uint offset = (j->type==JT_free)?3:0;
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
           Jrot = crossProduct(Jrot, conv_vec2arr(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
-          Jrot /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q.refRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
         }
       }
@@ -1402,7 +1416,7 @@ void ors::KinematicWorld::axesMatrix(arr& J, Body *b) const {
         if(j->type==JT_quatBall || j->type==JT_free) {
           uint offset = (j->type==JT_free)?3:0;
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
-          Jrot /= sqrt(sumOfSqr(q.subRef(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q.refRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
         }
         //all other joints: J=0 !!
@@ -1612,6 +1626,14 @@ ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const cha
   Body *t = getBodyByName(to);
   if(!f || !t) return NULL;
   return graphGetEdge<Body, Joint>(f, t);
+}
+
+/// find joint connecting two bodies with specific names
+ors::Joint* ors::KinematicWorld::getJointByBodyIndices(uint ifrom, uint ito) const {
+  CHECK(ifrom<bodies.N && ito<bodies.N,"");
+  Body *f = bodies(ifrom);
+  Body *t = bodies(ito);
+  return getJointByBodies(f, t);
 }
 
 ShapeL ors::KinematicWorld::getShapesByAgent(const uint agent) const {
@@ -1834,9 +1856,9 @@ void ors::KinematicWorld::init(const Graph& G) {
   uint nCoupledJoints=0;
   NodeL js = G.getNodes("joint");
   for(Node *n: js) {
-    CHECK_EQ(n->keys(0),"joint","");
-    CHECK_EQ(n->parents.N,2,"joints must have two parents");
-    CHECK(n->isGraph(),"joints must have value Graph");
+    CHECK_EQ(n->keys(0),"joint","joints must be declared as joint: specs=" <<*n <<' ' <<n->index);
+    CHECK_EQ(n->parents.N,2,"joints must have two parents: specs=" <<*n <<' ' <<n->index);
+    CHECK(n->isGraph(),"joints must have value Graph: specs=" <<*n <<' ' <<n->index);
     
     Body *from=listFindByName(bodies, n->parents(0)->keys(1));
     Body *to=listFindByName(bodies, n->parents(1)->keys(1));
@@ -2284,7 +2306,7 @@ ors::Proxy* ors::KinematicWorld::getContact(uint a, uint b) const {
 }
 
 arr ors::KinematicWorld::getHmetric() const{
-  arr H(getJointStateDimension());
+  arr H = zeros(getJointStateDimension());
   for(ors::Joint *j:joints){
     double h=j->H;
     CHECK(h>0.,"Hmetric should be larger than 0");
@@ -2436,31 +2458,30 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
     delete j;
     return;
   }
+  G.isLinkTree=false;
   if(symbol==addJointZero){
     Joint *j = new Joint(G, from->body, to->body);
-    j->type=jointType;
     j->constrainToZeroVel=true;
+    j->type=jointType;
     j->A = from->rel * jA;
     j->B = jB * (-to->rel);
-    G.isLinkTree=false;
     G.calc_fwdPropagateFrames();
     return;
   }
   if(symbol==addJointAtFrom){
     Joint *j = new Joint(G, from->body, to->body);
-    j->type=jointType;
     j->constrainToZeroVel=true;
+    j->type=jointType;
     j->B.setDifference(from->body->X, to->body->X);
     j->A.setZero();
-    G.isLinkTree=false;
     return;
   }
   if(symbol==addJointAtTo){
     Joint *j = new Joint(G, from->body, to->body);
+    j->constrainToZeroVel=true;
     j->type=jointType;
     j->A.setDifference(from->body->X, to->body->X);
     j->B.setZero();
-    G.isLinkTree=false;
     return;
   }
   HALT("shouldn't be here!");
@@ -2486,7 +2507,7 @@ void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious,
   }
   if(symbol==addJointAtTo){
     Joint *j = G.getJointByBodies(G.shapes(fromId)->body, G.shapes(toId)->body);
-    if(!j || j->type!=jointType) HALT(""); //return;
+    if(!j || j->type!=jointType) return; //HALT(""); //return;
     if(copyFromBodies){
       j->A.setDifference(Gprevious.shapes(fromId)->body->X, Gprevious.shapes(toId)->body->X);
     }else{
@@ -2503,11 +2524,21 @@ void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious,
   }
 }
 
+mlr::String ors::KinematicSwitch::shortTag(const ors::KinematicWorld* G) const{
+  mlr::String str;
+  str <<"  timeOfApplication=" <<timeOfApplication;
+  str <<"  symbol=" <<symbol;
+  str <<"  jointType=" <<jointType;
+  str <<"  fromId=" <<(G?G->shapes(fromId)->name:STRING(fromId));
+  str <<"  toId=" <<(G?G->shapes(toId)->name:STRING(toId)) <<endl;
+  return str;
+}
+
 void ors::KinematicSwitch::write(std::ostream& os) const{
-  os <<"  symbol=" <<symbol <<endl;
-  os <<"  jointType=" <<jointType <<endl;
-  os <<"  timeOfApplication=" <<timeOfApplication <<endl;
-  os <<"  fromId=" <<fromId <<endl;
+  os <<"  timeOfApplication=" <<timeOfApplication;
+  os <<"  symbol=" <<symbol;
+  os <<"  jointType=" <<jointType;
+  os <<"  fromId=" <<fromId;
   os <<"  toId=" <<toId <<endl;
 }
 
@@ -2524,7 +2555,18 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
 
   if(tt!="MakeJoint") return NULL;
+  ors::KinematicSwitch* sw = newSwitch(type, ref1, ref2, world, Tinterval, Tzero);
 
+  if(specs->isGraph()){
+    const Graph& params = specs->graph();
+    sw->timeOfApplication = Tzero + params.get<double>("time",1.)*Tinterval + 1;
+    params.get(sw->jA, "from");
+    params.get(sw->jB, "to");
+  }
+  return sw;
+}
+
+ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero, const ors::Transformation& jFrom, const ors::Transformation& jTo){
   //-- create switch
   ors::KinematicSwitch *sw= new ors::KinematicSwitch();
   if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
@@ -2535,12 +2577,14 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   else if(type=="transXYPhiAtFrom"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="transXYPhiZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="freeAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
+  else if(type=="freeZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
-  sw->fromId = world.getShapeByName(ref1)->index;
+  ors::Shape *fromShape = world.getShapeByName(ref1);
+  sw->fromId = fromShape->index;
   if(!ref2){
     CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
-    ors::Body *b = world.shapes(sw->fromId)->body;
+    ors::Body *b = fromShape->body;
     if(b->inLinks.N==1){
 //      CHECK_EQ(b->outLinks.N, 0, "");
       sw->toId = sw->fromId;
@@ -2557,12 +2601,8 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
     sw->toId = world.getShapeByName(ref2)->index;
   }
   sw->timeOfApplication = Tzero + Tinterval + 1;
-  if(specs->isGraph()){
-    const Graph& params = specs->graph();
-    sw->timeOfApplication = Tzero + params.get<double>("time",1.)*Tinterval + 1;
-    params.get(sw->jA, "from");
-    params.get(sw->jB, "to");
-  }
+  if(&jFrom) sw->jA = jFrom;
+  if(&jTo) sw->jB = jTo;
   return sw;
 }
 
@@ -2633,7 +2673,7 @@ void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicW
   if (qfrom.d1==0) qto.reshape(qto.N);
 }
 
-
+#if 0 //nonsensical
 void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
   //TODO: for saveness reasons, the velocities are zeroed.
   arr qDot;
@@ -2787,6 +2827,7 @@ void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const 
     }
   }
 }
+#endif
 
 //===========================================================================
 //-- template instantiations

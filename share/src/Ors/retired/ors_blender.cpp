@@ -134,7 +134,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   for(i=0; i<frames.d0; i++) {
     n=new ors::Body(bl);
     s=new ors::Shape(bl, *n); //always create a shape for a body...
-    mlr::skip(is);
+    //mlr::skip(is);
     n->name=names(i);
     f.pos.set(&frames(i, 3, 0)); f.pos=ROT*f.pos;
     f.rot.setMatrix(frames[i].sub(0, 2, 0, 2).p);
@@ -161,6 +161,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     n=bl.bodies(graph(i, 1));
     //e=new_edge(p, n, bl.bodies, bl.joints);
     e=new ors::Joint(bl, p, n);
+    e->type = ors::JT_hingeX;
     f.pos.set(&frames(graph(i, 1), 3, 0));  f.pos=ROT*f.pos;
     f.rot.setMatrix(frames[graph(i, 1)].sub(0, 2, 0, 2).p);
     f.rot.invert();
@@ -169,7 +170,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     e->A.setDifference(p->X, f);
     e->B.setDifference(f, n->X); //p=(h-t)/2;
   }
-  NIY//graphMakeLists(bl.bodies, bl.joints);
+  //graphMakeLists(bl.bodies, bl.joints);
   /* GROUPS: retired
   mesh.GF.resize(bl.bodies.N);
   for(i=0; i<bl.bodies.N; i++) {

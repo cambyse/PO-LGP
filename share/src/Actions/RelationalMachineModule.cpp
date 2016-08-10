@@ -20,6 +20,10 @@ struct RM_EditCallback:GraphEditCallback{
     RMM.A.deAccess();
     RMM.threadStep();
   }
+  virtual void cb_edit(Node *it){
+    LOG(3) <<"state cb -- edit fact: " <<*it;
+    RMM.threadStep();
+  }
 };
 
 RelationalMachineModule::RelationalMachineModule()
