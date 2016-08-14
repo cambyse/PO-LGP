@@ -6,97 +6,196 @@
 // =================================================================================================
 
 
-
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-
-  ACCESSname(std::vector<geometry_msgs::TransformStamped>, opti_markers)
-  ACCESSname(std::vector<geometry_msgs::TransformStamped>, opti_bodies)
+  ACCESSname(geometry_msgs::TransformStamped, opti_drone)
+  ACCESSname(geometry_msgs::TransformStamped, opti_body)
 
   {
     MyBaxter baxter;
-    while(1);
+    mlr::wait(2.);
 
 
+    arr my_q(22);
+    my_q = ARR(0, 0, 0, 0, 0, -0.0122718, 1.02777, -0.0571408, 0.0191748);
+    my_q.append(ARR(-1.01818, -0.0180243, -1.11405, -0.0483204, 1.95774, 0.0414175, 0.671884, 0.0368155, 1.0362));
+    my_q.append(ARR(-0.0145728, -0.495092, 0, 0.02083)); //apparently I can't initialize a vector with more than 9 elements
 
-//    mlr::wait(2.);
 
-//    auto home = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
+    auto home = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
 //    baxter.modifyTarget(home, baxter.q0());
 //    baxter.waitConv({home});
-//    baxter.stop({home});
+//    mlr::wait(2.);
 
-//    cout << "Getting current pos. " << endl;
-//    CtrlTask* currentPositionTask = baxter.task(
-//                        "rel",
-//                        new DefaultTaskMap(posTMT, baxter.getKinematicWorld(), "endeffL", NoVector, "base_footprint"), //map
-//                        1., 1, 1., 1.);
-//    currentPositionTask->map.phi(currentPositionTask->y, NoArr, baxter.getKinematicWorld()); //get the current value
-
-//    arr pos = currentPositionTask->y;
+    baxter.modifyTarget(home, my_q);
+    baxter.waitConv({home});
+    baxter.stop({home});
 
 
+    // create shapes
+    cout<<"create shapes"<<endl;
+    char hand_body[20]="optitrackbody_0";
+    char forearm_body[20]="optitrackbody_1";
+    char elbow_body[20]="optitrackbody_2";
+    //char object[20]="optitrackmarker_2";
 
-//    std::vector<geometry_msgs::TransformStamped> msgs;
-//    geometry_msgs::TransformStamped msg;
-//    geometry_msgs::Transform trans;
+    ors::Body* hand = baxter.getModelWorld().getBodyByName(hand_body);
+    ors::Body* forearm = baxter.getModelWorld().getBodyByName(forearm_body);
+    ors::Body* elbow = baxter.getModelWorld().getBodyByName(elbow_body);
 
-//    while(1)
-//    {
-//      //msgs = opti_bodies.get();
-//        msg = baxter.getMarker();
+    ors::Transformation hand_tf = hand->X;
+    ors::Transformation forearm_tf = forearm->X;
+    ors::Transformation elbow_tf = elbow->X;
 
-//        if(strncmp(msg.child_frame_id.c_str(),"optitrackmarker",15)==0)
-//          trans = msg.transform;
-
-//      if (trans.translation.x != 0)
-//        break;
-//    }
-
-//    cout<<"test: "<<msg.child_frame_id.c_str()<<endl;
-//    cout<<"size: "<<msg.child_frame_id<<endl;
-//    ors::Transformation origin = conv_transform2transformation(trans);
+    mlr::wait(2.);
 
 
+    ors::Transformation hand_body_origin = hand_tf;
+    ors::Transformation forearm_body_origin = forearm_tf;
+    ors::Transformation elbow_body_origin = elbow_tf;
 
 
-//    while(1)
-//    {
-//        msg = baxter.getMarker();
-//        if(strncmp(msg.child_frame_id.c_str(),"optitrackmarker",15)==0)
-//        trans = msg.transform;
+    ors::Shape* endeffr = baxter.getModelWorld().getShapeByName("endeffR");
+    ors::Transformation endeffR_origin= endeffr->X;
+
+    ors::Shape* wristr = baxter.getModelWorld().getShapeByName("wristR");
+    ors::Transformation forearmR_origin= wristr->X;
+
+    ors::Shape* elbowr = baxter.getModelWorld().getShapeByName("elbowR");
+    ors::Transformation elbowR_origin= elbowr->X;
 
 
-//      ors::Transformation new_tf = conv_transform2transformation(trans);
-//      new_tf.appendInvTransformation(origin);
-//      double scale = 1;
-//      arr new_target = pos + ARR(new_tf.pos.x / scale, new_tf.pos.y / scale, new_tf.pos.z / scale);
-//      cout << new_target << endl;
-//      baxter.modifyTarget(currentPositionTask, new_target);
+    mlr::wait(1.);
+
+        cout << "Getting current pos. " << endl;
+        CtrlTask* currentHandPositionTask = baxter.task(
+                            "rel",
+                            new DefaultTaskMap(posTMT, baxter.getModelWorld(), "endeffR", NoVector, "base_footprint"), //map
+                            1., 1, 1., 1.);
+        currentHandPositionTask->map.phi(currentHandPositionTask->y, NoArr, baxter.getModelWorld()); //get the current value
+
+        arr pos = currentHandPositionTask->y;
+        baxter.modifyTarget(currentHandPositionTask, pos);
 
 
-////      ors::Vector xVec = new_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
-////      ors::Vector yVec = new_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
-////      ors::Vector zVec = new_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+    while(1)
+    {
+
+      double scale = 1;
+
+//  //---------------------------------------ENDEFF
+
+      hand = baxter.getModelWorld().getBodyByName(hand_body);
+      hand_tf = hand->X;
+
+      ors::Transformation new_hand_tf = hand_tf;
+      new_hand_tf.appendInvTransformation(hand_body_origin); // new_hand_tf = new_hand_tf * hand_body_origin^-1
+
+      //========= new_hand_tf should be back in base frame
+      arr new_hand_target = pos + ARR(new_hand_tf.pos.x / scale, new_hand_tf.pos.y / scale, new_hand_tf.pos.z / scale);
+      baxter.modifyTarget(currentHandPositionTask, new_hand_target);
+      //baxter.modifyTarget(currentHandPositionTask, hand_pos);
+
+      new_hand_tf.appendTransformation(endeffR_origin);
+
+//      ors::Quaternion orig_rot = hand_origin.rot;
+//      orig_rot.invert();
+//      new_hand_tf = hand_tf;
+//      new_hand_tf.addRelativeRotation(orig_rot);
+//      new_hand_tf.addRelativeRotation(endeffR_origin.rot);
+
+      ors::Vector xVec_endeff = new_hand_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
+      ors::Vector yVec_endeff = new_hand_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
+      ors::Vector zVec_endeff = new_hand_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+
+      CtrlTask* alignX_endeff = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffR ref2=base_footprint vec1=[1 0 0] vec2=["
+                                             << xVec_endeff.x << ' ' << xVec_endeff.y << ' ' << xVec_endeff.z
+                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+      CtrlTask* alignY_endeff = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffR ref2=base_footprint vec1=[0 1 0] vec2=["
+                                             << yVec_endeff.x << ' ' << yVec_endeff.y << ' ' << yVec_endeff.z
+                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+      CtrlTask* alignZ_endeff = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffR ref2=base_footprint vec1=[0 0 1] vec2=["
+                                             << zVec_endeff.x << ' ' << zVec_endeff.y << ' ' << zVec_endeff.z
+                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
 
 
-////      CtrlTask* alignX = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=["
-////                                             << xVec.x << ' ' << xVec.y << ' ' << xVec.z
-////                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[100]")));
+      mlr::wait(0.05);
 
-////      CtrlTask* alignY = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=["
-////                                             << yVec.x << ' ' << yVec.y << ' ' << yVec.z
-////                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[100]")));
+      //baxter.stop({alignX_endeff, alignY_endeff, alignZ_endeff});
 
-////      CtrlTask* alignZ = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=["
-////                                             << zVec.x << ' ' << zVec.y << ' ' << zVec.z
-////                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[100]")));
+//-------------------------------------------------FOREARM
 
-//      //opti_bodies.waitForNextRevision();
-//       baxter.markersWaitForNextRevision();
-//      //baxter.stop({alignX, alignY, alignZ});
-//    }
+      forearm = baxter.getModelWorld().getBodyByName(forearm_body);
+      forearm_tf = forearm->X;
+
+      ors::Transformation new_forearm_tf = forearm_tf;
+      new_forearm_tf.appendInvTransformation(forearm_body_origin);
+      new_forearm_tf.appendTransformation(forearmR_origin);
+
+      ors::Vector xVec_forearm = new_forearm_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
+//      ors::Vector yVec_forearm = new_forearm_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
+//      ors::Vector zVec_forearm = new_forearm_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+
+      CtrlTask* alignX_forearm = baxter.task(GRAPH(STRING("map=vecAlign ref1=wristR ref2=base_footprint vec1=[1 0 0] vec2=["
+                                           << xVec_forearm.x << ' ' << xVec_forearm.y << ' ' << xVec_forearm.z
+                                           << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+//      CtrlTask* alignY_forearm = baxter.task(GRAPH(STRING("map=vecAlign ref1=wristR ref2=base_footprint vec1=[0 1 0] vec2=["
+//                                           << yVec_forearm.x << ' ' << yVec_forearm.y << ' ' << yVec_forearm.z
+//                                           << "] target=[1] PD=[1., 1., .8, 1.] prec=[300]")));
+
+//      CtrlTask* alignZ_forearm = baxter.task(GRAPH(STRING("map=vecAlign ref1=wristR ref2=base_footprint vec1=[0 0 1] vec2=["
+//                                           << zVec_forearm.x << ' ' << zVec_forearm.y << ' ' << zVec_forearm.z
+//                                           << "] target=[1] PD=[1., 1., .8, 1.] prec=[300]")));
+
+      mlr::wait(0.05);
+
+//      baxter.stop({alignX_endeff, alignY_endeff, alignZ_endeff});
+
+//      baxter.stop({alignX_forearm, alignY_forearm, alignZ_forearm});
+//      baxter.stop({alignX_forearm});
+
+
+      //---------------------------ELBOW
+
+      elbow = baxter.getModelWorld().getBodyByName(elbow_body);
+      elbow_tf = elbow->X;
+
+      ors::Transformation new_elbow_tf = elbow_tf;
+      new_elbow_tf.appendInvTransformation(elbow_body_origin);
+      new_elbow_tf.appendTransformation(elbowR_origin);
+
+//      ors::Vector xVec_elbow = new_elbow_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
+//      ors::Vector yVec_elbow = new_elbow_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
+      ors::Vector zVec_elbow = new_elbow_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+
+
+
+//      CtrlTask* alignX_elbow = baxter.task(GRAPH(STRING("map=vecAlign ref1=elbowR ref2=base_footprint vec1=[1 0 0] vec2=["
+//                                             << xVec_elbow.x << ' ' << xVec_elbow.y << ' ' << xVec_elbow.z
+//                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+//      CtrlTask* alignY_elbow = baxter.task(GRAPH(STRING("map=vecAlign ref1=elbowR ref2=base_footprint vec1=[0 1 0] vec2=["
+//                                             << yVec_elbow.x << ' ' << yVec_elbow.y << ' ' << yVec_elbow.z
+//                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[300]")));
+
+      CtrlTask* alignZ_elbow = baxter.task(GRAPH(STRING("map=vecAlign ref1=elbowR ref2=base_footprint vec1=[0 0 1] vec2=["
+                                             << zVec_elbow.x << ' ' << zVec_elbow.y << ' ' << zVec_elbow.z
+                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[1000]")));
+
+      mlr::wait(0.05);
+
+      baxter.stop({alignX_endeff, alignY_endeff, alignZ_endeff});
+
+      //baxter.stop({alignX_forearm, alignY_forearm, alignZ_forearm});
+      baxter.stop({alignX_forearm});
+
+      //baxter.stop({alignX_elbow, alignY_elbow, alignZ_elbow});
+      baxter.stop({alignZ_elbow});
+    }
   }
 
    moduleShutdown().waitForValueGreaterThan(0);
@@ -106,109 +205,7 @@ int main(int argc, char** argv){
 }
 
 
+// q =   0 0 0 0 0 -0.0122718 1.02777 -0.0571408 0.0191748 -1.01818 -0.0180243 -1.11405 -0.0483204 1.95774 0.0414175 0.671884 0.0368155 1.0362 -0.0145728 -0.495092 0 0.02083
 
 
-//int main(int argc, char** argv){
-//  mlr::initCmdLine(argc, argv);
-
-//  ACCESSname(geometry_msgs::TransformStamped, opti_drone)
-//  ACCESSname(geometry_msgs::TransformStamped, opti_body)
-
-//  {
-//    MyBaxter baxter;
-//    mlr::wait(2.);
-
-//    auto home = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
-//    baxter.modifyTarget(home, baxter.q0());
-//    baxter.waitConv({home});
-//    baxter.stop({home});
-
-//    cout << "Getting current pos. " << endl;
-//    CtrlTask* currentPositionTask = baxter.task(
-//                        "rel",
-//                        new DefaultTaskMap(posTMT, baxter.getKinematicWorld(), "endeffL", NoVector, "base_footprint"), //map
-//                        1., 1, 1., 1.);
-//    currentPositionTask->map.phi(currentPositionTask->y, NoArr, baxter.getKinematicWorld()); //get the current value
-
-//    arr pos = currentPositionTask->y;
-
-//    CtrlTask* currentElbow = baxter.task(
-//                        "rel2",
-//                        new DefaultTaskMap(posTMT, baxter.getKinematicWorld(), "elbowL", NoVector, "base_footprint"), //map
-//                        1., 1, 1., 1.);
-//    currentElbow->map.phi(currentElbow->y, NoArr, baxter.getKinematicWorld()); //get the current value
-
-//    arr pos2 = currentElbow->y;
-
-//    geometry_msgs::TransformStamped msg;
-//    geometry_msgs::Transform trans;
-
-//    while(1)
-//    {
-//      msg = opti_drone.get();
-//      trans = msg.transform;
-//      if (trans.translation.x != 0)
-//        break;
-//    }
-//    ors::Transformation origin = conv_transform2transformation(trans);
-
-//    while(1)
-//    {
-//      msg = opti_body.get();
-//      trans = msg.transform;
-//      if (trans.translation.x != 0)
-//        break;
-//    }
-//    ors::Transformation originE = conv_transform2transformation(trans);
-//    baxter.stop({currentElbow});
-
-//    while(1)
-//    {
-//      msg = opti_drone.get();
-//      trans = msg.transform;
-//      ors::Transformation new_tf = conv_transform2transformation(trans);
-//      new_tf.appendInvTransformation(origin);
-//      double scale = 5;
-//      arr new_target = pos + ARR(new_tf.pos.x / scale, new_tf.pos.y / scale, new_tf.pos.z / scale);
-//      cout << new_target << endl;
-//      baxter.modifyTarget(currentPositionTask, new_target);
-
-
-//      ors::Vector xVec = new_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
-//      ors::Vector yVec = new_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
-//      ors::Vector zVec = new_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
-
-
-//      CtrlTask* alignX = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=["
-//                                             << xVec.x << ' ' << xVec.y << ' ' << xVec.z
-//                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[100]")));
-
-//      CtrlTask* alignY = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=["
-//                                             << yVec.x << ' ' << yVec.y << ' ' << yVec.z
-//                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[100]")));
-
-//      CtrlTask* alignZ = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=["
-//                                             << zVec.x << ' ' << zVec.y << ' ' << zVec.z
-//                                             << "] target=[1] PD=[1., 1., .8, 1.] prec=[100]")));
-
-//      opti_drone.waitForNextRevision();
-//      baxter.stop({alignX, alignY, alignZ});
-
-////      opti_body.waitForNextRevision();
-////      msg = opti_body.get();
-////      trans = msg.transform;
-////      new_tf = conv_transform2transformation(trans);
-////      new_tf.appendInvTransformation(originE);
-////      new_target = pos2 + ARR(new_tf.pos.x, new_tf.pos.y, new_tf.pos.z);
-////      cout << new_target << endl;
-//      //baxter.modifyTarget(currentElbow, new_target);
-
-//    }
-//  }
-//  moduleShutdown().waitForValueGreaterThan(0);
-
-
-//  cout <<"bye bye" <<endl;
-//  return 0;
-//}
 
