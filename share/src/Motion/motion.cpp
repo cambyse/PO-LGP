@@ -27,8 +27,8 @@
 
 
 //===========================================================================
-#define TT T //(T+1)
-#define tlT (t<T) //(t<=T)
+//#define T T //(T+1)
+//#define t<T (t<T) //(t<=T)
 //===========================================================================
 
 void Task::setCostSpecs(int fromTime,
@@ -205,20 +205,34 @@ void MotionProblem::setupConfigurations(){
 
 void MotionProblem::set_x(const arr& x){
   if(!configurations.N) setupConfigurations();
-  CHECK_EQ(configurations.N, k_order+TT, "configurations are not setup yet");
+  CHECK_EQ(configurations.N, k_order+T, "configurations are not setup yet");
 
   //-- set the configurations' states
   uint x_count=0;
-  for(uint t=0;tlT;t++){
+  for(uint t=0;t<T;t++){
     uint s = t+k_order;
-    uint x_dim = configurations(s)->getJointStateDimension();
-    temporallyAlignKinematicSwitchesInConfiguration(t); //this breaks the jacobian check
-    if(x.nd==1) configurations(s)->setJointState(x.refRange(x_count, x_count+x_dim-1));
-    else        configurations(s)->setJointState(x[t]);
-    if(useSwift) configurations(s)->stepSwift();
-    x_count += x_dim;
+    uint x_dim = dim_x(t); //configurations(s)->getJointStateDimension();
+//    temporallyAlignKinematicSwitchesInConfiguration(t); //this breaks the jacobian check
+    if(x_dim){
+      if(x.nd==1) configurations(s)->setJointState(x.refRange(x_count, x_count+x_dim-1));
+      else        configurations(s)->setJointState(x[t]);
+      if(useSwift) configurations(s)->stepSwift();
+      x_count += x_dim;
+    }
   }
   CHECK_EQ(x_count, x.N, "");
+}
+
+/// this sets the t'th configuration and then redefines all joints as fixed -> no DOFs anymore in this time slice
+void MotionProblem::set_fixConfiguration(const arr& x, uint t){
+  if(!configurations.N) setupConfigurations();
+  CHECK(t<T,"");
+  ors::KinematicWorld *W=configurations(t+k_order);
+  W->setJointState(x);
+  if(useSwift) W->stepSwift();
+  W->zeroGaugeJoints();
+  for(ors::Joint *j:W->joints) j->type = ors::JT_rigid;
+  W->meldFixedJoints();
 }
 
 void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
@@ -293,10 +307,10 @@ void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
   CHECK_EQ(dimPhi_t, dim_phi(t), "");
 
   //memorize for report
-  if(!phiMatrix.N) phiMatrix.resize(TT);
+  if(!phiMatrix.N) phiMatrix.resize(T);
   phiMatrix(t) = phi;
   if(&tt){
-    if(!ttMatrix.N) ttMatrix.resize(TT);
+    if(!ttMatrix.N) ttMatrix.resize(T);
     ttMatrix(t) = tt;
   }
 }
@@ -340,7 +354,7 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
   if(!configurations.N) setupConfigurations();
 
   //-- collect all task costs and constraints
-  for(uint t=0; tlT; t++){
+  for(uint t=0; t<T; t++){
     uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
@@ -393,18 +407,18 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
 
 void MotionProblem::costReport(bool gnuplt) {
   cout <<"*** MotionProblem -- CostReport" <<endl;
-  if(phiMatrix.N!=TT){
+  if(phiMatrix.N!=T){
     CHECK(phiMatrix.N==0,"");
-    phiMatrix.resize(TT);
+    phiMatrix.resize(T);
   }
 
-  arr plotData(TT,tasks.N); plotData.setZero();
+  arr plotData(T,tasks.N); plotData.setZero();
 
   //-- collect all task costs and constraints
   double a;
   arr taskC(tasks.N); taskC.setZero();
   arr taskG(tasks.N); taskG.setZero();
-  for(uint t=0; tlT; t++){
+  for(uint t=0; t<T; t++){
     uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
@@ -473,7 +487,7 @@ void MotionProblem::costReport(bool gnuplt) {
   if(!dualSolution.N){
     plotData.write(fil,NULL,NULL,"  ");
   }else{
-    dualSolution.reshape(TT, dualSolution.N/(TT));
+    dualSolution.reshape(T, dualSolution.N/(T));
     catCol(plotData, dualSolution).write(fil,NULL,NULL,"  ");
   }
   fil.close();
@@ -491,15 +505,15 @@ void MotionProblem::costReport(bool gnuplt) {
 }
 
 Graph MotionProblem::getReport() {
-  if(phiMatrix.N!=TT){
+  if(phiMatrix.N!=T){
     CHECK(phiMatrix.N==0,"");
-    phiMatrix.resize(TT);
+    phiMatrix.resize(T);
   }
 
   //-- collect all task costs and constraints
   arr taskC(tasks.N); taskC.setZero();
   arr taskG(tasks.N); taskG.setZero();
-  for(uint t=0; tlT; t++){
+  for(uint t=0; t<T; t++){
     uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
@@ -543,9 +557,9 @@ Graph MotionProblem::getReport() {
 
 arr MotionProblem::getInitialization(){
   if(!configurations.N) setupConfigurations();
-  CHECK_EQ(configurations.N, k_order+TT, "configurations are not setup yet");
+  CHECK_EQ(configurations.N, k_order+T, "configurations are not setup yet");
   arr x;
-  for(uint t=0;tlT;t++) x.append(configurations(t+k_order)->getJointState());
+  for(uint t=0;t<T;t++) x.append(configurations(t+k_order)->getJointState());
   return x;
 }
 

@@ -173,6 +173,8 @@ cleanLocks: force
 cleanAll: clean
 	@find $(BASE) -type f \( -name '*.o' -or -name '*.so' -or -name '*.exe' \)  -delete -print
 
+cleanLibs: clean
+	@find $(BASE)/lib -type f \( -name '*.so' \)  -delete -print
 
 depend: generate_Makefile.dep
 

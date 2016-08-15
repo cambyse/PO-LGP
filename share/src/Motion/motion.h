@@ -94,6 +94,9 @@ struct MotionProblem : KOrderMarkovFunction{
   bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);           ///< read a single task from a node-spec
   Task* addTask(const char* name, TaskMap *map, const TermType& termType); ///< manually add a task
 
+  //-- define a fixed 'postfix' TODO: allow to explicitly set a prefix instead of the default one
+  void set_fixConfiguration(const arr& x, uint t);
+
   //-- initialization
   void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!)
   arr getInitialization();      ///< this reads out the initial state trajectory after 'setupConfigurations'

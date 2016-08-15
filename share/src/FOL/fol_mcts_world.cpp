@@ -63,7 +63,7 @@ void FOL_World::init(istream& is){
     cout <<"*** start_state=" <<*start_state <<endl;
     cout <<"*** reward fct=" <<*rewardFct <<endl;
     cout <<"*** worldRules = "; listWrite(worldRules, cout); cout <<endl;
-    cout <<"*** decisionRules = "; listWrite(decisionRules, cout); cout <<endl;
+    cout <<"*** decisionRules = "; listWrite(decisionRules, cout, "\n"); cout <<endl;
   }
   mlr::open(fil, "z.FOL_World");
 
@@ -75,7 +75,7 @@ void FOL_World::init(istream& is){
 FOL_World::~FOL_World(){
 }
 
-std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action){
+MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
   lastStepReward = -stepCost;
   lastStepDuration = 0.;
   lastStepProbability = 1.;
@@ -103,16 +103,6 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
     Node *n=state->elem(i);
     if(n->keys.N) delete n;
   }
-
-  //-- remove the old decision-fact, if exists (Obsolete - implicit in the above)
-//#if 0
-//  if(lastDecisionInState) delete lastDecisionInState;
-//#else
-//  for(uint i=state->N;i--;){
-//    Node *n=state->elem(i);
-//    if(n->parents.N && n->parents.first()->keys.N && n->parents.first()->keys.first()=="DecisionRule") delete n;
-//  }
-//#endif
 
   //-- add the decision as a fact
   if(!d->waitDecision){
@@ -193,13 +183,8 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
   forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &lastStepObservation);
 
   //-- check for QUIT
-//  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
   successEnd = getEqualFactInKB(*state, Quit_literal);
   deadEnd = (T_step>100);
-
-
-  //-- delete decision fact again
-  //if(decision) delete decision;
 
   if(deadEnd) lastStepReward -= deadEndCost;
 
@@ -215,7 +200,7 @@ std::pair<FOL_World::Handle, double> FOL_World::transition(const Handle& action)
 
   R_total += lastStepReward;
 
-  return { Handle(new Observation(lastStepObservation)), lastStepReward };
+  return { Handle(new Observation(lastStepObservation)), lastStepReward, lastStepDuration };
 }
 
 const std::vector<FOL_World::Handle> FOL_World::get_actions(){
@@ -363,18 +348,18 @@ void FOL_World::setState(Graph *s){
 void FOL_World::addAgent(const char* name){
 //  Node* n = new Node_typed<bool>(KB, {name}, {}, true); //already exists in kinematic part
   Node* n = KB[name];
-  new Node_typed<bool>(*state, {}, {KB["agent"], n}, true);
-  new Node_typed<bool>(*state, {}, {KB["free"], n}, true);
+  new Node_typed<bool>(*start_state, {}, {KB["agent"], n}, true);
+  new Node_typed<bool>(*start_state, {}, {KB["free"], n}, true);
 }
 
 void FOL_World::addObject(const char* name){
 //  Node* n = new Node_typed<bool>(KB, {name}, {}, true);
   Node* n = KB[name];
-  new Node_typed<bool>(*state, {}, {KB["object"], n}, true);
+  new Node_typed<bool>(*start_state, {}, {KB["object"], n}, true);
 }
 
 void FOL_World::addFact(const StringA& symbols){
   NodeL parents;
   for(const mlr::String& s:symbols) parents.append(KB[s]);
-  new Node_typed<bool>(*state, {}, parents, true);
+  new Node_typed<bool>(*start_state, {}, parents, true);
 }

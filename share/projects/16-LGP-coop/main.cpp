@@ -4,7 +4,7 @@
 
 //===========================================================================
 
-void coop(){
+void test(){
   Coop C;
 
   C.prepareKin();
@@ -19,8 +19,10 @@ void coop(){
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
 //  cmds={ "1", "1", "0", "x", "q" };
-  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "x", "q" }; //screwdriver 'hand over'
+//  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "s", "x", "q" }; //screwdriver 'hand over'
+  cmds={ "m", "m","m","m","q" };
   bool interactive = mlr::getParameter<bool>("intact", false);
+  bool random = mlr::getParameter<bool>("random", false);
 
   for(uint s=0;;s++){
     C.updateDisplay();
@@ -29,6 +31,8 @@ void coop(){
     if(interactive){
       mlr::String cmd = C.queryForChoice();
       if(!C.execChoice(cmd)) break;
+    }else if(random){
+      if(!C.execRandomChoice()) break;
     }else{
       if(!C.execChoice(cmds(s))) break;
     }
@@ -41,12 +45,32 @@ void coop(){
 
 //===========================================================================
 
+void plan_BHTS(){
+  Coop C;
+
+  C.prepareKin();
+  C.prepareFol();
+  C.prepareTree();
+  C.prepareDisplay();
+
+  for(;;){
+    //tree policy:
+    C.node->addMCRollouts(20,10);
+    auto* n = C.node->getMostPromisingChild();
+
+
+  }
+
+}
+
+//===========================================================================
+
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   orsDrawAlpha = 1.;
 //  orsDrawCores = true;
-  coop();
+  test();
 
   return 0;
 }

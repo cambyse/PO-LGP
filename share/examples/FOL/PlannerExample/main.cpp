@@ -46,7 +46,10 @@ void TEST(MCTS){
 //===========================================================================
 
 void TEST(MC){
-  FOL_World world(FILE("boxes_new.g"));
+  mlr::String file=mlr::getParameter<mlr::String>("file","");
+  if(file=="") file="boxes_new.g";
+  FOL_World world(FILE(file));
+
   PlainMC mc(world);
   world.verbose=0;
   world.verbFil=0;
@@ -69,14 +72,16 @@ void TEST(MC){
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world(FILE("boxes_new.g"));
+  mlr::String file=mlr::getParameter<mlr::String>("file");
+  if(!file.N) file="boxes_new.g";
+  FOL_World world(FILE(file));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
 
   for(uint k=0;k<10;k++){
     auto res=world.transition_randomly();
-    cout <<"RND TRANSITION: obs=" <<*res.first <<" r=" <<res.second <<endl;
+    cout <<"RND TRANSITION: obs=" <<*res.observation <<" r=" <<res.reward <<endl;
   }
 
   world.get_actions();
@@ -99,7 +104,6 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(Determinism){
-
   for(uint k=0;k<100;k++){
     FOL_World world(FILE("boxes_new.kvg"));
 
@@ -114,8 +118,8 @@ void TEST(Determinism){
       FOL_World::Handle action = A[rnd()%A.size()];
       auto res = world.transition(action);
       actions.append(action);
-      observations.append(res.first);
-      rewards.append(res.second);
+      observations.append(res.observation);
+      rewards.append(res.reward);
       states.append(STRING(*world.state));
       if(world.is_terminal_state()) break;
     }
@@ -128,14 +132,14 @@ void TEST(Determinism){
     uint t=0;
     for(;;t++){
       world.make_current_state_default();
-      std::pair<FOL_World::Handle, double> res;
+      FOL_World::TransitionReturn res;
       for(;;){ //repeat stochastic transition until you get the same observation
         res = world.transition(actions(t));
-        if(*res.first==*observations(t)) break; //observations match... move on
+        if(*res.observation==*observations(t)) break; //observations match... move on
         world.reset_state();
       }
-      CHECK_EQ(*observations(t), *res.first, "");
-      CHECK_EQ(rewards(t), res.second, "");
+      CHECK_EQ(*observations(t), *res.observation, "");
+      CHECK_EQ(rewards(t), res.reward, "");
       CHECK_EQ(states(t), STRING(*world.state), "");
       if(world.is_terminal_state()) break;
     }

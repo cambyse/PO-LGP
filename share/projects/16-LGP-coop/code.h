@@ -20,7 +20,6 @@
 #include <LGP/LGP.h>
 #include <LGP/manipulationTree.h>
 
-
 struct Coop{
   ors::KinematicWorld kin;
   BodyL box;
@@ -51,7 +50,8 @@ struct Coop{
 
   void printChoices();
   mlr::String queryForChoice();
-  bool execChoice(mlr::String& cmd);
+  bool execChoice(mlr::String cmd);
+  bool execRandomChoice();
 
   void expandNode(){  node->expand(); }
 };

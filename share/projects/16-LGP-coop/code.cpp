@@ -42,6 +42,7 @@ void Coop::prepareKin(){
 }
 
 void Coop::prepareFol(){
+//  fol.verbose = 5;
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
 //  for(ors::Body *b:box) fol.addObject(b->name);
@@ -55,7 +56,8 @@ void Coop::prepareFol(){
   fol.addAgent("handL");
   fol.addAgent("handR");
 
-  FILE("z.fol") <<fol;
+  fol.reset_state();
+  FILE("z.start.fol") <<fol;
 
 }
 
@@ -93,6 +95,7 @@ void Coop::printChoices(){
   cout <<"(p) pose problem" <<endl;
   cout <<"(s) sequence problem" <<endl;
   cout <<"(x) path problem" <<endl;
+  cout <<"(m) MC planning" <<endl;
   uint c=0;
   for(ManipulationTree_Node* a:node->children){
     cout <<"(" <<c++ <<") DECISION: " <<*a->decision <<endl;
@@ -107,7 +110,23 @@ mlr::String Coop::queryForChoice(){
   return cmd;
 }
 
-bool Coop::execChoice(mlr::String& cmd){
+bool Coop::execRandomChoice(){
+  mlr::String cmd;
+  if(mlr::rnd.uni()<.5){
+    switch(mlr::rnd.num(5)){
+      case 0: cmd="u"; break;
+      case 1: cmd="p"; break;
+      case 2: cmd="s"; break;
+      case 3: cmd="x"; break;
+      case 4: cmd="m"; break;
+    }
+  }else{
+    cmd <<rnd(node->children.N);
+  }
+  return execChoice(cmd);
+}
+
+bool Coop::execChoice(mlr::String cmd){
   cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
   if(cmd=="q") return false;
@@ -115,6 +134,7 @@ bool Coop::execChoice(mlr::String& cmd){
   else if(cmd=="p") node->solvePoseProblem();
   else if(cmd=="s") node->solveSeqProblem();
   else if(cmd=="x") node->solvePathProblem(20);
+  else if(cmd=="m") node->addMCRollouts(100,10);
   else{
     int choice;
     cmd >>choice;
