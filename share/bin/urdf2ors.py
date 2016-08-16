@@ -56,14 +56,14 @@ for link in links:
     # visual shape
     visual = link.find("visual")
     if visual is not None:
-        print 'shape visual %s (%s) {' % (name, name)
+        print 'shape visual %s_1 (%s) {' % (name, name)
         writeShape(visual)
         print '}\n', # end of shape
 
     # collision shape
     collision = link.find("collision")
     if collision is not None:
-        print 'shape collision %s (%s) { cont,' % (name, name)
+        print 'shape collision %s_0 (%s) { cont,' % (name, name)
         writeShape(collision)
         print '}\n', # end of shape
 
