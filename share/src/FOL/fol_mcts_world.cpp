@@ -335,7 +335,7 @@ void FOL_World::set_state(mlr::String& s){
   state->read(s);
 }
 
-Graph*FOL_World::getState(){
+Graph* FOL_World::getState(){
   return state;
 }
 
