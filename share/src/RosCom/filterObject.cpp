@@ -48,13 +48,17 @@ void Cluster::write(ostream& os) const{
 //============================================================================
 
 Plane::Plane(arr normal, arr center, arr hull, std::string frame_id)
-  : normal(normal), center(center), hull(hull), frame_id(frame_id){
+  : normal(normal),
+    center(center),
+    hull(hull),
+    frame_id(frame_id){
   this->type = FilterObjectType::plane;
 }
 
 Plane::Plane(const Plane& obj){
   this->frame_id = obj.frame_id;
   this->normal = obj.normal;
+  this->center = obj.center;
   this->hull = obj.hull;
   this->type = obj.type;
   this->relevance = obj.relevance;
