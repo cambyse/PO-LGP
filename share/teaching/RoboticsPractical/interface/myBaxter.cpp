@@ -1,5 +1,3 @@
-//#define REPORT 0
-
 #include "myBaxter.h"
 
 #include <RosCom/roscom.h>
@@ -59,9 +57,11 @@ struct MyBaxter_private{
 };
 
 
-MyBaxter::MyBaxter()
+MyBaxter::MyBaxter(const bool report)
   : s(new MyBaxter_private){
     testWorld = s->tcm.realWorld;
+    reportState = report;
+    stopAll();
 }
 
 MyBaxter::~MyBaxter(){
@@ -69,14 +69,20 @@ MyBaxter::~MyBaxter(){
 }
 
 CtrlTask* MyBaxter::task(const Graph& specs){
+  return task("noname", specs);
+
+}
+CtrlTask* MyBaxter::task(const char* name,
+                         const Graph& specs){
   TaskMap *map = TaskMap::newTaskMap(specs, s->tcm.modelWorld.get()());
-  CtrlTask* t = new CtrlTask("noname", *map, specs);
+  CtrlTask* t = new CtrlTask(name, *map, specs);
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
-#ifdef REPORT
-  t->reportState(cout);
-#endif
+
+  if (reportState)
+    t->reportState(cout);
+
   return t;
 }
 
@@ -87,9 +93,10 @@ CtrlTask* MyBaxter::task(const char* name,
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
-#ifdef REPORT
-  t->reportState(cout);
-#endif
+
+  if (reportState)
+    t->reportState(cout);
+
   return t;
 }
 
@@ -102,9 +109,10 @@ CtrlTask* MyBaxter::task(const char* name,
   map->phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
-#ifdef REPORT
-  t->reportState(cout);
-#endif
+
+  if (reportState)
+    t->reportState(cout);
+
   return t;
 }
 
@@ -121,18 +129,20 @@ CtrlTask*MyBaxter::task(const char* name,
   t->y_ref = target;
   activeTasks.append(t);
   s->tcm.ctrlTasks.set() = activeTasks;
-#ifdef REPORT
-  t->reportState(cout);
-#endif
+
+  if (reportState)
+    t->reportState(cout);
+
   return t;
 }
 
 CtrlTask* MyBaxter::modify(CtrlTask* t, const Graph& specs){
   s->tcm.ctrlTasks.writeAccess();
   t->set(specs);
-#ifdef REPORT
-  t->reportState(cout);
-#endif
+
+  if (reportState)
+    t->reportState(cout);
+
   s->tcm.ctrlTasks.deAccess();
   return t;
 }
@@ -141,9 +151,9 @@ CtrlTask* MyBaxter::modifyTarget(CtrlTask* t, const arr& target){
   s->tcm.ctrlTasks.writeAccess();
   t->y_ref = target;
 
-#ifdef REPORT
-  t->reportState(cout);
-#endif
+  if (reportState)
+    t->reportState(cout);
+
   s->tcm.ctrlTasks.deAccess();
   return t;
 }
@@ -157,13 +167,70 @@ void MyBaxter::stop(const CtrlTaskL& tasks){
   }
 }
 
+void MyBaxter::stopAll(){
+  while (activeTasks.N > 0)
+  {
+    CtrlTask* t = activeTasks.first();
+    activeTasks.removeValue(t);
+    t->active = false;
+    delete &t->map;
+    delete t;
+  }
+  s->tcm.ctrlTasks.set() = activeTasks;
+}
+
 void MyBaxter::waitConv(const CtrlTaskL& tasks){
-  for(;;){
+  double timeOut = 0;
+
+  while(timeOut < 10)
+  {
     mlr::wait(.03);
+    timeOut += .03;
     bool allConv=true;
     for(CtrlTask *t:tasks) if(!t->isConverged()){ allConv=false; break; }
     if(allConv) return;
   }
+
+  for (uint i = 0; i < s->tcm.q0.N; i++)
+  {
+    cout << "Joint: " << i << "   " << s->modelWorld.get()->joints(i)->name << endl;
+  }
+  for(CtrlTask *t:tasks)
+  {
+    if(!t->isConverged())
+      cout << t->name << " not converged. " << t->y_ref << " : " << t->y << endl;
+    else
+      cout << t->name << " converged. " << endl;
+  }
+
+
+  // We have spent 10 seconds getting here... do I want to just break?
+  char cont = ' ';
+  while (cont != 'y' && cont !='n')
+  {
+    cout << "Timeout getting to task. Continue waiting (y/n)? ";
+    std::cin >> cont;
+    cout << endl;
+  }
+  if (cont == 'y')
+    waitConv(tasks);
+
+  return;
+}
+
+bool MyBaxter::testConv(const CtrlTaskL& tasks){
+  double timeOut = 0;
+  double step = 0.03;
+  while(timeOut < 10)
+  {
+    mlr::wait(step);
+    timeOut += step;
+    bool allConv=true;
+    for(CtrlTask *t:tasks) if(!t->isConverged()){ allConv=false; break; }
+    if(allConv) return true;
+  }
+
+  return false;
 }
 
 uint MyBaxter::reportPerceptionObjects(){
@@ -374,11 +441,11 @@ TaskControllerModule& MyBaxter::getTaskControllerModule(){
 }
 
 void MyBaxter::disablePosControl(){
-  s->spctb.enablePositionControlR = false;
+  s->spctb.enablePositionControlL = false;
 }
 
 void MyBaxter::enablePosControl(){
-  s->spctb.enablePositionControlR = true;
+  s->spctb.enablePositionControlL = true;
 }
 
 void MyBaxter::enableTotalTorqueMode(){

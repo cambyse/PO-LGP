@@ -14,11 +14,14 @@ struct MyBaxter{
   CtrlTaskL activeTasks;
   ors::KinematicWorld testWorld;
 
-  MyBaxter();
+  MyBaxter(const bool report = false);
   ~MyBaxter();
 
   //-- add & modify tasks
   CtrlTask* task(const Graph& specs);
+  CtrlTask* task(const char* name,
+                 const Graph& specs);
+
   CtrlTask* task(const char* name,
                  TaskMap* map,
                  double decayTime, double dampingRatio, double maxVel, double maxAcc);
@@ -35,7 +38,9 @@ struct MyBaxter{
 
   //-- wait for & stop tasks
   void stop(const CtrlTaskL& tasks);
+  void stopAll();
   void waitConv(const CtrlTaskL& tasks);
+  bool testConv(const CtrlTaskL& tasks);
 
   //-- get object information
   uint reportPerceptionObjects();
@@ -76,4 +81,6 @@ struct MyBaxter{
 
   //-- info
   arr q0();
+
+  bool reportState;
 };

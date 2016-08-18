@@ -36,7 +36,9 @@ struct Lockbox:Module{
   void initializeJoints();
 //  void syncronizeJoints(); // Synchronize inputs with the simulated box, move the simulated box.
   void moveJoint(const uint joint, const double position); // Position should be 0-1, relative to limits
+  bool testJoint(const uint joint);
 
+  void moveHome(const bool stopAllOtherTasks = false);
   void fixJoint(const uint joint, const bool fix);
 
   void update();
@@ -46,10 +48,17 @@ struct Lockbox:Module{
   std::unordered_map<uint, mlr::String> joint_to_handle;
   std::unordered_map<uint, mlr::String> joint_name;
 
+  mlr::Array<uint> locked_joints;
+
+  bool queryContinue();
+
   MyBaxter* myBaxter;
 
 //  bool update = true;
   bool usingRos = false;
 
   ors::KinematicWorld lockbox_world;
+
+  CtrlTaskL joint_fixed_tasks;
+  arr q0;
 };
