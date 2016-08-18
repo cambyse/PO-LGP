@@ -105,7 +105,12 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
     }
     arr tmp = J_x;
     for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff.p[i]);
+#if 1
     HL = comp_At_A(tmp); //Gauss-Newton type!
+#else
+    arr tmpt = comp_At(tmp);
+    HL = comp_A_At(tmpt); //Gauss-Newton type!
+#endif
 
     if(fterm!=-1){ //For f-terms, the Hessian must be given explicitly, and is not \propto J^T J
       HL += H_x;

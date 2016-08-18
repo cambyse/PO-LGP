@@ -13,7 +13,7 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
     if(&J){
       uint qidx=0;
       for(uint i=0;i<G.N;i++) qidx+=G(i)->q.N;
-      J = zeros(y.N, qidx);
+      J.resize(y.N, qidx).setZero();
       J.setMatrixBlock(J_bar, 0, qidx-J_bar.d1);
     }
     return;

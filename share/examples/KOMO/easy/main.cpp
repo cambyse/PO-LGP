@@ -36,7 +36,7 @@ void TEST(EasyPR2){
     rndGauss(G.q,rand,true);
     G.setJointState(G.q);
   }
-#if 1
+#if 0
   KOMO komo;
   komo.setMoveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
   komo.setSpline(7);
@@ -87,8 +87,8 @@ int main(int argc,char** argv){
 
 //  testEasy();
 //  testEasyAlign();
-//  testEasyAlign2();
-  testEasyPR2();
+  testEasyAlign2();
+//  testEasyPR2();
 //  testFinalPosePR2();
   return 0;
 }

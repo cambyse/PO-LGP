@@ -113,6 +113,6 @@ inline arr finalPoseTo(ors::KinematicWorld& world,
                        ors::Shape& target,
                        byte whichAxesToAlign=0,
                        uint iterate=1){
-  return moveTo(world, endeff, target, whichAxesToAlign, iterate, 0, 5.);
+  return moveTo(world, endeff, target, whichAxesToAlign, iterate, 1, 5.);
 }
 

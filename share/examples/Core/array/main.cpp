@@ -564,10 +564,10 @@ void TEST(Tensor){
 
 void write(RowShifted& PM){
   cout <<"RowShifted: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
-  cout <<"\npacked numbers =" <<PM.Z
+  cout <<"packed numbers =\n" <<PM.Z
       <<"\nrowShifts=" <<PM.rowShift
-     <<"\ncolPaches=" <<PM.colPatches
-    <<"\nunpacked =" <<unpack(PM.Z) <<endl;
+     <<"\ncolPaches=\n" <<~PM.colPatches
+    <<"\nunpacked =\n" <<unpack(PM.Z) <<endl;
 }
 
 void TEST(RowShifted){
@@ -580,6 +580,8 @@ void TEST(RowShifted){
   Jaux->computeColPatches(false);
   write(*castRowShifted(J));
 
+  cout <<Jaux->At() <<endl;
+
   //constructor compressing an array
   arr K =  packRowShifted(unpack(J));
   write(*castRowShifted(K));
@@ -591,14 +593,19 @@ void TEST(RowShifted){
     arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
+    arr Yt = comp_At(Y);
+
 //    RowShifted& Yaux = castRowShifted(Y);
 //    write(*castRowShifted(Y));
     arr x(X.d0);   rndInteger(x,0,9);
     arr x2(X.d1);  rndInteger(x2,0,9);
-    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y))
-        <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y)))
-       <<' ' <<maxDiff(X*~X,unpack(comp_A_At(Y)))
-      <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
+    cout <<"errors = " <<maxDiff(X,unpack(Y))
+        <<' ' <<maxDiff(~X*X, unpack(comp_At_A(Y)))
+       <<' ' <<maxDiff(X*~X, unpack(comp_A_At(Y)))
+      <<' ' <<maxDiff(~X*x, comp_At_x(Y,x))
+      <<' ' <<maxDiff(~X*x, comp_A_x(Yt,x))
+     <<' ' <<maxDiff(~X*X, unpack(comp_A_At(Yt)))
+    <<endl;
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
 //    arr tmp =comp_A_At(Y);
@@ -702,7 +709,8 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
-  testSparse();
+//  testSparse();
+  testRowShifted();
   return 0;
 
   testBasics();

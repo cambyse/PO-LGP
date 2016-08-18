@@ -143,7 +143,7 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
   if(endTime>double(maxPhase)+1e-10)
     LOG(-1) <<"beyond the time!";
   uint tFrom = (startTime<0.?0:STEP(startTime)+order);
-  uint tTo = (endTime<0.?MP->T:STEP(endTime));
+  uint tTo = (endTime<0.?MP->T-1:STEP(endTime));
   if(tFrom>tTo && tFrom-tTo<=order) tFrom=tTo;
   task->setCostSpecs(tFrom, tTo, target, prec);
   MP->tasks.append(task);
@@ -356,7 +356,7 @@ void KOMO::setMoveTo(ors::KinematicWorld& world, ors::Shape& endeff, ors::Shape&
 
 void KOMO::setSpline(uint splineT){
   mlr::Spline S;
-  S.setUniformNonperiodicBasis(MP->T, splineT, 2);
+  S.setUniformNonperiodicBasis(MP->T-1, splineT, 2);
   uint n=MP->dim_x(0);
   splineB = zeros(S.basis.d0*n, S.basis.d1*n);
   for(uint i=0;i<S.basis.d0;i++) for(uint j=0;j<S.basis.d1;j++)
@@ -455,13 +455,17 @@ arr moveTo(ors::KinematicWorld& world,
   arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 
+//  MP.komo_problem.checkStructure(x);
+//  checkJacobianCP(Conv_KOMO_ConstrainedProblem(MP.komo_problem), x, 1e-4);
+
   //-- optimize
   double colPrec = mlr::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
   ors::KinematicWorld::setJointStateCount=0;
   for(uint k=0;k<iterate;k++){
     mlr::timerStart();
     if(colPrec<0){
-      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
+//      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MP.komo_problem), OPT(verbose=2)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
       optNewton(x, Convert(MP), OPT(verbose=2));
@@ -469,7 +473,7 @@ arr moveTo(ors::KinematicWorld& world,
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
     //    checkJacobian(Convert(MF), x, 1e-5);
-    MP.costReport();
+    //MP.costReport();
   }
 
   return x;
@@ -507,24 +511,24 @@ void setTasks(MotionProblem& MP,
   }else{
     t->map.order=1; //make this a velocity task!
   }
-  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+  t->setCostSpecs(0, MP.T-1, {0.}, 1e0);
 
   if(timeSteps!=0){
     t = MP.addTask("final_vel", new TaskMap_qItself(), sumOfSqrTT);
     t->map.order=1; //make this a velocity task!
-    t->setCostSpecs(MP.T-4, MP.T, {0.}, zeroVelPrec);
+    t->setCostSpecs(MP.T-4, MP.T-1, {0.}, zeroVelPrec);
   }
 
   if(colPrec<0){ //interpreted as hard constraint (default)
     t = MP.addTask("collisionConstraints", new CollisionConstraint(margin), ineqTT);
-    t->setCostSpecs(0, MP.T, {0.}, 1.);
+    t->setCostSpecs(0, MP.T-1, {0.}, 1.);
   }else{ //cost term
     t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, margin), sumOfSqrTT);
-    t->setCostSpecs(0, MP.T, {0.}, colPrec);
+    t->setCostSpecs(0, MP.T-1, {0.}, colPrec);
   }
 
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, endeff.index, NoVector, target.index, NoVector), sumOfSqrTT);
-  t->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
+  t->setCostSpecs(MP.T-1, MP.T-1, {0.}, posPrec);
 
 
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
@@ -534,7 +538,7 @@ void setTasks(MotionProblem& MP,
     t = MP.addTask(STRING("endeff_align_"<<i),
                    new TaskMap_Default(vecAlignTMT, endeff.index, axis, target.index, axis),
                    sumOfSqrTT);
-    t->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
+    t->setCostSpecs(MP.T-1, MP.T-1, {1.}, alignPrec);
   }
 }
 

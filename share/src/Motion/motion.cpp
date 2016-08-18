@@ -67,9 +67,9 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
   if(specs->isGraph()){
     const Graph& params = specs->graph();
     arr time = params.get<arr>("time",{0.,1.});
-    task->setCostSpecs(Tzero + time(0)*Tinterval, Tzero + time(1)*Tinterval, params.get<arr>("target", {}), params.get<double>("scale", {1.}));
+    task->setCostSpecs(Tzero + time(0)*(Tinterval-1), Tzero + time(1)*(Tinterval-1), params.get<arr>("target", {}), params.get<double>("scale", {1.}));
   }else{
-    task->setCostSpecs(Tzero, Tzero+Tinterval, {}, 1.);
+    task->setCostSpecs(Tzero, Tzero+(Tinterval-1), {}, 1.);
   }
   return task;
 }
@@ -78,7 +78,7 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
 //===========================================================================
 
 MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
-    : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2), gl(NULL)
+  : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2), gl(NULL), komo_problem(*this)
 {
   if(useSwift) {
     makeConvexHulls(originalWorld.shapes);
@@ -109,7 +109,7 @@ MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
 
 void MotionProblem::setTiming(uint steps, double duration){
   T = steps;
-  CHECK(T, "deprecated");
+  CHECK(T, "using T=0 to indicate inverse kinematics is deprecated.");
   if(T) tau = duration/T; else tau=duration;
 //  setupConfigurations();
 }
@@ -158,6 +158,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(Task *c: tasks) {
+    CHECK(c->prec.N==T,"");
     if(c->active && c->prec.N>t && c->prec(t))
       m += c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
   }
@@ -571,6 +572,64 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
   if(&tt) tt.clear();
   set_x(x);
   phi_t(y, J, tt, 0);
+}
+
+void MotionProblem::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes){
+  variableDimensions.resize(MP.T);
+  for(uint t=0;t<MP.T;t++) variableDimensions(t) = MP.configurations(t+MP.k_order)->getJointStateDimension();
+
+  featureTimes.clear();
+  featureTypes.clear();
+  for(uint t=0;t<MP.T;t++){
+    for(Task *task: MP.tasks) if(task->active && task->prec.N>t && task->prec(t)){
+      CHECK(task->prec.N==MP.T,"");
+      uint m = task->map.dim_phi(MP.configurations.refRange(t,t+MP.k_order), t); //dimensionality of this task
+      featureTimes.append(consts<uint>(t, m));
+      featureTypes.append(consts<TermType>(task->type, m));
+    }
+  }
+  dimPhi = featureTimes.N;
+}
+
+void MotionProblem::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, TermTypeA& tt, const arr& x){
+  //-- set the trajectory
+  MP.set_x(x);
+
+
+  CHECK(dimPhi,"getStructure must be called first");
+  phi.resize(dimPhi);
+  if(&tt) tt.resize(dimPhi);
+  if(&J) J.resize(dimPhi);
+
+  arr y, Jy;
+  uint M=0;
+  for(uint t=0;t<MP.T;t++){
+    for(Task *task: MP.tasks) if(task->active && task->prec.N>t && task->prec(t)){
+      task->map.phi(y, (&J?Jy:NoArr), MP.configurations.refRange(t,t+MP.k_order), MP.tau, t);
+      if(!y.N) continue;
+      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
+
+      //linear transform (target shift)
+      if(task->target.N==1) y -= task->target.elem(0);
+      else if(task->target.nd==1) y -= task->target;
+      else if(task->target.nd==2) y -= task->target[t];
+      y *= sqrt(task->prec(t));
+
+      //write into phi and J
+      phi.setVectorBlock(y, M);
+      if(&J){
+        Jy *= sqrt(task->prec(t));
+        if(t<MP.k_order) Jy.delColumns(0,(MP.k_order-t)*MP.configurations(0)->q.N); //delete the columns that correspond to the prefix!!
+        for(uint i=0;i<y.N;i++) J(M+i) = Jy[i]; //copy it to J(M+i); which is the Jacobian of the M+i'th feature w.r.t. its variables
+      }
+      if(&tt) for(uint i=0;i<y.N;i++) tt(M+i) = task->type;
+
+      //counter for features phi
+      M += y.N;
+    }
+  }
+
+  CHECK_EQ(M, dimPhi, "");
 }
 
 //===========================================================================

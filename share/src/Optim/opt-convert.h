@@ -41,7 +41,7 @@ struct Convert {
   ScalarFunction sf;
   VectorFunction vf;
   ConstrainedProblem cpm;
-  struct KOMO_ConstrainedProblem* komo;
+  struct Conv_KOMO_ConstrainedProblem* komo;
 
   Convert(const ScalarFunction&);
   Convert(const VectorFunction&);

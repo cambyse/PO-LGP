@@ -290,7 +290,7 @@ VectorFunction conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f)
 //===========================================================================
 
 Convert::Convert(KOMO_Problem& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) {
-  komo = new KOMO_ConstrainedProblem(p);
+  komo = new Conv_KOMO_ConstrainedProblem(p);
 }
 
 Convert::operator ConstrainedProblem() {

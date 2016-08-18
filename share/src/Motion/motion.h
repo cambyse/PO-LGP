@@ -21,6 +21,7 @@
 
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
+#include <Optim/KOMO_Problem.h>
 #include "taskMap.h"
 
 /* Notes
@@ -63,11 +64,8 @@ struct MotionProblem : KOrderMarkovFunction{
   WorldL configurations;       ///< copies for each time slice; including kinematic switches; only these are optimized
   bool useSwift;
   
-  /// task cost descriptions
-  mlr::Array<Task*> tasks;
-
-  /// kinematic switches along the motion
-  mlr::Array<ors::KinematicSwitch*> switches;
+  mlr::Array<Task*> tasks; ///< task cost descriptions
+  mlr::Array<ors::KinematicSwitch*> switches;  ///< kinematic switches along the motion
 
   //-- trajectory length and tau
   uint T;       ///< number of time steps
@@ -94,12 +92,15 @@ struct MotionProblem : KOrderMarkovFunction{
   bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);           ///< read a single task from a node-spec
   Task* addTask(const char* name, TaskMap *map, const TermType& termType); ///< manually add a task
 
-  //-- define a fixed 'postfix' TODO: allow to explicitly set a prefix instead of the default one
+  /// ``fix'' a certain time slice to configuration x (especitally final time slices). fix means that all joints become rigid and q zero-dimensional in that time slice
   void set_fixConfiguration(const arr& x, uint t);
 
   //-- initialization
-  void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!)
+  void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!) perhaps modified by KINEMATIC SWITCHES
   arr getInitialization();      ///< this reads out the initial state trajectory after 'setupConfigurations'
+
+
+
 
   //-- methods accessed by the optimizers
   void set_x(const arr& x);            ///< set the state trajectory of all configurations
@@ -118,7 +119,7 @@ struct MotionProblem : KOrderMarkovFunction{
   Graph getReport();
 
   //-- helpers
-  void temporallyAlignKinematicSwitchesInConfiguration(uint t);
+  void temporallyAlignKinematicSwitchesInConfiguration(uint t); //TODO: perhaps remove -> should be done by velocity constraints to ensure correct gradients
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
   /// inverse kinematics problem (which is the special case T=0) returned as a @ConstrainedProblem@
@@ -129,6 +130,22 @@ struct MotionProblem : KOrderMarkovFunction{
     };
   }
   void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
+
+  struct Conv_MotionProblem_KOMO_Problem : KOMO_Problem{
+    MotionProblem& MP;
+    uint dimPhi;
+//    uintA variableDimensions, varDimIntegral;
+//    uintA featureTimes;
+//    TermTypeA featureTypes;
+//    arrA J_KOMO, H_KOMO;
+
+    Conv_MotionProblem_KOMO_Problem(MotionProblem& P) : MP(P){}
+
+
+    virtual uint get_k(){ return MP.k_order; }
+    virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes);
+    virtual void phi(arr& phi, arrA& J, arrA& H, TermTypeA& tt, const arr& x);
+  } komo_problem;
 };
 
 
