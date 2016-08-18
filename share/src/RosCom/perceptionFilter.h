@@ -23,11 +23,10 @@ private:
 
   uint maxId = 0;
 
-  Hungarian *ha;
   arr costs;
 
   arr createCostMatrix(const FilterObjects& perceptualInputs, const FilterObjects& objectDatabase);
-  FilterObjects assign(const FilterObjects& perceps, const FilterObjects& database);
+  FilterObjects assign(const FilterObjects& perceps, const FilterObjects& database, const Hungarian& ha);
 
   int revision = -1;
 };

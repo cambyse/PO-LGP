@@ -38,6 +38,18 @@ struct Cluster:FilterObject {
   virtual void write(ostream& os) const;
 };
 
+struct Plane:FilterObject {
+  arr normal;
+  arr center; // not really necesarily center - but at least a point on the plane
+  arr hull;
+  std::string frame_id;
+
+  Plane(arr normal, arr center, arr hull, std::string frame_id);
+  Plane(const Plane &obj);
+  virtual double idMatchingCost(const FilterObject& other);
+  virtual void write(ostream& os) const;
+};
+
 struct Alvar:FilterObject {
   std::string frame_id;
 

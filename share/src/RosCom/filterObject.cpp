@@ -47,6 +47,40 @@ void Cluster::write(ostream& os) const{
 
 //============================================================================
 
+Plane::Plane(arr normal, arr center, arr hull, std::string frame_id)
+  : normal(normal),
+    center(center),
+    hull(hull),
+    frame_id(frame_id){
+  this->type = FilterObjectType::plane;
+}
+
+Plane::Plane(const Plane& obj){
+  this->frame_id = obj.frame_id;
+  this->normal = obj.normal;
+  this->center = obj.center;
+  this->hull = obj.hull;
+  this->type = obj.type;
+  this->relevance = obj.relevance;
+  this->id = obj.id;
+  this->transform = obj.transform;
+  this->frame = obj.frame;
+}
+
+double Plane::idMatchingCost(const FilterObject& other){
+  if(other.type!=plane) return -1.;
+  ors::Vector diff = (this->frame * ors::Vector(this->center)) -
+                     (dynamic_cast<const Plane*>(&other)->frame * ors::Vector(dynamic_cast<const Plane*>(&other)->center));
+  return diff.length();
+
+}
+
+void Plane::write(ostream& os) const{
+  os <<"plane_" <<id <<": center=" <<center <<" normal=" <<normal;
+  FilterObject::write(os);
+}
+
+//============================================================================
 
 Alvar::Alvar(std::string frame_id)
   : frame_id(frame_id) {
@@ -73,3 +107,5 @@ void Alvar::write(ostream& os) const{
   os <<"alvar_" <<id <<":";
   FilterObject::write(os);
 }
+
+
