@@ -38,7 +38,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
   //-- transitions
   {
     Task *t;
-    t = MP.addTask("transitions", new TransitionTaskMap(world), sumOfSqrTT);
+    t = MP.addTask("transitions", new TaskMap_Transition(world), sumOfSqrTT);
     if(microSteps>3) t->map.order=2;
     else t->map.order=1;
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
@@ -55,9 +55,9 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
   //-- tasks
   {
     Task *t;
-    DefaultTaskMap *m;
+    TaskMap_Default *m;
     //pick & place position
-    t = MP.addTask("pap_pos", m=new DefaultTaskMap(posDiffTMT), sumOfSqrTT);
+    t = MP.addTask("pap_pos", m=new TaskMap_Default(posDiffTMT), sumOfSqrTT);
     m->referenceIds.resize(MP.T+1,2) = -1;
     t->prec.resize(MP.T+1).setZero();
     t->target.resize(MP.T+1,3).setZero();
@@ -75,7 +75,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
     }
 
     //pick & place quaternion
-    t = MP.addTask("psp_quat", m=new DefaultTaskMap(quatDiffTMT), sumOfSqrTT);
+    t = MP.addTask("psp_quat", m=new TaskMap_Default(quatDiffTMT), sumOfSqrTT);
     m->referenceIds.resize(MP.T+1,2) = -1;
     t->prec.resize(MP.T+1).setZero();
     t->target.resize(MP.T+1,4).setZero();
@@ -94,7 +94,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
 
     // zero position velocity
     if(microSteps>3){
-      t = MP.addTask("psp_zeroPosVel", m=new DefaultTaskMap(posTMT, endeff_index), sumOfSqrTT);
+      t = MP.addTask("psp_zeroPosVel", m=new TaskMap_Default(posTMT, endeff_index), sumOfSqrTT);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -103,7 +103,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
       }
 
       // zero quaternion velocity
-      t = MP.addTask("pap_zeroQuatVel", new DefaultTaskMap(quatTMT, endeff_index), sumOfSqrTT);
+      t = MP.addTask("pap_zeroQuatVel", new TaskMap_Default(quatTMT, endeff_index), sumOfSqrTT);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -127,7 +127,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
 
     // up/down velocities after/before pick/place
     if(microSteps>3){
-      t = MP.addTask("pap_upDownPosVel", new DefaultTaskMap(posTMT, endeff_index), sumOfSqrTT);
+      t = MP.addTask("pap_upDownPosVel", new TaskMap_Default(posTMT, endeff_index), sumOfSqrTT);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       t->target.resize(MP.T+1,3).setZero();
@@ -194,7 +194,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
       t = MP.addTask("collisionConstraints", new CollisionConstraint(margin));
       t->setCostSpecs(0, MP.T, {0.}, 1.);
     }else{ //cost term
-      t = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, margin));
+      t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0}, margin));
       t->setCostSpecs(0, MP.T, {0.}, colPrec);
     }
 */

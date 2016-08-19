@@ -151,8 +151,8 @@ void Motion_Interface::gotoPosition(arr x)
 
 
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  t = MP.addTask("tra", new TaskMap_Transition(*world));
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 

@@ -5,7 +5,7 @@ struct IMU_Poller : Module {
 
   ACCESS(arr, imuData)
 
-  IMU_Poller():s(NULL){}
+  IMU_Poller():Module("IMU_Poller"), s(NULL){}
   virtual ~IMU_Poller(){}
 
   void open();
@@ -21,7 +21,7 @@ struct KalmanFilter : Module{
   ACCESS(arr, encoderData)
   ACCESS(arr, stateEstimate)
 
-  KalmanFilter():s(NULL){}
+  KalmanFilter():Module("KalmanFilter"),s(NULL){}
   virtual ~KalmanFilter(){}
 
   void open();
@@ -35,7 +35,7 @@ struct RacerDisplay : Module{
 
   ACCESS(arr, stateEstimate)
 
-  RacerDisplay():s(NULL){}
+  RacerDisplay():Module("RacerDisplay"),s(NULL){}
   virtual ~RacerDisplay(){}
 
   void open();
@@ -50,7 +50,7 @@ struct Motors : Module{
   ACCESS(arr, controls)
   ACCESS(arr, encoderData)
 
-  Motors():s(NULL){}
+  Motors():Module("Motors"),s(NULL){}
   virtual ~Motors(){}
 
   void open();

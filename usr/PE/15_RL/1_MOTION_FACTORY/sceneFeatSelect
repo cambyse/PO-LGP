@@ -1,0 +1,22 @@
+body stem { X=<T t(0 0 1)>  type=2 size=[0.1 0.1 2 .1] fixed, }
+
+body arm1 { type=2 size=[0.1 0.1 .4 .1]  }
+body arm2 { type=2 size=[0.1 0.1 .4 .1]  }
+body arm3 { type=2 size=[0.1 0.1 .4 .1]  }
+body arm4 { type=2 size=[0.1 0.1 .4 .1]  }
+
+shape endeff(arm4){ type=1 rel=<T t(0 0 .4)> color=[1 0 0] size=[.3 0 0 .05] contact}
+
+joint (stem arm1) { A=<T t(0 0 1) d(90 1 0 0)> B=<T t(0 0 .2)> }
+joint (arm1 arm2) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  }
+joint (arm2 arm3) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  }
+joint (arm3 arm4) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)>  }
+
+body t1 { X=<T t(0.5 -1.5 1.8)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed, }
+body t2 { X=<T t(0.5 -1.5 2.1)>  type=1 size=[.1 .1 .1 .05] color=[1 .5 0] fixed, }
+body t3 { X=<T t(0.5 -1.2 1.8)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 1] fixed, }
+body t4 { X=<T t(0.5 -1.2 2.1)>  type=1 size=[.1 .1 .1 .05] color=[1 .5 .5] fixed, }
+body t5 { X=<T t(0.5 -0.9 1.8)>  type=1 size=[.1 .1 .1 .05] color=[.5 .5 0] fixed, }
+body t6 { X=<T t(0.5 -0.9 2.1)>  type=1 size=[.1 .1 .1 .05] color=[.5 .5 .5] fixed, }
+body t7 { X=<T t(0.5 -0.6 1.8)>  type=1 size=[.1 .1 .1 .05] color=[1 .5 1] fixed, }
+body t8 { X=<T t(0.5 -0.6 2.1)>  type=1 size=[.1 .1 .1 .05] color=[1 .0 .5] fixed, }

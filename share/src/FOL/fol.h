@@ -18,7 +18,6 @@ bool valuesAreEqual(Node *fact0, Node *fact1, bool booleanMeansExistance);
 bool factsAreEqual(Node *fact0, Node *fact1, bool checkAlsoValue);
 bool factsAreEqual(Node *fact, Node *literal, const NodeL& subst, const Graph* subst_scope, bool checkAlsoValue, bool ignoreSubst=false);
 bool getEqualFactInKB(Graph& facts, Node *fact, bool checkAlsoValue=true);
-//bool getEqualFactInKB(Graph& facts, NodeL& fact, bool checkAlsoValue=true);
 bool getEqualFactInKB(Graph& facts, Node *literal, const NodeL& subst, Graph* subst_scope, bool checkAlsoValue=true);
 NodeL getPotentiallyEqualFactsInKB(Graph& facts, Node* tuple, const Graph& varScope, bool checkAlsoValue=true);
 Node *getEqualFactInList(Node *fact, NodeL& facts, bool checkAlsoValue=true);
@@ -41,8 +40,8 @@ bool applyEffectLiterals    (Graph& facts, NodeL& effects, const NodeL& subst, G
 
 //------------ fwd chaining
 
-bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query=NULL, Graph& changes=NoGraph, int verbose=0, int* decisionObservation=NULL);
-bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes=NoGraph, int verbose=0, int* decisionObservation=NULL);
+bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query=NULL, Graph& changes=NoGraph, int verbose=0, int* samplingObservation=NULL);
+bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes=NoGraph, int verbose=0, int* samplingObservation=NULL);
 bool forwardChaining_propositional(Graph& KB, Node* q);
 
 //------------ functions

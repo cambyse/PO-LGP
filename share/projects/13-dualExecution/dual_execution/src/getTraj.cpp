@@ -15,7 +15,7 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
   //-- setup the motion problem
   Task *pos =
       P.addTask("position",
-                   new DefaultTaskMap(posTMT, world, "endeff", NoVector));
+                   new TaskMap_Default(posTMT, world, "endeff", NoVector));
   pos->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
@@ -41,7 +41,7 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
 
   if(&y){
     //-- get a map to map into SL endeff space
-    TaskMap *m = new DefaultTaskMap(posTMT, world, "SL_endeff", NoVector);
+    TaskMap *m = new TaskMap_Default(posTMT, world, "SL_endeff", NoVector);
 
     y.resize(x.d0, pos->map.dim_phi(world));
     ori.resize(x.d0, 4);

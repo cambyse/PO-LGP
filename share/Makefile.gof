@@ -30,6 +30,9 @@ cleanLocks: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
 	@find $(BASE) -type f -name '.lastMake' -delete -print
 
+cleanDepends: force
+	@find $(BASE) -type f -name 'Makefile.dep' -delete -print
+
 cleanAll: $(src_paths:%=cleanPath/%) $(exa_paths:%=cleanPath/%) cleanLocks
 
 cleanStart: force

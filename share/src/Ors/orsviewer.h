@@ -34,6 +34,7 @@ struct OrsPathViewer : Module{
   //-- internal (private)
   ors::KinematicWorld copy;
   uint t;
+  int tprefix;
 
   void setConfigurations(const WorldL& cs){
     configurations.writeAccess();
@@ -45,9 +46,10 @@ struct OrsPathViewer : Module{
     listDelete(configurations.set()());
   }
 
-  OrsPathViewer(const char* varname, double beatIntervalSec=.2)
+  OrsPathViewer(const char* varname, double beatIntervalSec=.2, int tprefix=0)
     : Module("OrsPathViewer", beatIntervalSec),
-      configurations(this, varname, true){}
+      configurations(this, varname, true),
+      tprefix(tprefix){}
   ~OrsPathViewer(){}
   void open();
   void step();

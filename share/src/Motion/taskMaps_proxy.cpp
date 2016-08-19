@@ -18,7 +18,7 @@
 
 #include "taskMaps.h"
 
-ProxyTaskMap::ProxyTaskMap(PTMtype _type,
+TaskMap_Proxy::TaskMap_Proxy(PTMtype _type,
                            uintA _shapes,
                            double _margin,
                            bool _useCenterDist,
@@ -28,10 +28,10 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   margin=_margin;
   useCenterDist=_useCenterDist;
   useDistNotCost=_useDistNotCost;
-  cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
+  cout <<"creating TaskMap_Proxy with shape list" <<shapes <<endl;
 }
 
-void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   uintA shapes_t;
   shapes_t.referTo(shapes);
 
@@ -132,7 +132,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   }
 }
 
-uint ProxyTaskMap::dim_phi(const ors::KinematicWorld& G){
+uint TaskMap_Proxy::dim_phi(const ors::KinematicWorld& G){
   switch(type) {
   case allPTMT:
   case listedVsListedPTMT:

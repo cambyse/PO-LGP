@@ -108,19 +108,19 @@ void executeTrajectory(String scene, ControlType cType){
   MotionProblem P(world);
   P.loadTransitionParameters();
 
-  arr goal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
+  arr goal = ARR(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("position", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, goal, 1e4);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
-  c = P.addTask("orientation", new DefaultTaskMap(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
   c->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
-//  c = P.addTask("contact", new DefaultTaskMap(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
+//  c = P.addTask("contact", new TaskMap_Default(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
 //  c->setCostSpecs(0, P.T, {0.}, 1e0);
 
 
@@ -169,7 +169,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   arr dir;
   if (moveGoal){
-    dir = conv_vec2arr(world.getBodyByName("dir")->X.pos);
+    dir = ARR(world.getBodyByName("dir")->X.pos);
     cout << dir << endl;
   } else {
     dir = {1.,0.,0.};
@@ -177,7 +177,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   std::vector<MObject*> mobstacles;
   if (moveObs) {
-    arr obsdir = conv_vec2arr(world.getBodyByName("obsdir")->X.pos);
+    arr obsdir = ARR(world.getBodyByName("obsdir")->X.pos);
     mobstacles.push_back(new MObject(&world, mlr::String("obstacle"), MObject::OBSTACLE , 0.0005, obsdir));
   }
 

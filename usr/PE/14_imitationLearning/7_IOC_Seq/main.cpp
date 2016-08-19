@@ -43,20 +43,20 @@ void testSliding() {
   ors::Shape *tar = world.getShapeByName("target");
 
   TaskCost *c;
-  c = MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  c = MP.addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(MP.T/2, MP.T/2, conv_vec2arr(obj->X.pos), 1e4);
 
-  c = MP.addTask("quat", new DefaultTaskMap(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
+  c = MP.addTask("quat", new TaskMap_Default(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
   c->setCostSpecs(MP.T/2, MP.T/2, {0.,0.,-1.}, 1e3);
 
-  c = MP.addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
+  c = MP.addTask("pos2", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(tar->X.pos), 1e3);
 
-  c = MP.addTask("q_vel2", new DefaultTaskMap(qItselfTMT, world));
+  c = MP.addTask("q_vel2", new TaskMap_Default(qItselfTMT, world));
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T/2, MP.T/2, ARR(0.), 1e2);
 
-  c = MP.addTask("q_vel", new DefaultTaskMap(qItselfTMT, world));
+  c = MP.addTask("q_vel", new TaskMap_Default(qItselfTMT, world));
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T, MP.T, ARR(0.), 1e2);
 

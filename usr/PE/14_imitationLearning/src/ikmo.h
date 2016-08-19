@@ -12,7 +12,7 @@
 
 
 struct CostWeight {
-  enum WeightType {Transition=0,Dirac=1,Constant=2,Gaussian=3,RBF=4};
+  enum WeightType {Transition=0,Block=1,Constant=2,Gaussian=3,RBF=4};
   WeightType type;
   uint numParam;  // number of learned parameter
   arr fixedParam; // fixed parameter
@@ -47,6 +47,7 @@ struct Scene {
   arr xDem;
   arr lambdaDem;
 
+  arr lambda;
   uintA phi_perm;
   arr xInit; // init solution for optimization
   uint contactTime;
@@ -78,6 +79,7 @@ struct IKMO:ConstrainedProblem {
   uint nX,nT,nP; // number of joints,timesteps,parameters
   uintA phi_perm;
   uint numLambda;
+  double costScale;
 
   // optimization options
   bool optLearnTransParam;
@@ -96,14 +98,6 @@ struct IKMO:ConstrainedProblem {
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
   void costReport(arr param, arr param0);
 
-//  virtual uint dim_x() {return nP;}
-  // param limits + norm constraint + num active cons
-//  virtual uint dim_g() {
-//    return 2*nP+1+numLambda;
-//  }
-
-
-
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) {
     double costs = 0.;
 
@@ -113,7 +107,7 @@ struct IKMO:ConstrainedProblem {
       dwC.clear();HwC.clear();
       compWeights(w,dwC,HwC,x);
     } else {
-      // compute Hw and dw once if there are only nonlinear parameter
+      // compute Hw and dw only once if there are no nonlinear parameter
       compWeights(w,(dwC.N>0)?NoArr:dwC,(HwC.N>0)?NoArr:HwC,x);
     }
 

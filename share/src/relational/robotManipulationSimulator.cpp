@@ -1222,7 +1222,7 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   uint t;
   TaskController MP(*this, false);
   CtrlTask *o = MP.addPDTask("obj", .2, 1.5, posTMT, obj_dropped1);
-  CtrlTask *c = MP.addPDTask("collision", .5, 2., new ProxyTaskMap(allPTMT, {}, {.02}));
+  CtrlTask *c = MP.addPDTask("collision", .5, 2., new TaskMap_Proxy(allPTMT, {}, {.02}));
   c->prec = 1.;
 //  CtrlTask *r =  MP.addPDTask("q-pose", .5, 1., new TaskMap_qItself());
 //  r->prec = 1.;

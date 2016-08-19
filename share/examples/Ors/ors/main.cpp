@@ -67,7 +67,7 @@ void TEST(Kinematics){
     vec2.setRandom();
     arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
-//    x/=sqrt(sumOfSqr(x.subRef(0,3)));
+//    x/=sqrt(sumOfSqr(x.refRange(0,3)));
 
     cout <<"kinematicsPos:   "; checkJacobian(MyFct(MyFct::Pos   , G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsRelPos:"; checkJacobian(MyFct(MyFct::RelPos, G, b, vec, b2, vec2)(), x, 1e-5);
@@ -492,7 +492,7 @@ void TEST(ContactDynamics){
 // blender import test
 //
 
-#if 0
+#if 1
 static void drawTrimesh(void* _mesh){
 #if MLR_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
@@ -508,13 +508,16 @@ void TEST(BlenderImport){
   ors::KinematicWorld bl;
   readBlender("blender-export",mesh,bl);
   cout <<"loading time =" <<mlr::timerRead() <<"sec" <<endl;
-  OpenGL gl;
-  G.gl().add(glStandardScene, NULL);
-  G.gl().add(drawTrimesh,&mesh);
-  G.gl().watch("mesh only");
-  G.gl().add(ors::glDrawGraph,&bl);
-  G.gl().text="testing blender import";
-  animateConfiguration(bl,gl);
+  bl >>FILE("z.ors");
+
+  bl.gl().watch();
+//  OpenGL gl;
+//  bl.gl().add(glStandardScene, NULL);
+//  bl.gl().add(drawTrimesh,&mesh);
+//  bl.gl().watch("mesh only");
+//  bl.gl().add(ors::glDrawGraph,&bl);
+//  bl.gl().text="testing blender import";
+  animateConfiguration(bl);
 }
 #endif
 
@@ -558,11 +561,6 @@ void TEST(InverseKinematics) {
 
 int MAIN(int argc,char **argv){
 
-  testKinematics();
-  testQuaternionKinematics();
-
-  return 0;
-
   testLoadSave();
   testCopy();
   testPlayStateSequence();
@@ -578,7 +576,7 @@ int MAIN(int argc,char **argv){
 //  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();
 #endif
-  //testBlenderImport();
+  testBlenderImport();
 
   return 0;
 }
