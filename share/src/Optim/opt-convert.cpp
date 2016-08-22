@@ -186,6 +186,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   CHECK_EQ(M, dim_phi,"");
   if(&J){
+    Jaux->reshift();
     Jaux->computeColPatches(true);
   }
 

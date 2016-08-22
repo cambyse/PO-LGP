@@ -21,8 +21,8 @@ void test(){
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
 //  cmds={ "1", "1", "0", "x", "q" };
-//  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "s", "x", "q" }; //screwdriver 'hand over'
-  cmds={ "m", "m","m","m","q" };
+  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "s", "x", "q" }; //screwdriver 'hand over'
+//  cmds={ "m", "m","m","m","q" };
   bool interactive = mlr::getParameter<bool>("intact", false);
   bool random = mlr::getParameter<bool>("random", false);
 
@@ -47,6 +47,29 @@ void test(){
 
 //===========================================================================
 
+typedef ManipulationTree_Node MNode;
+
+MNode* popBestFromMCfringe(mlr::Array<MNode*>& fringe){
+  MNode* best=NULL;
+  for(MNode* n:fringe)
+    if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
+  fringe.removeValue(best);
+  return best;
+}
+
+MNode* popBestFromSeqFringe(mlr::Array<MNode*>& fringe){
+  MNode* best=NULL;
+  for(MNode* n:fringe)
+    if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
+  fringe.removeValue(best);
+  return best;
+}
+
+void setAllChildCostSoFar(MNode* n, double x){
+  n->costSoFar = x;
+  for(MNode *c: n->children) setAllChildCostSoFar(c,x);
+}
+
 void plan_BHTS(){
   Coop C;
 
@@ -56,48 +79,44 @@ void plan_BHTS(){
   C.prepareDisplay();
 
 
-  PriorityQueue<ManipulationTree_Node*> pqMC;
-  PriorityQueue<ManipulationTree_Node*> pqTerminal;
-  PriorityQueue<ManipulationTree_Node*> pqSeq;
-  PriorityQueue<ManipulationTree_Node*> pqPath;
-  PriorityQueue<ManipulationTree_Node*> pqDone;
+  mlr::Array<ManipulationTree_Node*> MCfringe;
+  mlr::Array<ManipulationTree_Node*> terminals;
+  mlr::Array<ManipulationTree_Node*> seqFringe;
+  mlr::Array<ManipulationTree_Node*> pathFringe;
+  mlr::Array<ManipulationTree_Node*> pqDone;
 
-  pqMC.add(C.root, 100.);
-//  pqSeg.add(C.root, 100.);
+  MCfringe.append(C.root);
+  seqFringe.append(C.root);
 
+  C.updateDisplay();
+  C.displayTree();
 
   for(;;){
 
     { //add MC rollouts
-      ManipulationTree_Node* n = pqMC.pop();
+      ManipulationTree_Node* n = popBestFromMCfringe(MCfringe);
       n->expand();
       for(ManipulationTree_Node* c:n->children){
         c->addMCRollouts(10,10);
-        if(c->symTerminal){
-          pqTerminal(c, c->symCost);
-        }else{
-          pqMC->add(c, c->symCost);
-        }
+        if(!c->symTerminal) MCfringe.append(c);
+        else terminals.append(c);
+        if(n->seq.N) seqFringe.append(n);
       }
-
-//      n->addMCRollouts(20, 10);
-//      n->expandOneActionOnly( n->mc->getBestAction() );
-
-//      if(!n->parent || n->parent->seq.N){ //parent has optimized seq
-//        pqSeg.add(n, n->symCost);
-//      }
     }
 
-//    { //optimize a seq
-//      ManipulationTree_Node* n = pqSeq.pop();
-//      if(n){
-//        n->solveSeqProblem();
-//        if(n->symTerminal && n->seqFeasible){ //this is a symbolic solution
-//          pqPath.add(n, n->symCost + n->seqCost);
-//        }
-//      }
-//    }
+    C.updateDisplay();
 
+    { //optimize a seq
+      MNode* n = popBestFromSeqFringe(seqFringe);
+      if(n){
+        n->solveSeqProblem();
+        setAllChildCostSoFar(n, n->seqCost);
+        if(n->seqFeasible) for(MNode* c:n->children) seqFringe.append(c);
+        if(n->seqFeasible && n->symTerminal) pathFringe.append(n);
+      }
+    }
+
+    C.updateDisplay();
 //    { //optimize a path
 //      ManipulationTree_Node* n = pqPath.pop();
 //      if(n){
@@ -109,10 +128,10 @@ void plan_BHTS(){
 //    }
 
     cout <<"===================== CURRENT QUEUES:" <<endl;
-    cout <<"pqMC:" <<pqMC <<endl;
-    cout <<"pqSeq:" <<pqSeq <<endl;
-    cout <<"pqPath:" <<pqPath <<endl;
-    cout <<"pqDone:" <<pqDone <<endl;
+    cout <<"MCfringe:" <<MCfringe <<endl;
+    cout <<"seqFringe:" <<seqFringe <<endl;
+    cout <<"pathFringe:" <<pathFringe <<endl;
+//    cout <<"pqDone:" <<pqDone <<endl;
 
   }
 }
@@ -124,7 +143,8 @@ int main(int argc,char **argv){
 
   orsDrawAlpha = 1.;
 //  orsDrawCores = true;
-  test();
+//  test();
+  plan_BHTS();
 
   return 0;
 }

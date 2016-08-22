@@ -158,7 +158,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-    CHECK(c->prec.N==T,"");
+    //    CHECK(c->prec.N==T,"");`
     if(c->active && c->prec.N>t && c->prec(t))
       m += c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
   }

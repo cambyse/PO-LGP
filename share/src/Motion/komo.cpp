@@ -379,9 +379,10 @@ void KOMO::step(){
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
   if(MP->T){
-    if(!splineB.N)
+    if(!splineB.N){
       optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
-    else{
+//      optConstrained(x, dual, Convert(MP->komo_problem), OPT(verbose=2));
+    }else{
       arr a,b,c,d,e;
       ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
       P0(a,b,c,NoTermTypeA, x);
