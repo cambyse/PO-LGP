@@ -32,14 +32,14 @@
 //===========================================================================
 
 void Task::setCostSpecs(int fromTime,
-                        uint toTime,
+                        int toTime,
                         const arr& _target,
                         double _prec){
   if(&_target) target = _target; else target = {0.};
   if(fromTime<0) fromTime=0;
-  CHECK((int)toTime>=fromTime,"");
+  CHECK(toTime>=fromTime,"");
   prec.resize(toTime+1).setZero();
-  for(uint t=fromTime;t<=toTime;t++) prec(t) = _prec;
+  for(uint t=fromTime;t<=(uint)toTime;t++) prec(t) = _prec;
 }
 
 

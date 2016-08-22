@@ -142,9 +142,10 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
   task->name <<map->shortTag(MP->world);
   if(endTime>double(maxPhase)+1e-10)
     LOG(-1) <<"beyond the time!";
-  uint tFrom = (startTime<0.?0:STEP(startTime)+order);
-  uint tTo = (endTime<0.?MP->T-1:STEP(endTime));
-  if(tFrom>tTo && tFrom-tTo<=order) tFrom=tTo;
+  int tFrom = (startTime<0.?0:STEP(startTime)+order);
+  int tTo = (endTime<0.?MP->T-1:STEP(endTime));
+  if(tTo<0) tTo=0;
+  if(tFrom>tTo && tFrom-tTo<=(int)order) tFrom=tTo;
   task->setCostSpecs(tFrom, tTo, target, prec);
   MP->tasks.append(task);
   return task;
