@@ -212,8 +212,9 @@ void TaskControllerModule::step(){
 #if 0
     arr u_bias, Kp, Kd;
     arr M, F;
-    feedbackController->world.equationOfMotion(M, F, false);
-    arr u_mean = feedbackController->calcOptimalControlProjected(Kp, Kd, u_bias, M, F); // TODO: what happens when changing the LAWs?
+    taskController->world.equationOfMotion(M, F, false);
+    arr u_mean = taskController->calcOptimalControlProjected(Kp, Kd, u_bias, M, F); // TODO: what happens when changing the LAWs?
+    arr q_ref = zeros(q_model.N);
 #else
 
     //-- compute desired acceleration law in q-space
@@ -221,20 +222,22 @@ void TaskControllerModule::step(){
     a = taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
     checkNan(k);
 
-    //-- limit the step
+
+    //-- translate to motor torques
+    arr M, F;
+    taskController->world.equationOfMotion(M, F, false);
+#if 1 //-- limit the step and use q_ref?
     arr q_step = pseudoInverse(Kp)*(k-Kp*q_real);
     clip(q_step, -.1, .1);
     arr q_ref = q_real + q_step;
-
-    //-- translate to motor torques
-#if 0
-    arr M, F;
-    taskController->world.equationOfMotion(M, F, false);
-//    arr u_bias = M*k + F;
+    arr u_bias = F;
+#else //... or directly u_bias
+    arr q_ref = zeros(q_model.N);
+    arr u_bias = M*k + F;
+#endif
     Kp = M*Kp;
     Kd = M*Kd;
     checkNan(Kp);
-#endif
 
     //-- compute the error between expected change in velocity and true one
 #if 0
@@ -255,7 +258,6 @@ void TaskControllerModule::step(){
     double gamma;
     taskController->calcForceControl(K_ft, J_ft_inv, fRef, gamma);
 
-
     if(verbose){
       LOG(0) <<"************** Tasks Report **********";
       taskController->reportCurrentState();
@@ -266,20 +268,6 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-#if 1 //like oldfashioned
-    refs.q =  q_ref;
-    refs.qdot = zeros(q_model.N);
-    refs.fL_gamma = 1.;
-    refs.Kp = ARR(1.);
-    refs.Kd = ARR(1.);
-    refs.Ki = ARR(0.5);
-    refs.fL = zeros(6);
-    refs.fR = zeros(6);
-    refs.KiFTL.clear();
-    refs.J_ft_invL.clear();
-    refs.u_bias = zeros(q_model.N);
-    refs.intLimitRatio = 0.7;
-#else
     refs.q =  q_ref;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = gamma;
@@ -290,10 +278,9 @@ void TaskControllerModule::step(){
     refs.fR = zeros(6);
     refs.KiFTL = K_ft;
     refs.J_ft_invL = J_ft_inv;
-    refs.u_bias = zeros(q_ref.N); //u_bias;
+    refs.u_bias = u_bias;
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;
-#endif
   }
 
   ctrl_q_ref.set() = refs.q;
