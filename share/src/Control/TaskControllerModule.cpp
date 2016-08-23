@@ -226,14 +226,15 @@ void TaskControllerModule::step(){
     //-- translate to motor torques
     arr M, F;
     taskController->world.equationOfMotion(M, F, false);
-#if 1 //-- limit the step and use q_ref?
+#if 0 //-- limit the step and use q_ref? works only if Kp is invertible!!!!!
+//    Kp += diag(1e-6, Kp.d0); //TODO: Danny removes this ;-) (z
     arr q_step = pseudoInverse(Kp)*(k-Kp*q_real);
     clip(q_step, -.1, .1);
     arr q_ref = q_real + q_step;
-    arr u_bias = F;
+    arr u_bias = zeros(q_model.N);
 #else //... or directly u_bias
     arr q_ref = zeros(q_model.N);
-    arr u_bias = M*k + F;
+    arr u_bias = M*k + zeros(q_model.N); //+F returns nans
 #endif
     Kp = M*Kp;
     Kd = M*Kd;
