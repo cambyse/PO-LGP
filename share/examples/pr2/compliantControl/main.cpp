@@ -13,6 +13,9 @@
 #include <Motion/taskMap_default.h>
 #include <Control/taskController.h>
 
+#include <Roopi/roopi.h>
+
+
 // =================================================================================================
 
 void setMoveUpTask(TaskControllerModule& tcm){
@@ -50,6 +53,9 @@ int main(int argc, char** argv){
 
   rosCheckInit("compliantControl");
 
+#if 1
+  Roopi R;
+#else
   Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
   Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
   Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
@@ -78,13 +84,14 @@ int main(int argc, char** argv){
   }
 
   threadOpenModules(true);
+#endif
 
   mlr::wait(1.);
   cout <<"NOW!" <<endl;
 
 //  setMoveUpTask(tcm);
 
-  TaskMap_Default posMap(posTMT, tcm.modelWorld.get(), "endeffL");
+  TaskMap_Default posMap(posTMT, R.tcm()->modelWorld.get(), "endeffL");
    CtrlTask* posLaw = new CtrlTask("endeffMove", &posMap);
    posLaw->maxAcc = 0.1;
    posLaw->maxVel = 0.1;
@@ -95,7 +102,7 @@ int main(int argc, char** argv){
    posLaw->prec = 1000.0;
 //   robot->addTask(posLaw);
 
-   TaskMap_Default orientationMap(vecTMT, tcm.modelWorld.get(), "endeffL", ors::Vector(1.0,0.0,0.0));
+   TaskMap_Default orientationMap(vecTMT, R.tcm()->modelWorld.get(), "endeffL", ors::Vector(1.0,0.0,0.0));
    CtrlTask* orientationLaw = new CtrlTask("endeffMove", &orientationMap);
    orientationLaw->maxAcc = 0.1;
    orientationLaw->maxVel = 0.5;
@@ -106,7 +113,7 @@ int main(int argc, char** argv){
    orientationLaw->prec = 1000.0;
 //   robot->addTask(orientationLaw);
 
-   tcm.ctrlTasks.set() = { posLaw, orientationLaw };
+   R.tcm()->ctrlTasks.set() = { posLaw, orientationLaw };
 
    while(true) {
      if(orientationLaw->isConverged(.05)) break;
@@ -122,7 +129,7 @@ int main(int argc, char** argv){
    //posLaw->prec = eye(3)*10.0;
    //posLaw->prec(2,2) = 0.0;
 
-   TaskMap_Default forceMap(pos1DTMT, tcm.modelWorld.get(), "endeffL", ors::Vector(.0,0.0,-1.0));
+   TaskMap_Default forceMap(pos1DTMT, R.tcm()->modelWorld.get(), "endeffL", ors::Vector(.0,0.0,-1.0));
    CtrlTask* forceLaw = new CtrlTask("endeffForce", &forceMap);
    forceLaw->setGains(ARR(0.0), ARR(20.0));
    forceLaw->setTarget(ARR(0.), ARR(0.1));
@@ -131,7 +138,7 @@ int main(int argc, char** argv){
 //   forceLaw->f_ref = ARR(-2.0);
    forceLaw->prec = 1000.0;
 
-   tcm.ctrlTasks.set() = { posLaw, orientationLaw, forceLaw };
+   R.tcm()->ctrlTasks.set() = { posLaw, orientationLaw, forceLaw };
 
 //   mlr::wait(4.0);
 //   arr yRef = posLaw->y_ref;
@@ -143,16 +150,17 @@ int main(int argc, char** argv){
 
 
 //  for(;;){
-////    cout <<tcm.ctrl_obs.get()->fL <<endl;
+////    cout <<R.tcm()->ctrl_obs.get()->fL <<endl;
 
 //    if(moduleShutdown().getValue()>0) break;
 //  }
 
   moduleShutdown().waitForValueGreaterThan(0);
 
+#if 0
   threadCloseModules();
-
   cout <<"bye bye" <<endl;
+#endif
   return 0;
 }
 
