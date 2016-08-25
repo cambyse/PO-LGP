@@ -629,8 +629,8 @@ void TEST(RowShifted){
 
 void sparseProduct(arr& y, arr& A, const arr& x);
 
-void TEST(Sparse){
-  cout <<"\n*** Sparse\n";
+void TEST(SparseMatrix){
+  cout <<"\n*** SparseMatrix\n";
 
 
   arr A(5,10), B(10);
@@ -662,6 +662,38 @@ void TEST(Sparse){
     arr D;
     sparseProduct(D, A, B);
     CHECK_EQ(C, D, "");
+  }
+}
+
+//===========================================================================
+
+void TEST(SparseVector){
+  cout <<"\n*** SparseVector\n";
+
+
+  arr a(10), b(10);
+  rndInteger(a,0,3);
+  rndInteger(b,0,3);
+  cout <<"A=\n" <<a <<"\nB=\n" <<b <<"\nA*B=\n" <<scalarProduct(a, b) <<endl;
+
+  cout <<"A sparsity=" <<a.sparsity() <<endl;
+  cout <<"B sparsity=" <<b.sparsity() <<endl;
+
+  a.makeSparse();
+  b.makeSparse();
+
+  cout <<"A=\n" <<a <<"\nB=\n" <<b <<"\nA*B=\n" <<scalarProduct(a, b) <<endl;
+
+  for(uint k=0;k<100;k++){
+    arr a(20);
+    arr b(20);
+    rndInteger(a,0,3);
+    rndInteger(b,0,3);
+    double c = scalarProduct(a,b);
+    a.makeSparse();
+    b.makeSparse();
+    double d = scalarProduct(a,b);
+    CHECK_EQ(c, d, "");
   }
 }
 
@@ -709,8 +741,9 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
-//  testSparse();
-  testRowShifted();
+//  testSparseVector();
+  testSparseMatrix();
+//  testRowShifted();
   return 0;
 
   testBasics();
@@ -730,7 +763,8 @@ int MAIN(int argc, char *argv[]){
   testDeterminant();
   testEigenValues();;
   testRowShifted();
-  testSparse();
+  testSparseVector();
+  testSparseMatrix();
   testInverse();
   testMM();
   testSVD();

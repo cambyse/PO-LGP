@@ -44,8 +44,9 @@ void OrsPathViewer::step(){
   if(T) copy.copy(*configurations()(t), true);
   configurations.deAccess();
   copy.gl().lock.unlock();
-  if(T)
+  if(T){
     copy.gl().update(STRING(" (time " <<tprefix+int(t) <<'/' <<tprefix+int(T) <<')').p, false, false, true);
+  }
   t++;
 }
 

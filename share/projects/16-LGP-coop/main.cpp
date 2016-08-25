@@ -105,6 +105,7 @@ void plan_BHTS(){
     }
 
     C.updateDisplay();
+    mlr::wait();
 
     { //optimize a seq
       MNode* n = popBestFromSeqFringe(seqFringe);
@@ -113,10 +114,13 @@ void plan_BHTS(){
         setAllChildCostSoFar(n, n->seqCost);
         if(n->seqFeasible) for(MNode* c:n->children) seqFringe.append(c);
         if(n->seqFeasible && n->symTerminal) pathFringe.append(n);
+        C.node = n;
       }
     }
 
     C.updateDisplay();
+    mlr::wait();
+
 //    { //optimize a path
 //      ManipulationTree_Node* n = pqPath.pop();
 //      if(n){

@@ -1,7 +1,7 @@
 
 #include "code.h"
 
-Coop::Coop() : poseView("pose"), seqView("sequence", 1., -1), pathView("path", .1, -2){}
+Coop::Coop() : poseView("pose"), seqView("sequence", 1., -0), pathView("path", .1, -1){}
 
 void Coop::prepareKin(){
   kin.init("LGP-coop-kin.g");
