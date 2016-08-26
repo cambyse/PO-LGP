@@ -2,22 +2,24 @@
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
-void SetOfDataFiles::open(const StringA& names, const char* folderName) {
-  system(STRING("mkdir -p " << "logData/" << folderName)); //linux specific :-) TODO
-  for(auto& name: names){
-    files.append(new ofstream(STRING("logData/" << folderName << "/" << name)));
+void SetOfDataFiles::write(const mlr::String& name, const arr& data) {
+  std::map<mlr::String, ofstream*>::iterator i = logMap.find(name);
+  if(i == logMap.end()) {
+    logMap.insert(std::map<mlr::String, ofstream*>::value_type(name, new ofstream(STRING("logData" << "/" << name))));
+  } else {
+    *i->second << data << endl;
   }
 }
 
-void SetOfDataFiles::write(const arrA& data) {
-  CHECK_EQ(data.N, files.N, "");
-  for(uint i=0; i<data.N; i++) *files(i) << data(i) << endl;
-}
+
+//SetOfDataFiles::SetOfDataFiles(mlr::String folderName) : folderName(folderName){
+//  system(STRING("mkdir -p " << "logData/" << this->folderName)); //linux specific :-) TODO
+//}
 
 SetOfDataFiles::~SetOfDataFiles() {
-  for(auto& file: files){
-    file->close();
-    delete file;
+  for(auto file : logMap) {
+    file.second->close();
+    delete file.second;
   }
 }
 
@@ -91,7 +93,7 @@ void TaskControllerModule::open(){
     dynSim->threadLoop();
   }
 
-  logFiles.open({"T", "q", "qDot"}, "data"); //TODO add more stuff here
+  //logFiles.open({"T", "q", "qDot"}, "data"); //TODO add more stuff here
 }
 
 
@@ -287,7 +289,12 @@ void TaskControllerModule::step(){
 
 //    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
 
-    logFiles.write({ARR(mlr::timerRead()), modelWorld().q, modelWorld().qdot});
+    //logFiles.write({ARR(mlr::timerRead()), modelWorld().q, modelWorld().qdot});
+
+    logFiles.write("t", ARR(mlr::timerRead()));
+    logFiles.write("q", modelWorld().q);
+    logFiles.write("qDot", modelWorld().qdot);
+    logFiles.write("uBias", u_bias);
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();

@@ -7,13 +7,9 @@
 
 /// Struct for logging data
 struct SetOfDataFiles {
+  std::map<mlr::String, ofstream*> logMap;
 
-  std::map<mlr::String, ofstream> logMap;
-
-  mlr::Array<ofstream*> files;
-
-  void open(const StringA& names, const char* folderName);
-  void write(const arrA& data);
+  void write(const mlr::String& name, const arr& data);
 
   ~SetOfDataFiles();
 };
