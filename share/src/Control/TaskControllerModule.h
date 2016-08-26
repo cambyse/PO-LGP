@@ -5,23 +5,17 @@
 #include <Control/taskController.h>
 #include <Control/RTControllerSimulation.h>
 
-struct SetOfDataFiles{
+/// Struct for logging data
+struct SetOfDataFiles {
+
+  std::map<mlr::String, ofstream> logMap;
+
   mlr::Array<ofstream*> files;
-  void open(const StringA& names){
-    for(auto& name: names){
-      files.append(new ofstream(STRING("z/" <<name)));
-    }
-  }
-  void write(const arrL& data){
-    CHECK_EQ(data.N, files.N, "");
-    for(uint i=0; i<data.N; i++) *files(i) <<*data(i) <<endl;
-  }
-  ~SetOfDataFiles(){
-    for(auto& file: files){
-      file->close();
-      delete file;
-    }
-  }
+
+  void open(const StringA& names, const char* folderName);
+  void write(const arrA& data);
+
+  ~SetOfDataFiles();
 };
 
 
@@ -55,12 +49,13 @@ struct TaskControllerModule : Module {
   bool syncModelStateWithReal; //< whether the step() should reinit the state from the ros message
   bool verbose;
   bool useDynSim;
+  bool log;
   RTControllerSimulation* dynSim;
 
   arr q_history, qdot_last, a_last, q_lowPass, qdot_lowPass, qddot_lowPass, aErrorIntegral, u_lowPass;
   arr model_error_g;
 
-  SetOfDataFiles dataFiles;
+  SetOfDataFiles logFiles;
 
 public:
   TaskControllerModule(const char* robot="pr2");

@@ -258,7 +258,7 @@ void Roopi::followTaskTrajectories(const CtrlTaskL& tasks, double executionTime,
 }
 
 void Roopi::followQTrajectory(double executionTime, const arr& trajectory) {
-  CtrlTask* ct = addQItselfCtrlTask(getJointState()); //TODO murks
+  CtrlTask* ct = addQItselfCtrlTask(getJointState()); //TODO murks, because here a task is added and then in followTaskTrajectory removed and then the same again added
   followTaskTrajectory(ct, executionTime, trajectory);
 }
 
@@ -310,15 +310,6 @@ void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime
 
 
 /*
-void Roopi::stop(const CtrlTaskL& tasks){
-  for(CtrlTask *t:tasks) activeTasks.removeValue(t);
-  s->tcm.ctrlTasks.set() = activeTasks;
-  for(CtrlTask *t:tasks){
-    delete &t->map;
-    delete t;
-  }
-}
-
 void Roopi::waitConv(const CtrlTaskL& tasks){
   for(;;){
     mlr::wait(.03);

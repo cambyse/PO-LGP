@@ -2,6 +2,26 @@
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
+void SetOfDataFiles::open(const StringA& names, const char* folderName) {
+  system(STRING("mkdir -p " << "logData/" << folderName)); //linux specific :-) TODO
+  for(auto& name: names){
+    files.append(new ofstream(STRING("logData/" << folderName << "/" << name)));
+  }
+}
+
+void SetOfDataFiles::write(const arrA& data) {
+  CHECK_EQ(data.N, files.N, "");
+  for(uint i=0; i<data.N; i++) *files(i) << data(i) << endl;
+}
+
+SetOfDataFiles::~SetOfDataFiles() {
+  for(auto& file: files){
+    file->close();
+    delete file;
+  }
+}
+
+
 void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
   lowPass = (1.-rate)*lowPass + rate*signal;
@@ -24,7 +44,8 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , requiresInitialSync(true)
   , syncModelStateWithReal(false)
   , verbose(false)
-  , useDynSim(true){
+  , useDynSim(true)
+  , log(false){
 
   s = new sTaskControllerModule();
   useRos = mlr::getParameter<bool>("useRos",false);
@@ -70,7 +91,7 @@ void TaskControllerModule::open(){
     dynSim->threadLoop();
   }
 
-  dataFiles.open({"q", "qdot", "qddot", "q_low", "qdot_low", "qddot_low", "qddot_des"});
+  logFiles.open({"T", "q", "qDot"}, "data"); //TODO add more stuff here
 }
 
 
@@ -265,6 +286,8 @@ void TaskControllerModule::step(){
     }
 
 //    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
+
+    logFiles.write({ARR(mlr::timerRead()), modelWorld().q, modelWorld().qdot});
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();
