@@ -78,6 +78,10 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   setGains(mlr::sqr(1./lambda), 2.*dampingRatio/lambda);
 }
 
+void CtrlTask::setC(const arr& C) {
+  prec = C;
+}
+
 
 void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
   if(Kp.N==1) Kp = diag(Kp.scalar(), n);

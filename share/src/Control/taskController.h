@@ -73,6 +73,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
+  void setC(const arr& C);
 
   arr get_y_ref(const arr& y);
   arr get_ydot_ref(const arr& ydot);

@@ -16,6 +16,94 @@
 #include <Roopi/roopi.h>
 
 
+arr generateEightTrajectory(arr startPos) {
+  arr traj0 = startPos;
+  arr traj;
+
+  double off = 0.1;
+  double radius = 0.2;
+
+  uint n = 100;
+
+  arr t = linspace(0,.75,n);
+  arr x_traj = sin((t+.125)*2.*M_PI)*radius;
+  arr y_traj = cos((t+.125)*2.*M_PI)*radius;
+
+  // circles
+  arr c1 = catCol(traj0(0)+0.*x_traj,traj0(1)+y_traj-radius-off,traj0(2)+x_traj);
+  arr c2 = catCol(traj0(0)+0.*x_traj,traj0(1)-y_traj+radius+off,traj0(2)+x_traj);
+
+  // lines
+  double m = (c1(0,2) - c2(c2.d0-1,2))/(c1(0,1) - c2(c2.d0-1,1));
+  arr center = (c2[0] - c1[c1.d0-1])*.5+c1[c1.d0-1];
+  arr xlin = linspace(c1(0,1),c2(0,1),n/3) -center(1);
+  arr ylin = xlin*m;
+
+  arr l1 = catCol(traj0(0)+0.*xlin,center(1)+xlin,center(2)-ylin);
+  xlin.reverseRows();
+  arr l2 = catCol(traj0(0)+0.*xlin,center(1)+xlin,center(2)-ylin);
+
+  // circle 2
+  traj.append(c1);
+  traj.append(l1);
+  traj.append(c2);
+  traj.append(l2);
+
+  traj.shift(round(l1.d0*0.5)*3);
+
+  //traj.append(traj);
+  return traj;
+}
+
+
+// =================================================================================================
+
+
+void tests() {
+  Roopi R;
+
+  // move arms in a good position with motion planner
+  arr endeffRAway = ARR(0.4,-0.8,1.0);
+  R.goToPosition(endeffRAway, "endeffR", 5.0);
+  arr trajStart = ARR(0.5,0.0,1.0);
+  R.goToPosition(trajStart, "endeffL", 2.0);
+
+  //execute a eight trajectory in task space
+  CtrlTask* c = new CtrlTask("bla", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
+  c->setGains(10.0,5.0);
+  c->setC(ARR(1000.0));
+  arr traj = generateEightTrajectory(R.getTaskValue(c));
+  R.followTaskTrajectory(c, 15.0, traj);
+
+  // move endeff in task space with maxVel
+  arr yEndeffL = R.getTaskValue(c);
+  yEndeffL(0) += 0.3;
+  R.modifyCtrlTaskGains(c, ARR(10.0), ARR(5.0), 0.05);
+  R.modifyCtrlTaskReference(c, yEndeffL);
+
+  moduleShutdown().waitForValueGreaterThan(0);
+}
+
+int main(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
+  tests();
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
 // =================================================================================================
 
 void setMoveUpTask(TaskControllerModule& tcm){
@@ -46,15 +134,36 @@ void setForceLimitTask(TaskControllerModule& tcm){
   tcm.ctrlTasks.set() = { task };
 }
 
-// =================================================================================================
-
-int main(int argc, char** argv){
-  mlr::initCmdLine(argc, argv);
-
-  rosCheckInit("compliantControl");
+void bla() {
+  //rosCheckInit("compliantControl");
 
 #if 1
   Roopi R;
+
+  //R.getPlanWorld().watch();
+
+  //R.goToPosition(ARR(0.2,0.5,1.0), "endeffL", 10.0);
+
+  CtrlTask* c = new CtrlTask("bla", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
+
+  //arr traj = ~ARR(0.3,0.3,1.0);
+  //traj.append(~ARR(0.5,0.3,0.3));
+  //traj.append(~ARR(1.5,0.2,1.0));
+  //arr y;
+  //c->map.phi(y, NoArr, R.tcm()->modelWorld.get()());
+  arr traj = generateEightTrajectory(R.getTaskValue(c));
+
+  c->setGains(10.0,5.0);
+  c->prec = 1000.0;
+
+  R.followTaskTrajectory(c, 30.0, traj);
+
+  R.syncPlanWorld();
+  R.planWorld.watch();
+
+mlr::wait(100.0);
+
+
 #else
   Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
   Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
@@ -113,7 +222,9 @@ int main(int argc, char** argv){
    orientationLaw->prec = 1000.0;
 //   robot->addTask(orientationLaw);
 
-   R.tcm()->ctrlTasks.set() = { posLaw, orientationLaw };
+   //R.tcm()->ctrlTasks.set() = { posLaw, orientationLaw };
+
+   R.addCtrlTasks({posLaw, orientationLaw});
 
    while(true) {
      if(orientationLaw->isConverged(.05)) break;
@@ -161,6 +272,6 @@ int main(int argc, char** argv){
   threadCloseModules();
   cout <<"bye bye" <<endl;
 #endif
-  return 0;
 }
 
+#endif
