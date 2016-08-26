@@ -289,12 +289,18 @@ void TaskControllerModule::step(){
 
 //    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
 
-    //logFiles.write({ARR(mlr::timerRead()), modelWorld().q, modelWorld().qdot});
-
+    //TODO add more here
     logFiles.write("t", ARR(mlr::timerRead()));
     logFiles.write("q", modelWorld().q);
     logFiles.write("qDot", modelWorld().qdot);
     logFiles.write("uBias", u_bias);
+
+    for(CtrlTask* c : ctrlTasks()) {
+      logFiles.write(STRING(c->name << "YRef"), c->y_ref);
+      logFiles.write(STRING(c->name << "YDotRef"), c->v_ref);
+      logFiles.write(STRING(c->name << "Y"), c->y); //TODO is that safe, or better call phi again?
+      logFiles.write(STRING(c->name << "YDot"), c->v); //TODO is that safe, or better call phi again?
+    }
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();
