@@ -21,21 +21,21 @@ shape door_marker (door){ type=0 size=[.056 .056 .01 0] rel=<T t(.0125 -.0375 0)
 shape door_handle (door) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 1 0) t(.0 .08 0.04)>  }
 
 body bar { type=4 size=[.0 .0 .3 .025] color=[.2 .6 .2] }
-joint lockbox_bar (lockbox bar){ type=3 axis=[0 0 1] A=<T t(0.0 0.2 .07)> limits=[0 .09]}
+joint lockbox_bar (lockbox bar){ type=3 axis=[0 0 1] A=<T t(0.0 0.2 .07)> limits=[0 0.1]}
 shape bar_marker (bar){ type=0 size=[.056 .056 .01 0] rel=<T t(.0275 0 -0.05) d(-90 0 0 1) d(-90 1 0 0) > }
-shape bar_handle (bar) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 0 1) d(90 1 0 0) t(.0 .06 0.055) > }
+shape bar_handle (bar) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 0 1) d(90 1 0 0) t(.0 .06 0.0515) d(3 0 1 0) > }
 
 body wheel {  }
 shape wheel (wheel) { type=4 size=[.0 .0 .03 .15] color=[.2 .2 .6] rel=<T d(0 0 1 0)>}
 joint lockbox_wheel (lockbox wheel){ type=0 axis=[0 0 1] A=<T d(90 0 1 0) t(0.145 0.2 0)> limits=[0 1.68] }
 shape wheel_marker (wheel){ type=0 size=[.056 .056 .01 0] rel=<T d(90 0 -1 0) t(.013 0.0725 0.0725) d(-90 0 0 1) d(-90 1 0 0) > }
-shape wheel_handle (wheel) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T t(-.06 -.06 0.04) d(90 0 0 1) d(-135 0 0 1) > }
+shape wheel_handle (wheel) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T t(-.06 -.06 0.045) d(90 0 0 1) d(-135 0 0 1) > }
 
 
 body bar2 { type=4 size=[.0 .0 .3 .0225] color=[.2 .6 .2] }
 joint lockbox_bar2 (lockbox bar2){ type=3 axis=[0 0 -1] A=<T t(0.0 -0.1 -.145) d(90 1 0 0)> limits=[0. 0.1]}
 shape bar2_marker (bar2){ type=0 size=[.056 .056 .01 0] rel=<T t(.0275 0 -0.05) d(-90 0 0 1) d(-90 1 0 0) > }
-shape bar2_handle (bar2) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 0 1) t(.0 -.05 0.08) d(90 1 0 0) d(180 0 0 1)> }
+shape bar2_handle (bar2) { type=0 size=[.02 .1 .06 0] color=[.6 .6 .2] rel=<T d(90 0 0 1) t(.005 -.0515 0.08) d(90 1 0 0) d(180 0 0 1)> }
 
 body door2 { type=0 size=[.02 .2 .3 0] color=[.6 .2 .2] }
 joint lockbox_door2 (lockbox door2){ type=0 axis=[0 1 0] A=<T t(.0 -.265 -.335)> limit=[-.5 .5 0 0 0] B=<T t(0 .0 .15) > limits=[0 .75]}

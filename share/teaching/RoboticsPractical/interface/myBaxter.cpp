@@ -168,15 +168,17 @@ void MyBaxter::stop(const CtrlTaskL& tasks){
 }
 
 void MyBaxter::stopAll(){
+ s->tcm.ctrlTasks.writeAccess();
   while (activeTasks.N > 0)
   {
     CtrlTask* t = activeTasks.first();
     activeTasks.removeValue(t);
+    s->tcm.ctrlTasks() = activeTasks;
     t->active = false;
     delete &t->map;
     delete t;
   }
-  s->tcm.ctrlTasks.set() = activeTasks;
+  s->tcm.ctrlTasks.deAccess();
 }
 
 void MyBaxter::waitConv(const CtrlTaskL& tasks){
@@ -191,10 +193,14 @@ void MyBaxter::waitConv(const CtrlTaskL& tasks){
     if(allConv) return;
   }
 
-  for (uint i = 0; i < s->tcm.q0.N; i++)
+  for (ors::Joint* joint : s->tcm.modelWorld.get()().joints)
   {
-    cout << "Joint: " << i << "   " << s->modelWorld.get()->joints(i)->name << endl;
+    if (joint->type != ors::JT_rigid)
+    {
+      cout << "Joint: " << joint->qIndex << ' ' << joint->name << endl;
+    }
   }
+
   for(CtrlTask *t:tasks)
   {
     if(!t->isConverged())
@@ -218,15 +224,50 @@ void MyBaxter::waitConv(const CtrlTaskL& tasks){
   return;
 }
 
-bool MyBaxter::testConv(const CtrlTaskL& tasks){
+bool MyBaxter::testConv(const CtrlTaskL& tasks, const double waitSecs){
   double timeOut = 0;
   double step = 0.03;
-  while(timeOut < 10)
+  while(timeOut < waitSecs)
   {
     mlr::wait(step);
     timeOut += step;
     bool allConv=true;
     for(CtrlTask *t:tasks) if(!t->isConverged()){ allConv=false; break; }
+    if(allConv) return true;
+  }
+
+  return false;
+}
+
+bool MyBaxter::testRealConv(const CtrlTaskL& tasks, const double waitSecs){
+  double timeOut = 0;
+  double step = 0.03;
+  while(timeOut < waitSecs)
+  {
+    mlr::wait(step);
+    timeOut += step;
+    bool allConv=true;
+    for(CtrlTask *t:tasks)
+    {
+      arr y;
+      t->map.phi(y, NoArr, s->tcm.realWorld);
+
+      bool converged = (y.N && y.N==t->y_ref.N && t->v.N==t->v_ref.N
+                       && maxDiff(y, t->y_ref)< 0.01
+                       && maxDiff(t->v, t->v_ref)< 0.01);
+
+      if (timeOut > (waitSecs - 0.05))
+      {
+        cout << t->name << " converged: " << converged << endl;
+        cout << y << endl;
+        cout << t->y_ref << endl;
+      }
+
+      if(!converged)
+      {
+        allConv=false; break;
+      }
+    }
     if(allConv) return true;
   }
 
@@ -285,6 +326,7 @@ double MyBaxter::setTestJointState(const arr &q){
 }
 
 double MyBaxter::updateLockbox(const ors::Transformation& tf){
+  ///////////////////
   s->tcm.realWorld.getBodyByName("lockbox")->X = tf;
   for (auto shape : s->tcm.realWorld.getBodyByName("lockbox")->shapes)
     shape->X = tf;
@@ -292,6 +334,7 @@ double MyBaxter::updateLockbox(const ors::Transformation& tf){
   s->tcm.realWorld.calc_fwdPropagateFrames();
   s->tcm.realWorld.calc_fwdPropagateShapeFrames();
 
+  ///////////////////
   s->modelWorld.set()->getBodyByName("lockbox")->X = tf;
   for (auto shape : s->modelWorld.set()->getBodyByName("lockbox")->shapes)
     shape->X = tf;
@@ -299,14 +342,13 @@ double MyBaxter::updateLockbox(const ors::Transformation& tf){
   s->modelWorld.set()->calc_fwdPropagateFrames();
   s->modelWorld.set()->calc_fwdPropagateShapeFrames();
 
+  ///////////////////
   s->tcm.modelWorld.set()->getBodyByName("lockbox")->X = tf;
   for (auto shape : s->tcm.modelWorld.set()->getBodyByName("lockbox")->shapes)
     shape->X = tf;
 
   s->tcm.modelWorld.set()->calc_fwdPropagateFrames();
   s->tcm.modelWorld.set()->calc_fwdPropagateShapeFrames();
-
-  //s->tcm.realWorld.calc_fwdPropagateFrames();
 
   for (auto kw : s->ctrlView.copies)
   {
@@ -461,15 +503,19 @@ void MyBaxter::grip(){
 }
 
 void MyBaxter::grip(const bool toGrip, const bool sim){
+  NIY;
   arr q = s->tcm.modelWorld.get()->q;
   ors::Joint *j = s->tcm.modelWorld.get()->getJointByName("l_gripper_l_finger_joint");
   isGripping = toGrip;
-  isGripping ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
+  toGrip ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
 
   std::cout << "Gripping: " << isGripping << std::endl;
 
-  auto grip = task(GRAPH("map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
-  modifyTarget(grip, q);
+  if (gripTask)
+    stop({gripTask});
+
+  gripTask = task(GRAPH("map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
+  modifyTarget(gripTask, q);
 
   uint count = 0;
   arr pos;
@@ -479,13 +525,13 @@ void MyBaxter::grip(const bool toGrip, const bool sim){
     if (count > 500)
       break;
     mlr::wait(0.01);
-    if (sim)
+//    if (sim)
       pos = s->tcm.modelWorld.get()->q;
-    else
-      pos = s->tcm.realWorld.q;
+  //  else
+    //  pos = s->tcm.realWorld.q;
 
   } while( std::abs(50 * pos(j->qIndex) - q(j->qIndex)) > 0.1);
-  stop({grip});
+//  stop({grip});
 }
 
 //RelationalMachineModule& MyBaxter::rm(){

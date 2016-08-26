@@ -40,7 +40,8 @@ struct MyBaxter{
   void stop(const CtrlTaskL& tasks);
   void stopAll();
   void waitConv(const CtrlTaskL& tasks);
-  bool testConv(const CtrlTaskL& tasks);
+  bool testConv(const CtrlTaskL& tasks, const double waitSecs=10);
+  bool testRealConv(const CtrlTaskL& tasks, const double waitSecs=10);
 
   //-- get object information
   uint reportPerceptionObjects();
@@ -76,6 +77,7 @@ struct MyBaxter{
 
   bool isGripping = false;
 
+  CtrlTask* gripTask;
   //-- inner access
   struct TaskControllerModule& getTaskControllerModule();
 

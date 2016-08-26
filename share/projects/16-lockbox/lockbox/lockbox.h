@@ -40,6 +40,7 @@ struct Lockbox:Module{
 
   void moveHome(const bool stopAllOtherTasks = false);
   void fixJoint(const uint joint, const bool fix);
+  void grip(const bool toGrip);
 
   void update();
   bool updatedJointPose(const uint joint_num, arr& new_q);
@@ -60,5 +61,6 @@ struct Lockbox:Module{
   ors::KinematicWorld lockbox_world;
 
   CtrlTaskL joint_fixed_tasks;
+  CtrlTask* grip_task;
   arr q0;
 };

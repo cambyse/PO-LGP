@@ -28,10 +28,6 @@ Merge right_w1 {q=1.02 }
 Merge left_w1 { q=1.02 }
 Merge right_w2 { q=0.5 }
 Merge left_w2 { q=-0.5 }
-#joint r_gripper_l_finger_joint (right_wrist r_gripper_l_finger){ type=3 from=<T 0.15855 -0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  limits=[ 0 0.020833 ]  ctrl_limits=[ 5 20 1 ]  }
-#joint r_gripper_r_finger_joint (right_wrist r_gripper_r_finger){ type=3 from=<T 0.15855 0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  mimic="r_gripper_l_finger_joint"  limits=[ -0.020833 0 ]  ctrl_limits=[ 5 20 1 ]  }
-#joint l_gripper_l_finger_joint (left_wrist l_gripper_l_finger){ type=3 from=<T 0.15855 -0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  limits=[ 0 0.020833 ]  ctrl_limits=[ 5 20 1 ]  }
-#joint l_gripper_r_finger_joint (left_wrist l_gripper_r_finger){ type=3 from=<T 0.15855 0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  mimic="l_gripper_l_finger_joint"  limits=[ -0.020833 0 ]  ctrl_limits=[ 5 20 1 ]  }
 
 
 ## extra shapes to mimick pr2
@@ -46,8 +42,8 @@ shape torso_lift_link_0 (base) { type=5 size=[.3 .3 .3 0] }
 shape endeffHead(head){ rel=<T  d(-90 0 0 1) d(-15 1 0 0)> type=5 color=[1 0 0] size=[.2 0 0 0]}
 #shape endeffWorkspace(torso_lift_link){ rel=<T d(90 0 1 0) t(.7 0 -.1) d(-90 0 0 1) > type=5 color=[1 0 0] size=[.1 0 0 0] }
 
-shape endeffL(left_wrist){ rel=<T t(.18 0 0)> type=5 color=[1 0 0] size=[.2 0 0 0] }
-shape endeffR(right_wrist){ rel=<T t(.18 0 0)> type=5 color=[1 0 0] size=[.2 0 0 0] }
+shape endeffL(left_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.2 0 0 0] }
+shape endeffR(right_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.2 0 0 0] }
 
 shape elbowL(left_lower_shoulder){ rel=<T d(180 1 0 0) t(0 0 .42)> type=5 color=[1 0 0] size=[.2 0 0 0]}
 shape elbowR(right_lower_shoulder){ rel=<T d(180 1 0 0) t(0 0 .42)> type=5 color=[1 0 0] size=[.2 0 0 0]}

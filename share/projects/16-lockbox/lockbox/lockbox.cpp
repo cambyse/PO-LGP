@@ -66,7 +66,6 @@ void Lockbox::fixJoint(const uint joint, const bool toFix)
     return;
   }
 
-
   if (!toFix)
   {
     for (CtrlTask* task : joint_fixed_tasks)
@@ -81,125 +80,53 @@ void Lockbox::fixJoint(const uint joint, const bool toFix)
   }
 }
 
-void Lockbox::moveJoint(const uint joint, const double position)
+void Lockbox::grip(const bool toGrip)
 {
-  // First, fix the joint in the model world.
-  fixJoint(joint, true);
+//  arr q = myBaxter->getModelWorld().q;
+  ors::Joint *j = myBaxter->getModelWorld().getJointByName("l_gripper_l_finger_joint");
 
+  toGrip ? q0(j->qIndex) = j->limits(0) : q0(j->qIndex) = j->limits(1);
 
-  // Move and align relative to the alvar in the model world.
+  std::cout << "Gripping: " << toGrip << std::endl;
 
-  mlr::String handle = joint_to_handle.at(joint);
-  mlr::String marker_name = STRING(joint_name.at(joint) << "_marker");
-
-
-  // Alignment tasks.
-  auto alignX = myBaxter->task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[1000]")));
-  auto alignY = myBaxter->task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[1000]")));
-  auto alignZ = myBaxter->task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[1000]")));
-
-  // Position task
-  mlr::String str;
-  ors::Vector target = ors::Vector(0, 0, 0.15);
-  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1, 1., 1.]";
-
-  auto approach = myBaxter->task(GRAPH(str));
-  myBaxter->waitConv({approach, alignX, alignY, alignZ});
-
-  // Now we are 15 cm away and aligned with the handle.
-  myBaxter->stop({approach});
-
-
-  mlr::wait(2.0);
-
-  // Move closer.
-  str.clear();
-  target = ors::Vector(0., 0., 0.05);
-  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1, 1., 1.]";
-  approach = myBaxter->task("approach", GRAPH(str));
-
-  myBaxter->waitConv({approach, alignX, alignY, alignZ});
-
-
-  // Grip
-  myBaxter->grip(true, usingRos);
-
-  fixJoint(joint, false);
-
-  // For the desired articulation:
-  // - q_ref(lockbox_joint) = lockbox_joint->limits(1)
-
-  // Create a task for moving the joint in the modelWorld.
-  auto move_joint = myBaxter->task("move_joint", new qItselfConstraint(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex, myBaxter->getModelWorld().getJointStateDimension()), 1, 1, 1, 1);
-
-
-  double current = myBaxter->getModelWorld().q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex);
-  double desired = position;
-
-  const double steps = 10;
-  for (double i = 1; i<=steps; i++)
+  for (CtrlTask* task : joint_fixed_tasks)
   {
-    double target = (desired - current) * (i/steps) + current;
-    cout << "Step: " << i << " target: " << target << endl;
-    myBaxter->modifyTarget(move_joint, ARR(target));
-    myBaxter->waitConv({move_joint, approach, alignX, alignY, alignZ});
+    if (task->name == "grip")
+    {
+      myBaxter->stop({task});
+      joint_fixed_tasks.removeValue(task);
+    }
   }
 
-  myBaxter->stop({move_joint, approach});
+  CtrlTask* gripTask = myBaxter->task("grip", new qItselfConstraint(j->qIndex, myBaxter->getModelWorld().getJointStateDimension()), 1, .8, 10, 10);
+  myBaxter->modifyTarget(gripTask, ARR(q0(j->qIndex)));
+  gripTask->prec = ARR(10000);
 
-  myBaxter->grip(false, usingRos);
+//  auto gripTask = myBaxter->task(GRAPH("map=qItself PD=[1., 1, 3., 2.] prec=[100.]"));
+//  gripTask->name = "grip";
+//  myBaxter->modifyTarget(gripTask, q);
 
+  joint_fixed_tasks.append(gripTask);
 
-//    auto hold2 = baxter.task("hold2", new qItselfConstraint(baxter.getKinematicWorld().getJointByName(name)->qIndex, baxter.getKinematicWorld().getJointStateDimension()), 1, .8, 1, 1);
-//    baxter.modifyTarget(hold2, ARR(baxter.getModelWorld().q(baxter.getModelWorld().getJointByName(name)->qIndex)));
+  cout << "Here." << endl;
+  // Special wait-conv, since it won't converge if it is gripping.
+  cout << (myBaxter->testConv({gripTask}, 5) ? "Grip converged. " : "Grip timed out." )<< endl;
+//  uint count = 0;
+//  arr pos;
+//  do
+//  {
+//    count++;
+//    if (count > 500)
+//      break;
+//    mlr::wait(0.01);
 
-  // Fixing the joint in the model world.
-  fixJoint(joint, true);
+//    pos = myBaxter->getModelWorld().q;
 
-  // Retracting with alignment.
-  cout << "Retracting with alignment. " << endl;
+//  } while( std::abs(pos(j->qIndex) - q0(j->qIndex)) > 0.001);
+}
 
-  str.clear();
-  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=[0 0 0.15] PD=[1., 1, 1., 1.]";
-  auto retract = myBaxter->task("retract", GRAPH(str));
-  myBaxter->waitConv({retract, alignX, alignY, alignZ});
-  myBaxter->stop({retract});//, alignX, alignY, alignZ});
-
-  cout << "Retraced from handle. Moving to above marker." << endl;
-
-  str.clear();
-  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
-//    ors::Vector marker_pos = baxter.getModelWorld().getShapeByName(marker_name)->X.pos;
-//    str << "map=pos ref1=endeffL ref2=base_footprint  vec2=[" << marker_pos.x << ' ' << marker_pos.y << ' ' << marker_pos.z << "] PD=[1., 1, 1., 1.]";
-
-  // Alignment tasks.
-//    auto alignXmarker = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[10]")));
-//    auto alignYmarker = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[10]")));
-//    auto alignZmarker = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[10]")));
-  auto marker = myBaxter->task("marker", GRAPH(str));
-  myBaxter->waitConv({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
-  myBaxter->stop({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
-
-  cout << "Retracted, updating modelworld. " << endl;
-
-  // Update the position
-  myBaxter->disablePosControl();
-  mlr::wait(5.);
-  arr new_q;
-  updatedJointPose(joint, new_q);
-  myBaxter->setRealWorld(new_q);
-  myBaxter->enablePosControl();
-
-  // Retracting without alignment.
-  str.clear();
-  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
-  cout << "Retracting. " << endl;
-  retract = myBaxter->task(GRAPH(str));
-  myBaxter->waitConv({retract});
-  myBaxter->stop({retract});
-
-  // Done, move home.
-  moveHome(true);
+void Lockbox::moveJoint(const uint joint, const double position)
+{
 }
 
 bool Lockbox::testJoint(const uint joint)
@@ -207,6 +134,9 @@ bool Lockbox::testJoint(const uint joint)
   // First, fix the joint in the model world.
   fixJoint(joint, true);
 
+  grip(false);
+//  myBaxter->grip(false, usingRos);
+
 
   // Move and align relative to the alvar in the model world.
 
@@ -214,36 +144,48 @@ bool Lockbox::testJoint(const uint joint)
   mlr::String marker_name = STRING(joint_name.at(joint) << "_marker");
 
 
-  // Alignment tasks.
-  auto alignX = myBaxter->task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[1000]")));
-  auto alignY = myBaxter->task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[1000]")));
-  auto alignZ = myBaxter->task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[1000]")));
-
   // Position task
   mlr::String str;
   ors::Vector target = ors::Vector(0, 0, 0.15);
-  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1, 1., 1.]";
+  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1.2, .2, 10.]";
 
-  auto approach = myBaxter->task(GRAPH(str));
-  myBaxter->waitConv({approach, alignX, alignY, alignZ});
+  cout << "Moving above handle." << endl;
+  auto approach = myBaxter->task("approach", GRAPH(str));
 
+  myBaxter->waitConv({approach});
+//  myBaxter->testRealConv({approach}, 10);
+
+  cout << "At handle, aligning" << endl;
+  // Alignment tasks.
+  auto alignX = myBaxter->task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[1000] PD=[1, 1.2, 4, .2]")));
+  auto alignY = myBaxter->task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[1000] PD=[1, 1.2, 4, .2]")));
+  auto alignZ = myBaxter->task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << handle << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[1000] PD=[1, 1.2, 4, .2]")));
+
+  if (usingRos)
+    myBaxter->testRealConv({approach, alignX, alignY, alignZ}, 10);
+  else
+    myBaxter->waitConv({approach, alignX, alignY, alignZ});
+
+//  mlr::wait(2.);
+  cout << "Aligned with handle." << endl;
   // Now we are 15 cm away and aligned with the handle.
   myBaxter->stop({approach});
-
-
-  mlr::wait(2.0);
 
   // Move closer.
   str.clear();
   target = ors::Vector(0., 0., 0.05);
-  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1, 1., 1.]";
+  str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1, 2, .5]";
   approach = myBaxter->task("approach", GRAPH(str));
 
-  myBaxter->waitConv({approach, alignX, alignY, alignZ});
+  if (usingRos)
+    myBaxter->testRealConv({approach, alignX, alignY, alignZ}, 10);
+  else
+    myBaxter->waitConv({approach, alignX, alignY, alignZ});
 
 
   // Grip
-  myBaxter->grip(true, usingRos);
+//  myBaxter->grip(true, usingRos);
+  grip(true);
 
   fixJoint(joint, false);
 
@@ -251,54 +193,86 @@ bool Lockbox::testJoint(const uint joint)
   // - q_ref(lockbox_joint) = lockbox_joint->limits(1)
 
   // Create a task for moving the joint in the modelWorld.
-  auto move_joint = myBaxter->task("move_joint", new qItselfConstraint(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex, myBaxter->getModelWorld().getJointStateDimension()), 1, 1, 1, 1);
+  CtrlTask* move_joint = myBaxter->task("move_joint", new qItselfConstraint(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex, myBaxter->getModelWorld().getJointStateDimension()), 1, 1, 1, 1);
 
 
   double current = myBaxter->getModelWorld().q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex);
   double desired = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->limits(1);
 
-  const double steps = 10;
+
+  // Simulate locked joints, if not using ROS
+  if (!usingRos)
+  {
+    // see if we can actually unlock the joint
+    if ( joint != locked_joints.min() )
+    {
+      fixJoint(joint, true);
+    }
+  }
+
+  const double steps = 100;
+  uint num_failed = 0;
   for (double i = 1; i<=steps; i++)
   {
     double target = (desired - current) * (i/steps) + current;
     cout << "Step: " << i << " target: " << target << endl;
 
-    if (!usingRos)
-    {
-      // see if we can actually unlock the joint
-      if ( joint != locked_joints.min() )
-      {
-        fixJoint(joint, true);
-      }
-    }
-
     myBaxter->modifyTarget(move_joint, ARR(target));
-    bool success = myBaxter->testConv({move_joint, approach, alignX, alignY, alignZ});
+
+    // Wait for the model world to converge
+//    myBaxter->testConv({move_joint}, 5);
+
+    // Update the real world position of the joint
+    arr sim_q = myBaxter->getKinematicWorld().q;
+    sim_q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex) = target;
+    myBaxter->setRealWorld(sim_q);
+
+    // Test if the real world converged
+    bool success;
+    if (usingRos)
+      success = myBaxter->testRealConv({approach, alignX, alignY, alignZ}, 3);
+    else
+      success = myBaxter->testConv({move_joint}, 3);
 
     cout << "Success: " << success << endl;
     // If not movement success, decide if it is failure, or if joint is locked.
-    if (!success && i>= 3)
+    if (!success)
     {
-      // Assuming joint is locked if steps is >= 5
-      cout << "Joint is locked." << endl;
-      myBaxter->stop({move_joint, approach});
-      myBaxter->grip(false, usingRos);
-      fixJoint(joint, true);
-      str.clear();
-      ors::Vector point = ors::Vector(0., 0., 0.1);
-      str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< point.x << ", " << point.y << ", " << point.z << "] PD=[1., 1, 1., 1.]";
-      auto retract = myBaxter->task("retract", GRAPH(str));
-      myBaxter->waitConv({retract, alignX, alignY, alignZ});
-      myBaxter->stop({retract, alignX, alignY, alignZ});
-      moveHome(true);
-      return false;
+      num_failed++;
     }
+    else
+      num_failed=0;
+      // If our step count is "in the middle." This allows us to 'fail' near the end of a grip.
+//      if (i >= 2 && i <= (steps - 3))
+      if (num_failed > 10)
+      {
+        // Assuming joint is locked if steps is >= 5
+        cout << "Joint is locked." << endl;
+        myBaxter->modifyTarget(move_joint, ARR(current));
+        myBaxter->waitConv({move_joint});
+        mlr::wait(1.);
+        myBaxter->stop({move_joint, approach});
+        grip(false);
+        fixJoint(joint, true);
+        str.clear();
+        ors::Vector point = ors::Vector(0., 0., 0.3);
+        str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< point.x << ", " << point.y << ", " << point.z << "] PD=[1., 1, 1., 1.]";
+        auto retract = myBaxter->task("retract", GRAPH(str));
+        myBaxter->waitConv({retract, alignX, alignY, alignZ});
+        myBaxter->stop({retract, alignX, alignY, alignZ});
+        moveHome(true);
+        sim_q = myBaxter->getKinematicWorld().q;
+        sim_q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex) = current;
+        myBaxter->setRealWorld(sim_q);
+        return false;
+      }
+//    }
   }
 
   myBaxter->stop({move_joint, approach});
 
-  myBaxter->grip(false, usingRos);
-
+//  myBaxter->grip(false, usingRos);
+  grip(false);
 
 //    auto hold2 = baxter.task("hold2", new qItselfConstraint(baxter.getKinematicWorld().getJointByName(name)->qIndex, baxter.getKinematicWorld().getJointStateDimension()), 1, .8, 1, 1);
 //    baxter.modifyTarget(hold2, ARR(baxter.getModelWorld().q(baxter.getModelWorld().getJointByName(name)->qIndex)));
@@ -319,6 +293,7 @@ bool Lockbox::testJoint(const uint joint)
 
   str.clear();
   str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
+
 //    ors::Vector marker_pos = baxter.getModelWorld().getShapeByName(marker_name)->X.pos;
 //    str << "map=pos ref1=endeffL ref2=base_footprint  vec2=[" << marker_pos.x << ' ' << marker_pos.y << ' ' << marker_pos.z << "] PD=[1., 1, 1., 1.]";
 
@@ -326,7 +301,7 @@ bool Lockbox::testJoint(const uint joint)
 //    auto alignXmarker = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[10]")));
 //    auto alignYmarker = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[10]")));
 //    auto alignZmarker = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[10]")));
-  auto marker = myBaxter->task("marker", GRAPH(str));
+  CtrlTask* marker = myBaxter->task("marker", GRAPH(str));
   myBaxter->waitConv({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
   myBaxter->stop({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
 
@@ -341,10 +316,16 @@ bool Lockbox::testJoint(const uint joint)
   myBaxter->enablePosControl();
 
   // Retracting without alignment.
-  str.clear();
-  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
   cout << "Retracting. " << endl;
-  retract = myBaxter->task(GRAPH(str));
+
+  str.clear();
+//  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
+
+  str << "map=pos ref1=endeffL ref2=base_footprint PD=[1, 1, 1, 1]";
+  retract = myBaxter->task("clear", GRAPH(str));
+  retract->map.phi(retract->y, NoArr, myBaxter->getModelWorld());
+  retract->y_ref = retract->y + ARR(-0.2, 0, 0);
+
   myBaxter->waitConv({retract});
   myBaxter->stop({retract});
 
@@ -360,30 +341,39 @@ void Lockbox::moveHome(const bool stopAllOtherTasks)
   if (stopAllOtherTasks)
   {
     cout << "Stopping all other tasks. " << endl;
+    for (auto task : joint_fixed_tasks)
+    {
+      cout << "Stopping: " << task->name << endl;
+      myBaxter->stop({task});
+    }
     joint_fixed_tasks.clear();
     myBaxter->stopAll();
+    mlr::wait(2.);
 //    CtrlTask* limits = myBaxter->task("limits", new LimitsConstraint());
 //    limits->setGainsAsNatural(1, 1);
   }
 
   if (q0.N == 0)
   {
-    myBaxter->grip(0, !mlr::getParameter<bool>("useRos", false));
-    auto endL   = myBaxter->task(GRAPH("map=pos ref1=endeffL ref2=base_footprint target=[0.675 0.45 1.4] PD=[1., .8, 1., 1.]"));
-    auto endR   = myBaxter->task(GRAPH("map=pos ref1=endeffR ref2=base_footprint target=[0.6 -0.8 1.5] PD=[1., .8, 1., 1.]"));
+//    myBaxter->grip(0, !mlr::getParameter<bool>("useRos", false));
+    auto endL   = myBaxter->task(GRAPH("map=pos ref1=endeffL ref2=base_footprint target=[0.675 0.45 1.4] PD=[.5, 1., 2., 10.]"));
+    auto endR   = myBaxter->task(GRAPH("map=pos ref1=endeffR ref2=base_footprint target=[0.6 -0.8 1.5] PD=[.5, 1., 2., 10.]"));
     auto alignX = myBaxter->task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[1 0 0] target=[1] PD=[1., 1., 1., 1.]"));
     auto alignY = myBaxter->task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 -1] target=[1] PD=[1., 1., 1., 1.]"));
     auto alignZ = myBaxter->task(GRAPH("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=[0 1 0] target=[1] PD=[1., 1., 1., 1.]"));
     auto wrist   = myBaxter->task(GRAPH("map=vecAlign ref1=wristL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., 1., 1., 1.]"));
     auto elbow   = myBaxter->task(GRAPH("map=vecAlign ref1=elbowL ref2=base_footprint vec1=[0 1 0] vec2=[0 0 1] target=[1] PD=[1., 1., 1., 1.]"));
-
     myBaxter->waitConv({alignX, alignY, alignZ, endR, endL});
+    if (usingRos)
+      myBaxter->testRealConv({alignX, alignY, alignZ, endR, endL}, 10);
+
     myBaxter->stop({alignX, alignY, alignZ, wrist, elbow, endR, endL});
     q0 = myBaxter->getModelWorld().q;
+    grip(false);
   }
   else
   {
-    auto home = myBaxter->task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
+    auto home = myBaxter->task(GRAPH("name=home map=qItself PD=[.5, 1., 2., 10.]"));
     myBaxter->modifyTarget(home, q0);
     myBaxter->waitConv({home});
     myBaxter->stop({home});
