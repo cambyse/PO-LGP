@@ -5,12 +5,15 @@
 void SetOfDataFiles::write(const mlr::String& name, const arr& data) {
   std::map<mlr::String, ofstream*>::iterator i = logMap.find(name);
   if(i == logMap.end()) {
-    logMap.insert(std::map<mlr::String, ofstream*>::value_type(name, new ofstream(STRING("logData" << "/" << name))));
+    logMap.insert(std::map<mlr::String, ofstream*>::value_type(name, new ofstream(STRING("logData/" << folderName << "/" << name))));
   } else {
     *i->second << data << endl;
   }
 }
 
+SetOfDataFiles::SetOfDataFiles(const char* logFolderName) : folderName(logFolderName) {
+  system(STRING("mkdir -p " << "logData/" << folderName)); //linux specific :-) TODO
+}
 
 //SetOfDataFiles::SetOfDataFiles(mlr::String folderName) : folderName(folderName){
 //  system(STRING("mkdir -p " << "logData/" << this->folderName)); //linux specific :-) TODO
@@ -47,7 +50,8 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , syncModelStateWithReal(false)
   , verbose(false)
   , useDynSim(true)
-  , log(false){
+  , log(false)
+  , logFiles("specifyMe"){
 
   s = new sTaskControllerModule();
   useRos = mlr::getParameter<bool>("useRos",false);

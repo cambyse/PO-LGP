@@ -7,10 +7,11 @@
 
 /// Struct for logging data
 struct SetOfDataFiles {
+  mlr::String folderName;
   std::map<mlr::String, ofstream*> logMap;
 
   void write(const mlr::String& name, const arr& data);
-
+  SetOfDataFiles(const char* logFolderName);
   ~SetOfDataFiles();
 };
 
@@ -46,12 +47,13 @@ struct TaskControllerModule : Module {
   bool verbose;
   bool useDynSim;
   bool log;
+  SetOfDataFiles logFiles;
   RTControllerSimulation* dynSim;
 
   arr q_history, qdot_last, a_last, q_lowPass, qdot_lowPass, qddot_lowPass, aErrorIntegral, u_lowPass;
   arr model_error_g;
 
-  SetOfDataFiles logFiles;
+
 
 public:
   TaskControllerModule(const char* robot="pr2");
