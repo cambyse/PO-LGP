@@ -1,19 +1,6 @@
 #include <Core/module.h>
-#include <RosCom/roscom.h>
-#include <RosCom/spinner.h>
-#include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
-#include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
-
-#include <sensor_msgs/JointState.h>
-#include <RosCom/baxter.h>
-
-
-#include <Motion/taskMap_default.h>
-#include <Control/taskController.h>
-
 #include <Roopi/roopi.h>
+#include <Control/TaskControllerModule.h>
 
 
 arr generateEightTrajectory(arr startPos) {
@@ -69,7 +56,7 @@ void tests() {
   R.goToPosition(trajStart, "endeffL", 2.0);
 
   //execute a eight trajectory in task space
-  CtrlTask* c = new CtrlTask("bla", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
+  CtrlTask* c = R.createCtrlTask("eight", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
   c->setGains(10.0,5.0);
   c->setC(ARR(1000.0));
   arr traj = generateEightTrajectory(R.getTaskValue(c));

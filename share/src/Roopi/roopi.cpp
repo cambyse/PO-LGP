@@ -25,7 +25,9 @@
 
 #define baxter 0
 
-struct RoopiSystem {
+//==============================================================================
+
+struct Roopi_private {
 
   Access_typed<sensor_msgs::JointState> jointState;
   Access_typed<CtrlMsg> ctrl_ref;
@@ -79,7 +81,7 @@ struct RoopiSystem {
 
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
-  RoopiSystem()
+  Roopi_private()
     : jointState(NULL, "jointState"),
       ctrl_ref(NULL, "ctrl_ref"),
       ctrl_obs(NULL, "ctrl_obs"),
@@ -107,15 +109,17 @@ struct RoopiSystem {
     cout << "Go!" << endl;
   }
 
-  ~RoopiSystem(){
+  ~Roopi_private(){
     threadCloseModules();
     cout << "bye bye" << endl;
   }
 };
 
 
+//==============================================================================
+
 Roopi::Roopi()
-  : s(new RoopiSystem){
+  : s(new Roopi_private){
     planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
     mlr::timerStart(true); //TODO is that necessary? Is the timer global?
 }
@@ -124,49 +128,30 @@ Roopi::~Roopi(){
   delete s;
 }
 
-TaskControllerModule* Roopi::tcm() {
-  return &s->tcm;
-}
-
-void Roopi::addCtrlTask(CtrlTask* ct) {
-  tcm()->ctrlTasks.set()->append(ct);
-}
-
-void Roopi::addCtrlTasks(CtrlTaskL cts) {
-  /*for(CtrlTask* t : cts) {
-    addCtrlTask(t);
-  }*/
-  tcm()->ctrlTasks.set()->append(cts);
-}
-
-CtrlTask* Roopi::addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
-  CtrlTask* ct = new CtrlTask("qItself", new TaskMap_qItself);
-  ct->setTarget(qRef);
-  ct->setC(ARR(1000.0));
-  ct->setGains(Kp, Kd);
-  addCtrlTask(ct);
-  return ct;
-}
-
-CtrlTask* Roopi::addDefaultCtrlTask(const char* name, const TaskMap_DefaultType type, const char* iShapeName, const ors::Vector& iVec, const char* jShapeName, const ors::Vector& jVec) {
-  CtrlTask* ct = createCtrlTask(name, new TaskMap_Default(type, tcm()->modelWorld.get()(), iShapeName, iVec, jShapeName, jVec), false);
-  return ct;
-}
+//==============================================================================
+//
+// basic CtrlTask management
 
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
   CtrlTask* ct = new CtrlTask(name, map);
-  ct->active = active;
   map->phi(ct->y, NoArr, tcm()->modelWorld.get()()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
+  ct->y_ref = ct->y;
   ct->setGains(0.0,0.0);
-  addCtrlTask(ct);
+  ct->active = active;
+  tcm()->ctrlTasks.set()->append(ct);
   return ct;
 }
 
-void Roopi::modifyCtrlActive(CtrlTask* ct, bool active) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->active = active;
-  tcm()->ctrlTasks.deAccess();
+void Roopi::activateCtrlTask(CtrlTask* t, bool active){
+  tcm()->ctrlTasks.set(), t->active=true;  //(mt) very unusual syntax.... check if that works!
 }
+
+void Roopi::destroyCtrlTask(CtrlTask* t) {
+  tcm()->ctrlTasks.set()->removeValue(t);
+  delete &t->map;
+  delete t;
+}
+
 
 void Roopi::modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef) {
   tcm()->ctrlTasks.writeAccess();
@@ -188,11 +173,26 @@ void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
   tcm()->ctrlTasks.deAccess();
 }
 
-void Roopi::destroyCtrlTask(CtrlTask* t) {
-  tcm()->ctrlTasks.set()->removeValue(t);
-  delete &t->map;
-  delete t;
+//CtrlTask* Roopi::_addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
+//  CtrlTask* ct = createCtrlTask("qItself", new TaskMap_qItself);
+//  ct->setTarget(qRef);
+//  ct->setC(ARR(1000.0));
+//  ct->setGains(Kp, Kd);
+//  //(mt): automatically activate the task??
+//  //addCtrlTask(ct);
+//  return ct;
+//}
+
+//CtrlTask* Roopi::_addDefaultCtrlTask(const char* name, const TaskMap_DefaultType type, const char* iShapeName, const ors::Vector& iVec, const char* jShapeName, const ors::Vector& jVec) {
+//  CtrlTask* ct = createCtrlTask(name, new TaskMap_Default(type, tcm()->modelWorld.get()(), iShapeName, iVec, jShapeName, jVec), false);
+//  return ct;
+//}
+
+TaskControllerModule* Roopi::tcm() {
+  return &s->tcm;
 }
+
+//==============================================================================
 
 arr Roopi::getJointState() {
   return tcm()->modelWorld.get()->getJointState();
@@ -203,6 +203,8 @@ arr Roopi::getTaskValue(CtrlTask* task) {
   task->map.phi(y, NoArr, tcm()->modelWorld.get()());
   return y;
 }
+
+//==============================================================================
 
 void Roopi::syncPlanWorld() {
   arr qPlan;
@@ -215,7 +217,7 @@ ors::KinematicWorld& Roopi::getPlanWorld() {
 }
 
 void Roopi::followTaskTrajectory(CtrlTask* task, double executionTime, const arr& trajectory) {
-  followTaskTrajectories({task}, executionTime, {trajectory});
+  followTaskTrajectories(CtrlTaskL({task}), executionTime, {trajectory});
 }
 
 void Roopi::followTaskTrajectories(const CtrlTaskL& tasks, double executionTime, const arrA& trajY, const arrA& trajYDot, const arrA& trajYDDot) {
@@ -236,19 +238,26 @@ void Roopi::followTaskTrajectories(const CtrlTaskL& tasks, double executionTime,
     }
   }
 
+#if 1 //marc's version
+  tcm()->ctrlTasks.writeAccess();
+  for(CtrlTask *t:tcm()->ctrlTasks()) t->active=false;
+  for(CtrlTask *t:tasks) t->active=true; //they were 'added' to the ctrlTasks list on creation!!
+//  tcm()->verbose=1;
+  tcm()->ctrlTasks.deAccess();
+#else //danny's
   tcm()->ctrlTasks.set()->clear(); // TODO memory leak! The question is if it is a good idea to delete all tasks here, because one could still use them in the main.cpp
   addCtrlTasks(tasks);
+#endif
 
   double startTime = mlr::timerRead();
   double time = 0.0;
   uint n = 0;
   cout << "start execution of trajectory" << endl;
-  while(true) {
-    double s;
-    if(time < executionTime) {
-      s = time/executionTime;
-    } else {
-      s = 1;
+  while(true) { //(mt) oh no! This goes full throttle!!
+    time = mlr::timerRead() - startTime;
+//    cout << time << endl;
+    double s = time/executionTime;
+    if(s > 1.) {
       cout << "finished execution of trajectory" << endl;
       break;
     }
@@ -256,21 +265,24 @@ void Roopi::followTaskTrajectories(const CtrlTaskL& tasks, double executionTime,
       modifyCtrlTaskReference(tasks(i), ySplines(i).eval(s));
     }
     n++;
-    time = mlr::timerRead() - startTime;
-    //cout << time << endl;
   }
 }
 
-void Roopi::followQTrajectory(double executionTime, const arr& trajectory) {
-  CtrlTask* ct = addQItselfCtrlTask(getJointState()); //TODO murks, because here a task is added and then in followTaskTrajectory removed and then the same again added
-  followTaskTrajectory(ct, executionTime, trajectory);
+void Roopi::followQTrajectory(const Roopi_Path* path) {
+  CtrlTask* ct = createCtrlTask("followQTrajectory", new TaskMap_qItself);
+  ct->setC(ARR(1000.0));
+  ct->setGains(ARR(30.0), ARR(5.0));
+  followTaskTrajectory(ct, path->executionTime, path->path);
+  destroyCtrlTask(ct);
 }
 
-void Roopi::goToTaskMotionPlannerJointSpace(CtrlTask* task, double executionTime, bool verbose) {
-  goToTasksMotionPlannerJointSpace({task}, executionTime, verbose);
+Roopi_Path* Roopi::createPathInJointSpace(CtrlTask* task, double executionTime, bool verbose) {
+  return createPathInJointSpace(CtrlTaskL({task}), executionTime, verbose);
 }
 
-void Roopi::goToTasksMotionPlannerJointSpace(const CtrlTaskL& tasks, double executionTime, bool verbose) {
+Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executionTime, bool verbose) {
+  Roopi_Path *path = new Roopi_Path(*this, executionTime);
+
   syncPlanWorld();
   MotionProblem MP(planWorld);
 
@@ -289,27 +301,31 @@ void Roopi::goToTasksMotionPlannerJointSpace(const CtrlTaskL& tasks, double exec
     t->setCostSpecs(MP.T-2, MP.T, ct->y_ref, 10.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
   }
 
-  arr traj = MP.getInitialization();
-  traj.reshape(MP.T,MP.world.getJointStateDimension());
+  path->path = MP.getInitialization();
 
-  optConstrained(traj, NoArr, Convert(MP), OPT(verbose=verbose, stopIters=100, damping=1., maxStep=1.,aulaMuInc=2, nonStrictSteps=5)); //TODO options
+  optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose, stopIters=100, damping=1., maxStep=1.,aulaMuInc=2, nonStrictSteps=5)); //TODO options
   if(verbose) MP.costReport();
   Graph result = MP.getReport();
-  double cost = result.get<double>({"total","sqrCosts"});
-  double constraints = result.get<double>({"total","constraints"});
+  path->path.reshape(MP.T, path->path.N/MP.T);
+  path->cost = result.get<double>({"total","sqrCosts"});
+  path->constraints = result.get<double>({"total","constraints"});
 
-  if(constraints < .1 && cost < 5.) {
-    followQTrajectory(executionTime, traj);
+  if(path->constraints < .1 && path->cost < 5.) {
+    path->isGood=true;
   } else {
+    path->isGood=false;
     cout << "No reasonable trajectory found!" << endl;
   }
+
+  return path;
 }
 
 void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
   CtrlTask* ct = new CtrlTask("pos", new TaskMap_Default(posTMT, tcm()->modelWorld.get()(), shape));
   ct->setTarget(pos);
-  goToTaskMotionPlannerJointSpace(ct, executionTime, verbose);
+  auto* path = createPathInJointSpace(ct, executionTime, verbose);
   delete ct;
+  followQTrajectory(path);
 }
 
 
@@ -333,3 +349,16 @@ CtrlTask* Roopi::modify(CtrlTask* t, const Graph& specs){
   return t;
 }
 */
+
+#if 0 //(mt) no such low-level operations -- only createCtrlTask should be used!!
+void Roopi::addCtrlTask(CtrlTask* ct) {
+  tcm()->ctrlTasks.set()->append(ct);
+}
+
+void Roopi::addCtrlTasks(CtrlTaskL cts) {
+  /*for(CtrlTask* t : cts) {
+    addCtrlTask(t);
+  }*/
+  tcm()->ctrlTasks.set()->append(cts);
+}
+#endif
