@@ -26,6 +26,33 @@
 #define baxter 0
 
 //==============================================================================
+/*
+
+(mt) The mid-term concept should be: Roopi allows you to create (and return) little
+handles on 'tasks' or 'things'. These tasks or things can be:
+-- control tasks
+-- a task following
+-- trajectories
+-- motion planning problems
+-- system level processes (like subscriptions, perceptual processes, etc)
+-- interfaces (gamepad, orsviewers, etc)
+
+The template for now is
+
+auto* handle = Roopi::createX(...)
+handle->setParameters
+handle->run
+handle->quit or Roopi::destroyX(handle)
+
+Maybe plan:
+-- first just control tasks & motion planning
+-- make path following a thread
+-- make logging just such a thread and 'handle'
+-- next the system processes (perception threads)
+-- the activities we already have
+
+*/
+//==============================================================================
 
 struct Roopi_private {
 
