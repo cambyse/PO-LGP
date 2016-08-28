@@ -81,7 +81,9 @@ void tests() {
   R.modifyCtrlTaskGains(c, ARR(10.0), ARR(5.0), 0.05);
   R.modifyCtrlTaskReference(c, yEndeffL);
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  mlr::wait(5.0);
+
+  //moduleShutdown().waitForValueGreaterThan(0);
 }
 
 int main(int argc, char** argv){

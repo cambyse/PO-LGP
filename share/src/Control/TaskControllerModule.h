@@ -5,16 +5,6 @@
 #include <Control/taskController.h>
 #include <Control/RTControllerSimulation.h>
 
-/// Struct for logging data
-struct SetOfDataFiles {
-  mlr::String folderName;
-  std::map<mlr::String, ofstream*> logMap;
-
-  void write(const mlr::String& name, const arr& data);
-  SetOfDataFiles(const char* logFolderName);
-  ~SetOfDataFiles();
-};
-
 
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
@@ -46,8 +36,6 @@ struct TaskControllerModule : Module {
   bool syncModelStateWithReal; //< whether the step() should reinit the state from the ros message
   bool verbose;
   bool useDynSim;
-  bool log;
-  SetOfDataFiles logFiles;
   RTControllerSimulation* dynSim;
 
   arr q_history, qdot_last, a_last, q_lowPass, qdot_lowPass, qddot_lowPass, aErrorIntegral, u_lowPass;

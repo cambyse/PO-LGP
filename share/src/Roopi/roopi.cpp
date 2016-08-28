@@ -20,6 +20,8 @@
 #include <RosCom/filterObject.h>
 #include <RosCom/publishDatabase.h>
 
+#include <Roopi/loggingModule.h>
+
 
 #define baxter 0
 
@@ -35,6 +37,8 @@ struct RoopiSystem {
 
   //-- controller process
   TaskControllerModule tcm;
+
+  LoggingModule loggingModule;
 
   //-- ROS initialization
   RosInit rosInit;
@@ -113,7 +117,7 @@ struct RoopiSystem {
 Roopi::Roopi()
   : s(new RoopiSystem){
     planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
-    mlr::timerStart(true);
+    mlr::timerStart(true); //TODO is that necessary? Is the timer global?
 }
 
 Roopi::~Roopi(){

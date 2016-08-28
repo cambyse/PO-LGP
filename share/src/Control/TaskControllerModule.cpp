@@ -2,30 +2,6 @@
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
-void SetOfDataFiles::write(const mlr::String& name, const arr& data) {
-  std::map<mlr::String, ofstream*>::iterator i = logMap.find(name);
-  if(i == logMap.end()) {
-    logMap.insert(std::map<mlr::String, ofstream*>::value_type(name, new ofstream(STRING("logData/" << folderName << "/" << name))));
-  } else {
-    *i->second << data << endl;
-  }
-}
-
-SetOfDataFiles::SetOfDataFiles(const char* logFolderName) : folderName(logFolderName) {
-  system(STRING("mkdir -p " << "logData/" << folderName)); //linux specific :-) TODO
-}
-
-//SetOfDataFiles::SetOfDataFiles(mlr::String folderName) : folderName(folderName){
-//  system(STRING("mkdir -p " << "logData/" << this->folderName)); //linux specific :-) TODO
-//}
-
-SetOfDataFiles::~SetOfDataFiles() {
-  for(auto file : logMap) {
-    file.second->close();
-    delete file.second;
-  }
-}
-
 
 void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
@@ -50,8 +26,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , syncModelStateWithReal(false)
   , verbose(false)
   , useDynSim(true)
-  , log(false)
-  , logFiles("specifyMe"){
+{
 
   s = new sTaskControllerModule();
   useRos = mlr::getParameter<bool>("useRos",false);
@@ -293,6 +268,7 @@ void TaskControllerModule::step(){
 
 //    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
 
+    /*
     //TODO add more here
     logFiles.write("t", ARR(mlr::timerRead()));
     logFiles.write("q", modelWorld().q);
@@ -304,7 +280,7 @@ void TaskControllerModule::step(){
       logFiles.write(STRING(c->name << "YDotRef"), c->v_ref);
       logFiles.write(STRING(c->name << "Y"), c->y); //TODO is that safe, or better call phi again?
       logFiles.write(STRING(c->name << "YDot"), c->v); //TODO is that safe, or better call phi again?
-    }
+    }*/
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();
