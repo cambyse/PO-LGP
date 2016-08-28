@@ -236,7 +236,7 @@ void TaskControllerModule::step(){
     arr u_bias = zeros(q_model.N);
 #else //... or directly u_bias
     arr q_ref = zeros(q_model.N);
-    arr u_bias = M*k + zeros(q_model.N); //+F returns nans
+    arr u_bias = M*k + zeros(q_model.N); //+F returns nans TODO
 #endif
     Kp = M*Kp;
     Kd = M*Kd;

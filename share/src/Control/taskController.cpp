@@ -59,14 +59,14 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
 }
 
 void CtrlTask::setGains(const arr& _Kp, const arr& _Kd) {
-  active=true;
+  //active=true; //TODO
   Kp = _Kp;
   Kd = _Kd;
   if(!prec.N) prec=ARR(100.);
 }
 
 void CtrlTask::setGains(double pgain, double dgain) {
-  active=true;
+  //active=true; //TODO
   Kp = ARR(pgain);
   Kd = ARR(dgain);
   if(!prec.N) prec=ARR(100.);
@@ -373,13 +373,13 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ, arr&
 
     arr JtC_y = ~J_y*C_y;
 
-    if(&JCJ) JCJ += JtC_y*J_y;
+    if(&JCJ) JCJ += JtC_y*J_y; // TODO JCJ has to be calculated!!!!!!!!!!
     if(&JCKJ) JCKJ += JtC_y*Kp_y*J_y;
     Kp += JtC_y*Kp_y*J_y;
     Kd += JtC_y*Kd_y*J_y;
     k  += JtC_y*(k_y + Kp_y*(J_y*world.q - y));
   }
-  arr invA = inverse_SymPosDef(H + JCJ);
+  arr invA = inverse_SymPosDef(H + JCJ); // TODO here JCJ is needed!!!!!!!
   Kp = invA*Kp;
   Kd = invA*Kd;
   k  = invA*k;

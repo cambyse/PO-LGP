@@ -170,7 +170,7 @@ CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
 }
 
 void Roopi::activateCtrlTask(CtrlTask* t, bool active){
-  tcm()->ctrlTasks.set(), t->active=true;  //(mt) very unusual syntax.... check if that works!
+  tcm()->ctrlTasks.set(), t->active = active;  //(mt) very unusual syntax.... check if that works!
 }
 
 void Roopi::destroyCtrlTask(CtrlTask* t) {
@@ -352,7 +352,7 @@ void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime
   ct->setTarget(pos);
   auto* path = createPathInJointSpace(ct, executionTime, verbose);
   delete ct;
-  followQTrajectory(path);
+  if(path->isGood) followQTrajectory(path);
 }
 
 
