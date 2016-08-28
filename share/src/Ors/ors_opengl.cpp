@@ -513,19 +513,20 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
   }
 };
 
-  struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
+struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::KinematicWorld *ors;
   EditConfigurationHoverCall(ors::KinematicWorld& _ors) { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
-    if(!movingBody) return false;
+//    if(!movingBody) return false;
     if(!movingBody) {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
+      mlr::timerStart(true);
       gl.Select(true);
       OpenGL::GLSelect *top=gl.topSelection;
       if(!top) return false;
       uint i=top->name;
-      cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+      cout <<mlr::timerRead() <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
       if((i&3)==1) s=ors->shapes(i>>2);
       if((i&3)==2) j=ors->joints(i>>2);
       gl.text.clear();
@@ -536,7 +537,7 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
       if(j) {
         gl.text
             <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-            <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+           <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
         listWrite(j->ats, gl.text, "\n");
       }
     } else {

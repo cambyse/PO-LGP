@@ -76,7 +76,7 @@ bool sOrsSceneGui::hoverCallback(OpenGL&) {
     case emNone: {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
-      gl->Select();
+      gl->Select(true);
       OpenGL::GLSelect *top=gl->topSelection;
       if(!top) { gl->text.clear();  return false; }
       uint i=top->name;
@@ -166,6 +166,12 @@ bool sOrsSceneGui::keyCallback(OpenGL&) {
   return true;
 }
 
+struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
+ ors::KinematicWorld *ors;
+ EditConfigurationHoverCall(ors::KinematicWorld& _ors);
+ bool hoverCallback(OpenGL& gl);
+};
+
 OrsSceneGui::OrsSceneGui(ors::KinematicWorld& ors, OpenGL* gl) {
   s=new sOrsSceneGui();
   s->ors = &ors;
@@ -176,9 +182,10 @@ OrsSceneGui::OrsSceneGui(ors::KinematicWorld& ors, OpenGL* gl) {
     gl->add(ors::glDrawGraph,&ors);
   }
   s->gl = gl;
-  gl->addHoverCall(s);
-  gl->addKeyCall(s);
-  gl->addClickCall(s);
+//  gl->addHoverCall(s);
+  gl->addHoverCall(new EditConfigurationHoverCall(ors));
+//  gl->addKeyCall(s);
+//  gl->addClickCall(s);
   
 }
 
