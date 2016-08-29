@@ -26,6 +26,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , syncModelStateWithReal(false)
   , verbose(false)
   , useDynSim(true)
+  , compensateGravity(true)
 {
 
   s = new sTaskControllerModule();
@@ -48,6 +49,10 @@ void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
+  if(compensateGravity) {
+    gc = new GravityCompensation(realWorld);
+    gc->loadBetas();
+  }
   modelWorld.set() = realWorld;
   taskController = new TaskController(modelWorld.set()(), false);
 
@@ -295,7 +300,13 @@ void TaskControllerModule::step(){
     refs.fR = zeros(6);
     refs.KiFTL = K_ft;
     refs.J_ft_invL = J_ft_inv;
+
+    if(compensateGravity) {
+      u_bias += gc->compensate(realWorld.getJointState(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint"
+                                                ,"l_wrist_flex_joint"});
+    }
     refs.u_bias = u_bias;
+
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;
   }

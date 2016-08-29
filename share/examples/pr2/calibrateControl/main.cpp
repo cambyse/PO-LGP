@@ -254,20 +254,21 @@ void testModel() {
   ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
   GravityCompensation gc(world);
 
-  //gc.learnModels(false); //set to false if you dont want to see plots
+  gc.learnModels(false); //set to false if you dont want to see plots
 
-  //cout << gc.compensate(world.getJointState(), true, true, true) << endl;
+  cout << gc.compensate(world.getJointState(), true, true, true) << endl;
 
-  //gc.saveBetas();
+  gc.saveBetas();
   gc.loadBetas();
   cout << gc.compensate(world.getJointState(), true, true, true) << endl;
 
 
-  mlr::String h = "l_shoulder_lift_joint";
-  mlr::String n = "l_wrist_flex_joint";
+  //mlr::String h = "l_shoulder_lift_joint";
 
-  uint index = world.getJointByName(h)->qIndex;
-  arr q = world.getJointState();
+  //mlr::String n = "l_wrist_flex_joint";
+
+  //uint index = world.getJointByName(h)->qIndex;
+  //arr q = world.getJointState();
 
   //arr limits = world.getJointByName(h)->limits;
   //arr Q = linspace(limits(0),limits(1),100);
@@ -347,7 +348,7 @@ void testHeadRealRobot() {
     }
   }
 
-  tcm.compensateGravity = true;
+  //tcm.compensateGravity = true;
 
   threadOpenModules(true);
   fixBase.set() = true;

@@ -56,7 +56,7 @@ void tests() {
   mlr::wait(3.0);
 
   CtrlTask* c = R.createCtrlTask("eight", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
-  c->setGains(10.0,5.0);
+  c->setGains(20.0,5.0);
   c->setC(ARR(1000.0));
   arr traj = generateEightTrajectory(R.getTaskValue(c));
   R.followTaskTrajectory(c, 15.0, traj);
