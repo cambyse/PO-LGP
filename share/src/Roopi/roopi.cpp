@@ -300,7 +300,7 @@ void Roopi::followQTrajectory(const Roopi_Path* path) {
   ct->setC(ARR(1000.0));
   ct->setGains(ARR(30.0), ARR(5.0));
   followTaskTrajectory(ct, path->executionTime, path->path);
-  destroyCtrlTask(ct);
+  //destroyCtrlTask(ct);
 }
 
 Roopi_Path* Roopi::createPathInJointSpace(CtrlTask* task, double executionTime, bool verbose) {
@@ -320,7 +320,7 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
 
   t = MP.addTask("collisions", new CollisionConstraint(0.1), ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.1), ineqTT);
+  t = MP.addTask("qLimits", new LimitsConstraint(0.05), ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
 
   for(CtrlTask* ct : tasks) {
@@ -350,6 +350,14 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
 void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
   CtrlTask* ct = new CtrlTask("pos", new TaskMap_Default(posTMT, tcm()->modelWorld.get()(), shape));
   ct->setTarget(pos);
+  auto* path = createPathInJointSpace(ct, executionTime, verbose);
+  delete ct;
+  if(path->isGood) followQTrajectory(path);
+}
+
+void Roopi::gotToJointConfiguration(const arr &jointConfig, double executionTime, bool verbose) {
+  CtrlTask* ct = new CtrlTask("q", new TaskMap_qItself);
+  ct->setTarget(jointConfig);
   auto* path = createPathInJointSpace(ct, executionTime, verbose);
   delete ct;
   if(path->isGood) followQTrajectory(path);

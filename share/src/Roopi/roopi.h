@@ -70,6 +70,9 @@ struct Roopi {
   /// move "shape" to "pos" using a motion planner.
   void goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose = false);
 
+  /// move to joint configuration using a motion planner
+  void gotToJointConfiguration(const arr& jointConfig, double executionTime, bool verbose = false);
+
   //-- low-level access
 
   arr getJointState();
