@@ -73,12 +73,12 @@ struct KOMO{
 
 
   //-- tasks (cost/constraint terms) high-level
-  void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false);
-  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false);
+  void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false, int verbose=0);
+  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false, int verbose=0);
   void setSlowAround(double time, double delta);
 
   //-- tasks - logic level
-  void setAbstractTask(double phase, const NodeL& facts, bool effKinMode=false);
+  void setAbstractTask(double phase, const NodeL& facts, bool effKinMode=false, int verbose=0);
 
   void setMoveTo(ors::KinematicWorld& world, //in initial state
                  ors::Shape& endeff,         //endeffector to be moved
@@ -90,7 +90,7 @@ struct KOMO{
   void reset();
   void step();
   void run();
-  Graph getReport();
+  Graph getReport(bool gnuplt=false);
   void checkGradients();
   void displayTrajectory(double delay=0.01);
 };

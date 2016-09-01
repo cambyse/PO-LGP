@@ -84,7 +84,8 @@ bool factsAreEqual(Node* fact, Node* literal, const NodeL& subst, const Graph* s
   for(uint i=0;i<fact->parents.N;i++){
     Node *fact_arg = fact->parents.elem(i);
     Node *lit_arg = literal->parents.elem(i);
-    if(&lit_arg->container==subst_scope){ //lit_arg is a variable -> check match of substitution
+    if(lit_arg->keys.N==1 && lit_arg->keys.last()=="ANY"){
+    }else if(&lit_arg->container==subst_scope){ //lit_arg is a variable -> check match of substitution
       if(!ignoreSubst && subst(lit_arg->index)!=fact_arg) return false;
     }else if(lit_arg!=fact_arg) return false;
   }

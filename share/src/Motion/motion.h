@@ -48,9 +48,17 @@ struct Task {
                     const arr& _target=ARR(0.),
                     double _prec=1.);
   bool isActive(uint t){ return (active && prec.N>t && prec(t)); }
+  void write(std::ostream& os) const{
+    os <<"TASK '" <<name <<"'"
+      <<(active?"":" [inactive]")
+        <<" type=" <<type
+       <<" target=" <<target
+      <<" prec=" <<prec;
+  }
 
   static Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
 };
+stdOutPipe(Task)
 
 
 
@@ -115,8 +123,8 @@ struct MotionProblem : KOrderMarkovFunction{
   //-- info on the costs
   StringA getPhiNames(uint t);
   void reportFull(bool brief=false, ostream& os=std::cout);
-  void costReport(bool gnuplt=true); ///< also computes the costMatrix
-  Graph getReport();
+  void costReport(bool gnuplt=true);
+  Graph getReport(bool gnuplt=true);
 
   //-- helpers
   void temporallyAlignKinematicSwitchesInConfiguration(uint t); //TODO: perhaps remove -> should be done by velocity constraints to ensure correct gradients

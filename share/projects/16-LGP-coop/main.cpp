@@ -21,7 +21,8 @@ void test(){
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
 //  cmds={ "1", "1", "0", "x", "q" };
-  cmds={ "1", "0", "5", "0", "3", "0", "4", "0", "s", "x", "q" }; //screwdriver 'hand over'
+  cmds={ "1", "0", "3", "0", "3", "0", "4", "0", "x", "s", "q" }; //screwdriver 'hand over'
+//  cmds={ "1", "s", "q" }; //screwdriver 'hand over'
 //  cmds={ "m", "m","m","m","q" };
   bool interactive = mlr::getParameter<bool>("intact", false);
   bool random = mlr::getParameter<bool>("random", false);
@@ -54,6 +55,7 @@ MNode* popBestFromMCfringe(mlr::Array<MNode*>& fringe){
   for(MNode* n:fringe)
     if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
   fringe.removeValue(best);
+  best->inFringe1=false;
   return best;
 }
 
@@ -62,6 +64,7 @@ MNode* popBestFromSeqFringe(mlr::Array<MNode*>& fringe){
   for(MNode* n:fringe)
     if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
   fringe.removeValue(best);
+  best->inFringe2=false;
   return best;
 }
 
@@ -79,14 +82,8 @@ void plan_BHTS(){
   C.prepareDisplay();
 
 
-  mlr::Array<ManipulationTree_Node*> MCfringe;
-  mlr::Array<ManipulationTree_Node*> terminals;
-  mlr::Array<ManipulationTree_Node*> seqFringe;
-  mlr::Array<ManipulationTree_Node*> pathFringe;
-  mlr::Array<ManipulationTree_Node*> pqDone;
-
-  MCfringe.append(C.root);
-  seqFringe.append(C.root);
+  C.MCfringe.append(C.root);
+  C.seqFringe.append(C.root);
 
   C.updateDisplay();
   C.displayTree();
@@ -94,13 +91,13 @@ void plan_BHTS(){
   for(;;){
 
     { //add MC rollouts
-      ManipulationTree_Node* n = popBestFromMCfringe(MCfringe);
+      ManipulationTree_Node* n = popBestFromMCfringe(C.MCfringe);
       n->expand();
       for(ManipulationTree_Node* c:n->children){
-        c->addMCRollouts(10,10);
-        if(!c->symTerminal) MCfringe.append(c);
-        else terminals.append(c);
-        if(n->seq.N) seqFringe.append(n);
+        c->addMCRollouts(100,10);
+        if(!c->symTerminal) C.MCfringe.append(c);
+        else C.terminals.append(c);
+        if(n->seq.N) C.seqFringe.append(n);
       }
     }
 
@@ -108,18 +105,18 @@ void plan_BHTS(){
     mlr::wait();
 
     { //optimize a seq
-      MNode* n = popBestFromSeqFringe(seqFringe);
+      MNode* n = popBestFromSeqFringe(C.seqFringe);
       if(n){
         n->solveSeqProblem();
         setAllChildCostSoFar(n, n->seqCost);
-        if(n->seqFeasible) for(MNode* c:n->children) seqFringe.append(c);
-        if(n->seqFeasible && n->symTerminal) pathFringe.append(n);
+        if(n->seqFeasible) for(MNode* c:n->children) C.seqFringe.append(c);
+        if(n->seqFeasible && n->symTerminal) C.pathFringe.append(n);
         C.node = n;
       }
     }
 
     C.updateDisplay();
-    mlr::wait();
+//    mlr::wait();
 
 //    { //optimize a path
 //      ManipulationTree_Node* n = pqPath.pop();
@@ -132,9 +129,9 @@ void plan_BHTS(){
 //    }
 
     cout <<"===================== CURRENT QUEUES:" <<endl;
-    cout <<"MCfringe:" <<MCfringe <<endl;
-    cout <<"seqFringe:" <<seqFringe <<endl;
-    cout <<"pathFringe:" <<pathFringe <<endl;
+    cout <<"MCfringe:" <<C.MCfringe <<endl;
+    cout <<"seqFringe:" <<C.seqFringe <<endl;
+    cout <<"pathFringe:" <<C.pathFringe <<endl;
 //    cout <<"pqDone:" <<pqDone <<endl;
 
   }

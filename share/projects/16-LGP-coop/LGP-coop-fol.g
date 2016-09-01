@@ -49,14 +49,14 @@ REWARD {
 
 DecisionRule activate_grasping {
   X, Y
-  { (grasping X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
-  { (grasping X Y)=1.0 (busy X) (busy Y) }
+  { (grasping X Y)! (INFEASIBLE grasping X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
+  { (grasping X Y)=1.0 (busy X) (busy Y) komoGrasp(X Y)=1. }
 }
 
 Rule {
   X, Y
   { (Terminate grasping X Y) }
-  { (Terminate grasping X Y)! (grasping X Y)! komoGrasp(X Y) (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
+  { (Terminate grasping X Y)! (grasping X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
 #  { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
 #  p=[.9 0.1]
 }
@@ -64,27 +64,27 @@ Rule {
 DecisionRule activate_placing {
   X, Y, Z,
   { (placing X Y Z)! (grasped X Y) (busy X)! (busy Y)! (table Z) }
-  { (placing X Y Z)=1.0 (busy X) (busy Y) }
+  { (placing X Y Z)=1.0 (busy X) (busy Y) komoPlace(X Y Z)=1. (INFEASIBLE grasping ANY Y)! }
 }
 
 Rule {
   X, Y, Z,
   { (Terminate placing X Y Z) }
-  { (Terminate placing X Y Z)! (placing X Y Z)! komoPlace(X Y Z) (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+  { (Terminate placing X Y Z)! (placing X Y Z)! (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
 }
 
 
-DecisionRule activate_graspingScrew {
-  X
-  { (graspingScrew X)! (agent X) (free X) (busy X)! }
-  { (graspingScrew X)=1.0 (busy X) }
-}
+#DecisionRule activate_graspingScrew {
+#  X
+#  { (graspingScrew X)! (agent X) (free X) (busy X)! }
+#  { (graspingScrew X)=1.0 (busy X) }
+#}
 
-Rule {
-  X
-  { (Terminate graspingScrew X) }
-  { (Terminate graspingScrew X)! (graspingScrew X)! (free X)! (hasScrew X) (busy X)! }
-}
+#Rule {
+#  X
+#  { (Terminate graspingScrew X) }
+#  { (Terminate graspingScrew X)! (graspingScrew X)! (free X)! (hasScrew X) (busy X)! }
+#}
 
 #that's never a good action -> for simplicity remove
 #DecisionRule activate_placingScrew {

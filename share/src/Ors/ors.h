@@ -45,6 +45,7 @@ namespace ors {
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, ssCvxST, ssBoxST };
 enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
+const char* name(JointType jt);
 /// @}
 
 struct Joint;
@@ -363,6 +364,7 @@ struct KinematicSwitch{
   void write(std::ostream& os) const;
   static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
   static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0, const ors::Transformation& jFrom=NoTransformation, const ors::Transformation& jTo=NoTransformation);
+  static const char* name(OperatorSymbol s);
 };
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace

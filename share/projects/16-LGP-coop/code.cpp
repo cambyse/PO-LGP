@@ -56,6 +56,8 @@ void Coop::prepareFol(){
   fol.addAgent("handL");
   fol.addAgent("handR");
 
+  fol.addFact({"INFEASIBLE","grasping","handR","screwdriverHandle"});
+
   fol.reset_state();
   FILE("z.start.fol") <<fol;
 
@@ -80,7 +82,12 @@ void Coop::updateDisplay(){
     pathView.setConfigurations(node->pathProblem->MP->configurations);
   else pathView.clear();
 
-  root->getGraph().writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
+
+  for(auto& n:MCfringe) n->inFringe1=true;
+  for(auto& n:seqFringe) n->inFringe2=true;
+
+  Graph dot=root->getGraph();
+  dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
   system("dot -Tpdf z.dot > z.pdf");
 }
 

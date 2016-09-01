@@ -85,9 +85,7 @@ MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
 
   //-- store the old state; make a new state that is child of the old
   if(generateStateTree){
-    Node *new_state = KB.appendSubgraph({STRING("STATE"<<count++)}, {state->isNodeOfParentGraph});
-    new_state->graph().copy(*state);
-    state = &new_state->graph();
+    state = createChildState();
     DEBUG(KB.checkConsistency());
   }
 
@@ -272,7 +270,7 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
-  if(!state) state = &KB.appendSubgraph({"STATE"}, {})->value;
+  if(!state) state = &KB.appendSubgraph({"STATE"}, {start_state->isNodeOfParentGraph})->value;
   state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
 
@@ -344,6 +342,11 @@ void FOL_World::setState(Graph *s){
   CHECK(state->isNodeOfParentGraph && &s->isNodeOfParentGraph->container==&KB,"");
 }
 
+Graph* FOL_World::createChildState(){
+  Graph* new_state = &KB.appendSubgraph({STRING("STATE_"<<count++)}, {state->isNodeOfParentGraph})->value;
+  new_state->copy(*state);
+  return new_state;
+}
 
 void FOL_World::addAgent(const char* name){
 //  Node* n = new Node_typed<bool>(KB, {name}, {}, true); //already exists in kinematic part

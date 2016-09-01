@@ -50,6 +50,7 @@ void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
   }else{
     uint n=dim_phi(G);
     q.resize(n);
+    G.getJointState();
     if(&J) J.resize(n, G.q.N).setZero();
     uint m=0;
     for(uint b:selectedBodies){

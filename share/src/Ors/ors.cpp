@@ -72,6 +72,14 @@ ors::Shape& NoShape = *((ors::Shape*)NULL);
 ors::Joint& NoJoint = *((ors::Joint*)NULL);
 ors::KinematicWorld& NoWorld = *((ors::KinematicWorld*)NULL);
 
+namespace ors{
+  const char* name(JointType jt){
+    static const char* names [] = { "JT_hingeX", "JT_hingeY", "JT_hingeZ", "JT_transX", "JT_transY", "JT_transZ", "JT_transXY", "JT_trans3", "JT_transXYPhi", "JT_universal", "JT_rigid", "JT_quatBall", "JT_phiTransXY", "JT_glue", "JT_free" };
+    if(jt==JT_none) return "JT_none";
+    return names[(int)jt];
+  }
+}
+
 //===========================================================================
 //
 // Body implementations
@@ -2451,7 +2459,17 @@ ors::KinematicSwitch::KinematicSwitch()
 }
 
 void ors::KinematicSwitch::apply(KinematicWorld& G){
-  Shape *from=G.shapes(fromId), *to=G.shapes(toId);
+  Shape *from=NULL, *to=NULL;
+  if(fromId!=UINT_MAX) from=G.shapes(fromId);
+  if(toId!=UINT_MAX) to=G.shapes(toId);
+  if(fromId==UINT_MAX){
+    CHECK_EQ(symbol, deleteJoint, "");
+    CHECK(to,"");
+    ors::Body *b = to->body;
+    CHECK_EQ(b->inLinks.N, 1,"");
+    from = b->inLinks(0)->from->shapes.first();
+  }
+
   if(symbol==deleteJoint){
     Joint *j = G.getJointByBodies(from->body, to->body);
     CHECK(j,"can't find joint between '"<<from->name <<"--" <<to->name <<"' Deleted before?");
@@ -2527,9 +2545,9 @@ void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious,
 mlr::String ors::KinematicSwitch::shortTag(const ors::KinematicWorld* G) const{
   mlr::String str;
   str <<"  timeOfApplication=" <<timeOfApplication;
-  str <<"  symbol=" <<symbol;
-  str <<"  jointType=" <<jointType;
-  str <<"  fromId=" <<(G?G->shapes(fromId)->name:STRING(fromId));
+  str <<"  symbol=" <<name(symbol);
+  str <<"  jointType=" <<ors::name(jointType);
+  str <<"  fromId=" <<(fromId==UINT_MAX?"NULL":(G?G->shapes(fromId)->name:STRING(fromId)));
   str <<"  toId=" <<(G?G->shapes(toId)->name:STRING(toId)) <<endl;
   return str;
 }
@@ -2580,30 +2598,35 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, c
   else if(type=="freeZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_free; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
-  ors::Shape *fromShape = world.getShapeByName(ref1);
-  sw->fromId = fromShape->index;
-  if(!ref2){
-    CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
-    ors::Body *b = fromShape->body;
-    if(b->inLinks.N==1){
-//      CHECK_EQ(b->outLinks.N, 0, "");
-      sw->toId = sw->fromId;
-      sw->fromId = b->inLinks(0)->from->shapes.first()->index;
-    }else if(b->outLinks.N==1){
-      CHECK_EQ(b->inLinks.N, 0, "");
-      sw->toId = b->outLinks(0)->from->shapes.first()->index;
-    }else if(b->inLinks.N==0 && b->outLinks.N==0){
-      MLR_MSG("No link to delete for shape '" <<ref1 <<"'");
-      delete sw;
-      return NULL;
-    }else HALT("that's ambiguous");
-  }else{
-    sw->toId = world.getShapeByName(ref2)->index;
-  }
+  if(ref1) sw->fromId = world.getShapeByName(ref1)->index;
+  if(ref2) sw->toId = world.getShapeByName(ref2)->index;
+//  if(!ref2){
+//    CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
+//    ors::Body *b = fromShape->body;
+//    if(b->inLinks.N==1){
+////      CHECK_EQ(b->outLinks.N, 0, "");
+//      sw->toId = sw->fromId;
+//      sw->fromId = b->inLinks(0)->from->shapes.first()->index;
+//    }else if(b->outLinks.N==1){
+//      CHECK_EQ(b->inLinks.N, 0, "");
+//      sw->toId = b->outLinks(0)->from->shapes.first()->index;
+//    }else if(b->inLinks.N==0 && b->outLinks.N==0){
+//      MLR_MSG("No link to delete for shape '" <<ref1 <<"'");
+//      delete sw;
+//      return NULL;
+//    }else HALT("that's ambiguous");
+//  }else{
+
   sw->timeOfApplication = Tzero + Tinterval + 1;
   if(&jFrom) sw->jA = jFrom;
   if(&jTo) sw->jB = jTo;
   return sw;
+}
+
+const char* ors::KinematicSwitch::name(ors::KinematicSwitch::OperatorSymbol s){
+  static const char* names[] = { "deleteJoint", "addJointZero", "addJointAtFrom", "addJointAtTo" };
+  if(s==none) return "none";
+  return names[(int)s];
 }
 
 

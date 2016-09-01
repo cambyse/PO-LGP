@@ -92,6 +92,7 @@ struct FOL_World:MCTS_Environment{
   //-- internal access
   Graph* getState();
   void setState(Graph*);
+  Graph* createChildState();
 
   void write(std::ostream& os) const{ os <<KB; }
 };

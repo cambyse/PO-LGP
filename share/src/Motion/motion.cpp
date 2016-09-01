@@ -158,7 +158,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-    //    CHECK(c->prec.N==T,"");`
+        CHECK(c->prec.N<=T,"");
     if(c->active && c->prec.N>t && c->prec(t))
       m += c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
   }
@@ -350,50 +350,12 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
   os <<"  T=" <<T <<endl;
   os <<"  tau=" <<tau <<endl;
   os <<"  k_order=" <<k_order <<endl;
-  os <<"  TASKS (time idx dim name order type target scale ttMatrix phiMatrix):" <<endl;
 
   if(!configurations.N) setupConfigurations();
 
-  //-- collect all task costs and constraints
-  for(uint t=0; t<T; t++){
-    uint m=0;
-    for(uint i=0; i<tasks.N; i++) {
-      Task *c = tasks(i);
-      if(!c->isActive(t)) continue;
-      uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
-      if(brief){
-        if(d){
-          os <<"  " <<t <<' ' <<i <<' ' <<d
-              <<' ' <<std::setw(10) <<c->name
-             <<' ' <<c->map.order <<' ' <<c->type <<' ';
-          if(c->target.N<5) os <<'[' <<c->target <<']'; else os<<"[..]";
-          os <<' ' <<c->prec(t);
-          if(ttMatrix.N){
-            os <<' ' <<ttMatrix(t).elem(m)
-                <<' ' <<sumOfSqr(phiMatrix(t).refRange(m,m+d-1));
-          }
-          os <<endl;
-        }
-      }else{
-        for(uint i=0;i<d;i++){
-          os <<"  " <<t <<' ' <<i
-              <<' ' <<std::setw(10) <<c->name
-             <<' ' <<c->map.order <<' ' <<c->type <<' ';
-          if(c->target.N==1) os <<c->target.elem(0);
-          else if(c->target.nd==1) os <<c->target(i);
-          else if(c->target.nd==2) os <<c->target(t,i);
-          else os <<"00";
-          os <<' ' <<c->prec(t);
-          if(ttMatrix.N){
-            os <<' ' <<ttMatrix(t)(m+i)
-                <<' ' <<phiMatrix(t)(m+i);
-          }
-          os <<endl;
-        }
-      }
-      m += d;
-    }
-    if(phiMatrix.N) CHECK_EQ(m , phiMatrix(t).N, "");
+  os <<"  TASKS (as list): " <<tasks.N <<endl;
+  for(Task* t:tasks){
+    os <<"  " <<*t <<endl;
   }
 
   os <<"  SWITCHES: " <<switches.N <<endl;
@@ -404,37 +366,84 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
       os <<sw->shortTag(NULL);
   }
 
+  //-- collect all task costs and constraints
+  os <<"  TASKS (time idx dim name order type target scale ttMatrix phiMatrix):" <<endl;
+  uint M=0;
+  for(uint t=0; t<T; t++){
+    for(uint i=0; i<tasks.N; i++) {
+      Task *task = tasks(i);
+      if(!task->isActive(t)) continue;
+      uint d=task->map.dim_phi(configurations.refRange(t,t+k_order), t);
+      if(brief){
+        if(d){
+          os <<"  " <<t <<' ' <<i <<' ' <<d
+              <<' ' <<std::setw(10) <<task->name
+             <<' ' <<task->map.order <<' ' <<task->type <<' ';
+          if(task->target.N<5) os <<'[' <<task->target <<']'; else os<<"[..]";
+          os <<' ' <<task->prec(t);
+          if(ttMatrix.N){
+            os <<' ' <<ttMatrix.scalar().elem(M)
+                <<' ' <<sumOfSqr(phiMatrix.scalar().refRange(M,M+d-1));
+          }
+          os <<endl;
+        }
+      }else{
+        for(uint i=0;i<d;i++){
+          os <<"  " <<t <<' ' <<i
+              <<' ' <<std::setw(10) <<task->name
+             <<' ' <<task->map.order <<' ' <<task->type <<' ';
+          if(task->target.N==1) os <<task->target.elem(0);
+          else if(task->target.nd==1) os <<task->target(i);
+          else if(task->target.nd==2) os <<task->target(t,i);
+          else os <<"00";
+          os <<' ' <<task->prec(t);
+          if(ttMatrix.N){
+            os <<' ' <<ttMatrix(t)(M+i)
+                <<' ' <<phiMatrix(t)(M+i);
+          }
+          os <<endl;
+        }
+      }
+
+      M += d;
+    }
+  }
+  if(phiMatrix.N) CHECK_EQ(M , phiMatrix.scalar().N, "");
+
+
 }
 
 void MotionProblem::costReport(bool gnuplt) {
   cout <<"*** MotionProblem -- CostReport" <<endl;
-  if(phiMatrix.N!=T){
-    CHECK(phiMatrix.N==0,"");
-    phiMatrix.resize(T);
-  }
 
-  arr plotData(T,tasks.N); plotData.setZero();
+  HALT("deprecated")
+  arr& phi = phiMatrix.scalar();
+  TermTypeA& tt = ttMatrix.scalar();
+
+  arr plotData=zeros(T,tasks.N);
 
   //-- collect all task costs and constraints
   double a;
-  arr taskC(tasks.N); taskC.setZero();
-  arr taskG(tasks.N); taskG.setZero();
+  arr taskC=zeros(tasks.N);
+  arr taskG=zeros(tasks.N);
+  uint M=0;
   for(uint t=0; t<T; t++){
-    uint m=0;
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       if(!c->isActive(t)) continue;
       uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
-      if(ttMatrix.N) for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
+
+      if(tt.N) for(uint i=0;i<d;i++) CHECK(tt(M+i)==c->type,"");
+
       if(d){
         if(c->type==sumOfSqrTT){
-          taskC(i) += a = sumOfSqr(phiMatrix(t).sub(m,m+d-1));
+          taskC(i) += a = sumOfSqr(phi.sub(M,M+d-1));
           plotData(t,i) = a;
         }
         if(c->type==ineqTT){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
-            double g=phiMatrix(t)(m+j);
+            double g=phi(M+j);
             if(g>0.) gpos+=g;
             gall += g;
           }
@@ -444,18 +453,19 @@ void MotionProblem::costReport(bool gnuplt) {
         if(c->type==eqTT){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
-            double h=phiMatrix(t)(m+j);
+            double h=phi(M+j);
             gpos+=fabs(h);
             gall += h;
           }
           taskG(i) += gpos;
           plotData(t,i) = gpos; //all;
         }
-        m += d;
       }
+
+      M += d;
     }
-    CHECK_EQ(m , phiMatrix(t).N, "");
   }
+  CHECK_EQ(M , phi.N, "");
 
   //-- generate output
   cout <<" * task costs:" <<endl;
@@ -505,39 +515,52 @@ void MotionProblem::costReport(bool gnuplt) {
   if(gnuplt) gnuplot("load 'z.costReport.plt'");
 }
 
-Graph MotionProblem::getReport() {
-  if(phiMatrix.N!=T){
-    CHECK(phiMatrix.N==0,"");
-    phiMatrix.resize(T);
+Graph MotionProblem::getReport(bool gnuplt) {
+  if(phiMatrix.N>1){ //old optimizer -> remove some time..
+    arr tmp;
+    for(auto& p:phiMatrix) tmp.append(p);
+    phiMatrix = ARRAY<arr>(tmp);
+
+    TermTypeA ttmp;
+    for(auto& p:ttMatrix) ttmp.append(p);
+    ttMatrix = ARRAY<TermTypeA>(ttmp);
   }
+
+  arr& phi = phiMatrix.scalar();
+  TermTypeA& tt = ttMatrix.scalar();
 
   //-- collect all task costs and constraints
-  arr taskC(tasks.N); taskC.setZero();
-  arr taskG(tasks.N); taskG.setZero();
+  arr err=zeros(T,tasks.N);
+  arr taskC=zeros(tasks.N);
+  arr taskG=zeros(tasks.N);
+  uint M=0;
   for(uint t=0; t<T; t++){
-    uint m=0;
     for(uint i=0; i<tasks.N; i++) {
-      Task *c = tasks(i);
-      if(!c->isActive(t)) continue;
-      uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
-      for(uint i=0;i<d;i++) CHECK(ttMatrix(t)(m+i)==c->type,"");
-      if(d){
-        if(c->type==sumOfSqrTT) taskC(i) += sumOfSqr(phiMatrix(t).sub(m,m+d-1));
-        if(c->type==ineqTT){
-          for(uint j=0;j<d;j++){
-            double g=phiMatrix(t)(m+j);
-            if(g>0.) taskG(i) += g;
+      Task *task = tasks(i);
+      if(task->active && task->prec.N>t && task->prec(t)){
+        uint d=task->map.dim_phi(configurations.refRange(t,t+k_order), t);
+        for(uint i=0;i<d;i++) CHECK(tt(M+i)==task->type,"");
+        if(d){
+          if(task->type==sumOfSqrTT){
+            for(uint j=0;j<d;j++) err(t,i) += mlr::sqr(phi(M+j)); //sumOfSqr(phi.sub(M,M+d-1));
+            taskC(i) += err(t,i);
           }
+          if(task->type==ineqTT){
+            for(uint j=0;j<d;j++) err(t,i) += mlr::MAX(0., phi(M+j));
+            taskG(i) += err(t,i);
+          }
+          if(task->type==eqTT){
+            for(uint j=0;j<d;j++) err(t,i) += fabs(phi(M+j));
+            taskG(i) += err(t,i);
+          }
+          M += d;
         }
-        if(c->type==eqTT){
-          for(uint j=0;j<d;j++) taskG(i) += fabs(phiMatrix(t)(m+j));
-        }
-        m += d;
       }
     }
-    CHECK_EQ(m , phiMatrix(t).N, "");
   }
+  CHECK_EQ(M , phi.N, "");
 
+  //-- generate a report graph
   Graph report;
   double totalC=0., totalG=0.;
   for(uint i=0; i<tasks.N; i++) {
@@ -552,6 +575,36 @@ Graph MotionProblem::getReport() {
   }
   report.append<double>({"total","sqrCosts"}, {}, totalC);
   report.append<double>({"total","constraints"}, {}, totalG);
+
+  //-- write a nice gnuplot file
+  ofstream fil("z.costReport");
+  //first line: legend
+  for(auto c:tasks) fil <<c->name <<' ';
+  for(auto c:tasks) if(c->type==ineqTT && dualSolution.N) fil <<c->name <<"_dual ";
+  fil <<endl;
+
+  //rest: just the matrix
+  if(!dualSolution.N){
+    err.write(fil,NULL,NULL,"  ");
+  }else{
+    dualSolution.reshape(T, dualSolution.N/(T));
+    catCol(err, dualSolution).write(fil,NULL,NULL,"  ");
+  }
+  fil.close();
+
+  ofstream fil2("z.costReport.plt");
+  fil2 <<"set key autotitle columnheader" <<endl;
+  fil2 <<"set title 'costReport ( plotting sqrt(costs) )'" <<endl;
+  fil2 <<"plot 'z.costReport' \\" <<endl;
+  for(uint i=1;i<=tasks.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l lw 3 lc " <<i <<" lt " <<1-((i/10)%2) <<" \\" <<endl;
+  if(dualSolution.N) for(uint i=0;i<tasks.N;i++) fil2 <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
+  fil2 <<endl;
+  fil2.close();
+
+  if(gnuplt){
+    cout <<"MotionProblem Report\n" <<report;
+    gnuplot("load 'z.costReport.plt'");
+  }
 
   return report;
 }
@@ -582,7 +635,7 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variabl
   featureTypes.clear();
   for(uint t=0;t<MP.T;t++){
     for(Task *task: MP.tasks) if(task->active && task->prec.N>t && task->prec(t)){
-      CHECK(task->prec.N==MP.T,"");
+      CHECK(task->prec.N<=MP.T,"");
       uint m = task->map.dim_phi(MP.configurations.refRange(t,t+MP.k_order), t); //dimensionality of this task
       featureTimes.append(consts<uint>(t, m));
       featureTypes.append(consts<TermType>(task->type, m));
@@ -630,7 +683,11 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA
   }
 
   CHECK_EQ(M, dimPhi, "");
+  MP.phiMatrix = ARRAY<arr>(phi);
+  if(&tt) MP.ttMatrix = ARRAY<TermTypeA>(tt);
 }
+
+
 
 //===========================================================================
 

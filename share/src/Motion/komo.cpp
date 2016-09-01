@@ -182,13 +182,13 @@ void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
 void KOMO::setSquaredFixJointVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
   auto *map = new TaskMap_Transition(MP->world, true);
-  setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
+  setTask(startTime, endTime, map, eqTT, NoArr, prec, 1);
   map->velCoeff = 1.;
 }
 
 void KOMO::setSquaredFixSwitchVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
-  setTask(startTime, endTime, new TaskMap_FixSwichedObjects(), sumOfSqrTT, NoArr, prec, 1);
+  setTask(startTime, endTime, new TaskMap_FixSwichedObjects(), eqTT, NoArr, prec, 1);
 }
 
 void KOMO::setHoldStill(double startTime, double endTime, const char* joint, double prec){
@@ -211,7 +211,8 @@ void KOMO::setLastTaskToBeVelocity(){
   MP->tasks.last()->map.order = 1; //set to be velocity!
 }
 
-void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode){
+void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode, int verbose){
+  if(verbose>0) cout <<"KOMO_setGrasp t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<endl;
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
 
   //-- position the hand & graspRef
@@ -219,7 +220,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   setTask(time, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
 
   //hand center at object center (could be replaced by touch)
-  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
+  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), eqTT, NoArr, 1e3);
 
   //hand grip axis orthogonal to object length axis
 //  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, endeffRef, Vector_x, object, Vector_x), sumOfSqrTT, NoArr, 1e1);
@@ -232,7 +233,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 
 
   //disconnect object from table
-  setKinematicSwitch(time, true, "delete", object, NULL);
+  setKinematicSwitch(time, true, "delete", NULL, object);
   //connect graspRef with object
   setKinematicSwitch(time, true, "freeZero", endeffRef, object);
 
@@ -242,7 +243,9 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   }
 }
 
-void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode){
+void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode, int verbose){
+  if(verbose>0) cout <<"KOMO_setPlace t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<" place=" <<placeRef <<endl;
+
   if(stepsPerPhase>2){ //velocities down and up
     setTask(time-.15, time, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
     setTask(time, time+.15, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
@@ -276,17 +279,20 @@ void KOMO::setSlowAround(double time, double delta){
   //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
 }
 
-void KOMO::setAbstractTask(double phase, const NodeL& facts, bool effKinMode){
-  CHECK(phase<=maxPhase,"");
+void KOMO::setAbstractTask(double phase, const NodeL& facts, bool effKinMode, int verbose){
+//  CHECK(phase<=maxPhase,"");
+//  listWrite(facts, cout,"\n");  cout <<endl;
   for(Node *n:facts){
     if(!n->parents.N) continue;
     StringL symbols;
     for(Node *p:n->parents) symbols.append(&p->keys.last());
     if(n->keys.N && n->keys.last()=="komoGrasp"){
-      setGrasp(phase, *symbols(0), *symbols(1), effKinMode);
+      double time=n->get<double>();
+      setGrasp(phase+time, *symbols(0), *symbols(1), effKinMode, verbose);
     }
     if(n->keys.N && n->keys.last()=="komoPlace"){
-      setPlace(phase, *symbols(0), *symbols(1), *symbols(2), effKinMode);
+      double time=n->get<double>();
+      setPlace(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
     }
   }
 }
@@ -381,8 +387,8 @@ void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
   if(MP->T){
     if(!splineB.N){
-      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
-//      optConstrained(x, dual, Convert(MP->komo_problem), OPT(verbose=2));
+//      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
+      optConstrained(x, dual, Convert(MP->komo_problem), OPT(verbose=2));
     }else{
       arr a,b,c,d,e;
       ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
@@ -397,11 +403,11 @@ void KOMO::run(){
   }
   cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-  MP->costReport(false);
+  cout <<MP->getReport(false);
 }
 
-Graph KOMO::getReport(){
-  return MP->getReport();
+Graph KOMO::getReport(bool gnuplt){
+  return MP->getReport(gnuplt);
 }
 
 void KOMO::checkGradients(){
