@@ -194,10 +194,25 @@ void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, cons
   tcm()->ctrlTasks.deAccess();
 }
 
+void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel, const double maxAcc) {
+  tcm()->ctrlTasks.writeAccess();
+  ct->setGains(Kp, Kd);
+  ct->maxVel = maxVel;
+  ct->maxAcc = maxAcc;
+  tcm()->ctrlTasks.deAccess();
+}
+
 void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
   tcm()->ctrlTasks.writeAccess();
   ct->setC(C);
   tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::holdPosition() {
+  CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
+  modifyCtrlTaskGains(ct, 30.0, 5.0);
+  modifyCtrlC(ct, ARR(1000.0));
+  activateCtrlTask(ct);
 }
 
 //CtrlTask* Roopi::_addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
@@ -300,7 +315,7 @@ void Roopi::followQTrajectory(const Roopi_Path* path) {
   ct->setC(ARR(1000.0));
   ct->setGains(ARR(30.0), ARR(5.0));
   followTaskTrajectory(ct, path->executionTime, path->path);
-  //destroyCtrlTask(ct);
+  destroyCtrlTask(ct);
 }
 
 Roopi_Path* Roopi::createPathInJointSpace(CtrlTask* task, double executionTime, bool verbose) {
@@ -353,14 +368,16 @@ void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime
   auto* path = createPathInJointSpace(ct, executionTime, verbose);
   delete ct;
   if(path->isGood) followQTrajectory(path);
+  delete path;
 }
 
 void Roopi::gotToJointConfiguration(const arr &jointConfig, double executionTime, bool verbose) {
   CtrlTask* ct = new CtrlTask("q", new TaskMap_qItself);
   ct->setTarget(jointConfig);
-  auto* path = createPathInJointSpace(ct, executionTime, verbose);
+  Roopi_Path* path = createPathInJointSpace(ct, executionTime, verbose); //TODO why was there a auto*
   delete ct;
   if(path->isGood) followQTrajectory(path);
+  delete path;
 }
 
 

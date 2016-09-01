@@ -26,7 +26,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , syncModelStateWithReal(false)
   , verbose(false)
   , useDynSim(true)
-  , compensateGravity(true)
+  , compensateGravity(false)
 {
 
   s = new sTaskControllerModule();

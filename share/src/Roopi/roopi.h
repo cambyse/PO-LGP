@@ -35,8 +35,11 @@ struct Roopi {
 
   void modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef = NoArr);
   void modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
+  void modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
   void modifyCtrlC(CtrlTask* ct, const arr& C);
 
+  /// holds all joints in position.
+  void holdPosition();
 
 
   // low-level ctr - use is discouraged!!
