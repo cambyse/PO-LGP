@@ -215,6 +215,10 @@ void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
 }
 
 void Roopi::holdPosition() {
+  tcm()->ctrlTasks.writeAccess();
+  for(CtrlTask *t:tcm()->ctrlTasks()) t->active=false;
+  tcm()->ctrlTasks.deAccess();
+
   CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
   modifyCtrlTaskGains(ct, 30.0, 5.0);
   modifyCtrlC(ct, ARR(1000.0));

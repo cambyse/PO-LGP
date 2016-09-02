@@ -173,11 +173,11 @@ void TaskControllerModule::step(){
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    arr Kp, Kd, k, JCJ;
-    taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+    //arr Kp, Kd, k, JCJ;
+    //taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
 
-    Kp = .01 * JCJ;
-    Kp += .2*diag(ones(Kp.d0));
+    //Kp = .01 * JCJ;
+    //Kp += .2*diag(ones(Kp.d0));
 
     ctrl_q_ref.set() = q_model;
 
@@ -185,7 +185,7 @@ void TaskControllerModule::step(){
     refs.q =  q_model;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = 1.;
-    refs.Kp = ARR(1.); //Kp;
+    refs.Kp = ARR(1.);
     refs.Kd = ARR(1.);
     refs.Ki = ARR(0.2);
     refs.fL = zeros(6);
@@ -225,8 +225,8 @@ void TaskControllerModule::step(){
 #else
 
     //-- compute desired acceleration law in q-space
-    arr a, Kp, Kd, k, JCJ;
-    a = taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+    arr a, Kp, Kd, k;
+    a = taskController->getDesiredLinAccLaw(Kp, Kd, k);
     checkNan(k);
 
 
