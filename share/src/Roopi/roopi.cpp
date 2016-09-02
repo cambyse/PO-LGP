@@ -92,7 +92,7 @@ struct Roopi_private {
   //-- display and interaction
   GamepadInterface gamepad;
   //OrsViewer view;
-  OrsPoseViewer ctrlView;
+  OrsPoseViewer* ctrlView;
 
   //-- sync'ing with ROS
   Subscriber<sensor_msgs::JointState> subJointState;
@@ -115,7 +115,6 @@ struct Roopi_private {
       pr2_odom(NULL, "pr2_odom"),
       tcm("pr2"),
       rosInit("Roopi"),
-      ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
       subJointState("/robot/joint_states", jointState),
       #if baxter
       spctb(tcm.realWorld),
@@ -131,6 +130,12 @@ struct Roopi_private {
     }
     #endif
 
+    if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
+      ctrlView = new OrsPoseViewer({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
+    } else {
+      ctrlView = new OrsPoseViewer({"ctrl_q_real"}, tcm.realWorld);
+    }
+
     threadOpenModules(true);
     mlr::wait(1.0);
     cout << "Go!" << endl;
@@ -138,6 +143,7 @@ struct Roopi_private {
 
   ~Roopi_private(){
     threadCloseModules();
+    delete ctrlView;
     cout << "bye bye" << endl;
   }
 };
