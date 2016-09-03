@@ -24,6 +24,8 @@ struct TaskControllerModule : Module {
   ACCESS(bool, fixBase)
   ACCESS(arr, pr2_odom)
 
+  ACCESS(arr, qSign)
+
 //private:
   ors::KinematicWorld realWorld;
   TaskController *taskController;
@@ -45,6 +47,7 @@ struct TaskControllerModule : Module {
   arr q_history, qdot_last, a_last, q_lowPass, qdot_lowPass, qddot_lowPass, aErrorIntegral, u_lowPass;
   arr model_error_g;
 
+  arr qLastReading;
 
 
 public:

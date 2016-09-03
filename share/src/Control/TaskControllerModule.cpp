@@ -40,6 +40,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   else HALT("undefined robot '" <<robot <<"'");
   q0 = realWorld.q;
 
+  qSign.set()() = zeros(q0.N);
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -76,8 +77,6 @@ void TaskControllerModule::open(){
     dynSim = new RTControllerSimulation(0.01, false, 0.);
     dynSim->threadLoop();
   }
-
-  //logFiles.open({"T", "q", "qDot"}, "data"); //TODO add more stuff here
 }
 
 
@@ -100,6 +99,19 @@ void TaskControllerModule::step(){
       if(q_real.N==realWorld.q.N && pr2odom.N==3){
         q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
       }
+
+      if(qLastReading.d0 > 0) {
+        qSign.writeAccess();
+        for(uint i = 0; i < q_real.N; i++) {
+          double si = sign(q_real(i)-qLastReading(i));
+          if(si != qSign()(i) && si != 0) {
+            qSign()(i) = si;
+          }
+        }
+        //cout << qSign() << endl;
+        qSign.deAccess();
+      }
+      qLastReading = q_real;
     }
     if(robot=="baxter"){
 #ifdef MLR_ROS
@@ -122,6 +134,7 @@ void TaskControllerModule::step(){
         if(q_history.d0>0) lowPassUpdate(q_lowPass, q_history[0]);
         if(q_history.d0>1) lowPassUpdate(qdot_lowPass, (q_history[0]-q_history[1])/.01);
         if(q_history.d0>2) lowPassUpdate(qddot_lowPass, (q_history[0]-2.*q_history[1]+q_history[2])/(.01*.01));
+        //if(q_history.d0 > 1) cout << sign(q_model-q_history[1]) << endl;
         if(oldfashioned) syncModelStateWithReal = false;
       }
       requiresInitialSync = false;
@@ -271,21 +284,6 @@ void TaskControllerModule::step(){
       taskController->reportCurrentState();
     }
 
-//    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
-
-    /*
-    //TODO add more here
-    logFiles.write("t", ARR(mlr::timerRead()));
-    logFiles.write("q", modelWorld().q);
-    logFiles.write("qDot", modelWorld().qdot);
-    logFiles.write("uBias", u_bias);
-
-    for(CtrlTask* c : ctrlTasks()) {
-      logFiles.write(STRING(c->name << "YRef"), c->y_ref);
-      logFiles.write(STRING(c->name << "YDotRef"), c->v_ref);
-      logFiles.write(STRING(c->name << "Y"), c->y); //TODO is that safe, or better call phi again?
-      logFiles.write(STRING(c->name << "YDot"), c->v); //TODO is that safe, or better call phi again?
-    }*/
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();

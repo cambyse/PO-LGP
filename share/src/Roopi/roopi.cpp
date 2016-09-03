@@ -67,6 +67,7 @@ struct Roopi_private {
   //-- controller process
   TaskControllerModule tcm;
 
+  //-- logging
   LoggingModule loggingModule;
 
   //-- ROS initialization
@@ -148,17 +149,22 @@ struct Roopi_private {
   }
 };
 
-
 //==============================================================================
 
 Roopi::Roopi()
   : s(new Roopi_private){
-    planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
-    mlr::timerStart(true); //TODO is that necessary? Is the timer global?
+  planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
+  mlr::timerStart(true); //TODO is that necessary? Is the timer global?
+
+  holdPositionTask = createCtrlTask("HoldPosition", new TaskMap_qItself);
+  modifyCtrlTaskGains(holdPositionTask, 30.0, 5.0);
+  modifyCtrlC(holdPositionTask, ARR(1000.0));
+  activateCtrlTask(holdPositionTask);
 }
 
 Roopi::~Roopi(){
   delete s;
+  delete holdPositionTask;
 }
 
 //==============================================================================
@@ -177,6 +183,7 @@ CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
 
 void Roopi::activateCtrlTask(CtrlTask* t, bool active){
   tcm()->ctrlTasks.set(), t->active = active;  //(mt) very unusual syntax.... check if that works!
+  //TODO maybe initialize here with actual value again for safety reasons??!?!?
 }
 
 void Roopi::destroyCtrlTask(CtrlTask* t) {
@@ -219,10 +226,17 @@ void Roopi::holdPosition() {
   for(CtrlTask *t:tcm()->ctrlTasks()) t->active=false;
   tcm()->ctrlTasks.deAccess();
 
-  CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
+  /*CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
   modifyCtrlTaskGains(ct, 30.0, 5.0);
   modifyCtrlC(ct, ARR(1000.0));
-  activateCtrlTask(ct);
+  activateCtrlTask(ct);*/
+
+  modifyCtrlTaskReference(holdPositionTask, tcm()->modelWorld.get()->getJointState());
+  activateCtrlTask(holdPositionTask);
+}
+
+void Roopi::releasePosition() {
+  activateCtrlTask(holdPositionTask, false);
 }
 
 //CtrlTask* Roopi::_addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
@@ -247,7 +261,26 @@ TaskControllerModule* Roopi::tcm() {
 //==============================================================================
 
 arr Roopi::getJointState() {
-  return tcm()->modelWorld.get()->getJointState();
+  if(tcm()->oldfashioned && !tcm()->useRos) {
+    return tcm()->modelWorld.get()->getJointState();
+  }
+  return tcm()->ctrl_obs.get()->q;
+}
+
+arr Roopi::getJointSign() {
+  return tcm()->qSign.get();
+}
+
+arr Roopi::getTorques() {
+  return tcm()->ctrl_obs.get()->u_bias;
+}
+
+arr Roopi::getFTLeft() {
+  return tcm()->ctrl_obs.get()->fL;
+}
+
+arr Roopi::getFTRight() {
+  return tcm()->ctrl_obs.get()->fR;
 }
 
 arr Roopi::getTaskValue(CtrlTask* task) {
@@ -372,22 +405,32 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   return path;
 }
 
-void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
+bool Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
   CtrlTask* ct = new CtrlTask("pos", new TaskMap_Default(posTMT, tcm()->modelWorld.get()(), shape));
   ct->setTarget(pos);
   auto* path = createPathInJointSpace(ct, executionTime, verbose);
   delete ct;
-  if(path->isGood) followQTrajectory(path);
+  bool goodPath = false;
+  if(path->isGood) {
+    followQTrajectory(path);
+    goodPath = true;
+  }
   delete path;
+  return goodPath;
 }
 
-void Roopi::gotToJointConfiguration(const arr &jointConfig, double executionTime, bool verbose) {
+bool Roopi::gotToJointConfiguration(const arr &jointConfig, double executionTime, bool verbose) {
   CtrlTask* ct = new CtrlTask("q", new TaskMap_qItself);
   ct->setTarget(jointConfig);
   Roopi_Path* path = createPathInJointSpace(ct, executionTime, verbose); //TODO why was there a auto*
   delete ct;
-  if(path->isGood) followQTrajectory(path);
+  bool goodPath = false;
+  if(path->isGood) {
+    followQTrajectory(path);
+    goodPath = true;
+  }
   delete path;
+  return goodPath;
 }
 
 
