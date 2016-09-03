@@ -21,6 +21,7 @@ struct LoggingModule : Module {
   ACCESSname(CtrlMsg, ctrl_ref) //< the message send to the RTController
   ACCESSname(CtrlMsg, ctrl_obs) //< the message received from the RTController
   ACCESSname(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESSname(arr, qSign)
 
   SetOfDataFiles logFiles;
 

@@ -51,7 +51,7 @@ void tests() {
 
   arr preTrajJointState = FILE("preTrajState");
 
-  R.gotToJointConfiguration(preTrajJointState, 10.0, true);
+  R.gotToJointConfiguration(preTrajJointState, 10.0);
   R.holdPosition();
 
   CtrlTask* c = R.createCtrlTask("eight", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
