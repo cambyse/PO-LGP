@@ -136,13 +136,9 @@ MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
 
     if(w==1e10){
       if(verbose>2) cout <<"*** NOTHING TO WAIT FOR!" <<endl;
-      lastStepReward -= 10.*timeCost;
-      lastStepDuration=10.;
+      lastStepDuration = 10.;
     }else{
       //-- subtract w from all times and collect all activities with minimal wait time
-      T_real += w;
-      lastStepReward -= w*timeCost; //cost per real time
-      lastStepDuration=w;
       NodeL terminatingActivities;
       for(Node *i:*state){
         if(i->isOfType<double>()){
@@ -159,6 +155,8 @@ MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
         symbols.append(act->parents);
         createNewFact(*state, symbols);
       }
+
+      lastStepDuration = w;
     }
   }else{ //normal decision
     //first check if probabilistic
@@ -175,7 +173,12 @@ MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
     }
     if(verbose>2){ cout <<"*** effect =" <<*effect <<" SUB"; listWrite(d->substitution, cout); cout <<endl; }
     applyEffectLiterals(*state, effect->graph(), d->substitution, &d->rule->graph());
+
+    if(!hasWait) lastStepDuration = 1.;
   }
+
+  T_real += lastStepDuration;
+  lastStepReward -= lastStepDuration*timeCost; //cost per real time
 
   //-- generic world transitioning
   forwardChaining_FOL(*state, worldRules, NULL, NoGraph, verbose-3, &lastStepObservation);

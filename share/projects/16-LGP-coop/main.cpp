@@ -21,7 +21,8 @@ void test(){
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
 //  cmds={ "1", "1", "0", "x", "q" };
-  cmds={ "1", "0", "3", "0", "3", "0", "4", "0", "x", "s", "q" }; //screwdriver 'hand over'
+//  cmds={ "1", "0", "3", "0", "3", "0", "4", "0", "x", "s", "q" }; //screwdriver 'hand over'
+  cmds={ "0", "2", "2", "3", "x", "s", "q" }; //screwdriver 'hand over'
 //  cmds={ "1", "s", "q" }; //screwdriver 'hand over'
 //  cmds={ "m", "m","m","m","q" };
   bool interactive = mlr::getParameter<bool>("intact", false);
@@ -50,6 +51,7 @@ void test(){
 
 typedef ManipulationTree_Node MNode;
 
+
 MNode* popBestFromMCfringe(mlr::Array<MNode*>& fringe){
   MNode* best=NULL;
   for(MNode* n:fringe)
@@ -60,6 +62,7 @@ MNode* popBestFromMCfringe(mlr::Array<MNode*>& fringe){
 }
 
 MNode* popBestFromSeqFringe(mlr::Array<MNode*>& fringe){
+  if(!fringe.N) return NULL;
   MNode* best=NULL;
   for(MNode* n:fringe)
     if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
@@ -82,7 +85,7 @@ void plan_BHTS(){
   C.prepareDisplay();
 
 
-  C.MCfringe.append(C.root);
+//  C.MCfringe.append(C.root);
   C.seqFringe.append(C.root);
 
   C.updateDisplay();
@@ -91,13 +94,20 @@ void plan_BHTS(){
   for(;;){
 
     { //add MC rollouts
+#if 0 //select from fringe
       ManipulationTree_Node* n = popBestFromMCfringe(C.MCfringe);
-      n->expand();
-      for(ManipulationTree_Node* c:n->children){
-        c->addMCRollouts(100,10);
-        if(!c->symTerminal) C.MCfringe.append(c);
-        else C.terminals.append(c);
-        if(n->seq.N) C.seqFringe.append(n);
+#else
+      ManipulationTree_Node* n = NULL;
+      for(uint k=0;k<10;k++){ n=C.root->treePolicy_random(); if(n) break; }
+#endif
+      if(n){
+        n->expand();
+        for(ManipulationTree_Node* c:n->children){
+          c->addMCRollouts(10,10);
+          if(!c->symTerminal) C.MCfringe.append(c);
+          else C.terminals.append(c);
+          if(n->seq.N) C.seqFringe.append(n);
+        }
       }
     }
 
@@ -144,8 +154,12 @@ int main(int argc,char **argv){
 
   orsDrawAlpha = 1.;
 //  orsDrawCores = true;
-//  test();
-  plan_BHTS();
+  if(mlr::getParameter<bool>("intact")){
+    test();
+  }else{
+    test();
+//    plan_BHTS();
+  }
 
   return 0;
 }

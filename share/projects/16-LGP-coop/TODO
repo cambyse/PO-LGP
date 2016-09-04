@@ -1,12 +1,34 @@
+# search:
+
+always random MC, not priority queue (random tree policy)
+
+remove the WAIT thing
+
+infeasible -> add symbolic block (which also produces Quit symbol) & remove previous MC statistics! (HOW?)
+
+Always recompute all 'statistics' from leaf statistics only (back project)
+
+remove nodes of the tree? (illustrate RED)
+
+# robustness:
+
+optimizer sometimes breaks (Hessian...) -> ?
+
+# write:
+
+make algo systematic!!
+
+
+# fluent hand-over:
 
 * Implement FixAttachedObjects TaskMap: For every object O that is attached to a new joint, compute the relative vel to the previous parent, and the relative vel to the new parent. Both should be zero. (Is there a difficulty with quat velocities? modulo?...)
 (DONE, mostly:)
 
 1. Variant: constrain the vel to be zero. (DONE)
 
-* Implement poseTMT, which is quat+pos 
+* Implement poseTMT, which is quat+pos -- why?
 
-* Implement a TaskMap AboveBox, which is 4D and computes the differences to the box edges (4 inequality constraints)
+* Implement a TaskMap AboveBox, which is 4D and computes the differences to the box edges (4 inequality constraints) -- why?
 
 
 

@@ -146,13 +146,17 @@ bool Coop::execChoice(mlr::String cmd){
     int choice;
     cmd >>choice;
     cout <<"CHOICE=" <<choice <<endl;
-    node = node->children(choice);
-    if(!node->isExpanded){
-      node->expand();
-      if(autoCompute){
-        node->solvePoseProblem();
-        //          node->solveSeqProblem();
-        //          node->solvePathProblem(20);
+    if(choice>=(int)node->children.N){
+      cout <<"--- there is no such choice" <<endl;
+    }else{
+      node = node->children(choice);
+      if(!node->isExpanded){
+        node->expand();
+        if(autoCompute){
+          node->solvePoseProblem();
+          //          node->solveSeqProblem();
+          //          node->solvePathProblem(20);
+        }
       }
     }
   }
