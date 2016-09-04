@@ -17,6 +17,8 @@ void test(){
 //  C.fol.verbose=5;
 
   C.expandNode();
+  FILE("z.fol") <<C.fol;
+  C.root->write(cout, true);
 //  C.displayTree();
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
@@ -93,6 +95,7 @@ void plan_BHTS(){
 
   for(;;){
 
+    C.root->checkConsistency();
     { //add MC rollouts
 #if 0 //select from fringe
       ManipulationTree_Node* n = popBestFromMCfringe(C.MCfringe);
@@ -157,8 +160,8 @@ int main(int argc,char **argv){
   if(mlr::getParameter<bool>("intact")){
     test();
   }else{
-    test();
-//    plan_BHTS();
+//    test();
+    plan_BHTS();
   }
 
   return 0;

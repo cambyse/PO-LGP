@@ -54,12 +54,10 @@ struct FOL_World:MCTS_Environment{
   NodeL decisionRules;  ///< rules within the KB (each is a subgraph item of the KB)
   Node *lastDecisionInState; ///< the literal that represents the last decision in the state
   Graph *rewardFct; ///< the reward function within the KB (is a subgraph item of KB)
-  Graph *tmp;   ///< a tmp subgraph of the KB (private, created within the constructor)
   Node *Terminate_keyword, *Quit_keyword, *Wait_keyword, *Quit_literal;
   int verbose;
   int verbFil;
   ofstream fil;
-  bool generateStateTree;
 
   double lastStepReward;
   double lastStepDuration;
@@ -92,7 +90,7 @@ struct FOL_World:MCTS_Environment{
   //-- internal access
   Graph* getState();
   void setState(Graph*);
-  Graph* createChildState();
+  Graph* createStateCopy();
 
   void write(std::ostream& os) const{ os <<KB; }
 };

@@ -23,14 +23,12 @@ void FOL_World::Decision::write(ostream& os) const{
 
 FOL_World::FOL_World()
     : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
-      generateStateTree(false),
+      state(NULL), lastDecisionInState(NULL), verbose(0), verbFil(0),
       lastStepReward(0.), lastStepDuration(0.), lastStepProbability(1.), lastStepObservation(0), count(0) {}
 
 FOL_World::FOL_World(istream& is)
     : hasWait(true), gamma(0.9), stepCost(0.1), timeCost(1.), deadEndCost(100.),
-      state(NULL), lastDecisionInState(NULL), tmp(NULL), verbose(0), verbFil(0),
-      generateStateTree(false),
+      state(NULL), lastDecisionInState(NULL), verbose(0), verbFil(0),
       lastStepReward(0.), lastStepDuration(0.), lastStepProbability(1.), lastStepObservation(0), count(0) {
   init(is);
 }
@@ -82,12 +80,6 @@ MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
   lastStepObservation = 0;
 
   T_step++;
-
-  //-- store the old state; make a new state that is child of the old
-  if(generateStateTree){
-    state = createChildState();
-    DEBUG(KB.checkConsistency());
-  }
 
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }
@@ -252,7 +244,7 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  if(!start_state) start_state = &newSubGraph(KB,{"START_STATE"},state->isNodeOfParentGraph->parents)->value;
+  if(!start_state) start_state = &KB.appendSubgraph({"START_STATE"}, state->isNodeOfParentGraph->parents)->value;
   start_state->copy(*state);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   start_T_step = T_step;
@@ -273,13 +265,14 @@ void FOL_World::reset_state(){
   R_total=0.;
   deadEnd=false;
   successEnd=false;
+
+#if 1
+  setState(start_state);
+#else
   if(!state) state = &KB.appendSubgraph({"STATE"}, {start_state->isNodeOfParentGraph})->value;
   state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
-
-  if(tmp) delete tmp->isNodeOfParentGraph;
-  KB.appendSubgraph({"TMP"}, {});
-  tmp   = &KB["TMP"]->graph();
+#endif
 
   DEBUG(KB.checkConsistency();)
   FILE("z.after") <<KB;
@@ -341,12 +334,19 @@ Graph* FOL_World::getState(){
 }
 
 void FOL_World::setState(Graph *s){
-  state = s;
-  CHECK(state->isNodeOfParentGraph && &s->isNodeOfParentGraph->container==&KB,"");
+  if(!state) state = &KB.appendSubgraph({"STATE"}, {s->isNodeOfParentGraph})->value;
+  state->copy(*s);
+  Node *n=state->isNodeOfParentGraph;
+  //reqire the parent! NOT NICE!
+  n->parents.scalar()->parentOf.removeValue(n);
+  n->parents.scalar() = s->isNodeOfParentGraph;
+  n->parents.scalar()->parentOf.append(n);
+  DEBUG(KB.checkConsistency();)
+  CHECK(state->isNodeOfParentGraph && &state->isNodeOfParentGraph->container==&KB,"");
 }
 
-Graph* FOL_World::createChildState(){
-  Graph* new_state = &KB.appendSubgraph({STRING("STATE_"<<count++)}, {state->isNodeOfParentGraph})->value;
+Graph* FOL_World::createStateCopy(){
+  Graph* new_state = &KB.appendSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfParentGraph->parents)->value;
   new_state->copy(*state);
   return new_state;
 }

@@ -1,8 +1,8 @@
 # search:
 
-always random MC, not priority queue (random tree policy)
+always random MC, not priority queue (random tree policy) (DONE)
 
-remove the WAIT thing
+remove the WAIT thing (DONE)
 
 infeasible -> add symbolic block (which also produces Quit symbol) & remove previous MC statistics! (HOW?)
 
