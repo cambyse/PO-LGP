@@ -2,6 +2,7 @@
 #include <Roopi/roopi.h>
 #include <Control/TaskControllerModule.h>
 
+#include <Roopi/act_followPath.h>
 
 arr generateEightTrajectory(arr startPos) {
   arr traj0 = startPos;
@@ -70,6 +71,8 @@ void tests() {
 
   mlr::wait(5.0);
 
+  FollowPath fp(R, "circle", traj, new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffR"), 15.0);
+fp.threadLoop();
   //moduleShutdown().waitForValueGreaterThan(0);
 }
 
