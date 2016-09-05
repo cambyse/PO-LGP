@@ -8,7 +8,7 @@
 
 void sampleData() {
   Roopi R;
-  SetOfDataFiles logging("gravityCompensation_1");
+  SetOfDataFiles logging("gcKugel_5");
   rnd.clockSeed();
   PoseGenerator poser(R.tcm()->modelWorld.get()());
 
@@ -16,8 +16,9 @@ void sampleData() {
     //try to find both a suitable random pose and a trajectory that transfers from the current configuration to the random pose
     while(true) {
       arr qPose = poser.getRandomPose();
-      if(R.gotToJointConfiguration(qPose,5.0)) break;
+      if(R.gotToJointConfiguration(qPose,5.0, true)) break;
     }
+    mlr::wait(0.5);
     R.holdPosition();
 
     //wait a few seconds to ensure that the controller has converged
@@ -42,10 +43,23 @@ void sampleData() {
   }
 }
 
+void testCollision() {
+  Roopi R;
+  makeConvexHulls(R.tcm()->modelWorld.set()->shapes);
+  CollisionConstraint c(0.1);
+  while(true) {
+    R.tcm()->modelWorld.set()->stepSwift();
+    arr y;
+    c.phi(y, NoArr, R.tcm()->modelWorld.get()());
+    cout << y << endl;
+    mlr::wait(0.5);
+  }
+}
 
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   sampleData();
+  //testCollision();
   return 0;
 }
