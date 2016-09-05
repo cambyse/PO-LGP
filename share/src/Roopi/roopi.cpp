@@ -358,7 +358,7 @@ void Roopi::followQTrajectory(const Roopi_Path* path) {
   ct->setC(ARR(1000.0));
   ct->setGains(ARR(30.0), ARR(5.0));
   followTaskTrajectory(ct, path->executionTime, path->path);
-  destroyCtrlTask(ct);
+  destroyCtrlTask(ct); //TODO this is a bit unsmooth, because then no task is active anymore! Calling holdPosition directly afterwards works, bit is a bit unsmmooth
 }
 
 Roopi_Path* Roopi::createPathInJointSpace(CtrlTask* task, double executionTime, bool verbose) {
@@ -376,19 +376,19 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   t->map.order=2; //acceleration task
   t->setCostSpecs(0, MP.T, {0.}, 1.0);
 
-  t = MP.addTask("collisions", new CollisionConstraint(0.1), ineqTT);
+  t = MP.addTask("collisions", new CollisionConstraint(0.11), ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.05), ineqTT);
-  t->setCostSpecs(0., MP.T, {0.}, 1.0);
+  t = MP.addTask("qLimits", new LimitsConstraint(0.03), ineqTT);
+  t->setCostSpecs(5, MP.T, {0.}, 1.0);
 
   for(CtrlTask* ct : tasks) {
     t = MP.addTask(ct->name, &ct->map, sumOfSqrTT);
-    t->setCostSpecs(MP.T-2, MP.T, ct->y_ref, 10.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
+    t->setCostSpecs(MP.T-5, MP.T, ct->y_ref, 5.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
   }
 
   path->path = MP.getInitialization();
 
-  optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose, stopIters=100, damping=1., maxStep=1.,aulaMuInc=2, nonStrictSteps=5)); //TODO options
+  optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose)); //TODO options
   if(verbose) MP.costReport();
   Graph result = MP.getReport();
   path->path.reshape(MP.T, path->path.N/MP.T);
