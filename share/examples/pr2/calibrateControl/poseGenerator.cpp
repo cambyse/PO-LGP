@@ -26,7 +26,7 @@ arr PoseGenerator::getRandomPose(const arr& qInit) {
   komo.setModel(W);
   komo.setTiming(1, 1, 5., 1, true);
   komo.setSquaredQVelocities();
-  komo.setCollisions(true);
+  komo.setCollisions(true, 0.15);
   komo.setLimits(true, 0.1);
   komo.setPosition(1., 1., "endeffR", NULL, sumOfSqrTT, posR);
   komo.setPosition(1., 1., "endeffL", NULL, sumOfSqrTT, posL);
