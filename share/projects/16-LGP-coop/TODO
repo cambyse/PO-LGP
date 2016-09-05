@@ -1,5 +1,15 @@
 # search:
 
+in checkConsistency:
+ fol.setState(folState);
+ fol.get_actions...
+ check exact match with children
+
+When adding BLOCK -> recompute all folstates of all nodes
+
+when changing start_state:
+  as above, prune all non-existing children
+
 always random MC, not priority queue (random tree policy) (DONE)
 
 remove the WAIT thing (DONE)
@@ -8,7 +18,7 @@ infeasible -> add symbolic block (which also produces Quit symbol) & remove prev
 
 Always recompute all 'statistics' from leaf statistics only (back project)
 
-remove nodes of the tree? (illustrate RED)
+remove nodes of the tree? (illustrate RED) (DONE)
 
 # robustness:
 

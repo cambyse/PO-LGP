@@ -203,7 +203,6 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
     decisions.append(Handle(new Decision(true, NULL, {}, decisions.N))); //the wait decision (true as first argument, no rule, no substitution)
   }
   for(Node* rule:decisionRules){
-//    NodeL subs = getRuleSubstitutions(*state, rule, constants, (verbose>4) );
     NodeL subs = getRuleSubstitutions2(*state, rule, verbose-3 );
     for(uint s=0;s<subs.d0;s++){
         decisions.append(Handle(new Decision(false, rule, subs[s], decisions.N))); //a grounded rule decision (abstract rule with substution)
@@ -212,8 +211,12 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
   if(verbose>2) cout <<"-- # possible decisions: " <<decisions.N <<endl;
   if(verbose>3) for(Handle& d:decisions){ d.get()->write(cout); cout <<endl; }
 //    cout <<"rule " <<d.first->keys(1) <<" SUB "; listWrite(d.second, cout); cout <<endl;
-//  Ndecisions=decisions.N;
   return conv_arr2stdvec(decisions);
+}
+
+bool FOL_World::is_feasible_action(const MCTS_Environment::Handle& action){
+  const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
+  return substitutedRulePreconditionHolds(*state, d->rule, d->substitution, 2);
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){
@@ -336,11 +339,12 @@ Graph* FOL_World::getState(){
 void FOL_World::setState(Graph *s){
   if(!state) state = &KB.appendSubgraph({"STATE"}, {s->isNodeOfParentGraph})->value;
   state->copy(*s);
-  Node *n=state->isNodeOfParentGraph;
-  //reqire the parent! NOT NICE!
-  n->parents.scalar()->parentOf.removeValue(n);
-  n->parents.scalar() = s->isNodeOfParentGraph;
-  n->parents.scalar()->parentOf.append(n);
+  {  //reqire the parent! NOT NICE!
+    Node *n=state->isNodeOfParentGraph;
+    n->parents.scalar()->parentOf.removeValue(n);
+    n->parents.scalar() = s->isNodeOfParentGraph;
+    n->parents.scalar()->parentOf.append(n);
+  }
   DEBUG(KB.checkConsistency();)
   CHECK(state->isNodeOfParentGraph && &state->isNodeOfParentGraph->container==&KB,"");
 }

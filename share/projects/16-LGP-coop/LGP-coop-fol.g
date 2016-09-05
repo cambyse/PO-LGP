@@ -49,7 +49,7 @@ REWARD {
 
 DecisionRule activate_grasping {
   X, Y
-  { (grasping X Y)! (INFEASIBLE grasping X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
+  { (grasping X Y)! (INFEASIBLE activate_grasping X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
   { (grasping X Y)=1.0 (busy X) (busy Y) komoGrasp(X Y)=1. }
 }
 

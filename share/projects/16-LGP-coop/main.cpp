@@ -18,7 +18,13 @@ void test(){
 
   C.expandNode();
   FILE("z.fol") <<C.fol;
-  C.root->write(cout, true);
+  C.root->checkConsistency();
+  C.root->recomputeAllFolStates();
+  FILE("z2.fol") <<C.fol;
+  C.root->checkConsistency();
+
+//  C.root->write(cout, true);
+
 //  C.displayTree();
 
   StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };

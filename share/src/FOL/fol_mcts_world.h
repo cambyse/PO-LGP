@@ -72,6 +72,7 @@ struct FOL_World:MCTS_Environment{
 
   virtual TransitionReturn transition(const Handle& action); //returns (observation, reward)
   virtual const std::vector<Handle> get_actions();
+  virtual bool is_feasible_action(const Handle& action);
   virtual const Handle get_state();
   virtual bool is_terminal_state() const;
   virtual void make_current_state_default();

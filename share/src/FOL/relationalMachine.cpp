@@ -27,7 +27,7 @@ bool RelationalMachine::queryCondition(mlr::String query) const{
   try{
     query >>*tmp;
     tmp->checkConsistency();
-    q=allFactsHaveEqualsInScope(*state, *tmp);
+    q=allFactsHaveEqualsInKB(*state, *tmp);
   }catch(...){
     LOG(-1) <<"queryCondition "<<query <<" -- syntax error of query:" ;
     return false;

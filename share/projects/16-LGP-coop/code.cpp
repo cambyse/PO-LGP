@@ -56,7 +56,7 @@ void Coop::prepareFol(){
   fol.addAgent("handL");
   fol.addAgent("handR");
 
-  fol.addFact({"INFEASIBLE","grasping","handR","screwdriverHandle"});
+//  fol.addFact({"INFEASIBLE","activate_grasping","handR","screwdriverHandle"});
 
   fol.reset_state();
   FILE("z.start.fol") <<fol;
