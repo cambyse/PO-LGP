@@ -69,8 +69,8 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   jointState_publisher = nh.advertise<marc_controller_pkg::JointState>("jointState", 1);
   baseCommand_publisher = nh.advertise<geometry_msgs::Twist>("/base_controller/command", 1);
   jointReference_subscriber = nh.subscribe("jointReference", 1, &TreeControllerClass::jointReference_subscriber_callback, this);
-  l_ft_subscriber = nh.subscribe("/ft_sensor/l_ft_compensated", 1, &TreeControllerClass::l_ft_subscriber_callback, this);
-  r_ft_subscriber = nh.subscribe("/ft_sensor/r_ft_compensated", 1, &TreeControllerClass::r_ft_subscriber_callback, this);
+  l_ft_subscriber = nh.subscribe("/ft/l_gripper_motor", 1, &TreeControllerClass::l_ft_subscriber_callback, this);
+  r_ft_subscriber = nh.subscribe("/ft/r_gripper_motor", 1, &TreeControllerClass::r_ft_subscriber_callback, this);
 
   ROS_INFO("*** TreeControllerClass Started");
 
