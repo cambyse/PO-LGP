@@ -56,10 +56,19 @@ void testCollision() {
   }
 }
 
+
+void learnModel() {
+  GravityCompensation gc(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  gc.learnFTModel();
+  cout << gc.compensateFTL(gc.world.getJointState()) << endl;
+}
+
+
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-  sampleData();
+  //sampleData();
+  learnModel();
   //testCollision();
   return 0;
 }
