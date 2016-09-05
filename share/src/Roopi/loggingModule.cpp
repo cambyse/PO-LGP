@@ -36,8 +36,8 @@ void LoggingModule::step() {
   CtrlMsg ref = ctrl_ref.get();
   logFiles.write("qRef", ref.q);
   logFiles.write("qDotRef", ref.qdot);
-  logFiles.write("compliance", ARR(trace(ref.Kp)));
-  logFiles.write("dynCompliance", ARR(trace(ref.Kd)));
+  //logFiles.write("compliance", ARR(trace(ref.Kp))); //TODO for oldfashioned
+  //logFiles.write("dynCompliance", ARR(trace(ref.Kd))); //TODO for oldfashioned
   logFiles.write("uBias", ref.u_bias);
 
   logFiles.write("t", ARR(mlr::timerRead()));
