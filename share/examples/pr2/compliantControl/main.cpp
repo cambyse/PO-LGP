@@ -59,8 +59,9 @@ void tests() {
   c->setC(ARR(1000.0));
   arr traj = generateEightTrajectory(R.getTaskValue(c));
   R.followTaskTrajectory(c, 15.0, traj);
+  R.holdPosition(); //Hold position TODO: unsmooth
 
-   mlr::wait(5.0);
+   mlr::wait(1000.0);
 
     /*
   // move arms in a good position with motion planner
@@ -91,9 +92,15 @@ void tests() {
   */
 }
 
+void testKugel() {
+  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  world.watch(true);
+}
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   tests();
+  //testKugel();
   return 0;
 }
 
