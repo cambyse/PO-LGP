@@ -1,14 +1,14 @@
 # search:
 
-in checkConsistency:
+in checkConsistency: (DONE)
  fol.setState(folState);
  fol.get_actions...
  check exact match with children
 
-When adding BLOCK -> recompute all folstates of all nodes
+When adding BLOCK -> recompute all folstates of all nodes (DONE)
 
 when changing start_state:
-  as above, prune all non-existing children
+  as above, prune all non-existing children (DONE)
 
 always random MC, not priority queue (random tree policy) (DONE)
 
@@ -22,7 +22,7 @@ remove nodes of the tree? (illustrate RED) (DONE)
 
 # robustness:
 
-optimizer sometimes breaks (Hessian...) -> ?
+optimizer sometimes breaks (Hessian...) -> ? (DONE)
 
 # write:
 

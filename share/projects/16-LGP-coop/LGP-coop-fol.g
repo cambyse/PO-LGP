@@ -71,7 +71,7 @@ Rule {
 DecisionRule activate_placing {
   X, Y, Z,
   { (placing X Y Z)! (grasped X Y) (busy X)! (busy Y)! (table Z) }
-  { (placing X Y Z)=1.0 (busy X) (busy Y) komoPlace(X Y Z)=1. (INFEASIBLE grasping ANY Y)! }
+  { (placing X Y Z)=1.0 (busy X) (busy Y) komoPlace(X Y Z)=1. (INFEASIBLE activate_grasping ANY Y)! }
 }
 
 ## that directly terminates!!
