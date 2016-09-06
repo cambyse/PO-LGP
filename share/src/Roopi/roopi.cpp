@@ -285,7 +285,7 @@ arr Roopi::getFTRight() {
 
 arr Roopi::getTaskValue(CtrlTask* task) {
   arr y;
-  task->map.phi(y, NoArr, tcm()->modelWorld.get()());
+  task->map.phi(y, NoArr, tcm()->modelWorld.get()()); //TODO or better with realWorld?
   return y;
 }
 
@@ -293,12 +293,33 @@ arr Roopi::getTaskValue(CtrlTask* task) {
 
 void Roopi::syncPlanWorld() {
   arr qPlan;
-  transferQbetweenTwoWorlds(qPlan, tcm()->modelWorld.get()->getJointState(), planWorld, tcm()->modelWorld.get()());
+  //this syncs with the real world, except for the case where no real world is available. TODO does this make sense?
+  if(tcm()->oldfashioned && !tcm()->useRos) {
+    transferQbetweenTwoWorlds(qPlan, tcm()->modelWorld.get()->getJointState(), planWorld, tcm()->modelWorld.get()());
+  } else {
+    transferQbetweenTwoWorlds(qPlan, tcm()->ctrl_obs.get()->q, planWorld, tcm()->modelWorld.get()());
+  }
   planWorld.setJointState(qPlan);
 }
 
 ors::KinematicWorld& Roopi::getPlanWorld() {
   return planWorld;
+}
+
+double Roopi::getLimitConstraint(double margin) {
+  LimitsConstraint limit(margin);
+  arr y;
+  syncPlanWorld();
+  limit.phi(y, NoArr, planWorld);
+  return y.first();
+}
+
+double Roopi::getCollisionConstraint(double margin) {
+  CollisionConstraint collisions(margin);
+  arr y;
+  syncPlanWorld();
+  collisions.phi(y, NoArr, planWorld);
+  return y.first();
 }
 
 void Roopi::followTaskTrajectory(CtrlTask* task, double executionTime, const arr& trajectory) {
@@ -378,7 +399,7 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
 
   t = MP.addTask("collisions", new CollisionConstraint(0.11), ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.03), ineqTT);
+  t = MP.addTask("qLimits", new LimitsConstraint(0.1), ineqTT); //TODO!!!!!!!!!!!!!!! margin
   t->setCostSpecs(5, MP.T, {0.}, 1.0);
 
   for(CtrlTask* ct : tasks) {

@@ -5,7 +5,6 @@
 
 #include "poseGenerator.h"
 
-
 void sampleData() {
   Roopi R;
   SetOfDataFiles logging("gcKugel_deleteMe");
@@ -20,9 +19,14 @@ void sampleData() {
     }
     mlr::wait(0.5);
     R.holdPosition();
-
+    mlr::wait(1.0);
+    double limits = R.getLimitConstraint();
+    cout << "Limits: " << limits << endl;
+    if(limits > 0) {
+      continue;
+    }
     //wait a few seconds to ensure that the controller has converged
-    mlr::wait(4.0);
+    mlr::wait(3.0);
 
     //mean over 1 second with 10 samples
     arr q, qSign, fL, fR, u;
@@ -97,8 +101,8 @@ void testFTCompensation() {
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-  //sampleData();
-  learnModel();
+  sampleData();
+  //learnModel();
   //testCollision();
   //testOnRobot();
   //testFTCompensation();

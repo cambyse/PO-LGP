@@ -95,6 +95,8 @@ struct Roopi {
   void syncPlanWorld();
   ors::KinematicWorld& getPlanWorld();
 
+  double getLimitConstraint(double margin = 0.05);
+  double getCollisionConstraint(double margin = 0.1);
 
   //-- TODO
 
