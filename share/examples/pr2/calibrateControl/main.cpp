@@ -8,7 +8,7 @@
 
 void sampleData() {
   Roopi R;
-  SetOfDataFiles logging("gcKugel_5");
+  SetOfDataFiles logging("gcKugel_deleteMe");
   rnd.clockSeed();
   PoseGenerator poser(R.tcm()->modelWorld.get()());
 
@@ -59,16 +59,42 @@ void testCollision() {
 
 void learnModel() {
   GravityCompensation gc(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
-  gc.learnFTModel();
-  cout << gc.compensateFTL(gc.world.getJointState()) << endl;
+
+  gc.learnGCModel();
+  cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), {"l_wrist_flex_joint"}) << endl;
+  //gc.learnFTModel();
+
+  //cout << gc.compensateFTL(gc.world.getJointState()) << endl;
 }
 
+void testOnRobot() {
+  Roopi R;
+  CtrlTask* t = R.createCtrlTask("damping", new TaskMap_qItself);
+  R.modifyCtrlTaskGains(t, .0,1.0);
+  R.modifyCtrlC(t, ARR(1000.0));
+  R.activateCtrlTask(t);
+  R.releasePosition();
+  mlr::wait(1000.0);
+}
+
+void testFTCompensation() {
+  Roopi R;
+  PoseGenerator poseGenerator(R.tcm()->modelWorld.get()());
+  arr pose = poseGenerator.getRandomPose();
+  R.gotToJointConfiguration(pose, 10.0, true);
+  while(true) {
+    cout << R.getFTLeft() << endl;
+    mlr::wait(1.0);
+  }
+}
 
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   //sampleData();
-  learnModel();
+  //learnModel();
   //testCollision();
+  testOnRobot();
+  //testFTCompensation();
   return 0;
 }
