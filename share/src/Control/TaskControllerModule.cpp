@@ -50,10 +50,14 @@ void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
-  if(compensateGravity) {
-    gc = new GravityCompensation(realWorld);
+  gc = new GravityCompensation(realWorld);
+  if(compensateGravity) {  
     //gc->loadBetas();
+    gc->learnGCModel();
   }
+
+  gc->learnFTModel();
+
   modelWorld.set() = realWorld;
   taskController = new TaskController(modelWorld.set()(), false);
 
@@ -302,8 +306,12 @@ void TaskControllerModule::step(){
     if(compensateGravity) {
       //u_bias += gc->compensate(realWorld.getJointState(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint"
                                                // ,"l_wrist_flex_joint"});
+      u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint","l_forearm_roll_joint","l_wrist_flex_joint"});
     }
     refs.u_bias = u_bias;
+
+    refs.fL_offset = gc->compensateFTL(realWorld.getJointState());
+    refs.fR_offset = gc->compensateFTR(realWorld.getJointState());
 
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;

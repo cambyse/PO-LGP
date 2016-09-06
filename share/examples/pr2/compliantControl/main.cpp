@@ -59,9 +59,9 @@ void tests() {
   c->setC(ARR(1000.0));
   arr traj = generateEightTrajectory(R.getTaskValue(c));
   R.followTaskTrajectory(c, 15.0, traj);
-  R.holdPosition(); //Hold position TODO: unsmooth
+  //R.holdPosition(); //Hold position TODO: unsmooth
 
-   mlr::wait(1000.0);
+   mlr::wait(1.0);
 
     /*
   // move arms in a good position with motion planner
