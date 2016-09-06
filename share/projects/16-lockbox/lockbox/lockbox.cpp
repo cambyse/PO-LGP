@@ -5,20 +5,59 @@
 #include <unordered_map>
 #include <Motion/komo.h>
 
+#include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 
 Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
+    test_joint(this, "test_joint", true),
+    get_joint_position(this, "get_joint_position", true),
     object_database(this, "object_database", true),
     data_collector(!mlr::getParameter<bool>("useRos", false))
 {
+  nh = new ros::NodeHandle;
+  joint_position_publisher = nh->advertise<std_msgs::Float64>("/lockbox/joint_position_result", 1);
+  test_joint_publisher = nh->advertise<std_msgs::Bool>("/lockbox/test_joint_result", 1);
+
   myBaxter = baxter;
   usingRos = mlr::getParameter<bool>("useRos", false);
+  test_joint_revision = test_joint.readAccess();
+  test_joint.deAccess();
+  joint_position_revision = get_joint_position.readAccess();
+  get_joint_position.deAccess();
 //  threadOpenModules(true);
 }
 
 Lockbox::~Lockbox(){
-//  threadCloseModules();
+  delete nh;
+  //  threadCloseModules();
 }
 
+
+void Lockbox::step()
+{
+  if (readyToTest)
+  {
+    int rev = test_joint.var->revisionNumber();
+    if (rev > test_joint_revision)
+    {
+      uint joint = test_joint.get()().data;
+      std_msgs::Bool result;
+      result.data = this->testJoint(joint);
+      test_joint_publisher.publish(result);
+      test_joint_revision = rev;
+    }
+    rev = get_joint_position.var->revisionNumber();
+    if (rev > joint_position_revision)
+    {
+       uint joint = get_joint_position.get()().data;
+       std_msgs::Float64 result;
+       result.data = myBaxter->getModelWorld().q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex);
+       joint_position_publisher.publish(result);
+       joint_position_revision = rev;
+    }
+    ros::spinOnce(); // not sure if I need this, used to ensure it really publishes
+  }
+}
 
 void Lockbox::initializeJoints()
 {

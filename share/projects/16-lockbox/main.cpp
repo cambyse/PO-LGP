@@ -73,41 +73,48 @@ int main(int argc, char** argv){
     lockbox.update();
   }
 
-//  for (uint joint = 1; joint <= 5; ++joint)
+  lockbox.readyToTest = true;
+
+  moduleShutdown().waitForValueGreaterThan(0);
+
+
+
+
+////  for (uint joint = 1; joint <= 5; ++joint)
+////  {
+////    double max = baxter.getKinematicWorld().getJointByName(lockbox.joint_to_ors_joint.at(joint))->limits(1);
+////    lockbox.moveJoint(joint, max );// / (3-i));
+////  }
+
+//  //Hack to ignore the 5th joint for now...
+////  lockbox.locked_joints.removeValue(5);
+
+//  lockbox.locked_joints.removeValue(1);
+//  lockbox.locked_joints.removeValue(2);
+//  lockbox.locked_joints.removeValue(3);
+//  lockbox.locked_joints.removeValue(4);
+
+
+//  mlr::Array<uint> joints_to_test = mlr::Array<uint>(lockbox.locked_joints);
+
+//  std::srand(std::time(NULL));
+//  while (joints_to_test.N > 0)
 //  {
-//    double max = baxter.getKinematicWorld().getJointByName(lockbox.joint_to_ors_joint.at(joint))->limits(1);
-//    lockbox.moveJoint(joint, max );// / (3-i));
+//    const uint joint = joints_to_test(std::rand() % joints_to_test.N);
+//    cout << "Testing: " << joint << endl;
+//    bool unlock = lockbox.testJoint(joint);
+
+//    if (unlock)
+//    {
+//      joints_to_test = lockbox.locked_joints;
+//    }
+//    else
+//    {
+//      joints_to_test.removeValue(joint);
+//    }
+//    cout << "Joints to test: " << joints_to_test << endl;
+//    cout << "Locked joints: " << lockbox.locked_joints << endl;
 //  }
-
-  //Hack to ignore the 5th joint for now...
-//  lockbox.locked_joints.removeValue(5);
-
-  lockbox.locked_joints.removeValue(1);
-  lockbox.locked_joints.removeValue(2);
-  lockbox.locked_joints.removeValue(3);
-  lockbox.locked_joints.removeValue(4);
-
-
-  mlr::Array<uint> joints_to_test = mlr::Array<uint>(lockbox.locked_joints);
-
-  std::srand(std::time(NULL));
-  while (joints_to_test.N > 0)
-  {
-    const uint joint = joints_to_test(std::rand() % joints_to_test.N);
-    cout << "Testing: " << joint << endl;
-    bool unlock = lockbox.testJoint(joint);
-
-    if (unlock)
-    {
-      joints_to_test = lockbox.locked_joints;
-    }
-    else
-    {
-      joints_to_test.removeValue(joint);
-    }
-    cout << "Joints to test: " << joints_to_test << endl;
-    cout << "Locked joints: " << lockbox.locked_joints << endl;
-  }
 
   cout <<"bye bye" <<endl;
   return 0;

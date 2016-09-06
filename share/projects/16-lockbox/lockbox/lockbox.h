@@ -16,20 +16,55 @@
 #include <RosCom/filterObject.h>
 #include <RosCom/publishDatabase.h>
 
-struct Lockbox:Module{
+#include <std_msgs/UInt8.h>
 
+struct SubscribeJointPosition{
+  ACCESSname(std_msgs::UInt8, get_joint_position)
+
+  Subscriber<std_msgs::UInt8> sub;
+
+  SubscribeJointPosition()
+    : sub("/lockbox/joint_position", get_joint_position) {
+  }
+  ~SubscribeJointPosition(){
+  }
+};
+
+struct SubscribeTestJoint{
+  ACCESSname(std_msgs::UInt8, test_joint)
+
+  Subscriber<std_msgs::UInt8> sub;
+
+  SubscribeTestJoint()
+    : sub("/lockbox/test_joint", test_joint) {
+  }
+  ~SubscribeTestJoint(){
+  }
+
+};
+
+struct Lockbox:Module{
+  Access_typed<std_msgs::UInt8> test_joint;
+  Access_typed<std_msgs::UInt8> get_joint_position;
   Access_typed<FilterObjects> object_database;
 
   SubscribeAlvar alvar_subscriber;
+  SubscribeTestJoint test_joint_sub;
+  SubscribeJointPosition joint_position_sub;
+
   Collector data_collector;
   Filter myFilter;
   PublishDatabase myPublisher;
+
+  ros::NodeHandle* nh;
+  ros::Publisher joint_position_publisher;
+  ros::Publisher test_joint_publisher;
 
   Lockbox(MyBaxter* baxter);
   ~Lockbox();
 
   void open(){}
-  void step(){}
+  void step();
   void close(){}
 
   // New methods
@@ -63,4 +98,7 @@ struct Lockbox:Module{
   CtrlTaskL joint_fixed_tasks;
   CtrlTask* grip_task;
   arr q0;
+  bool readyToTest = false;
+
+  int test_joint_revision = -1, joint_position_revision = -1;
 };
