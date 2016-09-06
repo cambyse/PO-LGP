@@ -61,7 +61,13 @@ void learnModel() {
   GravityCompensation gc(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
 
   gc.learnGCModel();
-  cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), {"l_wrist_flex_joint"}) << endl;
+
+  StringA joints;
+  joints.append(gc.leftJoints);
+  joints.append(gc.rightJoints);
+  joints.append(gc.headJoints);
+
+  cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), joints) << endl;
   //gc.learnFTModel();
 
   //cout << gc.compensateFTL(gc.world.getJointState()) << endl;
@@ -92,9 +98,9 @@ void testFTCompensation() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   //sampleData();
-  //learnModel();
+  learnModel();
   //testCollision();
-  testOnRobot();
+  //testOnRobot();
   //testFTCompensation();
   return 0;
 }
