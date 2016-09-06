@@ -12,11 +12,11 @@ Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
 {
   myBaxter = baxter;
   usingRos = mlr::getParameter<bool>("useRos", false);
-  threadOpenModules(true);
+//  threadOpenModules(true);
 }
 
 Lockbox::~Lockbox(){
-  threadCloseModules();
+//  threadCloseModules();
 }
 
 
@@ -166,7 +166,7 @@ bool Lockbox::testJoint(const uint joint)
   else
     myBaxter->waitConv({approach, alignX, alignY, alignZ});
 
-//  mlr::wait(2.);
+  mlr::wait(2.);
   cout << "Aligned with handle." << endl;
   // Now we are 15 cm away and aligned with the handle.
   myBaxter->stop({approach});
@@ -210,12 +210,11 @@ bool Lockbox::testJoint(const uint joint)
     }
   }
 
-  const double steps = 100;
+  const double steps = 25;
   uint num_failed = 0;
   for (double i = 1; i<=steps; i++)
   {
     double target = (desired - current) * (i/steps) + current;
-    cout << "Step: " << i << " target: " << target << endl;
 
     myBaxter->modifyTarget(move_joint, ARR(target));
 
@@ -230,43 +229,41 @@ bool Lockbox::testJoint(const uint joint)
     // Test if the real world converged
     bool success;
     if (usingRos)
-      success = myBaxter->testRealConv({approach, alignX, alignY, alignZ}, 3);
+      success = myBaxter->testRealConv({approach, alignX, alignY, alignZ}, 5);
     else
       success = myBaxter->testConv({move_joint}, 3);
 
-    cout << "Success: " << success << endl;
     // If not movement success, decide if it is failure, or if joint is locked.
     if (!success)
     {
       num_failed++;
+      cout << "Step: " << i << " target: " << target << " failed. Num failed: " << num_failed << endl;
     }
     else
       num_failed=0;
-      // If our step count is "in the middle." This allows us to 'fail' near the end of a grip.
-//      if (i >= 2 && i <= (steps - 3))
-      if (num_failed > 10)
-      {
-        // Assuming joint is locked if steps is >= 5
-        cout << "Joint is locked." << endl;
-        myBaxter->modifyTarget(move_joint, ARR(current));
-        myBaxter->waitConv({move_joint});
-        mlr::wait(1.);
-        myBaxter->stop({move_joint, approach});
-        grip(false);
-        fixJoint(joint, true);
-        str.clear();
-        ors::Vector point = ors::Vector(0., 0., 0.3);
-        str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< point.x << ", " << point.y << ", " << point.z << "] PD=[1., 1, 1., 1.]";
-        auto retract = myBaxter->task("retract", GRAPH(str));
-        myBaxter->waitConv({retract, alignX, alignY, alignZ});
-        myBaxter->stop({retract, alignX, alignY, alignZ});
-        moveHome(true);
-        sim_q = myBaxter->getKinematicWorld().q;
-        sim_q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex) = current;
-        myBaxter->setRealWorld(sim_q);
-        return false;
-      }
-//    }
+
+    if (num_failed > 3)
+    {
+      // Assuming joint is locked if steps is >= 5
+      cout << "Joint is locked." << endl;
+      myBaxter->modifyTarget(move_joint, ARR(current));
+      myBaxter->waitConv({move_joint});
+      mlr::wait(1.);
+      myBaxter->stop({move_joint, approach});
+      grip(false);
+      fixJoint(joint, true);
+      str.clear();
+      ors::Vector point = ors::Vector(0., 0., 0.3);
+      str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< point.x << ", " << point.y << ", " << point.z << "] PD=[1., 1, 1., 1.]";
+      auto retract = myBaxter->task("retract", GRAPH(str));
+      myBaxter->waitConv({retract, alignX, alignY, alignZ});
+      myBaxter->stop({retract, alignX, alignY, alignZ});
+      moveHome(true);
+      sim_q = myBaxter->getKinematicWorld().q;
+      sim_q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex) = current;
+      myBaxter->setRealWorld(sim_q);
+      return false;
+    }
   }
 
   myBaxter->stop({move_joint, approach});

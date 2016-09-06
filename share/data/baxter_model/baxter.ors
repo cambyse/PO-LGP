@@ -1,7 +1,7 @@
 Include = 'baxter-clean.ors'
 Include = '../lockboxNew.ors'
 
-#Delete shape visual
+Delete shape visual
 #Delete shape collision
 
 #Delete shape collision (head)
