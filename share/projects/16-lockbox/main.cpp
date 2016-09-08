@@ -29,42 +29,42 @@ int main(int argc, char** argv){
     lockbox.update();
     baxter.enablePosControl();
 
-//    ors::Transformation tf = baxter.getModelWorld().getShapeByName("alvar_10")->X;
+    ors::Transformation tf = baxter.getModelWorld().getShapeByName("alvar_10")->X;
 
 
-//    // Position task
-//    mlr::String str;
-//    ors::Vector target = tf*ors::Vector(-0.05, 0, 0.25);
-//    str << "map=pos ref1=endeffL ref2=base_footprint vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1.2, .2, 1.]";
+    // Position task
+    mlr::String str;
+    ors::Vector target = tf*ors::Vector(-0.05, 0, 0.25);
+    str << "map=pos ref1=endeffL ref2=base_footprint vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1.2, .2, 1.]";
 
-////    ors::Vector target = ors::Vector(0, 0, 0.25);
-////    str << "map=pos ref1=endeffL ref2=alvar_10 vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[.5, .8, .2, 1.]";
+//    ors::Vector target = ors::Vector(0, 0, 0.25);
+//    str << "map=pos ref1=endeffL ref2=alvar_10 vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[.5, .8, .2, 1.]";
 
-//    auto approach = baxter.task(GRAPH(str));
-////    baxter.waitConv({approach});
+    auto approach = baxter.task(GRAPH(str));
+//    baxter.waitConv({approach});
 
-//    // Alignment tasks.
-////    auto alignX = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=alvar_10 vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[1000]  PD=[.5, .8, .2, 1.]")));
-////    auto alignY = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=alvar_10 vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[1000] PD=[.5, .8, .2, 1.]")));
-////    auto alignZ = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=alvar_10 vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[1000] PD=[.5, .8, .2, 1.]")));
+    // Alignment tasks.
+//    auto alignX = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=alvar_10 vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[1000]  PD=[.5, .8, .2, 1.]")));
+//    auto alignY = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=alvar_10 vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[1000] PD=[.5, .8, .2, 1.]")));
+//    auto alignZ = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=alvar_10 vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[1000] PD=[.5, .8, .2, 1.]")));
 
-//    ors::Vector vecx = tf.rot * ors::Vector(0,0,-1); vecx.normalize();
-//    ors::Vector vecy = tf.rot * ors::Vector(1,0,0); vecy.normalize();
-//    ors::Vector vecz = tf.rot * ors::Vector(0,-1, 0); vecz.normalize();
-//    auto alignX = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[" << vecx.x << ' ' << vecx.y << ' ' << vecx.z << "] target=[1] prec=[1000]  PD=[1., 1.2, .2, 1.]")));
-//    auto alignY = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[" << vecy.x << ' ' << vecy.y << ' ' << vecy.z << "] target=[1] prec=[1000] PD=[1., 1.2, .2, 1.]")));
-//    auto alignZ = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=[" << vecz.x << ' ' << vecz.y << ' ' << vecz.z << "] target=[1] prec=[1000] PD=[1., 1.2, .2, 1.]")));
+    ors::Vector vecx = tf.rot * ors::Vector(0,0,-1); vecx.normalize();
+    ors::Vector vecy = tf.rot * ors::Vector(1,0,0); vecy.normalize();
+    ors::Vector vecz = tf.rot * ors::Vector(0,-1, 0); vecz.normalize();
+    auto alignX = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[" << vecx.x << ' ' << vecx.y << ' ' << vecx.z << "] target=[1] prec=[1000]  PD=[1., 1.2, .2, 1.]")));
+    auto alignY = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[" << vecy.x << ' ' << vecy.y << ' ' << vecy.z << "] target=[1] prec=[1000] PD=[1., 1.2, .2, 1.]")));
+    auto alignZ = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=[" << vecz.x << ' ' << vecz.y << ' ' << vecz.z << "] target=[1] prec=[1000] PD=[1., 1.2, .2, 1.]")));
 
-//    baxter.waitConv({approach, alignX, alignY, alignZ});
-//    baxter.testRealConv({approach, alignX, alignY, alignZ}, 10);
+    baxter.waitConv({approach, alignX, alignY, alignZ});
+    baxter.testRealConv({approach, alignX, alignY, alignZ}, 10);
 
-//    // Now we are 15 cm away and aligned with the handle.
-//    baxter.stop({approach, alignX, alignY, alignZ});
+    // Now we are 15 cm away and aligned with the handle.
+    baxter.stop({approach, alignX, alignY, alignZ});
 
-//    baxter.disablePosControl();
-//    mlr::wait(5.);
-//    lockbox.update();
-//    baxter.enablePosControl();
+    baxter.disablePosControl();
+    mlr::wait(5.);
+    lockbox.update();
+    baxter.enablePosControl();
 
     lockbox.moveHome(true);
   }

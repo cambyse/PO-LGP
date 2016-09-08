@@ -15,8 +15,8 @@ Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
     data_collector(!mlr::getParameter<bool>("useRos", false))
 {
   nh = new ros::NodeHandle;
-  joint_position_publisher = nh->advertise<std_msgs::Float64>("/lockbox/joint_position_result", 1);
-  test_joint_publisher = nh->advertise<std_msgs::Bool>("/lockbox/test_joint_result", 1);
+  joint_position_publisher = nh->advertise<std_msgs::Float64>("/lockbox/joint_position_result", 1, true);
+  test_joint_publisher = nh->advertise<std_msgs::Bool>("/lockbox/test_joint_result", 1, true);
 
   myBaxter = baxter;
   usingRos = mlr::getParameter<bool>("useRos", false);
@@ -51,11 +51,12 @@ void Lockbox::step()
     {
        uint joint = get_joint_position.get()().data;
        std_msgs::Float64 result;
-       result.data = myBaxter->getModelWorld().q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex);
+       ors::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
+       result.data = 100.0 * myBaxter->getModelWorld().q(jt->qIndex) / jt->limits(1);
        joint_position_publisher.publish(result);
        joint_position_revision = rev;
     }
-    ros::spinOnce(); // not sure if I need this, used to ensure it really publishes
+  mlr::wait(0.1);
   }
 }
 
