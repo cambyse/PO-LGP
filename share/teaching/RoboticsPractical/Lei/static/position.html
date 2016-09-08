@@ -1,0 +1,89 @@
+<html>
+<head>
+    <meta name = "viewport" content = "initial-scale=1.0, width=device-width">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.5.2/css/foundation.min.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        #info {
+            font-color: red;
+            font-size: 12px;
+        }
+        .graph {
+            height: 500px;
+            width: 500px;
+        }
+    </style>
+    <title>Position</title>
+</head>
+<body>
+    <div class="row collapse">
+        <div class="columns small-12 large-12" id="info"></div>
+    </div>
+    <div class="row collapse">
+        <div class="graph columns small-12 large-6" id="xy">
+        </div>
+        <div class="graph columns small-12 large-6" id="yz">
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>    
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script>
+        var xy, yz, options;
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function go() {
+            xy = new google.visualization.LineChart(document.getElementById('xy'));
+            yz = new google.visualization.LineChart(document.getElementById('yz'));
+
+            var cid = getParameterByName('cid');
+            window.setInterval(function() {
+                fetch(cid, 1);
+            }, 150);
+        }
+
+        function dataTable(pos, axis, indexes) {
+            datas = new google.visualization.DataTable();
+            datas.addColumn('number', axis[0]);
+            datas.addColumn('number', axis[1]);
+            datas.addRow([pos[indexes[0]], pos[indexes[1]]]);
+            return datas;
+        }
+
+        function fetch(cid, length) {
+
+            $.get('position', {cid: cid}, function(p) {
+                var p_xy_data = dataTable(p, ['X', 'Y'], [0,1]);
+                var p_yz_data = dataTable(p, ['Y', 'Z'], [1,2]);
+
+                xy.draw(p_xy_data, {
+                    title: 'XY',
+                    pointSize: 10,
+                    pointShape: 'dot',
+                    colors: ['blue'],
+                    hAxis: {title: 'Y', minValue: -1.0, maxValue: 1.0},
+                    vAxis: {title: 'X', minValue: -1.0, maxValue: 1.0}, 
+                });
+                yz.draw(p_yz_data, {
+                    title: 'YZ',
+                    pointSize: 10,
+                    pointShape: 'dot',
+                    colors: ['blue'],                    
+                    hAxis: {title: 'Z', minValue: -1.0, maxValue: 1.0},
+                    vAxis: {title: 'Y', minValue: -1.0, maxValue: 1.0}, 
+                });
+
+            });
+        }
+        $(document).ready(function() {
+            google.charts.load('current', {'packages':['corechart']});
+            google.charts.setOnLoadCallback(go);
+        });
+    </script>
+</body>
+</html>

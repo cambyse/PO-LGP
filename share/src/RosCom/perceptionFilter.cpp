@@ -40,77 +40,60 @@ void Filter::step(){
   }
 
   FilterObjects filteredInputs;
-  FilterObjects matchedSubsetFromDatabase, matchedSubsetFromPerceptualInputs;
-
-  arr matched_objects = zeros(objectDatabase.N);
+  FilterObjects DatabaseObjectsOfGivenType, PerceptualInputsOfGivenType;
 
   // For each type of inputs, run the algorithm.
   for (auto const& type : {FilterObject::FilterObjectType::alvar, FilterObject::FilterObjectType::cluster, FilterObject::FilterObjectType::plane})
   {
-    matchedSubsetFromDatabase.clear();
-    matchedSubsetFromPerceptualInputs.clear();
-
     // Grab the subset from the inputs matching this type
-    matchedSubsetFromPerceptualInputs.clear();
+    PerceptualInputsOfGivenType.clear();
     for (uint i = 0; i < perceptualInputs.N; i++) {
       if (perceptualInputs(i)->type == type) {
-        matchedSubsetFromPerceptualInputs.append(perceptualInputs(i));
+        PerceptualInputsOfGivenType.append(perceptualInputs(i));
       }
     }
 
     // Find all matching object of this type
+    DatabaseObjectsOfGivenType.clear();
     for (uint i = 0; i < objectDatabase.N; i++) {
-      if (matched_objects(i) == 1)
-        continue;
-
       if (objectDatabase(i)->type == type) {
-        matchedSubsetFromDatabase.append(objectDatabase(i));
-        matched_objects(i) = 1;
+        DatabaseObjectsOfGivenType.append(objectDatabase(i));
       }
     }
 
-    if (matchedSubsetFromPerceptualInputs.N == 0 && matchedSubsetFromDatabase.N == 0)
+    if (PerceptualInputsOfGivenType.N == 0 && DatabaseObjectsOfGivenType.N == 0)
       continue;
 
     // Create bipartite costs
-    costs = createCostMatrix(matchedSubsetFromPerceptualInputs, matchedSubsetFromDatabase);
+    costs = createCostMatrix(PerceptualInputsOfGivenType, DatabaseObjectsOfGivenType);
 
     // Run Hungarian algorithm
-    ha = new Hungarian(arr(costs));
+    Hungarian ha(costs);
 
     // Now we have the optimal matching. Assign values.
-    FilterObjects assignedObjects = assign(matchedSubsetFromPerceptualInputs, matchedSubsetFromDatabase);
+    FilterObjects assignedObjects = assign(PerceptualInputsOfGivenType, DatabaseObjectsOfGivenType, ha);
 
-    for (uint i = 0; i < assignedObjects.N; i++)
-      filteredInputs.append(assignedObjects(i));
+    filteredInputs.append(assignedObjects);
 
-    for (FilterObject* fo : matchedSubsetFromPerceptualInputs) {
-      if (filteredInputs.contains(fo) == 0)
-        delete fo;
-    }
-
-    for (FilterObject* fo : matchedSubsetFromDatabase) {
-      if (filteredInputs.contains(fo) == 0)
-        delete fo;
-    }
-
-    delete ha;
   }
 
-  // Add in any unmatched objects
-  for (uint i = 0; i < objectDatabase.N; i++) {
-    if (matched_objects(i) == 0) {
-      filteredInputs.append(objectDatabase(i));
-    }
+  //-- delete objects in percepts and database that are not filtered
+  for (FilterObject* fo : perceptual_inputs()) {
+    if (!filteredInputs.contains(fo))
+      delete fo;
+  }
+  for (FilterObject* fo : object_database()) {
+    if (!filteredInputs.contains(fo))
+      delete fo;
   }
 
-  // Set the access.
+  // Set the variable
   object_database() = filteredInputs;
   object_database.deAccess();
   perceptual_inputs.deAccess();
 }
 
-FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& database)
+FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& database, const Hungarian& ha)
 {
   FilterObjects new_objects;
   std::unordered_set<int> matched_ids;
@@ -118,8 +101,8 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   uint num_old = database.N;
   uint num_new = perceps.N;
 
-  for (uint i = 0; i < ha->starred.dim(0); ++i ) {
-    uint col = ha->starred[i]().maxIndex();
+  for (uint i = 0; i < ha.starred.dim(0); ++i ) {
+    uint col = ha.starred[i]().maxIndex();
     // 3 cases:
     // 1) Existed before, no longer exists. If i > num_new
     // 2) Existed before and still exists. If costs < distannce_threshold
