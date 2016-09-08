@@ -14,5 +14,9 @@
 %include "std_map.i"
 %include "std_vector.i"
 
+namespace std{
+	%template(VecDouble) vector<double>;
+}
+
 
 %include "swig.h"

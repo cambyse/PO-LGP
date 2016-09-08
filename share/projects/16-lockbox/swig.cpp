@@ -29,6 +29,11 @@ double LockboxSwig::getJointPosition(int jointNumber){
   return 1.0;
 }
 
+void LockboxSwig::testArray(std::vector<double> _x){
+  arr x = conv_stdvec2arr(_x);
+  cout <<"i received an array: " <<x <<endl;
+}
+
 
 
 

@@ -98,6 +98,53 @@ class SwigPyIterator(_object):
 SwigPyIterator_swigregister = _swig.SwigPyIterator_swigregister
 SwigPyIterator_swigregister(SwigPyIterator)
 
+class VecDouble(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, VecDouble, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, VecDouble, name)
+    __repr__ = _swig_repr
+    def iterator(self): return _swig.VecDouble_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self): return _swig.VecDouble___nonzero__(self)
+    def __bool__(self): return _swig.VecDouble___bool__(self)
+    def __len__(self): return _swig.VecDouble___len__(self)
+    def pop(self): return _swig.VecDouble_pop(self)
+    def __getslice__(self, *args): return _swig.VecDouble___getslice__(self, *args)
+    def __setslice__(self, *args): return _swig.VecDouble___setslice__(self, *args)
+    def __delslice__(self, *args): return _swig.VecDouble___delslice__(self, *args)
+    def __delitem__(self, *args): return _swig.VecDouble___delitem__(self, *args)
+    def __getitem__(self, *args): return _swig.VecDouble___getitem__(self, *args)
+    def __setitem__(self, *args): return _swig.VecDouble___setitem__(self, *args)
+    def append(self, *args): return _swig.VecDouble_append(self, *args)
+    def empty(self): return _swig.VecDouble_empty(self)
+    def size(self): return _swig.VecDouble_size(self)
+    def clear(self): return _swig.VecDouble_clear(self)
+    def swap(self, *args): return _swig.VecDouble_swap(self, *args)
+    def get_allocator(self): return _swig.VecDouble_get_allocator(self)
+    def begin(self): return _swig.VecDouble_begin(self)
+    def end(self): return _swig.VecDouble_end(self)
+    def rbegin(self): return _swig.VecDouble_rbegin(self)
+    def rend(self): return _swig.VecDouble_rend(self)
+    def pop_back(self): return _swig.VecDouble_pop_back(self)
+    def erase(self, *args): return _swig.VecDouble_erase(self, *args)
+    def __init__(self, *args): 
+        this = _swig.new_VecDouble(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def push_back(self, *args): return _swig.VecDouble_push_back(self, *args)
+    def front(self): return _swig.VecDouble_front(self)
+    def back(self): return _swig.VecDouble_back(self)
+    def assign(self, *args): return _swig.VecDouble_assign(self, *args)
+    def resize(self, *args): return _swig.VecDouble_resize(self, *args)
+    def insert(self, *args): return _swig.VecDouble_insert(self, *args)
+    def reserve(self, *args): return _swig.VecDouble_reserve(self, *args)
+    def capacity(self): return _swig.VecDouble_capacity(self)
+    __swig_destroy__ = _swig.delete_VecDouble
+    __del__ = lambda self : None;
+VecDouble_swigregister = _swig.VecDouble_swigregister
+VecDouble_swigregister(VecDouble)
+
 class LockboxSwig(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, LockboxSwig, name, value)
@@ -115,6 +162,7 @@ class LockboxSwig(_object):
     __del__ = lambda self : None;
     def testJoint(self, *args): return _swig.LockboxSwig_testJoint(self, *args)
     def getJointPosition(self, *args): return _swig.LockboxSwig_getJointPosition(self, *args)
+    def testArray(self, *args): return _swig.LockboxSwig_testArray(self, *args)
 LockboxSwig_swigregister = _swig.LockboxSwig_swigregister
 LockboxSwig_swigregister(LockboxSwig)
 
