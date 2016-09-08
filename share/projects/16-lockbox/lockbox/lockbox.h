@@ -67,11 +67,14 @@ struct Lockbox:Module{
   void step();
   void close(){}
 
+  //////// Johannes functions
+  bool testJoint(const uint joint);
+  double getJointPosition(const uint joint);
+
   // New methods
   void initializeJoints();
 //  void syncronizeJoints(); // Synchronize inputs with the simulated box, move the simulated box.
   void moveJoint(const uint joint, const double position); // Position should be 0-1, relative to limits
-  bool testJoint(const uint joint);
 
   void moveHome(const bool stopAllOtherTasks = false);
   void fixJoint(const uint joint, const bool fix);

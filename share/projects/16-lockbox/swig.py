@@ -162,7 +162,6 @@ class LockboxSwig(_object):
     __del__ = lambda self : None;
     def testJoint(self, *args): return _swig.LockboxSwig_testJoint(self, *args)
     def getJointPosition(self, *args): return _swig.LockboxSwig_getJointPosition(self, *args)
-    def testArray(self, *args): return _swig.LockboxSwig_testArray(self, *args)
 LockboxSwig_swigregister = _swig.LockboxSwig_swigregister
 LockboxSwig_swigregister(LockboxSwig)
 

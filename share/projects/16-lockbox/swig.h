@@ -6,8 +6,8 @@ struct LockboxSwig{
   LockboxSwig();
   ~LockboxSwig();
 
-  bool testJoint(int jointNumber);
-  double getJointPosition(int jointNumber);
+  bool testJoint(const int jointNumber);
+  double getJointPosition(const int jointNumber);
 
-  void testArray(std::vector<double> x);
+//  void testArray(std::vector<double> x);
 };

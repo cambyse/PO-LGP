@@ -27,6 +27,13 @@ Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
 //  threadOpenModules(true);
 }
 
+double Lockbox::getJointPosition(const uint joint)
+{
+  ors::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
+  return 100.0 * myBaxter->getModelWorld().q(jt->qIndex) / jt->limits(1);
+}
+
+
 Lockbox::~Lockbox(){
   delete nh;
   //  threadCloseModules();
