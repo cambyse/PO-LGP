@@ -5,6 +5,7 @@
 #include <Algo/gaussianProcess.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
+#include <Gui/plot.h>
 
 #include "taskMapVariance.h"
 
@@ -101,18 +102,29 @@ void verruecktWennDasKlappt() {
   gp.obsVar = 0.05;
   gp.setKernel(GaussKernel, &gpp);
   //gp.setKernel(kernel, &gpp);
-
+  gp.mu = 1.0;
   gp.dcov = dGaussKernel;
   gp.covF_D = GaussKernelF_D;
   gp.covD_D = GaussKernelD_D;
-  gp.appendObservation(~ARR(0.0,0.0,0),-1.0);
-  gp.appendObservation(~ARR(1.0,0.0,0),-1.0);
-  gp.appendObservation(~ARR(1.0,1.0,0),-1.0);
-  gp.appendObservation(~ARR(0.0,1.0,0),-1.0);
-  gp.appendObservation(~ARR(0.0,0.0,-1.0),-1.0);
-  gp.appendObservation(~ARR(1.0,0.0,-1.0),-1.0);
-  gp.appendObservation(~ARR(1.0,1.0,-1.0),-1.0);
-  gp.appendObservation(~ARR(0.0,1.0,-1.0),-1.0);
+  gp.appendObservation(~ARR(0.0,0.0,0),1.0);
+  gp.appendObservation(~ARR(1.0,0.0,0),1.0);
+  gp.appendObservation(~ARR(1.0,1.0,0),1.0);
+  gp.appendObservation(~ARR(0.0,1.0,0),1.0);
+  gp.appendObservation(~ARR(0.0,0.0,-1.0),1.0);
+  gp.appendObservation(~ARR(1.0,0.0,-1.0),1.0);
+  gp.appendObservation(~ARR(1.0,1.0,-1.0),1.0);
+  gp.appendObservation(~ARR(0.0,1.0,-1.0),1.0);
+
+
+  gp.appendObservation(~ARR(0.1,0.1,-0.1),-1.0);
+  gp.appendObservation(~ARR(0.9,0.0,-0.1),-1.0);
+  gp.appendObservation(~ARR(0.9,0.9,-0.1),-1.0);
+  gp.appendObservation(~ARR(0.0,0.9,-0.1),-1.0);
+  gp.appendObservation(~ARR(0.1,0.1,-0.9),-1.0);
+  gp.appendObservation(~ARR(0.9,0.0,-0.9),-1.0);
+  gp.appendObservation(~ARR(0.9,0.9,-0.9),-1.0);
+  gp.appendObservation(~ARR(0.0,0.9,-0.9),-1.0);
+
 
   //gp.appendObservation(~ARR(0.0,3.0,-1.0),1.0);
   //gp.appendObservation(~ARR(1.0,3.0,-1.0),1.0);
@@ -123,7 +135,7 @@ void verruecktWennDasKlappt() {
   gp.evaluate(~ARR(0.,0.,0.0), y,v);
   cout << v << endl;
 
-  /*ScalarFunction blobby = [&gp](arr&,arr&, const arr& X){
+  ScalarFunction blobby = [&gp](arr&,arr&, const arr& X){
     arr y, non;
     gp.evaluate(~X, y, non);
     return y.first();
@@ -131,23 +143,37 @@ void verruecktWennDasKlappt() {
 
   ors::Mesh m;
   world.gl().add(m);
-  m.setImplicitSurface(blobby,-50,50);*/
+  m.setImplicitSurface(blobby,-1.5,1.5);
+  cout << m << endl;
+
+  world.gl().add(glDrawPlot, &plotModule);
+  arr X;
+  X.setGrid(3,-2,2,10);
+  arr grad = zeros(X.d0,3);
+  for(uint i = 0; i < X.d0; i++) {
+    arr g;
+    gp.gradient(g, X[i]);
+    grad[i] = g;
+  }
+  //plotVectorField(X, grad);
+
+
 
   TaskMap* taskMap = new TaskMapVariance(gp, world, "endeff");
 
-  t = MP.addTask("super", taskMap, sumOfSqrTT);
-  t->map.order = 2;
-  t->setCostSpecs(0, MP.T, {0.5}, 10.0);
+  //t = MP.addTask("super", taskMap, sumOfSqrTT);
+  //t->map.order = 2;
+  //t->setCostSpecs(0, MP.T, {-0.5}, 10.0);
 
   TaskMap* ori = new TaskMapGPGradient(gp, world, "endeff", ors::Vector(1.0,0.0,0.0));
   t = MP.addTask("orie", ori, sumOfSqrTT);
-  t->setCostSpecs(0, MP.T, {0.0}, 1.0);
+  t->setCostSpecs(0, MP.T, {0.0}, 10.0);
 
   //t = MP.addTask("bla", new TaskMap_Default(vecTMT, world, "endeff", ors::Vector(0.0,0.0,1.0)), sumOfSqrTT);
   //t->setCostSpecs(0, MP.T, ARR(0.0,0.0,1.0), 2.0);
 
   t = MP.addTask("bla", new TaskMap_Default(posTMT, world, "endeff"), sumOfSqrTT);
-  t->setCostSpecs(MP.T-5, MP.T, ARR(-0.1,2.0,0.0), 5.0);
+  t->setCostSpecs(MP.T-5, MP.T, ARR(0.0,2.0,0.0), 5.0);
 
   arr x = MP.getInitialization();
 
@@ -164,6 +190,7 @@ void verruecktWennDasKlappt() {
     arr y, v;
     //gp.evaluate(~x[i], y, v);
     //cout << v << endl;
+    cout << ori->phi(world) << endl;
     mlr::wait(0.1);
   }
   world.setJointState(x[x.d0-1]);

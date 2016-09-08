@@ -24,7 +24,7 @@ struct TaskMapGPGradient : TaskMap {
   TaskMap_Default positionMap;
 
   void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t = -1);
-  uint dim_phi(const ors::KinematicWorld& G) { return 3; }
+  uint dim_phi(const ors::KinematicWorld& G) { return 1; }
 
   TaskMapGPGradient(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector);
 

@@ -105,12 +105,16 @@ void TaskMapGPGradient::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t)
   gp.gradient(grad, pos);
   gp.hessianPos(hess, pos);
 
-  y = pos-grad;
+  arr Jac, ori;
+  taskMap.phi(ori, Jac, G);
+
+  //y = ori-grad;
+
+  y = ~ori*grad - ARR(length(ori)*length(grad));
 
   if(&J) {
-    arr Jac;
-    taskMap.phi(NoArr, Jac, G);
-    J = Jac - hess*JacPos;
+    //J = Jac - hess*JacPos;
+    J = ~ori*hess*JacPos+~grad*Jac - length(grad)/length(ori)*~ori*Jac-length(ori)/length(grad)*~grad*hess*JacPos;
   }
 }
 
