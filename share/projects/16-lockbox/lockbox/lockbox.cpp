@@ -14,12 +14,16 @@ Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
     object_database(this, "object_database", true),
     data_collector(!mlr::getParameter<bool>("useRos", false))
 {
-  nh = new ros::NodeHandle;
-  joint_position_publisher = nh->advertise<std_msgs::Float64>("/lockbox/joint_position_result", 1, true);
-  test_joint_publisher = nh->advertise<std_msgs::Bool>("/lockbox/test_joint_result", 1, true);
+  usingRos = mlr::getParameter<bool>("useRos", false);
+
+  if (usingRos)
+  {
+    nh = new ros::NodeHandle;
+    joint_position_publisher = nh->advertise<std_msgs::Float64>("/lockbox/joint_position_result", 1, true);
+    test_joint_publisher = nh->advertise<std_msgs::Bool>("/lockbox/test_joint_result", 1, true);
+  }
 
   myBaxter = baxter;
-  usingRos = mlr::getParameter<bool>("useRos", false);
   test_joint_revision = test_joint.readAccess();
   test_joint.deAccess();
   joint_position_revision = get_joint_position.readAccess();
@@ -29,13 +33,36 @@ Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
 
 double Lockbox::getJointPosition(const uint joint)
 {
-  ors::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
-  return 100.0 * myBaxter->getModelWorld().q(jt->qIndex) / jt->limits(1);
+//  ors::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
+//  return 100.0 * myBaxter->getModelWorld().q(jt->qIndex) / jt->limits(1);
+    return 100.0 * joint_positions.at(joint);
 }
 
+bool Lockbox::testJoint(const uint joint)
+{
+  char res = 'a';
+  while ((res != 'y') && (res != 'n'))
+  {
+    cout << "Is joint: " << joint << " movable (y/n): ";
+    std::cin >> res;
+    cout << endl;
+  }
+  if (res == 'n')
+  {
+    cout << "Returning false." << endl;
+    return false;
+  }
+  else
+  {
+    cout << "Moving the joint." << endl;
+    return moveJoint(joint);
+  }
+
+}
 
 Lockbox::~Lockbox(){
-  delete nh;
+  if (nh)
+    delete nh;
   //  threadCloseModules();
 }
 
@@ -57,9 +84,7 @@ void Lockbox::step()
     if (rev > joint_position_revision)
     {
        uint joint = get_joint_position.get()().data;
-       std_msgs::Float64 result;
-       ors::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
-       result.data = 100.0 * myBaxter->getModelWorld().q(jt->qIndex) / jt->limits(1);
+       std_msgs::Float64 result; result.data = getJointPosition(joint);
        joint_position_publisher.publish(result);
        joint_position_revision = rev;
     }
@@ -87,6 +112,7 @@ void Lockbox::initializeJoints()
     joint_to_handle.insert(std::make_pair(i, STRING(name << "_handle")));
     joint_to_ors_joint.insert(std::make_pair(i, STRING("lockbox_" << name)));
     locked_joints.append(i);
+    joint_positions.insert(std::make_pair(i, 0.0));
   }
 }
 
@@ -172,11 +198,8 @@ void Lockbox::grip(const bool toGrip)
 //  } while( std::abs(pos(j->qIndex) - q0(j->qIndex)) > 0.001);
 }
 
-void Lockbox::moveJoint(const uint joint, const double position)
-{
-}
 
-bool Lockbox::testJoint(const uint joint)
+bool Lockbox::moveJoint(const uint joint)
 {
   // First, fix the joint in the model world.
   fixJoint(joint, true);
@@ -243,9 +266,11 @@ bool Lockbox::testJoint(const uint joint)
   CtrlTask* move_joint = myBaxter->task("move_joint", new qItselfConstraint(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex, myBaxter->getModelWorld().getJointStateDimension()), 1, 1, 1, 1);
 
 
-  double current = myBaxter->getModelWorld().q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex);
-  double desired = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->limits(1);
 
+  double current = myBaxter->getModelWorld().q(myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex);
+  double desired = ( joint_positions.at(joint) == 0 ) ? myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->limits(1) : myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint))->limits(0);
+
+  joint_positions.at(joint) = 1 - joint_positions.at(joint);
 
   // Simulate locked joints, if not using ROS
   if (!usingRos)
@@ -257,7 +282,7 @@ bool Lockbox::testJoint(const uint joint)
     }
   }
 
-  const double steps = 25;
+  const double steps = 20;
   uint num_failed = 0;
   for (double i = 1; i<=steps; i++)
   {
@@ -275,10 +300,13 @@ bool Lockbox::testJoint(const uint joint)
 
     // Test if the real world converged
     bool success;
+#if 0
     if (usingRos)
       success = myBaxter->testRealConv({approach, alignX, alignY, alignZ}, 5);
     else
       success = myBaxter->testConv({move_joint}, 3);
+#endif
+    success = myBaxter->testConv({move_joint}, 5);
 
     // If not movement success, decide if it is failure, or if joint is locked.
     if (!success)
@@ -333,31 +361,35 @@ bool Lockbox::testJoint(const uint joint)
   myBaxter->waitConv({retract, alignX, alignY, alignZ});
   myBaxter->stop({retract});//, alignX, alignY, alignZ});
 
-  cout << "Retraced from handle. Moving to above marker." << endl;
+//  cout << "Retraced from handle. Moving to above marker." << endl;
 
-  str.clear();
-  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
+//  str.clear();
+//  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
 
-//    ors::Vector marker_pos = baxter.getModelWorld().getShapeByName(marker_name)->X.pos;
-//    str << "map=pos ref1=endeffL ref2=base_footprint  vec2=[" << marker_pos.x << ' ' << marker_pos.y << ' ' << marker_pos.z << "] PD=[1., 1, 1., 1.]";
+////    ors::Vector marker_pos = baxter.getModelWorld().getShapeByName(marker_name)->X.pos;
+////    str << "map=pos ref1=endeffL ref2=base_footprint  vec2=[" << marker_pos.x << ' ' << marker_pos.y << ' ' << marker_pos.z << "] PD=[1., 1, 1., 1.]";
 
-  // Alignment tasks.
-//    auto alignXmarker = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[10]")));
-//    auto alignYmarker = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[10]")));
-//    auto alignZmarker = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[10]")));
-  CtrlTask* marker = myBaxter->task("marker", GRAPH(str));
-  myBaxter->waitConv({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
-  myBaxter->stop({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
+//  // Alignment tasks.
+////    auto alignXmarker = baxter.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[1 0 0] vec2=[0 0 -1] target=[1] prec=[10]")));
+////    auto alignYmarker = baxter.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 1 0] vec2=[1 0 0] target=[1] prec=[10]")));
+////    auto alignZmarker = baxter.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=" << marker_name << " vec1=[0 0 1] vec2=[0 -1 0] target=[1] prec=[10]")));
+//  CtrlTask* marker = myBaxter->task("marker", GRAPH(str));
+//  myBaxter->waitConv({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
+//  myBaxter->stop({marker, alignX, alignY, alignZ});//});//, alignXmarker, alignYmarker, alignZmarker});
 
-  cout << "Retracted, updating modelworld. " << endl;
+//  cout << "Retracted, updating modelworld. " << endl;
 
-  // Update the position
+//  // Update the position
+#if 0
   myBaxter->disablePosControl();
   mlr::wait(5.);
   arr new_q;
   updatedJointPose(joint, new_q);
   myBaxter->setRealWorld(new_q);
   myBaxter->enablePosControl();
+#endif
+  q0(myBaxter->getKinematicWorld().getJointByName(joint_to_ors_joint.at(joint))->qIndex) = desired;
+
 
   // Retracting without alignment.
   cout << "Retracting. " << endl;
@@ -376,7 +408,7 @@ bool Lockbox::testJoint(const uint joint)
   // Done, move home.
   moveHome(true);
 
-  locked_joints.removeValue(joint);
+//  locked_joints.removeValue(joint);
   return true;
 }
 

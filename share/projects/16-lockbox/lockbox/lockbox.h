@@ -69,12 +69,13 @@ struct Lockbox:Module{
 
   //////// Johannes functions
   bool testJoint(const uint joint);
+  bool moveJoint(const uint joint);
   double getJointPosition(const uint joint);
 
   // New methods
   void initializeJoints();
 //  void syncronizeJoints(); // Synchronize inputs with the simulated box, move the simulated box.
-  void moveJoint(const uint joint, const double position); // Position should be 0-1, relative to limits
+//  void moveJoint(const uint joint, const double position); // Position should be 0-1, relative to limits
 
   void moveHome(const bool stopAllOtherTasks = false);
   void fixJoint(const uint joint, const bool fix);
@@ -88,6 +89,7 @@ struct Lockbox:Module{
   std::unordered_map<uint, mlr::String> joint_name;
 
   mlr::Array<uint> locked_joints;
+  std::unordered_map<uint, double> joint_positions;
 
   bool queryContinue();
 
