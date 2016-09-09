@@ -82,7 +82,7 @@ void rndModify(Graph& G){
       new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      G.appendSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
+      G.newSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();

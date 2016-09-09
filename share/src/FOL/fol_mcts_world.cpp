@@ -1,7 +1,7 @@
 #include "fol_mcts_world.h"
 #include "fol.h"
 
-#define DEBUG(x) x
+#define DEBUG(x) //x
 
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
@@ -35,7 +35,7 @@ FOL_World::FOL_World(istream& is)
 
 void FOL_World::init(istream& is){
   KB.read(is);
-  FILE("z.init") <<KB; //write what was read, just for inspection
+  DEBUG( FILE("z.init") <<KB; ) //write what was read, just for inspection
   KB.checkConsistency();
 
   start_state = &KB.get<Graph>("START_STATE");
@@ -216,7 +216,7 @@ const std::vector<FOL_World::Handle> FOL_World::get_actions(){
 
 bool FOL_World::is_feasible_action(const MCTS_Environment::Handle& action){
   const Decision *d = std::dynamic_pointer_cast<const Decision>(action).get();
-  return substitutedRulePreconditionHolds(*state, d->rule, d->substitution, 2);
+  return substitutedRulePreconditionHolds(*state, d->rule, d->substitution);
 }
 
 const MCTS_Environment::Handle FOL_World::get_state(){
@@ -247,7 +247,7 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  if(!start_state) start_state = &KB.appendSubgraph({"START_STATE"}, state->isNodeOfParentGraph->parents)->value;
+  if(!start_state) start_state = &KB.newSubgraph({"START_STATE"}, state->isNodeOfParentGraph->parents)->value;
   start_state->copy(*state);
   start_state->isNodeOfParentGraph->keys(0)="START_STATE";
   start_T_step = T_step;
@@ -262,7 +262,7 @@ void FOL_World::make_current_state_default() {
 }
 
 void FOL_World::reset_state(){
-  FILE("z.before") <<KB;
+  DEBUG( FILE("z.before") <<KB; )
   T_step=start_T_step;
   T_real=start_T_real;
   R_total=0.;
@@ -272,13 +272,13 @@ void FOL_World::reset_state(){
 #if 1
   setState(start_state);
 #else
-  if(!state) state = &KB.appendSubgraph({"STATE"}, {start_state->isNodeOfParentGraph})->value;
+  if(!state) state = &KB.newSubgraph({"STATE"}, {start_state->isNodeOfParentGraph})->value;
   state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
 #endif
 
-  DEBUG(KB.checkConsistency();)
-  FILE("z.after") <<KB;
+  DEBUG( KB.checkConsistency(); )
+  DEBUG( FILE("z.after") <<KB; )
 
   //-- forward chain rules
   forwardChaining_FOL(KB, KB.get<Graph>("STATE"), NULL, NoGraph, verbose-3); //, &decisionObservation);
@@ -336,8 +336,8 @@ Graph* FOL_World::getState(){
   return state;
 }
 
-void FOL_World::setState(Graph *s){
-  if(!state) state = &KB.appendSubgraph({"STATE"}, {s->isNodeOfParentGraph})->value;
+void FOL_World::setState(Graph *s, int setT_step){
+  if(!state) state = &KB.newSubgraph({"STATE"}, {s->isNodeOfParentGraph})->value;
   state->copy(*s);
   {  //reqire the parent! NOT NICE!
     Node *n=state->isNodeOfParentGraph;
@@ -345,12 +345,13 @@ void FOL_World::setState(Graph *s){
     n->parents.scalar() = s->isNodeOfParentGraph;
     n->parents.scalar()->parentOf.append(n);
   }
+  if(setT_step>=0) T_step = setT_step;
   DEBUG(KB.checkConsistency();)
   CHECK(state->isNodeOfParentGraph && &state->isNodeOfParentGraph->container==&KB,"");
 }
 
 Graph* FOL_World::createStateCopy(){
-  Graph* new_state = &KB.appendSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfParentGraph->parents)->value;
+  Graph* new_state = &KB.newSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfParentGraph->parents)->value;
   new_state->copy(*state);
   return new_state;
 }

@@ -70,7 +70,7 @@ struct Node_typed : Node {
   
   virtual Node* newClone(Graph& container) const {
     if(isGraph()){
-      Node_typed<Graph> *n = container.appendSubgraph(keys, parents);
+      Node_typed<Graph> *n = container.newSubgraph(keys, parents);
       n->value.copy(graph());
       return n;
     }
@@ -126,7 +126,7 @@ template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
   return ret;
 }
 
-template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
+template<class T> Node_typed<T> *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
   return new Node_typed<T>(*this, keys, parents, x);
 }
 

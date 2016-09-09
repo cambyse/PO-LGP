@@ -90,7 +90,7 @@ struct FOL_World:MCTS_Environment{
 
   //-- internal access
   Graph* getState();
-  void setState(Graph*);
+  void setState(Graph*, int setT_step=-1);
   Graph* createStateCopy();
 
   void write(std::ostream& os) const{ os <<KB; }

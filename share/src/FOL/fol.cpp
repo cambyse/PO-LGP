@@ -54,6 +54,7 @@ Node *getFirstVariable(Node* literal, Graph* varScope){
 bool tuplesAreEqual(NodeL& tuple0, NodeL& tuple1){
   if(tuple0.N!=tuple1.N) return false;
   for(uint i=0;i<tuple0.N;i++){
+    if(tuple0.elem(i)->keys.last()=="ANY") continue;
     if(tuple0.elem(i) != tuple1.elem(i)) return false;
   }
   return true;

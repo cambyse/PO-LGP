@@ -33,7 +33,7 @@ void testFolLoadFile(){
 
 
   G.checkConsistency();
-  Node *sub = G.appendSubgraph({}, {});
+  Node *sub = G.newSubgraph({}, {});
   sub->graph().isNodeOfParentGraph = sub;
   G.checkConsistency();
   new Node_typed<bool>(sub->graph(), {}, {s, consts(0)}, true);

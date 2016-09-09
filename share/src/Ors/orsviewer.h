@@ -21,7 +21,7 @@ struct OrsViewer : Module{
       modelCameraView(this, "modelCameraView"),
       modelDepthView(this, "modelDepthView"),
       computeCameraView(computeCameraView){}
-  ~OrsViewer(){}
+  ~OrsViewer(){ threadClose(); }
   void open();
   void step();
   void close() {}
@@ -50,7 +50,7 @@ struct OrsPathViewer : Module{
     : Module("OrsPathViewer", beatIntervalSec),
       configurations(this, varname, true),
       tprefix(tprefix){}
-  ~OrsPathViewer(){}
+  ~OrsPathViewer(){ threadClose(); }
   void open();
   void step();
   void close() {}

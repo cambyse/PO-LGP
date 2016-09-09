@@ -99,9 +99,9 @@ void plan_BHTS(){
   C.updateDisplay();
   C.displayTree();
 
-  for(;;){
+  for(uint k=0;k<100;k++){
 
-    C.root->checkConsistency();
+//    C.root->checkConsistency();
     { //add MC rollouts
 #if 0 //select from fringe
       ManipulationTree_Node* n = popBestFromMCfringe(C.MCfringe);
@@ -120,8 +120,8 @@ void plan_BHTS(){
       }
     }
 
-    C.updateDisplay();
-    mlr::wait();
+//    C.updateDisplay();
+//    mlr::wait();
 
     { //optimize a seq
       MNode* n = popBestFromSeqFringe(C.seqFringe);
@@ -147,10 +147,10 @@ void plan_BHTS(){
 //      }
 //    }
 
-    cout <<"===================== CURRENT QUEUES:" <<endl;
-    cout <<"MCfringe:" <<C.MCfringe <<endl;
-    cout <<"seqFringe:" <<C.seqFringe <<endl;
-    cout <<"pathFringe:" <<C.pathFringe <<endl;
+//    cout <<"===================== CURRENT QUEUES:" <<endl;
+//    cout <<"MCfringe:" <<C.MCfringe <<endl;
+//    cout <<"seqFringe:" <<C.seqFringe <<endl;
+//    cout <<"pathFringe:" <<C.pathFringe <<endl;
 //    cout <<"pqDone:" <<pqDone <<endl;
 
   }

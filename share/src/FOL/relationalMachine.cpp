@@ -15,8 +15,8 @@ void RelationalMachine::init(const char* filename){
     fil >>KB;
     KB.checkConsistency();
   }
-  if(!KB["TMP"])   KB.appendSubgraph({"TMP"}, {});
-  if(!KB["STATE"]) KB.appendSubgraph({"STATE"}, {});
+  if(!KB["TMP"])   KB.newSubgraph({"TMP"}, {});
+  if(!KB["STATE"]) KB.newSubgraph({"STATE"}, {});
   state = &KB["STATE"]->graph();
   tmp   = &KB["TMP"]->graph();
 }
