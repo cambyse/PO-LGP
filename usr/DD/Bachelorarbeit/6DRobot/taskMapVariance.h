@@ -30,4 +30,35 @@ struct TaskMapGPGradient : TaskMap {
 
 };
 
+struct TaskMapGP : TaskMap {
+  GaussianProcess& gp;
+  TaskMap_Default taskMap;
+
+  void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t = -1);
+  uint dim_phi(const ors::KinematicWorld& G) { return 1; }
+
+  TaskMapGP(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName);
+
+};
+
+struct TaskMapGP1D : TaskMap {
+  GaussianProcess& gp;
+  TaskMap_Default positionMap;
+
+  void phi(arr &y, arr &J, const ors::KinematicWorld &G, int t);
+  uint dim_phi(const ors::KinematicWorld &G) { return 1; }
+
+  TaskMapGP1D(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName);
+};
+
+struct TaskMap1DPosOrientation : TaskMap {
+  TaskMap_Default orientationMap;
+  TaskMap_Default positionMap;
+
+  void phi(arr &y, arr &J, const ors::KinematicWorld &G, int t);
+  uint dim_phi(const ors::KinematicWorld &G) { return 1; }
+
+  TaskMap1DPosOrientation(const ors::KinematicWorld& world, const char* shapeName, const ors::Vector& vec);
+};
+
 #endif // TASKMAPVARIANCE_H

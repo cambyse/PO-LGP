@@ -110,10 +110,14 @@ void TaskMapGPGradient::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t)
 
   //y = ori-grad;
 
+  //y = ori/length(ori)-grad/length(grad);
+
   y = ~ori*grad - ARR(length(ori)*length(grad));
+  //cout << grad << endl;
 
   if(&J) {
     //J = Jac - hess*JacPos;
+    //J = Jac/length(ori)-ori*~ori*Jac/(pow(length(ori), 3.0)) - hess*JacPos/length(grad) + grad*~grad*hess*JacPos/(pow(length(grad),3.0));
     J = ~ori*hess*JacPos+~grad*Jac - length(grad)/length(ori)*~ori*Jac-length(ori)/length(grad)*~grad*hess*JacPos;
   }
 }
@@ -121,4 +125,56 @@ void TaskMapGPGradient::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t)
 TaskMapGPGradient::TaskMapGPGradient(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector)
   : gp(gp)
   , taskMap(vecTMT, world, shapeName, vector)
+  , positionMap(posTMT, world, shapeName) {}
+
+
+void TaskMapGP::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr pos, JPos;
+  taskMap.phi(pos, JPos, G);
+  arr gradF;
+  gp.gradient(gradF, pos);
+  arr non;
+  gp.evaluate(~pos, y, non);
+  if(&J) {
+    J = ~gradF*JPos;
+  }
+}
+
+TaskMapGP::TaskMapGP(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName)
+  : gp(gp)
+  , taskMap(posTMT, world, shapeName) {}
+
+
+void TaskMap1DPosOrientation::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr ori;
+  orientationMap.phi(ori, NoArr, G);
+  arr pos, JPos;
+  positionMap.phi(pos, JPos, G);
+  y = ~ori*pos;
+  if(&J) {
+    J = ~ori*JPos;
+  }
+}
+
+TaskMap1DPosOrientation::TaskMap1DPosOrientation(const ors::KinematicWorld& world, const char* shapeName, const ors::Vector& vec)
+  : orientationMap(vecTMT, world, shapeName, vec)
+  , positionMap(posTMT, world, shapeName) {}
+
+
+void TaskMapGP1D::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr pos, JPos;
+  positionMap.phi(pos, JPos, G);
+  arr grad, H;
+  gp.gradient(grad, pos);
+  y = ~grad/length(grad)*pos;
+  if(&J) {
+    gp.hessianPos(H, pos);
+    //J = ~grad*JPos;
+    double l = length(grad);
+    J = ~grad/l*JPos + ~pos*(H*JPos/l - grad*~grad*H*JPos/l/l/l);
+  }
+}
+
+TaskMapGP1D::TaskMapGP1D(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName)
+  : gp(gp)
   , positionMap(posTMT, world, shapeName) {}
