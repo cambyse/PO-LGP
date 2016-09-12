@@ -49,9 +49,11 @@ struct TaskControllerModule : Module {
 
   arr qLastReading;
 
+  ors::KinematicWorld& customModelWorld;
+
 
 public:
-  TaskControllerModule(const char* robot="pr2");
+  TaskControllerModule(const char* robot="pr2", ors::KinematicWorld& world = NoWorld);
   ~TaskControllerModule();
 
   void open();

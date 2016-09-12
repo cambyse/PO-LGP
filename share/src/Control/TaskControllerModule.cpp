@@ -16,7 +16,8 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot)
+
+TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWorld& world)
   : Module("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -27,6 +28,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , verbose(false)
   , useDynSim(true)
   , compensateGravity(false)
+  , customModelWorld(world)
 {
 
   s = new sTaskControllerModule();
@@ -41,6 +43,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   q0 = realWorld.q;
 
   qSign.set()() = zeros(q0.N);
+
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -58,7 +61,13 @@ void TaskControllerModule::open(){
 
   gc->learnFTModel();
 
-  modelWorld.set() = realWorld;
+  if(&customModelWorld) {
+    modelWorld.set()() = customModelWorld;
+  } else {
+    modelWorld.set()() = realWorld;
+  }
+
+ // modelWorld.set() = realWorld;
   taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
