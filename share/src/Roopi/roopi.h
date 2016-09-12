@@ -21,7 +21,7 @@ struct Roopi {
 
   CtrlTask* holdPositionTask;
 
-  Roopi();
+  Roopi(ors::KinematicWorld& world = NoWorld);
   ~Roopi();
 
   //-- control tasks
@@ -30,7 +30,9 @@ struct Roopi {
   CtrlTask *createCtrlTask(const char* name, TaskMap* map, bool active=false);
 
   /// activate a control task after you've set parameters, etc
-  void activateCtrlTask(CtrlTask* t, bool active=true);
+  void activateCtrlTask(CtrlTask* t, bool reinitializeReferences = false);
+  /// deactivate a control task
+  void deactivateCtrlTask(CtrlTask* t);
 
   /// removes a CtrlTask and deletes also the task map
   void destroyCtrlTask(CtrlTask* t);
@@ -42,12 +44,18 @@ struct Roopi {
 
   /// holds all joints in position. Desactivates all other tasks
   void holdPosition();
-  /// release hold position task. Has no effect for other tasks
+  /// release hold position task. Has no effect on other tasks
   void releasePosition();
 
+  /// returns whether a CtrlTask has converged
+  bool converged(CtrlTask* ct, double tolerance = 1e-2);
+
+  /// wait for all given CtrlTasks to be converged
+  bool waitForConv(CtrlTask* ct, double maxTime = -1, double tolerance = 1e-2);
+  bool waitForConv(const CtrlTaskL& cts, double maxTime = -1, double tolerance = 1e-2);
 
   // low-level ctr - use is discouraged!!
-  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary?
+  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 //  void addCtrlTask(CtrlTask* ct); ///< adds CtrlTask directly to the taskController
 //  void addCtrlTasks(CtrlTaskL cts); ///< adds multiple CtrlTasks directly to the taskController
 

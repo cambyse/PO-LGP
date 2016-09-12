@@ -92,6 +92,9 @@ struct Roopi_private {
 
   //-- display and interaction
   GamepadInterface gamepad;
+
+  ors::KinematicWorld* cu;
+
   //OrsViewer view;
   OrsPoseViewer* ctrlView;
 
@@ -102,6 +105,7 @@ struct Roopi_private {
   SendPositionCommandsToBaxter spctb;
   #endif
 
+
   //PR2
   SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> subCtrl;
   PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pubCtrl;
@@ -109,12 +113,14 @@ struct Roopi_private {
 
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
-  Roopi_private()
+
+
+  Roopi_private(ors::KinematicWorld& world)
     : jointState(NULL, "jointState"),
       ctrl_ref(NULL, "ctrl_ref"),
       ctrl_obs(NULL, "ctrl_obs"),
       pr2_odom(NULL, "pr2_odom"),
-      tcm("pr2"),
+      tcm("pr2", world),
       rosInit("Roopi"),
       subJointState("/robot/joint_states", jointState),
       #if baxter
@@ -131,10 +137,16 @@ struct Roopi_private {
     }
     #endif
 
-    if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
-      ctrlView = new OrsPoseViewer({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
+    if(&world) {
+      cu = new ors::KinematicWorld(world);
     } else {
-      ctrlView = new OrsPoseViewer({"ctrl_q_real"}, tcm.realWorld);
+      cu = new ors::KinematicWorld(tcm.realWorld);
+    }
+
+    if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
+      ctrlView = new OrsPoseViewer({"ctrl_q_real", "ctrl_q_ref"}, *cu);
+    } else {
+      ctrlView = new OrsPoseViewer({"ctrl_q_real"}, *cu);
     }
 
     threadOpenModules(true);
@@ -145,14 +157,15 @@ struct Roopi_private {
   ~Roopi_private(){
     threadCloseModules();
     delete ctrlView;
+    delete cu;
     cout << "bye bye" << endl;
   }
 };
 
 //==============================================================================
 
-Roopi::Roopi()
-  : s(new Roopi_private){
+Roopi::Roopi(ors::KinematicWorld& world)
+  : s(new Roopi_private(world)){
   planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
   mlr::timerStart(true); //TODO is that necessary? Is the timer global?
 
@@ -176,14 +189,28 @@ CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
   map->phi(ct->y, NoArr, tcm()->modelWorld.get()()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
   ct->y_ref = ct->y;
   ct->setGains(0.0,0.0);
+  ct->setC(eye(ct->y_ref.d0)*1000.0); //TODO
   ct->active = active;
   tcm()->ctrlTasks.set()->append(ct);
   return ct;
 }
 
-void Roopi::activateCtrlTask(CtrlTask* t, bool active){
-  tcm()->ctrlTasks.set(), t->active = active;  //(mt) very unusual syntax.... check if that works!
-  //TODO maybe initialize here with actual value again for safety reasons??!?!?
+void Roopi::activateCtrlTask(CtrlTask* t, bool reinitializeReferences){
+  tcm()->ctrlTasks.writeAccess();
+  if(reinitializeReferences) {
+    cout << "basd" << endl;
+    arr currentValue = getTaskValue(t);
+    t->y = currentValue;
+    t->y_ref = currentValue;
+  }
+  t->active = true;
+  tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::deactivateCtrlTask(CtrlTask* t) {
+  tcm()->ctrlTasks.writeAccess();
+  t->active = false;
+  tcm()->ctrlTasks.deAccess();
 }
 
 void Roopi::destroyCtrlTask(CtrlTask* t) {
@@ -231,13 +258,51 @@ void Roopi::holdPosition() {
   modifyCtrlC(ct, ARR(1000.0));
   activateCtrlTask(ct);*/
 
-  modifyCtrlTaskReference(holdPositionTask, tcm()->modelWorld.get()->getJointState());
-  activateCtrlTask(holdPositionTask);
+  //modifyCtrlTaskReference(holdPositionTask, tcm()->modelWorld.get()->getJointState());
+  activateCtrlTask(holdPositionTask, true);
 }
 
 void Roopi::releasePosition() {
-  activateCtrlTask(holdPositionTask, false);
+  deactivateCtrlTask(holdPositionTask);
 }
+
+bool Roopi::converged(CtrlTask* ct, double tolerance) {
+  bool conv = false;
+  tcm()->ctrlTasks.readAccess();
+  if(ct->isConverged(tolerance)) conv = true;
+  tcm()->ctrlTasks.deAccess();
+  return conv;
+}
+
+bool Roopi::waitForConv(CtrlTask* ct, double maxTime, double tolerance) {
+  return waitForConv(CtrlTaskL({ct}), maxTime, tolerance);
+}
+
+bool Roopi::waitForConv(const CtrlTaskL& cts, double maxTime, double tolerance) {
+  double startTime = mlr::timerRead();
+  while(true) {
+    bool allConv = true;
+    tcm()->ctrlTasks.readAccess();
+    for(CtrlTask* t : cts) {
+      if(!t->isConverged(tolerance)) {
+        allConv = false;
+        break;
+      } else {
+        cout << t->name << " has converged" << endl;
+      }
+    }
+    tcm()->ctrlTasks.deAccess();
+    if(allConv) return true;
+    double actTime = mlr::timerRead() - startTime;
+    if(maxTime != -1 && actTime > maxTime) {
+      cout << "not converged, timeout reached" << endl;
+      return false;
+    }
+    mlr::wait(0.1);
+  }
+  return false;
+}
+
 
 //CtrlTask* Roopi::_addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
 //  CtrlTask* ct = createCtrlTask("qItself", new TaskMap_qItself);
