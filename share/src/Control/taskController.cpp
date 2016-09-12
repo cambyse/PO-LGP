@@ -200,7 +200,7 @@ double CtrlTask::error(){
 bool CtrlTask::isConverged(double tolerance){
   return (y.N && y.N==y_ref.N && v.N==v_ref.N
           && maxDiff(y, y_ref)<tolerance
-          && maxDiff(v, v_ref)<tolerance);
+          && maxDiff(v, v_ref)<tolerance); //TODO what if Kp = 0, then it should not count?!?
 }
 
 void CtrlTask::reportState(ostream& os){
