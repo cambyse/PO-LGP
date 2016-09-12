@@ -97,10 +97,51 @@ void testKugel() {
   world.watch(true);
 }
 
+void testForceControl() {
+  Roopi R;
+  arr jointState = FILE("preForceControlJointState");
+  if(!R.gotToJointConfiguration(jointState, 5.0)) return;
+  R.holdPosition();
+  CtrlTask* holdLeftArm = R.createCtrlTask("holdLeftArm", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
+  R.modifyCtrlTaskGains(holdLeftArm, 10.0,5.0);
+  CtrlTask* ho = R.createCtrlTask("ho", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffR"));
+  R.modifyCtrlTaskGains(ho, diag(ARR(10.0,10.0,0.0)), diag(ARR(5.0,5.0,0.0)));
+  R.releasePosition();
+  R.activateCtrlTask(holdLeftArm);
+  R.activateCtrlTask(ho);
+  mlr::wait(1.0);
+  CtrlTask* orientation = R.createCtrlTask("orientation", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(1.0,0.0,0.0)));
+  R.modifyCtrlTaskGains(orientation, 10.0, 5.0);
+  R.modifyCtrlTaskReference(orientation, ARR(0.0,0.0,-1.0));
+  R.activateCtrlTask(orientation);
+  CtrlTask* move1D = R.createCtrlTask("move1D", new TaskMap_Default(pos1DTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(0.0,0.0,-1.0)));
+  R.modifyCtrlTaskGains(move1D, ARR(0.0), ARR(15.0));
+  R.modifyCtrlTaskReference(move1D, ARR(0.0), ARR(0.1));
+  R.tcm()->ctrlTasks.writeAccess();
+  move1D->f_ref = ARR(-3.0);
+  move1D->f_alpha = 0.001;
+  move1D->f_gamma = .999;
+  R.tcm()->ctrlTasks.deAccess();
+  R.activateCtrlTask(move1D);
+  mlr::wait(3.0);
+  arr pos = R.getTaskValue(ho);
+  pos(1) += 0.3;
+  R.modifyCtrlTaskGains(ho, diag(ARR(10.0,10.0,0.0)), diag(ARR(5.0,5.0,0.0)),0.05);
+  R.modifyCtrlTaskReference(ho, pos);
+  /*while(true) {
+    cout << R.getFTRight() << endl;
+    mlr::wait(0.2);
+  }*/
+  mlr::wait(1.0);
+  cout << R.getFTRight() << endl;
+  mlr::wait(100.0);
+}
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-  tests();
+  //tests();
   //testKugel();
+  testForceControl();
   return 0;
 }
 
