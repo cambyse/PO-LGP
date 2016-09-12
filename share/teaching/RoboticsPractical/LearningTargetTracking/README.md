@@ -1,6 +1,6 @@
 Learning Target Tracking with Tabular Q-Lambda or Actor-Critic Method 
 
-#TABULAR Q-LAMBDA
+# Tabular Q-Lambda
 
 Use runACM=false in main.cpp for running the Q-Lambda algorithm.
 
@@ -12,23 +12,22 @@ The simulation class inlcudes: an initialization, an epsilon-greedy action-selec
 The algorithm runs for 100 iterations at each episode. A plot of the summed reward of this 100 iterations at each episode is shown at the end.
 
 
-#ACTOR-CRITIC
+# Actor-Critic
+
 The features of the actor-critic method are considered the difference of the robot arm position and the marker position. It aims to learn the parameters which are the linear coefficients of the features and apply the learned parameters to select proper actions for target tracking.
 
 The implementation of the actor-critic algorithm contains two parts:
--environment
- including initialization, reward system, state transition and detection of alvar markers
 
--agent
- including selection of actions, computation of td-error, critic update, actor update and record of learning results
+- environment: including initialization, reward system, state transition and detection of alvar markers
+- agent: including selection of actions, computation of td-error, critic update, actor update and record of learning results
 
-The plots and the end if the simulation is used, shows:  -the number of steps needed to to get to the marker for some test-episodes
-							 -the summed reward for this test-episodes
-							 -the average reward for each step of the test-episodes (close to 20 would be best,
-							  because the reward gets a bonus of 10 if u are near enough in both x-direction and y-direction)
+The plots and the end if the simulation is used, shows:
+ 
+- the number of steps needed to to get to the marker for some test-episodes
+- the summed reward for this test-episodes
+- the average reward for each step of the test-episodes (close to 20 would be best, because the reward gets a bonus of 10 if u are near enough in both x-direction and y-direction)
 
-
-
+# Settings
 
 - set runACM in the main.cpp file to "true" if u want to run the Actor-Critic Method and to "false" if u want to run the Tabular Q-Lambda Algorithm.
 - set Ros in the main.cpp file to "true" if u want to run on the Baxter (u also have to execute the program with "./x.exe -useRos 1") 
