@@ -465,7 +465,7 @@ void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, doubl
     TaskMap_Default& map = dynamic_cast<TaskMap_Default&>(law->map);
     ors::Body* body = world.shapes(map.i)->body;
     ors::Vector vec = world.shapes(map.i)->rel.pos;
-    ors::Shape* lFtSensor = world.getShapeByName("l_ft_sensor");
+    ors::Shape* lFtSensor = world.getShapeByName("r_ft_sensor");
     arr y, J, J_ft;
     law->map.phi(y, J, world);
     world.kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);

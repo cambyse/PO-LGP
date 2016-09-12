@@ -28,6 +28,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWor
   , verbose(false)
   , useDynSim(true)
   , compensateGravity(false)
+  , compensateFTSensors(true)
   , customModelWorld(world)
 {
 
@@ -44,6 +45,8 @@ TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWor
 
   qSign.set()() = zeros(q0.N);
 
+  fRInitialOffset = ARR(-0.17119, 0.544316, -1.2, 0.023718, 0.00802182, 0.0095804);
+
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -58,8 +61,9 @@ void TaskControllerModule::open(){
     //gc->loadBetas();
     gc->learnGCModel();
   }
-
-  gc->learnFTModel();
+  if(compensateFTSensors) {
+    gc->learnFTModel();
+  }
 
   if(&customModelWorld) {
     modelWorld.set()() = customModelWorld;
@@ -303,24 +307,34 @@ void TaskControllerModule::step(){
 
     refs.q =  q_ref;
     refs.qdot = zeros(q_model.N);
-    refs.fL_gamma = gamma;
+    refs.fR_gamma = gamma;
     refs.Kp = Kp;
     refs.Kd = Kd;
     refs.Ki.clear();
-    refs.fL = fRef;
-    refs.fR = zeros(6);
-    refs.KiFTL = K_ft;
-    refs.J_ft_invL = J_ft_inv;
+    refs.fL = zeros(6);//fRef;
+    refs.fR = fRef;
+    refs.KiFTR = K_ft;
+    refs.J_ft_invR = J_ft_inv;
 
     if(compensateGravity) {
       //u_bias += gc->compensate(realWorld.getJointState(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint"
                                                // ,"l_wrist_flex_joint"});
-      u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint","l_forearm_roll_joint","l_wrist_flex_joint"});
+      //u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_forearm_roll_joint","l_wrist_flex_joint"});
+      u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"r_shoulder_pan_joint"
+                                                                         ,"r_shoulder_lift_joint"
+                                                                         ,"r_forearm_roll_joint"
+                                                                         ,"r_wrist_flex_joint"
+                                                                          });
     }
     refs.u_bias = u_bias;
 
-    refs.fL_offset = gc->compensateFTL(realWorld.getJointState());
-    refs.fR_offset = gc->compensateFTR(realWorld.getJointState());
+    if(compensateFTSensors) {
+      refs.fL_offset = gc->compensateFTL(realWorld.getJointState());
+      refs.fR_offset = gc->compensateFTR(realWorld.getJointState()) + fRInitialOffset;
+    } else {
+      refs.fL_offset = zeros(6);
+      refs.fR_offset = zeros(6);
+    }
 
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;

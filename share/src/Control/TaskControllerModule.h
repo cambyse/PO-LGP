@@ -40,6 +40,7 @@ struct TaskControllerModule : Module {
   bool verbose;
   bool useDynSim;
   bool compensateGravity;
+  bool compensateFTSensors;
   RTControllerSimulation* dynSim;
 
   GravityCompensation* gc;
@@ -50,6 +51,8 @@ struct TaskControllerModule : Module {
   arr qLastReading;
 
   ors::KinematicWorld& customModelWorld;
+
+  arr fRInitialOffset;
 
 
 public:
