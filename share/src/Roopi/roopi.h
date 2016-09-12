@@ -37,10 +37,16 @@ struct Roopi {
   /// removes a CtrlTask and deletes also the task map
   void destroyCtrlTask(CtrlTask* t);
 
+  /// modifies CtrlTasks
   void modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef = NoArr);
   void modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
   void modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
   void modifyCtrlC(CtrlTask* ct, const arr& C);
+  /// force related
+  void modifyForceRef(CtrlTask* ct, const arr& fRef);
+  void modifyForceAlpha(CtrlTask* ct, double fAlpha);
+  void modifyForceGamma(CtrlTask* ct, double fGamma);
+  void modifyForce(CtrlTask* ct, const arr& fRef, const double& fAlpha, const double& fGamma);
 
   /// holds all joints in position. Desactivates all other tasks
   void holdPosition();
@@ -70,6 +76,8 @@ struct Roopi {
   //                               const char* jShapeName = NULL, const ors::Vector& jVec = NoVector);
 
   //-- trajectory tasks
+
+  void interpolateToReference(CtrlTask* task, double executionTime, const arr& reference, const arr& start = NoArr);
 
   void followTaskTrajectory(CtrlTask* task, double executionTime, const arr& trajectory);
   void followTaskTrajectories(const CtrlTaskL& tasks, double executionTime, const arrA& trajY, const arrA& trajYDot = {}, const arrA& trajYDDot = {});

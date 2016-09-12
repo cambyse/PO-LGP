@@ -198,7 +198,6 @@ CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
 void Roopi::activateCtrlTask(CtrlTask* t, bool reinitializeReferences){
   tcm()->ctrlTasks.writeAccess();
   if(reinitializeReferences) {
-    cout << "basd" << endl;
     arr currentValue = getTaskValue(t);
     t->y = currentValue;
     t->y_ref = currentValue;
@@ -245,6 +244,32 @@ void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd
 void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
   tcm()->ctrlTasks.writeAccess();
   ct->setC(C);
+  tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::modifyForceRef(CtrlTask* ct, const arr& fRef) {
+  tcm()->ctrlTasks.writeAccess();
+  ct->f_ref = fRef;
+  tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::modifyForceAlpha(CtrlTask* ct, double fAlpha) {
+  tcm()->ctrlTasks.writeAccess();
+  ct->f_alpha = fAlpha;
+  tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::modifyForceGamma(CtrlTask* ct, double fGamma) {
+  tcm()->ctrlTasks.writeAccess();
+  ct->f_gamma = fGamma;
+  tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::modifyForce(CtrlTask* ct, const arr& fRef, const double& fAlpha, const double& fGamma) {
+  tcm()->ctrlTasks.writeAccess();
+  if(&fRef) ct->f_ref = fRef;
+  if(&fAlpha) ct->f_alpha = fAlpha;
+  if(&fGamma) ct->f_gamma = fGamma;
   tcm()->ctrlTasks.deAccess();
 }
 
@@ -321,6 +346,29 @@ bool Roopi::waitForConv(const CtrlTaskL& cts, double maxTime, double tolerance) 
 
 TaskControllerModule* Roopi::tcm() {
   return &s->tcm;
+}
+
+void Roopi::interpolateToReference(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
+  cout << "start interpolating to target" << endl;
+  arr initialRef;
+  if(&start) {
+    initialRef = start;
+  } else {
+    initialRef = getTaskValue(task);
+  }
+  double startTime = mlr::timerRead();
+  double time = 0.0;
+  while(true) {
+    time = mlr::timerRead() - startTime;
+    double s = time/executionTime;
+    if(s > 1.0) {
+      cout << "finished interpolating to target" << endl;
+      break;
+    }
+    arr actRef = initialRef + (reference - initialRef)*s;
+    modifyCtrlTaskReference(task, actRef);
+  }
+  modifyCtrlTaskReference(task, reference);
 }
 
 //==============================================================================
@@ -437,6 +485,9 @@ void Roopi::followTaskTrajectories(const CtrlTaskL& tasks, double executionTime,
     }
     n++;
   }
+  for(uint i = 0; i < tasks.N; i++) {
+    modifyCtrlTaskReference(tasks(i), ySplines(i).eval(1.0));
+  }
 }
 
 void Roopi::followQTrajectory(const Roopi_Path* path) {
@@ -464,7 +515,7 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
 
   t = MP.addTask("collisions", new CollisionConstraint(0.11), ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.1), ineqTT); //TODO!!!!!!!!!!!!!!! margin
+  t = MP.addTask("qLimits", new LimitsConstraint(0.05), ineqTT); //TODO!!!!!!!!!!!!!!! margin
   t->setCostSpecs(5, MP.T, {0.}, 1.0);
 
   for(CtrlTask* ct : tasks) {
