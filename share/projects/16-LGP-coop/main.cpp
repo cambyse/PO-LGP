@@ -60,20 +60,38 @@ void test(){
 typedef ManipulationTree_Node MNode;
 
 
-MNode* popBestFromMCfringe(mlr::Array<MNode*>& fringe){
-  MNode* best=NULL;
-  for(MNode* n:fringe)
-    if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
-  fringe.removeValue(best);
-  best->inFringe1=false;
-  return best;
+double seqHeuristic(MNode* n){
+  return n->symCost;
+  return n->symCost+n->costSoFar;
 }
 
-MNode* popBestFromSeqFringe(mlr::Array<MNode*>& fringe){
+double seqCost(MNode* n){
+  if(!n->seq.N) return 100.;
+  if(!n->seqFeasible) return 100.;
+  return n->symCost+n->seqCost;
+}
+
+double pathHeuristic(MNode* n){
+  return seqCost(n);
+}
+
+double pathCost(MNode* n){
+  if(!n->path.N) return 100.;
+  if(!n->pathFeasible) return 100.;
+  return n->symCost + n->seqCost + n->pathCost;
+}
+
+MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
   if(!fringe.N) return NULL;
   MNode* best=NULL;
   for(MNode* n:fringe)
-    if(!best || n->symCost+n->costSoFar < best->symCost+best->costSoFar) best=n;
+    if(!best || heuristic(n)<heuristic(best)) best=n;
+  return best;
+}
+
+MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
+  if(!fringe.N) return NULL;
+  MNode* best=getBest(fringe, heuristic);
   fringe.removeValue(best);
   best->inFringe2=false;
   return best;
@@ -92,7 +110,6 @@ void plan_BHTS(){
   C.prepareTree();
   C.prepareDisplay();
 
-
 //  C.MCfringe.append(C.root);
   C.seqFringe.append(C.root);
 
@@ -101,40 +118,72 @@ void plan_BHTS(){
 
   for(uint k=0;k<100;k++){
 
+
 //    C.root->checkConsistency();
-    { //add MC rollouts
-#if 0 //select from fringe
-      ManipulationTree_Node* n = popBestFromMCfringe(C.MCfringe);
-#else
+    { //expand
       ManipulationTree_Node* n = NULL;
-      for(uint k=0;k<10;k++){ n=C.root->treePolicy_random(); if(n) break; }
-#endif
+      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(2.); if(n) break; }
       if(n){
         n->expand();
         for(ManipulationTree_Node* c:n->children){
           c->addMCRollouts(10,10);
-          if(!c->symTerminal) C.MCfringe.append(c);
-          else C.terminals.append(c);
-          if(n->seq.N) C.seqFringe.append(n);
+          if(c->isTerminal) C.terminals.append(c);
+          if(n->seq.N) C.seqFringe.append(c);
         }
       }
     }
 
+    { //add MC rollouts
+      for(uint mc=0;mc<10;mc++){
+        ManipulationTree_Node* n = NULL;
+        for(uint k=0;k<10;k++){ n=C.root->treePolicy_random(); if(n) break; }
+        if(n){
+          n->addMCRollouts(10,10);
+        }
+      }
+    }
+
+    C.root->recomputeAllMCStats();
+
 //    C.updateDisplay();
-//    mlr::wait();
 
     { //optimize a seq
-      MNode* n = popBestFromSeqFringe(C.seqFringe);
+      MNode* n = popBest(C.seqFringe, seqHeuristic);
       if(n){
+        //      cout <<"### SEQ TESTING node " <<*n <<endl;
+        //      mlr::wait();
         n->solveSeqProblem();
         setAllChildCostSoFar(n, n->seqCost);
         if(n->seqFeasible) for(MNode* c:n->children) C.seqFringe.append(c);
-        if(n->seqFeasible && n->symTerminal) C.pathFringe.append(n);
+        if(n->seqFeasible && n->isTerminal) C.pathFringe.append(n);
         C.node = n;
       }
     }
 
+    { //optimize a path
+      MNode* n = popBest(C.pathFringe, pathHeuristic);
+      if(n){
+        //      cout <<"### PATH TESTING node " <<*n <<endl;
+        //      mlr::wait();
+        n->solvePathProblem(10);
+        setAllChildCostSoFar(n, n->pathCost);
+        if(n->pathFeasible) C.done.append(n);
+        C.node = n;
+      }
+    }
+
+    for(auto *n:C.terminals) CHECK(n->isTerminal,"");
+
     C.updateDisplay();
+    MNode *bt = getBest(C.terminals, seqCost);
+    MNode *bp = getBest(C.done, pathCost);
+    cout <<"EVALS = " <<COUNT_evals <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
+           <<" bestSeq= " <<(bt?seqCost(bt):100.)
+          <<" pathSeq= " <<(bp?pathCost(bp):100.)
+         <<" #solutions= " <<C.done.N <<endl;
+
+    if(bt) C.node=bt;
+    if(bp) C.node=bp;
 //    mlr::wait();
 
 //    { //optimize a path

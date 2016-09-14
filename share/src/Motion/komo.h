@@ -27,11 +27,14 @@ struct KOMO{
   Graph specs;
   ors::KinematicWorld world;
   struct MotionProblem *MP;
+  struct OptConstrained *opt;
   arr x, dual;
   arr z, splineB;
 
   double maxPhase;
   uint stepsPerPhase;
+
+  int verbose;
 
   KOMO();
   ~KOMO();

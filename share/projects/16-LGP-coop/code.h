@@ -38,11 +38,11 @@ struct Coop{
 
   bool autoCompute = false;
 
-  mlr::Array<ManipulationTree_Node*> MCfringe;
+//  mlr::Array<ManipulationTree_Node*> MCfringe;
   mlr::Array<ManipulationTree_Node*> terminals;
   mlr::Array<ManipulationTree_Node*> seqFringe;
   mlr::Array<ManipulationTree_Node*> pathFringe;
-  mlr::Array<ManipulationTree_Node*> pqDone;
+  mlr::Array<ManipulationTree_Node*> done;
 
   Coop();
 

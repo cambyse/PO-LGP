@@ -30,11 +30,13 @@ double height(ors::Shape* s){
   return 2.*s->size[2] + s->size[3];
 }
 
-KOMO::KOMO() : MP(NULL){
+KOMO::KOMO() : MP(NULL), opt(NULL), verbose(1){
+  verbose = mlr::getParameter<int>("KOMO/verbose",1);
 }
 
 KOMO::~KOMO(){
   if(MP) delete MP;
+  if(opt) delete opt;
 }
 
 KOMO::KOMO(const Graph& specs) : MP(NULL){
@@ -388,7 +390,14 @@ void KOMO::run(){
   if(MP->T){
     if(!splineB.N){
 //      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
+#if 0
       optConstrained(x, dual, Convert(MP->komo_problem), OPT(verbose=2));
+#else
+      if(opt) delete opt;
+      Convert C(MP->komo_problem);
+      opt = new OptConstrained(x, dual, C);
+      opt->run();
+#endif
     }else{
       arr a,b,c,d,e;
       ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
@@ -401,9 +410,11 @@ void KOMO::run(){
     HALT("deprecated")
     optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
   }
-  cout <<"** optimization time=" <<mlr::timerRead()
+  if(verbose>0){
+    cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-  cout <<MP->getReport(false);
+  }
+  if(verbose>1) cout <<MP->getReport(false);
 }
 
 Graph KOMO::getReport(bool gnuplt){
