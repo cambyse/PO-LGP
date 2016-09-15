@@ -23,6 +23,7 @@ busy     # involved in an ongoing (durative) activity
 free     # agent hand is free
 held     # object is held by an agent
 grasped  # agent X holds/has grasped object Y
+placed  # agent X holds/has grasped object Y
 hasScrew # agent X holds a screw (screws are not objects/constrants, just a predicate of having a screw...)
 fixed    # object X and Y are fixed together
 never    # (for debugging)
@@ -36,17 +37,17 @@ START_STATE {}
 
 #termination rule
 Rule {
-  { (grasped handL screwdriverHandle) (grasped handR /toolbox/handle) }
+  { (grasped handL screwdriverHandle) (placed screwbox tableC) } #(grasped handR screwbox) }
   { (QUIT) }
 }
 
 ### Reward
 REWARD {
-  tree{
-    leaf{ { (grasped handL screwdriverHandle) }, r=10. }
-    leaf{ { (grasped handR /toolbox/handle) }, r=10. }
-    weight=1.
-  }
+#  tree{
+#    leaf{ { (grasped handL screwdriverHandle) }, r=10. }
+##    leaf{ { (grasped handR screwbox) }, r=10. }
+#    weight=1.
+#  }
 }
 
 DecisionRule activate_grasping {
@@ -105,7 +106,7 @@ Rule {
 Rule {
   X, Y, Z,
   { (Terminate placing X Y Z) }
-  { (Terminate placing X Y Z)! (placing X Y Z)! (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+  { (Terminate placing X Y Z)! (placing X Y Z)! (placed Y Z) (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
 }
 
 

@@ -116,7 +116,7 @@ void plan_BHTS(){
 //  mlr::wait();
 
 //  C.MCfringe.append(C.root);
-//  C.seqFringe.append(C.root);
+  C.seqFringe.append(C.root);
 
   C.updateDisplay();
   C.displayTree();
@@ -129,14 +129,14 @@ void plan_BHTS(){
 //    C.root->checkConsistency();
     { //expand
       ManipulationTree_Node* n = NULL;
-      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(2.); if(n) break; }
+      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
       if(n){
         n->expand();
         for(ManipulationTree_Node* c:n->children){
           c->addMCRollouts(10,10);
           if(c->isTerminal) C.terminals.append(c);
-//          if(n->seq.N){ C.seqFringe.append(c); c->inFringe2=true; }
-          if(c->isTerminal){ C.seqFringe.append(c); c->inFringe2=true; }
+          if(n->seq.N){ C.seqFringe.append(c); c->inFringe2=true; }
+//          if(c->isTerminal){ C.seqFringe.append(c); c->inFringe2=true; }
         }
       }
     }
@@ -162,7 +162,7 @@ void plan_BHTS(){
         //      mlr::wait();
         n->solveSeqProblem();
         setAllChildCostSoFar(n, n->seqCost);
-//        if(n->seqFeasible) for(MNode* c:n->children) C.seqFringe.append(c);
+        if(n->seqFeasible) for(MNode* c:n->children) C.seqFringe.append(c);
         if(n->seqFeasible && n->isTerminal) C.pathFringe.append(n);
         C.node = n;
       }
@@ -182,7 +182,6 @@ void plan_BHTS(){
 
     for(auto *n:C.terminals) CHECK(n->isTerminal,"");
 
-//    C.updateDisplay();
     MNode *bt = getBest(C.terminals, seqCost);
     MNode *bp = getBest(C.done, pathCost);
     mlr::String out;
@@ -196,6 +195,7 @@ void plan_BHTS(){
 
     if(bt) C.node=bt;
     if(bp) C.node=bp;
+//    C.updateDisplay();
 //    mlr::wait();
 
 //    { //optimize a path
@@ -216,6 +216,10 @@ void plan_BHTS(){
 
   }
   fil.close();
+
+  C.pathView.writeToFiles=true;
+  mlr::wait();
+
 }
 
 //===========================================================================
