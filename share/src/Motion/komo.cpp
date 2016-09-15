@@ -275,6 +275,25 @@ void KOMO::setPlace(double time, const char* endeffRef, const char* object, cons
   }
 }
 
+void KOMO::setHandover(double time, const char* oldHolder, const char* object, const char* newHolder, bool effKinMode, int verbose){
+  if(verbose>0) cout <<"KOMO_setHandover t=" <<time <<" oldHolder=" <<oldHolder <<" obj=" <<object <<" newHolder=" <<newHolder <<endl;
+
+  //hand center at object center (could be replaced by touch)
+  setTask(time, time, new TaskMap_Default(posDiffTMT, world, newHolder, NoVector, object, NoVector), eqTT, NoArr, 1e3);
+
+//  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, newHolder, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
+
+  //disconnect object from table
+  setKinematicSwitch(time, true, "delete", oldHolder, object);
+  //connect graspRef with object
+  setKinematicSwitch(time, true, "freeZero", newHolder, object);
+
+  if(stepsPerPhase>2){ //velocities down and up
+    setTask(time-.15, time+.15, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,0.}, 1e1, 1); // no motion
+  }
+
+}
+
 void KOMO::setSlowAround(double time, double delta){
   if(stepsPerPhase>2) //otherwise: no velocities
     setTask(time-.02, time+.02, new TaskMap_qItself(), sumOfSqrTT, NoArr, 1e1, 1);
@@ -295,6 +314,10 @@ void KOMO::setAbstractTask(double phase, const NodeL& facts, bool effKinMode, in
     if(n->keys.N && n->keys.last()=="komoPlace"){
       double time=n->get<double>();
       setPlace(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
+    }
+    if(n->keys.N && n->keys.last()=="komoHandover"){
+      double time=n->get<double>();
+      setHandover(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
     }
   }
 }

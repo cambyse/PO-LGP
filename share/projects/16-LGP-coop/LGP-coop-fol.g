@@ -8,6 +8,7 @@ FOL_World{
 ## activities
 grasping
 placing
+handing
 attaching
 
 graspingScrew
@@ -35,14 +36,15 @@ START_STATE {}
 
 #termination rule
 Rule {
-  { (grasped handR screwdriverHandle) }
+  { (grasped handL screwdriverHandle) (grasped handR /toolbox/handle) }
   { (QUIT) }
 }
 
 ### Reward
 REWARD {
   tree{
-    leaf{ { (grasped handR screwdriverHandle) }, r=10. }
+    leaf{ { (grasped handL screwdriverHandle) }, r=10. }
+    leaf{ { (grasped handR /toolbox/handle) }, r=10. }
     weight=1.
   }
 }
@@ -66,6 +68,25 @@ Rule {
   { (Terminate grasping X Y)! (grasping X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
 #  { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
 #  p=[.9 0.1]
+}
+
+DecisionRule activate_handing {
+  X, Y, Z
+  { (handing X Y Z)! (INFEASIBLE) (INFEASIBLE activate_handing X Y Z)! (grasped X Y) (busy X)! (agent X) (agent Z) (object Y) (free Z) (busy Z)! }
+  { (handing X Y Z)=1.0 (busy Y) (busy Z) komoHandover(X Y Z)=1. }
+}
+
+## that directly terminates!!
+Rule {
+  X, Y, Z
+  { (handing X Y Z) }
+  { (Terminate handing X Y Z) }
+}
+
+Rule {
+  X, Y, Z
+  { (Terminate handing X Y Z) }
+  { (Terminate handing X Y Z)! (handing X Y Z)! (grasped X Y)! (free Z)! (free X) (grasped Z Y) (held Y) (busy X)! (busy Y)! (busy Z)!}
 }
 
 DecisionRule activate_placing {

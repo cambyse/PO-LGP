@@ -78,6 +78,7 @@ struct KOMO{
   //-- tasks (cost/constraint terms) high-level
   void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false, int verbose=0);
   void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false, int verbose=0);
+  void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, bool effKinMode=false, int verbose=0);
   void setSlowAround(double time, double delta);
 
   //-- tasks - logic level

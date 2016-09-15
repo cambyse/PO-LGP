@@ -129,7 +129,7 @@ void plan_BHTS(){
 //    C.root->checkConsistency();
     { //expand
       ManipulationTree_Node* n = NULL;
-      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(2.); if(n) break; }
+      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
       if(n){
         n->expand();
         for(ManipulationTree_Node* c:n->children){
@@ -182,7 +182,7 @@ void plan_BHTS(){
 
     for(auto *n:C.terminals) CHECK(n->isTerminal,"");
 
-//    C.updateDisplay();
+    C.updateDisplay();
     MNode *bt = getBest(C.terminals, seqCost);
     MNode *bp = getBest(C.done, pathCost);
     mlr::String out;
