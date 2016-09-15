@@ -1,5 +1,7 @@
 #include "orsviewer.h"
 
+#include <iomanip>
+
 //===========================================================================
 
 void OrsViewer::open(){
@@ -45,7 +47,9 @@ void OrsPathViewer::step(){
   configurations.deAccess();
   copy.gl().lock.unlock();
   if(T){
+    copy.gl().captureImg=writeToFiles;
     copy.gl().update(STRING(" (time " <<tprefix+int(t) <<'/' <<tprefix+int(T) <<')').p, false, false, true);
+    if(writeToFiles) write_ppm(copy.gl().captureImage,STRING("z.path."<<std::setw(3)<<std::setfill('0')<<tprefix+int(t)<<".ppm"));
   }
   t++;
 }

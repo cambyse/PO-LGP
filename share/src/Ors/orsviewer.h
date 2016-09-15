@@ -35,6 +35,7 @@ struct OrsPathViewer : Module{
   ors::KinematicWorld copy;
   uint t;
   int tprefix;
+  bool writeToFiles;
 
   void setConfigurations(const WorldL& cs){
     configurations.writeAccess();
@@ -49,7 +50,7 @@ struct OrsPathViewer : Module{
   OrsPathViewer(const char* varname, double beatIntervalSec=.2, int tprefix=0)
     : Module("OrsPathViewer", beatIntervalSec),
       configurations(this, varname, true),
-      tprefix(tprefix){}
+      tprefix(tprefix), writeToFiles(false){}
   ~OrsPathViewer(){ threadClose(); }
   void open();
   void step();

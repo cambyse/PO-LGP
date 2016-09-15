@@ -83,8 +83,8 @@ void Coop::updateDisplay(){
   else pathView.clear();
 
 
-  for(auto& n:MCfringe) n->inFringe1=true;
-  for(auto& n:seqFringe) n->inFringe2=true;
+  for(auto& n:seqFringe) n->inFringe1=true;
+  for(auto& n:pathFringe) n->inFringe2=true;
 
   Graph dot=root->getGraph();
   dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);

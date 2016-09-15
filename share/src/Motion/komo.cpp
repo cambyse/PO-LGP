@@ -387,6 +387,7 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
+  mlr::timerStart();
   if(MP->T){
     if(!splineB.N){
 //      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));

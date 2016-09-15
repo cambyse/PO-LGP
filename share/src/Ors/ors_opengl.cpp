@@ -515,7 +515,7 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
 
 struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::KinematicWorld *ors;
-  EditConfigurationHoverCall(ors::KinematicWorld& _ors) { ors=&_ors; }
+  EditConfigurationHoverCall(ors::KinematicWorld& _ors);// { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
 //    if(!movingBody) return false;
     if(!movingBody) {
@@ -553,6 +553,10 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   }
 };
 
+EditConfigurationHoverCall::EditConfigurationHoverCall(ors::KinematicWorld& _ors) {
+  ors=&_ors;
+}
+
 struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   ors::KinematicWorld &ors;
   bool &exit;
@@ -586,7 +590,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
     }else switch(gl.pressedkey) {
       case '1':  orsDrawBodies^=1;  break;
       case '2':  orsDrawShapes^=1;  break;
-      case '3':  orsDrawJoints^=1;  break;
+      case '3':  orsDrawJoints^=1;  orsDrawMarkers^=1; break;
       case '4':  orsDrawProxies^=1;  break;
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
@@ -621,7 +625,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
 void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 //  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
-  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
+//  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
   C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
   C.gl().addClickCall(new EditConfigurationClickCall(C));
   Inotify ino(filename);

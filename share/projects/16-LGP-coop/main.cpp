@@ -14,6 +14,7 @@ void test(){
   C.prepareTree();
   C.prepareDisplay();
 
+  C.pathView.writeToFiles=true;
 //  C.fol.verbose=5;
 
   C.expandNode();
@@ -68,7 +69,7 @@ double seqHeuristic(MNode* n){
 double seqCost(MNode* n){
   if(!n->seq.N) return 100.;
   if(!n->seqFeasible) return 100.;
-  return n->symCost+n->seqCost;
+  return .1*n->symCost+n->seqCost;
 }
 
 double pathHeuristic(MNode* n){
@@ -78,7 +79,7 @@ double pathHeuristic(MNode* n){
 double pathCost(MNode* n){
   if(!n->path.N) return 100.;
   if(!n->pathFeasible) return 100.;
-  return n->symCost + n->seqCost + n->pathCost;
+  return .1*n->symCost + n->seqCost + n->pathCost;
 }
 
 MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
@@ -110,11 +111,16 @@ void plan_BHTS(){
   C.prepareTree();
   C.prepareDisplay();
 
+//  C.kin.watch(true);
+//  mlr::wait();
+
 //  C.MCfringe.append(C.root);
   C.seqFringe.append(C.root);
 
   C.updateDisplay();
   C.displayTree();
+
+  ofstream fil("z.dat");
 
   for(uint k=0;k<100;k++){
 
@@ -128,7 +134,7 @@ void plan_BHTS(){
         for(ManipulationTree_Node* c:n->children){
           c->addMCRollouts(10,10);
           if(c->isTerminal) C.terminals.append(c);
-          if(n->seq.N) C.seqFringe.append(c);
+          if(n->seq.N){ C.seqFringe.append(c); c->inFringe2=true; }
         }
       }
     }
@@ -174,13 +180,17 @@ void plan_BHTS(){
 
     for(auto *n:C.terminals) CHECK(n->isTerminal,"");
 
-    C.updateDisplay();
+//    C.updateDisplay();
     MNode *bt = getBest(C.terminals, seqCost);
     MNode *bp = getBest(C.done, pathCost);
-    cout <<"EVALS = " <<COUNT_evals <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
+    mlr::String out;
+    out <<"TIME= " <<mlr::cpuTime() <<" KIN= " <<COUNT_kin <<" EVALS= " <<COUNT_evals <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
            <<" bestSeq= " <<(bt?seqCost(bt):100.)
           <<" pathSeq= " <<(bp?pathCost(bp):100.)
-         <<" #solutions= " <<C.done.N <<endl;
+         <<" #solutions= " <<C.done.N;
+
+    fil <<out <<endl;
+    cout <<out <<endl;
 
     if(bt) C.node=bt;
     if(bp) C.node=bp;
@@ -203,6 +213,7 @@ void plan_BHTS(){
 //    cout <<"pqDone:" <<pqDone <<endl;
 
   }
+  fil.close();
 }
 
 //===========================================================================
@@ -210,7 +221,10 @@ void plan_BHTS(){
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
+  rnd.clockSeed();
+
   orsDrawAlpha = 1.;
+  orsDrawJoints=orsDrawMarkers=false;
 //  orsDrawCores = true;
   if(mlr::getParameter<bool>("intact")){
     test();
