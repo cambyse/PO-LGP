@@ -32,7 +32,7 @@ struct Coop{
 
   ManipulationTree_Node *root,*node;
 
-  OrsViewer poseView;
+  OrsPathViewer poseView;
   OrsPathViewer seqView;
   OrsPathViewer pathView;
 

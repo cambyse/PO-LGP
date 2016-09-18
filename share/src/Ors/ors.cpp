@@ -2596,6 +2596,7 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, c
   else if(type=="transXYPhiZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_transXYPhi; }
   else if(type=="freeAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
   else if(type=="freeZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_free; }
+  else if(type=="ballZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_quatBall; }
   else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
   if(ref1) sw->fromId = world.getShapeByName(ref1)->index;

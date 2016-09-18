@@ -28,7 +28,7 @@ void test(){
 
 //  C.displayTree();
 
-  StringA cmds={ "p", "0", "3", "1"};//, "p", "4", "p", "s", "q" };
+  StringA cmds={ "p", "0", "p", "3", "p", "1"};//, "p", "4", "p", "s", "q" };
 //  cmds={ "1", "1", "0", "x", "q" };
 //  cmds={ "1", "0", "3", "0", "3", "0", "4", "0", "x", "s", "q" }; //screwdriver 'hand over'
   cmds={ "0", "2", "2", "3", "x", "s", "q" }; //screwdriver 'hand over'
@@ -235,7 +235,7 @@ int main(int argc,char **argv){
   if(mlr::getParameter<bool>("intact")){
     test();
   }else{
-//    test();
+    test();
     plan_BHTS();
   }
 

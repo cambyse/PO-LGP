@@ -222,7 +222,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   setTask(time, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
 
   //hand center at object center (could be replaced by touch)
-  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), eqTT, NoArr, 1e3);
+//  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), eqTT, NoArr, 1e3);
 
   //hand grip axis orthogonal to object length axis
 //  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, endeffRef, Vector_x, object, Vector_x), sumOfSqrTT, NoArr, 1e1);
@@ -237,7 +237,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   //disconnect object from table
   setKinematicSwitch(time, true, "delete", NULL, object);
   //connect graspRef with object
-  setKinematicSwitch(time, true, "freeZero", endeffRef, object);
+  setKinematicSwitch(time, true, "ballZero", endeffRef, object);
 
   if(stepsPerPhase>2){ //velocities down and up
     setTask(time-.15, time, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
@@ -263,15 +263,15 @@ void KOMO::setPlace(double time, const char* endeffRef, const char* object, cons
   setTask(time, time, new TaskMap_AboveBox(world, object, placeRef), ineqTT, NoArr, 1e2);
 
   //disconnect object from grasp ref
-  setKinematicSwitch(time, false, "delete", endeffRef, object);
+  setKinematicSwitch(time, true, "delete", endeffRef, object);
 
   //connect object to table
   if(!effKinMode){
-    setKinematicSwitch(time, false, "rigidAtTo", placeRef, object);
+    setKinematicSwitch(time, true, "rigidAtTo", placeRef, object);
   }else{
     ors::Transformation rel = 0;
     rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
-    setKinematicSwitch(time, false, "transXYPhiZero", placeRef, object, rel );
+    setKinematicSwitch(time, true, "transXYPhiZero", placeRef, object, rel );
   }
 }
 

@@ -1,7 +1,7 @@
 
 #include "code.h"
 
-Coop::Coop() : poseView("pose"), seqView("sequence", 1., -0), pathView("path", .1, -1){}
+Coop::Coop() : poseView("pose", 1., -0), seqView("sequence", 1., -0), pathView("path", .1, -1){}
 
 void Coop::prepareKin(){
   kin.init("LGP-coop-kin.g");
@@ -75,7 +75,7 @@ void Coop::prepareDisplay(){
 
 void Coop::updateDisplay(){
   if(node->poseProblem && node->poseProblem->MP->configurations.N)
-    poseView.modelWorld.set() = *node->poseProblem->MP->configurations.last();
+    poseView.setConfigurations(node->poseProblem->MP->configurations);
   if(node->seqProblem && node->seqProblem->MP->configurations.N)
     seqView.setConfigurations(node->seqProblem->MP->configurations);
   else seqView.clear();

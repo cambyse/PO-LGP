@@ -1,3 +1,10 @@
+* long video: hand code a long assembly sequence
+
+* pose optim heuristic - maybe really good?
+
+* have a mode only doing mc planning...
+
+
 # search:
 
 in checkConsistency: (DONE)
