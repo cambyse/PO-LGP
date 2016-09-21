@@ -1,0 +1,134 @@
+<html>
+<head>
+    <meta name = "viewport" content = "initial-scale=1.0, width=device-width">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.5.2/css/foundation.min.css" rel="stylesheet" type="text/text/css" />
+    <style>
+		button {
+			background-color: #007FFF;
+			color: white;
+			padding: 10px;
+			font-size: 18px;
+			width: 100px;
+		}
+	</style>
+</head>
+<body>
+    <div class="row">
+		<div class="columns large-6" id='acceleration'>
+			<p><b>Acceleration</b></p>
+			<p>
+				ddx: <span id="ddx"></span>
+			</p>
+			<p>
+				ddy: <span id="ddy"></span>
+			</p>
+			<p>
+				ddz: <span id="ddz"></span>
+			</p>
+			<p>
+				alpha: <span id="ralpha"></span>
+			</p>
+			<p>
+				beta: <span id="rbeta"></span>
+			</p>
+			<p>
+				gamma: <span id="rgamma"></span>
+			</p>			
+		</div>
+		<div class="columns large-6" id='gyro'>
+			<p><b>Gyro</b></p>
+			<p>
+				alpha: <span id="alpha"></span>
+			</p>
+			<p>
+				beta: <span id="beta"></span>
+			</p>
+			<p>
+				gamma: <span id="gamma"></span>
+			</p>
+		</div>
+	</div>
+    <div class="row">
+		<div class="columns large-12"  id='control'>
+			<button id="capture">Capture</button>
+		</div>
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script text='text/javascript'>
+		var data={};
+
+		function R(val) {
+			return Math.round(val*1000.0)/1000.0;
+		}
+
+		function onOrientation(e) {
+			if (e.alpha || 1) {
+				$('#alpha').html(R(e.alpha));
+				$('#beta').html(R(e.beta));
+				$('#gamma').html(R(e.gamma));
+				if (capture && new Date().getTime()-last_gyro>100) {
+					last_gyro = new Date().getTime();
+					var data = {}
+					data['alpha'] = e.alpha;
+					data['beta'] = e.beta;
+					data['gamma'] = e.gamma;
+					data['ts'] = e.timeStamp;
+					try {
+						$.post(
+						    '/app/g',
+							data
+						);
+					}
+					catch (ignored) {}
+				}
+			}
+		}
+
+		function onMotion(e) {
+			var a = e.acceleration;
+			var r = e.rotationRate;
+
+			if (a) {
+				$('#ralpha').html(R(r.alpha));
+				$('#rbeta').html(R(r.beta));
+				$('#rgamma').html(R(r.gamma));
+
+				$('#ddx').html(R(a.x));
+				$('#ddy').html(R(a.y));
+				$('#ddz').html(R(a.z));
+				if (capture && new Date().getTime()-last_motion>100) {
+					last_motion = new Date().getTime();
+					var data = {};
+					data['x'] = a.x;
+					data['y'] = a.y;
+					data['z'] = a.z;
+					data['ts'] = e.timeStamp;
+					try {
+						$.post(
+						    '/app/a',
+							data
+						);
+					}
+					catch (ignored) {}
+				}
+			}
+		}
+		var capture = false;
+		var last_gyro = new Date().getTime();
+		var last_motion = new Date().getTime();
+        $(document).ready(function() {
+			window.addEventListener('devicemotion', onMotion, true);
+			window.addEventListener('deviceorientation', onOrientation, true);				
+			$('#capture').click(function() {
+				capture = !capture;
+				if (capture) {
+					$('#capture').html('Stop');
+				} else {
+					$('#capture').html('Capture');
+				}
+			});
+		});
+	</script>
+</body>
+</html>

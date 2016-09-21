@@ -23,7 +23,7 @@ int main(int argc, char** argv){
 
     OrsViewer view;
     SubscribeAlvar alvar_subscriber;
-    SubscribeTabletop tabletop_subscriber;
+//    SubscribeTabletop tabletop_subscriber;
     SubscribeTableArray tableArray_subscriber;
     Collector data_collector;
 

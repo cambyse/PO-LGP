@@ -1,0 +1,133 @@
+<html>
+<head>
+    <meta name = "viewport" content = "initial-scale=1.0, width=device-width">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.5.2/css/foundation.min.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        #info {
+            font-color: red;
+            font-size: 12px;
+        }
+        .graph {
+            height: 300px;
+            width: 500px;
+        }
+    </style>
+    <title>Plot</title>
+</head>
+<body>
+    <div class="row collapse">
+        <div class="columns small-12 large-12" id="info"></div>
+    </div>
+    <div class="row collapse">
+        <div class="columns small-12 large-6">
+            <p>DDX</p>
+            <span class="graph" id="ddx"/>
+        </div>
+        <div class="columns small-12 large-6">
+            <p>ALPHA</p>
+            <span class="graph" id="alpha"/>
+        </div>
+    </div>
+    <div class="row collapse">
+        <div class="columns small-12 large-6">
+            <p>DDY</p>
+            <span class="graph" id="ddy"/>
+        </div>
+        <div class="columns small-12 large-6">
+            <p>BETA</p>
+            <span class="graph" id="beta"/>
+        </div>
+    </div>
+    <div class="row collapse">
+        <div class="columns small-12 large-6">
+            <p>DDZ</p>
+            <span class="graph" id="ddz"/>
+        </div>
+        <div class="columns small-12 large-6">
+            <p>GAMMA</p>
+            <span class="graph" id="gamma"/>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>    
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script>
+        var a_options, g_options;
+        var a_chart_ids = ['ddx', 'ddy', 'ddz'];
+        var g_chart_ids = ['alpha', 'beta', 'gamma'];
+        var charts = {};
+        var aas = [];
+        var gs = [];
+        var npts = 100;
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function go() {
+            a_chart_ids.forEach(function(v, idx, arr) {
+                charts[v] = new google.visualization.LineChart(document.getElementById(v));
+            });
+            g_chart_ids.forEach(function(v, idx, arr) {
+                charts[v] = new google.visualization.LineChart(document.getElementById(v));
+            });
+
+            a_options = {
+                hAxis: {title: 'Time'},
+                vAxis: {title: 'Value', minValue: -0.05, maxValue: 0.05}
+            }
+            g_options = {
+                hAxis: {title: 'Time'},
+                vAxis: {title: 'Value', minValue: -3.14159265358979, maxValue: 3.14159265358979}
+            }
+
+            var cid = getParameterByName('cid');
+
+            window.setInterval(function() {
+                fetch(cid);
+            }, 100);
+        }
+
+        function dataTable(raw, index) {
+            data = new google.visualization.DataTable();
+            data.addColumn('number', 'time');
+            data.addColumn('number', 'value');
+            for (var i=0; i<raw.length; ++i) {
+                data.addRow([raw[i][3]/1000.0, raw[i][index]]);
+            }
+            return data;
+        }
+
+        function fetch(cid) {
+            $.get('data', {cid: cid}, function(raw) {
+                aas.push(raw.a);
+                gs.push(raw.g);
+
+                if (aas.length>npts) {
+                    aas = aas.slice(aas.length-npts, aas.length)
+                }
+                if (gs.length>npts) {
+                    gs = gs.slice(gs.length-npts, gs.length)
+                }
+
+                for (var i=0; i<a_chart_ids.length; ++i) {
+                    var data = dataTable(aas, i);
+                    var chart = charts[a_chart_ids[i]].draw(data, a_options);
+                }
+                for (var i=0; i<g_chart_ids.length; ++i) {
+                    var data = dataTable(gs, i);
+                    var chart = charts[g_chart_ids[i]].draw(data, g_options);
+                }
+            });
+        }
+        $(document).ready(function() {
+            google.charts.load('current', {'packages':['corechart']});
+            google.charts.setOnLoadCallback(go);
+        });
+    </script>
+</body>
+</html>
