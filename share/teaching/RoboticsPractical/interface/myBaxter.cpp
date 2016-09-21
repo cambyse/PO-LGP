@@ -159,7 +159,7 @@ CtrlTask* MyBaxter::modifyTarget(CtrlTask* t, const arr& target){
 }
 
 void MyBaxter::stop(const CtrlTaskL& tasks){
-  for(CtrlTask *t:tasks) { activeTasks.removeValue(t); t->active = false;}
+  for(CtrlTask *t:tasks) { activeTasks.removeValueSafe(t); t->active = false;}
   s->tcm.ctrlTasks.set() = activeTasks;
   for(CtrlTask *t:tasks){
     delete &t->map;
@@ -168,17 +168,29 @@ void MyBaxter::stop(const CtrlTaskL& tasks){
 }
 
 void MyBaxter::stopAll(){
- s->tcm.ctrlTasks.writeAccess();
-  while (activeTasks.N > 0)
+  int count = activeTasks.N;
+  cout << "In my baxter, stopall. count: " << count << endl;
+
+  for (int i = 0; i < count; i++)
   {
     CtrlTask* t = activeTasks.first();
-    activeTasks.removeValue(t);
-    s->tcm.ctrlTasks() = activeTasks;
+    cout << "removing: " << i << " of " << count << ' ' << t->name << endl;
+    activeTasks.removeValueSafe(t);
     t->active = false;
+    s->tcm.ctrlTasks.set() = activeTasks;
     delete &t->map;
     delete t;
   }
-  s->tcm.ctrlTasks.deAccess();
+  cout << "Completed removal." << endl;
+//  while (activeTasks.N > 0)
+//  {
+//    CtrlTask* t = activeTasks.first();
+//    t->active = false;
+//    s->tcm.ctrlTasks() = activeTasks;
+//    delete &t->map;
+//    delete t;
+//  }
+//  s->tcm.ctrlTasks.deAccess();
 }
 
 void MyBaxter::waitConv(const CtrlTaskL& tasks){

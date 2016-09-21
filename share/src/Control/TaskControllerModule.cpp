@@ -162,11 +162,11 @@ void TaskControllerModule::step(){
       taskController->setState(q_model, qdot_model);
     }
     if(verbose) taskController->reportCurrentState();
-    modelWorld.deAccess();
-    ctrlTasks.deAccess();
 
     arr Kp, Kd, k, JCJ;
     taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+    modelWorld.deAccess();
+    ctrlTasks.deAccess();
 
     Kp = .01 * JCJ;
     Kp += .2*diag(ones(Kp.d0));
