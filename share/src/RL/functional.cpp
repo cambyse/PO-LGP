@@ -118,7 +118,6 @@ arr RKHSPol::runRKHS()
                     nxtFuncPolicy[k](ind) *= step_size;
 
                 FuncPolicy.append(nxtFuncPolicy[k]());
-
             }
         }
 
