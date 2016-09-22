@@ -89,6 +89,7 @@ struct Body {
   Matrix inertia;      ///< its inertia tensor
   Vector com;          ///< its center of gravity
   Vector force, torque; ///< current forces applying on the body
+  Vector vel, angvel;   ///< linear and angular velocities
   
   ShapeL shapes;
   
@@ -255,11 +256,12 @@ struct KinematicWorld : GLDrawer{
   bool checkConsistency();
   
   /// @name computations on the graph
-  void calc_Q_from_q(bool calcVels=false, int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(bool calcVels=false, int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
-  arr calc_q_from_Q(Joint* j, bool calcVels=false);  ///< returns (q,qdot) for a given joint  based on the joint's Q transformations
+  void calc_Q_from_q(int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
+  arr calc_q_from_Q(Joint* j);  ///< returns (q,qdot) for a given joint  based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
+  void calc_fwdPropagateVelocities();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
   void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
@@ -274,8 +276,8 @@ struct KinematicWorld : GLDrawer{
   arr getLimits() const;
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, bool calcVels=false, int agent=-1);
-  void setAgent(uint agent, bool calcVels=false);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, int agent=-1);
+  void setAgent(uint agent);
 
   /// @name kinematics
   void kinematicsPos (arr& y, arr& J, Body *b, const Vector& rel=NoVector) const; //TODO: make vector& not vector*
@@ -309,7 +311,7 @@ struct KinematicWorld : GLDrawer{
   double getCenterOfMass(arr& com) const;
   void getComGradient(arr &grad) const;
 
-  double getEnergy() const;
+  double getEnergy();
   double getJointErrors() const;
   ors::Proxy* getContact(uint a, uint b) const;
 
@@ -506,7 +508,7 @@ void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
 //===========================================================================
 /// @defgroup ors_interface_blender Blender interface.
 /// @{
-void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl);
+inline void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl){ NICO }
 /// @}
 
 /// @} // END of group ors_interfaces
