@@ -79,10 +79,12 @@ struct KOMO{
   void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false, int verbose=0);
   void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false, int verbose=0);
   void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, bool effKinMode=false, int verbose=0);
+  void setAttach(double time, const char* endeff, const char* object1, const char* object2, ors::Transformation& rel, int verbose=0);
+
   void setSlowAround(double time, double delta);
 
   //-- tasks - logic level
-  void setAbstractTask(double phase, const NodeL& facts, bool effKinMode=false, int verbose=0);
+  void setAbstractTask(double phase, const Graph& facts, bool effKinMode=false, int verbose=0);
 
   void setMoveTo(ors::KinematicWorld& world, //in initial state
                  ors::Shape& endeff,         //endeffector to be moved

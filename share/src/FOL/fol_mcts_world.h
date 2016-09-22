@@ -87,6 +87,11 @@ struct FOL_World:MCTS_Environment{
   void addFact(const StringA& symbols);
   void addAgent(const char* name);
   void addObject(const char* name);
+  template<class T> void addValuedFact(const StringA& symbols, const T& x){
+    NodeL parents;
+    for(const mlr::String& s:symbols) parents.append(KB[s]);
+    new Node_typed<T>(*start_state, {}, parents, x);
+  }
 
   //-- internal access
   Graph* getState();

@@ -16,13 +16,23 @@ void Coop::prepareKin(){
 
     for(ors::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
 
+    //memorize their relative positionings
     targetAbs.resize(box.N);
     targetRel.resize(box.N, box.N);
     for(uint i=0;i<box.N;i++){
       targetAbs(i) = box(i)->X;
-      for(uint j=0;j<i;j++) targetRel(i,j).setDifference(box(j)->X, box(i)->X);
+      for(uint j=i+1;j<box.N;j++){
+        ors::Transformation rel;
+        rel.setDifference(box(i)->X, box(j)->X);
+        targetRel(i,j) = rel;
+        if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_front") fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+        if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_back")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+        if(box(i)->name=="/toolbox/side_front" && box(j)->name=="/toolbox/side_left")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+        if(box(i)->name=="/toolbox/side_front" && box(j)->name=="/toolbox/side_right")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+      }
     }
 
+    //position them on the left table
     double xpos = -.6;
     for(ors::Body *b:box){
       ors::Joint *j = b->inLinks.scalar();
@@ -41,18 +51,20 @@ void Coop::prepareKin(){
 //  kin.watch(/*true*/);
 }
 
-void Coop::prepareFol(){
+void Coop::prepareFol(bool smaller){
 //  fol.verbose = 5;
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
 //  for(ors::Body *b:box) fol.addObject(b->name);
-//  fol.addObject("/toolbox/handle");
+  if(!smaller) fol.addObject("/toolbox/handle");
+  if(!smaller) fol.addObject("/toolbox/side_front");
+  if(!smaller) fol.addObject("/toolbox/side_back");
   fol.addObject("screwdriverHandle");
   fol.addObject("screwbox");
   fol.addFact({"table","tableC"});
   fol.addFact({"table","tableL"});
   fol.addFact({"table","tableR"});
-//  fol.addAgent("baxterL");
+  if(!smaller) fol.addAgent("baxterL");
   fol.addAgent("baxterR");
   fol.addAgent("handL");
   fol.addAgent("handR");
@@ -84,8 +96,11 @@ void Coop::updateDisplay(){
   else pathView.clear();
 
 
-  for(auto& n:seqFringe) n->inFringe1=true;
-  for(auto& n:pathFringe) n->inFringe2=true;
+  ManipulationTree_NodeL all = root->getAll();
+  for(auto& n:all) n->inFringe1=n->inFringe2=false;
+  for(auto& n:poseFringe) n->inFringe1=true;
+  //  for(auto& n:seqFringe) n->inFringe1=true;
+  for(auto& n:mcFringe) n->inFringe2=true;
 
   Graph dot=root->getGraph();
   dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);

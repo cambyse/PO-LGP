@@ -9,12 +9,12 @@
 void test(){
   Coop C;
 
-  C.prepareKin();
   C.prepareFol();
+  C.prepareKin();
   C.prepareTree();
   C.prepareDisplay();
 
-//  C.pathView.writeToFiles=true;
+  C.pathView.writeToFiles=true;
 //  C.fol.verbose=5;
 
   C.expandNode();
@@ -35,6 +35,10 @@ void test(){
 //  cmds={ "0", "2", "5", "x", "s", "q" }; //screwdriver 'hand over'
 //  cmds={ "1", "s", "q" }; //screwdriver 'hand over'
 //  cmds={ "m", "m","m","m","q" };
+  cmds={ "p", "0", "p", "12", "p", "1", "p", "15", "p", "2", "15", "p", "s", "x" };
+
+  cmds={ "1", "2", "6", "9", "6", "0", "4", "5", "12", "2", "12", "s", "x" };
+
   bool interactive = mlr::getParameter<bool>("intact", false);
   bool random = mlr::getParameter<bool>("random", false);
 
@@ -48,6 +52,7 @@ void test(){
     }else if(random){
       if(!C.execRandomChoice()) break;
     }else{
+      if(s>=cmds.N) break;
       if(!C.execChoice(cmds(s))) break;
     }
   }
@@ -62,14 +67,26 @@ void test(){
 typedef ManipulationTree_Node MNode;
 
 
+double poseHeuristic(MNode* n){
+  return n->symCost;
+}
+
+double mcHeuristic(MNode* n){
+  if(n->poseCount) return -10.+n->poseCost;
+  return 1.;
+}
+
 double seqHeuristic(MNode* n){
   return n->symCost;
-  return n->symCost+n->costSoFar;
+}
+
+double poseCost(MNode* n){
+  if(!n->poseCount || !n->poseFeasible) return 100.;
+  return .1*n->symCost+n->poseCost;
 }
 
 double seqCost(MNode* n){
-  if(!n->seq.N) return 100.;
-  if(!n->seqFeasible) return 100.;
+  if(!n->seqCount || !n->seqFeasible) return 100.;
   return .1*n->symCost+n->seqCost;
 }
 
@@ -78,8 +95,7 @@ double pathHeuristic(MNode* n){
 }
 
 double pathCost(MNode* n){
-  if(!n->path.N) return 100.;
-  if(!n->pathFeasible) return 100.;
+  if(!n->path.N || !n->pathFeasible) return 100.;
   return .1*n->symCost + n->seqCost + n->pathCost;
 }
 
@@ -95,28 +111,23 @@ MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
   if(!fringe.N) return NULL;
   MNode* best=getBest(fringe, heuristic);
   fringe.removeValue(best);
-  best->inFringe2=false;
   return best;
-}
-
-void setAllChildCostSoFar(MNode* n, double x){
-  n->costSoFar = x;
-  for(MNode *c: n->children) setAllChildCostSoFar(c,x);
 }
 
 void plan_BHTS(){
   Coop C;
 
+  C.prepareFol(true);
   C.prepareKin();
-  C.prepareFol();
   C.prepareTree();
   C.prepareDisplay();
 
 //  C.kin.watch(true);
 //  mlr::wait();
 
-//  C.MCfringe.append(C.root);
-  C.seqFringe.append(C.root);
+  C.mcFringe.append(C.root);
+  C.poseFringe.append(C.root);
+//  C.seqFringe.append(C.root);
 
   C.updateDisplay();
   C.displayTree();
@@ -128,15 +139,18 @@ void plan_BHTS(){
 
 //    C.root->checkConsistency();
     { //expand
-      ManipulationTree_Node* n = NULL;
-      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
+      MNode* n = popBest(C.mcFringe, mcHeuristic);
+      //      ManipulationTree_Node* n = NULL;
+//      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
       if(n){
         n->expand();
         for(ManipulationTree_Node* c:n->children){
           c->addMCRollouts(10,10);
+          C.mcFringe.append(c);
           if(c->isTerminal) C.terminals.append(c);
-          if(n->seq.N){ C.seqFringe.append(c); c->inFringe2=true; }
-//          if(c->isTerminal){ C.seqFringe.append(c); c->inFringe2=true; }
+          if(n->poseCount) C.poseFringe.append(c);
+//          if(n->seqCount) C.seqFringe.append(c);
+          //if(c->isTerminal) C.seqFringe.append(c);
         }
       }
     }
@@ -146,7 +160,7 @@ void plan_BHTS(){
         ManipulationTree_Node* n = NULL;
         for(uint k=0;k<10;k++){ n=C.root->treePolicy_random(); if(n) break; }
         if(n){
-          n->addMCRollouts(10,10);
+          n->addMCRollouts(2,10);
         }
       }
     }
@@ -155,15 +169,30 @@ void plan_BHTS(){
 
 //    C.updateDisplay();
 
+    { //optimize a pose
+      MNode* n = popBest(C.poseFringe, poseHeuristic);
+      if(n){
+        //      cout <<"### POSE TESTING node " <<*n <<endl;
+        //      mlr::wait();
+        n->solvePoseProblem();
+        if(n->poseFeasible){
+          for(MNode* c:n->children) C.poseFringe.append(c); //test all children
+          if(n->isTerminal) C.seqFringe.append(n); //test seq or path
+        }
+        C.node = n;
+      }
+    }
+
     { //optimize a seq
       MNode* n = popBest(C.seqFringe, seqHeuristic);
       if(n){
         //      cout <<"### SEQ TESTING node " <<*n <<endl;
         //      mlr::wait();
         n->solveSeqProblem();
-        setAllChildCostSoFar(n, n->seqCost);
-        if(n->seqFeasible) for(MNode* c:n->children) C.seqFringe.append(c);
-        if(n->seqFeasible && n->isTerminal) C.pathFringe.append(n);
+        if(n->seqFeasible){
+//          for(MNode* c:n->children) C.seqFringe.append(c);
+          if(n->isTerminal) C.pathFringe.append(n);
+        }
         C.node = n;
       }
     }
@@ -174,7 +203,6 @@ void plan_BHTS(){
         //      cout <<"### PATH TESTING node " <<*n <<endl;
         //      mlr::wait();
         n->solvePathProblem(10);
-        setAllChildCostSoFar(n, n->pathCost);
         if(n->pathFeasible) C.done.append(n);
         C.node = n;
       }
@@ -182,11 +210,22 @@ void plan_BHTS(){
 
     for(auto *n:C.terminals) CHECK(n->isTerminal,"");
 
+//    C.updateDisplay();
+    for(MNode *n:C.mcFringe) if(!n->mcStats->n){
+//      cout <<"recomputing MC rollouts for: " <<*n->decision <<endl;
+//      mlr::wait();
+//      C.root->rootMC->verbose = 2;
+      n->addMCRollouts(10,10);
+//      C.updateDisplay();
+    }
+
     MNode *bt = getBest(C.terminals, seqCost);
     MNode *bp = getBest(C.done, pathCost);
     mlr::String out;
-    out <<"TIME= " <<mlr::cpuTime() <<" KIN= " <<COUNT_kin <<" EVALS= " <<COUNT_evals <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
-           <<" bestSeq= " <<(bt?seqCost(bt):100.)
+    out <<"TIME= " <<mlr::cpuTime() <<" KIN= " <<COUNT_kin <<" EVALS= " <<COUNT_evals
+       <<" POSE= " <<COUNT_poseOpt <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
+      <<" bestPose= " <<(bt?poseCost(bt):100.)
+     <<" bestSeq= " <<(bt?seqCost(bt):100.)
           <<" pathSeq= " <<(bp?pathCost(bp):100.)
          <<" #solutions= " <<C.done.N;
 
@@ -218,7 +257,9 @@ void plan_BHTS(){
   fil.close();
 
   C.pathView.writeToFiles=true;
-  mlr::wait();
+  C.updateDisplay();
+  mlr::wait(.1);
+  //mlr::wait();
 
 }
 
@@ -235,7 +276,7 @@ int main(int argc,char **argv){
   if(mlr::getParameter<bool>("intact")){
     test();
   }else{
-    test();
+//    test();
     plan_BHTS();
   }
 

@@ -3,6 +3,9 @@ Include = 'LGP-coop-kin.g'
 
 FOL_World{
   hasWait=false
+  gamma = 1.
+  stepCost = 1.
+  timeCost = 0.
 }
 
 ## activities
@@ -18,12 +21,14 @@ placingScrew
 agent
 object
 table
+attachable
 
 busy     # involved in an ongoing (durative) activity
 free     # agent hand is free
 held     # object is held by an agent
 grasped  # agent X holds/has grasped object Y
 placed  # agent X holds/has grasped object Y
+attached
 hasScrew # agent X holds a screw (screws are not objects/constrants, just a predicate of having a screw...)
 fixed    # object X and Y are fixed together
 never    # (for debugging)
@@ -44,8 +49,7 @@ Rule {
 ### Reward
 REWARD {
 #  tree{
-#    leaf{ { (grasped handL screwdriverHandle) }, r=10. }
-##    leaf{ { (grasped handR screwbox) }, r=10. }
+#    leaf{ { (grasped handR screwdriverHandle) }, r=10. }
 #    weight=1.
 #  }
 }
@@ -107,6 +111,13 @@ Rule {
   X, Y, Z,
   { (Terminate placing X Y Z) }
   { (Terminate placing X Y Z)! (placing X Y Z)! (placed Y Z) (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+}
+
+
+DecisionRule activate_attaching {
+  X, Y, Z,
+  { (grasped X Z) (object Y) (object Z) (attachable Y Z) }
+  { (attached Y Z) (grasped X Z)! (free X) (held Z)! komoAttach(X Y Z)=1. }
 }
 
 

@@ -44,7 +44,7 @@ void FOL_World::init(istream& is){
   decisionRules = KB.getNodes("DecisionRule");
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
-  Wait_keyword = KB["WAIT"];            CHECK(Wait_keyword, "You need to declare the WAIT keyword");
+  Wait_keyword = KB["WAIT"];            //CHECK(Wait_keyword, "You need to declare the WAIT keyword");
   Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
 
   Graph *params = KB.find<Graph>("FOL_World");
@@ -80,6 +80,9 @@ MCTS_Environment::TransitionReturn FOL_World::transition(const Handle& action){
   lastStepObservation = 0;
 
   T_step++;
+
+  CHECK(!hasWait || Wait_keyword,"if the FOL uses wait, the WAIT keyword needs to be declared");
+
 
   if(verbose>2) cout <<"****************** FOL_World: step " <<T_step <<endl;
   if(verbose>2){ cout <<"*** pre-state = "; state->write(cout, " "); cout <<endl; }

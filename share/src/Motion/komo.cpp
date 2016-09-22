@@ -294,13 +294,31 @@ void KOMO::setHandover(double time, const char* oldHolder, const char* object, c
 
 }
 
+void KOMO::setAttach(double time, const char* endeff, const char* object1, const char* object2, ors::Transformation& rel, int verbose){
+  if(verbose>0) cout <<"KOMO_setAttach t=" <<time <<" endeff=" <<endeff <<" obj1=" <<object1 <<" obj2=" <<object2 <<endl;
+
+  //hand center at object center (could be replaced by touch)
+//  setTask(time, time, new TaskMap_Default(posTMT, world, object2, NoVector, object1, NoVector), sumOfSqrTT, rel.pos.getArr(), 1e3);
+//  setTask(time, time, new TaskMap_Default(quatDiffTMT, world, object2, NoVector, object1, NoVector), sumOfSqrTT, conv_quat2arr(rel.rot), 1e3);
+
+//  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, newHolder, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
+
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, true, "delete", endeff, object2);
+
+//  ors::Transformation rel = 0;
+//  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
+  setKinematicSwitch(time, true, "rigidZero", object1, object2, rel );
+
+}
+
 void KOMO::setSlowAround(double time, double delta){
   if(stepsPerPhase>2) //otherwise: no velocities
     setTask(time-.02, time+.02, new TaskMap_qItself(), sumOfSqrTT, NoArr, 1e1, 1);
   //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
 }
 
-void KOMO::setAbstractTask(double phase, const NodeL& facts, bool effKinMode, int verbose){
+void KOMO::setAbstractTask(double phase, const Graph& facts, bool effKinMode, int verbose){
 //  CHECK(phase<=maxPhase,"");
 //  listWrite(facts, cout,"\n");  cout <<endl;
   for(Node *n:facts){
@@ -311,13 +329,24 @@ void KOMO::setAbstractTask(double phase, const NodeL& facts, bool effKinMode, in
       double time=n->get<double>();
       setGrasp(phase+time, *symbols(0), *symbols(1), effKinMode, verbose);
     }
-    if(n->keys.N && n->keys.last()=="komoPlace"){
+    else if(n->keys.N && n->keys.last()=="komoPlace"){
       double time=n->get<double>();
       setPlace(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
     }
-    if(n->keys.N && n->keys.last()=="komoHandover"){
+    else if(n->keys.N && n->keys.last()=="komoHandover"){
       double time=n->get<double>();
       setHandover(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
+    }
+    else if(n->keys.N && n->keys.last()=="komoAttach"){
+      double time=n->get<double>();
+      Node *attachableSymbol = facts.getNode("attachable");
+      CHECK(attachableSymbol!=NULL,"");
+      Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
+      ors::Transformation rel = attachableFact->get<ors::Transformation>();
+      setAttach(phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
+    }
+    else if(n->keys.N && n->keys.last().startsWith("komo")){
+      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
     }
   }
 }
