@@ -720,7 +720,7 @@ void ors::KinematicWorld::calc_fwdPropagateVelocities(){
       Vector qV(R*q_vel); //relative vel in global coords
       Vector qW(R*q_angvel); //relative ang vel in global coords
       to->vel += b->angvel^(to->X.pos - b->X.pos);
-      to->vel += qW^(to->X.pos - j->X.pos);
+      if(!isLinkTree) to->vel += qW^(to->X.pos - j->X.pos);
       to->vel += qV;
       to->angvel += qW;
       todoBodies.setAppend(j->to);
