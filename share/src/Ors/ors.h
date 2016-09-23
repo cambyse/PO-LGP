@@ -145,6 +145,7 @@ struct Joint {
   void reset();
   void parseAts();
   uint qDim();
+  void applyTransformation(ors::Transformation& f, const arr& q);
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data() { return *this; }

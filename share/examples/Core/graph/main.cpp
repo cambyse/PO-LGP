@@ -102,11 +102,13 @@ void rndModify(Graph& G){
 void TEST(Random){
   Graph A,B;
 
+  ArrayG<int> Ax(A);
+
   for(uint k=0;k<10;k++){
     rndModify(rndSubgraph(A));
     Graph& C = rndSubgraph(A).newSubgraph({}, {})->value;
 
-//    cout <<"---" <<endl <<A <<endl;
+    cout <<"---" <<endl <<A <<endl <<Ax <<endl;
 
     A.checkConsistency();
     C.checkConsistency();
@@ -114,6 +116,7 @@ void TEST(Random){
     B.checkConsistency();
     delete C.isNodeOfParentGraph;
     A.checkConsistency();
+
   }
   A.clear();
   A.checkConsistency();
@@ -159,12 +162,12 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-//  testRandom();
+  testRandom();
 //  testRead();
 //  testInit();
 //  testDot();
 
-  testManual();
+//  testManual();
 //  if(!filename) testManual();
 
   return 0;

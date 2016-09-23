@@ -513,6 +513,79 @@ uint ors::Joint::qDim() {
   return 0;
 }
 
+void ors::Joint::applyTransformation(ors::Transformation& f, const arr& q){
+  switch(type) {
+    case JT_hingeX:{
+//      f.addRelativeRotationRad(q.elem(qIndex),1.,0.,0.);
+      f.rot.addX(q.elem(qIndex));
+    } break;
+
+    case JT_hingeY: {
+//      f.addRelativeRotationRad(q.elem(qIndex),0.,1.,0.);
+      f.rot.addY(q.elem(qIndex));
+    } break;
+
+    case JT_hingeZ: {
+//      f.addRelativeRotationRad(q.elem(qIndex),0.,0.,1.);
+      f.rot.addZ(q.elem(qIndex));
+    } break;
+
+    case JT_universal:{
+      f.addRelativeRotationRad(q.elem(qIndex),1.,0.,0.);
+      f.addRelativeRotationRad(q.elem(qIndex+1),0.,1.,0.);
+    } break;
+
+    case JT_quatBall:{
+      ors::Quaternion r;
+      r.set(q.p+qIndex);
+      r.normalize();
+      f.addRelativeRotation(r);
+    } break;
+
+    case JT_free:{
+      ors::Transformation t;
+      t.pos.set(q.p+qIndex);
+      t.rot.set(q.p+qIndex+3);
+      f.appendTransformation(t);
+    } break;
+
+    case JT_transX: {
+      f.addRelativeTranslation(q.elem(qIndex),0.,0.);
+    } break;
+
+    case JT_transY: {
+      f.addRelativeTranslation(0., q.elem(qIndex), 0.);
+    } break;
+
+    case JT_transZ: {
+      f.addRelativeTranslation(0., 0., q.elem(qIndex));
+    } break;
+
+    case JT_transXY: {
+      f.addRelativeTranslation(q.elem(qIndex), q.elem(qIndex+1), 0.);
+    } break;
+
+    case JT_trans3: {
+      f.addRelativeTranslation(q.elem(qIndex), q.elem(qIndex+1), q.elem(qIndex+2));
+    } break;
+
+    case JT_transXYPhi: {
+      f.addRelativeTranslation(q.elem(qIndex), q.elem(qIndex+1), 0.);
+      f.addRelativeRotationRad(q.elem(qIndex+2),0.,0.,1.);
+    } break;
+
+    case JT_phiTransXY: {
+      f.addRelativeRotationRad(q.elem(qIndex+2),0.,0.,1.);
+      f.addRelativeTranslation(q.elem(qIndex), q.elem(qIndex+1), 0.);
+    } break;
+
+    case JT_glue:
+    case JT_rigid:
+      break;
+    default: NIY;
+  }
+}
+
 void ors::Joint::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
@@ -680,10 +753,14 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
       if(j->type==JT_hingeZ || j->type==JT_transZ)  j->axis = j->X.rot.getZ();
       if(j->type==JT_transXYPhi)  j->axis = j->X.rot.getZ();
       if(j->type==JT_phiTransXY)  j->axis = j->X.rot.getZ();
+#if 1
       f.appendTransformation(j->Q);
+#else
+      j->applyTransformation(f, q);
+#endif
       if(!isLinkTree) f.appendTransformation(j->B);
       j->to->X=f;
-      todoBodies.setAppend(j->to);
+//      todoBodies.setAppend(j->to);
     }
   }
   calc_fwdPropagateShapeFrames();

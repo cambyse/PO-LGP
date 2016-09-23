@@ -142,7 +142,7 @@ void TEST(Copy){
 void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
-  ors::KinematicWorld G("arm7.ors");
+  ors::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -154,6 +154,7 @@ void TEST(KinematicSpeed){
   cout <<"kinematics timing: "<< mlr::timerRead() <<"sec" <<endl;
 #endif
 
+#if 0
   ors::Transformation t,s; t.setRandom(); s.setRandom();
   mlr::timerStart();
   for(uint k=0;k<NUM;k++){
@@ -171,6 +172,7 @@ void TEST(KinematicSpeed){
     A=Y;
   }
   cout <<"matrix timing: "<< mlr::timerRead() <<"sec" <<endl;
+#endif
 }
 
 //===========================================================================
@@ -561,7 +563,8 @@ void TEST(InverseKinematics) {
 
 int MAIN(int argc,char **argv){
 
-  testDynamics();
+//  testKinematicSpeed();
+//  return 0;
 
   testLoadSave();
   testCopy();
