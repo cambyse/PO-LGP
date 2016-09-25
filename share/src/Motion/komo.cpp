@@ -444,7 +444,7 @@ void KOMO::run(){
     if(!splineB.N){
 //      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
 #if 0
-      optConstrained(x, dual, Convert(MP->komo_problem), OPT(verbose=2));
+      optConstrained(x, dual, Convert(MP->komo_problem));
 #else
       if(opt) delete opt;
       Convert C(MP->komo_problem);
@@ -457,11 +457,11 @@ void KOMO::run(){
       P0(a,b,c,NoTermTypeA, x);
       ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
       P(a,b,NoArr,NoTermTypeA,z);
-      optConstrained(z, dual, P, OPT(verbose=2));
+      optConstrained(z, dual, P);
     }
   }else{
     HALT("deprecated")
-    optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
+    optConstrained(x, dual, MP->InvKinProblem());
   }
   if(verbose>0){
     cout <<"** optimization time=" <<mlr::timerRead()
@@ -537,10 +537,10 @@ arr moveTo(ors::KinematicWorld& world,
     mlr::timerStart();
     if(colPrec<0){
 //      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
-      optConstrained(x, NoArr, Convert(MP.komo_problem), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MP.komo_problem)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MP), OPT(verbose=2));
+      optNewton(x, Convert(MP));
     }
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;

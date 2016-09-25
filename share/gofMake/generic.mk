@@ -70,7 +70,7 @@ OPTIM = debug
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall $(CXXFLAGS)#-Wno-int-to-pointer-cast#-Wno-invalid-offsetof
+CXXFLAGS := -g -O1 -Wall $(CXXFLAGS)#-Wno-int-to-pointer-cast#-Wno-invalid-offsetof
 endif
 ifeq ($(OPTIM),fast_debug)
 CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)

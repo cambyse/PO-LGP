@@ -87,9 +87,9 @@ int main(int argc,char** argv){
 
 //  testEasy();
 //  testEasyAlign();
-  testEasyAlign2();
+//  testEasyAlign2();
 //  testEasyPR2();
-//  testFinalPosePR2();
+  testFinalPosePR2();
   return 0;
 }
 
