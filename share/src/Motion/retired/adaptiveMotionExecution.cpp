@@ -15,7 +15,6 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
 #include "adaptiveMotionExecution.h"
 
 AdaptiveMotionExecution::AdaptiveMotionExecution(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \

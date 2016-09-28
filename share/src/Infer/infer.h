@@ -15,8 +15,6 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
-
 /* Copyright (C) 2000, 2006  Marc Toussaint (mtoussai@inf.ed.ac.uk)
 under the terms of the GNU LGPL (http://www.gnu.org/copyleft/lesser.html)
 see the `util.h' file for a full copyright statement  */

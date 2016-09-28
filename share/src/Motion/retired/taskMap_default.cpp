@@ -15,7 +15,6 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
 #include "taskMap_default.h"
 
 TaskMap_Default::TaskMap_Default(TaskMap_DefaultType _type,
