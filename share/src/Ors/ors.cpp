@@ -2073,7 +2073,6 @@ void ors::KinematicWorld::frictionToForces(double coeff) {
   HALT("never do this: add it directly in the equations...");
   ors::Vector a;
   ors::Transformation X;
-  double v;
   for(Joint *j:joints) {
     X = j->from->X;
     X.appendTransformation(j->A);

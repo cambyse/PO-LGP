@@ -234,7 +234,7 @@ void plan_BHTS(){
 
     if(bt) C.node=bt;
     if(bp) C.node=bp;
-//    C.updateDisplay();
+    C.updateDisplay();
 //    mlr::wait();
 
 //    { //optimize a path

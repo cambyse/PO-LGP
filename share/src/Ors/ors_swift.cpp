@@ -337,7 +337,7 @@ void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) 
   
   //add pointClound stuff to list
   if(global_ANN) {
-    uint i, _i;
+    uint i, _i=0;
     arr R(3, 3), t(3);
     arr v, dists, _dists;
     intA idx, _idx;

@@ -104,7 +104,8 @@ void Coop::updateDisplay(){
 
   Graph dot=root->getGraph();
   dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
-  system("dot -Tpdf z.dot > z.pdf");
+  int r = system("dot -Tpdf z.dot > z.pdf");
+  if(r) LOG(-1) <<"could not startup dot";
 }
 
 void Coop::printChoices(){

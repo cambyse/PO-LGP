@@ -483,8 +483,8 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
       PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
     }
     actor->setAngularDamping(0.75);
-    actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
-    actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
+//    actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
+//    actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
   }
   gScene->addActor(*actor);
   actor->userData = b;
@@ -501,6 +501,7 @@ void PhysXInterface::pullFromPhysx(double tau) {
       PxRigidBody *px_body = (PxRigidBody*) a;
       PxVec3 vel = px_body->getLinearVelocity();
       PxVec3 angvel = px_body->getAngularVelocity();
+#if 0
       ors::Vector newvel(vel[0], vel[1], vel[2]);
       ors::Vector newangvel(angvel[0], angvel[1], angvel[2]);
       ors::Body *b = world.bodies(a_COUNT);
@@ -508,6 +509,7 @@ void PhysXInterface::pullFromPhysx(double tau) {
       b->torque = b->mass * ((b->X.angvel - newangvel)/tau);
       b->X.vel = newvel;
       b->X.angvel = newangvel;
+#endif
     }
   }
   world.calc_fwdPropagateShapeFrames();

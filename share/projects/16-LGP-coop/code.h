@@ -53,7 +53,7 @@ struct Coop{
   void prepareDisplay();
 
   void updateDisplay();
-  void displayTree(){ system("evince z.pdf &"); }
+  void displayTree(){ int r=system("evince z.pdf &");  if(r) LOG(-1) <<"could not startup evince"; }
 
   void printChoices();
   mlr::String queryForChoice();

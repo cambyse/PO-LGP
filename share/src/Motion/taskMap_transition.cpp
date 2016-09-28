@@ -132,7 +132,7 @@ void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
     uint m=0;
     for(uint i=0;i<matchingJoints.d0;i++){
       mlr::Array<ors::Joint*> joints = matchingJoints[i];
-      uint jdim = joints(0)->qDim(), qi1, qi2, qi3;
+      uint jdim = joints(0)->qDim(), qi1=0, qi2=0, qi3=0;
       for(uint j=0;j<jdim;j++){
         if(order>=0) qi1 = joints.elem(-1)->qIndex+j;
         if(order>=1) qi2 = joints.elem(-2)->qIndex+j;

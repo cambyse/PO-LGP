@@ -166,7 +166,7 @@ void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize
   if(anyTimeVariant){
     //collect gradients of active constraints
     arr A;
-    RowShifted *Aaux, *Jaux;
+    RowShifted *Aaux=NULL, *Jaux=NULL;
     if(isRowShifted(J_x)){
       Aaux = makeRowShifted(A, 0, J_x.d1, x.N);
       Jaux = castRowShifted(J_x);

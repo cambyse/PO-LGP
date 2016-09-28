@@ -147,7 +147,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   //resizing things:
   phi.resize(dim_phi).setZero();
-  RowShifted *Jaux;
+  RowShifted *Jaux=NULL;
   if(&J){
     Jaux = makeRowShifted(J, dim_phi, (k+1)*dim_xmax, x.N);
     J.setZero();
