@@ -23,7 +23,7 @@ TaskMap_Transition::TaskMap_Transition(const ors::KinematicWorld& G, bool fixJoi
   accCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/accCoeff",1.);
 
   //transition cost metric
-  H_rate = mlr::getParameter<double>("Hrate");
+  H_rate = mlr::getParameter<double>("Hrate", 1.);
   arr H_diag;
   if(mlr::checkParameter<arr>("Hdiag")) {
     H_diag = mlr::getParameter<arr>("Hdiag");
