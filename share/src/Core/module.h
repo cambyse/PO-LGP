@@ -63,7 +63,7 @@ void modulesReportCycleTimes();
 
 //struct Module : Thread{
 //  Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
-////    new Node_typed<Module*>(registry(), {"Module", name}, {}, this);
+////    registry().newNode<Module*>({"Module", name}, {}, this);
 //  }
 //  virtual ~Module(){}
 //  virtual void step(){ HALT("you should not run a virtual module"); }
@@ -115,10 +115,10 @@ struct Access_typed:Access{
     v = acc.v;
     var = acc.var;
     if(thread){
-      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {thread->registryNode, v->registryNode}, this);
+      registryNode = registry().newNode<Access_typed<T>* >({"Access", name}, {thread->registryNode, v->registryNode}, this);
       if(moduleListens) thread->listenTo(*var);
     }else{
-      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {v->registryNode}, this);
+      registryNode = registry().newNode<Access_typed<T>* >({"Access", name}, {v->registryNode}, this);
     }
   }
 
@@ -135,10 +135,10 @@ struct Access_typed:Access{
       CHECK(v,"something is wrong");
     }
     if(thread){
-      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {thread->registryNode, v->registryNode}, this);
+      registryNode = registry().newNode<Access_typed<T>* >({"Access", name}, {thread->registryNode, v->registryNode}, this);
       if(moduleListens) thread->listenTo(*var);
     }else{
-      registryNode = new Node_typed<Access_typed<T>* >(registry(), {"Access", name}, {v->registryNode}, this);
+      registryNode = registry().newNode<Access_typed<T>* >({"Access", name}, {v->registryNode}, this);
     }
   }
 
@@ -186,7 +186,7 @@ struct __##name##__Access:Access_typed<type>{ \
 
 #define REGISTER_MODULE(name) \
   RUN_ON_INIT_BEGIN(Decl_Module##_##name) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), std::make_shared<Type_typed<name, void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Module"), mlr::String(#name)}, NodeL(), std::make_shared<Type_typed<name, void> >()); \
   RUN_ON_INIT_END(Decl_Module##_##name)
 
 

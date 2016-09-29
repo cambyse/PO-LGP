@@ -67,7 +67,7 @@ void FOL_World::init(istream& is){
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
   Wait_keyword = KB["WAIT"];            //CHECK(Wait_keyword, "You need to declare the WAIT keyword");
-  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
+  Quit_literal = KB.newNode<bool>({}, {Quit_keyword}, true);
 
   Graph *params = KB.find<Graph>("FOL_World");
   if(params){
@@ -382,20 +382,20 @@ Graph* FOL_World::createStateCopy(){
 }
 
 void FOL_World::addAgent(const char* name){
-//  Node* n = new Node_typed<bool>(KB, {name}, {}, true); //already exists in kinematic part
+//  Node* n = KB.newNode<bool>({name}, {}, true); //already exists in kinematic part
   Node* n = KB[name];
-  new Node_typed<bool>(*start_state, {}, {KB["agent"], n}, true);
-  new Node_typed<bool>(*start_state, {}, {KB["free"], n}, true);
+  start_state->newNode<bool>({}, {KB["agent"], n}, true);
+  start_state->newNode<bool>({}, {KB["free"], n}, true);
 }
 
 void FOL_World::addObject(const char* name){
-//  Node* n = new Node_typed<bool>(KB, {name}, {}, true);
+//  Node* n = KB.newNode<bool>({name}, {}, true);
   Node* n = KB[name];
-  new Node_typed<bool>(*start_state, {}, {KB["object"], n}, true);
+  start_state->newNode<bool>({}, {KB["object"], n}, true);
 }
 
 void FOL_World::addFact(const StringA& symbols){
   NodeL parents;
   for(const mlr::String& s:symbols) parents.append(KB[s]);
-  new Node_typed<bool>(*start_state, {}, parents, true);
+  start_state->newNode<bool>({}, parents, true);
 }

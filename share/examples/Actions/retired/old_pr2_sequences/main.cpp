@@ -42,18 +42,18 @@ void rewriteGraph(){
   NodeL state=getLiteralsOfScope(G);
 
   for(Node* a:actions){
-    nice.append<bool>(a->keys(1), NULL, false);
+    nice.newNode<bool>(a->keys(1), NULL, false);
   }
 
   for(Node* rule:rules){
     Graph& Rule=rule->graph();
-    Node *rit = nice.append<bool>({"box"}, NULL, false);
+    Node *rit = nice.newNode<bool>({"box"}, NULL, false);
     for(Node* prec:Rule) if(prec->parents.N){
       Node *pit=nice[prec->parents(0)->keys(1)];
       if(pit){
         mlr::String label/*("pre")*/;
         if(prec->parents.N>1) label <<prec->parents(1)->keys(1);
-        nice.append<bool>({label}, {pit, rit}, NULL, false);
+        nice.newNode<bool>({label}, {pit, rit}, NULL, false);
       }
     }
     Graph &effect = Rule.last()->graph();
@@ -63,7 +63,7 @@ void rewriteGraph(){
         mlr::String label/*("eff")*/;
         if(eff->parents.N>1) label <<eff->parents(1)->keys(1);
         if(eff->isOfType<bool>() && eff->get<bool>()==false) label <<'!';
-        nice.append<bool>({label}, {rit, pit}, NULL, false);
+        nice.newNode<bool>({label}, {rit, pit}, NULL, false);
       }
     }
 

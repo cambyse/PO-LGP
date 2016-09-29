@@ -79,7 +79,7 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
+      G.newNode<bool>({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
       G.newSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
@@ -144,7 +144,7 @@ REGISTER_TYPE(Something)
 
 void TEST(Manual){
   Graph G;
-  G.append({"hallo"}, {}, new Something(3), true);
+  G.newNode({"hallo"}, {}, new Something(3), true);
   cout <<G <<endl;
 }
 

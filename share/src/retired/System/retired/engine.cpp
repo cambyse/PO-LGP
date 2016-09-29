@@ -275,16 +275,16 @@ void System::run(bool waitForOpened){
 
 Graph System::graph() const{
   Graph g;
-  g.append<bool>({"SystemModule", name}, {}, NULL, false);
+  g.newNode<bool>({"SystemModule", name}, {}, NULL, false);
   g.checkConsistency();
   std::map<RevisionedAccessGatedClass*, Node*> vit;
-  for(RevisionedAccessGatedClass *v: vars) vit[v] = g.append({"Variable", v->name}, {}, v, false);
+  for(RevisionedAccessGatedClass *v: vars) vit[v] = g.newNode({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
   for(Module *m: *this){
-    Node *mit = g.append({"Module", m->name}, {}, &m, false);
+    Node *mit = g.newNode({"Module", m->name}, {}, &m, false);
     g.checkConsistency();
     for(Access *a: m->accesses){
-      Node *ait = g.append({"Access", a->name}, {}, &a, false);
+      Node *ait = g.newNode({"Access", a->name}, {}, &a, false);
       ait->parents.append(mit);
       mit->parentOf.append(ait);
       if(a->var){

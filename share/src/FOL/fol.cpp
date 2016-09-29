@@ -250,7 +250,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
 
 /// directly create a new fact
 Node *createNewFact(Graph& facts, const NodeL& symbols){
-  return new Node_typed<bool>(facts, {}, symbols, true);
+  return facts.newNode<bool>({}, symbols, true);
 }
 
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)

@@ -56,8 +56,8 @@ void TEST(MC){
   mc.verbose=0;
 
   Graph& dataset = fol.KB.newSubgraph({"dataset"}, {})->value;
-  for(auto* s:getSymbolsOfScope(fol.KB)) dataset.append<bool>(s->keys, {}, true);
-  for(auto* r:fol.KB.getNodes("DecisionRule"))   dataset.append<bool>(r->keys, {}, true);
+  for(auto* s:getSymbolsOfScope(fol.KB)) dataset.newNode<bool>(s->keys, {}, true);
+  for(auto* r:fol.KB.getNodes("DecisionRule"))   dataset.newNode<bool>(r->keys, {}, true);
 
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
@@ -70,8 +70,8 @@ void TEST(MC){
     data.newSubgraph({"state"}, {}, *fol.state);
     for(uint i=0;i<mc.D.N;i++){
       const FOL_World::Decision *d = std::dynamic_pointer_cast<const FOL_World::Decision>(mc.A(i)).get();
-      data.append<bool>({"action"}, d->getTuple(), true);
-      data.append<double>({"return"}, {}, mc.D(i).X.first());
+      data.newNode<bool>({"action"}, d->getTuple(), true);
+      data.newNode<double>({"return"}, {}, mc.D(i).X.first());
     }
 
     auto a = mc.getBestAction();

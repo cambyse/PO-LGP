@@ -106,7 +106,7 @@ struct FOL_World:MCTS_Environment{
   template<class T> void addValuedFact(const StringA& symbols, const T& x){
     NodeL parents;
     for(const mlr::String& s:symbols) parents.append(KB[s]);
-    new Node_typed<T>(*start_state, {}, parents, x);
+    start_state->newNode<T>({}, parents, x);
   }
 
   //-- internal access

@@ -128,7 +128,7 @@ Node* registerNode(T *instance, const char *key1, const char* key2, Node *parent
   NodeL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
   StringA keys; if(key1) keys.append(mlr::String(key1)); if(key2) keys.append(mlr::String(key2));
   Type *ti = new Type_typed<T,P>(NULL, NULL);
-  return new Node_typed<Type>(keys, parents, ti, &registry());
+  return keys.newNode<Type>(parents, ti, &registry());
 }
 
 

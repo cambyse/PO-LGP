@@ -15,7 +15,7 @@ struct SystemDescription{
   template<class T> void addVar(const char *name){
     VariableEntry *v = new VariableEntry;
     v->type = new Type_typed<T, void>();
-    system.append<VariableEntry>({"Variable", name}, v);
+    system.newNode<VariableEntry>({"Variable", name}, v);
   }
   Node* getVariableEntry(const Access& acc);
   Node* getVariableEntry(const char* name, const Type& typeinfo);

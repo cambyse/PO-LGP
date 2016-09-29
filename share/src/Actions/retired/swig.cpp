@@ -23,7 +23,7 @@ ActionSwigInterface::ActionSwigInterface(bool useRos){
 //  new CoreTasks(*s->activity.machine);
 
   s->KB.writeAccess();
-  s->KB().append<Graph*>({"STATE"}, {}, new Graph());
+  s->KB().newNode<Graph*>({"STATE"}, {}, new Graph());
   s->KB().checkConsistency();
   s->KB.deAccess();
 
@@ -72,7 +72,7 @@ void ActionSwigInterface::startActivity(intV literal, dict parameters){
   Graph& state=s->KB().get<Graph>("STATE");
   NodeL parents;
   for(auto i:literal) parents.append(s->KB().elem(i));
-  state.append<bool>({}, parents, NULL, false);
+  state.newNode<bool>({}, parents, NULL, false);
   s->KB.deAccess();
 }
 
@@ -98,16 +98,16 @@ void ActionSwigInterface::waitForQuitSymbol(){
 }
 
 int ActionSwigInterface::createNewSymbol(std::string symbolName){
-  Node *symbol = s->KB.set()->append<bool>(symbolName.c_str(), NULL, false);
+  Node *symbol = s->KB.set()->newNode<bool>(symbolName.c_str(), NULL, false);
   return symbol->index;
 }
 
 int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName, dict parameters){
   s->KB.writeAccess();
 
-  Node *symbol = s->KB().append<bool>(symbolName.c_str(), NULL, false);
+  Node *symbol = s->KB().newNode<bool>(symbolName.c_str(), NULL, false);
   Graph *td = new Graph(parameters);
-  s->KB().append<Graph*>({"Task"}, {symbol}, td);
+  s->KB().newNode<Graph*>({"Task"}, {symbol}, td);
   s->KB().checkConsistency();
   //cout <<s->KB() <<endl;
   s->KB.deAccess();

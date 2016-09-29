@@ -690,15 +690,15 @@ Graph MotionProblem::getReport() {
   for(uint i=0; i<tasks.N; i++) {
     Task *c = tasks(i);
     Graph *g = &newSupGraph(report, {c->name}, {})->value;
-    g->append<double>({"order"}, {}, c->map.order);
-    g->append<mlr::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
-    g->append<double>({"sqrCosts"}, {}, taskC(i));
-    g->append<double>({"constraints"}, {}, taskG(i));
+    g->newNode<double>({"order"}, {}, c->map.order);
+    g->newNode<mlr::String>({"type"}, {}, STRING(TermTypeString[c->map.type]));
+    g->newNode<double>({"sqrCosts"}, {}, taskC(i));
+    g->newNode<double>({"constraints"}, {}, taskG(i));
     totalC += taskC(i);
     totalG += taskG(i);
   }
-  report.append<double>({"total","sqrCosts"}, {}, totalC);
-  report.append<double>({"total","constraints"}, {}, totalG);
+  report.newNode<double>({"total","sqrCosts"}, {}, totalC);
+  report.newNode<double>({"total","constraints"}, {}, totalG);
 
   return report;
 }
