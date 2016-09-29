@@ -28,8 +28,8 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
     symbolicState_after(symbolicState_after),
     verbose(verbose){
 
-  CHECK(symbolicState_before.isNodeOfParentGraph && &symbolicState_before.isNodeOfParentGraph->container==&KB,"");
-  CHECK(symbolicState_after.isNodeOfParentGraph && &symbolicState_after.isNodeOfParentGraph->container==&KB,"");
+  CHECK(symbolicState_before.isNodeOfGraph && &symbolicState_before.isNodeOfGraph->container==&KB,"");
+  CHECK(symbolicState_after.isNodeOfGraph && &symbolicState_after.isNodeOfGraph->container==&KB,"");
 
   ConstrainedProblem::operator=(
         [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {

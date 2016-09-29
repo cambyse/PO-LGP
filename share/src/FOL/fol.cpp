@@ -233,7 +233,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
       match = fact->hasEqualValue(literal);
     }
     if(match){
-      CHECK(value && &value->container==&facts.isNodeOfParentGraph->container,""); //the value should be a constant!
+      CHECK(value && &value->container==&facts.isNodeOfGraph->container,""); //the value should be a constant!
 //      dom.NodeL::setAppendInSorted(value, NodeComp);
       dom.NodeL::append(value);
     }
@@ -250,7 +250,7 @@ void removeInfeasibleSymbolsFromDomain(Graph& facts, NodeL& domain, Node* litera
 
 /// directly create a new fact
 Node *createNewFact(Graph& facts, const NodeL& symbols){
-  return new Node_typed<bool>(facts, {}, symbols, true);
+  return facts.newNode<bool>({}, symbols, true);
 }
 
 /// create a new fact by substituting all variables with subst(var->index) (if non-NULL)
@@ -259,7 +259,7 @@ Node* createNewSubstitutedLiteral(Graph& facts, Node* literal, const NodeL& subs
   Node *fact = literal->newClone(facts);
   for(uint i=0;i<fact->parents.N;i++){
     Node *arg=fact->parents(i);
-    CHECK(&arg->container==subst_scope || &arg->container==&facts.isNodeOfParentGraph->container,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
+    CHECK(&arg->container==subst_scope || &arg->container==&facts.isNodeOfGraph->container,"the literal argument should be a constant (KB scope) or variable (1st level local scope)");
     if(&arg->container==subst_scope){ //is a variable, and subst exists
        CHECK(subst(arg->index)!=NULL,"a variable (=argument in local scope) requires a substitution, no?");
       //CHECK(arg->container.N==subst.N, "somehow the substitution does not fit the container of literal arguments");
@@ -363,7 +363,7 @@ bool substitutedRulePreconditionHolds(Graph& KB, Node* rule, const NodeL& subst,
 
  NodeL getSubstitutions2(Graph& KB, NodeL& relations, int verbose){
    CHECK(relations.N,"");
-   Graph& varScope = relations(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
+   Graph& varScope = relations(0)->container.isNodeOfGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
 
    NodeL vars = getSymbolsOfScope(varScope);
 
@@ -525,7 +525,7 @@ bool substitutedRulePreconditionHolds(Graph& KB, Node* rule, const NodeL& subst,
 bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, int verbose, int *samplingObservation){
   NodeL rules = KB.getNodes("Rule");
 //  NodeL constants = KB.getNodes("Constant");
-  CHECK(state.isNodeOfParentGraph && &state.isNodeOfParentGraph->container==&KB,"state must be a node of the KB");
+  CHECK(state.isNodeOfGraph && &state.isNodeOfGraph->container==&KB,"state must be a node of the KB");
 //  Graph& state = KB.get<Graph>("STATE");
   return forwardChaining_FOL(state, rules, query, changes, verbose, samplingObservation);
 }
@@ -533,7 +533,7 @@ bool forwardChaining_FOL(Graph& KB, Graph& state, Node* query, Graph& changes, i
 bool forwardChaining_FOL(Graph& state, NodeL& rules, Node* query, Graph& changes, int verbose, int *samplingObservation){
 
   for(;;){
-    DEBUG(state.isNodeOfParentGraph->container.checkConsistency();)
+    DEBUG(state.isNodeOfGraph->container.checkConsistency();)
     bool newFacts=false;
     for(Node *rule:rules){
       if(verbose>1) cout <<"Testing Rule " <<*rule <<endl;
@@ -595,7 +595,7 @@ bool forwardChaining_propositional(Graph& KB, Node* q){
     if(!inferred(s->index)){
       inferred(s->index) = true;
       for(Node *child : s->parentOf){ //all objects that involve 's'
-        const Node *clause = child->container.isNodeOfParentGraph; //check if child is a literal in a clause
+        const Node *clause = child->container.isNodeOfGraph; //check if child is a literal in a clause
         if(clause){ //yes: 's' is a literal in a clause
           CHECK(count(clause->index)>0,"");
           //          if(count(clause->index)>0){ //I think this is always true...

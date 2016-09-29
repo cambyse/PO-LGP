@@ -79,7 +79,7 @@ struct TowerProgram:ConstrainedProblem{
 void optTowers() {
   ors::KinematicWorld W;
   Graph logicState;
-  Node *touch = new Node_typed<bool>(logicState, {"touch"}, {}, true);
+  Node *touch = logicState.newNode<bool>({"touch"}, {}, true);
   Graph& state = logicState.newSubgraph({"STATE"}, {})->value;
   //-- add random objects
   uint K=10;
@@ -97,8 +97,8 @@ void optTowers() {
     s->sscCore.setRandom();
     s->sscCore.scale(rnd.uni(.1,.3), rnd.uni(.1,.3), rnd.uni(.1,.3));
 
-    new Node_typed<bool>(logicState, {s->name}, {}, new bool(true), true);
-    if(k) new Node_typed<bool>(state, {}, {touch, logicState(k+1), logicState(k+2)}, new bool(true), true);
+    logicState.newNode<bool>({s->name}, {}, new bool(true), true);
+    if(k) state.newNode<bool>({}, {touch, logicState(k+1), logicState(k+2)}, new bool(true), true);
   }
   W.shapes.last()->color[0]=1.;
   W.calc_fwdPropagateFrames();

@@ -29,14 +29,14 @@ struct Node_typed : Node {
   /// directly store pointer to value
   Node_typed(Graph& container, const T& _value)
     : Node(typeid(T), &this->value, container), value(_value) {
-    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& _value)
     : Node(typeid(T), &this->value, container, keys, parents), value(_value) {
-    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -71,7 +71,7 @@ struct Node_typed : Node {
       n->value.copy(graph());
       return n;
     }
-    return new Node_typed<T>(container, keys, parents, value);
+    return container.newNode<T>(keys, parents, value);
   }
 };
 
@@ -88,13 +88,13 @@ template<class T> const T* Node::getValue() const {
 }
 
 template<class T> Nod::Nod(const char* key, const T& x){
-  n = new Node_typed<T>(G, x);
+  n = G.newNode<T>(x);
   n->keys.append(STRING(key));
 }
 
 template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   : parents(parents){
-  n = new Node_typed<T>(G, x);
+  n = G.newNode<T>(x);
   n->keys.append(STRING(key));
 }
 
@@ -123,9 +123,12 @@ template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
   return ret;
 }
 
-template<class T> Node_typed<T> *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
+template<class T> Node_typed<T> *Graph::newNode(const StringA& keys, const NodeL& parents, const T& x){
   return new Node_typed<T>(*this, keys, parents, x);
 }
 
+template<class T> Node_typed<T> *Graph::newNode(const T& x){
+  return new Node_typed<T>(*this, x);
+}
 
 

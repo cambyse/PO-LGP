@@ -58,7 +58,7 @@ struct Type_typed : Type {
 
 template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
-  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = new Node_typed<T>(container, T()); is >>n->value; return n; }
+  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = container.newNode<T>(T()); is >>n->value; return n; }
 //  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 
@@ -121,17 +121,17 @@ inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& i
 
 #define REGISTER_TYPE(T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
 #define REGISTER_TYPE_Key(Key, T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##Key) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##Key)
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO Base> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO Base> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
 

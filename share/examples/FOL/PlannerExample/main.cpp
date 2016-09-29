@@ -48,25 +48,41 @@ void TEST(MCTS){
 void TEST(MC){
   mlr::String file=mlr::getParameter<mlr::String>("file","");
   if(file=="") file="boxes_new.g";
-  FOL_World world(FILE(file));
+  FOL_World fol(FILE(file));
 
-  PlainMC mc(world);
-  world.verbose=0;
-  world.verbFil=0;
+  PlainMC mc(fol);
+  fol.verbose=0;
+  fol.verbFil=0;
   mc.verbose=0;
+
+  Graph& dataset = fol.KB.newSubgraph({"dataset"}, {})->value;
+  for(auto* s:getSymbolsOfScope(fol.KB)) dataset.newNode<bool>(s->keys, {}, true);
+  for(auto* r:fol.KB.getNodes("DecisionRule"))   dataset.newNode<bool>(r->keys, {}, true);
 
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
     mc.reset();
     for(uint k=0;k<100;k++) mc.addRollout(100);
     mc.report();
+
+    //save all estimated returns
+    Graph &data = dataset.newSubgraph({}, {})->value;
+    data.newSubgraph({"state"}, {}, *fol.state);
+    for(uint i=0;i<mc.D.N;i++){
+      const FOL_World::Decision *d = std::dynamic_pointer_cast<const FOL_World::Decision>(mc.A(i)).get();
+      data.newNode<bool>({"action"}, d->getTuple(), true);
+      data.newNode<double>({"return"}, {}, mc.D(i).X.first());
+    }
+
     auto a = mc.getBestAction();
     cout <<"******** ACTION " <<*a <<endl;
-    world.reset_state();
-    world.transition(a);
-    if(world.is_terminal_state()) break;
-    world.make_current_state_default();
+    fol.reset_state();
+    fol.transition(a);
+    if(fol.is_terminal_state()) break;
+    fol.make_current_state_default();
   }
+
+  FILE("z.data").getOs() <<dataset <<endl;
 }
 
 //===========================================================================
@@ -150,7 +166,7 @@ void TEST(Determinism){
 //===========================================================================
 
 int main(int argn, char** argv){
-  //rnd.clockSeed();
+  rnd.clockSeed();
   //srand(rnd());
 
 //  testMCTS();

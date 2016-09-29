@@ -18,6 +18,13 @@
 
 #define DEBUG(x) //x
 
+NodeL FOL_World::Decision::getTuple() const{
+  NodeL t;
+  if(rule) t.append(rule);
+  for(uint i=0;i<substitution.N;i++) t.append(substitution.elem(i));
+  return t;
+}
+
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
     os <<"(WAIT)";
@@ -60,7 +67,7 @@ void FOL_World::init(istream& is){
   Terminate_keyword = KB["Terminate"];  CHECK(Terminate_keyword, "You need to declare the Terminate keyword");
   Quit_keyword = KB["QUIT"];            CHECK(Quit_keyword, "You need to declare the QUIT keyword");
   Wait_keyword = KB["WAIT"];            //CHECK(Wait_keyword, "You need to declare the WAIT keyword");
-  Quit_literal = new Node_typed<bool>(KB, {}, {Quit_keyword}, true);
+  Quit_literal = KB.newNode<bool>({}, {Quit_keyword}, true);
 
   Graph *params = KB.find<Graph>("FOL_World");
   if(params){
@@ -265,9 +272,9 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  if(!start_state) start_state = &KB.newSubgraph({"START_STATE"}, state->isNodeOfParentGraph->parents)->value;
+  if(!start_state) start_state = &KB.newSubgraph({"START_STATE"}, state->isNodeOfGraph->parents)->value;
   start_state->copy(*state);
-  start_state->isNodeOfParentGraph->keys(0)="START_STATE";
+  start_state->isNodeOfGraph->keys(0)="START_STATE";
   start_T_step = T_step;
   start_T_real = T_real;
   DEBUG(KB.checkConsistency();)
@@ -290,7 +297,7 @@ void FOL_World::reset_state(){
 #if 1
   setState(start_state);
 #else
-  if(!state) state = &KB.newSubgraph({"STATE"}, {start_state->isNodeOfParentGraph})->value;
+  if(!state) state = &KB.newSubgraph({"STATE"}, {start_state->isNodeOfGraph})->value;
   state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
 #endif
@@ -302,7 +309,7 @@ void FOL_World::reset_state(){
   forwardChaining_FOL(KB, KB.get<Graph>("STATE"), NULL, NoGraph, verbose-3); //, &decisionObservation);
 
   //-- check for terminal
-//  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+//  successEnd = allFactsHaveEqualsInKB(*state, *terminal);
   successEnd = getEqualFactInKB(*state, Quit_literal);
 
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
@@ -355,40 +362,40 @@ Graph* FOL_World::getState(){
 }
 
 void FOL_World::setState(Graph *s, int setT_step){
-  if(!state) state = &KB.newSubgraph({"STATE"}, {s->isNodeOfParentGraph})->value;
+  if(!state) state = &KB.newSubgraph({"STATE"}, {s->isNodeOfGraph})->value;
   state->copy(*s);
   {  //reqire the parent! NOT NICE!
-    Node *n=state->isNodeOfParentGraph;
+    Node *n=state->isNodeOfGraph;
     n->parents.scalar()->parentOf.removeValue(n);
-    n->parents.scalar() = s->isNodeOfParentGraph;
+    n->parents.scalar() = s->isNodeOfGraph;
     n->parents.scalar()->parentOf.append(n);
   }
   if(setT_step>=0) T_step = setT_step;
   DEBUG(KB.checkConsistency();)
-  CHECK(state->isNodeOfParentGraph && &state->isNodeOfParentGraph->container==&KB,"");
+  CHECK(state->isNodeOfGraph && &state->isNodeOfGraph->container==&KB,"");
 }
 
 Graph* FOL_World::createStateCopy(){
-  Graph* new_state = &KB.newSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfParentGraph->parents)->value;
+  Graph* new_state = &KB.newSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfGraph->parents)->value;
   new_state->copy(*state);
   return new_state;
 }
 
 void FOL_World::addAgent(const char* name){
-//  Node* n = new Node_typed<bool>(KB, {name}, {}, true); //already exists in kinematic part
+//  Node* n = KB.newNode<bool>({name}, {}, true); //already exists in kinematic part
   Node* n = KB[name];
-  new Node_typed<bool>(*start_state, {}, {KB["agent"], n}, true);
-  new Node_typed<bool>(*start_state, {}, {KB["free"], n}, true);
+  start_state->newNode<bool>({}, {KB["agent"], n}, true);
+  start_state->newNode<bool>({}, {KB["free"], n}, true);
 }
 
 void FOL_World::addObject(const char* name){
-//  Node* n = new Node_typed<bool>(KB, {name}, {}, true);
+//  Node* n = KB.newNode<bool>({name}, {}, true);
   Node* n = KB[name];
-  new Node_typed<bool>(*start_state, {}, {KB["object"], n}, true);
+  start_state->newNode<bool>({}, {KB["object"], n}, true);
 }
 
 void FOL_World::addFact(const StringA& symbols){
   NodeL parents;
   for(const mlr::String& s:symbols) parents.append(KB[s]);
-  new Node_typed<bool>(*start_state, {}, parents, true);
+  start_state->newNode<bool>({}, parents, true);
 }

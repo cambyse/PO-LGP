@@ -52,8 +52,8 @@ void TEST(Init){
 const Graph& rndContainer(const Graph& G){
   const Graph *g=&G;
   while(rnd.uni()<.8){
-    if(!g->isNodeOfParentGraph) break;
-    g = &g->isNodeOfParentGraph->container;
+    if(!g->isNodeOfGraph) break;
+    g = &g->isNodeOfGraph->container;
   }
   return *g;
 }
@@ -82,7 +82,7 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
+      G.newNode<bool>({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
       G.newSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
@@ -114,7 +114,7 @@ void TEST(Random){
     C.checkConsistency();
     B = A;
     B.checkConsistency();
-    delete C.isNodeOfParentGraph;
+    delete C.isNodeOfGraph;
     A.checkConsistency();
 
   }
@@ -150,7 +150,7 @@ REGISTER_TYPE(Something)
 
 void TEST(Manual){
   Graph G;
-  G.append<Something>({"hallo"}, {}, Something(3));
+  G.newNode<Something>({"hallo"}, {}, Something(3));
   cout <<G <<endl;
 }
 

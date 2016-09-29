@@ -31,10 +31,10 @@ void initRegistry(int argc, char* argv[]){
         mlr::String value;
         value <<'=' <<argv[n+1];
         registry().readNode(value, false, false, key);
-//        new Node_typed<mlr::String>(registry(), {key}, {}, new mlr::String(argv[n+1]), true);
+//        registry().newNode<mlr::String>({key}, {}, new mlr::String(argv[n+1]), true);
         n++;
       }else{
-        new Node_typed<bool>(registry(), {key}, {}, true);
+        registry().newNode<bool>({key}, {}, true);
       }
     }else{
       MLR_MSG("non-parsed cmd line argument:" <<argv[n]);
