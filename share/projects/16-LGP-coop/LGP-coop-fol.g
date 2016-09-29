@@ -1,4 +1,4 @@
-Include = '../../../share/data/keywords.g'
+Include = '../../data/keywords.g'
 Include = 'LGP-coop-kin.g'
 
 FOL_World{
