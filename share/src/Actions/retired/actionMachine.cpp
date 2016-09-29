@@ -217,7 +217,7 @@ void ActionMachine::close(){
 }
 
 void ActionMachine::parseTaskDescription(Graph& td){
-  Node *t = td.isNodeOfParentGraph;
+  Node *t = td.isNodeOfGraph;
   mlr::String type=td["type"]->get<mlr::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
@@ -332,7 +332,7 @@ void ActionMachine::waitForQuitSymbol() {
       return;
     }
     for(Node *f:quitSymbol->parentOf){
-      if(f->container.isNodeOfParentGraph && f->container.isNodeOfParentGraph->keys.N && f->container.isNodeOfParentGraph->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
+      if(f->container.isNodeOfGraph && f->container.isNodeOfGraph->keys.N && f->container.isNodeOfGraph->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
     }
     KB.deAccess();
   }

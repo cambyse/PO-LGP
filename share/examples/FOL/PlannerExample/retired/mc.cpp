@@ -96,7 +96,7 @@ void TEST(MonteCarlo){
       }
 
       //-- test the terminal state
-      if(allFactsHaveEqualsInScope(state, terminal)){
+      if(allFactsHaveEqualsInKB(state, terminal)){
         if(verbose>0) cout <<"************* TERMINAL STATE FOUND (h=" <<h <<") ************" <<endl;
         if(verbose>1){ cout <<"*** FINAL STATE = "; state.write(cout, " "); cout <<endl; }
         break;

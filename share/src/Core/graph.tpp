@@ -29,14 +29,14 @@ struct Node_typed : Node {
   /// directly store pointer to value
   Node_typed(Graph& container, const T& _value)
     : Node(typeid(T), &this->value, container), value(_value) {
-    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& _value)
     : Node(typeid(T), &this->value, container, keys, parents), value(_value) {
-    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 

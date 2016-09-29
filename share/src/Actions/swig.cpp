@@ -513,7 +513,7 @@ void ActionSwigInterface::execScript(const char* filename){
   for(Node* n:script){
     if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
-        if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
+        if(allFactsHaveEqualsInKB(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);
       }
     }else{ //interpret as set fact

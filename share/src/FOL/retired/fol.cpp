@@ -9,7 +9,7 @@ NodeL getRuleSubstitutions(Graph& facts, Node *rule, NodeL& domain, int verbose)
 
 NodeL getSubstitutions(Graph& facts, NodeL& literals, NodeL& domain, int verbose){
   CHECK(literals.N,"");
-  Graph& varScope = literals(0)->container.isNodeOfParentGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
+  Graph& varScope = literals(0)->container.isNodeOfGraph->container; //this is usually a rule (scope = subGraph in which we'll use the indexing)
 
   Node* EQ = facts["EQ"];
   NodeL vars = getSymbolsOfScope(varScope);

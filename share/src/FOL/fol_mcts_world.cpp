@@ -18,6 +18,13 @@
 
 #define DEBUG(x) //x
 
+NodeL FOL_World::Decision::getTuple() const{
+  NodeL t;
+  if(rule) t.append(rule);
+  for(uint i=0;i<substitution.N;i++) t.append(substitution.elem(i));
+  return t;
+}
+
 void FOL_World::Decision::write(ostream& os) const{
   if(waitDecision){
     os <<"(WAIT)";
@@ -265,9 +272,9 @@ bool FOL_World::is_terminal_state() const{
 }
 
 void FOL_World::make_current_state_default() {
-  if(!start_state) start_state = &KB.newSubgraph({"START_STATE"}, state->isNodeOfParentGraph->parents)->value;
+  if(!start_state) start_state = &KB.newSubgraph({"START_STATE"}, state->isNodeOfGraph->parents)->value;
   start_state->copy(*state);
-  start_state->isNodeOfParentGraph->keys(0)="START_STATE";
+  start_state->isNodeOfGraph->keys(0)="START_STATE";
   start_T_step = T_step;
   start_T_real = T_real;
   DEBUG(KB.checkConsistency();)
@@ -290,7 +297,7 @@ void FOL_World::reset_state(){
 #if 1
   setState(start_state);
 #else
-  if(!state) state = &KB.newSubgraph({"STATE"}, {start_state->isNodeOfParentGraph})->value;
+  if(!state) state = &KB.newSubgraph({"STATE"}, {start_state->isNodeOfGraph})->value;
   state->copy(*start_state);
   DEBUG(KB.checkConsistency();)
 #endif
@@ -302,7 +309,7 @@ void FOL_World::reset_state(){
   forwardChaining_FOL(KB, KB.get<Graph>("STATE"), NULL, NoGraph, verbose-3); //, &decisionObservation);
 
   //-- check for terminal
-//  successEnd = allFactsHaveEqualsInScope(*state, *terminal);
+//  successEnd = allFactsHaveEqualsInKB(*state, *terminal);
   successEnd = getEqualFactInKB(*state, Quit_literal);
 
   if(verbose>1) cout <<"****************** FOL_World: reset_state" <<endl;
@@ -355,21 +362,21 @@ Graph* FOL_World::getState(){
 }
 
 void FOL_World::setState(Graph *s, int setT_step){
-  if(!state) state = &KB.newSubgraph({"STATE"}, {s->isNodeOfParentGraph})->value;
+  if(!state) state = &KB.newSubgraph({"STATE"}, {s->isNodeOfGraph})->value;
   state->copy(*s);
   {  //reqire the parent! NOT NICE!
-    Node *n=state->isNodeOfParentGraph;
+    Node *n=state->isNodeOfGraph;
     n->parents.scalar()->parentOf.removeValue(n);
-    n->parents.scalar() = s->isNodeOfParentGraph;
+    n->parents.scalar() = s->isNodeOfGraph;
     n->parents.scalar()->parentOf.append(n);
   }
   if(setT_step>=0) T_step = setT_step;
   DEBUG(KB.checkConsistency();)
-  CHECK(state->isNodeOfParentGraph && &state->isNodeOfParentGraph->container==&KB,"");
+  CHECK(state->isNodeOfGraph && &state->isNodeOfGraph->container==&KB,"");
 }
 
 Graph* FOL_World::createStateCopy(){
-  Graph* new_state = &KB.newSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfParentGraph->parents)->value;
+  Graph* new_state = &KB.newSubgraph({STRING("STATE_"<<count++)}, state->isNodeOfGraph->parents)->value;
   new_state->copy(*state);
   return new_state;
 }

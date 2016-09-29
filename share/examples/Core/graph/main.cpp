@@ -52,8 +52,8 @@ void TEST(Init){
 const Graph& rndContainer(const Graph& G){
   const Graph *g=&G;
   while(rnd.uni()<.8){
-    if(!g->isNodeOfParentGraph) break;
-    g = &g->isNodeOfParentGraph->container;
+    if(!g->isNodeOfGraph) break;
+    g = &g->isNodeOfGraph->container;
   }
   return *g;
 }
@@ -114,7 +114,7 @@ void TEST(Random){
     C.checkConsistency();
     B = A;
     B.checkConsistency();
-    delete C.isNodeOfParentGraph;
+    delete C.isNodeOfGraph;
     A.checkConsistency();
 
   }

@@ -34,6 +34,7 @@ struct FOL_World:MCTS_Environment{
       if(decision->substitution!=substitution) return false;
       return true;
     }
+    NodeL getTuple() const;
     void write(ostream&) const;
     virtual size_t get_hash() const {
       return std::hash<int>()(id);
