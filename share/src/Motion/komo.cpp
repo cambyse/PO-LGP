@@ -492,7 +492,7 @@ Graph KOMO::getReport(bool gnuplt){
 void KOMO::checkGradients(){
   if(MP->T){
     if(!splineB.N)
-      checkJacobianCP(Convert(*MP), x, 1e-4);
+      checkJacobianCP(Convert(MP->komo_problem), x, 1e-4);
     else{
       ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
       ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
