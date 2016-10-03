@@ -8,8 +8,8 @@
 ---------------------------------------------------------------------*/
 
 
-#include<Core/util.h>
-#include<Core/array.h>
+#include <Core/util.h>
+#include <Core/array.h>
 
 #include <assert.h>
 
@@ -21,10 +21,12 @@ using namespace mlr;
 namespace mdp {
 
 
-Environment::Environment(arr start)
+Environment::Environment(arr start, uint control, uint observ)
 {
     startState = start;
     currentState = startState;
+    controlType = control;
+    obsMDP = observ;
 }
 
 //uint Environment::getStateDim()

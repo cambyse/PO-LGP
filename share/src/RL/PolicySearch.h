@@ -16,8 +16,8 @@
 #include <stdint.h>
 #include <cstring>
 
-#include<Core/util.h>
-#include<Core/array.h>
+#include <Core/util.h>
+#include <Core/array.h>
 
 #include "Environment.h"
 #include "Policy.h"
@@ -49,17 +49,24 @@ public:
 
     //Inner access
     uint getHorizon();
+    uint getNumEps();
+    Policy* getPolicy();
 
     //Specific functions
-    double rollout(const arr& theta, arr& observations, arr& actions, arr& rewards, uint numSteps);
+    double rollout(const arr &theta);
+    double just_rollout(arr& features, arr& actions, arr& rewards, const arr& theta, uint numSteps);
+    double grad_rollout(arr& gradLogRet, arr& actions, arr& rewards, const arr &theta, uint numSteps);
 
     //for implemented algorithms
-    double REINFORCE(arr& theta, arr& gradJ);
-    arr updateREINFORCE();
+    double updateREINFORCE(arr& gradJ, const arr& theta);
+    arr runREINFORCE();
 
-    double GPOMDP(arr& theta, arr& gradJ);
-    arr updateGPOMDP();
+    double updateGPOMDP(arr& gradJ, const arr& theta);
+    arr runGPOMDP();
 
+    //Modified functions
+    double updateREINFORCE_ver1(arr& gradJ, const arr& theta);
+    double updateGPOMDP_ver1(arr &gradJ, const arr &theta);
 };
 
 

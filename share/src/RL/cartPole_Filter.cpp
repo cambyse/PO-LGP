@@ -22,32 +22,74 @@ namespace mdp {
 
 cartPole_Filter::cartPole_Filter()
 {
-    perceptionHistory.clear();
-    currentEstimate.clear();
+    observationHistory.clear(); //Working with append, so clear to be sure there's nothing at the beginning.
+    currentFeature.clear();
 }
+
+
+cartPole_Filter::cartPole_Filter(arr start)
+{
+    observationHistory.clear();
+    currentFeature.clear();
+    startFeature = start;
+    currentFeature = startFeature;
+}
+
 
 cartPole_Filter::~cartPole_Filter() {}
 
-void cartPole_Filter::savePerception(const arr& perception)
+
+void cartPole_Filter::reset()
 {
-    perceptionHistory.append(~perception);
+    currentFeature = startFeature;
 }
+
+
+void cartPole_Filter::saveObservation(const arr& observation)
+{
+    observationHistory.append(~observation);
+}
+
 
 void cartPole_Filter::clearHistory()
 {
-    perceptionHistory.clear();
+    observationHistory.clear();
 }
 
-void cartPole_Filter::computeEstimate()
+
+void cartPole_Filter::computeFeature()
 {
     uint lastRow;
-    lastRow = perceptionHistory.d0 - 1;
-    currentEstimate = perceptionHistory[lastRow];
+    lastRow = observationHistory.d0 - 1;
+    currentFeature = observationHistory[lastRow];
 }
 
-arr cartPole_Filter::getObsEstimate()
+
+void cartPole_Filter::computeFeature_PO()
 {
-    return currentEstimate;
+    uint windowSize = 5;
+    uint dim0 = observationHistory.d0;
+    uint dim1 = observationHistory.d1;
+    uint startRow;
+
+    if (dim0 >= windowSize)
+    {
+        startRow = dim0 - windowSize;
+        currentFeature = observationHistory.sub(startRow, -1, 0, -1);
+    }
+    else
+    {
+        currentFeature = zeros(windowSize, dim1);
+        currentFeature.refRange(0, dim0-1) = observationHistory;
+    }
+
+    currentFeature.reshape(windowSize * dim1); //vector
+}
+
+
+arr cartPole_Filter::getFeature()
+{
+    return currentFeature;
 }
 
 

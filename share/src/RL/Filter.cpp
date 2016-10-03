@@ -22,23 +22,31 @@ namespace mdp {
 
 Filter::Filter()
 {
-    perceptionHistory.clear();
-    currentEstimate.clear();
+    observationHistory.clear();
+    currentFeature.clear();
+}
+
+Filter::Filter(arr start)
+{
+    observationHistory.clear();
+    currentFeature.clear();
+    startFeature = start;
+    currentFeature = startFeature;
 }
 
 //Filter::~Filter() {}
 
-void Filter::savePerception(const arr& perception)
+void Filter::saveObservation(const arr& observation)
 {
-    perceptionHistory.append(~perception);
+    observationHistory.append(~observation);
 }
 
-//void Filter::computeEstimate()
+//void Filter::computeFeature()
 //{
 //    currentEstimate.setZero();
 //}
 
-//arr Filter::getObsEstimate()
+//arr Filter::getFeature()
 //{
 //    return currentEstimate;
 //}

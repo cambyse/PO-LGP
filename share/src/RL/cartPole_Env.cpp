@@ -37,10 +37,12 @@ using namespace mlr;
 namespace mdp {
 
 
-cartPole_Env::cartPole_Env(arr start)
+cartPole_Env::cartPole_Env(arr start, uint control, uint observ)
 {
     startState = start;
     currentState = startState;
+    controlType = control;
+    obsMDP = observ;
 }
 
 
@@ -50,14 +52,27 @@ uint cartPole_Env::getStateDim()
 }
 
 
+uint cartPole_Env::getControlType()
+{
+    return controlType;
+}
+
+
+uint cartPole_Env::getObsType()
+{
+    return obsMDP;
+}
+
+
 void cartPole_Env::resetState()
 {
     currentState = startState;
 }
 
 
-bool cartPole_Env::transition(const arr& action, arr& perception, double& reward)
+bool cartPole_Env::transition(arr& observation, double& reward, const arr& action)
 {
+    observation.clear(); //Using function "cat" to obtain the observation. Clear is needed.
     bool terminal = false;
     double x, x_dot, theta, theta_dot;
     double force, costheta, sintheta;
@@ -66,7 +81,17 @@ bool cartPole_Env::transition(const arr& action, arr& perception, double& reward
     theta     = currentState(2);
     theta_dot = currentState(3);
 
-    force = (action(0) > 0) ? FORCE_MAG : -FORCE_MAG;
+    //Continuous action, but deterministic (force is just min or max) -> bag bag control
+    //Implement also stochastic control (don't forget clipping - force within the interval)
+    if (controlType == 1)
+    {
+        force = action(0);
+        force = MIN(force, FORCE_MAG);
+        force = MAX(force, -FORCE_MAG);
+    }
+    else if (controlType == 0) force = (action(0) > 0) ? FORCE_MAG : -FORCE_MAG;
+    else cout<<"This control type isn't defined in this implementation."<<endl;
+
     costheta = cos(theta);
     sintheta = sin(theta);
 
@@ -83,7 +108,12 @@ bool cartPole_Env::transition(const arr& action, arr& perception, double& reward
     currentState(2)  = theta     + TAU * theta_dot + 0.001 * mlr::rnd.gauss();
     currentState(3)  = theta_dot + TAU * thetaacc; // + 0.02 * mlr::rnd.gauss();
 
-    perception = currentState;
+    if (obsMDP == 1) observation = currentState;
+    else
+    {
+        arr aux = ARR(currentState(3));
+        observation = cat(observation, action, aux);
+    }
 
     if (currentState(0) < -2.4 || currentState(0) > 2.4  || currentState(2) < -twelve_degrees || currentState(2) > twelve_degrees)
     {
