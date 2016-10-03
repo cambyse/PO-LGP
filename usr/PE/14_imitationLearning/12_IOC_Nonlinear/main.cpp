@@ -4,9 +4,9 @@
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
-//#include <Motion/taskMap_proxy.h>
-//#include <Motion/taskMap_constrained.h>
-//#include <Motion/taskMap_transition.h>
+//
+//
+//
 #include <Optim/optimization.h>
 #include <Ors/ors_swift.h>
 #include "../src/motion_factory.h"
@@ -34,10 +34,9 @@ void run() {
 //  param = 0.*param + 1e0;
   cout << "Parameter initialization: " << param << endl;
 
-  IKMO ikmo(trainScenes,weights,param.d0);
+  IKMO ikmo(trainScenes,weights,param.d0,mf->costScale);
   checkAllGradients(ikmo,param,1e-2);
   optConstrained(param,NoArr,ikmo,OPT(verbose=verbose,stopTolerance=1e-20));
-  ikmo.costReport(param);
 
   cout << param << endl;
   mf->execMotion(ikmo,trainScenes(0),param,visTest);

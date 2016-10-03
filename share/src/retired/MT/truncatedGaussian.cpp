@@ -16,8 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
 #include <Core/array.h>
 #include <Core/util.h>
 

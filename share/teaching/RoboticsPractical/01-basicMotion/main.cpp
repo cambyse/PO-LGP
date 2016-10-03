@@ -1,25 +1,27 @@
 #include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/orsviewer.h>
+#include <RosCom/baxter.h>
 
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-
   rosCheckInit("minimalPositionControl");
 
   {
+
+    Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+
     TaskControllerModule tcm("baxter");
     GamepadInterface gamepad;
-//    OrsViewer view;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
-    SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub1("/marc_rt_controller/jointState", "ctrl_obs");
-    PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pub1("/marc_rt_controller/jointReference", "ctrl_ref");
-    SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       sub2("/robot_pose_ekf/odom_combined", "pr2_odom");
+    SendPositionCommandsToBaxter spctb;
+    Subscriber<sensor_msgs::JointState> sub("/robot/joint_states", jointState);
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
-//    tcm.verbose = true;
+    //    tcm.verbose = true;
 
     threadOpenModules(true);
 
@@ -28,20 +30,23 @@ int main(int argc, char** argv){
 
     //-- create three tasks
     CtrlTask position("endeffL", //name
-                  new DefaultTaskMap(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
+                  new TaskMap_Default(posTMT, tcm.modelWorld.get()(), "endeffL", NoVector, "base_footprint"), //map
                   1., .8, 1., 1.); //time-scale, damping-ratio, maxVel, maxAcc
     position.map.phi(position.y, NoArr, tcm.modelWorld.get()()); //get the current value
     position.y_ref = position.y + ARR(.3, 0., 0.);; //set a target
 
     CtrlTask align1("align",
-                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "endeffR", Vector_z, NULL, Vector_x),
+                    new TaskMap_Default(vecAlignTMT, tcm.modelWorld.get()(), "elbowR", Vector_z, NULL, Vector_y),
                     1., 1., 1., 1.);
+    align1.y_ref = {-1.};
+
     CtrlTask align2("align",
-                    new DefaultTaskMap(vecAlignTMT, tcm.modelWorld.get()(), "endeffR", Vector_y, NULL, Vector_x),
+                    new TaskMap_Default(vecAlignTMT, tcm.modelWorld.get()(), "elbowL", Vector_z, "elbowR", Vector_z),
                     1., 1., 1., 1.);
+    align2.y_ref = {-1.};
 
     //-- tell the controller to take care of them
-    tcm.ctrlTasks.set() = { &position, &align1, &align2 };
+    tcm.ctrlTasks.set() = { /*&position,*/ /*&align1,*/ &align2 };
 
 
     mlr::wait(5.);

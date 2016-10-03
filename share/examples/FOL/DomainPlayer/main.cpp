@@ -11,7 +11,7 @@ void TEST(FOL_World){
 
   for(uint k=0;k<10;k++){
     auto res=world.transition_randomly();
-    cout <<"RND TRANSITION: obs=" <<*res.first <<" r=" <<res.second <<endl;
+    cout <<"RND TRANSITION: obs=" <<*res.observation <<" r=" <<res.reward <<endl;
   }
 
   world.get_actions();
@@ -26,7 +26,7 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-  const char *file = "../PlannerExample/toolbox.kvg";
+  const char *file = "../PlannerExample/boxes_new.g";
   if(mlr::argc>1) file = mlr::argv[1];
 
   FOL_World world(FILE(file));
@@ -53,7 +53,7 @@ void TEST(PlayFOL_World){
       auto &a = actions[int(cmd-'0')];
       cout <<"executing decision " <<*a <<endl;
       auto res=world.transition(a);
-      cout <<"->  result: obs=" <<*res.first <<" reward=" <<res.second <<endl;
+      cout <<"->  result: obs=" <<*res.observation <<" reward=" <<res.reward <<endl;
     }else switch(cmd){
       case 'q': go=false; break;
       case 'r': world.reset_state(); break;

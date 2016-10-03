@@ -1,6 +1,8 @@
 #define HAVE_CSTDDEF
 #include <coin/IpTNLP.hpp>
 
+#include <Optim/opt-constrained.h>
+
 using namespace Ipopt;
 
 class MyNLP : public TNLP

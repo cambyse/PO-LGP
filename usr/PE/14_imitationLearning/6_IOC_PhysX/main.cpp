@@ -53,7 +53,7 @@ struct IOC_DemoCost {
       }
       if(idx.contains(i)) {
         JgP.delRows(j);
-        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+        ((RowShifted*)JgP.aux)->rowShift.remove(j);
         j--;
       }
       j++;
@@ -315,14 +315,14 @@ void simpleMotion(){
   arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
   cout << refGoal1 << refGoal2 << endl;
   TaskCost *c;
-  c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e5);
-  c = MP.addTask("orientation_right_hand_1",new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 0., 1.)));
+  c = MP.addTask("orientation_right_hand_1",new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 0., 1.)));
   c->setCostSpecs(130,130,ARR(0.,1.,0.),1e1);
-  c = MP.addTask("position_right_hand_2",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(140,140,refGoal2,1e4);
 
-  c = MP.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
+  c = MP.addTask("qItselfTMT", new TaskMap_Default(qItselfTMT,world));
   c->setCostSpecs(MP.T, MP.T, zeros(MP.world.getJointStateDimension(),1), 1e3);
   c->map.order=1;
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.0));
@@ -376,17 +376,17 @@ void simpleMotion(){
   MotionProblem MP2(world2,true);
   MP2.loadTransitionParameters();
   MP2.makeContactsAttractive=false;
-  TaskCost *c1 = MP2.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  TaskCost *c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   c1->setCostSpecs(138,138,xPosTraj[138],1.);
 
-  TaskCost *c2 = MP2.addTask("position_right_hand_2",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  TaskCost *c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   c2->setCostSpecs(200,200,xPosTraj[200],1.);
 
-  TaskCost *c6 = MP2.addTask("vec_right_hand_1",new DefaultTaskMap(vecTMT,world2,"endeff", ors::Vector(0., 0., 1.)));
+  TaskCost *c6 = MP2.addTask("vec_right_hand_1",new TaskMap_Default(vecTMT,world2,"endeff", ors::Vector(0., 0., 1.)));
   c6->setCostSpecs(138,138,xVecTraj[138],1.);
 
 
-  TaskCost *c7 = MP2.addTask("vec_right_hand_2",new DefaultTaskMap(vecTMT,world2,"endeff", ors::Vector(0., 0., 1.)));
+  TaskCost *c7 = MP2.addTask("vec_right_hand_2",new TaskMap_Default(vecTMT,world2,"endeff", ors::Vector(0., 0., 1.)));
   c7->setCostSpecs(200,200,xVecTraj[200],1.);
 
 //  TaskMap *tm_contact = new PairCollisionConstraint(MP2.world,"box","endeff",0.01);

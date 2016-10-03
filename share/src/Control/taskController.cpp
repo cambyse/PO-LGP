@@ -15,15 +15,15 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
 #include "taskController.h"
 #include <Ors/ors_swift.h>
 #include <Motion/motion.h>
+#include <Motion/taskMaps.h>
 
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map)
-  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(1.), maxAcc(10.), f_alpha(0.), f_gamma(0.),
+  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(0.), maxAcc(0.), f_alpha(0.), f_gamma(0.),
     flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
 }
 
@@ -33,22 +33,24 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
-CtrlTask::CtrlTask(const char* name, TaskMap& map, Graph& params)
-  : map(map), name(name), active(true), prec(ARR(100.)), maxVel(1.), maxAcc(10.), f_alpha(0.), f_gamma(0.),
+CtrlTask::CtrlTask(const char* name, TaskMap& map, const Graph& params)
+  : map(map), name(name), active(true), prec(ARR(100.)), maxVel(0.), maxAcc(0.), f_alpha(0.), f_gamma(0.),
     flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
+  if(!params["PD"]) setGainsAsNatural(3., .7);
+  set(params);
+}
+
+void CtrlTask::set(const Graph& params){
   Node *it;
   if((it=params["PD"])){
     arr pd=it->get<arr>();
     setGainsAsNatural(pd(0), pd(1));
     maxVel = pd(2);
     maxAcc = pd(3);
-  } else {
-    setGainsAsNatural(3., .7);
   }
   if((it=params["prec"])) prec = it->get<arr>();
   if((it=params["target"])) y_ref = it->get<arr>();
 }
-
 
 void CtrlTask::setTarget(const arr& yref, const arr& vref){
   y_ref = yref;
@@ -117,8 +119,10 @@ arr CtrlTask::getC(){
 }
 
 arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
-  makeGainsMatrices(Kp, Kd, y.N);
-  arr a = Kp*(get_y_ref(y)-y) + Kd*(get_ydot_ref(ydot)-ydot);
+  arr Kp_y = Kp;
+  arr Kd_y = Kd;
+  makeGainsMatrices(Kp_y, Kd_y, y.N);
+  arr a = Kp_y*(get_y_ref(y)-y) + Kd_y*(get_ydot_ref(ydot)-ydot);
 
   //check vel/acc limits
   double accNorm = length(a);
@@ -136,7 +140,12 @@ void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y
   Kd_y = Kd;
   makeGainsMatrices(Kp_y, Kd_y, y.N);
 
-  a0_y = Kp_y*get_y_ref(y) + Kd_y*get_ydot_ref(ydot);
+  arr y_delta = get_y_ref(y) - y;
+  double y_delta_length = length(y_delta);
+  if(maxVel && y_delta_length>maxVel)
+    y_delta *= maxVel/y_delta_length;
+
+  a0_y = Kp_y*(y+y_delta) + Kd_y*get_ydot_ref(ydot);
   arr a = a0_y - Kp_y*y - Kd_y*ydot; //linear law
   double accNorm = length(a);
 
@@ -160,7 +169,7 @@ void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y
 
 void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
   //-- get necessary Jacobians
-  DefaultTaskMap *m = dynamic_cast<DefaultTaskMap*>(&map);
+  TaskMap_Default *m = dynamic_cast<TaskMap_Default*>(&map);
   CHECK(m,"this only works for the default position task map");
   CHECK(m->type==posTMT,"this only works for the default positioni task map");
   CHECK(m->i>=0,"this only works for the default position task map");
@@ -176,6 +185,12 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
   f_des = f_ref;
   J_ft_inv = inverse_SymPosDef(J_ft*~J_ft)*J_ft;
   K_I = f_alpha*~J;
+}
+
+bool CtrlTask::isConverged(double tolerance){
+  return (y.N && y.N==y_ref.N && v.N==v_ref.N
+          && maxDiff(y, y_ref)<tolerance
+          && maxDiff(v, v_ref)<tolerance);
 }
 
 void CtrlTask::reportState(ostream& os){
@@ -245,10 +260,10 @@ CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double d
 
 CtrlTask* TaskController::addPDTask(const char* name,
                                          double decayTime, double dampingRatio,
-                                         DefaultTaskMapType type,
+                                         TaskMap_DefaultType type,
                                          const char* iShapeName, const ors::Vector& ivec,
                                          const char* jShapeName, const ors::Vector& jvec){
-  return tasks.append(new CtrlTask(name, new DefaultTaskMap(type, world, iShapeName, ivec, jShapeName, jvec),
+  return tasks.append(new CtrlTask(name, new TaskMap_Default(type, world, iShapeName, ivec, jShapeName, jvec),
                                    decayTime, dampingRatio, 1., 1.));
 }
 
@@ -429,7 +444,7 @@ void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, doubl
   uint nForceTasks=0;
   for(CtrlTask* law : this->tasks) if(law->active && law->f_ref.N){
     nForceTasks++;
-    DefaultTaskMap& map = dynamic_cast<DefaultTaskMap&>(law->map);
+    TaskMap_Default& map = dynamic_cast<TaskMap_Default&>(law->map);
     ors::Body* body = world.shapes(map.i)->body;
     ors::Vector vec = world.shapes(map.i)->rel.pos;
     ors::Shape* lFtSensor = world.getShapeByName("l_ft_sensor");

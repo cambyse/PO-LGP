@@ -67,7 +67,7 @@ void runMonteCarlo(Graph& G){
         }
 
         //-- append it to store the decision
-        actionSequence.append({d.first->keys(1)}, cat({papSymbol}, d.second), new bool(true), true);
+        actionSequence.newNode<bool>({d.first->keys(1)}, cat({papSymbol}, d.second), true);
       }
     }
 

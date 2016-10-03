@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "opt-constrained.h"
 #include "opt-newton.h"
@@ -65,29 +61,29 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
   //precompute I_lambda_x
   boolA I_lambda_x(phi_x.N);
   if(phi_x.N) I_lambda_x = false;
-  if(mu)       for(uint i=0;i<phi_x.N;i++) if(tt_x(i)==ineqTT) I_lambda_x(i) = (phi_x(i)>0. || (lambda.N && lambda(i)>0.));
+  if(mu)       for(uint i=0;i<phi_x.N;i++) if(tt_x.p[i]==ineqTT) I_lambda_x.p[i] = (phi_x.p[i]>0. || (lambda.N && lambda.p[i]>0.));
 
   double L=0.; //L value
   for(uint i=0;i<phi_x.N;i++){
-    if(            tt_x(i)==fTT                    ) L += phi_x(i);                // direct cost term
-    if(            tt_x(i)==sumOfSqrTT             ) L += mlr::sqr(phi_x(i));       // sumOfSqr term
-    if(muLB     && tt_x(i)==ineqTT                 ){ if(phi_x(i)>0.) return NAN;  L -= muLB * ::log(-phi_x(i)); } //log barrier, check feasibility
-    if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) L += mu * mlr::sqr(phi_x(i));  //g-penalty
-    if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) L += lambda(i) * phi_x(i);    //g-lagrange terms
-    if(nu       && tt_x(i)==eqTT                   ) L += nu * mlr::sqr(phi_x(i));  //h-penalty
-    if(lambda.N && tt_x(i)==eqTT                   ) L += lambda(i) * phi_x(i);    //h-lagrange terms
+    if(            tt_x.p[i]==fTT                    ) L += phi_x.p[i];                // direct cost term
+    if(            tt_x.p[i]==sumOfSqrTT             ) L += mlr::sqr(phi_x.p[i]);       // sumOfSqr term
+    if(muLB     && tt_x.p[i]==ineqTT                 ){ if(phi_x.p[i]>0.) return NAN;  L -= muLB * ::log(-phi_x.p[i]); } //log barrier, check feasibility
+    if(mu       && tt_x.p[i]==ineqTT && I_lambda_x.p[i]) L += mu * mlr::sqr(phi_x.p[i]);  //g-penalty
+    if(lambda.N && tt_x.p[i]==ineqTT && lambda.p[i]>0. ) L += lambda.p[i] * phi_x.p[i];    //g-lagrange terms
+    if(nu       && tt_x.p[i]==eqTT                   ) L += nu * mlr::sqr(phi_x.p[i]);  //h-penalty
+    if(lambda.N && tt_x.p[i]==eqTT                   ) L += lambda.p[i] * phi_x.p[i];    //h-lagrange terms
   }
 
   if(&dL){ //L gradient
     arr coeff=zeros(phi_x.N);
     for(uint i=0;i<phi_x.N;i++){
-      if(            tt_x(i)==fTT                    ) coeff(i) += 1.;              // direct cost term
-      if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.* phi_x(i);    // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) -= (muLB/phi_x(i)); //log barrier, check feasibility
-      if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu*phi_x(i);  //g-penalty
-      if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) coeff(i) += lambda(i);       //g-lagrange terms
-      if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu*phi_x(i);  //h-penalty
-      if(lambda.N && tt_x(i)==eqTT                   ) coeff(i) += lambda(i);       //h-lagrange terms
+      if(            tt_x.p[i]==fTT                    ) coeff.p[i] += 1.;              // direct cost term
+      if(            tt_x.p[i]==sumOfSqrTT             ) coeff.p[i] += 2.* phi_x.p[i];    // sumOfSqr terms
+      if(muLB     && tt_x.p[i]==ineqTT                 ) coeff.p[i] -= (muLB/phi_x.p[i]); //log barrier, check feasibility
+      if(mu       && tt_x.p[i]==ineqTT && I_lambda_x.p[i]) coeff.p[i] += 2.*mu*phi_x.p[i];  //g-penalty
+      if(lambda.N && tt_x.p[i]==ineqTT && lambda.p[i]>0. ) coeff.p[i] += lambda.p[i];       //g-lagrange terms
+      if(nu       && tt_x.p[i]==eqTT                   ) coeff.p[i] += 2.*nu*phi_x.p[i];  //h-penalty
+      if(lambda.N && tt_x.p[i]==eqTT                   ) coeff.p[i] += lambda.p[i];       //h-lagrange terms
     }
     dL = comp_At_x(J_x, coeff);
     dL.reshape(x.N);
@@ -97,15 +93,20 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
     arr coeff=zeros(phi_x.N);
     int fterm=-1;
     for(uint i=0;i<phi_x.N;i++){
-      if(            tt_x(i)==fTT){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
-      if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.;      // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/mlr::sqr(phi_x(i)));  //log barrier, check feasibility
-      if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
-      if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu;   //h-penalty
+      if(            tt_x.p[i]==fTT){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
+      if(            tt_x.p[i]==sumOfSqrTT             ) coeff.p[i] += 2.;      // sumOfSqr terms
+      if(muLB     && tt_x.p[i]==ineqTT                 ) coeff.p[i] += (muLB/mlr::sqr(phi_x.p[i]));  //log barrier, check feasibility
+      if(mu       && tt_x.p[i]==ineqTT && I_lambda_x.p[i]) coeff.p[i] += 2.*mu;   //g-penalty
+      if(nu       && tt_x.p[i]==eqTT                   ) coeff.p[i] += 2.*nu;   //h-penalty
     }
     arr tmp = J_x;
-    for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff(i));
+    for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff.p[i]);
+#if 1
     HL = comp_At_A(tmp); //Gauss-Newton type!
+#else
+    arr tmpt = comp_At(tmp);
+    HL = comp_A_At(tmpt); //Gauss-Newton type!
+#endif
 
     if(fterm!=-1){ //For f-terms, the Hessian must be given explicitly, and is not \propto J^T J
       HL += H_x;
@@ -161,10 +162,10 @@ void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize
   if(anyTimeVariant){
     //collect gradients of active constraints
     arr A;
-    RowShiftedPackedMatrix *Aaux, *Jaux;
-    if(J_x.special==arr::RowShiftedPackedMatrixST){
-      Aaux = auxRowShifted(A, 0, J_x.d1, x.N);
-      Jaux = &castRowShiftedPackedMatrix(J_x);
+    RowShifted *Aaux=NULL, *Jaux=NULL;
+    if(isRowShifted(J_x)){
+      Aaux = makeRowShifted(A, 0, J_x.d1, x.N);
+      Jaux = castRowShifted(J_x);
     }
     //append rows of J_x to A if constraint is active
     for(uint i=0;i<lambda.N;i++){
@@ -172,15 +173,15 @@ void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize
           (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ){
         A.append(J_x[i]);
         A.reshape(A.N/J_x.d1,J_x.d1);
-        if(J_x.special==arr::RowShiftedPackedMatrixST)
+        if(isRowShifted(J_x))
           Aaux->rowShift.append(Jaux->rowShift(i));
       }
     }
     if(A.d0>0){
       arr tmp = comp_A_At(A);
       addDiag(tmp, 1e-6);
-      //    if(J_x.special==arr::RowShiftedPackedMatrixST){
-      //      CHECK_EQ(castRowShiftedPackedMatrix(tmp).symmetric,true,"");
+      //    if(isRowShifted(J_x)){
+      //      CHECK_EQ(castRowShifted(tmp)->symmetric, true, "");
       //      for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
       //    }else{
       //      for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;

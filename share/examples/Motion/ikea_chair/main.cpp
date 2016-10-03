@@ -75,14 +75,14 @@ cout <<"DIM =" <<G.getJointStateDimension();
 finalpos(0) -= 0.2 * i;
   Task *c;
 
-  c = MP2.addTask("transition",	new TransitionTaskMap(G));
+  c = MP2.addTask("transition",	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
- c = MP2.addTask("position", new DefaultTaskMap(posTMT, G, targets(current), ors::Vector(0, 0, 0)));
+ c = MP2.addTask("position", new TaskMap_Default(posTMT, G, targets(current), ors::Vector(0, 0, 0)));
  c->setCostSpecs(MP2.T, MP2.T, finalpos, 1e3);
 
- //c = MP2.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(current), ors::Vector(0, 0, 0)));
+ //c = MP2.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(current), ors::Vector(0, 0, 0)));
  //c->setCostSpecs(MP2.T, MP2.T, conv_quat2arr(G.getBodyByName("reference")->X.rot), 1e2);
 
 
@@ -93,11 +93,11 @@ finalpos(0) -= 0.2 * i;
 ors::Vector orient;  orient.set(0, 0, 1) ;
 if (current<5) orient.set(0,1,0);
 
-//  c = MP2.addTask("upAlign", new DefaultTaskMap(vecAlignTMT, G, targets(current), ors::Vector(1, 0, 0),"reference", orient ,NoArr));
+//  c = MP2.addTask("upAlign", new TaskMap_Default(vecAlignTMT, G, targets(current), ors::Vector(1, 0, 0),"reference", orient ,NoArr));
  
 //if (current<5) c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
  // c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
-  //c = MP2.addTask("orientation", new DefaultTaskMap(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
+  //c = MP2.addTask("orientation", new TaskMap_Default(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
   //c->setCostSpecs(MP2.T, MP2.T, {0.,0.,1.}, 1e3);
 /*
   c = MP2.addTask("q_vel", new TaskMap_qItself());
@@ -105,7 +105,7 @@ if (current<5) orient.set(0,1,0);
   c->setCostSpecs(MP2.T, MP2.T, NoArr, 1e1);
 */
  //   c = MP2.addTask("collision",
- //                  new DefaultTaskMap(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
+ //                  new TaskMap_Default(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
  //   c->setCostSpecs(0, MP2.T, {0.}, 1e-0);
  
 cout << "TEST\n";
@@ -194,25 +194,25 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
 
 
   Task *c;
-  c = MP.addTask("transition", 	new TransitionTaskMap(G));
+  c = MP.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
   double shift; if (i>3) shift=0; else shift =  -0.18;
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,shift)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), ors::Vector(0, 0,shift)));
   c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
- // c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+ // c = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0}, .04));
  // c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   G.getBodyByName("reference")->X.rot.set(0,0,0,1);
   if (i>3) G.getBodyByName("reference")->X.rot.set(0,0.7,0.7,0);
 
-  c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
+  c = MP.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getBodyByName("chair_sitting")->X.rot*G.getBodyByName("reference")->X.rot), 1e3);
 //
   //initialize trajectory
@@ -236,14 +236,14 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   MP.x0 = x[MP.T-1];
 }
 /*
-  c = MP.addTask("position", new DefaultTaskMap(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
   c->map.order=1; //make this a velocity variable!
   c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
-  c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+  c = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0}, .04));
   c->setCostSpecs(0, MP.T, NoArr, 1e-0);
 
   //initialize trajectory
@@ -335,24 +335,24 @@ for (uint i=0;i<5;i++)  {
          cout << "POS = "<< finalpos<< endl;
 
       Task *c;
-      c = MP.addTask("transition", 	new TransitionTaskMap(G));
+      c = MP.addTask("transition", 	new TaskMap_Transition(G));
       c->map.order=2; //make this an acceleration task!
       c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
-      c = MP.addTask("position", new DefaultTaskMap(posTMT, G, targets(i), ors::Vector(0, 0,0)));
+      c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), ors::Vector(0, 0,0)));
       c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);
 
       c = MP.addTask("q_vel", new TaskMap_qItself());
       c->map.order=1; //make this a velocity variable!
       c->setCostSpecs(MP.T, MP.T, NoArr, 1e1);
 
-      //c = MP.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .04));
+      //c = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0}, .04));
       //c->setCostSpecs(0, MP.T, NoArr, 1e-2);
 
      orientation.set(0,0,0,1);
       if (i>3) orientation.set(0,0.7,0.7,0);
 
-      c = MP.addTask("orientation", new DefaultTaskMap(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
+      c = MP.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
       c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
     //
       //initialize trajectory

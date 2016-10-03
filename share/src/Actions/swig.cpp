@@ -6,8 +6,9 @@
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/spinner.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/roscom.h>
 #include <RosCom/serviceRAP.h>
 #include <Gui/opengl.h>
 #include <csignal>
@@ -31,7 +32,7 @@ struct SwigSystem {
   ACCESSname(mlr::String, state)
   ACCESSname(ors::KinematicWorld, modelWorld)
 #ifdef MLR_ROS
-  ACCESSname(AlvarMarkers, ar_pose_markers)
+  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
 #endif
   ACCESSname(arr, pr2_odom)
@@ -87,7 +88,7 @@ struct SwigSystem {
 #ifdef MLR_ROS
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-      new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&)ar_pose_markers);
+      new Subscriber<ar::AlvarMarkers>("/ar_pose_marker", (Access_typed<ar::AlvarMarkers>&)ar_pose_markers);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
       new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
 
@@ -485,9 +486,9 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 #else
   S->RM.writeAccess();
 
-  Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
+  Item *symbol = S->RM().newNode<bool>(symbolName.c_str(), NULL, false);
   
-  Graph& td = S->RM().appendSubgraph({"Task"}, {symbol})->value;
+  Graph& td = S->RM().newSubgraph({"Task"}, {symbol})->value;
   td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
@@ -512,7 +513,7 @@ void ActionSwigInterface::execScript(const char* filename){
   for(Node* n:script){
     if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
-        if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
+        if(allFactsHaveEqualsInKB(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);
       }
     }else{ //interpret as set fact

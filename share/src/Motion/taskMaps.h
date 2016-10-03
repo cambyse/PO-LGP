@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #pragma once
 
@@ -22,67 +18,10 @@
 
 #include "taskMap_qItself.h"
 #include "taskMap_GJK.h"
+#include "taskMap_transition.h"
+#include "taskMap_default.h"
+#include "taskMap_qLimits.h"
 
-//===========================================================================
-
-/// defines a transition cost vector, which is q.N-dimensional and captures
-/// accelerations or velocities over consecutive time steps
-struct TransitionTaskMap:TaskMap {
-  double velCoeff, accCoeff;  ///< coefficients to blend between velocity and acceleration penalization
-  arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
-  TransitionTaskMap(const ors::KinematicWorld& G);
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
-};
-
-//===========================================================================
-
-enum DefaultTaskMapType {
-  noTMT,      ///< non-initialization
-  posTMT,     ///< 3D position of reference
-  vecTMT,     ///< 3D vec (orientation)
-  quatTMT,    ///< 4D quaterion
-  posDiffTMT, ///< the difference of two positions (NOT the relative position)
-  vecDiffTMT, ///< the difference of two vectors (NOT the relative position)
-  quatDiffTMT,///< the difference of 2 quaternions (NOT the relative quaternion)
-  vecAlignTMT,///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
-  gazeAtTMT,  ///< 2D orthogonality measure of object relative to camera plane
-  pos1DTMT
-};
-
-struct DefaultTaskMap:TaskMap {
-  DefaultTaskMapType type;
-  int i, j;               ///< which shapes does it refer to?
-  ors::Vector ivec, jvec; ///< additional position or vector
-  intA referenceIds; ///< the shapes it refers to DEPENDENT on time
-
-  DefaultTaskMap(DefaultTaskMapType type,
-                 int iShape=-1, const ors::Vector& ivec=NoVector,
-                 int jShape=-1, const ors::Vector& jvec=NoVector);
-
-  DefaultTaskMap(DefaultTaskMapType type, const ors::KinematicWorld& G,
-                 const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                 const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
-
-  DefaultTaskMap(const Graph &parameters, const ors::KinematicWorld& G);
-  DefaultTaskMap(const Node *parameters, const ors::KinematicWorld& G);
-
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G);
-};
-
-//===========================================================================
-
-
-//===========================================================================
-
-struct TaskMap_qLimits:TaskMap {
-  arr limits;
-  TaskMap_qLimits(const arr& _limits=NoArr){ if(&_limits) limits=_limits; } ///< if no limits are provided, they are taken from G's joints' attributes on the first call of phi
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
-};
 
 //===========================================================================
 
@@ -100,7 +39,7 @@ enum PTMtype {
 //===========================================================================
 
 /// Proxy task variable
-struct ProxyTaskMap:TaskMap {
+struct TaskMap_Proxy:TaskMap {
   /// @name data fields
   PTMtype type;
   uintA shapes,shapes2;
@@ -108,12 +47,12 @@ struct ProxyTaskMap:TaskMap {
   bool useCenterDist;
   bool useDistNotCost;
 
-  ProxyTaskMap(PTMtype _type,
+  TaskMap_Proxy(PTMtype _type,
                uintA _shapes,
                double _margin=.02,
                bool _useCenterDist=false,
                bool _useDistNotCost=false);
-  virtual ~ProxyTaskMap() {}
+  virtual ~TaskMap_Proxy() {}
   
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G);
@@ -126,13 +65,14 @@ struct CollisionConstraint:TaskMap {
   CollisionConstraint(double _margin=.1):margin(_margin){}
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("CollisionConstraint"); }
 };
 
 
 //===========================================================================
 
 struct ProxyConstraint:TaskMap {
-  ProxyTaskMap proxyCosts;
+  TaskMap_Proxy proxyCosts;
   ProxyConstraint(PTMtype _type,
                   uintA _shapes,
                   double _margin=.02,
@@ -147,9 +87,10 @@ struct ProxyConstraint:TaskMap {
 struct LimitsConstraint:TaskMap {
   double margin;
   arr limits;
-  LimitsConstraint():margin(.05){}
+  LimitsConstraint(double _margin=.05):margin(_margin){}
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=1);
   virtual uint dim_phi(const ors::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("LimitsConstraint"); }
 };
 
 //===========================================================================
@@ -206,7 +147,7 @@ struct PointEqualityConstraint:TaskMap {
   PointEqualityConstraint(const ors::KinematicWorld &G,
                           const char* iShapeName=NULL, const ors::Vector& _ivec=NoVector,
                           const char* jShapeName=NULL, const ors::Vector& _jvec=NoVector){
-    DefaultTaskMap dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
+    TaskMap_Default dummy(posTMT, G, iShapeName, _ivec, jShapeName, _jvec); //is deleted in a sec..
     i=dummy.i;
     j=dummy.j;
     ivec=dummy.ivec;

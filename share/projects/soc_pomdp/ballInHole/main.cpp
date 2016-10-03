@@ -148,10 +148,10 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
   //-- setup the motion problem
   Task *pos = P.addTask("position",
-                            new DefaultTaskMap(posTMT, world, "peg", NoVector, "target", NoVector));
+                            new TaskMap_Default(posTMT, world, "peg", NoVector, "target", NoVector));
   pos->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
-  Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "peg", NoVector));
+  Task *vel = P.addTask("position_vel", new TaskMap_Default(posTMT, world, "peg", NoVector));
   vel->map.order=1;
   vel->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
@@ -210,7 +210,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::K
   //position PD task
   CtrlTask *pd_y=
       MC.addPDTask("position", .1, .8,
-                   new DefaultTaskMap(posTMT, world, "endeff", NoVector, "target"));
+                   new TaskMap_Default(posTMT, world, "endeff", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task

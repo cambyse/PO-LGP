@@ -176,7 +176,7 @@ void KeyFramer::computeVar(const String &type, uint wlen, bool force) {
   for(uint i = 0; i < x.d0; i++) {
     for(uint fi = ff; fi < ft; fi++) {
       uint wi = fi - ff;
-      win.referToSub(x[i], wi, wi + wlen - 1);
+      win.referToRange(x[i], wi, wi + wlen - 1);
       m = sum(win, 0) / (double)wlen;
       m = ~repmat(m, 1, wlen);
       y(i, fi) = sumOfSqr(win - m);
@@ -2917,7 +2917,7 @@ void KeyFramer::EM_z_with_c(Graph &kvg, const String &subj, const String &obj) {
   int ind_subj, ind_obj;
   ind_subj = g4d().id().subjects().findValue(subj);
   ind_obj = g4d().id().objects().findValue(obj);
-  kvg.get<arr>("vit").subDim(ind_subj, ind_obj)() = vit;
+  kvg.get<arr>("vit").refDim(ind_subj, ind_obj)() = vit;
 
   Graph *hmm, *plot;
   
@@ -4152,7 +4152,7 @@ void KeyFramer::load_ann(const String &dir) {
           for(Node *lock: pair->graph()) {
             from = (uint)lock->graph()->get<double>("from");
             to = (uint)lock->graph()->get<double>("to");
-            ann_ref.subRef(from, to) = 1;
+            ann_ref.refRange(from, to) = 1;
           }
         }
       }

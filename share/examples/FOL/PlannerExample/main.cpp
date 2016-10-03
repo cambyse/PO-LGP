@@ -46,37 +46,58 @@ void TEST(MCTS){
 //===========================================================================
 
 void TEST(MC){
-  FOL_World world(FILE("boxes_new.g"));
-  PlainMC mc(world);
-  world.verbose=0;
-  world.verbFil=0;
+  mlr::String file=mlr::getParameter<mlr::String>("file","");
+  if(file=="") file="boxes_new.g";
+  FOL_World fol(FILE(file));
+
+  PlainMC mc(fol);
+  fol.verbose=0;
+  fol.verbFil=0;
   mc.verbose=0;
+
+  Graph& dataset = fol.KB.newSubgraph({"dataset"}, {})->value;
+  for(auto* s:getSymbolsOfScope(fol.KB)) dataset.newNode<bool>(s->keys, {}, true);
+  for(auto* r:fol.KB.getNodes("DecisionRule"))   dataset.newNode<bool>(r->keys, {}, true);
 
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
     mc.reset();
     for(uint k=0;k<100;k++) mc.addRollout(100);
     mc.report();
+
+    //save all estimated returns
+    Graph &data = dataset.newSubgraph({}, {})->value;
+    data.newSubgraph({"state"}, {}, *fol.state);
+    for(uint i=0;i<mc.D.N;i++){
+      const FOL_World::Decision *d = std::dynamic_pointer_cast<const FOL_World::Decision>(mc.A(i)).get();
+      data.newNode<bool>({"action"}, d->getTuple(), true);
+      data.newNode<double>({"return"}, {}, mc.D(i).X.first());
+    }
+
     auto a = mc.getBestAction();
     cout <<"******** ACTION " <<*a <<endl;
-    world.reset_state();
-    world.transition(a);
-    if(world.is_terminal_state()) break;
-    world.make_current_state_default();
+    fol.reset_state();
+    fol.transition(a);
+    if(fol.is_terminal_state()) break;
+    fol.make_current_state_default();
   }
+
+  FILE("z.data").getOs() <<dataset <<endl;
 }
 
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world(FILE("boxes_new.g"));
+  mlr::String file=mlr::getParameter<mlr::String>("file");
+  if(!file.N) file="boxes_new.g";
+  FOL_World world(FILE(file));
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
 
   for(uint k=0;k<10;k++){
     auto res=world.transition_randomly();
-    cout <<"RND TRANSITION: obs=" <<*res.first <<" r=" <<res.second <<endl;
+    cout <<"RND TRANSITION: obs=" <<*res.observation <<" r=" <<res.reward <<endl;
   }
 
   world.get_actions();
@@ -99,7 +120,6 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(Determinism){
-
   for(uint k=0;k<100;k++){
     FOL_World world(FILE("boxes_new.kvg"));
 
@@ -114,8 +134,8 @@ void TEST(Determinism){
       FOL_World::Handle action = A[rnd()%A.size()];
       auto res = world.transition(action);
       actions.append(action);
-      observations.append(res.first);
-      rewards.append(res.second);
+      observations.append(res.observation);
+      rewards.append(res.reward);
       states.append(STRING(*world.state));
       if(world.is_terminal_state()) break;
     }
@@ -128,14 +148,14 @@ void TEST(Determinism){
     uint t=0;
     for(;;t++){
       world.make_current_state_default();
-      std::pair<FOL_World::Handle, double> res;
+      FOL_World::TransitionReturn res;
       for(;;){ //repeat stochastic transition until you get the same observation
         res = world.transition(actions(t));
-        if(*res.first==*observations(t)) break; //observations match... move on
+        if(*res.observation==*observations(t)) break; //observations match... move on
         world.reset_state();
       }
-      CHECK_EQ(*observations(t), *res.first, "");
-      CHECK_EQ(rewards(t), res.second, "");
+      CHECK_EQ(*observations(t), *res.observation, "");
+      CHECK_EQ(rewards(t), res.reward, "");
       CHECK_EQ(states(t), STRING(*world.state), "");
       if(world.is_terminal_state()) break;
     }
@@ -146,7 +166,7 @@ void TEST(Determinism){
 //===========================================================================
 
 int main(int argn, char** argv){
-  //rnd.clockSeed();
+  rnd.clockSeed();
   //srand(rnd());
 
 //  testMCTS();

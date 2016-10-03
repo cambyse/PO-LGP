@@ -97,13 +97,13 @@ void TEST(Door){
 
     //-- setup the motion problem
     Task *t;
-    t = MP.addTask("transitions", new TransitionTaskMap(G));
+    t = MP.addTask("transitions", new TaskMap_Transition(G));
     t->map.order=2; //make this an acceleration task!
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
     double contactT = MP.T/2.;
     // position task maps
-    t = MP.addTask("position", new DefaultTaskMap(posTMT, G, "endeffL", NoVector, "cp1",NoVector));
+    t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeffL", NoVector, "cp1",NoVector));
     t->setCostSpecs(contactT-10., contactT, {0.}, 1e2);
 
     t = MP.addTask("handle_joint", new TaskMap_qItself(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()));

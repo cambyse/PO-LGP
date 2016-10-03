@@ -1,4 +1,4 @@
-#include <Motion/gamepad2tasks.h>
+#include <Control/gamepad2tasks.h>
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
@@ -8,11 +8,9 @@
 
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/trajectoryInterface.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
-void changeColor2(void*){  orsDrawAlpha = 1.; }
 /*
 void graspBox(){
 
@@ -28,17 +26,17 @@ void graspBox(){
   arr X;
   MotionProblem MP(*ti->world_plan);
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t = MP.addTask("transitions", new TaskMap_Transition(world));
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-  t = MP.addTask("pos1", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+  t = MP.addTask("pos1", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
   t->setCostSpecs(70, 80, {0.}, 1e2);
-  t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+  t = MP.addTask("rot1", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+  t = MP.addTask("rot2", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
   t->setCostSpecs(70, MP.T, {1.}, 1e1);
-  t = MP.addTask("pos2", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+  t = MP.addTask("pos2", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
   t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
   t = MP.addTask("limit", new LimitsConstraint());
   t->setCostSpecs(0, MP.T, ARR(0.), 1e2);
@@ -65,6 +63,7 @@ void graspBox(){
 
 void TEST(TrajectoryInterface){
   ors::KinematicWorld world("model_plan.kvg");
+  ors::KinematicWorld world_plan("model_plan.kvg");
   ors::KinematicWorld world_pr2("model.kvg");
   makeConvexHulls(world.shapes);
   TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
@@ -75,6 +74,17 @@ void TEST(TrajectoryInterface){
   ti->world_pr2->gl().resize(800,800);
   ti->world_pr2->gl().add(changeColor2);
 
+
+  for (uint i=7;i<20;i++) {
+    cout << i << endl;
+    world_pr2.watch(true);
+    ti->syncState();
+    ti->saveState(STRING("q"<<i<<".dat"));
+  }
+  ti->syncMarker();
+  ti->moveRightGripper(0.08);
+  world_pr2.watch(true);
+  ti->moveRightGripper(0.0);
 
   arr q;
   arr lim;
@@ -91,18 +101,18 @@ void TEST(TrajectoryInterface){
   qIdxList.append(ti->world_plan->getJointByName("l_upper_arm_roll_joint")->qIndex);
   qIdxList.append(ti->world_plan->getJointByName("l_shoulder_lift_joint")->qIndex);
 
-
   for (;;) {
     q = ti->world_plan->getJointState();
 
     /// sample a random goal position
     for (uint i=0;i<qIdxList.d0;i++) {
       uint qIdx = qIdxList(i);
-      q(qIdx) = lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
+      q(qIdx) = 0.;//lim(qIdx,0)+rand(1)*(lim(qIdx,1)-lim(qIdx,0))*alpha;
     }
 
-    ti->gotoPositionPlan(q,5.,true,true);
-    ti->logging("data/",2);
+
+    ti->gotoPositionPlan(q,15.,true,true);
+//    ti->logging("data/",2);
   }
 
   ti->~TrajectoryInterface();
@@ -137,6 +147,6 @@ void TEST(RecordReplay) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   testTrajectoryInterface();
-//  testRecordReplay();
+  //  testRecordReplay();
   return 0;
 }

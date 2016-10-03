@@ -3,21 +3,25 @@
 
 _RacerBalancingBenchmark RacerBalancingBenchmark;
 
-_RacerBalancingBenchmark::_RacerBalancingBenchmark():T(0), display(false), noise(-1.), theta0(-1.), fixRandomSeed(true){}
+_RacerBalancingBenchmark::_RacerBalancingBenchmark():display(false){
+  T = mlr::getParameter<uint>("Racer/BalancingBenchmark/T", 500);
+  exploration = mlr::getParameter<double>("Racer/BalancingBenchmark/exploration", -1.);
+  noise = mlr::getParameter<double>("Racer/BalancingBenchmark/noise", .1);
+  theta0 = mlr::getParameter<double>("Racer/BalancingBenchmark/theta0", .2);
+  fixedRandomSeed = mlr::getParameter<bool>("Racer/BalancingBenchmark/fixedRandomSeed", -1);
+
+  ScalarFunction::operator=(
+    [this](arr& g, arr& H, const arr& x)->double {
+      return fs(g, H, x);
+    }
+  );
+}
 
 double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
-  //initialize
-  if(!T) T = mlr::getParameter<uint>("Racer/BalancingBenchmark/T", 500);
-  if(noise<0.){
-    noise = mlr::getParameter<double>("Racer/BalancingBenchmark/noise", .1);
-    theta0 = mlr::getParameter<double>("Racer/BalancingBenchmark/theta0", .2);
-    fixRandomSeed = mlr::getParameter<bool>("Racer/BalancingBenchmark/fixRandomSeed", true);
-  }
 
-  if(&g) NIY;
   if(&H) NIY;
 
-  if(fixRandomSeed) rnd.seed(0);
+  if(fixedRandomSeed>=0) rnd.seed(fixedRandomSeed);
 
   //start racer and Kalman
   Racer R;
@@ -29,6 +33,7 @@ double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
   CHECK_EQ(x.N, 1+features.N, "wrong dimensionality of controller parameters");
 
   double costs=0.;
+  arr d_log_mu = zeros(x.N);
 
   Kalman K;
   K.initialize(cat(R.q, R.q_dot),1.*eye(4)); //correct initialization...
@@ -36,6 +41,11 @@ double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
   for (uint t=0; t<T; t++){
     arr phi={1.}; phi.append(features);
     double u = scalarProduct(x, phi);
+    if(exploration>0.){
+      double delta = exploration*rnd.gauss();
+      u += delta;
+      d_log_mu += delta * phi / (exploration*exploration);
+    }
 
     //-- get dynamics (for later filtering)
     arr A,a,B;
@@ -64,6 +74,7 @@ double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
 
     //-- construct features
     features[0] = K.b_mean; //use the Kalman mean state as only feature
+    features[0] = cat(R.q, R.q_dot);
 
     //-- costs
     //deviation from (x,th)=(0,0)
@@ -86,5 +97,8 @@ double _RacerBalancingBenchmark::fs(arr& g, arr& H, const arr& x){
     //       <<y
     //      <<K.b_mean <<K.b_mean+2.*::sqrt(getDiag(K.b_var)) <<endl;
   }
+
+  if(&g) g = d_log_mu;
+
   return costs;
 }

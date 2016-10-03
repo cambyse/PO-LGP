@@ -23,3 +23,4 @@ joint (arm6 arm7) { A=<T t(0 0 0.2) d(45 0 0 1)> B=<T t(0 0 .2)> q=1 }
 
 body target { X=<T t(1. -.5 1.2)>  type=1 size=[.1 .1 .1 .05] color=[0 .5 0] fixed, }
 
+body glCamera { X=<T 5.37831 -7.10912 5.96183 0.825669 0.461015 0.163458 0.281104>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }

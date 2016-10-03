@@ -56,7 +56,7 @@ void TEST(QuaternionJacobian){
 
 int MAIN(int argc,char **argv){
 
-//  testBasics();
+  testBasics();
   testQuaternionJacobian();
 
   return 0;

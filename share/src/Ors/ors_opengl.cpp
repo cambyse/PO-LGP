@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 /**
@@ -34,7 +30,7 @@
 
 //global options
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true, orsDrawIndexColors=false;
-bool orsDrawMeshes=true, orsDrawZlines=false;
+bool orsDrawMeshes=true, orsDrawCores=false, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
 uint orsDrawLimit=0;
@@ -107,24 +103,29 @@ void ors::Shape::glDraw(OpenGL& gl) {
     switch(type) {
       case ors::noneST: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
       case ors::boxST:
-        if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawBox(size[0], size[1], size[2]);
         break;
       case ors::sphereST:
-        if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawSphere(size[3]);
         break;
       case ors::cylinderST:
-        if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCylinder(size[3], size[2]);
         break;
       case ors::cappedCylinderST:
-        if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCappedCylinder(size[3], size[2]);
         break;
       case ors::SSBoxST:
         HALT("deprecated??");
-        if(orsDrawMeshes){
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes){
           if(!mesh.V.N) mesh.setSSBox(size[0], size[1], size[2], size[3]);
           mesh.glDraw(gl);
         }else NIY;
@@ -136,12 +137,14 @@ void ors::Shape::glDraw(OpenGL& gl) {
         break;
       case ors::meshST:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
-        mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
       case ors::ssCvxST:
         CHECK(sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
         if(!mesh.V.N) mesh.setSSCvx(sscCore, size[3]);
-        mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
       case ors::ssBoxST:
         if(!mesh.V.N || !sscCore.V.N){
@@ -149,11 +152,13 @@ void ors::Shape::glDraw(OpenGL& gl) {
           sscCore.scale(size[0], size[1], size[2]);
           mesh.setSSCvx(sscCore, size[3]);
         }
-        mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
       case ors::pointCloudST:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw point cloud object");
-        mesh.glDraw(gl);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
 
       default: HALT("can't draw that geom yet");
@@ -285,8 +290,8 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const K
   }
   arr x,z;
   if(dim_z){
-    x.referToSub(_x,0,-dim_z-1);
-    z.referToSub(_x,-dim_z,-1);
+    x.referToRange(_x,0,-dim_z-1);
+    z.referToRange(_x,-dim_z,-1);
   }else{
     x.referTo(_x);
   }
@@ -463,7 +468,7 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
       if(ino && ino->pollForModification()) return;
       x(i)=x0(i) + .5*sin(MLR_2PI*t/20);
       C.setJointState(x);
-      C.gl().update(STRING("joint = " <<i), false, false, true);
+      C.gl().update(STRING("DOF = " <<i), false, false, true);
       mlr::wait(0.01);
     }
   }
@@ -476,19 +481,48 @@ ors::Body *movingBody=NULL;
 ors::Vector selpos;
 double seld, selx, sely, selz;
 
+struct EditConfigurationClickCall:OpenGL::GLClickCall {
+  ors::KinematicWorld *ors;
+  EditConfigurationClickCall(ors::KinematicWorld& _ors) { ors=&_ors; }
+  bool clickCallback(OpenGL& gl) {
+    OpenGL::GLSelect *top=gl.topSelection;
+    if(!top) return false;
+    uint i=top->name;
+    cout <<"CLICK call: id = 0x" <<std::hex <<gl.topSelection->name <<" : ";
+    gl.text.clear();
+    if((i&3)==1) {
+      ors::Shape *s=ors->shapes(i>>2);
+      gl.text <<"shape selection: shape=" <<s->name <<" body=" <<s->body->name <<" X=" <<s->X <<endl;
+//      listWrite(s->ats, gl.text, "\n");
+      cout <<gl.text;
+    }
+    if((i&3)==2) {
+      ors::Joint *j=ors->joints(i>>2);
+      gl.text
+          <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+         <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+//      listWrite(j->ats, gl.text, "\n");
+      cout <<gl.text;
+    }
+    cout <<endl;
+    return true;
+  }
+};
+
 struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::KinematicWorld *ors;
-  EditConfigurationHoverCall(ors::KinematicWorld& _ors) { ors=&_ors; }
+  EditConfigurationHoverCall(ors::KinematicWorld& _ors);// { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
-    if(!movingBody) return false;
+//    if(!movingBody) return false;
     if(!movingBody) {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
-      gl.Select();
+      mlr::timerStart(true);
+      gl.Select(true);
       OpenGL::GLSelect *top=gl.topSelection;
       if(!top) return false;
       uint i=top->name;
-      //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+      cout <<mlr::timerRead() <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
       if((i&3)==1) s=ors->shapes(i>>2);
       if((i&3)==2) j=ors->joints(i>>2);
       gl.text.clear();
@@ -499,7 +533,7 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
       if(j) {
         gl.text
             <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-            <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+           <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
         listWrite(j->ats, gl.text, "\n");
       }
     } else {
@@ -514,6 +548,10 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
     return true;
   }
 };
+
+EditConfigurationHoverCall::EditConfigurationHoverCall(ors::KinematicWorld& _ors) {
+  ors=&_ors;
+}
 
 struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   ors::KinematicWorld &ors;
@@ -548,7 +586,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
     }else switch(gl.pressedkey) {
       case '1':  orsDrawBodies^=1;  break;
       case '2':  orsDrawShapes^=1;  break;
-      case '3':  orsDrawJoints^=1;  break;
+      case '3':  orsDrawJoints^=1;  orsDrawMarkers^=1; break;
       case '4':  orsDrawProxies^=1;  break;
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
@@ -583,8 +621,9 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
 void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 //  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
-  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
+//  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
   C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
+  C.gl().addClickCall(new EditConfigurationClickCall(C));
   Inotify ino(filename);
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;

@@ -1,3 +1,18 @@
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+
 #include "phase_optimization.h"
 
 PhaseOptimization::PhaseOptimization(arr &X, uint _kX, double _w){
@@ -15,11 +30,12 @@ arr PhaseOptimization::get_postfix() {
 
 arr PhaseOptimization::getInitialization(){
   arr s0 = linspace(0,1,T-1);s0.reshapeFlat();
-  s0 = s0.subRef(1,s0.d0-2); // remove 0 and 1 from optimization variables
+  s0 = s0.refRange(1,s0.d0-2); // remove 0 and 1 from optimization variables
   return s0;
 }
 
 void PhaseOptimization::getSolution(arr &xOpt, arr &sOpt){
+  xOpt.clear();
   sOpt.prepend(0.); sOpt.append(1.); // add 0 and 1 to optimization variables
   for (uint i=0;i<sOpt.d0;i++) {
     xOpt.append(~p->eval(sOpt(i)));

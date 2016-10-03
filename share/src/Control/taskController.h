@@ -15,8 +15,6 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
-
 #pragma once
 
 #include <Motion/taskMaps.h>
@@ -28,6 +26,10 @@
  * We simply define a set of motions via CtrlTasks/ConstraintForceTask and run
  * them.
  */
+
+
+struct CtrlTask;
+typedef mlr::Array<CtrlTask*> CtrlTaskL;
 
 
 //===========================================================================
@@ -62,8 +64,9 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   CtrlTask(const char* name, TaskMap* map);
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
-  CtrlTask(const char* name, TaskMap& map, Graph& params);
+  CtrlTask(const char* name, TaskMap& map, const Graph& params);
 
+  void set(const Graph& params);
   void setTarget(const arr& yref, const arr& vref=NoArr);
   void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);
@@ -77,6 +80,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   void getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0, const arr& y, const arr& ydot);
   void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const ors::KinematicWorld& world);
 
+  bool isConverged(double tolerance=1e-2);
   void reportState(ostream& os);
 };
 
@@ -113,7 +117,7 @@ struct TaskController {
   CtrlTask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
   CtrlTask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
-                    DefaultTaskMapType type,
+                    TaskMap_DefaultType type,
                     const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                     const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);

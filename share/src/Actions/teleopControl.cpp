@@ -1,6 +1,6 @@
 #include "teleopControl.h"
 #include <Control/TaskControllerModule.h>
-#include <Motion/teleop2tasks.h>
+#include <Control/teleop2tasks.h>
 
 //===========================================================================
 

@@ -55,12 +55,12 @@ void followTrajectory() {
   arr trajStart = ARR(0.65,0.0,0.56);
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTaskl = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setRef(trajStart);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -86,14 +86,14 @@ void followTrajectory() {
   plotLine(sp);
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setTrajectory(posTrajectory.d0, posTrajectory);
   posLaw->setC(eye(3)*1000.0);
   arr Kp = eye(3)*30.0;
   posLaw->setGains(Kp,eye(3)*5.0);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -132,7 +132,7 @@ void followTrajectory() {
 
   /*
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   arr actState = posLaw->getPhi();
   arr traj;
@@ -144,7 +144,7 @@ void followTrajectory() {
   arr Kp = eye(3)*10.0;
   posLaw->setGains(Kp,eye(3)*5.0);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -202,12 +202,12 @@ void qDotRefInConstraint() {
   arr trajStart = ARR(0.7,0.0,0.55);
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTaskl = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setRef(trajStart);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -231,7 +231,7 @@ void qDotRefInConstraint() {
   plotLine(sp);
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setTrajectory(posTrajectory.d0, posTrajectory);
   posLaw->setC(eye(3)*1000.0);
@@ -241,7 +241,7 @@ void qDotRefInConstraint() {
   Kd(2,2) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -263,7 +263,7 @@ void qDotRefInConstraint() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
-  TaskMap* velMap = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* velMap = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* velLaw = new LinTaskSpaceAccLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(3)*1000.0);
   arr KdVel = zeros(3,3);
@@ -312,12 +312,12 @@ void qDotRefInConstraintAndSlide() {
   arr trajStart = ARR(0.7,0.0,0.6);
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTaskl = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setRef(trajStart);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -341,7 +341,7 @@ void qDotRefInConstraintAndSlide() {
   plotLine(sp);
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setTrajectory(posTrajectory.d0, posTrajectory);
   posLaw->setC(eye(3)*1000.0);
@@ -351,7 +351,7 @@ void qDotRefInConstraintAndSlide() {
   Kd(2,2) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -373,7 +373,7 @@ void qDotRefInConstraintAndSlide() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
-  /*TaskMap* velMap = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  /*TaskMap* velMap = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* velLaw = new LinTaskSpaceAccLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(3)*1000.0);
   arr KdVel = zeros(3,3);
@@ -383,7 +383,7 @@ void qDotRefInConstraintAndSlide() {
   arr velTraj = repmat(~ARR(0.0,0.0,-.05), 3, 1);
   */
 
-  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*15.0);
@@ -396,7 +396,7 @@ void qDotRefInConstraintAndSlide() {
 
   velLaw->setTrajectory(3, NoArr, velTraj);
 
- /* TaskMap* gazeAtMap = new DefaultTaskMap(gazeAtTMT, *modelWorld, "endeffKinect", NoVector, "endeffL");
+ /* TaskMap* gazeAtMap = new TaskMap_Default(gazeAtTMT, *modelWorld, "endeffKinect", NoVector, "endeffL");
   LinTaskSpaceAccLaw* gazeAtLaw = new LinTaskSpaceAccLaw(gazeAtMap, modelWorld);
   gazeAtLaw->setC(eye(2)*1000.0);
   gazeAtLaw->setGains(eye(2)*10.0,eye(2)*5.0);
@@ -451,7 +451,7 @@ void openSchublade() {
   pr2->initialize(realWorld, realWorldSimulation, modelWorld, controller);
   pr2->startInterface();
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   arr posTrajectory;
   posTrajectory.append(~posLaw->getPhi());
@@ -469,7 +469,7 @@ void openSchublade() {
   Kd(2,2) = 5.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -479,7 +479,7 @@ void openSchublade() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -565,13 +565,13 @@ void openSchublade2() {
   pr2->startInterface();
 
 
- /* TaskMap* gazeAtMap = new DefaultTaskMap(gazeAtTMT, *modelWorld, "endeffKinect", NoVector, "endeffL");
+ /* TaskMap* gazeAtMap = new TaskMap_Default(gazeAtTMT, *modelWorld, "endeffKinect", NoVector, "endeffL");
   LinTaskSpaceAccLaw* gazeAtLaw = new LinTaskSpaceAccLaw(gazeAtMap, modelWorld);
   gazeAtLaw->setC(eye(2)*1000.0);
   gazeAtLaw->setGains(eye(2)*10.0,eye(2)*5.0);
   gazeAtLaw->setRef(ARR(0.0,0.0));
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setC(eye(3)*1000.0);
   arr Kp = eye(3)*1.0;
@@ -602,17 +602,17 @@ void openSchublade2() {
   //markerSchubladePos(2) -= 0.01;
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTaskl = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setRef(markerSchubladePos);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(1.0,0.0,0.0));
   laws.append(orientationLawl);
 
-  TaskMap* orientationMapl2 = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMapl2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLawl2 = new LinTaskSpaceAccLaw(orientationMapl2, modelWorld, "endeffLOrientation");
   orientationLawl2->setRef(ARR(0.0,0.0,1.0));
   //laws.append(orientationLawl2);
@@ -627,7 +627,7 @@ void openSchublade2() {
 
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   arr posTrajectory;
   posTrajectory.append(~posLaw->getPhi());
@@ -643,7 +643,7 @@ void openSchublade2() {
   Kd(0,0) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*30.0,eye(3)*5.0);
@@ -653,7 +653,7 @@ void openSchublade2() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -679,7 +679,7 @@ void openSchublade2() {
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
 
-  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1.0,0.0,.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1.0,0.0,.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*15.0);
@@ -707,7 +707,7 @@ void openSchublade2() {
 
 
 
-  /*TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  /*TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   arr posTrajectory;
   posTrajectory.append(~posLaw->getPhi());
@@ -725,7 +725,7 @@ void openSchublade2() {
   Kd(2,2) = 5.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -735,7 +735,7 @@ void openSchublade2() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -862,7 +862,7 @@ void openSchublade3() {
 
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   arr posTrajectory;
   posTrajectory.append(~posLaw->getPhi());
@@ -878,7 +878,7 @@ void openSchublade3() {
   Kd(0,0) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -888,7 +888,7 @@ void openSchublade3() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*3.0);
@@ -914,7 +914,7 @@ void openSchublade3() {
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
 
-  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1.0,0.0,.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1.0,0.0,.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*9.0);
@@ -998,7 +998,7 @@ void controllerExample(mlr::String mode) {
   pr2->startInterface();
 
   if(mode == "nullSpace_1") {
-    TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+    TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
     LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
     posLaw->setC(eye(3)*1000.0);
     arr Kp = eye(3)*10.0;
@@ -1030,7 +1030,7 @@ void controllerExample(mlr::String mode) {
   }
 
   if(mode == "nullSpace_2") {
-    TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+    TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
     LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
     posLaw->setC(eye(3)*1000.0);
     arr Kp = eye(3)*10.0;
@@ -1038,7 +1038,7 @@ void controllerExample(mlr::String mode) {
     posLaw->setGains(Kp,Kd);
     posLaw->setRef(posLaw->getPhi());
 
-    TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+    TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
     LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
     orientationLaw->setC(eye(3)*1000.0);
     orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1072,7 +1072,7 @@ void controllerExample(mlr::String mode) {
   }
 
   if(mode == "differentTaskSpaceStiffness_1") {
-    TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+    TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
     LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
     posLaw->setC(eye(3)*1000.0);
     arr Kp = eye(3)*10.0;
@@ -1080,7 +1080,7 @@ void controllerExample(mlr::String mode) {
     posLaw->setGains(Kp,Kd);
     posLaw->setRef(posLaw->getPhi());
 
-    TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+    TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
     LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
     orientationLaw->setC(eye(3)*1000.0);
     orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1176,12 +1176,12 @@ void tischTouchdown_1() {
   arr preTouchPos = ARR(0.7,0.0,0.6);
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTaskl = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setRef(preTouchPos);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -1200,7 +1200,7 @@ void tischTouchdown_1() {
   modelWorld->watch(true, "press enter for task space control");
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setC(eye(3)*1000.0);
   arr Kp = eye(3)*10.0;
@@ -1210,7 +1210,7 @@ void tischTouchdown_1() {
   posLaw->setGains(Kp,Kd);
   posLaw->setRef();
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1228,7 +1228,7 @@ void tischTouchdown_1() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setRef(zeros(qDampingLaw->getPhiDim()),zeros(qDampingLaw->getPhiDim()));
 
-  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "qDotRefInConstraint");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*25.0);
@@ -1290,7 +1290,7 @@ void tischTouchdown_2() {
   modelWorld->watch(true, "press enter for task space control");
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setC(eye(3)*1000.0);
   arr Kp = eye(3)*10.0;
@@ -1300,7 +1300,7 @@ void tischTouchdown_2() {
   posLaw->setGains(Kp,Kd);
   posLaw->setRef();
 
-  TaskMap* orientationMap = new DefaultTaskMap(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1318,7 +1318,7 @@ void tischTouchdown_2() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setRef(zeros(qDampingLaw->getPhiDim()),zeros(qDampingLaw->getPhiDim()));
 
-  TaskMap* velMap = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "qDotRefInConstraint");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*20.0);
@@ -1378,7 +1378,7 @@ void tests() {
   pr2->goToPosition(preTouchPos, "endeffL");
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new DefaultTaskMap(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1/sqrt(2),1/sqrt(2),0.0));
+  TaskMap* posTaskl = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1/sqrt(2),1/sqrt(2),0.0));
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setC(eye(1)*1000.0);
   posLawl->setGains(eye(1)*10.0, eye(1)*5.0);
@@ -1389,7 +1389,7 @@ void tests() {
   traj.d1 = 1;
   posLawl->setTrajectory(3,traj);
 
-  /*TaskMap* orientationMapl = new DefaultTaskMap(quatTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  /*TaskMap* orientationMapl = new TaskMap_Default(quatTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setC(eye(4)*1000.0);
   orientationLawl->setGains(eye(4)*10.0, eye(4)*5.0);
@@ -1425,7 +1425,7 @@ void tests() {
   plotLine(sp);
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setTrajectory(posTrajectory.d0, posTrajectory);
   posLaw->setC(eye(3)*1000.0);
@@ -1492,7 +1492,7 @@ void testDifferentMetric() {
   plotLine(sp);
 
 
-  TaskMap* posTask = new DefaultTaskMap(posTMT, *modelWorld, "endeffL");
+  TaskMap* posTask = new TaskMap_Default(posTMT, *modelWorld, "endeffL");
   LinTaskSpaceAccLaw* posLaw = new LinTaskSpaceAccLaw(posTask, modelWorld, "endeffLPos");
   posLaw->setTrajectory(posTrajectory.d0, posTrajectory);
   posLaw->setC(eye(3)*1000.0);

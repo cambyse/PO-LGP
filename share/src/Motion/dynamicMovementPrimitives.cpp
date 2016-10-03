@@ -1,27 +1,27 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "dynamicMovementPrimitives.h"
+#include <Gui/plot.h>
+#include <Motion/motion.h>
 
-DynamicMovementPrimitives::DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_) {
+DynamicMovementPrimitives::DynamicMovementPrimitives(arr &y_ref_, uint nBase_, double dt_, double lambda_) {
   y_ref = y_ref_;
   dt = dt_;
   nBase = nBase_;
+
+  lambda = lambda_;
 
   T = y_ref.d0*dt;
   tau = 0.5/T;
@@ -70,9 +70,8 @@ void DynamicMovementPrimitives::changeGoal(const arr &goal_) {
 }
 
 void DynamicMovementPrimitives::trainDMP() {
-
   uint i,j;
-  arr PHI = zeros(y_ref.d0,nBase);
+  PHI = zeros(y_ref.d0,nBase);
   double x_=1.;
   for(i = 0; i<y_ref.d0; i++) {
 
@@ -93,34 +92,12 @@ void DynamicMovementPrimitives::trainDMP() {
   arr trajd = y_ref*0.;
   arr trajdd = y_ref*0.;
 
-  for (i=0; i<trajdd.d0; i++) {
-    for (j=0; j<trajdd.d1; j++) {
-      if (i == 0) {
-        trajd(i,j) = (y_ref(i+1,j) - y_ref(i,j))/(dt);
-      } else if(i == trajdd.d0-1) {
-        trajd(i,j) = (y_ref(i,j) - y_ref(i-1,j))/(dt);
-      } else {
-        trajd(i,j) = (y_ref(i+1,j) - y_ref(i-1,j))/(2*dt);
-      }
-    }
-  }
-
-  for (i=0; i<trajdd.d0; i++) {
-    for (j=0; j<trajdd.d1; j++) {
-      if (i == 0) {
-        trajdd(i,j) = (trajd(i+1,j) - trajd(i,j))/(dt);
-      } else if(i == trajdd.d0-1) {
-        trajdd(i,j) = (trajd(i,j) - trajd(i-1,j))/(dt);
-      } else {
-        trajdd(i,j) = (trajd(i+1,j) - trajd(i-1,j))/(2*dt);
-      }
-    }
-  }
-
+  getVel(trajd,y_ref,dt);
+  getAcc(trajdd,y_ref,dt);
 
   for(i = 0; i<dimY; i++) {
     FT = (trajdd.col(i)/(tau*tau) - alphay*(betay*(goal(i)-y_ref.col(i)) -trajd.col(i)/tau))/amp(i);
-    weights.append(~(inverse(~PHI*PHI + eye(PHI.d1)*1e-7)*(~PHI)*FT));
+    weights.append(~(inverse(~PHI*PHI + eye(PHI.d1)*lambda)*(~PHI)*FT));
   }
   weights=~weights;
 
@@ -133,7 +110,6 @@ void DynamicMovementPrimitives::iterate() {
   double f;
   for(i =0; i< dimY; i++) {
     psi = exp(-H%(X-C)%(X-C));
-
     f = sum(~weights.col(i)*(psi)*X)/sum(psi);
 
     Ydd(i) = (alphay*(betay*(goal(i)-Y(i))-(Yd(i)/tau)) + (amp(i)*f))*tau*tau;
@@ -164,27 +140,12 @@ void DynamicMovementPrimitives::reset() {
 
 
 void DynamicMovementPrimitives::plotDMP() {
-
-  write(LIST<arr>(x_bk),"out/x_bk.output");
-  gnuplot("set term wxt 2 title 'phase variable x'");
-  gnuplot("plot 'out/x_bk.output'using 1  with points pointtype 7 pointsize 1");
-
-
-  write(LIST<arr>(y_ref),"out/y_ref.output");
-  write(LIST<arr>(y_bk),"out/y_bk.output");
-  gnuplot("set term wxt 5 title 'traj'");
-  gnuplot("plot 'out/y_ref.output'using 1 with points pointtype 7 pointsize 0.5");
-  gnuplot("replot 'out/y_bk.output'using 1 with points pointtype 7 pointsize 0.5");
-  mlr::String n;
-  for(uint i = 2; i<=y_ref.d1; i++) {
-    n.clear();
-    n<<"replot 'out/y_ref.output'using "<<i<<" with points pointtype 7 pointsize 0.5";
-    gnuplot(n);
-    n.clear();
-    n<<"replot 'out/y_bk.output'using "<<i<<" with points pointtype 7 pointsize 0.5";
-    gnuplot(n);
-  }
-
+  write(LIST<arr>(x_bk),"data/x_bk.dat");
+  write(LIST<arr>(y_ref),"data/y_ref.dat");
+  write(LIST<arr>(y_bk),"data/y_bk.dat");
+  write(LIST<arr>(C),"data/C.dat");
+  write(LIST<arr>(H),"data/H.dat");
+  write(LIST<arr>(weights),"data/weights.dat");
 }
 
 void DynamicMovementPrimitives::printDMP() {
@@ -202,5 +163,5 @@ void DynamicMovementPrimitives::printDMP() {
   std::cout <<"Y : " << Y << std::endl;
   //    std::cout <<"C : " << C << std::endl;
   //    std::cout <<"H : " << H << std::endl;
-  //  std::cout <<"weights : " << weights << std::endl;
+  std::cout <<"weights : " << weights << std::endl;
 }

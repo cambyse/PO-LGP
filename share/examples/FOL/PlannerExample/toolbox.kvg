@@ -1,3 +1,7 @@
+FOL_World{
+  hasWait = false
+}
+
 ## Syntactic keywords
 Terminate
 QUIT

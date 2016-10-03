@@ -20,6 +20,10 @@ struct RM_EditCallback:GraphEditCallback{
     RMM.A.deAccess();
     RMM.threadStep();
   }
+  virtual void cb_edit(Node *it){
+    LOG(3) <<"state cb -- edit fact: " <<*it;
+    RMM.threadStep();
+  }
 };
 
 RelationalMachineModule::RelationalMachineModule()
@@ -117,7 +121,7 @@ void RelationalMachineModule::runScript(const char* filename){
   for(Node* n:script){
     if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
-        if(allFactsHaveEqualsInScope(*RM.get()->state, n->graph())) break;
+        if(allFactsHaveEqualsInKB(*RM.get()->state, n->graph())) break;
         rev=RM.waitForRevisionGreaterThan(rev);
       }
     }else{ //interpret as set fact

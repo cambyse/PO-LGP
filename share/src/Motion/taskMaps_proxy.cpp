@@ -1,24 +1,20 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "taskMaps.h"
 
-ProxyTaskMap::ProxyTaskMap(PTMtype _type,
+TaskMap_Proxy::TaskMap_Proxy(PTMtype _type,
                            uintA _shapes,
                            double _margin,
                            bool _useCenterDist,
@@ -28,10 +24,10 @@ ProxyTaskMap::ProxyTaskMap(PTMtype _type,
   margin=_margin;
   useCenterDist=_useCenterDist;
   useDistNotCost=_useDistNotCost;
-  cout <<"creating ProxyTaskMap with shape list" <<shapes <<endl;
+  cout <<"creating TaskMap_Proxy with shape list" <<shapes <<endl;
 }
 
-void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   uintA shapes_t;
   shapes_t.referTo(shapes);
 
@@ -132,7 +128,7 @@ void ProxyTaskMap::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   }
 }
 
-uint ProxyTaskMap::dim_phi(const ors::KinematicWorld& G){
+uint TaskMap_Proxy::dim_phi(const ors::KinematicWorld& G){
   switch(type) {
   case allPTMT:
   case listedVsListedPTMT:

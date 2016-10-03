@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "motionHeuristics.h"
 #include "taskMaps.h"
@@ -61,7 +57,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   }
   
   //-- open hand
-  //x.subRef(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
+  //x.refRange(7,13) = ARR(0,-1.,.8,-1.,.8,-1.,.8);
   x(MP.world.getJointByName("l_gripper_l_finger_joint")->qIndex) = 1.;
 
   if (verbose>=2) {
@@ -109,7 +105,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   //-- graspCenter -> predefined point (xtarget)
   Task *c;
   c = MP.addTask("graspCenter",
-                   new DefaultTaskMap(posTMT, "graspCenter"));
+                   new TaskMap_Default(posTMT, "graspCenter"));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, positionPrec, NoArr, -1., .8);
 
@@ -129,12 +125,12 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
     default: NIY;
   }
   c = MP.addTask("upAlign",
-                   new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
+                   new TaskMap_Default(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
   c->map.phi(initial, NoArr, MP.world);
-  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->ivec.set(0., -1., 0.); //flip vector to become positive
+  if (initial(0)<0.) ((TaskMap_Default*)&c->map)->ivec.set(0., -1., 0.); //flip vector to become positive
 
 
   if (phase==0) return;
@@ -145,7 +141,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
                       {"tip1Shape", "tip2Shape", "tip3Shape"}, MP.world.shapes);
   shapes.append(shapeId); shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,3); shapes = ~shapes;
-  c = MP.addTask("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .05, true));
+  c = MP.addTask("graspContacts", new TaskMap_Proxy(vectorPTMT, shapes, .05, true));
   double grip=.8; //specifies the desired proxy value
   target = ARR(grip,grip,grip);
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
@@ -157,7 +153,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   
   //-- collisions with other objects
   shapes = {shapeId};
-  c = MP.addTask("otherCollisions", new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+  c = MP.addTask("otherCollisions", new TaskMap_Proxy(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, colPrec, target, colPrec);
   c->map.phi(initial, NoArr, MP.world);
@@ -169,7 +165,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   
   //-- opposing fingers
   c = MP.addTask("oppose12",
-                    new DefaultTaskMap(vecAlignTMT, MP.world, "tipNormal1", NoVector, "tipNormal2", NoVector));
+                    new TaskMap_Default(vecAlignTMT, MP.world, "tipNormal1", NoVector, "tipNormal2", NoVector));
   target = ARR(-1.);
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, oppositionPrec, ARR(0.,0.,0.), 0., 0.8);
@@ -177,7 +173,7 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
 
 
   c = MP.addTask("oppose13",
-                    new DefaultTaskMap(vecAlignTMT, MP.world, "tipNormal1", NoVector, "tipNormal3", NoVector));
+                    new TaskMap_Default(vecAlignTMT, MP.world, "tipNormal1", NoVector, "tipNormal3", NoVector));
   target = ARR(-1.);
   MP.setInterpolatingCosts(c, MotionProblem::final_restConst, target, oppositionPrec);
 
@@ -231,7 +227,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //-- graspCenter -> predefined point (xtarget)
   Task *c;
   c = MP.addTask("graspCenter",
-                    new DefaultTaskMap(posTMT, MP.world, "graspCenter"));
+                    new TaskMap_Default(posTMT, MP.world, "graspCenter"));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, positionPrec, NoArr, -1., .8);
 
@@ -255,12 +251,12 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
     default: NIY;
   }
   c = MP.addTask("upAlign",
-                    new DefaultTaskMap(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
+                    new TaskMap_Default(vecAlignTMT, MP.world, "graspCenter", ivec, target_shape->name, jvec));
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
                           target, alignmentPrec, NoArr, -1., .8);
   //test current state: flip if necessary
   c->map.phi(initial, NoArr, MP.world);
-  if (initial(0)<0.) ((DefaultTaskMap*)&c->map)->ivec.set(0,-1,0); //flip vector to become positive
+  if (initial(0)<0.) ((TaskMap_Default*)&c->map)->ivec.set(0,-1,0); //flip vector to become positive
 
   if (phase==0) return;
 
@@ -269,7 +265,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
                {"l_gripper_l_finger_tip_link_0", "l_gripper_r_finger_tip_link_0"}, MP.world.shapes);
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
-  c = MP.addTask("graspContacts", new ProxyTaskMap(vectorPTMT, shapes, .1, false));
+  c = MP.addTask("graspContacts", new TaskMap_Proxy(vectorPTMT, shapes, .1, false));
   for(ors::Shape *s: MP.world.shapes) cout <<' ' <<s->name;
   double grip=.98; //specifies the desired proxy value
   target = ARR(grip,grip);
@@ -284,7 +280,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   //-- collisions with other objects
   shapes = {shapeId};
   c = MP.addTask("otherCollisions",
-                 new ProxyTaskMap(allExceptListedPTMT, shapes, .04, true));
+                 new TaskMap_Proxy(allExceptListedPTMT, shapes, .04, true));
   target = ARR(0.);
   c->setCostSpecs(0, MP.T, NoArr, colPrec);
 //  arr initial;

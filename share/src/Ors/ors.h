@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 #ifndef MLR_ors_h
@@ -45,6 +41,7 @@ namespace ors {
 enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, ssCvxST, ssBoxST };
 enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
 enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
+const char* name(JointType jt);
 /// @}
 
 struct Joint;
@@ -88,6 +85,7 @@ struct Body {
   Matrix inertia;      ///< its inertia tensor
   Vector com;          ///< its center of gravity
   Vector force, torque; ///< current forces applying on the body
+  Vector vel, angvel;   ///< linear and angular velocities
   
   ShapeL shapes;
   
@@ -127,6 +125,7 @@ struct Joint {
   Transformation X;     ///< joint pose in world coordinates (same as from->X*A)
   Vector axis;          ///< joint axis (same as X.rot.getX() for standard hinge joints)
   arr limits;           ///< joint limits (lo, up, [maxvel, maxeffort])
+  double q0;            ///< joint null position
   double H;             ///< control cost factor
   Graph ats;    ///< list of any-type attributes
   
@@ -135,13 +134,14 @@ struct Joint {
   Joint(const Joint &j);
   void operator=(const Joint& j) {
     qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1l:0l); agent=j.agent; constrainToZeroVel=j.constrainToZeroVel;
-    name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; H=j.H;
+    name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; q0=j.q0; H=j.H;
     ats=j.ats;
     locker=j.locker;
   }
   void reset();
   void parseAts();
   uint qDim();
+  void applyTransformation(ors::Transformation& f, const arr& q);
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data() { return *this; }
@@ -228,6 +228,8 @@ struct KinematicWorld : GLDrawer{
   Joint *getJointByName(const char* name, bool warnIfNotExist=true) const;
   Joint *getJointByBodies(const Body* from, const Body* to) const;
   Joint *getJointByBodyNames(const char* from, const char* to) const;
+  Joint *getJointByBodyIndices(uint ifrom, uint ito) const;
+
   bool checkUniqueNames() const;
   void setShapeNames();
   void prefixNames();
@@ -251,11 +253,12 @@ struct KinematicWorld : GLDrawer{
   bool checkConsistency();
   
   /// @name computations on the graph
-  void calc_Q_from_q(bool calcVels=false, int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
-  void calc_q_from_Q(bool calcVels=false, int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
-  arr calc_q_from_Q(Joint* j, bool calcVels=false);  ///< returns (q,qdot) for a given joint  based on the joint's Q transformations
+  void calc_Q_from_q(int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
+  void calc_q_from_Q(int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
+  arr calc_q_from_Q(Joint* j);  ///< returns (q,qdot) for a given joint  based on the joint's Q transformations
   void calc_fwdPropagateFrames();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_fwdPropagateShapeFrames();   ///< same as above, but only shape frames (body frames are assumed up-to-date)
+  void calc_fwdPropagateVelocities();    ///< elementary forward kinematics; also computes all Shape frames
   void calc_Q_from_BodyFrames();    ///< fill in the joint transformations assuming that body poses are known (makes sense when reading files)
   void calc_missingAB_from_BodyAndJointFrames();    ///< fill in the missing joint relative transforms (A & B) if body and joint world poses are known
   void clearJointErrors();
@@ -270,8 +273,8 @@ struct KinematicWorld : GLDrawer{
   arr getLimits() const;
 
   /// @name set state
-  void setJointState(const arr& _q, const arr& _qdot=NoArr, bool calcVels=false, int agent=-1);
-  void setAgent(uint agent, bool calcVels=false);
+  void setJointState(const arr& _q, const arr& _qdot=NoArr, int agent=-1);
+  void setAgent(uint agent);
 
   /// @name kinematics
   void kinematicsPos (arr& y, arr& J, Body *b, const Vector& rel=NoVector) const; //TODO: make vector& not vector*
@@ -305,7 +308,7 @@ struct KinematicWorld : GLDrawer{
   double getCenterOfMass(arr& com) const;
   void getComGradient(arr &grad) const;
 
-  double getEnergy() const;
+  double getEnergy();
   double getJointErrors() const;
   ors::Proxy* getContact(uint a, uint b) const;
 
@@ -356,9 +359,11 @@ struct KinematicSwitch{
 //  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
   void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool copyFromBodies);
+  mlr::String shortTag(const KinematicWorld* G) const;
   void write(std::ostream& os) const;
   static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
-
+  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0, const ors::Transformation& jFrom=NoTransformation, const ors::Transformation& jTo=NoTransformation);
+  static const char* name(OperatorSymbol s);
 };
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace
@@ -438,7 +443,7 @@ void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const 
 struct OpenGL;
 
 //-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors, orsDrawIndexColors;
+extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawCores, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors, orsDrawIndexColors;
 extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
@@ -500,7 +505,7 @@ void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
 //===========================================================================
 /// @defgroup ors_interface_blender Blender interface.
 /// @{
-void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl);
+inline void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl){ NICO }
 /// @}
 
 /// @} // END of group ors_interfaces

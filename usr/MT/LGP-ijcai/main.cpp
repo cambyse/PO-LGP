@@ -85,7 +85,7 @@ void newMethod(){
       node->expand();
       //    for(ManipulationTree_Node *n:node->children) n->expand();
       for(ManipulationTree_Node *n:node->children){
-        FILE("z.fol").getOs() <<n->fol.KB <<endl <<n->folState->isNodeOfParentGraph->keys.last();
+        FILE("z.fol").getOs() <<n->fol.KB <<endl <<n->folState->isNodeOfGraph->keys.last();
 #if 1
         n->solvePoseProblem();
 #else

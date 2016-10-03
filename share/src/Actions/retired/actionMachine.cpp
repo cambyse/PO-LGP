@@ -4,7 +4,7 @@
 //#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
 #include <FOL/fol.h>
-#include <RosCom/rosalvar.h>
+#include <RosCom/subscribeAlvarMarkers.h>
 
 //===========================================================================
 //Singleton<SymbolL> symbols;
@@ -49,12 +49,12 @@ void ActionMachine::open(){
       KB.deAccess();
     }else{
       KB.writeAccess();
-      new Node_typed<bool>(KB(), {"conv"}, {}, NULL, false);
-      new Node_typed<bool>(KB(), {"contact"}, {}, NULL, false);
-      new Node_typed<bool>(KB(), {"timeout"}, {}, NULL, false);
-//new Node_typed<bool>(KB(), {"CoreTasks"}, {}, NULL, false);
-//new Node_typed<bool>(KB(), {"moving"}, {}, NULL, false);
-      KB().appendSubgraph({"STATE"}, {});
+      KB().newNode<bool>({"conv"}, {}, NULL, false);
+      KB().newNode<bool>({"contact"}, {}, NULL, false);
+      KB().newNode<bool>({"timeout"}, {}, NULL, false);
+//KB().newNode<bool>({"CoreTasks"}, {}, NULL, false);
+//KB().newNode<bool>({"moving"}, {}, NULL, false);
+      KB().newSubgraph({"STATE"}, {});
       KB().checkConsistency();
       KB()>> FILE("z.initialKB");
       KB.deAccess();
@@ -124,7 +124,7 @@ void ActionMachine::step(){
     cout <<"STOP" <<endl;
     KB.writeAccess();
     Node *quitSymbol = KB()["quit"];
-    KB().get<Graph>("STATE").append<bool>({},{quitSymbol}, NULL, false);
+    KB().get<Graph>("STATE").newNode<bool>({},{quitSymbol}, NULL, false);
     KB.deAccess();
 //    moduleShutdown().incrementValue();
   }
@@ -217,14 +217,14 @@ void ActionMachine::close(){
 }
 
 void ActionMachine::parseTaskDescription(Graph& td){
-  Node *t = td.isNodeOfParentGraph;
+  Node *t = td.isNodeOfGraph;
   mlr::String type=td["type"]->get<mlr::String>();
   if(type=="homing"){
     new Homing(*this, t->parents(0)->keys.last());
   }else if(type=="forceCtrl"){
-    new PushForce(*this, td["ref1"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
+    new PushForce(*this, td["sym2"]->get<mlr::String>(), td["target"]->get<arr>(), td["timeOut"]->get<double>());
   }else{
-    DefaultTaskMap *map = new DefaultTaskMap(td, *world);
+    TaskMap_Default *map = new TaskMap_Default(td, *world);
     CtrlTask* task = new CtrlTask(t->parents(0)->keys.last(), *map, td);
     task->active=false;
     new FollowReference(*this, t->parents(0)->keys.last(), task);
@@ -256,18 +256,18 @@ void ActionMachine::transitionFOL(double time, bool forceChaining){
   A.readAccess();
   for(Action *a:A()) if(a->active){
     if(a->finishedSuccess(*this)){
-      Node *newit = state.append<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
+      Node *newit = state.newNode<bool>({}, {a->symbol, convSymbol}, new bool(true), true);
       if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
     if(a->indicateTimeout(*this)){
-      Node *newit = state.append<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
+      Node *newit = state.newNode<bool>({}, {a->symbol, timeoutSymbol}, new bool(true), true);
       if(getEqualFactInKB(state, newit)) delete newit;
       else changes=true;
     }
   }
   if(getContactForce()>5.){
-    Node *newit = state.append<bool>({}, {contactSymbol}, new bool(true), true);
+    Node *newit = state.newNode<bool>({}, {contactSymbol}, new bool(true), true);
     if(getEqualFactInKB(state, newit)) delete newit;
     else changes=true;
   }
@@ -332,7 +332,7 @@ void ActionMachine::waitForQuitSymbol() {
       return;
     }
     for(Node *f:quitSymbol->parentOf){
-      if(f->container.isNodeOfParentGraph && f->container.isNodeOfParentGraph->keys.N && f->container.isNodeOfParentGraph->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
+      if(f->container.isNodeOfGraph && f->container.isNodeOfGraph->keys.N && f->container.isNodeOfGraph->keys(0)=="STATE" && f->parents.N==1){ cont=false; break; }
     }
     KB.deAccess();
   }

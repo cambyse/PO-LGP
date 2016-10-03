@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 /// @file
@@ -62,7 +58,7 @@ struct Type_typed : Type {
 
 template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
-  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = new Node_typed<T>(container, T()); is >>n->value; return n; }
+  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = container.newNode<T>(T()); is >>n->value; return n; }
 //  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
 };
 
@@ -125,22 +121,19 @@ inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& i
 
 #define REGISTER_TYPE(T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
 #define REGISTER_TYPE_Key(Key, T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##Key) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##Key)
-
-/*
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<Type*>(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), new Type_typed_readable<T KO Base>(#Base,NULL)); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO Base> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
-*/
 
 #endif
 

@@ -15,7 +15,6 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
 /**
  * @file
  * @ingroup group_soc
@@ -450,8 +449,8 @@ void OrsSystem::setx(const arr& x){
     uint n=x.N/2;
     CHECK_EQ(x.N,2*n, "");
     arr q, v;
-    q.referToSub(x, 0, n-1);
-    v.referToSub(x, n, 2*n-1);
+    q.referToRange(x, 0, n-1);
+    v.referToRange(x, n, 2*n-1);
     s->setqv(q, v);
   }
 }

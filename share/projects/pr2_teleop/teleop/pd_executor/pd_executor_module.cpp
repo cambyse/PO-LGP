@@ -34,22 +34,22 @@ PDExecutor::PDExecutor()
   }
 
   if(mlr::getParameter<bool>("useCollisions", false)) {
-    collision = fmc.addPDTask("collision", 0.1, 5.8, new ProxyTaskMap(allPTMT, {0u}, .1));
+    collision = fmc.addPDTask("collision", 0.1, 5.8, new TaskMap_Proxy(allPTMT, {0u}, .1));
   }
 
   if(mlr::getParameter<bool>("usePositionR", false)) {
 
-    effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffR",NoVector,"base_footprint"));
+    effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new TaskMap_Default(posTMT,world,"endeffR",NoVector,"base_footprint"));
     effPosR->y_ref = {0.8, -.5, 1.};
     //effPosR->maxVel = 0.004;
   }
 
   if(mlr::getParameter<bool>("usePositionL", false)) {
-    effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world,"endeffL",NoVector,"base_footprint"));
+    effPosL = fmc.addPDTask("MoveEffTo_endeffL", .2, 1.8,new TaskMap_Default(posTMT,world,"endeffL",NoVector,"base_footprint"));
     effPosL->y_ref = {0.8, .5, 1.};
   }
   if(mlr::getParameter<bool>("fc", false)) {
-    fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new DefaultTaskMap(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
+    fc = fmc.addPDTask("fc_endeffL", .2, 1.8,new TaskMap_Default(posTMT,world, "endeffForceL",NoVector,"base_footprint"));
     fc->y_ref ={0.8,0.5,1.}; 
     fc->f_ref = {15.,15.,15.};
     fc->f_Igain = .075;
@@ -71,14 +71,14 @@ PDExecutor::PDExecutor()
   }
 
   if(mlr::getParameter<bool>("useOrientationR", false)) {
-    effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new DefaultTaskMap(quatTMT,world, "endeffR"));
+    effOrientationR = fmc.addPDTask("orientationR", .2, 1.8,new TaskMap_Default(quatTMT,world, "endeffR"));
     effOrientationR->y_ref = {1., 0., 0., 0.};
     effOrientationR->flipTargetSignOnNegScalarProduct = true;
 
   }
 
   if(mlr::getParameter<bool>("useOrientationL", false)) {
-    effOrientationL = fmc.addPDTask("orientationL", .2,1.8,new DefaultTaskMap(quatTMT,world, "endeffL"));
+    effOrientationL = fmc.addPDTask("orientationL", .2,1.8,new TaskMap_Default(quatTMT,world, "endeffL"));
     effOrientationL->y_ref = {1., 0., 0., 0.};
     effOrientationL->flipTargetSignOnNegScalarProduct = true;
 

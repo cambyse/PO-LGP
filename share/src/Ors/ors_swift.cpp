@@ -1,24 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
-
-
-
-
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 /**
  * @file
@@ -225,11 +217,12 @@ void SwiftInterface::deactivate(ors::Shape *s1, ors::Shape *s2) {
 }
 
 void SwiftInterface::pushToSwift(const ors::KinematicWorld& world) {
-  CHECK_EQ(INDEXshape2swift.N,world.shapes.N,"the number of shapes has changed");
+  //CHECK_EQ(INDEXshape2swift.N,world.shapes.N,"the number of shapes has changed");
+  CHECK(INDEXshape2swift.N <= world.shapes.N, "the number of shapes has changed");
   ors::Matrix rot;
   for_list(ors::Shape,  s,  world.shapes) {
     rot = s->X.rot.getMatrix();
-    if(INDEXshape2swift(s->index)!=-1) {
+    if(s->index<INDEXshape2swift.N && INDEXshape2swift(s->index)!=-1) {
       scene->Set_Object_Transformation(INDEXshape2swift(s->index), rot.p(), s->X.pos.p());
       if(!s->cont) scene->Deactivate(INDEXshape2swift(s->index));
       //else         scene->Activate( INDEXshape2swift(s->index) );
@@ -336,7 +329,7 @@ void SwiftInterface::pullFromSwift(ors::KinematicWorld& world, bool dumpReport) 
   
   //add pointClound stuff to list
   if(global_ANN) {
-    uint i, _i;
+    uint i, _i=0;
     arr R(3, 3), t(3);
     arr v, dists, _dists;
     intA idx, _idx;

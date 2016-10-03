@@ -1,5 +1,6 @@
 ## Syntactic keywords
 QUIT
+WAIT
 Terminate
 
 ## activities

@@ -70,7 +70,7 @@ OPTIM = debug
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -Wall $(CXXFLAGS)#-Wno-int-to-pointer-cast#-Wno-invalid-offsetof
+CXXFLAGS := -g -O1 -Wall $(CXXFLAGS)#-Wno-int-to-pointer-cast#-Wno-invalid-offsetof
 endif
 ifeq ($(OPTIM),fast_debug)
 CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
@@ -86,7 +86,7 @@ CXXFLAGS := -O3 -pg -Wall -DMLR_NOCHECK -fno-inline $(CXXFLAGS)
 LDFLAGS += -pg
 endif
 ifeq ($(OPTIM),callgrind)
-CXXFLAGS := -O3 -g -Wall -DMLR_NOCHECK -fno-inline $(CXXFLAGS)
+CXXFLAGS := -O3 -g -Wall -DMLR_NOCHECK $(CXXFLAGS) #-fno-inline
 endif
 
 
@@ -169,6 +169,12 @@ clean: force
 cleanLocks: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
 	@find $(BASE) -type f -name '.lastMake' -delete -print
+
+cleanAll: clean
+	@find $(BASE) -type f \( -name '*.o' -or -name '*.so' -or -name '*.exe' \)  -delete -print
+
+cleanLibs: clean
+	@find $(BASE)/lib -type f \( -name '*.so' \)  -delete -print
 
 depend: generate_Makefile.dep
 

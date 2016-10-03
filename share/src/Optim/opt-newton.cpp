@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include <iomanip>
 
@@ -69,23 +65,28 @@ OptNewton::StopCriterion OptNewton::step(){
   //compute Delta
   arr R=Hx;
   if(beta) { //Levenberg Marquardt damping
-    if(R.special==arr::RowShiftedPackedMatrixST) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
+    if(isRowShifted(R)) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
     else for(uint i=0; i<R.d0; i++) R(i,i) += beta;
   }
   if(additionalRegularizer) {
-    if(R.special==arr::RowShiftedPackedMatrixST) R = unpack(R);
+    if(isRowShifted(R)) R = unpack(R);
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
+    bool inversionFailed=false;
     try {
       Delta = lapack_Ainv_b_sym(R, -gx);
     }catch(...){
-      arr sig, eig;
-      lapack_EigenDecomp(R, sig, eig);
+      inversionFailed=true;
+    }
+    if(inversionFailed){
+//      arr sig, eig;
+//      lapack_EigenDecomp(R, sig, eig);
+      arr sig = lapack_kSmallestEigenValues_sym(R, 3);
       if(o.verbose>0){
         cout <<endl <<"** hessian inversion failed ... increasing damping **\neigenvalues=" <<sig <<endl;
       }
       double sigmin = sig.min();
-      CHECK(sigmin<0,"Hessian inversion failed, but eigenvalues are positive???");
+      if(sigmin>0.) THROW("Hessian inversion failed, but eigenvalues are positive???");
       beta = 2.*beta - sigmin;
       betaChanged=true;
       return stopCriterion=stopNone;

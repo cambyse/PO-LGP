@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <Core/array.h>
-#include <Core/array-vector.h>
+
 #include <Algo/spline.h>
 #include "traj_optimizer.h"
 #include <tree_controller_pkg/GetJointState.h>
