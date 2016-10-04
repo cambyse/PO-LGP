@@ -3,4 +3,4 @@ BASE = ../..
 CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES
 LIBS += -lbiros
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

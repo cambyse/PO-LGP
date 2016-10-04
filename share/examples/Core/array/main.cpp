@@ -51,8 +51,6 @@ void TEST(Basics){
   cout <<"\nrefRange(2,4) =\n" <<a.refRange(2,4) <<endl;
   a.refRange(2,4) *= 10.;
   cout <<"\nrows manipulated:\n" <<a <<endl;
-  exit(0);
-
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to mlr::Array<double>({ ... })
@@ -566,7 +564,7 @@ void write(RowShifted& PM){
   cout <<"RowShifted: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
   cout <<"packed numbers =\n" <<PM.Z
       <<"\nrowShifts=" <<PM.rowShift
-     <<"\ncolPaches=\n" <<~PM.colPatches
+//     <<"\ncolPaches=\n" <<~PM.colPatches
     <<"\nunpacked =\n" <<unpack(PM.Z) <<endl;
 }
 
@@ -741,10 +739,6 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
-//  testSparseVector();
-  testSparseMatrix();
-//  testRowShifted();
-  return 0;
 
   testBasics();
   testCheatSheet();
@@ -754,7 +748,7 @@ int MAIN(int argc, char *argv[]){
   testRowsAndColumsAccess();
   testStdVectorCompat();
   testMatlab();
-//  testException();
+  testException();
   testMemoryBound();
   testBinaryIO();
   testExpression();

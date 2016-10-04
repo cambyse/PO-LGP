@@ -21,7 +21,7 @@ clean: $(src_paths:%=cleanPath/%) $(exa_paths:%=cleanPath/%) cleanLocks
 test: setConfigFlag $(exa_paths:%=cleanPath/%) cleanLocks $(exa_paths:%=makePath/%)
 
 setConfigFlag: force
-	echo "MLR_TESTS = 1" > gofMake/z.mk
+	echo "MLR_TESTS = 1" > build/z.mk
 
 runTests:
 	@rm -f z.test-report
@@ -30,7 +30,7 @@ runTests:
 #testLibs:
 #	@find examples -mindepth 2 -maxdepth 2 -type d \
 # 	      -not -name '*py' -not -name 'CMakeFiles'\
-#	      -exec $(BASE)/gofMake/make-path.sh {} lib_test.so \;
+#	      -exec $(BASE)/build/make-path.sh {} lib_test.so \;
 
 ################################################################################
 

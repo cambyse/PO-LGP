@@ -6,4 +6,4 @@ ROS = 1
 PCL=1
 DEPEND =  Core RosCom Perception
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

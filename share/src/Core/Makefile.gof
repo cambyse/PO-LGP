@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
-OUTPUT := ../$(NAME).so
+OUTPUT = ../$(NAME).so
 
 LAPACK = 1
 #OPTIM=fast_debug

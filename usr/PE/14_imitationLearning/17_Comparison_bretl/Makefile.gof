@@ -4,4 +4,4 @@ OBJS = main.o ../src/ikmo_bretl.o ../src/motion_factory.o ../src/gaussian_costs.
 DEPEND = Core Motion Gui Optim Algo Ors
 PTHREAD = 1
 PHYSX = 1
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

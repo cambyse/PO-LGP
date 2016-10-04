@@ -13,8 +13,7 @@ BASE_REAL = $(shell realpath $(BASE))
 # load user options from the local make-config
 #
 ################################################################################
-include $(BASE)/gofMake/config.mk
--include $(BASE)/gofMake/z.mk
+include $(BASE)/build/config.mk
 
 
 ################################################################################
@@ -48,13 +47,9 @@ MOC = moc
 UIC = uic
 YACC = bison -d
 
-ifndef MLR_LIBPATH
-MLR_LIBPATH = /home/lib
-endif
-
 LINK	= $(CXX)
-CPATHS	+= $(BASE)/include $(BASE)/src $(MLR_LIBPATH)/include
-LPATHS	+= $(BASE)/lib $(MLR_LIBPATH)/lib /usr/local/lib
+CPATHS	+= $(BASE)/src
+LPATHS	+= $(BASE)/src /usr/local/lib
 LIBS += -lrt
 SHAREFLAG = -shared #-Wl,--warn-unresolved-symbols #-Wl,--no-allow-shlib-undefined
 
@@ -70,7 +65,7 @@ OPTIM = debug
 endif
 
 ifeq ($(OPTIM),debug)
-CXXFLAGS := -g -O1 -Wall $(CXXFLAGS)#-Wno-int-to-pointer-cast#-Wno-invalid-offsetof
+CXXFLAGS := -g -Wall $(CXXFLAGS)#-Wno-int-to-pointer-cast#-Wno-invalid-offsetof
 endif
 ifeq ($(OPTIM),fast_debug)
 CXXFLAGS := -g -O3 -Wall $(CXXFLAGS)
@@ -95,7 +90,7 @@ endif
 # load defines for linking to external libs
 #
 ################################################################################
-include $(BASE)/gofMake/defines.mk
+include $(BASE)/build/defines.mk
 
 
 ################################################################################
@@ -129,7 +124,7 @@ SWIG_FLAGS=-c++ -python $(SWIG_INCLUDE)
 #
 ################################################################################
 
-BUILDS := $(DEPEND:%=$(BASE)/lib/lib%.so) $(BUILDS)
+BUILDS := $(DEPEND:%=$(BASE)/src/lib%.so) $(BUILDS)
 LIBS := $(DEPEND:%=-l%) $(LIBS)
 CXXFLAGS := $(DEPEND:%=-DMLR_%) $(CXXFLAGS)
 
@@ -209,8 +204,6 @@ info: force
 	@echo "  MAKEMODE =" "$(MAKEMODE)"
 	@echo
 
-all: default
-
 
 ################################################################################
 #
@@ -256,7 +249,7 @@ pywrapper: $(OUTPUT) $(MODULE_NAME)py.so $(MODULE_NAME)py.py
 
 ## this RULE only applies to $(NAME).so
 ## other %.so files are created by calling make in their directory
-$(BASE)/lib/$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
+../$(NAME).so: $(PREOBJS) $(BUILDS) $(OBJS)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(SHAREFLAG)
 
 %.lib: $(PREOBJS) $(BUILDS) $(OBJS)
@@ -321,25 +314,33 @@ includeAll.cxx: force
 #
 ################################################################################
 
-$(BASE)/lib/libextern_%.so: $(BASE)/src/extern/%
-	+@-$(BASE)/gofMake/make-path.sh $<
+$(BASE)/src/libextern_%.so: %
+	+@-$(BASE)/build/make-path.sh $<
 
-$(BASE)/lib/libHardware_%.so: $(BASE)/src/Hardware/%
-	+@-$(BASE)/gofMake/make-path.sh $<
+$(BASE)/src/libHardware_%.so: $(BASE)/src/Hardware/%
+	+@-$(BASE)/build/make-path.sh $<
 
-$(BASE)/lib/lib%.so: $(BASE)/src/%
-	+@-$(BASE)/gofMake/make-path.sh $<
+$(BASE)/src/lib%.so: $(BASE)/src/%
+	+@-$(BASE)/build/make-path.sh $<
 
 makePath/%: %
-	+@-$(BASE)/gofMake/make-path.sh $<
+	+@-$(BASE)/build/make-path.sh $<
+
+makeTest/%: %
+	+@-$(BASE)/build/make-path.sh $< MLR_TESTS=1
 
 runPath/%: %
-	+@-$(BASE)/gofMake/run-path.sh $<
+	+@-$(BASE)/build/run-path.sh $<
+
+cleanPath/%: %
+	@echo "                                                ***** clean " $*
+	@-rm -f $*/Makefile.dep
+	@-$(MAKE) -C $* -f Makefile clean --no-print-directory
 
 makePythonPath/%: %
 	make --directory=$< pywrapper
 
-$(BASE)/gofMake/config.mk: $(BASE)/gofMake/config.mk.default
+$(BASE)/build/config.mk: $(BASE)/build/config.mk.default
 	cp $< $@
 
 zip::

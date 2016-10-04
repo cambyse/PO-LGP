@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = libJK
-OUTPUT = $(BASE)/lib/$(NAME).so
+OUTPUT = ../$(NAME).so
 
 MAKEMODE = mlrlib
 
@@ -9,4 +9,4 @@ MAKEMODE = mlrlib
 SRCS = $(shell find . -maxdepth 2 \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -name '*_instantiate.cpp' \) )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

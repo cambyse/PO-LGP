@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = libNP
-OUTPUT = $(BASE)/lib/$(NAME).so
+OUTPUT = ../$(NAME).so
 
 MAKEMODE = mlrlib
 
@@ -31,4 +31,4 @@ OBJS         = \
 
 CXXFLAGS += -DNP_IMPLEMENT_TEMPLATES
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

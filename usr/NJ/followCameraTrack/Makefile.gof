@@ -17,7 +17,7 @@ SWIFT = 1
 SCHUNK = 1
 PLIB = 1  #for the Gamepad
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 
 
 

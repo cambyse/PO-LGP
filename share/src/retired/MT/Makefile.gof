@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = lib$(shell basename `pwd`)
-OUTPUT = $(BASE)/lib/$(NAME).so
+OUTPUT = ../$(NAME).so
 
 GTK = 1
 GTKGL = 1
@@ -13,4 +13,4 @@ OBJS = $(SRCS:%.cpp=%.o)
 
 #OPTIM=fast
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
