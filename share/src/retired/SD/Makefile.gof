@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = libSD
-OUTPUT = ../$(NAME).so
+NAME   = SD
+OUTPUT = lib$(NAME).so
 
 MAKEMODE = mlrlib
 

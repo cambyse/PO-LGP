@@ -1,6 +1,6 @@
 BASE   = ../../..
-NAME   = libHardware_$(shell basename `pwd`)
-OUTPUT = ../$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = libHardware_$(NAME).so
 
 FREENECT = 1
 DEPEND = Core

@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = libNP
-OUTPUT = ../$(NAME).so
+NAME   = NP
+OUTPUT = lib$(NAME).so
 
 MAKEMODE = mlrlib
 

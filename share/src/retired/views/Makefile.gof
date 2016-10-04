@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = libviews
-OUTPUT = ../$(NAME).so
+NAME   = views
+OUTPUT = lib$(NAME).so
 
 MAKEMODE = mlrlib
 

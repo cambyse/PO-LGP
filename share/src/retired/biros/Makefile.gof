@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = libbiros
-OUTPUT = ../$(NAME).so
+NAME   = biros
+OUTPUT = lib$(NAME).so
 
 MAKEMODE = mlrlib
 

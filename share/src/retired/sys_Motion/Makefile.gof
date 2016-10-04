@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = lib$(shell basename $(PWD))
-OUTPUT = ../$(NAME).so
+NAME   = $(shell basename $(PWD))
+OUTPUT = lib$(NAME).so
 
 DEPEND = Array
 

@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = lib$(shell basename `pwd`)
-OUTPUT = ../$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = lib$(NAME).so
 
 ROS = 1
 DEPEND = Core Hardware Hardware_gamepad Motion Ors Gui FOL

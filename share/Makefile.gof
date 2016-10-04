@@ -14,7 +14,7 @@ pysrc_paths = src/Core src/Ors src/Gui src/Motion src/Optim
 
 ################################################################################
 
-all: $(src_paths:%=makePath/%) $(exa_paths:%=makePath/%)
+srcExa: $(src_paths:%=makePath/%) $(exa_paths:%=makePath/%)
 
 src: $(src_paths:%=makePath/%)
 
@@ -24,11 +24,10 @@ python: $(src_paths:%=makePath/%) $(pysrc_paths:%=makePythonPath/%)
 
 clean: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
-	@find $(BASE) -type f \( -name '*.o' -or -name 'lib*.so' -or -name 'lib*.a' -or -name '.lastMake' \) -delete -print
+	@find $(BASE) \( -type f -or -type l \) \( -name '*.o' -or -name 'lib*.so' -or -name 'lib*.a' \) -delete -print
 
 cleanLocks: force
 	@find $(BASE) -type d -name 'Make.lock' -delete -print
-	@find $(BASE) -type f -name '.lastMake' -delete -print
 
 cleanDepends: force
 	@find $(BASE) -type f -name 'Makefile.dep' -delete -print

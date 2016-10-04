@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = libDZ
-OUTPUT = ../$(NAME).so
+NAME   = DZ
+OUTPUT = lib$(NAME).so
 
 MAKEMODE = mlrlib
 

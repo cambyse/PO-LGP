@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = lib$(shell basename `pwd`)
-OUTPUT = ../$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = lib$(NAME).so
 
 GL = 0
 PHYSX = 0

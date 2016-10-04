@@ -1,7 +1,7 @@
 CXX=clang++
 BASE   = $(shell realpath ../..)
 NAME   = $(shell basename $(BASE))
-OUTPUT = ../$(NAME).so
+OUTPUT = lib$(NAME).so
 
 CONFIGMODE = mlrlib
 

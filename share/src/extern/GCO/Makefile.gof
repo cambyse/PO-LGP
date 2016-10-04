@@ -1,6 +1,6 @@
 BASE   = ../../..
-NAME   = libextern_$(shell basename `pwd`)
-OUTPUT = ../$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = libextern_$(NAME).so
 
 CXXFLAGS += -Wno-parentheses -Wno-char-subscripts -Wno-reorder -Wno-unused-variable
 
