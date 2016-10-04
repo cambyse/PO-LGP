@@ -32,13 +32,13 @@ struct MyBaxter_private{
 //  ActivitySpinnerModule aspin;
 
   RosInit rosInit;
-  Filter myFilter;
 
 //  SubscribeTabletop tabletop_subscriber;
-  SubscribeAlvar alvar_subscriber;
-  SubscribeOptitrack optitrack_subscriber;
+//  SubscribeAlvar alvar_subscriber;
+//  SubscribeOptitrack optitrack_subscriber;
   Optitrack op;
   Collector data_collector;
+  Filter myFilter;
   PublishDatabase myPublisher;
 
   OrsViewer view;
@@ -60,11 +60,11 @@ struct MyBaxter_private{
     //-- ugly...
 //    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
 //    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
-    if(mlr::getParameter<bool>("useRos", false)){
-      nh = new ros::NodeHandle;
-      pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
-    }
-    //tcm.useRos = false;
+//    if(mlr::getParameter<bool>("useRos", false)){
+//      nh = new ros::NodeHandle;
+//      pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
+//    }
+    tcm.useRos = false;
     threadOpenModules(true);
   }
 
