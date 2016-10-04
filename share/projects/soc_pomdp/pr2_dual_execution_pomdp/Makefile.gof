@@ -9,4 +9,4 @@ OBJS = $(SRCS:%.cpp=%.o)
 LPATHS += /opt/ros/groovy/lib
 
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

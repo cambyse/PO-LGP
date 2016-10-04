@@ -70,6 +70,7 @@ struct JointState_
     , fL_gamma(0.0)
     , fR_gamma(0.0)
     , qd_filt(0.0)  {
+  (void)_alloc;
     }
 
 
@@ -305,7 +306,7 @@ namespace serialization
       stream.next(m.qd_filt);
     }
 
-    ROS_DECLARE_ALLINONE_SERIALIZER;
+    ROS_DECLARE_ALLINONE_SERIALIZER
   }; // struct JointState_
 
 } // namespace serialization

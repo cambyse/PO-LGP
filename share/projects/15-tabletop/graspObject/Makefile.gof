@@ -6,4 +6,4 @@ GL = 1
 
 DEPEND = Motion Core Perception Gui Ors RosCom Actions
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
