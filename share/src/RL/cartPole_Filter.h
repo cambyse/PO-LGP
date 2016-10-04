@@ -28,19 +28,23 @@ namespace mdp {
 class cartPole_Filter: public Filter{
 
 private:
-    arr perceptionHistory;
-    arr currentEstimate;
+    arr observationHistory;
+    arr startFeature;
+    arr currentFeature;
 
 public:
     //Constructor and destructor
     cartPole_Filter();
+    cartPole_Filter(arr start);
     ~cartPole_Filter();
 
     //Characteristic functions
-    void savePerception(const arr& perception);
+    void reset();
+    void saveObservation(const arr& observation);
     void clearHistory();
-    void computeEstimate();
-    arr getObsEstimate();
+    void computeFeature();
+    void computeFeature_PO(); //Partial observable MDP
+    arr getFeature();
 
 };
 

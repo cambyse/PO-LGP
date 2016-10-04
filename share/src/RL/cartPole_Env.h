@@ -30,19 +30,23 @@ class cartPole_Env: public Environment{
 protected:
     arr startState;
     arr currentState;
+    uint controlType;
+    uint obsMDP;
 
 public:
     //Constructor and destructor
     cartPole_Env() {}
-    cartPole_Env(arr start);
+    cartPole_Env(arr start, uint control, uint observ);
     ~cartPole_Env() {}
 
     //Inner access
     uint getStateDim();
+    uint getControlType();
+    uint getObsType();
 
     //Characteristic functions
     void resetState();
-    bool transition(const arr& action, arr& perception, double& reward);
+    bool transition(arr& observation, double& reward, const arr& action);
 
 };
 

@@ -28,7 +28,7 @@ protected:
 public:
     //Constructor and destructor
     Policy() = default;
-    Policy(uint aDim, uint pDim);
+    Policy(uint actDim, uint polDim);
     virtual ~Policy() {}
 
     //Inner access
@@ -37,8 +37,12 @@ public:
     virtual uint getPolicyDim();
 
     //Characteristic functions
-    virtual void sampleAction(arr& currentAgentObs, const arr& theta, arr& action) = 0;
-    virtual void gradLogPol(arr& agentObservations, arr& theta, arr& actions, arr& gradLog) = 0;
+    virtual void sampleAction(arr& action, const arr& currentFeature, const arr& theta) = 0;
+    virtual void gradLogPol(arr& gradLog, const arr& agentFeature, const arr& theta, const arr& action) = 0;
+
+    //Modified functions
+    virtual void sampleAction_ver1(arr& action, const arr& currentFeature, const arr& theta) = 0;
+    virtual void gradLogPol_ver1(arr& gradLog, const arr& agentFeatures, const arr& theta, const arr& actions) = 0;
 
 };
 

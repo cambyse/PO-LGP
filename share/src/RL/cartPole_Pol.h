@@ -37,7 +37,7 @@ public:
 
     //Constructor and destructor
     cartPole_Pol();
-    cartPole_Pol(uint aDim, uint pDim);
+    cartPole_Pol(uint actDim, uint polDim);
     ~cartPole_Pol();
 
     //Inner access
@@ -46,9 +46,12 @@ public:
     uint getPolicyDim();
 
     //Characteristic functions
-    void sampleAction(arr& currentAgentObs, const arr& theta, arr& action);
-    void gradLogPol(arr& agentObservations, arr& theta, arr& actions, arr& gradLog);
+    void sampleAction(arr& action, const arr& currentFeature, const arr& theta);
+    void gradLogPol(arr& gradLog, const arr &agentFeature, const arr &theta, const arr &action);
 
+    //Modified functions
+    void sampleAction_ver1(arr& action, const arr& currentFeature, const arr& theta);
+    void gradLogPol_ver1(arr& gradLog, const arr &agentFeatures, const arr &theta, const arr &actions);
 };
 
 

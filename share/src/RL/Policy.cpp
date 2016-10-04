@@ -23,14 +23,15 @@ namespace mdp {
 
 //Policy::Policy() {}
 
-Policy::Policy(uint aDim, uint pDim)
+Policy::Policy(uint actDim, uint polDim)
 {
 //    mlr::useLapack = true;
-    actionDim = aDim;
+    actionDim = actDim;
     //actionNum = aNum;
     assert(actionDim > 0);
 
-    policyDim = pDim;
+    policyDim = polDim;
+    assert(policyDim > 0);
 }
 
 //Policy::~Policy() {}
@@ -45,9 +46,9 @@ uint Policy::getPolicyDim()
     return policyDim;
 }
 
-//void Policy::sampleAction(arr& currentAgentObs, const arr& theta, arr& action) {}
+//void Policy::sampleAction(arr& action, const arr& currentFeature, const arr& theta) {}
 
-//void Policy::gradLogPol(arr& agentObservations, arr& theta, arr& actions, arr& gradLog) {}
+//void Policy::gradLogPol(arr& gradLog, const arr& agentFeature, const arr& theta, const arr& action) {}
 
 /*uint Policy::getActionNum()
 {

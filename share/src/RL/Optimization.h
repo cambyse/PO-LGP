@@ -16,8 +16,8 @@
 #include <stdint.h>
 #include <cstring>
 
-#include<Core/util.h>
-#include<Core/array.h>
+#include <Core/util.h>
+#include <Core/array.h>
 
 
 namespace mdp {
@@ -32,12 +32,12 @@ protected:
 
 public:
     //Constructor and destructor
-    Optimization() {};
-    Optimization(bool flag, double min = .0, double max = .0);
+    Optimization() = default;
+    Optimization(bool flag, double min, double max);
     ~Optimization();
 
     //Characteristic functions
-    void RPROP(arr& step, const arr& gradNew, arr& gradOld, arr& theta);
+    void RPROP(arr& gradOld, arr& theta, arr& step, const arr& gradNew);
 
 };
 

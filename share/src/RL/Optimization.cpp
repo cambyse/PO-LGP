@@ -1,6 +1,6 @@
 
-#include<Core/util.h>
-#include<Core/array.h>
+#include <Core/util.h>
+#include <Core/array.h>
 
 #include "Optimization.h"
 
@@ -30,7 +30,7 @@ Optimization::Optimization(bool flag, double min, double max)
 Optimization::~Optimization() {}
 
 
-void Optimization::RPROP(arr& step, const arr& gradNew, arr& gradOld, arr& theta)
+void Optimization::RPROP(arr& gradOld, arr& theta, arr& step, const arr& gradNew)
 {
     theta.reshapeAs(gradNew);
 
@@ -60,6 +60,7 @@ void Optimization::RPROP(arr& step, const arr& gradNew, arr& gradOld, arr& theta
             }
         }
     }
+
     theta.reshape(gradNew.d0*gradNew.d1);
 }
 
