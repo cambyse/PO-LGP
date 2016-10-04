@@ -3,7 +3,7 @@
 #include <Geo/geo.h>
 #include <Gui/opengl.h>
 
-void drawEnv(void*);
+void glStandardScene(void*);
 
 Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   q.resize(2).setZero();
@@ -208,7 +208,7 @@ void Racer::stepDynamicsAcc(double u_acc){
 OpenGL& Racer::gl(){
   if(!_gl){
     _gl = new OpenGL;
-    _gl->add(drawEnv, this);
+    _gl->add(glStandardScene, this);
     _gl->add(Racer::glStaticDraw, this);
     _gl->camera.setPosition(0., -20., 5.);
     _gl->camera.focus(0, 0, .2);

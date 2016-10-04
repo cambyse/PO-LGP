@@ -26,19 +26,22 @@ namespace mdp {
 class Filter{
 
 private:
-    arr perceptionHistory;
-    arr currentEstimate;
+//    arr perceptionHistory;
+//    arr currentEstimate;
 
 public:
     //Constructor and destructor
-    Filter();
+//    Filter();
     virtual ~Filter() {}
 
     //Characteristic functions
-    virtual void savePerception(const arr& perception);
+    virtual void savePerception(const arr& perception){ NIY; }
     virtual void clearHistory() = 0;
-    virtual void computeEstimate() = 0;
-    virtual arr getObsEstimate() = 0;
+    virtual void computeEstimate(){ NIY; }
+    virtual arr getObsEstimate(){ NIY; }
+
+    virtual uint getFeatureDim(){ NIY; }
+    virtual arr filterUpdate(const arr& action, const arr& perception){ NIY; }
 
 };
 

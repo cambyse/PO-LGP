@@ -33,7 +33,7 @@ protected:
 public:
     //Constructor and destructor
     Optimization() {};
-    Optimization(bool flag = false, double min = .0, double max = .0);
+    Optimization(bool flag, double min = .0, double max = .0);
     ~Optimization();
 
     //Characteristic functions

@@ -2,7 +2,6 @@ BASE = ../../..
 
 
 OBJS = main.o
-DEPEND = Core RL
-
+DEPEND = Core RL Hardware_racer Gui Algo
 
 include $(BASE)/gofMake/generic.mk

@@ -12,11 +12,6 @@
 #define MDP_Policy_H
 
 
-#include <iostream>
-#include <stdint.h>
-#include <cstring>
-
-#include <Core/util.h>
 #include <Core/array.h>
 
 

@@ -20,7 +20,8 @@ using namespace mlr;
 namespace mdp {
 
 
-Filter::Filter()
+#if 0
+  Filter::Filter()
 {
     perceptionHistory.clear();
     currentEstimate.clear();
@@ -32,6 +33,7 @@ void Filter::savePerception(const arr& perception)
 {
     perceptionHistory.append(~perception);
 }
+#endif
 
 //void Filter::computeEstimate()
 //{

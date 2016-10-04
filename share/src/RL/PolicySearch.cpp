@@ -52,9 +52,10 @@ double PolicySearch::rollout(const arr& theta, arr& observations, arr& actions, 
 
      Env.resetState();
      Fil.clearHistory();
-     arr currentAgentObs; currentAgentObs.setZero();
+     arr currentAgentObs = Fil.getObsEstimate(); //currentAgentObs.setZero();
      arr action;
      arr perception;
+     arr gradLog = zeros(Pol.getActionDim());
 
      double reward;
      double totalReturn = 0.0;  
@@ -63,7 +64,11 @@ double PolicySearch::rollout(const arr& theta, arr& observations, arr& actions, 
 
      for(uint t=0; t<numSteps; t++)
      {
+#if 1
         Pol.sampleAction(currentAgentObs, theta, action);
+#else
+       Pol.sampleAction(currentAgentObs, theta, action, gradLog);
+#endif
         observations.append(~currentAgentObs);
 
         //Append as a line - in actions, a row is an action

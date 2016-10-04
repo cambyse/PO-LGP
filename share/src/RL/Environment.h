@@ -12,22 +12,16 @@
 #define MDP_Environment_h
 
 
-#include <iostream>
-#include <stdint.h>
-#include <cstring>
-
-#include<Core/util.h>
 #include<Core/array.h>
 
 
 namespace mdp {
 
-
 class Environment{
 
 protected:
-    arr startState;
-    arr currentState;
+    arr startState;  //mt: must not be part of virtual class, only concrete class
+    arr currentState;  //mt: must not be part of virtual class, only concrete class
 
 public:
     //Constructor and destructor
@@ -41,7 +35,7 @@ public:
 
     //Characteristic functions
     virtual void resetState() = 0;
-    virtual bool transition(const arr& action, arr& perception, double& reward) = 0;
+    virtual bool transition(const arr& action, arr& perception, double& reward) = 0; //mt: swap argument orders //mt: bool indicates terminal state?
 
 };
 
