@@ -10,7 +10,7 @@ struct HandPositionMap:TaskMap{
     arr posArm, Jarm;
     G.kinematicsPos(posArm, Jarm, arm);
 
-    posArm -= ARR(.5,.5,1.3);
+    // posArm -= ARR(.5,.5,1.3);
 
     y = posArm;
     J = Jarm;
@@ -101,7 +101,8 @@ void moveReba(){
 #if 0
   komo.setPosition(1., 1., "endeffL", "target", sumOfSqrTT, NoArr, 1e2);
 #else
-  komo.setTask(.5, 1., new HandPositionMap(), sumOfSqrTT, NoArr, 1e2);
+  komo.setTask(0., .5, new HandPositionMap(), sumOfSqrTT, ARR(.5,.5,1.3), 1e2);
+  komo.setTask(.5, 1., new HandPositionMap(), sumOfSqrTT, ARR(.8,0.,1.3), 1e2);
   komo.setTask(0., 1., new RebaMap(), sumOfSqrTT, NoArr, 1e2);
 
   komo.setTask(.8, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
