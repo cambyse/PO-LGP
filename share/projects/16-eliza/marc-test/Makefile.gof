@@ -1,7 +1,7 @@
 BASE = ../../..
 
 
-OBJS = main.o
-DEPEND = Core RL Hardware_racer Gui Algo
+OBJS = main.o racerEnvironment.o
+DEPEND = Core RL Hardware_racer Gui Algo Optim
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
