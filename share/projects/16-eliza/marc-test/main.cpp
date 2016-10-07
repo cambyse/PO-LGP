@@ -66,18 +66,33 @@ void testOptimization(){
     return -xi.rollout(x);
   };
 
-
+  xi.horizon = 20;
 //  optRprop(theta, f, OPT(verbose=2));
-  optGradDescent(theta, f, OPT(verbose=2));
+//  optGradDescent(theta, f, OPT(verbose=2));
+  optGrad(theta, f, OPT(verbose=2));
+
+  xi.horizon = 50;
+//  optRprop(theta, f, OPT(verbose=2));
+//  optGradDescent(theta, f, OPT(verbose=2));
+  optGrad(theta, f, OPT(verbose=2));
+
+//  xi.horizon = 150;
+//  optRprop(theta, f, OPT(verbose=2));
+//  optGradDescent(theta, f, OPT(verbose=2));
+
+
+  R.display = true;
+  xi.horizon = 200;
+  xi.rollout(theta);
 }
 
 //==============================================================================
 
 int main(int argn, char** argv){
 
-  rnd.clockSeed();
+//  rnd.clockSeed();
 
-  testGradients();
+//  testGradients();
   testOptimization();
 
   return 0;

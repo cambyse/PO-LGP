@@ -36,18 +36,19 @@ bool RacerEnvironment::transition(arr& observation, double& reward, const arr& a
   R.getObservation(observation, C,c,W);
 
   //-- costs
-  double costs=0.;
+  double costs = -1.; //basic reward for being alive
+
   //deviation from (x,th)=(0,0)
-  //    costs += .1*mlr::sqr(y(3)) + 1.*mlr::sqr(y(2)); // + 1.*sumOfSqr(w);
+//      costs += .1*mlr::sqr(observation(3)) + 1.*mlr::sqr(observation(2)); // + 1.*sumOfSqr(w);
   costs += 1.*mlr::sqr(R.q(0)) + 10.*mlr::sqr(R.q(1)); // + 1.*sumOfSqr(w);
 
   //control costs
-  costs += .1 * sumOfSqr(action);
+  costs += .01 * sumOfSqr(action);
 
-  //big extra cost for crashing
+  //terminate when crashing (no basic rewards anymore)
   bool terminal=false;
   if(fabs(R.q(1))>30./180.*MLR_PI){ //greater 30 degrees
-    costs += 1.*(t-t);
+//    costs += 1.*(t-t);
     terminal=true;
   }
 

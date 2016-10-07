@@ -26,9 +26,6 @@ int optNewton(arr& x, const ScalarFunction& f,  OptOptions o) {
 }
 
 //===========================================================================
-//
-// OptNewton
-//
 
 OptNewton::OptNewton(arr& _x, const ScalarFunction& _f,  OptOptions _o):
   x(_x), f(_f), o(_o), it(0), evals(0), numTinySteps(0){
@@ -51,10 +48,11 @@ void OptNewton::reinit(){
   if(o.verbose>0) fil <<endl;
 }
 
+//===========================================================================
+
 OptNewton::StopCriterion OptNewton::step(){
   double fy;
   arr y, gy, Hy, Delta;
-//  x_changed=false;
   bool betaChanged=false;
 
   it++;
