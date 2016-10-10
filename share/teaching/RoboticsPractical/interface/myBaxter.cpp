@@ -9,8 +9,15 @@
 #include <RosCom/serviceRAP.h>
 #include <RosCom/baxter.h>
 
-#include <baxter_core_msgs/JointCommand.h>
+#include <RosCom/subscribeAlvarMarkers.h>
+#include <RosCom/subscribeTabletop.h>
+#include "RosCom/subscribeOptitrack.h"
+#include <RosCom/perceptionCollection.h>
+#include <RosCom/perceptionFilter.h>
 #include <RosCom/filterObject.h>
+#include <RosCom/publishDatabase.h>
+
+#include <baxter_core_msgs/JointCommand.h>
 
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
 
@@ -23,6 +30,13 @@ struct MyBaxter_private{
 
   RosInit rosInit;
 //  SubscribeTabletop tabletop_subscriber;
+//  SubscribeAlvar alvar_subscriber;
+//  SubscribeOptitrack optitrack_subscriber;
+  Optitrack op;
+  Collector data_collector;
+  Filter myFilter;
+  PublishDatabase myPublisher;
+
   OrsViewer view;
   OrsPoseViewer ctrlView;
   SendPositionCommandsToBaxter spctb;
@@ -38,15 +52,10 @@ struct MyBaxter_private{
       rosInit("MyBaxter"),
       ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
       spctb(tcm.realWorld),
-      sub("/robot/joint_states", jointState) {
-    //-- ugly...
-//    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
-//    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
-    if(mlr::getParameter<bool>("useRos", false)){
-      nh = new ros::NodeHandle;
-      pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
-    }
-    //tcm.useRos = false;
+//      data_collector(true),
+      sub("/robot/joint_states", jointState)
+  {
+//    tcm.useRos = false;
     threadOpenModules(true);
   }
 
@@ -483,6 +492,39 @@ const ors::KinematicWorld& MyBaxter::getModelWorld(){
 arr MyBaxter::getJointLimits(){
   return s->tcm.realWorld.getLimits();
 }
+
+void MyBaxter::setLimits(){
+  arr limits = s->tcm.realWorld.getLimits();
+
+  TaskMap *map = new TaskMap_qLimits(limits);
+
+  CtrlTask* t = new CtrlTask("limits", map);
+
+  t->map.phi(t->y, NoArr, s->tcm.modelWorld.get()()); //get the current value
+
+  activeTasks.append(t);
+  s->tcm.ctrlTasks.set() = activeTasks;
+
+  if (reportState)
+    t->reportState(cout);
+
+}
+
+void MyBaxter::releaseLimits(){
+  for (CtrlTask* t : activeTasks)
+  {
+    if (t->name == "limits")
+    {
+      t->active = false;
+      activeTasks.removeValue(t);
+      s->tcm.ctrlTasks.set() = activeTasks;
+      delete &t->map;
+      delete t;
+      return;
+    }
+  }
+}
+
 
 double MyBaxter::getCollisionScalar(){
   arr y;

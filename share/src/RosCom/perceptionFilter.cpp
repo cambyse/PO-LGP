@@ -43,7 +43,11 @@ void Filter::step(){
   FilterObjects DatabaseObjectsOfGivenType, PerceptualInputsOfGivenType;
 
   // For each type of inputs, run the algorithm.
-  for (auto const& type : {FilterObject::FilterObjectType::alvar, FilterObject::FilterObjectType::cluster, FilterObject::FilterObjectType::plane})
+  for (auto const& type : {FilterObject::FilterObjectType::alvar,
+                           FilterObject::FilterObjectType::cluster,
+                           FilterObject::FilterObjectType::plane,
+                           FilterObject::FilterObjectType::optitrackbody,
+                           FilterObject::FilterObjectType::optitrackmarker})
   {
     // Grab the subset from the inputs matching this type
     PerceptualInputsOfGivenType.clear();

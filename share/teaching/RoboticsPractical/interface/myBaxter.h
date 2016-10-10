@@ -72,6 +72,9 @@ struct MyBaxter{
   arr getJointLimits();
   double getCollisionScalar();
 
+  void setLimits();
+  void releaseLimits();
+
   void grip();
   void grip(const bool grip, const bool sim = false);
 
