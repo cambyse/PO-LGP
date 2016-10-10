@@ -26,9 +26,9 @@ struct Roopi{
 
   void destroyCtrlTask(CtrlTask* t); //deletes also the map
 
-  getModelWorld
+  //getModelWorld
 
-  followTaskTrajectory(const arrL& trajectory, CtrlTaskL& t);
+  //followTaskTrajectory(const arrL& trajectory, CtrlTaskL& t);
 
 //  CtrlTask* task(const Graph& specs);
 //  CtrlTask* task(const char* name,
@@ -37,12 +37,12 @@ struct Roopi{
 //                 const char* jShapeName, const ors::Vector& jvec,
 //                 const arr& target,
 //                 double decayTime, double dampingRatio, double maxVel, double maxAcc);
-//  CtrlTask* modify(CtrlTask* t, const Graph& specs);
-//  CtrlTask* modifyTarget(CtrlTask* t, const arr& target);
+  CtrlTask* modify(CtrlTask* t, const Graph& specs);
+  CtrlTask* modifyTarget(CtrlTask* t, const arr& target);
 
 //  //-- wait for & stop tasks
-//  void stop(const CtrlTaskL& tasks);
-//  void waitConv(const CtrlTaskL& tasks);
+  void stop(const CtrlTaskL& tasks);
+  void waitConv(const CtrlTaskL& tasks);
 
 //  //-- get object information
 //  uint reportPerceptionObjects();

@@ -18,13 +18,12 @@
 #include <unordered_set>
 #include "perceptionFilter.h"
 
-Filter::Filter():Module("filter", -1),
+Filter::Filter() : Thread("filter", -1),
   perceptual_inputs(this, "perceptual_inputs", true),
   object_database(this, "object_database", false)
 {}
 
 void Filter::step(){
-
   perceptual_inputs.writeAccess();
   object_database.writeAccess();
 

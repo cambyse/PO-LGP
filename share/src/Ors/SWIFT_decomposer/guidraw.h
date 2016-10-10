@@ -42,42 +42,34 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// convex.h
+// guidraw.h
 //
 // Description:
-//      The convex decomposition routines
+//      Draw utility functions for the user interface.
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef _CONVEX_H_
-#define _CONVEX_H_
+#ifndef _GUIDRAW_H_
+#define _GUIDRAW_H_
 
-#include <extern/SWIFT/SWIFT_array.h>
-#include <extern/SWIFT/SWIFT_mesh.h>
+#include <Ors/SWIFT/SWIFT_array.h>
+#include <Ors/SWIFT/SWIFT_mesh.h>
 
-void Convex_Initialize( SWIFT_Tri_Mesh* m );
-
-void Create_One_Piece( SWIFT_Tri_Mesh* m,
-                       SWIFT_Array<int>& piece_ids,
-                       SWIFT_Array< SWIFT_Array<int> >& mfs,
-                       SWIFT_Array< SWIFT_Array<SWIFT_Tri_Face> >& vfs );
-
-int Decompose_DFS( SWIFT_Tri_Mesh* m, SWIFT_Array<int>& piece_ids,
-               SWIFT_Array< SWIFT_Array<int> >& mfs,
-               SWIFT_Array< SWIFT_Array<SWIFT_Tri_Face> >& vfs, bool random );
-
-int Decompose_BFS( SWIFT_Tri_Mesh* m, SWIFT_Array<int>& piece_ids,
-               SWIFT_Array< SWIFT_Array<int> >& mfs,
-               SWIFT_Array< SWIFT_Array<SWIFT_Tri_Face> >& vfs, bool random );
-
-int Decompose_Cresting_BFS( SWIFT_Tri_Mesh* m, SWIFT_Array<int>& piece_ids,
-               SWIFT_Array< SWIFT_Array<int> >& mfs,
-               SWIFT_Array< SWIFT_Array<SWIFT_Tri_Face> >& vfs );
-
-
-
-void Jitter( SWIFT_Tri_Mesh* m, SWIFT_Real jampl );
-void Edge_Flip( SWIFT_Tri_Mesh* m, SWIFT_Real etol );
+void Draw_Triangle_Mesh( SWIFT_Tri_Mesh* m, bool color
+                         , SWIFT_Array<int>& piece_ids );
+void Draw_Vertices( SWIFT_Tri_Mesh* m );
+void Draw_Edge_Convexity( SWIFT_Tri_Mesh* m, SWIFT_Array<bool>& ecs );
+void Draw_Convex_Pieces( SWIFT_Tri_Mesh* m, bool color, bool vfaces, bool tcol,
+                         bool explode, SWIFT_Triple& expl_cen,
+                         SWIFT_Array<SWIFT_Triple>& coms,
+                         SWIFT_Array<int>& piece_ids,
+                         SWIFT_Array< SWIFT_Array<int> >& mfs,
+                         SWIFT_Array< SWIFT_Array<SWIFT_Tri_Face> >& vfs,
+                         SWIFT_Array<int>& wcps );
+void Draw_Hierarchy( SWIFT_Tri_Mesh* m, bool color, bool vfaces, bool tcol,
+                     bool explode, SWIFT_Triple& expl_cen,
+                     SWIFT_Array<int>& piece_ids,
+                     SWIFT_Array<SWIFT_BV*>& which_pieces );
 
 #endif
 

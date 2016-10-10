@@ -14,9 +14,9 @@ using std::cerr;
 using std::ios;
 using std::setprecision;
 
-#include <extern/SWIFT/SWIFT.h>
-#include <extern/SWIFT/SWIFT_mesh.h>
-#include <extern/SWIFT/SWIFT_fileio.h>
+#include <Ors/SWIFT/SWIFT.h>
+#include <Ors/SWIFT/SWIFT_mesh.h>
+#include <Ors/SWIFT/SWIFT_fileio.h>
 
 extern bool machine_is_big_endian;
 bool hierarchy = false;

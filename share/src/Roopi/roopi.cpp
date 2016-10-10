@@ -1,5 +1,5 @@
 #include "roopi.h"
-#include <Core/module.h>
+#include <Core/thread.h>
 
 
 #include <RosCom/roscom.h>

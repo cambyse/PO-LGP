@@ -6,33 +6,25 @@ target: src
 
 NAME   = $(shell basename $(PWD))
 
-src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' -not -name 'CMakeFiles' -not -name 'retired')
-src_paths += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d -not -name 'CMakeFiles')
+src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' -not -name 'CMakeFiles' -not -name 'retired' -printf "%f ")
+
+#src_paths += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d -not -name 'CMakeFiles')
+
 #exa_paths = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py' -not -name 'CMakeFiles')
 exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile.gof' | grep -o '.*/')
 pysrc_paths = src/Core src/Ors src/Gui src/Motion src/Optim
 
 ################################################################################
 
-srcExa: $(src_paths:%=makePath/%) $(exa_paths:%=makePath/%)
+srcExa: $(src_paths:%=makeDepend/%) $(exa_paths:%=makePath/%)
 
-src: $(src_paths:%=makePath/%)
+src: $(src_paths:%=makeDepend/%)
 
 depend: $(src_paths:%=dependPath/%)
 
-python: $(src_paths:%=makePath/%) $(pysrc_paths:%=makePythonPath/%)
+python: $(src_paths:%=makeDepend/%) $(pysrc_paths:%=makePythonPath/%)
 
-clean: force
-	@find $(BASE) -type d -name 'Make.lock' -delete -print
-	@find $(BASE) \( -type f -or -type l \) \( -name '*.o' -or -name 'lib*.so' -or -name 'lib*.a' \) -delete -print
-
-cleanLocks: force
-	@find $(BASE) -type d -name 'Make.lock' -delete -print
-
-cleanDepends: force
-	@find $(BASE) -type f -name 'Makefile.dep' -delete -print
-
-cleanAll: $(src_paths:%=cleanPath/%) $(exa_paths:%=cleanPath/%) cleanLocks
+clean: $(src_paths:%=cleanPath/%) $(exa_paths:%=cleanPath/%) cleanLocks
 
 cleanStart: force
 	@read -p " *** WARNING: This will rm ALL local files/changes (e.g. project/temporary/data files) - abort if you don't want to continue" yn
@@ -43,10 +35,6 @@ cleanStart: force
 cleanCmake:
 	@find . -type f \( -name 'CMakeCache.txt' -or -name 'CTestTestfile.cmake' -or -name 'cmake_install.cmake' \) -print -delete
 	@find . -type d \( -name 'CMakeFiles' \) -exec rm -Rf {} \;
-
-info:
-	@echo "src_paths =" $(src_paths)
-	@echo "exa_paths =" $(exa_paths)
 
 ################################################################################
 
@@ -95,16 +83,8 @@ reformatSources:
 		
 	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
 
-makePath/%: %
-	+@-$(BASE)/build/make-path.sh $<
-
-dependPath/%: %
-	@echo "                                                ***** depend " $*
-	@-$(MAKE) -C $* -f Makefile.gof depend --no-print-directory
-
-cleanPath/%: %
-	@echo "                                                ***** clean " $*
-	@-rm -f $*/Makefile.dep
-	@-$(MAKE) -C $* -f Makefile.gof clean --no-print-directory
-
 force:
+
+################################################################################
+
+include build/generic.mk

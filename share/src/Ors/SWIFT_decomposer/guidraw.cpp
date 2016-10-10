@@ -55,8 +55,8 @@
 #include <GL/glu.h>
 #include <togl.h>
 
-#include <extern/SWIFT/SWIFT.h>
-#include <extern/SWIFT/SWIFT_mesh.h>
+#include <Ors/SWIFT/SWIFT.h>
+#include <Ors/SWIFT/SWIFT_mesh.h>
 
 #include "guidraw.h"
 
