@@ -1,7 +1,7 @@
 #ifndef system_engine_h
 #define system_engine_h
 
-#include <Core/module.h>
+#include <Core/thread.h>
 
 struct SystemDescription{
   enum StepMode { listenAll=0, listenRead, loopWithBeat, loopFull };

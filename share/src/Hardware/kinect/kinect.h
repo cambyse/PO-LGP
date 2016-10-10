@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 
 
-struct KinectThread:Module{
+struct KinectThread : Thread {
   struct sKinectThread *s;
 
   ACCESS(byteA, kinect_rgb)

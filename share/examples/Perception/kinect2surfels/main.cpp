@@ -1,7 +1,7 @@
 #include <Perception/surfels.h>
 #include <Perception/kinect2pointCloud.h>
 #include <Gui/opengl.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 //#include <System/engine.h>
 #include <Hardware/kinect/kinect.h>
 #include <Perception/perception.h>

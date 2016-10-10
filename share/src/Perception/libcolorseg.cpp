@@ -20,8 +20,8 @@
 #ifdef MLR_extern_libcolorseg
 
 // Felzenszwalb's files
-#include <extern/libcolorseg/image.h>
-#include <extern/libcolorseg/segment-image.h>
+#include "libcolorseg/image.h"
+#include "libcolorseg/segment-image.h"
 
 // Unsupervised graph-cut-based segmentation (single-scale)
 //

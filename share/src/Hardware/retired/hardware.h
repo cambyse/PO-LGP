@@ -11,7 +11,7 @@
 struct HardwareReference;
 
 struct SkinPressure:public Variable {
-  FIELD(arr, y_real);
+  arr y_real;
   
   SkinPressure():Variable("SkinPressure") {
     reg_y_real();
@@ -21,9 +21,9 @@ struct SkinPressure:public Variable {
 };
 
 struct GamepadState: public Variable {
-  FIELD(intA, state);
-  FIELD(uint, n);
-  FIELD(bool, exitSignal);
+  intA state;
+  uint n;
+  bool exitSignal;
   
   GamepadState():Variable("GamepadState"), n(0), exitSignal(false) {
     reg_state();

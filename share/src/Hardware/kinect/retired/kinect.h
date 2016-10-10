@@ -1,13 +1,13 @@
 #ifndef _KINECT_H_
 #define _KINECT_H_
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <functional>
 
 #define Kinect_image_width 640
 #define Kinect_image_height 480
 
-struct KinectThread : Module {
+struct KinectThread : Thread {
   struct sKinectThread *s;
 
   ACCESS(byteA, kinect_rgb)

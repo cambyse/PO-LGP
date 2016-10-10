@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/graph.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 //===========================================================================
 
@@ -49,10 +49,10 @@ Activity* newActivity(Node *fact);
 
 //===========================================================================
 
-struct ActivitySpinnerModule : Module{
+struct ActivitySpinnerModule : Thread {
   ACCESS(ActivityL, A)
 
-  ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
+  ActivitySpinnerModule() : Thread("ActivitySpinnerModule", .01) {}
 
   void open(){}
   void step(){

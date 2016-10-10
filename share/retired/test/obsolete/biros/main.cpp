@@ -70,7 +70,7 @@ void TEST(Loop){
 //
 
 struct Int:Variable{
-  FIELD( int, x );
+   int x ;
   Int():Variable("Integer"), x(0){ reg_x(); }
 };
 
@@ -129,8 +129,8 @@ void TEST(Listening){
 
 struct ExampleVar:public Variable{
   //BIR_VARIABLE;
-  FIELD(int, x);
-  //BIR_FIELD(bool, mybool);
+  int x;
+  //BIR_bool mybool;
   
   ExampleVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
 };

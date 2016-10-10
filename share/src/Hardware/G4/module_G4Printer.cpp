@@ -5,7 +5,7 @@
 
 REGISTER_MODULE(G4Printer)
 
-G4Printer::G4Printer():Module("G4Printer"){ }
+G4Printer::G4Printer() : Thread("G4Printer"){ }
 
 void G4Printer::open(){}
 

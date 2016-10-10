@@ -27,7 +27,7 @@ struct RM_EditCallback:GraphEditCallback{
 };
 
 RelationalMachineModule::RelationalMachineModule()
-  : Module("RelationalMachineModule"),
+  : Thread("RelationalMachineModule"),
     _log("RelationalMachineModule", 1, 1){
 }
 

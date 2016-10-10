@@ -1,6 +1,6 @@
 
 ## SHAPES
-Merge base_link_0 { contact }
+#Merge base_link_0 { contact }
 Merge base_footprint { contact }
 Merge base_bellow_link { contact }
 Merge fl_caster_rotation_link_0 { contact }

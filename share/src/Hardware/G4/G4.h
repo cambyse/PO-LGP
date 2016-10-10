@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 
-struct G4Poller: Module {
+struct G4Poller: Thread{
   ACCESS(floatA, g4_poses)
 
   G4Poller();

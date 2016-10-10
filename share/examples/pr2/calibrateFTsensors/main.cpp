@@ -1,4 +1,4 @@
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <RosCom/roscom.h>
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
@@ -40,11 +40,11 @@
 
 // =================================================================================================
 
-struct RecordFTs : Module{
+struct RecordFTs : Thread {
   Access_typed<arr> wrenchL;
   ofstream fil;
 
-  RecordFTs() : Module("RecordeFTs"), wrenchL(this, "wrenchL", true){
+  RecordFTs() : Thread("RecordeFTs"), wrenchL(this, "wrenchL", true){
   }
 
   void open(){ mlr::open(fil, "z.wrenchL"); }

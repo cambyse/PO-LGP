@@ -9,7 +9,7 @@
 #include <omp.h>
 
 #include <Core/util.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Perception/audio.h>
 #include <Perception/perception.h>
 #include <Perception/videoEncoder.h>

@@ -1,16 +1,16 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Core/array.h>
 
 #include <Algo/hungarian.h>
 #include <RosCom/filterObject.h>
 
-struct Filter : Module{
+struct Filter : Thread {
   ACCESSname(FilterObjects, perceptual_inputs)
   ACCESSname(FilterObjects, object_database)
 
-  Filter():Module("Filter", -1){}
+  Filter() : Thread("Filter", -1){}
 
   virtual void open();
   virtual void step();

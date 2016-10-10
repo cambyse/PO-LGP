@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Hardware/G4/G4.h>
 
-struct G4Printer: Module{
+struct G4Printer : Thread {
   ACCESS(floatA, g4_poses);
 
   G4Printer();

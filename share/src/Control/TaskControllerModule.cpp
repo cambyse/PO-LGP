@@ -16,7 +16,7 @@ struct sTaskControllerModule{};
 #endif
 
 TaskControllerModule::TaskControllerModule(const char* _robot)
-  : Module("TaskControllerModule", .01)
+  : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
   , oldfashioned(true)

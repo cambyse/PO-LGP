@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Hardware/G4/G4.h>
 
 #include <Ors/ors.h>
 #include <Mocap/mocapdata.h>
 
-struct G4Display: Module{
+struct G4Display : Thread {
   ACCESS(floatA, g4_poses)
 
   G4Display();

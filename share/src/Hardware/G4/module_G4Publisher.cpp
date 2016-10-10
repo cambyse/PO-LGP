@@ -41,7 +41,7 @@ struct sG4Publisher{
 
 bool sG4Publisher::initialized = false;
 
-G4Publisher::G4Publisher() : Module("G4Publisher"), s(NULL) {
+G4Publisher::G4Publisher() : Thread("G4Publisher"), s(NULL) {
 }
 
 void G4Publisher::open() {

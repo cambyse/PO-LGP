@@ -28,7 +28,7 @@ void TEST(SSBoxFit){
     org.setRandom();
     org.translate(0,0,1);
     org.makeConvexHull();
-    box.makeSSBox(org.V, 10, 3);
+    box.makeSSBox(NoArr, NoTransformation, org.V, 10, 3);
 
     gl.watch();
   }

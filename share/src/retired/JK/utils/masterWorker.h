@@ -17,9 +17,9 @@ template<class Job, class Result> class Workspace : public Variable {
   public:
     Workspace<Job, Result>(const char* name) : Variable(name) { reg_working_jobs(); reg_jobs(); reg_results(); working_jobs = 0; };
     Workspace<Job, Result>();
-    FIELD(mlr::Array<Job>, jobs);
-    FIELD(mlr::Array<Result>, results);
-    FIELD(int, working_jobs);
+    mlr::Array<Job> jobs;
+    mlr::Array<Result> results;
+    int working_jobs;
 };
 
 template<class Job, class Result> class Worker : public Process {

@@ -9,7 +9,7 @@ struct RandomNumber:public Variable{
 };
 
 struct Integer:public Variable{
-  FIELD(int, x);
+  int x;
   
   void init(RandomNumber &rnd){ x=rnd.getRnd(100); }
   Integer():Variable("IntVar"){ x=0; reg_x(); }

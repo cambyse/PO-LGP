@@ -32,7 +32,7 @@ struct FeedbackControlTaskAbstraction;
 //
 
 struct GeometricState:Variable {
-  FIELD(ors::KinematicWorld, ors);
+  ors::KinematicWorld ors;
   GeometricState();
   ors::KinematicWorld& get_ors() { return ors; }
 };
@@ -45,35 +45,35 @@ struct MotionPrimitive:Variable {
   enum MotionMode{ none=0, planned, feedback, done  };
   enum ActionPredicate { toBeAssigned, reach, grasp, place, place_location, openHand, closeHand, homing };
 
-  FIELD(uint, count);
-  FIELD(MotionMode, mode);
+  uint count;
+  MotionMode mode;
 
   //-- symbolic action
-  FIELD(ActionPredicate, action);
-  FIELD(charp, objectRef1);  //arguments to the relational predicates
-  FIELD(charp, objectRef2);
-  FIELD(arr, locationRef);
+  ActionPredicate action;
+  charp objectRef1;  //arguments to the relational predicates
+  charp objectRef2;
+  arr locationRef;
 
   //-- motion
   //in case of planned
-  FIELD(arr, frame0);
-  FIELD(arr, frame1);
-  FIELD(arr, q_plan);
-  FIELD(double, tau);
-  FIELD(double, duration);
-  FIELD(bool, planConverged);
-  FIELD(uint, iterations_till_convergence);
-  FIELD(double, cost);
+  arr frame0;
+  arr frame1;
+  arr q_plan;
+  double tau;
+  double duration;
+  bool planConverged;
+  uint iterations_till_convergence;
+  double cost;
 
   //in case of feedback
-  FIELD(FeedbackControlTaskAbstraction*, feedbackControlTask);
+  FeedbackControlTaskAbstraction* feedbackControlTask;
 
   //controller options
-  FIELD(bool, fixFingers);
-  FIELD(bool, forceColLimTVs);
+  bool fixFingers;
+  bool forceColLimTVs;
 
   //only for info - to enable a view
-  //FIELD(TaskVariableList, TVs);
+  //TaskVariableList TVs;
   
   MotionPrimitive()
     :Variable("MotionPrimitive"),
@@ -99,14 +99,14 @@ struct MotionPrimitive:Variable {
 /** @brief The HardwareReference is the interface to motors, containing the reference pose for the motor controllers and
  * their return values (q_real). */
 struct HardwareReference:Variable {
-  FIELD(arr, q_reference);
-  FIELD(arr, v_reference);
-  FIELD(arr, q_real);
-  FIELD(arr, v_real);
-  FIELD(double, hardwareRealTime);
-  FIELD(double, motionPrimitiveRelativeTime);
+  arr q_reference;
+  arr v_reference;
+  arr q_real;
+  arr v_real;
+  double hardwareRealTime;
+  double motionPrimitiveRelativeTime;
   
-  FIELD(bool, readHandFromReal);
+  bool readHandFromReal;
   
   HardwareReference():Variable("HardwareReference"), hardwareRealTime(0.), motionPrimitiveRelativeTime(0.), readHandFromReal(true) {
     reg_q_reference(); reg_q_real(); reg_v_real(); reg_hardwareRealTime(); reg_readHandFromReal(); reg_motionPrimitiveRelativeTime();
@@ -118,11 +118,11 @@ struct HardwareReference:Variable {
  * planning of the motion primitives even when the action will only be in the future. The ActionProgressor takes care to point
  * the controller to the next motion primitive when the previous one was executed */
 struct MotionFuture:Variable {
-  FIELD(uint, currentPrimitive);
-  FIELD(uint, nextFreePrimitive);
-  FIELD(bool, done);
-  FIELD(mlr::Array<MotionPrimitive*>, motions);
-  FIELD(mlr::Array<MotionPlanner*>, planners);
+  uint currentPrimitive;
+  uint nextFreePrimitive;
+  bool done;
+  mlr::Array<MotionPrimitive*> motions;
+  mlr::Array<MotionPlanner*> planners;
   
   MotionFuture():Variable("MotionFuture"), currentPrimitive(0), nextFreePrimitive(0), done(true) {
     reg_currentPrimitive();  reg_nextFreePrimitive(); reg_motions();

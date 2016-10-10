@@ -5,7 +5,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Control/ctrlMsg.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 
 struct TrajectoryInterface {

@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/array.h>
 
-struct Pr2GamepadController:Module{
+struct Pr2GamepadController : Thread {
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(arr, gamepadState)
@@ -14,7 +14,7 @@ struct Pr2GamepadController:Module{
   Gamepad2Tasks *j2t;
   CtrlMsg refs;
 
-  Pr2GamepadController():Module("Pr2GamepadController"){
+  Pr2GamepadController() : Thread("Pr2GamepadController"){
   }
   void open(){
     world.init("model.kvg");

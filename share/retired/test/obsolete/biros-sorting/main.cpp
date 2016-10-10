@@ -6,7 +6,7 @@
 
 //-- standard Variable containing only an integer
 struct Integer:public Variable {
-  FIELD(int, x);
+  int x;
   
   Integer():Variable("IntVar") { reg_x(); x=rnd(100); }
 };

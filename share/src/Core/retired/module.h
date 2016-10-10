@@ -36,7 +36,7 @@ typedef mlr::Array<Module*> ModuleL;
     automatically analyze them and instantiate respective variables if
     necessary */
 
-//struct Module : Thread{
+//struct Module : Thread {
 //  Module(const char* name=NULL, double beatIntervalSec=-1.):Thread(name, beatIntervalSec){
 ////    registry().newNode<Module*>({"Module", name}, {}, this);
 //  }
@@ -93,16 +93,16 @@ struct __##name##__Access:Access_typed<type>{ \
 /** Macros for a most standard declaration of a module */
 
 #define BEGIN_MODULE(name) \
-  struct name : Module { \
+  struct name : Thread { \
     struct s##name *s; \
-    name(): Module(#name), s(NULL) {} \
+    name(): Thread(#name), s(NULL) {} \
     virtual void open(); \
     virtual void step(); \
     virtual void close();
 
 #define END_MODULE() };
 
-#define FIELD(type, name) type name;
+#define type name type name;
 
 //===========================================================================
 //
@@ -122,12 +122,12 @@ inline void operator<<(ostream& os, const Access& a){ os <<"Access '" <<a.name <
 //
 
 template <class T>
-struct Recorder : Module{
+struct Recorder : Thread {
   Access_typed<T> access;
   T buffer;
   ofstream fil;
 
-  Recorder(const char* var_name):Module(STRING("Recorder_"<<var_name)), access(this, var_name, true){}
+  Recorder(const char* var_name) : Thread(STRING("Recorder_"<<var_name)), access(this, var_name, true){}
 
   void open(){
     mlr::open(fil, STRING("z." <<access.name <<'.' <<mlr::getNowString() <<".dat"));
@@ -154,11 +154,11 @@ struct Recorder : Module{
 //
 
 template<class T>
-struct FileReplay : Module{
+struct FileReplay : Thread {
   Access_typed<T> access;
   T x;
   FileReplay(const char* file_name, const char* var_name, double beatIntervalSec)
-    : Module(STRING("FileReplay_"<<var_name), beatIntervalSec),
+    : Thread(STRING("FileReplay_"<<var_name), beatIntervalSec),
       access(this, var_name, false) {
     x <<FILE(file_name);
   }

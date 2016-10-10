@@ -1,7 +1,7 @@
 #include <Core/array.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
-struct PR2Simulator:Module{
+struct PR2Simulator : Thread {
   ACCESS(arr, q_ref);
   ACCESS(arr, qdot_ref);
   ACCESS(arr, q_obs);
