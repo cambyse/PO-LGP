@@ -1879,7 +1879,7 @@ void ors::KinematicWorld::init(const Graph& G) {
     CHECK(n->isGraph(), "bodies must have value Graph");
     
     Body *b=new Body(*this);
-    if(n->keys.N>1) b->name=n->keys(1);
+    if(n->keys.N>1) b->name=n->keys.last();
     b->ats.copy(n->graph(), false, true);
     b->parseAts();
   }
@@ -1892,13 +1892,13 @@ void ors::KinematicWorld::init(const Graph& G) {
     
     Shape *s;
     if(n->parents.N==1){
-      Body *b = listFindByName(bodies, n->parents(0)->keys(1));
+      Body *b = listFindByName(bodies, n->parents(0)->keys.last());
       CHECK(b,"");
       s=new Shape(*this, *b);
     }else{
       s=new Shape(*this, NoBody);
     }
-    if(n->keys.N>1) s->name=n->keys(1);
+    if(n->keys.N>1) s->name=n->keys.last();
     s->ats.copy(n->graph(), false, true);
     s->parseAts();
   }
@@ -1910,12 +1910,12 @@ void ors::KinematicWorld::init(const Graph& G) {
     CHECK_EQ(n->parents.N,2,"joints must have two parents: specs=" <<*n <<' ' <<n->index);
     CHECK(n->isGraph(),"joints must have value Graph: specs=" <<*n <<' ' <<n->index);
     
-    Body *from=listFindByName(bodies, n->parents(0)->keys(1));
-    Body *to=listFindByName(bodies, n->parents(1)->keys(1));
-    CHECK(from,"JOINT: from '" <<n->parents(0)->keys(1) <<"' does not exist ["<<*n <<"]");
-    CHECK(to,"JOINT: to '" <<n->parents(1)->keys(1) <<"' does not exist ["<<*n <<"]");
+    Body *from=listFindByName(bodies, n->parents(0)->keys.last());
+    Body *to=listFindByName(bodies, n->parents(1)->keys.last());
+    CHECK(from,"JOINT: from '" <<n->parents(0)->keys.last() <<"' does not exist ["<<*n <<"]");
+    CHECK(to,"JOINT: to '" <<n->parents(1)->keys.last() <<"' does not exist ["<<*n <<"]");
     Joint *j=new Joint(*this, from, to);
-    if(n->keys.N>1) j->name=n->keys(1);
+    if(n->keys.N>1) j->name=n->keys.last();
     j->ats.copy(n->graph(), false, true);
     j->parseAts();
 

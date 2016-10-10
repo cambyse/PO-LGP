@@ -84,6 +84,23 @@ public:
 
 
 
+//CART-POLE
+class CARTPOLE: public ENVIRONMENT{
+private:
+   double GRAVITY,MASSCART,  MASSPOLE, TOTAL_MASS, LENGTH ;		  /* actually half the pole's length */
+   double POLEMASS_LENGTH , FORCE_MAG ,TAU  , FOURTHIRDS, one_degree, six_degrees;
+   double twelve_degrees, fifty_degrees;
+
+public:
+
+   CARTPOLE(int stateDim=4, int actionDim=1, double discount = 1.0);
+   ~CARTPOLE(){}
+
+   virtual bool forwardDynamics(arr action, arr state, arr &nxtState, double &reward) const;
+   virtual void getTrajectory(arr actions, arr states, arr &obs, arr &reward, uint horizon) const ;
+   virtual void getStartState(arr &sState) const;
+
+};
 
 
 

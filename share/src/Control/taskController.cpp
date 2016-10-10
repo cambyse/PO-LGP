@@ -187,6 +187,11 @@ void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_f
   K_I = f_alpha*~J;
 }
 
+double CtrlTask::error(){
+  if(!(y.N && y.N==y_ref.N && v.N==v_ref.N)) return -1.;
+  return maxDiff(y, y_ref) + maxDiff(v, v_ref);
+}
+
 bool CtrlTask::isConverged(double tolerance){
   return (y.N && y.N==y_ref.N && v.N==v_ref.N
           && maxDiff(y, y_ref)<tolerance

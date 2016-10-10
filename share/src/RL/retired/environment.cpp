@@ -54,6 +54,8 @@ CANNON::CANNON(int stateDim, int actionDim, double discount)
     StateDim = stateDim;
     Discount = discount;
 
+
+
 }
 
 
@@ -103,6 +105,102 @@ void CANNON::getStartState(arr &sState) const
 
 
 
+
+//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+
+CARTPOLE::CARTPOLE(int stateDim, int actionDim, double discount)
+{
+    ActionDim = actionDim;
+    StateDim = stateDim;
+    Discount = discount;
+
+    GRAVITY =  9.8;
+    MASSCART =  1.0;
+    MASSPOLE  = 0.1;
+    TOTAL_MASS =  (MASSPOLE + MASSCART);
+    LENGTH =  0.5;		  /* actually half the pole's length */
+    POLEMASS_LENGTH  = (MASSPOLE * LENGTH);
+    FORCE_MAG =  10.0;
+    TAU  = 0.02;		  /* seconds between state updates */
+    FOURTHIRDS =  1.3333333333333;
+
+    one_degree  = 0.0174532;	/* 2pi/360 */
+    six_degrees = .1047192;
+    twelve_degrees =  0.2094384;
+    fifty_degrees = 0.87266;
+
+
+
+
+}
+
+
+bool CARTPOLE::forwardDynamics(arr action, arr state, arr &nxtState, double &reward) const
+{
+
+    ///////////////////////////////////////////
+    /// This Cart-Pole simulation is from Sutton's RL book
+    /*** Parameters for simulation ***/
+
+    nxtState.resize(state.d0);
+    nxtState.setZero();
+
+    double x, x_dot, theta, theta_dot;
+    double force, costheta, sintheta;
+    x     = state(0);
+    x_dot = state(1);
+    theta     = state(2);
+    theta_dot = state(3);
+
+    nxtState.resize(state.d0);
+
+
+    //continuous
+    force = action(0);
+     force = (force>FORCE_MAG)? FORCE_MAG : force;
+     force = (force<-FORCE_MAG)? -FORCE_MAG : force;
+
+    costheta = cos(theta);
+    sintheta = sin(theta);
+
+    double temp = (force + POLEMASS_LENGTH * theta_dot * theta_dot * sintheta) / TOTAL_MASS;
+
+    double thetaacc = (GRAVITY * sintheta - costheta* temp) / (LENGTH * (FOURTHIRDS - MASSPOLE * costheta * costheta / TOTAL_MASS));
+
+    double xacc  = temp - POLEMASS_LENGTH * thetaacc* costheta / TOTAL_MASS;
+
+/*** Update the four state variables, using Euler's method. ***/
+
+    nxtState(0)  = x     + TAU * x_dot + 0.01*mlr::rnd.gauss();
+    nxtState(1)  = x_dot + TAU * xacc ;//+ 0.02*mlr::rnd.gauss();
+    nxtState(2)  = theta + TAU * theta_dot + 0.001*mlr::rnd.gauss();
+    nxtState(3)  = theta_dot + TAU * thetaacc;// + 0.02*mlr::rnd.gauss();
+
+
+    if (nxtState(0) < -2.4 || nxtState(0) > 2.4  || nxtState(2) < -twelve_degrees || nxtState(2) > twelve_degrees)
+    {
+        reward = -1.; /* to signal failure */ //the pole goes beyond the balancing region.
+        return true;
+    }else{
+        reward = 1.0; //still balancing
+        return false;
+    }
+
+
+}
+void CARTPOLE::getTrajectory(arr actions, arr states, arr &obs, arr &reward, uint horizon) const
+{
+
+
+}
+
+
+void CARTPOLE::getStartState(arr &sState) const
+{
+    sState.resize(4);
+    sState.setZero();
+}
 
 
 }

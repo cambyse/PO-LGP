@@ -1,6 +1,7 @@
 Include = 'baxter-clean.ors'
+Include = '../lockboxNew.ors'
 
-#Delete shape visual
+Delete shape visual
 #Delete shape collision
 
 #Delete shape collision (head)
@@ -27,10 +28,6 @@ Merge right_w1 {q=1.02 }
 Merge left_w1 { q=1.02 }
 Merge right_w2 { q=0.5 }
 Merge left_w2 { q=-0.5 }
-#joint r_gripper_l_finger_joint (right_wrist r_gripper_l_finger){ type=3 from=<T 0.15855 -0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  limits=[ 0 0.020833 ]  ctrl_limits=[ 5 20 1 ]  }
-#joint r_gripper_r_finger_joint (right_wrist r_gripper_r_finger){ type=3 from=<T 0.15855 0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  mimic="r_gripper_l_finger_joint"  limits=[ -0.020833 0 ]  ctrl_limits=[ 5 20 1 ]  }
-#joint l_gripper_l_finger_joint (left_wrist l_gripper_l_finger){ type=3 from=<T 0.15855 -0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  limits=[ 0 0.020833 ]  ctrl_limits=[ 5 20 1 ]  }
-#joint l_gripper_r_finger_joint (left_wrist l_gripper_r_finger){ type=3 from=<T 0.15855 0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  mimic="l_gripper_l_finger_joint"  limits=[ -0.020833 0 ]  ctrl_limits=[ 5 20 1 ]  }
 
 
 ## extra shapes to mimick pr2
@@ -39,7 +36,6 @@ body base_footprint { mass=100 }
 shape base_footprint(base_footprint) { type=5 size=[.1 0 0 0] } #marker
 joint (base_footprint base){ type=10 A=<T t(0 0 1)> }
 shape torso_lift_link_0 (base) { type=5 size=[.3 .3 .3 0] }
-
 
 ## extra shapes
 #shape endeffBase(torso_lift_link){ rel=<T d(90 0 1 0) t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
@@ -52,6 +48,15 @@ shape endeffR(right_wrist){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.2 0 0 
 shape elbowL(left_lower_shoulder){ rel=<T d(180 1 0 0) t(0 0 .42)> type=5 color=[1 0 0] size=[.2 0 0 0]}
 shape elbowR(right_lower_shoulder){ rel=<T d(180 1 0 0) t(0 0 .42)> type=5 color=[1 0 0] size=[.2 0 0 0]}
 
-#body obj1 { size=[.06 .06 .1 .02] type=9 contact }
-#joint (table obj1) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
-#shape shape1 (obj1) { type=5 rel=<T t(0 0 .1)> size=[.4 0 0 0] }
+shape wristR(right_upper_forearm){ rel=<T d(180 1 0 0) t(0 0 .0)> type=5 color=[1 0 0] size=[.4 0 0 0]}
+shape wristL(left_upper_forearm){ rel=<T d(180 1 0 0) t(0 0 .0)> type=5 color=[1 0 0] size=[.4 0 0 0]}
+
+body table{ type=0, X=<T t(.7 0 .8)>, size=[1. 1. .04 .0], color=[.8 .5 .3] fixed, contact }
+shape leg1(table) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
+shape leg2(table) { rel=<T t(-.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
+shape leg3(table) { rel=<T t(.3 .3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
+shape leg4(table) { rel=<T t(.3 -.3 -.3)>  type=0 size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }
+
+body obj1 { size=[.06 .06 .1 .02] type=9 contact }
+joint (table obj1) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
+shape shape1 (obj1) { type=5 rel=<T t(0 0 .1)> size=[.4 0 0 0] }

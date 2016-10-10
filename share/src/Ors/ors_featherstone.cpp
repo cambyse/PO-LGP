@@ -298,7 +298,7 @@ void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
 
   for(ors::Body* body:C.bodies) {
     ors::Link& link=tree(body->index);
-    if(body->inLinks.N) { //is not a root
+    if(body->inLinks.N && body->inLinks(0)->qDim()) { //is not a root
       CHECK_EQ(body->inLinks.N,1, "this is not a tree");
       ors::Joint *j=body->inLinks(0);
       
@@ -317,7 +317,7 @@ void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
       
       link.Q=j->Q;
     } else {
-      CHECK_EQ(body->inLinks.N,0, "dammit");
+//      CHECK_EQ(body->inLinks.N,0, "dammit");
       
       link.type=-1;
       link.qIndex=-1;

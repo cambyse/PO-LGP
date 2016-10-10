@@ -494,7 +494,7 @@ void TEST(ContactDynamics){
 // blender import test
 //
 
-#if 1
+#if 0
 static void drawTrimesh(void* _mesh){
 #if MLR_GL
   ors::Mesh *mesh=(ors::Mesh*)_mesh;
@@ -510,16 +510,13 @@ void TEST(BlenderImport){
   ors::KinematicWorld bl;
   readBlender("blender-export",mesh,bl);
   cout <<"loading time =" <<mlr::timerRead() <<"sec" <<endl;
-  bl >>FILE("z.ors");
-
-  bl.gl().watch();
-//  OpenGL gl;
-//  bl.gl().add(glStandardScene, NULL);
-//  bl.gl().add(drawTrimesh,&mesh);
-//  bl.gl().watch("mesh only");
-//  bl.gl().add(ors::glDrawGraph,&bl);
-//  bl.gl().text="testing blender import";
-  animateConfiguration(bl);
+  OpenGL gl;
+  G.gl().add(glStandardScene, NULL);
+  G.gl().add(drawTrimesh,&mesh);
+  G.gl().watch("mesh only");
+  G.gl().add(ors::glDrawGraph,&bl);
+  G.gl().text="testing blender import";
+  animateConfiguration(bl,gl);
 }
 #endif
 
@@ -581,7 +578,7 @@ int MAIN(int argc,char **argv){
 //  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();
 #endif
-  testBlenderImport();
+  //testBlenderImport();
 
   return 0;
 }
