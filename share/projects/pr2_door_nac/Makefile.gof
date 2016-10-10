@@ -5,4 +5,4 @@ DEPEND = Core Ors Gui Algo Motion Optim RosCom
 PTHREAD = 0
 PHYSX = 0
 QHULL = 1
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

@@ -5,4 +5,4 @@ DEPEND = Core Ors RosCom Motion Hardware_gamepad
 
 LPATHS += /opt/ros/groovy/lib
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

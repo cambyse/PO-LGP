@@ -33,6 +33,7 @@ endif
 
 ifeq ($(MLR_TESTS),1)
 CXXFLAGS += -DMLR_GTEST -DEXAMPLES_AS_TESTS
+LPATHS += /usr/src/gtest
 LIBS += -lgtest -lpthread
 endif
 

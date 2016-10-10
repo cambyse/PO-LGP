@@ -4,4 +4,4 @@ OBJS = main.o ../../src/traj_factory.o ../../src/task_button.o ../../src/plotUti
 DEPEND = Core Motion Gui Optim Algo Ors Geo
 PTHREAD = 1
 PHYSX = 1
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

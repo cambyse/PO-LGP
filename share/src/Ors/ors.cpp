@@ -40,7 +40,7 @@
 //#  include <Gui/plot.h>
 #endif
 #ifdef MLR_extern_ply
-#  include <extern/ply/ply.h>
+#  include <Geo/ply/ply.h>
 #endif
 
 #define ORS_NO_DYNAMICS_IN_FRAMES

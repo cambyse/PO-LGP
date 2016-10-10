@@ -5,4 +5,4 @@ DEPEND = Core Gui
 
 OBJS = main.o ComputeSum_Module.o
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

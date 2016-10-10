@@ -2,4 +2,4 @@ BASE = ../../../../share
 
 DEPEND = relational Core
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

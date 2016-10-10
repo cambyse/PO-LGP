@@ -20,7 +20,7 @@ PLIB = 1  #for the Gamepad
 
 CXXFLAGS += -DMLR_NO_GLOBALMEM
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 
 
 

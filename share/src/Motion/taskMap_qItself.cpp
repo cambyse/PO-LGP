@@ -278,7 +278,7 @@ mlr::Array<ors::Joint*> getSwitchedJoints(const ors::KinematicWorld& G0, const o
     if(!j0 || j0->type!=j1->type){
       if(G0.bodies(j1->to->index)->inLinks.N==1){ //out-body had (in G0) one inlink...
         j0 = G0.bodies(j1->to->index)->inLinks.scalar();
-        switchedJoints.newNode({j0,j1});
+        switchedJoints.append({j0,j1});
       }
     }
   }

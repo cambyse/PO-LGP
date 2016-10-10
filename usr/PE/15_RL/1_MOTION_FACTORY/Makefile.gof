@@ -4,4 +4,4 @@ OBJS = main.o ../../src/motion_factory.o ../../src/cost_weight.o ../../src/inver
 DEPEND = Core Motion Gui Optim Algo Ors Geo
 PTHREAD = 1
 PHYSX = 1
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

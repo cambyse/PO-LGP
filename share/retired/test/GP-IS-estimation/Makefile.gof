@@ -5,5 +5,5 @@ buildAndLink_STANIMIR = 1
 LEWINER = 1
 CXXFLAGS += -DMLR_Lewiner
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 

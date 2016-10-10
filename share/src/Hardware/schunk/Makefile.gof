@@ -1,6 +1,6 @@
 BASE   = ../../..
-NAME   = libHardware_$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = libHardware_$(NAME).so
 
 LIBS += -lG4Track -lusb-1.0
 
@@ -13,4 +13,4 @@ DEPEND = Core
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
