@@ -16,7 +16,7 @@
 
 #include "optimization.h"
 
-uint optRprop(arr& x, const ScalarFunction& f, OptOptions opt);
+uint optRprop(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT);
 
 /** Rprop, a fast gradient-based minimization */
 struct Rprop {

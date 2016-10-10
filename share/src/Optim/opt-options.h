@@ -29,6 +29,8 @@ struct OptOptions {
   double stopGTolerance;
   uint   stopEvals;
   uint   stopIters;
+  uint   stopLineSteps;
+  uint   stopTinySteps;
   double initStep;
   double minStep;
   double maxStep;

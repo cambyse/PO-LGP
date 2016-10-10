@@ -101,6 +101,13 @@ for joint in joints:
             else:
                 print ' A=<T t(%s)>' % (elem.attrib['xyz']),
 
+        elem = joint.find("safety_controller")
+        if elem is not None:
+            lo = elem.attrib.get('soft_lower_limit')
+            up = elem.attrib.get('soft_upper_limit')
+            if lo is not None:
+                print ' limits=[%s %s]' % (lo, up),
+
         elem = joint.find("limit")
         if elem is not None:
             lo = elem.attrib.get('lower')

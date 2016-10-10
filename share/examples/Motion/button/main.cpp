@@ -25,31 +25,31 @@ void TEST(Button){
   cout << "joint dimensionality=" <<q.N <<endl;
 
   Task *t;
-  t = MP.addTask("transitions", new TransitionTaskMap(world));
+  t = MP.addTask("transitions", new TaskMap_Transition(world),sumOfSqrTT);
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
   double contactT = MP.T/2.;
-  t = MP.addTask("prePos", new DefaultTaskMap(posTMT, world, "endeffL", NoVector, "button",ors::Vector(0.,0.,0.2)));
+  t = MP.addTask("prePos", new TaskMap_Default(posTMT, world, "endeffL", NoVector, "button",ors::Vector(0.,0.,0.2)),sumOfSqrTT);
   t->setCostSpecs(contactT-10., contactT-10, {0.}, 1e2);
-  t = MP.addTask("preVec", new DefaultTaskMap(vecAlignTMT, world, "endeffL", ors::Vector(1.,0.,0.), "button",ors::Vector(0.,0.,-1.)));
+  t = MP.addTask("preVec", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(1.,0.,0.), "button",ors::Vector(0.,0.,-1.)),sumOfSqrTT);
   t->setCostSpecs(contactT-10., contactT-10, {1.}, 1e2);
-  t = MP.addTask("button_joint", new TaskMap_qItself(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()));
+  t = MP.addTask("button_joint", new TaskMap_qItself(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, {-.1}, 1e2);
 
-  t = MP.addTask("endeff_button", new PointEqualityConstraint(world,"endeffL",NoVector,"cp1",NoVector));
+  t = MP.addTask("endeff_button", new PointEqualityConstraint(world,"endeffL",NoVector,"cp1",NoVector),eqTT);
   t->setCostSpecs(contactT+1,MP.T, {0.}, 1.);
-  t = MP.addTask("button_fixation", new qItselfConstraint(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()));
+  t = MP.addTask("button_fixation", new qItselfConstraint(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),eqTT);
   t->setCostSpecs(0.,contactT, {0.}, 1.);
-  t = MP.addTask("qLimits", new LimitsConstraint());
+  t = MP.addTask("qLimits", new LimitsConstraint(),ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
-  MotionProblemFunction MF(MP);
-  arr X = MP.getInitialization();
+  arr X  = MP.getInitialization();
+  X.reshape(MP.T,world.getJointStateDimension());
   arr lambda;
 
-  optConstrained(X, lambda, Convert(MF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
+  optConstrained(X, lambda, Convert(MP), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2.,stopTolerance = 1e-2));
   cout << lambda << endl;
   cout << lambda.d0 << endl;
   cout << X.d0 << endl;
