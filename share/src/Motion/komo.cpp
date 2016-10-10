@@ -327,9 +327,9 @@ void KOMO::setAttach(double time, const char* endeff, const char* object1, const
 
 }
 
-void KOMO::setSlowAround(double time, double delta){
+void KOMO::setSlowAround(double time, double delta, double prec){
   if(stepsPerPhase>2) //otherwise: no velocities
-    setTask(time-.02, time+.02, new TaskMap_qItself(), sumOfSqrTT, NoArr, 1e1, 1);
+    setTask(time-delta, time+delta, new TaskMap_qItself(), sumOfSqrTT, NoArr, prec, 1);
   //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
 }
 
@@ -492,7 +492,7 @@ Graph KOMO::getReport(bool gnuplt){
 void KOMO::checkGradients(){
   if(MP->T){
     if(!splineB.N)
-      checkJacobianCP(Convert(*MP), x, 1e-4);
+      checkJacobianCP(Convert(MP->komo_problem), x, 1e-4);
     else{
       ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
       ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
@@ -503,9 +503,9 @@ void KOMO::checkGradients(){
   }
 }
 
-void KOMO::displayTrajectory(double delay){
+void KOMO::displayTrajectory(double delay, bool watch){
 #if 1
-  MP->displayTrajectory(1, "KOMO planned trajectory", delay);
+  MP->displayTrajectory(watch?-1:1, "KOMO planned trajectory", delay);
 #else
   if(MP->T){
     ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", delay);
