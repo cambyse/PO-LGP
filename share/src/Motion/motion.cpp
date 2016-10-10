@@ -152,7 +152,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(Task *c: tasks) {
-        CHECK(c->prec.N<=T,"");
+//        CHECK(c->prec.N<=T,"");
     if(c->active && c->prec.N>t && c->prec(t))
       m += c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
   }
@@ -596,7 +596,7 @@ Graph MotionProblem::getReport(bool gnuplt) {
   fil2.close();
 
   if(gnuplt){
-    cout <<"MotionProblem Report\n" <<report;
+    cout <<"MotionProblem Report\n" <<report <<endl;
     gnuplot("load 'z.costReport.plt'");
   }
 
@@ -629,7 +629,7 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variabl
   featureTypes.clear();
   for(uint t=0;t<MP.T;t++){
     for(Task *task: MP.tasks) if(task->active && task->prec.N>t && task->prec(t)){
-      CHECK(task->prec.N<=MP.T,"");
+//      CHECK(task->prec.N<=MP.T,"");
       uint m = task->map.dim_phi(MP.configurations.refRange(t,t+MP.k_order), t); //dimensionality of this task
       featureTimes.append(consts<uint>(t, m));
       featureTypes.append(consts<TermType>(task->type, m));
