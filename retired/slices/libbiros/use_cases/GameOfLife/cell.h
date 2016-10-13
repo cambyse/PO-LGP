@@ -6,7 +6,7 @@
 class Cell : public Variable {
 	public:
 		Cell() : Variable("Cell") {}
-		FIELD(bool, alive);
+		bool alive;
 };
 
 #endif

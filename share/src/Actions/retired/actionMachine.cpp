@@ -20,7 +20,7 @@ const char* getActionStateString(ActionState actionState){ return ActionStateStr
 // ActionMachine
 //
 
-ActionMachine::ActionMachine():Module("ActionMachine"), initStateFromRos(false){
+ActionMachine::ActionMachine() : Thread("ActionMachine"), initStateFromRos(false){
   ActionL::memMove=true;
   Kp = ARR(1.);
   Kd = ARR(1.);

@@ -16,7 +16,7 @@
 #include <stddef.h>
 
 #ifndef FIELD
-#define FIELD(type, name) \
+#define type name \
   type name; \
   inline int set_##name(const type& _x, Module *p){ \
     writeAccess(p);  name=(type&)_x;  return deAccess(p); } \
@@ -210,7 +210,7 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     typedef name __MODULE_TYPE__; \
     typedef name##_Base __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
-    name##_Base(): Module(#name) { \
+    name##_Base(): Thread(#name) { \
       reg = registerItem<name, void>((name*)this, "Module", #name, NULL, staticRegistrator.reg); \
     } \
 
@@ -242,7 +242,7 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     typedef name __MODULE_TYPE__; \
     typedef name __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
-    name(): Module(#name) { \
+    name(): Thread(#name) { \
       reg = registerItem<name, void>(this, "Module", #name, NULL, staticRegistrator.reg); \
     } \
     virtual ~name(){}; \

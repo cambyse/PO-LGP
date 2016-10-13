@@ -43,7 +43,7 @@ struct Module{
 };
 
 
-struct MyModule:Module{
+struct MyModule : Thread {
   Access<arr> input;
   Access<double> output;
   MyModule():input(this), output(this){}

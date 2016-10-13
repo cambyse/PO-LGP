@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = $(shell basename $(BASE))
-OUTPUT = $(BASE)/lib/$(NAME).so
+OUTPUT = ../$(NAME).so
 CXXFLAGS += -fPIC
 
 SYS = $(shell uname)
@@ -20,4 +20,4 @@ OBJS := $(OBJS:%.cpp=%.o)
 OBJS += ../MT/array.o \
 	../MT/util.o
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

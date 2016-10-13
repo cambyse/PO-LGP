@@ -11,12 +11,12 @@ void glDrawAxes(void*);
 
 //===========================================================================
 
-struct PointCloud2DataNeighbored:Module{
+struct PointCloud2DataNeighbored : Thread {
   Access_typed<arr> kinect_points;
   Access_typed<DataNeighbored> data;
 
   PointCloud2DataNeighbored()
-    : Module("PointCloud2DataNeighbored"),
+    : Thread("PointCloud2DataNeighbored"),
       kinect_points(this, "kinect_points", true),
       data(this, "data"){}
 
@@ -41,7 +41,7 @@ struct PointCloud2DataNeighbored:Module{
 
 //===========================================================================
 
-struct PlaneFitter:Module{
+struct PlaneFitter : Thread {
   Access_typed<DataNeighbored> data;
   Access_typed<arr> kinect_points;
   Access_typed<arr> kinect_pointColors;
@@ -49,7 +49,7 @@ struct PlaneFitter:Module{
   ModelEnsemble M;
 
   PlaneFitter()
-    : Module("PlaneFitter", -1.),
+    : Thread("PlaneFitter", -1.),
       data(this, "data", true),
       kinect_points(this, "kinect_points"),
       kinect_pointColors(this, "kinect_pointColors"),

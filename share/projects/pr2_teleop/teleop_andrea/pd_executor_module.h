@@ -6,7 +6,7 @@
 #include <RosCom/roscom.h>
 
 // ============================================================================
-struct PDExecutor: Module {
+struct PDExecutor: Thread{
   // calibrated_pose is pos + orientation (quaternion)
   ACCESS(arrf, calibrated_pose_rh);
   ACCESS(arrf, calibrated_pose_lh);

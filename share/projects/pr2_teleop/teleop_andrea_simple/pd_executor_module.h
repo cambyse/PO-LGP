@@ -8,7 +8,7 @@
 #include <RosCom/roscom.h>
 
 // ============================================================================
-struct PDExecutor: Module {
+struct PDExecutor: Thread{
   ACCESS(arr, gamepadState);
   ACCESS(arrf, poses);
 

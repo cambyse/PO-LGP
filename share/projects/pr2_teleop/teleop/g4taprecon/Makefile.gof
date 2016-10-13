@@ -12,4 +12,4 @@ DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Ors Perception
 # DEPEND += RosCom Actions
 # LPATHS += /opt/ros/groovy/lib
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

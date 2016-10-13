@@ -5,7 +5,7 @@
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 //================================================================================
 

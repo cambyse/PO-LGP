@@ -1,7 +1,7 @@
 #pragma once
 
 #include<sys/time.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <exception>
 
 struct sUEyeInterface;
@@ -32,7 +32,7 @@ public:
 
 } // MLR
 
-struct UEyePoller: Module {
+struct UEyePoller: Thread{
   struct sUEyeInterface *s;
 
   ACCESS(byteA, ueye_rgb);

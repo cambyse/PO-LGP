@@ -265,7 +265,7 @@ bool FlycapInterface::grab(byteA& image, double& timestamp, unsigned int timeout
 // Poller
 //
 
-FlycapPoller::FlycapPoller() : Module("FlycapInterface"), s(NULL) {
+FlycapPoller::FlycapPoller() : Thread("FlycapInterface"), s(NULL) {
 }
 
 FlycapPoller::~FlycapPoller() {

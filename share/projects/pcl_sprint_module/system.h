@@ -52,7 +52,7 @@ struct PCL_ModuleSystem:System{
 //===========================================================================
 
 // THIS IS AN EXAMPLE FOR HOW TO MAKE A MODULE FROM A ROUTINE
-struct ArrCloud2PclCloud:Module{
+struct ArrCloud2PclCloud : Thread {
   ACCESS(arr, kinect_points)
   ACCESS(arr, kinect_pointColors)
   ACCESS(pcl::PointCloud<PointT>::Ptr, pcl_cloud)

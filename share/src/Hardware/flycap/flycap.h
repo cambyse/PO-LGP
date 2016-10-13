@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sys/time.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <exception>
 #include <vector>
 #include <Perception/pixel_format.h>
@@ -44,7 +44,7 @@ std::vector<uint32_t> get_flycap_ids();
 
 } // MLR
 
-struct FlycapPoller: Module {
+struct FlycapPoller: Thread{
   struct mlr::sFlycapInterface *s;
 
   ACCESS(byteA, image);

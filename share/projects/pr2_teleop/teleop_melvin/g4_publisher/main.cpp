@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <Hardware/G4/G4.h>
 #include <Hardware/G4/module_G4Display.h>

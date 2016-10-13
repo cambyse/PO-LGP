@@ -2,7 +2,7 @@
 
 REGISTER_MODULE(G4Recorder)
 
-G4Recorder::G4Recorder(): Module("G4Recorder") {
+G4Recorder::G4Recorder(): Thread("G4Recorder") {
 }
 
 void G4Recorder::open() {

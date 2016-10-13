@@ -1,0 +1,6 @@
+build-essential
+realpath
+gnuplot-x11
+libgnuplot-iostream-dev
+liblapack-dev
+libf2c2-dev

@@ -20,7 +20,7 @@
 #define MLR_schunk_internal_h
 
 #include <vector>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 //fwd declarations
 class CDevice;
@@ -35,7 +35,7 @@ extern bool schunkShutdown;
 
 //===========================================================================
 
-struct SchunkArm:Module {
+struct SchunkArm : Thread {
   ACCESS(floatA, q_reference);
   ACCESS(floatA, q_real);
 
@@ -67,7 +67,7 @@ struct SchunkArm:Module {
 
 
 //===========================================================================
-struct SchunkHand:Module {
+struct SchunkHand : Thread {
   ACCESS(arr, v_reference);
   ACCESS(arr, q_real);
   ACCESS(arr, v_real);

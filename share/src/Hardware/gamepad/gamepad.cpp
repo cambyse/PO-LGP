@@ -6,7 +6,7 @@
 #undef min
 #undef max
 
-GamepadInterface::GamepadInterface():Module("GamepadInterface", .01){}
+GamepadInterface::GamepadInterface() : Thread("GamepadInterface", .01){}
 
 void GamepadInterface::open(){
   jsInit();
@@ -51,7 +51,7 @@ void GamepadInterface::step(){
 }
 
 #else //dummy implementations
-GamepadInterface::GamepadInterface():Module("GamepadInterfaceINACTIVE"){}
+GamepadInterface::GamepadInterface() : Thread("GamepadInterfaceINACTIVE"){}
 void GamepadInterface::open(){ gamepadState.set()->resize(10); gamepadState.set()->setZero(); MLR_MSG("WARNING: dummy gamepad implementation"); }
 void GamepadInterface::step(){ }
 void GamepadInterface::close(){ }

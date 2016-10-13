@@ -19,7 +19,7 @@
 #define system_engine_h
 
 #include <Core/thread.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 struct Module;
 typedef mlr::Array<Module*> ModuleL;

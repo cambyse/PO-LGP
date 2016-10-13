@@ -637,7 +637,7 @@ void sUEyeInterface::handleCaptStatus() {
 // Poller
 //
 
-UEyePoller::UEyePoller() : Module("UEyeInterface"), s(NULL) {
+UEyePoller::UEyePoller() : Thread("UEyeInterface"), s(NULL) {
   tout.reg(this) << "UEyePoller: ";
 }
 

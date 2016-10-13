@@ -1,0 +1,59 @@
+\documentclass{beamer}
+\usetheme{Warsaw}  %% Themenwahl
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\title{Learn to Throw a Ball}
+\author{Sven, Luis, Heiko}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{frame}
+    \frametitle{Features and Controller}
+    Robot tries to hit a \textbf{target}, specified by an \textit{Alvar-marker}.
+    \begin{itemize}
+        \item Cotroller: $$\mu(W, t, s) = W \phi_t(s)$$ 
+        \item Features: $$\phi_t(s) = \begin{pmatrix}t,& \mathrm{sin}\left(\frac{t \pi}{T}\right),& x_{eff}^{\mathrm{rot}},& 1 \end{pmatrix}^\top $$
+        \item Robot keeps on sending \textit{velocities} until \textbf{either}:\\
+        ~ -- $T - 15$ commands have been send, \textbf{or}\\
+        ~ -- $x$-rot. of the gripper, $x_{eff}^{\mathrm{rot}}$, is above a threshold ($0.005$)
+        \item Distance between ball and target is measured placing a second Alvar-marker where the ball landed.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Algorithm: Greedy Policy Search}
+        \begin{algorithmic}
+            \State \textbf{Init} W randomly with $w_{ij} \sim \mathcal U(0, 1), r_{max} \gets -10.000$
+            \While {not converged}
+            \State $i \gets rand(1, 2, 3)$
+            \Comment Use pr. sweeping
+            \State Add noise $\varepsilon \sim \mathcal N(0, \sigma)$ to $w_{i}$
+            \For {$t \in T_i$}
+            \State Get velocities for each joint: $v_t \gets \mu(W, \phi(s))$
+            \State Apply current velocity vector $v_t$
+            \EndFor
+            \State Get reward $r = -sq\_dist(target, \hat{x})$
+            \Comment $\hat{x}$: measured position
+            \If {$r > r_{max}$}
+            \State $W \gets W + \varepsilon$
+            \State Reset $\sigma$
+            \Else
+            \State $\sigma \gets \sigma \cdot 1.1$
+            \EndIf
+            \EndWhile
+        \end{algorithmic}
+    \end{frame}
+    
+    \begin{frame}
+        \frametitle{Offline-learning}
+        During execution: collect \textit{Data} ${\mathcal D} = \left\{ W_{11}^i, \dots, W_{34}^i, x_i, y_i, R_i \right\}_{i = 1}^N$.\\
+        \vspace{0.5cm}
+        Idea 1: Extract relevant data points arround point of interest ($kNN$)\\
+        Use \textit{Linear Regression} on the new data set to estimate \textit{gradient}.\\
+        \vspace{0.5cm}
+        Idea 2: Use \textit{supervised learning} to estimate \textit{model} (on either $W \mapsto R$ or $W \mapsto (x, y)$).\\
+    \end{frame}
+\end{document}

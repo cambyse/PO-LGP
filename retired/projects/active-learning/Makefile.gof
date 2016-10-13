@@ -8,4 +8,4 @@ CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES
 CUDA = 0
 OBJS  = main.o 
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

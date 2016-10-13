@@ -1,0 +1,1 @@
+../../../share/build/generic.mk

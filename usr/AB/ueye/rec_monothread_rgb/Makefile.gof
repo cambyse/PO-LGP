@@ -15,7 +15,7 @@ CXXFLAGS += -DMLR_IMPLEMENT_TEMPLATES -D__STDC_CONSTANT_MACROS #-march=native
 LPATHS += /usr/local/lib
 LIBS += -lueye_api -lavformat -lavcodec -lavutil -lswscale -lx264 -lz
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 
 # to make api-example
 # gcc api-example.c -o api-example -lavcodec -lavutil -lx264 -lz

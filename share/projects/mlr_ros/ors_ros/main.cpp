@@ -7,7 +7,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <GL/gl.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 //#include <System/engine.h>
 
 #include "ros_module.h"

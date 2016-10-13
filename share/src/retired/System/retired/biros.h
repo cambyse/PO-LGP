@@ -20,7 +20,7 @@
 
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include "engine.h"
 #include "engine_internal.h"
 
@@ -87,13 +87,13 @@ struct FieldRegistration_typed:FieldRegistration {
 void registerField(Variable *v, FieldRegistration* f);
 
 /**
- * \def FIELD(type, name)
+ * \def type name
  * A macro to create a member of a Variable.
  *
  * Creates setters/getters and a register function.
  */
 #ifndef FIELD
-#define FIELD(type, name) \
+#define type name \
   type name; \
   inline int set_##name(const type& _x, Module *p){ \
     writeAccess(p);  name=(type&)_x;  return deAccess(p); } \

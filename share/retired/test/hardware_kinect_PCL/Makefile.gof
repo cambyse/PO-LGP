@@ -6,4 +6,4 @@ BASE = ../..
 
 DEPEND = hardware
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

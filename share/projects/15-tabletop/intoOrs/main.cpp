@@ -11,12 +11,12 @@
 #include <tf/transform_listener.h>
 
 
-struct OrsViewer:Module{
+struct OrsViewer : Thread {
   ACCESSlisten(ors::KinematicWorld, modelWorld)
 
   ors::KinematicWorld copy;
 
-  OrsViewer():Module("OrsViewer") {}
+  OrsViewer() : Thread("OrsViewer") {}
   void open(){
     LOG(-1) <<"HERE"<< endl;
   }
@@ -29,12 +29,12 @@ struct OrsViewer:Module{
   void close(){}
 };
 
-struct PerceptionObjects2Ors : Module{
+struct PerceptionObjects2Ors : Thread {
   tf::TransformListener listener;
 
   ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
   ACCESS(ors::KinematicWorld, modelWorld)
-  PerceptionObjects2Ors(): Module("PerceptionObjects2Ors"){}
+  PerceptionObjects2Ors(): Thread("PerceptionObjects2Ors"){}
   void open(){}
   void step(){
     perceptionObjects.readAccess();

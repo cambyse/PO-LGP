@@ -1,7 +1,7 @@
 #ifndef ROS_MODULE_H
 #define ROS_MODULE_H
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Ors/ors.h>
 
 BEGIN_MODULE(RosTf)

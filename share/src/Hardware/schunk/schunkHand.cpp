@@ -7,7 +7,7 @@
 
 SchunkHand *SchunkHand::global_this=NULL;
 
-SchunkHand::SchunkHand():Module("SchunkHand"), isOpen(false), hand(NULL) {
+SchunkHand::SchunkHand() : Thread("SchunkHand"), isOpen(false), hand(NULL) {
 }
 
 void SchunkHand::open() {

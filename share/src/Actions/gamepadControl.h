@@ -6,7 +6,7 @@
 
 // ============================================================================
 
-struct GamepadControlActivity : Activity, Module {
+struct GamepadControlActivity : Activity, Thread {
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)

@@ -116,7 +116,7 @@ struct sKinectThread : Freenect::FreenectDevice {
 
 Freenect::Freenect *freenect = NULL;
 
-KinectThread::KinectThread() : Module("KinectThread"), s(NULL){
+KinectThread::KinectThread() : Thread("KinectThread"), s(NULL){
 }
 
 KinectThread::~KinectThread() {

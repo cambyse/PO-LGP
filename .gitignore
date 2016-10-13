@@ -48,6 +48,7 @@ CORE
 
 %% BACKUP/temporary files
 *.tmp
+*.dat
 nogit*
 *~
 z.*
@@ -121,7 +122,6 @@ html
 
 
 %% ROS
-build/
 catkin/
 catkin_generated/
 devel/

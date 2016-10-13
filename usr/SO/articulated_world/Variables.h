@@ -7,7 +7,7 @@
 // ============================================================================
 class PerceptsVar : public Variable {
 public:
-  FIELD(mlr::Array<ors::Vector*>, objects);
+  mlr::Array<ors::Vector*> objects;
 
   PerceptsVar() : Variable("percpets variable") {
     reg_objects();
@@ -16,7 +16,7 @@ public:
 
 // ============================================================================
 struct RobotPosVar : public Variable {
-  FIELD(ors::Vector, pos);
+  ors::Vector pos;
 
   RobotPosVar() : Variable("robot pos variable") {
     reg_pos();
@@ -26,7 +26,7 @@ struct RobotPosVar : public Variable {
 // ============================================================================
 class MovementRequestVar : public Variable {
 public:
-  FIELD(ors::Vector, control_u);
+  ors::Vector control_u;
 
   MovementRequestVar() : Variable("Movement Request") {
     reg_control_u();
@@ -42,8 +42,8 @@ typedef arr Pose6D_t;
 class WorldStateVar : public Variable {
 public:
   /// list of DOFs (degree of freedom)
-  FIELD(arr,  dofs);
-  FIELD(bool, changed);
+  arr  dofs;
+  bool changed;
 
   WorldStateVar() : Variable("WorldState") {
     reg_dofs();

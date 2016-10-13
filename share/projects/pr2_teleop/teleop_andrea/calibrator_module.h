@@ -6,7 +6,7 @@
 #include <Mocap/mocapdata.h>
 
 // ============================================================================
-struct Calibrator: Module {
+struct Calibrator: Thread{
   ACCESS(arr, gamepadState);
   ACCESS(arrf, poses);
   ACCESS(arrf, calibrated_pose_rh);

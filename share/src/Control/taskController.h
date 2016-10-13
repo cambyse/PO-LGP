@@ -80,6 +80,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   void getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0, const arr& y, const arr& ydot);
   void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const ors::KinematicWorld& world);
 
+  double error();
   bool isConverged(double tolerance=1e-2);
   void reportState(ostream& os);
 };

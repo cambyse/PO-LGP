@@ -5,7 +5,7 @@
 #define NTCAN_CLEAN_NAMESPACE
 #include <sdh/dsa.h>
 
-SchunkSkin::SchunkSkin():Module("SchunkSkin"), ts(NULL), isOpen(false), isEmulation(false) {
+SchunkSkin::SchunkSkin() : Thread("SchunkSkin"), ts(NULL), isOpen(false), isEmulation(false) {
 }
 
 void SchunkSkin::open() {

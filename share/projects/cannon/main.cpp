@@ -1,6 +1,4 @@
 
-
-
 #include<Core/util.h>
 #include<Core/array.h>
 #include<RL/environment.h>
@@ -41,7 +39,6 @@ int main(int argc, char *argv[]){
     RKHSPol rkhs1(*env,numCentres,H,numEpisode,numIterations);
     mlr::rnd.clockSeed();
     arr rewards;
-
 
 
     rewards = rkhs1.run();

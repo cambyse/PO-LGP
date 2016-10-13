@@ -56,14 +56,14 @@ for link in links:
     # visual shape
     visual = link.find("visual")
     if visual is not None:
-        print 'shape visual (%s) {' % name,
+        print 'shape visual %s_1 (%s) {' % (name, name)
         writeShape(visual)
         print '}\n', # end of shape
 
     # collision shape
     collision = link.find("collision")
     if collision is not None:
-        print 'shape collision (%s) { cont,' % name,
+        print 'shape collision %s_0 (%s) { cont,' % (name, name)
         writeShape(collision)
         print '}\n', # end of shape
 
@@ -100,6 +100,13 @@ for joint in joints:
                 print ' A=<T t(%s) E(%s)>' % (elem.attrib['xyz'], att),
             else:
                 print ' A=<T t(%s)>' % (elem.attrib['xyz']),
+
+        elem = joint.find("safety_controller")
+        if elem is not None:
+            lo = elem.attrib.get('soft_lower_limit')
+            up = elem.attrib.get('soft_upper_limit')
+            if lo is not None:
+                print ' limits=[%s %s]' % (lo, up),
 
         elem = joint.find("limit")
         if elem is not None:

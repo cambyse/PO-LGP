@@ -3,7 +3,7 @@
 #include <Actions/teleopControl.h>
 #include <Control/TaskControllerModule.h>
 #include <RosCom/roscom.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Perception/perception.h>
 #include <Hardware/gamepad/gamepad.h>
 #include "calibrator_module.h"

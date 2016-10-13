@@ -10,7 +10,7 @@ struct sPR2Simulator{
   sPR2Simulator():t(0.), dt(.001), step(0){}
 };
 
-PR2Simulator::PR2Simulator():Module("PR2Simulator"), s(NULL){}
+PR2Simulator::PR2Simulator() : Thread("PR2Simulator"), s(NULL){}
 
 PR2Simulator::~PR2Simulator(){}
 

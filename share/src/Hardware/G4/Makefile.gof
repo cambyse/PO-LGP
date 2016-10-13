@@ -1,6 +1,6 @@
 BASE   = ../../..
-NAME   = libHardware_$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = libHardware_$(NAME).so
 
 DEPEND = Core Ors Gui Mocap
 
@@ -9,4 +9,4 @@ G4 = 1
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

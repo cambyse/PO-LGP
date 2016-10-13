@@ -2,9 +2,9 @@
 #define MLR_gamepad_h
 
 #include <Core/array.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
-struct GamepadInterface:Module {
+struct GamepadInterface : Thread {
   struct jsJoystick *joystick;
   ACCESS(arr, gamepadState)
   ACCESS(bool, quitSignal)

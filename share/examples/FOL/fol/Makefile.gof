@@ -3,4 +3,4 @@ BASE = ../../..
 DEPEND = Core FOL
 #OPTIM=fast_debug
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

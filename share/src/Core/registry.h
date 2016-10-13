@@ -38,32 +38,10 @@ void initRegistry(int argc, char *argv[]);
 // to register a type (instead of general thing/item), use this:
 //
 
-struct Type {
-  virtual ~Type(){}
-  virtual const std::type_info& typeId() const {NIY}
-  virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
-  virtual void* newInstance() const {NIY}
-//  virtual Type* clone() const {NIY}
-  void write(std::ostream& os) const {  os <<"Type '" <<typeId().name() <<"' ";  }
-  void read(std::istream& is) const {NIY}
-};
-stdPipes(Type)
-
-template<class T, class Base>
-struct Type_typed : Type {
-  virtual const std::type_info& typeId() const { return typeid(T); }
-  virtual void* newInstance() const { return new T(); }
-//  virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
-};
-
 template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
-  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = container.newNode<T>(T()); is >>n->value; return n; }
-//  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
+  virtual Node* readIntoNewNode(Graph& container, std::istream& is) const { Node_typed<T> *n = container.newNode<T>(T()); is >>n->value; return n; }
 };
-
-inline bool operator!=(Type& t1, Type& t2){ return t1.typeId() != t2.typeId(); }
-inline bool operator==(Type& t1, Type& t2){ return t1.typeId() == t2.typeId(); }
 
 typedef mlr::Array<std::shared_ptr<Type> > TypeInfoL;
 

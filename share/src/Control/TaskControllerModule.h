@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Control/ctrlMsg.h>
 #include <Control/taskController.h>
 #include <Control/RTControllerSimulation.h>
@@ -27,7 +27,7 @@ struct SetOfDataFiles{
 
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
-struct TaskControllerModule : Module {
+struct TaskControllerModule : Thread {
   struct sTaskControllerModule *s;
 
   //protected access points

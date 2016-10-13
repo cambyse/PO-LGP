@@ -6,7 +6,7 @@
 
 // ============================================================================
 
-struct TeleopControlActivity : Activity, Module {
+struct TeleopControlActivity : Activity, Thread {
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
