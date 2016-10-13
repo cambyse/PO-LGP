@@ -136,11 +136,3 @@ srv_gen
 *Feedback.msg
 *Goal.msg
 *Result.msg
-
-%% QT
-*.config
-*.creator
-*.creator.user
-*.files
-*.includes
-
