@@ -122,7 +122,6 @@ html
 
 
 %% ROS
-build/
 catkin/
 catkin_generated/
 devel/
