@@ -30,6 +30,8 @@ int main(int argc, char** argv){
     baxter.stop({home});
     cout << "Homed." << endl;
 
+    mlr::wait(5);
+
     ors::Body* body = baxter.getModelWorld().getBodyByName("optitrackbody_0");
 //    ors::Body* body = baxter.getModelWorld().getBodyByName("alvar_10");
     while (!body)
