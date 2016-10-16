@@ -75,7 +75,7 @@ def qdump__mlr__Array(d, value):
                 if nd==2:
                     s = "(%i,%i)"%(i/d1,i%d1)
                 if nd==3:
-                    s = "(%i,%i,%i)"%(i/d1,(i/d2)%d1,i%d2)
+                    s = "(%i,%i,%i)"%(i/(d1*d2),(i/d2)%d1,i%d2)
                 d.putSubItem(s, (p+i).dereference())
                 i = i+1
             d.putSubItem("p", p)
