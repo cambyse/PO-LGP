@@ -1,4 +1,4 @@
-body base { mass=19.7101  }
+body baseH { mass=19.7101  }
 body spine_1 { pose=<T 0 0 0.0808867 1 0 0 0 >  }
 body right_hip_0 { pose=<T 0 -0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  }
 body left_hip_0 { pose=<T 0 0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  }
@@ -27,23 +27,23 @@ body right_elbow_0 { pose=<T 1.61579e-12 -0.508175 0.348539 0.5 -0.5 -0.5 -0.5 >
 body left_elbow_0 { pose=<T 1.61568e-12 0.508175 0.348539 0.5 0.5 -0.5 0.5 >  }
 body right_elbow { pose=<T 1.61579e-12 -0.508175 0.348539 -0.707107 -1.11022e-16 -5.55112e-17 0.707107 > mass=0.345403  }
 body left_elbow { pose=<T 1.61568e-12 0.508175 0.348539 -0.707107 0 -5.55112e-17 -0.707107 > mass=0.345403  }
-body right_wrist_0 { pose=<T 3.09381e-12 -0.809999 0.348539 -0.5 0.5 0.5 0.5 >  }
-body left_wrist_0 { pose=<T 3.0936e-12 0.809999 0.348539 -0.5 -0.5 0.5 -0.5 >  }
-body right_wrist { pose=<T 3.09381e-12 -0.809999 0.348539 1 5.55112e-17 -5.55112e-17 2.44832e-12 > mass=0.003125  }
-body left_wrist { pose=<T 3.0936e-12 0.809999 0.348539 2.44849e-12 0 -2.77556e-17 1 > mass=0.003125  }
+body right_wristH_0 { pose=<T 3.09381e-12 -0.809999 0.348539 -0.5 0.5 0.5 0.5 >  }
+body left_wristH_0 { pose=<T 3.0936e-12 0.809999 0.348539 -0.5 -0.5 0.5 -0.5 >  }
+body right_wristH { pose=<T 3.09381e-12 -0.809999 0.348539 1 5.55112e-17 -5.55112e-17 2.44832e-12 > mass=0.003125  }
+body left_wristH { pose=<T 3.0936e-12 0.809999 0.348539 2.44849e-12 0 -2.77556e-17 1 > mass=0.003125  }
 
-shape visual (base){ type=4 size=[0.129922 0.129922 0.169476 0.129922] rel=<T 0 0 -0.0395544 1 0 0 0 >  }
-shape visual (base){ type=4 size=[0.138218 0.138218 0.178662 0.138218] rel=<T 0 0 0.0404433 1 0 0 0 >  }
+shape visual (baseH){ type=4 size=[0.129922 0.129922 0.169476 0.129922] rel=<T 0 0 -0.0395544 1 0 0 0 >  }
+shape visual (baseH){ type=4 size=[0.138218 0.138218 0.178662 0.138218] rel=<T 0 0 0.0404433 1 0 0 0 >  }
 shape visual (spine){ type=4 size=[0.158218 0.158218 0.294781 0.158218] rel=<T 0.136563 0 3.0323e-17 -0.707107 0 -0.707107 0 >  }
 shape visual (spine){ type=4 size=[0.178218 0.178218 0.231723 0.178218] rel=<T 0.32663 0 7.25265e-17 -0.707107 0 -0.707107 0 >  }
 shape visual (neck){ type=4 size=[0.04 0.04 0.142525 0.04] rel=<T 0.102525 0 2.27651e-17 -0.707107 0 -0.707107 0 >  }
 shape visual (neck){ type=1 size=[0.1 0.1 0.1 0.1] rel=<T 0.20505 0 4.55303e-17 -0.707107 0 -0.707107 0 >  }
 shape visual (right_shoulder){ type=4 size=[0.05 0.05 0.214978 0.05] rel=<T 0.164978 0 0 0.707107 0 0.707107 0 >  }
 shape visual (right_elbow){ type=4 size=[0.025 0.025 0.175912 0.025] rel=<T 0.150912 0 0 0.707107 0 0.707107 0 >  }
-shape visual (right_wrist){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
+shape visual (right_wristH){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
 shape visual (left_shoulder){ type=4 size=[0.05 0.05 0.214978 0.05] rel=<T 0.164978 0 0 0.707107 0 0.707107 0 >  }
 shape visual (left_elbow){ type=4 size=[0.025 0.025 0.175912 0.025] rel=<T 0.150912 0 0 0.707107 0 0.707107 0 >  }
-shape visual (left_wrist){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
+shape visual (left_wristH){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
 shape visual (right_hip){ type=4 size=[0.05 0.05 0.337785 0.05] rel=<T 0.287785 0 0 0.707107 0 0.707107 0 >  }
 shape visual (right_knee){ type=4 size=[0.025 0.025 0.220529 0.025] rel=<T 4.34162e-17 -0 -0.195529 -2.44843e-12 0 -1 0 >  }
 shape visual (right_ankle){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
@@ -51,9 +51,9 @@ shape visual (left_hip){ type=4 size=[0.05 0.05 0.337785 0.05] rel=<T 0.287785 0
 shape visual (left_knee){ type=4 size=[0.025 0.025 0.220529 0.025] rel=<T 4.34162e-17 -0 -0.195529 -2.44843e-12 0 -1 0 >  }
 shape visual (left_ankle){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
 
-joint spine_0 (base spine_1){ type=0 from=<T 0 0 0.0808867 1 0 0 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_hip_0 (base right_hip_0){ type=0 from=<T 0 -0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_hip_0 (base left_hip_0){ type=0 from=<T 0 0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint spine_0 (baseH spine_1){ type=0 from=<T 0 0 0.0808867 1 0 0 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_hip_0 (baseH right_hip_0){ type=0 from=<T 0 -0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_hip_0 (baseH left_hip_0){ type=0 from=<T 0 0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
 joint spine_1 (spine_1 spine_2){ type=0 from=<T -0 -0 -0 0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
 joint right_hip_1 (right_hip_0 right_hip_1){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
 joint left_hip_1 (left_hip_0 left_hip_1){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
@@ -79,7 +79,7 @@ joint right_elbow_0 (right_shoulder right_elbow_0){ type=0 from=<T 0.329956 0 0 
 joint left_elbow_0 (left_shoulder left_elbow_0){ type=0 from=<T 0.329956 0 0 0.707107 0 -0.707107 0 >  limits=[ -3.14159 0 ]  ctrl_limits=[ 1 1 1 ]  }
 joint right_elbow_1 (right_elbow_0 right_elbow){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ 0 3.14159 ]  ctrl_limits=[ 1 1 1 ]  }
 joint left_elbow_1 (left_elbow_0 left_elbow){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -3.14159 0 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_wrist_0 (right_elbow right_wrist_0){ type=0 from=<T 0.301824 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_wrist_0 (left_elbow left_wrist_0){ type=0 from=<T 0.301824 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_wrist_1 (right_wrist_0 right_wrist){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_wrist_1 (left_wrist_0 left_wrist){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_wristH_0 (right_elbow right_wristH_0){ type=0 from=<T 0.301824 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_wristH_0 (left_elbow left_wristH_0){ type=0 from=<T 0.301824 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_wristH_1 (right_wristH_0 right_wristH){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_wristH_1 (left_wristH_0 left_wristH){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
