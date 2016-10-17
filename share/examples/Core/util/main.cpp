@@ -1,4 +1,5 @@
 #include <Core/util.h>
+#include <Core/registry.h>
 #include <math.h>
 #include <iomanip>
 
@@ -41,7 +42,11 @@ void TEST(Parameter){
   String p2 = mlr::getParameter<String>("h", String("def2"));
   CHECK_EQ(p2,"def2","");
 
-  cout <<p1 <<endl <<p2 <<endl;
+  double d = mlr::getParameter<double>("number");
+
+  cout <<p1 <<endl <<p2 <<endl <<d <<endl;
+
+  cout <<"registry:" <<registry() <<endl;
 }
 
 void TEST(Timer){
@@ -90,9 +95,9 @@ int MAIN(int argc,char** argv){
   uint long_int_size=sizeof(long);
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
 
-  testPaths();
+//  testPaths();
 //  testString();
-//  testParameter();
+  testParameter();
 //  testTimer();
 //  testLogging();
 //  testException();

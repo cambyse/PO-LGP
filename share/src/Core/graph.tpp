@@ -61,6 +61,10 @@ struct Node_typed : Node {
     else os <<value;
   }
   
+  virtual void copyValueInto(void *value_ptr) const {
+    *((T*)value_ptr) = value;
+  }
+
   virtual const std::type_info& getValueType() const {
     return typeid(T);
   }

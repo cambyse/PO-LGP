@@ -22,25 +22,54 @@
 
 Singleton<Graph> registry;
 
-void initRegistry(int argc, char* argv[]){
-  int n;
-  for(n=1; n<argc; n++){
-    if(argv[n][0]=='-'){
-      mlr::String key(argv[n]+1);
-      if(n+1<argc && argv[n+1][0]!='-'){
-        mlr::String value;
-        value <<'=' <<argv[n+1];
-        registry().readNode(value, false, false, key);
-//        registry().newNode<mlr::String>({key}, {}, new mlr::String(argv[n+1]), true);
-        n++;
+struct RegistryInitializer{
+  Mutex lock;
+  RegistryInitializer(){
+    int n;
+    for(n=1; n<mlr::argc; n++){
+      if(mlr::argv[n][0]=='-'){
+        mlr::String key(mlr::argv[n]+1);
+        if(n+1<mlr::argc && mlr::argv[n+1][0]!='-'){
+          mlr::String value;
+          value <<'=' <<mlr::argv[n+1];
+          registry().readNode(value, false, false, key);
+          n++;
+        }else{
+          registry().newNode<bool>({key}, {}, true);
+        }
       }else{
-        registry().newNode<bool>({key}, {}, true);
+        MLR_MSG("non-parsed cmd line argument:" <<mlr::argv[n]);
       }
-    }else{
-      MLR_MSG("non-parsed cmd line argument:" <<argv[n]);
+    }
+
+    mlr::String cfgFileName="MT.cfg";
+    if(registry()["cfg"]) cfgFileName = registry().get<mlr::String>("cfg");
+    LOG(3) <<"opening config file '" <<cfgFileName <<"'";
+    FILE(cfgFileName) >>registry();
+  }
+  ~RegistryInitializer(){
+  }
+};
+
+Singleton<RegistryInitializer> registryInitializer;
+
+void initRegistry(){
+  registryInitializer();
+}
+
+bool getParameterFromGraph(const std::type_info& type, void* data, const char* key){
+  registryInitializer();
+  Node *n = registry().findNodeOfType(type, {key});
+  if(n){
+    n->copyValueInto(data);
+    return true;
+  }else{
+    n = registry().findNode({key});
+    if(n && n->isOfType<double>()){
+      if(type==typeid(int)){ *((int*)data) = (int)n->get<double>(); return true; }
+      if(type==typeid(uint)){ *((uint*)data) = (uint)n->get<double>(); return true; }
+      if(type==typeid(bool)){ *((bool*)data) = (bool)n->get<double>(); return true; }
     }
   }
-
-  mlr::openConfigFile();
-  globalThings().cfgFile >>registry();
+  return false;
 }

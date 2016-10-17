@@ -30,7 +30,7 @@
 //
 
 extern Singleton<Graph> registry;
-void initRegistry(int argc, char *argv[]);
+void initRegistry();
 
 
 //===========================================================================

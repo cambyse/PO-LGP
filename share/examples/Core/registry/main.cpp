@@ -34,7 +34,7 @@ void TEST(Registry){
 }
 
 int MAIN(int argc,char** argv){
-  initRegistry(argc, argv);
+  initRegistry();
 
   testRegistry();
 
