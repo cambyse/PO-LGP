@@ -5,7 +5,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>
@@ -80,7 +80,7 @@ struct IOC_DemoCost {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
 
     if (&Hf) {
@@ -207,14 +207,14 @@ void simpleMotion(){
   MP.loadTransitionParameters();
   arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
-  c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 25);
-  c = MP.addTask("vec_right_hand", new DefaultTaskMap(vecAlignTMT,world,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
+  c = MP.addTask("vec_right_hand", new TaskMap_Default(vecAlignTMT,world,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
   c->setCostSpecs(MP.T, MP.T, ARR(1.), 25);
-  c = MP.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
+  c = MP.addTask("qItselfTMT", new TaskMap_Default(qItselfTMT,world));
   c->setCostSpecs(MP.T, MP.T, zeros(MP.world.getJointStateDimension(),1), 1);
   c->map.order=1;
-  c = MP.addTask("position_right_hand2", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand2", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(0, MP.T, refGoal, 0);
 
   MP.x0 = {0.,0.,0.};
@@ -256,14 +256,14 @@ void simpleMotion(){
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.2,0.);
   arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
-  c2 = MP2.addTask("position_right_hand",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = MP2.addTask("position_right_hand",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 20);
-  c2 = MP2.addTask("vec_right_hand", new DefaultTaskMap(vecAlignTMT,world2,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
+  c2 = MP2.addTask("vec_right_hand", new TaskMap_Default(vecAlignTMT,world2,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, ARR(1.), 25);
-  c2 = MP2.addTask("qItselfTMT", new DefaultTaskMap(qItselfTMT,world));
+  c2 = MP2.addTask("qItselfTMT", new TaskMap_Default(qItselfTMT,world));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, zeros(MP2.world.getJointStateDimension(),1), 1);
   c2->map.order=1;
-  c2 = MP2.addTask("position_right_hand2", new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = MP2.addTask("position_right_hand2", new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::constant, refGoal2, 0);
   MP2.x0 = {0.,0.,0.};
   MotionProblemFunction MPF2(MP2);
@@ -286,7 +286,7 @@ void simpleMotion(){
   IOC ioc(demos,numParam,false,false);
 
 
-  arr w = ones(numParam,1);w.flatten();//fabs(randn(numParam,1)); w.flatten();
+  arr w = ones(numParam,1);w.reshapeFlat();//fabs(randn(numParam,1)); w.reshapeFlat();
 
 //  checkAllGradients(ioc,w,1e-3);
   //  //  return;

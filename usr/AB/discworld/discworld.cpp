@@ -196,7 +196,7 @@ void DiscWorld::replay() {
     for(int b = 0; b < kf.getNBodies(); b++) {
       fname.clear() << basename << b;
       TEMP = kf.getErr(b);
-      TEMP.subRange(t-lwin, T-lwin-1).setZero();
+      TEMP.subRef(t-lwin, T-lwin-1).setZero();
       TEMP >>FILE(fname);
     }
     mlr::arrayBrackets = "[]";

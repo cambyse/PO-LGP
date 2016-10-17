@@ -1,17 +1,17 @@
 #pragma once
 
 #include "activity.h"
-#include <pr2/roscom.h>
-#include <Motion/feedbackControl.h>
+#include <Control/ctrlMsg.h>
+#include <Control/taskController.h>
 
 // ============================================================================
 
 struct GamepadControlActivity : Activity, Module {
-  ACCESSname(CtrlMsg, ctrl_ref)
-  ACCESSname(CtrlMsg, ctrl_obs)
-  ACCESSnew(mlr::Array<CtrlTask*>, ctrlTasks)
-  ACCESSname(arr, gamepadState)
-  ACCESSname(arr, pr2_odom)
+  ACCESS(CtrlMsg, ctrl_ref)
+  ACCESS(CtrlMsg, ctrl_obs)
+  ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESS(arr, gamepadState)
+  ACCESS(arr, pr2_odom)
 
   struct TaskControllerModule *taskController;
   struct Gamepad2Tasks *g2t;

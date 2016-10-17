@@ -39,7 +39,8 @@ ha::Controller::Ptr MLRFactory::createGraspController(const ha::HybridAutomatonA
     MLRFactoryParams& p = (MLRFactoryParams&) params;
     qItselfController::Ptr close_gripper(new qItselfController());
     close_gripper->setSystem(system);
-    close_gripper->setEndeff(p.endeff);
+    close_gripper->setEndeff(p.gripper);
+    close_gripper->setName(name);
     ::Eigen::MatrixXd goal(1, 1);
     goal(0, 0) = params.grasp_strength;
     close_gripper->setGoal(goal);
@@ -64,8 +65,10 @@ ha::Controller::Ptr MLRFactory::createSubjointSpaceController(const ha::HybridAu
                                                           bool is_relative) {
     qItselfController::Ptr ctrl(new qItselfController());
     ctrl->setSystem(system);
-    ctrl->setIndices(index_vec);
+    //ctrl->setIndices(index_vec);
+    ctrl->setEndeff("-");
     ctrl->setGoal(goal_js);
+    ctrl->setName(name);
     return ctrl;
 }
 
@@ -103,6 +106,7 @@ ha::Controller::Ptr MLRFactory::createOperationalSpaceController(const ha::Hybri
                                                              const Eigen::MatrixXd &goal_op_rot_matrix,
                                                              bool is_relative) {
     MLRFactoryParams& p = (MLRFactoryParams&) params;
+    OpSpaceController::Ptr ctrl(new OpSpaceController());
     Eigen::MatrixXd bin_home_frame;
     bin_home_frame.resize(4,4);
     bin_home_frame.setIdentity();
@@ -110,9 +114,11 @@ ha::Controller::Ptr MLRFactory::createOperationalSpaceController(const ha::Hybri
     {
         bin_home_frame.block(0,0,3,3) = goal_op_rot_matrix;
     }
+    else {
+        ctrl->setOnlyDisplacement(true);
+    }
     bin_home_frame.block(0,3,3,1) = goal_op_translation;
 
-    OpSpaceController::Ptr ctrl(new OpSpaceController());
     ctrl->setSystem(system);
 
     //Endeffector Frame Controller

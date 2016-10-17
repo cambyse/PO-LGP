@@ -27,7 +27,7 @@
 #include "utilTL.h"
 #include <Ors/ors_ode.h>
 #include <Ors/ors_swift.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #ifndef NEW_FEEDBACK_CONTROL
 #  include <Ors/ors_oldTaskVariables.h>
 #endif
@@ -127,11 +127,11 @@ void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, TaskVariableList& TV
 }
 #endif
 
-void controlledStep(ors::KinematicWorld *C, FeedbackMotionControl &FM, const char* text) {
+void controlledStep(ors::KinematicWorld *C, TaskController &FM, const char* text) {
   double tau=.01;
   arr q, qdot;
   C->getJointState(q, qdot);
-  FM.qitselfPD.y_ref = q0;
+  FM.qNullCostRef.y_ref = q0;
   arr a = FM.operationalSpaceControl();
   q += tau*qdot;
   qdot += tau*a;
@@ -247,8 +247,8 @@ void RobotManipulationSimulator::startVideo(const char* filename) {
 void RobotManipulationSimulator::simulate(uint t, const char* message) {
   String msg_string(message);
 #ifdef NEW_FEEDBACK_CONTROL
-  FeedbackMotionControl MP(*this, false);
-  MP.qitselfPD.prec=0.;
+  TaskController MP(*this, false);
+  MP.qNullCostRef.prec=0.;
   for(; t--;) controlledStep(this, MP, msg_string);
 #else
   arr q;
@@ -998,7 +998,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   arr pos = conv_vec2arr(obj->X.pos);
   uint fingIdx = getBodyByName("fing1c")->index;
 
-  FeedbackMotionControl MP(*this, false);
+  TaskController MP(*this, false);
   CtrlTask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, ors::Vector(pos));
   if(isTable) x->y_ref(2) = neutralHeight-0.1;
 
@@ -1220,9 +1220,9 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
 
 #ifdef NEW_FEEDBACK_CONTROL
   uint t;
-  FeedbackMotionControl MP(*this, false);
+  TaskController MP(*this, false);
   CtrlTask *o = MP.addPDTask("obj", .2, 1.5, posTMT, obj_dropped1);
-  CtrlTask *c = MP.addPDTask("collision", .5, 2., new ProxyTaskMap(allPTMT, {}, {.02}));
+  CtrlTask *c = MP.addPDTask("collision", .5, 2., new TaskMap_Proxy(allPTMT, {}, {.02}));
   c->prec = 1.;
 //  CtrlTask *r =  MP.addPDTask("q-pose", .5, 1., new TaskMap_qItself());
 //  r->prec = 1.;
@@ -1569,7 +1569,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   }
   
 #ifdef NEW_FEEDBACK_CONTROL
-  FeedbackMotionControl MP(*this, false);
+  TaskController MP(*this, false);
   CtrlTask *x =  MP.addPDTask("q-pose", .2, 1., new TaskMap_qItself());
   x->y_ref = q0;
   uint t;
@@ -1619,7 +1619,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   if(msg_string.N == 0) msg_string << "move to position "<< pos;
   
 #ifdef NEW_FEEDBACK_CONTROL
-  FeedbackMotionControl MP(*this, false);
+  TaskController MP(*this, false);
   CtrlTask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, ors::Vector(pos));
   uint t;
   for(t=0; t<Tabort; t++) {

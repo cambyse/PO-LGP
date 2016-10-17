@@ -47,5 +47,21 @@ struct TowerProblem_new:LogicGeometricProgram{
 
 //===========================================================================
 
+struct SticksProblem:LogicGeometricProgram{
+  SticksProblem(){
+    world_root.init("LGP-sticks-world.g");
+    fol_root.init(FILE("LGP-sticks-symbols.g"));
+  }
+  ~SticksProblem(){}
+
+  bool isFeasible(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+  double psi(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+  MotionProblem& getPathProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+  ConstrainedProblem& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+};
+
+
+//===========================================================================
+
 void runMonteCarlo(Graph& symbols);
 

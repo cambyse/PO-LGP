@@ -104,7 +104,7 @@ void stereoTriangulation_nonhom(arr& X, const arr& x, const arr& PL, const arr& 
 void global_P(){
   if(!global_PL.N){
     ifstream fil;
-    mlr::open(fil, "../../configurations/calib_P");
+    mlr::open(fil, "../../data/configurations/calib_P");
     global_PL.readTagged(fil, "PL");
     global_PR.readTagged(fil, "PR");
     fil.close();

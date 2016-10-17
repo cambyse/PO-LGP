@@ -240,8 +240,8 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
        arr tmp = recho.bwdMsg_v[recho.bwdMsg_count];
       if(recho.bwdMsg_count != 0) cout << " deviate " <<  norm(ctrl->q_reference - ctrl->bwdMsg_v.sub(0,6) ) << "; ";
        ctrl->useBwdMsg=true;
-      ctrl->bwdMsg_v   .referToSubDim(recho.bwdMsg_v,   (uint)recho.bwdMsg_count);
-      ctrl->bwdMsg_Vinv.referToSubDim(recho.bwdMsg_Vinv,(uint)recho.bwdMsg_count);
+      ctrl->bwdMsg_v   .referToDim(recho.bwdMsg_v,   (uint)recho.bwdMsg_count);
+      ctrl->bwdMsg_Vinv.referToDim(recho.bwdMsg_Vinv,(uint)recho.bwdMsg_count);
        cout <<"bwdMsg#"<<recho.bwdMsg_count << endl;// << " new target " << tmp.sub(0,6) << endl;
 
       //if(tmpco >= 399.0) tmpco = 399;       tmpco += 1.0;//allow to slow trajectory

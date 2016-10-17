@@ -38,13 +38,13 @@ void TowerProblem::setRandom(){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Node *o = symbols.append<bool>({"Object", s->name}, {}, new bool(true), true);
+    Node *o = symbols.append<bool>({"Object", s->name}, {}, true);
     if(s->type==ors::cylinderST){
-      state.append<bool>({}, {CYLIN ,o}, new bool(true), true);
+      state.append<bool>({}, {CYLIN ,o}, true);
     }else{
-      state.append<bool>({}, {BOARD, o}, new bool(true), true);
+      state.append<bool>({}, {BOARD, o}, true);
     }
-    state.append<double>({}, {DEPTH, o}, new double(0.), true);
+    state.append<double>({}, {DEPTH, o}, 0.);
   }
 
   symbols.checkConsistency();
@@ -70,9 +70,8 @@ double TowerProblem::reward(const ors::KinematicWorld& world, const Graph& symbo
   Graph& state =symbols["STATE"]->graph();
 
   for(Node *dep:depthSymbol->parentOf) if(&dep->container==&state){
-    double *d = dep->getValue<double>();
-    CHECK(d,"");
-    if(*d>depth) depth=*d;
+    double d = dep->get<double>();
+    if(d>depth) depth=d;
   }
 
   //-- count supports below
@@ -124,7 +123,8 @@ void TowerProblem_new::setRandom(){
     }
     s->sscCore.setBox();
     s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
-    s->mesh.setSSC(s->sscCore, s->size[3]);
+    s->mesh.setSSCvx(s->sscCore, s->size[3]);
+    s->mesh_radius = s->mesh.getRadius();
     b->name = s->name;
     //position on grid
     b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);
@@ -132,13 +132,13 @@ void TowerProblem_new::setRandom(){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Node *o = fol_root.KB.append<bool>({s->name}, {}, new bool(true), true);
+    Node *o = fol_root.KB.append<bool>({s->name}, {}, true);
     //add predicates
-    state.append<bool>({}, {OBJECT, o}, new bool(true), true);
+    state.append<bool>({}, {OBJECT, o}, true);
     if(!s->size[0]){
-      state.append<bool>({}, {CYLIN ,o}, new bool(true), true);
+      state.append<bool>({}, {CYLIN ,o}, true);
     }else{
-      state.append<bool>({}, {BOARD, o}, new bool(true), true);
+      state.append<bool>({}, {BOARD, o}, true);
     }
   }
 

@@ -17,7 +17,7 @@ struct EndStateProgram:ConstrainedProblem{
     );
   }
 
-  void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
+  void phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const arr& x){
     world.setJointState(x);
     if(verbose>1) world.gl().timedupdate(.1);
     if(verbose>2) world.gl().watch();
@@ -26,6 +26,7 @@ struct EndStateProgram:ConstrainedProblem{
     phi.clear();
     if(&phiJ) phiJ.clear();
     if(&tt) tt.clear();
+    if(&H)  H.clear();
 
     //-- support symbols -> constraints of being inside!
     Node *support=symbolicState["supports"];

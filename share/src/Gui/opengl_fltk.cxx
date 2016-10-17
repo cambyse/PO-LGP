@@ -66,8 +66,7 @@ OpenGL::~OpenGL(){
 
 void OpenGL::postRedrawEvent(){ s->redraw(); } 
 void OpenGL::processEvents(){  Fl::check(); }
-void OpenGL::enterEventLoop(){ loopExit=false; while(!loopExit) Fl::wait(); }
-void OpenGL::exitEventLoop(){  loopExit=true; }
+void OpenGL::sleepForEvents()(){ loopExit=false; while(!loopExit) Fl::wait(); }
 
 /// resize the window
 void OpenGL::resize(int w,int h){

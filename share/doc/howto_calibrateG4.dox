@@ -1,0 +1,15 @@
+/**
+To calibrate the G4 on Linux you need to download
+ftp://ftp.polhemus.com/pub/G4/G4_Linux/SWD-50408-25-1.0.1-G4_Linux_Suite.tar.gz
+and first build and install the G4_track_lib, then you can build the createcfgfile package.
+You need to start the CreateSrcConfig programm. In order to recalibrate with an existing config-file you
+need to open it now. 
+You need to measure the distance from the origin to the source and enter the result in the programm.
+Before making any changes make sure the units you enter in this programm are the 
+same you have measured before.
+Now you can create a new source configuration file.
+
+According to the manual ( ftp://ftp.polhemus.com/pub/G4/G4_Linux/G4%20Linux%20Tools%20ReleaseAnnouncement.pdf )
+it is easier to use Windows for the creation of the config-file.
+The files you need to create the file with windows can be found here: ftp://ftp.polhemus.com/pub/G4/
+*/

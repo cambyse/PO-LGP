@@ -1,7 +1,7 @@
 #include <Core/module.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 #include <Actions/gamepadControl.h>
-#include <Actions/TaskControllerModule.h>
+#include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Actions/swig.h>
 

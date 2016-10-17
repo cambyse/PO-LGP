@@ -20,3 +20,9 @@ sh INSTALL_ALL_UBUNTU_PACKAGES.sh
 ./PhysX_install
 ./ODE_install
 #./IBDS_install
+
+# install google test
+cd /usr/src/gtest
+sudo cmake .
+sudo make
+#sudo ln -s -f /usr/src/gtest/libgtest.a /home/lib/lib/

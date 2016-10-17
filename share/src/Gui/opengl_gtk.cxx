@@ -82,7 +82,7 @@ struct sOpenGL{
 
 /// constructor
 
-void OpenGL::checkWindow(){
+void OpenGL::openWindow(){
   gtkCheckInitialized();
   if(!s->container) s->createGlContainer();
   if(!s->glArea) s->createGlArea();
@@ -103,9 +103,6 @@ void OpenGL::processEvents(){
   while (gtk_events_pending())  gtk_main_iteration();
   gtkUnlock();
 }
-
-void OpenGL::enterEventLoop(){ watching.setValue(1); watching.waitForValueEq(0); } //loopExit=false; while(!loopExit){ gtkLock(); gtk_main_iteration(); gtkUnlock(); } }
-void OpenGL::exitEventLoop(){  watching.setValue(0); }
 
 /// resize the window
 void OpenGL::resize(int w,int h){

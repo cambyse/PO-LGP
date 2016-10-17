@@ -1,12 +1,12 @@
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/gamepad2tasks.h>
+#include <Control/taskController.h>
 #include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/actions.h>
-#include <pr2/actionMachine.h>
+#include <RosCom/roscom.h>
+#include <RosCom/actions.h>
+#include <RosCom/actionMachine.h>
 
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
@@ -70,7 +70,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
   //world.gl().add(ors::glDrawGraph, &worldCopy);
 
-  FeedbackMotionControl MP(world, true); // true means using swift
+  TaskController MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
 
@@ -112,7 +112,7 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
 
 
 
-  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector));//, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector));//, "target"));
   pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
   pd_y->prec = 10.;
 

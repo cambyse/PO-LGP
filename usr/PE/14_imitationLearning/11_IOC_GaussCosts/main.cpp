@@ -3,13 +3,13 @@
 
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/taskMap_transition.h>
+#include <Motion/taskMaps.h>
+
+
+
 #include <Optim/optimization.h>
 #include <Ors/ors_swift.h>
-#include <Motion/taskMap_proxy.h>
+
 #include <Gui/plot.h>
 #include "../src/gaussian_costs.h"
 #include "../src/rbf_costs.h"
@@ -56,9 +56,9 @@ int main(int argc,char **argv){
 
   RBFCosts rc;
   rc.nB = 20;
-  rc.M = linspace(0.,100.,rc.nB-1); rc.M.flatten();
-  rc.C = repmat(ARR(5.),rc.nB,1); rc.C.flatten();
-  rc.W = 1.+0.*fabs(randn(rc.nB,1)); rc.W.flatten();
+  rc.M = linspace(0.,100.,rc.nB-1); rc.M.reshapeFlat();
+  rc.C = repmat(ARR(5.),rc.nB,1); rc.C.reshapeFlat();
+  rc.W = 1.+0.*fabs(randn(rc.nB,1)); rc.W.reshapeFlat();
   cout << rc.W << endl;
   arr t = /*ARR(1.);//*/linspace(-0.,100.,100);
   arr z,dz,Hz;

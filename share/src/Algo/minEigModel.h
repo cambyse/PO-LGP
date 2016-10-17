@@ -5,9 +5,10 @@
 #include <Geo/mesh.h>
 #include "dataNeighbored.h"
 
-struct MinEigModel{
+struct MinEigModel : GLDrawer{
   DataNeighbored& data;
   arr weights;
+  double margin;
 
   //statistics
   arr bias_xx;
@@ -31,19 +32,22 @@ struct MinEigModel{
   int label;
 
 
-  MinEigModel(DataNeighbored& data) : data(data), weights(zeros(data.n())), label(0) {}
+  MinEigModel(DataNeighbored& data, double margin) : data(data), weights(zeros(data.n())), margin(margin), label(0) {}
+  virtual ~MinEigModel(){}
 
   void setPoints(const uintA& points); ///< set the model points (weights initialized to one)
   void setWeightsToOne();    ///< set all weights in pts to 1
   void setWeightsToZero();   ///< set all weights (ans stats) to zero
   void calc(bool update);    ///< compute the model (calc the eigenvalue/vector) incremental/update or exact
   void expand(uint steps=1); ///< add all neighbors of the fringe
-  void reweightWithError(uintA& pts, double margin=0.01);
+  void reweightWithError(uintA& pts);
+  arr getInliers();
   void computeConvexHull();
+  void computeConvexHull2();
   double coveredData(bool novelDataOnly=true);
   void calcDensity();
   void colorPixelsWithWeights(arr& cols);
-  void glDraw();
+  void glDraw(OpenGL&);
   void report(ostream& os=std::cout, bool mini=false);
 
 private:

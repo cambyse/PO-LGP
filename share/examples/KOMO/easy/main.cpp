@@ -7,8 +7,13 @@
 void TEST(Easy){
   ors::KinematicWorld G("test.ors");
   cout <<"configuration space dim=" <<G.q.N <<endl;
-  arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
+  KOMO komo;
+  komo.setMoveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
+//  komo.checkGradients();
+//  komo.setSpline(3);
+//  komo.checkGradients();
+  komo.run();
+  for(uint i=0;i<2;i++) komo.displayTrajectory();
 }
 
 //===========================================================================
@@ -31,8 +36,16 @@ void TEST(EasyPR2){
     rndGauss(G.q,rand,true);
     G.setJointState(G.q);
   }
+#if 1
+  KOMO komo;
+  komo.setMoveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
+  komo.setSpline(7);
+  komo.run();
+  for(uint i=0;i<2;i++) komo.displayTrajectory();
+#else
   arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
   for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
+#endif
 }
 
 //===========================================================================
@@ -74,8 +87,8 @@ int main(int argc,char** argv){
 
 //  testEasy();
 //  testEasyAlign();
-  testEasyAlign2();
-//  testEasyPR2();
+//  testEasyAlign2();
+  testEasyPR2();
 //  testFinalPosePR2();
   return 0;
 }

@@ -450,8 +450,8 @@ void OrsSystem::setx(const arr& x){
     uint n=x.N/2;
     CHECK_EQ(x.N,2*n, "");
     arr q, v;
-    q.referToSubRange(x, 0, n-1);
-    v.referToSubRange(x, n, 2*n-1);
+    q.referToRange(x, 0, n-1);
+    v.referToRange(x, n, 2*n-1);
     s->setqv(q, v);
   }
 }

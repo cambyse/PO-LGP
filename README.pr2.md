@@ -21,7 +21,7 @@ Put the following in your `~.bashrc`
 ```
 export ROS_DISTRO=indigo
 export ROS_VERSION=${ROS_DISTRO}
-source /opt/ros/${ROS_DISTRO}/setup.sh
+source /opt/ros/${ROS_DISTRO}/setup.bash
 export ROS_PACKAGE_PATH="${HOME}/git/mlr/rospath:${ROS_PACKAGE_PATH}"
 ```
 Or if you normally use a catkin workspace source the setup.sh from there

@@ -25,6 +25,8 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                Eigen::VectorXd approach_op_pos,
                                Eigen::MatrixXd approach_op_rot_matrix){
     MLRFactoryParams p;
+    p.endeff = "endeffR";
+    p.gripper = "r_gripper_joint";
     std::cout<<"generating pull push automaton"<<std::endl;
 
     //do we use an approach pose to initialize the interaction?
@@ -80,8 +82,8 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
         double ft_epsilon = 7;
 
         //epsilon in operational space for the convergence condition
-        double pos_epsilon_os_linear = 0.02;
-        double pos_epsilon_os_angular = 0.04;
+        p._pos_epsilon_os_linear = 0.02;
+        p._pos_epsilon_os_angular = 0.04;
 
         mlr_factory->CreateGoToCMConvergenceCSAndMaxForceCS(p,
                                                             move_towards_approach_cm,
@@ -155,6 +157,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     //Grasp
     ha::ControlMode::Ptr grasp_cm(new ha::ControlMode());
     ha::ControlSwitch::Ptr grasp_cs(new ha::ControlSwitch());
+    p.grasp_strength = .1;
     mlr_factory->CreateGraspCMAndCS(p, grasp_cm, grasp_cs, "Grasp");
 
     //add controlmode and switch to HA
@@ -183,7 +186,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                                         ha::JumpCondition::NORM_L2,
                                                         false,
                                                         true,
-                                                        .01,
+                                                        ft_epsilon,
                                                         true);
 
 
@@ -229,7 +232,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                                             ha::JumpCondition::NORM_L2,
                                                             false,
                                                             true,
-                                                            10.0,//ft_epsilon,
+                                                            ft_epsilon,
                                                             articulate_relative);
 
         actuate_affordance_ha->addControlSwitchAndMode(unrotate_cm->getName(),unrotate_convergence_cs, push_down_cm);
@@ -255,7 +258,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
                                                         ha::JumpCondition::NORM_L2,
                                                         false,
                                                         true,
-                                                        20.0,//ft_epsilon,
+                                                        ft_epsilon,
                                                         articulate_relative);
 
     actuate_affordance_ha->addControlSwitchAndMode(push_down_cm->getName(),push_down_force_exceeded_cs, pull_cm);
@@ -357,9 +360,11 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     //Create  Mode
     //ungrasp
     ha::ControlMode::Ptr ungrasp_cm(new ha::ControlMode());
-    ha::ControlSwitch::Ptr ungrasp_pressure_cs(new ha::ControlSwitch());
-    ha::ControlSwitch::Ptr ungrasp_time_cs(new ha::ControlSwitch());
-    //_ha_factory->CreateUngraspCMAndCS(ungrasp_cm, ungrasp_pressure_cs, ungrasp_time_cs, "Ungrasp", _gripper_type);
+    //ha::ControlSwitch::Ptr ungrasp_pressure_cs(new ha::ControlSwitch());
+    ha::ControlSwitch::Ptr ungrasp_cs(new ha::ControlSwitch());
+    //mlr_factory->CreateUngraspCMAndCS(ungrasp_cm, ungrasp_pressure_cs, ungrasp_time_cs, "Ungrasp", _gripper_type);
+    p.grasp_strength = 1;
+    mlr_factory->CreateGraspCMAndCS(p, ungrasp_cm, ungrasp_cs, "Ungrasp");
 
     //add controlmode and switch to HA
     actuate_affordance_ha->addControlSwitchAndMode(push_left_cm->getName(), push_left_force_exceeded_cs, ungrasp_cm);
@@ -419,8 +424,8 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
 
 
     //add controlmode and switch to HA
-    actuate_affordance_ha->addControlSwitchAndMode(ungrasp_cm->getName(), ungrasp_pressure_cs, move_towards_retreat_cm);
-    actuate_affordance_ha->addControlSwitch(ungrasp_cm->getName(), ungrasp_time_cs, move_towards_retreat_cm->getName());
+    actuate_affordance_ha->addControlSwitchAndMode(ungrasp_cm->getName(), ungrasp_cs, move_towards_retreat_cm);
+    //actuate_affordance_ha->addControlSwitch(ungrasp_cm->getName(), ungrasp_cs, move_towards_retreat_cm->getName());
 
     /////////////////////////////////////////////////////////////
     // Create  Mode
@@ -432,7 +437,7 @@ void createPullAndPushAtPoseHA(MLRFactory::Ptr mlr_factory,
     Eigen::MatrixXd home_config_js_arm = Eigen::MatrixXd(num_dof_arm, 1);
    //home_config_js_arm << 0.0, -0.447759, 0.01341, 2.79048, 1.0711, 0.485972, -0.119184;
     home_config_js_arm << 0.0, -0.14, 0.0, 2.18, 0.0, 0.2, -0.13;
-    //_ha_factory->CreateGoToHomeCMAndConvergenceCSArm(goto_home_cm, goto_home_convergence_cs, goto_home_name, home_config_js_arm);
+    mlr_factory->CreateGoToHomeCMAndConvergenceCSArm(p, goto_home_cm, goto_home_convergence_cs, goto_home_name);
 
     //add controlmode and switch to HA
     actuate_affordance_ha->addControlSwitchAndMode(move_towards_retreat_cm->getName(), move_towards_retreat_convergence_cs, goto_home_cm);
@@ -483,6 +488,118 @@ void createSimpleHA(MLRFactory::Ptr mlr_factory,
 
 }
 
+void testRelativeGoal(MLRFactory::Ptr mlr_factory,
+                               ha::HybridAutomaton::Ptr ha,
+                               Eigen::Vector3d goal_pos,
+                               Eigen::Matrix3d goal_rot_matrix) {
+    MLRFactoryParams p;
+    p._pos_epsilon_os_linear = .02;
+    p._pos_epsilon_os_angular = .04;
+    p.endeff = "endeffR";
+
+    /////////////////////////////////////////////////////////////
+    //Create failure Mode as
+    //gravity compensation control mode
+    ha::ControlMode::Ptr failure_cm(new ha::ControlMode());
+    mlr_factory->CreateGCCM(p, failure_cm, "failure");
+
+    //add controlmode to HA
+    ha->addControlMode(failure_cm);
+
+    /////////////////////////////////////////////////////////////
+
+    ha::ControlMode::Ptr move_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr move_cs(new ha::ControlSwitch());
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, move_cm, move_cs, "move", goal_pos, goal_rot_matrix, true, false);
+
+    //Push down
+    ha::ControlMode::Ptr push_down_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr push_down_convergence_cs(new ha::ControlSwitch());
+    goal_pos << 0., 0., -0.125;
+    Eigen::MatrixXd goal_op_rot_matrix2 = Eigen::MatrixXd();
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, push_down_cm,
+                                              push_down_convergence_cs,
+                                              "push_down",
+                                              goal_pos,
+                                              goal_op_rot_matrix2,
+                                              true,
+                                              true);
+
+    //Pull up
+    ha::ControlMode::Ptr pull_up_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr pull_up_convergence_cs(new ha::ControlSwitch());
+    goal_pos << 0., 0., 0.25;
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, pull_up_cm,
+                                              pull_up_convergence_cs,
+                                              "pull_up",
+                                              goal_pos,
+                                              goal_op_rot_matrix2,
+                                              true,
+                                              true);
+    //Pull right
+    ha::ControlMode::Ptr pull_right_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr pull_right_convergence_cs(new ha::ControlSwitch());
+    goal_pos << 0., 0.125, 0;
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, pull_right_cm,
+                                              pull_right_convergence_cs,
+                                              "pull_right",
+                                              goal_pos,
+                                              goal_op_rot_matrix2,
+                                              true,
+                                              true);
+    //Pull left
+    ha::ControlMode::Ptr pull_left_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr pull_left_convergence_cs(new ha::ControlSwitch());
+    goal_pos << 0., -0.25, 0;
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, pull_left_cm,
+                                              pull_left_convergence_cs,
+                                              "pull_left",
+                                              goal_pos,
+                                              goal_op_rot_matrix2,
+                                              true,
+                                              true);
+
+    //Pull back
+    ha::ControlMode::Ptr pull_back_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr pull_back_convergence_cs(new ha::ControlSwitch());
+    goal_pos << 0.125, 0, 0;
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, pull_back_cm,
+                                              pull_back_convergence_cs,
+                                              "pull_back",
+                                              goal_pos,
+                                              goal_op_rot_matrix2,
+                                              true,
+                                              true);
+    //Pull front
+    ha::ControlMode::Ptr pull_front_cm(new ha::ControlMode());
+    ha::ControlSwitch::Ptr pull_front_convergence_cs(new ha::ControlSwitch());
+    goal_pos << -0.25, 0, 0;
+
+    mlr_factory->CreateGoToCMAndConvergenceCS(p, pull_front_cm,
+                                              pull_front_convergence_cs,
+                                              "pull_front",
+                                              goal_pos,
+                                              goal_op_rot_matrix2,
+                                              true,
+                                              true);
+    ha->addControlMode(move_cm);
+    ha->addControlSwitchAndMode(move_cm->getName(),move_cs, push_down_cm);
+    ha->addControlSwitchAndMode(push_down_cm->getName(), push_down_convergence_cs, pull_up_cm);
+    ha->addControlSwitchAndMode(pull_up_cm->getName(), pull_up_convergence_cs, pull_right_cm);
+    ha->addControlSwitchAndMode(pull_right_cm->getName(), pull_right_convergence_cs, pull_left_cm);
+    ha->addControlSwitchAndMode(pull_left_cm->getName(), pull_left_convergence_cs, pull_back_cm);
+    ha->addControlSwitchAndMode(pull_back_cm->getName(), pull_back_convergence_cs, pull_front_cm);
+
+    ha->setCurrentControlMode(move_cm->getName());
+
+}
+
 int main(int argc, char** argv) {
   mlr::initCmdLine(argc, argv);
 
@@ -492,36 +609,40 @@ int main(int argc, char** argv) {
 
   ha::HybridAutomaton::Ptr hybrid_automaton(new ha::HybridAutomaton());
 
+  //hybrid_automaton->setVerbose(false);
+
   Eigen::Vector3d goal_op_pos;
-  goal_op_pos << .5, .5, .5;
+  goal_op_pos << .7, .0, .7;
   Eigen::Matrix3d goal_op_rot_matrix;
   goal_op_rot_matrix << 1, 0, 0, 
                         0, 1, 0, 
                         0, 0, 1;
   Eigen::MatrixXd retreat_op_pos(3, 1);
-  retreat_op_pos << .3, .3, .3;
+  retreat_op_pos << .3, .3, .7;
   Eigen::MatrixXd retreat_op_rot_matrix(3, 3);
   retreat_op_rot_matrix << 1, 0, 0,
                            0, 1, 0,
                            0, 0, 1;
   Eigen::VectorXd approach_op_pos(3);
-  approach_op_pos << .3, .3, .3;
+  approach_op_pos << .3, .3, .7;
   Eigen::MatrixXd approach_op_rot_matrix(3, 3);
   approach_op_rot_matrix << 1, 0, 0, 
                             0, 1, 0, 
                             0, 0, 1;
-//  createPullAndPushAtPoseHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix, retreat_op_pos, retreat_op_rot_matrix, approach_op_pos, approach_op_rot_matrix );
-  createSimpleHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix);
+  //createPullAndPushAtPoseHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix, retreat_op_pos, retreat_op_rot_matrix, approach_op_pos, approach_op_rot_matrix );
+  //createSimpleHA(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix);
+  testRelativeGoal(mlr_factory, hybrid_automaton, goal_op_pos, goal_op_rot_matrix);
   hybrid_automaton->setSystem(system);
   hybrid_automaton->initialize(.0);
   double t = 0.;
   for(uint i=0; i<10000; ++i) {
     t += .01;
     hybrid_automaton->step(t);
-    std::cout << hybrid_automaton->getCurrentControlMode()->getName() << std::endl;
+    //std::cout << hybrid_automaton->getCurrentControlMode()->getName() << std::endl;
+
     //std::cout << "JC active: " << bigger->isActive() << std::endl;
     //std::cout << "Sensor value: " << bigger->getSensor()->getCurrentValue() << std::endl;
-    mlr::wait(.01);
+    mlr::wait(.1);
   }
 
   hybrid_automaton->terminate();

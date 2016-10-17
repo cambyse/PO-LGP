@@ -150,9 +150,9 @@ void getPhaseTrajectory(arr& x, const arr& q, double tau){
   uint T=q.d0-1, n=q.d1, t;
   x.resize(T+1, 2, n);
   for(t=0; t<=T; t++){
-    x.subDim(t, 0)=q[t];
-    if(t<T) x.subDim(t, 1)=(q[t+1]-q[t])/tau;
-    else  x.subDim(t, 1)=0.;
+    x.refDim(t, 0)=q[t];
+    if(t<T) x.refDim(t, 1)=(q[t+1]-q[t])/tau;
+    else  x.refDim(t, 1)=0.;
   }
   x.reshape(T+1, 2*n);
 }
@@ -204,7 +204,7 @@ void dynamicControl(ControlledSystem& sys, arr& x, const arr& x0, uint t, arr *v
 
   //task message
   arr R, r;
-  //q_1.referToSubRange(x_1, 0, n-1);
+  //q_1.referToRange(x_1, 0, n-1);
   sys.getTaskCosts(R, r, t, NULL);
 
   //v, Vinv are optional bwd messages!

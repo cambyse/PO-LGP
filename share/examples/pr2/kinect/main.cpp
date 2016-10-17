@@ -1,11 +1,11 @@
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 //#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <Motion/gamepad2tasks.h>
+#include <RosCom/roscom.h>
+#include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
 #include <Perception/kinect2pointCloud.h>
@@ -79,7 +79,7 @@ void TEST(Sensors){
       tf::StampedTransform transform;
       listener.lookupTransform("/base_footprint", "/head_mount_kinect_ir_optical_frame",
                                ros::Time(0), transform);
-      X = conv_pose2transformation(transform);
+      X = conv_transform2transformation(transform);
     }
     catch (tf::TransformException &ex) {
       ROS_ERROR("%s",ex.what());

@@ -35,7 +35,7 @@ void TEST(ModuleSorter){
   for(uint i=1;i<N;i++) new PairSorter( STRING("int"<<i-1), STRING("int"<<i) );
 #endif
   cout <<registry() <<endl <<"----------------------------" <<endl;
-  auto vars = registry().getTypedValues<Variable<int> >();
+  auto vars = registry().getValuesOfType<Variable<int> >();
 
   threadOpenModules(true);
 

@@ -7,13 +7,10 @@
 
 #include <GL/gl.h>
 #include <GL/glut.h>
-
+#include <Core/module.h>
 using namespace std;
 
 
-void glDrawMesh(void *classP) {
-  ((ors::Mesh*)classP)->glDraw();
-}
 
 /************ first test ************/
 
@@ -47,7 +44,7 @@ void TEST(MultipleViews) {
   gl.add(draw1,0);
   gl.addView(0,draw1,0);
   gl.addView(1,draw1,0);
-//  gl.setViewPort(1,.1,.4,.1,.4);
+  gl.setViewPort(1,.1,.4,.1,.4);
   gl.setViewPort(0,.6,.9,.6,.9);
   gl.views(0).img=&img;
   gl.views(0).text="little image";
@@ -121,7 +118,7 @@ void TEST(Mesh) {
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   gl.watch();
 }
 
@@ -143,11 +140,11 @@ void TEST(Obj) {
   OpenGL gl;
   gl.text="testing Mesh";
   gl.add(draw2,0);
-  gl.add(glDrawMesh,&mesh);
+  gl.add(mesh);
   gl.watch();
   gl.clear();
   gl.add(draw2,0);
-  gl.add(glDrawMesh,&mesh2);
+  gl.add(mesh2);
   gl.watch();
 }
 
@@ -287,28 +284,34 @@ void TEST(Image) {
   OpenGL gl;
   byteA img;
   read_ppm(img,"box.ppm",false);
+  gl.captureImg=true;
   gl.watchImage(img,true,2);
+
+  img=gl.captureImage;
+  write_ppm(img,"z.ppm",false); //this turns out flipped!!! -> the capturing flips
 }
 
 //extern void qtCheckInitialized();
 
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
-  if(false){
-    glutInit(&argc,argv);
-    testTeapot();
-    testOfflineRendering();
-    testGrab();
-    testMultipleViews();
-    testUI();
-    testSelect();
-  }
+
+//  testMultipleViews(); return 0.;
+//  testImage(); return 0.;
+//  glutInit(&argc,argv);
+  testTeapot();
+  testOfflineRendering();
+  testGrab();
+  testMultipleViews();
+  testUI();
+  testSelect();
   testObj();
   testMesh();
   testTexture();
 //  testMenu();
   testImage();
 
+  threadCloseModules();
   return 0;
 }
 

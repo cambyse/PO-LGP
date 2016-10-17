@@ -1,4 +1,4 @@
-//#include <pr2/actionMachine.h>
+//#include <RosCom/actionMachine.h>
 #include "manipSim.h"
 #include <Ors/ors.h>
 
@@ -20,7 +20,7 @@ void OrsGraph2RelationalGraph(Graph& G, ors::KinematicWorld& W){
   }
 
   for(ors::Joint *j:world->joints){
-    if(j->type==ors::JT_fixed)
+    if(j->type==ors::JT_rigid)
       G.append<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
     if(j->type==ors::JT_transXYPhi)
       G.append<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
@@ -33,7 +33,7 @@ uint Domain::numObjects(){
 }
 
 void Domain::getInitialState(State &s){
-//  enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_fixed=10, JT_quatBall, JT_glue };
+//  enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall, JT_glue };
 
 //  for(ors::Body *b:world->bodies){
 //    Pose *p = new Pose;

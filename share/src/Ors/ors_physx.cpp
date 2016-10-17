@@ -310,16 +310,16 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       CHECK(desc, "PhysX joint creation failed.");
 
-      if(jj->ats.getValue<arr>("drive")) {
-        arr drive_values = *jj->ats.getValue<arr>("drive");
+      if(jj->ats.find<arr>("drive")) {
+        arr drive_values = jj->ats.get<arr>("drive");
         PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, true);
         desc->setDrive(PxD6Drive::eTWIST, drive);
       }
       
-      if(jj->ats.getValue<arr>("limit")) {
+      if(jj->ats.find<arr>("limit")) {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
 
-        arr limits = *(jj->ats.getValue<arr>("limit"));
+        arr limits = jj->ats.get<arr>("limit");
         PxJointAngularLimitPair limit(limits(0), limits(1), 0.1f);
         limit.restitution = limits(2);
           //limit.spring = limits(3);
@@ -331,8 +331,8 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
         desc->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
       }
 
-      if(jj->ats.getValue<arr>("drive")) {
-        arr drive_values = *jj->ats.getValue<arr>("drive");
+      if(jj->ats.find<arr>("drive")) {
+        arr drive_values = jj->ats.get<arr>("drive");
         PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, false);
         desc->setDrive(PxD6Drive::eTWIST, drive);
         //desc->setDriveVelocity(PxVec3(0, 0, 0), PxVec3(5e-1, 0, 0));
@@ -340,7 +340,7 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       joints(jj->index) = desc;
     }
     break;
-    case ors::JT_fixed: {
+    case ors::JT_rigid: {
       // PxFixedJoint* desc =
       PxFixedJointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
@@ -357,16 +357,16 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       CHECK(desc, "PhysX joint creation failed.");
 
-      if(jj->ats.getValue<arr>("drive")) {
-        arr drive_values = *jj->ats.getValue<arr>("drive");
+      if(jj->ats.find<arr>("drive")) {
+        arr drive_values = jj->ats.get<arr>("drive");
         PxD6JointDrive drive(drive_values(0), drive_values(1), PX_MAX_F32, true);
         desc->setDrive(PxD6Drive::eX, drive);
       }
       
-      if(jj->ats.getValue<arr>("limit")) {
+      if(jj->ats.find<arr>("limit")) {
         desc->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
 
-        arr limits = *(jj->ats.getValue<arr>("limit"));
+        arr limits = jj->ats.get<arr>("limit");
         PxJointLinearLimit limit(mPhysics->getTolerancesScale(), limits(0), 0.1f);
         limit.restitution = limits(2);
         //if(limits(3)>0) {
@@ -579,7 +579,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
         copy(mesh.V,Vfloat);
         mesh.V.reshape(g.convexMesh->getNbVertices(),3);
         mesh.makeConvexHull();
-        mesh.glDraw();
+        mesh.glDraw(NoOpenGL);
 #else
         s->mesh.glDraw();
 #endif

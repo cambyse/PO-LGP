@@ -6,9 +6,10 @@
 
 struct RelationalMachineModule : Module{
   ACCESSlisten(mlr::String, effects)
-  ACCESSnew(ActivityL, A)
-  ACCESSnew(mlr::String, state)
-  ACCESSnew(RelationalMachine, RM)
+  ACCESS(ActivityL, A)
+  ACCESS(mlr::String, state)
+  ACCESS(StringA, symbols)
+  ACCESS(RelationalMachine, RM)
 
   Log _log;
 
@@ -18,4 +19,13 @@ struct RelationalMachineModule : Module{
   void open();
   void step();
   void close();
+
+  //'scripting' interfaces
+  ConditionVariable stopWaiting;
+  void newSymbol(const char* symbol);
+  void setFact(const char* fact);
+  void waitForCondition(const char* query);
+  void runScript(const char* filename);
 };
+
+

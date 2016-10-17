@@ -5,7 +5,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>
@@ -51,7 +51,7 @@ struct IOC_DemoCost {
       }
       if(idx.contains(i)) {
         JgP.delRows(j);
-        ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+        ((RowShifted*)JgP.aux)->rowShift.remove(j);
         j--;
       }
       j++;
@@ -120,7 +120,7 @@ struct IOC_DemoCost {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
     if (&Hf) {
       if (useHNorm) {
@@ -276,9 +276,9 @@ void simpleMotion(){
   arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("goal1")->X.pos);
   arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("goal2")->X.pos);
   TaskCost *c;
-  c = MP.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e4);
-  c = MP.addTask("position_right_hand_2",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(120,120,refGoal2,1e3);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.1));
   c->setCostSpecs(0, MP.T, {0.}, 1.);
@@ -305,7 +305,7 @@ void simpleMotion(){
   MP2.loadTransitionParameters();
   MP2.makeContactsAttractive=false;
   TaskCost *c1;
-  c1 = MP2.addTask("position_right_hand_1",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
   c1->setCostSpecs(200,200,refGoal1,1.);
 
   TaskMap *tm_contact = new PairCollisionConstraint(world2,"endeff","table",0.0);
@@ -313,7 +313,7 @@ void simpleMotion(){
   c2->map.constraint = false;
   c2->setCostSpecs(120,120,ARR(0.),1.);
 
-//  TaskCost *c2 = MP2.addTask("position_right_hand_2",new DefaultTaskMap(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+//  TaskCost *c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
 //  c2->setCostSpecs(120,120,refGoal2,1.);
 
   TaskCost *c3 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","table",0.1));
@@ -336,9 +336,9 @@ void simpleMotion(){
   uint numParam = 5;
   IOC ioc(demos,numParam,false,false);
 
-  arr w = ones(numParam,1);w.flatten();
+  arr w = ones(numParam,1);w.reshapeFlat();
 //  w=wOpt/sqrt(sumOfSqr(wOpt));
-  //w = fabs(randn(numParam,1)); w.flatten();
+  //w = fabs(randn(numParam,1)); w.reshapeFlat();
 
 //  checkAllGradients(ioc,w,1e-3);
 

@@ -1,0 +1,4 @@
+Include='../../../share/data/pr2_model/pr2_model.ors'
+
+body graspRef { type=9 size=[0. 0. .0 .02] color=[1 0 0] }
+joint graspJoint(r_wrist_roll_link graspRef){ A=<T t(.35 0 0) > type=11 }

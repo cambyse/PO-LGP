@@ -34,7 +34,7 @@
 
 //global options
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true, orsDrawIndexColors=false;
-bool orsDrawMeshes=true, orsDrawZlines=false;
+bool orsDrawMeshes=true, orsDrawCores=false, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
 double orsDrawAlpha=0.50;
 uint orsDrawLimit=0;
@@ -84,19 +84,19 @@ void ors::glDrawGraph(void *classP) {
   ((ors::KinematicWorld*)classP)->glDraw(NoOpenGL);
 }
 
-void glDrawShape(ors::Shape *s) {
+void ors::Shape::glDraw(OpenGL& gl) {
   //set name (for OpenGL selection)
-  glPushName((s->index <<2) | 1);
-  if(orsDrawColors && !orsDrawIndexColors) glColor(s->color[0], s->color[1], s->color[2], orsDrawAlpha);
-  if(orsDrawIndexColors) glColor3b((s->index>>16)&0xff, (s->index>>8)&0xff, s->index&0xff);
+  glPushName((index <<2) | 1);
+  if(orsDrawColors && !orsDrawIndexColors) glColor(color[0], color[1], color[2], orsDrawAlpha);
+  if(orsDrawIndexColors) glColor3b((index>>16)&0xff, (index>>8)&0xff, index&0xff);
 
 
   double GLmatrix[16];
-  s->X.getAffineMatrixGL(GLmatrix);
+  X.getAffineMatrixGL(GLmatrix);
   glLoadMatrixd(GLmatrix);
 
   if(!orsDrawShapes) {
-    double scale=.33*(s->size[0]+s->size[1]+s->size[2] + 2.*s->size[3]); //some scale
+    double scale=.33*(size[0]+size[1]+size[2] + 2.*size[3]); //some scale
     if(!scale) scale=1.;
     scale*=.3;
     glDrawAxes(scale);
@@ -104,56 +104,65 @@ void glDrawShape(ors::Shape *s) {
     glDrawSphere(.1*scale);
   }
   if(orsDrawShapes) {
-    switch(s->type) {
-      case ors::noneST: LOG(-1) <<"Shape '" <<s->name <<"' has no joint type";  break;
+    switch(type) {
+      case ors::noneST: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
       case ors::boxST:
-        if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
-        else glDrawBox(s->size[0], s->size[1], s->size[2]);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        else glDrawBox(size[0], size[1], size[2]);
         break;
       case ors::sphereST:
-        if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
-        else glDrawSphere(s->size[3]);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        else glDrawSphere(size[3]);
         break;
       case ors::cylinderST:
-        if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
-        else glDrawCylinder(s->size[3], s->size[2]);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        else glDrawCylinder(size[3], size[2]);
         break;
       case ors::cappedCylinderST:
-        if(orsDrawMeshes && s->mesh.V.N) s->mesh.glDraw();
-        else glDrawCappedCylinder(s->size[3], s->size[2]);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
+        else glDrawCappedCylinder(size[3], size[2]);
         break;
       case ors::SSBoxST:
         HALT("deprecated??");
-        if(orsDrawMeshes){
-          if(!s->mesh.V.N) s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
-          s->mesh.glDraw();
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else if(orsDrawMeshes){
+          if(!mesh.V.N) mesh.setSSBox(size[0], size[1], size[2], size[3]);
+          mesh.glDraw(gl);
         }else NIY;
         break;
       case ors::markerST:
         if(orsDrawMarkers){
-          glDrawDiamond(s->size[0]/5., s->size[0]/5., s->size[0]/5.); glDrawAxes(s->size[0]);
+          glDrawDiamond(size[0]/5., size[0]/5., size[0]/5.); glDrawAxes(size[0]);
         }
         break;
       case ors::meshST:
-        CHECK(s->mesh.V.N, "mesh needs to be loaded to draw mesh object");
-        s->mesh.glDraw();
+        CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
-      case ors::sscST:
-        CHECK(s->sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
-        if(!s->mesh.V.N) s->mesh.setSSC(s->sscCore, s->size[3]);
-        s->mesh.glDraw();
+      case ors::ssCvxST:
+        CHECK(sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
+        if(!mesh.V.N) mesh.setSSCvx(sscCore, size[3]);
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
       case ors::ssBoxST:
-        if(!s->mesh.V.N || !s->sscCore.V.N){
-          s->sscCore.setBox();
-          s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
-          s->mesh.setSSC(s->sscCore, s->size[3]);
+        if(!mesh.V.N || !sscCore.V.N){
+          sscCore.setBox();
+          sscCore.scale(size[0], size[1], size[2]);
+          mesh.setSSCvx(sscCore, size[3]);
         }
-        s->mesh.glDraw();
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
       case ors::pointCloudST:
-        CHECK(s->mesh.V.N, "mesh needs to be loaded to draw point cloud object");
-        glDrawPointCloud(s->mesh.V, NoArr);
+        CHECK(mesh.V.N, "mesh needs to be loaded to draw point cloud object");
+        if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
+        else mesh.glDraw(gl);
         break;
 
       default: HALT("can't draw that geom yet");
@@ -163,20 +172,20 @@ void glDrawShape(ors::Shape *s) {
     glColor(0, .7, 0);
     glBegin(GL_LINES);
     glVertex3d(0., 0., 0.);
-    glVertex3d(0., 0., -s->X.pos.z);
+    glVertex3d(0., 0., -X.pos.z);
     glEnd();
   }
 
-  if(orsDrawBodyNames && s->body){
+  if(orsDrawBodyNames && body){
     glColor(1,1,1);
-    glDrawText(s->body->name, 0, 0, 0);
+    glDrawText(body->name, 0, 0, 0);
   }
 
   glPopName();
 }
 
 /// GL routine to draw a ors::KinematicWorld
-void ors::KinematicWorld::glDraw(OpenGL&) {
+void ors::KinematicWorld::glDraw(OpenGL& gl) {
   uint i=0;
   ors::Transformation f;
   double GLmatrix[16];
@@ -185,7 +194,7 @@ void ors::KinematicWorld::glDraw(OpenGL&) {
 
   //bodies
   if(orsDrawBodies) for(Shape *s: shapes) {
-    glDrawShape(s);
+    s->glDraw(gl);
     i++;
     if(orsDrawLimit && i>=orsDrawLimit) break;
   }
@@ -285,8 +294,8 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const K
   }
   arr x,z;
   if(dim_z){
-    x.referToSubRange(_x,0,-dim_z-1);
-    z.referToSubRange(_x,-dim_z,-1);
+    x.referToRange(_x,0,-dim_z-1);
+    z.referToRange(_x,-dim_z,-1);
   }else{
     x.referTo(_x);
   }
@@ -455,15 +464,27 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
   arr x, x0;
   uint t, i;
   C.getJointState(x0);
+  arr lim = C.getLimits();
   C.gl().pressedkey=0;
+  const int steps = 200;
   for(i=x0.N; i--;) {
     x=x0;
-    for(t=0; t<20; t++) {
+    const double upper_lim = lim(i,1);
+    const double lower_lim = lim(i,0);
+    const double delta = upper_lim - lower_lim;
+    const double center = lower_lim + delta / 2;
+    const double offset = acos( 2 * (x0(i) - center) / delta );
+
+    for(t=0; t<steps; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
       if(ino && ino->pollForModification()) return;
-      x(i)=x0(i) + .5*sin(MLR_2PI*t/20);
+      if (lim(i,0)==lim(i,1))
+        break;
+
+      x(i)= center + (delta*(0.5*cos(MLR_2PI*t/steps + offset)));
+      // Joint limits
       C.setJointState(x);
-      C.gl().update(STRING("joint = " <<i), false, false, true);
+      C.gl().update(STRING("DOF = " <<i), false, false, true);
       mlr::wait(0.01);
     }
   }
@@ -476,7 +497,35 @@ ors::Body *movingBody=NULL;
 ors::Vector selpos;
 double seld, selx, sely, selz;
 
-struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
+struct EditConfigurationClickCall:OpenGL::GLClickCall {
+  ors::KinematicWorld *ors;
+  EditConfigurationClickCall(ors::KinematicWorld& _ors) { ors=&_ors; }
+  bool clickCallback(OpenGL& gl) {
+    OpenGL::GLSelect *top=gl.topSelection;
+    if(!top) return false;
+    uint i=top->name;
+    cout <<"CLICK call: id = 0x" <<std::hex <<gl.topSelection->name <<" : ";
+    gl.text.clear();
+    if((i&3)==1) {
+      ors::Shape *s=ors->shapes(i>>2);
+      gl.text <<"shape selection: shape=" <<s->name <<" body=" <<s->body->name <<" X=" <<s->X <<endl;
+//      listWrite(s->ats, gl.text, "\n");
+      cout <<gl.text;
+    }
+    if((i&3)==2) {
+      ors::Joint *j=ors->joints(i>>2);
+      gl.text
+          <<"edge selection: " <<j->from->name <<' ' <<j->to->name
+         <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+//      listWrite(j->ats, gl.text, "\n");
+      cout <<gl.text;
+    }
+    cout <<endl;
+    return true;
+  }
+};
+
+  struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::KinematicWorld *ors;
   EditConfigurationHoverCall(ors::KinematicWorld& _ors) { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
@@ -484,11 +533,11 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
     if(!movingBody) {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
-      gl.Select();
+      gl.Select(true);
       OpenGL::GLSelect *top=gl.topSelection;
       if(!top) return false;
       uint i=top->name;
-      //cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+      cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
       if((i&3)==1) s=ors->shapes(i>>2);
       if((i&3)==2) j=ors->joints(i>>2);
       gl.text.clear();
@@ -585,6 +634,7 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   bool exit=false;
   C.gl().addHoverCall(new EditConfigurationHoverCall(C));
   C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
+  C.gl().addClickCall(new EditConfigurationClickCall(C));
   Inotify ino(filename);
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;

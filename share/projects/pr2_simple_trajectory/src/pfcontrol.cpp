@@ -66,7 +66,7 @@ public:
     P.loadTransitionParameters();
 
     Task *c;
-    c = P.addDefaultTaskMap_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
+    c = P.addTaskMap_Default_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                             conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
@@ -79,14 +79,14 @@ public:
                             {0.,0.,0.}, 1e-3);
 
     if (useOrientation) {
-      c = P.addDefaultTaskMap_Bodies("orientation", zoriTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
+      c = P.addTaskMap_Default_Bodies("orientation", zoriTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
       P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                               {0.,0.,-1.}, 1e4,
                               {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
-      c = P.addDefaultTaskMap("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
+      c = P.addTaskMap_Default("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
       P.setInterpolatingCosts(c, MotionProblem::constFinalMid, {0.}, 1e0);
     }
 

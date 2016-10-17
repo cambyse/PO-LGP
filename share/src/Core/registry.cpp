@@ -38,7 +38,7 @@ void initRegistry(int argc, char* argv[]){
 //        new Node_typed<mlr::String>(registry(), {key}, {}, new mlr::String(argv[n+1]), true);
         n++;
       }else{
-        new Node_typed<bool>(registry(), {key}, {}, new bool(true), true);
+        new Node_typed<bool>(registry(), {key}, {}, true);
       }
     }else{
       MLR_MSG("non-parsed cmd line argument:" <<argv[n]);

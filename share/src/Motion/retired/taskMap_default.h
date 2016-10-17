@@ -22,7 +22,7 @@
 
 #include "motion.h"
 
-enum DefaultTaskMapType {
+enum TaskMap_DefaultType {
   noneTMT,     ///< undefined
   posTMT,      ///< 3D position of reference
   vecTMT,      ///< 3D vec (orientation)
@@ -41,18 +41,18 @@ enum DefaultTaskMapType {
 
 
 
-struct DefaultTaskMap:TaskMap {
-  DefaultTaskMapType type;
+struct TaskMap_Default:TaskMap {
+  TaskMap_DefaultType type;
   int i, j;               ///< which shapes does it refer to?
   ors::Vector ivec, jvec; ///< additional position or vector
   arr params;             ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
-  DefaultTaskMap(DefaultTaskMapType type,
+  TaskMap_Default(TaskMap_DefaultType type,
                  int iShape=-1, const ors::Vector& ivec=NoVector,
                  int jShape=-1, const ors::Vector& jvec=NoVector,
                  const arr& params=NoArr);
 
-  DefaultTaskMap(DefaultTaskMapType type, const ors::KinematicWorld& G,
+  TaskMap_Default(TaskMap_DefaultType type, const ors::KinematicWorld& G,
                  const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
                  const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
                  const arr& params=NoArr);

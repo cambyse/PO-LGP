@@ -499,7 +499,7 @@ void plotDrawOpenGL(void *_data) {
           }
         data.mesh.computeNormals();
         glDisable(GL_CULL_FACE);
-        data.mesh.glDraw();
+        data.mesh.glDraw(NoOpenGL);
         glEnable(GL_CULL_FACE);
       } else { //as a grid
         c.blacken(.5);
@@ -651,12 +651,13 @@ void plotDrawGnuplot(void *_data, bool pauseMouse) {
     }
     block++;
   }
+
   //points
   for(i=0; i<data.points.N; i++) {
     data.points(i).write(gnuplotdata," ","\n","  ",false,false);
     gnuplotdata <<'\n' <<std::endl;
     if(block) gnuplotcmd <<", \\\n";
-    mlr::String a=" with p";
+    mlr::String a=" with p pt 3";
     if(i<data.legend.N) a<< " title '" <<data.legend(i) <<"' ";
     PLOTEVERY(block, a);
     block++;

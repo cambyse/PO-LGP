@@ -1,4 +1,4 @@
-//#include <pr2/actionMachine.h>
+//#include <RosCom/actionMachine.h>
 //#include "manipSim.h"
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
@@ -40,7 +40,7 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const Graph& G){
   //  }
 
   //  for(ors::Joint *j:world->joints){
-  //    if(j->type==ors::JT_fixed)
+  //    if(j->type==ors::JT_rigid)
   //      G.append<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   //    if(j->type==ors::JT_transXYPhi)
   //      G.append<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
@@ -142,13 +142,13 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Node *o = symbols.append<bool>({"Object", s->name}, {}, new bool(true), true);
+    Node *o = symbols.append<bool>({"Object", s->name}, {}, true);
     if(s->type==ors::cylinderST){
-      state.append<bool>({}, {CYLIN ,o}, new bool(true), true);
+      state.append<bool>({}, {CYLIN ,o}, true);
     }else{
-      state.append<bool>({}, {BOARD, o}, new bool(true), true);
+      state.append<bool>({}, {BOARD, o}, true);
     }
-    state.append<double>({}, {DEPTH, o}, new double(0.), true);
+    state.append<double>({}, {DEPTH, o}, 0.);
   }
 
   symbols.checkConsistency();
@@ -176,9 +176,8 @@ double reward(ors::KinematicWorld& world, Graph& symbols){
   Graph& state =symbols["STATE"]->graph();
 
   for(Node *dep:depthSymbol->parentOf) if(&dep->container==&state){
-    double *d = dep->getValue<double>();
-    CHECK(d,"");
-    if(*d>depth) depth=*d;
+    double d = dep->get<double>();
+      if(d>depth) depth=d;
   }
 
   //-- count supports below

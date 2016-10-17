@@ -1,14 +1,14 @@
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/gamepad2tasks.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/phase_optimization.h>
 #include <Optim/opt-constrained.h>
-#include <pr2/roscom.h>
-#include <pr2/rosmacro.h>
-#include <pr2/rosalvar.h>
-#include <pr2/trajectoryInterface.h>
+#include <RosCom/roscom.h>
+#include <RosCom/rosmacro.h>
+#include <RosCom/subscribeAlvarMarkers.h>
+#include <RosCom/trajectoryInterface.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <object_recognition_msgs/TableArray.h>
@@ -189,17 +189,17 @@ void PR2Grasp::graspObject(ors::Shape *object) {
     ti->getStatePlan(MP.x0);
 
     Task *t;
-    t = MP.addTask("transitions", new TransitionTaskMap(*ti->world_plan));
+    t = MP.addTask("transitions", new TaskMap_Transition(*ti->world_plan));
     t->map.order=2; //make this an acceleration task!
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-    t = MP.addTask("pos1", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+    t = MP.addTask("pos1", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
     t->setCostSpecs(70, 80, {0.}, 1e2);
-    t = MP.addTask("rot1", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+    t = MP.addTask("rot1", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
     t->setCostSpecs(70, MP.T, {1.}, 1e1);
-    t = MP.addTask("rot2", new DefaultTaskMap(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+    t = MP.addTask("rot2", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
     t->setCostSpecs(70, MP.T, {1.}, 1e1);
-    t = MP.addTask("pos2", new DefaultTaskMap(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+    t = MP.addTask("pos2", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
     t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
     t = MP.addTask("limit", new LimitsConstraint());
     t->setCostSpecs(0, MP.T, ARR(0.), 1e2);

@@ -31,20 +31,20 @@ double I_lambda_x(uint i, arr& lambda, arr& g){
 
 //==============================================================================
 
-UnconstrainedProblem::UnconstrainedProblem(const ConstrainedProblem& P, ConstrainedMethodType method, arr& lambdaInit)
+UnconstrainedProblem::UnconstrainedProblem(const ConstrainedProblem& P, OptOptions opt, arr& lambdaInit)
   : P(P), muLB(0.), mu(0.), nu(0.) {
   ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
     return this->lagrangian(dL, HL, x);
   } );
 
-  double muInit = mlr::getParameter("opt/optConstrained/muInit",1.);
   //switch on penalty terms
-  nu=muInit;
-  switch(method){
-    case squaredPenalty: mu=muInit;  break;
-    case augmentedLag:   mu=muInit;  break;
-    case anyTimeAula:    mu=muInit;  break;
-    case logBarrier:     muLB=.1;  break;
+  nu=opt.muInit;
+  switch(opt.constrainedMethod){
+    case squaredPenalty: mu=opt.muInit;  break;
+    case augmentedLag:   mu=opt.muInit;  break;
+    case anyTimeAula:    mu=opt.muInit;  break;
+    case logBarrier:     muLB=opt.muLBInit;  break;
+    case squaredPenaltyFixed: mu=opt.muInit;  break;
     case noMethod: HALT("need to set method before");  break;
   }
 
@@ -65,30 +65,29 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
   //precompute I_lambda_x
   boolA I_lambda_x(phi_x.N);
   if(phi_x.N) I_lambda_x = false;
-  if(mu)       for(uint i=0;i<phi_x.N;i++) if(tt_x(i)==ineqTT) I_lambda_x(i) = (phi_x(i)>0. || (lambda.N && lambda(i)>0.));
-
+  if(mu)       for(uint i=0;i<phi_x.N;i++) if(tt_x.p[i]==ineqTT) I_lambda_x.p[i] = (phi_x.p[i]>0. || (lambda.N && lambda.p[i]>0.));
 
   double L=0.; //L value
   for(uint i=0;i<phi_x.N;i++){
-    if(            tt_x(i)==fTT                    ) L += phi_x(i);                // direct cost term
-    if(            tt_x(i)==sumOfSqrTT             ) L += mlr::sqr(phi_x(i));       // sumOfSqr term
-    if(muLB     && tt_x(i)==ineqTT                 ){ if(phi_x(i)>0.) return NAN;  L -= muLB * ::log(-phi_x(i)); } //log barrier, check feasibility
-    if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) L += mu * mlr::sqr(phi_x(i));  //g-penalty
-    if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) L += lambda(i) * phi_x(i);    //g-lagrange terms
-    if(nu       && tt_x(i)==eqTT                   ) L += nu * mlr::sqr(phi_x(i));  //h-penalty
-    if(lambda.N && tt_x(i)==eqTT                   ) L += lambda(i) * phi_x(i);    //h-lagrange terms
+    if(            tt_x.p[i]==fTT                    ) L += phi_x.p[i];                // direct cost term
+    if(            tt_x.p[i]==sumOfSqrTT             ) L += mlr::sqr(phi_x.p[i]);       // sumOfSqr term
+    if(muLB     && tt_x.p[i]==ineqTT                 ){ if(phi_x.p[i]>0.) return NAN;  L -= muLB * ::log(-phi_x.p[i]); } //log barrier, check feasibility
+    if(mu       && tt_x.p[i]==ineqTT && I_lambda_x.p[i]) L += mu * mlr::sqr(phi_x.p[i]);  //g-penalty
+    if(lambda.N && tt_x.p[i]==ineqTT && lambda.p[i]>0. ) L += lambda.p[i] * phi_x.p[i];    //g-lagrange terms
+    if(nu       && tt_x.p[i]==eqTT                   ) L += nu * mlr::sqr(phi_x.p[i]);  //h-penalty
+    if(lambda.N && tt_x.p[i]==eqTT                   ) L += lambda.p[i] * phi_x.p[i];    //h-lagrange terms
   }
 
   if(&dL){ //L gradient
     arr coeff=zeros(phi_x.N);
     for(uint i=0;i<phi_x.N;i++){
-      if(            tt_x(i)==fTT                    ) coeff(i) += 1.;              // direct cost term
-      if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.* phi_x(i);    // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) -= (muLB/phi_x(i)); //log barrier, check feasibility
-      if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu*phi_x(i);  //g-penalty
-      if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) coeff(i) += lambda(i);       //g-lagrange terms
-      if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu*phi_x(i);  //h-penalty
-      if(lambda.N && tt_x(i)==eqTT                   ) coeff(i) += lambda(i);       //h-lagrange terms
+      if(            tt_x.p[i]==fTT                    ) coeff.p[i] += 1.;              // direct cost term
+      if(            tt_x.p[i]==sumOfSqrTT             ) coeff.p[i] += 2.* phi_x.p[i];    // sumOfSqr terms
+      if(muLB     && tt_x.p[i]==ineqTT                 ) coeff.p[i] -= (muLB/phi_x.p[i]); //log barrier, check feasibility
+      if(mu       && tt_x.p[i]==ineqTT && I_lambda_x.p[i]) coeff.p[i] += 2.*mu*phi_x.p[i];  //g-penalty
+      if(lambda.N && tt_x.p[i]==ineqTT && lambda.p[i]>0. ) coeff.p[i] += lambda.p[i];       //g-lagrange terms
+      if(nu       && tt_x.p[i]==eqTT                   ) coeff.p[i] += 2.*nu*phi_x.p[i];  //h-penalty
+      if(lambda.N && tt_x.p[i]==eqTT                   ) coeff.p[i] += lambda.p[i];       //h-lagrange terms
     }
     dL = comp_At_x(J_x, coeff);
     dL.reshape(x.N);
@@ -98,14 +97,14 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
     arr coeff=zeros(phi_x.N);
     int fterm=-1;
     for(uint i=0;i<phi_x.N;i++){
-      if(            tt_x(i)==fTT){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
-      if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.;      // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/mlr::sqr(phi_x(i)));  //log barrier, check feasibility
-      if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
-      if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu;   //h-penalty
+      if(            tt_x.p[i]==fTT){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
+      if(            tt_x.p[i]==sumOfSqrTT             ) coeff.p[i] += 2.;      // sumOfSqr terms
+      if(muLB     && tt_x.p[i]==ineqTT                 ) coeff.p[i] += (muLB/mlr::sqr(phi_x.p[i]));  //log barrier, check feasibility
+      if(mu       && tt_x.p[i]==ineqTT && I_lambda_x.p[i]) coeff.p[i] += 2.*mu;   //g-penalty
+      if(nu       && tt_x.p[i]==eqTT                   ) coeff.p[i] += 2.*nu;   //h-penalty
     }
     arr tmp = J_x;
-    for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff(i));
+    for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff.p[i]);
     HL = comp_At_A(tmp); //Gauss-Newton type!
 
     if(fterm!=-1){ //For f-terms, the Hessian must be given explicitly, and is not \propto J^T J
@@ -143,37 +142,13 @@ double UnconstrainedProblem::get_sumOfHviolations(){
   return S;
 }
 
-void UnconstrainedProblem::aulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr &dL_x, arr &HL_x){
-  if(!lambda.N) lambda=zeros(phi_x.N);
-
-  //-- lambda update
-  for(uint i=0;i<lambda.N;i++){
-    if(tt_x(i)==eqTT  )  lambda(i) += (lambdaStepsize * 2.*nu)*phi_x(i);
-    if(tt_x(i)==ineqTT)  lambda(i) += (lambdaStepsize * 2.*mu)*phi_x(i);
-    if(tt_x(i)==ineqTT && lambda(i)<0.) lambda(i)=0.;  //bound clipping
-  }
-
-  //-- adapt mu as well?
-#if 1
-  if(muInc>1. && mu<1e6) mu *= muInc;
-  if(muInc>1. && nu<1e6) nu *= muInc;
-#else
-  for(uint i=0;i<lambda.N;i++){
-#define delta_phi .1
-    if(tt_x(i)==  eqTT && 2.*nu*delta_phi < lambda(i) )  nu *= 2.;
-    if(tt_x(i)==ineqTT && 2.*mu*delta_phi < lambda(i) )  mu *= 2.;
-#undef delta_phi
-  }
-#endif
-
-  //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
-  if(L_x || &dL_x || &HL_x){
-    double L = lagrangian(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
-    if(L_x) *L_x = L;
-  }
+uint UnconstrainedProblem::get_dimOfType(const TermType& tt){
+  uint d=0;
+  for(uint i=0;i<tt_x.N;i++) if(tt_x(i)==tt) d++;
+  return d;
 }
 
-void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
+void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N) lambda=zeros(phi_x.N);
 
   //-- lambda update
@@ -183,46 +158,59 @@ void UnconstrainedProblem::anyTimeAulaUpdate(double lambdaStepsize, double muInc
     if(tt_x(i)==ineqTT && lambda(i)<0.) lambda(i)=0.;  //bound clipping
   }
 
-  //collect gradients of active constraints
-  arr A;
-  RowShiftedPackedMatrix *Aaux, *Jaux;
-  if(J_x.special==arr::RowShiftedPackedMatrixST){
-    Aaux = auxRowShifted(A, 0, J_x.d1, x.N);
-    Jaux = &castRowShiftedPackedMatrix(J_x);
-  }
-  //append rows of J_x to A if constraint is active
-  for(uint i=0;i<lambda.N;i++){
-    if( (tt_x(i)==eqTT) ||
-        (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ){
-      A.append(J_x[i]);
-      A.reshape(A.N/J_x.d1,J_x.d1);
-      if(J_x.special==arr::RowShiftedPackedMatrixST)
-        Aaux->rowShift.append(Jaux->rowShift(i));
+  if(anyTimeVariant){
+    //collect gradients of active constraints
+    arr A;
+    RowShifted *Aaux, *Jaux;
+    if(isRowShifted(J_x)){
+      Aaux = makeRowShifted(A, 0, J_x.d1, x.N);
+      Jaux = castRowShifted(J_x);
     }
-  }
-  if(A.d0>0){
-    arr tmp = comp_A_At(A);
-    addDiag(tmp, 1e-6);
-//    if(J_x.special==arr::RowShiftedPackedMatrixST){
-//      CHECK_EQ(castRowShiftedPackedMatrix(tmp).symmetric,true,"");
-//      for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
-//    }else{
-//      for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
-//    }
-
-    arr AdL = comp_A_x(A, dL_x);
-    arr beta;
-    beta = lapack_Ainv_b_sym(tmp, AdL);
-    //reinsert zero rows
+    //append rows of J_x to A if constraint is active
     for(uint i=0;i<lambda.N;i++){
-      if(! ( (tt_x(i)==eqTT) ||
-             (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ) ){
-        beta.insert(i,0.);
+      if( (tt_x(i)==eqTT) ||
+          (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ){
+        A.append(J_x[i]);
+        A.reshape(A.N/J_x.d1,J_x.d1);
+        if(isRowShifted(J_x))
+          Aaux->rowShift.append(Jaux->rowShift(i));
       }
     }
-    lambda -= lambdaStepsize * beta;
-    //bound clipping
-    for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+    if(A.d0>0){
+      arr tmp = comp_A_At(A);
+      addDiag(tmp, 1e-6);
+      //    if(isRowShifted(J_x)){
+      //      CHECK_EQ(castRowShifted(tmp)->symmetric, true, "");
+      //      for(uint i=0;i<tmp.d0;i++) tmp(i,0) += 1e-6;
+      //    }else{
+      //      for(uint i=0;i<tmp.d0;i++) tmp(i,i) += 1e-6;
+      //    }
+
+      arr AdL = comp_A_x(A, dL_x);
+      arr beta;
+      bool worked=true;
+      try {
+        beta = lapack_Ainv_b_sym(tmp, AdL);
+      }catch(...){
+        arr sig, eig;
+        lapack_EigenDecomp(tmp, sig, eig);
+        cout <<endl <<"** hessian inversion failed AulaAnyTimeUpdate: " <<sig <<" -- revert to standard update" <<endl;
+        worked=false;
+      }
+
+      if(worked){
+        //reinsert zero rows
+        for(uint i=0;i<lambda.N;i++){
+          if(! ( (tt_x(i)==eqTT) ||
+                 (tt_x(i)==ineqTT && (phi_x(i)>0. || lambda(i)>0.)) ) ){
+            beta.insert(i,0.);
+          }
+        }
+        lambda -= lambdaStepsize * beta;
+        //bound clipping
+        for(uint i=0;i<lambda.N;i++) if(lambda(i)<0.) lambda(i)=0.;
+      }
+    }
   }
 
   //-- adapt mu as well?
@@ -267,99 +255,20 @@ void PhaseOneProblem::phase_one(arr& meta_phi, arr& meta_J, arr& meta_H, TermTyp
 // Solvers
 //
 
-const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian" };
-
-
+const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian", "SquaredPenaltyFixed"};
 
 uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions opt){
-
-  ofstream fil(STRING("z."<<MethodName[opt.constrainedMethod]));
-
-  UnconstrainedProblem UCP(P, opt.constrainedMethod, dual);
-
-  //uint stopTolInc;
-
-  if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
-
-  OptNewton newton(x, UCP, opt);
-
-  for(uint k=0;;k++){
-    fil <<k <<' ' <<newton.evals <<' ' <<UCP.get_costs() <<' ' <<UCP.get_sumOfGviolations() <<' ' <<UCP.get_sumOfHviolations() <<endl;
-
-    if(opt.verbose>0){
-      cout <<"** optConstr. it=" <<k
-           <<" mu=" <<UCP.mu <<" nu=" <<UCP.nu <<" muLB=" <<UCP.muLB;
-      if(x.N<5) cout <<" \tlambda=" <<UCP.lambda;
-      cout <<endl;
-    }
-
-    arr x_old = x;
-    if(opt.constrainedMethod==anyTimeAula){
-      //decide yourselve on when to stop iterating Newton steps
-      double stopTol = newton.o.stopTolerance;
-      newton.o.stopTolerance*=10.;
-#if 1
-//      double stopTolInc = 1.5;
-      for(uint l=0;l<20; l++){
-        OptNewton::StopCriterion res = newton.step();
-        if(res>=OptNewton::stopCrit1) break;
-//        if(UCP.anyTimeAulaUpdateStopCriterion(newton.gx)) break;
-//        newton.o.stopTolerance*=stopTolInc;
-      }
-#else
-      newton.run();
-#endif
-      newton.o.stopTolerance = stopTol;
-    }else{
-      //use standard 'run()' to iterate Newton steps
-//      double stopTol = newton.o.stopTolerance;
-//      newton.o.stopTolerance*=2.;
-      newton.run();
-//      newton.o.stopTolerance = stopTol;
-    }
-
-    if(opt.verbose>0){
-      cout <<"** optConstr. it=" <<k
-          <<' ' <<newton.evals <<" f(x)=" <<UCP.get_costs()
-         <<" \tg_compl=" <<UCP.get_sumOfGviolations()
-        <<" \th_compl=" <<UCP.get_sumOfHviolations()
-       <<" \t|x-x'|=" <<absMax(x_old-x);
-      if(x.N<5) cout <<" \tx=" <<x;
-      cout <<endl;
-    }
-
-    //stopping criteron
-    if(k>=2 && absMax(x_old-x)<opt.stopTolerance){
-      if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
-      break;
-    }
-
-    //upate unconstraint problem parameters
-    switch(opt.constrainedMethod){
-      case squaredPenalty: UCP.mu *= 10;  break;
-      case augmentedLag:   UCP.aulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
-      case anyTimeAula:    UCP.aulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
-      case logBarrier:     UCP.muLB /= 2;  break;
-      case noMethod: HALT("need to set method before");  break;
-    }
-
-  }
-  fil.close();
-  if(&dual) dual=UCP.lambda;
-
-  return newton.evals;
+  return OptConstrained(x, dual, P, opt).run();
 }
 
 //==============================================================================
 
 OptConstrained::OptConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt)
-  : UCP(P, opt.constrainedMethod), newton(x, UCP, opt), dual(dual), opt(opt), its(0){
+  : UCP(P, opt, dual), newton(x, UCP, opt), dual(dual), opt(opt), its(0), earlyPhase(true){
 
   fil.open(STRING("z."<<MethodName[opt.constrainedMethod]));
 
-
   if(opt.verbose>0) cout <<"***** optConstrained: method=" <<MethodName[opt.constrainedMethod] <<endl;
-
 }
 
 bool OptConstrained::step(){
@@ -367,56 +276,67 @@ bool OptConstrained::step(){
 
   if(opt.verbose>0){
     cout <<"** optConstr. it=" <<its
+         <<(earlyPhase?'e':'l')
          <<" mu=" <<UCP.mu <<" nu=" <<UCP.nu <<" muLB=" <<UCP.muLB;
     if(newton.x.N<5) cout <<" \tlambda=" <<UCP.lambda;
     cout <<endl;
   }
 
   arr x_old = newton.x;
-  if(opt.constrainedMethod==anyTimeAula){
-    //decide yourselve on when to stop iterating Newton steps
-    double stopTol = newton.o.stopTolerance;
-    newton.o.stopTolerance*=10.;
-#if 1
-//      double stopTolInc = 1.5;
-    for(uint l=0;l<20; l++){
-      OptNewton::StopCriterion res = newton.step();
-      if(res>=OptNewton::stopCrit1) break;
-//        if(UCP.anyTimeAulaUpdateStopCriterion(newton.gx)) break;
-//        newton.o.stopTolerance*=stopTolInc;
-    }
-#else
+
+  if(opt.constrainedMethod==squaredPenaltyFixed){
     newton.run();
-#endif
-    newton.o.stopTolerance = stopTol;
   }else{
-    //use standard 'run()' to iterate Newton steps
     double stopTol = newton.o.stopTolerance;
-    newton.o.stopTolerance*=10.;
-    newton.run();
+    newton.o.stopTolerance *= (earlyPhase?10.:2.);
+    if(opt.constrainedMethod==anyTimeAula)  newton.run(20);
+    else                                    newton.run();
     newton.o.stopTolerance = stopTol;
   }
 
   if(opt.verbose>0){
-    cout <<its <<' ' <<newton.evals <<" f(x)=" <<UCP.get_costs()
-        <<" \tg_compl=" <<UCP.get_sumOfGviolations()
-       <<" \th_compl=" <<UCP.get_sumOfHviolations();
+    cout <<"** optConstr. it=" <<its
+         <<(earlyPhase?'e':'l')
+         <<' ' <<newton.evals
+         <<" f(x)=" <<UCP.get_costs()
+         <<" \tg_compl=" <<UCP.get_sumOfGviolations()
+         <<" \th_compl=" <<UCP.get_sumOfHviolations()
+         <<" \t|x-x'|=" <<absMax(x_old-newton.x);
     if(newton.x.N<5) cout <<" \tx=" <<newton.x;
     cout <<endl;
   }
 
-  //stopping criteron
-  if(its>10 && absMax(x_old-newton.x)<opt.stopTolerance){
-    if(opt.verbose>0) cout << " --- optConstrained StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+  //check for squaredPenaltyFixed method
+  if(opt.constrainedMethod==squaredPenaltyFixed){
+    if(opt.verbose>0) cout <<"** optConstr. squaredPenaltyFixed stops after one outer iteration" <<endl;
     return true;
   }
 
-  //upate unconstraint problem parameters
+  //check for no constraints
+  if(UCP.get_dimOfType(ineqTT) + UCP.get_dimOfType(eqTT) == 0){
+    if(opt.verbose>0) cout <<"** optConstr. NO CONSTRAINTS -> run Newton againg and stop" <<endl;
+    newton.run();
+    return true;
+  }
+
+  //stopping criteron
+  if(its>=2 && absMax(x_old-newton.x)<opt.stopTolerance){
+    if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+    if(earlyPhase) earlyPhase=false;
+    else{
+      if(opt.stopGTolerance<0.
+         || UCP.get_sumOfGviolations() + UCP.get_sumOfHviolations() < opt.stopGTolerance)
+        return true;
+     }
+  }
+
+  //upate Lagrange parameters
   switch(opt.constrainedMethod){
-    case squaredPenalty: UCP.mu *= 10;  break;
-    case augmentedLag:   UCP.aulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
-    case anyTimeAula:    UCP.aulaUpdate(1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
-    case logBarrier:     UCP.muLB /= 2;  break;
+    case squaredPenalty: UCP.mu *= 10.;  break;
+    case augmentedLag:   UCP.aulaUpdate(false, 1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
+    case anyTimeAula:    UCP.aulaUpdate(true,  1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
+    case logBarrier:     UCP.muLB /= 2.;  break;
+    case squaredPenaltyFixed: HALT("you should not be here"); break;
     case noMethod: HALT("need to set method before");  break;
   }
 
@@ -427,8 +347,10 @@ bool OptConstrained::step(){
   return false;
 }
 
-void OptConstrained::run(){
+uint OptConstrained::run(){
+  earlyPhase=true;
   while(!step());
+  return newton.evals;
 }
 
 OptConstrained::~OptConstrained(){

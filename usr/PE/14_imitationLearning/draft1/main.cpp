@@ -3,7 +3,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <vector>
 #include <future>
 
@@ -19,11 +19,11 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     makeConvexHulls(world.shapes);
     MotionProblem MP(world);
     MP.loadTransitionParameters();
-    arr refGoal = conv_vec2arr(MP.world.getBodyByName("goalRef")->X.pos);
+    arr refGoal = ARR(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;
-    c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+    c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
     c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
@@ -71,9 +71,9 @@ arr execRun(arr param, arr q0, arr refGoal) {
 
   world.getBodyByName("goalRef")->X.pos = refGoal;
   Task *c;
-  c = MP.addTask("position_right_hand", new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
-  c = MP.addTask("vel_right_hand", new DefaultTaskMap(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
+  c = MP.addTask("vel_right_hand", new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
   c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
   c = MP.addTask("final_vel", new TaskMap_qItself());
   MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));

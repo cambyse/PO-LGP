@@ -4,6 +4,6 @@ BASE = ../../..
 OBJS = main.o
 PLIB = 1
 ROS = 1
-DEPEND = Core Ors Gui pr2 Actions
+DEPEND = Core Ors Gui RosCom Actions
 
 include $(BASE)/gofMake/generic.mk

@@ -6,7 +6,7 @@
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
-#include <pr2/roscom.h>
+#include <RosCom/roscom.h>
 //#include <System/engine.h>
 #include <Motion/pr2_heuristics.h>
 #include "src/plotUtil.h"
@@ -68,7 +68,7 @@ int main(int argc,char **argv){
 
   /// set initial parameter
   arr param = ARR(-0.06,-0.12);
-  param.flatten();
+  param.reshapeFlat();
 
   uint count = 0;
   arr Xn;
@@ -89,7 +89,7 @@ int main(int argc,char **argv){
   uint kernel_type = 0;// 0 is RBF Kernel
 <<<<<<< HEAD
   mdp::RKHSPol rkhs1(world,useRos,duration,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
-  MT::rnd.clockSeed();
+  mlr::rnd.clockSeed();
 =======
   mdp::RKHSPol rkhs1(world,useRos,Xdemo,Fdemo,Mdemo,paramLim,numCentres,H,numEpisode,kernel_type,numIterations);
   mlr::rnd.clockSeed();

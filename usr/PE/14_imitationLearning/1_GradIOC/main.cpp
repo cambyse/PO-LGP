@@ -5,7 +5,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>
@@ -52,9 +52,9 @@ struct Dfdw:ConstrainedProblem {
   virtual double fc(arr& df, arr& Hf, arr& g, arr& Jg, const arr& x) {
 //    mlr::timerStart(true);
     // compute w vector
-    arr w=repmat(x.subRange(0,2),x0.d0,1.);
+    arr w=repmat(x.subRef(0,2),x0.d0,1.);
     w.append(repmat(ARR(x(3)),3,1));
-    w.flatten();
+    w.reshapeFlat();
 
     // compute matrix dWdx
     if (Dwdx.d0<1.) {
@@ -112,7 +112,7 @@ struct Dfdw:ConstrainedProblem {
         g2 = ~g2*Dwdx;
         df = df - g2;
       }
-      df.flatten();
+      df.reshapeFlat();
     }
 
     if (&Hf) {
@@ -156,10 +156,10 @@ void simpleMotion(){
   MP.useSwift = false;
   MP.loadTransitionParameters();
 
-  arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
+  arr refGoal = ARR(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
 
-  c = MP.addTask("position_right_hand",new DefaultTaskMap(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 25);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);
@@ -200,7 +200,7 @@ void simpleMotion(){
   arr gi,Hi,PHIi,Ji;
   arr w = sqr(PHI/(PHIo+1e-12));
   //  checkGradient(dfdw,x,1e-3);
-  w = w.subRange(w.d0-6,w.d0-3);
+  w = w.subRef(w.d0-6,w.d0-3);
   //  w={1.,2.,3.,4.};
   w = randn(4,1)+2.;
   w.reshape(w.N);

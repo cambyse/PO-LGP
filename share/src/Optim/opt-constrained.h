@@ -48,17 +48,16 @@ struct UnconstrainedProblem:ScalarFunction{
   arr phi_x, J_x, H_x; ///< everything else at x
   TermTypeA tt_x; ///< everything else at x
 
-  UnconstrainedProblem(const ConstrainedProblem &P, ConstrainedMethodType method, arr& lambdaInit=NoArr);
+  UnconstrainedProblem(const ConstrainedProblem &P, OptOptions opt=NOOPT, arr& lambdaInit=NoArr);
 
   double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained scalar function F
 
   double get_costs();            ///< info on the terms from last call
   double get_sumOfGviolations(); ///< info on the terms from last call
   double get_sumOfHviolations(); ///< info on the terms from last call
+  uint get_dimOfType(const TermType& tt); ///< info on the terms from last call
 
-  void aulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
-  void anyTimeAulaUpdate(double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
-  bool anyTimeAulaUpdateStopCriterion(const arr& dL_x);
+  void aulaUpdate(bool anyTimeVariant, double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
 };
 
 //==============================================================================
@@ -96,12 +95,13 @@ struct OptConstrained{
   arr &dual;
   OptOptions opt;
   uint its;
+  bool earlyPhase;
   ofstream fil;
 
   OptConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
   ~OptConstrained();
   bool step();
-  void run();
+  uint run();
 //  void reinit();
 };
 

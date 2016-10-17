@@ -37,18 +37,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
   //-- setup the motion problem 
 
-  //Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
+  //Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target", NoVector));
   //pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 2e5);
-  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
+  Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeffR", NoVector));
   pos->setCostSpecs(P.T, P.T,conv_vec2arr(target->X.pos), 2e5);
 
-  Task *vel = P.addTask("position_vel", new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
+  Task *vel = P.addTask("position_vel", new TaskMap_Default(posTMT, world, "endeffR", NoVector));
   vel->map.order=1;
   vel->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
   /*/
   //see taskmap_default.cpp;
-  Task *vec = P.addTask("orientation", new DefaultTaskMap(vecTMT, world, "peg",{0.,0.,1.}));
+  Task *vec = P.addTask("orientation", new TaskMap_Default(vecTMT, world, "peg",{0.,0.,1.}));
   //vec->setCostSpecs(P.T, P.T, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
   P.setInterpolatingCosts(vec, MotionProblem::early_restConst, {0.,0.,-1.}, 1e3, NoArr, -1., 0.1);
   /*/
@@ -61,7 +61,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   Task *collision = P.addTask("collisionConstraint", new CollisionConstraint(0.01));
   collision->setCostSpecs(0, P.T, {0.}, 1.);
 #else
-  c = P.addTask("collision", new ProxyTaskMap(allPTMT, {0}, .041));
+  c = P.addTask("collision", new TaskMap_Proxy(allPTMT, {0}, .041));
   c->setCostSpecs(0, P.T, {0.}, 1e1);
 #endif
 
@@ -136,11 +136,11 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
     ors::Body *table = world.getBodyByName("table");
 
 
-    FeedbackMotionControl MC(world);
+    TaskController MC(world);
     MC.qitselfPD.active=false;
 
     //position PD task:  decayTime = 0.1, dampingRatio = 0.8
-    CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector));
+    CtrlTask *pd_y =  MC.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector));
     pd_y->prec = 10.;
     pd_y->setTarget(ARR(est_target->X.pos.x,est_target->X.pos.y,est_target->X.pos.z));
     //MC.setInterpolatingCosts();

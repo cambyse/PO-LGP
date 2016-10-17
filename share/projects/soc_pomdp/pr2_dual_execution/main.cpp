@@ -1,12 +1,12 @@
-#include <Motion/gamepad2tasks.h>
-#include <Motion/feedbackControl.h>
+#include <Control/gamepad2tasks.h>
+#include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
-#include <pr2/roscom.h>
-#include <pr2/actions.h>
-#include <pr2/actionMachine.h>
+#include <RosCom/roscom.h>
+#include <RosCom/actions.h>
+#include <RosCom/actionMachine.h>
 
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
@@ -44,7 +44,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   world.getBodyByName("target")->X.pos.z = height + 0.1;
 
 
-  Task *pos = P.addTask("position", new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target", NoVector));
+  Task *pos = P.addTask("position", new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target", NoVector));
   pos->setCostSpecs(P.T, P.T,{0.,0.,0.}, 1e3);
 
 
@@ -119,7 +119,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
 
     double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-    FeedbackMotionControl MP(world);
+    TaskController MP(world);
     MP.qitselfPD.active=true;
 
     //position PD task:  decayTime = 0.1, dampingRatio = 0.8
@@ -130,7 +130,7 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
     cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-    CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+    CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target"));
     pd_y->prec = 10.;
 
     //joint space PD task
@@ -240,7 +240,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  //FeedbackMotionControl MC(world);
+  //TaskController MC(world);
   activity.machine->s->MP.qitselfPD.active=true;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
@@ -251,7 +251,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
   cout<< "true_target->X.pos.z  = "<<true_target->X.pos.z<<endl;
 
 
-  CtrlTask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  activity.machine->s->MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task
@@ -387,7 +387,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
   //world.gl().add(ors::glDrawGraph, &worldCopy);
 
-  FeedbackMotionControl MP(world, true); // true means using swift
+  TaskController MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = pr2_reasonable_W(world);
 
@@ -432,7 +432,7 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
 
 
 
-  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new DefaultTaskMap(posTMT, world, "endeffR", NoVector, "target"));
+  CtrlTask *pd_y =  MP.addPDTask("position", .1, .8, new TaskMap_Default(posTMT, world, "endeffR", NoVector, "target"));
   pd_y->prec = 10.;
 
   //joint space PD task

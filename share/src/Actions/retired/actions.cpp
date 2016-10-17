@@ -1,5 +1,5 @@
 #include "actions.h"
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include "actionMachine_internal.h"
 
 //===========================================================================
@@ -10,14 +10,14 @@ Action::Action(ActionMachine& actionMachine, const char* name)
   actionMachine.KB.readAccess();
   Node *it = actionMachine.KB().getNode(name);
   if(it && &it->container != &actionMachine.KB()) it=NULL;
-  if(it && it->getValueType()!=typeid(bool)) it=NULL;
+  if(it && !it->isOfType<bool>()) it=NULL;
   actionMachine.KB.deAccess();
   //if(!it) MLR_MSG("WARNING: there is no logic symbol for action '"<<name <<"' -- the action will be permanently deactive");
   if(it) symbol=it;
 }
 
 Action::~Action(){
-//  for (CtrlTask *t : tasks) actionMachine.s->feedbackController.tasks.removeValue(t);
+//  for (CtrlTask *t : tasks) actionMachine.s->taskController.tasks.removeValue(t);
   listDelete(tasks);
 }
 
@@ -185,7 +185,7 @@ MoveEffTo::MoveEffTo(ActionMachine& actionMachine, const char* effName, const ar
     : Action(actionMachine, "MoveEffTo") {
   CtrlTask *task = new CtrlTask(
                      STRING("MoveEffTo_" << effName),
-                     new DefaultTaskMap(posTMT, actionMachine.s->world, effName),
+                     new TaskMap_Default(posTMT, actionMachine.s->world, effName),
                      1., .8, 1., 1.);
   // task->setGains(200.,0.);
   task->y_ref = positionTarget;
@@ -206,14 +206,14 @@ PoseTo::PoseTo(ActionMachine& actionMachine, const char* effName, const arr& pos
     : Action(actionMachine, "PoseTo"){
   CtrlTask *task = new CtrlTask(
                      STRING("PosTo_" << effName),
-                     new DefaultTaskMap(posTMT, actionMachine.s->world, effName),
+                     new TaskMap_Default(posTMT, actionMachine.s->world, effName),
                      1., .8, 1., 1.);
   task->y_ref = positionTarget;
   tasks.append(task);
 
   task = new CtrlTask(
            STRING("OrientatationQuat_" << effName),
-           new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}),
+           new TaskMap_Default(quatTMT, actionMachine.s->world, effName, {0, 0, 0}),
             1., .8, 1., 1.);
   task->setTarget(orientationTarget);
   task->flipTargetSignOnNegScalarProduct = true;
@@ -234,7 +234,7 @@ AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const 
     : Action(actionMachine, "AlignEffTo") {
   CtrlTask *task = new CtrlTask(
                      STRING("AlignEffTo_" << effName),
-                     new DefaultTaskMap(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)),
+                     new TaskMap_Default(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)),
                      2., .8, 1., 1.);
   // task->setGains(100.,0.);
   task->y_ref = vectorTarget;
@@ -253,7 +253,7 @@ OrientationQuat::OrientationQuat(ActionMachine& actionMachine, const char* effNa
     : Action(actionMachine, "OrientationQuat") {
   auto task = new CtrlTask(
                 STRING("OrientatationQuat_" << effName),
-                new DefaultTaskMap(quatTMT, actionMachine.s->world, effName, {0, 0, 0}),
+                new TaskMap_Default(quatTMT, actionMachine.s->world, effName, {0, 0, 0}),
                 2, .8, 1., 1.);
   task->setTarget(orientationTarget);
   task->flipTargetSignOnNegScalarProduct = true;
@@ -289,7 +289,7 @@ bool SetQ::finishedSuccess(ActionMachine& M) {
 // PushForce
 PushForce::PushForce(ActionMachine& actionMachine, const char* effName, arr forceVec, double _timeOut)
     : Action(actionMachine, "controlForce") {
-  DefaultTaskMap *m = new DefaultTaskMap(posTMT, actionMachine.s->world, "endeffForceL");
+  TaskMap_Default *m = new TaskMap_Default(posTMT, actionMachine.s->world, "endeffForceL");
   CtrlTask *task = new CtrlTask(
                      STRING("MoveEffTo_" << effName),
                      m,

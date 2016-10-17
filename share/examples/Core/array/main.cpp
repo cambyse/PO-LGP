@@ -41,11 +41,18 @@ void TEST(Basics){
   //access:
   cout <<"\n3rd line:\n" <<a[2] <<endl; //gets a const-version of the []-subarray
   a[2](1)=7.; //same as a(2,1)=7 (but much slower)
-  a[3]()+=1.; //use operator() to get a non-const &-version of the []-subarray 
-  a[1]()=a[2];
+  a[3] += 1.; //use operator() to get a non-const &-version of the []-subarray
+  a[1] = a[2];
   cout <<"\nrows manipulated:\n" <<a <<endl;
   CHECK_EQ(a(2,1),7.,"");
   CHECK_EQ(a[1],a[2],"");
+
+  //access (copy and reference) of subarrays
+  cout <<"\nrefRange(2,4) =\n" <<a.refRange(2,4) <<endl;
+  a.refRange(2,4) *= 10.;
+  cout <<"\nrows manipulated:\n" <<a <<endl;
+  exit(0);
+
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to mlr::Array<double>({ ... })
@@ -555,27 +562,27 @@ void TEST(Tensor){
 
 //===========================================================================
 
-void write(RowShiftedPackedMatrix& PM){
-  cout <<"RowShiftedPackedMatrix: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
+void write(RowShifted& PM){
+  cout <<"RowShifted: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
   cout <<"\npacked numbers =" <<PM.Z
       <<"\nrowShifts=" <<PM.rowShift
      <<"\ncolPaches=" <<PM.colPatches
     <<"\nunpacked =" <<unpack(PM.Z) <<endl;
 }
 
-void TEST(RowShiftedPackedMatrix){
-  cout <<"\n*** RowShiftedPackedMatrix\n";
+void TEST(RowShifted){
+  cout <<"\n*** RowShifted\n";
   
   arr J;
-  RowShiftedPackedMatrix *Jaux = auxRowShifted(J,10,4,12);
+  RowShifted *Jaux = makeRowShifted(J,10,4,12);
   rndInteger(J,0,9);
   for(uint i=0;i<J.d0;i++) Jaux->rowShift(i) = i/3;
   Jaux->computeColPatches(false);
-  write(castRowShiftedPackedMatrix(J));
+  write(*castRowShifted(J));
 
   //constructor compressing an array
   arr K =  packRowShifted(unpack(J));
-  write(castRowShiftedPackedMatrix(K));
+  write(*castRowShifted(K));
   
   cout <<"-----------------------" <<endl;
 
@@ -584,8 +591,8 @@ void TEST(RowShiftedPackedMatrix){
     arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
-//    RowShiftedPackedMatrix& Yaux = castRowShiftedPackedMatrix(Y);
-//    write(castRowShiftedPackedMatrix(Y));
+//    RowShifted& Yaux = castRowShifted(Y);
+//    write(*castRowShifted(Y));
     arr x(X.d0);   rndInteger(x,0,9);
     arr x2(X.d1);  rndInteger(x2,0,9);
     cout <<"unpacking errors = " <<maxDiff(X,unpack(Y))
@@ -595,7 +602,7 @@ void TEST(RowShiftedPackedMatrix){
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
 //    arr tmp =comp_A_At(Y);
-//    //write(castRowShiftedPackedMatrix(tmp));
+//    //write(*castRowShifted(tmp));
 //    cout <<X*~X <<endl <<unpack(comp_A_At(Y)) <<endl;
     CHECK_ZERO(maxDiff(X*~X, unpack(comp_A_At(Y))), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*x, comp_At_x(Y,x)), 1e-10, "");
@@ -608,6 +615,46 @@ void TEST(RowShiftedPackedMatrix){
     lapack_choleskySymPosDef(Hchol, H);
     CHECK_ZERO(maxDiff(comp_At_A(Hchol), H), 1e-10, "");
     CHECK_ZERO(maxDiff(unpack(comp_At_A(Hchol)), unpack(H)), 1e-10, "");
+  }
+}
+
+//===========================================================================
+
+void sparseProduct(arr& y, arr& A, const arr& x);
+
+void TEST(Sparse){
+  cout <<"\n*** Sparse\n";
+
+
+  arr A(5,10), B(10);
+  rndInteger(A,0,3);
+  rndInteger(B,0,3);
+  cout <<"A=\n" <<A <<"\nB=\n" <<B <<"\nA*B=\n" <<A*B <<endl;
+
+  cout <<"A sparsity=" <<A.sparsity() <<endl;
+  cout <<"B sparsity=" <<B.sparsity() <<endl;
+
+  A.makeSparse();
+  B.makeSparse();
+
+
+  cout <<"A=\n" <<A <<"\nB=\n" <<B <<endl;
+//  cout <<"\nA*B=\n" <<A*B <<endl;
+  arr y;
+  sparseProduct(y, A, B);
+  cout <<"A*B=\n" <<y <<endl;
+
+  for(uint k=0;k<100;k++){
+    arr A(10,20);
+    arr B(20);
+    rndInteger(A,0,3);
+    rndInteger(B,0,3);
+    arr C = A*B;
+    A.makeSparse();
+//    B.makeSparse();
+    arr D;
+    sparseProduct(D, A, B);
+    CHECK_EQ(C, D, "");
   }
 }
 
@@ -655,6 +702,9 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
+  testSparse();
+  return 0;
+
   testBasics();
   testCheatSheet();
   testInitializationList();
@@ -671,7 +721,8 @@ int MAIN(int argc, char *argv[]){
   testGnuplot();
   testDeterminant();
   testEigenValues();;
-  testRowShiftedPackedMatrix();
+  testRowShifted();
+  testSparse();
   testInverse();
   testMM();
   testSVD();

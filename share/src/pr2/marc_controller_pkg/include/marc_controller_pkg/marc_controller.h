@@ -25,8 +25,10 @@ private:
 
   //force related things
   arr fL_obs, fR_obs, fL_ref, fR_ref;
-  arr KiFT, err, J_ft_inv;
-  double gamma;
+  arr KiFTL, fL_err, J_ft_invL, fL_offset;
+  arr KiFTR, fR_err, J_ft_invR, fR_offset;
+  double fL_gamma;
+  double fR_gamma;
 
   //matching joint indices
   mlr::Array<pr2_mechanism_model::JointState*> ROS_joints;
@@ -60,6 +62,7 @@ public:
   void jointReference_subscriber_callback(const marc_controller_pkg::JointState::ConstPtr& msg);
   void l_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
   void r_ft_subscriber_callback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
+  void calcFTintegral(arr &f_err, const arr &f_ref,const arr &f_obs,const arr &J_ft_inv, const double &f_gamma);
 };
 
 }

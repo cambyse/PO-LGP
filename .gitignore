@@ -48,6 +48,7 @@ CORE
 
 %% BACKUP/temporary files
 *.tmp
+*.dat
 nogit*
 *~
 z.*

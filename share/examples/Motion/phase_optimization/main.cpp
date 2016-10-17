@@ -17,10 +17,10 @@ void TEST(PhaseOptimization){
   ors::Shape *grasp = world.getShapeByName("endeff");
   ors::Body *target = world.getBodyByName("target");
   Task *t;
-  t = MP.addTask("tra", new TransitionTaskMap(world));
+  t = MP.addTask("tra", new TaskMap_Transition(world));
   t->map.order=1;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
-  t =MP.addTask("pos", new DefaultTaskMap(posTMT, grasp->index) );
+  t =MP.addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   t->setCostSpecs(MP.T-3,MP.T,conv_vec2arr(target->X.pos),1e2);
   MotionProblemFunction MPF(MP);
   arr X(MP.T+1,q.N); X.setZero();

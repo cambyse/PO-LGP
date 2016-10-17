@@ -8,7 +8,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
-#include <Motion/feedbackControl.h>
+#include <Control/taskController.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>
@@ -82,7 +82,7 @@ struct IOC_DemoCost {
         }
         if(idx.contains(i)) {
           JgP.delRows(j);
-          ((RowShiftedPackedMatrix*)JgP.aux)->rowShift.remove(j);
+          ((RowShifted*)JgP.aux)->rowShift.remove(j);
           j--;
         }
         j++;
@@ -129,16 +129,16 @@ struct IOC_DemoCost {
     if (&df) {
       arr h = 8.*(PHI%J_G_Jt_PHIw);
       df = ~h*Dwdx ;
-      df.flatten();
-//      df.subRange(0,6) = 0.;
+      df.reshapeFlat();
+//      df.subRef(0,6) = 0.;
       //      cout << "df: " << df << endl;
     }
     if (&Hf) {
       Hf = 8.*(dWdx_dPHI_J_G_Jt_dPHI_dWdx);
 //      if (learnTransitionCosts) {
-//        Hf.subRange(0,6) = 0.;
+//        Hf.subRef(0,6) = 0.;
 //        Hf = ~Hf;
-//        Hf.subRange(0,6) = 0.;
+//        Hf.subRef(0,6) = 0.;
 //        Hf = ~Hf;
 //      }
       //      cout <<"Hfa: " << Hf << endl;
@@ -252,8 +252,8 @@ struct IOC:ConstrainedProblem {
       if (normalizeParam) g.append((sumOfSqr(x)-1e0)*(sumOfSqr(x)-1e0)); // ||w|| = 1
 
       g.append(-x); // w > 0
-      //      g.append(-x.subRange(0,6)+1e-2); // w_trans > 2
-      //      g.append(-x.subRange(7,x.d0-1)+1e-2); // w_trans > 2
+      //      g.append(-x.subRef(0,6)+1e-2); // w_trans > 2
+      //      g.append(-x.subRef(7,x.d0-1)+1e-2); // w_trans > 2
     }
     if (&Jg) {
       Jg.clear();
