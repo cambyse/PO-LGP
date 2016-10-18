@@ -462,14 +462,14 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
   C.getJointState(x0);
   arr lim = C.getLimits();
   C.gl().pressedkey=0;
-  const int steps = 200;
+  const int steps = 50;
   for(i=x0.N; i--;) {
     x=x0;
     const double upper_lim = lim(i,1);
     const double lower_lim = lim(i,0);
     const double delta = upper_lim - lower_lim;
-    const double center = lower_lim + delta / 2;
-    const double offset = acos( 2 * (x0(i) - center) / delta );
+    const double center = lower_lim + delta / 2.;
+    const double offset = acos( 2. * (x0(i) - center) / delta );
 
     for(t=0; t<steps; t++) {
       if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
@@ -477,7 +477,7 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
       if (lim(i,0)==lim(i,1))
         break;
 
-      x(i)= center + (delta*(0.5*cos(MLR_2PI*t/steps + offset)));
+      x(i) = center + (delta*(0.5*cos(MLR_2PI*t/steps + offset)));
       // Joint limits
       C.setJointState(x);
       C.gl().update(STRING("DOF = " <<i), false, false, true);
@@ -639,10 +639,12 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   Inotify ino(filename);
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
+    ors::KinematicWorld W;
     try {
       mlr::lineCount=1;
+      W <<FILE(filename);
       C.gl().lock.writeLock();
-      C <<FILE(filename);
+      C = W;
       C.gl().lock.unlock();
     } catch(const char* msg) {
       cout <<"line " <<mlr::lineCount <<": " <<msg <<" -- please check the file and press ENTER" <<endl;

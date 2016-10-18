@@ -6,7 +6,7 @@ using namespace std;
 
 struct HandPositionMap:TaskMap{
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){
-    ors::Body *arm = G.getBodyByName("left_wrist");
+    ors::Body *arm = G.getBodyByName("left_wristH");
     arr posArm, Jarm;
     G.kinematicsPos(posArm, Jarm, arm);
 
@@ -35,8 +35,8 @@ struct RebaMap:TaskMap{
                                   "right_shoulder_0", "right_shoulder_1",
                                   "left_shoulder_0", "left_shoulder_1",
                                   "right_elbow_0", "left_elbow_0",
-                                  "right_wrist_0", "right_wrist_1",
-                                  "left_wrist_0", "left_wrist_1"};
+                                  "right_wristH_0", "right_wristH_1",
+                                  "left_wristH_0", "left_wristH_1"};
 
   RebaMap(){
     initCoefficientMap(coeffs_map);
@@ -57,10 +57,10 @@ struct RebaMap:TaskMap{
     theMap["left_shoulder_1"] = ARR(1.21584852,  0.        ,  1.        , 0.01);
     theMap["right_elbow_0"] = ARR(1.36783611, -2.3873254 ,  2.        , 0.01);
     theMap["left_elbow_0"] = ARR(1.36783611,  2.3873254 ,  2.        , 0.01);
-    theMap["right_wrist_0"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
-    theMap["right_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
-    theMap["left_wrist_0"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
-    theMap["left_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
+    theMap["right_wristH_0"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
+    theMap["right_wristH_1"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
+    theMap["left_wristH_0"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
+    theMap["left_wristH_1"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){
@@ -123,6 +123,8 @@ void moveReba(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
+  orsDrawAlpha=1.;
+
   moveReba();
 
   return 0;
@@ -131,6 +133,6 @@ int main(int argc,char** argv){
 /*
  * TODO:
  * Marc: add Baxter
- * Marc: check change joint types to quatBall
+ * Marc: check change joint types to quatBall (DONE; problem: reba task map)
  * Baptiste: add Markers to ShapeO
 */
