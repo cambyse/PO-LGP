@@ -11,7 +11,7 @@
 #define MLR_module_h
 
 #include <Core/array.h>
-#include <Core/registry.h>
+#include <Core/graph.h>
 #include <Core/thread.h>
 #include <stddef.h>
 

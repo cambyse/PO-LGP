@@ -10,20 +10,20 @@ shape (head){ type=0 size=[0.27 0.19 0.03 0] rel=<T -0.0157421 1.40048e-14 -0.11
 
 ## zero position
 
-Merge right_s0 { q= 0.08 }
-Merge left_s0 { q=-0.08 }
-Merge right_s1 { q=-1 }
-Merge left_s1 { q=-1 }
-Merge right_e0 { q= 1.17 }
-Merge left_e0 { q=-1.17 }
-Merge right_e1 { q=1.94 }
-Merge left_e1 { q=1.94 }
-Merge right_w0 { q=-0.67 }
-Merge left_w0 { q=0.67 }
-Merge right_w1 {q=1.02 }
-Merge left_w1 { q=1.02 }
-Merge right_w2 { q=0.5 }
-Merge left_w2 { q=-0.5 }
+Edit right_s0 { q= 0.08 }
+Edit left_s0 { q=-0.08 }
+Edit right_s1 { q=-1 }
+Edit left_s1 { q=-1 }
+Edit right_e0 { q= 1.17 }
+Edit left_e0 { q=-1.17 }
+Edit right_e1 { q=1.94 }
+Edit left_e1 { q=1.94 }
+Edit right_w0 { q=-0.67 }
+Edit left_w0 { q=0.67 }
+Edit right_w1 {q=1.02 }
+Edit left_w1 { q=1.02 }
+Edit right_w2 { q=0.5 }
+Edit left_w2 { q=-0.5 }
 #joint r_gripper_l_finger_joint (right_wrist r_gripper_l_finger){ type=3 from=<T 0.15855 -0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  limits=[ 0 0.020833 ]  ctrl_limits=[ 5 20 1 ]  }
 #joint r_gripper_r_finger_joint (right_wrist r_gripper_r_finger){ type=3 from=<T 0.15855 0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  mimic="r_gripper_l_finger_joint"  limits=[ -0.020833 0 ]  ctrl_limits=[ 5 20 1 ]  }
 #joint l_gripper_l_finger_joint (left_wrist l_gripper_l_finger){ type=3 from=<T 0.15855 -0.0015 3.52052e-17 -0.5 -0.5 -0.5 -0.5 >  limits=[ 0 0.020833 ]  ctrl_limits=[ 5 20 1 ]  }

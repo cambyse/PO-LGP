@@ -2,7 +2,7 @@ Include = '../../../share/data/baxter_model/baxter.ors'
 
 Include = '../../../share/data/man_model.ors'
 
-Merge  waist { X=<T t(1.5 0. 1.) d(-90 0 0 1)> }
+Edit  waist { X=<T t(1.5 0. 1.) d(-90 0 0 1)> }
 
 body table{ type=0, X=<T t(.7 0 .8)>, size=[1. 1. .04 .0], color=[.8 .5 .3] fixed, contact }
 shape leg1(table) { rel=<T t(-.3 -.3 -.3)>  type=0  size=[.04 .04 .6 0] color=[0.5 0.3 0.15] }

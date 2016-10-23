@@ -31,7 +31,7 @@ struct RelationalMachine{
   Graph KB;     ///< knowledge base
   Graph *state; ///< the state within the KB (is a subgraph item of KB)
   Graph *tmp;   ///< a tmp subgraph of the KB (private)
-  Log _log;
+  mlr::LogObject _log;
 
   RelationalMachine();
   RelationalMachine(const char* filename);

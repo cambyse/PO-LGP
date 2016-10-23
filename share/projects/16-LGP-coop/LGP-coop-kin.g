@@ -5,7 +5,7 @@ Delete shape visual
 Include = '../../data/man_model.ors'
 
 
-Merge  waist { X=<T t(1.5 0. 1.) d(-90 0 0 1)> }
+Edit  waist { X=<T t(1.5 0. 1.) d(-90 0 0 1)> }
 
 body tableC{ type=9, X=<T t(.7 0 .8)>, size=[1. .8 .04 .02], color=[.3 .3 .5] fixed, contact }
 body tableL{ type=9, X=<T t(.2 .7 .8)>, size=[2. .6 .04 .02], color=[.3 .5 .3] fixed, contact }

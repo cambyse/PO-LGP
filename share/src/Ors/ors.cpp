@@ -36,7 +36,7 @@
 #include <Algo/algos.h>
 
 #ifndef MLR_ORS_ONLY_BASICS
-#  include <Core/registry.h>
+#  include <Core/graph.h>
 //#  include <Gui/plot.h>
 #endif
 #ifdef MLR_extern_ply

@@ -17,6 +17,10 @@
 
 #define DEBUG(x) //x
 
+//inline bool NodeComp(Node* const& a, Node* const& b){ //TODO: why?
+//  return a < b;
+//}
+
 /// given a scope (a subGraph, e.g. the full KB, or a rule or so), return all literals (defined by degree>0, keys.N=0)
 NodeL getLiteralsOfScope(Graph& KB){
   NodeL state;

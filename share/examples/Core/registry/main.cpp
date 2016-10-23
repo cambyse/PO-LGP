@@ -1,4 +1,4 @@
-#include <Core/registry.h>
+#include <Core/graph.h>
 
 struct NewType{
   int x;
@@ -12,29 +12,29 @@ struct Derived:NewType{
   double y;
 };
 
-REGISTER_TYPE(NewType)
-REGISTER_TYPE(double)
-REGISTER_TYPE_DERIVED(Derived, NewType)
+REGISTER_TYPE(NewType, NewType)
+REGISTER_TYPE(double, double)
+//REGISTER_TYPE_DERIVED(Derived, NewType)
 
 void TEST(Registry){
   cout <<"** REGISTRY:\n" <<registry() <<endl;
 
   Node *it;
   it = reg_findType("NewType");
-  CHECK(it, "could't retrieve type derived from NewType");
+  CHECK(it, "could't retrieve type of NewType");
   cout <<"retrieved Type item: " <<*it <<endl;
 
   it = reg_findType("double");
-  CHECK(it, "could't retrieve type derived from double");
+  CHECK(it, "could't retrieve type of double");
   cout <<"retrieved Type item: " <<*it <<endl;
 
-  it = reg_findType("Derived");
-  CHECK(it, "could't retrieve type derived from Derived");
-  cout <<"retrieved Type item: " <<*it <<endl;
+  //it = reg_findType("Derived");
+  //CHECK(it, "could't retrieve type derived from Derived");
+  //cout <<"retrieved Type item: " <<*it <<endl;
 }
 
 int MAIN(int argc,char** argv){
-  initRegistry();
+  mlr::initCmdLine(argc, argv);
 
   testRegistry();
 

@@ -134,5 +134,5 @@ joint r_gripper_r_finger_tip_joint (r_gripper_r_finger_link r_gripper_r_finger_t
 ## FT sensors
 shape r_ft_sensor (r_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .0356 .02] }
 shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(90 0 1 0)> type=4 color=[0 0 0] size=[.0 .0 .0356 .02] }
-Merge r_wrist_roll_joint{ to=<T t(.0356 0 0)> }
-Merge l_wrist_roll_joint{ to=<T t(.0356 0 0)> }
+Edit r_wrist_roll_joint{ to=<T t(.0356 0 0)> }
+Edit l_wrist_roll_joint{ to=<T t(.0356 0 0)> }

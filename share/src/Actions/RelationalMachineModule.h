@@ -11,7 +11,7 @@ struct RelationalMachineModule : Thread {
   ACCESS(StringA, symbols)
   ACCESS(RelationalMachine, RM)
 
-  Log _log;
+  mlr::LogObject _log;
 
   RelationalMachineModule();
   ~RelationalMachineModule();

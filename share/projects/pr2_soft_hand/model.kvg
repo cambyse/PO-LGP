@@ -20,7 +20,7 @@ shape wrenchDispR(r_wrist_roll_link){ rel=<T t(.25 0 0)> type=5 color=[1 1 0] si
 
 shape mymarker(base_footprint){ type=5 color=[1 1 0] size=[.2 0 0 0]}
 
-#Merge worldTranslationRotation{ type=10 }
+#Edit worldTranslationRotation{ type=10 }
 
 body target{ X=<T t(.5 .0 .7)> type=1 size=[.0 .0 .108 .0375] color=[.3 .9 .1]}
 

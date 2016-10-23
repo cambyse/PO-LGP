@@ -23,6 +23,6 @@ shape endeffC2(l_gripper_l_finger_tip_link){rel=<T t(0.0145 -.015 .02) d(180 0 1
 
 body point1 { X=<T t(0.0 -0.0 -0.0145)>  type=5 size=[.1 .1 .1 .02] color=[0.5 0 0] fixed, }
 
-Merge torso_lift_joint { ctrl_H=3000000 }
-Merge worldTranslationRotation { ctrl_H=3000000 }
+Edit torso_lift_joint { ctrl_H=3000000 }
+Edit worldTranslationRotation { ctrl_H=3000000 }
 

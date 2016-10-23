@@ -1,5 +1,5 @@
 #include <Core/util.h>
-#include <Core/registry.h>
+#include <Core/graph.h>
 #include <math.h>
 #include <iomanip>
 
@@ -69,7 +69,7 @@ void TEST(Timer){
 }
 
 void TEST(Logging){
-  Log _log("Test");
+  mlr::LogObject _log("Test");
   LOG(-1) <<"HALLO";
   LOG(-3) <<"bye";
 //  mlr::log() <<"bla" <<endl;

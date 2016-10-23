@@ -71,7 +71,7 @@ struct SwigSystem {
 //  PointCloudViewer pclv;
 //  AlvarSyncer alvar_syncer;
 
-  Log _log;
+  mlr::LogObject _log;
 
   SwigSystem()
     : controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld), /*camview("modelDepthView"),*/

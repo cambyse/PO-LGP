@@ -3,7 +3,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Core/registry.h>
+#include <Core/graph.h>
 
 typedef struct _GtkWidget GtkWidget;
 
