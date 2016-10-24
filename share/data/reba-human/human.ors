@@ -10,6 +10,20 @@ Merge joint neck_0 { ctrl_H=.1 }
 Merge joint neck_1 { ctrl_H=.1 }
 Merge joint neck_2 { ctrl_H=.1 }
 
+Merge joint left_shoulder_0 { ctrl_H=.5 }
+Merge joint left_shoulder_1 { ctrl_H=.5 }
+Merge joint left_shoulder_2 { ctrl_H=.5 }
+
+Merge joint left_elbow_0 { ctrl_H=.1 }
+Merge joint left_elbow_1 { ctrl_H=.1 }
+
+Merge joint right_shoulder_0 { ctrl_H=.5 }
+Merge joint right_shoulder_1 { ctrl_H=.5 }
+Merge joint right_shoulder_2 { ctrl_H=.5 }
+
+Merge joint right_elbow_0 { ctrl_H=.1 }
+Merge joint right_elbow_1 { ctrl_H=.1 }
+
 shape endeffL(/human/left_wrist){ rel=<T t(0 -.05 0)> type=5 color=[1 0 0] size=[.1 0 0 0] }
 shape endeffR(/human/right_wrist){ rel=<T t(0 -.05 0)> type=5 color=[1 0 0] size=[.1 0 0 0] }
 

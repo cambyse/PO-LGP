@@ -43,24 +43,24 @@ struct RebaMap:TaskMap{
   }
 
   void initCoefficientMap( map<const string, arr>& theMap ){
-    theMap["neck_0"] = ARR(0.45594512, -0.07958066,  1.00000056, 0.01);
-    theMap["neck_1"] = ARR(0.45594512, -0.07958066,  1.00000056, 0.01);
-    theMap["neck_2"] = ARR(0.45594512, -0.07958066,  1.00000056, 0.01);
-    theMap["spine_0"] = ARR(1.82377278,  0.        ,  1.        , 0.01);
-    theMap["spine_1"] = ARR(1.82377278,  0.        ,  1.        , 0.01);
-    theMap["spine_2"] = ARR(1.82377278,  0.        ,  1.        , 0.01);
-    theMap["right_knee"] = ARR(1.82377278,  0.        ,  1.        , 0.01);
-    theMap["left_knee"] = ARR(1.82377278,  0.        ,  1.        , 0.01);
-    theMap["right_shoulder_0"] = ARR(1.21587174, -3.81974618,  4.        , 0.01);
-    theMap["right_shoulder_1"] = ARR(1.21584852,  0.        ,  1.        , 0.01);
-    theMap["left_shoulder_0"] = ARR(1.21587174, -3.81974618,  4.        , 0.01);
-    theMap["left_shoulder_1"] = ARR(1.21584852,  0.        ,  1.        , 0.01);
-    theMap["right_elbow_0"] = ARR(1.36783611, -2.3873254 ,  2.        , 0.01);
-    theMap["left_elbow_0"] = ARR(1.36783611,  2.3873254 ,  2.        , 0.01);
-    theMap["right_wrist_0"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
-    theMap["right_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
-    theMap["left_wrist_0"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
-    theMap["left_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.01);
+    theMap["neck_0"] = ARR(0.45594512, -0.07958066,  1.00000056, 0.1);
+    theMap["neck_1"] = ARR(0.45594512, -0.07958066,  1.00000056, 0.1);
+    theMap["neck_2"] = ARR(0.45594512, -0.07958066,  1.00000056, 0.1);
+    theMap["spine_0"] = ARR(1.82377278,  0.        ,  1.        , 0.1);
+    theMap["spine_1"] = ARR(1.82377278,  0.        ,  1.        , 0.1);
+    theMap["spine_2"] = ARR(1.82377278,  0.        ,  1.        , 0.1);
+    theMap["right_knee"] = ARR(1.82377278,  0.        ,  1.        , 0.1);
+    theMap["left_knee"] = ARR(1.82377278,  0.        ,  1.        , 0.1);
+    theMap["right_shoulder_0"] = ARR(1.21587174, -3.81974618,  4.        , 0.0033);
+    theMap["right_shoulder_1"] = ARR(1.21584852,  0.        ,  1.        , 0.0033);
+    theMap["left_shoulder_0"] = ARR(1.21587174, -3.81974618,  4.        , 0.0033);
+    theMap["left_shoulder_1"] = ARR(1.21584852,  0.        ,  1.        , 0.0033);
+    theMap["right_elbow_0"] = ARR(1.36783611, -2.3873254 ,  2.        , 0.0033);
+    theMap["left_elbow_0"] = ARR(1.36783611,  2.3873254 ,  2.        , 0.0033);
+    theMap["right_wrist_0"] = ARR(1.62113894,  0.        ,  1.        , 0.0033);
+    theMap["right_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.0033);
+    theMap["left_wrist_0"] = ARR(1.62113894,  0.        ,  1.        , 0.0033);
+    theMap["left_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.0033);
   }
 
   virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){
@@ -101,8 +101,8 @@ void moveReba(){
 #if 0
   komo.setPosition(1., 1., "endeffL", "target", sumOfSqrTT, NoArr, 1e2);
 #else
-  komo.setTask(.3, .5, new HandPositionMap(), sumOfSqrTT, ARR(.5,.5,1.3), 1e2);
-  komo.setTask(.8, 1., new HandPositionMap(), sumOfSqrTT, ARR(.8,0.,1.3), 1e2);
+  komo.setTask(.3, .5, new HandPositionMap(), sumOfSqrTT, ARR(.2,-.3,1.3), 1e2);
+  // komo.setTask(.8, 1., new HandPositionMap(), sumOfSqrTT, ARR(.8,0.,1.3), 1e2);
   komo.setTask(0., 1., new RebaMap(), sumOfSqrTT, NoArr, 1e2);
 
   komo.setTask(.3, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
@@ -111,7 +111,7 @@ void moveReba(){
 
   komo.reset();
   komo.run();
-//  komo.checkGradients();
+ // komo.checkGradients();
 
   Graph result = komo.getReport(true);
 
