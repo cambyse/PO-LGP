@@ -102,17 +102,24 @@ void moveReba(){
 
   //  komo.setHoming(-1., -1., 1e-1);
   //  komo.setSquaredQVelocities();
+  komo.setSquaredFixJointVelocities();
+  komo.setSquaredFixSwitchVelocities();
   komo.setSquaredQAccelerations();
 #if 0
   komo.setPosition(1., 1., "endeffL", "target", sumOfSqrTT, NoArr, 1e2);
 #else
 //  komo.setTask(.3, .5, new HandPositionMap(), sumOfSqrTT, ARR(.5,.5,1.3), 1e2);
 //  komo.setTask(.8, 1., new HandPositionMap(), sumOfSqrTT, ARR(.8,0.,1.3), 1e2);
-  komo.setTask(.8, 1., new TaskMap_Default(posDiffTMT, komo.world, "/human/endeffR", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
+//  komo.setTask(.8, 1., new TaskMap_Default(posDiffTMT, komo.world, "/human/endeffR", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
 
-  komo.setTask(0., 1., new RebaMap(), sumOfSqrTT, NoArr, 1e2);
+//  komo.setTask(0., 1., new RebaMap(), sumOfSqrTT, NoArr, 1e2);
 
-  komo.setTask(.3, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
+//  komo.setTask(.3, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
+
+
+  komo.setGrasp(1., "baxterR", "screwdriverHandle", true);
+
+//  komo.setPlace(2., "baxterR", "screwdriverHandle", "tableC", true);
 #endif
   komo.setSlowAround(1., .1, 1e3);
 
