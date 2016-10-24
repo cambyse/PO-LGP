@@ -119,7 +119,7 @@ void moveReba(){
 
   komo.setGrasp(1., "baxterR", "screwdriverHandle", true);
 
-//  komo.setPlace(2., "baxterR", "screwdriverHandle", "tableC", true);
+  komo.setPlace(1.8, "baxterR", "screwdriverHandle", "tableC", true);
 #endif
   komo.setSlowAround(1., .1, 1e3);
 
