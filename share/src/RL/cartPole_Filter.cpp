@@ -72,12 +72,12 @@ void cartPole_Filter::computeFeature_PO()
     uint dim1 = observationHistory.d1;
     uint startRow;
 
-    if (dim0 >= windowSize)
+    if (dim0 >= windowSize) //if enough observations available, retain only the last 5
     {
         startRow = dim0 - windowSize;
         currentFeature = observationHistory.sub(startRow, -1, 0, -1);
     }
-    else
+    else //if not enough observations available, complete the rest with zeros
     {
         currentFeature = zeros(windowSize, dim1);
         currentFeature.refRange(0, dim0-1) = observationHistory;
