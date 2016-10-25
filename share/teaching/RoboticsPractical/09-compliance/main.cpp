@@ -2,7 +2,7 @@
 #include "../interface/myBaxter.h"
 #include <Control/TaskControllerModule.h>
 
-#include <Media/audio.h>
+//#include <Media/audio.h>
 
 // =================================================================================================
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv){
 
 
     // Send it 0 torques for 1 second
-    sound().addNote(12, .5, 0.);
+  //  sound().addNote(12, .5, 0.);
 //    TaskControllerModule& TCM = baxter.getTaskControllerModule();
 //    TCM.oldfashioned = false;
 //    CtrlMsg refs;
@@ -62,7 +62,7 @@ int main(int argc, char** argv){
       mlr::wait(0.005);
     }
 //    TCM.oldfashioned = true;
-    sound().reset();
+    //sound().reset();
     baxter.enablePosControl();
 
     auto home = baxter.task(GRAPH(" map=qItself PD=[.5, 1., .2, 10.]"));
