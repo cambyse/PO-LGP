@@ -73,7 +73,7 @@ void learnModel() {
   joints.append(gc.rightJoints);
   joints.append(gc.headJoints);
   
-  cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), joints) << endl;
+  //cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), joints) << endl;
   //gc.learnFTModel();
   
   //cout << gc.compensateFTL(gc.world.getJointState()) << endl;
@@ -107,9 +107,9 @@ void testFTCompensation() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   //sampleData();
-  //learnModel();
+  learnModel();
   //testCollision();
   //testOnRobot();
-  testFTCompensation();
+  //testFTCompensation();
   return 0;
 }

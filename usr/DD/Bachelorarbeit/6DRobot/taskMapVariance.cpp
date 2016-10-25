@@ -128,6 +128,31 @@ TaskMapGPGradient::TaskMapGPGradient(GaussianProcess& gp, const ors::KinematicWo
   , positionMap(posTMT, world, shapeName) {}
 
 
+void TaskMapGPGradientThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr pos, JacPos;
+  positionMap.phi(pos, JacPos, G);
+  arr grad, hess;
+  gp.writeAccess();
+  gp().gradient(grad, pos);
+  gp().hessianPos(hess, pos);
+  gp.deAccess();
+
+  arr Jac, ori;
+  taskMap.phi(ori, Jac, G);
+
+  y = ~ori*grad - ARR(length(ori)*length(grad));
+
+  if(&J) {
+    J = ~ori*hess*JacPos+~grad*Jac - length(grad)/length(ori)*~ori*Jac-length(ori)/length(grad)*~grad*hess*JacPos;
+  }
+}
+
+TaskMapGPGradientThread::TaskMapGPGradientThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector)
+  : gp(gp)
+  , taskMap(vecTMT, world, shapeName, vector)
+  , positionMap(posTMT, world, shapeName) {}
+
+
 void TaskMapGP::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   arr pos, JPos;
   taskMap.phi(pos, JPos, G);
@@ -176,5 +201,47 @@ void TaskMapGP1D::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
 }
 
 TaskMapGP1D::TaskMapGP1D(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName)
+  : gp(gp)
+  , positionMap(posTMT, world, shapeName) {}
+
+
+void TaskMapGP1DThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr pos, JPos;
+  positionMap.phi(pos, JPos, G);
+  arr grad, H;
+  gp.set()->gradient(grad, pos);
+  y = ~grad/length(grad)*pos;
+  if(&J) {
+    gp.set()->hessianPos(H, pos);
+    //J = ~grad*JPos;
+    double l = length(grad);
+    J = ~grad/l*JPos + ~pos*(H*JPos/l - grad*~grad*H*JPos/l/l/l);
+  }
+}
+
+TaskMapGP1DThread::TaskMapGP1DThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName)
+  : gp(gp)
+  , positionMap(posTMT, world, shapeName) {}
+
+
+void TaskMapGPVariance1DThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+  arr actPos, JPos;
+  positionMap.phi(actPos, JPos, G);
+  arr gradGP, gradV;
+  gp.writeAccess();
+  gp().gradient(gradGP, actPos);
+  gp().gradientV(gradV, actPos);
+  gp.deAccess();
+  gradV.reshapeFlat();
+  arr gradVT = gradV - (~gradGP*gradV).first()*gradGP/length(gradGP)/length(gradGP);
+  gradVT = gradVT/length(gradVT);
+  y = ARR(0.0);
+  if(&J) {
+    J = ~gradVT*JPos;
+  }
+
+}
+
+TaskMapGPVariance1DThread::TaskMapGPVariance1DThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , positionMap(posTMT, world, shapeName) {}

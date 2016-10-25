@@ -51,6 +51,9 @@ Maybe plan:
 -- next the system processes (perception threads)
 -- the activities we already have
 
+(danny) Implemented many usefull things now. At the moment, Roopi handles everything, i.e. Roopi::modifyCtrlTaskGains etc.
+Is it better to shift this to the CtrlTasks itself?
+
 */
 //==============================================================================
 
@@ -319,7 +322,26 @@ bool Roopi::waitForConv(const CtrlTaskL& cts, double maxTime, double tolerance) 
     tcm()->ctrlTasks.deAccess();
     if(allConv) return true;
     double actTime = mlr::timerRead() - startTime;
-    if(maxTime != -1 && actTime > maxTime) {
+    if(maxTime > -1.0 && actTime > maxTime) {
+      cout << "not converged, timeout reached" << endl;
+      return false;
+    }
+    mlr::wait(0.1);
+  }
+  return false;
+}
+
+bool Roopi::waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime, double tolerance) {
+  double startTime = mlr::timerRead();
+  while(true) {
+    bool conv = false;
+    tcm()->ctrlTasks.readAccess();
+    if((ct->y.N && maxDiff(ct->y, desState) < tolerance)) conv = true;
+    cout << ct->error() << endl;
+    tcm()->ctrlTasks.deAccess();
+    if(conv) return true;
+    double actTime = mlr::timerRead() - startTime;
+    if(maxTime > -1.0 && actTime > maxTime) {
       cout << "not converged, timeout reached" << endl;
       return false;
     }
@@ -348,7 +370,33 @@ TaskControllerModule* Roopi::tcm() {
   return &s->tcm;
 }
 
+void Roopi::interpolateToReferenceThread(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
+
+}
+
+TaskReferenceInterpolAct*Roopi::createTaskReferenceInterpolAct(const char* name, CtrlTask* task) {
+  return new TaskReferenceInterpolAct(*this, name, task);
+}
+
+void Roopi::interpolateToReference(TaskReferenceInterpolAct* t, double executionTime, const arr& reference, const arr& start) {
+  t->startExecution(executionTime, reference, start);
+}
+
+bool Roopi::waitForFinishedTaskReferenceInterpolAct(TaskReferenceInterpolAct* t, double maxTime) {
+  double startTime = mlr::timerRead();
+  while(true) {
+    mlr::wait(0.1);
+    if(t->isIdle() || t->isClosed()) break;
+    double actTime = mlr::timerRead() - startTime;
+    if(maxTime > -1.0 && maxTime > actTime) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void Roopi::interpolateToReference(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
+  cout << "TODO MAKE THIS THREAD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
   cout << "start interpolating to target" << endl;
   arr initialRef;
   if(&start) {
@@ -365,7 +413,7 @@ void Roopi::interpolateToReference(CtrlTask* task, double executionTime, const a
       cout << "finished interpolating to target" << endl;
       break;
     }
-    arr actRef = initialRef + (reference - initialRef)*s;
+    arr actRef = initialRef + (reference - initialRef)*0.5*(1.0-cos(MLR_PI*s)); //TODO is this a good motion profile? Robotics lecture says yes :-)
     modifyCtrlTaskReference(task, actRef);
   }
   modifyCtrlTaskReference(task, reference);
@@ -604,3 +652,57 @@ void Roopi::addCtrlTasks(CtrlTaskL cts) {
   tcm()->ctrlTasks.set()->append(cts);
 }
 #endif
+
+
+
+
+
+
+//==============================================================================
+
+
+TaskReferenceInterpolAct::TaskReferenceInterpolAct(Roopi& roopi, const char* name, CtrlTask* task)
+  : Module(name, 0.01)
+  , roopi(roopi)
+  , task(task) {
+  this->verbose = false;
+}
+
+TaskReferenceInterpolAct::~TaskReferenceInterpolAct() {
+  threadClose();
+}
+
+void TaskReferenceInterpolAct::startExecution(double executionTime, const arr& reference, const arr& startState) {
+  this->executionTime = executionTime;
+  this->reference = reference;
+  if(&startState) {
+    initialRef = startState;
+  } else {
+    initialRef = roopi.getTaskValue(task);
+  }
+  startTime = mlr::timerRead();
+  this->threadLoop();
+}
+
+void TaskReferenceInterpolAct::stopExecution() {
+  this->threadStop();
+}
+
+void TaskReferenceInterpolAct::open() {}
+
+void TaskReferenceInterpolAct::step() {
+  double time = mlr::timerRead() - startTime;
+  double s = time/executionTime;
+  if(s > 1.0) {
+    //cout << "finished" << endl;
+    roopi.modifyCtrlTaskReference(task, reference);
+    s = 1.0;
+    this->state.setValue(tsCLOSE); //TODO I have no glue if this is save :-)
+  }
+  arr actRef = initialRef + (reference - initialRef)*0.5*(1.0-cos(MLR_PI*s)); //TODO is this a good motion profile? Robotics lecture says yes :-)
+  roopi.modifyCtrlTaskReference(task, actRef);
+}
+
+void TaskReferenceInterpolAct::close() {
+  //delete this;
+}

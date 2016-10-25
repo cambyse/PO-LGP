@@ -1,8 +1,21 @@
 body world {  }
-body endeff { type=1 size=[0 0 .5 0.1] contact, mass=1}
+body a {type = 1, size=[0 0 .1 0.02], mass = 1}
+body b {type = 1, size=[0 0 .1 0.02], mass = 1}
+body c {type = 1, size=[0 0 .1 0.02], mass = 1}
+body d {type = 1, size=[0 0 .1 0.02], mass = 1}
+body e {type = 1, size=[0 0 .1 0.02], mass = 1}
+body endeff { type=1 size=[0 0 .5 0.02] contact, mass=1}
 
-shape endeff(endeff){  type=5 color=[1 0 0] size=[1.5 0 0 0]}
+shape endeffR(endeff){  type=2 color=[1 0 0] size=[0 0 0 0.02] contact}
+shape endeffRFrame(endeff){  type=5 color=[1 0 0] size=[0.1 0 0 0.0]}
 
 #joint endeffJoint (world endeff) {type = 14}
 #joint endeffJoint (world endeff) {type = 7}
-joint endeffJoint (world endeff) {type = 5}
+#joint endeffJoint (world endeff) {type = 5}
+
+joint (world a) {type = 3}
+joint (a b) {type = 4}
+joint (b c) {type = 5}
+joint (c d) {type = 0}
+joint (d e) {type = 1}
+joint (e endeff) {type = 2}

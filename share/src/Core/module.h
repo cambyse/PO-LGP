@@ -111,6 +111,8 @@ template<class T>
 struct Access_typed:Access{
   Variable<T> *v;
 
+  int last_revisionThisSpecificAccess;
+
 //  Access_typed(const Access_typed<T>& acc) = delete;
 
   /// A "copy" of acc: An access to the same variable as acc refers to, but now for '_module'
@@ -149,9 +151,10 @@ struct Access_typed:Access{
   ~Access_typed(){ delete type;  delete registryNode; }
   T& operator()(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return v->data; }
   T* operator->(){ CHECK(v && var,"This Access has not been associated to any Variable"); CHECK(v->rwlock.isLocked(),"");  return &(v->data); }
-  typename Variable<T>::ReadToken get(){ CHECK(v && var,"");  return v->get((Thread*)thread); } ///< read access to the variable's data
+  typename Variable<T>::ReadToken get(){ CHECK(v && var,""); last_revisionThisSpecificAccess = v->revisionNumber(); return v->get((Thread*)thread); } ///< read access to the variable's data
   typename Variable<T>::WriteToken set(){ CHECK(v && var,"");  return v->set((Thread*)thread); } ///< write access to the variable's data
   typename Variable<T>::WriteToken set(const double& dataTime){ CHECK(v && var,"");  return v->set(dataTime, (Thread*)thread); } ///< write access to the variable's data
+  bool hasNewRevisionThisAccess() { return v->revisionNumber() > last_revisionThisSpecificAccess; }
 };
 
 inline bool operator==(const Access&,const Access&){ return false; }

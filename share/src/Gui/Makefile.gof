@@ -8,6 +8,7 @@ GTK = 1
 #GTKGL = 1
 FREEGLUT = 1
 GRAPHVIZ = 1
+GL2PS = 1
 
 DEPEND = Core Geo
 

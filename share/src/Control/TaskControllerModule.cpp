@@ -28,7 +28,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWor
   , verbose(false)
   , useDynSim(true)
   , compensateGravity(false)
-  , compensateFTSensors(true)
+  , compensateFTSensors(false)
   , customModelWorld(world)
 {
 
@@ -38,9 +38,10 @@ TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWor
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 
   robot = mlr::getParameter<mlr::String>("robot", _robot);
-  if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  /*if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
   else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
-  else HALT("undefined robot '" <<robot <<"'");
+  else HALT("undefined robot '" <<robot <<"'");*/
+  realWorld = customModelWorld;
   q0 = realWorld.q;
 
   qSign.set()() = zeros(q0.N);
@@ -56,7 +57,7 @@ void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
-  gc = new GravityCompensation(realWorld);
+  //gc = new GravityCompensation(realWorld);
   if(compensateGravity) {  
     //gc->loadBetas();
     gc->learnGCModel();
@@ -71,6 +72,7 @@ void TaskControllerModule::open(){
     modelWorld.set()() = realWorld;
   }
 
+  makeConvexHulls(modelWorld.set()->shapes);
  // modelWorld.set() = realWorld;
   taskController = new TaskController(modelWorld.set()(), false);
 
@@ -245,6 +247,8 @@ void TaskControllerModule::step(){
     ctrlTasks.readAccess();
     modelWorld.writeAccess();
     taskController->tasks = ctrlTasks();
+
+    modelWorld().stepSwift();
 
 #if 0
     arr u_bias, Kp, Kd;

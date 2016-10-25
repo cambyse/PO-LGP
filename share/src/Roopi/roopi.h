@@ -2,12 +2,14 @@
 
 #include <Core/array.h>
 #include <Core/graph.h>
+#include <Core/module.h>
 #include <Motion/taskMaps.h>
 #include <Control/taskController.h>
 
 
 struct CtrlTask;
 struct Roopi_Path;
+struct TaskReferenceInterpolAct;
 typedef mlr::Array<CtrlTask*> CtrlTaskL;
 //struct RelationalMachineModule;
 
@@ -60,6 +62,9 @@ struct Roopi {
   bool waitForConv(CtrlTask* ct, double maxTime = -1, double tolerance = 1e-2);
   bool waitForConv(const CtrlTaskL& cts, double maxTime = -1, double tolerance = 1e-2);
 
+  /// wait for a CtrlTask to be at a specific state;
+  bool waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime = -1, double tolerance = 1e-2);
+
   // low-level ctr - use is discouraged!!
   struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 //  void addCtrlTask(CtrlTask* ct); ///< adds CtrlTask directly to the taskController
@@ -76,6 +81,12 @@ struct Roopi {
   //                               const char* jShapeName = NULL, const ors::Vector& jVec = NoVector);
 
   //-- trajectory tasks
+
+  void interpolateToReferenceThread(CtrlTask *task, double executionTime, const arr &reference, const arr &start);
+
+  TaskReferenceInterpolAct* createTaskReferenceInterpolAct(const char* name, CtrlTask* task);
+  void interpolateToReference(TaskReferenceInterpolAct* t, double executionTime, const arr& reference, const arr& start = NoArr);
+  bool waitForFinishedTaskReferenceInterpolAct(TaskReferenceInterpolAct* t, double maxTime = -1);
 
   void interpolateToReference(CtrlTask* task, double executionTime, const arr& reference, const arr& start = NoArr);
 
@@ -143,3 +154,27 @@ struct Roopi_Path{
   bool isGood;
   Roopi_Path(Roopi& r, double executionTime) : roopi(r), executionTime(executionTime), isGood(false){}
 };
+
+
+
+//==============================================================================
+
+struct TaskReferenceInterpolAct : Module {
+  Roopi& roopi;
+  CtrlTask* task;
+  double executionTime;
+  arr reference;
+  arr initialRef;
+  double startTime;
+
+  TaskReferenceInterpolAct(Roopi& roopi, const char* name, CtrlTask* task);
+  ~TaskReferenceInterpolAct();
+
+  void startExecution(double executionTime, const arr& reference, const arr& startState = NoArr);
+  void stopExecution();
+
+  void open();
+  void step();
+  void close();
+};
+
