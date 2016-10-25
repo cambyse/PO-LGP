@@ -24,7 +24,7 @@ SetOfDataFiles::~SetOfDataFiles() {
 
 
 LoggingModule::LoggingModule()
-  : Module("LoggingModule", 0.01)
+  : Thread("LoggingModule", 0.01)
   , logFiles("specifyMe") {}
 
 void LoggingModule::open() {

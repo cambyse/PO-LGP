@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Motion/taskMaps.h>
 #include <Control/taskController.h>
 
@@ -159,7 +159,7 @@ struct Roopi_Path{
 
 //==============================================================================
 
-struct TaskReferenceInterpolAct : Module {
+struct TaskReferenceInterpolAct : Thread {
   Roopi& roopi;
   CtrlTask* task;
   double executionTime;

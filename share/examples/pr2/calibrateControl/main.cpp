@@ -107,9 +107,9 @@ void testFTCompensation() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   //sampleData();
-  learnModel();
+  //learnModel();
   //testCollision();
   //testOnRobot();
-  //testFTCompensation();
+  testFTCompensation();
   return 0;
 }

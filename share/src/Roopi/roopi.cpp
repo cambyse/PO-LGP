@@ -1,6 +1,5 @@
 #include "roopi.h"
 
-#include <Core/module.h>
 #include <Algo/spline.h>
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
@@ -396,7 +395,6 @@ bool Roopi::waitForFinishedTaskReferenceInterpolAct(TaskReferenceInterpolAct* t,
 }
 
 void Roopi::interpolateToReference(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
-  cout << "TODO MAKE THIS THREAD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
   cout << "start interpolating to target" << endl;
   arr initialRef;
   if(&start) {
@@ -574,7 +572,7 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   path->path = MP.getInitialization();
 
   optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose)); //TODO options
-  if(verbose) MP.costReport();
+  //if(verbose) MP.reportFull(); //TODO fails
   Graph result = MP.getReport();
   path->path.reshape(MP.T, path->path.N/MP.T);
   path->cost = result.get<double>({"total","sqrCosts"});
@@ -662,7 +660,7 @@ void Roopi::addCtrlTasks(CtrlTaskL cts) {
 
 
 TaskReferenceInterpolAct::TaskReferenceInterpolAct(Roopi& roopi, const char* name, CtrlTask* task)
-  : Module(name, 0.01)
+  : Thread(name, 0.01)
   , roopi(roopi)
   , task(task) {
   this->verbose = false;

@@ -16,7 +16,7 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot/*, ors::KinematicWorld& world*/, ors::KinematicWorld& world)
+TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWorld& world)
   : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -36,12 +36,22 @@ TaskControllerModule::TaskControllerModule(const char* _robot/*, ors::KinematicW
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 
   robot = mlr::getParameter<mlr::String>("robot", _robot);
-  if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
-  else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
-  else{
-    CHECK(&world,"if you don't specify a robot, you need to specify a world!!");
+
+  if(&world) {
     realWorld = world;
+    if(robot != "pr2" && robot != "baxter") {
+      HALT("robot not known!")
+    }
+  } else {
+    if(robot=="pr2") {
+      realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+    } else if(robot=="baxter") {
+      realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
+    } else {
+      HALT("robot not known!")
+    }
   }
+
   q0 = realWorld.q;
 
   qSign.set()() = zeros(q0.N);
@@ -89,7 +99,7 @@ void TaskControllerModule::open(){
   if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
   if(!oldfashioned && !useRos) {
-    dynSim = new RTControllerSimulation(0.01, false, 0.);
+    dynSim = new RTControllerSimulation(realWorld, 0.01, false, 0.);
     dynSim->threadLoop();
   }
 }
@@ -136,7 +146,9 @@ void TaskControllerModule::step(){
 #endif
       qdot_real = zeros(q_real.N);
     }
+
     ctrl_q_real.set() = q_real;
+
     if(succ && q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithReal){

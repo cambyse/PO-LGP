@@ -13,6 +13,7 @@
 void testForceControl() {
   Roopi R;
   arr jointState = FILE("preForceControlJointState");
+  jointState.reshapeFlat();
   if(!R.gotToJointConfiguration(jointState, 5.0,true)) return;
   R.holdPosition();
   CtrlTask* holdLeftArm = R.createCtrlTask("holdLeftArm", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
