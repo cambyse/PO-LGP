@@ -2,7 +2,6 @@
 #include <Core/util.h>
 #include <Geo/geo.h>
 #include <Core/graph.h>
-#include <Core/registry.h>
 #include <sys/stat.h>
 #include <json/json.h>
 #include "jsondata.h"
@@ -220,14 +219,14 @@ void JsonRec::load(const char *recdir) {
             ann.refRange(onat, offat) = 1;
           }
 
-          targetkvg.append<arr*>({"ann"}, {}, &ann);
+          targetkvg.newNode<arr*>({"ann"}, {}, &ann);
           // kvgann.append(STRINGS(target, agent, object), &targetkvg);
-          kvgann.append<Graph*>({target, agent, object}, {}, &targetkvg);
+          kvgann.newNode<Graph*>({target, agent, object}, {}, &targetkvg);
         }
       }
 
-      agent_targets.append<StringA>({target}, {}, a_targets);
-      object_targets.append<StringA>({target}, {}, o_targets);
+      agent_targets.newNode<StringA>({target}, {}, a_targets);
+      object_targets.newNode<StringA>({target}, {}, o_targets);
 
       // ann = new arr(nframes);
       // ann->setZero();

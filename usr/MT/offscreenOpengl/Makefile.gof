@@ -3,4 +3,4 @@ BASE = ../../../share
 LIBS += -lpthread
 GL = 1
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

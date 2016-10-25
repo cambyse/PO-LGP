@@ -31,9 +31,9 @@ k={ a, b=0.2 x="hallo"	  # sub-Graph with 6 items
 
 ## special Item Keys
 
-## merging: after reading all items, the Graph takes all Merge items, deletes the Merge tag, and calls a merge()
+## merging: after reading all items, the Graph takes all Edit items, deletes the Edit tag, and calls a merge()
 ## this example will modify/append the respective attributes of k
-Merge k { y=false, z=otherString, b=7, c=newAttribute }
+Edit k { y=false, z=otherString, b=7, c=newAttribute }
 
 ## including
 Include = 'example_include.kvg'   # first creates a normal FileToken item then opens and includes the file directly

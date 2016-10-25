@@ -1,11 +1,11 @@
-#include <Core/module.h>
+#include <Core/thread.h>
 
-struct IMU_Poller : Module {
+struct IMU_Poller : Thread {
   struct sIMU_Poller *s;
 
   ACCESS(arr, imuData)
 
-  IMU_Poller():Module("IMU_Poller"), s(NULL){}
+  IMU_Poller() : Thread("IMU_Poller"), s(NULL){}
   virtual ~IMU_Poller(){}
 
   void open();
@@ -14,14 +14,14 @@ struct IMU_Poller : Module {
 };
 
 
-struct KalmanFilter : Module{
+struct KalmanFilter : Thread {
   struct sKalmanFilter *s;
 
   ACCESS(arr, imuData)
   ACCESS(arr, encoderData)
   ACCESS(arr, stateEstimate)
 
-  KalmanFilter():Module("KalmanFilter"),s(NULL){}
+  KalmanFilter() : Thread("KalmanFilter"),s(NULL){}
   virtual ~KalmanFilter(){}
 
   void open();
@@ -30,12 +30,12 @@ struct KalmanFilter : Module{
 };
 
 
-struct RacerDisplay : Module{
+struct RacerDisplay : Thread {
   struct sRacerDisplay *s;
 
   ACCESS(arr, stateEstimate)
 
-  RacerDisplay():Module("RacerDisplay"),s(NULL){}
+  RacerDisplay() : Thread("RacerDisplay"),s(NULL){}
   virtual ~RacerDisplay(){}
 
   void open();
@@ -44,13 +44,13 @@ struct RacerDisplay : Module{
 };
 
 
-struct Motors : Module{
+struct Motors : Thread {
   struct sMotors *s;
 
   ACCESS(arr, controls)
   ACCESS(arr, encoderData)
 
-  Motors():Module("Motors"),s(NULL){}
+  Motors() : Thread("Motors"),s(NULL){}
   virtual ~Motors(){}
 
   void open();

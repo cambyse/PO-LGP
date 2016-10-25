@@ -75,6 +75,9 @@ Everything else is equal to ubuntu.
 * Enable Debugging helpers:
   .gdbinit -> git/mlr/tools/qt_mlr_types.py
 
+* Enable std::... pretty printing:
+  Options > Debugger > GDB ... UNCHECK the 'Load system GDB pretty printers'
+
 * set formatting:
   Options > C++ > Import...   git/mlr/tools/qt_coding_style.xml
   

@@ -19,7 +19,7 @@
  *      operational space control.
  *  The ActionMachine should loop (with ~0.01) as a module.
  *  The user methods allow the user to directly modify the ActionList A */
-struct ActionMachine : Module {
+struct ActionMachine : Thread {
   struct sActionMachine *s;
 
   ACCESS(CtrlMsg, ctrl_ref);

@@ -5,4 +5,4 @@ DEPEND = Core Ors Gui Algo Motion Optim System Hardware_gamepad Actions pr2
 PTHREAD = 0
 PHYSX = 0
 ROS = 1
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

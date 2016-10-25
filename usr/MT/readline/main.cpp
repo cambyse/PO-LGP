@@ -1,5 +1,4 @@
 #include <Core/graph.h>
-#include <Core/registry.h>
 
 //const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
 const char *filename=NULL;
@@ -49,8 +48,8 @@ void TEST(Init){
 const Graph& rndContainer(const Graph& G){
   const Graph *g=&G;
   while(rnd.uni()<.8){
-    if(!g->isNodeOfParentGraph) break;
-    g = &g->isNodeOfParentGraph->container;
+    if(!g->isNodeOfGraph) break;
+    g = &g->isNodeOfGraph->container;
   }
   return *g;
 }
@@ -79,10 +78,10 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
+      G.newNode<bool>({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      G.appendSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
+      G.newSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();
@@ -109,7 +108,7 @@ void TEST(Random){
     C->checkConsistency();
     B = A;
     B.checkConsistency();
-    if(C->isNodeOfParentGraph) delete C->isNodeOfParentGraph; else delete C;
+    if(C->isNodeOfGraph) delete C->isNodeOfGraph; else delete C;
     A.checkConsistency();
   }
   A.clear();
@@ -140,11 +139,11 @@ void operator<<(ostream& os, Something& s){ os <<s.x; }
 //the following 2 lines are optional: they enable naming the type and typed reading from file
 void operator>>(istream& is, Something& s){ is >>s.x; }
 bool operator==(const Something&, const Something&){ return false; }
-REGISTER_TYPE(Something)
+REGISTER_TYPE(Something, Something)
 
 void TEST(Manual){
   Graph G;
-  G.append({"hallo"}, {}, new Something(3), true);
+  G.newNode({"hallo"}, {}, new Something(3), true);
   cout <<G <<endl;
 }
 

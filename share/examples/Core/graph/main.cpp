@@ -1,5 +1,4 @@
 #include <Core/graph.h>
-#include <Core/registry.h>
 
 //const char *filename="/home/mtoussai/git/3rdHand/documents/USTT/14-meeting3TUD/box.kvg";
 const char *filename=NULL;
@@ -52,8 +51,8 @@ void TEST(Init){
 const Graph& rndContainer(const Graph& G){
   const Graph *g=&G;
   while(rnd.uni()<.8){
-    if(!g->isNodeOfParentGraph) break;
-    g = &g->isNodeOfParentGraph->container;
+    if(!g->isNodeOfGraph) break;
+    g = &g->isNodeOfGraph->container;
   }
   return *g;
 }
@@ -82,10 +81,10 @@ NodeL rndParents(const Graph& G){
 void rndModify(Graph& G){
   switch(rnd(4)){
     case 0://add bool item
-      new Node_typed<bool>(G, {mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
+      G.newNode<bool>({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G), true);
       break;
     case 1://add Subgraph item
-      G.appendSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
+      G.newSubgraph({mlr::String().setRandom(), mlr::String().setRandom()}, rndParents(G));
       break;
     case 2://delete item
       if(G.N) delete G.rndElem();
@@ -102,18 +101,21 @@ void rndModify(Graph& G){
 void TEST(Random){
   Graph A,B;
 
+  ArrayG<int> Ax(A);
+
   for(uint k=0;k<10;k++){
     rndModify(rndSubgraph(A));
-    Graph& C = rndSubgraph(A).appendSubgraph({}, {})->value;
+    Graph& C = rndSubgraph(A).newSubgraph({}, {})->value;
 
-//    cout <<"---" <<endl <<A <<endl;
+    cout <<"---" <<endl <<A <<endl <<Ax <<endl;
 
     A.checkConsistency();
     C.checkConsistency();
     B = A;
     B.checkConsistency();
-    delete C.isNodeOfParentGraph;
+    delete C.isNodeOfGraph;
     A.checkConsistency();
+
   }
   A.clear();
   A.checkConsistency();
@@ -143,11 +145,11 @@ void operator<<(ostream& os, const Something& s){ os <<s.x; }
 //the following 2 lines are optional: they enable naming the type and typed reading from file
 void operator>>(istream& is, Something& s){ is >>s.x; }
 bool operator==(const Something&, const Something&){ return false; }
-REGISTER_TYPE(Something)
+REGISTER_TYPE(Something, Something)
 
 void TEST(Manual){
   Graph G;
-  G.append<Something>({"hallo"}, {}, Something(3));
+  G.newNode<Something>({"hallo"}, {}, Something(3));
   cout <<G <<endl;
 }
 
@@ -159,12 +161,12 @@ int MAIN(int argc, char** argv){
 
   if(argc>=2) filename=argv[1];
 
-//  testRandom();
+  testRandom();
 //  testRead();
 //  testInit();
 //  testDot();
 
-  testManual();
+//  testManual();
 //  if(!filename) testManual();
 
   return 0;

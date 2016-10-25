@@ -18,4 +18,4 @@ LPATHS += $(BASE)/../../../rosbuild_ws/sandbox/articulation/articulation_models/
 
 LIBS += -larticulation_models
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

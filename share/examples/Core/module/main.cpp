@@ -1,6 +1,6 @@
 //#include <System/engine.h>
 #include <Gui/graphview.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 //NOTE: ComputeSum does not need to be included when using registry only!
 #include "ComputeSum_Module.h"

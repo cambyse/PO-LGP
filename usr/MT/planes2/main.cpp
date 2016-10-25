@@ -110,13 +110,13 @@ double delta_E_fuse(Segment& a, Segment& b){
 
 template<class V, class E> void makeGridGraph(Graph& G, uint h, uint w){
   for(uint i=0;i<h;i++) for(uint j=0;j<w;j++){
-    new Node_typed<Segment>(G, {STRING(i<<'_'<<j)}, {}, new V(), true);
+    G.newNode<Segment>({STRING(i<<'_'<<j)}, {}, new V(), true);
   }
   NodeL verts = G.list();
   verts.reshape(h,w);
   for(uint i=0;i<h;i++) for(uint j=0;j<w;j++){
-    if(i) new Node_typed<E>(G, {}, {verts(i-1,j), verts(i,j)}, new E(), true);
-    if(j) new Node_typed<E>(G, {}, {verts(i,j-1), verts(i,j)}, new E(), true);
+    if(i) G.newNode<E>({}, {verts(i-1,j), verts(i,j)}, new E(), true);
+    if(j) G.newNode<E>({}, {verts(i,j-1), verts(i,j)}, new E(), true);
   }
 }
 
@@ -144,7 +144,7 @@ void fuse(Graph& S, Node *ita, Node *itb){
     uint nbc = S.getEdge(itb,itc)->get<uint>();
     Node *ea=S.getEdge(ita,itc);
     if(ea) ea->get<uint>() += nbc;
-    else new Node_typed<uint>(S, {}, {ita, itc}, new uint(nbc), true);
+    else S.newNode<uint>({}, {ita, itc}, new uint(nbc), true);
   }
   while(itb->parentOf.N) delete itb->parentOf.last();
   delete itb;

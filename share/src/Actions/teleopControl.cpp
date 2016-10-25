@@ -5,7 +5,7 @@
 //===========================================================================
 
 TeleopControlActivity::TeleopControlActivity()
-  : Module("TeleopControlActivity", 0.01), taskController(NULL), t2t(NULL){
+  : Thread("TeleopControlActivity", 0.01), taskController(NULL), t2t(NULL){
   taskController = getThread<TaskControllerModule>("TaskControllerModule");
   CHECK(taskController,"that didn't work");
 }

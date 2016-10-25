@@ -1,12 +1,27 @@
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Gui/opengl.h>
 #include "ors.h"
 
 //===========================================================================
 
-struct OrsViewer : Module{
+struct OrsViewer : Thread {
   Access_typed<ors::KinematicWorld> modelWorld;
   //-- outputs
   Access_typed<byteA> modelCameraView;
@@ -16,12 +31,12 @@ struct OrsViewer : Module{
   bool computeCameraView;
 
   OrsViewer(const char* varname="modelWorld", bool computeCameraView=false)
-    : Module("OrsViewer", .2),
+    : Thread("OrsViewer", .2),
       modelWorld(this, varname, false),
       modelCameraView(this, "modelCameraView"),
       modelDepthView(this, "modelDepthView"),
       computeCameraView(computeCameraView){}
-  ~OrsViewer(){}
+  ~OrsViewer(){ threadClose(); }
   void open();
   void step();
   void close() {}
@@ -29,12 +44,13 @@ struct OrsViewer : Module{
 
 //===========================================================================
 
-struct OrsPathViewer : Module{
+struct OrsPathViewer : Thread {
   Access_typed<WorldL> configurations;
   //-- internal (private)
   ors::KinematicWorld copy;
   uint t;
   int tprefix;
+  bool writeToFiles;
 
   void setConfigurations(const WorldL& cs){
     configurations.writeAccess();
@@ -47,10 +63,10 @@ struct OrsPathViewer : Module{
   }
 
   OrsPathViewer(const char* varname, double beatIntervalSec=.2, int tprefix=0)
-    : Module("OrsPathViewer", beatIntervalSec),
+    : Thread("OrsPathViewer", beatIntervalSec),
       configurations(this, varname, true),
-      tprefix(tprefix){}
-  ~OrsPathViewer(){}
+      tprefix(tprefix), writeToFiles(false){}
+  ~OrsPathViewer(){ threadClose(); }
   void open();
   void step();
   void close() {}
@@ -58,14 +74,14 @@ struct OrsPathViewer : Module{
 
 //===========================================================================
 
-struct OrsPoseViewer : Module{
+struct OrsPoseViewer : Thread {
   mlr::Array<Access_typed<arr>*> poses; ///< poses to be watched
   //-- internal (private)
   OpenGL gl;
   WorldL copies;
 
   OrsPoseViewer(const StringA& poseVarNames, ors::KinematicWorld& world, double beatIntervalSec=.2)
-    : Module("OrsPoseViewer", beatIntervalSec){
+    : Thread("OrsPoseViewer", beatIntervalSec){
     for(const String& varname: poseVarNames){
       poses.append( new Access_typed<arr>(this, varname, true) );
       copies.append( new ors::KinematicWorld() );
@@ -81,13 +97,13 @@ struct OrsPoseViewer : Module{
 
 //===========================================================================
 
-struct ComputeCameraView:Module{
+struct ComputeCameraView : Thread {
   Access_typed<ors::KinematicWorld> modelWorld;
   Access_typed<byteA> cameraView;
   OpenGL gl;
   uint skipFrames, frame;
   ComputeCameraView(uint skipFrames=0)
-    : Module("OrsViewer"),
+    : Thread("OrsViewer"),
       modelWorld(this, "modelWorld", true),
       cameraView(this, "cameraView"),
       skipFrames(skipFrames), frame(0){}

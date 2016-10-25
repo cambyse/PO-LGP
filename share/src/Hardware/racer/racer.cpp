@@ -3,7 +3,7 @@
 #include <Geo/geo.h>
 #include <Gui/opengl.h>
 
-void drawEnv(void*);
+void glStandardScene(void*);
 
 Racer::Racer():dynamicsFct(*this),observationFct(*this),_gl(NULL){
   q.resize(2).setZero();
@@ -150,9 +150,10 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   //3-dimensional observation
   arr acc = ARR(0,g);
   acc += (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot);
-  y = c1 * R * acc; //2D: accelerations
-  y.append(c3 * (q_dot(1)+c4)); //1D: gyro
-  y.append(c5 * (q(0)/r-q(1))); //1D: encoder
+  arr y_acc = c1 * R * acc; //2D: accelerations
+  double y_gyro = c3 * (q_dot(1)+c4); //1D: gyro
+  double y_encoder = c5 * (q(0)/r-q(1)); //1D: encoder
+  y = ARR( y_acc(0), y_acc(1), y_gyro, y_encoder );
 
   if(&C){
     arr acc_dash = q_dot(1) * J_C_ddash * q_dot + J_C_dash * q_ddot;
@@ -208,7 +209,7 @@ void Racer::stepDynamicsAcc(double u_acc){
 OpenGL& Racer::gl(){
   if(!_gl){
     _gl = new OpenGL;
-    _gl->add(drawEnv, this);
+    _gl->add(glStandardScene, this);
     _gl->add(Racer::glStaticDraw, this);
     _gl->camera.setPosition(0., -20., 5.);
     _gl->camera.focus(0, 0, .2);

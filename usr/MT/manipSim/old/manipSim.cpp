@@ -49,7 +49,7 @@ void State::compControllable(){
   for(Node *o:ctrlables){
     bool hasTag=false;
     for(Node *r:o->parentOf) if(r->keys(0)=="controllable"){ hasTag=true; break; }
-    if(!hasTag) G.append<bool>({"controllable"}, {o}, NULL, false);
+    if(!hasTag) G.newNode<bool>({"controllable"}, {o}, NULL, false);
   }
 //  cout <<G <<endl;
 }
@@ -67,7 +67,7 @@ bool State::testAction(const Action& a, bool apply){
       if(!o1->ParentOf()["canGrasp"]) return false;
     }
     applicable = true;
-    if(apply) G.append<bool>({a.p}, {o1,o2}, NULL, false);
+    if(apply) G.newNode<bool>({a.p}, {o1,o2}, NULL, false);
   }
   if(a.a==break_){
     Node *toBeBroken=NULL;

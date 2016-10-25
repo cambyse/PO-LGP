@@ -1,10 +1,10 @@
-#include <Core/module.h>
+#include <Core/thread.h>
 
 struct MyType{
   int i;
 };
 
-struct ComputeSum : Module {
+struct ComputeSum : Thread {
   ACCESS(arr, x);    //input
   ACCESS(double, s); //output
   ACCESS(MyType, i);

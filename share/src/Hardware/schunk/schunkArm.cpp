@@ -28,7 +28,7 @@
 
 //--- emergency shutdown (call signal)
 
-SchunkArm::SchunkArm():Module("SchunkArm"), pDev(NULL), isOpen(false) {
+SchunkArm::SchunkArm() : Thread("SchunkArm"), pDev(NULL), isOpen(false) {
 }
 
 void SchunkArm::open() {

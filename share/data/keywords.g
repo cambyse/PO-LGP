@@ -42,4 +42,6 @@ conv
 ## Syntactic keywords
 QUIT
 WAIT
+INFEASIBLE
+ANY
 Terminate

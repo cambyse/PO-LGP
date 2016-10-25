@@ -8,7 +8,7 @@
 //#endif
 
 // ============================================================================
-struct PDExecutor: Module {
+struct PDExecutor: Thread{
   // calibrated_pose is pos + orientation (quaternion)
   ACCESS(floatA, calibrated_pose_rh);
   ACCESS(floatA, calibrated_pose_lh);

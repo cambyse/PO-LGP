@@ -17,7 +17,7 @@ struct sTaskControllerModule{};
 #endif
 
 TaskControllerModule::TaskControllerModule(const char* _robot)
-  : Module("TaskControllerModule", .01)
+  : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
   , oldfashioned(true)
@@ -117,7 +117,7 @@ void TaskControllerModule::step(){
       }
       qLastReading = q_real;
     }
-    if(robot=="baxter"){
+    if(robot=="baxter" && useRos){
 #ifdef MLR_ROS
       s->jointState.waitForRevisionGreaterThan(20);
       q_real = realWorld.q;
@@ -187,11 +187,11 @@ void TaskControllerModule::step(){
       taskController->setState(q_model, qdot_model);
     }
     if(verbose) taskController->reportCurrentState();
-    modelWorld.deAccess();
-    ctrlTasks.deAccess();
 
     //arr Kp, Kd, k, JCJ;
     //taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+    modelWorld.deAccess();
+    ctrlTasks.deAccess();
 
     //Kp = .01 * JCJ;
     //Kp += .2*diag(ones(Kp.d0));

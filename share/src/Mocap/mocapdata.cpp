@@ -2,14 +2,13 @@
 #include <Core/util.h>
 #include <Geo/geo.h>
 #include <Core/graph.h>
-#include <Core/registry.h>
 #include <json/json.h>
 #include <Ors/ors.h>
 #include "mocapdata.h"
 
 #define ONLY_OBSERVED
 
-#define ENUM_KVG(elem) Target_kvg.append<Target*>({#elem}, {}, new Target(elem));
+#define ENUM_KVG(elem) Target_kvg.newNode<Target*>({#elem}, {}, new Target(elem));
 ENUM_MACRO_CPP(Target)
 
 // =============================================================================
@@ -629,7 +628,7 @@ void MocapRec::appendBam(const char *bam, const arr &data) {
   Node *i = kvg.getNode({"bam", bam});
 
   if(!i)
-    kvg.append<arr>({"bam", bam}, {}, data);
+    kvg.newNode<arr>({"bam", bam}, {}, data);
   // else
   //   i->get<arr>() = data; // replacing
   else
@@ -1338,7 +1337,7 @@ MocapRec &MocapData::rec(const char *recdir) {
         cout << "found at: " << dir << endl;
         MocapRec *mrec = recp->clone();
         mrec->load(dir);
-        kvg.append<MocapRec*>({dir}, {}, mrec);
+        kvg.newNode<MocapRec*>({dir}, {}, mrec);
         return *mrec;
       }
     }

@@ -71,7 +71,7 @@ struct SwigSystem {
 //  PointCloudViewer pclv;
 //  AlvarSyncer alvar_syncer;
 
-  Log _log;
+  mlr::LogObject _log;
 
   SwigSystem()
     : controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld), /*camview("modelDepthView"),*/
@@ -486,9 +486,9 @@ int ActionSwigInterface::defineNewTaskSpaceControlAction(std::string symbolName,
 #else
   S->RM.writeAccess();
 
-  Item *symbol = S->RM().append<bool>(symbolName.c_str(), NULL, false);
+  Item *symbol = S->RM().newNode<bool>(symbolName.c_str(), NULL, false);
   
-  Graph& td = S->RM().appendSubgraph({"Task"}, {symbol})->value;
+  Graph& td = S->RM().newSubgraph({"Task"}, {symbol})->value;
   td = parameters;
   S->RM().checkConsistency();
   //cout <<S->RM() <<endl;
@@ -513,7 +513,7 @@ void ActionSwigInterface::execScript(const char* filename){
   for(Node* n:script){
     if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
-        if(allFactsHaveEqualsInScope(*S->RM.get()->state, n->graph())) break;
+        if(allFactsHaveEqualsInKB(*S->RM.get()->state, n->graph())) break;
         rev=S->RM.waitForRevisionGreaterThan(rev);
       }
     }else{ //interpret as set fact

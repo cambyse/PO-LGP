@@ -1,26 +1,23 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 #pragma once
 
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
+#include <Optim/KOMO_Problem.h>
 #include "taskMap.h"
 
 /* Notes
@@ -43,13 +40,21 @@ struct Task {
 
   Task(TaskMap* m, const TermType& type) : map(*m), type(type), active(true){}
 
-  void setCostSpecs(int fromTime, uint toTime,
+  void setCostSpecs(int fromTime, int toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
   bool isActive(uint t){ return (active && prec.N>t && prec(t)); }
+  void write(std::ostream& os) const{
+    os <<"TASK '" <<name <<"'"
+      <<(active?"":" [inactive]")
+        <<" type=" <<type
+       <<" target=" <<target
+      <<" prec=" <<prec;
+  }
 
   static Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
 };
+stdOutPipe(Task)
 
 
 
@@ -63,11 +68,8 @@ struct MotionProblem : KOrderMarkovFunction{
   WorldL configurations;       ///< copies for each time slice; including kinematic switches; only these are optimized
   bool useSwift;
   
-  /// task cost descriptions
-  mlr::Array<Task*> tasks;
-
-  /// kinematic switches along the motion
-  mlr::Array<ors::KinematicSwitch*> switches;
+  mlr::Array<Task*> tasks; ///< task cost descriptions
+  mlr::Array<ors::KinematicSwitch*> switches;  ///< kinematic switches along the motion
 
   //-- trajectory length and tau
   uint T;       ///< number of time steps
@@ -94,9 +96,15 @@ struct MotionProblem : KOrderMarkovFunction{
   bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);           ///< read a single task from a node-spec
   Task* addTask(const char* name, TaskMap *map, const TermType& termType); ///< manually add a task
 
+  /// ``fix'' a certain time slice to configuration x (especitally final time slices). fix means that all joints become rigid and q zero-dimensional in that time slice
+  void set_fixConfiguration(const arr& x, uint t);
+
   //-- initialization
-  void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!)
+  void setupConfigurations();   ///< this creates the @configurations@, that is, copies the original world T times (after setTiming!) perhaps modified by KINEMATIC SWITCHES
   arr getInitialization();      ///< this reads out the initial state trajectory after 'setupConfigurations'
+
+
+
 
   //-- methods accessed by the optimizers
   void set_x(const arr& x);            ///< set the state trajectory of all configurations
@@ -111,11 +119,11 @@ struct MotionProblem : KOrderMarkovFunction{
   //-- info on the costs
   StringA getPhiNames(uint t);
   void reportFull(bool brief=false, ostream& os=std::cout);
-  void costReport(bool gnuplt=true); ///< also computes the costMatrix
-  Graph getReport();
+  void costReport(bool gnuplt=true);
+  Graph getReport(bool gnuplt=true);
 
   //-- helpers
-  void temporallyAlignKinematicSwitchesInConfiguration(uint t);
+  void temporallyAlignKinematicSwitchesInConfiguration(uint t); //TODO: perhaps remove -> should be done by velocity constraints to ensure correct gradients
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
   /// inverse kinematics problem (which is the special case T=0) returned as a @ConstrainedProblem@
@@ -126,6 +134,22 @@ struct MotionProblem : KOrderMarkovFunction{
     };
   }
   void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
+
+  struct Conv_MotionProblem_KOMO_Problem : KOMO_Problem{
+    MotionProblem& MP;
+    uint dimPhi;
+//    uintA variableDimensions, varDimIntegral;
+//    uintA featureTimes;
+//    TermTypeA featureTypes;
+//    arrA J_KOMO, H_KOMO;
+
+    Conv_MotionProblem_KOMO_Problem(MotionProblem& P) : MP(P){}
+
+
+    virtual uint get_k(){ return MP.k_order; }
+    virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes);
+    virtual void phi(arr& phi, arrA& J, arrA& H, TermTypeA& tt, const arr& x);
+  } komo_problem;
 };
 
 

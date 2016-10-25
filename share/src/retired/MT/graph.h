@@ -16,8 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
 //graph representations
 uintA E; //Nx2 array of edge tuples
 mlr::Array<uintA> del; //array of in-neighbors lists

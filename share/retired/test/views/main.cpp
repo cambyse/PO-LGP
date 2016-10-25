@@ -6,9 +6,9 @@
 
 
 struct ExampleVar:Variable {
-  FIELD(int, i);
-  FIELD(byteA, rgb);
-  FIELD(ors::Mesh, mesh);
+  int i;
+  byteA rgb;
+  ors::Mesh mesh;
   ExampleVar():Variable("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
 };
 

@@ -1,4 +1,4 @@
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Roopi/roopi.h>
 #include <Control/TaskControllerModule.h>
 

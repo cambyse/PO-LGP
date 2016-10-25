@@ -4,4 +4,4 @@ OBJS = main.o ../src/phase_optimization.o ../src/traj_factory.o mb_strategy.o mf
 DEPEND = Core Ors Gui Algo Motion Optim System pr2 Hardware_gamepad Actions
 PTHREAD = 0
 PHYSX = 0
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

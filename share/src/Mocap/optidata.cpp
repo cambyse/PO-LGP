@@ -2,7 +2,6 @@
 #include <Core/util.h>
 #include <Geo/geo.h>
 #include <Core/graph.h>
-#include <Core/registry.h>
 #include <sys/stat.h>
 #include <json/json.h>
 #include "optidata.h"
@@ -210,9 +209,9 @@ void OptiRec::load(const char *recdir) {
 
     if(!agent_targets.getNode(pair->keys(0)))
       // agent_targets.append(pair->keys(0), new StringA());
-      agent_targets.append({pair->keys(0)}, {}, StringA());
+      agent_targets.newNode({pair->keys(0)}, {}, StringA());
     if(!object_targets.getNode(pair->keys(0)))
-      object_targets.append({pair->keys(0)}, {}, StringA());
+      object_targets.newNode({pair->keys(0)}, {}, StringA());
     StringA &a_targets = agent_targets.get<StringA>(pair->keys(0));
     StringA &o_targets = object_targets.get<StringA>(pair->keys(0));
     if(!a_targets.contains(pair->keys(1)))
@@ -224,7 +223,7 @@ void OptiRec::load(const char *recdir) {
       to = (uint)lock->graph().get<double>("to");
       ann->refRange(from, to) = 1;
     }
-    pair->graph().append<arr*>({"ann"}, {}, ann);
+    pair->graph().newNode<arr*>({"ann"}, {}, ann);
   }
 }
 

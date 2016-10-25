@@ -14,11 +14,19 @@ struct MyBaxter{
   CtrlTaskL activeTasks;
   ors::KinematicWorld testWorld;
 
-  MyBaxter();
+  MyBaxter(const bool report = false);
   ~MyBaxter();
 
   //-- add & modify tasks
   CtrlTask* task(const Graph& specs);
+  CtrlTask* task(const char* name,
+                 const Graph& specs);
+
+  CtrlTask* task(const char* name,
+                 TaskMap* map,
+                 double decayTime, double dampingRatio, double maxVel, double maxAcc);
+  CtrlTask* task(const char* name,
+                 TaskMap* map);
   CtrlTask* task(const char* name,
                  TaskMap_DefaultType type,
                  const char* iShapeName, const ors::Vector& ivec,
@@ -30,16 +38,22 @@ struct MyBaxter{
 
   //-- wait for & stop tasks
   void stop(const CtrlTaskL& tasks);
+  void stopAll();
   void waitConv(const CtrlTaskL& tasks);
+  bool testConv(const CtrlTaskL& tasks, const double waitSecs=10);
+  bool testRealConv(const CtrlTaskL& tasks, const double waitSecs=10);
 
   //-- get object information
   uint reportPerceptionObjects();
   void reportJointState();
   arr getEfforts();
   arr getJointState();
+  void getState(arr& q, arr& qdot, arr& u);
   double setTestJointState(const arr& q);
+  double updateLockbox(const ors::Transformation& tf);
   void getEquationOfMotion(arr& M, arr& F);
 
+  void setRealWorld(arr& q);
 
   //-- get position closest cluster
   ors::Vector closestCluster();
@@ -53,11 +67,25 @@ struct MyBaxter{
   void publishTorque(const arr& u, const char* prefix="right_");
 
   const ors::KinematicWorld& getKinematicWorld();
+  const ors::KinematicWorld& getModelWorld();
 
   arr getJointLimits();
   double getCollisionScalar();
 
+  void setLimits();
+  void releaseLimits();
+
+  void grip();
+  void grip(const bool grip, const bool sim = false);
+
+  bool isGripping = false;
+
+  CtrlTask* gripTask;
+  //-- inner access
+  struct TaskControllerModule& getTaskControllerModule();
 
   //-- info
   arr q0();
+
+  bool reportState;
 };

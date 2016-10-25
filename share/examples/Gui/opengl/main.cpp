@@ -7,7 +7,7 @@
 
 #include <GL/gl.h>
 #include <GL/glut.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 using namespace std;
 
 

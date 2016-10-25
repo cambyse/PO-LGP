@@ -11,12 +11,12 @@
 #define MLR_module_h
 
 #include <Core/array.h>
-#include <Core/registry.h>
+#include <Core/graph.h>
 #include <Core/thread.h>
 #include <stddef.h>
 
 #ifndef FIELD
-#define FIELD(type, name) \
+#define type name \
   type name; \
   inline int set_##name(const type& _x, Module *p){ \
     writeAccess(p);  name=(type&)_x;  return deAccess(p); } \
@@ -128,7 +128,7 @@ Node* registerNode(T *instance, const char *key1, const char* key2, Node *parent
   NodeL parents;  if(parent1) parents.append(parent1);  if(parent2) parents.append(parent2);
   StringA keys; if(key1) keys.append(mlr::String(key1)); if(key2) keys.append(mlr::String(key2));
   Type *ti = new Type_typed<T,P>(NULL, NULL);
-  return new Node_typed<Type>(keys, parents, ti, &registry());
+  return keys.newNode<Type>(parents, ti, &registry());
 }
 
 
@@ -210,7 +210,7 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     typedef name __MODULE_TYPE__; \
     typedef name##_Base __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
-    name##_Base(): Module(#name) { \
+    name##_Base(): Thread(#name) { \
       reg = registerItem<name, void>((name*)this, "Module", #name, NULL, staticRegistrator.reg); \
     } \
 
@@ -242,7 +242,7 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     typedef name __MODULE_TYPE__; \
     typedef name __MODULE_BASE_TYPE__; \
     inline void name##_forceModuleReg(){ staticRegistrator.force(); } \
-    name(): Module(#name) { \
+    name(): Thread(#name) { \
       reg = registerItem<name, void>(this, "Module", #name, NULL, staticRegistrator.reg); \
     } \
     virtual ~name(){}; \

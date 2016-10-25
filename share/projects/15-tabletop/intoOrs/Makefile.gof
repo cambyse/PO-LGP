@@ -6,4 +6,4 @@ GL = 1
 
 DEPEND =  Core Perception Gui Ors RosCom
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

@@ -10,7 +10,7 @@
 #include <Gui/opengl.h>
 //#include <MT/BinaryBP.h>
 //#include <MT/vision.h>
-#include <Perception/libcolorseg.h>
+#include <Perception/colorseg.h>
 
 #include <Perception/perception.h>
 //#include <hardware/uvccamera.h>

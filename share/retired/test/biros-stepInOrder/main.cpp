@@ -19,7 +19,7 @@
 // VARIBALES
 /** This is just an int */
 struct IntVar : public Variable {
-  FIELD(int, x);
+  int x;
   
   IntVar(const char* name) : Variable(name) {
     reg_x();

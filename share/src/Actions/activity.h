@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/graph.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 //===========================================================================
 
@@ -40,7 +40,7 @@ typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  new Node_typed<Type*>(registry(), {"Activity", key}, {}, new Type_typed<T,void>);
+  registry().newNode<Type*>({"Activity", key}, {}, new Type_typed<T>);
 }
 
 /// create/launch a new activity based on the fact
@@ -49,10 +49,10 @@ Activity* newActivity(Node *fact);
 
 //===========================================================================
 
-struct ActivitySpinnerModule : Module{
+struct ActivitySpinnerModule : Thread {
   ACCESS(ActivityL, A)
 
-  ActivitySpinnerModule() : Module("ActivitySpinnerModule", .01) {}
+  ActivitySpinnerModule() : Thread("ActivitySpinnerModule", .01) {}
 
   void open(){}
   void step(){

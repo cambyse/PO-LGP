@@ -1,5 +1,5 @@
 BASE   = ../../..
--include $(BASE)/gofMake/config.mk
+-include $(BASE)/build/config.mk
 
 MSGFILE = msg/JointState.msg
 ROSDIR = /opt/ros/$(ROS_DISTRO)

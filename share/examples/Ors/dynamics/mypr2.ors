@@ -1,5 +1,5 @@
 Include = '../../../data/pr2_model/pr2_model.ors'
 
-#Merge worldTranslationRotation { type=10 }
+#Edit worldTranslationRotation { type=10 }
 
-Merge torso_lift_joint { type=10 }
+Edit torso_lift_joint { type=10 }

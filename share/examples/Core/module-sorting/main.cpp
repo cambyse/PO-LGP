@@ -1,22 +1,21 @@
-#include <Core/module.h>
-#include <Gui/graphview.h>
+#include <Core/thread.h>
 
 
-struct PairSorter:Module{
+struct PairSorter:Thread{
   Access_typed<int> a;
   Access_typed<int> b;
   PairSorter(const char *a_name, const char* b_name)
-    : Module(STRING("S_"<<a_name<<"_"<<b_name)),
+    : Thread(STRING("S_"<<a_name<<"_"<<b_name)),
       a(this, a_name),
       b(this, b_name){}
-  PairSorter():Module("S"), a(this, "a"), b(this, "b"){}
+  PairSorter():Thread("S"), a(this, "a"), b(this, "b"){}
   void open(){}
   void close(){}
   void step();
 };
 
 
-REGISTER_MODULE(PairSorter)
+//REGISTER_MODULE(PairSorter)
 
 //==============================================================================
 

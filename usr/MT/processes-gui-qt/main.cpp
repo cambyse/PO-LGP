@@ -17,9 +17,9 @@ QApplication *app;
 struct IntVar:public Variable{
   //BIR_VARIABLE;
   
-  FIELD(int, x);
+  int x;
 
-  //BIR_FIELD(bool, mybool);
+  //BIR_bool mybool;
   
   IntVar():Variable("IntVar"){ x=rnd(1000); reg_x(); }
 };

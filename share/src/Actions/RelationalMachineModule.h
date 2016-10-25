@@ -1,17 +1,17 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <FOL/relationalMachine.h>
 #include <Actions/activity.h>
 
-struct RelationalMachineModule : Module{
+struct RelationalMachineModule : Thread {
   ACCESSlisten(mlr::String, effects)
   ACCESS(ActivityL, A)
   ACCESS(mlr::String, state)
   ACCESS(StringA, symbols)
   ACCESS(RelationalMachine, RM)
 
-  Log _log;
+  mlr::LogObject _log;
 
   RelationalMachineModule();
   ~RelationalMachineModule();

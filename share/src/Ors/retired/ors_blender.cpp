@@ -18,8 +18,6 @@
 
 
 
-
-
 /**
  * @file
  * @ingroup group_ors

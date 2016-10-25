@@ -1,10 +1,10 @@
 #ifndef _CELL_H_
 #define _CELL_H_
 
-#include <Core/module.h>
+#include <Core/thread.h>
 
 struct Cell {
-  FIELD(bool, alive);
+  bool alive;
 };
 
 #endif

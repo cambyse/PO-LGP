@@ -33,14 +33,26 @@ void testFolLoadFile(){
 
 
   G.checkConsistency();
-  Node *sub = G.appendSubgraph({}, {});
-  sub->graph().isNodeOfParentGraph = sub;
+  Node *sub = G.newSubgraph({}, {});
+  sub->graph().isNodeOfGraph = sub;
   G.checkConsistency();
-  new Node_typed<bool>(sub->graph(), {}, {s, consts(0)}, true);
+  sub->graph().newNode<bool>({}, {s, consts(0)}, true);
   G.checkConsistency();
-  new Node_typed<bool>(sub->graph(), {}, {s, consts(2)}, true);
+  sub->graph().newNode<bool>({}, {s, consts(2)}, true);
   G.checkConsistency();
 }
+
+//===========================================================================
+
+void testLoadAndDot(const char* filename="fol.g"){
+  Graph G(filename);
+  G.checkConsistency();
+
+  G.writeDot(FILE("z.dot"), false, false, 0);
+  int r = system("dot -Tpdf z.dot > z.pdf; evince z.pdf &");
+  if(r) LOG(-1) <<"could not startup dot or evince";
+}
+
 
 //===========================================================================
 
@@ -206,7 +218,7 @@ void testMonteCarlo(){
       }
 
       //-- test the terminal state
-      if(allFactsHaveEqualsInScope(state, terminal)){
+      if(allFactsHaveEqualsInKB(state, terminal)){
         if(verbose>0) cout <<"************* TERMINAL STATE FOUND (h=" <<h <<") ************" <<endl;
         if(verbose>1){ cout <<"*** FINAL STATE = "; state.write(cout, " "); cout <<endl; }
         break;
@@ -219,6 +231,10 @@ void testMonteCarlo(){
 
 
 int main(int argn, char** argv){
+  if(argn>1){
+    testLoadAndDot(argv[1]);
+    return 0;
+  }
   testFolLoadFile();
   testPolFwdChaining();
   testFolFwdChaining();
@@ -227,4 +243,6 @@ int main(int argn, char** argv){
   testFolFunction();
 //  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
+
+  return 0;
 }

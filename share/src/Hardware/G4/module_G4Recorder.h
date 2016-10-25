@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include "G4.h"
 
-struct G4Recorder: Module {
+struct G4Recorder: Thread{
   ACCESS(floatA, g4_poses);
 
   G4Recorder();

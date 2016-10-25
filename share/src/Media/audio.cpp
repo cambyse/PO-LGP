@@ -31,7 +31,11 @@ void SineSound::changeAmp(uint i, float amp){
   mutex.unlock();
 }
 
-void SineSound::reset(){ notes.clear(); }
+void SineSound::reset(){
+  mutex.lock();
+  notes.clear();
+  mutex.unlock();
+}
 
 void SineSound::clean(){
   mutex.lock();
@@ -124,4 +128,6 @@ Audio::~Audio(){
 
 
 #else //PORTAUDIO
+Audio::Audio(SineSound& S){ MLR_MSG("This is a fake Audio interface"); }
+Audio::~Audio(){}
 #endif

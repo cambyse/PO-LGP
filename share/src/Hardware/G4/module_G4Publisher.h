@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 
 class G4Publisher : public Module{
 public:

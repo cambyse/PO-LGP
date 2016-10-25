@@ -1,6 +1,6 @@
 BASE   = ../..
-NAME   = lib$(shell basename `pwd`)
-OUTPUT := $(BASE)/lib/$(NAME).so
+NAME   = $(shell basename `pwd`)
+OUTPUT = lib$(NAME).so
 
 ROS = 1
 DEPEND = Core Hardware Hardware_gamepad Motion Ors Gui FOL
@@ -12,4 +12,4 @@ CPATHS += $(BASE)/projects/marc_controller_pkg/msg_gen/cpp/include
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

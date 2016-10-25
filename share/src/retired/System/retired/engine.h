@@ -15,12 +15,11 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-
 #ifndef system_engine_h
 #define system_engine_h
 
 #include <Core/thread.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 
 struct Module;
 typedef mlr::Array<Module*> ModuleL;

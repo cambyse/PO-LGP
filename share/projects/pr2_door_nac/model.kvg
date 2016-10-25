@@ -26,6 +26,6 @@ shape cp1(handle) { rel=<T t(0.0 -0.0 -0.0145)>  type=1 size=[.1 .1 .1 .002] col
 shape cp2(handle) { rel=<T t(0.0 -0.0 0.0145)>  type=1 size=[.1 .1 .1 .002] color=[0 .5 0] fixed, }
 
 
-Merge torso_lift_joint { ctrl_H=3000000 }
-Merge worldTranslationRotation { ctrl_H=3000000 }
+Edit torso_lift_joint { ctrl_H=3000000 }
+Edit worldTranslationRotation { ctrl_H=3000000 }
 

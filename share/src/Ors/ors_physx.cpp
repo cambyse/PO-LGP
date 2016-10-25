@@ -1,22 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
-
-
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 /**
@@ -483,8 +477,8 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
       PxRigidBodyExt::updateMassAndInertia(*actor, 1.f);
     }
     actor->setAngularDamping(0.75);
-    actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
-    actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
+//    actor->setLinearVelocity(PxVec3(b->X.vel.x, b->X.vel.y, b->X.vel.z));
+//    actor->setAngularVelocity(PxVec3(b->X.angvel.x, b->X.angvel.y, b->X.angvel.z));
   }
   gScene->addActor(*actor);
   actor->userData = b;
@@ -501,6 +495,7 @@ void PhysXInterface::pullFromPhysx(double tau) {
       PxRigidBody *px_body = (PxRigidBody*) a;
       PxVec3 vel = px_body->getLinearVelocity();
       PxVec3 angvel = px_body->getAngularVelocity();
+#if 0
       ors::Vector newvel(vel[0], vel[1], vel[2]);
       ors::Vector newangvel(angvel[0], angvel[1], angvel[2]);
       ors::Body *b = world.bodies(a_COUNT);
@@ -508,6 +503,7 @@ void PhysXInterface::pullFromPhysx(double tau) {
       b->torque = b->mass * ((b->X.angvel - newangvel)/tau);
       b->X.vel = newvel;
       b->X.angvel = newangvel;
+#endif
     }
   }
   world.calc_fwdPropagateShapeFrames();

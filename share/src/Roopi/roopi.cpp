@@ -1,6 +1,6 @@
 #include "roopi.h"
+#include <Core/thread.h>
 
-#include <Core/module.h>
 #include <Algo/spline.h>
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>

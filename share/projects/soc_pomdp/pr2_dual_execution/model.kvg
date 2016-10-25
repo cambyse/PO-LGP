@@ -26,4 +26,4 @@ shape truetarget(table) { rel=<T t(-0.95 0.35 .12)>  type=1 size=[0 0 0 .02] col
 
 #shape endeff (R_HAND_M_FINGER_KNUCKLE_3){ type=5 rel=<T t(.058 0 .007)> size=[.02 0 0 .1] }
 
-Merge worldTranslationRotation{ type=10 }
+Edit worldTranslationRotation{ type=10 }

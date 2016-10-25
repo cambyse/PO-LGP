@@ -9,13 +9,13 @@
 #undef MAX
 
 struct RgbImage:Variable {
-  FIELD(byteA, rgb);
+  byteA rgb;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=rgb; deAccess(p); }
   RgbImage():Variable("RgbImage") {}
 };
 
 struct GrayImage:Variable {
-  FIELD(byteA, gray);
+  byteA gray;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=gray; deAccess(p); }
   GrayImage():Variable("GrayImage") {}
 };

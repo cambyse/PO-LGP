@@ -1,3 +1,18 @@
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+
 #include "effectivePoseProblem.h"
 #include <Gui/opengl.h>
 #include <Motion/taskMaps.h>
@@ -13,8 +28,8 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
     symbolicState_after(symbolicState_after),
     verbose(verbose){
 
-  CHECK(symbolicState_before.isNodeOfParentGraph && &symbolicState_before.isNodeOfParentGraph->container==&KB,"");
-  CHECK(symbolicState_after.isNodeOfParentGraph && &symbolicState_after.isNodeOfParentGraph->container==&KB,"");
+  CHECK(symbolicState_before.isNodeOfGraph && &symbolicState_before.isNodeOfGraph->container==&KB,"");
+  CHECK(symbolicState_after.isNodeOfGraph && &symbolicState_after.isNodeOfGraph->container==&KB,"");
 
   ConstrainedProblem::operator=(
         [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {

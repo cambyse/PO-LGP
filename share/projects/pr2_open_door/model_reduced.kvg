@@ -3,25 +3,25 @@ Include = '../../data/pr2_model/pr2_modifications.ors'
 
 
 # FIX unused joints
-Merge r_shoulder_pan_joint {type=10 limits =[]}
-Merge r_shoulder_pan_joint {type=10 limits =[]}
-Merge r_shoulder_lift_joint {type=10 limits =[]}
-Merge r_upper_arm_roll_joint {type=10 limits =[]}
-Merge r_elbow_flex_joint {type=10 limits =[]}
-Merge r_forearm_roll_joint {type=10 limits =[]}
-Merge r_wrist_flex_joint {type=10 limits =[]}
-Merge r_wrist_roll_joint {type=10 limits =[]}
-Merge r_gripper_joint {type=10  limits =[]}
-Merge l_gripper_joint {type=10  limits =[]}
-Merge head_pan_joint {type=10 limits =[]}
-Merge head_tilt_joint {type=10 limits =[]}
-Merge laser_tilt_mount_joint {type=10 limits=[]}
-Merge r_gripper_l_finger_joint {type=10 limits=[]}
-#Merge l_gripper_l_finger_joint {type=10 q=.79 limits=[]}
-Merge l_gripper_l_finger_joint {type=10 q=.4 limits=[]}
-Merge l_gripper_r_finger_joint {type=10 q=.4 limits=[]}
-#Merge torso_lift_joint {type=10 limits=[]}
-Merge worldTranslationRotation {type=10 limits=[]}
+Edit r_shoulder_pan_joint {type=10 limits =[]}
+Edit r_shoulder_pan_joint {type=10 limits =[]}
+Edit r_shoulder_lift_joint {type=10 limits =[]}
+Edit r_upper_arm_roll_joint {type=10 limits =[]}
+Edit r_elbow_flex_joint {type=10 limits =[]}
+Edit r_forearm_roll_joint {type=10 limits =[]}
+Edit r_wrist_flex_joint {type=10 limits =[]}
+Edit r_wrist_roll_joint {type=10 limits =[]}
+Edit r_gripper_joint {type=10  limits =[]}
+Edit l_gripper_joint {type=10  limits =[]}
+Edit head_pan_joint {type=10 limits =[]}
+Edit head_tilt_joint {type=10 limits =[]}
+Edit laser_tilt_mount_joint {type=10 limits=[]}
+Edit r_gripper_l_finger_joint {type=10 limits=[]}
+#Edit l_gripper_l_finger_joint {type=10 q=.79 limits=[]}
+Edit l_gripper_l_finger_joint {type=10 q=.4 limits=[]}
+Edit l_gripper_r_finger_joint {type=10 q=.4 limits=[]}
+#Edit torso_lift_joint {type=10 limits=[]}
+Edit worldTranslationRotation {type=10 limits=[]}
 
 shape endeffL(l_wrist_roll_link){ rel=<T t(.18 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 #shape endeffL(l_wrist_roll_link){ rel=<T t(.18 0.025 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}

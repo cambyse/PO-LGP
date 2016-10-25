@@ -7,13 +7,13 @@
 class Particles : public Variable {
   public:
     Particles(const char *name) : Variable(name) {reg_particles();}
-    FIELD(arr, particles);  
+    arr particles;  
 };
 
 class Measurement : public Variable {
   public:
     Measurement(const char *name) : Variable(name) {reg_measurement();}
-    FIELD(arr, measurement);  
+    arr measurement;  
 };
 
 class ParticleFilter :public Process {

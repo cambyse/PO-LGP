@@ -74,15 +74,15 @@ shape l_gripper_motor_accelerometer_link (l_wrist_roll_link){ type=0  mass=0.001
 #joint l_gripper_l_finger_joint (l_wrist_roll_link l_gripper_l_finger_link){ from=<T 0.07691 0.01 0 0.707107 0 -0.707107 0 >  type=0  limits=[ 0 0.548 ]  ctrl_limits=[ 0.5 1000 0]  }
 
 shape l_ft_sensor (l_wrist_roll_link){ rel=<T t(.01 0 0) d(-90 0 1 0) d(70.015 0 0 1)> type=4 color=[1 0 0] size=[.0 .0 .0356 .02] }
-Merge l_wrist_roll_joint{ to=<T t(.0356 0 0)> }
+Edit l_wrist_roll_joint{ to=<T t(.0356 0 0)> }
 shape endeffL(l_wrist_roll_link){ rel=<T t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 
 
-Merge l_shoulder_pan_joint {gains=[200 20] }
-Merge l_shoulder_lift_joint {gains=[160 10] }
-Merge l_upper_arm_roll_joint {gains=[80 4] }
-Merge l_elbow_flex_joint {gains=[70 4] }
-Merge l_forearm_roll_joint {gains=[10 1] }
-Merge l_wrist_flex_joint {gains=[30 1]}
-Merge l_wrist_roll_joint {gains=[15 1]}
+Edit l_shoulder_pan_joint {gains=[200 20] }
+Edit l_shoulder_lift_joint {gains=[160 10] }
+Edit l_upper_arm_roll_joint {gains=[80 4] }
+Edit l_elbow_flex_joint {gains=[70 4] }
+Edit l_forearm_roll_joint {gains=[10 1] }
+Edit l_wrist_flex_joint {gains=[30 1]}
+Edit l_wrist_roll_joint {gains=[15 1]}
 

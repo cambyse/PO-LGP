@@ -2,7 +2,6 @@
 #include <Core/util.h>
 #include <Geo/geo.h>
 #include <Core/graph.h>
-#include <Core/registry.h>
 #include <sys/stat.h>
 #include "g4data.h"
 
@@ -171,9 +170,9 @@ void G4Rec::load(const char *recdir) {
       targets.append(pair->keys(0));
 
     if(!agent_targets.getNode(pair->keys(0)))
-      agent_targets.append<StringA>({pair->keys(0)}, {}, StringA());
+      agent_targets.newNode<StringA>({pair->keys(0)}, {}, StringA());
     if(!object_targets.getNode(pair->keys(0)))
-      object_targets.append<StringA>({pair->keys(0)}, {}, StringA());
+      object_targets.newNode<StringA>({pair->keys(0)}, {}, StringA());
 
     StringA &a_targets = agent_targets.get<StringA>(pair->keys(0));
     StringA &o_targets = object_targets.get<StringA>(pair->keys(0));
@@ -189,6 +188,6 @@ void G4Rec::load(const char *recdir) {
       ann->refRange(from, to) = 1;
     }
     // pair->graph().append("ann", ann);
-    mlabel.append<arr*>({pair->keys}, {}, ann);
+    mlabel.newNode<arr*>({pair->keys}, {}, ann);
   }
 }

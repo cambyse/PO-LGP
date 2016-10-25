@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <Core/registry.h>
+#include <Core/graph.h>
 
 const char *USAGE=
 "\n\

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 
 struct ControlRefs{
   arr u0;                    ///< bias

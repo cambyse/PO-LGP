@@ -1,3 +1,18 @@
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+
 #include "taskMap_FixAttachedObjects.h"
 #include "taskMap_qItself.h"
 #include "taskMap_default.h"
@@ -27,6 +42,7 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
     ors::Joint *j1 = switchedJoints(i,1);    CHECK(&j1->world==G.elem(-1),"");
     CHECK(j0->to->index == j1->to->index,"");
 
+#if 1 //absolute velocities
     TaskMap_Default pos(posDiffTMT, j0->to->shapes.first()->index);
     pos.order=1;
     pos.TaskMap::phi(y.refRange(M*i,M*i+2)(), (&J?J.refRange(M*i,M*i+2)():NoArr), G, tau, t);
@@ -34,6 +50,15 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
     TaskMap_Default quat(quatDiffTMT, j0->to->shapes.first()->index);
     quat.order=1;
     quat.TaskMap::phi(y.refRange(M*i+3,M*i+6)(), (&J?J.refRange(M*i+3,M*i+6)():NoArr), G, tau, t);
+#else //relative velocities
+    TaskMap_Default pos(posDiffTMT, j0->to->shapes.first()->index, NoVector, j0->from->shapes.first()->index);
+    pos.order=1;
+    pos.TaskMap::phi(y.refRange(M*i,M*i+2)(), (&J?J.refRange(M*i,M*i+2)():NoArr), G, tau, t);
+
+    TaskMap_Default quat(quatDiffTMT, j0->to->shapes.first()->index/*, NoVector, j0->from->shapes.first()->index*/);
+    quat.order=1;
+    quat.TaskMap::phi(y.refRange(M*i+3,M*i+6)(), (&J?J.refRange(M*i+3,M*i+6)():NoArr), G, tau, t);
+#endif
   }
 }
 

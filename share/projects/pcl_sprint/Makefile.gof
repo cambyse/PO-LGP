@@ -6,4 +6,4 @@ PCL = 1
 DEPEND = Core Hardware_kinect Perception Gui Ors
 LIBS += -lboost_system
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

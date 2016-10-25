@@ -3,4 +3,4 @@ BASE = ../../..
 ROS = 1
 DEPEND =  Gui Core RosCom
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

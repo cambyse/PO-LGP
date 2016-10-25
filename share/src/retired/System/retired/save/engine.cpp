@@ -25,20 +25,20 @@ void SystemDescription::addModule(const char *dclName, const char *name, const N
   m->type = modReg->value<Type>();
   m->mode = mode;
   m->beat = beat;
-  Node* modIt = system.append<ModuleEntry>({"Module", (name?name:modReg->keys(1))}, m);
+  Node* modIt = system.newNode<ModuleEntry>({"Module", (name?name:modReg->keys(1))}, m);
 
   for(Node *accReg: modReg->parentOf){
     AccessEntry *a = new AccessEntry;
     a->reg = accReg;
     a->type = accReg->value<Type>();
     if(!&vars || !vars.N){
-      system.append<AccessEntry>({mlr::String("Access"), accReg->keys(1)}, {modIt}, a);
+      system.newNode<AccessEntry>({mlr::String("Access"), accReg->keys(1)}, {modIt}, a);
     }else{
       Node *varIt = vars(accReg_COUNT);
       VariableEntry *v = varIt->value<VariableEntry>();
       cout <<"linking access " <<modIt->keys(1) <<"->" <<accReg->keys(1)
            <<" with Variable (" <<*(v->type) <<")" <<endl;
-      system.append<AccessEntry>({mlr::String("Access"), varIt->keys(1)}, {modIt, varIt}, new AccessEntry());
+      system.newNode<AccessEntry>({mlr::String("Access"), varIt->keys(1)}, {modIt, varIt}, new AccessEntry());
     }
   }
 }
@@ -58,14 +58,14 @@ void SystemDescription::complete(){
           cout <<"adding-on-complete Variable " <<acc->keys(1) <<": " <<*(acc->value<Type>()) <<endl;
           v = new SystemDescription::VariableEntry;
           v->type = acc->value<Type>();
-          varIt = system.append<VariableEntry>({mlr::String("Variable"}, acc->keys(1)}, v);
+          varIt = system.newNode<VariableEntry>({mlr::String("Variable"}, acc->keys(1)}, v);
         }else{
           v = varIt->value<VariableEntry>();
         }
         cout <<"linking-on-complete access " <<it->keys(1) <<"->" <<acc->keys(1)
              <<" with Variable " <<varIt->keys(1) <<"(" <<*(v->type) <<")" <<endl;
         m->accs.append(v);
-        system.append<AccessEntry>({mlr::String("Access"), acc->keys(1)}, {it, varIt}, new AccessEntry());
+        system.newNode<AccessEntry>({mlr::String("Access"), acc->keys(1)}, {it, varIt}, new AccessEntry());
       }
     }
   }
@@ -81,7 +81,7 @@ void SystemDescription::complete(){
         cout <<"adding-on-complete Variable " <<accIt->keys(1) <<": " <<*a->type <<endl;
         v = new SystemDescription::VariableEntry;
         v->type = a->type;
-        varIt = system.append<VariableEntry>({mlr::String("Variable"), accIt->keys(1)}, v);
+        varIt = system.newNode<VariableEntry>({mlr::String("Variable"), accIt->keys(1)}, v);
       }else{
         v = varIt->value<VariableEntry>();
       }

@@ -1,5 +1,5 @@
 #pragma once
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Control/taskController.h>
 // #include <RosCom/actionMachine.h>
 // #include <RosCom/actions.h>
@@ -8,7 +8,7 @@
 // ============================================================================
 
 
-struct G4HutoRoMap:Module{
+struct G4HutoRoMap : Thread {
   ACCESS(bool, initmapper)
 
   ACCESS(floatA, g4_data)

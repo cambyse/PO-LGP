@@ -3,7 +3,7 @@
 
 struct RM_EditCallback:GraphEditCallback{
   RelationalMachineModule &RMM;
-  Log& _log;
+  mlr::LogObject& _log;
   RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM), _log(RMM._log){}
   virtual void cb_new(Node *it){
     LOG(3) <<"state cb -- new fact: " <<*it;
@@ -27,7 +27,7 @@ struct RM_EditCallback:GraphEditCallback{
 };
 
 RelationalMachineModule::RelationalMachineModule()
-  : Module("RelationalMachineModule"),
+  : Thread("RelationalMachineModule"),
     _log("RelationalMachineModule", 1, 1){
 }
 
@@ -121,7 +121,7 @@ void RelationalMachineModule::runScript(const char* filename){
   for(Node* n:script){
     if(n->parents.N==0 && n->isGraph()){ //interpret as wait
       for(;;){
-        if(allFactsHaveEqualsInScope(*RM.get()->state, n->graph())) break;
+        if(allFactsHaveEqualsInKB(*RM.get()->state, n->graph())) break;
         rev=RM.waitForRevisionGreaterThan(rev);
       }
     }else{ //interpret as set fact

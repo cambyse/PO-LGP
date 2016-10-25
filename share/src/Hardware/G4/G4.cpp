@@ -86,7 +86,7 @@ namespace {
   }
 }
 
-G4Poller::G4Poller():Module("G4Poller", .05){
+G4Poller::G4Poller() : Thread("G4Poller", .05){
   s = new sG4Poller;
 }
 
@@ -293,7 +293,7 @@ void G4Poller::close(){
 #else // ifdef G4_INSTALLED
 
 
-G4Poller::G4Poller():Module("G4Tracker"){ NICO }
+G4Poller::G4Poller() : Thread("G4Tracker"){ NICO }
 void G4Poller::open(){ NICO }
 void G4Poller::step(){ NICO }
 void G4Poller::close(){ NICO }

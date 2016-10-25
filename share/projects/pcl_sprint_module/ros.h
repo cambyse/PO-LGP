@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Core/array.h>
 #include <pcl/ModelCoefficients.h>
 

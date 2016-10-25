@@ -12,7 +12,7 @@ Activity* newActivity(Node *fact){
   //-- all other symbols in the literal are added to the params
   if(activityParams->isGraph()) for(uint i=0;i<fact->parents.N;i++){
     CHECK(!activityParams->graph()[STRING("sym"<<i)], "can't specify sym"<<i<<" both, as symbols and as parameter");
-    new Node_typed<mlr::String>(activityParams->graph(), {STRING("sym"<<i)}, {}, mlr::String(fact->parents(i)->keys.last()));
+    activityParams->graph().newNode<mlr::String>({STRING("sym"<<i)}, {}, mlr::String(fact->parents(i)->keys.last()));
   }
 
   //-- check if an activity class with this symbol name is registered

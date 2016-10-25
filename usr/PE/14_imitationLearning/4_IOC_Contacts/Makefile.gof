@@ -4,4 +4,4 @@ OBJS = main.o
 DEPEND = Core Motion Gui Optim Algo Ors
 PTHREAD = 1
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

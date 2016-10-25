@@ -1,0 +1,43 @@
+\documentclass{article}
+
+\author{Johannes Kulick}
+\title{Bayesian Changepoint Detection}
+
+\usepackage[minnames=1, maxnames=2, maxbibnames=99, giveninits=true, backend=biber, style=authoryear-comp, dashed=false, uniquename=false, doi=false, isbn=false, url=false]{biblatex}
+\addbibresource{abbrv.bib}
+\addbibresource{references.bib}
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+
+\section{Intro}
+This is part of the documentation of my software artifacts developed during my
+PhD time at the MLR lab. I hope it might help others to use my software for
+their research.
+
+The Bayesian changepoint detection code is useful to calculate probabilities of
+a change of the underlying model in time series data. It implements the
+algorithms from \textcite{fearnhead_exact_2006, adams_bayesian_2007}. E.g., in my joint
+dependency \parencite{kulick_active_2015} experiments I used it to get change points in the
+friction of joints to find possible unlocking states of e.g. keys.
+
+\section{Package}
+
+The main repository is at my github account:
+\url{https://github.com/hildensia/bayesian_changepoint_detection}, a mirror is
+  at our own gitlab:
+  \url{https://animal.informatik.uni-stuttgart.de/johannes.kulick/bayesian_changepoint_detection}
+  (but be aware that I might update the github version but not the gitlab
+  version).
+
+\subsection{Requirements}
+The package needs python, scipy and numpy. 
+
+\section{HowTo}
+The best way to get started is to have a look at the example jupyter notebook at
+\url{http://nbviewer.ipython.org/urls/raw.githubusercontent.com/hildensia/bayesian_changepoint_detection/master/Example%20Code.ipynb?create=1}
+
+
+\printbibliography[heading=bibintoc]
+\end{document}

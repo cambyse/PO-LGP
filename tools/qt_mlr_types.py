@@ -2,6 +2,11 @@ break /home/mtoussai/git/mlr/share/src/Core/util.h:321
 
 python
 
+#import sys 
+#sys.path.insert(0, '/usr/share/gcc-4.8/python')
+#from libstdcxx.v6.printers import register_libstdcxx_printers
+#register_libstdcxx_printers (None)
+
 import math
 
 def qdump__mlr__String(d, value):
@@ -70,7 +75,7 @@ def qdump__mlr__Array(d, value):
                 if nd==2:
                     s = "(%i,%i)"%(i/d1,i%d1)
                 if nd==3:
-                    s = "(%i,%i,%i)"%(i/d1,(i/d2)%d1,i%d2)
+                    s = "(%i,%i,%i)"%(i/(d1*d2),(i/d2)%d1,i%d2)
                 d.putSubItem(s, (p+i).dereference())
                 i = i+1
             d.putSubItem("p", p)

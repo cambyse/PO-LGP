@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "opt-convert.h"
 #include "KOMO_Problem.h"
@@ -147,7 +143,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   //resizing things:
   phi.resize(dim_phi).setZero();
-  RowShifted *Jaux;
+  RowShifted *Jaux=NULL;
   if(&J){
     Jaux = makeRowShifted(J, dim_phi, (k+1)*dim_xmax, x.N);
     J.setZero();
@@ -186,6 +182,7 @@ void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& 
 
   CHECK_EQ(M, dim_phi,"");
   if(&J){
+    Jaux->reshift();
     Jaux->computeColPatches(true);
   }
 
@@ -290,7 +287,7 @@ VectorFunction conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f)
 //===========================================================================
 
 Convert::Convert(KOMO_Problem& p):kom(NULL), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) {
-  komo = new KOMO_ConstrainedProblem(p);
+  komo = new Conv_KOMO_ConstrainedProblem(p);
 }
 
 Convert::operator ConstrainedProblem() {
