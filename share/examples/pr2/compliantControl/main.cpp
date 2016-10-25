@@ -1,4 +1,3 @@
-#include <Core/module.h>
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>

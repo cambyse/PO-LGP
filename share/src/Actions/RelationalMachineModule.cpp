@@ -3,7 +3,7 @@
 
 struct RM_EditCallback:GraphEditCallback{
   RelationalMachineModule &RMM;
-  Log& _log;
+  mlr::LogObject& _log;
   RM_EditCallback(RelationalMachineModule &RMM):RMM(RMM), _log(RMM._log){}
   virtual void cb_new(Node *it){
     LOG(3) <<"state cb -- new fact: " <<*it;
