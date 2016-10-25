@@ -10,4 +10,4 @@ ROS = 1
 # CXXFLAGS = -DWITH_ROS
 DEPEND += RosCom Actions
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

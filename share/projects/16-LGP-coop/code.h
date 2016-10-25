@@ -20,7 +20,6 @@
 #include <LGP/LGP.h>
 #include <LGP/manipulationTree.h>
 
-
 struct Coop{
   ors::KinematicWorld kin;
   BodyL box;
@@ -33,25 +32,33 @@ struct Coop{
 
   ManipulationTree_Node *root,*node;
 
-  OrsViewer poseView;
+  OrsPathViewer poseView;
   OrsPathViewer seqView;
   OrsPathViewer pathView;
 
   bool autoCompute = false;
 
+  mlr::Array<ManipulationTree_Node*> mcFringe;
+  mlr::Array<ManipulationTree_Node*> terminals;
+  mlr::Array<ManipulationTree_Node*> poseFringe;
+  mlr::Array<ManipulationTree_Node*> seqFringe;
+  mlr::Array<ManipulationTree_Node*> pathFringe;
+  mlr::Array<ManipulationTree_Node*> done;
+
   Coop();
 
   void prepareKin();
-  void prepareFol();
+  void prepareFol(bool smaller=false);
   void prepareTree();
   void prepareDisplay();
 
   void updateDisplay();
-  void displayTree(){ system("evince z.pdf &"); }
+  void displayTree(){ int r=system("evince z.pdf &");  if(r) LOG(-1) <<"could not startup evince"; }
 
   void printChoices();
   mlr::String queryForChoice();
-  bool execChoice(mlr::String& cmd);
+  bool execChoice(mlr::String cmd);
+  bool execRandomChoice();
 
   void expandNode(){  node->expand(); }
 };

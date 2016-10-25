@@ -2,10 +2,10 @@ BASE = ../..
 # NAME   = 
 
 DEPEND = Core
-# OUTPUT := x.exe rosmsgs
+# OUTPUT = x.exe rosmsgs
 ROS = 1
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 
 # MSGFILE = msg/Literal.msg
 

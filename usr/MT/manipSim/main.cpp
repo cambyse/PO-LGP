@@ -29,21 +29,21 @@ void RelationalGraph2OrsGraph(ors::KinematicWorld& W, const Graph& G){
 
   //  //do this first to ensure they have the same indexing
   //  for(ors::Body *b:world->bodies){
-  //    G.append<ors::Body>({"body", b->name}, b);
+  //    G.newNode<ors::Body>({"body", b->name}, b);
   //  }
 
   //  for(ors::Body *b:world->bodies){
-  //    G.append<ors::Transformation>({"pose"}, ARRAY(G(b->index)), new ors::Transformation(b->X));
-  ////    if(b->ats["ctrlable"]) G.append<bool>({"controllable"}, ARRAY(G(b->index)), NULL);
-  //    if(b->ats["canGrasp"]) G.append<bool>({"canGrasp"}, ARRAY(G(b->index)), NULL);
-  //    if(b->ats["fixed"])    G.append<bool>({"fixed"}, ARRAY(G(b->index)), NULL);
+  //    G.newNode<ors::Transformation>({"pose"}, ARRAY(G(b->index)), new ors::Transformation(b->X));
+  ////    if(b->ats["ctrlable"]) G.newNode<bool>({"controllable"}, ARRAY(G(b->index)), NULL);
+  //    if(b->ats["canGrasp"]) G.newNode<bool>({"canGrasp"}, ARRAY(G(b->index)), NULL);
+  //    if(b->ats["fixed"])    G.newNode<bool>({"fixed"}, ARRAY(G(b->index)), NULL);
   //  }
 
   //  for(ors::Joint *j:world->joints){
   //    if(j->type==ors::JT_rigid)
-  //      G.append<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
+  //      G.newNode<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   //    if(j->type==ors::JT_transXYPhi)
-  //      G.append<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
+  //      G.newNode<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   //  }
 
 }
@@ -142,13 +142,13 @@ void generateRandomProblem(ors::KinematicWorld& world, Graph& symbols){
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
-    Node *o = symbols.append<bool>({"Object", s->name}, {}, true);
+    Node *o = symbols.newNode<bool>({"Object", s->name}, {}, true);
     if(s->type==ors::cylinderST){
-      state.append<bool>({}, {CYLIN ,o}, true);
+      state.newNode<bool>({}, {CYLIN ,o}, true);
     }else{
-      state.append<bool>({}, {BOARD, o}, true);
+      state.newNode<bool>({}, {BOARD, o}, true);
     }
-    state.append<double>({}, {DEPTH, o}, 0.);
+    state.newNode<double>({}, {DEPTH, o}, 0.);
   }
 
   symbols.checkConsistency();

@@ -2,5 +2,5 @@ BASE = ../../..
 
 DEPEND = Core Geo
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 

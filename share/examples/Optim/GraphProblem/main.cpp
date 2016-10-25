@@ -23,7 +23,7 @@ void testGraphProblem() {
   KOMO_GraphProblem G(P);
 
   //-- convert directly to ConstrainedProblem (efficient)
-  KOMO_ConstrainedProblem C2(P); //(direct conversion - just for testing..)
+  Conv_KOMO_ConstrainedProblem C2(P); //(direct conversion - just for testing..)
 
   //-- convert to unstructued ConstrainedProblem (not efficient yet)
   Graph_ConstrainedProblem C(G);

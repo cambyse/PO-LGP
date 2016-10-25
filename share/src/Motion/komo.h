@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #pragma once
 #include <Ors/ors.h>
@@ -27,11 +23,14 @@ struct KOMO{
   Graph specs;
   ors::KinematicWorld world;
   struct MotionProblem *MP;
+  struct OptConstrained *opt;
   arr x, dual;
   arr z, splineB;
 
   double maxPhase;
   uint stepsPerPhase;
+
+  int verbose;
 
   KOMO();
   ~KOMO();
@@ -73,12 +72,15 @@ struct KOMO{
 
 
   //-- tasks (cost/constraint terms) high-level
-  void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false);
-  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false);
+  void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false, int verbose=0);
+  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false, int verbose=0);
+  void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, bool effKinMode=false, int verbose=0);
+  void setAttach(double time, const char* endeff, const char* object1, const char* object2, ors::Transformation& rel, int verbose=0);
+
   void setSlowAround(double time, double delta);
 
   //-- tasks - logic level
-  void setAbstractTask(double phase, const NodeL& facts, bool effKinMode=false);
+  void setAbstractTask(double phase, const Graph& facts, bool effKinMode=false, int verbose=0);
 
   void setMoveTo(ors::KinematicWorld& world, //in initial state
                  ors::Shape& endeff,         //endeffector to be moved
@@ -90,7 +92,7 @@ struct KOMO{
   void reset();
   void step();
   void run();
-  Graph getReport();
+  Graph getReport(bool gnuplt=false);
   void checkGradients();
   void displayTrajectory(double delay=0.01);
 };
@@ -113,6 +115,6 @@ inline arr finalPoseTo(ors::KinematicWorld& world,
                        ors::Shape& target,
                        byte whichAxesToAlign=0,
                        uint iterate=1){
-  return moveTo(world, endeff, target, whichAxesToAlign, iterate, 0, 5.);
+  return moveTo(world, endeff, target, whichAxesToAlign, iterate, 1, 5.);
 }
 

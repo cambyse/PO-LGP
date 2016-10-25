@@ -2,6 +2,11 @@ break /home/mtoussai/git/mlr/share/src/Core/util.h:321
 
 python
 
+#import sys 
+#sys.path.insert(0, '/usr/share/gcc-4.8/python')
+#from libstdcxx.v6.printers import register_libstdcxx_printers
+#register_libstdcxx_printers (None)
+
 import math
 
 def qdump__mlr__String(d, value):

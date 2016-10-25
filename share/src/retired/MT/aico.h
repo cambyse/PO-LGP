@@ -16,8 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
 /** @file aico.h
     @brief Approximate Inference Control */
 

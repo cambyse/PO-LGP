@@ -6,4 +6,4 @@ DEPEND = Core Media
 #LIBS += -lportaudio -lasound -lGLU -lXrandr
 #OBJS = main-mini.o
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

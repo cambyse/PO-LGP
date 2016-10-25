@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 #include "registry.h"
@@ -35,10 +31,10 @@ void initRegistry(int argc, char* argv[]){
         mlr::String value;
         value <<'=' <<argv[n+1];
         registry().readNode(value, false, false, key);
-//        new Node_typed<mlr::String>(registry(), {key}, {}, new mlr::String(argv[n+1]), true);
+//        registry().newNode<mlr::String>({key}, {}, new mlr::String(argv[n+1]), true);
         n++;
       }else{
-        new Node_typed<bool>(registry(), {key}, {}, true);
+        registry().newNode<bool>({key}, {}, true);
       }
     }else{
       MLR_MSG("non-parsed cmd line argument:" <<argv[n]);

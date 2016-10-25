@@ -1,3 +1,18 @@
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+
 #include "komo.h"
 #include "motion.h"
 #include <Algo/spline.h>
@@ -30,11 +45,13 @@ double height(ors::Shape* s){
   return 2.*s->size[2] + s->size[3];
 }
 
-KOMO::KOMO() : MP(NULL){
+KOMO::KOMO() : MP(NULL), opt(NULL), verbose(1){
+  verbose = mlr::getParameter<int>("KOMO/verbose",1);
 }
 
 KOMO::~KOMO(){
   if(MP) delete MP;
+  if(opt) delete opt;
 }
 
 KOMO::KOMO(const Graph& specs) : MP(NULL){
@@ -142,9 +159,10 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
   task->name <<map->shortTag(MP->world);
   if(endTime>double(maxPhase)+1e-10)
     LOG(-1) <<"beyond the time!";
-  uint tFrom = (startTime<0.?0:STEP(startTime)+order);
-  uint tTo = (endTime<0.?MP->T:STEP(endTime));
-  if(tFrom>tTo && tFrom-tTo<=order) tFrom=tTo;
+  int tFrom = (startTime<0.?0:STEP(startTime)+order);
+  int tTo = (endTime<0.?MP->T-1:STEP(endTime));
+  if(tTo<0) tTo=0;
+  if(tFrom>tTo && tFrom-tTo<=(int)order) tFrom=tTo;
   task->setCostSpecs(tFrom, tTo, target, prec);
   MP->tasks.append(task);
   return task;
@@ -181,13 +199,13 @@ void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
 void KOMO::setSquaredFixJointVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
   auto *map = new TaskMap_Transition(MP->world, true);
-  setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
+  setTask(startTime, endTime, map, eqTT, NoArr, prec, 1);
   map->velCoeff = 1.;
 }
 
 void KOMO::setSquaredFixSwitchVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
-  setTask(startTime, endTime, new TaskMap_FixSwichedObjects(), sumOfSqrTT, NoArr, prec, 1);
+  setTask(startTime, endTime, new TaskMap_FixSwichedObjects(), eqTT, NoArr, prec, 1);
 }
 
 void KOMO::setHoldStill(double startTime, double endTime, const char* joint, double prec){
@@ -210,7 +228,8 @@ void KOMO::setLastTaskToBeVelocity(){
   MP->tasks.last()->map.order = 1; //set to be velocity!
 }
 
-void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode){
+void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode, int verbose){
+  if(verbose>0) cout <<"KOMO_setGrasp t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<endl;
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
 
   //-- position the hand & graspRef
@@ -218,7 +237,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   setTask(time, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
 
   //hand center at object center (could be replaced by touch)
-  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), sumOfSqrTT, NoArr, 1e3);
+//  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), eqTT, NoArr, 1e3);
 
   //hand grip axis orthogonal to object length axis
 //  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, endeffRef, Vector_x, object, Vector_x), sumOfSqrTT, NoArr, 1e1);
@@ -231,9 +250,9 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
 
 
   //disconnect object from table
-  setKinematicSwitch(time, true, "delete", object, NULL);
+  setKinematicSwitch(time, true, "delete", NULL, object);
   //connect graspRef with object
-  setKinematicSwitch(time, true, "freeZero", endeffRef, object);
+  setKinematicSwitch(time, true, "ballZero", endeffRef, object);
 
   if(stepsPerPhase>2){ //velocities down and up
     setTask(time-.15, time, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
@@ -241,7 +260,9 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   }
 }
 
-void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode){
+void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode, int verbose){
+  if(verbose>0) cout <<"KOMO_setPlace t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<" place=" <<placeRef <<endl;
+
   if(stepsPerPhase>2){ //velocities down and up
     setTask(time-.15, time, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
     setTask(time, time+.15, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
@@ -257,16 +278,53 @@ void KOMO::setPlace(double time, const char* endeffRef, const char* object, cons
   setTask(time, time, new TaskMap_AboveBox(world, object, placeRef), ineqTT, NoArr, 1e2);
 
   //disconnect object from grasp ref
-  setKinematicSwitch(time, false, "delete", endeffRef, object);
+  setKinematicSwitch(time, true, "delete", endeffRef, object);
 
   //connect object to table
   if(!effKinMode){
-    setKinematicSwitch(time, false, "rigidAtTo", placeRef, object);
+    setKinematicSwitch(time, true, "rigidAtTo", placeRef, object);
   }else{
     ors::Transformation rel = 0;
     rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
-    setKinematicSwitch(time, false, "transXYPhiZero", placeRef, object, rel );
+    setKinematicSwitch(time, true, "transXYPhiZero", placeRef, object, rel );
   }
+}
+
+void KOMO::setHandover(double time, const char* oldHolder, const char* object, const char* newHolder, bool effKinMode, int verbose){
+  if(verbose>0) cout <<"KOMO_setHandover t=" <<time <<" oldHolder=" <<oldHolder <<" obj=" <<object <<" newHolder=" <<newHolder <<endl;
+
+  //hand center at object center (could be replaced by touch)
+  setTask(time, time, new TaskMap_Default(posDiffTMT, world, newHolder, NoVector, object, NoVector), eqTT, NoArr, 1e3);
+
+//  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, newHolder, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
+
+  //disconnect object from table
+  setKinematicSwitch(time, true, "delete", oldHolder, object);
+  //connect graspRef with object
+  setKinematicSwitch(time, true, "freeZero", newHolder, object);
+
+  if(stepsPerPhase>2){ //velocities down and up
+    setTask(time-.15, time+.15, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,0.}, 1e1, 1); // no motion
+  }
+
+}
+
+void KOMO::setAttach(double time, const char* endeff, const char* object1, const char* object2, ors::Transformation& rel, int verbose){
+  if(verbose>0) cout <<"KOMO_setAttach t=" <<time <<" endeff=" <<endeff <<" obj1=" <<object1 <<" obj2=" <<object2 <<endl;
+
+  //hand center at object center (could be replaced by touch)
+//  setTask(time, time, new TaskMap_Default(posTMT, world, object2, NoVector, object1, NoVector), sumOfSqrTT, rel.pos.getArr(), 1e3);
+//  setTask(time, time, new TaskMap_Default(quatDiffTMT, world, object2, NoVector, object1, NoVector), sumOfSqrTT, conv_quat2arr(rel.rot), 1e3);
+
+//  setTask(time, time, new TaskMap_Default(vecAlignTMT, world, newHolder, Vector_y, object, Vector_x), sumOfSqrTT, {-1.}, 1e1);
+
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, true, "delete", endeff, object2);
+
+//  ors::Transformation rel = 0;
+//  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
+  setKinematicSwitch(time, true, "rigidZero", object1, object2, rel );
+
 }
 
 void KOMO::setSlowAround(double time, double delta){
@@ -275,17 +333,35 @@ void KOMO::setSlowAround(double time, double delta){
   //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
 }
 
-void KOMO::setAbstractTask(double phase, const NodeL& facts, bool effKinMode){
-  CHECK(phase<=maxPhase,"");
+void KOMO::setAbstractTask(double phase, const Graph& facts, bool effKinMode, int verbose){
+//  CHECK(phase<=maxPhase,"");
+//  listWrite(facts, cout,"\n");  cout <<endl;
   for(Node *n:facts){
     if(!n->parents.N) continue;
     StringL symbols;
     for(Node *p:n->parents) symbols.append(&p->keys.last());
     if(n->keys.N && n->keys.last()=="komoGrasp"){
-      setGrasp(phase, *symbols(0), *symbols(1), effKinMode);
+      double time=n->get<double>();
+      setGrasp(phase+time, *symbols(0), *symbols(1), effKinMode, verbose);
     }
-    if(n->keys.N && n->keys.last()=="komoPlace"){
-      setPlace(phase, *symbols(0), *symbols(1), *symbols(2), effKinMode);
+    else if(n->keys.N && n->keys.last()=="komoPlace"){
+      double time=n->get<double>();
+      setPlace(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
+    }
+    else if(n->keys.N && n->keys.last()=="komoHandover"){
+      double time=n->get<double>();
+      setHandover(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
+    }
+    else if(n->keys.N && n->keys.last()=="komoAttach"){
+      double time=n->get<double>();
+      Node *attachableSymbol = facts.getNode("attachable");
+      CHECK(attachableSymbol!=NULL,"");
+      Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
+      ors::Transformation rel = attachableFact->get<ors::Transformation>();
+      setAttach(phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
+    }
+    else if(n->keys.N && n->keys.last().startsWith("komo")){
+      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
     }
   }
 }
@@ -356,7 +432,7 @@ void KOMO::setMoveTo(ors::KinematicWorld& world, ors::Shape& endeff, ors::Shape&
 
 void KOMO::setSpline(uint splineT){
   mlr::Spline S;
-  S.setUniformNonperiodicBasis(MP->T, splineT, 2);
+  S.setUniformNonperiodicBasis(MP->T-1, splineT, 2);
   uint n=MP->dim_x(0);
   splineB = zeros(S.basis.d0*n, S.basis.d1*n);
   for(uint i=0;i<S.basis.d0;i++) for(uint j=0;j<S.basis.d1;j++)
@@ -378,28 +454,39 @@ void KOMO::step(){
 
 void KOMO::run(){
   ors::KinematicWorld::setJointStateCount=0;
+  mlr::timerStart();
   if(MP->T){
-    if(!splineB.N)
-      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
-    else{
+    if(!splineB.N){
+//      optConstrained(x, dual, Convert(*MP), OPT(verbose=2));
+#if 0
+      optConstrained(x, dual, Convert(MP->komo_problem));
+#else
+      if(opt) delete opt;
+      Convert C(MP->komo_problem);
+      opt = new OptConstrained(x, dual, C);
+      opt->run();
+#endif
+    }else{
       arr a,b,c,d,e;
       ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
       P0(a,b,c,NoTermTypeA, x);
       ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
       P(a,b,NoArr,NoTermTypeA,z);
-      optConstrained(z, dual, P, OPT(verbose=2));
+      optConstrained(z, dual, P);
     }
   }else{
     HALT("deprecated")
-    optConstrained(x, dual, MP->InvKinProblem(), OPT(verbose=2));
+    optConstrained(x, dual, MP->InvKinProblem());
   }
-  cout <<"** optimization time=" <<mlr::timerRead()
+  if(verbose>0){
+    cout <<"** optimization time=" <<mlr::timerRead()
       <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-  MP->costReport(false);
+  }
+  if(verbose>1) cout <<MP->getReport(false);
 }
 
-Graph KOMO::getReport(){
-  return MP->getReport();
+Graph KOMO::getReport(bool gnuplt){
+  return MP->getReport(gnuplt);
 }
 
 void KOMO::checkGradients(){
@@ -455,21 +542,25 @@ arr moveTo(ors::KinematicWorld& world,
   arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 
+//  MP.komo_problem.checkStructure(x);
+//  checkJacobianCP(Conv_KOMO_ConstrainedProblem(MP.komo_problem), x, 1e-4);
+
   //-- optimize
   double colPrec = mlr::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
   ors::KinematicWorld::setJointStateCount=0;
   for(uint k=0;k<iterate;k++){
     mlr::timerStart();
     if(colPrec<0){
-      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
+//      optConstrained(x, NoArr, Convert(MP), OPT(verbose=2)); //parameters are set in cfg!!
+      optConstrained(x, NoArr, Convert(MP.komo_problem)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MP), OPT(verbose=2));
+      optNewton(x, Convert(MP));
     }
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
     //    checkJacobian(Convert(MF), x, 1e-5);
-    MP.costReport();
+    //MP.costReport();
   }
 
   return x;
@@ -507,24 +598,24 @@ void setTasks(MotionProblem& MP,
   }else{
     t->map.order=1; //make this a velocity task!
   }
-  t->setCostSpecs(0, MP.T, {0.}, 1e0);
+  t->setCostSpecs(0, MP.T-1, {0.}, 1e0);
 
   if(timeSteps!=0){
     t = MP.addTask("final_vel", new TaskMap_qItself(), sumOfSqrTT);
     t->map.order=1; //make this a velocity task!
-    t->setCostSpecs(MP.T-4, MP.T, {0.}, zeroVelPrec);
+    t->setCostSpecs(MP.T-4, MP.T-1, {0.}, zeroVelPrec);
   }
 
   if(colPrec<0){ //interpreted as hard constraint (default)
     t = MP.addTask("collisionConstraints", new CollisionConstraint(margin), ineqTT);
-    t->setCostSpecs(0, MP.T, {0.}, 1.);
+    t->setCostSpecs(0, MP.T-1, {0.}, 1.);
   }else{ //cost term
     t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, margin), sumOfSqrTT);
-    t->setCostSpecs(0, MP.T, {0.}, colPrec);
+    t->setCostSpecs(0, MP.T-1, {0.}, colPrec);
   }
 
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, endeff.index, NoVector, target.index, NoVector), sumOfSqrTT);
-  t->setCostSpecs(MP.T, MP.T, {0.}, posPrec);
+  t->setCostSpecs(MP.T-1, MP.T-1, {0.}, posPrec);
 
 
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
@@ -534,7 +625,7 @@ void setTasks(MotionProblem& MP,
     t = MP.addTask(STRING("endeff_align_"<<i),
                    new TaskMap_Default(vecAlignTMT, endeff.index, axis, target.index, axis),
                    sumOfSqrTT);
-    t->setCostSpecs(MP.T, MP.T, {1.}, alignPrec);
+    t->setCostSpecs(MP.T-1, MP.T-1, {1.}, alignPrec);
   }
 }
 

@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 /// @file
@@ -42,32 +38,10 @@ void initRegistry(int argc, char *argv[]);
 // to register a type (instead of general thing/item), use this:
 //
 
-struct Type {
-  virtual ~Type(){}
-  virtual const std::type_info& typeId() const {NIY}
-  virtual struct Node* readIntoNewNode(Graph& container, istream&) const {NIY}
-  virtual void* newInstance() const {NIY}
-//  virtual Type* clone() const {NIY}
-  void write(std::ostream& os) const {  os <<"Type '" <<typeId().name() <<"' ";  }
-  void read(std::istream& is) const {NIY}
-};
-stdPipes(Type)
-
-template<class T, class Base>
-struct Type_typed : Type {
-  virtual const std::type_info& typeId() const { return typeid(T); }
-  virtual void* newInstance() const { return new T(); }
-//  virtual Type* clone() const { Type *t = new Type_typed<T, void>(); t->parents=parents; return t; }
-};
-
 template<class T, class Base>
 struct Type_typed_readable:Type_typed<T,Base> {
-  virtual Node* readIntoNewNode(Graph& container, istream& is) const { Node_typed<T> *n = new Node_typed<T>(container, T()); is >>n->value; return n; }
-//  virtual Type* clone() const { Type *t = new Type_typed_readable<T, void>(); t->parents=Type::parents; return t; }
+  virtual Node* readIntoNewNode(Graph& container, std::istream& is) const { Node_typed<T> *n = container.newNode<T>(T()); is >>n->value; return n; }
 };
-
-inline bool operator!=(Type& t1, Type& t2){ return t1.typeId() != t2.typeId(); }
-inline bool operator==(Type& t1, Type& t2){ return t1.typeId() == t2.typeId(); }
 
 typedef mlr::Array<std::shared_ptr<Type> > TypeInfoL;
 
@@ -125,17 +99,17 @@ inline Node* readTypeIntoNode(Graph& container, const char* key, std::istream& i
 
 #define REGISTER_TYPE(T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
 #define REGISTER_TYPE_Key(Key, T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##Key) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T KO void> >()); \
   RUN_ON_INIT_END(Decl_Type##_##Key)
 
 #define REGISTER_TYPE_DERIVED(T, Base) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##T) \
-  new Node_typed<std::shared_ptr<Type> >(registry(), {mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO Base> >()); \
+  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#T)}, NodeL(), std::make_shared<Type_typed_readable<T KO Base> >()); \
   RUN_ON_INIT_END(Decl_Type##_##T)
 
 

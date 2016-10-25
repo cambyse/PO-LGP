@@ -166,7 +166,7 @@ void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
   for(Node *a:actions){
 
     //-- create a symbol that says A-on-B
-    symbolicState.append<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
+    symbolicState.newNode<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
 
     //-- create a joint between the object and the target
     ors::Shape *object= world.getShapeByName(a->parents(1)->keys(1));

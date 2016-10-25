@@ -51,8 +51,6 @@ void TEST(Basics){
   cout <<"\nrefRange(2,4) =\n" <<a.refRange(2,4) <<endl;
   a.refRange(2,4) *= 10.;
   cout <<"\nrows manipulated:\n" <<a <<endl;
-  exit(0);
-
 
   //setting arrays ``by hand''
   a = ARR(0, 1, 2, 3, 4); //ARR(...) is equivalent to mlr::Array<double>({ ... })
@@ -564,10 +562,10 @@ void TEST(Tensor){
 
 void write(RowShifted& PM){
   cout <<"RowShifted: real:" <<PM.Z.d0 <<'x' <<PM.real_d1 <<"  packed:" <<PM.Z.d0 <<'x' <<PM.Z.d1 <<endl;
-  cout <<"\npacked numbers =" <<PM.Z
+  cout <<"packed numbers =\n" <<PM.Z
       <<"\nrowShifts=" <<PM.rowShift
-     <<"\ncolPaches=" <<PM.colPatches
-    <<"\nunpacked =" <<unpack(PM.Z) <<endl;
+//     <<"\ncolPaches=\n" <<~PM.colPatches
+    <<"\nunpacked =\n" <<unpack(PM.Z) <<endl;
 }
 
 void TEST(RowShifted){
@@ -580,6 +578,8 @@ void TEST(RowShifted){
   Jaux->computeColPatches(false);
   write(*castRowShifted(J));
 
+  cout <<Jaux->At() <<endl;
+
   //constructor compressing an array
   arr K =  packRowShifted(unpack(J));
   write(*castRowShifted(K));
@@ -591,14 +591,19 @@ void TEST(RowShifted){
     arr X(1+rnd(5),1+rnd(5));
     rndInteger(X,0,1);
     arr Y = packRowShifted(X);
+    arr Yt = comp_At(Y);
+
 //    RowShifted& Yaux = castRowShifted(Y);
 //    write(*castRowShifted(Y));
     arr x(X.d0);   rndInteger(x,0,9);
     arr x2(X.d1);  rndInteger(x2,0,9);
-    cout <<"unpacking errors = " <<maxDiff(X,unpack(Y))
-        <<' ' <<maxDiff(~X*X,unpack(comp_At_A(Y)))
-       <<' ' <<maxDiff(X*~X,unpack(comp_A_At(Y)))
-      <<' ' <<maxDiff(~X*x,comp_At_x(Y,x)) <<endl;
+    cout <<"errors = " <<maxDiff(X,unpack(Y))
+        <<' ' <<maxDiff(~X*X, unpack(comp_At_A(Y)))
+       <<' ' <<maxDiff(X*~X, unpack(comp_A_At(Y)))
+      <<' ' <<maxDiff(~X*x, comp_At_x(Y,x))
+      <<' ' <<maxDiff(~X*x, comp_A_x(Yt,x))
+     <<' ' <<maxDiff(~X*X, unpack(comp_A_At(Yt)))
+    <<endl;
     CHECK_ZERO(maxDiff(X, unpack(Y)), 1e-10, "");
     CHECK_ZERO(maxDiff(~X*X, unpack(comp_At_A(Y))), 1e-10, "");
 //    arr tmp =comp_A_At(Y);
@@ -622,8 +627,8 @@ void TEST(RowShifted){
 
 void sparseProduct(arr& y, arr& A, const arr& x);
 
-void TEST(Sparse){
-  cout <<"\n*** Sparse\n";
+void TEST(SparseMatrix){
+  cout <<"\n*** SparseMatrix\n";
 
 
   arr A(5,10), B(10);
@@ -655,6 +660,38 @@ void TEST(Sparse){
     arr D;
     sparseProduct(D, A, B);
     CHECK_EQ(C, D, "");
+  }
+}
+
+//===========================================================================
+
+void TEST(SparseVector){
+  cout <<"\n*** SparseVector\n";
+
+
+  arr a(10), b(10);
+  rndInteger(a,0,3);
+  rndInteger(b,0,3);
+  cout <<"A=\n" <<a <<"\nB=\n" <<b <<"\nA*B=\n" <<scalarProduct(a, b) <<endl;
+
+  cout <<"A sparsity=" <<a.sparsity() <<endl;
+  cout <<"B sparsity=" <<b.sparsity() <<endl;
+
+  a.makeSparse();
+  b.makeSparse();
+
+  cout <<"A=\n" <<a <<"\nB=\n" <<b <<"\nA*B=\n" <<scalarProduct(a, b) <<endl;
+
+  for(uint k=0;k<100;k++){
+    arr a(20);
+    arr b(20);
+    rndInteger(a,0,3);
+    rndInteger(b,0,3);
+    double c = scalarProduct(a,b);
+    a.makeSparse();
+    b.makeSparse();
+    double d = scalarProduct(a,b);
+    CHECK_EQ(c, d, "");
   }
 }
 
@@ -702,8 +739,6 @@ void TEST(EigenValues){
 
 int MAIN(int argc, char *argv[]){
 
-  testSparse();
-  return 0;
 
   testBasics();
   testCheatSheet();
@@ -713,7 +748,7 @@ int MAIN(int argc, char *argv[]){
   testRowsAndColumsAccess();
   testStdVectorCompat();
   testMatlab();
-//  testException();
+  testException();
   testMemoryBound();
   testBinaryIO();
   testExpression();
@@ -722,7 +757,8 @@ int MAIN(int argc, char *argv[]){
   testDeterminant();
   testEigenValues();;
   testRowShifted();
-  testSparse();
+  testSparseVector();
+  testSparseMatrix();
   testInverse();
   testMM();
   testSVD();

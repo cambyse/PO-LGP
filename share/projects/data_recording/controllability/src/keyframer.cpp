@@ -1,4 +1,4 @@
-#include <extern/SWIFT/SWIFT.h>
+#include <Ors/SWIFT/SWIFT.h>
 #include <Gui/opengl.h>
 #include <Ors/ors_swift.h>
 #include <Algo/gaussianProcess.h>

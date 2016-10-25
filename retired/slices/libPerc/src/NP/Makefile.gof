@@ -1,6 +1,6 @@
 BASE   = ../..
 NAME   = libnp
-OUTPUT = $(BASE)/lib/$(NAME).so
+OUTPUT = ../$(NAME).so
 CXXFLAGS += -fPIC
 
 #OPTIM  = fast_debug
@@ -21,4 +21,4 @@ OBJS  = $(shell find . \( -name '*.cpp' -and -not -name '*_t.cpp' -and -not -nam
 OBJS := $(OBJS:%.cpp=%.o)
 endif
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

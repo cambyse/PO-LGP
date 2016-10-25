@@ -36,16 +36,11 @@ void TEST(EasyPR2){
     rndGauss(G.q,rand,true);
     G.setJointState(G.q);
   }
-#if 1
   KOMO komo;
   komo.setMoveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
-  komo.setSpline(7);
+//  komo.setSpline(10);
   komo.run();
   for(uint i=0;i<2;i++) komo.displayTrajectory();
-#else
-  arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"));
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
-#endif
 }
 
 //===========================================================================
@@ -66,8 +61,11 @@ void TEST(FinalPosePR2){
 
 void TEST(EasyAlign){
   ors::KinematicWorld G("test.ors");
-  arr x = moveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"), 7); //aligns all 3 axes
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
+  KOMO komo;
+  komo.setMoveTo(G, *G.getShapeByName("endeff"), *G.getShapeByName("target"), 7); //aligns all 3 axes
+  komo.setSpline(5);
+  komo.run();
+  for(uint i=0;i<2;i++) komo.displayTrajectory();
 }
 
 //===========================================================================
@@ -76,8 +74,12 @@ void TEST(EasyAlign2){
   ors::KinematicWorld G("test.ors");
   ors::Shape *s = G.getShapeByName("target");
   s->rel.addRelativeRotationDeg(90,1,0,0);
-  arr x = moveTo(G, *G.getShapeByName("endeff"), *s, 7, 2); //aligns all 3 axes
-  for(uint i=0;i<2;i++) displayTrajectory(x, 1, G, {}, "planned trajectory", 0.01);
+  KOMO komo;
+  komo.setMoveTo(G, *G.getShapeByName("endeff"), *s, 7);
+  komo.setSpline(10);
+  komo.run();
+//  komo.run();
+  for(uint i=0;i<2;i++) komo.displayTrajectory();
 }
 
 //===========================================================================

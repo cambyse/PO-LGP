@@ -6,4 +6,4 @@ PLIB = 1
 ROS = 1
 DEPEND = Core RosCom Actions Hardware_gamepad FOL
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

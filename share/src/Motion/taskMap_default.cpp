@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "taskMap_default.h"
 
@@ -276,12 +272,6 @@ void TaskMap_Default::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
 //    ors::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
     G.kinematicsQuat(y, J, body_i);
     if(!body_j){ //relative to world
-//      arr y2 = conv_vec2arr(q_j);
-//      if(scalarProduct(y,y2)>=0.){
-//        y -= y2;
-//      }else{
-//        y += y2;
-//      }
     }else{
       arr y2, J2;
       G.kinematicsQuat(y2, J2, body_j);

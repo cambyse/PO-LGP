@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 
 /**
@@ -513,19 +509,20 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
   }
 };
 
-  struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
+struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   ors::KinematicWorld *ors;
-  EditConfigurationHoverCall(ors::KinematicWorld& _ors) { ors=&_ors; }
+  EditConfigurationHoverCall(ors::KinematicWorld& _ors);// { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
-    if(!movingBody) return false;
+//    if(!movingBody) return false;
     if(!movingBody) {
       ors::Joint *j=NULL;
       ors::Shape *s=NULL;
+      mlr::timerStart(true);
       gl.Select(true);
       OpenGL::GLSelect *top=gl.topSelection;
       if(!top) return false;
       uint i=top->name;
-      cout <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
+      cout <<mlr::timerRead() <<"HOVER call: id = 0x" <<std::hex <<gl.topSelection->name <<endl;
       if((i&3)==1) s=ors->shapes(i>>2);
       if((i&3)==2) j=ors->joints(i>>2);
       gl.text.clear();
@@ -536,7 +533,7 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
       if(j) {
         gl.text
             <<"edge selection: " <<j->from->name <<' ' <<j->to->name
-            <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
+           <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
         listWrite(j->ats, gl.text, "\n");
       }
     } else {
@@ -551,6 +548,10 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
     return true;
   }
 };
+
+EditConfigurationHoverCall::EditConfigurationHoverCall(ors::KinematicWorld& _ors) {
+  ors=&_ors;
+}
 
 struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   ors::KinematicWorld &ors;
@@ -585,7 +586,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
     }else switch(gl.pressedkey) {
       case '1':  orsDrawBodies^=1;  break;
       case '2':  orsDrawShapes^=1;  break;
-      case '3':  orsDrawJoints^=1;  break;
+      case '3':  orsDrawJoints^=1;  orsDrawMarkers^=1; break;
       case '4':  orsDrawProxies^=1;  break;
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
@@ -620,7 +621,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
 void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 //  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
-  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
+//  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
   C.gl().addKeyCall(new EditConfigurationKeyCall(C,exit));
   C.gl().addClickCall(new EditConfigurationClickCall(C));
   Inotify ino(filename);

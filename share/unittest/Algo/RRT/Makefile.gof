@@ -3,4 +3,4 @@ BASE = ../../..
 DEPEND = Geo Ors Core Algo Motion
 LIBS += -lgtest
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

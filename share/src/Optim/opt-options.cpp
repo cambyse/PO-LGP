@@ -1,3 +1,18 @@
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
+    email: marc.toussaint@informatik.uni-stuttgart.de
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+
 #include "opt-options.h"
 
 //===========================================================================
@@ -13,6 +28,8 @@ OptOptions::OptOptions() {
   stopGTolerance= mlr::getParameter<double>("opt/stopGTolerance", -1.);
   stopEvals = mlr::getParameter<uint>  ("opt/stopEvals", 1000);
   stopIters = mlr::getParameter<uint>  ("opt/stopIters", 1000);
+  stopLineSteps = mlr::getParameter<uint>  ("opt/stopLineSteps", 10);
+  stopTinySteps = mlr::getParameter<uint>  ("opt/stopTinySteps", 10);
   initStep  = mlr::getParameter<double>("opt/initStep", 1.);
   minStep   = mlr::getParameter<double>("opt/minStep", -1.);
   maxStep   = mlr::getParameter<double>("opt/maxStep", .5);

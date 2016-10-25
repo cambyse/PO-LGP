@@ -64,6 +64,7 @@ joint (tableC /toolbox/floor_right) { from=<T t(0 0 .04)> to=<T d(180 0 0 1) t(.
 
 Include = '../../data/screwdriver/screwdriver.ors'
 joint (tableR screwdriver) { from=<T t(0 0 .06)> to=<T t(-.5 .0 .0) > type=10 }
+#joint (tableR screwdriver) { from=<T t(0 0 .06)> to=<T t(.5 .0 .0) > type=10 }
 shape screwdriverHandle(screwdriver) { type=5 rel=<T d(90 0 0 1)> size=[.15 0 0 0] color=[1 1 0] }
 
 body screwbox { type=9, size=[.05 .1 .04 .02], color=[.8 .3 .3] fixed, contact }

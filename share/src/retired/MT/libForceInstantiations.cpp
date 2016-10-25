@@ -16,8 +16,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 
-
-
 //#define MLR_IMPLEMENTATION
 #ifndef MLR_IMPLEMENT_TEMPLATES
 #  define MLR_IMPLEMENT_TEMPLATES

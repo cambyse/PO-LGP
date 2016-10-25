@@ -1,20 +1,17 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
 
 #include "graph.h"
 
@@ -32,14 +29,14 @@ struct Node_typed : Node {
   /// directly store pointer to value
   Node_typed(Graph& container, const T& _value)
     : Node(typeid(T), &this->value, container), value(_value) {
-    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
   /// directly store pointer to value
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& _value)
     : Node(typeid(T), &this->value, container, keys, parents), value(_value) {
-    if(isGraph()) graph().isNodeOfParentGraph = this; //this is the only place where isNodeOfParentGraph is set
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
@@ -70,11 +67,11 @@ struct Node_typed : Node {
   
   virtual Node* newClone(Graph& container) const {
     if(isGraph()){
-      Node_typed<Graph> *n = container.appendSubgraph(keys, parents);
+      Node_typed<Graph> *n = container.newSubgraph(keys, parents);
       n->value.copy(graph());
       return n;
     }
-    return new Node_typed<T>(container, keys, parents, value);
+    return container.newNode<T>(keys, parents, value);
   }
 };
 
@@ -91,13 +88,13 @@ template<class T> const T* Node::getValue() const {
 }
 
 template<class T> Nod::Nod(const char* key, const T& x){
-  n = new Node_typed<T>(G, x);
+  n = G.newNode<T>(x);
   n->keys.append(STRING(key));
 }
 
 template<class T> Nod::Nod(const char* key, const StringA& parents, const T& x)
   : parents(parents){
-  n = new Node_typed<T>(G, x);
+  n = G.newNode<T>(x);
   n->keys.append(STRING(key));
 }
 
@@ -126,9 +123,12 @@ template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
   return ret;
 }
 
-template<class T> Node *Graph::append(const StringA& keys, const NodeL& parents, const T& x){
+template<class T> Node_typed<T> *Graph::newNode(const StringA& keys, const NodeL& parents, const T& x){
   return new Node_typed<T>(*this, keys, parents, x);
 }
 
+template<class T> Node_typed<T> *Graph::newNode(const T& x){
+  return new Node_typed<T>(*this, x);
+}
 
 

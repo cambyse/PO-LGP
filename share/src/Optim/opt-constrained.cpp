@@ -1,20 +1,16 @@
-/*  ---------------------------------------------------------------------
-    Copyright 2014 Marc Toussaint
+/*  ------------------------------------------------------------------
+    Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a COPYING file of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>
-    -----------------------------------------------------------------  */
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
 
 #include "opt-constrained.h"
 #include "opt-newton.h"
@@ -105,7 +101,12 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
     }
     arr tmp = J_x;
     for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff.p[i]);
+#if 1
     HL = comp_At_A(tmp); //Gauss-Newton type!
+#else
+    arr tmpt = comp_At(tmp);
+    HL = comp_A_At(tmpt); //Gauss-Newton type!
+#endif
 
     if(fterm!=-1){ //For f-terms, the Hessian must be given explicitly, and is not \propto J^T J
       HL += H_x;
@@ -161,7 +162,7 @@ void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize
   if(anyTimeVariant){
     //collect gradients of active constraints
     arr A;
-    RowShifted *Aaux, *Jaux;
+    RowShifted *Aaux=NULL, *Jaux=NULL;
     if(isRowShifted(J_x)){
       Aaux = makeRowShifted(A, 0, J_x.d1, x.N);
       Jaux = castRowShifted(J_x);

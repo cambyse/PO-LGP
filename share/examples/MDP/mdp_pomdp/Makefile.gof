@@ -10,5 +10,5 @@ endif
 
 CLEAN = *_moc.cpp *_ui.h MT.log
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 

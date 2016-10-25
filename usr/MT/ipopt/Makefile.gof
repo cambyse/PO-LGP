@@ -13,4 +13,4 @@ CXXFLAGS += -fopenmp
 
 LIBS += -lipopt -lcoinhsl
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk

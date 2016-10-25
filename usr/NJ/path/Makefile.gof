@@ -11,5 +11,5 @@ SCHUNK = 1
 PLIB = 1
 SWIFT = 1
 
-include $(BASE)/gofMake/generic.mk
+include $(BASE)/build/generic.mk
 
