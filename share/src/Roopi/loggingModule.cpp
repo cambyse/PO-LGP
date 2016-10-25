@@ -3,7 +3,9 @@
 void SetOfDataFiles::write(const mlr::String& name, const arr& data) {
   std::map<mlr::String, ofstream*>::iterator i = logMap.find(name);
   if(i == logMap.end()) {
-    logMap.insert(std::map<mlr::String, ofstream*>::value_type(name, new ofstream(STRING("logData/" << folderName << "/" << name))));
+    ofstream* s = new ofstream(STRING("logData/" << folderName << "/" << name));
+    logMap.insert(std::map<mlr::String, ofstream*>::value_type(name, s));
+    *s << data << endl;
   } else {
     *i->second << data << endl;
   }
@@ -34,8 +36,8 @@ void LoggingModule::step() {
   CtrlMsg ref = ctrl_ref.get();
   logFiles.write("qRef", ref.q);
   logFiles.write("qDotRef", ref.qdot);
-  logFiles.write("compliance", ARR(trace(ref.Kp)));
-  logFiles.write("dynCompliance", ARR(trace(ref.Kd)));
+  //logFiles.write("compliance", ARR(trace(ref.Kp))); //TODO for oldfashioned
+  //logFiles.write("dynCompliance", ARR(trace(ref.Kd))); //TODO for oldfashioned
   logFiles.write("uBias", ref.u_bias);
 
   logFiles.write("t", ARR(mlr::timerRead()));
@@ -46,6 +48,8 @@ void LoggingModule::step() {
   logFiles.write("fL", obs.fL);
   logFiles.write("fR", obs.fR);
   logFiles.write("u", obs.u_bias);
+
+  logFiles.write("qSign", qSign.get());
 
   //TODO this produces many files. Maybe separate folder for each task? And a timestamp when the task was created or active or whatever?
   mlr::Array<CtrlTask*> tasks = ctrlTasks.get();

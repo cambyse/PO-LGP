@@ -9,7 +9,7 @@ arr generateEightTrajectory(arr startPos) {
   arr traj;
 
   double off = 0.1;
-  double radius = 0.2;
+  double radius = 0.15;
 
   uint n = 100;
 
@@ -50,15 +50,33 @@ arr generateEightTrajectory(arr startPos) {
 void tests() {
   Roopi R;
 
+  arr preTrajJointState = FILE("preTrajState");
+
+  R.gotToJointConfiguration(preTrajJointState, 10.0);
+  R.holdPosition();
+
+  CtrlTask* c = R.createCtrlTask("eight", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
+  c->setGains(20.0,5.0);
+  c->setC(ARR(1000.0));
+  arr traj = generateEightTrajectory(R.getTaskValue(c));
+  R.followTaskTrajectory(c, 15.0, traj);
+  //R.holdPosition(); //Hold position TODO: unsmooth
+
+   mlr::wait(1.0);
+
+    /*
   // move arms in a good position with motion planner
-  arr endeffRAway = ARR(0.4,-0.8,1.0);
-  R.goToPosition(endeffRAway, "endeffR", 5.0);
-  arr trajStart = ARR(0.5,0.0,1.0);
-  R.goToPosition(trajStart, "endeffL", 2.0);
+  arr endeffRAway = ARR(0.4,-0.8,.7);
+  //R.goToPosition(endeffRAway, "endeffR", 5.0,true);
+
+  arr trajStart = ARR(0.5,0.0,.7);
+  //R.goToPosition(trajStart, "endeffL", 2.0);
+
+  mlr::wait(1.0);
 
   //execute a eight trajectory in task space
   CtrlTask* c = R.createCtrlTask("eight", new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffL"));
-  c->setGains(10.0,5.0);
+  c->setGains(30.0,5.0);
   c->setC(ARR(1000.0));
   arr traj = generateEightTrajectory(R.getTaskValue(c));
   R.followTaskTrajectory(c, 15.0, traj);
@@ -74,11 +92,18 @@ void tests() {
   FollowPath fp(R, "circle", traj, new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffR"), 15.0);
 fp.threadLoop();
   //moduleShutdown().waitForValueGreaterThan(0);
+  */
+}
+
+void testKugel() {
+  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  world.watch(true);
 }
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   tests();
+  //testKugel();
   return 0;
 }
 

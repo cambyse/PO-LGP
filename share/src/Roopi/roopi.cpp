@@ -67,6 +67,7 @@ struct Roopi_private {
   //-- controller process
   TaskControllerModule tcm;
 
+  //-- logging
   LoggingModule loggingModule;
 
   //-- ROS initialization
@@ -92,7 +93,7 @@ struct Roopi_private {
   //-- display and interaction
   GamepadInterface gamepad;
   //OrsViewer view;
-  OrsPoseViewer ctrlView;
+  OrsPoseViewer* ctrlView;
 
   //-- sync'ing with ROS
   Subscriber<sensor_msgs::JointState> subJointState;
@@ -115,7 +116,6 @@ struct Roopi_private {
       pr2_odom(NULL, "pr2_odom"),
       tcm("pr2"),
       rosInit("Roopi"),
-      ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld),
       subJointState("/robot/joint_states", jointState),
       #if baxter
       spctb(tcm.realWorld),
@@ -131,6 +131,12 @@ struct Roopi_private {
     }
     #endif
 
+    if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
+      ctrlView = new OrsPoseViewer({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
+    } else {
+      ctrlView = new OrsPoseViewer({"ctrl_q_real"}, tcm.realWorld);
+    }
+
     threadOpenModules(true);
     mlr::wait(1.0);
     cout << "Go!" << endl;
@@ -138,21 +144,27 @@ struct Roopi_private {
 
   ~Roopi_private(){
     threadCloseModules();
+    delete ctrlView;
     cout << "bye bye" << endl;
   }
 };
-
 
 //==============================================================================
 
 Roopi::Roopi()
   : s(new Roopi_private){
-    planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
-    mlr::timerStart(true); //TODO is that necessary? Is the timer global?
+  planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
+  mlr::timerStart(true); //TODO is that necessary? Is the timer global?
+
+  holdPositionTask = createCtrlTask("HoldPosition", new TaskMap_qItself);
+  modifyCtrlTaskGains(holdPositionTask, 30.0, 5.0);
+  modifyCtrlC(holdPositionTask, ARR(1000.0));
+  activateCtrlTask(holdPositionTask);
 }
 
 Roopi::~Roopi(){
   delete s;
+  delete holdPositionTask;
 }
 
 //==============================================================================
@@ -171,6 +183,7 @@ CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
 
 void Roopi::activateCtrlTask(CtrlTask* t, bool active){
   tcm()->ctrlTasks.set(), t->active = active;  //(mt) very unusual syntax.... check if that works!
+  //TODO maybe initialize here with actual value again for safety reasons??!?!?
 }
 
 void Roopi::destroyCtrlTask(CtrlTask* t) {
@@ -194,10 +207,36 @@ void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, cons
   tcm()->ctrlTasks.deAccess();
 }
 
+void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel, const double maxAcc) {
+  tcm()->ctrlTasks.writeAccess();
+  ct->setGains(Kp, Kd);
+  ct->maxVel = maxVel;
+  ct->maxAcc = maxAcc;
+  tcm()->ctrlTasks.deAccess();
+}
+
 void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
   tcm()->ctrlTasks.writeAccess();
   ct->setC(C);
   tcm()->ctrlTasks.deAccess();
+}
+
+void Roopi::holdPosition() {
+  tcm()->ctrlTasks.writeAccess();
+  for(CtrlTask *t:tcm()->ctrlTasks()) t->active=false;
+  tcm()->ctrlTasks.deAccess();
+
+  /*CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
+  modifyCtrlTaskGains(ct, 30.0, 5.0);
+  modifyCtrlC(ct, ARR(1000.0));
+  activateCtrlTask(ct);*/
+
+  modifyCtrlTaskReference(holdPositionTask, tcm()->modelWorld.get()->getJointState());
+  activateCtrlTask(holdPositionTask);
+}
+
+void Roopi::releasePosition() {
+  activateCtrlTask(holdPositionTask, false);
 }
 
 //CtrlTask* Roopi::_addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
@@ -222,12 +261,31 @@ TaskControllerModule* Roopi::tcm() {
 //==============================================================================
 
 arr Roopi::getJointState() {
-  return tcm()->modelWorld.get()->getJointState();
+  if(tcm()->oldfashioned && !tcm()->useRos) {
+    return tcm()->modelWorld.get()->getJointState();
+  }
+  return tcm()->ctrl_obs.get()->q;
+}
+
+arr Roopi::getJointSign() {
+  return tcm()->qSign.get();
+}
+
+arr Roopi::getTorques() {
+  return tcm()->ctrl_obs.get()->u_bias;
+}
+
+arr Roopi::getFTLeft() {
+  return tcm()->ctrl_obs.get()->fL;
+}
+
+arr Roopi::getFTRight() {
+  return tcm()->ctrl_obs.get()->fR;
 }
 
 arr Roopi::getTaskValue(CtrlTask* task) {
   arr y;
-  task->map.phi(y, NoArr, tcm()->modelWorld.get()());
+  task->map.phi(y, NoArr, tcm()->modelWorld.get()()); //TODO or better with realWorld?
   return y;
 }
 
@@ -235,12 +293,33 @@ arr Roopi::getTaskValue(CtrlTask* task) {
 
 void Roopi::syncPlanWorld() {
   arr qPlan;
-  transferQbetweenTwoWorlds(qPlan, tcm()->modelWorld.get()->getJointState(), planWorld, tcm()->modelWorld.get()());
+  //this syncs with the real world, except for the case where no real world is available. TODO does this make sense?
+  if(tcm()->oldfashioned && !tcm()->useRos) {
+    transferQbetweenTwoWorlds(qPlan, tcm()->modelWorld.get()->getJointState(), planWorld, tcm()->modelWorld.get()());
+  } else {
+    transferQbetweenTwoWorlds(qPlan, tcm()->ctrl_obs.get()->q, planWorld, tcm()->modelWorld.get()());
+  }
   planWorld.setJointState(qPlan);
 }
 
 ors::KinematicWorld& Roopi::getPlanWorld() {
   return planWorld;
+}
+
+double Roopi::getLimitConstraint(double margin) {
+  LimitsConstraint limit(margin);
+  arr y;
+  syncPlanWorld();
+  limit.phi(y, NoArr, planWorld);
+  return y.first();
+}
+
+double Roopi::getCollisionConstraint(double margin) {
+  CollisionConstraint collisions(margin);
+  arr y;
+  syncPlanWorld();
+  collisions.phi(y, NoArr, planWorld);
+  return y.first();
 }
 
 void Roopi::followTaskTrajectory(CtrlTask* task, double executionTime, const arr& trajectory) {
@@ -300,7 +379,7 @@ void Roopi::followQTrajectory(const Roopi_Path* path) {
   ct->setC(ARR(1000.0));
   ct->setGains(ARR(30.0), ARR(5.0));
   followTaskTrajectory(ct, path->executionTime, path->path);
-  destroyCtrlTask(ct);
+  destroyCtrlTask(ct); //TODO this is a bit unsmooth, because then no task is active anymore! Calling holdPosition directly afterwards works, bit is a bit unsmmooth
 }
 
 Roopi_Path* Roopi::createPathInJointSpace(CtrlTask* task, double executionTime, bool verbose) {
@@ -318,19 +397,19 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   t->map.order=2; //acceleration task
   t->setCostSpecs(0, MP.T, {0.}, 1.0);
 
-  t = MP.addTask("collisions", new CollisionConstraint(0.1), ineqTT);
+  t = MP.addTask("collisions", new CollisionConstraint(0.11), ineqTT);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.1), ineqTT);
-  t->setCostSpecs(0., MP.T, {0.}, 1.0);
+  t = MP.addTask("qLimits", new LimitsConstraint(0.1), ineqTT); //TODO!!!!!!!!!!!!!!! margin
+  t->setCostSpecs(5, MP.T, {0.}, 1.0);
 
   for(CtrlTask* ct : tasks) {
     t = MP.addTask(ct->name, &ct->map, sumOfSqrTT);
-    t->setCostSpecs(MP.T-2, MP.T, ct->y_ref, 10.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
+    t->setCostSpecs(MP.T-5, MP.T, ct->y_ref, 5.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
   }
 
   path->path = MP.getInitialization();
 
-  optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose, stopIters=100, damping=1., maxStep=1.,aulaMuInc=2, nonStrictSteps=5)); //TODO options
+  optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose)); //TODO options
   if(verbose) MP.costReport();
   Graph result = MP.getReport();
   path->path.reshape(MP.T, path->path.N/MP.T);
@@ -347,12 +426,32 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   return path;
 }
 
-void Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
+bool Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
   CtrlTask* ct = new CtrlTask("pos", new TaskMap_Default(posTMT, tcm()->modelWorld.get()(), shape));
   ct->setTarget(pos);
   auto* path = createPathInJointSpace(ct, executionTime, verbose);
   delete ct;
-  if(path->isGood) followQTrajectory(path);
+  bool goodPath = false;
+  if(path->isGood) {
+    followQTrajectory(path);
+    goodPath = true;
+  }
+  delete path;
+  return goodPath;
+}
+
+bool Roopi::gotToJointConfiguration(const arr &jointConfig, double executionTime, bool verbose) {
+  CtrlTask* ct = new CtrlTask("q", new TaskMap_qItself);
+  ct->setTarget(jointConfig);
+  Roopi_Path* path = createPathInJointSpace(ct, executionTime, verbose); //TODO why was there a auto*
+  delete ct;
+  bool goodPath = false;
+  if(path->isGood) {
+    followQTrajectory(path);
+    goodPath = true;
+  }
+  delete path;
+  return goodPath;
 }
 
 

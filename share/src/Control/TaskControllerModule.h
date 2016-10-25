@@ -4,6 +4,7 @@
 #include <Control/ctrlMsg.h>
 #include <Control/taskController.h>
 #include <Control/RTControllerSimulation.h>
+#include <Control/gravityCompensation.h>
 
 
 /// The task controller generates the message send to the RT_Controller
@@ -23,6 +24,8 @@ struct TaskControllerModule : Module {
   ACCESS(bool, fixBase)
   ACCESS(arr, pr2_odom)
 
+  ACCESS(arr, qSign)
+
 //private:
   ors::KinematicWorld realWorld;
   TaskController *taskController;
@@ -36,11 +39,15 @@ struct TaskControllerModule : Module {
   bool syncModelStateWithReal; //< whether the step() should reinit the state from the ros message
   bool verbose;
   bool useDynSim;
+  bool compensateGravity;
   RTControllerSimulation* dynSim;
+
+  GravityCompensation* gc;
 
   arr q_history, qdot_last, a_last, q_lowPass, qdot_lowPass, qddot_lowPass, aErrorIntegral, u_lowPass;
   arr model_error_g;
 
+  arr qLastReading;
 
 
 public:

@@ -19,6 +19,8 @@ struct Roopi {
   CtrlTaskL activeTasks;
   ors::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
 
+  CtrlTask* holdPositionTask;
+
   Roopi();
   ~Roopi();
 
@@ -35,8 +37,13 @@ struct Roopi {
 
   void modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef = NoArr);
   void modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
+  void modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
   void modifyCtrlC(CtrlTask* ct, const arr& C);
 
+  /// holds all joints in position. Desactivates all other tasks
+  void holdPosition();
+  /// release hold position task. Has no effect for other tasks
+  void releasePosition();
 
 
   // low-level ctr - use is discouraged!!
@@ -68,11 +75,19 @@ struct Roopi {
   //-- macros
 
   /// move "shape" to "pos" using a motion planner.
-  void goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose = false);
+  bool goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose = false);
+
+  /// move to joint configuration using a motion planner
+  bool gotToJointConfiguration(const arr& jointConfig, double executionTime, bool verbose = false);
 
   //-- low-level access
 
   arr getJointState();
+  arr getJointSign();
+  arr getTorques();
+  arr getFTLeft();
+  arr getFTRight();
+
   /// get current value of the underlying task map
   arr getTaskValue(CtrlTask* task);
 
@@ -80,6 +95,8 @@ struct Roopi {
   void syncPlanWorld();
   ors::KinematicWorld& getPlanWorld();
 
+  double getLimitConstraint(double margin = 0.05);
+  double getCollisionConstraint(double margin = 0.1);
 
   //-- TODO
 
