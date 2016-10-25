@@ -41,5 +41,5 @@ void PlayForceSoundActivity::step(){
 // ============================================================================
 
 RUN_ON_INIT_BEGIN(PlayForceSound)
-registerActivity<PlayForceSoundActivity>("PlayForceSound");
+//registerActivity<PlayForceSoundActivity>("PlayForceSound");
 RUN_ON_INIT_END(PlayForceSound)

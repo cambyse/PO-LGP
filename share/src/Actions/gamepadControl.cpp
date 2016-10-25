@@ -46,5 +46,5 @@ void GamepadControlActivity::close(){
 //===========================================================================
 
 RUN_ON_INIT_BEGIN(gamepadControl)
-registerActivity<GamepadControlActivity>("GamepadControlActivity");
+//registerActivity<GamepadControlActivity>("GamepadControlActivity");
 RUN_ON_INIT_END(gamepadControl)

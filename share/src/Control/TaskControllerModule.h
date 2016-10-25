@@ -50,13 +50,13 @@ struct TaskControllerModule : Thread {
 
   arr qLastReading;
 
-  ors::KinematicWorld& customModelWorld;
+//  ors::KinematicWorld& customModelWorld;
 
   arr fRInitialOffset;
 
 
 public:
-  TaskControllerModule(const char* robot="pr2", ors::KinematicWorld& world = NoWorld);
+  TaskControllerModule(const char* robot="pr2");
   ~TaskControllerModule();
 
   void open();
