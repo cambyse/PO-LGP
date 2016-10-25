@@ -56,7 +56,7 @@ struct TaskControllerModule : Thread {
 
 
 public:
-  TaskControllerModule(const char* robot="pr2");
+  TaskControllerModule(const char* robot="pr2", ors::KinematicWorld& world = NoWorld);
   ~TaskControllerModule();
 
   void open();

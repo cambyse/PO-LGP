@@ -16,7 +16,7 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot/*, ors::KinematicWorld& world*/)
+TaskControllerModule::TaskControllerModule(const char* _robot/*, ors::KinematicWorld& world*/, ors::KinematicWorld& world)
   : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -28,7 +28,6 @@ TaskControllerModule::TaskControllerModule(const char* _robot/*, ors::KinematicW
   , useDynSim(true)
   , compensateGravity(false)
   , compensateFTSensors(false)
-//  , customModelWorld(world)
 {
 
   s = new sTaskControllerModule();
@@ -40,9 +39,8 @@ TaskControllerModule::TaskControllerModule(const char* _robot/*, ors::KinematicW
   if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
   else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
   else{
-    HALT("you need to specify a robot by string");
-//    CHECK(&customModelWorld,"");
-//    realWorld = customModelWorld;
+    CHECK(&world,"if you don't specify a robot, you need to specify a world!!");
+    realWorld = world;
   }
   q0 = realWorld.q;
 
@@ -68,11 +66,7 @@ void TaskControllerModule::open(){
     gc->learnFTModel();
   }
 
-//  if(&customModelWorld) {
-//    modelWorld.set()() = customModelWorld;
-//  } else {
-    modelWorld.set()() = realWorld;
-//  }
+  modelWorld.set()() = realWorld;
 
   makeConvexHulls(modelWorld.set()->shapes);
  // modelWorld.set() = realWorld;
