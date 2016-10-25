@@ -1799,7 +1799,6 @@ void ors::KinematicWorld::stepOde(double tau){
 }
 
 void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double dynamicNoise, bool gravity){
-
   struct DiffEqn:VectorFunction{
     ors::KinematicWorld &S;
     const arr& Bu;
@@ -2045,7 +2044,7 @@ void ors::KinematicWorld::clearForces() {
 void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
   n->force += force;
   if (!s->physx) {
-    NIY;
+    //NIY;
   }
   else {
     s->physx->addForce(force, n);
@@ -2057,12 +2056,12 @@ void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
 void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n, ors::Vector pos) {
   n->force += force;
   if (!s->physx) {
-    NIY;
+    //NIY;
   }
   else {
     s->physx->addForce(force, n, pos);
   }
-  //n->torque += (pos - n->X.p) ^ force;
+  n->torque += (pos - n->X.pos) ^ force;
 }
 
 void ors::KinematicWorld::frictionToForces(double coeff) {
@@ -2093,7 +2092,9 @@ void ors::KinematicWorld::contactsToForces(double hook, double damp) {
   ors::Vector trans, transvel, force;
   uint i;
   int a, b;
-  for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
+  for(i=0; i<proxies.N; i++) {
+    //cout << proxies(i)->d << endl;
+    if(proxies(i)->d <= 0.) {
       a=proxies(i)->a; b=proxies(i)->b;
       
       //if(!i || proxies(i-1).a!=a || proxies(i-1).b!=b) continue; //no old reference sticking-frame
@@ -2110,6 +2111,7 @@ void ors::KinematicWorld::contactsToForces(double hook, double damp) {
       if(a!=-1) addForce(force, shapes(a)->body, proxies(i)->posA);
       if(b!=-1) addForce(-force, shapes(b)->body, proxies(i)->posB);
     }
+  }
 }
 
 void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
@@ -2151,8 +2153,8 @@ void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
 void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
   ors::Shape *a = shapes(p->a);
   ors::Shape *b = shapes(p->b);
-  CHECK(a->mesh_radius>0.,"");
-  CHECK(b->mesh_radius>0.,"");
+  //CHECK(a->mesh_radius>0.,"");
+  //CHECK(b->mesh_radius>0.,"");
 
   y.resize(1);
   if(&J) J.resize(1, getJointStateDimension());
@@ -2172,8 +2174,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
     return;
   }
   double ab_radius = margin + 10.*(a->mesh_radius+b->mesh_radius);
-  CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
-  CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
+  //CHECK(p->d<(1.+1e-6)*margin, "something's really wierd here!");
+  //CHECK(p->cenD<(1.+1e-6)*ab_radius, "something's really wierd here! You disproved the triangle inequality :-)");
   double d1 = 1.-p->d/margin;
   double d2 = 1.-p->cenD/ab_radius;
   if(d2<0.) d2=0.;

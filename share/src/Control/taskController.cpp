@@ -58,14 +58,14 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
 }
 
 void CtrlTask::setGains(const arr& _Kp, const arr& _Kd) {
-  active=true;
+  //active=true; //TODO
   Kp = _Kp;
   Kd = _Kd;
   if(!prec.N) prec=ARR(100.);
 }
 
 void CtrlTask::setGains(double pgain, double dgain) {
-  active=true;
+  //active=true; //TODO
   Kp = ARR(pgain);
   Kd = ARR(dgain);
   if(!prec.N) prec=ARR(100.);
@@ -75,6 +75,10 @@ void CtrlTask::setGainsAsNatural(double decayTime, double dampingRatio) {
   CHECK(decayTime>0. && dampingRatio>0., "this does not define proper gains!");
   double lambda = -decayTime*dampingRatio/log(.1);
   setGains(mlr::sqr(1./lambda), 2.*dampingRatio/lambda);
+}
+
+void CtrlTask::setC(const arr& C) {
+  prec = C;
 }
 
 
@@ -195,7 +199,7 @@ double CtrlTask::error(){
 bool CtrlTask::isConverged(double tolerance){
   return (y.N && y.N==y_ref.N && v.N==v_ref.N
           && maxDiff(y, y_ref)<tolerance
-          && maxDiff(v, v_ref)<tolerance);
+          && maxDiff(v, v_ref)<tolerance); //TODO what if Kp = 0, then it should not count?!?
 }
 
 void CtrlTask::reportState(ostream& os){
@@ -348,7 +352,7 @@ arr TaskController::operationalSpaceControl(){
   return q_ddot;
 }
 
-arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ, arr& JCKJ) {
+arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
   arr Kp_y, Kd_y, k_y, C_y;
   qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
   arr H = qNullCostRef.getC();
@@ -357,8 +361,7 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ, arr&
   Kd = H * Kd_y;
   k  = H * k_y;
 
-  if(&JCJ) JCJ = zeros(world.q.N, world.q.N);
-  if(&JCKJ) JCKJ = zeros(world.q.N, world.q.N);
+  arr JCJ = zeros(world.q.N, world.q.N);
 
   for(CtrlTask* task : tasks) if(task->active){
     arr y, J_y;
@@ -368,13 +371,22 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, arr& JCJ, arr&
 
     arr JtC_y = ~J_y*C_y;
 
-    if(&JCJ) JCJ += JtC_y*J_y;
-    if(&JCKJ) JCKJ += JtC_y*Kp_y*J_y;
+    JCJ += JtC_y*J_y;
+
     Kp += JtC_y*Kp_y*J_y;
     Kd += JtC_y*Kd_y*J_y;
     k  += JtC_y*(k_y + Kp_y*(J_y*world.q - y));
   }
   arr invA = inverse_SymPosDef(H + JCJ);
+
+  arr E = zeros(4,world.q.N);
+  E(0,0) = 1; //Fix Base
+  E(1,1) = 1; //Fix Base
+  E(2,2) = 1; //Fix Base
+
+  E(3,3) = 1; //Fix Torso
+
+  invA = invA*(eye(world.q.N)-~E*inverse_SymPosDef(E*invA*~E)*E*invA);
   Kp = invA*Kp;
   Kd = invA*Kd;
   k  = invA*k;
@@ -452,7 +464,7 @@ void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, doubl
     TaskMap_Default& map = dynamic_cast<TaskMap_Default&>(law->map);
     ors::Body* body = world.shapes(map.i)->body;
     ors::Vector vec = world.shapes(map.i)->rel.pos;
-    ors::Shape* lFtSensor = world.getShapeByName("l_ft_sensor");
+    ors::Shape* lFtSensor = world.getShapeByName("r_ft_sensor");
     arr y, J, J_ft;
     law->map.phi(y, J, world);
     world.kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);

@@ -2,6 +2,7 @@
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
+
 void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
   if(lowPass.N!=signal.N){ lowPass=zeros(signal.N); return; }
   lowPass = (1.-rate)*lowPass + rate*signal;
@@ -15,7 +16,7 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot)
+TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWorld& world)
   : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -24,7 +25,11 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , requiresInitialSync(true)
   , syncModelStateWithReal(false)
   , verbose(false)
-  , useDynSim(true){
+  , useDynSim(true)
+  , compensateGravity(false)
+  , compensateFTSensors(false)
+  , customModelWorld(world)
+{
 
   s = new sTaskControllerModule();
   useRos = mlr::getParameter<bool>("useRos",false);
@@ -32,10 +37,15 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 
   robot = mlr::getParameter<mlr::String>("robot", _robot);
-  if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  /*if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
   else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
-  else HALT("undefined robot '" <<robot <<"'");
+  else HALT("undefined robot '" <<robot <<"'");*/
+  realWorld = customModelWorld;
   q0 = realWorld.q;
+
+  qSign.set()() = zeros(q0.N);
+
+  fRInitialOffset = ARR(-0.17119, 0.544316, -1.2, 0.023718, 0.00802182, 0.0095804);
 
 }
 
@@ -46,7 +56,23 @@ void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
-  modelWorld.set() = realWorld;
+  //gc = new GravityCompensation(realWorld);
+  if(compensateGravity) {  
+    //gc->loadBetas();
+    gc->learnGCModel();
+  }
+  if(compensateFTSensors) {
+    gc->learnFTModel();
+  }
+
+  if(&customModelWorld) {
+    modelWorld.set()() = customModelWorld;
+  } else {
+    modelWorld.set()() = realWorld;
+  }
+
+  makeConvexHulls(modelWorld.set()->shapes);
+ // modelWorld.set() = realWorld;
   taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
@@ -69,8 +95,6 @@ void TaskControllerModule::open(){
     dynSim = new RTControllerSimulation(0.01, false, 0.);
     dynSim->threadLoop();
   }
-
-  dataFiles.open({"q", "qdot", "qddot", "q_low", "qdot_low", "qddot_low", "qddot_des"});
 }
 
 
@@ -93,6 +117,19 @@ void TaskControllerModule::step(){
       if(q_real.N==realWorld.q.N && pr2odom.N==3){
         q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
       }
+
+      if(qLastReading.d0 > 0) {
+        qSign.writeAccess();
+        for(uint i = 0; i < q_real.N; i++) {
+          double si = sign(q_real(i)-qLastReading(i));
+          if(si != qSign()(i) && si != 0) {
+            qSign()(i) = si;
+          }
+        }
+        //cout << qSign() << endl;
+        qSign.deAccess();
+      }
+      qLastReading = q_real;
     }
     if(robot=="baxter" && useRos){
 #ifdef MLR_ROS
@@ -115,6 +152,7 @@ void TaskControllerModule::step(){
         if(q_history.d0>0) lowPassUpdate(q_lowPass, q_history[0]);
         if(q_history.d0>1) lowPassUpdate(qdot_lowPass, (q_history[0]-q_history[1])/.01);
         if(q_history.d0>2) lowPassUpdate(qddot_lowPass, (q_history[0]-2.*q_history[1]+q_history[2])/(.01*.01));
+        //if(q_history.d0 > 1) cout << sign(q_model-q_history[1]) << endl;
         if(oldfashioned) syncModelStateWithReal = false;
       }
       requiresInitialSync = false;
@@ -163,14 +201,14 @@ void TaskControllerModule::step(){
       taskController->setState(q_model, qdot_model);
     }
     if(verbose) taskController->reportCurrentState();
-
-    arr Kp, Kd, k, JCJ;
-    taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
-    Kp = .01 * JCJ;
-    Kp += .2*diag(ones(Kp.d0));
+    //arr Kp, Kd, k, JCJ;
+    //taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+
+    //Kp = .01 * JCJ;
+    //Kp += .2*diag(ones(Kp.d0));
 
     ctrl_q_ref.set() = q_model;
 
@@ -178,7 +216,7 @@ void TaskControllerModule::step(){
     refs.q =  q_model;
     refs.qdot = zeros(q_model.N);
     refs.fL_gamma = 1.;
-    refs.Kp = ARR(1.); //Kp;
+    refs.Kp = ARR(1.);
     refs.Kd = ARR(1.);
     refs.Ki = ARR(0.2);
     refs.fL = zeros(6);
@@ -209,6 +247,8 @@ void TaskControllerModule::step(){
     modelWorld.writeAccess();
     taskController->tasks = ctrlTasks();
 
+    modelWorld().stepSwift();
+
 #if 0
     arr u_bias, Kp, Kd;
     arr M, F;
@@ -218,8 +258,8 @@ void TaskControllerModule::step(){
 #else
 
     //-- compute desired acceleration law in q-space
-    arr a, Kp, Kd, k, JCJ;
-    a = taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
+    arr a, Kp, Kd, k;
+    a = taskController->getDesiredLinAccLaw(Kp, Kd, k);
     checkNan(k);
 
 
@@ -234,7 +274,7 @@ void TaskControllerModule::step(){
     arr u_bias = zeros(q_model.N);
 #else //... or directly u_bias
     arr q_ref = zeros(q_model.N);
-    arr u_bias = M*k + zeros(q_model.N); //+F returns nans
+    arr u_bias = M*k + zeros(q_model.N); //+F returns nans TODO
 #endif
     Kp = M*Kp;
     Kd = M*Kd;
@@ -264,22 +304,41 @@ void TaskControllerModule::step(){
       taskController->reportCurrentState();
     }
 
-//    dataFiles.write({&modelWorld().q, &modelWorld().qdot, &qddot, &q_lowPass, &qdot_lowPass, &qddot_lowPass, &aErrorIntegral});
 
     modelWorld.deAccess();
     ctrlTasks.deAccess();
 
     refs.q =  q_ref;
     refs.qdot = zeros(q_model.N);
-    refs.fL_gamma = gamma;
+    refs.fR_gamma = gamma;
     refs.Kp = Kp;
     refs.Kd = Kd;
     refs.Ki.clear();
-    refs.fL = fRef;
-    refs.fR = zeros(6);
-    refs.KiFTL = K_ft;
-    refs.J_ft_invL = J_ft_inv;
+    refs.fL = zeros(6);//fRef;
+    refs.fR = fRef;
+    refs.KiFTR = K_ft;
+    refs.J_ft_invR = J_ft_inv;
+
+    if(compensateGravity) {
+      //u_bias += gc->compensate(realWorld.getJointState(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint"
+                                               // ,"l_wrist_flex_joint"});
+      //u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_forearm_roll_joint","l_wrist_flex_joint"});
+      u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"r_shoulder_pan_joint"
+                                                                         ,"r_shoulder_lift_joint"
+                                                                         ,"r_forearm_roll_joint"
+                                                                         ,"r_wrist_flex_joint"
+                                                                          });
+    }
     refs.u_bias = u_bias;
+
+    if(compensateFTSensors) {
+      refs.fL_offset = gc->compensateFTL(realWorld.getJointState());
+      refs.fR_offset = gc->compensateFTR(realWorld.getJointState()) + fRInitialOffset;
+    } else {
+      refs.fL_offset = zeros(6);
+      refs.fR_offset = zeros(6);
+    }
+
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;
   }

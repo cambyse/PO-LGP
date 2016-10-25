@@ -71,6 +71,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
   void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
+  void setC(const arr& C);
 
   arr get_y_ref(const arr& y);
   arr get_ydot_ref(const arr& ydot);
@@ -128,7 +129,7 @@ struct TaskController {
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
   arr calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F); ///< returns the linearized control law
-  arr getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &u0, arr& JCJ=NoArr, arr& JCKJ=NoArr); ///< returns the linearized control law
+  arr getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &u0); ///< returns the linearized control law
   void calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma); ///< returns the force controller coefficients
   void updateConstraintControllers();
   void reportCurrentState();
