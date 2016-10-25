@@ -4,7 +4,7 @@
 #include "roopi.h"
 #include <Algo/spline.h>
 
-struct FollowPath:Thread{
+struct FollowPath : Thread{
   Roopi &roopi;
   const char* name;
   arr path;

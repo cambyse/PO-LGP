@@ -2,7 +2,7 @@
 #define LOGGINGMODULE_H
 
 #include <Core/array.h>
-#include <Core/module.h>
+#include <Core/thread.h>
 #include <Control/ctrlMsg.h>
 #include <Control/taskController.h>
 
@@ -16,7 +16,7 @@ struct SetOfDataFiles {
   ~SetOfDataFiles();
 };
 
-struct LoggingModule : Module {
+struct LoggingModule : Thread {
 
   ACCESSname(CtrlMsg, ctrl_ref) //< the message send to the RTController
   ACCESSname(CtrlMsg, ctrl_obs) //< the message received from the RTController
