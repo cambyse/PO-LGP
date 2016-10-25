@@ -379,14 +379,14 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
   }
   arr invA = inverse_SymPosDef(H + JCJ);
 
-  arr E = zeros(4,world.q.N);
-  E(0,0) = 1; //Fix Base
-  E(1,1) = 1; //Fix Base
-  E(2,2) = 1; //Fix Base
+  //arr E = zeros(4,world.q.N);
+  //E(0,0) = 1; //Fix Base
+  //E(1,1) = 1; //Fix Base
+  //E(2,2) = 1; //Fix Base
 
-  E(3,3) = 1; //Fix Torso
+  //E(3,3) = 1; //Fix Torso
 
-  invA = invA*(eye(world.q.N)-~E*inverse_SymPosDef(E*invA*~E)*E*invA);
+  //invA = invA*(eye(world.q.N)-~E*inverse_SymPosDef(E*invA*~E)*E*invA);
   Kp = invA*Kp;
   Kd = invA*Kd;
   k  = invA*k;
