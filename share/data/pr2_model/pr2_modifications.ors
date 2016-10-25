@@ -33,12 +33,12 @@ Merge r_elbow_flex_link_0 { contact }
 Merge r_forearm_link_0 { contact }
 Merge r_wrist_flex_link_0 { contact }
 Merge r_wrist_roll_link_0 { contact }
-Merge r_gripper_palm_link_0 { contact }
-Merge r_gripper_motor_accelerometer_link_0 { contact }
-Merge r_gripper_l_finger_link_0 { contact }
-Merge r_gripper_r_finger_link_0 { contact }
-Merge r_gripper_l_finger_tip_link_0 { contact }
-Merge r_gripper_r_finger_tip_link_0 { contact }
+#Merge r_gripper_palm_link_0 { contact }
+#Merge r_gripper_motor_accelerometer_link_0 { contact }
+#Merge r_gripper_l_finger_link_0 { contact }
+#Merge r_gripper_r_finger_link_0 { contact }
+#Merge r_gripper_l_finger_tip_link_0 { contact }
+#Merge r_gripper_r_finger_tip_link_0 { contact }
 Merge l_shoulder_pan_link_0 { contact }
 Merge l_shoulder_lift_link_0 { contact }
 Merge l_upper_arm_roll_link_0 { contact }
@@ -48,12 +48,12 @@ Merge l_elbow_flex_link_0 { contact }
 Merge l_forearm_link_0 { contact }
 Merge l_wrist_flex_link_0 { contact }
 Merge l_wrist_roll_link_0 { contact }
-Merge l_gripper_palm_link_0 { contact }
-Merge l_gripper_motor_accelerometer_link_0 { contact }
-Merge l_gripper_l_finger_link_0 { contact }
-Merge l_gripper_r_finger_link_0 { contact }
-Merge l_gripper_l_finger_tip_link_0 { contact }
-Merge l_gripper_r_finger_tip_link_0 { contact }
+#Merge l_gripper_palm_link_0 { contact }
+#Merge l_gripper_motor_accelerometer_link_0 { contact }
+#Merge l_gripper_l_finger_link_0 { contact }
+#Merge l_gripper_r_finger_link_0 { contact }
+#Merge l_gripper_l_finger_tip_link_0 { contact }
+#Merge l_gripper_r_finger_tip_link_0 { contact }
 
 Merge worldTranslationRotation { gains=[1 1] ctrl_limits=[1 1 1] }
 
