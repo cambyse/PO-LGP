@@ -572,8 +572,7 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   path->path = MP.getInitialization();
 
   optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose)); //TODO options
-  //if(verbose) MP.reportFull(); //TODO fails
-  Graph result = MP.getReport();
+  Graph result = MP.getReport(verbose);
   path->path.reshape(MP.T, path->path.N/MP.T);
   path->cost = result.get<double>({"total","sqrCosts"});
   path->constraints = result.get<double>({"total","constraints"});
