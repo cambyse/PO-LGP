@@ -16,6 +16,64 @@
 #pragma once
 
 #include <Core/array.h>
+#include "optimization.h"
+
+/*
+
+  Implement:
+ HillClimbing (with fixed exploration; with adaptive exploration)
+ DifferentialHillClimbing (with adaptive exploration distribution on delta)
+ classical model-based optim
+
+ Greedy local search (6:5) Stochastic local search (6:6) Simulated annealing (6:7)
+Random restarts (6:10) Iterated local search (6:11) Variable neighborhood search
+(6:13) Coordinate search (6:14) Pattern search (6:15) Nelder-Mead simplex method
+(6:16) General stochastic search (6:20) Evolutionary algorithms (6:23) Covariance Matrix
+Adaptation (CMA) (6:24) Estimation of Distribution Algorithms (EDAs) (6:28)
+Model-based optimization (6:31) Implicit filtering (6:34)
+
+Improvement (5:24) Maximal Probability of Improvement
+(5:24) GP-UCB (5:24)
+
+Generic globalization: Iterated Local Optim: check when converged multiply to same local opt
+
+Require bound constraints!
+
+*
+Twiddle
+ */
+
+
+//===========================================================================
+
+struct LocalModelBasedOptim{
+  struct Datum{
+    arr x;
+    double f;
+    double distToBest;
+  };
+
+  arr x_init;
+  ScalarFunction f;
+  mlr::Array<Datum*> D; ///< data collected so far
+  Datum* best;
+  double alpha;
+  OptOptions o;
+  uint it, evals, numTinySteps;
+//  Gradient::StopCriterion stopCriterion;
+  ofstream fil;
+
+  LocalModelBasedOptim(arr& x, const ScalarFunction& f, OptOptions o=NOOPT);
+  ~LocalModelBasedOptim();
+  void step();
+  void run(uint maxIt = 1000);
+
+private:
+  void evaluate(const arr& x, bool sort=true);
+
+};
+
+//===========================================================================
 
 /// Wrapper for CMA stochastic optimization
 struct SearchCMA{
