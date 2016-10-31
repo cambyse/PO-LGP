@@ -3,6 +3,7 @@
 #include <Optim/benchmarks.h>
 
 // the kernel stuff is preliminary -- please igore everything related to kernels so far
+#if 0
 arr buildKernelMatrix(KOrderMarkovFunction& P){
   CHECK(P.hasKernel(),"");
   uint T = P.get_T();
@@ -23,8 +24,6 @@ arr buildKernelMatrix(KOrderMarkovFunction& P){
   inverse_SymPosDef(Kinv, K);
   return Kinv;
 }
-
-
 
 void TEST(KOrderMarkov) {
   //see the implemention of ParticleAroundWalls::phi_t for an example on how to specify constrained k-order-Markov optimization problems
@@ -58,6 +57,7 @@ void TEST(KOrderMarkov) {
   for(uint i=1;i<n;i++) plt <<", '' us " <<i+1;
   gnuplot(plt, true, true);
 }
+#endif
 
 void TEST(KOrderMarkov2) {
   //see the implemention of ParticleAroundWalls::phi_t for an example on how to specify constrained k-order-Markov optimization problems

@@ -20,9 +20,6 @@
 ScalarFunction     conv_cstylefs2ScalarFunction(double(*fs)(arr*, const arr&, void*),void *data);
 VectorFunction     conv_cstylefv2VectorFunction(void (*fv)(arr&, arr*, const arr&, void*),void *data);
 ScalarFunction     conv_VectorFunction2ScalarFunction(const VectorFunction& f);
-ScalarFunction     conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f);
-VectorFunction     conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f);
-ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f);
 ConstrainedProblem conv_KOMO2ConstrainedProblem(struct KOMO_Problem& f);
 
 /// this takes a constrained problem over $x$ and re-represents it over $z$ where $x=Bz$
@@ -30,7 +27,7 @@ ConstrainedProblem conv_linearlyReparameterize(const ConstrainedProblem& f, cons
 
 /// A struct that allows to convert one function type into another, even when given as argument
 struct Convert {
-  KOrderMarkovFunction *kom;
+//  KOrderMarkovFunction *kom;
   double(*cstyle_fs)(arr*, const arr&, void*);
   void (*cstyle_fv)(arr&, arr*, const arr&, void*);
   void *data;
@@ -41,7 +38,7 @@ struct Convert {
 
   Convert(const ScalarFunction&);
   Convert(const VectorFunction&);
-  Convert(KOrderMarkovFunction&);
+//  Convert(KOrderMarkovFunction&);
   Convert(KOMO_Problem&);
   Convert(double(*fs)(arr*, const arr&, void*),void *data);
   Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data);
@@ -49,6 +46,6 @@ struct Convert {
   operator ScalarFunction();
   operator VectorFunction();
   operator ConstrainedProblem();
-  operator KOrderMarkovFunction&();
+//  operator KOrderMarkovFunction&();
 };
 

@@ -68,17 +68,16 @@ void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr,
 
     //optRprop(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
     //optGradDescent(x, F, OPT(verbose=2, stopTolerance=1e-3, initStep=1e-1));
-    OptNewton opt(x, UCP, OPT(verbose=2, damping=.1, stopTolerance=1e-2));
-    opt.run();
-    evals+=opt.evals;
+    OptNewton newton(x, UCP, OPT(verbose=2, damping=.1, stopTolerance=1e-2));
+    newton.run();
+    evals+=newton.evals;
 
     //upate unconstraint problem parameters
-    switch(opt.o.constrainedMethod){
-    case squaredPenalty: UCP.mu *= 10;  UCP.nu *= 10;  break;
-    case augmentedLag:
-      UCP.aulaUpdate(1.);//   UCP.mu *= 2.;
-        break;
-    case logBarrier:     UCP.muLB *=.5;  UCP.nu *= 10;  break;
+    switch(newton.o.constrainedMethod){
+    case squaredPenalty: UCP.mu *= 10.;  UCP.nu *= 10.;  break;
+    case augmentedLag:   UCP.aulaUpdate(false, 1., 2., &newton.fx, newton.gx, newton.Hx);  break;
+    case anyTimeAula:    UCP.aulaUpdate(true,  1., 2., &newton.fx, newton.gx, newton.Hx);  break;
+    case logBarrier:     UCP.muLB /= 2.;  UCP.nu *= 10;  break;
     default: NIY;
     }
 

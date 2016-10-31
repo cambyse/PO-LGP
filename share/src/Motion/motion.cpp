@@ -149,6 +149,7 @@ void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
   }
 }
 
+#if 0
 uint MotionProblem::dim_phi(uint t) {
   uint m=0;
   for(Task *c: tasks) {
@@ -176,6 +177,7 @@ uint MotionProblem::dim_h(uint t) {
   }
   return m;
 }
+#endif
 
 void MotionProblem::setupConfigurations(){
 
@@ -265,6 +267,7 @@ void MotionProblem::displayTrajectory(int steps, const char* tag, double delay){
     gl->watch(STRING(tag <<" (time " <<std::setw(3) <<T <<'/' <<T <<')').p);
 }
 
+#if 0
 void MotionProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t) {
 #if 0
   phi.clear();
@@ -336,6 +339,7 @@ StringA MotionProblem::getPhiNames(uint t){
   CHECK_EQ(m , names.N,"");
   return names;
 }
+#endif
 
 void MotionProblem::reportFull(bool brief, ostream& os) {
   os <<"*** MotionProblem -- FeatureReport " <<endl;
@@ -617,8 +621,11 @@ void MotionProblem::inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, con
   if(&J) J.clear();
   if(&H) H.clear();
   if(&tt) tt.clear();
-  set_x(x);
-  phi_t(y, J, tt, 0);
+  arrA Ja, Ha;
+  komo_problem.phi(y, (&J?Ja:NoArrA), NoArrA, tt, x);
+  if(&J) J = Ja.scalar();
+//  set_x(x);
+//  phi_t(y, J, tt, 0);
 }
 
 void MotionProblem::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes){

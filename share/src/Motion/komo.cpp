@@ -468,7 +468,8 @@ void KOMO::run(){
 #endif
     }else{
       arr a,b,c,d,e;
-      ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
+      Conv_KOMO_ConstrainedProblem P0(MP->komo_problem);
+//      ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
       P0(a,b,c,NoTermTypeA, x);
       ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
       P(a,b,NoArr,NoTermTypeA,z);
@@ -492,9 +493,9 @@ Graph KOMO::getReport(bool gnuplt){
 void KOMO::checkGradients(){
   if(MP->T){
     if(!splineB.N)
-      checkJacobianCP(Convert(MP->komo_problem), x, 1e-4);
+      checkJacobianCP(Conv_KOMO_ConstrainedProblem(MP->komo_problem), x, 1e-4);
     else{
-      ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
+      Conv_KOMO_ConstrainedProblem P0(MP->komo_problem);
       ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
       checkJacobianCP(P, z, 1e-4);
     }
@@ -555,7 +556,7 @@ arr moveTo(ors::KinematicWorld& world,
       optConstrained(x, NoArr, Convert(MP.komo_problem)); //parameters are set in cfg!!
       //verbose=1, stopIters=100, maxStep=.5, stepInc=2./*, nonStrictSteps=(!k?15:5)*/));
     }else{
-      optNewton(x, Convert(MP));
+      optNewton(x, Convert(MP.komo_problem));
     }
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;

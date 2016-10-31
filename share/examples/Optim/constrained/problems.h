@@ -4,7 +4,14 @@ struct CoveringSpheresProblem:ConstrainedProblem {
   const arr& x;
   double p, alpha;
   uint s;
-  CoveringSpheresProblem(const arr& x, uint s):x(x), p(2.), alpha(-10.), s(s) {}
+  CoveringSpheresProblem(const arr& x, uint s):x(x), p(2.), alpha(-10.), s(s) {
+    ConstrainedProblem::operator=(
+      [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+//      this->fc(phi, J, H, tt, x);
+      NIY;
+    } );
+
+  }
   arr initialization(const arr& x){
     arr c(s, 3);
     for(uint j=0;j<s;j++) c[j] = x[rnd(x.d0)];

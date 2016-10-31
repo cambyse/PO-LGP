@@ -63,7 +63,7 @@ stdOutPipe(Task)
 /// This class allows you to DESCRIBE a motion planning problem, nothing more
 //
 
-struct MotionProblem : KOrderMarkovFunction{
+struct MotionProblem {
   ors::KinematicWorld& world;  ///< the original world, which also defines the 'start conditions'
   WorldL configurations;       ///< copies for each time slice; including kinematic switches; only these are optimized
   bool useSwift;
@@ -76,7 +76,7 @@ struct MotionProblem : KOrderMarkovFunction{
   double tau;   ///< duration of single step
   uint k_order; ///< determine the order of the KOMO problem (default 2)
   
-  //-- return values of an optimizer
+  //-- return values of an optimizer, for reporting
   arrA phiMatrix;                  ///< storage of all features in all time slices
   mlr::Array<TermTypeA> ttMatrix;  ///< storage of all feature-types in all time slices
   arr dualSolution;                ///< the dual solution computed during constrained optimization
@@ -108,16 +108,16 @@ struct MotionProblem : KOrderMarkovFunction{
 
   //-- methods accessed by the optimizers
   void set_x(const arr& x);            ///< set the state trajectory of all configurations
-  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t); ///< read out the general task vector and its Jacobian for time slice t (this is APPENDING to phi and J)
-  uint dim_phi(uint t);
-  uint dim_g(uint t);
-  uint dim_h(uint t);
-  uint get_T() { return T; }
-  uint get_k() { return k_order; }
+//  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t); ///< read out the general task vector and its Jacobian for time slice t (this is APPENDING to phi and J)
+//  uint dim_phi(uint t);
+//  uint dim_g(uint t);
+//  uint dim_h(uint t);
+//  uint get_T() { return T; }
+//  uint get_k() { return k_order; }
   uint dim_x(uint t) { return configurations(t+k_order)->getJointStateDimension(); }
 
   //-- info on the costs
-  StringA getPhiNames(uint t);
+//  StringA getPhiNames(uint t);
   void reportFull(bool brief=false, ostream& os=std::cout);
   void costReport(bool gnuplt=true);
   Graph getReport(bool gnuplt=true);
@@ -138,13 +138,8 @@ struct MotionProblem : KOrderMarkovFunction{
   struct Conv_MotionProblem_KOMO_Problem : KOMO_Problem{
     MotionProblem& MP;
     uint dimPhi;
-//    uintA variableDimensions, varDimIntegral;
-//    uintA featureTimes;
-//    TermTypeA featureTypes;
-//    arrA J_KOMO, H_KOMO;
 
     Conv_MotionProblem_KOMO_Problem(MotionProblem& P) : MP(P){}
-
 
     virtual uint get_k(){ return MP.k_order; }
     virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes);
