@@ -12,15 +12,15 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "opt-convert.h"
+#include "convert.h"
 #include "KOMO_Problem.h"
 
 //the Convert is essentially only a ``garbage collector'', creating all the necessary conversion objects and then deleting them on destruction
-Convert::Convert(const ScalarFunction& p) : cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { sf=p; }
-Convert::Convert(const VectorFunction& p) : cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { vf=p; }
-//Convert::Convert(KOrderMarkovFunction& p):kom(&p), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), komo(NULL) { }
-Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data) : cstyle_fs(fs), cstyle_fv(NULL), data(data) {  }
-Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) : cstyle_fs(NULL), cstyle_fv(fv), data(data) {  }
+Convert::Convert(const ScalarFunction& p) : cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), cpm(NULL) { sf=p; }
+Convert::Convert(const VectorFunction& p) : cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), cpm(NULL) { vf=p; }
+//Convert::Convert(KOrderMarkovFunction& p):kom(&p), cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) { }
+Convert::Convert(double(*fs)(arr*, const arr&, void*),void *data) : cstyle_fs(fs), cstyle_fv(NULL), data(data), cpm(NULL) {  }
+Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) : cstyle_fs(NULL), cstyle_fv(fv), data(data), cpm(NULL) {  }
 
 #ifndef libRoboticsCourse
 //Convert::Convert(ControlledSystem& p) { cs=&p; }
@@ -109,50 +109,23 @@ ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
   };
 }
 
-ConstrainedProblem conv_linearlyReparameterize(const ConstrainedProblem& f, const arr& B){
-  return [&f, &B](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& z){
-    arr x = B*z;
-    f(phi, J, H, tt, x);
-    if(&J) J = comp_A_x(J,B);
-    if(&H && H.N) NIY;
-  };
+void Conv_linearlyReparameterize_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& z){
+  arr x = B*z;
+  P.phi(phi, J, H, tt, x);
+  if(&J) J = comp_A_x(J,B);
+  if(&H && H.N) NIY;
 }
-
-//ScalarFunction conv_KOrderMarkovFunction2ScalarFunction(KOrderMarkovFunction& f) {
-//  return conv_VectorFunction2ScalarFunction(
-//        [&f](arr& y, arr& J, const arr& x) -> void {
-//    conv_KOrderMarkovFunction_ConstrainedProblem(f, y, J, NoArr, NoTermTypeA, x);
-//  }
-//  );
-//}
-
-
-//ConstrainedProblem conv_KOrderMarkovFunction2ConstrainedProblem(KOrderMarkovFunction& f){
-//  return [&f](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
-//    conv_KOrderMarkovFunction_ConstrainedProblem(f, phi, J, H, tt, x);
-//  };
-//}
-
-//VectorFunction conv_KOrderMarkovFunction2VectorFunction(KOrderMarkovFunction& f) {
-//  return [&f](arr& y, arr& J, const arr& x) -> void {
-//    conv_KOrderMarkovFunction_ConstrainedProblem(f, y, J, NoArr, NoTermTypeA, x);
-//  };
-//}
 
 
 //===========================================================================
 
-Convert::Convert(KOMO_Problem& p) : cstyle_fs(NULL), cstyle_fv(NULL), data(NULL) {
-  komo = new Conv_KOMO_ConstrainedProblem(p);
+Convert::Convert(KOMO_Problem& p) : cstyle_fs(NULL), cstyle_fv(NULL), data(NULL), cpm(NULL) {
+  cpm = new Conv_KOMO_ConstrainedProblem(p);
 }
 
-Convert::operator ConstrainedProblem() {
-  if(!cpm) {
-//    if(kom) cpm = conv_KOrderMarkovFunction2ConstrainedProblem(*kom);
-    if(komo) return *komo;
-  }
+Convert::operator ConstrainedProblem&() {
   if(!cpm) HALT("");
-  return cpm;
+  return *cpm;
 }
 
 

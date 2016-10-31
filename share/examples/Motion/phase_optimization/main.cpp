@@ -1,7 +1,7 @@
 #include <Motion/taskMaps.h>
 #include <Motion/motion.h>
 #include <Motion/phase_optimization.h>
-#include <Optim/opt-constrained.h>
+#include <Optim/lagrangian.h>
 #include <Optim/optimization.h>
 #include <Ors/ors.h>
 

@@ -5,7 +5,7 @@
 #include <Algo/spline.h>
 #include <GL/glu.h>
 #include <Gui/opengl.h>
-#include <Optim/search.h>
+#include <Optim/blackbox.h>
 
 #include "../src/motion_factory.h"
 #include "../src/cost_weight.h"

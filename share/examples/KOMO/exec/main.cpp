@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <Motion/komo.h>
 #include <Motion/motion.h>
-#include <Optim/opt-convert.h>
+#include <Optim/convert.h>
 
 //===========================================================================
 

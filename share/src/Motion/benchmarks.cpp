@@ -15,7 +15,8 @@
 
 #include "benchmarks.h"
 #include "motion.h"
-#include <Optim/kOrderMarkov.h>
+//#include <Optim/kOrderMarkov.h>
+#include <Optim/convert.h>
 
 void setTasks(MotionProblem& MP,
               ors::Shape &endeff,

@@ -23,6 +23,8 @@
 #include <Motion/taskMap_FixAttachedObjects.h>
 #include <Motion/taskMap_AboveBox.h>
 #include <Motion/taskMap_GJK.h>
+#include <Optim/optimization.h>
+#include <Optim/convert.h>
 
 //===========================================================================
 
@@ -470,14 +472,14 @@ void KOMO::run(){
       arr a,b,c,d,e;
       Conv_KOMO_ConstrainedProblem P0(MP->komo_problem);
 //      ConstrainedProblem P0 = conv_KOrderMarkovFunction2ConstrainedProblem(*MP);
-      P0(a,b,c,NoTermTypeA, x);
-      ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
-      P(a,b,NoArr,NoTermTypeA,z);
+      P0.phi(a,b,c,NoTermTypeA, x); //TODO: why???
+      Conv_linearlyReparameterize_ConstrainedProblem P(P0, splineB);
+      P.phi(a,b,NoArr,NoTermTypeA,z);
       optConstrained(z, dual, P);
     }
   }else{
     HALT("deprecated")
-    optConstrained(x, dual, MP->InvKinProblem());
+    optConstrained(x, dual, MP->invKin_problem);
   }
   if(verbose>0){
     cout <<"** optimization time=" <<mlr::timerRead()
@@ -493,14 +495,14 @@ Graph KOMO::getReport(bool gnuplt){
 void KOMO::checkGradients(){
   if(MP->T){
     if(!splineB.N)
-      checkJacobianCP(Conv_KOMO_ConstrainedProblem(MP->komo_problem), x, 1e-4);
+      checkJacobianCP(Convert(MP->komo_problem), x, 1e-4);
     else{
       Conv_KOMO_ConstrainedProblem P0(MP->komo_problem);
-      ConstrainedProblem P = conv_linearlyReparameterize(P0, splineB);
-      checkJacobianCP(P, z, 1e-4);
+      Conv_linearlyReparameterize_ConstrainedProblem P1(P0, splineB);
+      checkJacobianCP(P1, z, 1e-4);
     }
   }else{
-    checkJacobianCP(MP->InvKinProblem(), x, 1e-4);
+    checkJacobianCP(MP->invKin_problem, x, 1e-4);
   }
 }
 

@@ -7,7 +7,7 @@
 
 #include "endStateOptim.h"
 #include "switchOptim.h"
-#include "search.h"
+#include "blackbox.h"
 
 //===========================================================================
 

@@ -15,6 +15,7 @@
 #pragma once
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
+#include <Optim/lagrangian.h>
 #include <Motion/taskMaps.h>
 
 //===========================================================================

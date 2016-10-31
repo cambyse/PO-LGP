@@ -5,7 +5,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Optim/search.h>
+#include <Optim/blackbox.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
 #include <Motion/pr2_heuristics.h>

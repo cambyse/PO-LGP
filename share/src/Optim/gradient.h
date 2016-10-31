@@ -15,9 +15,12 @@
 #pragma once
 
 #include <Core/array.h>
-#include "opt-options.h"
+#include "optimization.h"
 
-int optGrad(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT);
+//===========================================================================
+//
+// proper (monotone) plain gradient descent with line search
+//
 
 struct OptGrad{
   arr& x;
@@ -38,3 +41,29 @@ struct OptGrad{
   StopCriterion run(uint maxIt = 1000);
   void reinit();
 };
+
+inline int optGrad(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT){
+  return OptGrad(x, f, opt).run();
+}
+
+
+//===========================================================================
+//
+// Rprop
+//
+
+/** Rprop, a fast gradient-based minimization */
+struct Rprop {
+  struct sRprop *s;
+  Rprop();
+  void init(double initialStepSize=1., double minStepSize=1e-6, double maxStepSize=50.);
+  bool step(arr& x, const ScalarFunction& f);
+  uint loop(arr& x, const ScalarFunction& f, double *fmin_return=NULL, double stoppingTolerance=1e-2, double initialStepSize=1., uint maxIterations=1000, uint verbose=0);
+};
+
+inline uint optRprop(arr& x, const ScalarFunction& f, OptOptions opt=NOOPT){
+  return Rprop().loop(x, f, opt.fmin_return, opt.stopTolerance, opt.initStep, opt.stopEvals, opt.verbose);
+}
+
+
+

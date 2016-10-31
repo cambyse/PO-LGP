@@ -2,7 +2,7 @@
 #include "racerEnvironment.h"
 #include <RL/RL.h>
 #include <RL/linearPolicy.h>
-#include <Optim/opt-rprop.h>
+#include <Optim/gradient.h>
 
 #include "quadratic.h"
 

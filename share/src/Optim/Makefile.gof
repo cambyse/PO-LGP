@@ -2,11 +2,9 @@ BASE   = ../..
 NAME   = $(shell basename `pwd`)
 OUTPUT = lib$(NAME).so
 
-DEPEND = Core
+DEPEND = Core extern_CMA
 
-SRC_CPP = $(shell find . -maxdepth 1 -name '*.cpp')
-SRC_C   = $(shell find . -maxdepth 1 -name '*.c')
-SRCS = $(SRC_CPP) $(SRC_C)
-OBJS = $(SRC_CPP:%.cpp=%.o) $(SRC_C:%.c=%.o)
+SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
+OBJS = $(SRCS:%.cpp=%.o)
 
 include $(BASE)/build/generic.mk

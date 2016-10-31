@@ -4,7 +4,7 @@
 #include <Gui/opengl.h>
 #include <Motion/pr2_heuristics.h>
 #include <Motion/phase_optimization.h>
-#include <Optim/opt-constrained.h>
+#include <Optim/lagrangian.h>
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
 #include <RosCom/subscribeAlvarMarkers.h>

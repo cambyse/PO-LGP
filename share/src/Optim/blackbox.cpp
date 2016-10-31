@@ -12,7 +12,7 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "search.h"
+#include "blackbox.h"
 
 //uint optCMA(arr& x, ScalarFunction& f,
 //	    OptOptions opt, CMA_Options cma_opt, arr *fx_user=NULL){
@@ -21,7 +21,7 @@
 //}
 
 extern "C"{
-#include "cmaes_interface.h" //by Nikolaus Hansen
+#include "CMA/cmaes_interface.h" //by Nikolaus Hansen
 }
 
 struct sSearchCMA{

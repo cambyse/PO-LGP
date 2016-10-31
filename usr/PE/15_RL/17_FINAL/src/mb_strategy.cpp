@@ -36,7 +36,7 @@ void MB_strategy::evaluate(arr &X)
   OptOptions o; o.maxStep = mlr::getParameter<double>("MB_maxStep");
   o.stopTolerance = 1e-5; o.constrainedMethod=anyTimeAula; o.verbose=1;
   ConstrainedProblem CPM = Convert(*MPF);
-  UnconstrainedProblem UPM(CPM, o.constrainedMethod);
+  LagrangianProblem UPM(CPM, o.constrainedMethod);
 
   OptNewton opt(X, UPM, o);
   opt.step();

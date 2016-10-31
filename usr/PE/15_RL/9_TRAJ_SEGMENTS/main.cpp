@@ -80,7 +80,7 @@ int main(int argc,char **argv){
 
 //  for(uint l=0;l<100; l++){
 //    OptNewton(X, Convert(MPF),OPT(verbose=1, stopTolerance = 1e-7, maxStep = 1e-1)).step();
-//    OptNewton(X, UnconstrainedProblemMix(Convert(MPF), augmentedLag), OPT(verbose=1, stopTolerance = 1e-7, maxStep = 1e-1)).step();
+//    OptNewton(X, LagrangianProblemMix(Convert(MPF), augmentedLag), OPT(verbose=1, stopTolerance = 1e-7, maxStep = 1e-1)).step();
 //    world.watch(true);
 //  }
 
@@ -191,7 +191,7 @@ int main(int argc,char **argv){
 //  }
 
   /*
-  UnconstrainedProblemMix UCP(KOMF,ConstrainedMethodType::augmentedLag);
+  LagrangianProblemMix UCP(KOMF,ConstrainedMethodType::augmentedLag);
 
   cout << X << endl;
   arr a = newton.x;
@@ -206,7 +206,7 @@ int main(int argc,char **argv){
     double alpha = 1e-7;
     X = X - alpha*repmat(L,X.d0,X.d1);
   }
-  //  UnconstrainedProblemMix KOMF = Convert(MPF);
+  //  LagrangianProblemMix KOMF = Convert(MPF);
   //  KOMF(X);
   //  optConstrainedMix(X, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 

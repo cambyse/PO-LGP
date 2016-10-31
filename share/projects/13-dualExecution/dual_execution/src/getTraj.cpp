@@ -25,17 +25,17 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
 
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
+  LagrangianProblem LagrangianP(ConstrainedP);
+  LagrangianP.mu = 10.;
 
   for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=2, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
+    optNewton(x, LagrangianP, OPT(verbose=2, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
 //    optNewton(x, UCP, OPT(verbose=2, stopIters=100, damping=1e-3, maxStep=1.));
     P.costReport();
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.augmentedLagrangian_LambdaUpdate(x, .9);
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
+    LagrangianP.augmentedLagrangian_LambdaUpdate(x, .9);
+    P.dualMatrix = LagrangianP.lambda;
+    LagrangianP.mu *= 2.;
   }
   P.costReport();
 
@@ -53,5 +53,5 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
     }
     delete m;
   }
-  if(&dual) dual = UnConstrainedP.lambda;
+  if(&dual) dual = LagrangianP.lambda;
 }

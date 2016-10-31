@@ -128,11 +128,14 @@ struct MotionProblem {
 
   /// inverse kinematics problem (which is the special case T=0) returned as a @ConstrainedProblem@
   /// as input to optimizers
-  ConstrainedProblem InvKinProblem(){
-    return [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
-      this->inverseKinematics(phi, J, H, tt, x);
+  struct Conv_MotionProblem_InvKinProblem : ConstrainedProblem{
+    MotionProblem& MP;
+    Conv_MotionProblem_InvKinProblem(MotionProblem& P) : MP(P){}
+
+    void phi(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x){
+      MP.inverseKinematics(phi, J, H, tt, x);
     };
-  }
+  } invKin_problem;
   void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
 
   struct Conv_MotionProblem_KOMO_Problem : KOMO_Problem{

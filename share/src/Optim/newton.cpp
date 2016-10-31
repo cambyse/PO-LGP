@@ -14,7 +14,7 @@
 
 #include <iomanip>
 
-#include "opt-newton.h"
+#include "newton.h"
 
 bool sanityCheck=false; //true;
 

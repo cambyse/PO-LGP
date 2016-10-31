@@ -12,12 +12,12 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "opt-constrained.h"
-#include "opt-newton.h"
+#include "lagrangian.h"
+#include "newton.h"
 
 //==============================================================================
 //
-// UnconstrainedProblem
+// LagrangianProblem
 //
 
 double I_lambda_x(uint i, arr& lambda, arr& g){
@@ -27,7 +27,7 @@ double I_lambda_x(uint i, arr& lambda, arr& g){
 
 //==============================================================================
 
-UnconstrainedProblem::UnconstrainedProblem(const ConstrainedProblem& P, OptOptions opt, arr& lambdaInit)
+LagrangianProblem::LagrangianProblem(ConstrainedProblem& P, OptOptions opt, arr& lambdaInit)
   : P(P), muLB(0.), mu(0.), nu(0.) {
   ScalarFunction::operator=( [this](arr& dL, arr& HL, const arr& x) -> double {
     return this->lagrangian(dL, HL, x);
@@ -47,11 +47,11 @@ UnconstrainedProblem::UnconstrainedProblem(const ConstrainedProblem& P, OptOptio
   if(&lambdaInit) lambda = lambdaInit;
 }
 
-double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
+double LagrangianProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
   //-- evaluate constrained problem and buffer
   if(_x!=x){
     x=_x;
-    P(phi_x, J_x, H_x, tt_x, x);
+    P.phi(phi_x, J_x, H_x, tt_x, x);
   }else{ //we evaluated this before - use buffered values; the meta F is still recomputed as (dual) parameters might have changed
   }
   CHECK_EQ(phi_x.N, J_x.d0, "Jacobian size inconsistent");
@@ -118,7 +118,7 @@ double UnconstrainedProblem::lagrangian(arr& dL, arr& HL, const arr& _x){
   return L;
 }
 
-double UnconstrainedProblem::get_costs(){
+double LagrangianProblem::get_costs(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==fTT) S += phi_x(i);
@@ -127,7 +127,7 @@ double UnconstrainedProblem::get_costs(){
   return S;
 }
 
-double UnconstrainedProblem::get_sumOfGviolations(){
+double LagrangianProblem::get_sumOfGviolations(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==ineqTT && phi_x(i)>0.) S += phi_x(i);
@@ -135,7 +135,7 @@ double UnconstrainedProblem::get_sumOfGviolations(){
   return S;
 }
 
-double UnconstrainedProblem::get_sumOfHviolations(){
+double LagrangianProblem::get_sumOfHviolations(){
   double S=0.;
   for(uint i=0;i<phi_x.N;i++){
     if(tt_x(i)==eqTT) S += fabs(phi_x(i));
@@ -143,13 +143,13 @@ double UnconstrainedProblem::get_sumOfHviolations(){
   return S;
 }
 
-uint UnconstrainedProblem::get_dimOfType(const TermType& tt){
+uint LagrangianProblem::get_dimOfType(const TermType& tt){
   uint d=0;
   for(uint i=0;i<tt_x.N;i++) if(tt_x(i)==tt) d++;
   return d;
 }
 
-void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
+void LagrangianProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize, double muInc, double *L_x, arr& dL_x, arr& HL_x){
   if(!lambda.N) lambda=zeros(phi_x.N);
 
   //-- lambda update
@@ -231,7 +231,7 @@ void UnconstrainedProblem::aulaUpdate(bool anyTimeVariant, double lambdaStepsize
 //
 
 
-void PhaseOneProblem::phase_one(arr& meta_phi, arr& meta_J, arr& meta_H, TermTypeA& tt, const arr& x){
+void PhaseOneProblem::phi(arr& meta_phi, arr& meta_J, arr& meta_H, TermTypeA& tt, const arr& x){
   NIY;
   arr g, Jg;
 //  f_orig(NoArr, NoArr, g, (&meta_Jg?Jg:NoArr), x.sub(0,-2)); //the underlying problem only receives a x.N-1 dimensional x
@@ -258,13 +258,10 @@ void PhaseOneProblem::phase_one(arr& meta_phi, arr& meta_J, arr& meta_H, TermTyp
 
 const char* MethodName[]={ "NoMethod", "SquaredPenalty", "AugmentedLagrangian", "LogBarrier", "AnyTimeAugmentedLagrangian", "SquaredPenaltyFixed"};
 
-uint optConstrained(arr& x, arr& dual, const ConstrainedProblem& P, OptOptions opt){
-  return OptConstrained(x, dual, P, opt).run();
-}
 
 //==============================================================================
 
-OptConstrained::OptConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt)
+OptConstrained::OptConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt)
   : UCP(P, opt, dual), newton(x, UCP, opt), dual(dual), opt(opt), its(0), earlyPhase(true){
 
   fil.open(STRING("z."<<MethodName[opt.constrainedMethod]));

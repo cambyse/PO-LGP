@@ -23,10 +23,10 @@
 // test standard constrained optimizers
 //
 
-void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
+void testConstraint(ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20){
 
   OptOptions options;
-  UnconstrainedProblem UCP(p, options);
+  LagrangianProblem UCP(p, options);
 
   //-- choose constrained method
   switch(options.constrainedMethod){

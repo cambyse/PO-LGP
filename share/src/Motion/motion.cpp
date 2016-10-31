@@ -72,7 +72,7 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
 //===========================================================================
 
 MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
-  : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2), gl(NULL), komo_problem(*this)
+  : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2), gl(NULL), invKin_problem(*this), komo_problem(*this)
 {
   if(useSwift) {
     makeConvexHulls(originalWorld.shapes);

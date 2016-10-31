@@ -71,7 +71,7 @@ int main(int argc,char** argv){
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
   Convert CP(MF);
-  UnconstrainedProblem UCP(CP);
+  LagrangianProblem UCP(CP);
   UCP.mu = 10.;
 
   //gradient check

@@ -91,7 +91,7 @@ int main(int argc,char **argv){
 //  }
 
   /*
-  UnconstrainedProblemMix UCP(KOMF,ConstrainedMethodType::augmentedLag);
+  LagrangianProblemMix UCP(KOMF,ConstrainedMethodType::augmentedLag);
 
   cout << X << endl;
   arr a = newton.x;
@@ -106,7 +106,7 @@ int main(int argc,char **argv){
     double alpha = 1e-7;
     X = X - alpha*repmat(L,X.d0,X.d1);
   }
-  //  UnconstrainedProblemMix KOMF = Convert(MPF);
+  //  LagrangianProblemMix KOMF = Convert(MPF);
   //  KOMF(X);
   //  optConstrainedMix(X, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 

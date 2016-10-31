@@ -15,25 +15,22 @@
 #pragma once
 
 #include "optimization.h"
-#include "opt-newton.h"
+#include "newton.h"
 
 extern const char* MethodName[];
 
 //==============================================================================
 //
-// UnconstrainedProblem
+// LagrangianProblem
 //
 // we define an unconstraint optimization problem from a constrained one
 // that can include lagrange terms, penalties, log barriers, and augmented lagrangian terms
 //
 
-struct UnconstrainedProblem:ScalarFunction{
-  /** The VectorFunction F describes the cost function f(x) as well as the constraints g(x)
-      concatenated to one vector:
-      phi(0) = cost,   phi(1,..,phi.N-1) = constraints */
-  ConstrainedProblem P;
+struct LagrangianProblem : ScalarFunction{ //TODO: rename: UnconstrainedLagrangianProblem
+  ConstrainedProblem& P;
 
-  //-- parameters of the unconstrained scalar function
+  //-- parameters of the unconstrained (Lagrangian) scalar function
   double muLB;       ///< log barrier weight
   double mu;         ///< squared penalty weight for inequalities g
   double nu;         ///< squared penalty weight for equalities h
@@ -44,7 +41,7 @@ struct UnconstrainedProblem:ScalarFunction{
   arr phi_x, J_x, H_x; ///< everything else at x
   TermTypeA tt_x; ///< everything else at x
 
-  UnconstrainedProblem(const ConstrainedProblem &P, OptOptions opt=NOOPT, arr& lambdaInit=NoArr);
+  LagrangianProblem(ConstrainedProblem &P, OptOptions opt=NOOPT, arr& lambdaInit=NoArr);
 
   double lagrangian(arr& dL, arr& HL, const arr& x); ///< the unconstrained scalar function F
 
@@ -64,17 +61,11 @@ struct UnconstrainedProblem:ScalarFunction{
 // to the phase one problem of another constraint problem
 //
 
-struct PhaseOneProblem{
-  const ConstrainedProblem &f_orig;
-  ConstrainedProblem f_phaseOne;
+struct PhaseOneProblem : ConstrainedProblem{
+  ConstrainedProblem &f_orig;
 
-  PhaseOneProblem(const ConstrainedProblem &f_orig):f_orig(f_orig) {
-    f_phaseOne = [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
-      return this->phase_one(phi, J, H, tt, x);
-    };
-  }
-  operator const ConstrainedProblem&(){ return f_phaseOne; }
-  void phase_one(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x);
+  PhaseOneProblem(ConstrainedProblem &f_orig):f_orig(f_orig) {}
+  void phi(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x);
 };
 
 
@@ -83,10 +74,8 @@ struct PhaseOneProblem{
 // Solvers
 //
 
-uint optConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
-
 struct OptConstrained{
-  UnconstrainedProblem UCP;
+  LagrangianProblem UCP;
   OptNewton newton;
   arr &dual;
   OptOptions opt;
@@ -94,13 +83,17 @@ struct OptConstrained{
   bool earlyPhase;
   ofstream fil;
 
-  OptConstrained(arr& x, arr &dual, const ConstrainedProblem& P, OptOptions opt=NOOPT);
+  OptConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOOPT);
   ~OptConstrained();
   bool step();
   uint run();
 //  void reinit();
 };
 
+//TODO: remove:
+inline uint optConstrained(arr& x, arr &dual, ConstrainedProblem& P, OptOptions opt=NOOPT){
+  return OptConstrained(x, dual, P, opt).run();
+}
 
 //==============================================================================
 //
@@ -110,9 +103,10 @@ struct OptConstrained{
 inline void evaluateConstrainedProblem(const arr& x, ConstrainedProblem& P, std::ostream& os){
   arr phi_x;
   TermTypeA tt_x;
-  P(phi_x, NoArr, NoArr, tt_x, x);
+  P.phi(phi_x, NoArr, NoArr, tt_x, x);
   double Ef=0., Eh=0., Eg=0.;
   for(uint i=0;i<phi_x.N;i++){
+    if(tt_x(i)==fTT) Ef += phi_x(i);
     if(tt_x(i)==sumOfSqrTT) Ef += mlr::sqr(phi_x(i));
     if(tt_x(i)==ineqTT && phi_x(i)>0.) Eg += phi_x(i);
     if(tt_x(i)==eqTT) Eh += fabs(phi_x(i));

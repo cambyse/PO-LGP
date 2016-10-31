@@ -81,18 +81,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
 
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
+  LagrangianProblem LagrangianP(ConstrainedP);
+  LagrangianP.mu = 10.;
 
 
 
   for(uint k=0;k<10;k++){
-   optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=300, damping=1e-4, stopTolerance=1e-5, maxStep=.5));
+   optNewton(x, LagrangianP, OPT(verbose=0, stopIters=300, damping=1e-4, stopTolerance=1e-5, maxStep=.5));
     P.costReport(false);
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.aulaUpdate(.9,x);
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
+    LagrangianP.aulaUpdate(.9,x);
+    P.dualMatrix = LagrangianP.lambda;
+    LagrangianP.mu *= 2.;
  }
 
   //get the final optimal cost at each time slice
@@ -109,8 +109,8 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   uint index = 0;
   dual.resize(x.d0);
   if(&dual) {
-      for(int i=1;i<UnConstrainedP.lambda.d0;i=i+2){
-          dual(index) = UnConstrainedP.lambda(i);
+      for(int i=1;i<LagrangianP.lambda.d0;i=i+2){
+          dual(index) = LagrangianP.lambda(i);
 
           index++;
       }

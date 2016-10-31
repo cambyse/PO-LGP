@@ -3,14 +3,14 @@
 #include "problems.h"
 
 //lecture.cpp:
-void testConstraint(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20);
+void testConstraint(ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20);
 
 //==============================================================================
 //
 // test standard constrained optimizers
 //
 
-void testConstraint2(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr){
+void testConstraint2(ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr){
   //-- initial x
   arr x = zeros(dim_x);
   if(&x_start) x=x_start;
@@ -26,7 +26,7 @@ void testConstraint2(const ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr
 // test the phase one optimization
 //
 
-void testPhaseOne(const ConstrainedProblem& f, uint dim_x){
+void testPhaseOne(ConstrainedProblem& f, uint dim_x){
   PhaseOneProblem metaF(f);
 
   arr x;

@@ -1,6 +1,6 @@
 #include <Core/util_t.h>
 #include <Gui/opengl.h>
-#include <Optim/search.h>
+#include <Optim/blackbox.h>
 
 #include <Motion/motion.h>
 #include <Motion/motionHeuristics.h>

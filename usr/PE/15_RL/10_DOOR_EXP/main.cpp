@@ -122,7 +122,7 @@ int main(int argc,char **argv){
   world.gl().add(drawBluePoints,&(wC2));
 
   ConstrainedProblemMix CPM = Convert(MPF);
-  UnconstrainedProblemMix UPM(CPM, o.constrainedMethod);
+  LagrangianProblemMix UPM(CPM, o.constrainedMethod);
   OptNewton opt(X, UPM, o);
 
 
@@ -214,7 +214,7 @@ int main(int argc,char **argv){
   arr uC1,uC2;
 
 //  for(uint l=0;l<10; l++){
-//    OptNewton(Xmf, UnconstrainedProblemMix(Convert(MPF2), o2.constrainedMethod), o2).step();
+//    OptNewton(Xmf, LagrangianProblemMix(Convert(MPF2), o2.constrainedMethod), o2).step();
 //    tf.compFeatTraj(Xmf,uC1,world,new DefaultTaskMap(posTMT,world,"endeffC1"));
 //    tf.compFeatTraj(Xmf,uC2,world,new DefaultTaskMap(posTMT,world,"endeffC2"));
 //    displayTrajectory(Xmf,Xmf.d0,world,"Xmf");
