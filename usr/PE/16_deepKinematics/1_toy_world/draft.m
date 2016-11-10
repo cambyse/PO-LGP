@@ -1,0 +1,11 @@
+clear;
+A = imread('z.ppm');
+B = imread('z.d.ppm');
+pts = load('pts.dat');
+% B = double(B);
+% B = (B-min(min(B)))/(max(max(B))-min(min(B)));
+C = double(C);
+C = (C-min(min(C)))/(max(max(C))-min(min(C)));
+figure(1);clf; imagesc(A); 
+figure(2);clf; imagesc(B); colorbar;
+figure(3);clf; plot3(pts(:,1),pts(:,2),pts(:,3),'.');
