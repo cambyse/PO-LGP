@@ -415,7 +415,7 @@ bool substitutedRulePreconditionHolds(Graph& KB, Node* rule, const NodeL& subst,
          Node *var = rel->parents(i);
          if(&var->container==&varScope){ //this is a var
            CHECK(var->index<vars.N, "relation '" <<*rel <<"' has variable '" <<var->keys.last() <<"' that is not in the scope");
-           for(Node *m:matches) domainsForThisRel(var->index).append(m->parents(i)); //setAppend not necessary
+           for(Node *m:matches) domainsForThisRel(var->index).setAppend(m->parents(i)); //setAppend not necessary
          }
        }
        if(verbose>3){
