@@ -3,6 +3,8 @@
 #include <Motion/pr2_heuristics.h>
 #include <Gui/opengl.h>
 #include <RosCom/subscribeAlvarMarkers.h>
+#include <Optim/convert.h>
+#include <Optim/lagrangian.h>
 
 #include "roscom.h"
 #include "spinner.h"
@@ -225,7 +227,7 @@ void TrajectoryInterface::gotoPosition(arr x_robot, double T, bool recordData, b
   X_robot.reshape(MP.T,world_robot->getJointStateDimension());
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
-  optConstrained(X_robot, NoArr, Convert(MP), o);
+  optConstrained(X_robot, NoArr, Convert(MP.komo_problem), o);
 
   executeTrajectory(X_robot, T, recordData, displayTraj);
 }

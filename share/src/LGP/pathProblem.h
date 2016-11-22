@@ -20,7 +20,7 @@
 
 //===========================================================================
 
-struct PathProblem:ConstrainedProblem{
+struct PathProblem{
   ors::KinematicWorld world;
   const Graph& symbolicState;
   uint microSteps;

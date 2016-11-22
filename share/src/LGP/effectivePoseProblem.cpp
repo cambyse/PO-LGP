@@ -16,6 +16,7 @@
 #include "effectivePoseProblem.h"
 #include <Gui/opengl.h>
 #include <Motion/taskMaps.h>
+#include <Optim/lagrangian.h>
 
 //===========================================================================
 
@@ -31,10 +32,10 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
   CHECK(symbolicState_before.isNodeOfGraph && &symbolicState_before.isNodeOfGraph->container==&KB,"");
   CHECK(symbolicState_after.isNodeOfGraph && &symbolicState_after.isNodeOfGraph->container==&KB,"");
 
-  ConstrainedProblem::operator=(
-        [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
-    return this -> phi(phi, J, H, tt, x);
-  } );
+  // ConstrainedProblem::operator=(
+  //       [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+  //   return this -> phi(phi, J, H, tt, x);
+  // } );
 
 //  Node *glueSymbol  = KB["glued"];
 //  for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){

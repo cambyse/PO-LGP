@@ -14,6 +14,7 @@
 #include <map>
 
 #include <Core/array.h>
+#include <Core/graph.h>
 
 // gen purpose enum defines
 #define ENUM_ELEM(elem) elem,
@@ -118,4 +119,49 @@ namespace hash {
   std::string get(const std::string &key);
 };
 // }}}
+
+// Params {{{
+struct Params {
+  Graph graph;
+
+  template<class T>
+  void set(const char *key, const T &value) {
+    Node *i = graph.getNode(key);
+    if(i) i->get<T>() = value;
+    else graph.newNode({key}, {}, value);
+  }
+
+  template<class T>
+  bool get(const char *key, T &value) { return graph.get(value, key); }
+
+  template<class T>
+  T* get(const char *key) { return graph.find<T>(key); }
+
+  void clear() { graph.clear(); }
+
+  bool remove(const char *key) {
+    delete graph[key];
+    Node *i = graph.getNode(key);
+    if(!i) return false;
+    delete i;
+//    // TODO is list() here necessary?
+//    graph.list().remove(i->index);
+    return true;
+  }
+
+  void write(std::ostream &os = std::cout) const {
+    os << "params = {" << std::endl;
+    graph.write(os, " ");
+    os << "}" << std::endl;
+  }
+};
+stdOutPipe(Params)
+
+// }}}
+// Parametric {{{
+struct Parametric {
+  Params params;
+};
+// }}}
+
 #include "utilAB_t.h"

@@ -25,7 +25,7 @@ struct OrsViewer : Thread {
   Access_typed<ors::KinematicWorld> modelWorld;
   //-- outputs
   Access_typed<byteA> modelCameraView;
-  Access_typed<byteA> modelDepthView;
+  Access_typed<floatA> modelDepthView;
   //-- internal (private)
   ors::KinematicWorld copy;
   bool computeCameraView;

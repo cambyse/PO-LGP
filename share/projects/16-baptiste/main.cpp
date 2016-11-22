@@ -75,7 +75,7 @@ struct RebaMap:TaskMap{
       ors::Joint *joint = G.getJointByName(name.c_str());
       double joint_value = G.q(joint->qIndex);
       y(i) = coeffs(3) * (coeffs(0) * joint_value * joint_value + coeffs(1) * joint_value + coeffs(2));
-      J(i, joint->qIndex) = coeffs(3) * (2. * coeffs(0) * joint_value + coeffs(1));
+      if(&J) J(i, joint->qIndex) = coeffs(3) * (2. * coeffs(0) * joint_value + coeffs(1));
     }
   }
 

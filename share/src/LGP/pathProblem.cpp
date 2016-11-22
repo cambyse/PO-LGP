@@ -16,6 +16,7 @@
 #include "pathProblem.h"
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
+#include <Optim/lagrangian.h>
 
 //===========================================================================
 
@@ -25,7 +26,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
                          uint microSteps,
                          int verbose)
   : world(world_initial), symbolicState(symbolicState), microSteps(microSteps), verbose(verbose), MP(world){
-  ConstrainedProblem::operator=( conv_KOrderMarkovFunction2ConstrainedProblem(MP) );
+  //  ConstrainedProblem::operator=( conv_KOrderMarkovFunction2ConstrainedProblem(MP.komo_problem) );
 
   double posPrec = mlr::getParameter<double>("LGP/precision", 1e3);
 //  double colPrec = mlr::getParameter<double>("LGP/collisionPrecision", -1e0);
@@ -222,7 +223,8 @@ double PathProblem::optimize(arr& x){
   x = MP.getInitialization();
 //  rndGauss(x,.01,true); //don't initialize at a singular config
 
-  OptConstrained opt(x, NoArr, *this, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
+  Conv_KOMO_ConstrainedProblem CP(MP.komo_problem);
+  OptConstrained opt(x, NoArr, CP, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
   opt.run();
   MP.costReport();
 //  for(;;)
