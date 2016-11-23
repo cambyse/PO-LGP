@@ -184,7 +184,7 @@ void TEST(GenerateDataset) {
 
 
 int main(int argc,char **argv){
-//  testCapturePointcloud();
-  testGenerateDataset();
+  testCapturePointcloud();
+//  testGenerateDataset();
   return 0;
 }
