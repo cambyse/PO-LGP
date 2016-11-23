@@ -33,6 +33,12 @@ void TEST(String){
   tmp.read(s,"", " ,;:\n\r"); //stop symbols
   CHECK_EQ(tmp,"a=1.2", "");
   cout <<tmp <<'|' <<endl;
+
+
+  for(uint i=0;i<100;i++){
+    tmp.setRandom();
+    tmp <<"3";
+  }
 }
 
 void TEST(Parameter){
@@ -96,8 +102,8 @@ int MAIN(int argc,char** argv){
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
 
 //  testPaths();
-//  testString();
-  testParameter();
+  testString();
+//  testParameter();
 //  testTimer();
 //  testLogging();
 //  testException();

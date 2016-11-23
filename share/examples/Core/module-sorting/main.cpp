@@ -41,7 +41,7 @@ void TEST(ModuleSorter){
   //new InsideOut();                 //create an explicit view
 
 
-  for(uint i=0;i<N;i++) vars(i)->set() = mlr::rnd(100);
+  for(uint i=0;i<N;i++) vars(i)->set() = rnd(100);
 
   for(uint k=0;k<20;k++){
     if(moduleShutdown().getValue()) break;
@@ -69,8 +69,8 @@ void TEST(ModuleSorter2){
 
   cout <<registry() <<endl;
 
-  for(uint i=0;i<N-1;i++) ps(i)->a.set() = mlr::rnd(100);
-  ps.last()->b.set() = mlr::rnd(100);
+  for(uint i=0;i<N-1;i++) ps(i)->a.set() = rnd(100);
+  ps.last()->b.set() = rnd(100);
 
   openModules();
 

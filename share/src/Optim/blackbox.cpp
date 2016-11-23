@@ -17,16 +17,16 @@
 
 //===========================================================================
 
-void BayesOpt::query(const arr& x){
-  X.append(x);
-  y.append( f(NoArr, NoArr, x) );
+// void BayesOpt::query(const arr& x){
+//   X.append(x);
+//   y.append( f(NoArr, NoArr, x) );
 
-  double mu = sum(y)/double(y.N);
-//  double var = var(y);
+//   double mu = sum(y)/double(y.N);
+// //  double var = var(y);
 
-  if(model) delete model;
-  model = new KernelRidgeRegression(X, y, *kernel, -1., mu);
-}
+//   if(model) delete model;
+//   model = new KernelRidgeRegression(X, y, *kernel, -1., mu);
+// }
 
 //===========================================================================
 

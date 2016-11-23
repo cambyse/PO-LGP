@@ -107,7 +107,12 @@ void TEST(Random){
     rndModify(rndSubgraph(A));
     Graph& C = rndSubgraph(A).newSubgraph({}, {})->value;
 
-    cout <<"---" <<endl <<A <<endl <<Ax <<endl;
+    Graph& D = rndSubgraph(A);
+    if(D.N){
+      D.getRenderingInfo(D.rndElem()).dotstyle.setRandom();
+    }
+
+    cout <<"---" <<endl <<A <<endl; // <<Ax <<endl;
 
     A.checkConsistency();
     C.checkConsistency();

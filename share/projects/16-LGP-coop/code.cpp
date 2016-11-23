@@ -136,8 +136,8 @@ mlr::String Coop::queryForChoice(){
 
 bool Coop::execRandomChoice(){
   mlr::String cmd;
-  if(mlr::rnd.uni()<.5){
-    switch(mlr::rnd.num(5)){
+  if(rnd.uni()<.5){
+    switch(rnd.num(5)){
       case 0: cmd="u"; break;
       case 1: cmd="p"; break;
       case 2: cmd="s"; break;

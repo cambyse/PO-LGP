@@ -6,6 +6,8 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
+#include <Optim/convert.h>
+#include <Optim/lagrangian.h>
 #include <Ors/ors_swift.h>
 
 //===========================================================================
@@ -52,12 +54,12 @@ void TEST(PR2reach){
 #ifndef CONSTRAINT
     optNewton(x, Convert(MP), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
 #else
-    optConstrained(x, NoArr, Convert(MP), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
+    optConstrained(x, NoArr, Convert(MP.komo_problem), OPT(verbose=2, stopIters=100, damping=1., maxStep=1., nonStrictSteps=5));
 #endif
 
     cout <<"** optimization time=" <<mlr::timerRead()
         <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
-    MP.costReport();
+    cout <<MP.getReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("load 'z.costReport.plt'", false, true);
     displayTrajectory(x, 1, G, "planned trajectory", 0.01);
@@ -101,7 +103,7 @@ void TEST(Basics){
 
   //gradient check: will fail in case of collisions
   for(uint k=0;k<0;k++){
-    checkJacobian(Convert(MP), x, 1e-4);
+    checkJacobian(Convert(MP.komo_problem), x, 1e-4);
     rndUniform(x,-1.,1.);
   }
 
@@ -111,7 +113,7 @@ void TEST(Basics){
 #ifndef CONSTRAINT
     optNewton(x, Convert(MP));
 #else
-    optConstrained(x, NoArr, Convert(MP));
+    optConstrained(x, NoArr, Convert(MP.komo_problem));
 #endif
     cout <<"** optimization time=" <<mlr::timerRead() <<endl;
     MP.costReport();

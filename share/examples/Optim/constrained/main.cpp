@@ -1,6 +1,8 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include "problems.h"
+#include <Optim/lagrangian.h>
+#include <Optim/convert.h>
 
 //lecture.cpp:
 void testConstraint(ConstrainedProblem& p, uint dim_x, arr& x_start=NoArr, uint iters=20);

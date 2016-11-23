@@ -1,5 +1,6 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
+#include <Optim/lagrangian.h>
 
 #include <iomanip>
 
