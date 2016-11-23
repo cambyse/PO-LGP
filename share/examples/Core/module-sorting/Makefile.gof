@@ -1,6 +1,6 @@
 BASE = ../../..
 
 GTK = 1
-DEPEND = Core Gui
+DEPEND = Core
 
 include $(BASE)/build/generic.mk

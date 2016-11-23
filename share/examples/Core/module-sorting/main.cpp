@@ -81,6 +81,8 @@ void TEST(ModuleSorter2){
   }
 
   closeModules();
+
+  for(auto& x:ps){ delete x; x=NULL; }
 }
 
 //==============================================================================

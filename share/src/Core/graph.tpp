@@ -26,14 +26,18 @@ struct Node_typed : Node {
 
   Node_typed():value(NULL) { HALT("shouldn't be called, right? You always want to append to a container"); }
 
-  /// directly store pointer to value
   Node_typed(Graph& container, const T& _value)
     : Node(typeid(T), &this->value, container), value(_value) {
     if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
     if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
   }
 
-  /// directly store pointer to value
+  Node_typed(Graph& container, const StringA& keys, const NodeL& parents)
+    : Node(typeid(T), &this->value, container, keys, parents), value() {
+    if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
+    if(&container && container.callbacks.N) for(GraphEditCallback *cb:container.callbacks) cb->cb_new(this);
+  }
+
   Node_typed(Graph& container, const StringA& keys, const NodeL& parents, const T& _value)
     : Node(typeid(T), &this->value, container, keys, parents), value(_value) {
     if(isGraph()) graph().isNodeOfGraph = this; //this is the only place where isNodeOfGraph is set
@@ -129,6 +133,10 @@ template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {
 
 template<class T> Node_typed<T> *Graph::newNode(const StringA& keys, const NodeL& parents, const T& x){
   return new Node_typed<T>(*this, keys, parents, x);
+}
+
+template<class T> Node_typed<T> *Graph::newNode(const StringA& keys, const NodeL& parents){
+  return new Node_typed<T>(*this, keys, parents);
 }
 
 template<class T> Node_typed<T> *Graph::newNode(const T& x){

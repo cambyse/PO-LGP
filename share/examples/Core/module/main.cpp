@@ -28,7 +28,7 @@ void way0(){
 void way1(){
 
 //  Module *m = S.addModule<ComputeSum> ("funnyName");
-  Module *m = new ComputeSum;
+  Thread *m = new ComputeSum;
   //S.connect(); //this will create the respective variables!
 
   Access_typed<arr> x(NULL, "x");
@@ -100,8 +100,10 @@ void TEST(SystemConnect) {
 
   cout <<registry() <<endl;
 
-  GraphView gv(registry());
-  gv.watch();
+  registry().displayDot();
+
+//  GraphView gv(registry());
+//  gv.watch();
 }
 
 

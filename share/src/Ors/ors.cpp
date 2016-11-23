@@ -102,7 +102,7 @@ ors::Body::~Body() {
 }
 
 void ors::Body::reset() {
-  listDelete(ats);
+  ats.clear();
   X.setZero();
   type=dynamicBT;
   shapes.memMove=true;
@@ -171,7 +171,6 @@ void ors::Body::parseAts() {
   for(Shape *s:shapes) { s->ats=ats;  s->parseAts(); }
   //TODO check if this works! coupled to the listDelete below
   Node *it=ats["type"]; if(it){ delete it; }
-  //  listDelete(ats);
 }
 
 void ors::Body::write(std::ostream& os) const {
@@ -341,7 +340,7 @@ void ors::Shape::reset() {
   type=noneST;
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
-  listDelete(ats);
+  ats.clear();
   X.setZero();
   rel.setZero();
   mesh.V.clear();
@@ -441,7 +440,7 @@ ors::Joint::~Joint() {
 }
 
 void ors::Joint::reset() { 
-  listDelete(ats); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); q0=0.; H=1.; type=JT_none;
+  ats.clear(); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); q0=0.; H=1.; type=JT_none;
   locker=NULL;
 }
 

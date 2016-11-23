@@ -17,4 +17,4 @@ bool ComputeSum::test(){
   return true;
 }
 
-REGISTER_MODULE(ComputeSum);
+//REGISTER_MODULE(ComputeSum);
