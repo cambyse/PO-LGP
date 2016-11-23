@@ -46,8 +46,7 @@ void TEST(ConvexHull) {
   }
 
   arr grad;
-  d = distanceToConvexHullGradient(grad,X,origin,true);
-
+//  d = distanceToConvexHullGradient(grad,X,origin,true);
   cout <<"gradient = " <<grad <<endl;
 
   QHULL_DEBUG_LEVEL=0;
@@ -177,7 +176,7 @@ void TEST(FCinOrs){
 int MAIN(int argc, char *argv[]){
   cout <<"QHull version = " <<qhullVersion() <<endl;
 
-  testConvexHull();
+//  testConvexHull();
   testForceClosure();
   //testFCinOrs();
 

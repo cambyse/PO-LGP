@@ -97,7 +97,7 @@ double distance_SSLines(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vecto
 }
 
 double distance_SSRects(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vector& Pb){
-  CHECK(A.type==ors::SSBoxST && B.type==ors::SSBoxST,"");
+  CHECK(A.type==ors::ssBoxST && B.type==ors::ssBoxST,"");
   CHECK(!A.size[2] && !B.size[2], "can only handle spheres, cylinders & rectangles yet - no boxes");
   if(!A.size[1] && !B.size[1]){ //SSLines
     return distance_SSLines(A, B, Pa, Pb);
@@ -138,10 +138,10 @@ double distance_(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vector& Pb)
 void TEST(Distance){
   ors::KinematicWorld W;
   ors::Shape A(W, NoBody), B(W, NoBody);
-  A.type = B.type = ors::SSBoxST;
+  A.type = B.type = ors::ssBoxST;
   memmove(A.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
   memmove(B.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
-  for(uint k=0;k<200;k++){
+  for(uint k=0;k<20;k++){
     A.X.setRandom(); A.X.pos(2) += 2.;
     B.X.setRandom(); B.X.pos(2) += 2.;
     double d=distance_(A, B, Pa, Pb);
@@ -150,7 +150,7 @@ void TEST(Distance){
     if(d>0.) CHECK_ZERO(d-d2, 1e-4, "NOT EQUAL!");
     ors::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
     W.proxies.append( &p );
-    W.watch(true); mlr::wait(.1);
+    W.gl().timedupdate(.1);
     W.proxies.clear();
   }
 }

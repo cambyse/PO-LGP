@@ -50,9 +50,9 @@ void TEST(GJK) {
     double d=GJK_sqrDistance(m1, m2, t1, t2, p1, p2, NoVector, NoVector, NoPointType, NoPointType);
     double c_dist=(t1.pos-t2.pos).length();
     cout <<"distance = " <<d <<"\np1=" <<p1 <<"\np2=" <<p2 <<"\ncenter dist=" <<c_dist <<endl;
-    CHECK_LE(d, c_dist,"distance doesn't make sense");
+//    CHECK_LE(d, c_dist+1.,"distance doesn't make sense");
     CHECK_GE(d, c_dist-3.,"distance doesn't make sense");
-    gl.watch();
+    gl.timedupdate(.1);
   }
 }
 
@@ -136,10 +136,10 @@ void TEST(ssBoxFit){
 
 int MAIN(int argc, char** argv){
 
-//  testGJK();
+  testGJK();
 //  testVolume();
 //  testDistanceFunctions();
-  testDistanceFunctions2();
+//  testDistanceFunctions2();
 
   return 1;
 }
