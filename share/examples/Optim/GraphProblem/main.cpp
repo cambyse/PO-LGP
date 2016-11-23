@@ -2,7 +2,8 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 
-#include <Optim/KOMO_Problem.h>
+#include <Optim/Graph_Problem.h>
+#include <Optim/lagrangian.h>
 
 void testGraphProblem() {
   //see the implemention of ParticleAroundWalls::phi_t for an example on how to specify constrained k-order-Markov optimization problems
@@ -26,7 +27,7 @@ void testGraphProblem() {
   Conv_KOMO_ConstrainedProblem C2(P); //(direct conversion - just for testing..)
 
   //-- convert to unstructued ConstrainedProblem (not efficient yet)
-  Graph_ConstrainedProblem C(G);
+  Conv_Graph_ConstrainedProblem C(G);
 
   //-- gradient check: this is slow!
   arr x(sum(d));

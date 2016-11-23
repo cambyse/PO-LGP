@@ -27,8 +27,7 @@ Convert::Convert(void (*fv)(arr&, arr*, const arr&, void*),void *data) : cstyle_
 #endif
 
 Convert::~Convert() {
-  int i=5;
-  i++;
+  if(cpm){ delete cpm; cpm=NULL; }
 }
 
 //void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x);

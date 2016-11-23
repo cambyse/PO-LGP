@@ -18,7 +18,7 @@ void TEST(SqrProblem) {
   system("cp z.opt z.rprop");
 
   x=x0;
-  optGradDescent(x, f, OPT(stopEvals=10000));
+  optGrad(x, f, OPT(stopEvals=10000));
   system("cp z.opt z.grad");
 
   x=x0;
