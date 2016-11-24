@@ -77,7 +77,7 @@ void TEST(Timer){
 void TEST(Logging){
   mlr::LogObject _log("Test");
   LOG(-1) <<"HALLO";
-  LOG(-3) <<"bye";
+//  LOG(-3) <<"bye";
 //  mlr::log() <<"bla" <<endl;
 }
 
@@ -101,12 +101,12 @@ int MAIN(int argc,char** argv){
   uint long_int_size=sizeof(long);
   cout <<"double size: " <<double_size <<"\nlong int size: " <<long_int_size <<endl;
 
-//  testPaths();
+  testPaths();
   testString();
-//  testParameter();
-//  testTimer();
-//  testLogging();
-//  testException();
+  testParameter();
+  testTimer();
+  testLogging();
+  testException();
 
   return 0;
 }

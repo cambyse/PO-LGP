@@ -162,17 +162,16 @@ void TEST(Manual){
 
 int MAIN(int argc, char** argv){
 
-//  cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
+  cout <<"GLOBAL LATENT REGISTRY:\n" <<registry() <<endl;
 
   if(argc>=2) filename=argv[1];
 
   testRandom();
-//  testRead();
-//  testInit();
-//  testDot();
+  testRead();
+  testInit();
+  testDot();
 
-//  testManual();
-//  if(!filename) testManual();
+  testManual();
 
   return 0;
 }

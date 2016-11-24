@@ -1,38 +1,4 @@
-#include <Core/thread.h>
-
-TStream tout(cout);
-Mutex m;
-//===========================================================================
-
-// Normal Thread struct
-struct MyThread: Thread{
-  Variable<double>& x;
-  uint n;
-  MyThread(Variable<double>& x, uint n, double beat):Thread(STRING("MyThread_"<<n), beat), x(x), n(n){}
-  void open(){}
-  void close(){}
-  void step(){
-    x.set(this)++;
-    COUT <<mlr::realTime() <<"sec Thread " <<n <<" is counting:" <<x.get() <<endl;
-  }
-};
-
-void TEST(Thread){
-  Variable<double> x(0., "doubleVariable");
-  MyThread t1(x, 1, .5), t2(x, 2, .5);
-
-  t1.threadLoop();
-  t2.listenTo(x); //whenever t1 modifies x, t2 is stepped
-  
-  mlr::wait(3.);
-
-  t1.threadClose();
-  t2.threadClose();
-
-  CHECK(x.get()>=11. && x.get()<=15.,"");
-}
-
-//===========================================================================
+//==============================================================================
 
 // Thread struct with throut
 struct MyOtherThread: Thread {
@@ -49,6 +15,7 @@ struct MyOtherThread: Thread {
     tout(this) << "iteration " << i++ << endl;
   }
 };
+
 
 void TEST(Throut){
   // tout example
@@ -98,15 +65,4 @@ void TEST(Throut){
   tout() << "tests after unregistering all:" << endl;
   tout(&i) << "test " << i << endl;
   tout(&j) << "test " << j << endl;
-}
-
-//===========================================================================
-
-int MAIN(int argc,char** argv){
-  mlr::initCmdLine(argc, argv);
-  testThread();
-//  testVariable();
-//  testThrout();
-
-  return 0;
 }
