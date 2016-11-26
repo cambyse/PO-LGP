@@ -5,7 +5,7 @@
 
 void testPolFwdChaining(){
   Graph G;
-  FILE("pol.kvg") >>G;
+  FILE("pol.g") >>G;
 
   cout <<G <<endl;
 
@@ -17,7 +17,7 @@ void testPolFwdChaining(){
 void testFolLoadFile(){
   Graph G;
   G.checkConsistency();
-  FILE("fol0.kvg") >>G;
+  FILE("fol0.g") >>G;
   G.checkConsistency();
 
 //  cout <<"\n-----------------\n" <<G <<"\n-----------------\n" <<endl;
@@ -59,7 +59,7 @@ void testLoadAndDot(const char* filename="fol.g"){
 void testFolFwdChaining(){
   Graph G;
 
-  FILE("fol.kvg") >>G;
+  FILE("fol.g") >>G;
 
   Graph& state = G.get<Graph>("STATE");
 
@@ -72,23 +72,19 @@ void testFolFwdChaining(){
 
 //===========================================================================
 
-#if 0
 void testFolDisplay(){
   Graph G;
-  FILE("fol.kvg") >>G;
+  FILE("fol.g") >>G;
 
-  GraphView view(G);
-  view.watch();
-
+  G.displayDot();
 }
-#endif
 
 //===========================================================================
 
 void testFolSubstitution(){
   Graph KB;
 
-//  FILE("boxes.kvg") >>G;
+//  FILE("boxes.g") >>G;
   FILE("substTest.g") >>KB;
 
   NodeL rules = KB.getNodes("Rule");
@@ -124,8 +120,8 @@ void testFolFunction(){
 
 void testMonteCarlo(){
   Graph Gorig;
-  FILE("boxes.kvg") >>Gorig;
-  mlr::rnd.seed(3);
+  FILE("boxes.g") >>Gorig;
+  rnd.seed(3);
   int verbose=2;
 
   for(uint k=0;k<10;k++){
@@ -142,7 +138,7 @@ void testMonteCarlo(){
       if(verbose>2){ cout <<"*** state = "; state.write(cout, " "); cout <<endl; }
 
       bool forceWait=false, decideWait=false;
-      if(mlr::rnd.uni()<.8){ //normal rule decision
+      if(rnd.uni()<.8){ //normal rule decision
         //-- get all possible decisions
         mlr::Array<std::pair<Node*, NodeL> > decisions; //tuples of rule and substitution
         for(Node* rule:rules){
@@ -162,7 +158,7 @@ void testMonteCarlo(){
           forceWait=true;
         }else{
           //-- pick a random decision
-          uint deci = mlr::rnd(decisions.N);
+          uint deci = rnd(decisions.N);
           std::pair<Node*, NodeL>& d = decisions(deci);
           if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 
@@ -230,18 +226,20 @@ void testMonteCarlo(){
 //===========================================================================
 
 
-int main(int argn, char** argv){
-  if(argn>1){
+int main(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
+
+  if(argc>1){
     testLoadAndDot(argv[1]);
     return 0;
   }
   testFolLoadFile();
   testPolFwdChaining();
   testFolFwdChaining();
-//  testFolDisplay();
+  testFolDisplay();
   testFolSubstitution();
   testFolFunction();
-//  testMonteCarlo();
+  testMonteCarlo();
   cout <<"BYE BYE" <<endl;
 
   return 0;

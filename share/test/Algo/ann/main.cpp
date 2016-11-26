@@ -75,6 +75,7 @@ void TEST(ANNIncremental) {
 }*/
 
 int MAIN(int argc,char** argv){
+  mlr::initCmdLine(argc, argv);
 
   testANN();
   testANNIncremental();

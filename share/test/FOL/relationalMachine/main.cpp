@@ -3,7 +3,7 @@
 //===========================================================================
 
 void TEST(RM){
-  RelationalMachine RM("machine.fol");
+  RelationalMachine RM("machine.g");
 
   cout <<"symbols = " <<RM.getSymbols() <<endl;
   cout <<"rules = " <<RM.getRules() <<endl;
@@ -34,6 +34,8 @@ void TEST(RM){
 
 //===========================================================================
 
-int main(int argn, char** argv){
+int main(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
+
   testRM();
 }

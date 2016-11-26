@@ -11,7 +11,8 @@ void draw1(void*){
 }
 
 
-int main(int argc, const char* argv[]){
+int main(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
 
   if(false){
     int argc=1;
@@ -25,7 +26,7 @@ int main(int argc, const char* argv[]){
   gl.watch();
   gl.renderInBack(false, true);
 
-  write_ppm(gl.captureDepth, "z.ppm", true);
+  write_ppm(convert<byte>(255.f*gl.captureDepth), "z.ppm", true);
 
 //  gl.watch(); //if this is commented, never ever glut/gtk is initalized
 

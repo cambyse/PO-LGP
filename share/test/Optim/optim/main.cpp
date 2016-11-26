@@ -28,7 +28,7 @@ void TEST(SqrProblem) {
   gnuplot("set log y; plot 'z.newton' us 1:3 w l,'z.grad' us 1:3 w l,'z.rprop' us 1:3 w l",false,true);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+//===========================================================================
 
 void TEST(LambdaFunction){
   std::function<double (double)> f = [](double x)->double{ return 2.*x; };
@@ -37,11 +37,13 @@ void TEST(LambdaFunction){
 
 }
 
+//===========================================================================
 
 int MAIN(int argc,char** argv){
-  testSqrProblem();
+  mlr::initCmdLine(argc,argv);
 
-//  testLambdaFunction();
+  testSqrProblem();
+  testLambdaFunction();
 
   return 0;
 }

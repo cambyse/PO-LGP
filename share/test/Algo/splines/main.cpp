@@ -166,7 +166,7 @@ int MAIN(int argc,char** argv){
   mlr::initCmdLine(argc, argv);
 
   testBSpline();
-//  testPath();
+  testPath();
 
 
   return 0;

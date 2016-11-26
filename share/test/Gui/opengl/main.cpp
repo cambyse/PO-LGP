@@ -61,7 +61,7 @@ void TEST(Grab) {
   cout <<"normal view - written to z.ppm " <<endl;
   gl.update("title", true, true);
   write_ppm(gl.captureImage,"z.1.ppm");
-  write_ppm(gl.captureDepth,"z.2.ppm");
+  write_ppm(convert<byte>(255.f*gl.captureDepth),"z.2.ppm");
 
   gl.watch();
 

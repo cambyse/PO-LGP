@@ -55,6 +55,7 @@ void TEST(QuaternionJacobian){
 //===========================================================================
 
 int MAIN(int argc,char **argv){
+  mlr::initCmdLine(argc, argv);
 
   testBasics();
   testQuaternionJacobian();
