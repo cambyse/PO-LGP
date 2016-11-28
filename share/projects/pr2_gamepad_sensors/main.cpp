@@ -109,7 +109,7 @@ void TEST(Sensors){
       if(!s){
         s = new mlr::Shape(world, NoBody);
         s->name="kinectCloud";
-        s->type = mlr::meshST;
+        s->type = mlr::ST_mesh;
       }
       s->mesh.V = S.kinect_points.get();
       s->mesh.C = S.kinect_pointColors.get();

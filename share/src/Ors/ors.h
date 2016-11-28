@@ -35,13 +35,14 @@ struct OdeInterface;
 
 //===========================================================================
 
-namespace mlr {
+
+namespace mlr{
+
 /// @addtogroup ors_basic_data_structures
 /// @{
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, ssCvxST, ssBoxST };
+enum ShapeType { ST_none=-1, ST_box=0, ST_sphere, ST_capsule, ST_mesh, ST_cylinder, ST_marker, ST_retired_SSBox, ST_pointCloud, ST_ssCvx, ST_ssBox };
 enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
-enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
-const char* name(JointType jt);
+enum BodyType  { BT_none=-1, BT_dynamic=0, BT_kinematic, BT_static };
 /// @}
 
 struct Joint;
@@ -80,7 +81,7 @@ struct Body {
   Graph ats;   ///< list of any-type attributes
   
   //dynamic properties
-  BodyType type;          ///< is globally fixed?
+  Enum<BodyType> type;          ///< is globally fixed?
   double mass;           ///< its mass
   Matrix inertia;      ///< its inertia tensor
   Vector com;          ///< its center of gravity
@@ -118,7 +119,7 @@ struct Joint {
   JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
   mlr::String name;      ///< name
-  JointType type;       ///< joint type
+  Enum<JointType> type;       ///< joint type
   Transformation A;     ///< transformation from parent body to joint (attachment, usually static)
   Transformation Q;     ///< transformation within the joint (usually dynamic)
   Transformation B;     ///< transformation from joint to child body (attachment, usually static)
@@ -158,7 +159,7 @@ struct Shape : GLDrawer{
   mlr::String name;     ///< name
   Transformation X;
   Transformation rel;  ///< relative translation/rotation of the bodies geometry
-  ShapeType type;
+  Enum<ShapeType> type;
   double size[4];  //TODO: obsolete: directly translate to mesh?
   double color[3]; //TODO: obsolete: directly translate to mesh?
   Mesh mesh, sscCore;
@@ -351,7 +352,7 @@ struct KinematicWorld : GLDrawer{
 struct KinematicSwitch{
   enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo };
   OperatorSymbol symbol;
-  JointType jointType;
+  Enum<JointType> jointType;
   uint timeOfApplication;
   uint fromId, toId;
   mlr::Transformation jA,jB;

@@ -61,8 +61,8 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
     //cout <<'.' <<flush;
     add=true;
     switch(s->type) {
-      case mlr::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-      case mlr::meshST: {
+      case mlr::ST_none: HALT("shapes should have a type - somehow wrong initialization..."); break;
+      case mlr::ST_mesh: {
         //check if there is a specific swiftfile!
         mlr::String *filename;
         filename=s->ats.find<mlr::String>("swiftfile");
@@ -73,7 +73,7 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
           if(!r) HALT("--failed!");
         }
       } break;
-      case mlr::pointCloudST: {
+      case mlr::ST_pointCloud: {
         //for now, assume there is only ONE pointCloudObject!
         CHECK(s->mesh.V.N, "");
         global_ANN=new ANN;
@@ -82,7 +82,7 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
         global_ANN->calculate();
         add=false;
       } break;
-      case mlr::markerST:
+      case mlr::ST_marker:
         add=false; // ignore (no collisions)
         break;
       default:
@@ -91,23 +91,23 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
     if(add) {
       if(!s->mesh.V.d0){
         switch(s->type) {
-          case mlr::boxST:
+          case mlr::ST_box:
             s->mesh.setBox();
             s->mesh.scale(s->size[0], s->size[1], s->size[2]);
             break;
-          case mlr::sphereST:
+          case mlr::ST_sphere:
             s->mesh.setSphere();
             s->mesh.scale(s->size[3], s->size[3], s->size[3]);
             break;
-          case mlr::cylinderST:
+          case mlr::ST_cylinder:
             CHECK(s->size[3]>1e-10,"");
             s->mesh.setCylinder(s->size[3], s->size[2]);
             break;
-          case mlr::cappedCylinderST:
+          case mlr::ST_capsule:
             CHECK(s->size[3]>1e-10,"");
             s->mesh.setCappedCylinder(s->size[3], s->size[2]);
             break;
-          case mlr::SSBoxST:
+          case mlr::ST_retired_SSBox:
             s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
             break;
           default:
@@ -291,8 +291,8 @@ void SwiftInterface::pullFromSwift(mlr::KinematicWorld& world, bool dumpReport) 
         proxy->posB.set(&nearest_pts[6*k+3]);  proxy->posB = world.shapes(b)->X * proxy->posB;
         proxy->cenA = world.shapes(a)->X.pos;
         proxy->cenB = world.shapes(b)->X.pos;
-//        if(world.shapes(a)->type==mlr::meshST) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
-//        if(world.shapes(b)->type==mlr::meshST) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
+//        if(world.shapes(a)->type==mlr::ST_mesh) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
+//        if(world.shapes(b)->type==mlr::ST_mesh) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
         proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
         proxy->cenD = proxy->cenN.length();
         proxy->cenN /= proxy->cenD;
@@ -304,8 +304,8 @@ void SwiftInterface::pullFromSwift(mlr::KinematicWorld& world, bool dumpReport) 
       proxy->a=a;
       proxy->b=b;
       proxy->d = -.0;
-      if(world.shapes(a)->type==mlr::meshST) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
-      if(world.shapes(b)->type==mlr::meshST) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
+      if(world.shapes(a)->type==mlr::ST_mesh) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
+      if(world.shapes(b)->type==mlr::ST_mesh) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
       proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
       proxy->cenD = proxy->cenN.length();
       proxy->cenN /= proxy->cenD;

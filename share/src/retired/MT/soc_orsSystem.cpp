@@ -211,9 +211,9 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   for(uint k=0; k<=K; k++){
     b=new mlr::Body(*s->ors);
     b->name = STRING("body" <<k);
-    if(!k) b->type=mlr::staticBT;
+    if(!k) b->type=mlr::BT_static;
     sh=new mlr::Shape(*s->ors, b);
-    sh->type=mlr::cappedCylinderST;
+    sh->type=mlr::ST_capsule;
     sh->size[0]=.0; sh->size[1]=.0; sh->size[2]=1./K; sh->size[3]=.2/K;
     sh->rel.setText(STRING("<t(0 0 " <<.5/K <<")>"));
     if(k&1){ sh->color[0]=.5; sh->color[1]=.2; sh->color[2]=.2; } else   { sh->color[0]=.2; sh->color[1]=.2; sh->color[2]=.2; }

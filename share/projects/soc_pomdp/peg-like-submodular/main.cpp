@@ -338,7 +338,7 @@ int main(int argc,char** argv){
   mlr::KinematicWorld hypotheses;
   for(int i=0;i<100;i++){
     mlr::Shape *s = new mlr::Shape(hypotheses,NoBody);
-    s->type = mlr::boxST;
+    s->type = mlr::ST_box;
     s->X.pos.x = x + 0.1*rnd.gauss();
     s->X.pos.y = y + 0.1*rnd.gauss();
     s->X.pos.z = z + 0.1*rnd.gauss();

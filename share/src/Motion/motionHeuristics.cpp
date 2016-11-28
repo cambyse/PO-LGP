@@ -33,7 +33,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   uint side=0;
   
   //-- optimize ignoring hand -- testing different options for aligning with the object
-  if (MP.world.shapes(shapeId)->type==mlr::boxST) {
+  if (MP.world.shapes(shapeId)->type==mlr::ST_box) {
     arr cost_side(3), x_side(3, MP.world.q.N);
     for (side=0; side<3; side++) {
       setGraspGoals_PR2(MP, T, shapeId, side, 0);
@@ -113,10 +113,10 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   ivec.set(0, 1, 0);
   jvec.set(0, 0, 1);
   switch (target_shape->type) {
-    case mlr::cylinderST:
+    case mlr::ST_cylinder:
       target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case mlr::boxST: {
+    case mlr::ST_box: {
       //jrel=target_shape->X;
       if (side==1) jvec.set(0, 1, 0);
       if (side==2) jvec.set(1, 0, 0);
@@ -235,13 +235,13 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   ivec.set(0,1,0); //we want to align the y-axis of the hand with something
   jvec.set(0,0,1);
   switch (target_shape->type) {
-    case mlr::cylinderST:
+    case mlr::ST_cylinder:
       target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case mlr::meshST:
+    case mlr::ST_mesh:
       target = ARR(0.);  //works for simple cylinder-like objects
       break;
-    case mlr::boxST: {
+    case mlr::ST_box: {
       //jrel=target_shape->X;
       //  side =1; //! Hack for PR2
       if (side==1) jvec.set(0,1,0);

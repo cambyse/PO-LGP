@@ -27,8 +27,8 @@
 
 //---------- test standard dynamic control
 void TEST(Dynamics){
-//  mlr::KinematicWorld G("arm7.ors");
-  mlr::KinematicWorld G("mypr2.ors");
+//  mlr::KinematicWorld G("arm7.g");
+  mlr::KinematicWorld G("mypr2.g");
 //  G.meldFixedJoints();
 //  G.makeLinkTree();
   cout <<G <<endl;

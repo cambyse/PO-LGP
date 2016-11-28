@@ -151,7 +151,7 @@ void RobotActionInterface::setMesh(const char* shapeName, const mlr::Mesh& mesh)
   mlr::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
   mlr::Shape *shape = ors->getShapeByName(shapeName);
   shape->mesh = mesh;
-  shape->type = mlr::meshST;
+  shape->type = mlr::ST_mesh;
   if(s->robotProcesses.openGui){
     s->robotProcesses.gui.ors->copyShapesAndJoints(*ors);
     s->robotProcesses.gui.ors2->copyShapesAndJoints(*ors);

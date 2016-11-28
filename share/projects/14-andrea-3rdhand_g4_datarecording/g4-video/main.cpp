@@ -10,12 +10,12 @@ void setup_opengl_for_g4(mlr::KinematicWorld& ors, OpenGL& gl, uint hubs){
   gl.camera.upright();
 
   mlr::Shape *s = new mlr::Shape(ors, NoBody);
-  s->type = mlr::markerST;
+  s->type = mlr::ST_marker;
   s->size[0] = .5;
 
   for(uint m=0;m<hubs;m++){
     mlr::Shape *s = new mlr::Shape(ors, NoBody);
-    s->type = mlr::boxST;
+    s->type = mlr::ST_box;
     memmove(s->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
     memmove(s->color,ARR(1, 0, 0).p, 3*sizeof(double));
   }

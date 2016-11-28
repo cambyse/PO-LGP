@@ -23,7 +23,7 @@ void createScene(mlr::KinematicWorld& ors, OpenGL& gl) {
     b->X.pos.z += 1.;
     b->name <<"rndSphere_" <<k;
     mlr::Shape *s = new mlr::Shape(ors, *b);
-    s->type=mlr::boxST;
+    s->type=mlr::ST_box;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
   for(uint k=0; k<3; k++) {
@@ -32,7 +32,7 @@ void createScene(mlr::KinematicWorld& ors, OpenGL& gl) {
     b->X.pos.z += 1.;
     b->name <<"thing_" <<k;
     mlr::Shape *s = new mlr::Shape(ors, *b);
-    s->type=mlr::sphereST;
+    s->type=mlr::ST_sphere;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
     //s->mesh.readFile("pin1.off");
   }
@@ -42,7 +42,7 @@ void createScene(mlr::KinematicWorld& ors, OpenGL& gl) {
     b->X.pos.z += .5;
     b->name <<"thing_" <<k;
     mlr::Shape *s = new mlr::Shape(ors, *b);
-    s->type=mlr::meshST;
+    s->type=mlr::ST_mesh;
     s->mesh.readFile("pin1.off");
   }
   //ors.calcShapeFramesFromBodies();

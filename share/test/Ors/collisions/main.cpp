@@ -28,7 +28,7 @@ inline void clip(double& x, double r){
 
 
 double distance_SSPoints(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
-  CHECK(A.type==mlr::SSBoxST && B.type==mlr::SSBoxST,"");
+  CHECK(A.type==mlr::ST_retired_SSBox && B.type==mlr::ST_retired_SSBox,"");
   CHECK(!A.size[0] && !B.size[0] && !A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SSpoints");
   Pa = A.X.pos;
   Pb = B.X.pos;
@@ -41,7 +41,7 @@ double distance_SSPoints(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vect
 }
 
 double distance_SSLinePoint(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
-  CHECK(A.type==mlr::SSBoxST && B.type==mlr::SSBoxST,"");
+  CHECK(A.type==mlr::ST_retired_SSBox && B.type==mlr::ST_retired_SSBox,"");
   CHECK(!B.size[0] && !A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SSLinePoint");
   if(!A.size[0]){ //SSLinePoint
     return distance_SSPoints(A, B, Pa, Pb);
@@ -64,7 +64,7 @@ double distance_SSLinePoint(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::V
 }
 
 double distance_SSLines(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
-  CHECK(A.type==mlr::SSBoxST && B.type==mlr::SSBoxST,"");
+  CHECK(A.type==mlr::ST_retired_SSBox && B.type==mlr::ST_retired_SSBox,"");
   CHECK(!A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SS line segments (cylinders)");
   if(!B.size[0]){ //SSLinePoint
     return distance_SSLinePoint(A, B, Pa, Pb);
@@ -97,7 +97,7 @@ double distance_SSLines(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vecto
 }
 
 double distance_SSRects(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb){
-  CHECK(A.type==mlr::ssBoxST && B.type==mlr::ssBoxST,"");
+  CHECK(A.type==mlr::ST_ssBox && B.type==mlr::ST_ssBox,"");
   CHECK(!A.size[2] && !B.size[2], "can only handle spheres, cylinders & rectangles yet - no boxes");
   if(!A.size[1] && !B.size[1]){ //SSLines
     return distance_SSLines(A, B, Pa, Pb);
@@ -138,7 +138,7 @@ double distance_(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb)
 void TEST(Distance){
   mlr::KinematicWorld W;
   mlr::Shape A(W, NoBody), B(W, NoBody);
-  A.type = B.type = mlr::ssBoxST;
+  A.type = B.type = mlr::ST_ssBox;
   memmove(A.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
   memmove(B.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
   for(uint k=0;k<20;k++){

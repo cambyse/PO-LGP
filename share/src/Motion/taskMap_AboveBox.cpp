@@ -31,11 +31,11 @@ TaskMap_AboveBox::TaskMap_AboveBox(const mlr::KinematicWorld& G, const char* iSh
 void TaskMap_AboveBox::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   mlr::Shape *s1=G.shapes(i);
   mlr::Shape *s2=G.shapes(j);
-  if(s2->type!=mlr::ssBoxST){ //switch roles
+  if(s2->type!=mlr::ST_ssBox){ //switch roles
     mlr::Shape *z=s1;
     s1=s2; s2=z;
   }
-  CHECK(s2->type==mlr::ssBoxST,"");//s1 should be the board
+  CHECK(s2->type==mlr::ST_ssBox,"");//s1 should be the board
   arr pos,posJ;
   G.kinematicsRelPos(pos, posJ, s1->body, s1->rel.pos, s2->body, s2->rel.pos);
   arr range(3);

@@ -114,7 +114,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   for(Node *constraint:support->parentOf) if(&constraint->container==&symbolicState_after){
     mlr::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());
     mlr::Body *b2=effKinematics.getBodyByName(constraint->parents(2)->keys.last());
-    if(b2->shapes(0)->type==mlr::cylinderST){
+    if(b2->shapes(0)->type==mlr::ST_cylinder){
       mlr::Body *z=b1;
       b1=b2; b2=z;
     }//b2 should be the board
@@ -201,7 +201,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       arr y1,J1,y2,J2;
       mlr::Body *b1=effKinematics.getBodyByName(obj->keys.last());
       mlr::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
-      if(b1->shapes(0)->type==mlr::boxST){
+      if(b1->shapes(0)->type==mlr::ST_box){
         if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
         effKinematics.kinematicsPos(y1, J1, b1);
         effKinematics.kinematicsPos(y2, J2, b2);
@@ -264,7 +264,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       arr y1,J1,y2,J2;
       mlr::Body *b1=effKinematics.getBodyByName(obj->keys.last());
       mlr::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
-      if(b1->shapes(0)->type==mlr::boxST){
+      if(b1->shapes(0)->type==mlr::ST_box){
         if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
         effKinematics.kinematicsPos(y1, J1, b1);
         effKinematics.kinematicsPos(y2, J2, b2);

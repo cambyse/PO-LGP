@@ -42,7 +42,7 @@ void TEST(GJK_Jacobians) {
   j1.A.addRelativeTranslation(1,1,1);
   j2.A.addRelativeTranslation(-1,-1,1);
   J1.type = J2.type = mlr::JT_quatBall;
-  s1.type = s2.type = mlr::ssCvxST;
+  s1.type = s2.type = mlr::ST_ssCvx;
   s1.size[3] = .5;  s2.size[3] = .5;
   s1.sscCore.setRandom();
   s2.sscCore.setRandom();
@@ -127,7 +127,7 @@ void TEST(GJK_Jacobians) {
 
 //    checkJacobian(gjk.vf(W), q, 1e-4);
 
-    W.gl().watch();
+    W.gl().update();
   }
 
 

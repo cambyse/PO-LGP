@@ -354,7 +354,7 @@ void RobotManipulationSimulator::getBlocks(uintA& blocks) {
     ss << "o" << i;
     mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n->shapes.N == 1) {
-      if(n->shapes(0)->type == mlr::boxST)
+      if(n->shapes(0)->type == mlr::ST_box)
         blocks.append(n->index);
     }
   }
@@ -371,7 +371,7 @@ void RobotManipulationSimulator::getBalls(uintA& balls) {
     ss << "o" << i;
     mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n->shapes.N == 1) {
-      if(n->shapes(0)->type == mlr::sphereST)
+      if(n->shapes(0)->type == mlr::ST_sphere)
         balls.append(n->index);
     }
   }
@@ -403,7 +403,7 @@ void RobotManipulationSimulator::getCylinders(uintA& cylinders) {
     ss << "o" << i;
     mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n->shapes.N == 1) {
-      if(n->shapes(0)->type == mlr::cylinderST)
+      if(n->shapes(0)->type == mlr::ST_cylinder)
         cylinders.append(n->index);
     }
   }
@@ -571,7 +571,7 @@ void RobotManipulationSimulator::getObjectPositions(arr& positions) {
 void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   orientation.resize(2);
   
-  if(getOrsType(id) == mlr::sphereST) {
+  if(getOrsType(id) == mlr::ST_sphere) {
     orientation.setUni(0.);
     return;
   }
@@ -645,7 +645,7 @@ void RobotManipulationSimulator::getObjectAngles(arr& angles) {
 
 bool RobotManipulationSimulator::isUpright(uint id) {
   // balls are always upright
-  if(getOrsType(id) == mlr::sphereST)
+  if(getOrsType(id) == mlr::ST_sphere)
     return true;
     
   double TOLERANCE = 0.05; // in radians
@@ -1497,9 +1497,9 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     }
   }
   // Below = Block
-  else if(obj_below_type == mlr::boxST) {
+  else if(obj_below_type == mlr::ST_box) {
     // (1) Dropping block
-    if(obj_dropped_type == mlr::boxST) {
+    if(obj_dropped_type == mlr::ST_box) {
       // (1a) on small block
       if(TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK;
@@ -1512,7 +1512,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
       } else {NIY;}
     }
     // (2) Dropping ball
-    else if(obj_dropped_type == mlr::sphereST) {
+    else if(obj_dropped_type == mlr::ST_sphere) {
       // (2a) on small block
       if(TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_SMALL_BLOCK;
@@ -1530,7 +1530,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 //     PRINT(std_dev_noise);
   }
   // Below = Ball
-  else if(obj_below_type == mlr::sphereST) {
+  else if(obj_below_type == mlr::ST_sphere) {
     x_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
     y_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
   }
@@ -1850,7 +1850,7 @@ void createCylinder(mlr::KinematicWorld& G, mlr::Body& cyl, const mlr::Vector& p
   t.pos = pos;
   mlr::Shape* s = new mlr::Shape(G, cyl);
   for(uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
-  s->type = mlr::cylinderST;
+  s->type = mlr::ST_cylinder;
   for(uint i = 0; i < 3; ++i) s->color[i] = color(i);
   
   cyl.X = t;

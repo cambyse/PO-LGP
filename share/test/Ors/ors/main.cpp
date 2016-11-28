@@ -15,7 +15,7 @@
 
 void TEST(LoadSave){
   mlr::KinematicWorld G;
-  FILE("arm7.ors") >>G;
+  FILE("arm7.g") >>G;
   cout <<G <<endl;
 
   for(uint i=0;i<0;i++){
@@ -55,9 +55,9 @@ void TEST(Kinematics){
     VectorFunction& operator()(){ return *this; }
   };
 
-//  mlr::KinematicWorld G("arm7.ors");
+//  mlr::KinematicWorld G("arm7.g");
   mlr::KinematicWorld G("kinematicTests.g");
-  //mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+  //mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.g");
 
   for(uint k=0;k<10;k++){
     mlr::Body *b = G.bodies.rndElem();
@@ -117,7 +117,7 @@ void TEST(QuaternionKinematics){
 
 void TEST(Copy){
   mlr::KinematicWorld G1("kinematicTests.g");
-  //mlr::KinematicWorld G1("../../../data/pr2_model/pr2_model.ors");
+  //mlr::KinematicWorld G1("../../../data/pr2_model/pr2_model.g");
   mlr::KinematicWorld G2(G1);
 
   G1.checkConsistency();
@@ -142,7 +142,7 @@ void TEST(Copy){
 void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
-  mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+  mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.g");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -182,7 +182,7 @@ void TEST(KinematicSpeed){
 
 
 void TEST(Contacts){
-  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("arm7.g");
   
   arr x,con,grad;
   uint t;
@@ -216,7 +216,7 @@ void TEST(Contacts){
 //===========================================================================
 
 void TEST(Limits){
-  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("arm7.g");
 
   arr limits = G.getLimits();
   VectorFunction F = [&G, &limits](arr& y, arr& J, const arr& x){
@@ -258,7 +258,7 @@ void generateSequence(arr &X, uint T, uint n){
 }
 
 void TEST(PlayStateSequence){
-  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("arm7.g");
   uint n=G.getJointStateDimension();
   arr X;
   generateSequence(X, 200, n);
@@ -276,7 +276,7 @@ void TEST(PlayStateSequence){
 
 #ifdef MLR_ODE
 void TEST(PlayTorqueSequenceInOde){
-  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("arm7.g");
   G.ode();
   uint n=G.getJointStateDimension();
   arr F,Xt,Vt;
@@ -295,7 +295,7 @@ void TEST(PlayTorqueSequenceInOde){
 }
 
 void TEST(MeshShapesInOde){
-  mlr::KinematicWorld G("testOdeMesh.ors");
+  mlr::KinematicWorld G("testOdeMesh.g");
   for(uint t=0;t<1000;t++){
     //G.clearJointErrors(); exportStateToOde(C,); //try doing this without clearing joint errors...!
     G.ode().step(0.03);
@@ -312,7 +312,7 @@ void TEST(MeshShapesInOde){
 //
 
 void TEST(FollowRedundantSequence){  
-  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("arm7.g");
 
   uint t,T,n=G.getJointStateDimension();
   arr x(n),y,J,invJ;
@@ -362,7 +362,7 @@ void TEST(FollowRedundantSequence){
 
 //---------- test standard dynamic control
 void TEST(Dynamics){
-  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("arm7.g");
 //  G.makeLinkTree();
   cout <<G <<endl;
 
@@ -524,7 +524,7 @@ void TEST(BlenderImport){
 void TEST(InverseKinematics) {
   // we're testing some big steps / target positions, some of which are not
   // reachable to check if the IK handle it
-  mlr::KinematicWorld world("drawer.ors");
+  mlr::KinematicWorld world("drawer.g");
 
   mlr::Body* drawer = world.getBodyByName("cabinet_drawer");
   mlr::Body* marker = world.getBodyByName("marker");

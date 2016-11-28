@@ -29,8 +29,8 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   GraspObject *graspobj;
   switch(obj->type){
       //graspobj = new GraspObject_InfCylinder(conv_vec2arr(obj->X.pos), ARR(0,0,1), .04, 1.);
-    case mlr::cylinderST:  graspobj = new GraspObject_Cylinder1(obj);  break;
-    case mlr::boxST:  graspobj = new GraspObject_Box(obj);  break;
+    case mlr::ST_cylinder:  graspobj = new GraspObject_Cylinder1(obj);  break;
+    case mlr::ST_box:  graspobj = new GraspObject_Box(obj);  break;
     default: NIY;
   }
   graspobj->distanceMode = true;
@@ -69,10 +69,10 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch(obj->type){
-    case mlr::cylinderST:
+    case mlr::ST_cylinder:
       V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case mlr::boxST:{
+    case mlr::ST_box:{
       /*rnd.clockSeed();
       static int side=-1;
       if(side==-1) side=rnd(3);

@@ -43,10 +43,10 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch(obj->type){
-    case mlr::cylinderST:
+    case mlr::ST_cylinder:
       V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case mlr::boxST:{
+    case mlr::ST_box:{
       /*rnd.clockSeed();
       static int side=-1;
       if(side==-1) side=rnd(3);

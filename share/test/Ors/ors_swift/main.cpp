@@ -10,7 +10,7 @@ void drawInit(void*){
 }
 
 void TEST(Swift) {
-  mlr::KinematicWorld G("swift_test.ors");
+  mlr::KinematicWorld G("swift_test.g");
 
   G.swift().setCutoff(2.);
   G.stepSwift();

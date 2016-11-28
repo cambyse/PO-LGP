@@ -102,13 +102,13 @@ void TEST(CoveringSphere){
   r.referToRange(cr,3*s,-1); r.reshape(s);
   for(uint j=0;j<s;j++) if(r(j)>1e-3){
     mlr::Shape *s = new mlr::Shape(G, NoBody);
-    s->type = mlr::sphereST;
+    s->type = mlr::ST_sphere;
     s->X.pos.set(c[j].p);
     s->size[3] = r(j);
   }
   for(uint i=0;i<x.d0;i++){
     mlr::Shape *s = new mlr::Shape(G, NoBody);
-    s->type = mlr::sphereST;
+    s->type = mlr::ST_sphere;
     s->X.pos.set(x[i].p);
     s->size[3] = .1;
     s->color[0]=0.;

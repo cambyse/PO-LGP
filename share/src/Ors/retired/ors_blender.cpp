@@ -149,7 +149,7 @@ void readBlender(const char* filename, mlr::Mesh& mesh, mlr::KinematicWorld& bl)
 #endif
     n->X.rot = f.rot;
     
-    s->type=mlr::boxST;
+    s->type=mlr::ST_box;
     l=(t-h).length();
     v[0]=v[1]=v[3]=l/20.; v[2]=l;
     memmove(s->size, v, 4*sizeof(double));

@@ -46,7 +46,7 @@ void G4Display::open(){
         mlr::Body *b = new mlr::Body(s->ors);
         b->name = sen_name;
         mlr::Shape *sh = new mlr::Shape(s->ors, *b);
-        sh->type = mlr::boxST;
+        sh->type = mlr::ST_box;
         memmove(sh->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
         memmove(sh->color,ARR(1, 0, 0).p, 3*sizeof(double));
       }
@@ -59,7 +59,7 @@ void G4Display::open(){
       mlr::Body *b = new mlr::Body(s->ors);
       mlr::Shape *sh = new mlr::Shape(s->ors, *b);
 
-      sh->type = mlr::boxST;
+      sh->type = mlr::ST_box;
       memmove(sh->size, ARR(.10, .04, .01, 0).p, 4*sizeof(double));
       memmove(sh->color, ARR(1, 0, 0).p, 3*sizeof(double));
     }
@@ -69,7 +69,7 @@ void G4Display::open(){
   mlr::Body *b = new mlr::Body(s->ors);
   b->name = STRING("world");
   mlr::Shape *sh = new mlr::Shape(s->ors, *b);
-  sh->type = mlr::markerST;
+  sh->type = mlr::ST_marker;
   sh->size[0] = .5;
 }
 

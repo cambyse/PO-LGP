@@ -104,7 +104,7 @@ void IbdsModule::create(mlr::KinematicWorld& C) {
   addCollisionCube(floor, 100, 100, .2);
 #endif
   
-  //double *mass,*shape,*type,*fixed,*cont,typeD=mlr::cylinderST;
+  //double *mass,*shape,*type,*fixed,*cont,typeD=mlr::ST_cylinder;
   
   double rot[9];
   Matrix3x3 mat;
@@ -138,21 +138,21 @@ void IbdsModule::create(mlr::KinematicWorld& C) {
     mlr::Shape *s = n->shapes(0);
     switch(s->type) {
     default:
-    case mlr::boxST: // box
+    case mlr::ST_box: // box
       //b->addGeometry(createCubeGeometry(s->size[0], s->size[1], s->size[2], 0.0f,0.6f,0.0f,1.0f));
       b->setInertiaTensor(SimMath::computeBoxIntertiaTensor(n->mass, s->size[0], s->size[1], s->size[2]));
       //sim->addCollisionObject(b, s->mesh.V.d0, s->mesh.V.p, s->mesh.T.d0, (int*)s->mesh.T.p, NULL);
       addCollisionCube(b, s->size[0], s->size[1], s->size[2]);
       break;
-    case mlr::sphereST: // sphere
+    case mlr::ST_sphere: // sphere
       //b->addGeometry(createSphereGeometry(s->size[3], 0.0f,0.3f,0.6f,1.0f));
       b->setInertiaTensor(SimMath::computeSphereIntertiaTensor(n->mass, s->size[3]));
       //sim->addCollisionObject(b, s->mesh.V.d0, s->mesh.V.p, s->mesh.T.d0, (int*)s->mesh.T.p, NULL);
       addCollisionSphere(b, s->size[3]);
       break;
-    case mlr::cylinderST:
-    case mlr::cappedCylinderST:
-    case mlr::meshST:
+    case mlr::ST_cylinder:
+    case mlr::ST_capsule:
+    case mlr::ST_mesh:
       MeshGeometry *geo = new MeshGeometry();
       cout <<s->mesh.V.d0 <<endl;
       sim->addCollisionObject(b, s->mesh.V.d0, s->mesh.V.p, s->mesh.T.d0, (int*)s->mesh.T.p, NULL);

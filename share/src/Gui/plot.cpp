@@ -54,7 +54,7 @@ PlotModule::PlotModule() {
 
 PlotModule::~PlotModule() {
 #ifdef MLR_GL
-  if(gl) delete gl;
+  if(gl){ delete gl; gl=NULL; }
 #endif
   delete s;
 }
@@ -91,12 +91,16 @@ void plotInitGL(double xl=-1., double xh=1., double yl=-1., double yh=1., double
   }
   plotModule.gl->update();
 }
+
+void plotCloseGL(){
+  if(plotModule.gl){ delete plotModule.gl; plotModule.gl=NULL; }
+}
 #endif
 
 void plot(bool wait, const char* txt) {
-if(!mlr::getInteractivity()){
-  wait=false;
-}
+  if(!mlr::getInteractivity()){
+    wait=false;
+  }
   switch(plotModule.mode) {
     case gnupl:
       plotDrawGnuplot(plotModule.s, wait);
@@ -117,6 +121,15 @@ if(!mlr::getInteractivity()){
     case xfig:
       NIY;
       break;
+  }
+}
+
+void plotClose() {
+  switch(plotModule.mode) {
+    case opengl:
+      plotCloseGL();
+      break;
+    default:{}
   }
 }
 

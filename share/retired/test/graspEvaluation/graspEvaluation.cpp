@@ -118,7 +118,7 @@ void GraspEvaluation::copyGraspFromOrs(const mlr::KinematicWorld& all,
   mlr::Array<mlr::Body*> bodyMap(all.bodies.N);
   for_list(Type, b, handBodies){
     bodyMap(b->index) = new mlr::Body(grasp, b);
-    bodyMap(b->index)->type = mlr::kinematicBT;
+    bodyMap(b->index)->type = mlr::BT_kinematic;
     for_list(Type, s, b->shapes){
       new mlr::Shape(grasp, bodyMap(b->index), s);
     }

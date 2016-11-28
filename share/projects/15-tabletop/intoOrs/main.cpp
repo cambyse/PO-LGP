@@ -48,11 +48,11 @@ struct PerceptionObjects2Ors : Thread {
         s = new mlr::Shape(modelWorld(), NoBody);
         s->name=name;
         if(marker.type==marker.CYLINDER){
-          s->type = mlr::cylinderST;
+          s->type = mlr::ST_cylinder;
           s->size[3] = .25*(marker.scale.x+marker.scale.y);
           s->size[2] = marker.scale.z;
         }else if(marker.type==marker.POINTS){
-          s->type = mlr::meshST;
+          s->type = mlr::ST_mesh;
           s->mesh.V = conv_points2arr(marker.points);
           s->mesh.C = conv_colors2arr(marker.colors);
         }else NIY;

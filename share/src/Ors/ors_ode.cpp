@@ -89,7 +89,7 @@ OdeInterface::OdeInterface(mlr::KinematicWorld &_C):C(_C) {
   dxJointAMotor* jointM=0;
   dJointFeedback* jointFB=0;
   mlr::Vector a;
-  //double *mass, *shape, *type, *fixed, *cont, typeD=cappedCylinderST;
+  //double *mass, *shape, *type, *fixed, *cont, typeD=ST_capsule;
   //, *inertiaTensor, *realMass, *centerOfMass;
 
   clear();
@@ -127,28 +127,28 @@ OdeInterface::OdeInterface(mlr::KinematicWorld &_C):C(_C) {
           for(int i=0; i<3; ++i) {
             if(s->size[i] == 0) s->size[i] = 0.001;
           }
-        case mlr::boxST:
+        case mlr::ST_box:
           dMassSetBox(&odeMass, n->mass, s->size[0], s->size[1], s->size[2]);
           dBodySetMass(b, &odeMass);
           geom=dCreateBox(myspace, s->size[0], s->size[1], s->size[2]);
           break;
-        case mlr::sphereST:
+        case mlr::ST_sphere:
           dMassSetSphere(&odeMass, n->mass, s->size[3]);
           dBodySetMass(b, &odeMass);
           geom=dCreateSphere(myspace, s->size[3]);
           break;
-        case mlr::cylinderST:
+        case mlr::ST_cylinder:
           dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
           dBodySetMass(b, &odeMass);
           geom=dCreateCylinder(myspace, s->size[3], s->size[2]);
           break;
-        case mlr::cappedCylinderST:
+        case mlr::ST_capsule:
           dMassSetCylinder(&odeMass, n->mass, 3, s->size[3], s->size[2]);
           //                 MLR_MSG("ODE: setting Cylinder instead of capped cylinder mass");
           dBodySetMass(b, &odeMass);
           geom=dCreateCCylinder(myspace, s->size[3], s->size[2]);
           break;
-        case mlr::meshST: {
+        case mlr::ST_mesh: {
 #if 0
           NIY;
 #else
@@ -217,7 +217,7 @@ OdeInterface::OdeInterface(mlr::KinematicWorld &_C):C(_C) {
       }
     }//loop through shapes
 
-    if(n->type==mlr::staticBT) {
+    if(n->type==mlr::BT_static) {
       jointF=(dxJointFixed*)dJointCreateFixed(world, 0);
       dJointAttach(jointF, b, 0);
       dJointSetFixed(jointF);
@@ -333,11 +333,11 @@ void OdeInterface::staticCallback(void *classP, dGeomID g1, dGeomID g2) {
   if(b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeSlider)) return;
   
   // exit if fixed body intersects with earth,  4. Mar 06 (hh)
-  if(b1==0 && db2->type==mlr::staticBT) return;
-  if(b2==0 && db1->type==mlr::staticBT) return;
+  if(b1==0 && db2->type==mlr::BT_static) return;
+  if(b2==0 && db1->type==mlr::BT_static) return;
   
   // exit if we have two fixed bodies,  6. Mar 06 (hh)
-  if(db1 && db2 && db1->type==mlr::staticBT && db2->type==mlr::staticBT) return;
+  if(db1 && db2 && db1->type==mlr::BT_static && db2->type==mlr::BT_static) return;
   
   // exit if none of the bodies have cont enabled (mt)
   //if(db1 && !db1->cont && db2 && !db2->cont) return;

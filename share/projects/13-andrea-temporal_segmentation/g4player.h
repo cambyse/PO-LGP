@@ -108,7 +108,7 @@ struct G4Player {
 
     mlr::Body *b = new mlr::Body(kw());
     mlr::Shape *sh = new mlr::Shape(kw(), *b);
-    sh->type = mlr::markerST;
+    sh->type = mlr::ST_marker;
     sh->size[0] = .5;
 
     uint nframes = g4rec.numFrames();

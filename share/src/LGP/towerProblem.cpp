@@ -33,13 +33,13 @@ void TowerProblem::setRandom(){
     b->X.addRelativeTranslation(x,y,.62);
     //randomize type and size
     if(rnd.uni()<.6){
-      s->type = mlr::cylinderST;
+      s->type = mlr::ST_cylinder;
       s->size[0]=s->size[1]=0.;
       s->size[2]=.2;
       s->size[3]=.05;
       s->name <<"cyl_" <<i;
     }else{
-      s->type = mlr::boxST;
+      s->type = mlr::ST_box;
       s->size[0]=.1 + .3*rnd.uni();
       s->size[1]=.1 + .6*rnd.uni();
       s->size[2]=.02;
@@ -54,7 +54,7 @@ void TowerProblem::setRandom(){
 
     //add symbols
     Node *o = symbols.newNode<bool>({"Object", s->name}, {}, true);
-    if(s->type==mlr::cylinderST){
+    if(s->type==mlr::ST_cylinder){
       state.newNode<bool>({}, {CYLIN ,o}, true);
     }else{
       state.newNode<bool>({}, {BOARD, o}, true);
@@ -123,13 +123,13 @@ void TowerProblem_new::setRandom(){
     b->X.addRelativeTranslation(x,y,.62);
     //randomize type and size
     if(rnd.uni()<.6){
-      s->type = mlr::ssBoxST;
+      s->type = mlr::ST_ssBox;
       s->size[0]=s->size[1]=0.;
       s->size[2]=.2;
       s->size[3]=.05;
       s->name <<"cyl_" <<i;
     }else{
-      s->type = mlr::ssBoxST;
+      s->type = mlr::ST_ssBox;
       s->size[0]=.1 + .3*rnd.uni();
       s->size[1]=.1 + .6*rnd.uni();
       s->size[2]=.02;

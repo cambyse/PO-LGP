@@ -17,7 +17,7 @@ void TEST(KinectModules) {
   //  gl.add(glStandardScene, NULL);
   //  gl.add(glDrawPrimitives, &primitives);
   //  primitives.P.append(new Plane(1,1,1,2.));
-  //  mlr::Shape *s = new mlr::Shape(primitives.G, NoBody)->type=mlr::boxST;
+  //  mlr::Shape *s = new mlr::Shape(primitives.G, NoBody)->type=mlr::ST_box;
   //  gl.update();
 
   PCL_ModuleSystem S;

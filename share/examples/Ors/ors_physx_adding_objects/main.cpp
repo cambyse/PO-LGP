@@ -12,7 +12,7 @@ void addRandomObject(mlr::KinematicWorld &ors) {
   b->X.pos.z += 1.;
 
   mlr::Shape *s = new mlr::Shape(ors, *b);
-  s->type = mlr::sphereST;
+  s->type = mlr::ST_sphere;
   s->size[0] = .1; s->size[1] = .1; s->size[2] = .1; s->size[3] = .1;
 }
 

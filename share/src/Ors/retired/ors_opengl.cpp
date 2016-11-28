@@ -101,28 +101,28 @@ void mlr::Shape::glDraw(OpenGL& gl) {
   }
   if(orsDrawShapes) {
     switch(type) {
-      case mlr::noneST: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
-      case mlr::boxST:
+      case mlr::ST_none: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
+      case mlr::ST_box:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawBox(size[0], size[1], size[2]);
         break;
-      case mlr::sphereST:
+      case mlr::ST_sphere:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawSphere(size[3]);
         break;
-      case mlr::cylinderST:
+      case mlr::ST_cylinder:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCylinder(size[3], size[2]);
         break;
-      case mlr::cappedCylinderST:
+      case mlr::ST_capsule:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCappedCylinder(size[3], size[2]);
         break;
-      case mlr::SSBoxST:
+      case mlr::ST_retired_SSBox:
         HALT("deprecated??");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes){
@@ -130,23 +130,23 @@ void mlr::Shape::glDraw(OpenGL& gl) {
           mesh.glDraw(gl);
         }else NIY;
         break;
-      case mlr::markerST:
+      case mlr::ST_marker:
         if(orsDrawMarkers){
           glDrawDiamond(size[0]/5., size[0]/5., size[0]/5.); glDrawAxes(size[0]);
         }
         break;
-      case mlr::meshST:
+      case mlr::ST_mesh:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case mlr::ssCvxST:
+      case mlr::ST_ssCvx:
         CHECK(sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
         if(!mesh.V.N) mesh.setSSCvx(sscCore, size[3]);
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case mlr::ssBoxST:
+      case mlr::ST_ssBox:
         if(!mesh.V.N || !sscCore.V.N){
           sscCore.setBox();
           sscCore.scale(size[0], size[1], size[2]);
@@ -155,7 +155,7 @@ void mlr::Shape::glDraw(OpenGL& gl) {
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case mlr::pointCloudST:
+      case mlr::ST_pointCloud:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw point cloud object");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);

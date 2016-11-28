@@ -11,29 +11,29 @@ void addDoor(mlr::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, dou
 
   mlr::Body *frame = new mlr::Body(G);
   frame->X.pos = mlr::Vector(1.2, 1.2, door_h/2.);
-  frame->type = mlr::BodyType::staticBT;
+  frame->type = mlr::BodyType::BT_static;
   mlr::Shape *frame_shape = new mlr::Shape(G,*frame);
-  frame_shape->type = mlr::ShapeType::cylinderST;
+  frame_shape->type = mlr::ShapeType::ST_cylinder;
   arr size = ARRAY(0.,0.,door_h,0.0085);
   memmove(frame_shape->size, size.p, 4*sizeof(double));
   arr color = ARRAY(0.,0.,0.);
   memmove(frame_shape->color, color.p, 3*sizeof(double));
 
   mlr::Body *door = new mlr::Body(G);
-  door->type = mlr::BodyType::staticBT;
+  door->type = mlr::BodyType::BT_static;
   door->name = "door";
   mlr::Shape *door_shape = new mlr::Shape(G,*door);
-  door_shape->type = mlr::ShapeType::boxST;
+  door_shape->type = mlr::ShapeType::ST_box;
   size = ARRAY(.038, door_w, door_h, 0.);
   memmove(door_shape->size, size.p, 4*sizeof(double));
   color = ARRAY(0.5,0.5,0.);
   memmove(door_shape->color, color.p, 3*sizeof(double));
 
   mlr::Body *handle = new mlr::Body(G);
-  handle->type = mlr::BodyType::staticBT;
+  handle->type = mlr::BodyType::BT_static;
   handle->name = "handle";
   mlr::Shape *handle_shape = new mlr::Shape(G,*handle);
-  handle_shape->type = mlr::ShapeType::boxST;
+  handle_shape->type = mlr::ShapeType::ST_box;
   size = ARRAY(.014, handle_w, handle_h, 0.);
   memmove(handle_shape->size, size.p, 4*sizeof(double));
   color = ARRAY(0.,0.,0.);
@@ -55,7 +55,7 @@ void addDoor(mlr::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, dou
   mlr::Shape *cp1 = new mlr::Shape(G,*handle);
   cp1->name = "cp1";
   cp1->rel.pos = mlr::Vector(0,0.05, handle_h/2.);
-  cp1->type = mlr::ShapeType::sphereST;
+  cp1->type = mlr::ShapeType::ST_sphere;
   size=ARRAY(.1, .1, .1, .01);
   memmove(cp1->size, size.p, 4*sizeof(double));
   color = ARRAY(1.,0.,0.);
@@ -64,7 +64,7 @@ void addDoor(mlr::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, dou
   mlr::Shape *cp2 = new mlr::Shape(G,*handle);
   cp2->name = "cp2";
   cp2->rel.pos = mlr::Vector(0,-0.02, -handle_h/2.);
-  cp2->type = mlr::ShapeType::sphereST;
+  cp2->type = mlr::ShapeType::ST_sphere;
   size=ARRAY(.1, .1, .1, .01);
   memmove(cp2->size, size.p, 4*sizeof(double));
   color = ARRAY(0.,1.,0.);

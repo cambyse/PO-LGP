@@ -139,7 +139,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
     // if(zmin > .5) {
     if(zmin > .25) {
       // mlr::Shape *pcShape = new mlr::Shape(*ti->world_plan, NoBody);
-      // pcShape->type = mlr::pointCloudST;
+      // pcShape->type = mlr::ST_pointCloud;
       // pcShape->name = STRING("pcShape_"<<nobj);
 
       // pcShape->color[0] = colors[nobj][0];
@@ -159,12 +159,12 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
 
       mlr::Body *boxBody = new mlr::Body(*ti->world_plan);
       boxBody->name = STRING("boxBody_"<<nobj);
-      boxBody->type = mlr::BodyType::dynamicBT;
+      boxBody->type = mlr::BodyType::BT_dynamic;
       boxBody->X.pos = center;
       boxBody->X.rot.setDiff(mlr::Vector(1.,0.,0.),dir);
 
       mlr::Shape *boxShape = new mlr::Shape(*ti->world_plan, *boxBody);
-      boxShape->type = mlr::boxST;
+      boxShape->type = mlr::ST_box;
       boxShape->name = STRING("boxShape_"<<nobj);
       arr size = ARRAY(Y.col(0).max()-Y.col(0).min(),Y.col(1).max()-Y.col(1).min(),points.col(2).max()-points.col(2).min(), 0.);
       memmove(boxShape->size, size.p, 4*sizeof(double));
@@ -258,7 +258,7 @@ void TEST(PointCloud) {
   world.gl().add(changeColor2);
 
   mlr::Shape *pcShape = new mlr::Shape(world,NoBody);
-  pcShape->type = mlr::pointCloudST;
+  pcShape->type = mlr::ST_pointCloud;
   pcShape->name = "pcShape";
   uint N=1000;
   arr scale = eye(3)*0.01;
@@ -281,11 +281,11 @@ void TEST(PointCloud) {
 
   mlr::Body *boxBody = new mlr::Body(world);
   boxBody->name = "boxBody";
-  boxBody->type = mlr::BodyType::dynamicBT;
+  boxBody->type = mlr::BodyType::BT_dynamic;
   boxBody->X.pos = center;
   boxBody->X.rot.setDiff(mlr::Vector(1.,0.,0.),dir);
   mlr::Shape *boxShape = new mlr::Shape(world,*boxBody);
-  boxShape->type = mlr::boxST;
+  boxShape->type = mlr::ST_box;
   boxShape->name = "boxShape";
   arr size = ARRAY(Y.col(0).max()-Y.col(0).min(),Y.col(1).max()-Y.col(1).min(),Y.col(2).max()-Y.col(2).min(), 0.);
   memmove(boxShape->size, size.p, 4*sizeof(double));

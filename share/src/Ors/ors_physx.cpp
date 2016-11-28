@@ -231,7 +231,7 @@ PhysXInterface::~PhysXInterface() {
 
 void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
-  for_list(mlr::Body, b, world.bodies) if(b->type==mlr::kinematicBT) {
+  for_list(mlr::Body, b, world.bodies) if(b->type==mlr::BT_kinematic) {
     ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
 
@@ -272,14 +272,14 @@ void PhysXInterface::step(double tau) {
 void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
   for(mlr::Joint* j:world.joints){
     if(j->agent==agent){
-      if(j->from->type==mlr::dynamicBT) j->from->type=mlr::kinematicBT;
-      if(j->to->type==mlr::dynamicBT) j->to->type=mlr::kinematicBT;
+      if(j->from->type==mlr::BT_dynamic) j->from->type=mlr::BT_kinematic;
+      if(j->to->type==mlr::BT_dynamic) j->to->type=mlr::BT_kinematic;
     }
   }
   for(mlr::Body *b: world.bodies) {
-    if(b->type==mlr::kinematicBT)
+    if(b->type==mlr::BT_kinematic)
       ((PxRigidDynamic*)s->actors(b->index))->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-    if(b->type==mlr::dynamicBT)
+    if(b->type==mlr::BT_dynamic)
       ((PxRigidDynamic*)s->actors(b->index))->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
   }
 }
@@ -407,17 +407,17 @@ void sPhysXInterface::unlockJoint(PxD6Joint *joint, mlr::Joint *ors_joint) {
 void sPhysXInterface::addBody(mlr::Body *b, physx::PxMaterial *mMaterial) {
   PxRigidDynamic* actor;
   switch(b->type) {
-    case mlr::staticBT:
+    case mlr::BT_static:
       actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
       break;
-    case mlr::dynamicBT:
+    case mlr::BT_dynamic:
       actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       break;
-    case mlr::kinematicBT:
+    case mlr::BT_kinematic:
       actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
       break;
-    case mlr::noneBT:
+    case mlr::BT_none:
       HALT("this shoudn't be none BT!?")
 //      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       break;
@@ -426,20 +426,20 @@ void sPhysXInterface::addBody(mlr::Body *b, physx::PxMaterial *mMaterial) {
   for_list(mlr::Shape,  s,  b->shapes) {
     PxGeometry* geometry;
     switch(s->type) {
-      case mlr::boxST: {
+      case mlr::ST_box: {
         geometry = new PxBoxGeometry(.5 * s->size[0], .5 * s->size[1], .5 * s->size[2]);
       }
       break;
-      case mlr::sphereST: {
+      case mlr::ST_sphere: {
         geometry = new PxSphereGeometry(s->size[3]);
       }
       break;
-      case mlr::cappedCylinderST: {
+      case mlr::ST_capsule: {
         geometry = new PxCapsuleGeometry(s->size[3], s->size[2]);
       }
       break;
-      case mlr::cylinderST:
-      case mlr::meshST: {
+      case mlr::ST_cylinder:
+      case mlr::ST_mesh: {
         // Note: physx can't decompose meshes itself.
         // Physx doesn't support triangle meshes in dynamic objects! See:
         // file:///home/mtoussai/lib/PhysX/Documentation/PhysXGuide/Manual/Shapes.html
@@ -456,7 +456,7 @@ void sPhysXInterface::addBody(mlr::Body *b, physx::PxMaterial *mMaterial) {
         geometry = new PxConvexMeshGeometry(triangleMesh);
       }
       break;
-      case mlr::markerST: {
+      case mlr::ST_marker: {
         geometry = NULL;
       }
       break;
@@ -469,7 +469,7 @@ void sPhysXInterface::addBody(mlr::Body *b, physx::PxMaterial *mMaterial) {
     }
     //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
-  if(b->type == mlr::dynamicBT) {
+  if(b->type == mlr::BT_dynamic) {
     if(b->mass) {
       PxRigidBodyExt::setMassAndUpdateInertia(*actor, b->mass);
     }

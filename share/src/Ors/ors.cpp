@@ -83,13 +83,14 @@ mlr::Shape& NoShape = *((mlr::Shape*)NULL);
 mlr::Joint& NoJoint = *((mlr::Joint*)NULL);
 mlr::KinematicWorld& NoWorld = *((mlr::KinematicWorld*)NULL);
 
-namespace mlr{
-  const char* name(JointType jt){
-    static const char* names [] = { "JT_hingeX", "JT_hingeY", "JT_hingeZ", "JT_transX", "JT_transY", "JT_transZ", "JT_transXY", "JT_trans3", "JT_transXYPhi", "JT_universal", "JT_rigid", "JT_quatBall", "JT_phiTransXY", "JT_glue", "JT_free" };
-    if(jt==JT_none) return "JT_none";
-    return names[(int)jt];
-  }
-}
+template<> const char* mlr::Enum<mlr::ShapeType>::names []={
+  "ST_box", "ST_sphere", "ST_capsule", "ST_mesh", "ST_cylinder", "ST_marker", "ST_SSBox", "ST_pointCloud", "ST_ssCvx", "ST_ssBox", NULL
+};
+
+template<> const char* mlr::Enum<mlr::JointType>::names []={
+  "JT_hingeX", "JT_hingeY", "JT_hingeZ", "JT_transX", "JT_transY", "JT_transZ", "JT_transXY", "JT_trans3", "JT_transXYPhi", "JT_universal", "JT_rigid", "JT_quatBall", "JT_phiTransXY", "JT_glue", "JT_free", NULL
+};
+
 
 //===========================================================================
 //
@@ -119,7 +120,7 @@ mlr::Body::~Body() {
 void mlr::Body::reset() {
   ats.clear();
   X.setZero();
-  type=dynamicBT;
+  type=BT_dynamic;
   shapes.memMove=true;
   com.setZero();
   mass = 0.;
@@ -143,10 +144,10 @@ void mlr::Body::parseAts() {
     inertia *= .2*d;
   }
 
-  type=dynamicBT;
-  if(ats["fixed"])       type=staticBT;
-  if(ats["static"])      type=staticBT;
-  if(ats["kinematic"])   type=kinematicBT;
+  type=BT_dynamic;
+  if(ats["fixed"])       type=BT_static;
+  if(ats["static"])      type=BT_static;
+  if(ats["kinematic"])   type=BT_kinematic;
   if(ats.get(d,"dyntype")) type=(BodyType)d;
 
   // SHAPE handling //TODO: remove this code!
@@ -171,7 +172,7 @@ void mlr::Body::parseAts() {
         s->mesh.parsing_pos_end = parsing_pos(1);
 	//TODO: use Shape::parseAts instead of doing the same things here again!!
         s->mesh.readObjFile(file->getIs()); 
-        s->type=meshST;
+        s->type=ST_mesh;
       }
     }
   }
@@ -191,7 +192,7 @@ void mlr::Body::parseAts() {
 void mlr::Body::write(std::ostream& os) const {
   if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
   if(mass) os <<"mass=" <<mass <<' ';
-  if(type!=dynamicBT) os <<"dyntype=" <<(int)type <<' ';
+  if(type!=BT_dynamic) os <<"dyntype=" <<(int)type <<' ';
 //  uint i; Node *a;
 //  for(Type *  a:  ats)
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
@@ -266,52 +267,53 @@ void mlr::Shape::parseAts() {
   if(ats.get(x, "size"))          { CHECK_EQ(x.N,4,"size=[] needs 4 entries"); memmove(size, x.p, 4*sizeof(double)); }
   if(ats.get(x, "color"))         { CHECK(x.N>=3,"color=[] needs at least 3 entries"); memmove(color, x.p, 3*sizeof(double)); }
   if(ats.get(d, "type"))       { type=(ShapeType)(int)d;}
+  else if(ats.get(str, "type")) { str>> type; }
   if(ats["contact"])           { cont=true; }
   if(ats.get(fil, "mesh"))     { mesh.read(fil.getIs(), fil.name.getLastN(3).p, fil.name); }
   if(ats.get(d, "meshscale"))  { mesh.scale(d); }
 
   //create mesh for basic shapes
   switch(type) {
-    case mlr::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-    case mlr::boxST:
+    case mlr::ST_none: HALT("shapes should have a type - somehow wrong initialization..."); break;
+    case mlr::ST_box:
       mesh.setBox();
       mesh.scale(size[0], size[1], size[2]);
       break;
-    case mlr::sphereST:
+    case mlr::ST_sphere:
       mesh.setSphere();
       mesh.scale(size[3], size[3], size[3]);
       break;
-    case mlr::cylinderST:
+    case mlr::ST_cylinder:
       CHECK(size[3]>1e-10,"");
       mesh.setCylinder(size[3], size[2]);
       break;
-    case mlr::cappedCylinderST:
+    case mlr::ST_capsule:
       CHECK(size[3]>1e-10,"");
 //      mesh.setCappedCylinder(size[3], size[2]);
       sscCore.setBox();
       sscCore.scale(0., 0., size[2]);
       mesh.setSSCvx(sscCore, size[3]);
       break;
-    case mlr::SSBoxST:
+    case mlr::ST_retired_SSBox:
       HALT("deprecated?");
       mesh.setSSBox(size[0], size[1], size[2], size[3]);
       break;
-    case mlr::markerST:
+    case mlr::ST_marker:
       break;
-    case mlr::meshST:
-    case mlr::pointCloudST:
+    case mlr::ST_mesh:
+    case mlr::ST_pointCloud:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       sscCore = mesh;
       sscCore.makeConvexHull();
       size[3]=0.;
       break;
-    case mlr::ssCvxST:
+    case mlr::ST_ssCvx:
       CHECK(size[3]>1e-10,"");
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       sscCore=mesh;
       mesh.setSSCvx(sscCore, size[3]);
       break;
-    case mlr::ssBoxST:
+    case mlr::ST_ssBox:
       CHECK(size[3]>1e-10,"");
       sscCore.setBox();
       sscCore.scale(size[0], size[1], size[2]);
@@ -337,11 +339,11 @@ void mlr::Shape::parseAts() {
     Matrix I;
     double mass=-1.;
     switch(type) {
-      case sphereST:   inertiaSphere(I.p(), mass, 1000., size[3]);  break;
-      case boxST:      inertiaBox(I.p(), mass, 1000., size[0], size[1], size[2]);  break;
-      case cappedCylinderST:
-      case cylinderST: inertiaCylinder(I.p(), mass, 1000., size[2], size[3]);  break;
-      case noneST:
+      case ST_sphere:   inertiaSphere(I.p(), mass, 1000., size[3]);  break;
+      case ST_box:      inertiaBox(I.p(), mass, 1000., size[0], size[1], size[2]);  break;
+      case ST_capsule:
+      case ST_cylinder: inertiaCylinder(I.p(), mass, 1000., size[2], size[3]);  break;
+      case ST_none:
       default: ;
     }
     if(mass>0.){
@@ -352,7 +354,7 @@ void mlr::Shape::parseAts() {
 }
 
 void mlr::Shape::reset() {
-  type=noneST;
+  type=ST_none;
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
   ats.clear();
@@ -400,28 +402,28 @@ void mlr::Shape::glDraw(OpenGL& gl) {
   }
   if(orsDrawShapes) {
     switch(type) {
-      case mlr::noneST: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
-      case mlr::boxST:
+      case mlr::ST_none: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
+      case mlr::ST_box:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawBox(size[0], size[1], size[2]);
         break;
-      case mlr::sphereST:
+      case mlr::ST_sphere:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawSphere(size[3]);
         break;
-      case mlr::cylinderST:
+      case mlr::ST_cylinder:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCylinder(size[3], size[2]);
         break;
-      case mlr::cappedCylinderST:
+      case mlr::ST_capsule:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCappedCylinder(size[3], size[2]);
         break;
-      case mlr::SSBoxST:
+      case mlr::ST_retired_SSBox:
         HALT("deprecated??");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes){
@@ -429,23 +431,23 @@ void mlr::Shape::glDraw(OpenGL& gl) {
           mesh.glDraw(gl);
         }else NIY;
         break;
-      case mlr::markerST:
+      case mlr::ST_marker:
         if(orsDrawMarkers){
           glDrawDiamond(size[0]/5., size[0]/5., size[0]/5.); glDrawAxes(size[0]);
         }
         break;
-      case mlr::meshST:
+      case mlr::ST_mesh:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case mlr::ssCvxST:
+      case mlr::ST_ssCvx:
         CHECK(sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
         if(!mesh.V.N) mesh.setSSCvx(sscCore, size[3]);
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case mlr::ssBoxST:
+      case mlr::ST_ssBox:
         if(!mesh.V.N || !sscCore.V.N){
           sscCore.setBox();
           sscCore.scale(size[0], size[1], size[2]);
@@ -454,7 +456,7 @@ void mlr::Shape::glDraw(OpenGL& gl) {
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case mlr::pointCloudST:
+      case mlr::ST_pointCloud:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw point cloud object");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
@@ -505,11 +507,11 @@ void makeSSBoxApproximations(ShapeL& shapes){
 //  for(mlr::Shape *s: shapes) s->mesh.makeSSBox(s->mesh.V);
   for(uint i=0;i<shapes.N;i++){
     mlr::Shape *s=shapes(i);
-    if(!(s->type==mlr::meshST && s->mesh.V.N)) continue;
+    if(!(s->type==mlr::ST_mesh && s->mesh.V.N)) continue;
     mlr::Transformation t;
     arr x;
     s->mesh.makeSSBox(x, t, s->mesh.V);
-    s->type = mlr::ssBoxST;
+    s->type = mlr::ST_ssBox;
     s->size[0]=2.*x(0); s->size[1]=2.*x(1); s->size[2]=2.*x(2); s->size[3]=x(3);
     s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
     s->rel.appendTransformation(t);
@@ -564,6 +566,7 @@ void mlr::Joint::reset() {
 void mlr::Joint::parseAts() {
   //interpret some of the attributes
   double d=0.;
+  mlr::String str;
   ats.get(A, "A");
   ats.get(A, "from");
   if(ats["BinvA"]) B.setInverse(A);
@@ -572,7 +575,9 @@ void mlr::Joint::parseAts() {
   ats.get(Q, "Q");
   ats.get(X, "X");
   ats.get(H, "ctrl_H");
-  if(ats.get(d, "type")) type=(JointType)(int)d; else type=JT_hingeX;
+  if(ats.get(d, "type")) type=(JointType)d;
+  else if(ats.get(str, "type")) { str>> type; }
+  else type=JT_hingeX;
   if(type==JT_rigid && !Q.isZero()){ A.appendTransformation(Q); Q.setZero(); }
   if(ats.get(d, "q")){
     q0=d;
@@ -1087,7 +1092,7 @@ arr mlr::KinematicWorld::getLimits() const {
 void mlr::KinematicWorld::zeroGaugeJoints() {
   Joint *e;
   mlr::Vector w;
-  for(Body *  n:  bodies) if(n->type!=staticBT) {
+  for(Body *  n:  bodies) if(n->type!=BT_static) {
     e=n->inLinks(0);
     if(e) {
       e->A.appendTransformation(e->Q);
@@ -2237,7 +2242,7 @@ void mlr::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
   if(!addValues){ y.setZero();  if(&J) J.setZero(); }
 
 //  //costs
-//  if(a->type==mlr::sphereST && b->type==mlr::sphereST){
+//  if(a->type==mlr::ST_sphere && b->type==mlr::ST_sphere){
 //    mlr::Vector diff=a->X.pos-b->X.pos;
 //    double d = diff.length() - a->size[3] - b->size[3];
 //    y(0) = d;
@@ -2275,7 +2280,7 @@ void mlr::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
   if(!addValues){ y.setZero();  if(&J) J.setZero(); }
 
   //costs
-  if(a->type==mlr::sphereST && b->type==mlr::sphereST){
+  if(a->type==mlr::ST_sphere && b->type==mlr::ST_sphere){
     mlr::Vector diff=a->X.pos-b->X.pos;
     double d = diff.length() - a->size[3] - b->size[3];
     y(0) = 1. - d/margin;
@@ -2800,7 +2805,7 @@ mlr::String mlr::KinematicSwitch::shortTag(const mlr::KinematicWorld* G) const{
   mlr::String str;
   str <<"  timeOfApplication=" <<timeOfApplication;
   str <<"  symbol=" <<name(symbol);
-  str <<"  jointType=" <<mlr::name(jointType);
+  str <<"  jointType=" <<jointType;
   str <<"  fromId=" <<(fromId==UINT_MAX?"NULL":(G?G->shapes(fromId)->name:STRING(fromId)));
   str <<"  toId=" <<(G?G->shapes(toId)->name:STRING(toId)) <<endl;
   return str;
