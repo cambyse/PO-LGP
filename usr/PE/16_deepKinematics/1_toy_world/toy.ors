@@ -1,3 +1,3 @@
-body box{ type=0, X=<T t(0 0 0.05)>, size=[0.2 0.2 0.1 0], color=[0 0 0] fixed }
+# body box{ type=0, X=<T t(0 0 0.05)>, size=[0.2 0.2 0.1 0], color=[0 0 0] fixed }
 
 # body glCamera { X=<T 0 0 -32.70632 0 0 0 0>  type=1 size=[.1 .1 .1 .01] color=[1. 0 0] fixed, }
