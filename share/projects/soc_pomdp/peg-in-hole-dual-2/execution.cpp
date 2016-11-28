@@ -9,7 +9,7 @@
 using namespace std;
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0, const arr& model, bool stickyness, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0, const arr& model, bool stickyness, uint horizon){
     /////////////
 
 
@@ -116,7 +116,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
   /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
+void POMDPExecution(FSC fsc, mlr::KinematicWorld& world, int num, double est){
 
 
 
@@ -126,10 +126,10 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
 
     ofstream data(STRING("data-"<<num<<".dat"));
 
-    ors::Shape *endeff = world.getShapeByName("peg");
-    ors::Shape *true_target = world.getShapeByName("target");
-    ors::Body *est_target = world.getBodyByName("target");
-    ors::Body *table = world.getBodyByName("hole");
+    mlr::Shape *endeff = world.getShapeByName("peg");
+    mlr::Shape *true_target = world.getShapeByName("target");
+    mlr::Body *est_target = world.getBodyByName("target");
+    mlr::Body *table = world.getBodyByName("hole");
 
 
     //est_target->X.pos.z  = est;

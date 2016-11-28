@@ -3,9 +3,9 @@
 #include <Motion/pr2_heuristics.h>
 
 
-Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
+Motion_Interface::Motion_Interface(mlr::KinematicWorld &world_)
 {
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
   world->q = world_.q;
   threadOpenModules(true);
 
@@ -42,11 +42,11 @@ Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
 }
 
 void Motion_Interface::setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
-  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
-  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
+  mlr::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
+  mlr::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
 
   double angle;
-  ors::Vector rotvec;
+  mlr::Vector rotvec;
   quat.getRad(angle, rotvec);
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
@@ -69,8 +69,8 @@ void Motion_Interface::executeTrajectory(arr &X, double T, bool recordData)
 
   if (recordData) {Tact.clear(); Xdes.clear(); Xact.clear(); FLact.clear(); Uact.clear(); Mact.clear(); }
 
-  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
-  ors::Joint *torso = world->getJointByName("torso_lift_joint");
+  mlr::Joint *trans = world->getJointByName("worldTranslationRotation");
+  mlr::Joint *torso = world->getJointByName("torso_lift_joint");
 
   arr q_real;
   q_real = S.ctrl_obs.get()->q;
@@ -146,7 +146,7 @@ void Motion_Interface::gotoPosition(arr x)
   MP.tau = 0.05;
   MP.x0 = S.ctrl_obs.get()->q;
 
-  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
+  mlr::Joint *trans = world->getJointByName("worldTranslationRotation");
   if (useBase) { setOdom(MP.x0, trans->qIndex, S.pr2_odom.get()); }
 
 
@@ -203,7 +203,7 @@ void Motion_Interface::recordDemonstration(arr &X,double T)
   cout << "//////////////////////////////////////////////////////////////////" << endl;
   cout << "START RECORDING" << endl;
   cout << "//////////////////////////////////////////////////////////////////" << endl;
-  ors::Joint *trans = world->getJointByName("worldTranslationRotation");
+  mlr::Joint *trans = world->getJointByName("worldTranslationRotation");
 
   /// record demonstrations
   double t = 0.;

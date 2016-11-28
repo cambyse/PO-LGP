@@ -99,12 +99,12 @@ struct TaskVariable {
   void shiftTargets(int offset);
   
   /// @name updates
-  virtual void updateState(const ors::KinematicWorld &ors, double tau=1.) = 0; //updates both, state and Jacobian -> TODO: rename update(..)
+  virtual void updateState(const mlr::KinematicWorld &ors, double tau=1.) = 0; //updates both, state and Jacobian -> TODO: rename update(..)
   void updateChange(int t=-1, double tau=1.);
-  virtual void getHessian(const ors::KinematicWorld& ors, arr& H) { NIY; }
+  virtual void getHessian(const mlr::KinematicWorld& ors, arr& H) { NIY; }
   
   /// @name I/O
-  virtual void write(ostream& os, const ors::KinematicWorld& ors) const;
+  virtual void write(ostream& os, const mlr::KinematicWorld& ors) const;
   void write(ostream& os) const {NIY};
 };
 stdOutPipe(TaskVariable);
@@ -114,21 +114,21 @@ stdOutPipe(TaskVariable);
 struct DefaultTaskVariable:public TaskVariable {
   /// @name data fields
   int i, j;             ///< which body(-ies) does it refer to?
-  ors::Transformation irel, jrel; ///< relative position to the body
+  mlr::Transformation irel, jrel; ///< relative position to the body
   arr params;           ///< parameters of the variable (e.g., liner coefficients, limits, etc)
   
   /// @name initialization
   DefaultTaskVariable();
   DefaultTaskVariable(
     const char* _name,
-    const ors::KinematicWorld& _ors,
+    const mlr::KinematicWorld& _ors,
     TVtype _type,
     const char *iBodyName, const char *iframe,
     const char *jBodyName, const char *jframe,
     const arr& _params);
   DefaultTaskVariable(
     const char* _name,
-    const ors::KinematicWorld& _ors,
+    const mlr::KinematicWorld& _ors,
     TVtype _type,
     const char *iShapeName,
     const char *jShapeName,
@@ -138,23 +138,23 @@ struct DefaultTaskVariable:public TaskVariable {
   
   void set(
     const char* _name,
-    const ors::KinematicWorld& _ors,
+    const mlr::KinematicWorld& _ors,
     TVtype _type,
-    int _i, const ors::Transformation& _irel,
-    int _j, const ors::Transformation& _jrel,
+    int _i, const mlr::Transformation& _irel,
+    int _j, const mlr::Transformation& _jrel,
     const arr& _params);
-  //void set(const char* _name, ors::KinematicWorld& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
+  //void set(const char* _name, mlr::KinematicWorld& _ors, TVtype _type, const char *iname, const char *jname, const char *reltext);
   
   /// @name updates
-  void updateState(const ors::KinematicWorld& ors, double tau=1.);
-  void getHessian(const ors::KinematicWorld& ors, arr& H);
+  void updateState(const mlr::KinematicWorld& ors, double tau=1.);
+  void getHessian(const mlr::KinematicWorld& ors, arr& H);
   
   /// @name virtual user update
-  virtual void userUpdate(const ors::KinematicWorld& ors) { NIY; } //updates both, state and Jacobian
+  virtual void userUpdate(const mlr::KinematicWorld& ors) { NIY; } //updates both, state and Jacobian
   
   
   /// @name I/O
-  void write(ostream& os, const ors::KinematicWorld& ors) const;
+  void write(ostream& os, const mlr::KinematicWorld& ors) const;
 };
 //stdOutPipe(DefaultTaskVariable);
 
@@ -181,7 +181,7 @@ struct ProxyTaskVariable:public TaskVariable {
   /// @name initialization
   ProxyTaskVariable();
   ProxyTaskVariable(const char* _name,
-                    ors::KinematicWorld& _ors,
+                    mlr::KinematicWorld& _ors,
                     CTVtype _type,
                     uintA _shapes,
                     double _margin=.02,
@@ -189,7 +189,7 @@ struct ProxyTaskVariable:public TaskVariable {
   TaskVariable* newClone() { return new ProxyTaskVariable(*this); }
   
   /// @name updates
-  void updateState(const ors::KinematicWorld& ors, double tau=1.);
+  void updateState(const mlr::KinematicWorld& ors, double tau=1.);
 };
 
 /** proxy align task variable */
@@ -203,7 +203,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
   /// @name initialization
   ProxyAlignTaskVariable();
   ProxyAlignTaskVariable(const char* _name,
-                         ors::KinematicWorld& _ors,
+                         mlr::KinematicWorld& _ors,
                          CTVtype _type,
                          uintA _shapes,
                          double _margin=3.,
@@ -211,7 +211,7 @@ struct ProxyAlignTaskVariable:public TaskVariable {
   TaskVariable* newClone() { return new ProxyAlignTaskVariable(*this); }
   
   /// @name updates
-  void updateState(const ors::KinematicWorld& ors, double tau=1.);
+  void updateState(const mlr::KinematicWorld& ors, double tau=1.);
 };
 
 //===========================================================================
@@ -226,7 +226,7 @@ void reportState(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void reportErrors(TaskVariableList& CS, ostream& os, bool onlyActives=true, int t=-1);
 void reportNames(TaskVariableList& CS, ostream& os, bool onlyActives=true);
 void activateAll(TaskVariableList& CS, bool active);
-void updateState(TaskVariableList& CS, const ors::KinematicWorld& ors);
+void updateState(TaskVariableList& CS, const mlr::KinematicWorld& ors);
 void updateChanges(TaskVariableList& CS, int t=-1);
 void getJointJacobian(TaskVariableList& CS, arr& J);
 void getJointYchange(TaskVariableList& CS, arr& y_change);

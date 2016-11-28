@@ -9,7 +9,7 @@ void TEST(GraspHeuristic){
 //  double seconds = mlr::getParameter<double>("reachPlanTrajectoryDuration");
 
   //setup the problem
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   MotionProblem P(G);
 
@@ -24,7 +24,7 @@ void TEST(GraspHeuristic){
   //uint side=rnd(3);
   //side = 2;
 
-  ors::Shape *s = G.getShapeByName("target1");
+  mlr::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
 
 #if 1

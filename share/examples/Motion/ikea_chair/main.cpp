@@ -7,13 +7,13 @@
 #include <Ors/ors_swift.h>
 
 void pickandplace(arr finalpos){
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
-  for(ors::Shape*s: G.shapes) s->cont = true;
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  for(mlr::Shape*s: G.shapes) s->cont = true;
   mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back_main","chair_sitting"};
   const char* actuator = "l_wrist_roll_link";
   uint current =5;
 
-  for(ors::Shape *s: G.shapes)
+  for(mlr::Shape *s: G.shapes)
     if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
 
 
@@ -29,7 +29,7 @@ current = 5-i*2;
 //G.watch(true);
 
 
-  ors::Shape *s = G.getShapeByName(targets(current));
+  mlr::Shape *s = G.getShapeByName(targets(current));
  
 
     threeStepGraspHeuristic(xT, MP, s->index, 0);
@@ -54,7 +54,7 @@ current = 5-i*2;
 cout << "DIM = "<<G.getJointStateDimension();
  G.glueBodies(G.getBodyByName(actuator),G.getBodyByName(targets(current)));
 
- G.getBodyByName(targets(current))->inLinks(0)->type =ors::JT_rigid;
+ G.getBodyByName(targets(current))->inLinks(0)->type =mlr::JT_rigid;
  G.getBodyByName(targets(current))->inLinks(0)->name ="test";
 //G.getJointByName("l_gripper_l_finger_joint")->agent =0;
 // G.getBodyByName(targets(current))->inLinks(0)->qIndex = G.getJointStateDimension();
@@ -79,25 +79,25 @@ finalpos(0) -= 0.2 * i;
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
- c = MP2.addTask("position", new TaskMap_Default(posTMT, G, targets(current), ors::Vector(0, 0, 0)));
+ c = MP2.addTask("position", new TaskMap_Default(posTMT, G, targets(current), mlr::Vector(0, 0, 0)));
  c->setCostSpecs(MP2.T, MP2.T, finalpos, 1e3);
 
- //c = MP2.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(current), ors::Vector(0, 0, 0)));
+ //c = MP2.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(current), mlr::Vector(0, 0, 0)));
  //c->setCostSpecs(MP2.T, MP2.T, conv_quat2arr(G.getBodyByName("reference")->X.rot), 1e2);
 
 
-// ors::Quaternion my_quat; my_quat.set(0, 0, 0, 1);
+// mlr::Quaternion my_quat; my_quat.set(0, 0, 0, 1);
 // c->setCostSpecs(MP2.T, MP2.T, conv_quat2arr(my_quat), 1e3);
 
 
-ors::Vector orient;  orient.set(0, 0, 1) ;
+mlr::Vector orient;  orient.set(0, 0, 1) ;
 if (current<5) orient.set(0,1,0);
 
-//  c = MP2.addTask("upAlign", new TaskMap_Default(vecAlignTMT, G, targets(current), ors::Vector(1, 0, 0),"reference", orient ,NoArr));
+//  c = MP2.addTask("upAlign", new TaskMap_Default(vecAlignTMT, G, targets(current), mlr::Vector(1, 0, 0),"reference", orient ,NoArr));
  
 //if (current<5) c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
  // c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
-  //c = MP2.addTask("orientation", new TaskMap_Default(vecTMT, G, targets(current), ors::Vector(0, 0, 0)));
+  //c = MP2.addTask("orientation", new TaskMap_Default(vecTMT, G, targets(current), mlr::Vector(0, 0, 0)));
   //c->setCostSpecs(MP2.T, MP2.T, {0.,0.,1.}, 1e3);
 /*
   c = MP2.addTask("q_vel", new TaskMap_qItself());
@@ -141,10 +141,10 @@ void testPickAndPlace(const char* target,arr finalpos){
   positions.resize(5,7);
    ifstream out3("constraints.txt"); positions.readRaw(out3); out3.close();
   //setup the problem
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 
-//for(ors::Shape *s: G.shapes)
+//for(mlr::Shape *s: G.shapes)
 //    if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
   G.watch(true);
 
@@ -181,7 +181,7 @@ for (uint i=0;i<5;i++)  {
   listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 
-  ors::Vector current; current.set(positions(i,0),positions(i,1),positions(i,2));
+  mlr::Vector current; current.set(positions(i,0),positions(i,1),positions(i,2));
   G.getBodyByName("reference")->X.rot.set(0,0,0,1);
 
 //  arr relativ; relativ = conv_vec2arr(G.getBodyByName("chair_sitting")->X*current);
@@ -199,7 +199,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
   double shift; if (i>3) shift=0; else shift =  -0.18;
-  c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), ors::Vector(0, 0,shift)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), mlr::Vector(0, 0,shift)));
   c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
@@ -212,7 +212,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   G.getBodyByName("reference")->X.rot.set(0,0,0,1);
   if (i>3) G.getBodyByName("reference")->X.rot.set(0,0.7,0.7,0);
 
-  c = MP.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
+  c = MP.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(i), mlr::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getBodyByName("chair_sitting")->X.rot*G.getBodyByName("reference")->X.rot), 1e3);
 //
   //initialize trajectory
@@ -236,7 +236,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   MP.x0 = x[MP.T-1];
 }
 /*
-  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "graspCenter", mlr::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
@@ -259,7 +259,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
 
 void test_Loading_submeshes()
 {
-    ors::Mesh mesh;
+    mlr::Mesh mesh;
     mesh.readObjFile(FILE("chair_back_decomposed.obj"));
     OpenGL gl;
     gl.add(mesh);
@@ -273,11 +273,11 @@ void AssembleChair(){
   positions.resize(5,7);
    ifstream out3("constraints.txt"); positions.readRaw(out3); out3.close();
   //setup the problem
-   ors::KinematicWorld G("ikea2.kvg.txt");
+   mlr::KinematicWorld G("ikea2.kvg.txt");
   makeConvexHulls(G.shapes);
   arr initial = G.getJointState();
 
-//for(ors::Shape *s: G.shapes)
+//for(mlr::Shape *s: G.shapes)
 //    if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
 //  G.watch(true);
 
@@ -286,7 +286,7 @@ void AssembleChair(){
 
   arr x, xT;
   mlr::Array<const char*> targets = {"leg1","leg2","leg3","leg4","chair_back","chair_sitting"};
-  arr finalpos; ors::Vector current; ors::Quaternion original; ors::Quaternion orientation;
+  arr finalpos; mlr::Vector current; mlr::Quaternion original; mlr::Quaternion orientation;
    original.set(sqrt(0.5),-sqrt(0.5),0,0);
   //original.set(0,0,0,1);
 
@@ -339,7 +339,7 @@ for (uint i=0;i<5;i++)  {
       c->map.order=2; //make this an acceleration task!
       c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
 
-      c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), ors::Vector(0, 0,0)));
+      c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), mlr::Vector(0, 0,0)));
       c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);
 
       c = MP.addTask("q_vel", new TaskMap_qItself());
@@ -352,7 +352,7 @@ for (uint i=0;i<5;i++)  {
      orientation.set(0,0,0,1);
       if (i>3) orientation.set(0,0.7,0.7,0);
 
-      c = MP.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(i), ors::Vector(0, 0, 0)));
+      c = MP.addTask("orientation", new TaskMap_Default(quatTMT, G, targets(i), mlr::Vector(0, 0, 0)));
       c->setCostSpecs(MP.T, MP.T, conv_quat2arr(G.getShapeByName("chair_sitting_main")->X.rot*orientation), 1e3);
     //
       //initialize trajectory

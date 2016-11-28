@@ -14,9 +14,9 @@
 #include <Motion/motion.h>
 
 struct Poser{
-  ors::KinematicWorld W;
+  mlr::KinematicWorld W;
   arr q0;
-  Poser(ors::KinematicWorld& W):W(W){
+  Poser(mlr::KinematicWorld& W):W(W){
     q0 = W.getJointState();
   }
 
@@ -65,9 +65,9 @@ struct Poser{
     t->setCostSpecs(MP.T-1, MP.T, posR, 1e2);
     t = MP.addTask("endeffL", new TaskMap_Default(posTMT,W,"endeffL"), sumOfSqrTT);
     t->setCostSpecs(MP.T-1, MP.T, posL, 1e2);
-    t = MP.addTask("alignL", new TaskMap_Default(vecAlignTMT,W,"endeffL",ors::Vector(1.,0.,0.),NULL,ors::Vector(vecL)), sumOfSqrTT);
+    t = MP.addTask("alignL", new TaskMap_Default(vecAlignTMT,W,"endeffL",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(vecL)), sumOfSqrTT);
     t->setCostSpecs(MP.T-1, MP.T, {1.}, 1e1);
-    t = MP.addTask("alignR", new TaskMap_Default(vecAlignTMT,W,"endeffR",ors::Vector(1.,0.,0.),NULL,ors::Vector(vecR)), sumOfSqrTT);
+    t = MP.addTask("alignR", new TaskMap_Default(vecAlignTMT,W,"endeffR",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(vecR)), sumOfSqrTT);
     t->setCostSpecs(MP.T-1, MP.T, {1.}, 1e1);
 
     t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
@@ -93,7 +93,7 @@ struct Poser{
     //-- optimize
     optConstrained(x, NoArr, Convert(MP), OPT(verbose=1, stopIters=100, damping=1., maxStep=1.,aulaMuInc=2, nonStrictSteps=5));
     cout <<"** optimization time=" <<mlr::timerRead()
-        <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
+        <<" setJointStateCount=" <<mlr::KinematicWorld::setJointStateCount <<endl;
     MP.costReport();
 
     Graph result = MP.getReport();
@@ -219,7 +219,7 @@ void learnModel() {
   String arm = "r";
   StringA joints = {"_elbow_flex_joint","_wrist_roll_joint","_wrist_flex_joint","_forearm_roll_joint",
                     "_upper_arm_roll_joint","_shoulder_lift_joint","_shoulder_pan_joint"};
-  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  mlr::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
 
   // load the data, split in input and output
   Z <<FILE("data/Q1.dat");

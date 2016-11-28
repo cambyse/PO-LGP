@@ -20,7 +20,7 @@ struct CostFct_PlanePoints{
   const arr& X;
   const arr& transform;
   arr y;
-  ors::Quaternion r;
+  mlr::Quaternion r;
 
   CostFct_PlanePoints(const arr& n, const arr& m, const arr& X, const arr& transform);
 

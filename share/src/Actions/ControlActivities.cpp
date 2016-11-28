@@ -47,7 +47,7 @@ bool ControlActivity::isConv(){
 
 //===========================================================================
 
-void FollowReferenceActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void FollowReferenceActivity::configureControl(const char *name, Graph& specs, mlr::KinematicWorld& world) {
   stuck_count = 0;
   Node *it;
   if((it=specs["sym1"])){
@@ -121,7 +121,7 @@ bool FollowReferenceActivity::isConv(){
 
 //===========================================================================
 
-void HomingActivity::configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) {
+void HomingActivity::configureControl(const char *name, Graph& specs, mlr::KinematicWorld& world) {
   map = new TaskMap_qItself;
   task = new CtrlTask(name, map, 1., .8, 1., 1.);
   task->y_ref=taskController->q0;

@@ -21,12 +21,12 @@
 #include <LGP/manipulationTree.h>
 
 struct Coop{
-  ors::KinematicWorld kin;
+  mlr::KinematicWorld kin;
   BodyL box;
-  ors::Body *tableC;
-  ors::Body *tableL;
-  ors::Body *tableR;
-  mlr::Array<ors::Transformation> targetAbs, targetRel;
+  mlr::Body *tableC;
+  mlr::Body *tableL;
+  mlr::Body *tableR;
+  mlr::Array<mlr::Transformation> targetAbs, targetRel;
 
   FOL_World fol;
 

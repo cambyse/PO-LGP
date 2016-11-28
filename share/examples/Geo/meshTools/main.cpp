@@ -30,7 +30,7 @@ void TEST(MeshTools) {
   cout <<"FILE=" <<file <<endl;
   OpenGL *gl=NULL;
 
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   mesh.readFile(file);
 
   cout <<"#vertices = " <<mesh.V.d0 <<" #triangles=" <<mesh.T.d0 <<endl;

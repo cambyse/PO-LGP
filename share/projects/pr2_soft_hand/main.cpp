@@ -35,7 +35,7 @@ int main(int argc, char** argv){
 
   return 0;
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   world.gl().resize(800,800);
   world.watch(true);
 

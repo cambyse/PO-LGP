@@ -27,7 +27,7 @@ int main(int argc,char **argv){
   /// -----------------------------------------------------------
   mlr::String sceneName = mlr::getParameter<mlr::String>("sceneName");
   cout <<"Task: "<< sceneName << endl;
-  ors::KinematicWorld world(STRING(sceneName<<".ors"));
+  mlr::KinematicWorld world(STRING(sceneName<<".ors"));
 
   TaskManager *tm;
   if (sceneName=="donut") {

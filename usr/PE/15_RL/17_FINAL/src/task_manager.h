@@ -11,13 +11,13 @@ struct TaskManager
   enum TaskType {DOOR=1,GRASP=2};
   arr constraintTime;
   arr constraintCP;
-  ors::KinematicWorld *world;
+  mlr::KinematicWorld *world;
   TaskType type;
   arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
   arr PX1f,PX1c,PX2f,PX2c;
   TaskManager() {};
   virtual void addConstraints(MotionProblem *MP, const arr &X) = 0;
-  virtual void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr) = 0;
+  virtual void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr) = 0;
   virtual void computeConstraintTime(const arr &F,const arr &X) = 0;
   virtual bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo) = 0;
   virtual bool success(const arr &X, const arr &Y) = 0;
@@ -26,9 +26,9 @@ struct TaskManager
 };
 
 struct DoorTask:TaskManager {
-  DoorTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = DOOR;}
+  DoorTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_); type = DOOR;}
   void addConstraints(MotionProblem *MP, const arr &X);
-  void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
+  void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
   bool success(const arr &X, const arr &Y);
@@ -36,9 +36,9 @@ struct DoorTask:TaskManager {
 };
 
 struct GraspTask:TaskManager {
-  GraspTask(ors::KinematicWorld &world_) {world = new ors::KinematicWorld(world_); type = GRASP;}
+  GraspTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_); type = GRASP;}
   void addConstraints(MotionProblem *MP, const arr &X);
-  void updateVisualization(ors::KinematicWorld &world, arr &X, arr &Y=NoArr);
+  void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
   bool success(const arr &X, const arr &Y);

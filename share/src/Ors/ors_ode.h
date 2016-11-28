@@ -45,7 +45,7 @@ typedef struct dxJointGroup *dJointGroupID;
  * callback function, and basic stepping function.
  */
 struct OdeInterface {
-  ors::KinematicWorld& C;
+  mlr::KinematicWorld& C;
   double time;
   dxSpace *space;
   dxGeom *plane0, *planex1, *planex2, *planey1, *planey2;
@@ -61,7 +61,7 @@ struct OdeInterface {
   mlr::Array<dxJoint*> motors;
   mlr::Array<dContactGeom*> conts;
 
-  OdeInterface(ors::KinematicWorld &_C);
+  OdeInterface(mlr::KinematicWorld &_C);
   ~OdeInterface();
 
   /** @brief reinstantiates a new ODE world (and space) clear of all previous objects */
@@ -87,25 +87,25 @@ struct OdeInterface {
   void printInfo(std::ostream& os, dxBody *b);
   void reportContacts();
   void contactForces();
-  void penetration(ors::Vector &p);
+  void penetration(mlr::Vector &p);
 
   void exportStateToOde();
   void importStateFromOde();
   void exportForcesToOde();
-  void addJointForce(ors::Joint *e, double f1, double f2);
+  void addJointForce(mlr::Joint *e, double f1, double f2);
   void addJointForce(arr& f);
   void setMotorVel(const arr& qdot, double maxF);
   uint getJointMotorDimension();
   void setJointMotorPos(arr& x, double maxF=1., double tau=.01);
-  void setJointMotorPos(ors::Joint *e, double x0, double maxF=1., double tau=.01);
+  void setJointMotorPos(mlr::Joint *e, double x0, double maxF=1., double tau=.01);
   void setJointMotorVel(arr& v, double maxF=1.);
-  void setJointMotorVel(ors::Joint *e, double v0, double maxF=1.);
+  void setJointMotorVel(mlr::Joint *e, double v0, double maxF=1.);
   void unsetJointMotors();
-  void unsetJointMotor(ors::Joint *e);
+  void unsetJointMotor(mlr::Joint *e);
   void getJointMotorForce(arr& f);
-  void getJointMotorForce(ors::Joint *e, double& f);
-  void pidJointPos(ors::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
-  void pidJointVel(ors::Joint *e, double v0, double vGain);
+  void getJointMotorForce(mlr::Joint *e, double& f);
+  void pidJointPos(mlr::Joint *e, double x0, double v0, double xGain, double vGain, double iGain=0, double* eInt=0);
+  void pidJointVel(mlr::Joint *e, double v0, double vGain);
   void getGroundContact(boolA& cts);
   void importProxiesFromOde();
   void step(arr& force, uint steps=1, double tau=.01);
@@ -113,8 +113,8 @@ struct OdeInterface {
   void slGetProxies();
   //void slGetProxyGradient(arr &dx, const arr &x);
   void reportContacts2();
-  bool inFloorContacts(ors::Vector& x);
-  void pushPoseForShape(ors::Shape *s);
+  bool inFloorContacts(mlr::Vector& x);
+  void pushPoseForShape(mlr::Shape *s);
 };
 
 /** @} */

@@ -30,10 +30,10 @@ enum EditMode { emNone, emMove, emOde };
 
 struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall {
   OpenGL *gl;
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   EditMode mode;
-  ors::Body *movingBody;
-  ors::Vector selpos;
+  mlr::Body *movingBody;
+  mlr::Vector selpos;
   double seld, selx, sely, selz;
   sOrsSceneGui() {
     mode = emNone;
@@ -53,7 +53,7 @@ struct sOrsSceneGui:OpenGL::GLKeyCall,OpenGL::GLHoverCall,OpenGL::GLClickCall {
 
 bool sOrsSceneGui::clickCallback(OpenGL&) {
   if(mode==emMove) {
-    ors::Vector delta;
+    mlr::Vector delta;
     if(gl->mouse_button==4 && gl->mouseIsDown) delta = -.01*(gl->camera.X.pos - movingBody->X.pos);
     if(gl->mouse_button==5 && gl->mouseIsDown) delta = +.01*(gl->camera.X.pos - movingBody->X.pos);
     if(delta.length()) {
@@ -68,8 +68,8 @@ bool sOrsSceneGui::clickCallback(OpenGL&) {
 bool sOrsSceneGui::hoverCallback(OpenGL&) {
   switch(mode) {
     case emNone: {
-      ors::Joint *j=NULL;
-      ors::Shape *s=NULL;
+      mlr::Joint *j=NULL;
+      mlr::Shape *s=NULL;
       gl->Select(true);
       OpenGL::GLSelect *top=gl->topSelection;
       if(!top) { gl->text.clear();  return false; }
@@ -126,7 +126,7 @@ bool sOrsSceneGui::keyCallback(OpenGL&) {
       }
       uint i=top->name;
       //cout <<"HOVER call: id = 0x" <<std::hex <<gl->topSelection->name <<endl;
-      ors::Body *b=NULL;
+      mlr::Body *b=NULL;
       if((i&3)==1) b=ors->shapes(i>>2)->body;
       if(b) {
         cout <<"selected body " <<b->name <<endl;
@@ -161,19 +161,19 @@ bool sOrsSceneGui::keyCallback(OpenGL&) {
 }
 
 struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
- ors::KinematicWorld *ors;
- EditConfigurationHoverCall(ors::KinematicWorld& _ors);
+ mlr::KinematicWorld *ors;
+ EditConfigurationHoverCall(mlr::KinematicWorld& _ors);
  bool hoverCallback(OpenGL& gl);
 };
 
-OrsSceneGui::OrsSceneGui(ors::KinematicWorld& ors, OpenGL* gl) {
+OrsSceneGui::OrsSceneGui(mlr::KinematicWorld& ors, OpenGL* gl) {
   s=new sOrsSceneGui();
   s->ors = &ors;
   orsDrawZlines=true;
   if(!gl) {
     gl = new OpenGL();
     gl->add(sOrsSceneGui::drawBase,0);
-    gl->add(ors::glDrawGraph,&ors);
+    gl->add(mlr::glDrawGraph,&ors);
   }
   s->gl = gl;
 //  gl->addHoverCall(s);
@@ -196,21 +196,21 @@ void OrsSceneGui::edit() {
         case '4':  orsDrawProxies^=1;  break;
         case '5':  gl.reportSelects^=1;  break;
         case '6':  gl.reportEvents^=1;  break;
-        case 'j':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
-        case 'k':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
-        case 'i':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
-        case ',':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
-        case 'l':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(.1, .0, 0);  break;
-        case 'h':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(.1, 0, 0);  break;
+        case 'j':  gl.camera.X.pos += gl.camera.X.rot*mlr::Vector(0, 0, .1);  break;
+        case 'k':  gl.camera.X.pos -= gl.camera.X.rot*mlr::Vector(0, 0, .1);  break;
+        case 'i':  gl.camera.X.pos += gl.camera.X.rot*mlr::Vector(0, .1, 0);  break;
+        case ',':  gl.camera.X.pos -= gl.camera.X.rot*mlr::Vector(0, .1, 0);  break;
+        case 'l':  gl.camera.X.pos += gl.camera.X.rot*mlr::Vector(.1, .0, 0);  break;
+        case 'h':  gl.camera.X.pos -= gl.camera.X.rot*mlr::Vector(.1, 0, 0);  break;
         case 'a':  gl.camera.focus(
             (gl.camera.X.rot*(*gl.camera.foc - gl.camera.X.pos)
-             ^ gl.camera.X.rot*ors::Vector(1, 0, 0)) * .001
+             ^ gl.camera.X.rot*mlr::Vector(1, 0, 0)) * .001
             + *gl.camera.foc);
           break;
         case 's':  gl.camera.X.pos +=
             (
               gl.camera.X.rot*(*gl.camera.foc - gl.camera.X.pos)
-              ^(gl.camera.X.rot * ors::Vector(1., 0, 0))
+              ^(gl.camera.X.rot * mlr::Vector(1., 0, 0))
             ) * .01;
           break;
       }

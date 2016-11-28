@@ -14,8 +14,8 @@ OpenGL *globalGL=NULL;
 struct MultiPlan:public TaskAbstraction {
   uint visStep;
   TaskVariable * TV_fNew;
-  ors::Body * obst,*obstV,*obstV2,*future,*target;
-  ors::Vector lastTarget;
+  mlr::Body * obst,*obstV,*obstV2,*future,*target;
+  mlr::Vector lastTarget;
   AverageTrack Kal1, Kal2;
   bool started_track, bGoTarget, bFirstSense;
   double goodCost, colPrec;
@@ -47,15 +47,15 @@ void MultiPlan::init(RobotProcessGroup *_master){
   robotProcesses->gui.gl->camera.setPosition(-0.5,-7,1);
   robotProcesses->gui.gl->camera.focus(0., -0.5, 1.);
   //find camera location
-  ors::Body * b = new ors::Body(robotProcesses->gui.ors->bodies);
-  ors::Shape * s=new ors::Shape(robotProcesses->gui.ors->shapes,b);
+  mlr::Body * b = new mlr::Body(robotProcesses->gui.ors->bodies);
+  mlr::Shape * s=new mlr::Shape(robotProcesses->gui.ors->shapes,b);
   s->type=1;
   s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
   s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
   b->X.p = CameraLocation(Pl);
 
-  ors::Body * br = new ors::Body(robotProcesses->gui.ors->bodies);
-  ors::Shape * sr=new ors::Shape(robotProcesses->gui.ors->shapes,br);
+  mlr::Body * br = new mlr::Body(robotProcesses->gui.ors->bodies);
+  mlr::Shape * sr=new mlr::Shape(robotProcesses->gui.ors->shapes,br);
   sr->type=1;
   sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
   sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -78,7 +78,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
 }
 
 void MultiPlan::initTaskVariables(ControllerModule *ctrl){
-  ors::KinematicWorld &ors=ctrl->ors;
+  mlr::KinematicWorld &ors=ctrl->ors;
   TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
   TV_fNew->targetType=directTT;
   TVall.append(TV_fNew);//keep in mind, this is in place 0, others come after it
@@ -100,17 +100,17 @@ void MultiPlan::findObstacle(){
       vision2(i) = 	robotProcesses->evis.hsvCenters(i+4);
     }
 
-    ors::Vector val1,val2;
+    mlr::Vector val1,val2;
     Kal1.addSample(vision1,Pl,Pr,time);
     Kal2.addSample(vision2,Pl,Pr,time);
     val1 = Kal1.p;val2 = Kal2.p;
     pos_file << val1 << " " << val2 << " " << Kal1.v << " " << Kal2.v << " " << vision1 << " " << vision2 << endl;
-    ors::Vector oriVal = val2-val1;oriVal = oriVal/oriVal.length();
-    ors::Vector poscenter = val2 + oriVal*0.2;//green marker 0.2 from center
+    mlr::Vector oriVal = val2-val1;oriVal = oriVal/oriVal.length();
+    mlr::Vector poscenter = val2 + oriVal*0.2;//green marker 0.2 from center
     obst->X.p =  poscenter;
     obst->X.v = (Kal1.v+Kal2.v)/2.0;//average speed of 2 tracked markers
-    ors::Frame f;
-    f.r.setDiff(ors::Vector(0,0,1),oriVal);
+    mlr::Frame f;
+    f.r.setDiff(mlr::Vector(0,0,1),oriVal);
     obst->X.r = f.r;
 
     obstV2->X.r =  obst->X.r;//just ext state changes yhis
@@ -136,7 +136,7 @@ void MultiPlan::findTarget(){
     //  vision1(i) = perc->objects(0)->shapePointsR(0,i-2);
     vision1  = vision1*pow(2.0,robotProcesses->evis.downScale);
     Kal1.addSample(vision1,Pl,Pr,time);
-    ors::Vector val = Kal1.p;
+    mlr::Vector val = Kal1.p;
     target->X.p = val;
     pos_file << Kal1.v.length() << " " << lastTarget << endl;    // pos_file << val << " " << Kal1.v << " " << vision1 << endl;
     pos_file.flush();
@@ -209,21 +209,21 @@ void MultiPlan::updateTaskVariables(ControllerModule *ctrl){
       }
     }
     if(nMod >= 3){//random jumps of target
-      ors::Vector val = target->X.p ;
+      mlr::Vector val = target->X.p ;
       TV_fNew->updateState();
-      ors::Vector diff = val - ors::Vector(TV_fNew->y(0),TV_fNew->y(1),TV_fNew->y(2));
+      mlr::Vector diff = val - mlr::Vector(TV_fNew->y(0),TV_fNew->y(1),TV_fNew->y(2));
       bool OnTarget = diff.length() < 0.05;//is it on target
       if(OnTarget) counter ++;
       if(counter%30 == 0 &&OnTarget){
         if( val(0) > 0.0 && val(1) == -0.64)//counter%1000 == 0
-          val = ors::Vector(-0.2,-0.64,1);
+          val = mlr::Vector(-0.2,-0.64,1);
         else  if( val(0) < 0.0 && val(1) == -0.64)
-          val = ors::Vector(-0.2,-0.84,1);
+          val = mlr::Vector(-0.2,-0.84,1);
         else  if( val(0) < 0.0 && val(1) == -0.84){
-          val = ors::Vector(0.28,-0.84,1);          //   recho.helpers(0)->nInit = 2;
+          val = mlr::Vector(0.28,-0.84,1);          //   recho.helpers(0)->nInit = 2;
         }
         else  if( val(0) > 0.0 && val(1) == -0.84)
-          val = ors::Vector(0.28,-0.64,1);
+          val = mlr::Vector(0.28,-0.64,1);
         Change();
         counter = 0;
       }
@@ -287,9 +287,9 @@ int main(int argc,char** argv){
 
   demo.obst = robotProcesses.ctrl.ors.getBodyByName("obstacle");
   if(demo.nMod >= 3 || demo.nMod == 1){//dummy obstacle first, ease up
-    ors::Shape * s = demo.obst->shapes(0);
+    mlr::Shape * s = demo.obst->shapes(0);
     arr size = ARR(0,0,0.53,0.08);if(demo.nMod == 1){size(2) = 0.72; size(3) = 0.06;demo.obst->X.p(2) += 0.1;demo.obst->X.p(1) -= 0.16;}
-    memmove(s->size, size.p, 4*sizeof(double));    //demo.obst->X.p = ors::Vector(0.0,-0.7,0.98);
+    memmove(s->size, size.p, 4*sizeof(double));    //demo.obst->X.p = mlr::Vector(0.0,-0.7,0.98);
     copyBodyInfos(*robotProcesses.gui.ors,robotProcesses.ctrl.ors);
     copyBodyInfos(*robotProcesses.gui.ors2,robotProcesses.ctrl.ors);
   }
@@ -299,11 +299,11 @@ int main(int argc,char** argv){
   demo.obstV2->shapes(0)->mesh.clear();
   demo.future = robotProcesses.gui.ors->getBodyByName("obstacleF");
   arr atarget; mlr::getParameter(atarget,"target");
-  ors::Vector itarget =  ors::Vector(atarget(0),atarget(1),atarget(2));
+  mlr::Vector itarget =  mlr::Vector(atarget(0),atarget(1),atarget(2));
   if(demo.nMod == 4)
-    itarget = ors::Vector(0.28,-0.84,1);
+    itarget = mlr::Vector(0.28,-0.84,1);
   if(demo.nMod == 5 )
-    itarget = ors::Vector(0.28,-0.64,1);
+    itarget = mlr::Vector(0.28,-0.64,1);
   robotProcesses.ctrl.ors.getBodyByName("target")->X.p = itarget;//planner thread uses this actually, not GL body !!!
   robotProcesses.ctrl.ors.calcNodeFramesFromEdges();///stupid bugg, otherwise target has other values.... yess now fixed
   robotProcesses.gui.ors->getBodyByName("target")->X.p = robotProcesses.ctrl.ors.getBodyByName("target")->X.p;

@@ -14,7 +14,7 @@ int main(int argc,char **argv){
   /// initialize world
   double w = 640;
   double h = 480;
-  ors::KinematicWorld world("toy.ors");
+  mlr::KinematicWorld world("toy.ors");
   OpenGL gl("background", w,h);
   gl.add(glStandardScene, 0);
   gl.add(world);
@@ -32,7 +32,7 @@ int main(int argc,char **argv){
 //  gl.renderInBack(true, true, w, h);
 
   /// get image and depth image
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   arr pts, cols;
   floatA captureDepth = gl.captureDepth;
   byteA captureImage = gl.captureImage;
@@ -58,7 +58,7 @@ int main(int argc,char **argv){
   //depthData2pointCloud(pts,depth_image);
 
   for(uint i=0;i<pts.d0;i++) pts(i,2) *= -1.; // switch z dimension of points
-  ors::Transformation T = gl.camera.X;
+  mlr::Transformation T = gl.camera.X;
   T.applyOnPointArray(pts);
   cout << T.rot.getArr() << endl;
 

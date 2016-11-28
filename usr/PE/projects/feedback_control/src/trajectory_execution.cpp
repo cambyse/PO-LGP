@@ -34,7 +34,7 @@ typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajC
 
 class TrajExecution{
 private:
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
 
 
   arr x0_opt, xRef;
@@ -91,7 +91,7 @@ public:
     P.loadTransitionParameters();
 
     Task *c;
-    c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+    c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
 
     c->setCostSpecs(P.T, P.T,
                             conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -101,14 +101,14 @@ public:
                                {0.,0.,0.}, 0.);
 
     if (useOrientation) {
-      c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",ors::Vector(0., 0., 0.)));
+      c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",mlr::Vector(0., 0., 0.)));
       c->setCostSpecs(P.T, P.T,
                               {0.,0.,-1.}, 1e4,
                               {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
-      c = P.addTask("collision", new TaskMap_Default(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
+      c = P.addTask("collision", new TaskMap_Default(collTMT, 0, mlr::Vector(0., 0., 0.), 0, mlr::Vector(0., 0., 0.), ARR(.1)));
       c->setCostSpecs(0, P.T, {0.}, 1e0);
     }
 

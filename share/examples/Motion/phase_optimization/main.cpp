@@ -7,15 +7,15 @@
 
 void TEST(PhaseOptimization){
   /// create reference motion
-  ors::KinematicWorld world("test.ors");
+  mlr::KinematicWorld world("test.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MP(world,false);
   MP.T = 100;
   MP.tau = 0.01;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target = world.getBodyByName("target");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target = world.getBodyByName("target");
   Task *t;
   t = MP.addTask("tra", new TaskMap_Transition(world));
   t->map.order=1;

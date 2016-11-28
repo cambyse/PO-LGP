@@ -9,7 +9,7 @@
 #include "../src/phase_optimization.h"
 #include "../src/traj_factory.h"
 
-arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
+arr createDoorDemonstration(mlr::KinematicWorld &world, arr &tp) {
   arr q; world.getJointState(q);
   world.setJointState(q,q*0.);
 
@@ -28,8 +28,8 @@ arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
 
 
   t =MP.addTask("pre_pos", new DefaultTaskMap(posTMT,world,"endeffL"));
-  t->setCostSpecs(tp(0),tp(0), ARR(world.getBodyByName("handle")->X.pos - ors::Vector(0.1,0,0.)), 1e2);
-  t =MP.addTask("pre_vec", new DefaultTaskMap(vecAlignTMT,world,"endeffL",ors::Vector(0.,1.,0.),__null,ors::Vector(0.,0.,-1.)));
+  t->setCostSpecs(tp(0),tp(0), ARR(world.getBodyByName("handle")->X.pos - mlr::Vector(0.1,0,0.)), 1e2);
+  t =MP.addTask("pre_vec", new DefaultTaskMap(vecAlignTMT,world,"endeffL",mlr::Vector(0.,1.,0.),__null,mlr::Vector(0.,0.,-1.)));
   t->setCostSpecs(tp(0),tp(0), ARR(1.), 1e2);
   t =MP.addTask("handle_pos", new TaskMap_qItself(world.getJointByName("door_handle")->qIndex,world.getJointStateDimension()));
   t->setCostSpecs(tp(2)-2,tp(2), ARR(0.3), 1e3);
@@ -69,7 +69,7 @@ int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   arr tp;
-  ors::KinematicWorld world("robot_door.ors");
+  mlr::KinematicWorld world("robot_door.ors");
   arr xDem = createDoorDemonstration(world,tp);
 
   TrajFactory tf;

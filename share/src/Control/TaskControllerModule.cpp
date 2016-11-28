@@ -58,7 +58,7 @@ void TaskControllerModule::open(){
 #if 1
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
-  modelWorld().gl().add(ors::glDrawGraph, &realWorld);
+  modelWorld().gl().add(mlr::glDrawGraph, &realWorld);
   modelWorld().gl().add(changeColor2);
   modelWorld.deAccess();
 #endif
@@ -78,7 +78,7 @@ void TaskControllerModule::step(){
   static uint t=0;
   t++;
 
-  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
+  mlr::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
 
   //-- read real state
   if(useRos || !oldfashioned){

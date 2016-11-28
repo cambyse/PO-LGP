@@ -142,7 +142,7 @@ void ActionMachine::step(){
 
   //-- code to output force signals
   if(true){
-    ors::Shape *ftL_shape = world->getShapeByName("endeffForceL");
+    mlr::Shape *ftL_shape = world->getShapeByName("endeffForceL");
     arr fLobs = ctrl_obs.get()->fL;
     arr uobs =  ctrl_obs.get()->u_bias;
 //    cout <<fLobs <<endl;

@@ -25,10 +25,10 @@ void TEST(Executable){
 
     //-- output results:
     FILE(STRING(outprefix<<".costs.g")) <<komo.getReport(); //cost details
-    ors::KinematicWorld pose=komo.MP->world;
+    mlr::KinematicWorld pose=komo.MP->world;
     if(komo.MP->T){ //generate all kinematic switches
       pose=*komo.MP->configurations.last(); //take the last pose
-      for(ors::KinematicSwitch *sw:komo.MP->switches){ //apply all switches that are 'after last'
+      for(mlr::KinematicSwitch *sw:komo.MP->switches){ //apply all switches that are 'after last'
         if(sw->timeOfApplication >= komo.MP->T+1) sw->apply(pose);
       }
     }

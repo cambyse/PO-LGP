@@ -79,8 +79,8 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
     sys->swift=swift->newClone(*sys->ors);
     if(gl){
       sys->gl =gl->newClone();
-      sys->gl->remove(ors::glDrawGraph, ors);
-      sys->gl->add(ors::glDrawGraph, sys->ors);
+      sys->gl->remove(mlr::glDrawGraph, ors);
+      sys->gl->add(mlr::glDrawGraph, sys->ors);
     }
     sys->s->newedOrs = true;
   }
@@ -98,14 +98,14 @@ soc::SocSystem_Ors* soc::SocSystem_Ors::newClone(bool deep) const {
   return sys;
 }
 
-void soc::SocSystem_Ors::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
+void soc::SocSystem_Ors::initBasics(mlr::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                                     uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
-  if(_ors)   ors   = _ors;   else { ors=new ors::KinematicWorld;        ors  ->init(mlr::getParameter<mlr::String>("orsFile")); } // ors->makeLinkTree(); }
+  if(_ors)   ors   = _ors;   else { ors=new mlr::KinematicWorld;        ors  ->init(mlr::getParameter<mlr::String>("orsFile")); } // ors->makeLinkTree(); }
   if(_swift) swift = _swift; else { swift=new SwiftInterface;  swift->init(*ors, 2.*mlr::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
   if(gl && !_ors){
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, ors);
+    gl->add(mlr::glDrawGraph, ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -152,7 +152,7 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
 
   if(rand_seed>0){
     rnd.seed(rand_seed);
-    ors::Body &t=*ors->getBodyByName("target");
+    mlr::Body &t=*ors->getBodyByName("target");
     t.X.pos.x += .05*rnd.gauss();
     t.X.pos.y += .05*rnd.gauss();
     t.X.pos.z += .05*rnd.gauss();
@@ -196,23 +196,23 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   bool useTruncation = mlr::getParameter<bool>("useTruncation");
 
   //generate the configuration
-  ors::Body *b, *target, *endeff;  ors::Shape *s;  ors::Joint *j;
+  mlr::Body *b, *target, *endeff;  mlr::Shape *s;  mlr::Joint *j;
   mlr::String str;
-  ors=new ors::KinematicWorld;
+  ors=new mlr::KinematicWorld;
   //the links
   for(uint k=0; k<=K; k++){
-    b=new ors::Body(*ors);
+    b=new mlr::Body(*ors);
     b->name = STRING("body" <<k);
-    if(!k) b->type=ors::staticBT;
-    s=new ors::Shape(*ors, b);
-    s->type=ors::cappedCylinderST;
+    if(!k) b->type=mlr::staticBT;
+    s=new mlr::Shape(*ors, b);
+    s->type=mlr::cappedCylinderST;
     s->size[0]=.0; s->size[1]=.0; s->size[2]=1./K; s->size[3]=.2/K;
     s->rel.setText(STRING("<t(0 0 " <<.5/K <<")>"));
     if(k&1){ s->color[0]=.5; s->color[1]=.2; s->color[2]=.2; } else   { s->color[0]=.2; s->color[1]=.2; s->color[2]=.2; }
     s->cont=true;
     if(k){
-      j=new ors::Joint(*ors, ors->bodies(k-1), ors->bodies(k));
-      j->type = ors::JT_hingeX;
+      j=new mlr::Joint(*ors, ors->bodies(k-1), ors->bodies(k));
+      j->type = mlr::JT_hingeX;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
         j->A.setText(STRING("<t(0 0 " <<1./K <<") d(-90 0 1 0)>"));
@@ -224,16 +224,16 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   }
   endeff=b;
   //the target
-  b=new ors::Body(*ors);
+  b=new mlr::Body(*ors);
   b->name = "target";
   b->X.setText("<t(.2 0 0)>");
-  s=new ors::Shape(*ors, b);
+  s=new mlr::Shape(*ors, b);
   s->read(STREAM("type=1 size=[.0 .0 .1 .02] color=[0 0 1]"));
-  s=new ors::Shape(*ors, b);
+  s=new mlr::Shape(*ors, b);
   s->read(STREAM("type=0 rel=<t(0 -.1 0)> size=[.2 .01 .3 .0] color=[0 0 0] contact"));
-  s=new ors::Shape(*ors, b);
+  s=new mlr::Shape(*ors, b);
   s->read(STREAM("type=0 rel=<t(0 .1 0)> size=[.2 .01 .3 .0] color=[0 0 0] contact"));
-  s=new ors::Shape(*ors, b);
+  s=new mlr::Shape(*ors, b);
   s->read(STREAM("type=0 rel=<t(.1 0 0)> size=[.01 .2 .3 .0] color=[0 0 0] contact"));
   graphMakeLists(ors->bodies, ors->joints);
   ors->calcBodyFramesFromJoints();
@@ -279,7 +279,7 @@ void soc::createEndeffectorReachProblem(SocSystem_Ors &sys,
   *sys.ors <<FILE(ors_file);
   if(rand_seed>0){
     rnd.seed(rand_seed);
-    ors::Body &t=*sys.ors->getBodyByName("target");
+    mlr::Body &t=*sys.ors->getBodyByName("target");
     t.X.p(0) += .05*rnd.gauss();
     t.X.p(1) += .05*rnd.gauss();
     t.X.p(2) += .05*rnd.gauss();
@@ -591,7 +591,7 @@ void drawOrsSocEnv(void*){
 /*void soc::setupOpenGL(SocSystem_Ors &sys){
   if(!sys.gl) sys.gl=new OpenGL();
   sys.gl->add(drawOrsSocEnv, 0);
-  sys.gl->add(ors::glDrawGraph, sys.ors);
+  sys.gl->add(mlr::glDrawGraph, sys.ors);
   //sys.gl->add(plotDrawOpenGL, &plotData);
   sys.gl->camera.focus(0, 0, .8);
 }*/
@@ -640,7 +640,7 @@ void drawOrsSocEnv(void*){
 }
 
 void createNikolayReachProblem(soc::SocSystem_Ors& sys,
-                                   ors::KinematicWorld& _ors,
+                                   mlr::KinematicWorld& _ors,
                                    SwiftInterface& _swift,
                                    uint trajectory_length,
                                    const arr& endeffector_target,
@@ -679,7 +679,7 @@ void createNikolayReachProblem(soc::SocSystem_Ors& sys,
 
 #if 0
 //old code to give system relative to a linear transform
-//now realized a level deeper within ors::KinematicWorld
+//now realized a level deeper within mlr::KinematicWorld
 void transformSystemMatricesWithQlin(){
   //clone operator operator
   sys->Qlin = Qlin;

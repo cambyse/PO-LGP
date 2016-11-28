@@ -13,9 +13,9 @@
 //===========================================================================
 
 void TEST(PR2reach){
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  for(ors::Shape *s:G.shapes) s->cont=true;
+  for(mlr::Shape *s:G.shapes) s->cont=true;
   G.getShapeByName("target")->cont=false;
   cout <<"loaded model: n=" <<G.q.N <<endl;
 
@@ -50,7 +50,7 @@ void TEST(PR2reach){
   //-- optimize
   for(uint k=0;k<5;k++){
     mlr::timerStart();
-    ors::KinematicWorld::setJointStateCount=0;
+    mlr::KinematicWorld::setJointStateCount=0;
 #ifndef CONSTRAINT
     optNewton(x, Convert(MP), OPT(verbose=2, nonStrictSteps=(!k?15:5)));
 #else
@@ -58,7 +58,7 @@ void TEST(PR2reach){
 #endif
 
     cout <<"** optimization time=" <<mlr::timerRead()
-        <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
+        <<" setJointStateCount=" <<mlr::KinematicWorld::setJointStateCount <<endl;
     cout <<MP.getReport();
     write(LIST<arr>(x),"z.output");
     gnuplot("load 'z.costReport.plt'", false, true);
@@ -69,7 +69,7 @@ void TEST(PR2reach){
 //===========================================================================
 
 void TEST(Basics){
-  ors::KinematicWorld G("test.ors");
+  mlr::KinematicWorld G("test.ors");
   G.getShapeByName("target")->cont=false;
 
   MotionProblem MP(G);
@@ -93,7 +93,7 @@ void TEST(Basics){
   t->map.order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e1);
 
-  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", ors::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos), sumOfSqrTT);
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", mlr::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos), sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 

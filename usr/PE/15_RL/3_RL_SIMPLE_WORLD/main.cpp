@@ -15,16 +15,16 @@
 
 void testPathIMP() {
   /// create reference motion
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target1 = world.getBodyByName("target1");
-  ors::Body *target2 = world.getBodyByName("target2");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target1 = world.getBodyByName("target1");
+  mlr::Body *target2 = world.getBodyByName("target2");
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(world));
   t->map.order=2;
@@ -123,16 +123,16 @@ void testPathIMP() {
 
 void testPathBBO() {
   /// create reference motion
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target1 = world.getBodyByName("target1");
-  ors::Body *target2 = world.getBodyByName("target2");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target1 = world.getBodyByName("target1");
+  mlr::Body *target2 = world.getBodyByName("target2");
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(world));
   t->map.order=2;
@@ -203,15 +203,15 @@ void testPathBBO() {
 
 void testSplineExploration() {
   /// create reference motion
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target1 = world.getBodyByName("target1");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target1 = world.getBodyByName("target1");
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(world));
   t->map.order=2;
@@ -268,7 +268,7 @@ void testSplineExploration() {
   displayTrajectory(x,MP.T,world,"world");
 }
 
-double reward(const arr &x, ors::KinematicWorld &world) {
+double reward(const arr &x, mlr::KinematicWorld &world) {
   double r = 0.;
   world.setJointState(x[x.d0-1]);
 
@@ -287,7 +287,7 @@ double reward(const arr &x, ors::KinematicWorld &world) {
 
 void TEST(SimpleWorld) {
   /// create starting motion
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   world.gl().resize(800,800);
   arr q, qdot;
   world.getJointState(q, qdot);
@@ -295,9 +295,9 @@ void TEST(SimpleWorld) {
   MotionProblem MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target1 = world.getBodyByName("target1");
-  ors::Body *target2 = world.getBodyByName("target2");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target1 = world.getBodyByName("target1");
+  mlr::Body *target2 = world.getBodyByName("target2");
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(world));
   t->map.order=2;

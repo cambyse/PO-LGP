@@ -30,10 +30,10 @@ namespace physx {
  * @{
  */
 struct PhysXInterface {
-  ors::KinematicWorld& world;
+  mlr::KinematicWorld& world;
   struct sPhysXInterface *s;
   
-  PhysXInterface(ors::KinematicWorld& _world);
+  PhysXInterface(mlr::KinematicWorld& _world);
   ~PhysXInterface();
   
   void step(double tau=1./60.);
@@ -46,14 +46,14 @@ struct PhysXInterface {
 
   void glDraw();
 
-  void addForce(ors::Vector& force, ors::Body* b);
-  void addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos);
+  void addForce(mlr::Vector& force, mlr::Body* b);
+  void addForce(mlr::Vector& force, mlr::Body* b, mlr::Vector& pos);
 };
 
 void glPhysXInterface(void *classP);
 
 
-void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx);
+void bindOrsToPhysX(mlr::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx);
 
 #endif
 /// @}

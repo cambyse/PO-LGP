@@ -196,10 +196,10 @@ arrf transformPosition(const arrf& thumb, const arrf& index, const arrf& center,
 }
 
 arrf transformOrientation(const arrf &pose_thumb, const arrf &pose_index) {
-  ors::Quaternion quat;
-  ors::Vector x_thumb, x_index;
-  ors::Vector pos_thumb, pos_index;
-  ors::Vector x_pr2, y_pr2, z_pr2;
+  mlr::Quaternion quat;
+  mlr::Vector x_thumb, x_index;
+  mlr::Vector pos_thumb, pos_index;
+  mlr::Vector x_pr2, y_pr2, z_pr2;
 
   pos_thumb.set(pose_thumb(0), pose_thumb(1), pose_thumb(2));
   quat.set(pose_thumb(3), pose_thumb(4), pose_thumb(5), pose_thumb(6));
@@ -267,7 +267,7 @@ void Calibrator::transform(const arrf& poses_raw) {
 }
 
 void Calibrator::fixCoordinates(arrf &poses) {
-  ors::Transformation T, Tfix;
+  mlr::Transformation T, Tfix;
   Tfix.setZero();
   Tfix.addRelativeRotationDeg(-90, 0, 0, 1);
 

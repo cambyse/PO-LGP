@@ -5,8 +5,8 @@
 using namespace std;
 
 struct HandPositionMap:TaskMap{
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){
-    ors::Body *arm = G.getBodyByName("/human/left_wrist");
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1){
+    mlr::Body *arm = G.getBodyByName("/human/left_wrist");
     arr posArm, Jarm;
     G.kinematicsPos(posArm, Jarm, arm);
 
@@ -16,11 +16,11 @@ struct HandPositionMap:TaskMap{
     J = Jarm;
   }
 
-  virtual uint dim_phi(const ors::KinematicWorld& G){
+  virtual uint dim_phi(const mlr::KinematicWorld& G){
     return 3;
   }
 
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return mlr::String("HandPositionMap"); }
+  virtual mlr::String shortTag(const mlr::KinematicWorld& G){ return mlr::String("HandPositionMap"); }
 
 };
 
@@ -63,7 +63,7 @@ struct RebaMap:TaskMap{
     theMap["left_wrist_1"] = ARR(1.62113894,  0.        ,  1.        , 0.0033);
   }
 
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1){
     y = zeros(nb_joints);
     if(&J){
       J = zeros(nb_joints, G.q.N);
@@ -72,7 +72,7 @@ struct RebaMap:TaskMap{
     for (int i=0; i<nb_joints; ++i){
       const string name = joint_names[i];
       arr coeffs = coeffs_map[name];
-      ors::Joint *joint = G.getJointByName(name.c_str());
+      mlr::Joint *joint = G.getJointByName(name.c_str());
       double joint_value = G.q(joint->qIndex);
       y(i) = coeffs(3) * (coeffs(0) * joint_value * joint_value + coeffs(1) * joint_value + coeffs(2));
       if(&J) J(i, joint->qIndex) = coeffs(3) * (2. * coeffs(0) * joint_value + coeffs(1));
@@ -80,11 +80,11 @@ struct RebaMap:TaskMap{
   }
 
 
-  virtual uint dim_phi(const ors::KinematicWorld& G){
+  virtual uint dim_phi(const mlr::KinematicWorld& G){
     return nb_joints;
   }
 
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return mlr::String("RebaMap"); }
+  virtual mlr::String shortTag(const mlr::KinematicWorld& G){ return mlr::String("RebaMap"); }
 
 };
 
@@ -95,7 +95,7 @@ void moveReba(){
   KOMO komo;
   komo.setConfigFromFile();
 
-  ors::Body *b = komo.world.getBodyByName("/human/base");
+  mlr::Body *b = komo.world.getBodyByName("/human/base");
   b->X.addRelativeTranslation(.3,0,0);
 
 

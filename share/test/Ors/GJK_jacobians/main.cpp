@@ -6,8 +6,8 @@
 #include <Ors/ors.h>
 #include <Motion/taskMaps.h>
 
-ors::Vector p1, p2;
-ors::Vector e1, e2;
+mlr::Vector p1, p2;
+mlr::Vector e1, e2;
 GJK_point_type pt1, pt2;
 
 void draw(void*){
@@ -34,15 +34,15 @@ void draw(void*){
 extern bool orsDrawWires;
 
 void TEST(GJK_Jacobians) {
-  ors::KinematicWorld W;
-  ors::Body base(W), b1(W), B1(W), b2(W), B2(W);
-  ors::Joint j1(W, &base, &b1), J1(W, &b1, &B1), j2(W, &base, &b2), J2(W, &b2, &B2);
-  ors::Shape s1(W, B1), s2(W, B2);
-  j1.type = j2.type = ors::JT_trans3;
+  mlr::KinematicWorld W;
+  mlr::Body base(W), b1(W), B1(W), b2(W), B2(W);
+  mlr::Joint j1(W, &base, &b1), J1(W, &b1, &B1), j2(W, &base, &b2), J2(W, &b2, &B2);
+  mlr::Shape s1(W, B1), s2(W, B2);
+  j1.type = j2.type = mlr::JT_trans3;
   j1.A.addRelativeTranslation(1,1,1);
   j2.A.addRelativeTranslation(-1,-1,1);
-  J1.type = J2.type = ors::JT_quatBall;
-  s1.type = s2.type = ors::ssCvxST;
+  J1.type = J2.type = mlr::JT_quatBall;
+  s1.type = s2.type = mlr::ssCvxST;
   s1.size[3] = .5;  s2.size[3] = .5;
   s1.sscCore.setRandom();
   s2.sscCore.setRandom();
@@ -105,8 +105,8 @@ void TEST(GJK_Jacobians) {
     }
     //reduce by radii
     double l2=sumOfSqr(v), l=sqrt(l2);
-    p1 -= s1.size[3]/l*ors::Vector(v);
-    p2 += s2.size[3]/l*ors::Vector(v);
+    p1 -= s1.size[3]/l*mlr::Vector(v);
+    p2 += s2.size[3]/l*mlr::Vector(v);
     double fac = (l-s1.size[3]-s2.size[3])/l;
     if(&J){
       arr d_fac = (1.-(l-s1.size[3]-s2.size[3])/l)/l2 *(~v)*J;
@@ -118,7 +118,7 @@ void TEST(GJK_Jacobians) {
 
   TaskMap_GJK gjk(W, Graph(STRING("type=GJK_vec ref1=s1 ref2=s2")), true);
 
-  for(uint k=0;k<100;k++){
+  for(uint k=0;k<30;k++){
     rndGauss(q, .3);
 
     arr y,J;
@@ -139,5 +139,5 @@ int MAIN(int argc, char** argv){
 
   testGJK_Jacobians();
 
-  return 1;
+  return 0;
 }

@@ -16,7 +16,7 @@
 
 //===========================================================================
 
-void CollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void CollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   G.kinematicsProxyCost(y, J, margin, false);
   y -= .5;
 }
@@ -32,14 +32,14 @@ ProxyConstraint::ProxyConstraint(PTMtype _type,
   : proxyCosts(_type, _shapes, _margin, _useCenterDist, _useDistNotCost){
 }
 
-void ProxyConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void ProxyConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   proxyCosts.phi(y, J, G, t);
   y -= .5;
 }
 
 //===========================================================================
 
-void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void LimitsConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   if(!limits.N) limits = G.getLimits();
   G.kinematicsLimitsCost(y, J, limits, margin);
   y -= .5;
@@ -47,7 +47,7 @@ void LimitsConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
 
 //===========================================================================
 
-void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void PairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   if(t>=0 && referenceIds.N){
     if(referenceIds.nd==1){  i=referenceIds(t); j=-1; }
     if(referenceIds.nd==2){  i=referenceIds(t,0); j=referenceIds(t,1); }
@@ -56,7 +56,7 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
   y.resize(1) = -1.; //default value if not overwritten below
   if(&J) J.resize(1,G.q.N).setZero();
   if(j>=0){ //against a concrete j
-    for(ors::Proxy *p: G.proxies){
+    for(mlr::Proxy *p: G.proxies){
       if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
         G.kinematicsProxyConstraint(y, J, p, margin);
         break;
@@ -66,11 +66,11 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
     NIY; //this doesn't work, don't know why
     //first collect all relevant proxies
     ProxyL P;
-    for(ors::Proxy *p: G.proxies) if((p->a==i) || (p->b==i)) P.append(p);
+    for(mlr::Proxy *p: G.proxies) if((p->a==i) || (p->b==i)) P.append(p);
     //Compute the softmax
     double alpha = 10.;
     double yHat=0.,yNorm=0.;
-    for(ors::Proxy *p: P){
+    for(mlr::Proxy *p: P){
       G.kinematicsProxyConstraint(y, NoArr, p, margin);
       double yi=y.scalar();
       double expyi=::exp(alpha*yi);
@@ -82,7 +82,7 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
     if(&J){
       J.resize(1,G.getJointStateDimension()).setZero();
       arr Ji;
-      for(ors::Proxy *p: P){
+      for(mlr::Proxy *p: P){
         G.kinematicsProxyConstraint(y, Ji, p, margin);
         double yi=y.scalar();
         double expyi=::exp(alpha*yi);
@@ -96,9 +96,9 @@ void PairCollisionConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
 
 //===========================================================================
 
-void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
-  ors::Body *body_i = G.shapes(i)->body;
-  ors::Vector vec_i = G.shapes(i)->rel.pos;
+void PlaneConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
+  mlr::Body *body_i = G.shapes(i)->body;
+  mlr::Vector vec_i = G.shapes(i)->rel.pos;
 
   arr y_eff, J_eff;
   G.kinematicsPos(y_eff, (&J?J_eff:NoArr), body_i, vec_i);
@@ -113,7 +113,7 @@ void PlaneConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
 
 //===========================================================================
 
-void ConstraintStickiness::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void ConstraintStickiness::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   map.phi(y, J, G);
   for(uint j=0;j<y.N;j++) y(j) = -y(j);
   if(&J) for(uint j=0;j<J.d0;j++) J[j]() *= -1.;
@@ -121,13 +121,13 @@ void ConstraintStickiness::phi(arr& y, arr& J, const ors::KinematicWorld& G, int
 
 //===========================================================================
 
-void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
-  ors::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
-  ors::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
-  ors::Body *body_i = i<0?NULL: G.shapes(i)->body;
-  ors::Body *body_j = j<0?NULL: G.shapes(j)->body;
-  ors::Vector pi = body_i ? body_i->X * vec_i : vec_i;
-  ors::Vector pj = body_j ? body_j->X * vec_j : vec_j;
+void PointEqualityConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
+  mlr::Vector vec_i = i<0?ivec: G.shapes(i)->rel*ivec;
+  mlr::Vector vec_j = j<0?jvec: G.shapes(j)->rel*jvec;
+  mlr::Body *body_i = i<0?NULL: G.shapes(i)->body;
+  mlr::Body *body_j = j<0?NULL: G.shapes(j)->body;
+  mlr::Vector pi = body_i ? body_i->X * vec_i : vec_i;
+  mlr::Vector pj = body_j ? body_j->X * vec_j : vec_j;
   y = conv_vec2arr(pi-pj);
   if(&J) {
     arr Ji, Jj;
@@ -143,10 +143,10 @@ void PointEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
 
 //===========================================================================
 
-void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void ContactEqualityConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   y.resize(1) = 0.;
   if(&J) J.resize(1,G.q.N).setZero();
-  for(ors::Proxy *p: G.proxies){
+  for(mlr::Proxy *p: G.proxies){
     if((p->a==i && p->b==j) || (p->a==j && p->b==i)){
       G.kinematicsProxyConstraint(y, J, p, margin);
       break;
@@ -157,11 +157,11 @@ void ContactEqualityConstraint::phi(arr& y, arr& J, const ors::KinematicWorld& G
 //===========================================================================
 
 
-VelAlignConstraint::VelAlignConstraint(const ors::KinematicWorld& G,
-                   const char* iShapeName, const ors::Vector& _ivec,
-                   const char* jShapeName, const ors::Vector& _jvec, double _target) {
-  ors::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
-  ors::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
+VelAlignConstraint::VelAlignConstraint(const mlr::KinematicWorld& G,
+                   const char* iShapeName, const mlr::Vector& _ivec,
+                   const char* jShapeName, const mlr::Vector& _jvec, double _target) {
+  mlr::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
+  mlr::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
   if(a) i=a->index;
   if(b) j=b->index;
   if(&_ivec) ivec=_ivec; else ivec.setZero();
@@ -227,7 +227,7 @@ void VelAlignConstraint::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
 
 //===========================================================================
 
-void qItselfConstraint::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
+void qItselfConstraint::phi(arr& q, arr& J, const mlr::KinematicWorld& G, int t) {
   G.getJointState(q);
   if(M.N){
     if(M.nd==1){

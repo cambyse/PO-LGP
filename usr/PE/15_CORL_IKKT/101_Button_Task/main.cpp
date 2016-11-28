@@ -14,7 +14,7 @@ void dofExploration() {
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   double duration = mlr::getParameter<double>("duration");
 
-  ors::KinematicWorld G(STRING(folder<<"modelaug.kvg"));
+  mlr::KinematicWorld G(STRING(folder<<"modelaug.kvg"));
   TaskManager *task = new ButtonTask(G);
 
   arr Xbase,FLbase,Mbase;
@@ -75,7 +75,7 @@ void initExploration() {
     mlr::String folder = mlr::getParameter<mlr::String>("folder");
     double duration = mlr::getParameter<double>("duration");
 
-    ors::KinematicWorld G(STRING(folder<<"modelaug.kvg"));
+    mlr::KinematicWorld G(STRING(folder<<"modelaug.kvg"));
     TaskManager *task = new ButtonTask(G);
 
     arr Xbase,FLbase,Mbase;
@@ -92,9 +92,9 @@ void initExploration() {
     q0(G.getJointByName("b2_b1")->qIndex) = Xbase(0,G.getJointByName("b2_b1")->qIndex);
 
     G.setJointState(Xbase[0]);
-    ors::Vector yBase0 = G.getShapeByName("endeffL")->X.pos;
+    mlr::Vector yBase0 = G.getShapeByName("endeffL")->X.pos;
     G.setJointState(q0);
-    ors::Vector y0 = conv_vec2arr(G.getShapeByName("endeffL")->X.pos);
+    mlr::Vector y0 = conv_vec2arr(G.getShapeByName("endeffL")->X.pos);
 
     arr offsetC1 = conv_vec2arr(y0 - yBase0);
     cout << "offset" << y0-yBase0 << endl;
@@ -158,7 +158,7 @@ void initdofExploration() {
     mlr::String folder = mlr::getParameter<mlr::String>("folder");
     double duration = mlr::getParameter<double>("duration");
 
-    ors::KinematicWorld G(STRING(folder<<"modelaug.kvg"));
+    mlr::KinematicWorld G(STRING(folder<<"modelaug.kvg"));
     TaskManager *task = new ButtonTask(G);
 
     arr Xbase,FLbase,Mbase;
@@ -176,9 +176,9 @@ void initdofExploration() {
     q0(G.getJointByName("b2_b1")->qIndex) = Xbase(0,G.getJointByName("b2_b1")->qIndex);
 
     G.setJointState(Xbase[0]);
-    ors::Vector yBase0 = G.getShapeByName("endeffL")->X.pos;
+    mlr::Vector yBase0 = G.getShapeByName("endeffL")->X.pos;
     G.setJointState(q0);
-    ors::Vector y0 = conv_vec2arr(G.getShapeByName("endeffL")->X.pos);
+    mlr::Vector y0 = conv_vec2arr(G.getShapeByName("endeffL")->X.pos);
 
     arr offsetC1 = conv_vec2arr(y0 - yBase0);
     cout << "offset" << y0-yBase0 << endl;

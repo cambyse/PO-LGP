@@ -14,17 +14,17 @@ void drawFrame(void* classP){
 
 
 
- ors::Vector p = world.getShapeByName("r_ft_sensor")->X.pos;
-  ors::Vector xV = ors::Vector(1.,0.,0.); //world.getShapeByName("r_ft_sensor")->X.rot.getX();
-  ors::Vector yV = ors::Vector(0.,1.,0.); //world.getShapeByName("r_ft_sensor")->X.rot.getY();
-  ors::Vector zV = ors::Vector(0.,0.,1.); //world.getShapeByName("r_ft_sensor")->X.rot.getZ();
+ mlr::Vector p = world.getShapeByName("r_ft_sensor")->X.pos;
+  mlr::Vector xV = mlr::Vector(1.,0.,0.); //world.getShapeByName("r_ft_sensor")->X.rot.getX();
+  mlr::Vector yV = mlr::Vector(0.,1.,0.); //world.getShapeByName("r_ft_sensor")->X.rot.getY();
+  mlr::Vector zV = mlr::Vector(0.,0.,1.); //world.getShapeByName("r_ft_sensor")->X.rot.getZ();
 
 //  world.kinematicsVec(x,NoArr,world.getShapeByName("r_ft_sensor")->body,&xV);
 //  world.kinematicsVec(y,NoArr,world.getShapeByName("r_ft_sensor")->body,&yV);
 //  world.kinematicsVec(z,NoArr,world.getShapeByName("r_ft_sensor")->body,&zV);
-  ors::Vector xx = world.getShapeByName("r_ft_sensor")->X.rot.getX();
-  ors::Vector yy = world.getShapeByName("r_ft_sensor")->X.rot.getY();
-  ors::Vector zz = world.getShapeByName("r_ft_sensor")->X.rot.getZ();
+  mlr::Vector xx = world.getShapeByName("r_ft_sensor")->X.rot.getX();
+  mlr::Vector yy = world.getShapeByName("r_ft_sensor")->X.rot.getY();
+  mlr::Vector zz = world.getShapeByName("r_ft_sensor")->X.rot.getZ();
 
   cout << "x Vector: " << x << endl;
   cout << "y Vector: " << y << endl;
@@ -39,7 +39,7 @@ void drawFrame(void* classP){
   world.gl().add(drawFrame,&draw3);
 
 
-  ors::Vector p2 = world.getBodyByName("r_wrist_roll_link")->X.pos;
+  mlr::Vector p2 = world.getBodyByName("r_wrist_roll_link")->X.pos;
 
   world.kinematicsVec(x,NoArr,world.getBodyByName("r_wrist_roll_link"),&xV);
   world.kinematicsVec(y,NoArr,world.getBodyByName("r_wrist_roll_link"),&yV);

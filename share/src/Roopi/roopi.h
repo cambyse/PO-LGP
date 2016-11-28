@@ -12,7 +12,7 @@ struct Roopi{
   struct Roopi_private* s;
 
   CtrlTaskL activeTasks;
-  ors::KinematicWorld testWorld;
+  mlr::KinematicWorld testWorld;
 
   Roopi();
   ~Roopi();
@@ -33,8 +33,8 @@ struct Roopi{
 //  CtrlTask* task(const Graph& specs);
 //  CtrlTask* task(const char* name,
 //                 TaskMap_DefaultType type,
-//                 const char* iShapeName, const ors::Vector& ivec,
-//                 const char* jShapeName, const ors::Vector& jvec,
+//                 const char* iShapeName, const mlr::Vector& ivec,
+//                 const char* jShapeName, const mlr::Vector& jvec,
 //                 const arr& target,
 //                 double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask* modify(CtrlTask* t, const Graph& specs);
@@ -54,8 +54,8 @@ struct Roopi{
 
 
 //  //-- get position closest cluster
-//  ors::Vector closestCluster();
-//  ors::Vector arPose();
+//  mlr::Vector closestCluster();
+//  mlr::Vector arPose();
 
 //  void disablePosControl();
 //  void enablePosControl();
@@ -64,7 +64,7 @@ struct Roopi{
 //  void disableTotalTorqueMode();
 //  void publishTorque(const arr& u, const char* prefix="right_");
 
-//  const ors::KinematicWorld& getKinematicWorld();
+//  const mlr::KinematicWorld& getKinematicWorld();
 
 //  arr getJointLimits();
 //  double getCollisionScalar();

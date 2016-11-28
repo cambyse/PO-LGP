@@ -71,19 +71,19 @@ void lib_ors(){ cout <<"force loading lib/ors" <<endl; }
 
 #ifndef MLR_ORS_ONLY_BASICS
 
-uint ors::KinematicWorld::setJointStateCount = 0;
+uint mlr::KinematicWorld::setJointStateCount = 0;
 
 //===========================================================================
 //
 // contants
 //
 
-ors::Body& NoBody = *((ors::Body*)NULL);
-ors::Shape& NoShape = *((ors::Shape*)NULL);
-ors::Joint& NoJoint = *((ors::Joint*)NULL);
-ors::KinematicWorld& NoWorld = *((ors::KinematicWorld*)NULL);
+mlr::Body& NoBody = *((mlr::Body*)NULL);
+mlr::Shape& NoShape = *((mlr::Shape*)NULL);
+mlr::Joint& NoJoint = *((mlr::Joint*)NULL);
+mlr::KinematicWorld& NoWorld = *((mlr::KinematicWorld*)NULL);
 
-namespace ors{
+namespace mlr{
   const char* name(JointType jt){
     static const char* names [] = { "JT_hingeX", "JT_hingeY", "JT_hingeZ", "JT_transX", "JT_transY", "JT_transZ", "JT_transXY", "JT_trans3", "JT_transXYPhi", "JT_universal", "JT_rigid", "JT_quatBall", "JT_phiTransXY", "JT_glue", "JT_free" };
     if(jt==JT_none) return "JT_none";
@@ -96,18 +96,18 @@ namespace ors{
 // Body implementations
 //
 
-//ors::Body::Body() { reset(); }
+//mlr::Body::Body() { reset(); }
 
-//ors::Body::Body(const Body& b) { reset(); *this=b; }
+//mlr::Body::Body(const Body& b) { reset(); *this=b; }
 
-ors::Body::Body(KinematicWorld& _world, const Body* copyBody):world(_world), vel(0), angvel(0) {
+mlr::Body::Body(KinematicWorld& _world, const Body* copyBody):world(_world), vel(0), angvel(0) {
   reset();
   index=world.bodies.N;
   world.bodies.append(this);
   if(copyBody) *this=*copyBody;
 }
 
-ors::Body::~Body() {
+mlr::Body::~Body() {
   reset();
   while(inLinks.N) delete inLinks.last();
   while(outLinks.N) delete outLinks.last();
@@ -116,7 +116,7 @@ ors::Body::~Body() {
   listReindex(world.bodies);
 }
 
-void ors::Body::reset() {
+void mlr::Body::reset() {
   ats.clear();
   X.setZero();
   type=dynamicBT;
@@ -128,7 +128,7 @@ void ors::Body::reset() {
   angvel.setZero();
 }
 
-void ors::Body::parseAts() {
+void mlr::Body::parseAts() {
   //interpret some of the attributes
   arr x;
   mlr::String str;
@@ -188,7 +188,7 @@ void ors::Body::parseAts() {
   Node *it=ats["type"]; if(it){ delete it; }
 }
 
-void ors::Body::write(std::ostream& os) const {
+void mlr::Body::write(std::ostream& os) const {
   if(!X.isZero()) os <<"pose=<T " <<X <<" > ";
   if(mass) os <<"mass=" <<mass <<' ';
   if(type!=dynamicBT) os <<"dyntype=" <<(int)type <<' ';
@@ -197,14 +197,14 @@ void ors::Body::write(std::ostream& os) const {
 //      if(a->keys(0)!="X" && a->keys(0)!="pose") os <<*a <<' ';
 }
 
-void ors::Body::read(std::istream& is) {
+void mlr::Body::read(std::istream& is) {
   reset();
   ats.read(is);
   if(!is.good()) HALT("body '" <<name <<"' read error: in ");
   parseAts();
 }
 
-namespace ors {
+namespace mlr {
 std::ostream& operator<<(std::ostream& os, const Body& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const Shape& x) { x.write(os); return os; }
 std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return os; }
@@ -215,7 +215,7 @@ std::ostream& operator<<(std::ostream& os, const Joint& x) { x.write(os); return
 // Shape implementations
 //
 
-ors::Shape::Shape(KinematicWorld &_world, Body& b, const Shape *copyShape, bool referenceMeshOnCopy): world(_world), /*ibody(UINT_MAX),*/ body(NULL) {
+mlr::Shape::Shape(KinematicWorld &_world, Body& b, const Shape *copyShape, bool referenceMeshOnCopy): world(_world), /*ibody(UINT_MAX),*/ body(NULL) {
   reset();
   CHECK(&world,"you need at least a world to attach this shape to!");
   index=world.shapes.N;
@@ -227,7 +227,7 @@ ors::Shape::Shape(KinematicWorld &_world, Body& b, const Shape *copyShape, bool 
   if(copyShape) copy(*copyShape, referenceMeshOnCopy);
 }
 
-ors::Shape::~Shape() {
+mlr::Shape::~Shape() {
   reset();
   if(body){
     body->shapes.removeValue(this);
@@ -237,7 +237,7 @@ ors::Shape::~Shape() {
   listReindex(world.shapes);
 }
 
-void ors::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
+void mlr::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
   name=s.name; X=s.X; rel=s.rel; type=s.type;
   memmove(size, s.size, 4*sizeof(double)); memmove(color, s.color, 3*sizeof(double));
   if(!referenceMeshOnCopy){
@@ -257,7 +257,7 @@ void ors::Shape::copy(const Shape& s, bool referenceMeshOnCopy){
   ats=s.ats;
 }
 
-void ors::Shape::parseAts() {
+void mlr::Shape::parseAts() {
   double d;
   arr x;
   mlr::String str;
@@ -272,46 +272,46 @@ void ors::Shape::parseAts() {
 
   //create mesh for basic shapes
   switch(type) {
-    case ors::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
-    case ors::boxST:
+    case mlr::noneST: HALT("shapes should have a type - somehow wrong initialization..."); break;
+    case mlr::boxST:
       mesh.setBox();
       mesh.scale(size[0], size[1], size[2]);
       break;
-    case ors::sphereST:
+    case mlr::sphereST:
       mesh.setSphere();
       mesh.scale(size[3], size[3], size[3]);
       break;
-    case ors::cylinderST:
+    case mlr::cylinderST:
       CHECK(size[3]>1e-10,"");
       mesh.setCylinder(size[3], size[2]);
       break;
-    case ors::cappedCylinderST:
+    case mlr::cappedCylinderST:
       CHECK(size[3]>1e-10,"");
 //      mesh.setCappedCylinder(size[3], size[2]);
       sscCore.setBox();
       sscCore.scale(0., 0., size[2]);
       mesh.setSSCvx(sscCore, size[3]);
       break;
-    case ors::SSBoxST:
+    case mlr::SSBoxST:
       HALT("deprecated?");
       mesh.setSSBox(size[0], size[1], size[2], size[3]);
       break;
-    case ors::markerST:
+    case mlr::markerST:
       break;
-    case ors::meshST:
-    case ors::pointCloudST:
+    case mlr::meshST:
+    case mlr::pointCloudST:
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       sscCore = mesh;
       sscCore.makeConvexHull();
       size[3]=0.;
       break;
-    case ors::ssCvxST:
+    case mlr::ssCvxST:
       CHECK(size[3]>1e-10,"");
       CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
       sscCore=mesh;
       mesh.setSSCvx(sscCore, size[3]);
       break;
-    case ors::ssBoxST:
+    case mlr::ssBoxST:
       CHECK(size[3]>1e-10,"");
       sscCore.setBox();
       sscCore.scale(size[0], size[1], size[2]);
@@ -351,7 +351,7 @@ void ors::Shape::parseAts() {
   }
 }
 
-void ors::Shape::reset() {
+void mlr::Shape::reset() {
   type=noneST;
   size[0]=size[1]=size[2]=size[3]=1.;
   color[0]=color[1]=color[2]=.8;
@@ -363,7 +363,7 @@ void ors::Shape::reset() {
   cont=false;
 }
 
-void ors::Shape::write(std::ostream& os) const {
+void mlr::Shape::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
   os <<"size=[" <<size[0] <<' '<<size[1] <<' '<<size[2] <<' '<<size[3] <<"] ";
   if(!rel.isZero()) os <<"rel=<T " <<rel <<" > ";
@@ -371,7 +371,7 @@ void ors::Shape::write(std::ostream& os) const {
   if(a->keys(0)!="rel" && a->keys(0)!="type" && a->keys(0)!="size") os <<*a <<' ';
 }
 
-void ors::Shape::read(std::istream& is) {
+void mlr::Shape::read(std::istream& is) {
   reset();
   ats.read(is);
   if(!is.good()) HALT("shape read error");
@@ -379,7 +379,7 @@ void ors::Shape::read(std::istream& is) {
 }
 
 #ifdef MLR_GL
-void ors::Shape::glDraw(OpenGL& gl) {
+void mlr::Shape::glDraw(OpenGL& gl) {
   //set name (for OpenGL selection)
   glPushName((index <<2) | 1);
   if(orsDrawColors && !orsDrawIndexColors) glColor(color[0], color[1], color[2], orsDrawAlpha);
@@ -400,28 +400,28 @@ void ors::Shape::glDraw(OpenGL& gl) {
   }
   if(orsDrawShapes) {
     switch(type) {
-      case ors::noneST: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
-      case ors::boxST:
+      case mlr::noneST: LOG(-1) <<"Shape '" <<name <<"' has no joint type";  break;
+      case mlr::boxST:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawBox(size[0], size[1], size[2]);
         break;
-      case ors::sphereST:
+      case mlr::sphereST:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawSphere(size[3]);
         break;
-      case ors::cylinderST:
+      case mlr::cylinderST:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCylinder(size[3], size[2]);
         break;
-      case ors::cappedCylinderST:
+      case mlr::cappedCylinderST:
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes && mesh.V.N) mesh.glDraw(gl);
         else glDrawCappedCylinder(size[3], size[2]);
         break;
-      case ors::SSBoxST:
+      case mlr::SSBoxST:
         HALT("deprecated??");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else if(orsDrawMeshes){
@@ -429,23 +429,23 @@ void ors::Shape::glDraw(OpenGL& gl) {
           mesh.glDraw(gl);
         }else NIY;
         break;
-      case ors::markerST:
+      case mlr::markerST:
         if(orsDrawMarkers){
           glDrawDiamond(size[0]/5., size[0]/5., size[0]/5.); glDrawAxes(size[0]);
         }
         break;
-      case ors::meshST:
+      case mlr::meshST:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw mesh object");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case ors::ssCvxST:
+      case mlr::ssCvxST:
         CHECK(sscCore.V.N, "sscCore needs to be loaded to draw mesh object");
         if(!mesh.V.N) mesh.setSSCvx(sscCore, size[3]);
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case ors::ssBoxST:
+      case mlr::ssBoxST:
         if(!mesh.V.N || !sscCore.V.N){
           sscCore.setBox();
           sscCore.scale(size[0], size[1], size[2]);
@@ -454,7 +454,7 @@ void ors::Shape::glDraw(OpenGL& gl) {
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
         break;
-      case ors::pointCloudST:
+      case mlr::pointCloudST:
         CHECK(mesh.V.N, "mesh needs to be loaded to draw point cloud object");
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
         else mesh.glDraw(gl);
@@ -480,17 +480,17 @@ void ors::Shape::glDraw(OpenGL& gl) {
 }
 #endif
 
-uintA stringListToShapeIndices(const mlr::Array<const char*>& names, const mlr::Array<ors::Shape*>& shapes) {
+uintA stringListToShapeIndices(const mlr::Array<const char*>& names, const mlr::Array<mlr::Shape*>& shapes) {
   uintA I(names.N);
   for(uint i=0; i<names.N; i++) {
-    ors::Shape *s = listFindByName(shapes, names(i));
+    mlr::Shape *s = listFindByName(shapes, names(i));
     if(!s) HALT("shape name '"<<names(i)<<"' doesn't exist");
     I(i) = s->index;
   }
   return I;
 }
 
-uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes) {
+uintA shapesToShapeIndices(const mlr::Array<mlr::Shape*>& shapes) {
   uintA I;
   resizeAs(I, shapes);
   for(uint i=0; i<shapes.N; i++) I.elem(i) = shapes.elem(i)->index;
@@ -498,18 +498,18 @@ uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes) {
 }
 
 void makeConvexHulls(ShapeL& shapes){
-  for(ors::Shape *s: shapes) s->mesh.makeConvexHull();
+  for(mlr::Shape *s: shapes) s->mesh.makeConvexHull();
 }
 
 void makeSSBoxApproximations(ShapeL& shapes){
-//  for(ors::Shape *s: shapes) s->mesh.makeSSBox(s->mesh.V);
+//  for(mlr::Shape *s: shapes) s->mesh.makeSSBox(s->mesh.V);
   for(uint i=0;i<shapes.N;i++){
-    ors::Shape *s=shapes(i);
-    if(!(s->type==ors::meshST && s->mesh.V.N)) continue;
-    ors::Transformation t;
+    mlr::Shape *s=shapes(i);
+    if(!(s->type==mlr::meshST && s->mesh.V.N)) continue;
+    mlr::Transformation t;
     arr x;
     s->mesh.makeSSBox(x, t, s->mesh.V);
-    s->type = ors::ssBoxST;
+    s->type = mlr::ssBoxST;
     s->size[0]=2.*x(0); s->size[1]=2.*x(1); s->size[2]=2.*x(2); s->size[3]=x(3);
     s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
     s->rel.appendTransformation(t);
@@ -517,7 +517,7 @@ void makeSSBoxApproximations(ShapeL& shapes){
 }
 
 void computeMeshNormals(ShapeL& shapes){
-  for(ors::Shape *s: shapes){
+  for(mlr::Shape *s: shapes){
     if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) s->mesh.computeNormals();
     if(s->sscCore.V.d0!=s->sscCore.Vn.d0 || s->sscCore.T.d0!=s->sscCore.Tn.d0) s->sscCore.computeNormals();
   }
@@ -531,7 +531,7 @@ void computeMeshNormals(ShapeL& shapes){
 
 bool always_unlocked(void*) { return false; }
 
-ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
+mlr::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
   : world(G), index(0), qIndex(UINT_MAX), from(f), to(t), mimic(NULL), agent(0), constrainToZeroVel(false), q0(0.), H(1.) {
   reset();
   if(copyJoint) *this=*copyJoint;
@@ -544,7 +544,7 @@ ors::Joint::Joint(KinematicWorld& G, Body *f, Body *t, const Joint* copyJoint)
   world.qdim.clear();
 }
 
-ors::Joint::~Joint() {
+mlr::Joint::~Joint() {
   world.checkConsistency();
   reset();
   if(from){ from->outLinks.removeValue(this); listReindex(from->outLinks); }
@@ -556,12 +556,12 @@ ors::Joint::~Joint() {
   world.qdim.clear();
 }
 
-void ors::Joint::reset() { 
+void mlr::Joint::reset() { 
   ats.clear(); A.setZero(); B.setZero(); Q.setZero(); X.setZero(); axis.setZero(); limits.clear(); q0=0.; H=1.; type=JT_none;
   locker=NULL;
 }
 
-void ors::Joint::parseAts() {
+void mlr::Joint::parseAts() {
   //interpret some of the attributes
   double d=0.;
   ats.get(A, "A");
@@ -610,7 +610,7 @@ void ors::Joint::parseAts() {
   if(ats["mimic"]) mimic=(Joint*)1;
 }
 
-uint ors::Joint::qDim() {
+uint mlr::Joint::qDim() {
   if(mimic) return 0;
   if(type>=JT_hingeX && type<=JT_transZ) return 1;
   if(type==JT_transXY) return 2;
@@ -625,7 +625,7 @@ uint ors::Joint::qDim() {
   return 0;
 }
 
-void ors::Joint::applyTransformation(ors::Transformation& f, const arr& q){
+void mlr::Joint::applyTransformation(mlr::Transformation& f, const arr& q){
   switch(type) {
     case JT_hingeX:{
 //      f.addRelativeRotationRad(q.elem(qIndex),1.,0.,0.);
@@ -648,14 +648,14 @@ void ors::Joint::applyTransformation(ors::Transformation& f, const arr& q){
     } break;
 
     case JT_quatBall:{
-      ors::Quaternion r;
+      mlr::Quaternion r;
       r.set(q.p+qIndex);
       r.normalize();
       f.addRelativeRotation(r);
     } break;
 
     case JT_free:{
-      ors::Transformation t;
+      mlr::Transformation t;
       t.pos.set(q.p+qIndex);
       t.rot.set(q.p+qIndex+3);
       f.appendTransformation(t);
@@ -698,7 +698,7 @@ void ors::Joint::applyTransformation(ors::Transformation& f, const arr& q){
   }
 }
 
-void ors::Joint::write(std::ostream& os) const {
+void mlr::Joint::write(std::ostream& os) const {
   os <<"type=" <<type <<' ';
   if(!A.isZero()) os <<"from=<T " <<A <<" > ";
   if(!B.isZero()) os <<"to=<T " <<B <<" > ";
@@ -711,7 +711,7 @@ void ors::Joint::write(std::ostream& os) const {
       && a->keys(0)!="type") os <<*a <<' ';
 }
 
-void ors::Joint::read(std::istream& is) {
+void mlr::Joint::read(std::istream& is) {
   reset();
   ats.read(is);
   if(!is.good()) HALT("joint (" <<from->name <<' ' <<to->name <<") read read error");
@@ -719,7 +719,7 @@ void ors::Joint::read(std::istream& is) {
 }
 
 
-ors::Proxy::Proxy() {
+mlr::Proxy::Proxy() {
   colorCode = 0;
 }
 
@@ -728,7 +728,7 @@ ors::Proxy::Proxy() {
 // Graph implementations
 //
 
-namespace ors{
+namespace mlr{
 struct sKinematicWorld{
   OpenGL *gl;
   SwiftInterface *swift;
@@ -745,33 +745,33 @@ struct sKinematicWorld{
 };
 }
 
-ors::KinematicWorld::KinematicWorld():s(NULL),q_agent(0),isLinkTree(false) {
+mlr::KinematicWorld::KinematicWorld():s(NULL),q_agent(0),isLinkTree(false) {
   bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true;
   s=new sKinematicWorld;
 }
 
-ors::KinematicWorld::KinematicWorld(const ors::KinematicWorld& other):s(NULL),q_agent(0),isLinkTree(false)  {
+mlr::KinematicWorld::KinematicWorld(const mlr::KinematicWorld& other):s(NULL),q_agent(0),isLinkTree(false)  {
   bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true;
   s=new sKinematicWorld;
   copy( other );
 }
 
-ors::KinematicWorld::KinematicWorld(const char* filename):s(NULL),q_agent(0),isLinkTree(false)  {
+mlr::KinematicWorld::KinematicWorld(const char* filename):s(NULL),q_agent(0),isLinkTree(false)  {
   bodies.memMove=joints.memMove=shapes.memMove=proxies.memMove=true;
   s=new sKinematicWorld;
   init(filename);
 }
-ors::KinematicWorld::~KinematicWorld() {
+mlr::KinematicWorld::~KinematicWorld() {
   clear();
   delete s;
   s=NULL;
 }
 
-void ors::KinematicWorld::init(const char* filename) {
+void mlr::KinematicWorld::init(const char* filename) {
   *this <<FILE(filename);
 }
 
-void ors::KinematicWorld::clear() {
+void mlr::KinematicWorld::clear() {
   qdim.clear();
   q.clear();
   qdot.clear();
@@ -782,7 +782,7 @@ void ors::KinematicWorld::clear() {
   isLinkTree=false;
 }
 
-void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
+void mlr::KinematicWorld::copy(const mlr::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy) {
   clear();
 #if 1
   listCopy(proxies, G.proxies);
@@ -835,12 +835,12 @@ void ors::KinematicWorld::copy(const ors::KinematicWorld& G, bool referenceMeshe
 
 /** @brief transforms (e.g., translates or rotates) the joints coordinate system):
   `adds' the transformation f to A and its inverse to B */
-void ors::KinematicWorld::transformJoint(ors::Joint *e, const ors::Transformation &f) {
+void mlr::KinematicWorld::transformJoint(mlr::Joint *e, const mlr::Transformation &f) {
   e->A = e->A * f;
   e->B = -f * e->B;
 }
 
-void ors::KinematicWorld::makeLinkTree() {
+void mlr::KinematicWorld::makeLinkTree() {
   for(Joint *j: joints) {
     for(Shape *s: j->to->shapes)  s->rel = j->B * s->rel;
     for(Joint *j2: j->to->outLinks) j2->A = j->B * j2->A;
@@ -852,8 +852,8 @@ void ors::KinematicWorld::makeLinkTree() {
 /** @brief KINEMATICS: given the (absolute) frames of root nodes and the relative frames
     on the edges, this calculates the absolute frames of all other nodes (propagating forward
     through trees and testing consistency of loops). */
-void ors::KinematicWorld::calc_fwdPropagateFrames() {
-  ors::Transformation f;
+void mlr::KinematicWorld::calc_fwdPropagateFrames() {
+  mlr::Transformation f;
   BodyL todoBodies = bodies;
   for(Body *b: todoBodies) {
     for(Joint *j:b->outLinks){ //this has no bailout for loopy graphs!
@@ -878,7 +878,7 @@ void ors::KinematicWorld::calc_fwdPropagateFrames() {
   calc_fwdPropagateShapeFrames();
 }
 
-void ors::KinematicWorld::calc_fwdPropagateShapeFrames() {
+void mlr::KinematicWorld::calc_fwdPropagateShapeFrames() {
   for(Shape *s: shapes) {
     if(s->body){
       s->X = s->body->X;
@@ -889,8 +889,8 @@ void ors::KinematicWorld::calc_fwdPropagateShapeFrames() {
   }
 }
 
-void ors::KinematicWorld::calc_fwdPropagateVelocities(){
-  ors::Transformation f;
+void mlr::KinematicWorld::calc_fwdPropagateVelocities(){
+  mlr::Transformation f;
   BodyL todoBodies = bodies;
   Vector q_vel, q_angvel;
   for(Body *b: todoBodies) {
@@ -917,7 +917,7 @@ void ors::KinematicWorld::calc_fwdPropagateVelocities(){
   }
 }
 
-void ors::KinematicWorld::calc_missingAB_from_BodyAndJointFrames() {
+void mlr::KinematicWorld::calc_missingAB_from_BodyAndJointFrames() {
   for(Joint *e: joints) {
     if(!e->X.isZero() && e->A.isZero() && e->B.isZero()) {
       e->A.setDifference(e->from->X, e->X);
@@ -929,9 +929,9 @@ void ors::KinematicWorld::calc_missingAB_from_BodyAndJointFrames() {
 /** @brief given the absolute frames of all nodes and the two rigid (relative)
     frames A & B of each edge, this calculates the dynamic (relative) joint
     frame X for each edge (which includes joint transformation and errors) */
-void ors::KinematicWorld::calc_Q_from_BodyFrames() {
+void mlr::KinematicWorld::calc_Q_from_BodyFrames() {
   for(Joint *j:joints) {
-    ors::Transformation A(j->from->X), B(j->to->X);
+    mlr::Transformation A(j->from->X), B(j->to->X);
     A.appendTransformation(j->A);
     B.appendInvTransformation(j->B);
     j->Q.setDifference(A, B);
@@ -941,14 +941,14 @@ void ors::KinematicWorld::calc_Q_from_BodyFrames() {
 /** @brief in all edge frames: remove any displacements, velocities and non-x rotations.
     After this, edges and nodes are not coherent anymore. You might want to call
     calcBodyFramesFromJoints() */
-void ors::KinematicWorld::clearJointErrors() {
-  ors::Vector xaxis(1, 0, 0);
+void mlr::KinematicWorld::clearJointErrors() {
+  mlr::Vector xaxis(1, 0, 0);
   for(Joint *j:joints) {
     j->Q.rot.alignWith(xaxis);
   }
 }
 
-arr ors::KinematicWorld::naturalQmetric(double power) const {
+arr mlr::KinematicWorld::naturalQmetric(double power) const {
 #if 0
   if(!q.N) getJointStateDimension();
   arr Wdiag(q.N);
@@ -977,7 +977,7 @@ arr ors::KinematicWorld::naturalQmetric(double power) const {
 
 /** @brief revert the topological orientation of a joint (edge),
    e.g., when choosing another body as root of a tree */
-void ors::KinematicWorld::revertJoint(ors::Joint *j) {
+void mlr::KinematicWorld::revertJoint(mlr::Joint *j) {
   cout <<"reverting edge (" <<j->from->name <<' ' <<j->to->name <<")" <<endl;
   //revert
   j->from->outLinks.removeValue(j);
@@ -989,7 +989,7 @@ void ors::KinematicWorld::revertJoint(ors::Joint *j) {
   listReindex(j->from->inLinks);
   checkConsistency();
 
-  ors::Transformation f;
+  mlr::Transformation f;
   f=j->A;
   j->A.setInverse(j->B);
   j->B.setInverse(f);
@@ -999,7 +999,7 @@ void ors::KinematicWorld::revertJoint(ors::Joint *j) {
 
 /** @brief re-orient all joints (edges) such that n becomes
   the root of the configuration */
-void ors::KinematicWorld::reconfigureRoot(Body *root) {
+void mlr::KinematicWorld::reconfigureRoot(Body *root) {
   mlr::Array<Body*> list, list2;
   Body **m,**mstop;
   list.append(root);
@@ -1024,7 +1024,7 @@ void ors::KinematicWorld::reconfigureRoot(Body *root) {
   graphTopsort(bodies, joints);
 }
 
-void ors::KinematicWorld::analyzeJointStateDimensions() {
+void mlr::KinematicWorld::analyzeJointStateDimensions() {
   uint maxagent=0;
   for(Joint *j: joints) if(j->agent>maxagent) maxagent=j->agent;
   qdim.resize(maxagent+1);
@@ -1041,7 +1041,7 @@ void ors::KinematicWorld::analyzeJointStateDimensions() {
 }
 
 /** @brief returns the joint (actuator) dimensionality */
-uint ors::KinematicWorld::getJointStateDimension(int agent) const {
+uint mlr::KinematicWorld::getJointStateDimension(int agent) const {
   if(agent==-1) agent=q_agent;
   CHECK(agent!=INT_MAX,"");
   if(!qdim.N) ((KinematicWorld*)this)->analyzeJointStateDimensions();
@@ -1049,7 +1049,7 @@ uint ors::KinematicWorld::getJointStateDimension(int agent) const {
   return qdim(agent);
 }
 
-void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
+void mlr::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
   if(!qdim.N) ((KinematicWorld*)this)->analyzeJointStateDimensions();
   if(q.N!=getJointStateDimension(agent)) ((KinematicWorld*)this)->calc_q_from_Q(agent);
 
@@ -1060,7 +1060,7 @@ void ors::KinematicWorld::getJointState(arr &_q, arr& _qdot, int agent) const {
   }
 }
 
-arr ors::KinematicWorld::getJointState(int agent) const {
+arr mlr::KinematicWorld::getJointState(int agent) const {
   if(!qdim.N) ((KinematicWorld*)this)->analyzeJointStateDimensions();
   if(q.N!=getJointStateDimension(agent)) ((KinematicWorld*)this)->calc_q_from_Q(agent);
 
@@ -1068,7 +1068,7 @@ arr ors::KinematicWorld::getJointState(int agent) const {
 }
 
 /** @brief returns the vector of joint limts */
-arr ors::KinematicWorld::getLimits() const {
+arr mlr::KinematicWorld::getLimits() const {
   uint N=getJointStateDimension();
   arr limits(N,2);
   limits.setZero();
@@ -1084,9 +1084,9 @@ arr ors::KinematicWorld::getLimits() const {
   return limits;
 }
 
-void ors::KinematicWorld::zeroGaugeJoints() {
+void mlr::KinematicWorld::zeroGaugeJoints() {
   Joint *e;
-  ors::Vector w;
+  mlr::Vector w;
   for(Body *  n:  bodies) if(n->type!=staticBT) {
     e=n->inLinks(0);
     if(e) {
@@ -1096,7 +1096,7 @@ void ors::KinematicWorld::zeroGaugeJoints() {
   }
 }
 
-arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j) {
+arr mlr::KinematicWorld::calc_q_from_Q(mlr::Joint* j) {
   arr q;
   switch(j->type) {
     case JT_hingeX:
@@ -1104,7 +1104,7 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j) {
     case JT_hingeZ: {
       q.resize(1);
       //angle
-      ors::Vector rotv;
+      mlr::Vector rotv;
       j->Q.rot.getRad(q(0), rotv);
       if(q(0)>MLR_PI) q(0)-=MLR_2PI;
       if(j->type==JT_hingeX && rotv*Vector_x<0.) q(0)=-q(0);
@@ -1153,18 +1153,18 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j) {
       q.resize(3);
       q(0)=j->Q.pos.x;
       q(1)=j->Q.pos.y;
-      ors::Vector rotv;
+      mlr::Vector rotv;
       j->Q.rot.getRad(q(2), rotv);
       if(q(2)>MLR_PI) q(2)-=MLR_2PI;
       if(rotv*Vector_z<0.) q(2)=-q(2);
     } break;
     case JT_phiTransXY: {
       q.resize(3);
-      ors::Vector rotv;
+      mlr::Vector rotv;
       j->Q.rot.getRad(q(0), rotv);
       if(q(0)>MLR_PI) q(0)-=MLR_2PI;
       if(rotv*Vector_z<0.) q(0)=-q(0);
-      ors::Vector relpos = j->Q.rot/j->Q.pos;
+      mlr::Vector relpos = j->Q.rot/j->Q.pos;
       q(1)=relpos.x;
       q(2)=relpos.y;
     } break;
@@ -1192,9 +1192,9 @@ arr ors::KinematicWorld::calc_q_from_Q(ors::Joint* j) {
   return q;
 }
 
-void ors::KinematicWorld::calc_q_from_Q(int agent) {
+void mlr::KinematicWorld::calc_q_from_Q(int agent) {
   if(agent == -1) agent = q_agent;
-//  ors::Quaternion rot;
+//  mlr::Quaternion rot;
   
   uint N=getJointStateDimension(agent);
   q.resize(N);
@@ -1213,7 +1213,7 @@ void ors::KinematicWorld::calc_q_from_Q(int agent) {
   CHECK_EQ(n,N,"");
 }
 
-void ors::KinematicWorld::calc_Q_from_q(int agent){
+void mlr::KinematicWorld::calc_Q_from_q(int agent){
   if(agent==-1) agent = q_agent;
   uint n=0;
   for(Joint *j: joints) if(j->agent==(uint)agent){
@@ -1238,7 +1238,7 @@ void ors::KinematicWorld::calc_Q_from_q(int agent){
         } break;
 
         case JT_universal:{
-          ors::Quaternion rot1, rot2;
+          mlr::Quaternion rot1, rot2;
           rot1.setRadX(q(n));
           rot2.setRadY(q(n+1));
           j->Q.rot = rot1*rot2;
@@ -1312,7 +1312,7 @@ void ors::KinematicWorld::calc_Q_from_q(int agent){
 
 /** @brief sets the joint state vectors separated in positions and
   velocities */
-void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int agent) {
+void mlr::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int agent) {
   setJointStateCount++; //global counter
 
   uint N=getJointStateDimension(agent);
@@ -1325,7 +1325,7 @@ void ors::KinematicWorld::setJointState(const arr& _q, const arr& _qdot, int age
   calc_fwdPropagateFrames();
 }
 
-void ors::KinematicWorld::setAgent(uint agent){
+void mlr::KinematicWorld::setAgent(uint agent){
   if(agent==q_agent) return; //nothing to do
   q_agent = agent;
   calc_q_from_Q();
@@ -1340,7 +1340,7 @@ void ors::KinematicWorld::setAgent(uint agent){
 
 /** @brief return the jacobian \f$J = \frac{\partial\phi_i(q)}{\partial q}\f$ of the position
   of the i-th body (3 x n tensor)*/
-void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vector& rel) const {
+void mlr::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const mlr::Vector& rel) const {
   if(!b){
     MLR_MSG("WARNING: calling kinematics for NULL body");
     if(&y) y.resize(3).setZero();
@@ -1349,7 +1349,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
   }
 
   //get position
-  ors::Vector pos_world = b->X.pos;
+  mlr::Vector pos_world = b->X.pos;
   if(&rel) pos_world += b->X.rot*rel;
   if(&y) y = conv_vec2arr(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
@@ -1364,7 +1364,7 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
       if(j->agent==q_agent && j_idx>=N) CHECK(j->type==JT_glue || j->type==JT_rigid, "");
       if(j->agent==q_agent && j_idx<N){
         if(j->type==JT_hingeX || j->type==JT_hingeY || j->type==JT_hingeZ) {
-          ors::Vector tmp = j->axis ^ (pos_world-j->X.pos);
+          mlr::Vector tmp = j->axis ^ (pos_world-j->X.pos);
           J(0, j_idx) += tmp.x;
           J(1, j_idx) += tmp.y;
           J(2, j_idx) += tmp.z;
@@ -1383,14 +1383,14 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
           if(j->mimic) NIY;
           arr R = j->X.rot.getArr();
           J.setMatrixBlock(R.sub(0,-1,0,1), 0, j_idx);
-          ors::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->X.rot*j->Q.pos));
+          mlr::Vector tmp = j->axis ^ (pos_world-(j->X.pos + j->X.rot*j->Q.pos));
           J(0, j_idx+2) += tmp.x;
           J(1, j_idx+2) += tmp.y;
           J(2, j_idx+2) += tmp.z;
         }
         else if(j->type==JT_phiTransXY) {
           if(j->mimic) NIY;
-          ors::Vector tmp = j->axis ^ (pos_world-j->X.pos);
+          mlr::Vector tmp = j->axis ^ (pos_world-j->X.pos);
           J(0, j_idx) += tmp.x;
           J(1, j_idx) += tmp.y;
           J(2, j_idx) += tmp.z;
@@ -1420,19 +1420,19 @@ void ors::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const ors::Vect
   of the i-th body W.R.T. the 6 axes of an arbitrary shape-frame, NOT the robot's joints (3 x 6 tensor)
   WARNING: this does not check if s is actually in the kinematic chain from root to b.
 */
-void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const ors::Vector& rel, Shape *s) const {
+void mlr::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const mlr::Vector& rel, Shape *s) const {
   if(!b && &J){ J.resize(3, getJointStateDimension()).setZero();  return; }
 
   //get position
-  ors::Vector pos_world = b->X.pos;
+  mlr::Vector pos_world = b->X.pos;
   if(&rel) pos_world += b->X.rot*rel;
   if(&y) y = conv_vec2arr(pos_world); //return the output
   if(!&J) return; //do not return the Jacobian
 
   //get Jacobian
   J.resize(3, 6).setZero();
-  ors::Vector diff = pos_world - s->X.pos;
-  mlr::Array<ors::Vector> axes = {s->X.rot.getX(), s->X.rot.getY(), s->X.rot.getZ()};
+  mlr::Vector diff = pos_world - s->X.pos;
+  mlr::Array<mlr::Vector> axes = {s->X.rot.getX(), s->X.rot.getY(), s->X.rot.getZ()};
 
   //3 translational axes
   for(uint i=0;i<3;i++){
@@ -1443,7 +1443,7 @@ void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const 
 
   //3 rotational axes
   for(uint i=0;i<3;i++){
-    ors::Vector tmp = axes(i) ^ diff;
+    mlr::Vector tmp = axes(i) ^ diff;
     J(0, 3+i) += tmp.x;
     J(1, 3+i) += tmp.y;
     J(2, 3+i) += tmp.z;
@@ -1452,11 +1452,11 @@ void ors::KinematicWorld::kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const 
 
 /** @brief return the Hessian \f$H = \frac{\partial^2\phi_i(q)}{\partial q\partial q}\f$ of the position
   of the i-th body (3 x n x n tensor) */
-void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
+void mlr::KinematicWorld::hessianPos(arr& H, Body *b, mlr::Vector *rel) const {
   HALT("this is buggy: a sign error: see examples/Ors/ors testKinematics");
   Joint *j1, *j2;
   uint j1_idx, j2_idx;
-  ors::Vector tmp, pos_a;
+  mlr::Vector tmp, pos_a;
   
   uint N=getJointStateDimension();
   
@@ -1529,9 +1529,9 @@ void ors::KinematicWorld::hessianPos(arr& H, Body *b, ors::Vector *rel) const {
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
 /// Jacobian of the i-th body's z-orientation vector
-void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const ors::Vector& vec) const {
+void mlr::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const mlr::Vector& vec) const {
   //get the vectoreference frame
-  ors::Vector vec_referene;
+  mlr::Vector vec_referene;
   if(&vec) vec_referene = b->X.rot*vec;
   else     vec_referene = b->X.rot.getZ();
   if(&y) y = conv_vec2arr(vec_referene); //return the vec
@@ -1545,15 +1545,15 @@ void ors::KinematicWorld::kinematicsVec(arr& y, arr& J, Body *b, const ors::Vect
 /* takes the joint state x and returns the jacobian dz of
    the position of the ith body (w.r.t. all joints) -> 2D array */
 /// Jacobian of the i-th body's z-orientation vector
-void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const { //TODO: allow for relative quat
-  ors::Quaternion rot_b = b->X.rot;
+void mlr::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const { //TODO: allow for relative quat
+  mlr::Quaternion rot_b = b->X.rot;
   if(&y) y = conv_quat2arr(rot_b); //return the vec
   if(&J){
     arr A;
     axesMatrix(A, b);
     J.resize(4, A.d1);
     for(uint i=0;i<J.d1;i++){
-      ors::Quaternion tmp(0., 0.5*A(0,i), 0.5*A(1,i), 0.5*A(2,i) ); //this is unnormalized!!
+      mlr::Quaternion tmp(0., 0.5*A(0,i), 0.5*A(1,i), 0.5*A(2,i) ); //this is unnormalized!!
       tmp = tmp * rot_b;
       J(0, i) = tmp.w;
       J(1, i) = tmp.x;
@@ -1564,7 +1564,7 @@ void ors::KinematicWorld::kinematicsQuat(arr& y, arr& J, Body *b) const { //TODO
 }
 
 //* This Jacobian directly gives the implied rotation vector: multiplied with \dot q it gives the angular velocity of body b */
-void ors::KinematicWorld::axesMatrix(arr& J, Body *b) const {
+void mlr::KinematicWorld::axesMatrix(arr& J, Body *b) const {
   uint N = getJointStateDimension();
   J.resize(3, N).setZero();
   if(b->inLinks.N) {
@@ -1594,7 +1594,7 @@ void ors::KinematicWorld::axesMatrix(arr& J, Body *b) const {
 }
 
 /// The position vec1, attached to b1, relative to the frame of b2 (plus vec2)
-void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const {
+void mlr::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2, const mlr::Vector& vec2) const {
   arr y1,y2,J1,J2;
   kinematicsPos(y1, J1, b1, vec1);
   kinematicsPos(y2, J2, b2, vec2);
@@ -1608,7 +1608,7 @@ void ors::KinematicWorld::kinematicsRelPos(arr& y, arr& J, Body *b1, const ors::
 }
 
 /// The vector vec1, attached to b1, relative to the frame of b2
-void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const {
+void mlr::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2) const {
   arr y1,J1;
   kinematicsVec(y1, J1, b1, vec1);
 //  kinematicsVec(y2, J2, b2, vec2);
@@ -1622,8 +1622,8 @@ void ors::KinematicWorld::kinematicsRelVec(arr& y, arr& J, Body *b1, const ors::
 }
 
 /// The position vec1, attached to b1, relative to the frame of b2 (plus vec2)
-void ors::KinematicWorld::kinematicsRelRot(arr& y, arr& J, Body *b1, Body *b2) const {
-  ors::Quaternion rot_b = b1->X.rot;
+void mlr::KinematicWorld::kinematicsRelRot(arr& y, arr& J, Body *b1, Body *b2) const {
+  mlr::Quaternion rot_b = b1->X.rot;
   if(&y) y = conv_vec2arr(rot_b.getVec());
   if(&J){
     double phi=acos(rot_b.w);
@@ -1637,11 +1637,11 @@ void ors::KinematicWorld::kinematicsRelRot(arr& y, arr& J, Body *b1, Body *b2) c
 }
 
 /** @brief return the configuration's inertia tensor $M$ (n x n tensor)*/
-void ors::KinematicWorld::inertia(arr& M) {
+void mlr::KinematicWorld::inertia(arr& M) {
   uint j1_idx, j2_idx;
-  ors::Transformation Xa, Xi, Xj;
+  mlr::Transformation Xa, Xi, Xj;
   Joint *j1, *j2;
-  ors::Vector vi, vj, ti, tj;
+  mlr::Vector vi, vj, ti, tj;
   double tmp;
   
   uint N=getJointStateDimension();
@@ -1690,8 +1690,8 @@ void ors::KinematicWorld::inertia(arr& M) {
   for(j1_idx=0; j1_idx<N; j1_idx++) for(j2_idx=0; j2_idx<j1_idx; j2_idx++) M(j2_idx, j1_idx) = M(j1_idx, j2_idx);
 }
 
-void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
-  ors::LinkTree tree; //TODO: HACK!! Danny: Why was there a static? This fails if there are more than 2 worlds
+void mlr::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
+  mlr::LinkTree tree; //TODO: HACK!! Danny: Why was there a static? This fails if there are more than 2 worlds
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
   if(gravity){
@@ -1699,31 +1699,31 @@ void ors::KinematicWorld::equationOfMotion(arr& M, arr& F, bool gravity) {
     gravityToForces();
   }
   if(!qdot.N) qdot.resize(q.N).setZero();
-  ors::equationOfMotion(M, F, tree, qdot);
+  mlr::equationOfMotion(M, F, tree, qdot);
 }
 
 /** @brief return the joint accelerations \f$\ddot q\f$ given the
   joint torques \f$\tau\f$ (computed via Featherstone's Articulated Body Algorithm in O(n)) */
-void ors::KinematicWorld::fwdDynamics(arr& qdd, const arr& qd, const arr& tau) {
-  static ors::LinkTree tree;
+void mlr::KinematicWorld::fwdDynamics(arr& qdd, const arr& qd, const arr& tau) {
+  static mlr::LinkTree tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
   //cout <<tree <<endl;
-  //ors::fwdDynamics_aba_1D(qdd, tree, qd, tau);
-  //ors::fwdDynamics_aba_nD(qdd, tree, qd, tau);
-  ors::fwdDynamics_MF(qdd, tree, qd, tau);
+  //mlr::fwdDynamics_aba_1D(qdd, tree, qd, tau);
+  //mlr::fwdDynamics_aba_nD(qdd, tree, qd, tau);
+  mlr::fwdDynamics_MF(qdd, tree, qd, tau);
 }
 
 /** @brief return the necessary joint torques \f$\tau\f$ to achieve joint accelerations
   \f$\ddot q\f$ (computed via the Recursive Newton-Euler Algorithm in O(n)) */
-void ors::KinematicWorld::inverseDynamics(arr& tau, const arr& qd, const arr& qdd) {
-  static ors::LinkTree tree;
+void mlr::KinematicWorld::inverseDynamics(arr& tau, const arr& qd, const arr& qdd) {
+  static mlr::LinkTree tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
-  ors::invDynamics(tau, tree, qd, qdd);
+  mlr::invDynamics(tau, tree, qd, qdd);
 }
 
-/*void ors::KinematicWorld::impulsePropagation(arr& qd1, const arr& qd0){
+/*void mlr::KinematicWorld::impulsePropagation(arr& qd1, const arr& qd0){
   static mlr::Array<Featherstone::Link> tree;
   if(!tree.N) GraphToTree(tree, *this);
   else updateGraphToTree(tree, *this);
@@ -1732,14 +1732,14 @@ void ors::KinematicWorld::inverseDynamics(arr& tau, const arr& qd, const arr& qd
 }*/
 
 /// [prelim] some heuristic measure for the joint errors
-double ors::KinematicWorld::getJointErrors() const {
+double mlr::KinematicWorld::getJointErrors() const {
   double err=0.0;
   for(Joint * e: joints) err+=e->Q.pos.lengthSqr();
   return ::sqrt(err);
 }
 
 /** @brief checks if all names of the bodies are disjoint */
-bool ors::KinematicWorld::checkUniqueNames() const {
+bool mlr::KinematicWorld::checkUniqueNames() const {
   for(Body *  n:  bodies) for(Body *b: bodies) {
     if(n==b) break;
     if(n->name==b->name) return false;
@@ -1748,7 +1748,7 @@ bool ors::KinematicWorld::checkUniqueNames() const {
 }
 
 /** @brief checks if all names of the bodies are disjoint */
-void ors::KinematicWorld::setShapeNames() {
+void mlr::KinematicWorld::setShapeNames() {
   for(Body *b: bodies){
     uint i=0;
     for(Shape *s:b->shapes){
@@ -1759,7 +1759,7 @@ void ors::KinematicWorld::setShapeNames() {
 }
 
 /// find body with specific name
-ors::Body* ors::KinematicWorld::getBodyByName(const char* name, bool warnIfNotExist) const {
+mlr::Body* mlr::KinematicWorld::getBodyByName(const char* name, bool warnIfNotExist) const {
   for(Body *b: bodies) if(b->name==name) return b;
   if(strcmp("glCamera", name)!=0)
   if(warnIfNotExist) MLR_MSG("cannot find Body named '" <<name <<"' in Graph");
@@ -1767,27 +1767,27 @@ ors::Body* ors::KinematicWorld::getBodyByName(const char* name, bool warnIfNotEx
 }
 
 /// find shape with specific name
-ors::Shape* ors::KinematicWorld::getShapeByName(const char* name, bool warnIfNotExist) const {
+mlr::Shape* mlr::KinematicWorld::getShapeByName(const char* name, bool warnIfNotExist) const {
   for(Shape *s: shapes) if(s->name==name) return s;
   if(warnIfNotExist) MLR_MSG("cannot find Shape named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find shape with specific name
-ors::Joint* ors::KinematicWorld::getJointByName(const char* name, bool warnIfNotExist) const {
+mlr::Joint* mlr::KinematicWorld::getJointByName(const char* name, bool warnIfNotExist) const {
   for(Joint *j: joints) if(j->name==name) return j;
   if(warnIfNotExist) MLR_MSG("cannot find Joint named '" <<name <<"' in Graph");
   return NULL;
 }
 
 /// find joint connecting two bodies
-ors::Joint* ors::KinematicWorld::getJointByBodies(const Body* from, const Body* to) const {
+mlr::Joint* mlr::KinematicWorld::getJointByBodies(const Body* from, const Body* to) const {
   for(Joint *j: to->inLinks) if(j->from==from) return j;
   return NULL;
 }
 
 /// find joint connecting two bodies with specific names
-ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
+mlr::Joint* mlr::KinematicWorld::getJointByBodyNames(const char* from, const char* to) const {
   Body *f = getBodyByName(from);
   Body *t = getBodyByName(to);
   if(!f || !t) return NULL;
@@ -1795,21 +1795,21 @@ ors::Joint* ors::KinematicWorld::getJointByBodyNames(const char* from, const cha
 }
 
 /// find joint connecting two bodies with specific names
-ors::Joint* ors::KinematicWorld::getJointByBodyIndices(uint ifrom, uint ito) const {
+mlr::Joint* mlr::KinematicWorld::getJointByBodyIndices(uint ifrom, uint ito) const {
   CHECK(ifrom<bodies.N && ito<bodies.N,"");
   Body *f = bodies(ifrom);
   Body *t = bodies(ito);
   return getJointByBodies(f, t);
 }
 
-ShapeL ors::KinematicWorld::getShapesByAgent(const uint agent) const {
+ShapeL mlr::KinematicWorld::getShapesByAgent(const uint agent) const {
   ShapeL agent_shapes;
-  for(ors::Joint *j : joints) {
+  for(mlr::Joint *j : joints) {
     if(j->agent==agent) {
       ShapeL tmp;
       tmp.append(j->from->shapes);
       tmp.append(j->to->shapes);
-      for(ors::Shape* s : tmp) {
+      for(mlr::Shape* s : tmp) {
         if (!agent_shapes.contains(s)) agent_shapes.append(s);
       }
     } 
@@ -1817,21 +1817,21 @@ ShapeL ors::KinematicWorld::getShapesByAgent(const uint agent) const {
   return agent_shapes;
 }
 
-uintA ors::KinematicWorld::getShapeIdxByAgent(const uint agent) const {
+uintA mlr::KinematicWorld::getShapeIdxByAgent(const uint agent) const {
   uintA agent_shape_idx;
   ShapeL agent_shapes = getShapesByAgent(agent);
-  for(ors::Shape* s : agent_shapes)
+  for(mlr::Shape* s : agent_shapes)
     agent_shape_idx.append(s->index);
   return agent_shape_idx;
 }
 
 /** @brief creates uniques names by prefixing the node-index-number to each name */
-void ors::KinematicWorld::prefixNames() {
+void mlr::KinematicWorld::prefixNames() {
   for(Body * n: bodies) n->name=STRING(n->index<< n->name);
 }
 
 /// return a OpenGL extension
-OpenGL& ors::KinematicWorld::gl(const char* window_title){
+OpenGL& mlr::KinematicWorld::gl(const char* window_title){
   if(!s->gl){
     s->gl = new OpenGL(window_title);
     s->gl->add(glStandardScene, 0);
@@ -1842,18 +1842,18 @@ OpenGL& ors::KinematicWorld::gl(const char* window_title){
 }
 
 /// return a Swift extension
-SwiftInterface& ors::KinematicWorld::swift(){
+SwiftInterface& mlr::KinematicWorld::swift(){
   if(!s->swift) s->swift = new SwiftInterface(*this);
   return *s->swift;
 }
 
-void ors::KinematicWorld::swiftDelete() {
+void mlr::KinematicWorld::swiftDelete() {
   delete s->swift;
   s->swift = nullptr;
 }
 
 /// return a PhysX extension
-PhysXInterface& ors::KinematicWorld::physx(){
+PhysXInterface& mlr::KinematicWorld::physx(){
   if(!s->physx){
     s->physx = new PhysXInterface(*this);
     s->physx->setArticulatedBodiesKinematic();
@@ -1862,21 +1862,21 @@ PhysXInterface& ors::KinematicWorld::physx(){
 }
 
 /// return a ODE extension
-OdeInterface& ors::KinematicWorld::ode(){
+OdeInterface& mlr::KinematicWorld::ode(){
   if(!s->ode) s->ode = new OdeInterface(*this);
   return *s->ode;
 }
 
-void ors::KinematicWorld::watch(bool pause, const char* txt){
+void mlr::KinematicWorld::watch(bool pause, const char* txt){
   if(pause) gl().watch(txt);
   else gl().update(txt);
 }
 
-void ors::KinematicWorld::glAnimate(){
+void mlr::KinematicWorld::glAnimate(){
   animateConfiguration(*this, NULL);
 }
 
-void ors::KinematicWorld::glGetMasks(int w, int h, bool rgbIndices){
+void mlr::KinematicWorld::glGetMasks(int w, int h, bool rgbIndices){
   gl().clear();
   gl().addDrawer(this);
   if(rgbIndices){
@@ -1898,15 +1898,15 @@ void ors::KinematicWorld::glGetMasks(int w, int h, bool rgbIndices){
   }
 }
 
-void ors::KinematicWorld::stepSwift(){
+void mlr::KinematicWorld::stepSwift(){
   swift().step(*this, false);
 }
 
-void ors::KinematicWorld::stepPhysx(double tau){
+void mlr::KinematicWorld::stepPhysx(double tau){
   physx().step(tau);
 }
 
-void ors::KinematicWorld::stepOde(double tau){
+void mlr::KinematicWorld::stepOde(double tau){
 #ifdef MLR_ODE
   ode().setMotorVel(qdot, 100.);
   ode().step(tau);
@@ -1914,13 +1914,13 @@ void ors::KinematicWorld::stepOde(double tau){
 #endif
 }
 
-void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double dynamicNoise, bool gravity){
+void mlr::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double dynamicNoise, bool gravity){
 
   struct DiffEqn:VectorFunction{
-    ors::KinematicWorld &S;
+    mlr::KinematicWorld &S;
     const arr& Bu;
     bool gravity;
-    DiffEqn(ors::KinematicWorld& _S, const arr& _Bu, bool _gravity):S(_S), Bu(_Bu), gravity(_gravity){
+    DiffEqn(mlr::KinematicWorld& _S, const arr& _Bu, bool _gravity):S(_S), Bu(_Bu), gravity(_gravity){
       VectorFunction::operator=( [this](arr& y, arr& J, const arr& x) -> void {
         this->fv(y, J, x);
       } );
@@ -1956,7 +1956,7 @@ void ors::KinematicWorld::stepDynamics(const arr& Bu_control, double tau, double
 }
 
 /** @brief prototype for \c operator<< */
-void ors::KinematicWorld::write(std::ostream& os) const {
+void mlr::KinematicWorld::write(std::ostream& os) const {
   for(Body *b: bodies) {
     os <<"body " <<b->name <<" { ";
     b->write(os);  os <<" }\n";
@@ -1980,13 +1980,13 @@ void ors::KinematicWorld::write(std::ostream& os) const {
 #define DEBUG(x) //x
 
 /** @brief prototype for \c operator>> */
-void ors::KinematicWorld::read(std::istream& is) {
+void mlr::KinematicWorld::read(std::istream& is) {
   Graph G(is);
   G.checkConsistency();
 //  cout <<"***KVG:\n" <<G <<endl;
   init(G);
 }
-void ors::KinematicWorld::init(const Graph& G) {
+void mlr::KinematicWorld::init(const Graph& G) {
   clear();
 
   NodeL bs = G.getNodes("body");
@@ -2062,12 +2062,12 @@ void ors::KinematicWorld::init(const Graph& G) {
   calc_fwdPropagateFrames();
 }
 
-void ors::KinematicWorld::writePlyFile(const char* filename) const {
+void mlr::KinematicWorld::writePlyFile(const char* filename) const {
   ofstream os;
   mlr::open(os, filename);
   uint nT=0,nV=0;
   uint j;
-  ors::Mesh *m;
+  mlr::Mesh *m;
   for(Shape *s: shapes) { nV += s->mesh.V.d0; nT += s->mesh.T.d0; }
   
   os <<"\
@@ -2085,8 +2085,8 @@ property list uchar int vertex_index\n\
 end_header\n";
 
   uint k=0;
-  ors::Transformation t;
-  ors::Vector v;
+  mlr::Transformation t;
+  mlr::Vector v;
   for(Shape * s: shapes) {
     m = &s->mesh;
     t = s->X;
@@ -2113,12 +2113,12 @@ end_header\n";
 }
 
 /// dump the list of current proximities on the screen
-void ors::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
+void mlr::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
   (*os) <<"Proximity report: #" <<proxies.N <<endl;
   for_list(Proxy, p, proxies) {
     if(belowMargin>0. && p->d>belowMargin) continue;
-    ors::Shape *a = shapes(p->a);
-    ors::Shape *b = shapes(p->b);
+    mlr::Shape *a = shapes(p->a);
+    mlr::Shape *b = shapes(p->b);
     (*os)
         <<p_COUNT <<" ("
         <<a->name <<':' <<a->body->name <<")-("
@@ -2135,11 +2135,11 @@ void ors::KinematicWorld::reportProxies(std::ostream *os, double belowMargin) {
   }
 }
 
-bool ProxySortComp(const ors::Proxy *a, const ors::Proxy *b) {
+bool ProxySortComp(const mlr::Proxy *a, const mlr::Proxy *b) {
   return (a->a < b->a) || (a->a==b->a && a->b<b->b) || (a->a==b->a && a->b==b->b && a->d < b->d);
 }
 
-void ors::KinematicWorld::glueBodies(Body *f, Body *t) {
+void mlr::KinematicWorld::glueBodies(Body *f, Body *t) {
   Joint *j = new Joint(*this, f, t);
   j->A.setDifference(f->X, t->X);
   j->type=JT_rigid;
@@ -2150,7 +2150,7 @@ void ors::KinematicWorld::glueBodies(Body *f, Body *t) {
 
 
 /// clear all forces currently stored at bodies
-void ors::KinematicWorld::clearForces() {
+void mlr::KinematicWorld::clearForces() {
   for(Body *  n:  bodies) {
     n->force.setZero();
     n->torque.setZero();
@@ -2158,7 +2158,7 @@ void ors::KinematicWorld::clearForces() {
 }
 
 /// apply a force on body n 
-void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
+void mlr::KinematicWorld::addForce(mlr::Vector force, mlr::Body *n) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -2170,7 +2170,7 @@ void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n) {
 }
 
 /// apply a force on body n at position pos (in world coordinates)
-void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n, ors::Vector pos) {
+void mlr::KinematicWorld::addForce(mlr::Vector force, mlr::Body *n, mlr::Vector pos) {
   n->force += force;
   if (!s->physx) {
     NIY;
@@ -2181,10 +2181,10 @@ void ors::KinematicWorld::addForce(ors::Vector force, ors::Body *n, ors::Vector 
   //n->torque += (pos - n->X.p) ^ force;
 }
 
-void ors::KinematicWorld::frictionToForces(double coeff) {
+void mlr::KinematicWorld::frictionToForces(double coeff) {
   HALT("never do this: add it directly in the equations...");
-  ors::Vector a;
-  ors::Transformation X;
+  mlr::Vector a;
+  mlr::Transformation X;
   for(Joint *j:joints) {
     X = j->from->X;
     X.appendTransformation(j->A);
@@ -2199,14 +2199,14 @@ NIY;
   }
 }
 
-void ors::KinematicWorld::gravityToForces() {
-  ors::Vector g(0, 0, -9.81);
+void mlr::KinematicWorld::gravityToForces() {
+  mlr::Vector g(0, 0, -9.81);
   for(Body *  n:  bodies) n->force += n->mass * g;
 }
 
 /// compute forces from the current contacts
-void ors::KinematicWorld::contactsToForces(double hook, double damp) {
-  ors::Vector trans, transvel, force;
+void mlr::KinematicWorld::contactsToForces(double hook, double damp) {
+  mlr::Vector trans, transvel, force;
   uint i;
   int a, b;
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
@@ -2228,17 +2228,17 @@ void ors::KinematicWorld::contactsToForces(double hook, double damp) {
     }
 }
 
-void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
-  ors::Shape *a = shapes(p->a);
-  ors::Shape *b = shapes(p->b);
+void mlr::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
+  mlr::Shape *a = shapes(p->a);
+  mlr::Shape *b = shapes(p->b);
 
   y.resize(1);
   if(&J) J.resize(1, getJointStateDimension());
   if(!addValues){ y.setZero();  if(&J) J.setZero(); }
 
 //  //costs
-//  if(a->type==ors::sphereST && b->type==ors::sphereST){
-//    ors::Vector diff=a->X.pos-b->X.pos;
+//  if(a->type==mlr::sphereST && b->type==mlr::sphereST){
+//    mlr::Vector diff=a->X.pos-b->X.pos;
 //    double d = diff.length() - a->size[3] - b->size[3];
 //    y(0) = d;
 //    if(&J){
@@ -2252,7 +2252,7 @@ void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
   y(0) = p->d;
   if(&J){
     arr Jpos;
-    ors::Vector arel, brel;
+    mlr::Vector arel, brel;
     if(p->d>0.) { //we have a gradient on pos only when outside
       arel=a->X.rot/(p->posA-a->X.pos);
       brel=b->X.rot/(p->posB-b->X.pos);
@@ -2264,9 +2264,9 @@ void ors::KinematicWorld::kinematicsProxyDist(arr& y, arr& J, Proxy *p, double m
   }
 }
 
-void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
-  ors::Shape *a = shapes(p->a);
-  ors::Shape *b = shapes(p->b);
+void mlr::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double margin, bool useCenterDist, bool addValues) const {
+  mlr::Shape *a = shapes(p->a);
+  mlr::Shape *b = shapes(p->b);
   CHECK(a->mesh_radius>0.,"");
   CHECK(b->mesh_radius>0.,"");
 
@@ -2275,8 +2275,8 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
   if(!addValues){ y.setZero();  if(&J) J.setZero(); }
 
   //costs
-  if(a->type==ors::sphereST && b->type==ors::sphereST){
-    ors::Vector diff=a->X.pos-b->X.pos;
+  if(a->type==mlr::sphereST && b->type==mlr::sphereST){
+    mlr::Vector diff=a->X.pos-b->X.pos;
     double d = diff.length() - a->size[3] - b->size[3];
     y(0) = 1. - d/margin;
     if(&J){
@@ -2299,7 +2299,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
   //Jacobian
   if(&J){
     arr Jpos;
-    ors::Vector arel, brel;
+    mlr::Vector arel, brel;
     if(p->d>0.) { //we have a gradient on pos only when outside
       arel=a->X.rot/(p->posA-a->X.pos);
       brel=b->X.rot/(p->posB-b->X.pos);
@@ -2327,7 +2327,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr& y, arr& J, Proxy *p, double m
 }
 
 /// measure (=scalar kinematics) for the contact cost summed over all bodies
-void ors::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, bool useCenterDist) const {
+void mlr::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, bool useCenterDist) const {
   y.resize(1).setZero();
   if(&J) J.resize(1, getJointStateDimension()).setZero();
   for(Proxy *p:proxies) if(p->d<margin) {
@@ -2335,7 +2335,7 @@ void ors::KinematicWorld::kinematicsProxyCost(arr &y, arr& J, double margin, boo
   }
 }
 
-void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin) const {
+void mlr::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin) const {
   if(&J) J.resize(1, getJointStateDimension()).setZero();
 
   g.resize(1) = margin - p->d;
@@ -2343,9 +2343,9 @@ void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, do
   //Jacobian
   if(&J){
     arr Jpos, normal;
-    ors::Vector arel,brel;
-    ors::Shape *a = shapes(p->a);
-    ors::Shape *b = shapes(p->b);
+    mlr::Vector arel,brel;
+    mlr::Shape *a = shapes(p->a);
+    mlr::Shape *b = shapes(p->b);
     if(p->d>0.) { //we have a gradient on pos only when outside
       arel=a->X.rot/(p->posA-a->X.pos);
       brel=b->X.rot/(p->posB-b->X.pos);
@@ -2364,9 +2364,9 @@ void ors::KinematicWorld::kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, do
   }
 }
 
-void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
+void mlr::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
   J.clear();
-  ors::Vector normal;
+  mlr::Vector normal;
   uint i, con=0;
   Shape *a, *b;
   arr Jpos, dnormal, grad(1, q.N);
@@ -2376,7 +2376,7 @@ void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
 
   if(!&J) return; //do not return the Jacobian
 
-  ors::Vector arel, brel;
+  mlr::Vector arel, brel;
   for(i=0; i<proxies.N; i++) {
     a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
     
@@ -2394,7 +2394,7 @@ void ors::KinematicWorld::kinematicsContactConstraints(arr& y, arr &J) const {
   J.reshape(con, q.N);
 }
 
-void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits, double margin) const {
+void mlr::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits, double margin) const {
   y.resize(1).setZero();
   if(&J) J.resize(1, getJointStateDimension()).setZero();
   double d;
@@ -2408,8 +2408,8 @@ void ors::KinematicWorld::kinematicsLimitsCost(arr &y, arr &J, const arr& limits
 }
 
 /// Compute the new configuration q such that body is located at ytarget (with deplacement rel).
-void ors::KinematicWorld::inverseKinematicsPos(Body& body, const arr& ytarget,
-                                               const ors::Vector& rel_offset, int max_iter) {
+void mlr::KinematicWorld::inverseKinematicsPos(Body& body, const arr& ytarget,
+                                               const mlr::Vector& rel_offset, int max_iter) {
   arr q0, q;
   getJointState(q0);
   q = q0;
@@ -2434,9 +2434,9 @@ void ors::KinematicWorld::inverseKinematicsPos(Body& body, const arr& ytarget,
 }
 
 /// center of mass of the whole configuration (3 vector)
-double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
+double mlr::KinematicWorld::getCenterOfMass(arr& x_) const {
   double M=0.;
-  ors::Vector x;
+  mlr::Vector x;
   x.setZero();
   for(Body *  n:  bodies) {
     M+=n->mass;
@@ -2448,7 +2448,7 @@ double ors::KinematicWorld::getCenterOfMass(arr& x_) const {
 }
 
 /// gradient (Jacobian) of the COM w.r.t. q (3 x n tensor)
-void ors::KinematicWorld::getComGradient(arr &grad) const {
+void mlr::KinematicWorld::getComGradient(arr &grad) const {
   double M=0.;
   arr J(3, getJointStateDimension());
   grad.resizeAs(J); grad.setZero();
@@ -2460,7 +2460,7 @@ void ors::KinematicWorld::getComGradient(arr &grad) const {
   grad/=M;
 }
 
-ors::Proxy* ors::KinematicWorld::getContact(uint a, uint b) const {
+mlr::Proxy* mlr::KinematicWorld::getContact(uint a, uint b) const {
   uint i;
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
       if(proxies(i)->a==(int)a && proxies(i)->b==(int)b) return proxies(i);
@@ -2469,9 +2469,9 @@ ors::Proxy* ors::KinematicWorld::getContact(uint a, uint b) const {
   return NULL;
 }
 
-arr ors::KinematicWorld::getHmetric() const{
+arr mlr::KinematicWorld::getHmetric() const{
   arr H = zeros(getJointStateDimension());
-  for(ors::Joint *j:joints){
+  for(mlr::Joint *j:joints){
     double h=j->H;
     CHECK(h>0.,"Hmetric should be larger than 0");
     for(uint k=0;k<j->qDim();k++) H(j->qIndex+k)=h;
@@ -2480,17 +2480,17 @@ arr ors::KinematicWorld::getHmetric() const{
 }
 
 /** @brief */
-double ors::KinematicWorld::getEnergy() {
+double mlr::KinematicWorld::getEnergy() {
   double m, v, E;
-  ors::Matrix I;
-  ors::Vector w;
+  mlr::Matrix I;
+  mlr::Vector w;
 
   calc_fwdPropagateVelocities();
   
   E=0.;
   for(Body *b: bodies) {
     m=b->mass;
-    ors::Quaternion &rot = b->X.rot;
+    mlr::Quaternion &rot = b->X.rot;
     I=(rot).getMatrix() * b->inertia * (-rot).getMatrix();
     v=b->vel.length();
     w=b->angvel;
@@ -2502,7 +2502,7 @@ double ors::KinematicWorld::getEnergy() {
   return E;
 }
 
-void ors::KinematicWorld::removeUselessBodies(int verbose) {
+void mlr::KinematicWorld::removeUselessBodies(int verbose) {
   //-- remove bodies and their in-joints
   for_list_rev(Body, b, bodies) if(!b->shapes.N && !b->outLinks.N) {
     if(verbose>0) LOG(0) <<" -- removing useless body " <<b->name <<endl;
@@ -2521,7 +2521,7 @@ void ors::KinematicWorld::removeUselessBodies(int verbose) {
   calc_q_from_Q();
 }
 
-bool ors::KinematicWorld::checkConsistency(){
+bool mlr::KinematicWorld::checkConsistency(){
   if(qdim.N){
     uint N=getJointStateDimension();
     CHECK_EQ(N, qdim(q_agent), "");
@@ -2570,7 +2570,7 @@ bool ors::KinematicWorld::checkConsistency(){
   return true;
 }
 
-void ors::KinematicWorld::meldFixedJoints(int verbose) {
+void mlr::KinematicWorld::meldFixedJoints(int verbose) {
   checkConsistency();
   for(Joint *j: joints) if(j->type==JT_rigid) {
     if(verbose>0) LOG(0) <<" -- melding fixed joint " <<j->name <<" (" <<j->from->name <<' ' <<j->to->name <<" )" <<endl;
@@ -2608,11 +2608,11 @@ void ors::KinematicWorld::meldFixedJoints(int verbose) {
   checkConsistency();
 }
 
-/// GL routine to draw a ors::KinematicWorld
+/// GL routine to draw a mlr::KinematicWorld
 #ifdef MLR_GL
-void ors::KinematicWorld::glDraw(OpenGL& gl) {
+void mlr::KinematicWorld::glDraw(OpenGL& gl) {
   uint i=0;
-  ors::Transformation f;
+  mlr::Transformation f;
   double GLmatrix[16];
 
   glPushMatrix();
@@ -2682,9 +2682,9 @@ void ors::KinematicWorld::glDraw(OpenGL& gl) {
     glVertex3dv(proxy->posA.p());
     glVertex3dv(proxy->posB.p());
     glEnd();
-    ors::Transformation f;
+    mlr::Transformation f;
     f.pos=proxy->posA;
-    f.rot.setDiff(ors::Vector(0, 0, 1), proxy->posA-proxy->posB);
+    f.rot.setDiff(mlr::Vector(0, 0, 1), proxy->posA-proxy->posB);
     f.getAffineMatrixGL(GLmatrix);
     glLoadMatrixd(GLmatrix);
     glDisable(GL_CULL_FACE);
@@ -2706,20 +2706,20 @@ void ors::KinematicWorld::glDraw(OpenGL& gl) {
 // Kinematic Switch
 //
 
-ors::KinematicSwitch::KinematicSwitch()
+mlr::KinematicSwitch::KinematicSwitch()
   : symbol(none), jointType(JT_none), timeOfApplication(UINT_MAX), fromId(UINT_MAX), toId(UINT_MAX){
   jA.setZero();
   jB.setZero();
 }
 
-void ors::KinematicSwitch::apply(KinematicWorld& G){
+void mlr::KinematicSwitch::apply(KinematicWorld& G){
   Shape *from=NULL, *to=NULL;
   if(fromId!=UINT_MAX) from=G.shapes(fromId);
   if(toId!=UINT_MAX) to=G.shapes(toId);
   if(fromId==UINT_MAX){
     CHECK_EQ(symbol, deleteJoint, "");
     CHECK(to,"");
-    ors::Body *b = to->body;
+    mlr::Body *b = to->body;
     CHECK_EQ(b->inLinks.N, 1,"");
     from = b->inLinks(0)->from->shapes.first();
   }
@@ -2759,7 +2759,7 @@ void ors::KinematicSwitch::apply(KinematicWorld& G){
   HALT("shouldn't be here!");
 }
 
-void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious, ors::KinematicWorld& G, bool copyFromBodies){
+void mlr::KinematicSwitch::temporallyAlign(const mlr::KinematicWorld& Gprevious, mlr::KinematicWorld& G, bool copyFromBodies){
   if(symbol==addJointAtFrom){
     Joint *j = G.getJointByBodies(G.shapes(fromId)->body, G.shapes(toId)->body);
     if(!j/* || j->type!=jointType*/) HALT("");
@@ -2796,17 +2796,17 @@ void ors::KinematicSwitch::temporallyAlign(const ors::KinematicWorld& Gprevious,
   }
 }
 
-mlr::String ors::KinematicSwitch::shortTag(const ors::KinematicWorld* G) const{
+mlr::String mlr::KinematicSwitch::shortTag(const mlr::KinematicWorld* G) const{
   mlr::String str;
   str <<"  timeOfApplication=" <<timeOfApplication;
   str <<"  symbol=" <<name(symbol);
-  str <<"  jointType=" <<ors::name(jointType);
+  str <<"  jointType=" <<mlr::name(jointType);
   str <<"  fromId=" <<(fromId==UINT_MAX?"NULL":(G?G->shapes(fromId)->name:STRING(fromId)));
   str <<"  toId=" <<(G?G->shapes(toId)->name:STRING(toId)) <<endl;
   return str;
 }
 
-void ors::KinematicSwitch::write(std::ostream& os) const{
+void mlr::KinematicSwitch::write(std::ostream& os) const{
   os <<"  timeOfApplication=" <<timeOfApplication;
   os <<"  symbol=" <<symbol;
   os <<"  jointType=" <<jointType;
@@ -2816,7 +2816,7 @@ void ors::KinematicSwitch::write(std::ostream& os) const{
 
 //===========================================================================
 
-ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
+mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const Node *specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero){
   if(specs->parents.N<2) return NULL;
 
   //-- get tags
@@ -2827,7 +2827,7 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
 
   if(tt!="MakeJoint") return NULL;
-  ors::KinematicSwitch* sw = newSwitch(type, ref1, ref2, world, Tinterval, Tzero);
+  mlr::KinematicSwitch* sw = newSwitch(type, ref1, ref2, world, Tinterval, Tzero);
 
   if(specs->isGraph()){
     const Graph& params = specs->graph();
@@ -2838,26 +2838,26 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const Node *specs, const o
   return sw;
 }
 
-ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero, const ors::Transformation& jFrom, const ors::Transformation& jTo){
+mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero, const mlr::Transformation& jFrom, const mlr::Transformation& jTo){
   //-- create switch
-  ors::KinematicSwitch *sw= new ors::KinematicSwitch();
-  if(type=="addRigid"){ sw->symbol=ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
-//  else if(type=="addRigidRel"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
-  else if(type=="rigidAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_rigid; }
-  else if(type=="rigidAtFrom"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_rigid; }
-  else if(type=="rigidZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_rigid; }
-  else if(type=="transXYPhiAtFrom"){ sw->symbol = ors::KinematicSwitch::addJointAtFrom; sw->jointType=ors::JT_transXYPhi; }
-  else if(type=="transXYPhiZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_transXYPhi; }
-  else if(type=="freeAtTo"){ sw->symbol = ors::KinematicSwitch::addJointAtTo; sw->jointType=ors::JT_free; }
-  else if(type=="freeZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_free; }
-  else if(type=="ballZero"){ sw->symbol = ors::KinematicSwitch::addJointZero; sw->jointType=ors::JT_quatBall; }
-  else if(type=="delete"){ sw->symbol = ors::KinematicSwitch::deleteJoint; }
+  mlr::KinematicSwitch *sw= new mlr::KinematicSwitch();
+  if(type=="addRigid"){ sw->symbol=mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_rigid; }
+//  else if(type=="addRigidRel"){ sw->symbol = mlr::KinematicSwitch::addJointAtTo; sw->jointType=mlr::JT_rigid; }
+  else if(type=="rigidAtTo"){ sw->symbol = mlr::KinematicSwitch::addJointAtTo; sw->jointType=mlr::JT_rigid; }
+  else if(type=="rigidAtFrom"){ sw->symbol = mlr::KinematicSwitch::addJointAtFrom; sw->jointType=mlr::JT_rigid; }
+  else if(type=="rigidZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_rigid; }
+  else if(type=="transXYPhiAtFrom"){ sw->symbol = mlr::KinematicSwitch::addJointAtFrom; sw->jointType=mlr::JT_transXYPhi; }
+  else if(type=="transXYPhiZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_transXYPhi; }
+  else if(type=="freeAtTo"){ sw->symbol = mlr::KinematicSwitch::addJointAtTo; sw->jointType=mlr::JT_free; }
+  else if(type=="freeZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_free; }
+  else if(type=="ballZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_quatBall; }
+  else if(type=="delete"){ sw->symbol = mlr::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
   if(ref1) sw->fromId = world.getShapeByName(ref1)->index;
   if(ref2) sw->toId = world.getShapeByName(ref2)->index;
 //  if(!ref2){
-//    CHECK_EQ(sw->symbol, ors::KinematicSwitch::deleteJoint, "");
-//    ors::Body *b = fromShape->body;
+//    CHECK_EQ(sw->symbol, mlr::KinematicSwitch::deleteJoint, "");
+//    mlr::Body *b = fromShape->body;
 //    if(b->inLinks.N==1){
 ////      CHECK_EQ(b->outLinks.N, 0, "");
 //      sw->toId = sw->fromId;
@@ -2878,7 +2878,7 @@ ors::KinematicSwitch* ors::KinematicSwitch::newSwitch(const mlr::String& type, c
   return sw;
 }
 
-const char* ors::KinematicSwitch::name(ors::KinematicSwitch::OperatorSymbol s){
+const char* mlr::KinematicSwitch::name(mlr::KinematicSwitch::OperatorSymbol s){
   static const char* names[] = { "deleteJoint", "addJointZero", "addJointAtFrom", "addJointAtTo" };
   if(s==none) return "none";
   return names[(int)s];
@@ -2894,10 +2894,10 @@ const char* ors::KinematicSwitch::name(ors::KinematicSwitch::OperatorSymbol s){
 
 #undef LEN
 
-double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) {
-  ors::Vector c, cn;
+double forceClosureFromProxies(mlr::KinematicWorld& ORS, uint bodyIndex, double distanceThreshold, double mu, double torqueWeights) {
+  mlr::Vector c, cn;
   arr C, Cn;
-  for(ors::Proxy * p: ORS.proxies){
+  for(mlr::Proxy * p: ORS.proxies){
     int body_a = ORS.shapes(p->a)->body?ORS.shapes(p->a)->body->index:-1;
     int body_b = ORS.shapes(p->b)->body?ORS.shapes(p->b)->body->index:-1;
     if(p->d<distanceThreshold && (body_a==(int)bodyIndex || body_b==(int)bodyIndex)) {
@@ -2918,7 +2918,7 @@ double forceClosureFromProxies(ors::KinematicWorld& ORS, uint bodyIndex, double 
   return fc;
 }
 
-void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from){
   arr q = to.getJointState();
   uint T = qfrom.d0;
   uint Nfrom = qfrom.d1;
@@ -2929,8 +2929,8 @@ void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicW
 
   intA match(Nfrom);
   match = -1;
-  for(ors::Joint* jfrom:from.joints){
-    ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+  for(mlr::Joint* jfrom:from.joints){
+    mlr::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
@@ -2952,7 +2952,7 @@ void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicW
 }
 
 #if 0 //nonsensical
-void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from){
   //TODO: for saveness reasons, the velocities are zeroed.
   arr qDot;
   qDot = zeros(to.getJointStateDimension());
@@ -2969,8 +2969,8 @@ void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::K
 
   intA match(dim);
   match = -1;
-  for(ors::Joint* jfrom:from.joints){
-    ors::Joint* jto = to.getJointByName(jfrom->name, false); //OLD: to.getJointByBodyNames(jfrom->from->name, jfrom->to->name); why???
+  for(mlr::Joint* jfrom:from.joints){
+    mlr::Joint* jto = to.getJointByName(jfrom->name, false); //OLD: to.getJointByBodyNames(jfrom->from->name, jfrom->to->name); why???
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
@@ -2991,10 +2991,10 @@ void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::K
 
 }
 
-void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from){
   KpTo = zeros(to.getJointStateDimension(),to.getJointStateDimension());
   //use Kp gains from ors file for toWorld, if there are no entries of this joint in fromWorld
-  for_list(ors::Joint, j, to.joints) {
+  for_list(mlr::Joint, j, to.joints) {
     if(j->qDim()>0) {
       arr *info;
       info = j->ats.find<arr>("gains");
@@ -3006,8 +3006,8 @@ void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::Kinemat
 
   intA match(KpFrom.d0);
   match = -1;
-  for(ors::Joint* jfrom : from.joints){
-    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+  for(mlr::Joint* jfrom : from.joints){
+    mlr::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: mlr::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
@@ -3022,11 +3022,11 @@ void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::Kinemat
   }
 }
 
-void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from) {
+void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from) {
   KdTo = zeros(to.getJointStateDimension(),to.getJointStateDimension());
 
   //use Kd gains from ors file for toWorld, if there are no entries of this joint in fromWorld
-  for_list(ors::Joint, j, to.joints) {
+  for_list(mlr::Joint, j, to.joints) {
     if(j->qDim()>0) {
       arr *info;
       info = j->ats.find<arr>("gains");
@@ -3038,8 +3038,8 @@ void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::Kinemat
 
   intA match(KdFrom.d0);
   match = -1;
-  for(ors::Joint* jfrom : from.joints){
-    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+  for(mlr::Joint* jfrom : from.joints){
+    mlr::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: mlr::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
@@ -3055,13 +3055,13 @@ void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::Kinemat
 }
 
 
-void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from){
   u0To = zeros(to.getJointStateDimension());
 
   intA match(u0From.d0);
   match = -1;
-  for(ors::Joint* jfrom : from.joints){
-    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+  for(mlr::Joint* jfrom : from.joints){
+    mlr::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: mlr::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
@@ -3075,7 +3075,7 @@ void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::Kinemat
 }
 
 
-void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const ors::KinematicWorld& to, const ors::KinematicWorld& from){
+void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from){
   uint numberOfColumns = KI_ft_From.d1;
   if(KI_ft_From.d1 == 0) {
     numberOfColumns = 1;
@@ -3086,8 +3086,8 @@ void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const 
 
   intA match(KI_ft_From.d0);
   match = -1;
-  for(ors::Joint* jfrom : from.joints){
-    ors::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: ors::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
+  for(mlr::Joint* jfrom : from.joints){
+    mlr::Joint* jto = to.getJointByName(jfrom->name, false); // OLD: mlr::Joint* jto = to.getJointByBodyNames(jfrom->from->name, jfrom->to->name);
     if(!jto || !jfrom->qDim() || !jto->qDim()) continue;
     CHECK_EQ(jfrom->qDim(), jto->qDim(), "joints must have same dimensionality");
     for(uint i=0; i<jfrom->qDim(); i++){
@@ -3132,12 +3132,12 @@ extern void glDrawText(const char* txt, float x, float y, float z);
  * @param graph the ors graph.
  * @param gl OpenGL which shows the ors graph.
  */
-void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
+void bindOrsToOpenGL(mlr::KinematicWorld& graph, OpenGL& gl) {
   gl.add(glStandardScene, 0);
-  gl.add(ors::glDrawGraph, &graph);
+  gl.add(mlr::glDrawGraph, &graph);
 //  gl.setClearColors(1., 1., 1., 1.);
 
-  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  mlr::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
     gl.camera.X = glCamera->X;
     gl.resize(500,500);
@@ -3152,28 +3152,28 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl) {
 
 #ifndef MLR_ORS_ONLY_BASICS
 
-/// static GL routine to draw a ors::KinematicWorld
-void ors::glDrawGraph(void *classP) {
-  ((ors::KinematicWorld*)classP)->glDraw(NoOpenGL);
+/// static GL routine to draw a mlr::KinematicWorld
+void mlr::glDrawGraph(void *classP) {
+  ((mlr::KinematicWorld*)classP)->glDraw(NoOpenGL);
 }
 
 
 
-void displayState(const arr& x, ors::KinematicWorld& G, const char *tag){
+void displayState(const arr& x, mlr::KinematicWorld& G, const char *tag){
   G.setJointState(x);
   G.gl().watch(tag);
 }
 
-void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay, uint dim_z, bool copyG) {
+void displayTrajectory(const arr& _x, int steps, mlr::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay, uint dim_z, bool copyG) {
   if(!steps) return;
-  for(ors::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
+  for(mlr::Shape *s : G.shapes) if(s->mesh.V.d0!=s->mesh.Vn.d0 || s->mesh.T.d0!=s->mesh.Tn.d0) {
     s->mesh.computeNormals();
   }
-  ors::KinematicWorld *Gcopy;
+  mlr::KinematicWorld *Gcopy;
   if(switches.N) copyG=true;
   if(!copyG) Gcopy=&G;
   else{
-    Gcopy = new ors::KinematicWorld;
+    Gcopy = new mlr::KinematicWorld;
     Gcopy->copy(G,true);
   }
   arr x,z;
@@ -3190,7 +3190,7 @@ void displayTrajectory(const arr& _x, int steps, ors::KinematicWorld& G, const K
   for(uint k=0; k<=(uint)num; k++) {
     uint t = (T?(k*T/num):0);
     if(switches.N){
-      for(ors::KinematicSwitch *sw: switches)
+      for(mlr::KinematicSwitch *sw: switches)
         if(sw->timeOfApplication==t)
           sw->apply(*Gcopy);
     }
@@ -3344,7 +3344,7 @@ void _glDrawOdeWorld(dWorldID world)
 }
 */
 
-void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
+void animateConfiguration(mlr::KinematicWorld& C, Inotify *ino) {
   arr x, x0;
   uint t, i;
   C.getJointState(x0);
@@ -3377,13 +3377,13 @@ void animateConfiguration(ors::KinematicWorld& C, Inotify *ino) {
 }
 
 
-ors::Body *movingBody=NULL;
-ors::Vector selpos;
+mlr::Body *movingBody=NULL;
+mlr::Vector selpos;
 double seld, selx, sely, selz;
 
 struct EditConfigurationClickCall:OpenGL::GLClickCall {
-  ors::KinematicWorld *ors;
-  EditConfigurationClickCall(ors::KinematicWorld& _ors) { ors=&_ors; }
+  mlr::KinematicWorld *ors;
+  EditConfigurationClickCall(mlr::KinematicWorld& _ors) { ors=&_ors; }
   bool clickCallback(OpenGL& gl) {
     OpenGL::GLSelect *top=gl.topSelection;
     if(!top) return false;
@@ -3391,13 +3391,13 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
     cout <<"CLICK call: id = 0x" <<std::hex <<gl.topSelection->name <<" : ";
     gl.text.clear();
     if((i&3)==1) {
-      ors::Shape *s=ors->shapes(i>>2);
+      mlr::Shape *s=ors->shapes(i>>2);
       gl.text <<"shape selection: shape=" <<s->name <<" body=" <<s->body->name <<" X=" <<s->X <<endl;
 //      listWrite(s->ats, gl.text, "\n");
       cout <<gl.text;
     }
     if((i&3)==2) {
-      ors::Joint *j=ors->joints(i>>2);
+      mlr::Joint *j=ors->joints(i>>2);
       gl.text
           <<"edge selection: " <<j->from->name <<' ' <<j->to->name
          <<"\nA=" <<j->A <<"\nQ=" <<j->Q <<"\nB=" <<j->B <<endl;
@@ -3410,13 +3410,13 @@ struct EditConfigurationClickCall:OpenGL::GLClickCall {
 };
 
 struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
-  ors::KinematicWorld *ors;
-  EditConfigurationHoverCall(ors::KinematicWorld& _ors);// { ors=&_ors; }
+  mlr::KinematicWorld *ors;
+  EditConfigurationHoverCall(mlr::KinematicWorld& _ors);// { ors=&_ors; }
   bool hoverCallback(OpenGL& gl) {
 //    if(!movingBody) return false;
     if(!movingBody) {
-      ors::Joint *j=NULL;
-      ors::Shape *s=NULL;
+      mlr::Joint *j=NULL;
+      mlr::Shape *s=NULL;
       mlr::timerStart(true);
       gl.Select(true);
       OpenGL::GLSelect *top=gl.topSelection;
@@ -3449,19 +3449,19 @@ struct EditConfigurationHoverCall:OpenGL::GLHoverCall {
   }
 };
 
-EditConfigurationHoverCall::EditConfigurationHoverCall(ors::KinematicWorld& _ors) {
+EditConfigurationHoverCall::EditConfigurationHoverCall(mlr::KinematicWorld& _ors) {
   ors=&_ors;
 }
 
 struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
-  ors::KinematicWorld &ors;
+  mlr::KinematicWorld &ors;
   bool &exit;
-  EditConfigurationKeyCall(ors::KinematicWorld& _ors, bool& _exit): ors(_ors), exit(_exit){}
+  EditConfigurationKeyCall(mlr::KinematicWorld& _ors, bool& _exit): ors(_ors), exit(_exit){}
   bool keyCallback(OpenGL& gl) {
     if(gl.pressedkey==' '){ //grab a body
       if(movingBody) { movingBody=NULL; return true; }
-      ors::Joint *j=NULL;
-      ors::Shape *s=NULL;
+      mlr::Joint *j=NULL;
+      mlr::Shape *s=NULL;
       gl.Select();
       OpenGL::GLSelect *top=gl.topSelection;
       if(!top) { cout <<"No object below mouse!" <<endl;  return false; }
@@ -3491,21 +3491,21 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
       case '5':  gl.reportSelects^=1;  break;
       case '6':  gl.reportEvents^=1;  break;
       case '7':  ors.writePlyFile("z.ply");  break;
-      case 'j':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
-      case 'k':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, 0, .1);  break;
-      case 'i':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
-      case ',':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(0, .1, 0);  break;
-      case 'l':  gl.camera.X.pos += gl.camera.X.rot*ors::Vector(.1, .0, 0);  break;
-      case 'h':  gl.camera.X.pos -= gl.camera.X.rot*ors::Vector(.1, 0, 0);  break;
+      case 'j':  gl.camera.X.pos += gl.camera.X.rot*mlr::Vector(0, 0, .1);  break;
+      case 'k':  gl.camera.X.pos -= gl.camera.X.rot*mlr::Vector(0, 0, .1);  break;
+      case 'i':  gl.camera.X.pos += gl.camera.X.rot*mlr::Vector(0, .1, 0);  break;
+      case ',':  gl.camera.X.pos -= gl.camera.X.rot*mlr::Vector(0, .1, 0);  break;
+      case 'l':  gl.camera.X.pos += gl.camera.X.rot*mlr::Vector(.1, .0, 0);  break;
+      case 'h':  gl.camera.X.pos -= gl.camera.X.rot*mlr::Vector(.1, 0, 0);  break;
       case 'a':  gl.camera.focus(
           (gl.camera.X.rot*(gl.camera.foc - gl.camera.X.pos)
-           ^ gl.camera.X.rot*ors::Vector(1, 0, 0)) * .001
+           ^ gl.camera.X.rot*mlr::Vector(1, 0, 0)) * .001
           + gl.camera.foc);
         break;
       case 's':  gl.camera.X.pos +=
           (
             gl.camera.X.rot*(gl.camera.foc - gl.camera.X.pos)
-            ^(gl.camera.X.rot * ors::Vector(1., 0, 0))
+            ^(gl.camera.X.rot * mlr::Vector(1., 0, 0))
           ) * .01;
         break;
       case 'q' :
@@ -3518,7 +3518,7 @@ struct EditConfigurationKeyCall:OpenGL::GLKeyCall {
   }
 };
 
-void editConfiguration(const char* filename, ors::KinematicWorld& C) {
+void editConfiguration(const char* filename, mlr::KinematicWorld& C) {
 //  gl.exitkeys="1234567890qhjklias, "; //TODO: move the key handling to the keyCall!
   bool exit=false;
 //  C.gl().addHoverCall(new EditConfigurationHoverCall(C));
@@ -3527,7 +3527,7 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
   Inotify ino(filename);
   for(;!exit;) {
     cout <<"reloading `" <<filename <<"' ... " <<std::endl;
-    ors::KinematicWorld W;
+    mlr::KinematicWorld W;
     try {
       mlr::lineCount=1;
       W <<FILE(filename);
@@ -3559,14 +3559,14 @@ void editConfiguration(const char* filename, ors::KinematicWorld& C) {
 
 #else ///MLR_GL
 #ifndef MLR_ORS_ONLY_BASICS
-void bindOrsToOpenGL(ors::KinematicWorld&, OpenGL&) { NICO };
-void ors::KinematicWorld::glDraw(OpenGL&) { NICO }
-void ors::glDrawGraph(void *classP) { NICO }
-void editConfiguration(const char* orsfile, ors::KinematicWorld& C) { NICO }
-void animateConfiguration(ors::KinematicWorld& C, Inotify*) { NICO }
-void glTransform(const ors::Transformation&) { NICO }
-void displayTrajectory(const arr&, int, ors::KinematicWorld&, const char*, double) { NICO }
-void displayState(const arr&, ors::KinematicWorld&, const char*) { NICO }
+void bindOrsToOpenGL(mlr::KinematicWorld&, OpenGL&) { NICO };
+void mlr::KinematicWorld::glDraw(OpenGL&) { NICO }
+void mlr::glDrawGraph(void *classP) { NICO }
+void editConfiguration(const char* orsfile, mlr::KinematicWorld& C) { NICO }
+void animateConfiguration(mlr::KinematicWorld& C, Inotify*) { NICO }
+void glTransform(const mlr::Transformation&) { NICO }
+void displayTrajectory(const arr&, int, mlr::KinematicWorld&, const char*, double) { NICO }
+void displayState(const arr&, mlr::KinematicWorld&, const char*) { NICO }
 #endif
 #endif
 /** @} */
@@ -3642,7 +3642,7 @@ void Xtrans(arr& X, double* r);
   with mass m, centre of mass at c, and (3x3) rotational inertia
   about CoM of I.
 */
-void RBmci(arr& rbi, double m, double *c, const ors::Matrix& I);
+void RBmci(arr& rbi, double m, double *c, const mlr::Matrix& I);
 
 /** @brief MM6 cross-product tensor from M6 vector.  crossM(v)
   calculates the MM6 cross-product tensor of motion vector v such
@@ -3667,18 +3667,18 @@ arr crossF(const arr& v);
 //#define Qstate
 
 #if 0
-ors::Body *robotbody(uint i, const Featherstone::Robot& robot) { return robot.C->nodes(i); }
+mlr::Body *robotbody(uint i, const Featherstone::Robot& robot) { return robot.C->nodes(i); }
 
 uint Featherstone::Robot::N() const { return C->nodes.N; }
 
 int Featherstone::Robot::parent(uint i) const {
-  ors::Joint *e=C->nodes(i)->inLinks(0);
+  mlr::Joint *e=C->nodes(i)->inLinks(0);
   if(e) return e->from->index;
   return -1;
 }
 
 byte Featherstone::Robot::dof(uint i) const {
-  ors::Body *n=C->nodes(i);
+  mlr::Body *n=C->nodes(i);
   if(n->fixed) return 0;
   if(n->inLinks.N) {
     switch(n->inLinks(0)->type) {
@@ -3696,8 +3696,8 @@ byte Featherstone::Robot::dof(uint i) const {
 const arr Featherstone::Robot::S(uint i) const {
   byte d_i=dof(i);
   arr S;
-  ors::Quaternion r;
-  ors::Matrix R;
+  mlr::Quaternion r;
+  mlr::Matrix R;
   arr Ss, rr;
   switch(d_i) {
     case 0: S.resize(6, (uint)0); S.setZero(); break;
@@ -3735,12 +3735,12 @@ const arr Featherstone::Robot::S(uint i) const {
 /* returns the transformation from the parent link to the i-th link */
 const arr Featherstone::Robot::Xlink(uint i) const {
   //slide 15
-  ors::Transformation f;
-  ors::Joint *e1=C->nodes(i)->firstIn;
+  mlr::Transformation f;
+  mlr::Joint *e1=C->nodes(i)->firstIn;
   if(!e1) {
     f.setZero();
   } else {
-    ors::Joint *e0=e1->from->firstIn;
+    mlr::Joint *e0=e1->from->firstIn;
     if(e0) {
       f = e0->B;
       f.addRelativeFrame(e1->A);
@@ -3759,9 +3759,9 @@ const arr Featherstone::Robot::Xlink(uint i) const {
 
 const arr Featherstone::Robot::Ilink(uint i) const {
   //taken from slide 27
-  ors::Joint *e=C->nodes(i)->firstIn;
+  mlr::Joint *e=C->nodes(i)->firstIn;
   double m=C->nodes(i)->mass;
-  ors::Vector com;
+  mlr::Vector com;
   if(e) com = e->B.p; else com = C->nodes(i)->X.p;
   //arr Ic(3, 3);  Ic.setDiag(.1*m);
   arr I;
@@ -3770,15 +3770,15 @@ const arr Featherstone::Robot::Ilink(uint i) const {
 }
 
 const arr Featherstone::Robot::force(uint i) const {
-  ors::Body *n=C->nodes(i);
+  mlr::Body *n=C->nodes(i);
   CHECK(n, "is not a body with input joint");
-  ors::Joint *e=n->firstIn;
+  mlr::Joint *e=n->firstIn;
   //CHECK(e, "is not a body with input joint");
-  ors::Transformation g;
+  mlr::Transformation g;
   g=n->X;
   if(e) g.subRelativeFrame(e->B);
-  ors::Vector fo = g.r/n->force;
-  ors::Vector to;
+  mlr::Vector fo = g.r/n->force;
+  mlr::Vector to;
   if(e) to = g.r/(n->torque + (g.r*e->B.p)^n->force);
   else  to = g.r/(n->torque);
   arr f(6);
@@ -3797,7 +3797,7 @@ void Featherstone::skew(arr& X, const double *v) {
 
 arr Featherstone::skew(const double *v) { arr X; skew(X, v); return X; }
 
-void FrameToMatrix(arr &X, const ors::Transformation& f) {
+void FrameToMatrix(arr &X, const mlr::Transformation& f) {
   arr z(3, 3);  z.setZero();
   arr r(3, 3);  Featherstone::skew(r, &f.pos.x);
   arr R(3, 3);  f.rot.getMatrix(R.p);
@@ -3806,7 +3806,7 @@ void FrameToMatrix(arr &X, const ors::Transformation& f) {
   //cout <<"\nz=" <<z <<"\nr=" <<r <<"\nR=" <<R <<"\nX=" <<X <<endl;
 }
 
-void ors::Link::setFeatherstones() {
+void mlr::Link::setFeatherstones() {
   switch(type) {
     case -1:     CHECK_EQ(parent,-1, ""); _h.clear();  break;
     case JT_rigid:
@@ -3827,30 +3827,30 @@ void ors::Link::setFeatherstones() {
   updateFeatherstones();
 }
 
-void ors::Link::updateFeatherstones() {
+void mlr::Link::updateFeatherstones() {
   FrameToMatrix(_A, A);
   FrameToMatrix(_Q, Q);
   
-  ors::Transformation XQ;
+  mlr::Transformation XQ;
   XQ=X;
   XQ.appendTransformation(Q);
-  ors::Vector fo = XQ.rot/force;
-  ors::Vector to = XQ.rot/(torque + ((XQ.rot*com)^force));
+  mlr::Vector fo = XQ.rot/force;
+  mlr::Vector to = XQ.rot/(torque + ((XQ.rot*com)^force));
   _f.resize(6);
   _f(0)=to.x;  _f(1)=to.y;  _f(2)=to.z;
   _f(3)=fo.x;  _f(4)=fo.y;  _f(5)=fo.z;
 }
 
-void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
+void GraphToTree(mlr::Array<mlr::Link>& tree, const mlr::KinematicWorld& C) {
   tree.resize(C.bodies.N);
   
-  for(ors::Link& link:tree){ link.parent=-1; link.qIndex=-1; }
+  for(mlr::Link& link:tree){ link.parent=-1; link.qIndex=-1; }
 
-  for(ors::Body* body:C.bodies) {
-    ors::Link& link=tree(body->index);
+  for(mlr::Body* body:C.bodies) {
+    mlr::Link& link=tree(body->index);
     if(body->inLinks.N && body->inLinks(0)->qDim()) { //is not a root
       CHECK_EQ(body->inLinks.N,1, "this is not a tree");
-      ors::Joint *j=body->inLinks(0);
+      mlr::Joint *j=body->inLinks(0);
       
       link.type   = j->type;
       link.qIndex = j->qIndex;
@@ -3883,18 +3883,18 @@ void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
     link.torque=body->torque;
   }
 
-  for(ors::Link& link:tree) link.setFeatherstones();
+  for(mlr::Link& link:tree) link.setFeatherstones();
 }
 
-void updateGraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
+void updateGraphToTree(mlr::Array<mlr::Link>& tree, const mlr::KinematicWorld& C) {
   CHECK_EQ(tree.N,C.bodies.N, "");
   
   uint i;
-  ors::Body *p;
-  ors::Joint *e;
-  ors::Transformation f;
+  mlr::Body *p;
+  mlr::Joint *e;
+  mlr::Transformation f;
   i=0;
-  for_list(ors::Body, n, C.bodies) {
+  for_list(mlr::Body, n, C.bodies) {
     i=n_COUNT;
     if(n->inLinks.N) {
       e=n->inLinks(0);
@@ -4025,7 +4025,7 @@ void Featherstone::Xtrans(arr& X, double* r) {
 /*
 ----------- RBmci.m ----------------------------------------------------------
 */
-void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I) {
+void Featherstone::RBmci(arr& rbi, double m, double *c, const mlr::Matrix& I) {
   /*
   % RBmci  Calculate RBI from mass, CoM and rotational inertia.
   % RBmci(m, c, I) calculate MF6 rigid-body inertia tensor for a body with
@@ -4144,7 +4144,7 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
     
 #if 0
     if(i) {
-      ors::Transformation f, r, g;
+      mlr::Transformation f, r, g;
       f=robot.C->nodes(i)->X;
       f.subRelativeFrame(robot.C->nodes(i)->inLinks(0)->B);
       arr vi(6);  vi.setVectorBlock(arr((f.r/f.w).v, 3), 0);  vi.setVectorBlock(arr((f.r/f.v).v, 3), 3);
@@ -4277,8 +4277,8 @@ void Featherstone::fwdDynamics_old(arr& qdd,
 
 /* Articulated Body Dynamics - exactly as in my `simulationSoftware notes',
    following the notation of Featherstone's recent short survey paper */
-void ors::fwdDynamics_aba_nD(arr& qdd,
-                             const ors::LinkTree& tree,
+void mlr::fwdDynamics_aba_nD(arr& qdd,
+                             const mlr::LinkTree& tree,
                              const arr& qd,
                              const arr& tau) {
   int par;
@@ -4350,8 +4350,8 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
 
 //===========================================================================
 
-void ors::fwdDynamics_aba_1D(arr& qdd,
-                             const ors::LinkTree& tree,
+void mlr::fwdDynamics_aba_1D(arr& qdd,
+                             const mlr::LinkTree& tree,
                              const arr& qd,
                              const arr& tau) {
   int par;
@@ -4415,8 +4415,8 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
 
 //===========================================================================
 
-void ors::invDynamics(arr& tau,
-                      const ors::LinkTree& tree,
+void mlr::invDynamics(arr& tau,
+                      const mlr::LinkTree& tree,
                       const arr& qd,
                       const arr& qdd) {
   int par;
@@ -4466,8 +4466,8 @@ void ors::invDynamics(arr& tau,
 
 //===========================================================================
 
-void ors::equationOfMotion(arr& H, arr& C,
-                           const ors::LinkTree& tree,
+void mlr::equationOfMotion(arr& H, arr& C,
+                           const mlr::LinkTree& tree,
                            const arr& qd) {
                            
   /*function  [H, C] = HandC( model, q, qd, f_ext, grav_accn )
@@ -4571,8 +4571,8 @@ void ors::equationOfMotion(arr& H, arr& C,
 
 //===========================================================================
 
-void ors::fwdDynamics_MF(arr& qdd,
-                         const ors::LinkTree& tree,
+void mlr::fwdDynamics_MF(arr& qdd,
+                         const mlr::LinkTree& tree,
                          const arr& qd,
                          const arr& u) {
                          
@@ -4585,17 +4585,17 @@ void ors::fwdDynamics_MF(arr& qdd,
 }
 
 // #else ///MLR_FEATHERSTONE
-// void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
-// void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
+// void GraphToTree(mlr::LinkTree& tree, const mlr::KinematicWorld& C) { NIY; }
+// void updateGraphToTree(mlr::LinkTree& tree, const mlr::KinematicWorld& C) { NIY; }
 // void Featherstone::equationOfMotion(arr& H, arr& C,
-//                                     const ors::LinkTree& tree,
+//                                     const mlr::LinkTree& tree,
 //                                     const arr& qd) { NIY; }
 // void Featherstone::fwdDynamics_MF(arr& qdd,
-//                                   const ors::LinkTree& tree,
+//                                   const mlr::LinkTree& tree,
 //                                   const arr& qd,
 //                                   const arr& tau) { NIY; }
 // void Featherstone::invDynamics(arr& tau,
-//                                const ors::LinkTree& tree,
+//                                const mlr::LinkTree& tree,
 //                                const arr& qd,
 //                                const arr& qdd) { NIY; }
 // #endif
@@ -4611,10 +4611,10 @@ void ors::fwdDynamics_MF(arr& qdd,
 #include <Core/util.tpp>
 
 #ifndef  MLR_ORS_ONLY_BASICS
-template mlr::Array<ors::Shape*>::Array(uint);
-template ors::Shape* listFindByName(const mlr::Array<ors::Shape*>&,const char*);
+template mlr::Array<mlr::Shape*>::Array(uint);
+template mlr::Shape* listFindByName(const mlr::Array<mlr::Shape*>&,const char*);
 
 #include <Core/array.tpp>
-template mlr::Array<ors::Joint*>::Array();
+template mlr::Array<mlr::Joint*>::Array();
 #endif
 /** @} */

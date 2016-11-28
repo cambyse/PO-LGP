@@ -22,7 +22,7 @@ void TEST(Simulator){
     }
   } S;
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   arr q, qdot;
   world.getJointState(q, qdot);
 

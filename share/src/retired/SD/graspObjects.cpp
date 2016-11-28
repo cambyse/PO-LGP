@@ -294,8 +294,8 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(arr c1,arr z1, double r1, double s1
   h = h1;
 }
 
-GraspObject_Cylinder1::GraspObject_Cylinder1(const ors::Shape* s){
-  ors::Vector tmp;
+GraspObject_Cylinder1::GraspObject_Cylinder1(const mlr::Shape* s){
+  mlr::Vector tmp;
   c = conv_vec2arr(s->X.pos);
   z = conv_vec2arr(s->X.rot.getZ(tmp));
   r = s->size[3];
@@ -368,7 +368,7 @@ GraspObject_Box::GraspObject_Box(const arr& center, double dx_, double  dy_, dou
   s=1.;
 }
 
-GraspObject_Box::GraspObject_Box(const ors::Shape* s){
+GraspObject_Box::GraspObject_Box(const mlr::Shape* s){
   c = conv_vec2arr(s->X.pos);
   dim = .5*arr(s->size, 3);
   rot.resize(3,3);  s->X.rot.getMatrix(rot.p);

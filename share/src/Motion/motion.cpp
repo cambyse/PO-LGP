@@ -39,7 +39,7 @@ void Task::setCostSpecs(int fromTime,
 
 //===========================================================================
 
-Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero){
+Task* Task::newTask(const Node* specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero){
   if(specs->parents.N<2) return NULL; //these are not task specs
 
   //-- check the term type first
@@ -71,7 +71,7 @@ Task* Task::newTask(const Node* specs, const ors::KinematicWorld& world, uint Ti
 
 //===========================================================================
 
-MotionProblem::MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift)
+MotionProblem::MotionProblem(mlr::KinematicWorld& originalWorld, bool useSwift)
   : world(originalWorld) , useSwift(useSwift), T(0), tau(0.), k_order(2), gl(NULL), invKin_problem(*this), komo_problem(*this)
 {
   if(useSwift) {
@@ -89,7 +89,7 @@ MotionProblem::~MotionProblem(){
 
 MotionProblem& MotionProblem::operator=(const MotionProblem& other) {
   HALT("does the following work and make sense?");
-  world = other.world; //const_cast<const ors::KinematicWorld&>(other.world);
+  world = other.world; //const_cast<const mlr::KinematicWorld&>(other.world);
   useSwift = other.useSwift;
   tasks = other.tasks;
   T = other.T;
@@ -127,7 +127,7 @@ bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
     return true;
   }
   //-- switch?
-  ors::KinematicSwitch *sw = ors::KinematicSwitch::newSwitch(n, world, Tinterval, Tzero);
+  mlr::KinematicSwitch *sw = mlr::KinematicSwitch::newSwitch(n, world, Tinterval, Tzero);
   if(sw){
     switches.append(sw);
     return true;
@@ -186,12 +186,12 @@ void MotionProblem::setupConfigurations(){
   CHECK(!configurations.N,"why setup again?");
 //    listDelete(configurations);
 
-  configurations.append(new ors::KinematicWorld())->copy(world, true);
+  configurations.append(new mlr::KinematicWorld())->copy(world, true);
   for(uint s=1;s<k_order+T;s++){
-    configurations.append(new ors::KinematicWorld())->copy(*configurations(s-1), true);
+    configurations.append(new mlr::KinematicWorld())->copy(*configurations(s-1), true);
     CHECK(configurations(s)==configurations.last(), "");
     //apply potential graph switches
-    for(ors::KinematicSwitch *sw:switches){
+    for(mlr::KinematicSwitch *sw:switches){
       if(sw->timeOfApplication+k_order==s){
         sw->apply(*configurations(s));
         //          if(MP.useSwift) configurations(t)->swift().initActivations(*configurations(t));
@@ -224,16 +224,16 @@ void MotionProblem::set_x(const arr& x){
 void MotionProblem::set_fixConfiguration(const arr& x, uint t){
   if(!configurations.N) setupConfigurations();
   CHECK(t<T,"");
-  ors::KinematicWorld *W=configurations(t+k_order);
+  mlr::KinematicWorld *W=configurations(t+k_order);
   W->setJointState(x);
   if(useSwift) W->stepSwift();
   W->zeroGaugeJoints();
-  for(ors::Joint *j:W->joints) j->type = ors::JT_rigid;
+  for(mlr::Joint *j:W->joints) j->type = mlr::JT_rigid;
   W->meldFixedJoints();
 }
 
 void MotionProblem::temporallyAlignKinematicSwitchesInConfiguration(uint t){
-  for(ors::KinematicSwitch *sw:switches) if(sw->timeOfApplication<=t){
+  for(mlr::KinematicSwitch *sw:switches) if(sw->timeOfApplication<=t){
     sw->temporallyAlign(*configurations(t+k_order-1), *configurations(t+k_order), sw->timeOfApplication==t);
   }
 }
@@ -357,7 +357,7 @@ void MotionProblem::reportFull(bool brief, ostream& os) {
   }
 
   os <<"  SWITCHES: " <<switches.N <<endl;
-  for(ors::KinematicSwitch *sw:switches){
+  for(mlr::KinematicSwitch *sw:switches){
     if(sw->timeOfApplication+k_order<configurations.N)
       os <<sw->shortTag(configurations(sw->timeOfApplication+k_order));
     else
@@ -692,7 +692,7 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA
 
 //===========================================================================
 
-arr getH_rate_diag(ors::KinematicWorld& world) {
+arr getH_rate_diag(mlr::KinematicWorld& world) {
   //transition cost metric
   arr W_diag;
   if(mlr::checkParameter<arr>("Wdiag")) {
@@ -733,5 +733,5 @@ void getAcc(arr& a, const arr& q, double tau){
 }
 
 RUN_ON_INIT_BEGIN(motion)
-mlr::Array<ors::KinematicWorld*>::memMove=true;
+mlr::Array<mlr::KinematicWorld*>::memMove=true;
 RUN_ON_INIT_END(motion)

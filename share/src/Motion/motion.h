@@ -52,7 +52,7 @@ struct Task {
       <<" prec=" <<prec;
   }
 
-  static Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
+  static Task* newTask(const Node* specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
 };
 stdOutPipe(Task)
 
@@ -64,12 +64,12 @@ stdOutPipe(Task)
 //
 
 struct MotionProblem {
-  ors::KinematicWorld& world;  ///< the original world, which also defines the 'start conditions'
+  mlr::KinematicWorld& world;  ///< the original world, which also defines the 'start conditions'
   WorldL configurations;       ///< copies for each time slice; including kinematic switches; only these are optimized
   bool useSwift;
   
   mlr::Array<Task*> tasks; ///< task cost descriptions
-  mlr::Array<ors::KinematicSwitch*> switches;  ///< kinematic switches along the motion
+  mlr::Array<mlr::KinematicSwitch*> switches;  ///< kinematic switches along the motion
 
   //-- trajectory length and tau
   uint T;       ///< number of time steps
@@ -83,7 +83,7 @@ struct MotionProblem {
 
   struct OpenGL *gl; //internal only: used in 'displayTrajectory'
 
-  MotionProblem(ors::KinematicWorld& originalWorld, bool useSwift=true);
+  MotionProblem(mlr::KinematicWorld& originalWorld, bool useSwift=true);
   ~MotionProblem();
   
   MotionProblem& operator=(const MotionProblem& other);
@@ -156,7 +156,7 @@ struct MotionProblem {
 // basic helpers
 //
 
-arr getH_rate_diag(ors::KinematicWorld& world);
+arr getH_rate_diag(mlr::KinematicWorld& world);
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T);
 arr reverseTrajectory(const arr& q);
 void getVel(arr& v, const arr& q, double tau);

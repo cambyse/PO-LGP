@@ -21,17 +21,17 @@ arr pr2_zero_pose(){
   return q;
 }
 
-arr pr2_reasonable_W(const ors::KinematicWorld& world){
+arr pr2_reasonable_W(const mlr::KinematicWorld& world){
 #if 0
   arr W = world.naturalQmetric(5.);
-  ors::Joint *j = world.getJointByName("torso_lift_joint");
+  mlr::Joint *j = world.getJointByName("torso_lift_joint");
   if(j){
-    CHECK_EQ(j->type , ors::JT_transX, "");
+    CHECK_EQ(j->type , mlr::JT_transX, "");
     W(j->qIndex) *= 10;
   }
   j = world.getJointByName("worldTranslationRotation");
   if(j){
-    CHECK_EQ(j->type , ors::JT_transXYPhi, "");
+    CHECK_EQ(j->type , mlr::JT_transXYPhi, "");
     W(j->qIndex+0) *= 3;
     W(j->qIndex+1) *= 3;
 //    W(j->qIndex+2) *= 10;
@@ -42,9 +42,9 @@ arr pr2_reasonable_W(const ors::KinematicWorld& world){
 #endif
 }
 
-uintA _get_shape_indices(ors::Body* b) {
+uintA _get_shape_indices(mlr::Body* b) {
   uintA idx;
-  for(ors::Shape *s : b->shapes) {
+  for(mlr::Shape *s : b->shapes) {
     idx.append(s->index); 
   }
   return idx;
@@ -146,7 +146,7 @@ mlr::Array<const char*> pr2_get_joints() {
       "l_gripper_joint"};
 }
 
-uintA pr2_get_shapes(const ors::KinematicWorld &G) {
+uintA pr2_get_shapes(const mlr::KinematicWorld &G) {
   mlr::Array<const char*> bodynames = pr2_left_get_bodynames();
   uintA shape_idx;
   for (const char* bodyname: bodynames) {

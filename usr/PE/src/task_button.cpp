@@ -29,7 +29,7 @@ void ButtonTask::addModelConstraints(MotionProblem *MP,arr &target) {
   t->setCostSpecs(constraintCP(1),constraintCP(1),target,1e1);
 }
 
-void ButtonTask::updateVisualization(ors::KinematicWorld &world,arr &X, arr &Y) {
+void ButtonTask::updateVisualization(mlr::KinematicWorld &world,arr &X, arr &Y) {
   drawLine(world,X,Pdemo1f,"endeffC1",0,0,conStart(0));
   drawLine(world,X,Pdemo1c,"endeffC1",2,conStart(0),conEnd(0));
   drawLine(world,X,Pdemo2f,"endeffC1",0,conEnd(0),X.d0);

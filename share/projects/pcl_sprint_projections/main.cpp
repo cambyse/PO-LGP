@@ -63,7 +63,7 @@ void TEST(Projections){
   gl.camera = kinectCam;
   gl.add(glStandardScene, NULL);
   primitives.G.init("model.kvg");
-  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
+  mlr::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();

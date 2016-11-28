@@ -29,7 +29,7 @@ GTEST_TEST(Ors, getSubMeshPos_numberOfParts) {
 
 //=============================================================================
 GTEST_TEST(Ors, ParseObjFirstPart) {
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   mesh.parsing_pos_start = 0;
   mesh.parsing_pos_end = 50;
   mesh.readObjFile(FILE("example.obj"));
@@ -50,7 +50,7 @@ GTEST_TEST(Ors, ParseObjFirstPart) {
 }
 
 GTEST_TEST(Ors, ParseObjSecondPart) {
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   mesh.parsing_pos_start = 50;
   mesh.parsing_pos_end = 100;
   mesh.readObjFile(FILE("example.obj"));

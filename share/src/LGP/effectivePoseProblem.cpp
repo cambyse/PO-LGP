@@ -20,7 +20,7 @@
 
 //===========================================================================
 
-EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_before,
+EffectivePoseProblem::EffectivePoseProblem(mlr::KinematicWorld& effKinematics_before,
                                            const Graph& KB, const Graph& symbolicState_before, const Graph& symbolicState_after,
                                            int verbose)
   : effKinematics(effKinematics_before),
@@ -40,30 +40,30 @@ EffectivePoseProblem::EffectivePoseProblem(ors::KinematicWorld& effKinematics_be
 //  Node *glueSymbol  = KB["glued"];
 //  for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){
 //    //-- create a joint between the object and the target
-//    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
-//    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
+//    mlr::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+//    mlr::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
   Node *glueSymbol  = KB["glued"];
   for(Node *s:glueSymbol->parentOf) if(&s->container==&symbolicState_before){
     //-- create a joint between the object and the target
-    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
-    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
+    mlr::Shape *ref1 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+    mlr::Shape *ref2 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
     //TODO: this may generate multiple joints! CHECK IF IT EXISTS ALREADY
-    ors::Joint *j = new ors::Joint(effKinematics, ref1->body, ref2->body);
-    j->type = ors::JT_free;
+    mlr::Joint *j = new mlr::Joint(effKinematics, ref1->body, ref2->body);
+    j->type = mlr::JT_free;
     j->Q.setDifference(ref1->body->X, ref2->body->X);
   }
 
   Node *supportSymbol  = KB["Gsupport"];
   for(Node *s:supportSymbol->parentOf) if(&s->container==&symbolicState_after){
     //-- create a joint between the object and the target
-    ors::Shape *ref2 = effKinematics.getShapeByName(s->parents(1)->keys.last());
-    ors::Shape *ref1 = effKinematics.getShapeByName(s->parents(2)->keys.last());
+    mlr::Shape *ref2 = effKinematics.getShapeByName(s->parents(1)->keys.last());
+    mlr::Shape *ref1 = effKinematics.getShapeByName(s->parents(2)->keys.last());
 
     if(!ref2->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
-      ors::Joint *j = new ors::Joint(effKinematics, ref1->body, ref2->body);
-      j->type = ors::JT_transXYPhi;
+      mlr::Joint *j = new mlr::Joint(effKinematics, ref1->body, ref2->body);
+      j->type = mlr::JT_transXYPhi;
       j->A.addRelativeTranslation(0, 0, .5*ref1->size[2]);
       j->B.addRelativeTranslation(0, 0, .5*ref2->size[2]);
       j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
@@ -98,8 +98,8 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   //-- touch symbols -> constraints of being inside!
   Node *touch=symbolicState_after["touch"];
   for(Node *constraint:touch->parentOf) if(&constraint->container==&symbolicState_after){
-    ors::Shape *s1=effKinematics.getShapeByName(constraint->parents(1)->keys(0));
-    ors::Shape *s2=effKinematics.getShapeByName(constraint->parents(2)->keys(0));
+    mlr::Shape *s1=effKinematics.getShapeByName(constraint->parents(1)->keys(0));
+    mlr::Shape *s2=effKinematics.getShapeByName(constraint->parents(2)->keys(0));
 
     TaskMap_GJK gjk(s1, s2, true);
 
@@ -112,10 +112,10 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   //-- support symbols -> constraints of being inside!
   Node *support=symbolicState_after["Gsupport"];
   for(Node *constraint:support->parentOf) if(&constraint->container==&symbolicState_after){
-    ors::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());
-    ors::Body *b2=effKinematics.getBodyByName(constraint->parents(2)->keys.last());
-    if(b2->shapes(0)->type==ors::cylinderST){
-      ors::Body *z=b1;
+    mlr::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());
+    mlr::Body *b2=effKinematics.getBodyByName(constraint->parents(2)->keys.last());
+    if(b2->shapes(0)->type==mlr::cylinderST){
+      mlr::Body *z=b1;
       b1=b2; b2=z;
     }//b2 should be the board
     arr y,J;
@@ -163,7 +163,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       //-- compute center
       uint n=effKinematics.getJointStateDimension();
       arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
-      ors::Body *b;
+      mlr::Body *b;
       arr y,J;
       for(Node *s:supporters){
         b=effKinematics.getBodyByName(s->keys.last());
@@ -199,9 +199,9 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
     prec=1e-0;
     if(supporters.N==1){ // just one-on-one: align
       arr y1,J1,y2,J2;
-      ors::Body *b1=effKinematics.getBodyByName(obj->keys.last());
-      ors::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
-      if(b1->shapes(0)->type==ors::boxST){
+      mlr::Body *b1=effKinematics.getBodyByName(obj->keys.last());
+      mlr::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
+      if(b1->shapes(0)->type==mlr::boxST){
         if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
         effKinematics.kinematicsPos(y1, J1, b1);
         effKinematics.kinematicsPos(y2, J2, b2);
@@ -226,7 +226,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       //-- compute center
       uint n=effKinematics.getJointStateDimension();
       arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
-      ors::Body *b;
+      mlr::Body *b;
       arr y,J;
       for(Node *s:supporters){
         b=effKinematics.getBodyByName(s->keys.last());
@@ -262,9 +262,9 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
     prec=1e-0;
     if(supporters.N==1){ // just one-on-one: align
       arr y1,J1,y2,J2;
-      ors::Body *b1=effKinematics.getBodyByName(obj->keys.last());
-      ors::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
-      if(b1->shapes(0)->type==ors::boxST){
+      mlr::Body *b1=effKinematics.getBodyByName(obj->keys.last());
+      mlr::Body *b2=effKinematics.getBodyByName(supporters(0)->keys.last());
+      if(b1->shapes(0)->type==mlr::boxST){
         if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
         effKinematics.kinematicsPos(y1, J1, b1);
         effKinematics.kinematicsPos(y2, J2, b2);

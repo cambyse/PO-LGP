@@ -18,15 +18,15 @@ void TEST(Matrices) {
   cout << expl << endl;
   return;
 
-  ors::KinematicWorld G("chain.ors");
+  mlr::KinematicWorld G("chain.ors");
   MotionProblem MP(G);
 
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);
   MP.world.getBodyByName("target")->X.rot.setRandom();
   arr dir = {2.,1.,0.};
-  ors::Quaternion quat;
-  quat.setDiff(ors::Vector(1.,0.,0.),dir);
+  mlr::Quaternion quat;
+  quat.setDiff(mlr::Vector(1.,0.,0.),dir);
   arr R = ~quat.getArr();
   cout << "R: " << R << endl;
   arr J_fL0 = R*J_fL;
@@ -51,15 +51,15 @@ void TEST(Matrices) {
 }
 
 void TEST(GradCheck) {
-  ors::KinematicWorld G("chain.ors");
+  mlr::KinematicWorld G("chain.ors");
   MotionProblem MP(G);
 
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);
   MP.world.getBodyByName("target")->X.rot.setRandom();
   arr dir = {2.,1.,0.};
-  ors::Quaternion quat;
-  quat.setDiff(ors::Vector(1.,0.,0.),dir);
+  mlr::Quaternion quat;
+  quat.setDiff(mlr::Vector(1.,0.,0.),dir);
   arr R = ~quat.getArr();
   cout << "R: " << R << endl;
   arr J_fL0 = R*J_fL;
@@ -210,28 +210,28 @@ void TEST(MatlabGP) {
 }
 
 void TEST(Transformation) {
-  ors::KinematicWorld world("trans.ors");
+  mlr::KinematicWorld world("trans.ors");
   world.gl().resize(800,800);
 
 
-  ors::Transformation marker = world.getJointByName("tm")->B;
+  mlr::Transformation marker = world.getJointByName("tm")->B;
   cout << world.getJointByName("tm")->B.pos << endl;
   cout << world.getJointByName("tm")->B.rot << endl;
   cout << marker << endl;
 
-  ors::Body *trans1 = world.getBodyByName("trans1");
-  ors::Body *trans2 = world.getBodyByName("trans2");
+  mlr::Body *trans1 = world.getBodyByName("trans1");
+  mlr::Body *trans2 = world.getBodyByName("trans2");
 
   arr m = trans2->X.rot.getArr();
 
-  //  ors::Vector v = trans2->X.pos + trans2->X.rot*marker.pos;
-  //  ors::Quaternion r = trans2->X.rot*marker.rot;
+  //  mlr::Vector v = trans2->X.pos + trans2->X.rot*marker.pos;
+  //  mlr::Quaternion r = trans2->X.rot*marker.rot;
 
   //  world.getBodyByName("marker2")->X.pos = v;
   //  world.getBodyByName("marker2")->X.rot = r;
   //  world.getBodyByName("marker2")->X = trans2->X*marker;
 
-  ors::Transformation T;
+  mlr::Transformation T;
   T.setZero();
   T.addRelativeRotationDeg(90.,0.,1.,0.);
   world.getBodyByName("marker2")->X = trans1->X*T*marker;
@@ -242,7 +242,7 @@ void TEST(Transformation) {
 }
 
 void TEST(PointCloud) {
-  ors::KinematicWorld world("chain.ors");
+  mlr::KinematicWorld world("chain.ors");
   arr pc;
   pc.append(~ARR(1.,1.,1.));
   pc.append(~ARR(2.,2.,2.));
@@ -254,7 +254,7 @@ void TEST(PointCloud) {
 }
 
 void TEST(PR2) {
-  ors::KinematicWorld world("pr2.kvg");
+  mlr::KinematicWorld world("pr2.kvg");
   world.getBodyByName("point1")->X = world.getShapeByName("head_mount_kinect_rgb_link")->X;
   world.calc_fwdPropagateFrames();
 
@@ -290,11 +290,11 @@ void TEST(contactCP) {
 }
 
 void TEST(GLcamera) {
-  ors::KinematicWorld world("pr2.kvg");
+  mlr::KinematicWorld world("pr2.kvg");
   world.watch(false);
   world.gl().resize(800,800);
-  world.gl().camera.X.pos = ors::Vector(7.54819, 0.0245368, 2.91587 );
-  world.gl().camera.X.rot = ors::Quaternion(0.544337, 0.4411, 0.400758, 0.590357);
+  world.gl().camera.X.pos = mlr::Vector(7.54819, 0.0245368, 2.91587 );
+  world.gl().camera.X.rot = mlr::Quaternion(0.544337, 0.4411, 0.400758, 0.590357);
   world.watch(true);
   cout << world.gl().camera.X.pos << endl;
   cout << world.gl().camera.X.rot << endl;

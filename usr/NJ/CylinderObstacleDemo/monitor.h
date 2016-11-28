@@ -16,7 +16,7 @@ struct Monitor:public StepThread{
 #endif
   bool useOpengl,logData,plotData;
   OpenGL *gl;
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   RobotController  *ctrl;
   bool isOpen;
   

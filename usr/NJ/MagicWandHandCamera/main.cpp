@@ -11,7 +11,7 @@ ofstream pos_file("onlinePos.dat");
 
 struct MyDemo:public TaskAbstraction {
   TaskVariable * TV_fNew, * qBiasRotate;
-  ors::Body * target;
+  mlr::Body * target;
   bool started_track;
   arr Pl,Pr;
   RobotProcessGroup *robotProcesses;
@@ -43,15 +43,15 @@ void MyDemo::init(RobotProcessGroup *_master){
   robotProcesses->gui.gl->camera.focus(0., -0.5, 1.);
 
   //find camera location
-      ors::Body * b = new ors::Body(robotProcesses->gui.ors->bodies);
-      ors::Shape * s=new ors::Shape(robotProcesses->gui.ors->shapes,b);
+      mlr::Body * b = new mlr::Body(robotProcesses->gui.ors->bodies);
+      mlr::Shape * s=new mlr::Shape(robotProcesses->gui.ors->shapes,b);
       s->type=1;
       s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
       s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
       b->X.p = CameraLocation(Pl);
 
-      ors::Body * br = new ors::Body(robotProcesses->gui.ors->bodies);
-      ors::Shape * sr=new ors::Shape(robotProcesses->gui.ors->shapes,br);
+      mlr::Body * br = new mlr::Body(robotProcesses->gui.ors->bodies);
+      mlr::Shape * sr=new mlr::Shape(robotProcesses->gui.ors->shapes,br);
       sr->type=1;
       sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
       sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -60,10 +60,10 @@ void MyDemo::init(RobotProcessGroup *_master){
       arr Rot;
       Rot <<FILE("../../src/NJ/RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
       Rot = Rot*-1.0;//hack to get positive trace and determinant 1
-      ors::Quaternion q;
+      mlr::Quaternion q;
       q.setMatrix(Rot.p);
       cout <<"Rot = " <<Rot <<"Q=" <<q <<endl;
-      ors::Vector z; ors::Quaternion q2;
+      mlr::Vector z; mlr::Quaternion q2;
       q.getZ(z);q2.setRad(PI,z);
       q = q2*q;
       robotProcesses->gui.gl->camera.X->r = q;
@@ -76,7 +76,7 @@ void MyDemo::init(RobotProcessGroup *_master){
 }
 
 void MyDemo::initTaskVariables(ControllerModule *ctrl){
-  ors::KinematicWorld &ors=ctrl->ors;
+  mlr::KinematicWorld &ors=ctrl->ors;
 
   TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
   TV_fNew->targetType=directTT;
@@ -103,8 +103,8 @@ void MyDemo::findTarget(){
     vision1  = vision1*pow(2.0,robotProcesses->evis.downScale);
 
     Kal1.addSample(vision1,Pl,Pr,time);
-    //arr val1a =   Find3dPoint(Pl,Pr,vision);ors::Vector val(val1a(0),val1a(1),val1a(2));
-    ors::Vector val = Kal1.p;
+    //arr val1a =   Find3dPoint(Pl,Pr,vision);mlr::Vector val(val1a(0),val1a(1),val1a(2));
+    mlr::Vector val = Kal1.p;
     target->X.p = val;
 
    // pos_file << Kal1.v.length() << " " << lastTarget << endl;
@@ -186,13 +186,13 @@ int main(int argc,char** argv){
   robotProcesses.open();
   perc.threadOpen();
   robotProcesses.gui.ors->getBodyByName("obstacle")->X.p(2) = 100;
-  demo.target = new ors::Body(robotProcesses.gui.ors->bodies);   ///robotProcesses.ors only for control, gui.ors for visualization
-  ors::Shape * s=new ors::Shape(robotProcesses.gui.ors->shapes,demo.target);
+  demo.target = new mlr::Body(robotProcesses.gui.ors->bodies);   ///robotProcesses.ors only for control, gui.ors for visualization
+  mlr::Shape * s=new mlr::Shape(robotProcesses.gui.ors->shapes,demo.target);
   s->type=1;
   s->size[0]=.0; s->size[1]=.0; s->size[2]=0; s->size[3]=.02;
   s->color[0]=.5; s->color[1]=.2; s->color[2]=.2;
 
-  demo.target->X.p = ors::Vector(0,0,0);
+  demo.target->X.p = mlr::Vector(0,0,0);
   demo.init(&robotProcesses);
   //cout << "tennis " << robotProcesses.gui.ors->getShapeByName("tennisBall")->X.p << endl;
 

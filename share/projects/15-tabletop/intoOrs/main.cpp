@@ -12,9 +12,9 @@
 
 
 struct OrsViewer : Thread {
-  ACCESSlisten(ors::KinematicWorld, modelWorld)
+  ACCESSlisten(mlr::KinematicWorld, modelWorld)
 
-  ors::KinematicWorld copy;
+  mlr::KinematicWorld copy;
 
   OrsViewer() : Thread("OrsViewer") {}
   void open(){
@@ -33,7 +33,7 @@ struct PerceptionObjects2Ors : Thread {
   tf::TransformListener listener;
 
   ACCESSlisten(visualization_msgs::MarkerArray, perceptionObjects)
-  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESS(mlr::KinematicWorld, modelWorld)
   PerceptionObjects2Ors(): Thread("PerceptionObjects2Ors"){}
   void open(){}
   void step(){
@@ -43,16 +43,16 @@ struct PerceptionObjects2Ors : Thread {
     for(visualization_msgs::Marker& marker : perceptionObjects().markers){
       mlr::String name;
       name <<"obj" <<marker.id;
-      ors::Shape *s = modelWorld->getShapeByName(name);
+      mlr::Shape *s = modelWorld->getShapeByName(name);
       if(!s){
-        s = new ors::Shape(modelWorld(), NoBody);
+        s = new mlr::Shape(modelWorld(), NoBody);
         s->name=name;
         if(marker.type==marker.CYLINDER){
-          s->type = ors::cylinderST;
+          s->type = mlr::cylinderST;
           s->size[3] = .25*(marker.scale.x+marker.scale.y);
           s->size[2] = marker.scale.z;
         }else if(marker.type==marker.POINTS){
-          s->type = ors::meshST;
+          s->type = mlr::meshST;
           s->mesh.V = conv_points2arr(marker.points);
           s->mesh.C = conv_colors2arr(marker.colors);
         }else NIY;
@@ -82,15 +82,15 @@ struct MySystem {
   ACCESSname(arr, kinect_points)
   ACCESSname(arr, kinect_pointColors)
   ACCESSname(arr, kinect_points_world)
-  ACCESSname(ors::Transformation, kinect_frame)
+  ACCESSname(mlr::Transformation, kinect_frame)
 
-  ACCESSname(ors::KinematicWorld, modelWorld)
+  ACCESSname(mlr::KinematicWorld, modelWorld)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
 
   ACCESSname(arr, wrenchL)
 
-  ACCESSname(ors::Mesh, pointCloud)
-  ACCESSname(mlr::Array<ors::Mesh>, clusters)
+  ACCESSname(mlr::Mesh, pointCloud)
+  ACCESSname(mlr::Array<mlr::Mesh>, clusters)
 
   MySystem(){
     new RosCom_Spinner();
@@ -148,8 +148,8 @@ struct Main{
 
       gl.clear();
       gl.add(glStandardScene, 0);
-      gl.add(ors::glDrawGraph, &S.modelWorld());
-//      for(ors::Mesh& m:S.clusters()) gl.add(m);
+      gl.add(mlr::glDrawGraph, &S.modelWorld());
+//      for(mlr::Mesh& m:S.clusters()) gl.add(m);
       gl.add(S.pointCloud());
       gl.update();
 

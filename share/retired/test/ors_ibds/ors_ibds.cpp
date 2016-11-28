@@ -26,7 +26,7 @@ void addCollisionSphere (RigidBody *b, Real radius);
 ~IbdsModule::IbdsModule() { delete sim; }
 
 
-void IbdsModule::create(ors::KinematicWorld& C) {
+void IbdsModule::create(mlr::KinematicWorld& C) {
   ors = &C;
   
 #if 1
@@ -104,13 +104,13 @@ void IbdsModule::create(ors::KinematicWorld& C) {
   addCollisionCube(floor, 100, 100, .2);
 #endif
   
-  //double *mass,*shape,*type,*fixed,*cont,typeD=ors::cylinderST;
+  //double *mass,*shape,*type,*fixed,*cont,typeD=mlr::cylinderST;
   
   double rot[9];
   Matrix3x3 mat;
   
   bodies.resize(C.bodies.N);
-  ors::Body *n;
+  mlr::Body *n;
   RigidBody *b;
   int i;
   for(i=0; i<C.bodies.N; i++) {
@@ -135,24 +135,24 @@ void IbdsModule::create(ors::KinematicWorld& C) {
     
     // need to fix: "mass" is not a mass but a density (in dMassSetBox)
     
-    ors::Shape *s = n->shapes(0);
+    mlr::Shape *s = n->shapes(0);
     switch(s->type) {
     default:
-    case ors::boxST: // box
+    case mlr::boxST: // box
       //b->addGeometry(createCubeGeometry(s->size[0], s->size[1], s->size[2], 0.0f,0.6f,0.0f,1.0f));
       b->setInertiaTensor(SimMath::computeBoxIntertiaTensor(n->mass, s->size[0], s->size[1], s->size[2]));
       //sim->addCollisionObject(b, s->mesh.V.d0, s->mesh.V.p, s->mesh.T.d0, (int*)s->mesh.T.p, NULL);
       addCollisionCube(b, s->size[0], s->size[1], s->size[2]);
       break;
-    case ors::sphereST: // sphere
+    case mlr::sphereST: // sphere
       //b->addGeometry(createSphereGeometry(s->size[3], 0.0f,0.3f,0.6f,1.0f));
       b->setInertiaTensor(SimMath::computeSphereIntertiaTensor(n->mass, s->size[3]));
       //sim->addCollisionObject(b, s->mesh.V.d0, s->mesh.V.p, s->mesh.T.d0, (int*)s->mesh.T.p, NULL);
       addCollisionSphere(b, s->size[3]);
       break;
-    case ors::cylinderST:
-    case ors::cappedCylinderST:
-    case ors::meshST:
+    case mlr::cylinderST:
+    case mlr::cappedCylinderST:
+    case mlr::meshST:
       MeshGeometry *geo = new MeshGeometry();
       cout <<s->mesh.V.d0 <<endl;
       sim->addCollisionObject(b, s->mesh.V.d0, s->mesh.V.p, s->mesh.T.d0, (int*)s->mesh.T.p, NULL);
@@ -168,9 +168,9 @@ void IbdsModule::create(ors::KinematicWorld& C) {
 }
 
 
-void importStateFromIbds(ors::KinematicWorld& C,IbdsModule& ibds) {
+void importStateFromIbds(mlr::KinematicWorld& C,IbdsModule& ibds) {
   // Bodies
-  ors::Body *n;
+  mlr::Body *n;
   RigidBody *b;
   int i;
   for(int i=0; i<C.bodies.N; i++) {
@@ -334,7 +334,7 @@ void drawEnv(void*) {
 
 #else //MLR_IBDS
 
-void IbdsModule::create(ors::KinematicWorld& C) { NICO }
+void IbdsModule::create(mlr::KinematicWorld& C) { NICO }
 void IbdsModule::step(){ NICO }
 
 #include <Core/array.tpp>

@@ -41,7 +41,7 @@ void scenario1() {
 
 //** optimized trajectory in joint space **//
 void scenario2() {
-  ors::KinematicWorld world("scenes/scene1.ors");
+  mlr::KinematicWorld world("scenes/scene1.ors");
   world.gl().resize(800, 800);
 
   makeConvexHulls(world.shapes);
@@ -56,12 +56,12 @@ void scenario2() {
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
@@ -124,7 +124,7 @@ void scenario2() {
 
 //** optimized trajectory in cartesian space **//
 void scenario3() {
-  ors::KinematicWorld G("scenes/scene1.ors");
+  mlr::KinematicWorld G("scenes/scene1.ors");
   G.gl().resize(800, 800);
 
   makeConvexHulls(G.shapes);
@@ -138,12 +138,12 @@ void scenario3() {
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
@@ -246,7 +246,7 @@ void scenario3() {
 void scenario4() {
   bool useOrientation = true;
 
-  ors::KinematicWorld G("scenes/scene1.ors");
+  mlr::KinematicWorld G("scenes/scene1.ors");
   G.gl().resize(800, 800);
 
   makeConvexHulls(G.shapes);
@@ -260,19 +260,19 @@ void scenario4() {
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
-    c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
+    c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",mlr::Vector(0., 1., 0.)));
     c->setCostSpecs(P.T, P.T,
                             {1.,0.,0.}, 1e3,
                             {0.,0.,0.}, 1e-3);

@@ -8,7 +8,7 @@
 #include <Ors/ors_swift.h>
 
 
-void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
+void saveTrajectory(const arr& x, mlr::KinematicWorld& G, OpenGL& gl) {
   VideoEncoder_libav_simple vid;
   for(uint t=0; t<x.d0; t++) {
     G.setJointState(x[t]);
@@ -21,7 +21,7 @@ void saveTrajectory(const arr& x, ors::KinematicWorld& G, OpenGL& gl) {
 }
 
 void TEST(Stickiness){
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   bool hardConstraint=true;
 
@@ -69,7 +69,7 @@ void TEST(Stickiness){
 //===========================================================================
 
 void TEST(EqualityConstraints){
-  ors::KinematicWorld G("chain.ors");
+  mlr::KinematicWorld G("chain.ors");
   MotionProblem MP(G);
 
   //-- setup the motion problem
@@ -106,7 +106,7 @@ void TEST(EqualityConstraints){
 //===========================================================================
 
 void TEST(ClosedKinematicChain){
-  ors::KinematicWorld G("closed_chain.ors");
+  mlr::KinematicWorld G("closed_chain.ors");
   MotionProblem MP(G);
 
   arr q;
@@ -144,7 +144,7 @@ void TEST(ClosedKinematicChain){
 //===========================================================================
 
 void TEST(ContactConstraint){
-  ors::KinematicWorld G("table.ors");
+  mlr::KinematicWorld G("table.ors");
   makeConvexHulls(G.shapes);
   G.swift().setCutoff(10.);
   G.swift();
@@ -198,7 +198,7 @@ void TEST(ContactConstraint){
 //===========================================================================
 
 void TEST(VelConstraint){
-  ors::KinematicWorld G("table.ors");
+  mlr::KinematicWorld G("table.ors");
 
   arr q;
   G.getJointState(q);
@@ -225,7 +225,7 @@ void TEST(VelConstraint){
 //  t = MP.addTask("collision", new PairCollisionConstraint(G, "table", "endeff", 0.1));
 //  t->setCostSpecs(0., MP.T, {0.}, 1.);
 
-  t = MP.addTask("contact", new VelAlignConstraint(G, "endeff",NoVector, "table", ors::Vector(0.,0.,1.)));
+  t = MP.addTask("contact", new VelAlignConstraint(G, "endeff",NoVector, "table", mlr::Vector(0.,0.,1.)));
   t->setCostSpecs(0., MP.T, {0.}, 1.);
 
 
@@ -244,7 +244,7 @@ void TEST(VelConstraint){
 }
 
 void TEST(qItselfConstraint){
-  ors::KinematicWorld G("table.ors");
+  mlr::KinematicWorld G("table.ors");
 
   arr q;
   G.getJointState(q);

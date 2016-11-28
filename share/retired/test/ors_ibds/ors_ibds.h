@@ -7,14 +7,14 @@ namespace IBDS{ class Simulation; class RigidBody; }
 
 struct IbdsModule {
   IBDS::Simulation *sim;
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   mlr::Array<IBDS::RigidBody*> bodies;
   
   IBDS::RigidBody *floor;
   
   ~IbdsModule();
   
-  void create(ors::KinematicWorld &C);
+  void create(mlr::KinematicWorld &C);
   void step();
 
 };

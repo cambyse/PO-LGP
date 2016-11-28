@@ -91,7 +91,7 @@ void Xtrans(arr& X, double* r);
   with mass m, centre of mass at c, and (3x3) rotational inertia
   about CoM of I.
 */
-void RBmci(arr& rbi, double m, double *c, const ors::Matrix& I);
+void RBmci(arr& rbi, double m, double *c, const mlr::Matrix& I);
 
 /** @brief MM6 cross-product tensor from M6 vector.  crossM(v)
   calculates the MM6 cross-product tensor of motion vector v such
@@ -116,18 +116,18 @@ arr crossF(const arr& v);
 //#define Qstate
 
 #if 0
-ors::Body *robotbody(uint i, const Featherstone::Robot& robot) { return robot.C->nodes(i); }
+mlr::Body *robotbody(uint i, const Featherstone::Robot& robot) { return robot.C->nodes(i); }
 
 uint Featherstone::Robot::N() const { return C->nodes.N; }
 
 int Featherstone::Robot::parent(uint i) const {
-  ors::Joint *e=C->nodes(i)->inLinks(0);
+  mlr::Joint *e=C->nodes(i)->inLinks(0);
   if(e) return e->from->index;
   return -1;
 }
 
 byte Featherstone::Robot::dof(uint i) const {
-  ors::Body *n=C->nodes(i);
+  mlr::Body *n=C->nodes(i);
   if(n->fixed) return 0;
   if(n->inLinks.N) {
     switch(n->inLinks(0)->type) {
@@ -145,8 +145,8 @@ byte Featherstone::Robot::dof(uint i) const {
 const arr Featherstone::Robot::S(uint i) const {
   byte d_i=dof(i);
   arr S;
-  ors::Quaternion r;
-  ors::Matrix R;
+  mlr::Quaternion r;
+  mlr::Matrix R;
   arr Ss, rr;
   switch(d_i) {
     case 0: S.resize(6, (uint)0); S.setZero(); break;
@@ -184,12 +184,12 @@ const arr Featherstone::Robot::S(uint i) const {
 /* returns the transformation from the parent link to the i-th link */
 const arr Featherstone::Robot::Xlink(uint i) const {
   //slide 15
-  ors::Transformation f;
-  ors::Joint *e1=C->nodes(i)->firstIn;
+  mlr::Transformation f;
+  mlr::Joint *e1=C->nodes(i)->firstIn;
   if(!e1) {
     f.setZero();
   } else {
-    ors::Joint *e0=e1->from->firstIn;
+    mlr::Joint *e0=e1->from->firstIn;
     if(e0) {
       f = e0->B;
       f.addRelativeFrame(e1->A);
@@ -208,9 +208,9 @@ const arr Featherstone::Robot::Xlink(uint i) const {
 
 const arr Featherstone::Robot::Ilink(uint i) const {
   //taken from slide 27
-  ors::Joint *e=C->nodes(i)->firstIn;
+  mlr::Joint *e=C->nodes(i)->firstIn;
   double m=C->nodes(i)->mass;
-  ors::Vector com;
+  mlr::Vector com;
   if(e) com = e->B.p; else com = C->nodes(i)->X.p;
   //arr Ic(3, 3);  Ic.setDiag(.1*m);
   arr I;
@@ -219,15 +219,15 @@ const arr Featherstone::Robot::Ilink(uint i) const {
 }
 
 const arr Featherstone::Robot::force(uint i) const {
-  ors::Body *n=C->nodes(i);
+  mlr::Body *n=C->nodes(i);
   CHECK(n, "is not a body with input joint");
-  ors::Joint *e=n->firstIn;
+  mlr::Joint *e=n->firstIn;
   //CHECK(e, "is not a body with input joint");
-  ors::Transformation g;
+  mlr::Transformation g;
   g=n->X;
   if(e) g.subRelativeFrame(e->B);
-  ors::Vector fo = g.r/n->force;
-  ors::Vector to;
+  mlr::Vector fo = g.r/n->force;
+  mlr::Vector to;
   if(e) to = g.r/(n->torque + (g.r*e->B.p)^n->force);
   else  to = g.r/(n->torque);
   arr f(6);
@@ -247,7 +247,7 @@ void Featherstone::skew(arr& X, const double *v) {
 
 arr Featherstone::skew(const double *v) { arr X; skew(X, v); return X; }
 
-void FrameToMatrix(arr &X, const ors::Transformation& f) {
+void FrameToMatrix(arr &X, const mlr::Transformation& f) {
   arr z(3, 3);  z.setZero();
   arr r(3, 3);  Featherstone::skew(r, &f.pos.x);
   arr R(3, 3);  f.rot.getMatrix(R.p);
@@ -256,7 +256,7 @@ void FrameToMatrix(arr &X, const ors::Transformation& f) {
   //cout <<"\nz=" <<z <<"\nr=" <<r <<"\nR=" <<R <<"\nX=" <<X <<endl;
 }
 
-void ors::Link::setFeatherstones() {
+void mlr::Link::setFeatherstones() {
   switch(type) {
     case -1:     CHECK_EQ(parent,-1, ""); _h.clear();  break;
     case JT_rigid:
@@ -277,30 +277,30 @@ void ors::Link::setFeatherstones() {
   updateFeatherstones();
 }
 
-void ors::Link::updateFeatherstones() {
+void mlr::Link::updateFeatherstones() {
   FrameToMatrix(_A, A);
   FrameToMatrix(_Q, Q);
   
-  ors::Transformation XQ;
+  mlr::Transformation XQ;
   XQ=X;
   XQ.appendTransformation(Q);
-  ors::Vector fo = XQ.rot/force;
-  ors::Vector to = XQ.rot/(torque + ((XQ.rot*com)^force));
+  mlr::Vector fo = XQ.rot/force;
+  mlr::Vector to = XQ.rot/(torque + ((XQ.rot*com)^force));
   _f.resize(6);
   _f(0)=to.x;  _f(1)=to.y;  _f(2)=to.z;
   _f(3)=fo.x;  _f(4)=fo.y;  _f(5)=fo.z;
 }
 
-void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
+void GraphToTree(mlr::Array<mlr::Link>& tree, const mlr::KinematicWorld& C) {
   tree.resize(C.bodies.N);
   
-  for(ors::Link& link:tree){ link.parent=-1; link.qIndex=-1; }
+  for(mlr::Link& link:tree){ link.parent=-1; link.qIndex=-1; }
 
-  for(ors::Body* body:C.bodies) {
-    ors::Link& link=tree(body->index);
+  for(mlr::Body* body:C.bodies) {
+    mlr::Link& link=tree(body->index);
     if(body->inLinks.N && body->inLinks(0)->qDim()) { //is not a root
       CHECK_EQ(body->inLinks.N,1, "this is not a tree");
-      ors::Joint *j=body->inLinks(0);
+      mlr::Joint *j=body->inLinks(0);
       
       link.type   = j->type;
       link.qIndex = j->qIndex;
@@ -333,18 +333,18 @@ void GraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
     link.torque=body->torque;
   }
 
-  for(ors::Link& link:tree) link.setFeatherstones();
+  for(mlr::Link& link:tree) link.setFeatherstones();
 }
 
-void updateGraphToTree(mlr::Array<ors::Link>& tree, const ors::KinematicWorld& C) {
+void updateGraphToTree(mlr::Array<mlr::Link>& tree, const mlr::KinematicWorld& C) {
   CHECK_EQ(tree.N,C.bodies.N, "");
   
   uint i;
-  ors::Body *p;
-  ors::Joint *e;
-  ors::Transformation f;
+  mlr::Body *p;
+  mlr::Joint *e;
+  mlr::Transformation f;
   i=0;
-  for_list(ors::Body, n, C.bodies) {
+  for_list(mlr::Body, n, C.bodies) {
     i=n_COUNT;
     if(n->inLinks.N) {
       e=n->inLinks(0);
@@ -475,7 +475,7 @@ void Featherstone::Xtrans(arr& X, double* r) {
 /*
 ----------- RBmci.m ----------------------------------------------------------
 */
-void Featherstone::RBmci(arr& rbi, double m, double *c, const ors::Matrix& I) {
+void Featherstone::RBmci(arr& rbi, double m, double *c, const mlr::Matrix& I) {
   /*
   % RBmci  Calculate RBI from mass, CoM and rotational inertia.
   % RBmci(m, c, I) calculate MF6 rigid-body inertia tensor for a body with
@@ -600,7 +600,7 @@ void Featherstone::invdyn_old(arr& tau, const Robot& robot, const arr& qd, const
     
 #if 0
     if(i) {
-      ors::Transformation f, r, g;
+      mlr::Transformation f, r, g;
       f=robot.C->nodes(i)->X;
       f.subRelativeFrame(robot.C->nodes(i)->inLinks(0)->B);
       arr vi(6);  vi.setVectorBlock(arr((f.r/f.w).v, 3), 0);  vi.setVectorBlock(arr((f.r/f.v).v, 3), 3);
@@ -737,8 +737,8 @@ void Featherstone::fwdDynamics_old(arr& qdd,
 
 /* Articulated Body Dynamics - exactly as in my `simulationSoftware notes',
    following the notation of Featherstone's recent short survey paper */
-void ors::fwdDynamics_aba_nD(arr& qdd,
-                             const ors::LinkTree& tree,
+void mlr::fwdDynamics_aba_nD(arr& qdd,
+                             const mlr::LinkTree& tree,
                              const arr& qd,
                              const arr& tau) {
   int par;
@@ -812,8 +812,8 @@ void ors::fwdDynamics_aba_nD(arr& qdd,
 ------------------------------------------------------------------------------
 */
 
-void ors::fwdDynamics_aba_1D(arr& qdd,
-                             const ors::LinkTree& tree,
+void mlr::fwdDynamics_aba_1D(arr& qdd,
+                             const mlr::LinkTree& tree,
                              const arr& qd,
                              const arr& tau) {
   int par;
@@ -877,8 +877,8 @@ void ors::fwdDynamics_aba_1D(arr& qdd,
 
 //===========================================================================
 
-void ors::invDynamics(arr& tau,
-                      const ors::LinkTree& tree,
+void mlr::invDynamics(arr& tau,
+                      const mlr::LinkTree& tree,
                       const arr& qd,
                       const arr& qdd) {
   int par;
@@ -928,8 +928,8 @@ void ors::invDynamics(arr& tau,
 
 //===========================================================================
 
-void ors::equationOfMotion(arr& H, arr& C,
-                           const ors::LinkTree& tree,
+void mlr::equationOfMotion(arr& H, arr& C,
+                           const mlr::LinkTree& tree,
                            const arr& qd) {
                            
   /*function  [H, C] = HandC( model, q, qd, f_ext, grav_accn )
@@ -1033,8 +1033,8 @@ void ors::equationOfMotion(arr& H, arr& C,
 
 //===========================================================================
 
-void ors::fwdDynamics_MF(arr& qdd,
-                         const ors::LinkTree& tree,
+void mlr::fwdDynamics_MF(arr& qdd,
+                         const mlr::LinkTree& tree,
                          const arr& qd,
                          const arr& u) {
                          
@@ -1047,17 +1047,17 @@ void ors::fwdDynamics_MF(arr& qdd,
 }
 
 #else ///MLR_FEATHERSTONE
-void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
-void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C) { NIY; }
+void GraphToTree(mlr::LinkTree& tree, const mlr::KinematicWorld& C) { NIY; }
+void updateGraphToTree(mlr::LinkTree& tree, const mlr::KinematicWorld& C) { NIY; }
 void Featherstone::equationOfMotion(arr& H, arr& C,
-                                    const ors::LinkTree& tree,
+                                    const mlr::LinkTree& tree,
                                     const arr& qd) { NIY; }
 void Featherstone::fwdDynamics_MF(arr& qdd,
-                                  const ors::LinkTree& tree,
+                                  const mlr::LinkTree& tree,
                                   const arr& qd,
                                   const arr& tau) { NIY; }
 void Featherstone::invDynamics(arr& tau,
-                               const ors::LinkTree& tree,
+                               const mlr::LinkTree& tree,
                                const arr& qd,
                                const arr& qdd) { NIY; }
 #endif

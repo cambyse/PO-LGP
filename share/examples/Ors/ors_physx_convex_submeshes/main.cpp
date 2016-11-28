@@ -2,14 +2,14 @@
 #include <Gui/opengl.h>
 
 void TEST(PhysxConvexSubmeshes) {
-  ors::KinematicWorld graph;
+  mlr::KinematicWorld graph;
   graph.init("doorSimple.ors");
-  ors::Body* robot = graph.getBodyByName("robot");
+  mlr::Body* robot = graph.getBodyByName("robot");
 
   OpenGL glPh("PhysX");
   //  bindOrsToPhysX(graph, glPh, physx);
 
-  ors::Vector control = ors::Vector(0.0, 0.01, 0.0);
+  mlr::Vector control = mlr::Vector(0.0, 0.01, 0.0);
   for (uint i = 0; i < 1000; i++) {
 
     // move robot

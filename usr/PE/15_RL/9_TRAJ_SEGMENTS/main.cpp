@@ -12,14 +12,14 @@ int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   /// create reference motion
-  ors::KinematicWorld world("test.ors");
+  mlr::KinematicWorld world("test.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MPref(world,false);
   MPref.T = 50;
   MPref.tau = 0.01;
-  ors::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
   Task *t;
   arr timepoints = ARR(20.,30.,40.,50.);
   t = MPref.addTask("tra", new TransitionTaskMap(world));

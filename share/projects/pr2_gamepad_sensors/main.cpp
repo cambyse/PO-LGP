@@ -17,7 +17,7 @@ struct MySystem {
 
   ACCESSname(byteA, kinect_rgb)
   ACCESSname(uint16A, kinect_depth)
-  ACCESSname(ors::Transformation, kinect_frame)
+  ACCESSname(mlr::Transformation, kinect_frame)
 
   ACCESSname(arr, kinect_points)
   ACCESSname(arr, kinect_pointColors)
@@ -64,7 +64,7 @@ void TEST(Sensors){
 
   MySystem S;
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   OpenGL gl;
   gl.setClearColors(1., 1., 1., 1.);
   gl.camera.setPosition(10., -15., 8.);
@@ -73,11 +73,11 @@ void TEST(Sensors){
 
 //  gl.camera = kinectCam;
   gl.add(glStandardScene, NULL);
-  gl.add(ors::glDrawGraph, &world);
+  gl.add(mlr::glDrawGraph, &world);
 //  primitives.G.init("model.kvg");
-//  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
-//  ors::Shape *wrenchDispL = primitives.G.getShapeByName("wrenchDispL");
-//  ors::Shape *wrenchDispR = primitives.G.getShapeByName("wrenchDispR");
+//  mlr::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
+//  mlr::Shape *wrenchDispL = primitives.G.getShapeByName("wrenchDispL");
+//  mlr::Shape *wrenchDispR = primitives.G.getShapeByName("wrenchDispR");
 //  gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();
@@ -105,11 +105,11 @@ void TEST(Sensors){
 
     //kinect point cloud
     if(S.kinect_points.get()->N){
-      ors::Shape *s = world.getShapeByName("kinectCloud");
+      mlr::Shape *s = world.getShapeByName("kinectCloud");
       if(!s){
-        s = new ors::Shape(world, NoBody);
+        s = new mlr::Shape(world, NoBody);
         s->name="kinectCloud";
-        s->type = ors::meshST;
+        s->type = mlr::meshST;
       }
       s->mesh.V = S.kinect_points.get();
       s->mesh.C = S.kinect_pointColors.get();
@@ -127,14 +127,14 @@ void TEST(Sensors){
     arr wR = S.wrenchR.get()();
     cout <<"WRENCHES= " <<wL <<wR  <<endl;
     if(wL.N==6 && wR.N==6){
-      ors::Quaternion rot, tmp;
+      mlr::Quaternion rot, tmp;
       rot.setDeg(-90, 0, 1, 0);
       tmp.setDeg(90, 0, 0, 1);
       rot = rot*tmp;
-//      wrenchDispR->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wR.sub(0,2)));
-//      wrenchDispR->rel.rot.setVec(-1.*(rot*ors::Vector(wR.sub(3,-1))));;
-//      wrenchDispL->rel.pos = ors::Vector(.1,0,0) - .01 * (rot * ors::Vector(wL.sub(0,2)));
-//      wrenchDispL->rel.rot.setVec(-1.*(rot*ors::Vector(wL.sub(3,-1))));;
+//      wrenchDispR->rel.pos = mlr::Vector(.1,0,0) - .01 * (rot * mlr::Vector(wR.sub(0,2)));
+//      wrenchDispR->rel.rot.setVec(-1.*(rot*mlr::Vector(wR.sub(3,-1))));;
+//      wrenchDispL->rel.pos = mlr::Vector(.1,0,0) - .01 * (rot * mlr::Vector(wL.sub(0,2)));
+//      wrenchDispL->rel.rot.setVec(-1.*(rot*mlr::Vector(wL.sub(3,-1))));;
     }
   }
 

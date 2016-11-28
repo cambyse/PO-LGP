@@ -4,7 +4,7 @@
 #include <Gui/opengl.h>
 
 struct sPR2Simulator{
-  ors::KinematicWorld pr2, openglCopy;
+  mlr::KinematicWorld pr2, openglCopy;
   double t, dt;
   uint step;
   sPR2Simulator():t(0.), dt(.001), step(0){}

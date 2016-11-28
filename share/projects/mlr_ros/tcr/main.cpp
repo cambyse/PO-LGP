@@ -15,7 +15,7 @@
 #include <devTools/logging.h>
 SET_LOG(main, DEBUG);
 
-arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr& start) {
+arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr& start) {
   DEBUG_VAR(main, G.qdot);
   MotionProblem P(G);
 
@@ -29,7 +29,7 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
   Task *c = P.addTask("proxyColls", new TaskMap_Proxy(allVersusListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, col_prec);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), pos_prec);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
@@ -38,7 +38,7 @@ arr create_endpose(ors::KinematicWorld& G, double col_prec, double pos_prec, arr
   return start;
 }
 
-arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
+arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
   double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
@@ -51,7 +51,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   c->setCostSpecs(0, P.T, {0.}, 1e-0);
   c->threshold = 0;
 
-  ors::RRTPlanner planner(&G, P, stepsize);
+  mlr::RRTPlanner planner(&G, P, stepsize);
   planner.joint_max = mlr::getParameter<arr>("joint_max");
   planner.joint_min = mlr::getParameter<arr>("joint_min");
   std::cout << "Planner initialized" <<std::endl;
@@ -59,7 +59,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   return planner.getTrajectoryTo(target);
 }
 
-arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
+arr optimize_trajectory(mlr::KinematicWorld& G, const arr& init_trajectory) {
   // create MotionProblem
   MotionProblem P(G);
   P.loadTransitionParameters();
@@ -71,7 +71,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
   Task *c = P.addTask("proxyColls", new TaskMap_Proxy(allVersusListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, 1e1);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
@@ -82,7 +82,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, const arr& init_trajectory) {
   return x;
 }
 
-void show_trajectory(ors::KinematicWorld& G, OpenGL& gl, arr& trajectory, const char* title) {
+void show_trajectory(mlr::KinematicWorld& G, OpenGL& gl, arr& trajectory, const char* title) {
   arr start;
   G.getJointState(start);
   displayTrajectory(trajectory, trajectory.d0, G, title);
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
   rnd.seed(seed);
   
 
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 
 

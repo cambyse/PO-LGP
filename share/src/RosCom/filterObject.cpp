@@ -35,8 +35,8 @@ Cluster::Cluster(const Cluster& obj) {
 
 double Cluster::idMatchingCost(const FilterObject& other){
   if(other.type!=cluster) return -1.;
-  ors::Vector diff = (this->frame * ors::Vector(this->mean)) -
-                     (dynamic_cast<const Cluster*>(&other)->frame * ors::Vector(dynamic_cast<const Cluster*>(&other)->mean));
+  mlr::Vector diff = (this->frame * mlr::Vector(this->mean)) -
+                     (dynamic_cast<const Cluster*>(&other)->frame * mlr::Vector(dynamic_cast<const Cluster*>(&other)->mean));
   return diff.length();
 }
 
@@ -69,8 +69,8 @@ Plane::Plane(const Plane& obj){
 
 double Plane::idMatchingCost(const FilterObject& other){
   if(other.type!=plane) return -1.;
-  ors::Vector diff = (this->frame * ors::Vector(this->center)) -
-                     (dynamic_cast<const Plane*>(&other)->frame * ors::Vector(dynamic_cast<const Plane*>(&other)->center));
+  mlr::Vector diff = (this->frame * mlr::Vector(this->center)) -
+                     (dynamic_cast<const Plane*>(&other)->frame * mlr::Vector(dynamic_cast<const Plane*>(&other)->center));
   return diff.length();
 
 }
@@ -99,7 +99,7 @@ Alvar::Alvar(const Alvar& obj){
 
 double Alvar::idMatchingCost(const FilterObject& other){
   if(other.type!=alvar) return -1.;
-  ors::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const Alvar*>(&other)->frame * dynamic_cast<const Alvar*>(&other)->transform.pos);
+  mlr::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const Alvar*>(&other)->frame * dynamic_cast<const Alvar*>(&other)->transform.pos);
   return dist.length();
 }
 

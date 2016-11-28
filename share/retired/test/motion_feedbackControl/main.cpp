@@ -4,14 +4,14 @@
 
 struct MyTask:FeedbackControlTaskAbstraction{
   TaskVariable *TV_eff;
-  virtual void initTaskVariables(const ors::KinematicWorld &ors){
+  virtual void initTaskVariables(const mlr::KinematicWorld &ors){
     listDelete(TVs);
     TV_eff  = new DefaultTaskVariable("endeffector", ors, posTVT, "m9", "<t(0 0 -.24)>", NULL, NULL, NoArr);
     TVs = LIST<TaskVariable>(*TV_eff);
     requiresInit = false;
     TV_eff->active=true;
   }
-  virtual void updateTaskVariableGoals(const ors::KinematicWorld& ors){
+  virtual void updateTaskVariableGoals(const mlr::KinematicWorld& ors){
     if(false){ //position control
       TV_eff->y_prec  =1e3;
       TV_eff->y_target = TV_eff->y_target + ARR(0.,0.,.002); //move upward

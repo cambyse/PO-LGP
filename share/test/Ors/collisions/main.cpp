@@ -6,9 +6,9 @@ double
 pqp_RectDist(double Rab[9], double Tab[3],
 double a[2], double b[2], double Pa[3], double Pb[3]);
 
-using ors::Shape;
+using mlr::Shape;
 
-ors::Vector Pa, Pb;
+mlr::Vector Pa, Pb;
 
 void draw(void*){
   glLoadIdentity();
@@ -27,12 +27,12 @@ inline void clip(double& x, double r){
 }
 
 
-double distance_SSPoints(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vector& Pb){
-  CHECK(A.type==ors::SSBoxST && B.type==ors::SSBoxST,"");
+double distance_SSPoints(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
+  CHECK(A.type==mlr::SSBoxST && B.type==mlr::SSBoxST,"");
   CHECK(!A.size[0] && !B.size[0] && !A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SSpoints");
   Pa = A.X.pos;
   Pb = B.X.pos;
-  ors::Vector c = Pa-Pb;
+  mlr::Vector c = Pa-Pb;
   double d = c.length();
   //account for radii
   Pa -= A.size[3]*c/d;
@@ -40,14 +40,14 @@ double distance_SSPoints(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vect
   return d-A.size[3]-B.size[3];
 }
 
-double distance_SSLinePoint(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vector& Pb){
-  CHECK(A.type==ors::SSBoxST && B.type==ors::SSBoxST,"");
+double distance_SSLinePoint(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
+  CHECK(A.type==mlr::SSBoxST && B.type==mlr::SSBoxST,"");
   CHECK(!B.size[0] && !A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SSLinePoint");
   if(!A.size[0]){ //SSLinePoint
     return distance_SSPoints(A, B, Pa, Pb);
   }
-  ors::Vector a=A.X.rot.getX();
-  ors::Vector c=B.X.pos - A.X.pos;
+  mlr::Vector a=A.X.rot.getX();
+  mlr::Vector c=B.X.pos - A.X.pos;
   //get the 'coordinate' along the line segment
   double t = c*a;
   clip(t, A.size[0]);
@@ -63,15 +63,15 @@ double distance_SSLinePoint(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::V
   return d-A.size[3]-B.size[3];
 }
 
-double distance_SSLines(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vector& Pb){
-  CHECK(A.type==ors::SSBoxST && B.type==ors::SSBoxST,"");
+double distance_SSLines(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
+  CHECK(A.type==mlr::SSBoxST && B.type==mlr::SSBoxST,"");
   CHECK(!A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SS line segments (cylinders)");
   if(!B.size[0]){ //SSLinePoint
     return distance_SSLinePoint(A, B, Pa, Pb);
   }
-  ors::Vector a=A.X.rot.getX();
-  ors::Vector b=B.X.rot.getX();
-  ors::Vector c=B.X.pos - A.X.pos;
+  mlr::Vector a=A.X.rot.getX();
+  mlr::Vector b=B.X.rot.getX();
+  mlr::Vector c=B.X.pos - A.X.pos;
   //get the 'coordinates' along the line segments
   double A_dot_B = a*b;
   double A_dot_C = a*c;
@@ -96,23 +96,23 @@ double distance_SSLines(ors::Shape& A, ors::Shape& B,ors::Vector& Pa, ors::Vecto
   return d-A.size[3]-B.size[3];
 }
 
-double distance_SSRects(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vector& Pb){
-  CHECK(A.type==ors::ssBoxST && B.type==ors::ssBoxST,"");
+double distance_SSRects(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb){
+  CHECK(A.type==mlr::ssBoxST && B.type==mlr::ssBoxST,"");
   CHECK(!A.size[2] && !B.size[2], "can only handle spheres, cylinders & rectangles yet - no boxes");
   if(!A.size[1] && !B.size[1]){ //SSLines
     return distance_SSLines(A, B, Pa, Pb);
   }
-  ors::Transformation f;
+  mlr::Transformation f;
   f.setDifference(A.X, B.X);
-  ors::Matrix R = ((f.rot)).getMatrix();
-  ors::Vector Asize={A.size[0], A.size[1], 0.};
-  ors::Vector Bsize={B.size[0], B.size[1], 0.};
-  ors::Vector trans = f.pos; //Asize + f.pos - R*Bsize;
+  mlr::Matrix R = ((f.rot)).getMatrix();
+  mlr::Vector Asize={A.size[0], A.size[1], 0.};
+  mlr::Vector Bsize={B.size[0], B.size[1], 0.};
+  mlr::Vector trans = f.pos; //Asize + f.pos - R*Bsize;
   double dist = pqp_RectDist(R.p(), trans.p(), (Asize).p(), (Bsize).p(), Pa.p(), Pb.p());
   Pa = A.X * Pa;
   Pb = A.X * Pb;
    //distance
-  ors::Vector c = Pa-Pb;
+  mlr::Vector c = Pa-Pb;
   double d = c.length();
   if(dist>0.) CHECK_ZERO(dist-d, 1e-4, "NOT EQUAL!");
   if(dist==0.) d *= -1.; //if the rects penetrate already, measure the penetration as negative!
@@ -126,19 +126,19 @@ double distance_SSRects(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vect
 /* NOTE: All functions above: Internally they assume the shape's not centered, but extended from (0,0,0) to the positive coordinates
  * That is different to the 'Shape' convention, where shapes are centered and extend (with half length) to negative and positive coordinates
  * In the code this is transformed back and forth... */
-double distance_(ors::Shape& A, ors::Shape& B, ors::Vector& Pa, ors::Vector& Pb){
-  A.X.pos -= 0.5*(A.X.rot*ors::Vector(A.size[0], A.size[1], A.size[2]));
-  B.X.pos -= 0.5*(B.X.rot*ors::Vector(B.size[0], B.size[1], B.size[2]));
+double distance_(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb){
+  A.X.pos -= 0.5*(A.X.rot*mlr::Vector(A.size[0], A.size[1], A.size[2]));
+  B.X.pos -= 0.5*(B.X.rot*mlr::Vector(B.size[0], B.size[1], B.size[2]));
   double d=distance_SSRects(A, B, Pa, Pb);
-  A.X.pos += 0.5*(A.X.rot*ors::Vector(A.size[0], A.size[1], A.size[2]));
-  B.X.pos += 0.5*(B.X.rot*ors::Vector(B.size[0], B.size[1], B.size[2]));
+  A.X.pos += 0.5*(A.X.rot*mlr::Vector(A.size[0], A.size[1], A.size[2]));
+  B.X.pos += 0.5*(B.X.rot*mlr::Vector(B.size[0], B.size[1], B.size[2]));
   return d;
 }
 
 void TEST(Distance){
-  ors::KinematicWorld W;
-  ors::Shape A(W, NoBody), B(W, NoBody);
-  A.type = B.type = ors::ssBoxST;
+  mlr::KinematicWorld W;
+  mlr::Shape A(W, NoBody), B(W, NoBody);
+  A.type = B.type = mlr::ssBoxST;
   memmove(A.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
   memmove(B.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
   for(uint k=0;k<20;k++){
@@ -148,7 +148,7 @@ void TEST(Distance){
     double d2=(Pa-Pb).length();
     cout <<"d=" <<d <<' ' <<d2 <<' ' <<Pa <<Pb <<endl;
     if(d>0.) CHECK_ZERO(d-d2, 1e-4, "NOT EQUAL!");
-    ors::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
+    mlr::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
     W.proxies.append( &p );
     W.gl().timedupdate(.1);
     W.proxies.clear();
@@ -160,5 +160,5 @@ int MAIN(int argc, char** argv){
 
   testDistance();
 
-  return 1;
+  return 0;
 }

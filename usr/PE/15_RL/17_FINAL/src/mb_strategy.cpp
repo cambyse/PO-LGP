@@ -2,10 +2,10 @@
 #include <Motion/pr2_heuristics.h>
 #include <Ors/ors.h>
 
-MB_strategy::MB_strategy(arr &xDemo_,ors::KinematicWorld &world_,double duration_,TaskManager &task)
+MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,double duration_,TaskManager &task)
 {
   xDemo = xDemo_;
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
 
   duration = duration_;
   MP = new MotionProblem(*world,false);

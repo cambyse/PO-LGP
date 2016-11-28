@@ -108,7 +108,7 @@ int main(int argc, char** argv){
       Cluster copy = *first_cluster;
       object_database.deAccess();
 
-      ors::Vector orsPoint = copy.frame * ors::Vector(copy.mean);
+      mlr::Vector orsPoint = copy.frame * mlr::Vector(copy.mean);
 
       std::cout << "Point to poke, relative to base: " << orsPoint.x;
       std::cout << ' ' << orsPoint.y << ' ' << orsPoint.z << std::endl;

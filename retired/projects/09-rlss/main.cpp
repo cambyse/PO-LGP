@@ -16,7 +16,7 @@ int main(int argc,char **argv){
   // initialization of the simulator (should be ok for the lab)
   
   // load the ors file
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("iCub.ors")));
   // start the collision computation engine
   SwiftInterface swift;
@@ -24,7 +24,7 @@ int main(int argc,char **argv){
   // start the OpenGL engine
   OpenGL gl;
   gl.add(glStandardScene);          //add a standard static draw routine for the floor...
-  gl.add(ors::glDrawGraph,&ors);    //adds a draw routine to draw the geometry
+  gl.add(mlr::glDrawGraph,&ors);    //adds a draw routine to draw the geometry
   gl.camera.setPosition(5,-10,10);  //sets the perspective...
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");

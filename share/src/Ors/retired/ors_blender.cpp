@@ -41,7 +41,7 @@ struct VertGroup {
 //template class mlr::Array<VertGroup>;
 //template class mlr::Array<String>;
 
-void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl) {
+void readBlender(const char* filename, mlr::Mesh& mesh, mlr::KinematicWorld& bl) {
   ifstream is(filename, std::ios::binary);
   CHECK(is.good(), "couldn't open file " <<filename);
   
@@ -97,10 +97,10 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     HALT("unknown tag `" <<tag <<"'");
   }
   
-  ors::Vector *w;
-  ors::Quaternion r; r.setDeg(0, 1, 0, 0); //don't rotate the mesh
+  mlr::Vector *w;
+  mlr::Quaternion r; r.setDeg(0, 1, 0, 0); //don't rotate the mesh
   for(i=0; i<vertices.d0; i++) {
-    w = (ors::Vector*)&vertices(i, 0);
+    w = (mlr::Vector*)&vertices(i, 0);
     *w = r*(*w);
   }
   
@@ -121,17 +121,17 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
   mesh.computeNormals();
   
   double v[4], l;
-  ors::Body *n, *p;
-  ors::Shape *s;
+  mlr::Body *n, *p;
+  mlr::Shape *s;
   String parent;
-  ors::Joint *e;
-  ors::Vector h, t;
-  ors::Transformation f;
-  ors::Quaternion ROT; ROT.setDeg(90, 1, 0, 0); //rotate the armature
+  mlr::Joint *e;
+  mlr::Vector h, t;
+  mlr::Transformation f;
+  mlr::Quaternion ROT; ROT.setDeg(90, 1, 0, 0); //rotate the armature
   
   for(i=0; i<frames.d0; i++) {
-    n=new ors::Body(bl);
-    s=new ors::Shape(bl, *n); //always create a shape for a body...
+    n=new mlr::Body(bl);
+    s=new mlr::Shape(bl, *n); //always create a shape for a body...
     //mlr::skip(is);
     n->name=names(i);
     f.pos.set(&frames(i, 3, 0)); f.pos=ROT*f.pos;
@@ -149,7 +149,7 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
 #endif
     n->X.rot = f.rot;
     
-    s->type=ors::boxST;
+    s->type=mlr::boxST;
     l=(t-h).length();
     v[0]=v[1]=v[3]=l/20.; v[2]=l;
     memmove(s->size, v, 4*sizeof(double));
@@ -158,8 +158,8 @@ void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl)
     p=bl.bodies(graph(i, 0));
     n=bl.bodies(graph(i, 1));
     //e=new_edge(p, n, bl.bodies, bl.joints);
-    e=new ors::Joint(bl, p, n);
-    e->type = ors::JT_hingeX;
+    e=new mlr::Joint(bl, p, n);
+    e->type = mlr::JT_hingeX;
     f.pos.set(&frames(graph(i, 1), 3, 0));  f.pos=ROT*f.pos;
     f.rot.setMatrix(frames[graph(i, 1)].sub(0, 2, 0, 2).p);
     f.rot.invert();

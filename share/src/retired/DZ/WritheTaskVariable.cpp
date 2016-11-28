@@ -4,7 +4,7 @@
 #include <Gui/plot.h>
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
-                                         ors::KinematicWorld& _ors,
+                                         mlr::KinematicWorld& _ors,
                                          const char* _obj_name,
 				         int _segments1,int _segments2,
 				         int _param){
@@ -26,14 +26,14 @@ void plot_writhe(arr WM,int dim1,int dim2)
  plot(false);
 }
 
-void GetRopes(arr& r1,arr& r2,const ors::KinematicWorld& _ors,int rope_points1,int rope_points2,const char* obj_name){
+void GetRopes(arr& r1,arr& r2,const mlr::KinematicWorld& _ors,int rope_points1,int rope_points2,const char* obj_name){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points1,3); 
   arr rope2=arr(rope_points2,3);
   arr ty;
    
-    ors::Vector shift,neg_shift; shift.set(0.,0.,.1); neg_shift.set(0.,0.,-.1);
+    mlr::Vector shift,neg_shift; shift.set(0.,0.,.1); neg_shift.set(0.,0.,-.1);
   for (int i=0;i<rope_points1;i++) {// start with second body part
      _ors.kinematicsPos(ty,i,  &shift ); 
       rope1[i] = ty;
@@ -55,7 +55,7 @@ void GetRopes(arr& r1,arr& r2,const ors::KinematicWorld& _ors,int rope_points1,i
 }
 /// Matrix
 
-void WritheTaskVariable::userUpdate(const ors::KinematicWorld& ors){
+void WritheTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
     arr rope1,rope2,yy,Jp,JM,points;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name);
     GetWritheMatrix(yy,rope1,rope2,segments1,segments2);
@@ -69,7 +69,7 @@ void WritheTaskVariable::userUpdate(const ors::KinematicWorld& ors){
     y=yy;
     int wrsize = (segments1)* (segments2);
     y.reshape(wrsize); 
-     ors::Vector shift; shift.set(0.,0.,.1);
+     mlr::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
       for (int k=0;k<segments1;k++){
        ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
@@ -103,7 +103,7 @@ transpose(Jt,J);
 // //cout <<y<<endl;
 //     ///////////Jacobian
 //       for (int k=0;k<segments;k++){
-//        this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+//        this->ors->jacobianPos(Jp,k,&mlr::Vector(0.,0.,.1)); // Zero jacobian? +1
 // 	 points.append(Jp);
 //        } 
 //        ScalarJacobian(JM,rope1,rope2,points,segments);  
@@ -120,7 +120,7 @@ transpose(Jt,J);
 // }
 /// End of scalar
 
-void WritheTaskVariable::epsilon_check(arr& delta_q, const ors::KinematicWorld& ors){
+void WritheTaskVariable::epsilon_check(arr& delta_q, const mlr::KinematicWorld& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name); 
     GetWritheMatrix(yy,rope1,rope2,segments1,segments2);
@@ -135,7 +135,7 @@ arr delta_y;
   //  delta_y= delta_y-y;
    //   delta_y = (y1-y2);
    //  delta_y.reshape((segments-1)* (segments-1));
-     ors::Vector shift; shift.set(0.,0.,.1);
+     mlr::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
   for (int k=0;k<segments1;k++){
        ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1
@@ -173,14 +173,14 @@ cout<<"\nDelta_q"<<delta_q<<endl;
 //cout<<"\nSum of Delta_q"<<sum(delta_q)<<endl;
 }
 
-void WritheTaskVariable::delta_check(arr& delta_q, const ors::KinematicWorld& ors){
+void WritheTaskVariable::delta_check(arr& delta_q, const mlr::KinematicWorld& ors){
     arr rope1,rope2,yy,Jp,JM,points,y1,y2;
     GetRopes(rope1,rope2,ors,segments1+1,segments2+1,obj_name); 
     GetScalarWrithe(yy,rope1,rope2,segments1);
 //// HERE - small deformation
     arr delta_y;
     delta_y = ARR(-0.1);
-  ors::Vector shift; shift.set(0.,0.,.1);
+  mlr::Vector shift; shift.set(0.,0.,.1);
     ///////////Jacobian
       for (int k=0;k<segments1;k++){
        ors.jacobianPos(Jp,k,&shift); // Zero jacobian? +1

@@ -18,7 +18,7 @@ struct ControlActivity : Activity{
   virtual void configure(); ///< calls configure2 and registers
   virtual void activitySpinnerStep(double dt); ///< calls step2, then checks for isConv and sets facts accordingly
 
-  virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world) = 0;
+  virtual void configureControl(const char *name, Graph& specs, mlr::KinematicWorld& world) = 0;
   virtual void stepControl(double dt){}
   virtual bool isConv();
 };
@@ -33,7 +33,7 @@ struct FollowReferenceActivity : ControlActivity {
 
   FollowReferenceActivity(){}
   FollowReferenceActivity(const Graph&){ NIY; }
-  virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world);
+  virtual void configureControl(const char *name, Graph& specs, mlr::KinematicWorld& world);
   virtual void stepControl(double dt);
   virtual bool isConv();
 };
@@ -50,9 +50,9 @@ struct FollowReferenceActivity : ControlActivity {
 //===========================================================================
 
 struct HomingActivity : ControlActivity {
-  ors::Joint *wheeljoint;
+  mlr::Joint *wheeljoint;
 
-  virtual void configureControl(const char *name, Graph& specs, ors::KinematicWorld& world);
+  virtual void configureControl(const char *name, Graph& specs, mlr::KinematicWorld& world);
   virtual void stepControl(double dt);
   virtual bool isConv();
 };

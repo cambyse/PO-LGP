@@ -22,7 +22,7 @@
 
 struct KOMO{
   Graph specs;
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   struct MotionProblem *MP;
   struct OptConstrained *opt;
   arr x, dual;
@@ -44,7 +44,7 @@ struct KOMO{
   //-- manual specs helpers
   //-- setup
   void setConfigFromFile();
-  void setModel(const ors::KinematicWorld& W,
+  void setModel(const mlr::KinematicWorld& W,
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
   void setTiming(double _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
   void setSinglePoseOptim(double duration=5.){ setTiming(1, 1, duration, 1); }
@@ -54,7 +54,7 @@ struct KOMO{
   //-- tasks (cost/constraint terms) low-level
   struct Task* setTask(double startTime, double endTime, TaskMap* map, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
   struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
-  void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const ors::Transformation& jFrom=NoTransformation, const ors::Transformation& jTo=NoTransformation);
+  void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
 
   //-- tasks (transitions) mid-level
   void setHoming(double startTime=-1., double endTime=-1., double prec=1e-1);
@@ -75,16 +75,16 @@ struct KOMO{
   void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false, int verbose=0);
   void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false, int verbose=0);
   void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, bool effKinMode=false, int verbose=0);
-  void setAttach(double time, const char* endeff, const char* object1, const char* object2, ors::Transformation& rel, int verbose=0);
+  void setAttach(double time, const char* endeff, const char* object1, const char* object2, mlr::Transformation& rel, int verbose=0);
 
   void setSlowAround(double time, double delta, double prec=10.);
 
   //-- tasks - logic level
   void setAbstractTask(double phase, const Graph& facts, bool effKinMode=false, int verbose=0);
 
-  void setMoveTo(ors::KinematicWorld& world, //in initial state
-                 ors::Shape& endeff,         //endeffector to be moved
-                 ors::Shape &target,         //target shape
+  void setMoveTo(mlr::KinematicWorld& world, //in initial state
+                 mlr::Shape& endeff,         //endeffector to be moved
+                 mlr::Shape &target,         //target shape
                  byte whichAxesToAlign=0);   //bit coded options to align axes
 
   //-- optimization macros
@@ -100,9 +100,9 @@ struct KOMO{
 //===========================================================================
 
 /// Return a trajectory that moves the endeffector to a desired target position
-arr moveTo(ors::KinematicWorld& world, //in initial state
-           ors::Shape& endeff,         //endeffector to be moved
-           ors::Shape &target,         //target shape
+arr moveTo(mlr::KinematicWorld& world, //in initial state
+           mlr::Shape& endeff,         //endeffector to be moved
+           mlr::Shape &target,         //target shape
            byte whichAxesToAlign=0,    //bit coded options to align axes
            uint iterate=1,
            int timeSteps=-1,
@@ -110,9 +110,9 @@ arr moveTo(ors::KinematicWorld& world, //in initial state
 
 //===========================================================================
 
-inline arr finalPoseTo(ors::KinematicWorld& world,
-                       ors::Shape &endeff,
-                       ors::Shape& target,
+inline arr finalPoseTo(mlr::KinematicWorld& world,
+                       mlr::Shape &endeff,
+                       mlr::Shape& target,
                        byte whichAxesToAlign=0,
                        uint iterate=1){
   return moveTo(world, endeff, target, whichAxesToAlign, iterate, 1, 5.);

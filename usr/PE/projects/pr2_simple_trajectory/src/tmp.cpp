@@ -108,14 +108,14 @@ public:
     return goal;
   }
 
-  pr2_controllers_msgs::JointTrajectoryGoal OrsConfigToPR2Msg(const arr& q_last, const arr& q, const ors::KinematicWorld& G) {
+  pr2_controllers_msgs::JointTrajectoryGoal OrsConfigToPR2Msg(const arr& q_last, const arr& q, const mlr::KinematicWorld& G) {
     pr2_controllers_msgs::JointTrajectoryGoal goal;
     goal.trajectory.points.resize(2);
 
 
     // First, the joint names, which apply to all waypoints
     uint COUNT=0;
-    for(ors::Joint* j:G.joints) if(!j->mimic){
+    for(mlr::Joint* j:G.joints) if(!j->mimic){
       goal.trajectory.joint_names.push_back(j->name.p);
 //      cout <<j->name <<endl;
       COUNT++;
@@ -164,7 +164,7 @@ void base(){
 }
 
 void circle(bool FIRE=false){
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   OpenGL gl;
   init(G, gl, "pr2_model/pr2_left.ors");
   makeConvexHulls(G.shapes);
@@ -184,7 +184,7 @@ void circle(bool FIRE=false){
   W(0,0) = 1e3;
 
   uint endeff = G.getBodyByName("l_wrist_roll_link")->index;
-//  for(ors::Joint* j: G.joints) cout <<j->name <<endl;
+//  for(mlr::Joint* j: G.joints) cout <<j->name <<endl;
 
   gl.watch();
 

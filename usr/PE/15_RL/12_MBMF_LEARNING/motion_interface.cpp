@@ -3,9 +3,9 @@
 #include <Motion/pr2_heuristics.h>
 
 
-Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
+Motion_Interface::Motion_Interface(mlr::KinematicWorld &world_)
 {
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
   world->q = world_.q;
   engine().open(S);
 

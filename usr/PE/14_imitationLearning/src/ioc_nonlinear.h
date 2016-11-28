@@ -361,7 +361,7 @@ struct Scene {
   arr xInit; // init solution for optimization
   uint contactTime;
   MotionProblem* MP;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
   IOC_DemoCost* cost;// ioc cost function for this demonstrations
 
   Scene () { }

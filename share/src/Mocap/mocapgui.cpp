@@ -3,7 +3,7 @@
 #include "mocapgui.h"
 
 struct sMocapGui: OpenGL::GLKeyCall, OpenGL::GLClickCall {
-  ors::KinematicWorld *kw;
+  mlr::KinematicWorld *kw;
 
   VideoEncoder_x264_simple *vid;
   bool quit, play, screen, record;
@@ -102,19 +102,19 @@ void sMocapGui::set_target(Target target) {
     }
     interactions.reshape(nagents, nobjectsensors, interactions.N / (nagents * nobjectsensors));
 
-    init_custom = [&, nagents, agentshapes] (ors::KinematicWorld &kw) {
+    init_custom = [&, nagents, agentshapes] (mlr::KinematicWorld &kw) {
       for(uint ai = 0; ai < nagents; ai++)
         for(const String &agentshape: agentshapes(ai))
           memcpy(kw.getShapeByName(agentshape)->color, col_on[ai], 3 * sizeof(double));
     };
 
-    update_custom = [&, col_on, col_off, nagents, nobjectsensors, agentshapes, objectsensors, interactions] (ors::KinematicWorld &kw, uint f) {
+    update_custom = [&, col_on, col_off, nagents, nobjectsensors, agentshapes, objectsensors, interactions] (mlr::KinematicWorld &kw, uint f) {
       for(uint osi = 0; osi < nobjectsensors; osi++) {
-        for(ors::Shape *sh: kw.getBodyByName(objectsensors(osi))->shapes)
+        for(mlr::Shape *sh: kw.getBodyByName(objectsensors(osi))->shapes)
           memcpy(sh->color, col_off, 3 * sizeof(double));
         for(uint ai = 0; ai < nagents; ai++) {
           if(interactions(ai, osi, f)) {
-            for(ors::Shape *sh: kw.getBodyByName(objectsensors(osi))->shapes)
+            for(mlr::Shape *sh: kw.getBodyByName(objectsensors(osi))->shapes)
               memcpy(sh->color, col_on[ai], 3 * sizeof(double));
             break;
           }
@@ -154,7 +154,7 @@ void sMocapGui::set_target(Target target) {
     interactions.reshape(ninteractions, interactions.N / ninteractions);
 
     init_custom = nullptr;
-    update_custom = [&, col_on, nobjectsensors, objectsensors, interactions] (ors::KinematicWorld &kw, uint f) {
+    update_custom = [&, col_on, nobjectsensors, objectsensors, interactions] (mlr::KinematicWorld &kw, uint f) {
       boolA objectcolor(nobjectsensors);
       objectcolor = false;
 
@@ -165,7 +165,7 @@ void sMocapGui::set_target(Target target) {
 
       for(uint os = 0; os < nobjectsensors; os++) {
         const double *color = objectcolor(os)? col_on[0]: col_off;
-        for(ors::Shape *sh: kw.getBodyByName(objectsensors(os))->shapes)
+        for(mlr::Shape *sh: kw.getBodyByName(objectsensors(os))->shapes)
           memcpy(sh->color, color, 3 * sizeof(double));
       }
     };
@@ -213,12 +213,12 @@ void sMocapGui::finally() {
 #define PREC_ORI 1e-1
 void sMocapGui::update_poses() {
   arr sensor_pos, sensor_quat;
-  ors::Vector vec_x = Vector_x,
+  mlr::Vector vec_x = Vector_x,
               vec_y = Vector_y,
               vec_z = Vector_z;
-  ors::Quaternion quat;
-  ors::Body *b;
-  ors::Shape *sh;
+  mlr::Quaternion quat;
+  mlr::Body *b;
+  mlr::Shape *sh;
 
   arr y, J, yVec, JVec;
   arr Phi, PhiJ, PhiJT;
@@ -246,7 +246,7 @@ void sMocapGui::update_poses() {
 
         sensor_pos.referTo(rec.query("pos", sensor, f));
         sensor_quat.referTo(rec.query("quat", sensor, f));
-        quat = ors::Quaternion(sensor_quat);
+        quat = mlr::Quaternion(sensor_quat);
 
         kw->kinematicsPos(y, J, sh->body, sh->rel.pos);
         Phi.append((y - sensor_pos) / PREC_POS);
@@ -284,7 +284,7 @@ void sMocapGui::update_poses() {
 
 void sMocapGui::update_alpha() {
   for(const String sensor: rec.id().sensors())
-    for(ors::Shape *sh: kw->getBodyByName(sensor)->shapes)
+    for(mlr::Shape *sh: kw->getBodyByName(sensor)->shapes)
       sh->color[3] = rec.query("poseObs", sensor, f).scalar();
 }
 
@@ -357,7 +357,7 @@ bool sMocapGui::keyCallback(OpenGL&) {
 bool sMocapGui::clickCallback(OpenGL &gl) {
   gl.Select();
   uint i = gl.topSelection->name;
-  ors::Body *b = nullptr;
+  mlr::Body *b = nullptr;
   if((i&3)==1)
     b = kw->shapes(i>>2)->body;
   if(b) {
@@ -374,7 +374,7 @@ bool sMocapGui::clickCallback(OpenGL &gl) {
 MocapGui::MocapGui(MocapRec &rec) { s = new sMocapGui(rec); }
 MocapGui::~MocapGui() { delete s; }
 
-ors::KinematicWorld &MocapGui::kw() {
+mlr::KinematicWorld &MocapGui::kw() {
   return *s->kw;
 }
 

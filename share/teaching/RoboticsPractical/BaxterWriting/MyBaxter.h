@@ -31,7 +31,7 @@
 
 
 
-baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
+baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const mlr::KinematicWorld& baxterModel, const char* prefix);
 
 class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
@@ -60,8 +60,8 @@ class MyBaxter {
     CtrlTask *openG, *closeG;
     mlr::Array<CtrlTask*> set;
 
-    ors::KinematicWorld baxterModel;
-    ors::KinematicWorld testWorld;
+    mlr::KinematicWorld baxterModel;
+    mlr::KinematicWorld testWorld;
 
 public:
     float sec = 200.;
@@ -101,7 +101,7 @@ public:
     }
 
     void homing();
-    CtrlTask* align( char* name, char* frame1, ors::Vector vec1, char* frame2, ors::Vector vec2, double ref);
+    CtrlTask* align( char* name, char* frame1, mlr::Vector vec1, char* frame2, mlr::Vector vec2, double ref);
     CtrlTask* goToPosition(const char* frame1, const char* frame2, arr pos, double timeScale=1.0);
     CtrlTask* goToPositionTest(const char* frame1, const char* frame2, arr pos, double timeScale);
     void changePosition(CtrlTask *position, arr pos);
@@ -127,8 +127,8 @@ public:
 
 
     //-- get position closest cluster
-    ors::Vector closestCluster();
-    ors::Vector arPose();
+    mlr::Vector closestCluster();
+    mlr::Vector arPose();
 
     void disablePosControlL();
     void disablePosControlR();
@@ -141,7 +141,7 @@ public:
     void disableTotalTorqueModeR();
     void publishTorque(const arr& u, const char* prefix="left_");
 
-    const ors::KinematicWorld& getKinematicWorld();
+    const mlr::KinematicWorld& getKinematicWorld();
 
     arr getJointLimits();
     double getCollisionScalar();
@@ -149,7 +149,7 @@ public:
     //-- inner access
     struct TaskControllerModule& getTaskControllerModule();
 
-    const ors::KinematicWorld& getModelWorld();
+    const mlr::KinematicWorld& getModelWorld();
     void sendJoints(const arr &q);
 
     //--writing

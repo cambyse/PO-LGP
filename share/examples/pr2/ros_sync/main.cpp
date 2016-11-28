@@ -16,7 +16,7 @@ int main(int argc, char** argv){
 
   threadOpenModules(true);
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
 
   bool useRos = true;
   initialSyncJointStateWithROS(world, ctrl_obs, useRos);

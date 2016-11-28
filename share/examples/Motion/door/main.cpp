@@ -7,64 +7,64 @@
 #include <Ors/ors_swift.h>
 
 
-void addDoor(ors::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, double handle_h = 0.03, double handle_w = 0.4, double handle_y = 0.05,double handle_z=1.) {
+void addDoor(mlr::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, double handle_h = 0.03, double handle_w = 0.4, double handle_y = 0.05,double handle_z=1.) {
 
-  ors::Body *frame = new ors::Body(G);
-  frame->X.pos = ors::Vector(1.2, 1.2, door_h/2.);
-  frame->type = ors::BodyType::staticBT;
-  ors::Shape *frame_shape = new ors::Shape(G,*frame);
-  frame_shape->type = ors::ShapeType::cylinderST;
+  mlr::Body *frame = new mlr::Body(G);
+  frame->X.pos = mlr::Vector(1.2, 1.2, door_h/2.);
+  frame->type = mlr::BodyType::staticBT;
+  mlr::Shape *frame_shape = new mlr::Shape(G,*frame);
+  frame_shape->type = mlr::ShapeType::cylinderST;
   arr size = ARRAY(0.,0.,door_h,0.0085);
   memmove(frame_shape->size, size.p, 4*sizeof(double));
   arr color = ARRAY(0.,0.,0.);
   memmove(frame_shape->color, color.p, 3*sizeof(double));
 
-  ors::Body *door = new ors::Body(G);
-  door->type = ors::BodyType::staticBT;
+  mlr::Body *door = new mlr::Body(G);
+  door->type = mlr::BodyType::staticBT;
   door->name = "door";
-  ors::Shape *door_shape = new ors::Shape(G,*door);
-  door_shape->type = ors::ShapeType::boxST;
+  mlr::Shape *door_shape = new mlr::Shape(G,*door);
+  door_shape->type = mlr::ShapeType::boxST;
   size = ARRAY(.038, door_w, door_h, 0.);
   memmove(door_shape->size, size.p, 4*sizeof(double));
   color = ARRAY(0.5,0.5,0.);
   memmove(door_shape->color, color.p, 3*sizeof(double));
 
-  ors::Body *handle = new ors::Body(G);
-  handle->type = ors::BodyType::staticBT;
+  mlr::Body *handle = new mlr::Body(G);
+  handle->type = mlr::BodyType::staticBT;
   handle->name = "handle";
-  ors::Shape *handle_shape = new ors::Shape(G,*handle);
-  handle_shape->type = ors::ShapeType::boxST;
+  mlr::Shape *handle_shape = new mlr::Shape(G,*handle);
+  handle_shape->type = mlr::ShapeType::boxST;
   size = ARRAY(.014, handle_w, handle_h, 0.);
   memmove(handle_shape->size, size.p, 4*sizeof(double));
   color = ARRAY(0.,0.,0.);
   memmove(handle_shape->color, color.p, 3*sizeof(double));
 
-  ors::Joint *frame_door = new ors::Joint(G,frame,door);
+  mlr::Joint *frame_door = new mlr::Joint(G,frame,door);
   frame_door->name = "frame_door";
   frame_door->A.pos = ARR(0, 0, .0);
   frame_door->B.pos = ARR(0, -door_w/2.-0.0085, .0);
-  frame_door->type = ors::JointType::JT_hingeZ;
+  frame_door->type = mlr::JointType::JT_hingeZ;
 
-  ors::Joint *door_handle = new ors::Joint(G,door,handle);
+  mlr::Joint *door_handle = new mlr::Joint(G,door,handle);
   door_handle->name = "door_handle";
   door_handle->A.pos = ARR(-0.07, -door_w/2.+handle_y, -door_h/2.+handle_z);
   door_handle->B.pos = ARR(0, handle_w/2. -0.015, .0);
-  door_handle->type = ors::JointType::JT_hingeX;
+  door_handle->type = mlr::JointType::JT_hingeX;
   door_handle->limits = ARR(-0.5,0.5);
 
-  ors::Shape *cp1 = new ors::Shape(G,*handle);
+  mlr::Shape *cp1 = new mlr::Shape(G,*handle);
   cp1->name = "cp1";
-  cp1->rel.pos = ors::Vector(0,0.05, handle_h/2.);
-  cp1->type = ors::ShapeType::sphereST;
+  cp1->rel.pos = mlr::Vector(0,0.05, handle_h/2.);
+  cp1->type = mlr::ShapeType::sphereST;
   size=ARRAY(.1, .1, .1, .01);
   memmove(cp1->size, size.p, 4*sizeof(double));
   color = ARRAY(1.,0.,0.);
   memmove(cp1->color, color.p, 3*sizeof(double));
 
-  ors::Shape *cp2 = new ors::Shape(G,*handle);
+  mlr::Shape *cp2 = new mlr::Shape(G,*handle);
   cp2->name = "cp2";
-  cp2->rel.pos = ors::Vector(0,-0.02, -handle_h/2.);
-  cp2->type = ors::ShapeType::sphereST;
+  cp2->rel.pos = mlr::Vector(0,-0.02, -handle_h/2.);
+  cp2->type = mlr::ShapeType::sphereST;
   size=ARRAY(.1, .1, .1, .01);
   memmove(cp2->size, size.p, 4*sizeof(double));
   color = ARRAY(0.,1.,0.);
@@ -75,7 +75,7 @@ void addDoor(ors::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, dou
 
 void TEST(Door){
   for (;;) {
-    ors::KinematicWorld G("model.kvg");
+    mlr::KinematicWorld G("model.kvg");
     G.meldFixedJoints();
     G.removeUselessBodies();
     makeConvexHulls(G.shapes);

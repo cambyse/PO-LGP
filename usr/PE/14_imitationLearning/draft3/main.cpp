@@ -68,7 +68,7 @@ int main(int argc,char **argv) {
   createToyDemonstrations1(demos);
 
   /// define an inner cost function (for TrajOpt)
-  InnerCostFunction* icf = new SimpleICF(ors::KinematicWorld("scene"));
+  InnerCostFunction* icf = new SimpleICF(mlr::KinematicWorld("scene"));
   icf->setParam(ARR(1.,1.,1.),demos(0).world,demos(0).qTraj.d0);
 
   /// define an outer cost function (for CMA)

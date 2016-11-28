@@ -14,7 +14,7 @@ const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
  
 int main(int argc,char **argv){     
   mlr::initCmdLine(argc,argv);
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope.ors")));
  //ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("writhe.ors")));
   SwiftInterface swift;
@@ -22,7 +22,7 @@ int main(int argc,char **argv){
   
   OpenGL gl;
   gl.add(glStandardScene);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.camera.setPosition(5,-10,10);
   gl.camera.focus(0,0,1);
  

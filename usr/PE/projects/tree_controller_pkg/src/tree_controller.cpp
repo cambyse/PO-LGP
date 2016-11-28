@@ -45,7 +45,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   getControlParamSrv_ = n.advertiseService("get_control_param", &TreeControllerClass::getControlParam, this);
 
   /// init ORS
-  world = new ors::KinematicWorld("scene");
+  world = new mlr::KinematicWorld("scene");
   MP = new TaskController(*world,false);
   tau_control = 0.001;
 

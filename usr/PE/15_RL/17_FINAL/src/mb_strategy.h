@@ -13,10 +13,10 @@ struct MB_strategy
   double duration;
   arr xDemo;
   MotionProblem* MP;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
   MotionProblemFunction* MPF;
 
-  MB_strategy(arr &xDemo_, ors::KinematicWorld &world, double duration_, TaskManager &task);
+  MB_strategy(arr &xDemo_, mlr::KinematicWorld &world, double duration_, TaskManager &task);
 
   void evaluate(arr &X);
 };

@@ -2,7 +2,7 @@
 void KOMO::setGrasp(double time, const char* endeffRef, const char* object){
 //#    (EqualZero GJK Hand Obj){ time=[1 1] scale=100 } #touch is not necessary
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
-  ors::Body *endeff = world.getShapeByName(endeffRef)->body;
+  mlr::Body *endeff = world.getShapeByName(endeffRef)->body;
   mlr::String& graspRef = endeff->outLinks.last()->to->shapes.scalar()->name;
 
   setTask(time-.1, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e3);

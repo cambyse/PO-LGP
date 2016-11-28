@@ -14,7 +14,7 @@
 void LGPexample(){
   TowerProblem_new towers;
 
-  ors::KinematicWorld display=towers.world_root;
+  mlr::KinematicWorld display=towers.world_root;
   towers.world_root.gl().update("root");
 
   ManipulationTree_Node root(towers);

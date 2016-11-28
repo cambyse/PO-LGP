@@ -10,7 +10,7 @@ void drawInit(void*){
 }
 
 void TEST(Swift) {
-  ors::KinematicWorld G("swift_test.ors");
+  mlr::KinematicWorld G("swift_test.ors");
 
   G.swift().setCutoff(2.);
   G.stepSwift();
@@ -32,7 +32,7 @@ void TEST(Swift) {
 
 void TEST(Sphere) {
   OpenGL gl;
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
 
   //MeshSetTetrahedron(mesh);
   //MeshSetOctahedron(mesh);
@@ -53,7 +53,7 @@ void TEST(Sphere) {
 
 void TEST(Meshes) {
   OpenGL gl;
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   mesh.readStlFile(FILE("../../../data/pr2_model/head_v0/head_pan.stl"));
   mesh.scale(.001);
   mesh.writeTriFile(("z.full.tri"));
@@ -69,7 +69,7 @@ void TEST(Meshes) {
 }
 
 void TEST(Meshes2) {
-  ors::Mesh mesh1,mesh2;
+  mlr::Mesh mesh1,mesh2;
   OpenGL gl;
   gl.add(drawInit,0);
   gl.add(mesh1);
@@ -85,7 +85,7 @@ void TEST(Meshes2) {
 }
 
 void TEST(Meshes3) {
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   OpenGL gl;
   gl.add(drawInit,0);
   gl.add(mesh);

@@ -6,11 +6,11 @@ struct Pr2GamepadController : Thread {
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(arr, gamepadState)
 
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   arr q, qdot, zero_qdot;
   TaskController *MP;
-  ors::Shape *ftL_shape;
-  ors::Joint *trans;
+  mlr::Shape *ftL_shape;
+  mlr::Joint *trans;
   Gamepad2Tasks *j2t;
   CtrlMsg refs;
 

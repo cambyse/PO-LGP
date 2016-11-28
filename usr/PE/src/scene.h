@@ -8,7 +8,7 @@ struct Scene {
   /// scene description
   arr x0;
   MotionProblem* MP;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
 
   /// options
   bool optConstraintsParam;

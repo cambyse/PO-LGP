@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
   /// Init ors
   mlr::initCmdLine(argc,argv);
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   world.init(STRING("scene"));
   makeConvexHulls(world.shapes);
 

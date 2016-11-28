@@ -8,7 +8,7 @@
 struct ExampleVar:Variable {
   int i;
   byteA rgb;
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   ExampleVar():Variable("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
 };
 

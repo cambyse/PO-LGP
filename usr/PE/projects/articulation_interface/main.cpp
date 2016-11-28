@@ -24,7 +24,7 @@ using namespace articulation_models;
 using namespace articulation_msgs;
 
 void detectDOFdoor() {
-  ors::KinematicWorld G("door.ors");
+  mlr::KinematicWorld G("door.ors");
   G.meldFixedJoints();
   G.removeUselessBodies();
   makeConvexHulls(G.shapes);
@@ -71,7 +71,7 @@ void detectDOFdoor() {
   }
 
   /// detect DOF
-  ors::Transformation T;
+  mlr::Transformation T;
 
   ModelMsg model_msg;
   model_msg.name = "rotational";
@@ -126,8 +126,8 @@ void detectDOFdoor() {
 
   cout << "	log LH = " << model_instance->getParam("loglikelihood")<< endl;
 
-  T.pos = ors::Vector(model_instance->getParam("rot_center.x"),model_instance->getParam("rot_center.y"),model_instance->getParam("rot_center.z"));
-  T.rot = ors::Quaternion(model_instance->getParam("rot_axis.w"),model_instance->getParam("rot_axis.x"),model_instance->getParam("rot_axis.y"),model_instance->getParam("rot_axis.z"));
+  T.pos = mlr::Vector(model_instance->getParam("rot_center.x"),model_instance->getParam("rot_center.y"),model_instance->getParam("rot_center.z"));
+  T.rot = mlr::Quaternion(model_instance->getParam("rot_axis.w"),model_instance->getParam("rot_axis.x"),model_instance->getParam("rot_axis.y"),model_instance->getParam("rot_axis.z"));
 
   G.getBodyByName("dof_axis")->X = T;
   G.calc_fwdPropagateFrames();

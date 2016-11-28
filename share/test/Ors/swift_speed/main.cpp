@@ -3,7 +3,7 @@
 #include <Gui/opengl.h>
 
 void TEST(CollisionTiming){
-  ors::KinematicWorld G("../../../data/configurations/schunk.ors");
+  mlr::KinematicWorld G("../../../data/configurations/schunk.ors");
 
   G.swift().setCutoff(1.);
 

@@ -33,13 +33,13 @@ struct Motion_Interface
 {
   MySystem S;
   arr q,qdot;
-  ors::KinematicWorld *world;
+  mlr::KinematicWorld *world;
   AlvarMarkers markers;
   bool useBase,useTorso;
 
   arr Xdes,Xact,FLact,Tact,Uact,Mact,Xref;
 
-  Motion_Interface(ors::KinematicWorld &world_);
+  Motion_Interface(mlr::KinematicWorld &world_);
   ~Motion_Interface(){threadCloseModules();}
   void executeTrajectory(arr &X, double T, bool recordData = false);
   void gotoPosition(arr x);

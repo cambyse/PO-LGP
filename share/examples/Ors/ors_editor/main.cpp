@@ -19,7 +19,7 @@ void TEST(OrsEditor) {
   if(mlr::argc==2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
   cout <<"opening file `" <<file <<"'" <<endl;
 
-  ors::KinematicWorld G(file);
+  mlr::KinematicWorld G(file);
 
   //G.setAgent(99);
 

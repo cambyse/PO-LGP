@@ -24,7 +24,7 @@ void drawEnv(void*){ glStandardLight(NULL); glDrawFloor(10., .9, .9, .9); }
 void drawBase(void*){ glDrawAxes(1.); }
 
 struct sSimulator {
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   double margin;
   double dynamicNoise;
   bool gravity;
@@ -113,7 +113,7 @@ void Simulator::setJointAnglesAndVels(const arr& q, const arr& qdot, bool update
 
 void Simulator::kinematicsPos(arr& y, const char* shapeName, const arr* rel){
   if(rel){
-    ors::Vector v;  v.set(rel->p);
+    mlr::Vector v;  v.set(rel->p);
     s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body, v);
   }else{
     s->G.kinematicsPos(y, NoArr, s->G.getShapeByName(shapeName)->body);
@@ -122,7 +122,7 @@ void Simulator::kinematicsPos(arr& y, const char* shapeName, const arr* rel){
 
 void Simulator::kinematicsVec(arr& y, const char* shapeName, const arr* vec){
   if(vec){
-    ors::Vector v;  v.set(vec->p);
+    mlr::Vector v;  v.set(vec->p);
     s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body, v);
   }else{
     s->G.kinematicsVec(y, NoArr, s->G.getShapeByName(shapeName)->body);
@@ -131,7 +131,7 @@ void Simulator::kinematicsVec(arr& y, const char* shapeName, const arr* vec){
 
 void Simulator::jacobianPos(arr& J, const char* shapeName, const arr* rel){
   if(rel){
-    ors::Vector v;  v.set(rel->p);
+    mlr::Vector v;  v.set(rel->p);
     s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body, v);
   }else{
     s->G.kinematicsPos(NoArr, J, s->G.getShapeByName(shapeName)->body);
@@ -140,7 +140,7 @@ void Simulator::jacobianPos(arr& J, const char* shapeName, const arr* rel){
 
 void Simulator::jacobianVec(arr& J, const char* shapeName, const arr* vec){
   if(vec){
-    ors::Vector v;  v.set(vec->p);
+    mlr::Vector v;  v.set(vec->p);
     s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body, v);
   }else{
     s->G.kinematicsVec(NoArr, J, s->G.getShapeByName(shapeName)->body);
@@ -208,7 +208,7 @@ void Simulator::stepPhysx(const arr& qdot, double tau){
   s->G.physx().step(tau);
 }
 
-ors::KinematicWorld& Simulator::getOrsGraph(){
+mlr::KinematicWorld& Simulator::getOrsGraph(){
   return s->G;
 }
 
@@ -390,7 +390,7 @@ void CarSimulator::getObservationJacobianAtState(arr& dy_dx, const arr& X){
 void glDrawCarSimulator(void *classP){
 #ifdef FREEGLUT
   CarSimulator *s=(CarSimulator*)classP;
-  ors::Transformation f;
+  mlr::Transformation f;
   f.setZero();
   f.addRelativeTranslation(s->x,s->y,.3);
   f.addRelativeRotationRad(s->theta, 0., 0., 1.);

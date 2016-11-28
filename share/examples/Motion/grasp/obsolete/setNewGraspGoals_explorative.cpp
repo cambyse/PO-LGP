@@ -21,7 +21,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   activateAll(sys.vars, false);
   
   //activate collision testing with target shape
-  ors::Shape *obj = sys.ors->shapes(shapeId);
+  mlr::Shape *obj = sys.ors->shapes(shapeId);
   obj->cont=true;
   sys.swift->initActivations(*sys.ors);
   
@@ -29,8 +29,8 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   GraspObject *graspobj;
   switch(obj->type){
       //graspobj = new GraspObject_InfCylinder(conv_vec2arr(obj->X.pos), ARR(0,0,1), .04, 1.);
-    case ors::cylinderST:  graspobj = new GraspObject_Cylinder1(obj);  break;
-    case ors::boxST:  graspobj = new GraspObject_Box(obj);  break;
+    case mlr::cylinderST:  graspobj = new GraspObject_Cylinder1(obj);  break;
+    case mlr::boxST:  graspobj = new GraspObject_Box(obj);  break;
     default: NIY;
   }
   graspobj->distanceMode = true;
@@ -69,10 +69,10 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch(obj->type){
-    case ors::cylinderST:
+    case mlr::cylinderST:
       V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case ors::boxST:{
+    case mlr::boxST:{
       /*rnd.clockSeed();
       static int side=-1;
       if(side==-1) side=rnd(3);
@@ -95,13 +95,13 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   if(phase==0) return;
   
   //finger tips
-  mlr::Array<ors::Shape*> tipsN;
+  mlr::Array<mlr::Shape*> tipsN;
   tipsN.append(sys.ors->getShapeByName("tipNormal1"));
   tipsN.append(sys.ors->getShapeByName("tipNormal2"));
   tipsN.append(sys.ors->getShapeByName("tipNormal3"));
 
   //CLEAN away
-  mlr::Array<ors::Shape*> hooksN;
+  mlr::Array<mlr::Shape*> hooksN;
   hooksN.append(sys.ors->getShapeByName("tipHook1"));
   hooksN.append(sys.ors->getShapeByName("tipHook2"));
   hooksN.append(sys.ors->getShapeByName("tipHook3"));

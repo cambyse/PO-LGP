@@ -63,7 +63,7 @@ void drawEnv(void*){
   glDrawFloor(4.,1,1,1);
 }
 
-void oneStep(const arr &q,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift){
+void oneStep(const arr &q,mlr::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift){
   C->setJointState(q);
 #ifdef MLR_ODE
   if(ode){
@@ -84,7 +84,7 @@ void oneStep(const arr &q,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *
 		
 }
 
-void controlledStep(arr &q,arr &W,ors::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift,TaskVariableList& TVs){
+void controlledStep(arr &q,arr &W,mlr::KinematicWorld *C,OdeModule *ode,SwiftInterface *swift,TaskVariableList& TVs){
   static arr dq;
   updateState(TVs);
   updateChanges(TVs); //computeXchangeWithAttractor(globalSpace);
@@ -123,7 +123,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   chdir(path);
 
   if(C) delete C;
-  C = new ors::KinematicWorld();
+  C = new mlr::KinematicWorld();
   *C <<FILE(name);
   //C->reconfigureRoot(C->getName("rfoot"));
 
@@ -153,7 +153,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   for (i=1;;i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body *n = C->getBodyByName(ss.str().c_str());
+    mlr::Body *n = C->getBodyByName(ss.str().c_str());
     if (n==0)
       break;
     noObjects++;
@@ -162,7 +162,7 @@ void ActionInterface::loadConfiguration(const char* ors_filename){
   if(gl) return;
   gl=new OpenGL;
   gl->add(drawEnv,0);
-  gl->add(ors::glDrawGraph,C);
+  gl->add(mlr::glDrawGraph,C);
   //gl->setClearColors(1.,1.,1.,1.);
   gl->camera.setPosition(7.,-0.,2.);
   gl->camera.focus(0,0,.8);
@@ -254,7 +254,7 @@ void ActionInterface::relaxPosition(){
 //   TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,ARR());
 //   x.setGainsAsAttractor(20,.2);
 //   x.y_prec=1000.;
-//   ors::KinematicWorld::node obj=C->getName(obj_id);
+//   mlr::KinematicWorld::node obj=C->getName(obj_id);
 //   
 //   uint t;
 //   arr q,dq;
@@ -297,7 +297,7 @@ void ActionInterface::moveTo(const char *man_id,const arr& target){
 }
 
 void ActionInterface::grab(const char *man_id,const char *obj_id){
-  ors::Body *obj=C->getBodyByName(obj_id);
+  mlr::Body *obj=C->getBodyByName(obj_id);
 	
   TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,ARR());
   x.setGainsAsAttractor(20,.2);
@@ -310,7 +310,7 @@ void ActionInterface::grab(const char *man_id,const char *obj_id){
 //   if(!swift) c.active=false;
   
   // (1) drop object if one is in hand
-  ors::Joint *e;
+  mlr::Joint *e;
   uint i;
   for_list(Type, e, C->bodies(x.i)->outLinks){
     NIY;
@@ -376,16 +376,16 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   //
   int obj_index=C->getBodyByName(obj_id1)->index;
   delete[] obj_id1;
-  ors::Quaternion rot;
+  mlr::Quaternion rot;
   rot = C->bodies(obj_index)->X.rot;
-  ors::Vector upvec; double maxz=-2;
+  mlr::Vector upvec; double maxz=-2;
   if((rot*Vector_x)(2)>maxz){ upvec=Vector_x; maxz=(rot*upvec)(2); }
   if((rot*Vector_y)(2)>maxz){ upvec=Vector_y; maxz=(rot*upvec)(2); }
   if((rot*Vector_z)(2)>maxz){ upvec=Vector_z; maxz=(rot*upvec)(2); }
   if((rot*(-Vector_x))(2)>maxz){ upvec=-Vector_x; maxz=(rot*upvec)(2); }
   if((rot*(-Vector_y))(2)>maxz){ upvec=-Vector_y; maxz=(rot*upvec)(2); }
   if((rot*(-Vector_z))(2)>maxz){ upvec=-Vector_z; maxz=(rot*upvec)(2); }
-  ors::Transformation f;
+  mlr::Transformation f;
   f.rot.setDiff(Vector_z, upvec);
   z.set("obj-z-align",*C,zalignTVT,obj_index,f,-1,Transformation_Id,ARR());
   //
@@ -508,7 +508,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   }
   if(t==Tabort){ indicateFailure(); return; }
   
-  ors::Joint *e;
+  mlr::Joint *e;
   e=C->bodies(x.i)->inLinks(0);
   if (obj_is_inhand){
     NIY;
@@ -533,8 +533,8 @@ bool ActionInterface::partOfBody(uint id){
 
 uint ActionInterface::getCatched(uint man_id){
 #if 0
-  //   ors::KinematicWorld::node n = C->bodies(man_id);
-  ors::Proxy *p;
+  //   mlr::KinematicWorld::node n = C->bodies(man_id);
+  mlr::Proxy *p;
   // 	cout << "davor";
   uint obj=C->getBodyByName(convertObjectID2name(man_id))->index;
   //   cout << "danach";
@@ -558,7 +558,7 @@ uint ActionInterface::getCatched(uint man_id){
 }
   return UINT_MAX;
 #else
-  ors::Joint *e;
+  mlr::Joint *e;
   e=C->bodies(man_id)->outLinks(0);
   if(!e) return UINT_MAX;
   return e->to->index;
@@ -570,7 +570,7 @@ uint ActionInterface::getCatched() {
 }
 
 void ActionInterface::writeAllContacts(uint id) {
-  ors::Proxy *p;
+  mlr::Proxy *p;
   // 	cout << "davor";
   uint obj=C->getBodyByName(convertObjectID2name(id))->index;
   //   cout << "danach";
@@ -598,7 +598,7 @@ void ActionInterface::writeAllContacts(uint id) {
 
 void ActionInterface::getObjectsAbove(uintA& list,const char *obj_id){
   list.clear();
-  ors::Proxy *p;
+  mlr::Proxy *p;
   uint obj=C->getBodyByName(obj_id)->index;
 //   writeAllContacts(convertObjectName2ID(obj_id));
   uint i;
@@ -632,7 +632,7 @@ void ActionInterface::getObjectsAbove(uintA& list,const uint obj_id) {
 
 // void ActionInterface::getObjectsBelow(uintA& list,const char *obj_id){
 //   list.clear();
-//   ors::Proxy *p;
+//   mlr::Proxy *p;
 //   uint obj=C->getBodyByName(obj_id)->index;
 //   uint i;
 //   for(i=0;i<C->proxies.N;i++) if(!C->proxies(i).age && C->proxies(i).d<0.){
@@ -666,14 +666,14 @@ void ActionInterface::getManipulableObjects(uintA& objects) {
   for (i=1;i<=noObjects;i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body *n = C->getBodyByName(ss.str().c_str());
+    mlr::Body *n = C->getBodyByName(ss.str().c_str());
     obj=n->index;
     objects.append(obj);
   }
 }
 
 uint ActionInterface::getTableID() {
-  ors::Body *n = C->getBodyByName("table");
+  mlr::Body *n = C->getBodyByName("table");
   return n->index;
 }
 
@@ -686,9 +686,9 @@ bool ActionInterface::inContact(uint a,uint b){
 bool ActionInterface::isUpright(uint id){
   double TOLERANCE = 0.05; // in radians
   
-  ors::Quaternion rot;
+  mlr::Quaternion rot;
   rot = C->bodies(id)->X.rot;
-  ors::Vector upvec; double maxz=-2;
+  mlr::Vector upvec; double maxz=-2;
   if((rot*Vector_x)(2)>maxz){ upvec=Vector_x; maxz=(rot*upvec)(2); }
   if((rot*Vector_y)(2)>maxz){ upvec=Vector_y; maxz=(rot*upvec)(2); }
   if((rot*Vector_z)(2)>maxz){ upvec=Vector_z; maxz=(rot*upvec)(2); }
@@ -763,7 +763,7 @@ void ActionInterface::printObjectInfo() {
 
 void ActionInterface::indicateFailure(){
   // drop object
-  ors::Joint *e;
+  mlr::Joint *e;
   uint i;
   for_list(Type, e, C->getBodyByName("fing1c")->outLinks){
     NIY;
@@ -776,7 +776,7 @@ void ActionInterface::indicateFailure(){
 // if z-value of objects is beneath THRESHOLD
 bool ActionInterface::onBottom(uint id) {
   double THRESHOLD = 0.15;
-  ors::Body *obj=C->bodies(id);
+  mlr::Body *obj=C->bodies(id);
   if (obj->X.pos.z < THRESHOLD)
     return true;
   else

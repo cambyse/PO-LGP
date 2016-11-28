@@ -31,7 +31,7 @@ int main(int argc, char** argv){
 
     //-- ugly...
     for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
-    for(ors::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
+    for(mlr::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
 
     //-- run script
     threadOpenModules(true);

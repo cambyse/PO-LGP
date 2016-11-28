@@ -51,7 +51,7 @@ void inferCameraProjectionMatrix(){
       K /= K(2,2); //the scaling of K is arbitrary, convention: $K_{3,3}=1$
     }
     R = ~R; //in my convention this R is the inverse rotation!
-    ors::Quaternion r;  r.setMatrix(R.p);
+    mlr::Quaternion r;  r.setMatrix(R.p);
 
     cout <<"\nProjection Matrix computed from noise points:"
 	 <<"\nP=" <<P

@@ -11,8 +11,8 @@
 #include <RosCom/trajectoryInterface.h>
 
 void TEST(TrajectoryInterface){
-  ors::KinematicWorld world_plan("model_plan.kvg");
-  ors::KinematicWorld world_robot("model.kvg");
+  mlr::KinematicWorld world_plan("model_plan.kvg");
+  mlr::KinematicWorld world_robot("model.kvg");
   makeConvexHulls(world_plan.shapes);
   TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_robot);
 
@@ -54,8 +54,8 @@ void TEST(TrajectoryInterface){
 }
 
 void TEST(RecordReplay) {
-  ors::KinematicWorld world_plan("model_plan.kvg");
-  ors::KinematicWorld world_robot("model.kvg");
+  mlr::KinematicWorld world_plan("model_plan.kvg");
+  mlr::KinematicWorld world_robot("model.kvg");
 
   TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_robot);
 

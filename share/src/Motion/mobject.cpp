@@ -14,7 +14,7 @@
 
 #include "mobject.h"
 
-MObject::MObject(ors::KinematicWorld *_world,mlr::String _name, ObjectType _objectType, double _stepLength, const arr &_direction) {
+MObject::MObject(mlr::KinematicWorld *_world,mlr::String _name, ObjectType _objectType, double _stepLength, const arr &_direction) {
   world=_world;
   name = _name;
   objectType = _objectType;

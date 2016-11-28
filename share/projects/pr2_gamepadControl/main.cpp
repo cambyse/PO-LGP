@@ -32,14 +32,14 @@ void TEST(Gamepad){
   //-- open modules
   threadOpenModules(true);
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
+  mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
 
-  ors::KinematicWorld world_pr2 = world;
+  mlr::KinematicWorld world_pr2 = world;
   world.gl().add(changeColor);
   world.gl().addDrawer(&world_pr2);
   world.gl().add(changeColor2);
@@ -135,7 +135,7 @@ void TEST(Gamepad){
 #else // apply force in direction fe
       arr f_des = ARR(0.,0.,-5.);
       double alpha = .003;
-      ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
+      mlr::Shape *ftL_shape = world.getShapeByName("endeffForceL");
       arr J_ft, J;
       MP.world.kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
       MP.world.kinematicsPos_wrtFrame(NoArr, J_ft, ftL_shape->body, ftL_shape->rel.pos, MP.world.getShapeByName("l_ft_sensor"));
@@ -161,11 +161,11 @@ void TEST(Gamepad){
 
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;
-//      ors::Vector rel = ftL_shape->rel.rot*ors::Vector(fe/length(fe));
+//      mlr::Vector rel = ftL_shape->rel.rot*mlr::Vector(fe/length(fe));
 //      MP.world.kinematicsVec(yVec_fL, JVec_fL, ftL_shape->body,&rel);
 
-//      ors::Quaternion quat;
-//      quat.setDiff(ors::Vector(1.,0.,0.),yVec_fL);
+//      mlr::Quaternion quat;
+//      quat.setDiff(mlr::Vector(1.,0.,0.),yVec_fL);
 //      arr R = ~quat.getArr();
 //      arr J_fL0 = R*Jeq;
 //      J_fL0[0]=0.;

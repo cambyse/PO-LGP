@@ -27,7 +27,7 @@ struct MySystem{
 void changeColor(void*){  orsDrawAlpha = .7; }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
-void planTrajectory(arr &x,ors::KinematicWorld &world) {
+void planTrajectory(arr &x,mlr::KinematicWorld &world) {
   MotionProblem MP(world,false);
 
   /// load parameter from file
@@ -57,20 +57,20 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
   t->setCostSpecs(C, C, conv_vec2arr(world.getShapeByName("handle")->X.pos), param(pC));
   pC++;
 
-  t =MP.addTask("vecC", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t =MP.addTask("vecC", new TaskMap_Default(vecAlignTMT, world, "endeffL", mlr::Vector(0.,1.,0.),"handle",mlr::Vector(0.,0.,1.)));
   t->setCostSpecs(C, C, ARR(1.), param(pC));
   pC++;
 
-  t =MP.addTask("vecC2", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t =MP.addTask("vecC2", new TaskMap_Default(vecAlignTMT, world, "endeffL", mlr::Vector(0.,1.,0.),"handle",mlr::Vector(0.,0.,1.)));
   t->setCostSpecs(C-10, C-10, ARR(1.), param(pC));
   pC++;
 
-  t =MP.addTask("vecC3", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t =MP.addTask("vecC3", new TaskMap_Default(vecAlignTMT, world, "endeffL", mlr::Vector(0.,1.,0.),"handle",mlr::Vector(0.,0.,1.)));
   t->setCostSpecs(C+10, C+10, ARR(1.), param(pC));
   pC++;
 
-  ors::Vector dir = ors::Vector(0.,-.7,0.2); dir.normalize();
-  t =MP.addTask("vecF", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(0.,1.,0.),"handle",dir));
+  mlr::Vector dir = mlr::Vector(0.,-.7,0.2); dir.normalize();
+  t =MP.addTask("vecF", new TaskMap_Default(vecAlignTMT, world, "endeffL", mlr::Vector(0.,1.,0.),"handle",dir));
   t->setCostSpecs(U, U, ARR(1.), param(pC));
   pC++;
 
@@ -101,27 +101,27 @@ void planTrajectory(arr &x,ors::KinematicWorld &world) {
 }
 
 
-void initDoor(ors::KinematicWorld &world, arr &marker_pose){
+void initDoor(mlr::KinematicWorld &world, arr &marker_pose){
   arr doorMarker = marker_pose[4];
   arr doorMarkerPos = doorMarker.refRange(0,2);
-  ors::Quaternion doorMarkerQuat = ors::Quaternion(doorMarker.refRange(3,6));
+  mlr::Quaternion doorMarkerQuat = mlr::Quaternion(doorMarker.refRange(3,6));
 
   arr wallMarker = marker_pose[17];
   arr wallMarkerPos = wallMarker.refRange(0,2);
-  ors::Quaternion wallMarkerQuat = ors::Quaternion(wallMarker.refRange(3,6));
+  mlr::Quaternion wallMarkerQuat = mlr::Quaternion(wallMarker.refRange(3,6));
 
   arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 
-  ors::Quaternion door_rot = ors::Quaternion(0,1,0,0);//doorMarkerQuat;//ors::Quaternion(markerQuat0[1]);
-  ors::Quaternion trans = world.getBodyByName("torso_lift_link")->X.rot;
+  mlr::Quaternion door_rot = mlr::Quaternion(0,1,0,0);//doorMarkerQuat;//mlr::Quaternion(markerQuat0[1]);
+  mlr::Quaternion trans = world.getBodyByName("torso_lift_link")->X.rot;
 //  trans.z=0.; trans.normalize();
 //  arr tmp = ~trans.getArr();
 //  cout << tmp << endl;
-//  trans.setDiff(tmp[2],ors::Vector(0.,0.,1));
+//  trans.setDiff(tmp[2],mlr::Vector(0.,0.,1));
 //  door_rot = trans*door_rot;
   trans.setRad(-M_PI,door_rot.getZ());
   door_rot = trans*door_rot;
-//  trans.setRad(M_PI_2,ors::Vector(0.,0.,1.));
+//  trans.setRad(M_PI_2,mlr::Vector(0.,0.,1.));
 //  door_rot = trans*door_rot;
 //  trans.setRad(M_PI_2,door_rot.getY());
 //  door_rot = trans*door_rot;
@@ -143,7 +143,7 @@ void initDoor(ors::KinematicWorld &world, arr &marker_pose){
   world.calc_fwdPropagateShapeFrames();
 }
 
-void transPlanPR2(mlr::Array<mlr::String> &active_joints, ors::KinematicWorld &w_plan, ors::KinematicWorld &w_pr2, const arr &q_plan, arr &q_pr2) {
+void transPlanPR2(mlr::Array<mlr::String> &active_joints, mlr::KinematicWorld &w_plan, mlr::KinematicWorld &w_pr2, const arr &q_plan, arr &q_pr2) {
   for (uint i = 0; i<active_joints.d0;i++){
     uint planIdx = w_plan.getJointByName(active_joints(i))->qIndex;
     uint pr2Idx = w_pr2.getJointByName(active_joints(i))->qIndex;
@@ -151,7 +151,7 @@ void transPlanPR2(mlr::Array<mlr::String> &active_joints, ors::KinematicWorld &w
   }
 }
 
-void transPR2Plan(mlr::Array<mlr::String> &act_joints, ors::KinematicWorld &w_pr2, ors::KinematicWorld &w_plan, const arr &q_pr2, arr &q_plan) {
+void transPR2Plan(mlr::Array<mlr::String> &act_joints, mlr::KinematicWorld &w_pr2, mlr::KinematicWorld &w_plan, const arr &q_pr2, arr &q_plan) {
   for (uint i = 0; i<act_joints.d0;i++){
     uint pr2Idx = w_pr2.getJointByName(act_joints(i))->qIndex;
     uint planIdx = w_plan.getJointByName(act_joints(i))->qIndex;
@@ -162,8 +162,8 @@ void transPR2Plan(mlr::Array<mlr::String> &act_joints, ors::KinematicWorld &w_pr
 void run(){
   MySystem S;
   threadOpenModules(true);
-  ors::KinematicWorld world_plan("model_reduced.kvg");
-  ors::KinematicWorld world_pr2("model.kvg");
+  mlr::KinematicWorld world_plan("model_reduced.kvg");
+  mlr::KinematicWorld world_pr2("model.kvg");
 
   // set list of active joints for remapping between pr2 and plan KinematicWorlds
   mlr::Array<mlr::String> active_joints;

@@ -10,7 +10,7 @@ private:
   tf::TransformBroadcaster tf_sender;
 
 public:
-  void publish_bodies(const ros::Time& time, const ors::KinematicWorld& w);
+  void publish_bodies(const ros::Time& time, const mlr::KinematicWorld& w);
 };
 
 class MarkerSender {
@@ -22,7 +22,7 @@ private:
 public:
   MarkerSender();
   virtual ~MarkerSender();
-  void publish_bodies(const ros::Time& time, const ors::KinematicWorld& w);
+  void publish_bodies(const ros::Time& time, const mlr::KinematicWorld& w);
 };
 
 #endif // ROS_PRIVATE_H

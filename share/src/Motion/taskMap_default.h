@@ -35,22 +35,22 @@ extern const char* TaskMap_DefaultType2String[];
 struct TaskMap_Default:TaskMap {
   TaskMap_DefaultType type;
   int i, j;               ///< which shapes does it refer to?
-  ors::Vector ivec, jvec; ///< additional position or vector
+  mlr::Vector ivec, jvec; ///< additional position or vector
   intA referenceIds; ///< the shapes it refers to DEPENDENT on time
 
   TaskMap_Default(TaskMap_DefaultType type,
-                 int iShape=-1, const ors::Vector& ivec=NoVector,
-                 int jShape=-1, const ors::Vector& jvec=NoVector);
+                 int iShape=-1, const mlr::Vector& ivec=NoVector,
+                 int jShape=-1, const mlr::Vector& jvec=NoVector);
 
-  TaskMap_Default(TaskMap_DefaultType type, const ors::KinematicWorld& G,
-                 const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                 const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
+  TaskMap_Default(TaskMap_DefaultType type, const mlr::KinematicWorld& G,
+                 const char* iShapeName=NULL, const mlr::Vector& ivec=NoVector,
+                 const char* jShapeName=NULL, const mlr::Vector& jvec=NoVector);
 
-  TaskMap_Default(const Graph &parameters, const ors::KinematicWorld& G);
-  TaskMap_Default(const Node *parameters, const ors::KinematicWorld& G);
+  TaskMap_Default(const Graph &parameters, const mlr::KinematicWorld& G);
+  TaskMap_Default(const Node *parameters, const mlr::KinematicWorld& G);
 
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1);
-  virtual uint dim_phi(const ors::KinematicWorld& G);
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("Default_"<<TaskMap_DefaultType2String[type]<<'_'<<(i<0?"WORLD":G.shapes(i)->name) <<'_' <<(j<0?"WORLD":G.shapes(j)->name)); }
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
+  virtual uint dim_phi(const mlr::KinematicWorld& G);
+  virtual mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("Default_"<<TaskMap_DefaultType2String[type]<<'_'<<(i<0?"WORLD":G.shapes(i)->name) <<'_' <<(j<0?"WORLD":G.shapes(j)->name)); }
 };
 

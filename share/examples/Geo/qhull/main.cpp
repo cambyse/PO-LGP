@@ -68,7 +68,7 @@ void TEST(ConvexHull) {
 //
 
 namespace FCtest{
-  ors::Vector center;
+  mlr::Vector center;
   arr Xn;
   double f(arr *grad,const arr& X,void*){
     return forceClosure(X,Xn,center,.5,10.,grad);
@@ -89,7 +89,7 @@ void TEST(ForceClosure) {
   arr dFdX;
 
   double d;
-  ors::Vector center;
+  mlr::Vector center;
   center.set(c.p);
 
   //gradient descent on force closure
@@ -129,12 +129,12 @@ void drawInit(void*){
 
 /*
 void TEST(FCinOrs){
-  ors::KinematicWorld C;
+  mlr::KinematicWorld C;
   C <<FILE("../../data/configurations/forceClosureTest.ors");
 
   OpenGL gl;
   gl.add(drawInit,0);
-  gl.add(ors::glDrawGraph,&C);
+  gl.add(mlr::glDrawGraph,&C);
   gl.watch();
 
   SwiftInterface swift;

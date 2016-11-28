@@ -20,8 +20,8 @@
 
 //===========================================================================
 
-PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
-                         const ors::KinematicWorld& world_final,
+PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
+                         const mlr::KinematicWorld& world_final,
                          const Graph& symbolicState,
                          uint microSteps,
                          int verbose)
@@ -129,7 +129,7 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
     }
 
     // zero grasp joint motion during holding
-    ors::Joint *j_grasp = world.getJointByName("graspJoint");
+    mlr::Joint *j_grasp = world.getJointByName("graspJoint");
     arr M(j_grasp->qDim(),world.getJointStateDimension());
     M.setZero();
     for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
@@ -188,17 +188,17 @@ PathProblem::PathProblem(const ors::KinematicWorld& world_initial,
   //-- graph switches
   for(uint i=0;i<actions.N;i++){
     //pick at time 2*i+1
-    ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
-    op_pick->symbol = ors::KinematicSwitch::addJointZero;
-    op_pick->jointType = ors::JT_rigid;
+    mlr::KinematicSwitch *op_pick = new mlr::KinematicSwitch();
+    op_pick->symbol = mlr::KinematicSwitch::addJointZero;
+    op_pick->jointType = mlr::JT_rigid;
     op_pick->timeOfApplication = tPick(i)+1;
     op_pick->fromId = world.shapes(endeff_index)->index;
     op_pick->toId = world.shapes(idObject(i))->index;
     MP.switches.append(op_pick);
 
     //place at time 2*i+2
-    ors::KinematicSwitch *op_place = new ors::KinematicSwitch();
-    op_place->symbol = ors::KinematicSwitch::deleteJoint;
+    mlr::KinematicSwitch *op_place = new mlr::KinematicSwitch();
+    op_place->symbol = mlr::KinematicSwitch::deleteJoint;
     op_place->timeOfApplication = tPlace(i)+1;
     op_place->fromId = world.shapes(endeff_index)->index;
     op_place->toId = world.shapes(idObject(i))->index;

@@ -54,24 +54,24 @@ struct MySystem{
 };
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
+void PR2_ActionMachine(FSC fsc, mlr::KinematicWorld& world, int num){
 
 
      ofstream data(STRING("data-"<<num<<".dat"));
 
- // ors::KinematicWorld& world = activity.machine->s->world;
+ // mlr::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
   threadOpenModules(true);
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-  ors::Shape *ftL_shape=world.getShapeByName("endeffR");
+  mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
+  mlr::Shape *ftL_shape=world.getShapeByName("endeffR");
 
-  ors::KinematicWorld worldCopy = world;
+  mlr::KinematicWorld worldCopy = world;
 
-  //world.gl().add(ors::glDrawGraph, &worldCopy);
+  //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
   TaskController MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
@@ -108,10 +108,10 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
   MP.qitselfPD.active=true;
 
 
-  ors::Shape *endeff = world.getShapeByName("endeffR");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeffR");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
 
 
 
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
   arr y0;
   double dual;
   //arr x0 = world.getJointState();
-  ors::Shape *endeff = activity.machine->s->world.getShapeByName("endeffR");
+  mlr::Shape *endeff = activity.machine->s->world.getShapeByName("endeffR");
 
   y0.resize(3);
 

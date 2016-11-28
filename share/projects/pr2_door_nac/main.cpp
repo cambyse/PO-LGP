@@ -28,7 +28,7 @@ int main(int argc,char **argv){
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
 
 
-  ors::KinematicWorld world(STRING("model.kvg"));
+  mlr::KinematicWorld world(STRING("model.kvg"));
   DoorTask *task = new DoorTask(world);
   Motion_Interface *mi;
   if (useRos) mi = new Motion_Interface(world);

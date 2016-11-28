@@ -33,7 +33,7 @@ struct ValueFctLearning {
 
   arr A,b,z; // Iterative LSTD
 
-  ors::KinematicWorld *world;
+  mlr::KinematicWorld *world;
   MotionProblem *MP;
 
   /// initialize W to diagonal matrix and all values to 1
@@ -47,7 +47,7 @@ struct ValueFctLearning {
       param.resize(nFeat*nFeat);
     }
 
-//    world = new ors::KinematicWorld("scene0");
+//    world = new mlr::KinematicWorld("scene0");
 //    arr w = ARR(world->getBodyByName("target")->X.pos);
 //    param.append(w);
 
@@ -175,7 +175,7 @@ struct ValueFctLearning {
   }
 
   void runVF() {
-    world = new ors::KinematicWorld("scene0");
+    world = new mlr::KinematicWorld("scene0");
     MP = new MotionProblem(*world,false);
 
     MP->addTask("pos", new DefaultTaskMap(posTMT, *world, "endeff", NoVector));

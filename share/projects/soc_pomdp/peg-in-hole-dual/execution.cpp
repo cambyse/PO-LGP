@@ -8,7 +8,7 @@
 using namespace std;
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0, const double& height, bool stickyness, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0, const double& height, bool stickyness, uint horizon){
     /////////////
 
   //SET INITIAL STATE: Model parameter (height, position, size,...), and initial joint's position
@@ -110,16 +110,16 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
 // DUAL-EXECUTION
-void POMDPExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWorld& world, int num){
+void POMDPExecution(const arr& x, const arr& y, const arr& dual, mlr::KinematicWorld& world, int num){
   arr q, qdot;
   world.getJointState(q, qdot);
 
   ofstream data(STRING("data-"<<num<<".dat"));
 
-  ors::Shape *endeff = world.getShapeByName("peg");
-  ors::Shape *true_target = world.getShapeByName("target");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("hole");
+  mlr::Shape *endeff = world.getShapeByName("peg");
+  mlr::Shape *true_target = world.getShapeByName("target");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("hole");
   double mean_table_height = table->X.pos.z;
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);

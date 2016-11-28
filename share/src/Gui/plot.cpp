@@ -34,8 +34,8 @@ struct sPlotModule {
   mlr::Array<arr> lines;
   mlr::Array<mlr::String> legend;
 #ifdef MLR_geo_h
-  mlr::Array<ors::Vector> planes;
-  ors::Mesh mesh;
+  mlr::Array<mlr::Vector> planes;
+  mlr::Mesh mesh;
 #endif
 };
 

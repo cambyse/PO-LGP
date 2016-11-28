@@ -152,7 +152,7 @@ void NODE::Add(int obs)
 
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0, const double& height, bool stickyness, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0, const double& height, bool stickyness, uint horizon){
     /////////////
 
   //set initial state
@@ -227,22 +227,22 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
 //set a specific pose to the robot
-void setInitialPose(const arr x, ors::KinematicWorld& world)
+void setInitialPose(const arr x, mlr::KinematicWorld& world)
 {
     world.setJointState(x);
 }
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::KinematicWorld& world, int num){
+void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, mlr::KinematicWorld& world, int num){
   arr q, qdot;
   world.getJointState(q, qdot);
 
   ofstream data(STRING("data-"<<num<<".dat"));
 
-  ors::Shape *endeff = world.getShapeByName("endeff");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeff");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
   double mean_table_height = table->X.pos.z;
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
@@ -450,7 +450,7 @@ inline bool check_next_observation (arr sampleDual, double prev)
 
 
 //CHECK current_obs
-void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
+void OptimizeFSC(mlr::KinematicWorld& world, NODE*& node, int horizon)
 {
     int steps = 1;
 

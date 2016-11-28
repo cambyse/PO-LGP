@@ -18,7 +18,7 @@
 #include <Core/thread.h>
 #include "execution.h"
 
-arr getSimpleTrajectory(ors::KinematicWorld& G){
+arr getSimpleTrajectory(mlr::KinematicWorld& G){
   MotionProblem P(G, false);
   P.loadTransitionParameters();
 
@@ -38,7 +38,7 @@ arr getSimpleTrajectory(ors::KinematicWorld& G){
   return x;
 }
 
-arr getKindOfSimpleTrajectory(ors::KinematicWorld& G){
+arr getKindOfSimpleTrajectory(mlr::KinematicWorld& G){
   MotionProblem P(G, false);
   P.loadTransitionParameters();
   arr x = P.getInitialization();
@@ -113,7 +113,7 @@ int main(int argc, char** argv){
 
 
   OpenGL gl;
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x = getKindOfSimpleTrajectory(G);
   arr x2 = reverseTrajectory(x);

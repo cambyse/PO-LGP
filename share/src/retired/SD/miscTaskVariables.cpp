@@ -1,18 +1,18 @@
 #include "miscTaskVariables.h"
 
 zOpposeTaskVariable::zOpposeTaskVariable(const char* _name,
-                                         ors::KinematicWorld& _ors,
+                                         mlr::KinematicWorld& _ors,
                                          ShapeList& _refs){
   refs=_refs;
   set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
-void zOpposeTaskVariable::userUpdate(const ors::KinematicWorld& ors){
+void zOpposeTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
     //compute sum of z-vectors for n shapes
     //return sunOfSqr of this sum (is a scalar task variable)
   uint i;
-  ors::Shape *s;
-  ors::Vector tmp;
+  mlr::Shape *s;
+  mlr::Vector tmp;
   arr zi,Ji,sum_z,sum_J;
   sum_J.resize(refs.N,ors.getJointStateDimension()); sum_J.setZero();
   sum_z.resize(3); sum_z.setZero();
@@ -30,13 +30,13 @@ void zOpposeTaskVariable::userUpdate(const ors::KinematicWorld& ors){
 }
 
 zFocusTargetTaskVariable::zFocusTargetTaskVariable(const char* _name,
-    ors::KinematicWorld& _ors,
+    mlr::KinematicWorld& _ors,
     ShapeList& _refs){
   refs=_refs;
   set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
 }
 
-void zFocusTargetTaskVariable::userUpdate(const ors::KinematicWorld& ors){
+void zFocusTargetTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
     //for all n shapes:
     //diff=target-shape->X.p;
     //z = shape->X.getZ();

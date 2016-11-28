@@ -45,7 +45,7 @@ private:
 
   // Ors related variables
   TaskController* MP;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
   CtrlTask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;
   double tau_control, tau_plan;

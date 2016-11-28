@@ -49,7 +49,7 @@ struct AmexController {
   arr refFrame;                   // Reference Coordinate Frame
   bool useGoalPub;                // Use Goal from /get_goal topic
 
-  ors::KinematicWorld world;      //
+  mlr::KinematicWorld world;      //
   AdaptiveMotionExecution* amex;  // Motion adaptation method
   MObject* goalMO;                // Target goal state
   arr acc_gains, vel_gains;       // PD Gains for joints
@@ -63,7 +63,7 @@ struct AmexController {
   arr ct_bk;                      // computational time at each time step
   arr s_bk;                       // phase variable at each time step
 
-  AmexController(ros::NodeHandle &_nh, ors::KinematicWorld &_world, arr &_refPlan, arr &_q0, double _TRef, bool _useGoalPub);
+  AmexController(ros::NodeHandle &_nh, mlr::KinematicWorld &_world, arr &_refPlan, arr &_q0, double _TRef, bool _useGoalPub);
   void initRosServices();
   void initController();
   void iterate();

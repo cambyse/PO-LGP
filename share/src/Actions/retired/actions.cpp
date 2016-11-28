@@ -234,7 +234,7 @@ AlignEffTo::AlignEffTo(ActionMachine& actionMachine, const char* effName, const 
     : Action(actionMachine, "AlignEffTo") {
   CtrlTask *task = new CtrlTask(
                      STRING("AlignEffTo_" << effName),
-                     new TaskMap_Default(vecTMT, actionMachine.s->world, effName, ors::Vector(effVector)),
+                     new TaskMap_Default(vecTMT, actionMachine.s->world, effName, mlr::Vector(effVector)),
                      2., .8, 1., 1.);
   // task->setGains(100.,0.);
   task->y_ref = vectorTarget;

@@ -33,7 +33,7 @@ Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
 
 double Lockbox::getJointPosition(const uint joint)
 {
-//  ors::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
+//  mlr::Joint* jt = myBaxter->getModelWorld().getJointByName(joint_to_ors_joint.at(joint));
 //  return 100.0 * myBaxter->getModelWorld().q(jt->qIndex) / jt->limits(1);
     return 100.0 * joint_positions.at(joint);
 }
@@ -156,7 +156,7 @@ void Lockbox::fixJoint(const uint joint, const bool toFix)
 void Lockbox::grip(const bool toGrip)
 {
 //  arr q = myBaxter->getModelWorld().q;
-  ors::Joint *j = myBaxter->getModelWorld().getJointByName("l_gripper_l_finger_joint");
+  mlr::Joint *j = myBaxter->getModelWorld().getJointByName("l_gripper_l_finger_joint");
 
   toGrip ? q0(j->qIndex) = j->limits(0) : q0(j->qIndex) = j->limits(1);
 
@@ -216,7 +216,7 @@ bool Lockbox::moveJoint(const uint joint)
 
   // Position task
   mlr::String str;
-  ors::Vector target = ors::Vector(0, 0, 0.15);
+  mlr::Vector target = mlr::Vector(0, 0, 0.15);
   str << "map=pos ref1=endeffL ref2=" << handle << " vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1.2, .2, 10.]";
 
   cout << "Moving above handle." << endl;
@@ -243,7 +243,7 @@ bool Lockbox::moveJoint(const uint joint)
 
   // Move closer.
   str.clear();
-  target = ors::Vector(0., 0., 0.05);
+  target = mlr::Vector(0., 0., 0.05);
   str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1, 2, .5]";
   approach = myBaxter->task("approach", GRAPH(str));
 
@@ -328,7 +328,7 @@ bool Lockbox::moveJoint(const uint joint)
       grip(false);
       fixJoint(joint, true);
       str.clear();
-      ors::Vector point = ors::Vector(0., 0., 0.3);
+      mlr::Vector point = mlr::Vector(0., 0., 0.3);
       str << "map=pos ref1=endeffL ref2=" << handle << " vec2=["<< point.x << ", " << point.y << ", " << point.z << "] PD=[1., 1, 1., 1.]";
       auto retract = myBaxter->task("retract", GRAPH(str));
       myBaxter->waitConv({retract, alignX, alignY, alignZ});
@@ -366,7 +366,7 @@ bool Lockbox::moveJoint(const uint joint)
 //  str.clear();
 //  str << "map=pos ref1=endeffL ref2=" << marker_name << " vec2=[0 0 0.2] PD=[1., 1, 1., 1.]";
 
-////    ors::Vector marker_pos = baxter.getModelWorld().getShapeByName(marker_name)->X.pos;
+////    mlr::Vector marker_pos = baxter.getModelWorld().getShapeByName(marker_name)->X.pos;
 ////    str << "map=pos ref1=endeffL ref2=base_footprint  vec2=[" << marker_pos.x << ' ' << marker_pos.y << ' ' << marker_pos.z << "] PD=[1., 1, 1., 1.]";
 
 //  // Alignment tasks.
@@ -489,7 +489,7 @@ void Lockbox::update()
   for (auto i : {6, 7, 9, 10})
   {
     mlr::String alvar_name = STRING("alvar_" << i);
-    ors::Shape* alvar = myBaxter->getModelWorld().getShapeByName(alvar_name, false);
+    mlr::Shape* alvar = myBaxter->getModelWorld().getShapeByName(alvar_name, false);
 
     if (!alvar)
      continue;
@@ -506,7 +506,7 @@ void Lockbox::update()
   // New Q vector is in komo.x
   lockbox_world.setJointState(komo.x);
 
-  ors::Transformation lockboxPos = lockbox_world.getBodyByName("lockbox")->X;
+  mlr::Transformation lockboxPos = lockbox_world.getBodyByName("lockbox")->X;
 
   myBaxter->updateLockbox(lockboxPos);
 }
@@ -514,7 +514,7 @@ void Lockbox::update()
 bool Lockbox::updatedJointPose(const uint joint_num, arr& new_q)
 {
 
-  ors::KinematicWorld my_copy(myBaxter->getKinematicWorld());
+  mlr::KinematicWorld my_copy(myBaxter->getKinematicWorld());
 
   KOMO komo;
   komo.setModel(my_copy);
@@ -532,10 +532,10 @@ bool Lockbox::updatedJointPose(const uint joint_num, arr& new_q)
     alvar_name = lockbox_marker_name;
 
 
-  ors::Shape* alvar = myBaxter->getModelWorld().getShapeByName(alvar_name);
-  ors::Joint* jt = my_copy.getJointByName(STRING("lockbox_" << joint_name.at(joint_num)));
+  mlr::Shape* alvar = myBaxter->getModelWorld().getShapeByName(alvar_name);
+  mlr::Joint* jt = my_copy.getJointByName(STRING("lockbox_" << joint_name.at(joint_num)));
 
-  //ors::Joint* model_jt = myBaxter->getModelWorld().getJointByName(STRING("lockbox_" << joint_name.at(joint_num)));
+  //mlr::Joint* model_jt = myBaxter->getModelWorld().getJointByName(STRING("lockbox_" << joint_name.at(joint_num)));
 
   if (!alvar)
     return false;

@@ -37,7 +37,7 @@
 //
 
 struct sOrsSystem {
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   SwiftInterface *swift;
   mlr::Array<TaskVariable*> vars;
   arr x, x0;
@@ -95,8 +95,8 @@ OrsSystem* OrsSystem::newClone(bool deep) const {
     sys->s->swift= s->swift->newClone(*sys->s->ors);
     if(gl){
       sys->gl =gl->newClone();
-      sys->gl->remove(ors::glDrawGraph, s->ors);
-      sys->gl->add(ors::glDrawGraph, sys->s->ors);
+      sys->gl->remove(mlr::glDrawGraph, s->ors);
+      sys->gl->add(mlr::glDrawGraph, sys->s->ors);
     }
     sys->s->newedOrs = true;
   }
@@ -111,14 +111,14 @@ OrsSystem* OrsSystem::newClone(bool deep) const {
   return sys;
 }
 
-void OrsSystem::initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
+void OrsSystem::initBasics(mlr::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                                     uint trajectory_steps, double trajectory_duration, bool _dynamic, arr *W){
-  if(_ors)   s->ors   = _ors;   else { s->ors=new ors::KinematicWorld;        s->ors  ->init(mlr::getParameter<mlr::String>("orsFile")); } // ors->makeLinkTree(); }
+  if(_ors)   s->ors   = _ors;   else { s->ors=new mlr::KinematicWorld;        s->ors  ->init(mlr::getParameter<mlr::String>("orsFile")); } // ors->makeLinkTree(); }
   if(_swift) s->swift = _swift; else { s->swift=new SwiftInterface;  s->swift->init(*s->ors, 2.*mlr::getParameter<double>("swiftCutoff", 0.11)); }
   gl    = _gl;
   if(gl && !_ors){
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, s->ors);
+    gl->add(mlr::glDrawGraph, s->ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -160,7 +160,7 @@ void OrsSystem::initStandardReachProblem(uint rand_seed, uint T, bool _dynamic){
 
   if(rand_seed>0){
     rnd.seed(rand_seed);
-    ors::Body &t=*s->ors->getBodyByName("target");
+    mlr::Body &t=*s->ors->getBodyByName("target");
     t.X.pos.x += .05*rnd.gauss();
     t.X.pos.y += .05*rnd.gauss();
     t.X.pos.z += .05*rnd.gauss();
@@ -204,23 +204,23 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   bool useTruncation = mlr::getParameter<bool>("useTruncation");
 
   //generate the configuration
-  ors::Body *b, *target, *endeff;  ors::Shape *sh;  ors::Joint *j;
+  mlr::Body *b, *target, *endeff;  mlr::Shape *sh;  mlr::Joint *j;
   mlr::String str;
-  s->ors=new ors::KinematicWorld;
+  s->ors=new mlr::KinematicWorld;
   //the links
   for(uint k=0; k<=K; k++){
-    b=new ors::Body(*s->ors);
+    b=new mlr::Body(*s->ors);
     b->name = STRING("body" <<k);
-    if(!k) b->type=ors::staticBT;
-    sh=new ors::Shape(*s->ors, b);
-    sh->type=ors::cappedCylinderST;
+    if(!k) b->type=mlr::staticBT;
+    sh=new mlr::Shape(*s->ors, b);
+    sh->type=mlr::cappedCylinderST;
     sh->size[0]=.0; sh->size[1]=.0; sh->size[2]=1./K; sh->size[3]=.2/K;
     sh->rel.setText(STRING("<t(0 0 " <<.5/K <<")>"));
     if(k&1){ sh->color[0]=.5; sh->color[1]=.2; sh->color[2]=.2; } else   { sh->color[0]=.2; sh->color[1]=.2; sh->color[2]=.2; }
     sh->cont=true;
     if(k){
-      j=new ors::Joint(*s->ors, s->ors->bodies(k-1), s->ors->bodies(k));
-      j->type = ors::JT_hingeX;
+      j=new mlr::Joint(*s->ors, s->ors->bodies(k-1), s->ors->bodies(k));
+      j->type = mlr::JT_hingeX;
       j->Q.setText("<d(45 1 0 0)>");
       if(k&1){ //odd -> rotation around z
         j->A.setText(STRING("<t(0 0 " <<1./K <<") d(-90 0 1 0)>"));
@@ -232,16 +232,16 @@ void OrsSystem::initStandardBenchmark(uint rand_seed){
   }
   endeff=b;
   //the target
-  b=new ors::Body(*s->ors);
+  b=new mlr::Body(*s->ors);
   b->name = "target";
   b->X.setText("<t(.2 0 0)>");
-  sh=new ors::Shape(*s->ors, b);
+  sh=new mlr::Shape(*s->ors, b);
   sh->read(STREAM("type=1 size=[.0 .0 .1 .02] color=[0 0 1]"));
-  sh=new ors::Shape(*s->ors, b);
+  sh=new mlr::Shape(*s->ors, b);
   sh->read(STREAM("type=0 rel=<t(0 -.1 0)> size=[.2 .01 .3 .0] color=[0 0 0] contact"));
-  sh=new ors::Shape(*s->ors, b);
+  sh=new mlr::Shape(*s->ors, b);
   sh->read(STREAM("type=0 rel=<t(0 .1 0)> size=[.2 .01 .3 .0] color=[0 0 0] contact"));
-  sh=new ors::Shape(*s->ors, b);
+  sh=new mlr::Shape(*s->ors, b);
   sh->read(STREAM("type=0 rel=<t(.1 0 0)> size=[.01 .2 .3 .0] color=[0 0 0] contact"));
   graphMakeLists(s->ors->bodies, s->ors->joints);
   s->ors->calcBodyFramesFromJoints();
@@ -563,7 +563,7 @@ void OrsSystem::getTaskCostInfos(uintA& dims, mlr::Array<mlr::String>& names, ui
   }
 }
 
-ors::KinematicWorld& OrsSystem::getOrs(){ return *s->ors; }
+mlr::KinematicWorld& OrsSystem::getOrs(){ return *s->ors; }
 
 SwiftInterface& OrsSystem::getSwift(){ return *s->swift; }
 

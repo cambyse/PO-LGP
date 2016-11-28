@@ -51,7 +51,7 @@ void JsonRec::load(const char *recdir) {
   boolA missing;
   mlr::Array<intA> missingno(nsensors), missingf(nsensors);
 
-  ors::Transformation T;
+  mlr::Transformation T;
   data.resize(nframes, nsensors, 7);
   data.setZero();
 
@@ -141,9 +141,9 @@ void JsonRec::load(const char *recdir) {
     //     else if(t+no < nframes) { // interpolate between t-1 and t+missingno(i)
     //       arr s0 = data[t-1][i];
     //       arr sF = data[t+no][i];
-    //       ors::Quaternion q0(s0(3), s0(4), s0(5), s0(6));
-    //       ors::Quaternion qF(sF(3), sF(4), sF(5), sF(6));
-    //       ors::Quaternion qt;
+    //       mlr::Quaternion q0(s0(3), s0(4), s0(5), s0(6));
+    //       mlr::Quaternion qF(sF(3), sF(4), sF(5), sF(6));
+    //       mlr::Quaternion qt;
 
     //       arr diff = sF - s0;
     //       for(uint tt = 0; tt < no; tt++) {

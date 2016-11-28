@@ -16,7 +16,7 @@
 #include "taskMap_transition.h"
 #include "taskMap_qItself.h"
 
-TaskMap_Transition::TaskMap_Transition(const ors::KinematicWorld& G, bool fixJointsOnly)
+TaskMap_Transition::TaskMap_Transition(const mlr::KinematicWorld& G, bool fixJointsOnly)
   : fixJointsOnly(fixJointsOnly){
   posCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/posCoeff",.0);
   velCoeff = mlr::getParameter<double>("Motion/TaskMapTransition/velCoeff",.0);
@@ -43,7 +43,7 @@ uint TaskMap_Transition::dim_phi(const WorldL& G, int t){
     return G.last()->getJointStateDimension();
   }else{
 //    for(uint i=0;i<G.N;i++) cout <<i <<' ' <<G(i)->joints.N <<' ' <<G(i)->q.N <<' ' <<G(i)->getJointStateDimension() <<endl;
-    mlr::Array<ors::Joint*> matchingJoints = getMatchingJoints(G.sub(-1-order,-1), fixJointsOnly);
+    mlr::Array<mlr::Joint*> matchingJoints = getMatchingJoints(G.sub(-1-order,-1), fixJointsOnly);
     uint ydim=0;
     for(uint i=0;i<matchingJoints.d0;i++){
 //      cout <<i <<' ' <<matchingJoints(i,0)->qIndex <<' ' <<matchingJoints(i,0)->qDim() <<' ' <<matchingJoints(i,0)->name <<endl;
@@ -97,7 +97,7 @@ void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
     if(order>=3) NIY; //  y = (x_bar[3]-3.*x_bar[2]+3.*x_bar[1]-x_bar[0])/tau3; //penalize jerk
 
     //multiply with h...
-    for(ors::Joint *j:G.last()->joints) for(uint i=0;i<j->qDim();i++)
+    for(mlr::Joint *j:G.last()->joints) for(uint i=0;i<j->qDim();i++)
       y(j->qIndex+i) *= h*j->H;
 
     if(&J) {
@@ -119,7 +119,7 @@ void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
         //      if(order>=3){ J(i,3,i) = 1.;  J(i,2,i) = -3.;  J(i,1,i) = +3.;  J(i,0,i) = -1.; }
       }
       J.reshape(y.N, G.N*n);
-      for(ors::Joint *j:G.last()->joints) for(uint i=0;i<j->qDim();i++){
+      for(mlr::Joint *j:G.last()->joints) for(uint i=0;i<j->qDim();i++){
 #if 0
         J[j->qIndex+i] *= h*j->H;
 #else //EQUIVALENT, but profiled - optimized for speed
@@ -129,7 +129,7 @@ void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
       }
     }
   }else{ //with switches
-    mlr::Array<ors::Joint*> matchingJoints = getMatchingJoints(G.sub(-1-order,-1), fixJointsOnly);
+    mlr::Array<mlr::Joint*> matchingJoints = getMatchingJoints(G.sub(-1-order,-1), fixJointsOnly);
     double h = H_rate*sqrt(tau), tau2=tau*tau;
 
 //    getSwitchedJoints(*G.elem(-2), *G.elem(-1), true);
@@ -146,7 +146,7 @@ void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
 
     uint m=0;
     for(uint i=0;i<matchingJoints.d0;i++){
-      mlr::Array<ors::Joint*> joints = matchingJoints[i];
+      mlr::Array<mlr::Joint*> joints = matchingJoints[i];
       uint jdim = joints(0)->qDim(), qi1=0, qi2=0, qi3=0;
       for(uint j=0;j<jdim;j++){
         if(order>=0) qi1 = joints.elem(-1)->qIndex+j;

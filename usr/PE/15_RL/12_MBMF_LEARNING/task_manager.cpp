@@ -4,8 +4,8 @@
 //#include "../src/plotUtil.h"
 
 
-void DonutTask::createSynthethicDemonstration(arr &X, ors::KinematicWorld &world_){
-  world = new ors::KinematicWorld(world_);
+void DonutTask::createSynthethicDemonstration(arr &X, mlr::KinematicWorld &world_){
+  world = new mlr::KinematicWorld(world_);
   MotionProblem MP(world_,false);
   MP.T = T;
   MP.tau = tau;
@@ -98,10 +98,10 @@ double DonutTask::rewardFunction(const arr &X)
   return -sumOfAbs(A);
 }
 
-void DoorTask::initTask(ors::KinematicWorld &world_, arr &Xdemo_)
+void DoorTask::initTask(mlr::KinematicWorld &world_, arr &Xdemo_)
 {
   Xdemo = Xdemo_;
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
   T = Xdemo.d0-1;
   uint qI = world->getJointByName("l_gripper_joint")->qIndex;
   Cdemo = zeros(Xdemo.d0); Cdemo.flatten();
@@ -118,7 +118,7 @@ void DoorTask::initTask(ors::KinematicWorld &world_, arr &Xdemo_)
   cout <<"Cdemo: " << ~Cdemo << endl;
 }
 
-void DoorTask::createSynthethicDemonstration(arr &X, ors::KinematicWorld &world)
+void DoorTask::createSynthethicDemonstration(arr &X, mlr::KinematicWorld &world)
 {
 
 }

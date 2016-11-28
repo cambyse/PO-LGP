@@ -18,7 +18,7 @@
 
 #include "ors.h"
 
-namespace ors {
+namespace mlr {
 struct JointLocker {
   virtual bool lock() = 0;   ///< returns true if in _this_ timestep the joint 
                              ///  should be locked

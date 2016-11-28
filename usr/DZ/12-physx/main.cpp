@@ -12,33 +12,33 @@
 // const double PI = 3.1415926535897932384626; 
 // const double PI_OVER_2 = 0.5* PI;
  
-void createOrs(ors::KinematicWorld& ors, OpenGL& gl) {
+void createOrs(mlr::KinematicWorld& ors, OpenGL& gl) {
   ors.clear(); 
    
   for(uint k=0; k<3; k++) { 
-    ors::Body *b = new ors::Body(ors);  
+    mlr::Body *b = new mlr::Body(ors);  
     b->X.setRandom(); 
     b->X.pos(2) += 1.;
     b->name <<"Box_" <<k;
-    b->type = ors::staticBT;
-    ors::Shape *s = new ors::Shape(ors, b);
-    s->type=ors::boxST;
+    b->type = mlr::staticBT;
+    mlr::Shape *s = new mlr::Shape(ors, b);
+    s->type=mlr::boxST;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
   for(uint k=0; k<3; k++) {
-    ors::Body *b = new ors::Body(ors);
+    mlr::Body *b = new mlr::Body(ors);
     b->X.setRandom(); 
     b->X.pos(2) += 1.;
     b->name <<"Sphere_" <<k;
-    ors::Shape *s = new ors::Shape(ors, b);
-    s->type=ors::sphereST;
+    mlr::Shape *s = new mlr::Shape(ors, b);
+    s->type=mlr::sphereST;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
    
   ors.calcShapeFramesFromBodies();
   
   gl.add(glStandardScene,NULL);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(10.,-15.,8.);
   gl.camera.focus(0,0,1.);
@@ -47,7 +47,7 @@ void createOrs(ors::KinematicWorld& ors, OpenGL& gl) {
 
 void problem1(){   
   cout <<"\n= Sample physX simulation=\n" <<endl;
-   ors::KinematicWorld ors;
+   mlr::KinematicWorld ors;
    OpenGL gl, phys_gl; 
   
    createOrs(ors, gl);
@@ -72,7 +72,7 @@ void problem1(){
 
 void problem2(){   
   cout <<"\n= Sample physX simulation with joints=\n" <<endl;
-   ors::KinematicWorld ors;
+   mlr::KinematicWorld ors;
    OpenGL gl, phys_gl; 
   
    createOrs(ors, gl); 
@@ -81,7 +81,7 @@ void problem2(){
   
   ors.init("complex_writhe.ors");
  //  ors.init("box.ors");
-  ors.getBodyByName("arm1")->type = ors::staticBT;
+  ors.getBodyByName("arm1")->type = mlr::staticBT;
      //!
    
        
@@ -107,15 +107,15 @@ void problem2(){
 
 void problem3(){   
   cout <<"\n= Sample physX simulation with joints and kinematic objects=\n" <<endl;
-   ors::KinematicWorld ors;
+   mlr::KinematicWorld ors;
    OpenGL gl, phys_gl; 
    ors.init("complex_writhe.ors");
   
-   ors.getBodyByName("center")->type = ors::kinematicBT;
-    ors.getBodyByName("arm1")->type = ors::kinematicBT;
+   ors.getBodyByName("center")->type = mlr::kinematicBT;
+    ors.getBodyByName("arm1")->type = mlr::kinematicBT;
     
    gl.add(glStandardScene,NULL);
-   gl.add(ors::glDrawGraph,&ors);
+   gl.add(mlr::glDrawGraph,&ors);
    gl.setClearColors(1.,1.,1.,1.);
    gl.camera.setPosition(10.,-15.,8.);
    gl.camera.focus(0,0,1.);
@@ -152,25 +152,25 @@ void problem3(){
 
 void problem4(){   
   cout <<"\n=  physX simulation with Schunk arm and hand=\n" <<endl;
-   ors::KinematicWorld ors;
+   mlr::KinematicWorld ors;
    OpenGL gl, phys_gl; 
    ors.init("schunk.ors");
-   ors::Joint *jj;
-   ors::Body *bb;
+   mlr::Joint *jj;
+   mlr::Body *bb;
     uint i;
  /*
     for_list(Type, jj, ors.joints) { 
-       jj->type  = ors::JT_rigid; 
+       jj->type  = mlr::JT_rigid; 
   }
    */
     for_list(Type, bb, ors.bodies){
-      if (bb->index>7) bb->type  = ors::dynamicBT; 
+      if (bb->index>7) bb->type  = mlr::dynamicBT; 
      else 
-	bb->type = ors::kinematicBT; ;//ors::staticBT; 
+	bb->type = mlr::kinematicBT; ;//mlr::staticBT; 
   } 
     
    gl.add(glStandardScene,NULL);
-   gl.add(ors::glDrawGraph,&ors);
+   gl.add(mlr::glDrawGraph,&ors);
    gl.setClearColors(1.,1.,1.,1.);   
    gl.camera.setPosition(10.,-15.,8.);
    gl.camera.focus(0,0,1.);

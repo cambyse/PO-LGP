@@ -55,16 +55,16 @@ OpenGL gl;
  mlr::Array<arr> Transform3D( mlr::Array<arr> scan){
    mlr::Array<arr> out3d;
    
-   ors::Vector z(1,0,0);
+   mlr::Vector z(1,0,0);
    
    for(uint i = 0; i < scan.N;i++)
    {
      double phi = i*(3.14/6)/60;//divide 30' in 60 parts
-     ors::Quaternion R;
+     mlr::Quaternion R;
      R.setRad(phi,z);
      arr points(scan(i).d0, 3);
      for(uint j=0; j<scan(i).d0;j++){
-       ors::Vector x;
+       mlr::Vector x;
        x(0) = scan(i)(j,0); x(1) = scan(i)(j,1); x(2) = 0;//scans always in a xy plane, rotated!!
        x = R*x;
        points[j] = arr(x.v,3);

@@ -7,11 +7,11 @@
 
 struct TrajOptimizer {
 
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   arr refPlan;
   double TRef;
 
-  TrajOptimizer(ors::KinematicWorld &_world);
+  TrajOptimizer(mlr::KinematicWorld &_world);
   void optimizeTrajectory(arr &_goal, arr &_q0);
 };
 

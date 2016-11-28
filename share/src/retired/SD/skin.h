@@ -7,22 +7,22 @@
 
 struct tactile_arr_t {
   enum type {LINK=0, TIP=1};
-  ors::Body *b;
-  mlr::Array<ors::Transformation> tr;
-  mlr::Array<ors::Shape *>  sh_s,sh_n; 
+  mlr::Body *b;
+  mlr::Array<mlr::Transformation> tr;
+  mlr::Array<mlr::Shape *>  sh_s,sh_n; 
   uintA mapp;
   byteA map;
   type t;
 
   tactile_arr_t(){};
-  tactile_arr_t(ors::KinematicWorld &G, const char *name, uintA mapparam, type t1){
+  tactile_arr_t(mlr::KinematicWorld &G, const char *name, uintA mapparam, type t1){
     init(G,name,mapparam,t1); }
-  void init(ors::KinematicWorld &G, const char *name, uintA mapparam, type t1){
+  void init(mlr::KinematicWorld &G, const char *name, uintA mapparam, type t1){
     b = G.getBodyByName(name);
     mapp = mapparam;
     t = t1;
   }
-  void add_sensor_shapes(ors::KinematicWorld &);
+  void add_sensor_shapes(mlr::KinematicWorld &);
   void update_shapes();
   void senseskin(SchunkSkinModule *);
   void senseimg(const byteA &img);
@@ -41,7 +41,7 @@ struct grobi_skin_t {
   mlr::Array<fing_skin_t> fingers;
   fing_skin_t *th, *f2, *f3;
   
-  grobi_skin_t(ors::KinematicWorld &);
+  grobi_skin_t(mlr::KinematicWorld &);
   void sense(SchunkSkinModule*,const byteA*const,const byteA*const);
   void update_shapes();
 };

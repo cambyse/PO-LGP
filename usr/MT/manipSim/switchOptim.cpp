@@ -7,14 +7,14 @@
 //===========================================================================
 
 struct SwitchConfigurationProgram:ConstrainedProblem{
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   Graph& symbolicState;
   uint microSteps;
   int verbose;
 
   MotionProblem MP;
 
-  SwitchConfigurationProgram(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final,
+  SwitchConfigurationProgram(mlr::KinematicWorld& world_initial, mlr::KinematicWorld& world_final,
                              Graph& symbolicState,
                              uint microSteps,
                              int verbose)
@@ -122,7 +122,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
       }
 
       // zero grasp joint motion during holding
-      ors::Joint *j_grasp = world.getJointByName("graspJoint");
+      mlr::Joint *j_grasp = world.getJointByName("graspJoint");
       arr M(j_grasp->qDim(),world.getJointStateDimension());
       M.setZero();
       for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
@@ -181,17 +181,17 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
     //-- graph switches
     for(uint i=0;i<actions.N;i++){
       //pick at time 2*i+1
-      ors::KinematicSwitch *op_pick = new ors::KinematicSwitch();
-      op_pick->symbol = ors::KinematicSwitch::addJointZero;
-      op_pick->jointType = ors::JT_rigid;
+      mlr::KinematicSwitch *op_pick = new mlr::KinematicSwitch();
+      op_pick->symbol = mlr::KinematicSwitch::addJointZero;
+      op_pick->jointType = mlr::JT_rigid;
       op_pick->timeOfApplication = tPick(i)+1;
       op_pick->fromId = world.shapes(endeff_index)->index;
       op_pick->toId = world.shapes(idObject(i))->index;
       MP.switches.append(op_pick);
 
       //place at time 2*i+2
-      ors::KinematicSwitch *op_place = new ors::KinematicSwitch();
-      op_place->symbol = ors::KinematicSwitch::deleteJoint;
+      mlr::KinematicSwitch *op_place = new mlr::KinematicSwitch();
+      op_place->symbol = mlr::KinematicSwitch::deleteJoint;
       op_place->timeOfApplication = tPlace(i)+1;
       op_place->fromId = world.shapes(endeff_index)->index;
       op_place->toId = world.shapes(idObject(i))->index;
@@ -213,7 +213,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
 
 //===========================================================================
 
-double optimSwitchConfigurations(ors::KinematicWorld& world_initial, ors::KinematicWorld& world_final,
+double optimSwitchConfigurations(mlr::KinematicWorld& world_initial, mlr::KinematicWorld& world_final,
                                  Graph& symbolicState,
                                  uint microSteps){
   SwitchConfigurationProgram f(world_initial, world_final, symbolicState, microSteps, 0);

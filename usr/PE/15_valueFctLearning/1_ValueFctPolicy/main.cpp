@@ -9,13 +9,13 @@
 
 
 void run() {
-  ors::KinematicWorld world("scene0");
+  mlr::KinematicWorld world("scene0");
   MotionProblem MP(world);
 
   Task *t;
   Task *t2;
   t = MP.addTask("pos", new DefaultTaskMap(posTMT, world, "endeff", NoVector));
-//  t2 = MP.addTask("rot", new DefaultTaskMap(vecTMT, world, "endeff", ors::Vector(0.,0.,1.), NULL, ors::Vector(0.,0.,1.)));
+//  t2 = MP.addTask("rot", new DefaultTaskMap(vecTMT, world, "endeff", mlr::Vector(0.,0.,1.), NULL, mlr::Vector(0.,0.,1.)));
 
   arr y,J;
   arr x0,y0;
@@ -62,7 +62,7 @@ void run() {
 }
 
 void run2() {
-  ors::KinematicWorld world("scene0");
+  mlr::KinematicWorld world("scene0");
   MotionProblem MP(world);
 
   Task *t;

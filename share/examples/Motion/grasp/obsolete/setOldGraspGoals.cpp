@@ -21,7 +21,7 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   activateAll(sys.vars, false);
   
   //activate collision testing with target shape
-  ors::Shape *obj = sys.ors->shapes(shapeId);
+  mlr::Shape *obj = sys.ors->shapes(shapeId);
   obj->cont=true;
   sys.swift->initActivations(*sys.ors);
   
@@ -43,10 +43,10 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch(obj->type){
-    case ors::cylinderST:
+    case mlr::cylinderST:
       V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case ors::boxST:{
+    case mlr::boxST:{
       /*rnd.clockSeed();
       static int side=-1;
       if(side==-1) side=rnd(3);
@@ -96,7 +96,7 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   V=listFindByName(sys.vars, "oppose13");  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   
   //col lim and relax
-  uintA shapes;  ors::Shape *s;
+  uintA shapes;  mlr::Shape *s;
   s = listFindByName(sys.ors->shapes, "tip1Shape");  shapes.append(s->index);
   s = listFindByName(sys.ors->shapes, "target");  shapes.append(s->index);
   s = listFindByName(sys.ors->shapes, "tip2Shape");  shapes.append(s->index);

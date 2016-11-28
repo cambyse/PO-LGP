@@ -45,7 +45,7 @@ void MotionPlanner::open() {
   if (s->verbose) {
     s->gl = new OpenGL("MotionPlanner");
     s->gl->add(glStandardScene);
-    s->gl->add(ors::glDrawGraph, &s->geo().ors);
+    s->gl->add(mlr::glDrawGraph, &s->geo().ors);
     s->gl->camera.setPosition(5, -10, 10);
     s->gl->camera.focus(0, 0, 1);
     s->gl->camera.upright();

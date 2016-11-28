@@ -33,7 +33,7 @@ void threeStepGraspHeuristic(arr& x, MotionProblem& MP, uint shapeId, uint verbo
   uint side=0;
   
   //-- optimize ignoring hand -- testing different options for aligning with the object
-  if (MP.world.shapes(shapeId)->type==ors::boxST) {
+  if (MP.world.shapes(shapeId)->type==mlr::boxST) {
     arr cost_side(3), x_side(3, MP.world.q.N);
     for (side=0; side<3; side++) {
       setGraspGoals_PR2(MP, T, shapeId, side, 0);
@@ -90,13 +90,13 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   MP.activateAllTaskCosts(false);
   
   //activate collision testing with target shape
-  ors::Shape *target_shape = MP.world.shapes(shapeId);
+  mlr::Shape *target_shape = MP.world.shapes(shapeId);
   target_shape->cont=true;
   MP.world.swift().initActivations(MP.world);
   
   //
   arr target,initial;
-  ors::Vector ivec,jvec;
+  mlr::Vector ivec,jvec;
 
   //general target
   target = conv_vec2arr(target_shape->X.pos);
@@ -113,10 +113,10 @@ void setGraspGoals_Schunk(MotionProblem& MP, uint T, uint shapeId, uint side, ui
   ivec.set(0, 1, 0);
   jvec.set(0, 0, 1);
   switch (target_shape->type) {
-    case ors::cylinderST:
+    case mlr::cylinderST:
       target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case ors::boxST: {
+    case mlr::boxST: {
       //jrel=target_shape->X;
       if (side==1) jvec.set(0, 1, 0);
       if (side==2) jvec.set(1, 0, 0);
@@ -213,13 +213,13 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   MP.tasks.clear();
 
   //activate collision testing with target shape
-  ors::Shape *target_shape = MP.world.shapes(shapeId);
+  mlr::Shape *target_shape = MP.world.shapes(shapeId);
   target_shape->cont=true;
   MP.world.swift().initActivations(MP.world);
 
   //
   arr target,initial;
-  ors::Vector ivec,jvec;
+  mlr::Vector ivec,jvec;
 
   //general target
   target = conv_vec2arr(target_shape->X.pos);
@@ -235,13 +235,13 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   ivec.set(0,1,0); //we want to align the y-axis of the hand with something
   jvec.set(0,0,1);
   switch (target_shape->type) {
-    case ors::cylinderST:
+    case mlr::cylinderST:
       target = ARR(0.);  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case ors::meshST:
+    case mlr::meshST:
       target = ARR(0.);  //works for simple cylinder-like objects
       break;
-    case ors::boxST: {
+    case mlr::boxST: {
       //jrel=target_shape->X;
       //  side =1; //! Hack for PR2
       if (side==1) jvec.set(0,1,0);
@@ -266,7 +266,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
   shapes.append(shapeId); shapes.append(shapeId);
   shapes.reshape(2,2); shapes = ~shapes;
   c = MP.addTask("graspContacts", new TaskMap_Proxy(vectorPTMT, shapes, .1, false));
-  for(ors::Shape *s: MP.world.shapes) cout <<' ' <<s->name;
+  for(mlr::Shape *s: MP.world.shapes) cout <<' ' <<s->name;
   double grip=.98; //specifies the desired proxy value
   target = ARR(grip,grip);
   MP.setInterpolatingCosts(c, MotionProblem::early_restConst,
@@ -318,7 +318,7 @@ void setGraspGoals_PR2(MotionProblem& MP, uint T, uint shapeId, uint side, uint 
 }
 #endif
 
-void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
+void reattachShape(mlr::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody);
 
 #if 0
 void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, const arr& locationTo){
@@ -342,8 +342,8 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   MP.activateAllTaskCosts(false);
   
   //activate collision testing with target shape
-  ors::Shape *obj  = MP.world.shapes(shapeId);
-  ors::Shape *onto = NULL;
+  mlr::Shape *obj  = MP.world.shapes(shapeId);
+  mlr::Shape *onto = NULL;
   if(belowToShapeId != -1)
      onto = MP.world.shapes(belowToShapeId);
   if (obj->body!=MP.world.getBodyByName("m9")){

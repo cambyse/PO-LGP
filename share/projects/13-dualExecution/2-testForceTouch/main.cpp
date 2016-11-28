@@ -5,7 +5,7 @@
 #include <Optim/optimization.h>
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world){
   MotionProblem P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
@@ -47,7 +47,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world){
   if(&dual) dual = LagrangianP.lambda;
 }
 
-void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWorld& world){
+void testExecution(const arr& x, const arr& y, const arr& dual, mlr::KinematicWorld& world){
   arr q, qdot;
   world.getJointState(q, qdot);
 
@@ -93,7 +93,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, ors::KinematicWo
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, dual;
   getTrajectory(x, y, dual, world);

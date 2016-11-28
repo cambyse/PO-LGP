@@ -21,14 +21,14 @@
 //  //static arr conswit;
 //  //bool hasContact=false;
 //  bool addContactsToDynamics=false;
-//  ors::KinematicWorld *G;
+//  mlr::KinematicWorld *G;
 //}
 
 
 //---------- test standard dynamic control
 void TEST(Dynamics){
-//  ors::KinematicWorld G("arm7.ors");
-  ors::KinematicWorld G("mypr2.ors");
+//  mlr::KinematicWorld G("arm7.ors");
+  mlr::KinematicWorld G("mypr2.ors");
 //  G.meldFixedJoints();
 //  G.makeLinkTree();
   cout <<G <<endl;
@@ -57,7 +57,7 @@ void TEST(Dynamics){
   ofstream z("z.dyn");
   G.clearForces();
   G.watch();
-//  for(ors::Body *b:G.bodies){ b->mass=1.; b->inertia.setZero(); }
+//  for(mlr::Body *b:G.bodies){ b->mass=1.; b->inertia.setZero(); }
 
   for(t=0;t<T;t++){
     if(t>=500){ //hold steady

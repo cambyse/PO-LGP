@@ -36,7 +36,7 @@ ScalarFunction cylinder = [](arr&,arr&, const arr& X){
   };
 
 void TEST(SimpleImplicitSurfaces) {
-  ors::Mesh m;
+  mlr::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
   gl.add(m);

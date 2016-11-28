@@ -3,7 +3,7 @@
 
 
 void TEST(GetRobotMask){
-  ors::KinematicWorld robot("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld robot("pr2_model/pr2_model.ors");
   robot.gl().camera.setKinect();
   robot.gl().camera.X = robot.getShapeByName("endeffKinect")->X * robot.gl().camera.X;
 //  robot.gl().watch(); //if commented, glut/gtk is never initiated

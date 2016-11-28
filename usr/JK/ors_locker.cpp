@@ -16,7 +16,7 @@
 #include "ors_locker.h"
 #include "ors.h"
 
-namespace ors {
+namespace mlr {
   JointDependentLocker::JointDependentLocker() {
     joint_locked = 0; 
   }

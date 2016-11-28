@@ -23,7 +23,7 @@ typedef actionlib::SimpleActionClient<control_msgs::JointTrajectoryAction> TrajC
 
 class PfControl{
 private:
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   Pfc* pfc;
   MObject* goalMO;
   arr xRef, x0;
@@ -66,7 +66,7 @@ public:
     P.loadTransitionParameters();
 
     Task *c;
-    c = P.addTaskMap_Default_Bodies("position", posTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
+    c = P.addTaskMap_Default_Bodies("position", posTMT,"endeff",mlr::Transformation().setText("<t(0 0 0)>"));
     P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                             conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
@@ -79,7 +79,7 @@ public:
                             {0.,0.,0.}, 1e-3);
 
     if (useOrientation) {
-      c = P.addTaskMap_Default_Bodies("orientation", zoriTMT,"endeff",ors::Transformation().setText("<t(0 0 0)>"));
+      c = P.addTaskMap_Default_Bodies("orientation", zoriTMT,"endeff",mlr::Transformation().setText("<t(0 0 0)>"));
       P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
                               {0.,0.,-1.}, 1e4,
                               {0.,0.,0.}, 1e-3);

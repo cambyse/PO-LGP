@@ -7,7 +7,7 @@
 
 #include "getTraj.h"
 
-void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& world){
+void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, mlr::KinematicWorld& world){
   MotionProblem P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
@@ -45,7 +45,7 @@ void getTrajectory(arr& x, arr& y, arr& ori, arr& dual, ors::KinematicWorld& wor
 
     y.resize(x.d0, pos->map.dim_phi(world));
     ori.resize(x.d0, 4);
-    ors::Shape *s_SL_endeff = world.getShapeByName("SL_endeff");
+    mlr::Shape *s_SL_endeff = world.getShapeByName("SL_endeff");
     for(uint t=0;t<x.d0;t++){
       world.setJointState(x[t]);
       m->phi(y[t](), NoArr, world);

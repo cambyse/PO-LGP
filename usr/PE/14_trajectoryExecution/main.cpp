@@ -96,7 +96,7 @@ void executeTrajectory(String scene, ControlType cType){
   String folder = STRING("out/"<<evalName<<"/"<<scene);
   cout << currScene << endl;
 
-  ors::KinematicWorld world(currScene);
+  mlr::KinematicWorld world(currScene);
 #if VISUALIZE
   world.gl().resize(800, 800);
 #endif
@@ -112,11 +112,11 @@ void executeTrajectory(String scene, ControlType cType){
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, goal, 1e4);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 
-  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 1.)));
   c->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
   P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
 

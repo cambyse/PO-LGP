@@ -36,7 +36,7 @@ k={ a, b=0.2 x="hallo"	  # sub-Graph with 6 nodes
 Edit k { y=false, z=otherString, b=7, c=newAttribute }
 
 ## including
-Include = 'example_include.kvg'   # first creates a normal FileToken node then opens and includes the file directly
+Include = 'example_include.g'   # first creates a normal FileToken node then opens and includes the file directly
 
 ## referring to nodes (constants/macros)
 #macro = 5

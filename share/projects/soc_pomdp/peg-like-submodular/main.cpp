@@ -11,7 +11,7 @@
 
 //VideoEncoder_libav_simple *vid;
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const arr target, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const arr target, uint horizon){
     /////////////
 
 
@@ -23,7 +23,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
 
   cout<<"target: "<< target <<endl;
-  ors::Shape *endeff = world.getShapeByName("endeff");
+  mlr::Shape *endeff = world.getShapeByName("endeff");
   //check
   cout<< endeff->X.pos.x<<" "<< endeff->X.pos.y<<" "<< endeff->X.pos.z<<" "<<endl;
 
@@ -129,11 +129,11 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 
 
 /// Using Online Planning as Submodularity
-void OnlineSubmodularity(const double tableW, const double tableL, ors::KinematicWorld& world, int num, const arr target, int type, arr &pos){
-    ors::Shape *endeff = world.getShapeByName("endeff");
-    ors::Shape *true_target = world.getShapeByName("truetarget");
-    ors::Body *est_target = world.getBodyByName("target");
-    ors::Body *table = world.getBodyByName("table");
+void OnlineSubmodularity(const double tableW, const double tableL, mlr::KinematicWorld& world, int num, const arr target, int type, arr &pos){
+    mlr::Shape *endeff = world.getShapeByName("endeff");
+    mlr::Shape *true_target = world.getShapeByName("truetarget");
+    mlr::Body *est_target = world.getBodyByName("target");
+    mlr::Body *table = world.getBodyByName("table");
 
   arr q, qdot;
   world.getJointState(q, qdot);
@@ -319,9 +319,9 @@ ConstraintForceTask *pd_c ;
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
   uint T = 200; //time horizon
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Body *table = world.getBodyByName("table");
   double tableW = table->shapes(0)->size[1];
   double tableL = table->shapes(0)->size[0];
   double tableT = table->shapes(0)->size[2];
@@ -335,10 +335,10 @@ int main(int argc,char** argv){
 
 
   //OpenGL gl;
-  ors::KinematicWorld hypotheses;
+  mlr::KinematicWorld hypotheses;
   for(int i=0;i<100;i++){
-    ors::Shape *s = new ors::Shape(hypotheses,NoBody);
-    s->type = ors::boxST;
+    mlr::Shape *s = new mlr::Shape(hypotheses,NoBody);
+    s->type = mlr::boxST;
     s->X.pos.x = x + 0.1*rnd.gauss();
     s->X.pos.y = y + 0.1*rnd.gauss();
     s->X.pos.z = z + 0.1*rnd.gauss();
@@ -349,9 +349,9 @@ int main(int argc,char** argv){
     s->color[1] = 0.5  ;
     s->color[2] = 0.5  ;
   }
-  //gl.add(ors::glDrawGraph, &world);
+  //gl.add(mlr::glDrawGraph, &world);
   world.gl().add(switchToTransparent);
-  world.gl().add(ors::glDrawGraph, &hypotheses);
+  world.gl().add(mlr::glDrawGraph, &hypotheses);
 
   //hypotheses.shapes.remove(0);
   //world.gl().watch();
@@ -379,7 +379,7 @@ int main(int argc,char** argv){
 
 
      // DETECT_HEIGHT
-      ors::Shape *endeff = world.getShapeByName("endeff");
+      mlr::Shape *endeff = world.getShapeByName("endeff");
       arr target;
       target.resize(3);
       target(0) = endeff->X.pos.x;

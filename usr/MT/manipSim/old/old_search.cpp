@@ -1,24 +1,24 @@
-ors::KinematicWorld* world=NULL;
+mlr::KinematicWorld* world=NULL;
 
-void OrsGraph2RelationalGraph(Graph& G, ors::KinematicWorld& W){
+void OrsGraph2RelationalGraph(Graph& G, mlr::KinematicWorld& W){
   G.clear();
 
   //do this first to ensure they have the same indexing
-  for(ors::Body *b:world->bodies){
-    G.newNode<ors::Body>({"body", b->name}, b, false);
+  for(mlr::Body *b:world->bodies){
+    G.newNode<mlr::Body>({"body", b->name}, b, false);
   }
 
-  for(ors::Body *b:world->bodies){
-    G.newNode<ors::Transformation>({"pose"}, {G(b->index)}, new ors::Transformation(b->X), true);
+  for(mlr::Body *b:world->bodies){
+    G.newNode<mlr::Transformation>({"pose"}, {G(b->index)}, new mlr::Transformation(b->X), true);
 //    if(b->ats["ctrlable"]) G.newNode<bool>({"controllable"}, {G(b->index)}, NULL);
     if(b->ats["canGrasp"]) G.newNode<bool>({"canGrasp"}, {G(b->index)}, NULL, false);
     if(b->ats["fixed"])    G.newNode<bool>({"fixed"}, {G(b->index)}, NULL, false);
   }
 
-  for(ors::Joint *j:world->joints){
-    if(j->type==ors::JT_rigid)
+  for(mlr::Joint *j:world->joints){
+    if(j->type==mlr::JT_rigid)
       G.newNode<bool>({"rigid"}, {G(j->from->index), G(j->to->index)}, NULL, false);
-    if(j->type==ors::JT_transXYPhi)
+    if(j->type==mlr::JT_transXYPhi)
       G.newNode<bool>({"support"}, {G(j->from->index), G(j->to->index)}, NULL, false);
   }
 
@@ -35,7 +35,7 @@ void Domain::getInitialState(State &s){
 //===========================================================================
 
 void sample(){
-  ors::KinematicWorld W("model.kvg");
+  mlr::KinematicWorld W("model.kvg");
   world = &W;
 
   //-- fwd expansion

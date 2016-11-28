@@ -40,7 +40,7 @@ DefaultTaskVariable::~DefaultTaskVariable() {
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  const ors::KinematicWorld& _ors,
+  const mlr::KinematicWorld& _ors,
   TVtype _type,
   const char *iname, const char *iframe,
   const char *jname, const char *jframe,
@@ -48,21 +48,21 @@ DefaultTaskVariable::DefaultTaskVariable(
   set(
     _name, _ors, _type,
     iname  ? (int)_ors.getBodyByName(iname)->index      : -1,
-    iframe ? ors::Transformation().setText(iframe) : Transformation_Id,
+    iframe ? mlr::Transformation().setText(iframe) : Transformation_Id,
     jname  ? (int)_ors.getBodyByName(jname)->index      : -1,
-    jframe ? ors::Transformation().setText(jframe) : Transformation_Id,
+    jframe ? mlr::Transformation().setText(jframe) : Transformation_Id,
     _params);
 }
 
 DefaultTaskVariable::DefaultTaskVariable(
   const char* _name,
-  const ors::KinematicWorld& _ors,
+  const mlr::KinematicWorld& _ors,
   TVtype _type,
   const char *iShapeName,
   const char *jShapeName,
   const arr& _params) {
-  ors::Shape *a = iShapeName ? _ors.getShapeByName(iShapeName):NULL;
-  ors::Shape *b = jShapeName ? _ors.getShapeByName(jShapeName):NULL;
+  mlr::Shape *a = iShapeName ? _ors.getShapeByName(iShapeName):NULL;
+  mlr::Shape *b = jShapeName ? _ors.getShapeByName(jShapeName):NULL;
   set(
     _name, _ors, _type,
     a ? (int)a->body->index : -1,
@@ -77,10 +77,10 @@ TaskVariable::~TaskVariable() {
 
 void DefaultTaskVariable::set(
   const char* _name,
-  const ors::KinematicWorld& _ors,
+  const mlr::KinematicWorld& _ors,
   TVtype _type,
-  int _i, const ors::Transformation& _irel,
-  int _j, const ors::Transformation& _jrel,
+  int _i, const mlr::Transformation& _irel,
+  int _j, const mlr::Transformation& _jrel,
   const arr& _params) {
   type=_type;
   name=_name;
@@ -94,12 +94,12 @@ void DefaultTaskVariable::set(
   v_target=v;
 }
 
-/*void TaskVariable::set(const char* _name, ors::KinematicWorld& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext){
+/*void TaskVariable::set(const char* _name, mlr::KinematicWorld& _sl, TVtype _type, const char *iname, const char *jname, const char *reltext){
   set(
     _name, _sl, _type,
     _sl.getBodyByName(iname)->index,
     _sl.getBodyByName(jname)->index,
-    ors::Transformation().setText(reltext));
+    mlr::Transformation().setText(reltext));
 }*/
 
 void TaskVariable::setGains(double pgain, double dgain, bool onReal) {
@@ -323,15 +323,15 @@ void TaskVariable::shiftTargets(int offset) {
 #endif
 }
 
-void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) {
+void DefaultTaskVariable::updateState(const mlr::KinematicWorld& ors, double tau) {
   arr q, qd, p;
-  ors::Vector pi, pj, c;
+  mlr::Vector pi, pj, c;
   arr zi, zj, Ji, Jj, JRj;
-  ors::Transformation f, fi, fj;
-  ors::Vector vi, vj, r, jk;
+  mlr::Transformation f, fi, fj;
+  mlr::Vector vi, vj, r, jk;
   uint k,l;
-  ors::Body *bi = ors.bodies(i);
-  ors::Body *bj = ors.bodies(j);
+  mlr::Body *bi = ors.bodies(i);
+  mlr::Body *bj = ors.bodies(j);
 
   v_old=v;
   y_old=y;
@@ -414,7 +414,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
       vi = irel.rot.getZ();
       ors.kinematicsVec(zi, Ji, bi, vi);
       if(j==-1) {
-        ors::Vector world_z;
+        mlr::Vector world_z;
         if(params.N==3) world_z.set(params.p); else world_z=Vector_z;
         zj = conv_vec2arr((jrel*world_z));
         Jj.resizeAs(Ji);
@@ -450,7 +450,7 @@ void DefaultTaskVariable::updateState(const ors::KinematicWorld& ors, double tau
   }
 }
 
-void DefaultTaskVariable::getHessian(const ors::KinematicWorld& ors, arr& H) {
+void DefaultTaskVariable::getHessian(const mlr::KinematicWorld& ors, arr& H) {
   switch(type) {
     case posTVT:
       if(j==-1) { ors.hessianPos(H, ors.bodies(i), &irel.pos); break; }
@@ -518,7 +518,7 @@ void TaskVariable::updateChange(int t, double tau) {
   }
     */
 
-void TaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
+void TaskVariable::write(ostream &os, const mlr::KinematicWorld& ors) const {
   os <<"TaskVariable '" <<name <<'\'';
   os
       <<"\n  y=" <<y
@@ -537,10 +537,10 @@ void TaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
       <<endl;
 }
 
-void DefaultTaskVariable::write(ostream &os, const ors::KinematicWorld& ors) const {
+void DefaultTaskVariable::write(ostream &os, const mlr::KinematicWorld& ors) const {
   TaskVariable::write(os);
   return;
-  ors::Body *bi = ors.bodies(i);
+  mlr::Body *bi = ors.bodies(i);
   switch(type) {
     case posTVT:     os <<"  (pos " <<bi->name <<")"; break;
       //case relPosTVT:  os <<"  (relPos " <<bi->name <<'-' <<bj->name <<")"; break;
@@ -562,7 +562,7 @@ void DefaultTaskVariable::write(ostream &os, const ors::KinematicWorld& ors) con
 
 
 ProxyTaskVariable::ProxyTaskVariable(const char* _name,
-                                     ors::KinematicWorld& ors,
+                                     mlr::KinematicWorld& ors,
                                      CTVtype _type,
                                      uintA _shapes,
                                      double _margin,
@@ -578,10 +578,10 @@ ProxyTaskVariable::ProxyTaskVariable(const char* _name,
 }
 
 #if 0
-void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::KinematicWorld& ors, double margin, bool linear) {
+void addAContact(double& y, arr& J, const mlr::Proxy *p, const mlr::KinematicWorld& ors, double margin, bool linear) {
   double d;
-  ors::Shape *a, *b;
-  ors::Vector arel, brel;
+  mlr::Shape *a, *b;
+  mlr::Vector arel, brel;
   arr Ja, Jb, dnormal;
   
   a=ors.shapes(p->a); b=ors.shapes(p->b);
@@ -607,7 +607,7 @@ void addAContact(double& y, arr& J, const ors::Proxy *p, const ors::KinematicWor
 }
 #endif
 
-void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) {
+void ProxyTaskVariable::updateState(const mlr::KinematicWorld& ors, double tau) {
   v_old=v;
   y_old=y;
   
@@ -616,20 +616,20 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
   
   switch(type) {
     case allCTVT:
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         ors.kinematicsProxyCost(y, J, p, margin, linear, true);
         p->colorCode = 1;
       }
       break;
     case allListedCTVT:
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
           p->colorCode = 2;
         }
       }
     case allExceptListedCTVT:
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         if(!shapes.contains(p->a) && !shapes.contains(p->b)) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
           p->colorCode = 3;
@@ -637,7 +637,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       }
       break;
     case bipartiteCTVT:
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
           ors.kinematicsProxyCost(y, J, p, margin, linear, true);
@@ -648,7 +648,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -663,7 +663,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -680,7 +680,7 @@ void ProxyTaskVariable::updateState(const ors::KinematicWorld& ors, double tau) 
       y.resize(shapes.d0,1).setZero();
       J.resize(shapes.d0,J.d1).setZero();
       uint j;
-      for(ors::Proxy *p: ors.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: ors.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -766,7 +766,7 @@ void shiftTargets(TaskVariableList& CS, int offset) {
   for(uint i=0; i<CS.N; i++) CS(i)->shiftTargets(offset);
 }
 
-void updateState(TaskVariableList& CS, const ors::KinematicWorld& ors) {
+void updateState(TaskVariableList& CS, const mlr::KinematicWorld& ors) {
   for(uint i=0; i<CS.N; i++) {
     CS(i)->updateState(ors);
   }
@@ -816,7 +816,7 @@ void bayesianControl(TaskVariableList& CS, arr& dq, const arr& W) {
 
 #if 0
 
-void TaskVariableTable::init(const ors::KinematicWorld& ors) {
+void TaskVariableTable::init(const mlr::KinematicWorld& ors) {
   uint i,j,k,m=0,T=0,t,qdim;
   //count the total task dimension, q-d
   for_list(TaskVariable, v, list) {
@@ -838,7 +838,7 @@ void TaskVariableTable::init(const ors::KinematicWorld& ors) {
 }
 
 //recompute all phi in time slice t using the pose in ors
-void TaskVariableTable::updateTimeSlice(uint t, const ors::KinematicWorld& ors, bool alsoTargets) {
+void TaskVariableTable::updateTimeSlice(uint t, const mlr::KinematicWorld& ors, bool alsoTargets) {
   uint i,j,k,m=0;
   for_list(TaskVariable, v, list) {
     v->updateState(ors);
@@ -960,7 +960,7 @@ void additiveControl_obsolete(TaskVariableList& CS, arr& dq, const arr& W){
 }
 */
 /*OLD
-void bayesianPlanner_obsolete(ors::KinematicWorld *ors, TaskVariableList& CS, SwiftInterface *swift, OpenGL *gl,
+void bayesianPlanner_obsolete(mlr::KinematicWorld *ors, TaskVariableList& CS, SwiftInterface *swift, OpenGL *gl,
                      arr& q, uint T, const arr& W, uint iterations,
                      std::ostream* os, int display, bool repeat){
   //FOR THE OLD VERSION, SEE SMAC.CPP IN THE DEPOSIT
@@ -1094,7 +1094,7 @@ void SMAC::readCVdef(std::istream& is) {
   char c;
   TaskVariable *cv;
   mlr::String name, ref1, ref2;
-  ors::Transformation f;
+  mlr::Transformation f;
   uint i, j, k;
   arr mat;
   mlr::String::readSkipSymbols=" \n\r\t";

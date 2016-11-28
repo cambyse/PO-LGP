@@ -49,7 +49,7 @@ void TEST(Sensors){
   gl.camera.setKinect();
   gl.add(glStandardScene, NULL);
   primitives.G.init("model.kvg");
-  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
+  mlr::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();
@@ -72,7 +72,7 @@ void TEST(Sensors){
 
     FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
-    ors::Transformation X;
+    mlr::Transformation X;
     double tstamp = S.kinect_depth.get().v->data_time;
     cout <<tstamp <<endl;
     try{

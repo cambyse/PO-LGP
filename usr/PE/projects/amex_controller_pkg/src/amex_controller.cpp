@@ -1,6 +1,6 @@
 #include "amex_controller.h"
 
-AmexController::AmexController(ros::NodeHandle &_nh, ors::KinematicWorld &_world, arr &_refPlan, arr &_q0, double _TRef, bool _useGoalPub) {
+AmexController::AmexController(ros::NodeHandle &_nh, mlr::KinematicWorld &_world, arr &_refPlan, arr &_q0, double _TRef, bool _useGoalPub) {
   nh = _nh;
   world = _world;
   useGoalPub = _useGoalPub;

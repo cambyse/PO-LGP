@@ -96,19 +96,19 @@ void TEST(CoveringSphere){
   cout <<"cr_opt=" <<cr <<endl;
 
 
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   arr c,r;
   c.referToRange(cr,0,3*s-1); c.reshape(s,3);
   r.referToRange(cr,3*s,-1); r.reshape(s);
   for(uint j=0;j<s;j++) if(r(j)>1e-3){
-    ors::Shape *s = new ors::Shape(G, NoBody);
-    s->type = ors::sphereST;
+    mlr::Shape *s = new mlr::Shape(G, NoBody);
+    s->type = mlr::sphereST;
     s->X.pos.set(c[j].p);
     s->size[3] = r(j);
   }
   for(uint i=0;i<x.d0;i++){
-    ors::Shape *s = new ors::Shape(G, NoBody);
-    s->type = ors::sphereST;
+    mlr::Shape *s = new mlr::Shape(G, NoBody);
+    s->type = mlr::sphereST;
     s->X.pos.set(x[i].p);
     s->size[3] = .1;
     s->color[0]=0.;

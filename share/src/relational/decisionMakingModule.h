@@ -10,7 +10,7 @@ struct DecisionMakingModule : Thread {
   const static uint SYMBOLIC_ACTION__PUTON = 3;
   
   //INPUT
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   
   //OUTPUT
   uint action;

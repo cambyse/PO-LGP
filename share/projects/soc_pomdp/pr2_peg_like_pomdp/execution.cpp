@@ -9,7 +9,7 @@
 using namespace std;
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0, const arr& model, bool stickyness, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0, const arr& model, bool stickyness, uint horizon){
     /////////////
 
 
@@ -22,7 +22,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
     world.getBodyByName("table")->X.pos.y   = model(1);
     world.getBodyByName("target")->X.pos.y  = model(1);
-    ors::Body* target = world.getBodyByName("target");
+    mlr::Body* target = world.getBodyByName("target");
 
 
 
@@ -121,7 +121,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
   /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
+void POMDPExecution(FSC fsc, mlr::KinematicWorld& world, int num, double est){
 
 
     arr q, qdot;
@@ -130,10 +130,10 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
 
     ofstream data(STRING("data-"<<num<<".dat"));
 
-    ors::Shape *endeffR = world.getShapeByName("endeffR");
-    ors::Shape *true_target = world.getShapeByName("truetarget");
-    ors::Body *est_target = world.getBodyByName("target");
-    ors::Body *table = world.getBodyByName("table");
+    mlr::Shape *endeffR = world.getShapeByName("endeffR");
+    mlr::Shape *true_target = world.getShapeByName("truetarget");
+    mlr::Body *est_target = world.getBodyByName("target");
+    mlr::Body *table = world.getBodyByName("table");
 
 
     TaskController MC(world);

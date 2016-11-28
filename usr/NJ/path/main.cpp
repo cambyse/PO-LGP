@@ -10,7 +10,7 @@ void TEST(Tracking){
 
   uint T=200;
 
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors <<FILE("../../../share/data/configurations/schunk.ors");
   ors.calcNodeFramesFromEdges();
   
@@ -135,7 +135,7 @@ void drawBase(void*){
   glColor(1.,.5,0.);
 }
 
-void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../../share/data/configurations/schunk.ors"){
+void loadOrsFile(mlr::KinematicWorld& C, OpenGL& gl,const char *file="../../../share/data/configurations/schunk.ors"){
   char *path,*name,cwd[200];
   mlr::decomposeFilename(path,name,file);
   getcwd(cwd,200);
@@ -165,7 +165,7 @@ void TEST(Schunk){
 
 void TEST(Control){
   OpenGL gl;
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   loadOrsFile(ors,gl);
   gl.watch();
 

@@ -5,7 +5,7 @@
 #include <Ors/ors.h>
 
 //from camera parameters to camera center, cf. Zisserman
-ors::Vector CameraLocation(const arr & p){
+mlr::Vector CameraLocation(const arr & p){
 	double X,Y,Z,T;
 	arr a(3,3);
 
@@ -27,7 +27,7 @@ ors::Vector CameraLocation(const arr & p){
 		else
 			a(i,j)= p(i,j);
 	Z = determinant(a);
-	ors::Vector ans(X/T,Y/T,Z/T);
+	mlr::Vector ans(X/T,Y/T,Z/T);
 	return ans;
 }
 
@@ -66,18 +66,18 @@ arr Find3dPoint(const arr & P1,const arr & P2, const arr & p4){
 }
 
 struct SimpleTrack{
-	ors::Vector v;//speed
-	ors::Vector p;//last position
+	mlr::Vector v;//speed
+	mlr::Vector p;//last position
 	double t ;//last time
 	int Smooth;//smooth type
 
-	void addSample(ors::Vector pos, double time){
+	void addSample(mlr::Vector pos, double time){
 		cout << " timeee " << (time-t) << endl;
 		v = (pos-p)/(time-t);
 		p = pos;
 		t = time;
 	}
-	ors::Vector predict(double time){
+	mlr::Vector predict(double time){
 		return p + v*(time-t);
 	}
 	arr R1,R2,R12,xk,Pk;
@@ -175,17 +175,17 @@ struct SimpleTrack{
 		if (oldx.N > 0 && Smooth == 3)
 			x = 0.5*(oldx +x);//simple average smoother..
 
-		p = ors::Vector(x(0),x(1),x(2));
-		v = ors::Vector(x(3),x(4),x(5));
+		p = mlr::Vector(x(0),x(1),x(2));
+		v = mlr::Vector(x(3),x(4),x(5));
 		x = oldx;//to avoid smoothing self effect..
 	}
 };
 
 struct AverageTrack{
 	double Variance;
-	ors::Vector v;//speed
-	ors::Vector p;//last position
-	ors::Vector pdif;//last position difference
+	mlr::Vector v;//speed
+	mlr::Vector p;//last position
+	mlr::Vector pdif;//last position difference
 	uint Smooth;//smooth type
 	arr VSamples;
 	double t;
@@ -207,7 +207,7 @@ struct AverageTrack{
 			avvis = avvis + VSamples[i]/(double)Smooth;
 
 		arr po = Find3dPoint(Pl,Pr,avvis);
-		ors::Vector pnew(po(0),po(1),po(2));
+		mlr::Vector pnew(po(0),po(1),po(2));
 		pdif = (pnew-p);
 		v = (pnew-p)/(time-t);//average velocity in m/s, displacement over time
 		p = pnew;
