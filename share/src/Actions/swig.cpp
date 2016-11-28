@@ -1,6 +1,6 @@
 #include "swig.h"
 
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 #include <Ors/ors.h>
 #include <Control/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
@@ -14,7 +14,7 @@
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 
 #ifdef MLR_ROS
 #  include <RosCom/roscom.h>

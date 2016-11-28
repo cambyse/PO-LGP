@@ -16,7 +16,7 @@
 //#include <RosCom/actionMachine.h>
 //#include "manipSim.h"
 #include <Ors/ors.h>
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 
 
 void runMonteCarlo(Graph& G){

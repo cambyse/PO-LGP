@@ -2,7 +2,7 @@
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 #include <Actions/RelationalMachineModule.h>
 #include <Actions/ActivitySpinnerModule.h>
 #include <RosCom/serviceRAP.h>

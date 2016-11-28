@@ -559,9 +559,7 @@ void TEST(InverseKinematics) {
 // =============================================================================
 
 int MAIN(int argc,char **argv){
-
-//  testKinematicSpeed();
-//  return 0;
+  mlr::initCmdLine(argc, argv);
 
   testLoadSave();
   testCopy();

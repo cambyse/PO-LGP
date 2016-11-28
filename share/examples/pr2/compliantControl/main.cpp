@@ -3,7 +3,7 @@
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 
 #include <sensor_msgs/JointState.h>
 #include <RosCom/baxter.h>

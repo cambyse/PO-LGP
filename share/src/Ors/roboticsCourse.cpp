@@ -16,7 +16,6 @@
 #include <Ors/ors.h>
 #include <Ors/ors_swift.h>
 #include <Ors/ors_physx.h>
-#include <Ors/ors_ode.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Algo/algos.h>

@@ -96,6 +96,7 @@ void TEST(Dynamics){
 // =============================================================================
 
 int MAIN(int argc,char **argv){
+  mlr::initCmdLine(argc, argv);
 
   testDynamics();
 

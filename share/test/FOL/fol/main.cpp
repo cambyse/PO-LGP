@@ -1,4 +1,4 @@
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 //#include <Gui/graphview.h>
 
 //===========================================================================

@@ -26,6 +26,8 @@ void TEST(CollisionTiming){
 
 
 int MAIN(int argc,char **argv){
+  mlr::initCmdLine(argc, argv);
+
   testCollisionTiming();
   
   return 0;

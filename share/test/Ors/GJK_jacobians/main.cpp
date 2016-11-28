@@ -135,6 +135,7 @@ void TEST(GJK_Jacobians) {
 
 
 int MAIN(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
 
   testGJK_Jacobians();
 

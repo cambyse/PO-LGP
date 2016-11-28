@@ -13,7 +13,7 @@
     --------------------------------------------------------------  */
 
 
-#include "orsviewer.h"
+#include "orsViewer.h"
 
 #include <iomanip>
 

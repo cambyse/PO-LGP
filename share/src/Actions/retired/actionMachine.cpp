@@ -3,7 +3,7 @@
 
 //#include <Hardware/gamepad/gamepad.h>
 #include <Motion/pr2_heuristics.h>
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 
 //===========================================================================

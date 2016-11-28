@@ -12,7 +12,7 @@
 
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 
 #include <Motion/taskMap_qItself.h>
 

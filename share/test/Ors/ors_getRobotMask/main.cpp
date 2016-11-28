@@ -10,12 +10,14 @@ void TEST(GetRobotMask){
   byteA indexRgb, depth;
   robot.glGetMasks(580, 480);
   write_ppm(robot.gl().captureImage, "z.rgb.ppm");
-  write_ppm(robot.gl().captureDepth, "z.depth.ppm");
+  write_ppm(convert<byte>(255.f*robot.gl().captureDepth), "z.depth.ppm");
 }
 
 // ============================================================================
 
 int main(int argc, char** argv) {
+  mlr::initCmdLine(argc, argv);
+
   testGetRobotMask();
 
   return 0;

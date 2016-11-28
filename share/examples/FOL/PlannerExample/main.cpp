@@ -1,7 +1,7 @@
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 #include <MCTS/solver_marc.h>
 #include <MCTS/solver_PlainMC.h>
-#include <FOL/fol_mcts_world.h>
+#include <Logic/fol_mcts_world.h>
 
 
 //===========================================================================

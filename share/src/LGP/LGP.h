@@ -22,7 +22,7 @@
 #include "towerProblem.h"
 
 #include <Motion/motion.h>
-#include <FOL/fol_mcts_world.h>
+#include <Logic/fol_mcts_world.h>
 
 //===========================================================================
 

@@ -156,6 +156,7 @@ void TEST(Distance){
 }
 
 int MAIN(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
 
   testDistance();
 

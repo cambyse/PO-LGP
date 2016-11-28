@@ -11,7 +11,7 @@
 #include <LGP/manipulationTree.h>
 
 #include <Ors/ors.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 #include <Gui/opengl.h>
 #include <Gui/graphview.h>
 #include <Ors/ors.h>

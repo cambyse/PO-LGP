@@ -102,9 +102,10 @@ void TEST(Meshes3) {
 }
 
 int MAIN(int argc, char** argv){
+  mlr::initCmdLine(argc, argv);
 
-//  testSwift();
-//  testSphere();
+  testSwift();
+  testSphere();
   testMeshes3();
 
   return 0;
