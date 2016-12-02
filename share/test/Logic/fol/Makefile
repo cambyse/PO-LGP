@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Core FOL
+DEPEND = Core Logic
 #OPTIM=fast_debug
 
 include $(BASE)/build/generic.mk

@@ -4,7 +4,7 @@ OUTPUT = lib$(NAME).so swig_wrap.cxx _swig.so
 
 ROS = 1
 
-DEPEND = RosCom Motion Ors Core Control FOL Hardware Perception Hardware_gamepad Gui Media
+DEPEND = RosCom Motion Ors Core Control Logic Hardware Perception Hardware_gamepad Gui Media
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)
