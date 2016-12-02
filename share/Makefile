@@ -5,15 +5,13 @@ NAME   = $(shell basename $(PWD))
 
 ################################################################################
 
-src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' -not -name 'CMakeFiles' -not -name 'retired')
+src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern' -not -name 'CMakeFiles' -not -name 'retired' -printf "%f ")
 
-#src_paths += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d -not -name 'CMakeFiles')
+exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile' -printf "%h ")
 
-#exa_paths = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py' -not -name 'CMakeFiles')
-exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile' | grep -o '.*/')
-pysrc_paths = src/Core src/Ors src/Gui src/Motion src/Optim
+pysrc_paths = Core Ors Gui Motion Optim
 
-test_paths = $(shell find test -maxdepth 3 -name 'Makefile' | grep -o '.*/')
+test_paths = $(shell find test -maxdepth 3 -name 'Makefile' -printf "%h ")
 
 ################################################################################
 
@@ -83,8 +81,9 @@ reformatSources:
 	--exclude-from $(PWD)/slices/$*.excl
 	cp -f build/config.mk.mine build/config.mk
 	rm -f README.md README.mlr.md COPYING INSTALL_ALL_UBUNTU_PACKAGES.sh
-		
-	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
+
+
+#	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
 
 force:
 
