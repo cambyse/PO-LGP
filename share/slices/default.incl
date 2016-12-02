@@ -1,6 +1,6 @@
 share/lib/.force
 share/makefile
-share/Makefile.gof
+share/Makefile
 share/gofMake/generic.mk
 share/gofMake/config.mk
 share/gofMake/config.mk.default

@@ -8,7 +8,7 @@
 #include <Optim/blackbox.h>
 #include <Ors/ors.h>
 #include <pr2/roscom.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <pr2/trajectoryInterface.h>
 
 #include "../../src/plotUtil.h"

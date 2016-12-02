@@ -4,7 +4,7 @@
 #include <Ors/ors.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Motion/feedbackControl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <pr2/roscom.h>
 #include <pr2/rosmacro.h>
 #include <pr2/rosalvar.h>

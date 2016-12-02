@@ -3,7 +3,7 @@
 //#include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 //#include <RosCom/actions.h>
 //#include <RosCom/actionMachine.h>
@@ -68,7 +68,7 @@ void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String>
 
     ofstream data(STRING("data-"<<num<<".dat"));
     TaskController MP(world, true); // true means using swift
-    MP.H_rate_diag = pr2_reasonable_W(world);
+    MP.H_rate_diag = world.getHmetric();
   ////////////////////////////////////////////////////////////////////////////////////////
   // PLANNING
   ////////////////////////////////////////////////////////////////////////////////////////

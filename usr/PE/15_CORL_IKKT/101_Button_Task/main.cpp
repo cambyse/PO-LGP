@@ -1,5 +1,5 @@
 #include <Motion/motion.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Gui/opengl.h>
@@ -35,7 +35,7 @@ void dofExploration() {
 
   Task *t;
   t = MP->addTask("tra", new TransitionTaskMap(G));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(G);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = G.getHmetric();
   t->map.order=2;
   t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 
@@ -118,7 +118,7 @@ void initExploration() {
 
     Task *t;
     t = MP->addTask("tra", new TransitionTaskMap(G));
-    ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(G);
+    ((TransitionTaskMap*)&t->map)->H_rate_diag = G.getHmetric();
     t->map.order=2;
     t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 
@@ -201,7 +201,7 @@ void initdofExploration() {
 
     Task *t;
     t = MP->addTask("tra", new TransitionTaskMap(G));
-    ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(G);
+    ((TransitionTaskMap*)&t->map)->H_rate_diag = G.getHmetric();
     t->map.order=2;
     t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 

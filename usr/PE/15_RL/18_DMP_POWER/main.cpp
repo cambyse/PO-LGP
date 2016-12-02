@@ -3,7 +3,7 @@
 #include <Core/array_t.h>
 #include <Gui/plot.h>
 #include <Motion/motion.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Motion/taskMaps.h>
 #include <Motion/dynamicMovementPrimitives.h>
 #include <Optim/optimization.h>
@@ -87,7 +87,7 @@ struct Power_DMP {
 
     Task *t;
     t = MP->addTask("tra", new TransitionTaskMap(*world));
-    ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+    ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
     t->map.order=2;
     t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 
@@ -219,7 +219,7 @@ void evaluate(arr &Xn){
 
   Task *t;
   t = MP->addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
   t->map.order=2;
   t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 

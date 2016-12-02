@@ -1,5 +1,5 @@
 #include "mb_strategy.h"
-#include <Motion/pr2_heuristics.h>
+
 
 MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,TaskManager &tm):
   xDemo(xDemo_)
@@ -13,7 +13,7 @@ MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,TaskManager &tm
 
   Task *t;
   t = MP->addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
   t->map.order=2;
 
   t->setCostSpecs(0, MP->T, ARR(0.), 1e-2);

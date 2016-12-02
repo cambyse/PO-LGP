@@ -2,7 +2,7 @@
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Motion/phase_optimization.h>
 #include <Optim/lagrangian.h>
 

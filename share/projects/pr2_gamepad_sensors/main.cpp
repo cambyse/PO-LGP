@@ -2,7 +2,7 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <Ors/ors.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>

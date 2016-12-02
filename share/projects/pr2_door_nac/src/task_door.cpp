@@ -1,5 +1,5 @@
 #include "task_door.h"
-#include <Motion/pr2_heuristics.h>
+
 #include "plotUtil.h"
 #include "traj_factory.h"
 
@@ -116,7 +116,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   t = MP.addTask("tra", new TaskMap_Transition(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
-  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = world->getHmetric();
 
   t =MP.addTask("posC1", new TaskMap_Default(posTMT,*world,"endeffC1"));
   t->setCostSpecs(0,MP.T, C1trans, 1e3);

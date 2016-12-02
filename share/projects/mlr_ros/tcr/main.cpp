@@ -1,7 +1,7 @@
 #include <Motion/rrt_planner.h>
 #include <Motion/motion.h>
-#include <Motion/pr2_heuristics.h>
-#include <Motion/motionHeuristics.h>
+
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
 #include <Core/array.tpp>

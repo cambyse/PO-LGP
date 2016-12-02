@@ -1,6 +1,6 @@
 #include "pd_executor_module.h"
 #include <Ors/ors.h>
-#include <Motion/pr2_heuristics.h>
+
 
 
 //#ifdef WITH_ROS
@@ -17,7 +17,7 @@ PDExecutor::PDExecutor()
 {
   // fmc setup
   world.getJointState(q, qdot);
-  fmc.H_rate_diag = pr2_reasonable_W(world);
+  fmc.H_rate_diag = world.getHmetric();
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(2.3,10);
  // fmc.qitselfPD.active = false;

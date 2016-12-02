@@ -8,7 +8,7 @@
 #include <Ors/ors.h>
 #include <RosCom/roscom.h>
 //#include <System/engine.h>
-#include <Motion/pr2_heuristics.h>
+
 #include "src/plotUtil.h"
 #include "src/traj_factory.h"
 #include "src/task_door.h"

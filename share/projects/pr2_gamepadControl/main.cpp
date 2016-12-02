@@ -2,7 +2,7 @@
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -46,7 +46,7 @@ void TEST(Gamepad){
 
   TaskController MP(world, true);
   MP.qitselfPD.y_ref = q;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = world.getHmetric();
   Gamepad2Tasks j2t(MP);
   MP.tasks = j2t.getTasks();
 

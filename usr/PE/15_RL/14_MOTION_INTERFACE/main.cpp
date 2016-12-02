@@ -12,7 +12,7 @@
 #include "../src/plotUtil.h"
 #include <pr2/roscom.h>
 #include <System/engine.h>
-#include <Motion/pr2_heuristics.h>
+
 //#include "../12_MBMF_LEARNING/motion_interface.h"
 #include "../17_FINAL/src/motion_interface.h"
 #include "../src/traj_factory.h"
@@ -76,7 +76,7 @@ void transformTrajectory(mlr::KinematicWorld &world, const arr &X, arr &XT) {
   t = MP.addTask("tra", new TransitionTaskMap(world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-3);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world.getHmetric();
 
 
   t =MP.addTask("qGripper", new TaskMap_qItself(world,"l_gripper_joint"));

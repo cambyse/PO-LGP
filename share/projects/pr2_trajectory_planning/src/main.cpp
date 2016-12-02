@@ -5,8 +5,8 @@
 
 #include <Motion/rrt_planner.h>
 #include <Motion/motion.h>
-#include <Motion/pr2_heuristics.h>
-#include <Motion/motionHeuristics.h>
+
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
 #include <Ors/ors.h>
@@ -89,7 +89,7 @@ arr create_endpose(mlr::KinematicWorld& G) {
   MotionProblem P(&G);
 
   P.loadTransitionParameters();
-  P.H_rate_diag = pr2_reasonable_W();
+  P.H_rate_diag = .getHmetric();
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
@@ -132,7 +132,7 @@ arr optimize_trajectory(mlr::KinematicWorld& G, arr& init_trajectory) {
   // create MotionProblem
   MotionProblem P(&G);
   P.loadTransitionParameters();
-  P.H_rate_diag = pr2_reasonable_W();
+  P.H_rate_diag = .getHmetric();
   P.T = init_trajectory.d0-1;
 
   // add a collision cost with threshold 0 to avoid collisions

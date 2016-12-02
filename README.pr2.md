@@ -35,7 +35,7 @@ export ROS_PACKAGE_PATH="${HOME}/git/mlr/rospath:${ROS_PACKAGE_PATH}"
 Now compile `src/pr2/`
 ```
 cd ~/git/mlr/share/src/pr2/marc_controller_pkg/
-make -f Makefile.gof  # create the c++ header from the msg
+make -f Makefile  # create the c++ header from the msg
 cd ..
 make # actually compile roscom etc
 ```
@@ -108,7 +108,7 @@ Known issues
   msgs build?
 
 - `make` in marc_controller_pkg does not compile the ROS package:
-  `bin/createMakeFileLinks.sh` created links to the `Makefile.gof` which is
+  `bin/createMakeFileLinks.sh` created links to the `Makefile` which is
   only generating the msgs.
 
 - `source ~/catkin_ws/devel/setup.sh` overwrites the `ROS_PACKAGE_PATH`

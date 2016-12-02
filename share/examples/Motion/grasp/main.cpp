@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <Motion/taskMaps.h>
 
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 
 void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;

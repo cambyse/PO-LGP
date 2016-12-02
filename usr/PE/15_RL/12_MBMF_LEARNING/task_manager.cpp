@@ -1,6 +1,6 @@
 #include "task_manager.h"
 #include "../src/traj_factory.h"
-#include <Motion/pr2_heuristics.h>
+
 //#include "../src/plotUtil.h"
 
 
@@ -165,7 +165,7 @@ void DoorTask::applyModelFreeExploration(arr &X, const arr &X_base, const arr &p
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
 
 
   t =MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));

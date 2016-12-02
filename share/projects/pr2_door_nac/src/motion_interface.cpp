@@ -1,6 +1,6 @@
 #include "motion_interface.h"
 #include <Algo/spline.h>
-#include <Motion/pr2_heuristics.h>
+
 
 
 Motion_Interface::Motion_Interface(mlr::KinematicWorld &world_)
@@ -152,7 +152,7 @@ void Motion_Interface::gotoPosition(arr x)
 
   Task *t;
   t = MP.addTask("tra", new TaskMap_Transition(*world));
-  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = world->getHmetric();
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 

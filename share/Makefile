@@ -10,10 +10,10 @@ src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern
 #src_paths += $(shell find src/extern -mindepth 1 -maxdepth 1 -type d -not -name 'CMakeFiles')
 
 #exa_paths = $(shell find examples -mindepth 2 -maxdepth 2 -type d -not -name '*py' -not -name 'CMakeFiles')
-exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile.gof' | grep -o '.*/')
+exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile' | grep -o '.*/')
 pysrc_paths = src/Core src/Ors src/Gui src/Motion src/Optim
 
-test_paths = $(shell find test -maxdepth 3 -name 'Makefile.gof' | grep -o '.*/')
+test_paths = $(shell find test -maxdepth 3 -name 'Makefile' | grep -o '.*/')
 
 ################################################################################
 

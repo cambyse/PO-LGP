@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>

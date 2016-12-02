@@ -26,7 +26,7 @@ struct Pr2GamepadController : Thread {
 
     MP = new TaskController(world, true);
     MP->qitselfPD.y_ref = q;
-    MP->H_rate_diag = pr2_reasonable_W(world);
+    MP->H_rate_diag = world.getHmetric();
     j2t = new Gamepad2Tasks(*MP);
 
 

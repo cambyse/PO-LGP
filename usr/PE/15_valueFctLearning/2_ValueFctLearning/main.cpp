@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Ors/ors_swift.h>

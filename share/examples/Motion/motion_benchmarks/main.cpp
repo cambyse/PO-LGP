@@ -1,8 +1,8 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motionHeuristics.h>
-#include <Motion/pr2_heuristics.h>
+//#include <Motion/motionHeuristics.h>
+
 #include <Motion/taskMaps.h>
 #include <GL/glu.h>
 

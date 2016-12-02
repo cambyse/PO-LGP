@@ -3,7 +3,7 @@
 #include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <RosCom/actions.h>
 #include <RosCom/actionMachine.h>
@@ -75,7 +75,7 @@ void PR2_ActionMachine(FSC fsc, mlr::KinematicWorld& world, int num){
 
   TaskController MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = world.getHmetric();
 
   bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){

@@ -20,7 +20,5 @@ namespace mlr {
   struct KinematicWorld;
 };
 
-inline uint pr2_q_dim(){ MLR_MSG("WHAT IS THIS? :-)"); return 7; } //10; } //34; }
-//arr pr2_zero_pose();
 arr pr2_reasonable_W(const mlr::KinematicWorld& world);
 uintA pr2_get_shapes(const mlr::KinematicWorld& world);
