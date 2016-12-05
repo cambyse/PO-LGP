@@ -100,7 +100,7 @@ void TEST(PickAndPlace){
 //  checkAllGradients(Convert(MF), x, 1e-4); return;
 //  checkJacobianCP(Convert(MF), x, 1e-4); return;
 
-  MP.reportFull();
+  MP.reportFeatures();
 
   //-- optimize
   for(uint k=0;k<1;k++){

@@ -1,7 +1,7 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-//#include <Motion/motionHeuristics.h>
+#include <Motion/motion.h>
 
 #include <Motion/taskMaps.h>
 #include <GL/glu.h>

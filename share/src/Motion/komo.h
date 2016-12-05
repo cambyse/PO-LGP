@@ -16,11 +16,12 @@
 #include <Ors/ors.h>
 #include <Optim/optimization.h>
 #include <Optim/lagrangian.h>
+#include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 
 //===========================================================================
 
-struct KOMO{
+struct KOMO{ //TODO: rename ManipOp
   Graph specs;
   mlr::KinematicWorld world;
   struct MotionProblem *MP;
@@ -36,52 +37,74 @@ struct KOMO{
   KOMO();
   ~KOMO();
 
-  //-- specs gives as logic expressions
+  //-- (not much in use..) specs gives as logic expressions in a Graph (or config file)
   KOMO(const Graph& specs);
   void init(const Graph& specs);
   void setFact(const char* fact);
 
-  //-- manual specs helpers
-  //-- setup
-  void setConfigFromFile();
+
+  //-- setup the problem
   void setModel(const mlr::KinematicWorld& W,
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
-  void setTiming(double _phases=1, uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
-  void setSinglePoseOptim(double duration=5.){ setTiming(1, 1, duration, 1); }
-  void setSequenceOptim(uint frames, double duration=5.){ setTiming(frames, 1, duration, 1); }
+  void setTiming(double _phases=1., uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
 
+  //-- higher-level defaults
+  void setConfigFromFile();
+  void setPoseOpt(){
+    setTiming(1., 2, 5., 1, false);
+    setSquaredFixJointVelocities();
+    setSquaredFixSwitchVelocities();
+    setSquaredQVelocities();
+  }
+  void setSequenceOpt(double _phases){
+    setTiming(_phases, 2, 5., 1, false);
+    setSquaredFixJointVelocities();
+    setSquaredFixSwitchVelocities();
+    setSquaredQVelocities();
+  }
+  void setPathOpt(double _phases){
+    setTiming(_phases, 20, 5., 2, false);
+    setSquaredFixJointVelocities();
+    setSquaredFixSwitchVelocities();
+    setSquaredQAccelerations();
+  }
 
   //-- tasks (cost/constraint terms) low-level
   struct Task* setTask(double startTime, double endTime, TaskMap* map, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
-  struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
+//  struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
   void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
 
   //-- tasks (transitions) mid-level
   void setHoming(double startTime=-1., double endTime=-1., double prec=1e-1);
   void setSquaredQAccelerations(double startTime=-1., double endTime=-1., double prec=1.);
   void setSquaredQVelocities(double startTime=-1., double endTime=-1., double prec=1.);
-  void setSquaredFixJointVelocities(double startTime=-1., double endTime=-1., double prec=1.);
-  void setSquaredFixSwitchVelocities(double startTime=-1., double endTime=-1., double prec=1.);
+  void setSquaredFixJointVelocities(double startTime=-1., double endTime=-1., double prec=1e2);
+  void setSquaredFixSwitchVelocities(double startTime=-1., double endTime=-1., double prec=1e2);
 
   //-- tasks (tasks) mid-level
   void setHoldStill(double startTime, double endTime, const char* joint, double prec=1e2);
   void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
   void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), TermType type=sumOfSqrTT, const arr& target=ARR(1.), double prec=1e2);
+  void setAlignedStacking(double time, const char* object, TermType type=sumOfSqrTT, double prec=1e2);
   void setLastTaskToBeVelocity();
   void setCollisions(bool hardConstraint, double margin=.05, double prec=1.);
   void setLimits(bool hardConstraint, double margin=.05, double prec=1.);
 
   //-- tasks (cost/constraint terms) high-level
-  void setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode=false, int verbose=0);
-  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode=false, int verbose=0);
-  void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, bool effKinMode=false, int verbose=0);
+  void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0);
+  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, int verbose=0);
+  void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, int verbose=0);
   void setAttach(double time, const char* endeff, const char* object1, const char* object2, mlr::Transformation& rel, int verbose=0);
 
   void setSlowAround(double time, double delta, double prec=10.);
 
   //-- tasks - logic level
-  void setAbstractTask(double phase, const Graph& facts, bool effKinMode=false, int verbose=0);
+  void setAbstractTask(double phase, const Graph& facts, int verbose=0);
 
+  //-- tasks - high-level geometric
+  void setTowersAlign();
+
+  //-- deprecated
   void setMoveTo(mlr::KinematicWorld& world, //in initial state
                  mlr::Shape& endeff,         //endeffector to be moved
                  mlr::Shape &target,         //target shape
@@ -94,7 +117,8 @@ struct KOMO{
   void run();
   Graph getReport(bool gnuplt=false);
   void checkGradients();
-  void displayTrajectory(double delay=0.01, bool watch=false);
+  bool displayTrajectory(double delay=0.01, bool watch=false);
+  mlr::Camera& displayCamera();
 };
 
 //===========================================================================

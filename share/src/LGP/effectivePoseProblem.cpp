@@ -32,6 +32,9 @@ EffectivePoseProblem::EffectivePoseProblem(mlr::KinematicWorld& effKinematics_be
   CHECK(symbolicState_before.isNodeOfGraph && &symbolicState_before.isNodeOfGraph->container==&KB,"");
   CHECK(symbolicState_after.isNodeOfGraph && &symbolicState_after.isNodeOfGraph->container==&KB,"");
 
+  /* LATER COMMENT: This is to create the effective kinematics, which is now more standardized with the ICRA'16 LGP submission
+   */
+
   // ConstrainedProblem::operator=(
   //       [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
   //   return this -> phi(phi, J, H, tt, x);
@@ -96,6 +99,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   if(&tt) tt.append(sumOfSqrTT, x.N);
 
   //-- touch symbols -> constraints of being inside!
+  //LATER: This is not yet transferred to the new LGP!
   Node *touch=symbolicState_after["touch"];
   for(Node *constraint:touch->parentOf) if(&constraint->container==&symbolicState_after){
     mlr::Shape *s1=effKinematics.getShapeByName(constraint->parents(1)->keys(0));
@@ -110,6 +114,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   }
 
   //-- support symbols -> constraints of being inside!
+  //LATER: This is is now done by the TaskMap_AboveBox (as used in place)
   Node *support=symbolicState_after["Gsupport"];
   for(Node *constraint:support->parentOf) if(&constraint->container==&symbolicState_after){
     mlr::Body *b1=effKinematics.getBodyByName(constraint->parents(1)->keys.last());
@@ -150,6 +155,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   }
 
   //-- supporters below object -> maximize their distances to center
+  //LATER: TODO:  we'd need to transfer this when multiple supporters in a tower - not done yet!
   NodeL objs=symbolicState_after.getNodes("Object");
   for(Node *obj:objs){
     NodeL supporters;
@@ -197,6 +203,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
     }
 
     prec=1e-0;
+    //TODO: ALIGN transfer!
     if(supporters.N==1){ // just one-on-one: align
       arr y1,J1,y2,J2;
       mlr::Body *b1=effKinematics.getBodyByName(obj->keys.last());

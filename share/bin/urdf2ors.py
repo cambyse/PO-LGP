@@ -83,7 +83,7 @@ for joint in joints:
         if att == "prismatic":
             print ' type=JT_transX',
         if att == "fixed":
-            print ' type=JT_fixed',
+            print ' type=JT_rigid',
 
         elem = joint.find("mimic")
         if elem is not None:

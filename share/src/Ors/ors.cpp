@@ -316,7 +316,7 @@ void mlr::Shape::parseAts() {
     case mlr::ST_ssBox:
       CHECK(size[3]>1e-10,"");
       sscCore.setBox();
-      sscCore.scale(size[0], size[1], size[2]);
+      sscCore.scale(size[0]-2.*size[3], size[1]-2.*size[3], size[2]-2.*size[3]);
       mesh.setSSCvx(sscCore, size[3]);
       break;
     default: NIY;
@@ -450,7 +450,7 @@ void mlr::Shape::glDraw(OpenGL& gl) {
       case mlr::ST_ssBox:
         if(!mesh.V.N || !sscCore.V.N){
           sscCore.setBox();
-          sscCore.scale(size[0], size[1], size[2]);
+          sscCore.scale(size[0]-2.*size[3], size[1]-2.*size[3], size[2]-2.*size[3]);
           mesh.setSSCvx(sscCore, size[3]);
         }
         if(orsDrawCores && sscCore.V.N) sscCore.glDraw(gl);
@@ -3365,7 +3365,7 @@ void animateConfiguration(mlr::KinematicWorld& C, Inotify *ino) {
     const double offset = acos( 2. * (x0(i) - center) / delta );
 
     for(t=0; t<steps; t++) {
-      if(C.gl().pressedkey==13 || C.gl().pressedkey==27) return;
+      if(C.gl().pressedkey==13 || C.gl().pressedkey==27 || C.gl().pressedkey=='q') return;
       if(ino && ino->pollForModification()) return;
       if (lim(i,0)==lim(i,1))
         break;
@@ -3545,9 +3545,11 @@ void editConfiguration(const char* filename, mlr::KinematicWorld& C) {
       continue;
     }
     C.gl().update();
+    if(exit) break;
     cout <<"animating.." <<endl;
     //while(ino.pollForModification());
     animateConfiguration(C, &ino);
+    if(exit) break;
     cout <<"watching..." <<endl;
 #if 0
     ino.waitForModification();

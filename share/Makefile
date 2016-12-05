@@ -81,9 +81,7 @@ reformatSources:
 	--exclude-from $(PWD)/slices/$*.excl
 	cp -f build/config.mk.mine build/config.mk
 	rm -f README.md README.mlr.md COPYING INSTALL_ALL_UBUNTU_PACKAGES.sh
-
-
-#	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
+	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
 
 force:
 

@@ -41,6 +41,5 @@ m494.chr
 
 CMake*
 *.cmake
-Makefile
 
 .lastMake

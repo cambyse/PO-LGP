@@ -117,9 +117,9 @@ void moveReba(){
 //  komo.setTask(.3, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), sumOfSqrTT, NoArr, 1e2);
 
 
-  komo.setGrasp(1., "baxterR", "screwdriverHandle", true);
+  komo.setGrasp(1., "baxterR", "screwdriverHandle");
 
-  komo.setPlace(1.8, "baxterR", "screwdriverHandle", "tableC", true);
+  komo.setPlace(1.8, "baxterR", "screwdriverHandle", "tableC");
 #endif
   komo.setSlowAround(1., .1, 1e3);
 

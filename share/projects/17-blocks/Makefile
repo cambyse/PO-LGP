@@ -1,4 +1,4 @@
-BASE = ../../..
+BASE = ../..
 
 OBJS = main.o
 

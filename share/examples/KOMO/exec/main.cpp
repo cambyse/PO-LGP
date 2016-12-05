@@ -15,7 +15,7 @@ void TEST(Executable){
   Graph specs(specsfile);
   KOMO komo(specs);
   komo.reset();
-  komo.MP->reportFull();
+  komo.MP->reportFeatures();
 
   int repeats=specs.get<double>("repeats", -1.);
   for(int r=0;repeats<0. || r<repeats; r++){
@@ -47,7 +47,7 @@ void TEST(cInterface){
   komo.setFact("(EqualZero posDiff endeff target)");
   komo.setFact("(LowerEqualZero collisionIneq){ margin=0.05 scale=.1 }");
   komo.reset();
-  komo.MP->reportFull();
+  komo.MP->reportFeatures();
   komo.run(); //reoptimize
   komo.displayTrajectory();  //play trajectory
 }

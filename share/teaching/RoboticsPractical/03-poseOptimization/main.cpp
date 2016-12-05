@@ -17,7 +17,7 @@ void TEST(PickAndPlace){
   arr q=komo.MP->world.getJointState();
   komo.MP->world.setJointState(q);
   komo.reset();
-  komo.MP->reportFull(true);
+  komo.MP->reportFeatures(true);
   komo.run();
   komo.MP->costReport(true);
   for(;;)

@@ -22,6 +22,7 @@
 #include <Gui/opengl.h>
 #include <Motion/taskMap_FixAttachedObjects.h>
 #include <Motion/taskMap_AboveBox.h>
+#include <Motion/taskMap_AlignStacking.h>
 #include <Motion/taskMap_GJK.h>
 #include <Optim/optimization.h>
 #include <Optim/convert.h>
@@ -44,7 +45,7 @@ void setTasks(MotionProblem& MP,
 
 double height(mlr::Shape* s){
   CHECK(s,"");
-  return 2.*s->size[2] + s->size[3];
+  return 2.*s->size[2];// + s->size[3];
 }
 
 KOMO::KOMO() : MP(NULL), opt(NULL), verbose(1){
@@ -157,8 +158,13 @@ void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhas
 
 Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType type, const arr& target, double prec, uint order){
   map->order = order;
+#if 0
   Task *task = new Task(map, type);
   task->name <<map->shortTag(MP->world);
+  MP->tasks.append(task);
+#else
+  Task *task = MP->addTask(map->shortTag(MP->world), map, type);
+#endif
   if(endTime>double(maxPhase)+1e-10)
     LOG(-1) <<"beyond the time!";
   int tFrom = (startTime<0.?0:STEP(startTime)+order);
@@ -166,14 +172,13 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
   if(tTo<0) tTo=0;
   if(tFrom>tTo && tFrom-tTo<=(int)order) tFrom=tTo;
   task->setCostSpecs(tFrom, tTo, target, prec);
-  MP->tasks.append(task);
   return task;
 }
 
-Task *KOMO::setTask(double startTime, double endTime, const char* mapSpecs, TermType type, const arr& target, double prec, uint order){
-  TaskMap *map = TaskMap::newTaskMap(Graph(mapSpecs), world);
-  return setTask(startTime, endTime, map, type, target, prec, order);
-}
+//Task *KOMO::setTask(double startTime, double endTime, const char* mapSpecs, TermType type, const arr& target, double prec, uint order){
+//  TaskMap *map = TaskMap::newTaskMap(Graph(mapSpecs), world);
+//  return setTask(startTime, endTime, map, type, target, prec, order);
+//}
 
 void KOMO::setKinematicSwitch(double time, bool before, const char* type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom, const mlr::Transformation& jTo){
   mlr::KinematicSwitch *sw = mlr::KinematicSwitch::newSwitch(type, ref1, ref2, world, STEP(time)+(before?-1:0), 0, jFrom, jTo );
@@ -230,7 +235,7 @@ void KOMO::setLastTaskToBeVelocity(){
   MP->tasks.last()->map.order = 1; //set to be velocity!
 }
 
-void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool effKinMode, int verbose){
+void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose){
   if(verbose>0) cout <<"KOMO_setGrasp t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<endl;
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
 
@@ -262,7 +267,7 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, bool
   }
 }
 
-void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, bool effKinMode, int verbose){
+void KOMO::setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, int verbose){
   if(verbose>0) cout <<"KOMO_setPlace t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<" place=" <<placeRef <<endl;
 
   if(stepsPerPhase>2){ //velocities down and up
@@ -283,16 +288,13 @@ void KOMO::setPlace(double time, const char* endeffRef, const char* object, cons
   setKinematicSwitch(time, true, "delete", endeffRef, object);
 
   //connect object to table
-  if(!effKinMode){
-    setKinematicSwitch(time, true, "rigidAtTo", placeRef, object);
-  }else{
-    mlr::Transformation rel = 0;
-    rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
-    setKinematicSwitch(time, true, "transXYPhiZero", placeRef, object, rel );
-  }
+//  if(!effKinMode)  setKinematicSwitch(time, true, "rigidAtTo", placeRef, object); //OLD!!
+  mlr::Transformation rel = 0;
+  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
+  setKinematicSwitch(time, true, "transXYPhiZero", placeRef, object, rel );
 }
 
-void KOMO::setHandover(double time, const char* oldHolder, const char* object, const char* newHolder, bool effKinMode, int verbose){
+void KOMO::setHandover(double time, const char* oldHolder, const char* object, const char* newHolder, int verbose){
   if(verbose>0) cout <<"KOMO_setHandover t=" <<time <<" oldHolder=" <<oldHolder <<" obj=" <<object <<" newHolder=" <<newHolder <<endl;
 
   //hand center at object center (could be replaced by touch)
@@ -335,7 +337,8 @@ void KOMO::setSlowAround(double time, double delta, double prec){
   //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
 }
 
-void KOMO::setAbstractTask(double phase, const Graph& facts, bool effKinMode, int verbose){
+/// translate a list of facts (typically facts in a FOL state) to LGP tasks
+void KOMO::setAbstractTask(double phase, const Graph& facts, int verbose){
 //  CHECK(phase<=maxPhase,"");
 //  listWrite(facts, cout,"\n");  cout <<endl;
   for(Node *n:facts){
@@ -344,15 +347,15 @@ void KOMO::setAbstractTask(double phase, const Graph& facts, bool effKinMode, in
     for(Node *p:n->parents) symbols.append(&p->keys.last());
     if(n->keys.N && n->keys.last()=="komoGrasp"){
       double time=n->get<double>();
-      setGrasp(phase+time, *symbols(0), *symbols(1), effKinMode, verbose);
+      setGrasp(phase+time, *symbols(0), *symbols(1), verbose);
     }
     else if(n->keys.N && n->keys.last()=="komoPlace"){
       double time=n->get<double>();
-      setPlace(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
+      setPlace(phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
     }
     else if(n->keys.N && n->keys.last()=="komoHandover"){
       double time=n->get<double>();
-      setHandover(phase+time, *symbols(0), *symbols(1), *symbols(2), effKinMode, verbose);
+      setHandover(phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
     }
     else if(n->keys.N && n->keys.last()=="komoAttach"){
       double time=n->get<double>();
@@ -380,6 +383,11 @@ void KOMO::setAlign(double startTime, double endTime, const char* shape, const a
   setTask(startTime, endTime, new TaskMap_Default(vecAlignTMT, world, shape, mlr::Vector(whichAxis), shapeRel, mlr::Vector(whichAxisRel)), type, target, prec);
 #endif
 
+}
+
+void KOMO::setAlignedStacking(double time, const char* object, TermType type, double prec)
+{
+  setTask(time, time, new TaskMap_AlignStacking(world, object), type, NoArr, prec);
 }
 
 void KOMO::setCollisions(bool hardConstraint, double margin, double prec){
@@ -506,9 +514,9 @@ void KOMO::checkGradients(){
   }
 }
 
-void KOMO::displayTrajectory(double delay, bool watch){
+bool KOMO::displayTrajectory(double delay, bool watch){
 #if 1
-  MP->displayTrajectory(watch?-1:1, "KOMO planned trajectory", delay);
+  return MP->displayTrajectory(watch?-1:1, "KOMO planned trajectory", delay);
 #else
   if(MP->T){
     ::displayTrajectory(x, 1, world, MP->switches, "KOMO planned trajectory", delay);
@@ -524,6 +532,14 @@ void KOMO::displayTrajectory(double delay, bool watch){
   }
   // if(wait) MP->world.gl().watch();
 #endif
+}
+
+mlr::Camera& KOMO::displayCamera(){
+  if(!MP->gl){
+    MP->gl = new OpenGL ("MotionProblem display");
+    MP->gl->camera.setDefault();
+  }
+  return MP->gl->camera;
 }
 
 //===========================================================================

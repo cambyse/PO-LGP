@@ -495,7 +495,7 @@ void MotionProblem::activateAllTaskCosts(bool active) {
   for(Task *c: tasks) c->active=active;
 }
 
-void MotionProblem::reportFull(bool brief) {
+void MotionProblem::reportFeatures(bool brief) {
   cout <<"*** MotionProblem -- FeatureReport " <<endl;
 
   cout <<"  useSwift=" <<useSwift <<endl;

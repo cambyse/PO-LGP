@@ -138,7 +138,7 @@ struct MotionProblem {
   uint dim_g(const mlr::KinematicWorld& G, uint t);
   uint dim_h(const mlr::KinematicWorld& G, uint t);
   StringA getPhiNames(const mlr::KinematicWorld& G, uint t);
-  void reportFull(bool brief=false);
+  void reportFeatures(bool brief=false);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 

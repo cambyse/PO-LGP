@@ -41,8 +41,8 @@ body dnWristR { type=2 mass=.01 size=[.1 .1 .1 .055] }
 body dnWristL { type=2 mass=.01 size=[.1 .1 .1 .055] }
 body ddnWristR{ type=2 mass=.01 size=[.5 .5 .04 .05] }
 body ddnWristL{ type=2 mass=.01 size=[.5 .5 .04 .05] }
-body handR    { type=9 mass=.01 size=[.075 .0 .075 .02] }
-body handL    { type=9 mass=.01 size=[.075 .0 .075 .02] }
+body handR    { type=9 mass=.01 size=[.1 .04 .1 .02] }
+body handL    { type=9 mass=.01 size=[.1 .04 .1 .02] }
 
 joint (upWristR dnWristR) { A=<T t(0 0 .075) d( 90 0 1 0) d(140 1 0 0)> B=<T d(-90 0 1 0) t(0 0 .075)>  }
 joint (upWristL dnWristL) { A=<T t(0 0 .075) d(-90 0 1 0) d(140 1 0 0)> B=<T d( 90 0 1 0) t(0 0 .075)>  }
