@@ -357,13 +357,14 @@ struct KinematicSwitch{
   uint fromId, toId;
   mlr::Transformation jA,jB;
   KinematicSwitch();
+  void setTimeOfApplication(double time, bool before, int stepsPerPhase, uint T);
 //  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
   void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool copyFromBodies);
   mlr::String shortTag(const KinematicWorld* G) const;
   void write(std::ostream& os) const;
-  static KinematicSwitch* newSwitch(const Node *specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero=0);
-  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero=0, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
+  static KinematicSwitch* newSwitch(const Node *specs, const mlr::KinematicWorld& world, int stepsPerPhase, uint T);
+  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const mlr::KinematicWorld& world, uint _timeOfApplication, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
   static const char* name(OperatorSymbol s);
 };
 /// @} // END of group ors_basic_data_structures

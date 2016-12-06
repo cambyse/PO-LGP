@@ -1,6 +1,6 @@
-Include = '../../../data/man_model.ors'
+Include = '../../data/man_model.ors'
 
-Edit  waist { X=<T t(.8 0. 1.) d(-90 0 0 1)> }
+Edit waist { X=<T t(.8 0. 1.) d(-90 0 0 1)> }
 
 body tableC{ type=9, X=<T t(0 0 .9)>, size=[1. .8 .04 .02], color=[.3 .3 .5] fixed, contact }
 

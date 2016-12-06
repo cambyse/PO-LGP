@@ -37,6 +37,9 @@ struct Task {
   void setCostSpecs(int fromTime, int toTime,
                     const arr& _target=ARR(0.),
                     double _prec=1.);
+  void setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T,
+                    const arr& _target,
+                    double _prec);
   bool isActive(uint t){ return (prec.N>t && prec(t)); }
   void write(std::ostream& os) const{
     os <<"TASK '" <<name <<"'"
@@ -45,7 +48,7 @@ struct Task {
     <<" prec=" <<prec;
   }
 
-  static Task* newTask(const Node* specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero=0); ///< create a new Task from specs
+  static Task* newTask(const Node* specs, const mlr::KinematicWorld& world, int stepsPerPhase, uint T); ///< create a new Task from specs
 };
 stdOutPipe(Task)
 
@@ -88,8 +91,8 @@ struct MotionProblem {
   Task* addTask(const char* name, TaskMap *map, const TermType& termType); ///< manually add a task
 
   //-- setting costs in a task space via specs
-  void parseTasks(const Graph& specs, int Tinterval=-1, uint Tzero=0);     ///< read all tasks from a graph
-  bool parseTask(const Node *n, int Tinterval=-1, uint Tzero=0);           ///< read a single task from a node-spec
+  void parseTasks(const Graph& specs, int stepsPerPhase=-1);     ///< read all tasks from a graph
+  bool parseTask(const Node *n, int stepsPerPhase=-1);           ///< read a single task from a node-spec
 
   /// ``fix'' a certain time slice to configuration x (especitally final time slices). fix means that all joints become rigid and q zero-dimensional in that time slice
   void set_fixConfiguration(const arr& x, uint t);

@@ -21,6 +21,9 @@ collisionPairs
 collisionExcept
 collisionExceptPairs
 wheels
+Transition
+FixJointVelocities
+FixSwichedObjects
 
 #joint types
 MakeJoint
@@ -31,6 +34,9 @@ rigidZero
 freeAtTo
 transXYPhiAtFrom
 transXYPhiZero
+
+#default tasks
+DefaultPathOpt
 
 # from Johannes
 OpSpacePos

@@ -39,10 +39,6 @@ void setTasks(MotionProblem& MP,
 
 //===========================================================================
 
-#define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
-
-//===========================================================================
-
 double height(mlr::Shape* s){
   CHECK(s,"");
   return 2.*s->size[2];// + s->size[3];
@@ -156,6 +152,8 @@ void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhas
 // task specs
 //
 
+//#define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
+
 Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType type, const arr& target, double prec, uint order){
   map->order = order;
 #if 0
@@ -165,6 +163,7 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
 #else
   Task *task = MP->addTask(map->shortTag(MP->world), map, type);
 #endif
+#if 0
   if(endTime>double(maxPhase)+1e-10)
     LOG(-1) <<"beyond the time!";
   int tFrom = (startTime<0.?0:STEP(startTime)+order);
@@ -172,6 +171,9 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
   if(tTo<0) tTo=0;
   if(tFrom>tTo && tFrom-tTo<=(int)order) tFrom=tTo;
   task->setCostSpecs(tFrom, tTo, target, prec);
+#else
+  task->setCostSpecs(startTime, endTime, stepsPerPhase, MP->T, target, prec);
+#endif
   return task;
 }
 
@@ -181,7 +183,8 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType typ
 //}
 
 void KOMO::setKinematicSwitch(double time, bool before, const char* type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom, const mlr::Transformation& jTo){
-  mlr::KinematicSwitch *sw = mlr::KinematicSwitch::newSwitch(type, ref1, ref2, world, STEP(time)+(before?-1:0), 0, jFrom, jTo );
+  mlr::KinematicSwitch *sw = mlr::KinematicSwitch::newSwitch(type, ref1, ref2, world, 0/*STEP(time)+(before?0:1)*/, jFrom, jTo );
+  sw->setTimeOfApplication(time, before, stepsPerPhase, MP->T);
   MP->switches.append(sw);
 }
 

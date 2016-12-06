@@ -36,10 +36,23 @@ void Task::setCostSpecs(int fromTime,
   for(uint t=fromTime;t<=(uint)toTime;t++) prec(t) = _prec;
 }
 
+#define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
+
+void Task::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T, const arr& _target, double _prec){
+  if(stepsPerPhase<0) stepsPerPhase=T;
+  if(STEP(toTime)>T-1) LOG(-1) <<"beyond the time!: endTime=" <<toTime <<" phases=" <<double(T)/stepsPerPhase;
+  int tFrom = (fromTime<0.?0:STEP(fromTime)+map.order);
+  int tTo = (toTime<0.?T-1:STEP(toTime));
+  if(tTo<0) tTo=0;
+  if(tFrom>tTo && tFrom-tTo<=(int)map.order) tFrom=tTo;
+
+  setCostSpecs(tFrom, tTo, _target, _prec);
+}
+
 
 //===========================================================================
 
-Task* Task::newTask(const Node* specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero){
+Task* Task::newTask(const Node* specs, const mlr::KinematicWorld& world, int stepsPerPhase, uint T){
   if(specs->parents.N<2) return NULL; //these are not task specs
 
   //-- check the term type first
@@ -61,9 +74,9 @@ Task* Task::newTask(const Node* specs, const mlr::KinematicWorld& world, uint Ti
   if(specs->isGraph()){
     const Graph& params = specs->graph();
     arr time = params.get<arr>("time",{0.,1.});
-    task->setCostSpecs(Tzero + time(0)*(Tinterval-1), Tzero + time(1)*(Tinterval-1), params.get<arr>("target", {}), params.get<double>("scale", {1.}));
+    task->setCostSpecs(time(0), time(1), stepsPerPhase, T, params.get<arr>("target", {}), params.get<double>("scale", {1.}));
   }else{
-    task->setCostSpecs(Tzero, Tzero+(Tinterval-1), {}, 1.);
+    task->setCostSpecs(0, T-1, {}, 1.);
   }
   return task;
 }
@@ -114,28 +127,30 @@ Task* MotionProblem::addTask(const char* name, TaskMap *m, const TermType& termT
   return t;
 }
 
-bool MotionProblem::parseTask(const Node *n, int Tinterval, uint Tzero){
-  if(Tinterval==-1) Tinterval=T;
+bool MotionProblem::parseTask(const Node *n, int stepsPerPhase){
+  if(stepsPerPhase==-1) stepsPerPhase=T;
   //-- task?
-  Task *task = Task::newTask(n, world, Tinterval, Tzero);
+  Task *task = Task::newTask(n, world, stepsPerPhase, T);
   if(task){
-    if(n->keys.N) task->name=n->keys.last(); else{
+    if(n->keys.N) task->name=n->keys.last();
+    else{
       for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
     }
     tasks.append(task);
     return true;
   }
   //-- switch?
-  mlr::KinematicSwitch *sw = mlr::KinematicSwitch::newSwitch(n, world, Tinterval, Tzero);
+  mlr::KinematicSwitch *sw = mlr::KinematicSwitch::newSwitch(n, world, stepsPerPhase, T);
   if(sw){
     switches.append(sw);
     return true;
   }
+//  LOG(-1) <<"task spec '" <<*n <<"' could not be parsed";
   return false;
 }
 
-void MotionProblem::parseTasks(const Graph& specs, int Tinterval, uint Tzero){
-  for(Node *n:specs) parseTask(n, Tinterval, Tzero);
+void MotionProblem::parseTasks(const Graph& specs, int stepsPerPhase){
+  for(Node *n:specs) parseTask(n, stepsPerPhase);
 
   //-- add TransitionTask for InvKinematics
   if(!T){

@@ -54,7 +54,7 @@
 bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true, orsDrawIndexColors=false;
 bool orsDrawMeshes=true, orsDrawCores=false, orsDrawZlines=false;
 bool orsDrawBodyNames=false;
-double orsDrawAlpha=0.50;
+double orsDrawAlpha=1.;
 uint orsDrawLimit=0;
 
 
@@ -2717,6 +2717,13 @@ mlr::KinematicSwitch::KinematicSwitch()
   jB.setZero();
 }
 
+#define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
+
+void mlr::KinematicSwitch::setTimeOfApplication(double time, bool before, int stepsPerPhase, uint T){
+  if(stepsPerPhase<0) stepsPerPhase=T;
+  timeOfApplication = STEP(time)+(before?0:1);
+}
+
 void mlr::KinematicSwitch::apply(KinematicWorld& G){
   Shape *from=NULL, *to=NULL;
   if(fromId!=UINT_MAX) from=G.shapes(fromId);
@@ -2821,7 +2828,7 @@ void mlr::KinematicSwitch::write(std::ostream& os) const{
 
 //===========================================================================
 
-mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const Node *specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero){
+mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const Node *specs, const mlr::KinematicWorld& world, int stepsPerPhase, uint T){
   if(specs->parents.N<2) return NULL;
 
   //-- get tags
@@ -2832,18 +2839,19 @@ mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const Node *specs, const m
   if(specs->parents.N>3) ref2=specs->parents(3)->keys.last().p;
 
   if(tt!="MakeJoint") return NULL;
-  mlr::KinematicSwitch* sw = newSwitch(type, ref1, ref2, world, Tinterval, Tzero);
+  mlr::KinematicSwitch* sw = newSwitch(type, ref1, ref2, world, stepsPerPhase + 1);
 
   if(specs->isGraph()){
     const Graph& params = specs->graph();
-    sw->timeOfApplication = Tzero + params.get<double>("time",1.)*Tinterval + 1;
+    sw->setTimeOfApplication(params.get<double>("time",1.), params.get<bool>("time", false), stepsPerPhase, T);
+//    sw->timeOfApplication = *stepsPerPhase + 1;
     params.get(sw->jA, "from");
     params.get(sw->jB, "to");
   }
   return sw;
 }
 
-mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero, const mlr::Transformation& jFrom, const mlr::Transformation& jTo){
+mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const mlr::KinematicWorld& world, uint _timeOfApplication, const mlr::Transformation& jFrom, const mlr::Transformation& jTo){
   //-- create switch
   mlr::KinematicSwitch *sw= new mlr::KinematicSwitch();
   if(type=="addRigid"){ sw->symbol=mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_rigid; }
@@ -2877,7 +2885,7 @@ mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, c
 //    }else HALT("that's ambiguous");
 //  }else{
 
-  sw->timeOfApplication = Tzero + Tinterval + 1;
+  sw->timeOfApplication = _timeOfApplication;
   if(&jFrom) sw->jA = jFrom;
   if(&jTo) sw->jB = jTo;
   return sw;

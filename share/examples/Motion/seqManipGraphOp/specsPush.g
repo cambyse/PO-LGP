@@ -3,13 +3,18 @@ Include = 'model.kvg'
 
 KOMO{
   T = 40
-  duration = 7
+  duration = 10
   phases = 3
   makeConvexHulls, activateAllContacts, makeSCBoxes
 }
 
+#defaults
+(DefaultPathOpt)
+
 #transition costs
-(MinSumOfSqr qItself){ order=2 time=[0 3] }
+(MinSumOfSqr Transition){ order=2 time=[0 -1] scale=1e0 }
+#(MinSumOfSqr FixJointVelocities){ order=1 time=[0 -1] scale=1e2 }
+(MinSumOfSqr FixSwichedObjects){ order=1 time=[0 -1] scale=1e2 }
 
 #watch
 #(MinSumOfSqr gazeAt endeffKinect obj1){ time=[.6 2.4] scale=1e-1 }
@@ -18,8 +23,8 @@ KOMO{
 #kinematic switches
 (MakeJoint delete table obj1){ time=1 }
 (MakeJoint transXYPhiAtFrom table obj1){ time=1 }
-(MakeJoint delete table obj1){ time=2 }
-(MakeJoint rigidAtFrom table obj1){ time=2 }
+#(MakeJoint delete table obj1){ time=2 }
+#(MakeJoint transXYPhiAtFrom table obj1){ time=2 }
 
 
 #reach:
@@ -29,12 +34,12 @@ KOMO{
 (MinSumOfSqr posDiff endeff obj1){ order=1 scale=1e0 time=[.8 1] target=[.2 0 0] }
 #(MinSumOfSqr posDiff graspRef obj1){ time=[1 1] scale=1e3 }
 #(MinSumOfSqr quatDiff graspRef obj1){ time=[1 1] scale=1e3 }
-(MinSumOfSqr qItself){ order=1 time=[0.97 1.03] scale=1e1 }
+(MinSumOfSqr qItself){ order=1 time=[0.95 1.05] scale=1e2 }
 
 #push:
-(MinSumOfSqr posDiff endeff obj1){ time=[1 2] target=[-.1 0 0] scale=100 }
-(MinSumOfSqr pos obj1){ order=1 scale=1e0 time=[1 2] target=[.07 0 0] }
-(MinSumOfSqr qItself){ order=1 time=[1.97 2.03] scale=1e1 }
+(MinSumOfSqr posDiff endeff obj1){ time=[1 2] target=[-.1 0 0] scale=1e2 } #keep relative positioning
+(MinSumOfSqr pos obj1){ order=1 scale=1e0 time=[1 2] target=[.07 0 0] } #push velocity
+(MinSumOfSqr qItself){ order=1 time=[1.95 2.05] scale=1e2 } #slow down again
 
 
 #move up:
@@ -50,8 +55,10 @@ KOMO{
 #(EqualZero quatDiff obj1 target){ time=[2 2] scale=1e3 }
 
 ##home:
-(MinSumOfSqr posDiff endeff){ time=[3 3] scale=1e3 target=[1 -1 1.5] }
-(MinSumOfSqr qItself){ order=1 time=[2.95 3] scale=1e1 }
+#(MinSumOfSqr posDiff endeff){ time=[3 3] scale=1e3 target=[1 -1 1.5] }
+(MinSumOfSqr qItself){ order=1 time=[2.95 3] scale=1e2 }
+(MinSumOfSqr qItself){ relative time=[2.95 3] scale=1e1 }
+
 
 ##rigid grasp:
 #(EqualZero qItself graspJoint){ order=1 time=[1 2] scale=1e3 }

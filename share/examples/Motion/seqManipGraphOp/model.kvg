@@ -21,7 +21,7 @@ body obj1 { size=[.1 .1 .2 .02] type=9 contact }
 #body obj5 { size=[.1 .1 .2 0] type=0 contact }
 #body obj6 { size=[.1 .1 .2 0] type=0 contact }
 
-joint (table obj1) { from=<T t(-.1 .2 0)> to=<T t(0 0 .1)> type=10 }
+joint (table obj1) { from=<T t(-.1 .2 0)> to=<T t(0 0 .1)> type=JT_rigid }
 #joint (table obj2) { from=<T t(-.2 .1 0)> to=<T t(0 0 .1)> type=10 }
 #joint (table obj3) { from=<T t(-.3 -.1 0)> to=<T t(0 0 .1)> type=10 }
 #joint (table obj4) { from=<T t(-.1 -.1 0)> to=<T t(0 0 .1)> type=10 }

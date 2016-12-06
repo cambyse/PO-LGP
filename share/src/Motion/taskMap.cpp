@@ -16,6 +16,7 @@
 #include "taskMap.h"
 #include "taskMap_qItself.h"
 #include "taskMap_GJK.h"
+#include "taskMap_FixAttachedObjects.h"
 
 //===========================================================================
 
@@ -193,11 +194,19 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const mlr::KinematicWorld& world
       map = new TaskMap_qItself(world, j);
     }else if(ref1) map = new TaskMap_qItself(world, ref1);
     else if(params && params->getNode("Hmetric")) map = new TaskMap_qItself(params->getNode("Hmetric")->get<double>()*world.getHmetric()); //world.naturalQmetric()); //
+    else if(params && params->getNode("relative")) map = new TaskMap_qItself(NoArr, true); //world.naturalQmetric()); //
     else map = new TaskMap_qItself();
   }else if(type=="qZeroVels"){
     map = new TaskMap_qZeroVels();
   }else if(type=="GJK"){
     map = new TaskMap_GJK(world, ref1, ref2, true);
+  }else if(type=="Transition"){
+    map = new TaskMap_Transition(world);
+  }else if(type=="FixJointVelocities"){
+    map = new TaskMap_Transition(world, true);
+    dynamic_cast<TaskMap_Transition*>(map)->velCoeff = 1.;
+  }else if(type=="FixSwichedObjects"){
+    map = new TaskMap_FixSwichedObjects();
   }else{
     map = new TaskMap_Default(specs, world);
   }
