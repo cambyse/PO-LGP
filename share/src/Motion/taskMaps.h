@@ -21,7 +21,10 @@
 #include "taskMap_transition.h"
 #include "taskMap_default.h"
 #include "taskMap_qLimits.h"
-
+#include "taskMap_pushConsistent.h"
+#include "taskMap_FixAttachedObjects.h"
+#include "taskMap_AboveBox.h"
+#include "taskMap_AlignStacking.h"
 
 //===========================================================================
 
@@ -80,6 +83,7 @@ struct ProxyConstraint:TaskMap {
                   bool _useDistNotCost=false);
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
   virtual uint dim_phi(const mlr::KinematicWorld& G){ return 1; }
+  virtual mlr::String shortTag(const mlr::KinematicWorld& G){ return "ProxyConstraint"; }
 };
 
 //===========================================================================

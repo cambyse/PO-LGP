@@ -64,7 +64,7 @@ struct KOMO{ //TODO: rename ManipOp
   }
   void setPathOpt(double _phases){
     setTiming(_phases, 20, 5., 2, false);
-    setSquaredFixJointVelocities();
+    setSquaredFixJointVelocities(-1., -1., 1e3);
     setSquaredFixSwitchVelocities();
     setSquaredQAccelerations();
   }
@@ -73,6 +73,7 @@ struct KOMO{ //TODO: rename ManipOp
   struct Task* setTask(double startTime, double endTime, TaskMap* map, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
 //  struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
   void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
+
 
   //-- tasks (transitions) mid-level
   void setHoming(double startTime=-1., double endTime=-1., double prec=1e-1);
@@ -85,10 +86,14 @@ struct KOMO{ //TODO: rename ManipOp
   void setHoldStill(double startTime, double endTime, const char* joint, double prec=1e2);
   void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
   void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), TermType type=sumOfSqrTT, const arr& target=ARR(1.), double prec=1e2);
+  void setTouch(double startTime, double endTime, const char* shape1, const char* shape2, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
   void setAlignedStacking(double time, const char* object, TermType type=sumOfSqrTT, double prec=1e2);
   void setLastTaskToBeVelocity();
   void setCollisions(bool hardConstraint, double margin=.05, double prec=1.);
   void setLimits(bool hardConstraint, double margin=.05, double prec=1.);
+
+  //-- kinematic switches mid-level
+  void setKS_placeOn(double time, bool before, const char* ref1, const char* ref2, bool actuated=false);
 
   //-- tasks (cost/constraint terms) high-level
   void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0);

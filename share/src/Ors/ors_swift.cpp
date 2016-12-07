@@ -216,6 +216,12 @@ void SwiftInterface::deactivate(mlr::Shape *s1, mlr::Shape *s2) {
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
+void SwiftInterface::activate(mlr::Shape *s) {
+  if(INDEXshape2swift(s->index)==-1) return;
+  scene->Activate(INDEXshape2swift(s->index));
+}
+
+
 void SwiftInterface::pushToSwift(const mlr::KinematicWorld& world) {
   //CHECK_EQ(INDEXshape2swift.N,world.shapes.N,"the number of shapes has changed");
   CHECK(INDEXshape2swift.N <= world.shapes.N, "the number of shapes has changed");

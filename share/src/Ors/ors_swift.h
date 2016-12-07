@@ -42,9 +42,11 @@ struct SwiftInterface {
 
   void reinitShape(const mlr::Shape *s);
 //  void close();
+  void activate(mlr::Shape *s);
   void deactivate(mlr::Shape *s1, mlr::Shape *s2);
   void deactivate(const mlr::Array<mlr::Shape*>& shapes);
   void deactivate(const mlr::Array<mlr::Body*>& bodies);
+
   void initActivations(const mlr::KinematicWorld& world, uint parentLevelsToDeactivate=3);
   void swiftQueryExactDistance();
 };

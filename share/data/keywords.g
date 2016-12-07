@@ -34,6 +34,7 @@ rigidZero
 freeAtTo
 transXYPhiAtFrom
 transXYPhiZero
+transXYPhiActuated
 
 #default tasks
 DefaultPathOpt

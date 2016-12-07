@@ -12,8 +12,8 @@ body upArmL   { type=2 mass=.1 size=[.15 .15 .15 .075]  }
 body upArmR   { type=2 mass=.1 size=[.15 .15 .15 .075]  }
 body dnArmL   { type=2 mass=.1 size=[.15 .15 .15 .075]  }
 body dnArmR   { type=2 mass=.1 size=[.15 .15 .15 .075]  }
-body upWristL { type=2 mass=.1 size=[.15 .15 .15 .06] }
-body upWristR { type=2 mass=.1 size=[.15 .15 .15 .06] }
+body upWristL { type=2 mass=.1 size=[.15 .15 .15 .06] contact }
+body upWristR { type=2 mass=.1 size=[.15 .15 .15 .06] contact }
 
 body neck { type=2 mass=.1 size=[.0 .0 .1 .08] }
 body manhead { type=1 mass=.1 size=[0 0 0 .2] }

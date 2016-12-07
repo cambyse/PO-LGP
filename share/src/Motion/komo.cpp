@@ -188,6 +188,19 @@ void KOMO::setKinematicSwitch(double time, bool before, const char* type, const 
   MP->switches.append(sw);
 }
 
+void KOMO::setKS_placeOn(double time, bool before, const char* ref1, const char* ref2, bool actuated){
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, before, "delete", NULL, ref1);
+
+  //connect object to table
+  mlr::Transformation rel = 0;
+  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(ref1)) + height(world.getShapeByName(ref2))));
+  if(!actuated)
+    setKinematicSwitch(time, before, "transXYPhiZero", ref2, ref1, rel );
+  else
+    setKinematicSwitch(time, before, "transXYPhiActuated", ref2, ref1, rel );
+}
+
 void KOMO::setHoming(double startTime, double endTime, double prec){
   uintA bodies;
   for(mlr::Joint *j:MP->world.joints) if(j->qDim()>0) bodies.append(j->to->index);
@@ -388,8 +401,11 @@ void KOMO::setAlign(double startTime, double endTime, const char* shape, const a
 
 }
 
-void KOMO::setAlignedStacking(double time, const char* object, TermType type, double prec)
-{
+void KOMO::setTouch(double startTime, double endTime, const char* shape1, const char* shape2, TermType type, const arr& target, double prec){
+  setTask(startTime, endTime, new TaskMap_GJK(world, shape1, shape2, true), type, target, prec);
+}
+
+void KOMO::setAlignedStacking(double time, const char* object, TermType type, double prec){
   setTask(time, time, new TaskMap_AlignStacking(world, object), type, NoArr, prec);
 }
 

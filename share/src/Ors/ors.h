@@ -349,9 +349,9 @@ struct KinematicWorld : GLDrawer{
 
 //===========================================================================
 
-struct KinematicSwitch{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo };
-  OperatorSymbol symbol;
+struct KinematicSwitch{ //TODO: move to src/Motion
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo, addActuated };
+  Enum<OperatorSymbol> symbol;
   Enum<JointType> jointType;
   uint timeOfApplication;
   uint fromId, toId;

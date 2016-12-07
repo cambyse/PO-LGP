@@ -91,6 +91,9 @@ template<> const char* mlr::Enum<mlr::JointType>::names []={
   "JT_hingeX", "JT_hingeY", "JT_hingeZ", "JT_transX", "JT_transY", "JT_transZ", "JT_transXY", "JT_trans3", "JT_transXYPhi", "JT_universal", "JT_rigid", "JT_quatBall", "JT_phiTransXY", "JT_glue", "JT_free", NULL
 };
 
+template<> const char* mlr::Enum<mlr::KinematicSwitch::OperatorSymbol>::names []={
+  "deleteJoint", "addJointZero", "addJointAtFrom", "addJointAtTo", "addArticulated", NULL
+};
 
 //===========================================================================
 //
@@ -1092,7 +1095,7 @@ arr mlr::KinematicWorld::getLimits() const {
 void mlr::KinematicWorld::zeroGaugeJoints() {
   Joint *e;
   mlr::Vector w;
-  for(Body *  n:  bodies) if(n->type!=BT_static) {
+  for(Body *n: bodies) if(n->type!=BT_static && n->inLinks.N) {
     e=n->inLinks(0);
     if(e) {
       e->A.appendTransformation(e->Q);
@@ -2743,9 +2746,10 @@ void mlr::KinematicSwitch::apply(KinematicWorld& G){
     return;
   }
   G.isLinkTree=false;
-  if(symbol==addJointZero){
+  if(symbol==addJointZero || symbol==addActuated){
     Joint *j = new Joint(G, from->body, to->body);
-    j->constrainToZeroVel=true;
+    if(symbol==addJointZero) j->constrainToZeroVel=true;
+    else                     j->constrainToZeroVel=false;
     j->type=jointType;
     j->A = from->rel * jA;
     j->B = jB * (-to->rel);
@@ -2811,7 +2815,7 @@ void mlr::KinematicSwitch::temporallyAlign(const mlr::KinematicWorld& Gprevious,
 mlr::String mlr::KinematicSwitch::shortTag(const mlr::KinematicWorld* G) const{
   mlr::String str;
   str <<"  timeOfApplication=" <<timeOfApplication;
-  str <<"  symbol=" <<name(symbol);
+  str <<"  symbol=" <<symbol;
   str <<"  jointType=" <<jointType;
   str <<"  fromId=" <<(fromId==UINT_MAX?"NULL":(G?G->shapes(fromId)->name:STRING(fromId)));
   str <<"  toId=" <<(G?G->shapes(toId)->name:STRING(toId)) <<endl;
@@ -2861,6 +2865,7 @@ mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, c
   else if(type=="rigidZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_rigid; }
   else if(type=="transXYPhiAtFrom"){ sw->symbol = mlr::KinematicSwitch::addJointAtFrom; sw->jointType=mlr::JT_transXYPhi; }
   else if(type=="transXYPhiZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_transXYPhi; }
+  else if(type=="transXYPhiActuated"){ sw->symbol = mlr::KinematicSwitch::addActuated; sw->jointType=mlr::JT_transXYPhi; }
   else if(type=="freeAtTo"){ sw->symbol = mlr::KinematicSwitch::addJointAtTo; sw->jointType=mlr::JT_free; }
   else if(type=="freeZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_free; }
   else if(type=="ballZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_quatBall; }
@@ -2892,7 +2897,8 @@ mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, c
 }
 
 const char* mlr::KinematicSwitch::name(mlr::KinematicSwitch::OperatorSymbol s){
-  static const char* names[] = { "deleteJoint", "addJointZero", "addJointAtFrom", "addJointAtTo" };
+  HALT("deprecated");
+  static const char* names[] = { "deleteJoint", "addJointZero", "addJointAtFrom", "addJointAtTo", "addArticulated" };
   if(s==none) return "none";
   return names[(int)s];
 }

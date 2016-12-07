@@ -1,5 +1,5 @@
 Include = '../../../data/keywords.g'
-Include = 'model.kvg'
+Include = 'model.g'
 
 KOMO{
   T = 40
@@ -13,8 +13,8 @@ KOMO{
 
 #transition costs
 (MinSumOfSqr Transition){ order=2 time=[0 -1] scale=1e0 }
-#(MinSumOfSqr FixJointVelocities){ order=1 time=[0 -1] scale=1e2 }
-(MinSumOfSqr FixSwichedObjects){ order=1 time=[0 -1] scale=1e2 }
+(MinSumOfSqr FixJointVelocities){ order=1 time=[0 -1] scale=1e2 }
+#(MinSumOfSqr FixSwichedObjects){ order=1 time=[0 -1] scale=1e2 }
 
 #watch
 #(MinSumOfSqr gazeAt endeffKinect obj1){ time=[.6 2.4] scale=1e-1 }
@@ -22,9 +22,10 @@ KOMO{
 
 #kinematic switches
 (MakeJoint delete table obj1){ time=1 }
-(MakeJoint transXYPhiAtFrom table obj1){ time=1 }
-#(MakeJoint delete table obj1){ time=2 }
-#(MakeJoint transXYPhiAtFrom table obj1){ time=2 }
+(MakeJoint transXYPhiActuated table obj1){ time=1 }
+(MakeJoint delete table obj1){ time=2 }
+(MakeJoint transXYPhiZero table obj1){ time=2 }
+#(MakeJoint rigidAtTo table obj1){ time=2 }
 
 
 #reach:
@@ -38,7 +39,7 @@ KOMO{
 
 #push:
 (MinSumOfSqr posDiff endeff obj1){ time=[1 2] target=[-.1 0 0] scale=1e2 } #keep relative positioning
-(MinSumOfSqr pos obj1){ order=1 scale=1e0 time=[1 2] target=[.07 0 0] } #push velocity
+(MinSumOfSqr pos obj1){ order=1 scale=1e1 time=[1 2] target=[.07 0 0] } #push velocity
 (MinSumOfSqr qItself){ order=1 time=[1.95 2.05] scale=1e2 } #slow down again
 
 
@@ -57,7 +58,7 @@ KOMO{
 ##home:
 #(MinSumOfSqr posDiff endeff){ time=[3 3] scale=1e3 target=[1 -1 1.5] }
 (MinSumOfSqr qItself){ order=1 time=[2.95 3] scale=1e2 }
-(MinSumOfSqr qItself){ relative time=[2.95 3] scale=1e1 }
+(MinSumOfSqr qItself){ relative time=[3 3] scale=1e0 }
 
 
 ##rigid grasp:

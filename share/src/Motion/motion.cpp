@@ -70,6 +70,13 @@ Task* Task::newTask(const Node* specs, const mlr::KinematicWorld& world, int ste
   //-- create a task
   Task *task = new Task(map, termType);
 
+  if(specs->keys.N) task->name=specs->keys.last();
+  else{
+    task->name = map->shortTag(world);
+//    for(Node *p:specs->parents) task->name <<'_' <<p->keys.last();
+    task ->name<<"_o" <<task->map.order;
+  }
+
   //-- check for additional continuous parameters
   if(specs->isGraph()){
     const Graph& params = specs->graph();
@@ -132,10 +139,6 @@ bool MotionProblem::parseTask(const Node *n, int stepsPerPhase){
   //-- task?
   Task *task = Task::newTask(n, world, stepsPerPhase, T);
   if(task){
-    if(n->keys.N) task->name=n->keys.last();
-    else{
-      for(Node *p:n->parents) task->name <<'_' <<p->keys.last();
-    }
     tasks.append(task);
     return true;
   }
