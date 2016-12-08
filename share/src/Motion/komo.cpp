@@ -251,13 +251,13 @@ void KOMO::setLastTaskToBeVelocity(){
   MP->tasks.last()->map.order = 1; //set to be velocity!
 }
 
-void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose){
+void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose, double weightFromTop){
   if(verbose>0) cout <<"KOMO_setGrasp t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<endl;
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
 
   //-- position the hand & graspRef
   //hand upright
-  setTask(time, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, 1e1);
+  setTask(time, time, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, weightFromTop);
 
   //hand center at object center (could be replaced by touch)
 //  setTask(time, time, new TaskMap_Default(posDiffTMT, world, endeffRef, NoVector, object, NoVector), eqTT, NoArr, 1e3);
@@ -280,6 +280,42 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int 
   if(stepsPerPhase>2){ //velocities down and up
     setTask(time-.15, time, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
     setTask(time, time+.15, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
+  }
+}
+
+void KOMO::setGraspSlide(double startTime, double endTime, const char* endeffRef, const char* object, const char* placeRef, int verbose, double weightFromTop){
+  if(verbose>0) cout <<"KOMO_setGraspSlide t=" <<startTime <<" endeff=" <<endeffRef <<" obj=" <<object <<endl;
+
+  //-- grasp part
+  //hand upright
+  setTask(startTime, startTime, new TaskMap_Default(vecTMT, world, endeffRef, Vector_z), sumOfSqrTT, {0.,0.,1.}, weightFromTop);
+
+  //disconnect object from table
+  setKinematicSwitch(startTime, true, "delete", placeRef, object);
+  //connect graspRef with object
+  setKinematicSwitch(startTime, true, "ballZero", endeffRef, object);
+
+  //-- place part
+  //place inside box support
+  setTask(endTime, endTime, new TaskMap_AboveBox(world, object, placeRef), ineqTT, NoArr, 1e2);
+
+  //disconnect object from grasp ref
+  setKinematicSwitch(endTime, true, "delete", endeffRef, object);
+
+  //connect object to table
+  mlr::Transformation rel = 0;
+  double above = .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef)));
+  rel.addRelativeTranslation( 0., 0., above);
+  setKinematicSwitch(endTime, true, "transXYPhiZero", placeRef, object, rel );
+
+  //-- slide constraints!
+  setTask(startTime, endTime,
+          new TaskMap_LinTrans(new TaskMap_Default(posDiffTMT, world, object, NoVector, placeRef), ~ARR(0,0,1), ARR(0)),
+                               sumOfSqrTT, ARR(above), 1e2);
+
+  if(stepsPerPhase>2){ //velocities down and up
+    setTask(startTime-.15, startTime, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(endTime, endTime+.15, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
   }
 }
 
@@ -308,6 +344,20 @@ void KOMO::setPlace(double time, const char* endeffRef, const char* object, cons
   mlr::Transformation rel = 0;
   rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(object)) + height(world.getShapeByName(placeRef))));
   setKinematicSwitch(time, true, "transXYPhiZero", placeRef, object, rel );
+}
+
+void KOMO::setPlaceFixed(double time, const char* endeffRef, const char* object, const char* placeRef, const mlr::Transformation& relPose, int verbose){
+  if(verbose>0) cout <<"KOMO_setPlace t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<" place=" <<placeRef <<endl;
+
+  if(stepsPerPhase>2){ //velocities down and up
+    setTask(time-.15, time, new TaskMap_Default(posTMT, world, object), sumOfSqrTT, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(time, time+.15, new TaskMap_Default(posTMT, world, endeffRef), sumOfSqrTT, {0.,0.,.1}, 1e1, 1); // move up
+  }
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, true, "delete", endeffRef, object);
+
+  //connect object to table
+  setKinematicSwitch(time, true, "rigidZero", placeRef, object, relPose );
 }
 
 void KOMO::setHandover(double time, const char* oldHolder, const char* object, const char* newHolder, int verbose){

@@ -96,8 +96,10 @@ struct KOMO{ //TODO: rename ManipOp
   void setKS_placeOn(double time, bool before, const char* ref1, const char* ref2, bool actuated=false);
 
   //-- tasks (cost/constraint terms) high-level
-  void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0);
+  void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0, double weightFromTop=1e1);
   void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, int verbose=0);
+  void setPlaceFixed(double time, const char* endeffRef, const char* object, const char* placeRef, const mlr::Transformation& worldPose, int verbose=0);
+  void setGraspSlide(double startTime, double endTime, const char* endeffRef, const char* object, const char* placeRef, int verbose=0, double weightFromTop=1e1);
   void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, int verbose=0);
   void setAttach(double time, const char* endeff, const char* object1, const char* object2, mlr::Transformation& rel, int verbose=0);
 
