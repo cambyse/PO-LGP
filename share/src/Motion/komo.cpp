@@ -215,15 +215,17 @@ void KOMO::setSquaredQAccelerations(double startTime, double endTime, double pre
 void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
   auto *map = new TaskMap_Transition(MP->world);
-  setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
   map->velCoeff = 1.;
+  map->accCoeff = 0.;
+  setTask(startTime, endTime, map, sumOfSqrTT, NoArr, prec, 1);
 }
 
 void KOMO::setSquaredFixJointVelocities(double startTime, double endTime, double prec){
   CHECK(MP->k_order>=1,"");
   auto *map = new TaskMap_Transition(MP->world, true);
-  setTask(startTime, endTime, map, eqTT, NoArr, prec, 1);
   map->velCoeff = 1.;
+  map->accCoeff = 0.;
+  setTask(startTime, endTime, map, eqTT, NoArr, prec, 1);
 }
 
 void KOMO::setSquaredFixSwitchVelocities(double startTime, double endTime, double prec){

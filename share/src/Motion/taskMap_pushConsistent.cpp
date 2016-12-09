@@ -38,14 +38,16 @@ void TaskMap_PushConsistent::phi(arr& y, arr& J, const WorldL& G, double tau, in
   G2.kinematicsPos(yj2, Jj2, body_j2);
 
 #if 1
-  y = crossProduct(yi2-yi1, yi2-yj2);
+//  tau = 1.; //1e-5;
+  y = crossProduct((yi2-yi1)/tau, yi2-yj2);
+//  cout <<"PC " <<t <<' ' <<(yi2-yi1)/tau <<' ' <<yi2-yj2 <<' ' <<y <<endl;
   if(&J){
     uint qidx=0;
     for(uint i=0;i<G.N;i++) qidx+=G(i)->q.N;
     J.resize(y.N, qidx).setZero();
 
-    arr J1 = skew(yi2-yj2)*Ji1;
-    arr J2 = skew(yi2-yi1)*(Ji2-Jj2) - skew(yi2-yj2)*Ji2;
+    arr J1 = skew(yi2-yj2)*Ji1/tau;
+    arr J2 = skew((yi2-yi1)/tau)*(Ji2-Jj2) - skew(yi2-yj2)*Ji2/tau;
 
     J.setMatrixBlock(J1, 0, qidx-(J1.d1+J2.d1));
     J.setMatrixBlock(J2, 0, qidx-J2.d1);
