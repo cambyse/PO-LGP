@@ -1080,12 +1080,17 @@ arr mlr::KinematicWorld::getLimits() const {
   uint N=getJointStateDimension();
   arr limits(N,2);
   limits.setZero();
-  for(Joint *j: joints) if(j->agent==q_agent && j->limits.N){
+  for(Joint *j: joints) if(j->agent==q_agent){
     uint i=j->qIndex;
     uint d=j->qDim();
     for(uint k=0;k<d;k++){//in case joint has multiple dimensions
-      limits(i+k,0)=j->limits(0); //lo
-      limits(i+k,1)=j->limits(1); //up
+      if(j->limits.N){
+        limits(i+k,0)=j->limits(0); //lo
+        limits(i+k,1)=j->limits(1); //up
+      }else{
+        limits(i+k,0)=-1.; //lo
+        limits(i+k,1)=+1.; //up
+      }
     }
   }
 //  cout <<"limits=" <<limits <<endl;
@@ -1804,7 +1809,7 @@ mlr::Joint* mlr::KinematicWorld::getJointByBodyNames(const char* from, const cha
 
 /// find joint connecting two bodies with specific names
 mlr::Joint* mlr::KinematicWorld::getJointByBodyIndices(uint ifrom, uint ito) const {
-  CHECK(ifrom<bodies.N && ito<bodies.N,"");
+  if(ifrom>=bodies.N || ito>=bodies.N) return NULL;
   Body *f = bodies(ifrom);
   Body *t = bodies(ito);
   return getJointByBodies(f, t);
@@ -2772,6 +2777,22 @@ void mlr::KinematicSwitch::apply(KinematicWorld& G){
     j->B.setZero();
     return;
   }
+  if(symbol==addSliderMechanism){
+    Body *slider1 = new Body(G); //{ type=ST_box size=[.2 .1 .05 0] color=[0 0 0] }
+    Body *slider2 = new Body(G); //{ type=ST_box size=[.2 .1 .05 0] color=[1 0 0] }
+    Joint *j1 = new Joint(G, from->body, slider1);
+    j1->type = JT_transXYPhi;
+    j1->constrainToZeroVel=true;
+    j1->A = from->rel * jA;
+    Joint *j2 = new Joint(G, slider1, slider2);
+    j2->type = JT_transX;
+    j2->constrainToZeroVel=false;
+    Joint *j3 = new Joint(G, slider2, to->body);
+    j3->type = JT_hingeZ;
+    j3->constrainToZeroVel=false;
+    j3->B = jB * (-to->rel);
+    return;
+  }
   HALT("shouldn't be here!");
 }
 
@@ -2863,12 +2884,16 @@ mlr::KinematicSwitch* mlr::KinematicSwitch::newSwitch(const mlr::String& type, c
   else if(type=="rigidAtTo"){ sw->symbol = mlr::KinematicSwitch::addJointAtTo; sw->jointType=mlr::JT_rigid; }
   else if(type=="rigidAtFrom"){ sw->symbol = mlr::KinematicSwitch::addJointAtFrom; sw->jointType=mlr::JT_rigid; }
   else if(type=="rigidZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_rigid; }
+  else if(type=="transXActuated"){ sw->symbol = mlr::KinematicSwitch::addActuated; sw->jointType=mlr::JT_transX; }
   else if(type=="transXYPhiAtFrom"){ sw->symbol = mlr::KinematicSwitch::addJointAtFrom; sw->jointType=mlr::JT_transXYPhi; }
   else if(type=="transXYPhiZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_transXYPhi; }
   else if(type=="transXYPhiActuated"){ sw->symbol = mlr::KinematicSwitch::addActuated; sw->jointType=mlr::JT_transXYPhi; }
   else if(type=="freeAtTo"){ sw->symbol = mlr::KinematicSwitch::addJointAtTo; sw->jointType=mlr::JT_free; }
   else if(type=="freeZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_free; }
+  else if(type=="freeActuated"){ sw->symbol = mlr::KinematicSwitch::addActuated; sw->jointType=mlr::JT_free; }
   else if(type=="ballZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_quatBall; }
+  else if(type=="hingeZZero"){ sw->symbol = mlr::KinematicSwitch::addJointZero; sw->jointType=mlr::JT_hingeZ; }
+  else if(type=="sliderMechanism"){ sw->symbol = mlr::KinematicSwitch::addSliderMechanism; }
   else if(type=="delete"){ sw->symbol = mlr::KinematicSwitch::deleteJoint; }
   else HALT("unknown type: "<< type);
   if(ref1) sw->fromId = world.getShapeByName(ref1)->index;

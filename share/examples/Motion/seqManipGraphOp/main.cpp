@@ -33,7 +33,7 @@ void TEST(UsingKomo){
 
   komo.setTiming(5., 20, 5., 2, true);
   komo.setSquaredFixJointVelocities(-1., -1., 1e2);
-  komo.setSquaredFixSwitchVelocities(-1., -1., 1e2);
+  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
   komo.setSquaredQAccelerations();
 //  komo.setSquaredQVelocities(-1., -1., 1e-1);
 
@@ -75,13 +75,85 @@ void TEST(UsingKomo){
 
 //===========================================================================
 
+void testSlide(){
+  mlr::KinematicWorld W("model_slide.g");
+
+  KOMO komo;
+  komo.setModel(W);
+
+  komo.setTiming(2., 20, 5., 2, true);
+  komo.setSquaredFixJointVelocities(-1., -1., 1e2);
+  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
+  komo.setSquaredQAccelerations();
+//  komo.setSquaredQVelocities(-1., -1., 1e-1);
+
+//  komo.setPosition(.5, 2.5, "obj1", "endeffWorkspace", sumOfSqrTT, NoArr, 1e-1);
+//  komo.setTouch(1., 3., "endeff", "obj1", sumOfSqrTT, ARR(.0), 1e3);
+
+#if 0
+  komo.setKS_placeOn(2., true, "obj1", "table", true);
+//#else
+  komo.setKS_slider(1., true, "obj1", "slider", "table", true);
+#endif
+
+//  komo.setHoldStill(1., 4., "slider1", 1e2);
+//  komo.setHoldStill(1., 4., "slider2", 1e4);
+//  komo.setHoldStill(-1., 1., "obj1", 1e4);
+//  komo.setKS_slider(1., true, "obj1", "slider2", "table", true);
+
+  komo.setKinematicSwitch(1., true, "delete", "table", "slider1");
+  komo.setKinematicSwitch(1., true, "transXYPhiZero", "table", "slider1");
+
+  komo.setKinematicSwitch(1., true, "delete", "table", "obj1");
+  mlr::Transformation rel = 0;
+  rel.addRelativeTranslation( 0., 0., .12);
+  komo.setKinematicSwitch(1., true, "hingeZZero", "slider2", "obj1", rel );
+//  komo.setKinematicSwitch(1., true, "sliderMechanism", "table", "obj1", rel );
+
+
+  komo.setPosition(1.8, 2., "obj1", "table", sumOfSqrTT, ARR(.4, -.2, .12), 1e2);
+
+//  komo.setKS_placeOn(4., true, "obj1", "table", false);
+
+//  //velocities
+//  komo.setTask(2.-.15, 2., new TaskMap_Default(posDiffTMT, W, "endeff"), sumOfSqrTT, ARR(.1,0,0), 1e2, 1);
+//  komo.setTask(4., 4.+.15, new TaskMap_Default(posDiffTMT, W, "endeff"), sumOfSqrTT, ARR(-.1,0,0), 1e2, 1);
+
+//  //keep distance
+////  komo.setTask(1.5, 4., new TaskMap_LinTrans(new TaskMap_Default(posDiffTMT, W, "endeff", NoVector, "obj1", NoVector),
+////                                            true),          sumOfSqrTT, ARR(.2), 1e3);
+////  komo.setTask(2., 4., new TaskMap_GJK(W, "endeff", "obj1", true, true), eqTT, ARR(-.15), 1e2, 0);
+//  komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "endeff", NoVector, "obj1", NoVector), sumOfSqrTT, ARR(-.1,0,0), 1e2);
+//  //push align
+////  komo.setTask(2., 4., new TaskMap_PushConsistent(W, "obj1", "endeff"), sumOfSqrTT, ARR(0,0,0), 1e3);
+
+//  //no collisions
+//  komo.setTask(0., 1.9, new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e3);
+////  komo.setTask(4.5, -1., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+
+  komo.reset();
+  komo.run();
+//      komo.checkGradients();
+
+  cout <<komo.getReport(true);
+
+  ofstream fil("z.x");
+  for(mlr::KinematicWorld* c:komo.MP->configurations) fil <<c->q <<endl;
+  gnuplot("plot 'z.x' us 1,'' us 2,'' us 3,'' us 4,'' us 5,'' us 6");
+
+  while(komo.displayTrajectory(.1, true));
+}
+
+//===========================================================================
 
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
 //  testUsingSpecs();
 
-  testUsingKomo();
+//  testUsingKomo();
+
+  testSlide();
 
   return 0;
 }

@@ -103,7 +103,7 @@ void moveReba(){
   //  komo.setHoming(-1., -1., 1e-1);
   //  komo.setSquaredQVelocities();
   komo.setSquaredFixJointVelocities();
-  komo.setSquaredFixSwitchVelocities();
+  komo.setSquaredFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 #if 0
   komo.setPosition(1., 1., "endeffL", "target", sumOfSqrTT, NoArr, 1e2);

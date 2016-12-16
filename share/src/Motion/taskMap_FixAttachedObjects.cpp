@@ -42,6 +42,8 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
     mlr::Joint *j1 = switchedJoints(i,1);    CHECK(&j1->world==G.elem(-1),"");
     CHECK(j0->to->index == j1->to->index,"");
 
+    if(j1->to->name.startsWith("slider")) continue;
+
 #if 1 //absolute velocities
     TaskMap_Default pos(posDiffTMT, j0->to->shapes.first()->index);
     pos.order=1;

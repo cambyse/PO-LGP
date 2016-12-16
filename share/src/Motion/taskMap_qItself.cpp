@@ -274,6 +274,7 @@ mlr::Array<mlr::Joint*> getSwitchedJoints(const mlr::KinematicWorld& G0, const m
   mlr::Array<mlr::Joint*> switchedJoints;
 
   for(mlr::Joint *j1:G1.joints) {
+    if(j1->from->index>=G0.bodies.N || j1->to->index>=G0.bodies.N) continue;
     mlr::Joint *j0 = G0.getJointByBodyIndices(j1->from->index, j1->to->index);
     if(!j0 || j0->type!=j1->type){
       if(G0.bodies(j1->to->index)->inLinks.N==1){ //out-body had (in G0) one inlink...

@@ -155,6 +155,7 @@ void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhas
 //#define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
 
 Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, TermType type, const arr& target, double prec, uint order){
+  CHECK(MP->k_order>=order,"");
   map->order = order;
 #if 0
   Task *task = new Task(map, type);
@@ -188,17 +189,35 @@ void KOMO::setKinematicSwitch(double time, bool before, const char* type, const 
   MP->switches.append(sw);
 }
 
-void KOMO::setKS_placeOn(double time, bool before, const char* ref1, const char* ref2, bool actuated){
+void KOMO::setKS_placeOn(double time, bool before, const char* obj, const char* table, bool actuated){
   //disconnect object from grasp ref
-  setKinematicSwitch(time, before, "delete", NULL, ref1);
+  setKinematicSwitch(time, before, "delete", NULL, obj);
 
   //connect object to table
   mlr::Transformation rel = 0;
-  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(ref1)) + height(world.getShapeByName(ref2))));
+  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(obj)) + height(world.getShapeByName(table))));
   if(!actuated)
-    setKinematicSwitch(time, before, "transXYPhiZero", ref2, ref1, rel );
+    setKinematicSwitch(time, before, "transXYPhiZero", table, obj, rel );
   else
-    setKinematicSwitch(time, before, "transXYPhiActuated", ref2, ref1, rel );
+    setKinematicSwitch(time, before, "transXYPhiActuated", table, obj, rel );
+}
+
+void KOMO::setKS_slider(double time, bool before, const char* obj, const char* slider, const char* table, bool actuated){
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, before, "delete", NULL, obj);
+
+  //connect table to slider and slider to object
+//  setKinematicSwitch(time-1., before, "delete", NULL, slider);
+//  setKinematicSwitch(time-1., before, "transXYPhiZero", table, slider );
+//  setKinematicSwitch(time, before, "delete", NULL, slider);
+//  setKinematicSwitch(time, before, "transXYPhiZero", table, slider );
+
+  mlr::Transformation rel = 0;
+  rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(obj)) + height(world.getShapeByName(table))));
+  if(!actuated)
+    setKinematicSwitch(time, before, "hingeZZero", slider, obj, rel );
+  else
+    setKinematicSwitch(time, before, "transXActuated", slider, obj, rel );
 }
 
 void KOMO::setHoming(double startTime, double endTime, double prec){
@@ -213,7 +232,6 @@ void KOMO::setSquaredQAccelerations(double startTime, double endTime, double pre
 }
 
 void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
-  CHECK(MP->k_order>=1,"");
   auto *map = new TaskMap_Transition(MP->world);
   map->velCoeff = 1.;
   map->accCoeff = 0.;
@@ -221,21 +239,19 @@ void KOMO::setSquaredQVelocities(double startTime, double endTime, double prec){
 }
 
 void KOMO::setSquaredFixJointVelocities(double startTime, double endTime, double prec){
-  CHECK(MP->k_order>=1,"");
   auto *map = new TaskMap_Transition(MP->world, true);
   map->velCoeff = 1.;
   map->accCoeff = 0.;
   setTask(startTime, endTime, map, eqTT, NoArr, prec, 1);
 }
 
-void KOMO::setSquaredFixSwitchVelocities(double startTime, double endTime, double prec){
-  CHECK(MP->k_order>=1,"");
+void KOMO::setSquaredFixSwitchedObjects(double startTime, double endTime, double prec){
   setTask(startTime, endTime, new TaskMap_FixSwichedObjects(), eqTT, NoArr, prec, 1);
 }
 
-void KOMO::setHoldStill(double startTime, double endTime, const char* joint, double prec){
-  CHECK(MP->k_order>=1,"");
-  setTask(startTime, endTime, new TaskMap_qItself(world, joint), sumOfSqrTT, NoArr, prec, 1);
+void KOMO::setHoldStill(double startTime, double endTime, const char* shape, double prec){
+  mlr::Shape *s = world.getShapeByName(shape);
+  setTask(startTime, endTime, new TaskMap_qItself(TUP(s->body->index)), sumOfSqrTT, NoArr, prec, 1);
 }
 
 void KOMO::setPosition(double startTime, double endTime, const char* shape, const char* shapeRel, TermType type, const arr& target, double prec){
@@ -247,6 +263,10 @@ void KOMO::setPosition(double startTime, double endTime, const char* shape, cons
 #else
   setTask(startTime, endTime, new TaskMap_Default(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
 #endif
+}
+
+void KOMO::setVelocity(double startTime, double endTime, const char* shape, const char* shapeRel, TermType type, const arr& target, double prec){
+  setTask(startTime, endTime, new TaskMap_Default(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec, 1);
 }
 
 void KOMO::setLastTaskToBeVelocity(){

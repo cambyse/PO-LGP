@@ -17,7 +17,7 @@ void init(KOMO& komo, uint trial, mlr::KinematicWorld& W, mlr::KinematicWorld& W
 
   komo.setTiming(phases, 20, 5., 2, true);
   komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchVelocities();
+  komo.setSquaredFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 
   komo.displayCamera().setPosition(-5.,-1.,2.);
