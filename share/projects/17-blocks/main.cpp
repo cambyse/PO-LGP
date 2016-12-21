@@ -194,7 +194,7 @@ void trial4(){
   //komo.setplace(2.5, "humanr", "blue", "table");
   //komo.setgrasp(3.5, "humanl", "blue", 0, 0.8);
 
-  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT, W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
+  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
   komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
 
   komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
