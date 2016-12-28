@@ -12,7 +12,7 @@
 
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 
 #include <Motion/taskMap_qItself.h>
 
@@ -52,7 +52,7 @@ class MyBaxter {
     CtrlTask *openG, *closeG;
     mlr::Array<CtrlTask*> set;
 
-    ors::KinematicWorld baxterModel;// !!!!
+    mlr::KinematicWorld baxterModel;// !!!!
 
 public:
     Access_typed<arr> ctrl_q_ref;
@@ -92,7 +92,7 @@ public:
     void homing();
     CtrlTask* goToPosition(const char* frame1, const char* frame2, arr pos, double timeScale=1.0);
     void changePosition(CtrlTask *position, arr pos);
-    CtrlTask* align( char* name, char* frame1, ors::Vector vec1, char* frame2, ors::Vector vec2, double ref);
+    CtrlTask* align( char* name, char* frame1, mlr::Vector vec1, char* frame2, mlr::Vector vec2, double ref);
     void addTask(CtrlTask *task, int wait, int weight=100);
     void removeTask(CtrlTask *task);
     void closeGripper();
@@ -101,8 +101,8 @@ public:
     void waitConv(const CtrlTaskL& tasks);
     arr q0();
     uint reportPerceptionObjects();
-    ors::Vector closestCluster();    
-    ors::Vector arPose();
+    mlr::Vector closestCluster();    
+    mlr::Vector arPose();
     void reportJointState();
     void disablePosControl();
     void enablePosControl();
@@ -120,11 +120,11 @@ void MyBaxter::waitConv(const CtrlTaskL& tasks){
   }
 }
 
-baxter_core_msgs::JointCommand conv_qRef2baxterMessage(/*const arr& q_ref,*/ const ors::KinematicWorld& baxterModel, const char* prefix){
+baxter_core_msgs::JointCommand conv_qRef2baxterMessage(/*const arr& q_ref,*/ const mlr::KinematicWorld& baxterModel, const char* prefix){
   baxter_core_msgs::JointCommand msg;
   //msg.mode = 1;
   msg.mode = 1;
-  //for(ors::Joint *j:baxterModel.joints) if(j->name.startsWith(prefix)){
+  //for(mlr::Joint *j:baxterModel.joints) if(j->name.startsWith(prefix)){
     //msg.command.push_back(q_ref(j->qIndex));
    // msg.command.push_back(0);
     //msg.names.push_back("right_s0");
@@ -221,7 +221,7 @@ void MyBaxter::changePosition(CtrlTask* position, arr pos){
 }
 
 
-CtrlTask* MyBaxter::align(char *name, char* frame1, ors::Vector vec1, char* frame2, ors::Vector vec2, double ref){
+CtrlTask* MyBaxter::align(char *name, char* frame1, mlr::Vector vec1, char* frame2, mlr::Vector vec2, double ref){
     CtrlTask *align = new CtrlTask(name,
         //new TaskMap_Default(vecAlignTMT, tcm.modelWorld.get()(), "endeffL", Vector_x, "shape1", Vector_z),
         new TaskMap_Default(vecAlignTMT, tcmBax.modelWorld.get()(), frame1, vec1, frame2, vec2),
@@ -247,17 +247,17 @@ uint MyBaxter::reportPerceptionObjects(){
 }
 
 
-ors::Vector MyBaxter::closestCluster(){
+mlr::Vector MyBaxter::closestCluster(){
   object_database.readAccess();
 
-  ors::Vector toReturn(0,0,0);
+  mlr::Vector toReturn(0,0,0);
 
   double max_dist = DBL_MIN;
   for(FilterObject* fo : object_database())
   {
     if (fo->type == FilterObject::FilterObjectType::cluster)
     {
-      ors::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
+      mlr::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
       double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
       if (max_dist < dist)
       {
@@ -272,16 +272,16 @@ ors::Vector MyBaxter::closestCluster(){
 }
 
 
-ors::Vector MyBaxter::arPose(){
+mlr::Vector MyBaxter::arPose(){
   object_database.readAccess();
 
-  ors::Vector toReturn(0,0,0);
+  mlr::Vector toReturn(0,0,0);
 
   for(FilterObject* fo : object_database())
   {
     if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
     {
-      ors::Transformation pos = fo->frame * fo->transform;
+      mlr::Transformation pos = fo->frame * fo->transform;
       toReturn = pos.pos;
       std::cout << toReturn << std::endl;
     }

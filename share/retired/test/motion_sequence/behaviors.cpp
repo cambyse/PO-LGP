@@ -114,7 +114,7 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
   TV.updateState(*s->robotProcesses.ctrl.sys.ors);
   
   DefaultTaskVariable TValign("align", *s->robotProcesses.ctrl.sys.ors, zalignTVT, shapeName, NULL, 0);
-  ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
+  mlr::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
   TValign.jrel.rot.setDiff(Vector_z, vecGoalOrs);
   TValign.setGainsAsNatural(2., 1., false);
   TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
@@ -144,12 +144,12 @@ void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal
 #endif
 }
 
-void setMesh(const char* shapeName, const ors::Mesh& mesh){
+void setMesh(const char* shapeName, const mlr::Mesh& mesh){
 #if 0
-  ors::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
-  ors::Shape *shape = ors->getShapeByName(shapeName);
+  mlr::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
+  mlr::Shape *shape = ors->getShapeByName(shapeName);
   shape->mesh = mesh;
-  shape->type = ors::meshST;
+  shape->type = mlr::ST_mesh;
   if(s->robotProcesses.openGui){
     s->robotProcesses.gui.ors->copyShapesAndJoints(*ors);
     s->robotProcesses.gui.ors2->copyShapesAndJoints(*ors);
@@ -177,7 +177,7 @@ void waitForPerceivedObjects(uint numObjects, uint foundSteps){
         if(found){
           _GeometricState->writeAccess(NULL);
           for(uint j=0;j<numObjects;j++){
-            ors::Shape *sh=_GeometricState->ors.getShapeByName(STRING("cyl"<<j+1));
+            mlr::Shape *sh=_GeometricState->ors.getShapeByName(STRING("cyl"<<j+1));
             sh->rel.pos.set(_PerceptionOutput->objects(j).center3d.p);
             sh->rel.pos -= sh->body->X.pos;
           }

@@ -8,7 +8,7 @@
 #include <Ors/ors.h>
 
 void TEST(Button){
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
 
   world.meldFixedJoints();
   world.removeUselessBodies();
@@ -30,9 +30,9 @@ void TEST(Button){
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
   double contactT = MP.T/2.;
-  t = MP.addTask("prePos", new TaskMap_Default(posTMT, world, "endeffL", NoVector, "button",ors::Vector(0.,0.,0.2)),sumOfSqrTT);
+  t = MP.addTask("prePos", new TaskMap_Default(posTMT, world, "endeffL", NoVector, "button",mlr::Vector(0.,0.,0.2)),sumOfSqrTT);
   t->setCostSpecs(contactT-10., contactT-10, {0.}, 1e2);
-  t = MP.addTask("preVec", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(1.,0.,0.), "button",ors::Vector(0.,0.,-1.)),sumOfSqrTT);
+  t = MP.addTask("preVec", new TaskMap_Default(vecAlignTMT, world, "endeffL", mlr::Vector(1.,0.,0.), "button",mlr::Vector(0.,0.,-1.)),sumOfSqrTT);
   t->setCostSpecs(contactT-10., contactT-10, {1.}, 1e2);
   t = MP.addTask("button_joint", new TaskMap_qItself(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),sumOfSqrTT);
   t->setCostSpecs(MP.T, MP.T, {-.1}, 1e2);
@@ -55,7 +55,7 @@ void TEST(Button){
   cout << X.d0 << endl;
 
 
-  ors::KinematicWorld world_pr2("../../../projects/pr2_gamepadControl/model.kvg");
+  mlr::KinematicWorld world_pr2("../../../projects/pr2_gamepadControl/model.kvg");
   world_pr2.watch(true);
   arr X_pr2;
   transferQbetweenTwoWorlds(X_pr2,X,world_pr2,world);

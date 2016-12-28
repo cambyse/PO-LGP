@@ -421,7 +421,7 @@ void extractMode() {
         viewer->addSphere(*filteredObjects.objects(0)->pcl_object, "sphere");
 
         geometricState.writeAccess(NULL);
-        ors::Shape *ball = geometricState.ors.getShapeByName("target1");
+        mlr::Shape *ball = geometricState.ors.getShapeByName("target1");
         ball->X.pos.set(array_pos.p);
         ball->rel.setDifference(ball->body->X, ball->X);
         geometricState.deAccess(NULL);
@@ -463,9 +463,9 @@ void extractMode() {
     ////shape << finger + 1;
     ////std::cout << shape  << std::endl;
     //double* orsPos = geometricState.ors.getShapeByName("marker")->X.pos.p;
-    ////ors::Vector orsPos = geometricState.ors.getBodyByName("m9")->X.pos;
+    ////mlr::Vector orsPos = geometricState.ors.getBodyByName("m9")->X.pos;
     ////std::cout << orsPos << std::endl;
-    ////ors::Shape *s = geometricState.ors.getShapeByName("marker");
+    ////mlr::Shape *s = geometricState.ors.getShapeByName("marker");
     ////geometricState.ors.kinematicsPos(orsPt,s->body->index,&s->rel.pos);
     //geometricState.deAccess(NULL);
     ////std::cout << *orsPos << *(orsPos+1) << *(orsPos+2);

@@ -20,7 +20,7 @@ int main(int argc,char **argv){
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
-  ors::KinematicWorld world(STRING("../model.kvg"));
+  mlr::KinematicWorld world(STRING("../model.kvg"));
   TaskManager *task;
   if (taskName == "door") {
     task = new DoorTask(world);

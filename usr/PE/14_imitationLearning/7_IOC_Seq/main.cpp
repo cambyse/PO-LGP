@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
@@ -12,7 +12,7 @@
 #include <Motion/taskMap_proxy.h>
 
 void testSliding() {
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   makeConvexHulls(world.shapes);
@@ -23,30 +23,30 @@ void testSliding() {
   MP.makeContactsAttractive=false;
   arr refGoal1 = conv_vec2arr(MP.world.getShapeByName("target")->X.pos);
 
-  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
-  op1->symbol = ors::KinematicSwitch::addRigid;
+  mlr::KinematicSwitch *op1 = new mlr::KinematicSwitch();
+  op1->symbol = mlr::KinematicSwitch::addRigid;
   op1->timeOfApplication = MP.T/2;
   op1->fromId = world.getBodyByName("graspRef")->index;
   op1->toId = world.getBodyByName("obj1")->index;
   world.operators.append(op1);
 
-  ors::KinematicSwitch *op2 = new ors::KinematicSwitch();
-  op2->symbol = ors::KinematicSwitch::deleteJoint;
+  mlr::KinematicSwitch *op2 = new mlr::KinematicSwitch();
+  op2->symbol = mlr::KinematicSwitch::deleteJoint;
   op2->timeOfApplication = MP.T/2;
   op2->fromId = world.getBodyByName("table")->index;
   op2->toId = world.getBodyByName("obj1")->index;
   world.operators.append(op2);
 
   //-- setup new motion problem
-  ors::Shape *grasp = world.getShapeByName("graspRef");
-  ors::Shape *obj = world.getShapeByName("obj1");
-  ors::Shape *tar = world.getShapeByName("target");
+  mlr::Shape *grasp = world.getShapeByName("graspRef");
+  mlr::Shape *obj = world.getShapeByName("obj1");
+  mlr::Shape *tar = world.getShapeByName("target");
 
   TaskCost *c;
   c = MP.addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(MP.T/2, MP.T/2, conv_vec2arr(obj->X.pos), 1e4);
 
-  c = MP.addTask("quat", new TaskMap_Default(vecTMT, grasp->index, ors::Vector(0.,0.,1.)) );
+  c = MP.addTask("quat", new TaskMap_Default(vecTMT, grasp->index, mlr::Vector(0.,0.,1.)) );
   c->setCostSpecs(MP.T/2, MP.T/2, {0.,0.,-1.}, 1e3);
 
   c = MP.addTask("pos2", new TaskMap_Default(posTMT, grasp->index) );

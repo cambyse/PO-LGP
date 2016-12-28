@@ -1,5 +1,6 @@
 #include <Algo/MLcourse.h>
 #include <Gui/plot.h>
+#include <Optim/GlobalIterativeNewton.h>
 
 bool plotDev=true;
 
@@ -129,6 +130,26 @@ void testRobustRegression(const char *datafile=NULL) {
 
 //===========================================================================
 
+void testKernelGradients() {
+  DefaultKernelFunction kernel;
+
+  arr x1, x2;
+  ScalarFunction f = [&kernel, &x2](arr& g, arr& H, const arr& x)->double{
+    return kernel.k(x, x2, g, H);
+  };
+
+  for(uint i=0;i<10;i++){
+    x1 = .1*randn(3);
+    x2 = .1*randn(3);
+    checkGradient(f, x1, 1e-5);
+    checkHessian(f, x1, 1e-5);
+  }
+
+
+}
+
+//===========================================================================
+
 void testKernelReg(const char *datafile=NULL) {
   if(!datafile){ //store artificial data to a file
     datafile="z.train";
@@ -146,11 +167,36 @@ void testKernelReg(const char *datafile=NULL) {
 
   KernelRidgeRegression f(X, y, defaultKernelFunction, -1, 0.);
   cout <<"estimated alpha = "<< f.alpha <<endl;
-  cout <<"Mean error (sdv) = " <<f.sigma <<endl;
+  cout <<"Mean error (sdv) = " <<sqrt(f.sigmaSqr) <<endl;
+  cout <<endl;
+
+  { // optimization test
+    //-- test gradients
+    for(uint k=0;k<1;k++){
+      arr x = 1.*randn(X.d1);
+      checkGradient(f.getF(1.), x, 1e-4);
+      checkHessian(f.getF(1.), x, 1e-4);
+    }
+
+    arr x = 2.*randn(X.d1);
+    arr bounds_lo = consts<double>(-2., x.N);
+    arr bounds_hi = consts<double>(+2., x.N);
+    GlobalIterativeNewton o(x, f.getF(-1.), bounds_lo, bounds_hi, OPT(verbose=1, stopTolerance=1e-3));
+    o.run(10);
+    o.report();
+    cout <<"optimum at x=" <<x <<' ' <<f.getF(-1.)(NoArr, NoArr, x) <<endl;
+    arr fx,sig;
+    fx = f.evaluate(x.reshape(1,x.N), sig);
+    cout <<fx << ' ' <<fx - sqrt(sig) <<endl;
+
+
+//    OptGrad(x, f.getF(1.), OPT(verbose=2)).run();
+//    cout <<"optimum at x=" <<x <<endl;
+  }
 
   //-- evaluate model on a grid
   arr X_grid, s_grid;
-  X_grid.setGrid(X.d1,-5,5, (X.d1==1?500:30));
+  X_grid.setGrid(X.d1, -5., 5., (X.d1==1?500:30));
   arr y_grid = f.evaluate(X_grid, s_grid);
   s_grid = sqrt(s_grid);
 
@@ -419,7 +465,8 @@ int main(int argc, char *argv[]) {
     case 5:  testKernelReg();  break;
     case 6:  testKernelLogReg();  break;
     case 7:  testRobustRegression();  break;
-      break;
+    case 8:  testKernelGradients();  break;
+    break;
   }
   
   return 0;

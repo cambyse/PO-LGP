@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Optim/search.h>
+#include <Optim/blackbox.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
@@ -12,7 +12,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
   uint trajIter;
   for (trajIter=0;trajIter<10;trajIter++) {
 
-    ors::KinematicWorld world("scene");
+    mlr::KinematicWorld world("scene");
     arr q, qdot;
     world.getJointState(q, qdot);
 
@@ -23,7 +23,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;
-    c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+    c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
     c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
@@ -60,7 +60,7 @@ double trajectoryCosts(arr &a, arr &b) {
 
 arr execRun(arr param, arr q0, arr refGoal) {
   bool vis=false;
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   arr y;
   world.getJointState(q, qdot);
@@ -71,9 +71,9 @@ arr execRun(arr param, arr q0, arr refGoal) {
 
   world.getBodyByName("goalRef")->X.pos = refGoal;
   Task *c;
-  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
-  c = MP.addTask("vel_right_hand", new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
+  c = MP.addTask("vel_right_hand", new TaskMap_Default(vecTMT,world,"endeff", mlr::Vector(0., 1., 0.)));
   c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
   c = MP.addTask("final_vel", new TaskMap_qItself());
   MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));

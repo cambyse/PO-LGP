@@ -360,12 +360,12 @@ floatA CORDtranstoRo(const floatA& input,floatA centera)
 {
     //-90° from G4 to roboto
 
-    ors::Vector PosToRobot;
-    ors::Quaternion OrToRobot;
-    ors::Quaternion trans;
+    mlr::Vector PosToRobot;
+    mlr::Quaternion OrToRobot;
+    mlr::Quaternion trans;
     trans.setDeg(-90,0.,0.,1.);
 
-    ors::Vector center;
+    mlr::Vector center;
     center.set(centera(0),centera(1),centera(2));
     PosToRobot.set(input(0),input(1),input(2));
     OrToRobot.set(input(3) , input(4), input(5), input(6));
@@ -380,13 +380,13 @@ floatA CORDtranstoRo(const floatA& input,floatA centera)
 floatA transcenter(const floatA& tempData,const floatA& ref )
 {
     floatA TtempData(tempData);
-    ors::Transformation transform;
+    mlr::Transformation transform;
 
-    ors::Vector refVector;
-    ors::Quaternion refOrien;
+    mlr::Vector refVector;
+    mlr::Quaternion refOrien;
     refVector.set(ref(0),ref(1),ref(2));
     refOrien.set(ref(3),ref(4),ref(5),ref(6));
-    ors::Quaternion flip;
+    mlr::Quaternion flip;
     flip.setDeg(180,0.,0.,1.);
 
     refOrien.alignWith(Vector_z);
@@ -396,9 +396,9 @@ floatA transcenter(const floatA& tempData,const floatA& ref )
 
     for(uint i =0 ;i<tempData.d0;i++)
     {
-        ors::Vector tempV;
+        mlr::Vector tempV;
         tempV.set(tempData[i](0),tempData[i](1),tempData[i](2));
-        ors::Quaternion tempQ;
+        mlr::Quaternion tempQ;
         tempQ.set(tempData[i](3),tempData[i](4),tempData[i](5),tempData[i](6));
         tempV = transform*tempV;
         tempV = refOrien/tempV;
@@ -413,9 +413,9 @@ floatA transcenter(const floatA& tempData,const floatA& ref )
 floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& shoulderOR)
 {
     floatA TtempData(shoulder);
-    ors::Transformation transform;
+    mlr::Transformation transform;
 
-    ors::Quaternion refOrien;
+    mlr::Quaternion refOrien;
     refOrien.set(ref(0),ref(1),ref(2),ref(3));
 
     transform.addRelativeRotation(refOrien);
@@ -424,7 +424,7 @@ floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& sho
     transform.addRelativeRotation(refOrien.invert());
     //transform.setInverse(transform);
 
-    ors::Vector shoulderV;
+    mlr::Vector shoulderV;
     shoulderV.set(shoulder[0](0),shoulder[0](1),shoulder[0](2));
     shoulderV = transform *shoulderV;
 
@@ -443,7 +443,7 @@ void G4HutoRoMap::calcparameters(floatA tempData)
 
     TI_vec = TI_vec/length(TI_vec);
    // cout<<TI_vec<<endl;
-    ors::Quaternion orsquats;
+    mlr::Quaternion orsquats;
     orsquats.set(double(quats(0)),double(quats(1)),double(quats(2)),double(quats(3)));
     x = (double)TI_vec(0);
     y = (double)TI_vec(1);
@@ -870,10 +870,10 @@ floatA transformPosition(const floatA& thumb, const floatA& index, const floatA&
 
 
 floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index,bool right) {
-  ors::Quaternion quat;
-  ors::Vector x_thumb, x_index;
-  ors::Vector pos_thumb, pos_index;
-  ors::Vector x_pr2, y_pr2, z_pr2;
+  mlr::Quaternion quat;
+  mlr::Vector x_thumb, x_index;
+  mlr::Vector pos_thumb, pos_index;
+  mlr::Vector x_pr2, y_pr2, z_pr2;
 
 
 

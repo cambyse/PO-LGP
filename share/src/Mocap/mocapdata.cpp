@@ -26,7 +26,7 @@ struct MocapID::sMocapID {
           objects, sensors_struct, sensors_unstruct, object_parts;
   StringA sensor_type, sensor_mesh;
   StringA sensor_rn; // eventually removed
-  mlr::Array<ors::Transformation> sensor_meshtr;
+  mlr::Array<mlr::Transformation> sensor_meshtr;
   boolA sensor_hastype, sensor_hasmesh, sensor_hasmeshtr;
 
   String root; // eventually removed
@@ -158,7 +158,7 @@ void MocapID::sMocapID::parseAgentSensor(const String &sensor, Json::Value prope
   sensor_hasmesh.append(false);
 
   // Mesh Transform
-  ors::Transformation TI;
+  mlr::Transformation TI;
   TI.setZero();
   sensor_meshtr.append(TI);
   sensor_hasmeshtr.append(false);
@@ -195,7 +195,7 @@ void MocapID::sMocapID::parseObjectSensor(const String &sensor, Json::Value prop
   sensor_hasmesh.append(true);
 
   // Mesh transform
-  ors::Transformation T, TI;
+  mlr::Transformation T, TI;
   T.setZero();
   T.pos.x = .001 * properties["transformation"][0][0].asDouble();
   T.pos.y = .001 * properties["transformation"][0][1].asDouble();
@@ -351,7 +351,7 @@ const String &MocapID::sensor_mesh(const char *sensor) const {
   return s->sensor_mesh(id);
 }
 
-const ors::Transformation &MocapID::sensor_meshtr(const char *sensor) const {
+const mlr::Transformation &MocapID::sensor_meshtr(const char *sensor) const {
   int id = sensor_id(sensor);
   CHECK(id >= 0, STRING("Sensor '" << sensor << "' does not exist."));
   if(s->sensor_hasmeshtr(id))
@@ -432,7 +432,7 @@ void MocapRec::save() {
   Json::Value root, array, array_pos, array_quat, array_pose, value;
   // loop objects
 
-  ors::KinematicWorld kw(STRING(dir << "world.ors"));
+  mlr::KinematicWorld kw(STRING(dir << "world.ors"));
 
   for(const String &sensor: id().agent_digits()) {
     value.clear();
@@ -449,7 +449,7 @@ void MocapRec::save() {
 
     String mesh = kw.getShapeByName(STRING("sh"<<sensor))->ats.get<mlr::FileToken>("mesh").name;
 
-    ors::Transformation TI;
+    mlr::Transformation TI;
     TI.setInverse(kw.getShapeByName(STRING("sh"<<sensor))->rel);
 
     array_pos.clear();
@@ -793,8 +793,8 @@ void MocapRec::computeDPos(const char *frame_sensor, const char *sensor) {
   quatX = query("quat", frame_sensor);
   obsX = query("poseObs", frame_sensor);
   obsY = query("posObs", sensor);
-  ors::Vector pYX, dpos;
-  ors::Quaternion qX;
+  mlr::Vector pYX, dpos;
+  mlr::Quaternion qX;
   for(uint f = 0; f < nframes; f++) {
     if(obsX(f) && obsY(f)) {
       qX.set(quatX[f].p);
@@ -808,8 +808,8 @@ void MocapRec::computeDPos(const char *frame_sensor, const char *sensor) {
   arr posYX, quatX;
   posYX = query("pos", sensor) - query("pos", frame_sensor);
   quatX = query("quat", frame_sensor);
-  ors::Vector pYX, dpos;
-  ors::Quaternion qX;
+  mlr::Vector pYX, dpos;
+  mlr::Quaternion qX;
   for(uint f = 0; f < nframes; f++) {
     qX.set(quatX[f].p);
     pYX.set(posYX[f].p);
@@ -844,7 +844,7 @@ void MocapRec::computeDQuat(const char *frame_sensor, const char *sensor) {
   quatY = query("quat", sensor);
   obsX = query("quatObs", frame_sensor);
   obsY = query("quatObs", sensor);
-  ors::Quaternion qX, qY, dquat;
+  mlr::Quaternion qX, qY, dquat;
   for(uint f = 0; f < nframes; f++) {
     if(obsX(f) && obsY(f)) {
       qX.set(quatX[f].p);
@@ -858,7 +858,7 @@ void MocapRec::computeDQuat(const char *frame_sensor, const char *sensor) {
   arr quatX, quatY;
   quatX = query("quat", frame_sensor);
   quatY = query("quat", sensor);
-  ors::Quaternion qX, qY, dquat;
+  mlr::Quaternion qX, qY, dquat;
   for(uint f = 0; f < nframes; f++) {
     qX.set(quatX[f].p);
     qY.set(quatY[f].p);
@@ -1289,14 +1289,14 @@ MocapSeqL MocapRec::seqlist(const char *obj1, const char *obj2) {
   return seqlist;
 }
 
-ors::KinematicWorld *MocapRec::newKW() {
-  ors::KinematicWorld *kw = new ors::KinematicWorld(STRING(dir << "world.ors"));
+mlr::KinematicWorld *MocapRec::newKW() {
+  mlr::KinematicWorld *kw = new mlr::KinematicWorld(STRING(dir << "world.ors"));
 
   // Overwrite with mesh transformations found in scene.json
   // for(const String &sensor: id().sensors()) {
-  //   const ors::Transformation &T = id().sensor_meshtr(sensor);
+  //   const mlr::Transformation &T = id().sensor_meshtr(sensor);
     // if(&T) {
-    //   ors::Shape *sh = kw->getShapeByName(STRING("sh"<<sensor));
+    //   mlr::Shape *sh = kw->getShapeByName(STRING("sh"<<sensor));
       // TODO fix this..
       // cout << "--" << endl;
       // cout << "sh->rel: " << sh->rel << endl;

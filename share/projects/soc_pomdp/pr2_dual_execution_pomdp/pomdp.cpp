@@ -171,7 +171,7 @@ void NODE::Add(Observation obs)
 
 
 //set a specific pose to the robot
-void setInitialPose(const arr x, ors::KinematicWorld& world)
+void setInitialPose(const arr x, mlr::KinematicWorld& world)
 {
     //Using the controller.
 }
@@ -252,7 +252,7 @@ inline bool check_next_observation (arr sampleDual, double prev)
     return true;
 }
 
-void OptimizeFSC_Test(ors::KinematicWorld& world, NODE *&node, int horizon)
+void OptimizeFSC_Test(mlr::KinematicWorld& world, NODE *&node, int horizon)
 {
     arr x, y, dual;
 
@@ -331,7 +331,7 @@ int choose_Next_Obs(arr Heights)
 }
 
 //OPTIMIZING an FSC
-void OptimizeFSC(ors::KinematicWorld& world, NODE*& node, int horizon)
+void OptimizeFSC(mlr::KinematicWorld& world, NODE*& node, int horizon)
 {
     int steps = 1;
 

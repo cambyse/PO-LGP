@@ -15,8 +15,8 @@ int main(int argc,char **argv){
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   bool learnIKKT = mlr::getParameter<bool>("IMP/learnIKKT",false);
   // init kinematic worlds & trajectoriy interface
-  ors::KinematicWorld world(STRING(folder<<"modelaug.kvg"));
-  ors::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
+  mlr::KinematicWorld world(STRING(folder<<"modelaug.kvg"));
+  mlr::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
   TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);
   double duration = mlr::getParameter<double>("duration");
 

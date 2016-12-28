@@ -86,7 +86,7 @@ uint video_step = 0;
 bool useSwift=true;
 bool useOpengl=true;
 
-void oneStep(const arr &q, ors::KinematicWorld *C, const char* text) {
+void oneStep(const arr &q, mlr::KinematicWorld *C, const char* text) {
   C->ode().exportStateToOde();
   C->ode().step(.01);
   C->ode().importStateFromOde();
@@ -115,7 +115,7 @@ arr q0;
 #ifndef NEW_FEEDBACK_CONTROL
 arr W, Wdiag;
 
-void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, TaskVariableList& TVs, const char* text) {
+void controlledStep(arr &q, arr &W, mlr::KinematicWorld *C, TaskVariableList& TVs, const char* text) {
   arr dq;
   updateState(TVs, *C);
   updateChanges(TVs);
@@ -127,7 +127,7 @@ void controlledStep(arr &q, arr &W, ors::KinematicWorld *C, TaskVariableList& TV
 }
 #endif
 
-void controlledStep(ors::KinematicWorld *C, TaskController &FM, const char* text) {
+void controlledStep(mlr::KinematicWorld *C, TaskController &FM, const char* text) {
   double tau=.01;
   arr q, qdot;
   C->getJointState(q, qdot);
@@ -197,7 +197,7 @@ void RobotManipulationSimulator::loadConfiguration(const char* ors_filename) {
   if(useOpengl){
     gl().clear();
     gl().add(drawEnv,0);
-    gl().add(ors::glDrawGraph, this);
+    gl().add(mlr::glDrawGraph, this);
     orsDrawProxies = false;
     gl().resize(800, 600);
     //   gl().resize(1024, 600);
@@ -311,7 +311,7 @@ void RobotManipulationSimulator::calcObjectNumber() {
   for(i=1;; i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body* n = getBodyByName(ss.str().c_str());
+    mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n==0)
       break;
     numObjects++;
@@ -339,7 +339,7 @@ void RobotManipulationSimulator::getObjects(uintA& objects) { ///< return list a
 
 
 uint RobotManipulationSimulator::getTableID() {
-  ors::Body* n = getBodyByName("table");
+  mlr::Body* n = getBodyByName("table");
   return n->index;
 }
 
@@ -352,9 +352,9 @@ void RobotManipulationSimulator::getBlocks(uintA& blocks) {
   for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body* n = getBodyByName(ss.str().c_str());
+    mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n->shapes.N == 1) {
-      if(n->shapes(0)->type == ors::boxST)
+      if(n->shapes(0)->type == mlr::ST_box)
         blocks.append(n->index);
     }
   }
@@ -369,9 +369,9 @@ void RobotManipulationSimulator::getBalls(uintA& balls) {
   for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body* n = getBodyByName(ss.str().c_str());
+    mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n->shapes.N == 1) {
-      if(n->shapes(0)->type == ors::sphereST)
+      if(n->shapes(0)->type == mlr::ST_sphere)
         balls.append(n->index);
     }
   }
@@ -386,7 +386,7 @@ void RobotManipulationSimulator::getBoxes(uintA& boxes) {
   for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body* n = getBodyByName(ss.str().c_str());
+    mlr::Body* n = getBodyByName(ss.str().c_str());
     if(isBox(n->index))
       boxes.append(n->index);
   }
@@ -401,9 +401,9 @@ void RobotManipulationSimulator::getCylinders(uintA& cylinders) {
   for(i=1; i<=numObjects; i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body* n = getBodyByName(ss.str().c_str());
+    mlr::Body* n = getBodyByName(ss.str().c_str());
     if(n->shapes.N == 1) {
-      if(n->shapes(0)->type == ors::cylinderST)
+      if(n->shapes(0)->type == mlr::ST_cylinder)
         cylinders.append(n->index);
     }
   }
@@ -571,17 +571,17 @@ void RobotManipulationSimulator::getObjectPositions(arr& positions) {
 void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
   orientation.resize(2);
   
-  if(getOrsType(id) == ors::sphereST) {
+  if(getOrsType(id) == mlr::ST_sphere) {
     orientation.setUni(0.);
     return;
   }
   
 //   cout<<bodies(id)->name<<endl;
 
-  ors::Quaternion rot;
+  mlr::Quaternion rot;
   rot = bodies(id)->X.rot;
   
-  ors::Vector upvec_z; double maxz=-2;
+  mlr::Vector upvec_z; double maxz=-2;
   if((rot*Vector_x).z>maxz) { upvec_z=Vector_x; maxz=(rot*upvec_z).z; }
   if((rot*Vector_y).z>maxz) { upvec_z=Vector_y; maxz=(rot*upvec_z).z; }
   if((rot*Vector_z).z>maxz) { upvec_z=Vector_z; maxz=(rot*upvec_z).z; }
@@ -610,7 +610,7 @@ void RobotManipulationSimulator::getOrientation(arr& orientation, uint id) {
 //   CHECK((angle_z<=MLR_PI/2)  &&  (angle_z>=0), "invalid angle_z  (upvec_z="<<upvec_z<<", z="<<maxz<<")");
   orientation(0) = angle_z;
   
-  ors::Vector upvec_x; double maxx=-2;
+  mlr::Vector upvec_x; double maxx=-2;
   if((rot*Vector_x).x>maxx) { upvec_x=Vector_x; maxx=(rot*upvec_x).x; }
   if((rot*Vector_y).x>maxx) { upvec_x=Vector_y; maxx=(rot*upvec_x).x; }
   if((rot*Vector_z).x>maxx) { upvec_x=Vector_z; maxx=(rot*upvec_x).x; }
@@ -645,7 +645,7 @@ void RobotManipulationSimulator::getObjectAngles(arr& angles) {
 
 bool RobotManipulationSimulator::isUpright(uint id) {
   // balls are always upright
-  if(getOrsType(id) == ors::sphereST)
+  if(getOrsType(id) == mlr::ST_sphere)
     return true;
     
   double TOLERANCE = 0.05; // in radians
@@ -686,7 +686,7 @@ double RobotManipulationSimulator::getOverallHeight(uintA& objects) {
 
 
 uint RobotManipulationSimulator::getInhand(uint man_id) {
-  ors::Joint* e;
+  mlr::Joint* e;
   if(!bodies(man_id)->outLinks.N) return TL::UINT_NIL;
   e=bodies(man_id)->outLinks(0);
   return e->to->index;
@@ -706,7 +706,7 @@ uint RobotManipulationSimulator::getHandID() {
 void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name) {
   list.clear();
   
-  ors::Body* obj_body = getBodyByName(obj_name);
+  mlr::Body* obj_body = getBodyByName(obj_name);
   double obj_rad = 0.5 * getSize(obj_body->index)[2];
   
   uint i;
@@ -716,7 +716,7 @@ void RobotManipulationSimulator::getObjectsOn(uintA& list,const char *obj_name) 
   
   uintA others;
   getObjects(others);
-  ors::Body* other_body;
+  mlr::Body* other_body;
   
   //reportProxies();
   
@@ -770,7 +770,7 @@ bool RobotManipulationSimulator::isClear(uint id) {
 // if z-value of objects is beneath THRESHOLD
 bool RobotManipulationSimulator::onGround(uint id) {
   double THRESHOLD = 0.4;
-  ors::Body* obj=bodies(id);
+  mlr::Body* obj=bodies(id);
   if(obj->X.pos.z < THRESHOLD)
     return true;
   else
@@ -924,7 +924,7 @@ void RobotManipulationSimulator::writeAllContacts(uint id) {
 //   reportProxies();
 //   void sortProxies(bool deleteMultiple=false,bool deleteOld=false);
 
-  ors::Proxy *p;
+  mlr::Proxy *p;
   uint obj=getBodyByName(convertObjectID2name(id))->index;
   uint i;
   cout << convertObjectID2name(id) << " is in contact with ";
@@ -970,7 +970,7 @@ void RobotManipulationSimulator::printObjectInfo() {
 
 
 void RobotManipulationSimulator::grab_final(const char *manipulator,const char *obj_grabbed, const char* message) {
-  ors::Body *obj=getBodyByName(obj_grabbed);
+  mlr::Body *obj=getBodyByName(obj_grabbed);
   bool isTable = obj->index == getTableID();
   if(isTable) {
     cout<<"Cannot grab table"<<endl;
@@ -999,7 +999,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   uint fingIdx = getBodyByName("fing1c")->index;
 
   TaskController MP(*this, false);
-  CtrlTask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, ors::Vector(pos));
+  CtrlTask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, mlr::Vector(pos));
   if(isTable) x->y_ref(2) = neutralHeight-0.1;
 
   // (1) drop object if one is in hand
@@ -1036,7 +1036,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
 
   // (4) move upwards (to avoid collisions)
   // to be sure: unset contact of that object if grabbed from table
-  ors::Shape* s = NULL;
+  mlr::Shape* s = NULL;
   if(isClear(obj->index)) {
     s = obj->shapes(0);
     s->cont = false;
@@ -1113,7 +1113,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   
   // (4) move upwards (to avoid collisions)
   // to be sure: unset contact of that object if grabbed from table
-  ors::Shape* s = NULL;
+  mlr::Shape* s = NULL;
   if(isClear(obj->index)) {
     s = obj->shapes(0);
     s->cont = false;
@@ -1229,16 +1229,16 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
 //  r->y_ref = q0;
 
   //target for the upright align
-  ors::Quaternion rot;
+  mlr::Quaternion rot;
   rot = bodies(obj_dropped1_index)->X.rot;
-  ors::Vector upvec; double maxz=-2;
+  mlr::Vector upvec; double maxz=-2;
   if((rot*Vector_x).z>maxz) { upvec=Vector_x; maxz=(rot*upvec).z; }
   if((rot*Vector_y).z>maxz) { upvec=Vector_y; maxz=(rot*upvec).z; }
   if((rot*Vector_z).z>maxz) { upvec=Vector_z; maxz=(rot*upvec).z; }
   if((rot*(-Vector_x)).z>maxz) { upvec=-Vector_x; maxz=(rot*upvec).z; }
   if((rot*(-Vector_y)).z>maxz) { upvec=-Vector_y; maxz=(rot*upvec).z; }
   if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
-  ors::Transformation tf;
+  mlr::Transformation tf;
   tf.rot.setDiff(Vector_z, upvec);
   CtrlTask *z = MP.addPDTask("obj-z-align", .2, 1.5, vecAlignTMT, bodies(obj_dropped1_index)->name, upvec, NULL, Vector_z);
   z->y_ref = ARR(1.);
@@ -1306,16 +1306,16 @@ void RobotManipulationSimulator::dropObjectAbove_final(const char *obj_dropped, 
   DefaultTaskVariable o("obj",*this,posTVT,obj_dropped1,0,0,0,arr(0));
   DefaultTaskVariable z;
   //
-  ors::Quaternion rot;
+  mlr::Quaternion rot;
   rot = bodies(obj_dropped1_index)->X.rot;
-  ors::Vector upvec; double maxz=-2;
+  mlr::Vector upvec; double maxz=-2;
   if((rot*Vector_x).z>maxz) { upvec=Vector_x; maxz=(rot*upvec).z; }
   if((rot*Vector_y).z>maxz) { upvec=Vector_y; maxz=(rot*upvec).z; }
   if((rot*Vector_z).z>maxz) { upvec=Vector_z; maxz=(rot*upvec).z; }
   if((rot*(-Vector_x)).z>maxz) { upvec=-Vector_x; maxz=(rot*upvec).z; }
   if((rot*(-Vector_y)).z>maxz) { upvec=-Vector_y; maxz=(rot*upvec).z; }
   if((rot*(-Vector_z)).z>maxz) { upvec=-Vector_z; maxz=(rot*upvec).z; }
-  ors::Transformation tf;
+  mlr::Transformation tf;
   tf.rot.setDiff(Vector_z, upvec);
   z.set("obj-z-align",*this,zalignTVT,obj_dropped1_index,tf,-1,Transformation_Id,arr(0));
   //
@@ -1497,9 +1497,9 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
     }
   }
   // Below = Block
-  else if(obj_below_type == ors::boxST) {
+  else if(obj_below_type == mlr::ST_box) {
     // (1) Dropping block
-    if(obj_dropped_type == ors::boxST) {
+    if(obj_dropped_type == mlr::ST_box) {
       // (1a) on small block
       if(TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BLOCK_ON_SMALL_BLOCK;
@@ -1512,7 +1512,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
       } else {NIY;}
     }
     // (2) Dropping ball
-    else if(obj_dropped_type == ors::sphereST) {
+    else if(obj_dropped_type == mlr::ST_sphere) {
       // (2a) on small block
       if(TL::areEqual(obj_below_size, BLOCK_SMALL)) {
         std_dev_noise = DROP_TARGET_NOISE__BALL_ON_SMALL_BLOCK;
@@ -1530,7 +1530,7 @@ void RobotManipulationSimulator::calcTargetPositionForDrop(double& x, double& y,
 //     PRINT(std_dev_noise);
   }
   // Below = Ball
-  else if(obj_below_type == ors::sphereST) {
+  else if(obj_below_type == mlr::ST_sphere) {
     x_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
     y_noise = DROP_TARGET_NOISE__ON_BALL * rnd.gauss();
   }
@@ -1561,7 +1561,7 @@ void RobotManipulationSimulator::relaxPosition(const char* message) {
   PRINT(msg_string);
   
   uint inhand_id = getInhand();
-  ors::Shape* s = NULL;
+  mlr::Shape* s = NULL;
   // simplification: set off contacts for inhand-object
   if(inhand_id != TL::UINT_NIL) {
     s = getBodyByName(convertObjectID2name(inhand_id))->shapes(0);
@@ -1620,7 +1620,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   
 #ifdef NEW_FEEDBACK_CONTROL
   TaskController MP(*this, false);
-  CtrlTask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, ors::Vector(pos));
+  CtrlTask *x = MP.addPDTask("endeffector", .2, 1.5, posTMT, "fing1c", NoVector, NULL, mlr::Vector(pos));
   uint t;
   for(t=0; t<Tabort; t++) {
     controlledStep(this, MP, msg_string);
@@ -1628,7 +1628,7 @@ void RobotManipulationSimulator::moveToPosition(const arr& pos, const char* mess
   }
   if(t==Tabort) { indicateFailure(); return; }
 #else
-  ors::Body* obj = bodies(convertObjectName2ID("fing1c"));
+  mlr::Body* obj = bodies(convertObjectName2ID("fing1c"));
   // move manipulator towards box
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
@@ -1672,9 +1672,9 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   }
   
   // move manipulator towards box
-  ors::Body* obj = bodies(id);
+  mlr::Body* obj = bodies(id);
 #ifdef NEW_FEEDBACK_CONTROL
-  moveToPosition(conv_vec2arr(obj->X.pos+ors::Vector(0,0,.15)));
+  moveToPosition(conv_vec2arr(obj->X.pos+mlr::Vector(0,0,.15)));
 #else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
@@ -1700,7 +1700,7 @@ void RobotManipulationSimulator::openBox(uint id, const char* message) {
   simulate(30, msg_string);
   
   // open it
-  ors::Shape* s = bodies(id)->shapes.last();
+  mlr::Shape* s = bodies(id)->shapes.last();
   s->rel.setText("<t(0 0 .075) t(0 -.05 0) d(80 1 0 0) t(0 .05 .0)>");
   swift().initActivations(*this);
 
@@ -1714,9 +1714,9 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   }
   
   // move manipulator towards box
-  ors::Body* obj = bodies(id);
+  mlr::Body* obj = bodies(id);
 #ifdef NEW_FEEDBACK_CONTROL
-  moveToPosition(conv_vec2arr(obj->X.pos+ors::Vector(0,0,.15)));
+  moveToPosition(conv_vec2arr(obj->X.pos+mlr::Vector(0,0,.15)));
 #else
   DefaultTaskVariable x("endeffector",*this,posTVT,"fing1c",0,0,0,NoArr);
   x.setGainsAsAttractor(20,.2);
@@ -1742,7 +1742,7 @@ void RobotManipulationSimulator::closeBox(uint id, const char* message) {
   simulate(30, msg_string);
   
   // close it
-  ors::Shape* s = bodies(id)->shapes.last();
+  mlr::Shape* s = bodies(id)->shapes.last();
   s->rel.setText("<t(0 0 .075)>");
   swift().initActivations(*this);
   ode().pushPoseForShape(s);
@@ -1782,21 +1782,21 @@ void RobotManipulationSimulator::displayText(const char* text, uint t) {
 
 namespace relational {
 
-void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks) {
+void generateOrsBlocksSample(mlr::KinematicWorld& ors, const uint numOfBlocks) {
   mlr::Array<arr> pos;
   generateBlocksSample(pos, numOfBlocks);
   generateOrsFromSample(ors, pos);
 }
 
 
-void generateOrsFromSample(ors::KinematicWorld& ors, const mlr::Array<arr>& sample) {
+void generateOrsFromSample(mlr::KinematicWorld& ors, const mlr::Array<arr>& sample) {
   //for (int i = ors.bodies.N - 1; i >= 0; --i) {
   //if (ors.bodies(i)->name.p[0] == 'o') {
   //ors.bodies.remove(i);
   //}
   //}
   for(uint i = 0; i < sample.N; i+=2) {
-    ors::Body* body = new ors::Body(ors);
+    mlr::Body* body = new mlr::Body(ors);
     createCylinder(ors, *body, sample(0,i), ARR(1., 0., 0.), sample(0,i+1));
     mlr::String name;
     name << "o7" << i;
@@ -1839,18 +1839,18 @@ void generateBlocksSample(mlr::Array<arr>& sample, const uint numOfBlocks) {
 }
 
 
-void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color) {
+void createCylinder(mlr::KinematicWorld& G, mlr::Body& cyl, const mlr::Vector& pos, const arr& color) {
   arr size = ARR(0.1, 0.1, 0.108, 0.0375);
   createCylinder(G, cyl, pos, color, size);
 }
 
 
-void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size) {
-  ors::Transformation t;
+void createCylinder(mlr::KinematicWorld& G, mlr::Body& cyl, const mlr::Vector& pos, const arr& color, const arr& size) {
+  mlr::Transformation t;
   t.pos = pos;
-  ors::Shape* s = new ors::Shape(G, cyl);
+  mlr::Shape* s = new mlr::Shape(G, cyl);
   for(uint i = 0; i < 4; ++i) { s->size[i] = size(i);}
-  s->type = ors::cylinderST;
+  s->type = mlr::ST_cylinder;
   for(uint i = 0; i < 3; ++i) s->color[i] = color(i);
   
   cyl.X = t;

@@ -1,6 +1,6 @@
 #include "pd_executor_module.h"
 #include <Ors/ors.h>
-#include <Motion/pr2_heuristics.h>
+
 
 
 //#ifdef WITH_ROS
@@ -17,7 +17,7 @@ PDExecutor::PDExecutor()
 {
   // fmc setup
   world.getJointState(q, qdot);
-  fmc.H_rate_diag = pr2_reasonable_W(world);
+  fmc.H_rate_diag = world.getHmetric();
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(2.3,10);
 //  fmc.qitselfPD.active = false;
@@ -98,23 +98,23 @@ void PDExecutor::visualizeSensors()
 {
   floatA rh = poses_rh.get();
   if(rh.N) {
-    world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
-    world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
+    world.getShapeByName("sensor_rh_thumb")->rel.pos = mlr::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
+    world.getShapeByName("sensor_rh_index")->rel.pos = mlr::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
   }
   floatA lh = poses_lh.get();
   if(lh.N) {
-    world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
-    world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
+    world.getShapeByName("sensor_lh_thumb")->rel.pos = mlr::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
+    world.getShapeByName("sensor_lh_index")->rel.pos = mlr::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
   }
 }
 
 
 void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
-  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
-  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
+  mlr::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
+  mlr::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
 
   double angle;
-  ors::Vector rotvec;
+  mlr::Vector rotvec;
   quat.getRad(angle, rotvec);
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
@@ -138,14 +138,14 @@ void PDExecutor::step()
     world.watch(false);
     worldreal.watch(false);
     
-    ors::Joint *trans= world.getJointByName("worldTranslationRotation");
+    mlr::Joint *trans= world.getJointByName("worldTranslationRotation");
     arr fLobs;
     arr uobs;
     if(useros)
     {
        // ctrl_obs.waitForNextRevision();
        // pr2_odom.waitForRevisionGreaterThan(0);
-        ors::Shape *ftL_shape = worldreal.getShapeByName("endeffForceL");
+        mlr::Shape *ftL_shape = worldreal.getShapeByName("endeffForceL");
         CtrlMsg obs = ctrl_obs.get();
         fLobs = obs.fL;
         //cout<<fLobs<<endl;
@@ -223,9 +223,9 @@ void PDExecutor::step()
         double x, y, z;
         arr pos, quat;
     
-        ors::Quaternion orsquats;
+        mlr::Quaternion orsquats;
         orsquats.setRad( q(trans->qIndex+2),{0.,0.,1.}); 
-        ors::Quaternion orsquatsacc;
+        mlr::Quaternion orsquatsacc;
 
         x = cal_pose_rh(0) * 1;
         y = cal_pose_rh(1) * 1;

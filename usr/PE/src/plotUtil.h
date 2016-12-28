@@ -16,9 +16,9 @@ void drawBluePoints(void* classP);
 void drawYellowLine(void* classP);
 void drawBlackPoints(void* classP);
 
-void drawLine(ors::KinematicWorld &world, arr &x, uint color);
-void drawPoints(ors::KinematicWorld &world, arr &x, uint color);
-void drawLine(ors::KinematicWorld &world, arr &q,arr &x, const char *name ,uint color,uint lower,uint upper);
-void drawPoints(ors::KinematicWorld &world, arr q,arr &x, const char *name ,uint color);
+void drawLine(mlr::KinematicWorld &world, arr &x, uint color);
+void drawPoints(mlr::KinematicWorld &world, arr &x, uint color);
+void drawLine(mlr::KinematicWorld &world, arr &q,arr &x, const char *name ,uint color,uint lower,uint upper);
+void drawPoints(mlr::KinematicWorld &world, arr q,arr &x, const char *name ,uint color);
 
 #endif

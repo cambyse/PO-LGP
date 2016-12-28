@@ -9,8 +9,8 @@ struct FilterObject {
 
   uint id;
   double relevance = 1;
-  ors::Transformation transform;
-  ors::Transformation frame;
+  mlr::Transformation transform;
+  mlr::Transformation frame;
   FilterObjectType type;
   FilterObject();
   virtual ~FilterObject(){}
@@ -84,7 +84,7 @@ struct OptitrackMarker:FilterObject {
 
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=optitrackmarker) return -1.;
-    ors::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const OptitrackMarker*>(&other)->frame * dynamic_cast<const OptitrackMarker*>(&other)->transform.pos);
+    mlr::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const OptitrackMarker*>(&other)->frame * dynamic_cast<const OptitrackMarker*>(&other)->transform.pos);
     return dist.length();
   }
 
@@ -115,7 +115,7 @@ struct OptitrackBody:FilterObject {
 
   virtual double idMatchingCost(const FilterObject& other){
     if(other.type!=optitrackbody) return -1.;
-    ors::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const OptitrackBody*>(&other)->frame * dynamic_cast<const OptitrackBody*>(&other)->transform.pos);
+    mlr::Vector dist = (this->frame * this->transform.pos) - (dynamic_cast<const OptitrackBody*>(&other)->frame * dynamic_cast<const OptitrackBody*>(&other)->transform.pos);
     return dist.length();
   }
 

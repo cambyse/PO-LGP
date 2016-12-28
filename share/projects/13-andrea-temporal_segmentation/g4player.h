@@ -9,7 +9,7 @@
 #include <Ors/ors.h>
 struct G4Player {
   struct sG4Player {
-    ors::KinematicWorld *kw;
+    mlr::KinematicWorld *kw;
 
     sG4Player(): kw(nullptr) {}
     ~sG4Player() {}
@@ -20,8 +20,8 @@ struct G4Player {
   G4Player() { s = new sG4Player(); }
   ~G4Player() { delete s; }
   
-  ors::KinematicWorld &kw() {
-    if(!s->kw) s->kw = new ors::KinematicWorld();
+  mlr::KinematicWorld &kw() {
+    if(!s->kw) s->kw = new mlr::KinematicWorld();
     return *s->kw;
   }
 
@@ -33,12 +33,12 @@ struct G4Player {
     //  * g4rec
     //  * kw
     arr sensor_pos, sensor_quat;
-    ors::Vector vec_x = Vector_x,
+    mlr::Vector vec_x = Vector_x,
                 vec_y = Vector_y,
                 vec_z = Vector_z;
-    ors::Quaternion quat;
-    ors::Body *b;
-    ors::Shape *sh;
+    mlr::Quaternion quat;
+    mlr::Body *b;
+    mlr::Shape *sh;
 
     arr y, J, yVec, JVec;
     arr Phi, PhiJ, PhiJT;
@@ -65,7 +65,7 @@ struct G4Player {
 
         sensor_pos.referTo(g4rec.query("pos", sensor, f));
         sensor_quat.referTo(g4rec.query("quat", sensor, f));
-        quat = ors::Quaternion(sensor_quat);
+        quat = mlr::Quaternion(sensor_quat);
 
         kw().kinematicsPos(y, J, sh->body, &sh->rel.pos);
         Phi.append((y - sensor_pos) / PREC_POS);
@@ -104,11 +104,11 @@ struct G4Player {
   }
 
   void play(G4Rec &g4rec) {
-    kw() = ors::KinematicWorld(STRING(g4rec.dir << "world.ors"));
+    kw() = mlr::KinematicWorld(STRING(g4rec.dir << "world.ors"));
 
-    ors::Body *b = new ors::Body(kw());
-    ors::Shape *sh = new ors::Shape(kw(), *b);
-    sh->type = ors::markerST;
+    mlr::Body *b = new mlr::Body(kw());
+    mlr::Shape *sh = new mlr::Shape(kw(), *b);
+    sh->type = mlr::ST_marker;
     sh->size[0] = .5;
 
     uint nframes = g4rec.numFrames();
@@ -135,10 +135,10 @@ struct G4Player {
     double col_on[3] = { 1, 0, 0 };
     double col_off[3] = { 1, 1, 1 };
 
-    kw() = ors::KinematicWorld(STRING(g4rec.dir << "world.ors"));
+    kw() = mlr::KinematicWorld(STRING(g4rec.dir << "world.ors"));
     uint nframes = g4rec.numFrames();
     for(uint f = 0; f < nframes; f++) {
-      for(ors::Shape *sh: kw().shapes)
+      for(mlr::Shape *sh: kw().shapes)
         memcpy(sh->color, col_off, 3*sizeof(double));
       updateKW(g4rec, f);
 
@@ -158,16 +158,16 @@ struct G4Player {
   // double col_off[3] = { 1, 1, 1 };
 
   // for(uint f = 0; f < g4d().numFrames(); f++) {
-  //   for(ors::Shape *sh: kw().shapes)
+  //   for(mlr::Shape *sh: kw().shapes)
   //     memcpy(sh->color, col_off, 3*sizeof(double));
   //   for(uint i1 = 0; i1 < g4d().id().sensors().N; i1++) {
   //     for(uint i2 = i1+1; i2 < g4d().id().sensors().N; i2++) {
   //       String &s1 = g4d().id().sensors().elem(i1);
   //       String &s2 = g4d().id().sensors().elem(i2);
   //       if(annOf(s1, s2).elem(f) == 1) {
-  //         for(ors::Shape *sh: kw().getBodyByName(s1)->shapes)
+  //         for(mlr::Shape *sh: kw().getBodyByName(s1)->shapes)
   //           memcpy(sh->color, col_on, 3*sizeof(double));
-  //         for(ors::Shape *sh: kw().getBodyByName(s2)->shapes)
+  //         for(mlr::Shape *sh: kw().getBodyByName(s2)->shapes)
   //           memcpy(sh->color, col_on, 3*sizeof(double));
   //       }
   //     }

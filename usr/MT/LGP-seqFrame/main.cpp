@@ -1,5 +1,5 @@
 #include <Ors/ors.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 #include <Gui/opengl.h>
 #include <Gui/graphview.h>
 #include <Ors/ors.h>
@@ -14,7 +14,7 @@
 void LGPexample(){
   TowerProblem_new towers;
 
-  ors::KinematicWorld display=towers.world_root;
+  mlr::KinematicWorld display=towers.world_root;
   towers.world_root.gl().update("root");
 
   ManipulationTree_Node root(towers);

@@ -1,8 +1,10 @@
 #include "trajectoryInterface.h"
 #include <Algo/spline.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Gui/opengl.h>
 #include <RosCom/subscribeAlvarMarkers.h>
+#include <Optim/convert.h>
+#include <Optim/lagrangian.h>
 
 #include "roscom.h"
 #include "spinner.h"
@@ -24,7 +26,7 @@ struct sTrajectoryInterface{
   }
 };
 
-TrajectoryInterface::TrajectoryInterface(ors::KinematicWorld &world_plan_,ors::KinematicWorld &world_robot_)
+TrajectoryInterface::TrajectoryInterface(mlr::KinematicWorld &world_plan_,mlr::KinematicWorld &world_robot_)
   : S(NULL){
   rosCheckInit("trajectoryInterface");
 
@@ -106,8 +108,8 @@ void TrajectoryInterface::executeTrajectory(arr &X_robot, double T, bool recordD
   /// clear logging variables
   if (recordData) {logT.clear(); logXdes.clear(); logX.clear(); logFL.clear(); logU.clear(); logM.clear(); logM.resize(22); logXref = Xref;}
 
-  ors::Joint *trans = world_robot->getJointByName("worldTranslationRotation");
-  ors::Joint *torso = world_robot->getJointByName("torso_lift_joint");
+  mlr::Joint *trans = world_robot->getJointByName("worldTranslationRotation");
+  mlr::Joint *torso = world_robot->getJointByName("torso_lift_joint");
 
   arr q0;
   if (useRos) {
@@ -164,7 +166,7 @@ void TrajectoryInterface::executeTrajectory(arr &X_robot, double T, bool recordD
 
         if (useMarker) {
           for (uint i=0;i<21;i++) {
-            ors::Body *body = world_plan->getBodyByName(STRING("marker"<<i),false);
+            mlr::Body *body = world_plan->getBodyByName(STRING("marker"<<i),false);
             if (body) {
               logM(i).append(~cat(conv_vec2arr(body->X.pos),conv_quat2arr(body->X.rot)));
             }
@@ -214,7 +216,7 @@ void TrajectoryInterface::gotoPosition(arr x_robot, double T, bool recordData, b
 
   Task *t;
   t = MP.addTask("tra", new TaskMap_Transition(*world_robot), sumOfSqrTT);
-  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world_robot);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = world_robot->getHmetric();
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 
@@ -225,7 +227,7 @@ void TrajectoryInterface::gotoPosition(arr x_robot, double T, bool recordData, b
   X_robot.reshape(MP.T,world_robot->getJointStateDimension());
   OptOptions o;
   o.stopTolerance = 1e-3; o.constrainedMethod=anyTimeAula; o.verbose=0; o.aulaMuInc=1.1;
-  optConstrained(X_robot, NoArr, Convert(MP), o);
+  optConstrained(X_robot, NoArr, Convert(MP.komo_problem), o);
 
   executeTrajectory(X_robot, T, recordData, displayTraj);
 }
@@ -304,7 +306,7 @@ void TrajectoryInterface::syncState() {
   world_plan->setJointState(q_plan);
 
   /// sync torso
-  if (world_plan->getJointByName("torso_lift_joint")->type==ors::JT_rigid) {
+  if (world_plan->getJointByName("torso_lift_joint")->type==mlr::JT_rigid) {
     world_plan->getJointByName("torso_lift_joint")->A = world_robot->getJointByName("torso_lift_joint")->A;
     world_plan->getJointByName("torso_lift_joint")->Q.pos = world_robot->getJointByName("torso_lift_joint")->Q.pos;
 

@@ -69,15 +69,15 @@ void OptiRec::load(const char *recdir) {
       if(m)
         data.append({0., 0., 0., 0., 0., 0., 0.});
       else {
-        ors::Transformation T;
+        mlr::Transformation T;
         T.setZero();
         T.addRelativeRotationDeg(90, 1, 0, 0);
         T.addRelativeTranslation(
-                            ors::Vector(frame[sensor]["pose"][0][0].asDouble(),
+                            mlr::Vector(frame[sensor]["pose"][0][0].asDouble(),
                                         frame[sensor]["pose"][0][1].asDouble(),
                                         frame[sensor]["pose"][0][2].asDouble()));
         T.addRelativeRotation(
-                        ors::Quaternion(frame[sensor]["pose"][1][3].asDouble(),
+                        mlr::Quaternion(frame[sensor]["pose"][1][3].asDouble(),
                                         frame[sensor]["pose"][1][0].asDouble(),
                                         frame[sensor]["pose"][1][1].asDouble(),
                                         frame[sensor]["pose"][1][2].asDouble()));
@@ -150,9 +150,9 @@ void OptiRec::load(const char *recdir) {
         else if(t+no < nframes) { // interpolate between t-1 and t+missingno(i)
           arr s0 = data[t-1][i];
           arr sF = data[t+no][i];
-          ors::Quaternion q0(s0(3), s0(4), s0(5), s0(6));
-          ors::Quaternion qF(sF(3), sF(4), sF(5), sF(6));
-          ors::Quaternion qt;
+          mlr::Quaternion q0(s0(3), s0(4), s0(5), s0(6));
+          mlr::Quaternion qF(sF(3), sF(4), sF(5), sF(6));
+          mlr::Quaternion qt;
 
           arr diff = sF - s0;
           for(uint tt = 0; tt < no; tt++) {

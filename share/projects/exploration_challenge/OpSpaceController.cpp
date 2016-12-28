@@ -74,7 +74,7 @@ void OpSpaceController::_create_facts() {
   cout << "Goal: " << goal << endl;
 
 
-  ors::Transformation trans;
+  mlr::Transformation trans;
   trans.setAffineMatrix(eigen2mt(goal).p);
 
   std::stringstream buf1;

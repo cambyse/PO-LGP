@@ -22,7 +22,7 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   activateAll(sys.vars, false);
   
   //activate collision testing with target shape
-  ors::Shape *obj = sys.ors->shapes(shapeId);
+  mlr::Shape *obj = sys.ors->shapes(shapeId);
   obj->cont=true;
   sys.swift->initActivations(*sys.ors);
   
@@ -44,10 +44,10 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   V=new DefaultTaskVariable("upAlign", *sys.ors, zalignTVT, "graspCenter", obj->name, arr());
   ((DefaultTaskVariable*)V)->irel.setText("<d(90 1 0 0)>");
   switch(obj->type){
-    case ors::cylinderST:
+    case mlr::ST_cylinder:
       V->y_target = 0.;  //y-axis of m9 is orthogonal to world z-axis (tricky :-) )
       break;
-    case ors::boxST:{
+    case mlr::ST_box:{
       ((DefaultTaskVariable*)V)->jrel=obj->X;
       if(side==1) ((DefaultTaskVariable*)V)->jrel.addRelativeRotationDeg(90,1,0,0);
       if(side==2) ((DefaultTaskVariable*)V)->jrel.addRelativeRotationDeg(90,0,1,0);

@@ -4,7 +4,7 @@ void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G("model.kvg");
+  mlr::KinematicWorld G("model.kvg");
   G.q += .3;
   G.setJointState(G.q);
 
@@ -14,25 +14,25 @@ void TEST(PickAndPlace){
 
   uint pickTime=MP.T/2, placeTime=MP.T;
 
-  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
-  op1->symbol = ors::KinematicSwitch::addJointZero;
-  op1->jointType = ors::JT_rigid;
+  mlr::KinematicSwitch *op1 = new mlr::KinematicSwitch();
+  op1->symbol = mlr::KinematicSwitch::addJointZero;
+  op1->jointType = mlr::JT_rigid;
   op1->timeOfApplication = pickTime;
   op1->fromId = G.getShapeByName("graspRef")->index;
   op1->toId = G.getShapeByName("obj1")->index;
   MP.switches.append(op1);
 
-  ors::KinematicSwitch *op2 = new ors::KinematicSwitch();
-  op2->symbol = ors::KinematicSwitch::deleteJoint;
+  mlr::KinematicSwitch *op2 = new mlr::KinematicSwitch();
+  op2->symbol = mlr::KinematicSwitch::deleteJoint;
   op2->timeOfApplication = pickTime;
   op2->fromId = G.getShapeByName("table")->index;
   op2->toId = G.getShapeByName("obj1")->index;
   MP.switches.append(op2);
 
   //-- setup new motion problem
-  ors::Shape *grasp = G.getShapeByName("graspRef");
-  ors::Shape *obj = G.getShapeByName("obj1");
-  ors::Shape *tar = G.getShapeByName("target");
+  mlr::Shape *grasp = G.getShapeByName("graspRef");
+  mlr::Shape *obj = G.getShapeByName("obj1");
+  mlr::Shape *tar = G.getShapeByName("target");
 
   Task *t;
   t = MP.addTask("_MinSumOfSqr_qItself", new TaskMap_Transition(G), sumOfSqrTT);
@@ -65,7 +65,7 @@ void TEST(PickAndPlace){
   t->setCostSpecs(MP.T, MP.T, ARR(1.,0.,0.,0.), 1e3);
 
   // zero grasp joint motion during holding
-  ors::Joint *j_grasp = MP.world.getJointByName("graspJoint");
+  mlr::Joint *j_grasp = MP.world.getJointByName("graspJoint");
   arr M(j_grasp->qDim(), MP.world.getJointStateDimension());
   M.setZero();
   for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
@@ -100,7 +100,7 @@ void TEST(PickAndPlace){
 //  checkAllGradients(Convert(MF), x, 1e-4); return;
 //  checkJacobianCP(Convert(MF), x, 1e-4); return;
 
-  MP.reportFull();
+  MP.reportFeatures();
 
   //-- optimize
   for(uint k=0;k<1;k++){

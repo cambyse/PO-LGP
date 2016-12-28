@@ -12,7 +12,7 @@ struct TaskManager
   arr paramLimit;
   uint T;
   double tau;
-  ors::KinematicWorld *world;
+  mlr::KinematicWorld *world;
   mlr::String name;
   arr constraintTime;
   uint gridSize;
@@ -20,8 +20,8 @@ struct TaskManager
   arr Cdemo;
 
   TaskManager() {};
-  virtual void initTask(ors::KinematicWorld &world_, arr &Xdemo_) = 0;
-  virtual void createSynthethicDemonstration(arr &X,ors::KinematicWorld &world) = 0;
+  virtual void initTask(mlr::KinematicWorld &world_, arr &Xdemo_) = 0;
+  virtual void createSynthethicDemonstration(arr &X,mlr::KinematicWorld &world) = 0;
   virtual void applyModelFreeExploration(arr &X,const arr &X_base,const arr &param) = 0;
   virtual void addConstraintTaskMaps(MotionProblem &MP, arr param) = 0;
   virtual void computeCostGrid(arr &F_grid,const arr &param_grid, arr &X) = 0;
@@ -40,8 +40,8 @@ struct DonutTask:TaskManager {
     gridSize = 100;
     arr Xdemo;
   }
-  virtual void initTask(ors::KinematicWorld &world_, arr &Xdemo_) {};
-  virtual void createSynthethicDemonstration(arr &X,ors::KinematicWorld &world);
+  virtual void initTask(mlr::KinematicWorld &world_, arr &Xdemo_) {};
+  virtual void createSynthethicDemonstration(arr &X,mlr::KinematicWorld &world);
   virtual void applyModelFreeExploration(arr &X, const arr &X_base, const arr &param);
   virtual void addConstraintTaskMaps(MotionProblem &MP, arr param);
   virtual void computeCostGrid(arr &F_grid,const arr &param_grid, arr &X_base);
@@ -56,8 +56,8 @@ struct DoorTask:TaskManager {
     tau = 0.05;
     gridSize = 50;
   }
-  virtual void initTask(ors::KinematicWorld &world_, arr &Xdemo_);
-  virtual void createSynthethicDemonstration(arr &X,ors::KinematicWorld &world);
+  virtual void initTask(mlr::KinematicWorld &world_, arr &Xdemo_);
+  virtual void createSynthethicDemonstration(arr &X,mlr::KinematicWorld &world);
   virtual void applyModelFreeExploration(arr &X, const arr &X_base, const arr &param);
   virtual void addConstraintTaskMaps(MotionProblem &MP, arr param);
   virtual void computeCostGrid(arr &F_grid,const arr &param_grid, arr &X_base);

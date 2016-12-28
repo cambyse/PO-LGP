@@ -35,7 +35,7 @@ void displayFunction(VectorFunction& F){
 
 void testAula(ConstrainedProblem& p){
 
-  UnconstrainedProblem UCP(p);
+  LagrangianProblem UCP(p);
 
   UCP.mu=1.;
 

@@ -37,7 +37,7 @@ GraspISFTask::GraspISFTask(){
 }
 
 double
-GraspISFTask::phiAtFrame(ors::Transformation& X, arr &grad,double *sig){
+GraspISFTask::phiAtFrame(mlr::Transformation& X, arr &grad,double *sig){
   arr x;
   double _sig;
   x.setCarray(X.pos.p,3);

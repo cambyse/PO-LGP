@@ -63,7 +63,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   //------------------------------------------------//
   // Compute optimal trajectory
   //------------------------------------------------//
-  ors::KinematicWorld world(scene);
+  mlr::KinematicWorld world(scene);
   world.gl().resize(1000,800);
 
 
@@ -79,26 +79,26 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, P.T, ARR(0.),1e-2);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
-    c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 0.)));
+    c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 0.)));
     c->setCostSpecs(P.T, P.T,
                             {0.,0.,1.}, 1e4,
                             {0.,0.,0.}, 1e-3);
   }
 
   if (useCollAvoid) {
-//    c = P.addTask("collision", new TaskMap_Default(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
+//    c = P.addTask("collision", new TaskMap_Default(collTMT, 0, mlr::Vector(0., 0., 0.), 0, mlr::Vector(0., 0., 0.), ARR(.1)));
 //    c->setCostSpecs(0, P.T, {0.}, 1e0);
   }
 

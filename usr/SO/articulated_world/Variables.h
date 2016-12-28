@@ -7,7 +7,7 @@
 // ============================================================================
 class PerceptsVar : public Variable {
 public:
-  mlr::Array<ors::Vector*> objects;
+  mlr::Array<mlr::Vector*> objects;
 
   PerceptsVar() : Variable("percpets variable") {
     reg_objects();
@@ -16,7 +16,7 @@ public:
 
 // ============================================================================
 struct RobotPosVar : public Variable {
-  ors::Vector pos;
+  mlr::Vector pos;
 
   RobotPosVar() : Variable("robot pos variable") {
     reg_pos();
@@ -26,7 +26,7 @@ struct RobotPosVar : public Variable {
 // ============================================================================
 class MovementRequestVar : public Variable {
 public:
-  ors::Vector control_u;
+  mlr::Vector control_u;
 
   MovementRequestVar() : Variable("Movement Request") {
     reg_control_u();

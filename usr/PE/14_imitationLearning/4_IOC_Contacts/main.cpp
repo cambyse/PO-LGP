@@ -267,7 +267,7 @@ void simpleMotion(){
   mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   MotionProblem MP(world,true);
@@ -276,9 +276,9 @@ void simpleMotion(){
   arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("goal1")->X.pos);
   arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("goal2")->X.pos);
   TaskCost *c;
-  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e4);
-  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(120,120,refGoal2,1e3);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.1));
   c->setCostSpecs(0, MP.T, {0.}, 1.);
@@ -299,13 +299,13 @@ void simpleMotion(){
 
 
   // create MP for learning
-  ors::KinematicWorld world2("scene");
+  mlr::KinematicWorld world2("scene");
   world2.getJointState(q, qdot);
   MotionProblem MP2(world2,true);
   MP2.loadTransitionParameters();
   MP2.makeContactsAttractive=false;
   TaskCost *c1;
-  c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
   c1->setCostSpecs(200,200,refGoal1,1.);
 
   TaskMap *tm_contact = new PairCollisionConstraint(world2,"endeff","table",0.0);
@@ -313,7 +313,7 @@ void simpleMotion(){
   c2->map.constraint = false;
   c2->setCostSpecs(120,120,ARR(0.),1.);
 
-//  TaskCost *c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+//  TaskCost *c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
 //  c2->setCostSpecs(120,120,refGoal2,1.);
 
   TaskCost *c3 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","table",0.1));

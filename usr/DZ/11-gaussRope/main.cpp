@@ -103,14 +103,14 @@ void sine_trajectory(const arr& q,arr& sine_q,const uint _N)
 }
 
 int problem4(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));//e.g._test
   bool usebwd=mlr::getParameter<double>("usebwd") ;
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
  // gl.camera.setPosition(5,-10,10);  
    gl.camera.setPosition(5,-10,5);  
   
@@ -286,13 +286,13 @@ wr->userUpdate();
        
 
 int problem41(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -376,13 +376,13 @@ soc.gl->watch();
 
 
 int problem42(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -464,13 +464,13 @@ soc.gl->watch();
 }
 
 int problem43(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -533,13 +533,13 @@ soc.gl->watch();
 }
 
 int problem5(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -642,13 +642,13 @@ Tlist.append(reach);
 
 
 int problem6(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);    
   OpenGL gl;  
   gl.add(glStandardScene);  
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");

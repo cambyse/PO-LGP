@@ -32,15 +32,15 @@ int main(int argc, char** argv){
 
     mlr::wait(5);
 
-    ors::Body* body = baxter.getModelWorld().getBodyByName("optitrackbody_0");
-//    ors::Body* body = baxter.getModelWorld().getBodyByName("alvar_10");
+    mlr::Body* body = baxter.getModelWorld().getBodyByName("optitrackbody_0");
+//    mlr::Body* body = baxter.getModelWorld().getBodyByName("alvar_10");
     while (!body)
     {
       mlr::wait(0.1);
       body = baxter.getModelWorld().getBodyByName("optitrackbody_0");
 //      body = baxter.getModelWorld().getBodyByName("alvar_10");
     }
-    ors::Transformation initial_optitrack_tf = body->X;
+    mlr::Transformation initial_optitrack_tf = body->X;
 
     CtrlTask* currentHandPositionTask = baxter.task(
                         "hand_task",
@@ -51,11 +51,11 @@ int main(int argc, char** argv){
 //    arr initial_end_eff_pos = currentHandPositionTask->y;
 //    cout << "Initial: " << initial_end_eff_pos << endl;
 
-    ors::Transformation initial = baxter.getModelWorld().getShapeByName("endeffR")->X;
+    mlr::Transformation initial = baxter.getModelWorld().getShapeByName("endeffR")->X;
 
-    ors::Vector xVec_endeff = initial.rot.getX();
-    ors::Vector yVec_endeff = initial.rot.getY();
-    ors::Vector zVec_endeff = initial.rot.getZ();
+    mlr::Vector xVec_endeff = initial.rot.getX();
+    mlr::Vector yVec_endeff = initial.rot.getY();
+    mlr::Vector zVec_endeff = initial.rot.getZ();
 
     CtrlTask* alignX_endeff = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffR ref2=base_footprint vec1=[1 0 0] vec2=["
                                            << xVec_endeff.x << ' ' << xVec_endeff.y << ' ' << xVec_endeff.z
@@ -84,16 +84,16 @@ int main(int argc, char** argv){
       // I want: new_tf = (body->X * initial_optitrack_tf^-1) * initial_endeff;
       baxter.stop({alignX_endeff, alignY_endeff, alignZ_endeff});
 
-      ors::Transformation new_tf; new_tf.setDifference(initial_optitrack_tf, body->X);
+      mlr::Transformation new_tf; new_tf.setDifference(initial_optitrack_tf, body->X);
 
 
 //      (body->X.pos - initial_optitrack_tf.pos)
-      //      ors::Vector new_pos = new_tf * initial.pos;
-//      ors::Vector new_pos = new_tf.pos + initial.pos;
-      ors::Vector new_pos = (body->X.pos - initial_optitrack_tf.pos) + initial.pos;
+      //      mlr::Vector new_pos = new_tf * initial.pos;
+//      mlr::Vector new_pos = new_tf.pos + initial.pos;
+      mlr::Vector new_pos = (body->X.pos - initial_optitrack_tf.pos) + initial.pos;
 
 
-      ors::Quaternion new_rot = (body->X.rot * -initial_optitrack_tf.rot) * initial.rot;
+      mlr::Quaternion new_rot = (body->X.rot * -initial_optitrack_tf.rot) * initial.rot;
 
 
       baxter.modifyTarget(currentHandPositionTask, new_pos.getArr());
@@ -135,30 +135,30 @@ int main(int argc, char** argv){
 //    char elbow_body[20]="optitrackbody_2";
 //    //char object[20]="optitrackmarker_2";
 
-//    ors::Body* hand = baxter.getModelWorld().getBodyByName(hand_body);
-//    ors::Body* forearm = baxter.getModelWorld().getBodyByName(forearm_body);
-//    ors::Body* elbow = baxter.getModelWorld().getBodyByName(elbow_body);
+//    mlr::Body* hand = baxter.getModelWorld().getBodyByName(hand_body);
+//    mlr::Body* forearm = baxter.getModelWorld().getBodyByName(forearm_body);
+//    mlr::Body* elbow = baxter.getModelWorld().getBodyByName(elbow_body);
 
-//    ors::Transformation hand_tf = hand->X;
-//    ors::Transformation forearm_tf = forearm->X;
-//    ors::Transformation elbow_tf = elbow->X;
+//    mlr::Transformation hand_tf = hand->X;
+//    mlr::Transformation forearm_tf = forearm->X;
+//    mlr::Transformation elbow_tf = elbow->X;
 
 //    mlr::wait(2.);
 
 
-//    ors::Transformation hand_body_origin = hand_tf;
-//    ors::Transformation forearm_body_origin = forearm_tf;
-//    ors::Transformation elbow_body_origin = elbow_tf;
+//    mlr::Transformation hand_body_origin = hand_tf;
+//    mlr::Transformation forearm_body_origin = forearm_tf;
+//    mlr::Transformation elbow_body_origin = elbow_tf;
 
 
-//    ors::Shape* endeffr = baxter.getModelWorld().getShapeByName("endeffR");
-//    ors::Transformation endeffR_origin= endeffr->X;
+//    mlr::Shape* endeffr = baxter.getModelWorld().getShapeByName("endeffR");
+//    mlr::Transformation endeffR_origin= endeffr->X;
 
-//    ors::Shape* wristr = baxter.getModelWorld().getShapeByName("wristR");
-//    ors::Transformation forearmR_origin= wristr->X;
+//    mlr::Shape* wristr = baxter.getModelWorld().getShapeByName("wristR");
+//    mlr::Transformation forearmR_origin= wristr->X;
 
-//    ors::Shape* elbowr = baxter.getModelWorld().getShapeByName("elbowR");
-//    ors::Transformation elbowR_origin= elbowr->X;
+//    mlr::Shape* elbowr = baxter.getModelWorld().getShapeByName("elbowR");
+//    mlr::Transformation elbowR_origin= elbowr->X;
 
 
 //    mlr::wait(1.);
@@ -184,7 +184,7 @@ int main(int argc, char** argv){
 //      hand = baxter.getModelWorld().getBodyByName(hand_body);
 //      hand_tf = hand->X;
 
-//      ors::Transformation new_hand_tf = hand_tf;
+//      mlr::Transformation new_hand_tf = hand_tf;
 //      new_hand_tf.appendInvTransformation(hand_body_origin); // new_hand_tf = new_hand_tf * hand_body_origin^-1
 
 //      //========= new_hand_tf should be back in base frame
@@ -194,15 +194,15 @@ int main(int argc, char** argv){
 
 //      new_hand_tf.appendTransformation(endeffR_origin);
 
-////      ors::Quaternion orig_rot = hand_origin.rot;
+////      mlr::Quaternion orig_rot = hand_origin.rot;
 ////      orig_rot.invert();
 ////      new_hand_tf = hand_tf;
 ////      new_hand_tf.addRelativeRotation(orig_rot);
 ////      new_hand_tf.addRelativeRotation(endeffR_origin.rot);
 
-//      ors::Vector xVec_endeff = new_hand_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
-//      ors::Vector yVec_endeff = new_hand_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
-//      ors::Vector zVec_endeff = new_hand_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+//      mlr::Vector xVec_endeff = new_hand_tf.rot.getX(); //rot.getMatrix() * mlr::Vector(1, 0, 0);
+//      mlr::Vector yVec_endeff = new_hand_tf.rot.getY(); //rot.getMatrix() * mlr::Vector(0, 1, 0);
+//      mlr::Vector zVec_endeff = new_hand_tf.rot.getZ(); //rot.getMatrix() * mlr::Vector(0, 0, 1);
 
 //      CtrlTask* alignX_endeff = baxter.task(GRAPH(STRING("map=vecAlign ref1=endeffR ref2=base_footprint vec1=[1 0 0] vec2=["
 //                                             << xVec_endeff.x << ' ' << xVec_endeff.y << ' ' << xVec_endeff.z
@@ -226,13 +226,13 @@ int main(int argc, char** argv){
 //      forearm = baxter.getModelWorld().getBodyByName(forearm_body);
 //      forearm_tf = forearm->X;
 
-//      ors::Transformation new_forearm_tf = forearm_tf;
+//      mlr::Transformation new_forearm_tf = forearm_tf;
 //      new_forearm_tf.appendInvTransformation(forearm_body_origin);
 //      new_forearm_tf.appendTransformation(forearmR_origin);
 
-//      ors::Vector xVec_forearm = new_forearm_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
-////      ors::Vector yVec_forearm = new_forearm_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
-////      ors::Vector zVec_forearm = new_forearm_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+//      mlr::Vector xVec_forearm = new_forearm_tf.rot.getX(); //rot.getMatrix() * mlr::Vector(1, 0, 0);
+////      mlr::Vector yVec_forearm = new_forearm_tf.rot.getY(); //rot.getMatrix() * mlr::Vector(0, 1, 0);
+////      mlr::Vector zVec_forearm = new_forearm_tf.rot.getZ(); //rot.getMatrix() * mlr::Vector(0, 0, 1);
 
 //      CtrlTask* alignX_forearm = baxter.task(GRAPH(STRING("map=vecAlign ref1=wristR ref2=base_footprint vec1=[1 0 0] vec2=["
 //                                           << xVec_forearm.x << ' ' << xVec_forearm.y << ' ' << xVec_forearm.z
@@ -259,13 +259,13 @@ int main(int argc, char** argv){
 //      elbow = baxter.getModelWorld().getBodyByName(elbow_body);
 //      elbow_tf = elbow->X;
 
-//      ors::Transformation new_elbow_tf = elbow_tf;
+//      mlr::Transformation new_elbow_tf = elbow_tf;
 //      new_elbow_tf.appendInvTransformation(elbow_body_origin);
 //      new_elbow_tf.appendTransformation(elbowR_origin);
 
-////      ors::Vector xVec_elbow = new_elbow_tf.rot.getX(); //rot.getMatrix() * ors::Vector(1, 0, 0);
-////      ors::Vector yVec_elbow = new_elbow_tf.rot.getY(); //rot.getMatrix() * ors::Vector(0, 1, 0);
-//      ors::Vector zVec_elbow = new_elbow_tf.rot.getZ(); //rot.getMatrix() * ors::Vector(0, 0, 1);
+////      mlr::Vector xVec_elbow = new_elbow_tf.rot.getX(); //rot.getMatrix() * mlr::Vector(1, 0, 0);
+////      mlr::Vector yVec_elbow = new_elbow_tf.rot.getY(); //rot.getMatrix() * mlr::Vector(0, 1, 0);
+//      mlr::Vector zVec_elbow = new_elbow_tf.rot.getZ(); //rot.getMatrix() * mlr::Vector(0, 0, 1);
 
 
 

@@ -27,7 +27,7 @@
 // types
 //
 
-typedef mlr::Array<ors::Shape*> ShapeList;
+typedef mlr::Array<mlr::Shape*> ShapeList;
 
 //===========================================================================
 //

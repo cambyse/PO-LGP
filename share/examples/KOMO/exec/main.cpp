@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <Motion/komo.h>
 #include <Motion/motion.h>
-#include <Optim/opt-convert.h>
+#include <Optim/convert.h>
 
 //===========================================================================
 
@@ -15,7 +15,7 @@ void TEST(Executable){
   Graph specs(specsfile);
   KOMO komo(specs);
   komo.reset();
-  komo.MP->reportFull();
+  komo.MP->reportFeatures();
 
   int repeats=specs.get<double>("repeats", -1.);
   for(int r=0;repeats<0. || r<repeats; r++){
@@ -25,10 +25,10 @@ void TEST(Executable){
 
     //-- output results:
     FILE(STRING(outprefix<<".costs.g")) <<komo.getReport(); //cost details
-    ors::KinematicWorld pose=komo.MP->world;
+    mlr::KinematicWorld pose=komo.MP->world;
     if(komo.MP->T){ //generate all kinematic switches
       pose=*komo.MP->configurations.last(); //take the last pose
-      for(ors::KinematicSwitch *sw:komo.MP->switches){ //apply all switches that are 'after last'
+      for(mlr::KinematicSwitch *sw:komo.MP->switches){ //apply all switches that are 'after last'
         if(sw->timeOfApplication >= komo.MP->T+1) sw->apply(pose);
       }
     }
@@ -47,7 +47,7 @@ void TEST(cInterface){
   komo.setFact("(EqualZero posDiff endeff target)");
   komo.setFact("(LowerEqualZero collisionIneq){ margin=0.05 scale=.1 }");
   komo.reset();
-  komo.MP->reportFull();
+  komo.MP->reportFeatures();
   komo.run(); //reoptimize
   komo.displayTrajectory();  //play trajectory
 }

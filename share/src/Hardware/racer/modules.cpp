@@ -75,7 +75,7 @@ struct sMotors{
   arr lastEnc;
 };
 
-void Motors::open(){
+void Motmlr::open(){
   s = new sMotors;
   s->motor = new MD25();
   i2cmutex.lock();
@@ -89,7 +89,7 @@ void Motors::open(){
   mlr::arrayBrackets="  ";
 }
 
-void Motors::step(){
+void Motmlr::step(){
   double time=mlr::realTime();
   arr u = controls.get();
   if(!u.N) return;
@@ -120,7 +120,7 @@ void Motors::step(){
   encoderData.deAccess();
 }
 
-void Motors::close(){
+void Motmlr::close(){
   i2cmutex.lock();
   s->motor->setMotorSpeedAndAcceleration("", 0, 0, 10);
   s->motor->close();

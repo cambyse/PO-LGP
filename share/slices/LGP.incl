@@ -1,7 +1,5 @@
-share/include/lapack
-
 share/src/Core
-share/src/FOL
+share/src/Logic
 share/src/MCTS
 share/src/Geo
 share/src/Algo
@@ -10,10 +8,6 @@ share/src/Ors
 share/src/Motion
 share/src/Optim
 share/src/LGP
-share/src/extern/ply
-share/src/extern/GJK
-share/src/extern/Lewiner
-share/src/extern/SWIFT
 
 share/data/keywords.g
 share/data/man_model.ors
@@ -21,9 +15,11 @@ share/data/baxter_model
 share/data/screwdriver
 share/data/toolbox
 
-share/examples/FOL/fol
+share/test/Logic/fol
 share/examples/FOL/PlannerExample
 share/examples/FOL/DomainPlayer
 share/examples/KOMO/easy
 
 share/projects/16-LGP-coop
+
+share/projects/17-blocks

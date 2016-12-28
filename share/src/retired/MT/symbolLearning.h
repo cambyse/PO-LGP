@@ -18,8 +18,8 @@
 #include <Ors/ors.h>
 
 //implemented in ors_opengl.cpp
-void editConfiguration(const char* filename, ors::KinematicWorld& C, OpenGL& gl);
+void editConfiguration(const char* filename, mlr::KinematicWorld& C, OpenGL& gl);
 
-void getFeatureVector(arr& fab, const ors::KinematicWorld& ors, uint a, uint b);
-void getFeatureVector(arr& fa, const ors::KinematicWorld& ors, uint a);
+void getFeatureVector(arr& fab, const mlr::KinematicWorld& ors, uint a, uint b);
+void getFeatureVector(arr& fa, const mlr::KinematicWorld& ors, uint a);
 

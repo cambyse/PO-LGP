@@ -63,7 +63,7 @@ struct Simulator {
   void stepPhysx(const arr& qdot, double tau);
 
   //-- internal
-  ors::KinematicWorld& getOrsGraph();
+  mlr::KinematicWorld& getOrsGraph();
 };
 
 struct VisionSimulator {

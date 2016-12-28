@@ -4,7 +4,7 @@
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Perception/perception.h>
-#include <Ors/orsviewer.h>
+#include <Ors/orsViewer.h>
 
 // =================================================================================================
 int main(int argc, char** argv){

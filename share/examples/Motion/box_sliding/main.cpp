@@ -8,12 +8,12 @@
 #include <Ors/ors_swift.h>
 
 void box1(arr &y){
-  ors::KinematicWorld world("box.ors");
+  mlr::KinematicWorld world("box.ors");
 
   // set some visualization properties
-  world.getJointByName("table_box")->A.pos = ors::Vector(y.sub(0,2));
+  world.getJointByName("table_box")->A.pos = mlr::Vector(y.sub(0,2));
   world.getJointByName("table_box")->A.rot.setRad(y(3)*M_PI/180);
-  world.getJointByName("table_boxTarget")->A.pos = ors::Vector(y.sub(4,6));
+  world.getJointByName("table_boxTarget")->A.pos = mlr::Vector(y.sub(4,6));
   world.getJointByName("table_boxTarget")->A.rot.setRad(y(7)*M_PI/180);
   world.getJointByName("table_boxTargetVis")->A = world.getJointByName("table_boxTarget")->A;
   world.getJointByName("table_boxTargetVis2")->A = world.getJointByName("table_boxTarget")->A;
@@ -25,9 +25,9 @@ void box1(arr &y){
 //  q(4)=-1.5;
 //  world.setJointState(q);
 
-//  ors::Vector dir= ( world.getBodyByName("endeffM")->X.pos - world.getBodyByName("endeffL")->X.pos);
-//  ors::Vector pos = world.getBodyByName("endeffL")->X.pos + dir*.5;
-//  ors::Vector dir2 = pos-world.getBodyByName("R_LOWER_WRIST")->X.pos;
+//  mlr::Vector dir= ( world.getBodyByName("endeffM")->X.pos - world.getBodyByName("endeffL")->X.pos);
+//  mlr::Vector pos = world.getBodyByName("endeffL")->X.pos + dir*.5;
+//  mlr::Vector dir2 = pos-world.getBodyByName("R_LOWER_WRIST")->X.pos;
 //  cout << dir << endl;
 //  cout << ~(world.getBodyByName("R_LOWER_WRIST")->X.rot.getArr())*ARRAY(dir2) << endl;
 
@@ -61,7 +61,7 @@ void box1(arr &y){
   t = MP.addTask("posT", new TaskMap_Default(posTMT, world, "box", NoVector, "boxTarget",NoVector),sumOfSqrTT);
   t->setCostSpecs(MP.T-1,MP.T, {0.}, param(pC));pC++;
 
-  t = MP.addTask("vecT", new TaskMap_Default(vecAlignTMT, world, "box", ors::Vector(0.,1.,0), "boxTarget",ors::Vector(0.,1.,0)),sumOfSqrTT);
+  t = MP.addTask("vecT", new TaskMap_Default(vecAlignTMT, world, "box", mlr::Vector(0.,1.,0), "boxTarget",mlr::Vector(0.,1.,0)),sumOfSqrTT);
   t->setCostSpecs(MP.T-1,MP.T, {1.}, param(pC));pC++;
   t = MP.addTask("posC1", new TaskMap_Default(posTMT, world, "endeffL", NoVector),sumOfSqrTT);
   t->setCostSpecs(conT-5,conT, conv_vec2arr(world.getShapeByName("boxP1")->X.pos), param(pC));pC++;
@@ -69,7 +69,7 @@ void box1(arr &y){
   t->setCostSpecs(conT-5,conT, conv_vec2arr(world.getShapeByName("boxP2")->X.pos), param(pC));pC++;
   t = MP.addTask("posPre", new TaskMap_Default(posTMT, world, "endeffM", NoVector),sumOfSqrTT);
   t->setCostSpecs(conT-70,conT-70, conv_vec2arr(world.getShapeByName("preContact")->X.pos), param(pC));pC++;
-  t = MP.addTask("rotPre", new TaskMap_Default(vecAlignTMT, world, "endeffC", ors::Vector(0.,0.,1.),"preContact",ors::Vector(1.,0.,0.)),sumOfSqrTT);
+  t = MP.addTask("rotPre", new TaskMap_Default(vecAlignTMT, world, "endeffC", mlr::Vector(0.,0.,1.),"preContact",mlr::Vector(1.,0.,0.)),sumOfSqrTT);
   t->setCostSpecs(conT-70,conT-70, ARR(1.), param(pC));pC++;
 
   // constraints
@@ -84,7 +84,7 @@ void box1(arr &y){
   t->setCostSpecs(0.,conT, ARR(0.), 1.);
   t = MP.addTask("box_fixation2", new qItselfConstraint(world.getJointByName("table_box")->qIndex+2, world.getJointStateDimension()),eqTT);
   t->setCostSpecs(0.,conT, ARR(0.), 1.);
-  t = MP.addTask("velocity_dir2", new VelAlignConstraint(world, "endeffM",NoVector, "box", ors::Vector(1,0,0),.99),ineqTT);
+  t = MP.addTask("velocity_dir2", new VelAlignConstraint(world, "endeffM",NoVector, "box", mlr::Vector(1,0,0),.99),ineqTT);
   t->setCostSpecs(conT, MP.T, {0.}, 1.);
 
 //  t = MP.addTask("collision", new ProxyConstraint(allPTMT,{} , 0.001));

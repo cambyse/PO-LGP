@@ -18,6 +18,7 @@
 
 #include <Optim/optimization.h>
 #include <Algo/spline.h>
+#include <Optim/kOrderMarkov.h>
 
 struct PhaseOptimization:KOrderMarkovFunction {
   //options of the problem

@@ -61,7 +61,6 @@ joint (tableC /toolbox/side_right) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(180 
 joint (tableC /toolbox/floor_left) { from=<T t(0 0 .04)> to=<T t(.0 .069 .004) d(90 1 0 0)> type=10 }
 joint (tableC /toolbox/floor_right) { from=<T t(0 0 .04)> to=<T d(180 0 0 1) t(.0 .069 .004) d(90 1 0 0)> type=10 }
 
-
 Include = '../../data/screwdriver/screwdriver.ors'
 joint (tableR screwdriver) { from=<T t(0 0 .06)> to=<T t(-.5 .0 .0) > type=10 }
 #joint (tableR screwdriver) { from=<T t(0 0 .06)> to=<T t(.5 .0 .0) > type=10 }

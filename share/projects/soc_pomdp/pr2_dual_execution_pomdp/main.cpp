@@ -3,7 +3,7 @@
 #include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <RosCom/actions.h>
 #include <RosCom/actionMachine.h>
@@ -51,28 +51,28 @@ struct MySystem{
 };
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
+void PR2_ActionMachine(FSC fsc, mlr::KinematicWorld& world, int num){
 
 
      ofstream data(STRING("data-"<<num<<".dat"));
 
- // ors::KinematicWorld& world = activity.machine->s->world;
+ // mlr::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
   threadOpenModules(true);
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-  ors::Shape *ftL_shape=world.getShapeByName("endeffR");
+  mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
+  mlr::Shape *ftL_shape=world.getShapeByName("endeffR");
 
-  ors::KinematicWorld worldCopy = world;
+  mlr::KinematicWorld worldCopy = world;
 
-  //world.gl().add(ors::glDrawGraph, &worldCopy);
+  //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
   TaskController MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = world.getHmetric();
 
   bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){
@@ -105,10 +105,10 @@ void PR2_ActionMachine(FSC fsc, ors::KinematicWorld& world, int num){
   MP.qitselfPD.active=true;
 
 
-  ors::Shape *endeff = world.getShapeByName("endeffR");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeffR");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
 
 
 
@@ -323,7 +323,7 @@ int main(int argc, char** argv)
   //rnd.seed(111001);
 
 
-  ors::Shape *endeff = activity.machine->s->world.getShapeByName("endeffR");
+  mlr::Shape *endeff = activity.machine->s->world.getShapeByName("endeffR");
 
   arr y0;
 

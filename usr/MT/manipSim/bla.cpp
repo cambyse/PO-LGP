@@ -5,10 +5,10 @@
 //===========================================================================
 
 struct EndStateProgram:ConstrainedProblem{
-  ors::KinematicWorld& world;
+  mlr::KinematicWorld& world;
   Graph& symbolicState;
   int verbose;
-  EndStateProgram(ors::KinematicWorld& world, Graph& symbolicState, int verbose)
+  EndStateProgram(mlr::KinematicWorld& world, Graph& symbolicState, int verbose)
     : world(world), symbolicState(symbolicState), verbose(verbose){
     ConstrainedProblem::operator=(
       [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
@@ -29,8 +29,8 @@ struct EndStateProgram:ConstrainedProblem{
     //-- support symbols -> constraints of being inside!
     Node *support=symbolicState["supports"];
     for(Node *constraint:support->parentOf){
-      ors::Body *b1=world.getBodyByName(constraint->parents(1)->keys(1));
-      ors::Body *b2=world.getBodyByName(constraint->parents(2)->keys(1));
+      mlr::Body *b1=world.getBodyByName(constraint->parents(1)->keys(1));
+      mlr::Body *b2=world.getBodyByName(constraint->parents(2)->keys(1));
       arr y,J;
       world.kinematicsRelPos(y, J, b1, NULL, b2, NULL);
       arr range(3);
@@ -75,7 +75,7 @@ struct EndStateProgram:ConstrainedProblem{
         //-- compute center
         uint n=world.getJointStateDimension();
         arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
-        ors::Body *b;
+        mlr::Body *b;
         arr y,J;
         for(Node *s:supporters){
           b=world.getBodyByName(s->keys(1));
@@ -114,7 +114,7 @@ struct EndStateProgram:ConstrainedProblem{
         //-- compute center
         uint n=world.getJointStateDimension();
         arr cen(3),cenJ(3,n);  cen.setZero(); cenJ.setZero();
-        ors::Body *b;
+        mlr::Body *b;
         arr y,J;
         for(Node *s:supporters){
           b=world.getBodyByName(s->keys(1));
@@ -142,7 +142,7 @@ struct EndStateProgram:ConstrainedProblem{
 
 //===========================================================================
 
-double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
+double endStateOptim(mlr::KinematicWorld& world, Graph& symbolicState){
   EndStateProgram f(world, symbolicState, 0);
 
   arr x = world.getJointState();
@@ -158,7 +158,7 @@ double endStateOptim(ors::KinematicWorld& world, Graph& symbolicState){
 
 //===========================================================================
 
-void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
+void createEndState(mlr::KinematicWorld& world, Graph& symbolicState){
   Node *actionSequence = symbolicState["actionSequence"];
   Node *supportSymbol  = symbolicState["supports"];
   Graph& actions = actionSequence->graph();
@@ -169,12 +169,12 @@ void createEndState(ors::KinematicWorld& world, Graph& symbolicState){
     symbolicState.newNode<bool>( {}, {supportSymbol, a->parents(2), a->parents(1)}, new bool(true), true);
 
     //-- create a joint between the object and the target
-    ors::Shape *object= world.getShapeByName(a->parents(1)->keys(1));
-    ors::Shape *target = world.getShapeByName(a->parents(2)->keys(1));
+    mlr::Shape *object= world.getShapeByName(a->parents(1)->keys(1));
+    mlr::Shape *target = world.getShapeByName(a->parents(2)->keys(1));
 
     if(!object->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
-        ors::Joint *j = new ors::Joint(world, target->body, object->body);
-        j->type = ors::JT_transXYPhi;
+        mlr::Joint *j = new mlr::Joint(world, target->body, object->body);
+        j->type = mlr::JT_transXYPhi;
         j->A.addRelativeTranslation(0, 0, .5*target->size[2]);
         j->B.addRelativeTranslation(0, 0, .5*object->size[2]);
         j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);

@@ -2,8 +2,8 @@
 #include "actionMachine_internal.h"
 
 //#include <Hardware/gamepad/gamepad.h>
-#include <Motion/pr2_heuristics.h>
-#include <FOL/fol.h>
+
+#include <Logic/fol.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 
 //===========================================================================
@@ -35,7 +35,7 @@ ActionMachine::~ActionMachine(){
 void ActionMachine::open(){
   s->world.getJointState(s->q, s->qdot);
 
-  s->taskController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*pr2_reasonable_W(s->world);
+  s->taskController.H_rate_diag = mlr::getParameter<double>("Hrate", 1.)*s->world.getHmetric();
   s->taskController.qitselfPD.y_ref = s->q;
   s->taskController.qitselfPD.setGains(.0,10.);
 
@@ -142,7 +142,7 @@ void ActionMachine::step(){
 
   //-- code to output force signals
   if(true){
-    ors::Shape *ftL_shape = world->getShapeByName("endeffForceL");
+    mlr::Shape *ftL_shape = world->getShapeByName("endeffForceL");
     arr fLobs = ctrl_obs.get()->fL;
     arr uobs =  ctrl_obs.get()->u_bias;
 //    cout <<fLobs <<endl;

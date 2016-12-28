@@ -37,8 +37,8 @@ struct PDExecutor: Thread{
   ACCESS(bool,calisaysokay);
   ACCESS(bool,taped);
 
-  ors::KinematicWorld world;
-  ors::KinematicWorld worldreal;
+  mlr::KinematicWorld world;
+  mlr::KinematicWorld worldreal;
   TaskController fmc;
   arr q, qdot ;
 

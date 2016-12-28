@@ -15,10 +15,10 @@
    }
 */
 
-//void ors::KinematicWorld::addObject(ors::Body *b) {
+//void mlr::KinematicWorld::addObject(mlr::Body *b) {
 //  bodies.append(b);
 //  int ibody = bodies.N - 1;
-//  uint i; ors::Shape *s;
+//  uint i; mlr::Shape *s;
 //  for_list(Type,  s,  b->shapes) {
 //    s->ibody = ibody;
 //    s->index = shapes.N;
@@ -26,7 +26,7 @@
 //  }
 //}
 
-ors::KinematicWorld* ors::KinematicWorld::newClone() const {
+mlr::KinematicWorld* mlr::KinematicWorld::newClone() const {
   Graph *G=new Graph();
   G->q_dim=q_dim;
   listCopy(G->proxies, proxies);
@@ -54,7 +54,7 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
 }
 
 
-//void ors::KinematicWorld::copyShapesAndJoints(const Graph& G) {
+//void mlr::KinematicWorld::copyShapesAndJoints(const Graph& G) {
 //  uint i;  Shape *s;  Body *b;  Joint *j;
 //  for_list(Type,  s,  shapes)(*s) = *G.shapes(i);
 //  for_list(Type,  j,  joints)(*j) = *G.joints(i);
@@ -69,20 +69,20 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
 
 
 ///// find body index with specific name
-//uint ors::KinematicWorld::getBodyIndexByName(const char* name) const {
+//uint mlr::KinematicWorld::getBodyIndexByName(const char* name) const {
 //  Body *b=getBodyByName(name);
 //  return b?b->index:0;
 //}
 
 ///// find shape index with specific name
-//uint ors::KinematicWorld::getShapeIndexByName(const char* name) const {
+//uint mlr::KinematicWorld::getShapeIndexByName(const char* name) const {
 //  Shape *s=getShapeByName(name);
 //  return s?s->index:0;
 //}
 
 /** @brief if two bodies touch, the are not yet connected, and one of them has
   the `glue' attribute, add a new edge of FIXED type between them */
-//void ors::KinematicWorld::glueTouchingBodies() {
+//void mlr::KinematicWorld::glueTouchingBodies() {
 //  uint i, A, B;
 //  Body *a, *b;//, c;
 //  bool ag, bg;
@@ -102,7 +102,7 @@ ors::KinematicWorld* ors::KinematicWorld::newClone() const {
 //}
 
 #if 0 //obsolete:
-void ors::KinematicWorld::getContactMeasure(arr &x, double margin, bool linear) const {
+void mlr::KinematicWorld::getContactMeasure(arr &x, double margin, bool linear) const {
   x.resize(1);
   x=0.;
   uint i;
@@ -133,8 +133,8 @@ void ors::KinematicWorld::getContactMeasure(arr &x, double margin, bool linear) 
 }
 
 /// gradient (=scalar Jacobian) of this contact cost
-double ors::KinematicWorld::getContactGradient(arr &grad, double margin, bool linear) const {
-  ors::Vector normal;
+double mlr::KinematicWorld::getContactGradient(arr &grad, double margin, bool linear) const {
+  mlr::Vector normal;
   uint i;
   Shape *a, *b;
   double d, discount;
@@ -142,7 +142,7 @@ double ors::KinematicWorld::getContactGradient(arr &grad, double margin, bool li
   arr J, dnormal;
   grad.resize(1, getJointStateDimension(false));
   grad.setZero();
-  ors::Vector arel, brel;
+  mlr::Vector arel, brel;
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<margin) {
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
       d=1.-proxies(i)->d/margin;
@@ -183,8 +183,8 @@ double ors::KinematicWorld::getContactGradient(arr &grad, double margin, bool li
 #endif
 
 #if 0 //alternative implementation : cost=1 -> contact, other discounting...
-double ors::KinematicWorld::getContactGradient(arr &grad, double margin) {
-  ors::Vector normal;
+double mlr::KinematicWorld::getContactGradient(arr &grad, double margin) {
+  mlr::Vector normal;
   uint i;
   Shape *a, *b;
   double d, discount;
@@ -192,7 +192,7 @@ double ors::KinematicWorld::getContactGradient(arr &grad, double margin) {
   arr J, dnormal;
   grad.resize(1, jd);
   grad.setZero();
-  ors::Transformation arel, brel;
+  mlr::Transformation arel, brel;
   for(i=0; i<proxies.N; i++) if(!proxies(i)->age && proxies(i)->d<margin) {
       a=shapes(proxies(i)->a); b=shapes(proxies(i)->b);
       discount = 1.;
@@ -229,16 +229,16 @@ double ors::KinematicWorld::getContactGradient(arr &grad, double margin) {
 #endif
 
 /// [prelim] some kind of gyroscope
-void ors::KinematicWorld::getGyroscope(ors::Vector& up) const {
+void mlr::KinematicWorld::getGyroscope(mlr::Vector& up) const {
   up.set(0, 0, 1);
   up=bodies(0)->X.rot*up;
 }
 
 /** @brief returns a k-dim vector containing the penetration depths of all bodies */
-void ors::KinematicWorld::getPenetrationState(arr &vec) const {
+void mlr::KinematicWorld::getPenetrationState(arr &vec) const {
   vec.resize(bodies.N);
   vec.setZero();
-  ors::Vector d;
+  mlr::Vector d;
   uint i;
   for(i=0; i<proxies.N; i++) if(proxies(i)->d<0.) {
       d=proxies(i)->posB - proxies(i)->posA;
@@ -249,10 +249,10 @@ void ors::KinematicWorld::getPenetrationState(arr &vec) const {
 }
 
 /** @brief a vector describing the incoming forces (penetrations) on one object */
-void ors::KinematicWorld::getGripState(arr& grip, uint j) const {
-  ors::Vector d, p;
-  ors::Vector sumOfD; sumOfD.setZero();
-  ors::Vector torque; torque.setZero();
+void mlr::KinematicWorld::getGripState(arr& grip, uint j) const {
+  mlr::Vector d, p;
+  mlr::Vector sumOfD; sumOfD.setZero();
+  mlr::Vector torque; torque.setZero();
   double sumOfAbsD = 0.;
   double varOfD = 0.;
 
@@ -293,7 +293,7 @@ void ors::KinematicWorld::getGripState(arr& grip, uint j) const {
 
 #if 0 //OBSOLETE
 /// returns the number of touch-sensors
-uint ors::KinematicWorld::getTouchDimension() {
+uint mlr::KinematicWorld::getTouchDimension() {
   Body *n;
   uint i=0, j;
 
@@ -304,7 +304,7 @@ uint ors::KinematicWorld::getTouchDimension() {
 }
 
 /// returns the touch vector (penetrations) of all touch-sensors
-void ors::KinematicWorld::getTouchState(arr& touch) {
+void mlr::KinematicWorld::getTouchState(arr& touch) {
   if(!td) td=getTouchDimension();
   arr pen;
   getPenetrationState(pen);
@@ -321,15 +321,15 @@ void ors::KinematicWorld::getTouchState(arr& touch) {
 #endif
 
 /** @brief get the center of mass, total velocity, and total angular momemtum */
-void ors::KinematicWorld::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector& l, ors::Quaternion& ori) const {
+void mlr::KinematicWorld::getTotals(mlr::Vector& c, mlr::Vector& v, mlr::Vector& l, mlr::Quaternion& ori) const {
   Body *n;
   uint j;
   double m, M;
 
   //dMass mass;
-  ors::Matrix ID;
-  //ors::Matrix TP;
-  ors::Vector r, o;
+  mlr::Matrix ID;
+  //mlr::Matrix TP;
+  mlr::Vector r, o;
 
   ID.setId();
   c.setZero();
@@ -358,7 +358,7 @@ void ors::KinematicWorld::getTotals(ors::Vector& c, ors::Vector& v, ors::Vector&
 }
 
 /** @brief dump a list body pairs for which the upper conditions hold */
-void ors::KinematicWorld::reportGlue(std::ostream *os) {
+void mlr::KinematicWorld::reportGlue(std::ostream *os) {
   uint i, A, B;
   Body *a, *b;
   bool ag, bg;

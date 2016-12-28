@@ -2,7 +2,8 @@
 #include "racerEnvironment.h"
 #include <RL/RL.h>
 #include <RL/linearPolicy.h>
-#include <Optim/opt-rprop.h>
+#include <Optim/gradient.h>
+#include <Optim/blackbox.h>
 
 #include "quadratic.h"
 
@@ -126,6 +127,24 @@ void testOptimization(){
 
 //==============================================================================
 
+void testOptimizationBlackBox(){
+  RacerEnvironment R;
+  LinearPolicy pi;
+  arr theta = pi.getInitialization(R, R);
+  mlr::Rollouts xi(R, pi, R, 20, 1.);
+
+  ScalarFunction f = [&xi](arr& g, arr& H, const arr& x) -> double{
+    if(&g) HALT("that's not black box");
+    return -xi.rollout(1, x);
+  };
+
+  xi.T = 50;
+  LocalModelBasedOptim opt(theta, f, OPT(verbose=2, initStep=1e-1));
+  opt.run(300);
+}
+
+//==============================================================================
+
 void testLSPI(){
   RacerEnvironment env;
   LinearPolicy pi;
@@ -203,7 +222,8 @@ int main(int argn, char** argv){
 //  rnd.clockSeed();
 
 //  testGradients();
-  testOptimization();
+//  testOptimization();
+  testOptimizationBlackBox();
 //  testLSPI();
 
   return 0;

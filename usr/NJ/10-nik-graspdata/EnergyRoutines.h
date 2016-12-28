@@ -15,16 +15,16 @@ arr lastCenter;//for object positons in train data create
 int bDynamical;
 mlr::String sDiscriminant;
 
-mlr::Array<ors::Shape*> GetLandmarks(ors::KinematicWorld * g){
-	ors::Shape * s1 = g->getShapeByName("tipNormal1");
-	ors::Shape * s2 = g->getShapeByName("tipNormal2");
-	ors::Shape * s3 = g->getShapeByName("tipNormal3");
-	ors::Shape * s4 = g->getShapeByName("fingNormal1");
-	ors::Shape * s5 = g->getShapeByName("fingNormal2");
-	ors::Shape * s6 = g->getShapeByName("fingNormal3");
-	ors::Shape * o1 = g->getBodyByName("o1")->shapes(0);
-	ors::Shape * palm = g->getShapeByName("palmCenter");
-	mlr::Array<ors::Shape*> landmarks(8);
+mlr::Array<mlr::Shape*> GetLandmarks(mlr::KinematicWorld * g){
+	mlr::Shape * s1 = g->getShapeByName("tipNormal1");
+	mlr::Shape * s2 = g->getShapeByName("tipNormal2");
+	mlr::Shape * s3 = g->getShapeByName("tipNormal3");
+	mlr::Shape * s4 = g->getShapeByName("fingNormal1");
+	mlr::Shape * s5 = g->getShapeByName("fingNormal2");
+	mlr::Shape * s6 = g->getShapeByName("fingNormal3");
+	mlr::Shape * o1 = g->getBodyByName("o1")->shapes(0);
+	mlr::Shape * palm = g->getShapeByName("palmCenter");
+	mlr::Array<mlr::Shape*> landmarks(8);
 	landmarks(1) = s1;landmarks(2) = s2;landmarks(3) = s3;
 	landmarks(4) = s4;landmarks(5) = s5;landmarks(6) = s6;
 	landmarks(0) = o1;
@@ -32,17 +32,17 @@ mlr::Array<ors::Shape*> GetLandmarks(ors::KinematicWorld * g){
 	return landmarks;
 }
 
-ors::Vector GetRelPos(ors::Shape* a,ors::Shape* b){
-	ors::Vector pi,pj,c;
+mlr::Vector GetRelPos(mlr::Shape* a,mlr::Shape* b){
+	mlr::Vector pi,pj,c;
 	pi = a->body->X.pos + a->body->X.rot * a->rel.pos;
 	pj = b->body->X.pos + b->body->X.rot *b->rel.pos;
 	c = b->X.rot / (pi-pj);
 	return c;
 }
 
-arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::KinematicWorld * G){
+arr GetRelJacobian(mlr::Shape* a,mlr::Shape* b,mlr::KinematicWorld * G){
 	arr J,Ji,Jj,JRj;
-	ors::Vector pi,pj,c,vi,vj,r,jk;
+	mlr::Vector pi,pj,c,vi,vj,r,jk;
 	uint k;
 	pi = a->body->X.pos + a->body->X.rot * a->rel.pos;
 	pj = b->body->X.pos + b->body->X.rot * b->rel.pos;
@@ -61,7 +61,7 @@ arr GetRelJacobian(ors::Shape* a,ors::Shape* b,ors::KinematicWorld * G){
 	return J;
 }
 
-arr GetRawFeaturesJ(const mlr::Array<ors::Shape*> & landmarks,ors::KinematicWorld * G,arr & grad){
+arr GetRawFeaturesJ(const mlr::Array<mlr::Shape*> & landmarks,mlr::KinematicWorld * G,arr & grad){
 	uint br = 0;
 	uint M = 4;
 	arr ans(landmarks.N*(landmarks.N-1)*M);
@@ -70,7 +70,7 @@ arr GetRawFeaturesJ(const mlr::Array<ors::Shape*> & landmarks,ors::KinematicWorl
 		for(uint i = 0; i < landmarks.N; i++)
 			if (i!=j)
 			{
-				ors::Vector f = GetRelPos(landmarks(j),landmarks(i));
+				mlr::Vector f = GetRelPos(landmarks(j),landmarks(i));
 				if(f.length()==0)f(0)+=0.00000001;
 				ans(br*M) =   f(0);
 				ans(br*M+1) = f(1);
@@ -99,7 +99,7 @@ arr GetRawFeaturesJ(const mlr::Array<ors::Shape*> & landmarks,ors::KinematicWorl
 	return ans;
 }
 
-arr GetRawFeatures(const mlr::Array<ors::Shape*> & landmarks){
+arr GetRawFeatures(const mlr::Array<mlr::Shape*> & landmarks){
 	uint br = 0;
 	uint M = 4;
 	arr ans(landmarks.N*(landmarks.N-1)*M);
@@ -107,7 +107,7 @@ arr GetRawFeatures(const mlr::Array<ors::Shape*> & landmarks){
 		for(uint i = 0; i < landmarks.N; i++)
 			if (i!=j)
 			{
-				ors::Vector f = GetRelPos(landmarks(j),landmarks(i));
+				mlr::Vector f = GetRelPos(landmarks(j),landmarks(i));
 				if(f.length()==0)f(0)+=0.00000001;
 				ans(br*M) =   f(0);
 				ans(br*M+1) = f(1);
@@ -120,7 +120,7 @@ arr GetRawFeatures(const mlr::Array<ors::Shape*> & landmarks){
 	return ans;
 }
 
-arr GetFeaturesDyn(const mlr::Array<ors::Shape*> & landmarks,const arr & q, const arr & lastRaw, const arr & lastJoint,ors::KinematicWorld * G,arr & grad){
+arr GetFeaturesDyn(const mlr::Array<mlr::Shape*> & landmarks,const arr & q, const arr & lastRaw, const arr & lastJoint,mlr::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 	uint nOffset = raw.N + q.N;
@@ -152,7 +152,7 @@ arr GetFeaturesDyn(const mlr::Array<ors::Shape*> & landmarks,const arr & q, cons
 	return TD;
 }
 
-arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G,arr & grad){
+arr GetFeatures(const mlr::Array<mlr::Shape*> & landmarks,const arr & q, mlr::KinematicWorld * G,arr & grad){
 	arr gradR;
 	arr raw = GetRawFeaturesJ(landmarks,G,gradR);
 	arr TD(raw.N + q.N);
@@ -176,7 +176,7 @@ arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks,const arr & q, ors::Ki
 	return TD-0.5;
 }
 
-arr GetFeatures(const mlr::Array<ors::Shape*> & landmarks,const arr & q, ors::KinematicWorld * G){
+arr GetFeatures(const mlr::Array<mlr::Shape*> & landmarks,const arr & q, mlr::KinematicWorld * G){
 	arr temp;
 	return GetFeatures(landmarks,q,G,temp);
 }
@@ -260,7 +260,7 @@ double DLPml(const arr & feat, const arr & lastF, arr & grad){
 }
 
 void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJoint){
-	mlr::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
+	mlr::Array<mlr::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " noise creation " << endl;
 	uint noi = 60;
 	ofstream f("noise.txt",ofstream::app);
@@ -327,7 +327,7 @@ void PrintJointsNoise(RobotProcessGroup & robot, const arr& joints, arr & lastJo
 
 //move by collision free sampling
 void SampleTrajectory(RobotProcessGroup & robot){
-	mlr::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
+	mlr::Array<mlr::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " sampling creation " << endl;
 	int nSa = mlr::getParameter<int>("iterations");
 	uint T = mlr::getParameter<int>("T");
@@ -395,7 +395,7 @@ void SampleTrajectory(RobotProcessGroup & robot){
 }
 
 void GradTrajectory(RobotProcessGroup & robot){
-	mlr::Array<ors::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
+	mlr::Array<mlr::Shape*> landmarks = GetLandmarks(&robot.ctrl.ors);
 	cout << " sampling creation " << endl;
 	int nSa = mlr::getParameter<int>("iterations");
 	uint T = mlr::getParameter<int>("T");
@@ -456,8 +456,8 @@ void GradTrajectory(RobotProcessGroup & robot){
 
 namespace NJCH {
 
-mlr::Array<ors::Shape*> landmarks;
-ors::KinematicWorld * G;
+mlr::Array<mlr::Shape*> landmarks;
+mlr::KinematicWorld * G;
 
 void f(arr &y,const arr &x,void*){
 	arr a(39,8); a = 1;
@@ -494,9 +494,9 @@ void f5(arr &y,const arr &x,void*){
 	y = GetRawFeatures(landmarks);
 	//y = y.sub(50,100);
 	//cout << " y " << y << endl;
-	/*ors::Shape * s1 = G->getBodyByName("m3")->shapes(0);
-	ors::Shape * s2 = G->getBodyByName("m5")->shapes(0);
-	ors::Vector d = GetRelPos(s1,s2);
+	/*mlr::Shape * s1 = G->getBodyByName("m3")->shapes(0);
+	mlr::Shape * s2 = G->getBodyByName("m5")->shapes(0);
+	mlr::Vector d = GetRelPos(s1,s2);
 	y = arr(d.p,3);
 	return;*/
 	/*arr lastQ(14);
@@ -508,8 +508,8 @@ void f5(arr &y,const arr &x,void*){
 void  df5(arr &J,const arr &x,void*){
 	G->setJointState(x);
 	G->calcBodyFramesFromJoints();
-	/*ors::Shape * s1 = G->getBodyByName("m3")->shapes(0);
-	ors::Shape * s2 = G->getBodyByName("m5")->shapes(0);
+	/*mlr::Shape * s1 = G->getBodyByName("m3")->shapes(0);
+	mlr::Shape * s2 = G->getBodyByName("m5")->shapes(0);
 	arr Jt =GetRelJacobian(s1,s2,G);
 	transpose(J,Jt);
 	return;*/
@@ -628,7 +628,7 @@ void CheckManifold(const arr & q){
 	}
 }
 
-void NJCheck(ors::KinematicWorld * C){
+void NJCheck(mlr::KinematicWorld * C){
 	G = C;
 	landmarks = GetLandmarks(G);
 	arr q;

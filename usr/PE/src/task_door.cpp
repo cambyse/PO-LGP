@@ -1,5 +1,5 @@
 #include "task_manager.h"
-#include <Motion/pr2_heuristics.h>
+
 #include "traj_factory.h"
 #include "plotUtil.h"
 
@@ -19,7 +19,7 @@ void DoorTask::addConstraints(MotionProblem *MP, const arr &X) {
   t->prec = prec;
 }
 
-void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X, arr &Y) {
+void DoorTask::updateVisualization(mlr::KinematicWorld &world,arr &X, arr &Y) {
   drawLine(world,X,Pdemo1f,"endeffC1",0,0,constraintCP(0));
   drawLine(world,X,Pdemo1c,"endeffC1",2,constraintCP(0),constraintCP(1));
   drawLine(world,X,Pdemo2f,"endeffC2",0,0,constraintCP(0));
@@ -73,9 +73,9 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
 
   for (uint t=0;t<Xdemo.d0;t++) {
     world->setJointState(Xdemo[t]);
-    ors::Body *handle = world->getBodyByName("handle");
-    ors::Shape *ec1 = world->getShapeByName("endeffC1");
-    ors::Shape *ec2 = world->getShapeByName("endeffC2");
+    mlr::Body *handle = world->getBodyByName("handle");
+    mlr::Shape *ec1 = world->getShapeByName("endeffC1");
+    mlr::Shape *ec2 = world->getShapeByName("endeffC2");
 
     handle->X.pos = (C1demo[t]+C2demo[t])/2.;
     handle->X.rot = ec1->X.rot;
@@ -125,7 +125,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
 
 
   t =MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));

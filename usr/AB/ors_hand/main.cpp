@@ -33,9 +33,9 @@
 const double pi=4*atan(1);
 
 void testHand();
-void readCSVline(std::ifstream &file,int &id,int &hindex, int &sensor,int &JUNK,ors::Vector &p,ors::Vector &r);
-ors::Transformation getRotationT(ors::Transformation t);
-void showTransformation(ors::Transformation t);
+void readCSVline(std::ifstream &file,int &id,int &hindex, int &sensor,int &JUNK,mlr::Vector &p,mlr::Vector &r);
+mlr::Transformation getRotationT(mlr::Transformation t);
+void showTransformation(mlr::Transformation t);
 double maxZero(double n);
 int identity(bool b);
 
@@ -73,7 +73,7 @@ void TEST(Hand){
     int sid_to_fid[num_fings+1]={0,0,1,2,3,4}; // the first one is a dummy offset
 
     // ors objects and related init
-    ors::KinematicWorld G;
+    mlr::KinematicWorld G;
     OpenGL gl;
     init(G,gl,"models/hand.ors");
 
@@ -97,16 +97,16 @@ void TEST(Hand){
     arr J,JR,Jtmp;
     arr y,yR,Y[num_fings];
 
-    ors::Body *bStip,*bSorthoP,*bMorthoP,*bSorthoV,*bMorthoV;
+    mlr::Body *bStip,*bSorthoP,*bMorthoP,*bSorthoV,*bMorthoV;
 
     std::ifstream file("tracks/individual.csv");
 
     for(uint N=0;N<num_fings;N++)
         Y[N]=ARR(0,0,0);
 
-    ors::Vector p,r,sortho,mortho;
-    ors::Vector morthoV(0,.05,0);
-    ors::Transformation T_palm_set,T_set_palm,T_model_palm,T_model_set,T_set_track[num_fings];
+    mlr::Vector p,r,sortho,mortho;
+    mlr::Vector morthoV(0,.05,0);
+    mlr::Transformation T_palm_set,T_set_palm,T_model_palm,T_model_set,T_set_track[num_fings];
     int S,JUNK;
 
     // Misc.
@@ -218,8 +218,8 @@ void TEST(Hand){
                 bMorthoV->X.pos=y+(yR*.5);
 #endif
 
-                ors::Vector a;
-                ors::Vector b;
+                mlr::Vector a;
+                mlr::Vector b;
 #ifdef LOSS_ORTHO_ALIGN_TYPE1
                 // eval cost function contribution (distance between orthogonals)
                 a=yR;
@@ -321,8 +321,8 @@ void TEST(Hand){
         double tz=.485;
 
         Y[findex]=conv_vec2arr(
-                ors::Vector(sx*p.x,sy*p.y,sz*p.z)+
-                ors::Vector(tx,ty,tz)
+                mlr::Vector(sx*p.x,sy*p.y,sz*p.z)+
+                mlr::Vector(tx,ty,tz)
                 );
 
         T_set_track[findex].setZero();
@@ -334,7 +334,7 @@ void TEST(Hand){
     return;
 }
 
-void readCSVline(std::ifstream &file,int &sindex,int &hindex, int &sensor,int &JUNK,ors::Vector &p,ors::Vector &r) {
+void readCSVline(std::ifstream &file,int &sindex,int &hindex, int &sensor,int &JUNK,mlr::Vector &p,mlr::Vector &r) {
     std::stringstream line;
     char buff[256];
 
@@ -371,19 +371,19 @@ void readCSVline(std::ifstream &file,int &sindex,int &hindex, int &sensor,int &J
     r.set(x,y,z);
 }
 
-ors::Transformation getRotationT(ors::Transformation t) {
+mlr::Transformation getRotationT(mlr::Transformation t) {
     double m[16];
     t.getAffineMatrix(m);
     m[3]=m[7]=m[11]=0;
 
-    ors::Transformation out;
+    mlr::Transformation out;
     out.setAffineMatrix(m);
 
     return out;
 }
 
 
-void showTransformation(ors::Transformation t) {
+void showTransformation(mlr::Transformation t) {
     double m[16];
     t.getAffineMatrix(m);
     cout << "m: " << endl;

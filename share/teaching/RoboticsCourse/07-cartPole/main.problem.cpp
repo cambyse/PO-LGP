@@ -57,7 +57,7 @@ void glDrawCartPole(void *classP){
 #ifdef MLR_GL //FIXME: this should really use our GL abstraction, should it not?
   CartPoleState *s=(CartPoleState*)classP;
   double GLmatrix[16];
-  ors::Transformation f;
+  mlr::Transformation f;
   f.setZero();
   //cart
   f.addRelativeTranslation(s->x,0.,1.);

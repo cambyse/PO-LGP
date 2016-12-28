@@ -12,14 +12,14 @@ struct ControllerProcess;
 struct GraspISFTask:public TaskAbstraction{
   GraspObject *graspobj;
   GraspISFTask();
-  double phiAtFrame(ors::Transformation& X, arr &grad, double *sig);
+  double phiAtFrame(mlr::Transformation& X, arr &grad, double *sig);
   void plot_append_data(ControllerProcess*);
   void plot_all();
 
-  mlr::Array<ors::Shape*> tipsN;
-  mlr::Array<ors::Shape*> fingsN;
+  mlr::Array<mlr::Shape*> tipsN;
+  mlr::Array<mlr::Shape*> fingsN;
   arr  skins;
-  ors::Shape *palm; // palm center wrt wrist body
+  mlr::Shape *palm; // palm center wrt wrist body
 
   double skin_prec;
   bool open_skin;

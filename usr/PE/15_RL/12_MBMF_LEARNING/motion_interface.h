@@ -25,9 +25,9 @@ struct Motion_Interface
   MySystem S;
   arr q,qdot;
   arr Xdes,Vdes,Vact,Xact,FLact,Tact;
-  ors::KinematicWorld *world;
+  mlr::KinematicWorld *world;
 
-  Motion_Interface(ors::KinematicWorld &world_);
+  Motion_Interface(mlr::KinematicWorld &world_);
   ~Motion_Interface(){engine().close(S);}
   void executeTrajectory(arr &X, double duration);
   void gotoPosition(arr &x);

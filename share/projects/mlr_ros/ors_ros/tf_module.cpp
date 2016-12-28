@@ -13,21 +13,21 @@
 #include "ros_private.h"
 
 namespace {
-  tf::Vector3 convert(const ors::Vector& v) {
+  tf::Vector3 convert(const mlr::Vector& v) {
     return tf::Vector3(v.x, v.y, v.z);
   }
-  tf::Quaternion convert(const ors::Quaternion& v) {
+  tf::Quaternion convert(const mlr::Quaternion& v) {
     return tf::Quaternion(v.x, v.y, v.z, v.w);
   }
-  tf::Transform convert(const ors::Transformation& t) {
+  tf::Transform convert(const mlr::Transformation& t) {
     return tf::Transform(convert(t.rot), convert(t.pos));
   }
 }
 
-void TF_Sender::publish_bodies(const ros::Time& timestamp, const ors::KinematicWorld& w) {
+void TF_Sender::publish_bodies(const ros::Time& timestamp, const mlr::KinematicWorld& w) {
   std::ostringstream name;
 
-  for(ors::Body* b : w.bodies) {
+  for(mlr::Body* b : w.bodies) {
       name.str("");
       name << "body-" << b->index;
       tf_sender.sendTransform(tf::StampedTransform(convert(b->X), timestamp, "world",
@@ -42,7 +42,7 @@ struct sRosTf {
 };
 
 namespace {
-  visualization_msgs::Marker::_pose_type& convert(visualization_msgs::Marker::_pose_type& left, const ors::Transformation &t) {
+  visualization_msgs::Marker::_pose_type& convert(visualization_msgs::Marker::_pose_type& left, const mlr::Transformation &t) {
     left.position.x = t.pos.x;
     left.position.y = t.pos.y;
     left.position.z = t.pos.z;
@@ -61,14 +61,14 @@ MarkerSender::~MarkerSender() {
   node_handle.shutdown();
 }
 
-void MarkerSender::publish_bodies(const ros::Time& timestamp, const ors::KinematicWorld& w) {
+void MarkerSender::publish_bodies(const ros::Time& timestamp, const mlr::KinematicWorld& w) {
   visualization_msgs::Marker marker;
 
   marker.header.frame_id = "world";
   marker.header.stamp = timestamp;
   marker.ns = "ors";
 
-  for(ors::Body* b : w.bodies) {
+  for(mlr::Body* b : w.bodies) {
       marker.id = b->index;
       marker.type = visualization_msgs::Marker::SPHERE; //FIXME!
       marker.action = known_markers.find(marker.id) == known_markers.end() ?
@@ -102,7 +102,7 @@ void RosTf::step() {
   publish(world.get());
 }
 
-void RosTf::publish(const ors::KinematicWorld& w) {
+void RosTf::publish(const mlr::KinematicWorld& w) {
   ros::Time timestamp(ros::Time::now());
   s->tf.publish_bodies(timestamp, w);
   s->markers.publish_bodies(timestamp, w);

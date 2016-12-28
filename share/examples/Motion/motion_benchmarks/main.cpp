@@ -1,8 +1,8 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motionHeuristics.h>
-#include <Motion/pr2_heuristics.h>
+#include <Motion/motion.h>
+
 #include <Motion/taskMaps.h>
 #include <GL/glu.h>
 
@@ -35,7 +35,7 @@ void drawActTraj(void* classP){
 }
 
 void circle_BM(){
-  ors::KinematicWorld world("pr2_my_arm.ors");
+  mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
   MotionProblem MP(world);
@@ -99,7 +99,7 @@ void circle_BM(){
 }
 
 void star_BM(){
-  ors::KinematicWorld world("pr2_my_arm.ors");
+  mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
   MotionProblem MP(world);
@@ -213,7 +213,7 @@ void star_BM(){
 }
 
 void eight_BM(){
-  ors::KinematicWorld world("pr2_my_arm.ors");
+  mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
   MotionProblem MP(world);

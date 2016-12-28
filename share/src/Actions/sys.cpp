@@ -1,8 +1,8 @@
 #include "sys.h"
 
-void createSymbolsForShapes(RelationalMachine& RM, const ors::KinematicWorld& world){
+void createSymbolsForShapes(RelationalMachine& RM, const mlr::KinematicWorld& world){
   LOG(1) <<"Shape Symbols:";
-  for(ors::Shape *sh:world.shapes){
+  for(mlr::Shape *sh:world.shapes){
     LOG(1) <<"adding symbol for Shape " <<sh->name;
     RM.declareNewSymbol(sh->name.p);
   }

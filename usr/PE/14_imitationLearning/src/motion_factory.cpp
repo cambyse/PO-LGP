@@ -1,7 +1,7 @@
 #include "motion_factory.h"
 
 #include <Motion/motion.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Ors/ors_swift.h>
 #include <Geo/geo.h>
@@ -166,7 +166,7 @@ void MotionFactory::createScenes(uint sID,mlr::Array<Scene> &trainScenes, mlr::A
 void MotionFactory::createSceneTest(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   uint optTestParam = mlr::getParameter<uint>("optTestParam");
 
-  s.world = new ors::KinematicWorld("sceneTest");
+  s.world = new mlr::KinematicWorld("sceneTest");
   arr q, qdot;
   s.world->getJointState(q, qdot);
   makeConvexHulls(s.world->shapes);
@@ -181,8 +181,8 @@ void MotionFactory::createSceneTest(Scene &s, mlr::Array<CostWeight> &weights, u
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.2,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
   arr param = ARR(.5,1e3,1e3,1e3);
@@ -207,7 +207,7 @@ void MotionFactory::createSceneTest(Scene &s, mlr::Array<CostWeight> &weights, u
 
 
   if (optTestParam>0) {
-    t =s.MP->addTask("vec", new DefaultTaskMap(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+    t =s.MP->addTask("vec", new DefaultTaskMap(vecTMT, grasp->index,mlr::Vector(1.,0.,0)) );
     t->setCostSpecs(s.MP->T,s.MP->T,ARR(0.,0.,-1.),param(pC));
     weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T),1,3));
     pC++;
@@ -259,7 +259,7 @@ void MotionFactory::createSceneTest(Scene &s, mlr::Array<CostWeight> &weights, u
 }
 
 void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
-  s.world = new ors::KinematicWorld("sceneBox");
+  s.world = new mlr::KinematicWorld("sceneBox");
   arr q, qdot;
 
   arr ft;
@@ -268,9 +268,9 @@ void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weig
   arr targets = ft[i];
   cout << ft << endl;
   // set some visualization properties
-  s.world->getJointByName("table_box")->A.pos = ors::Vector(targets.subRange(0,2));
+  s.world->getJointByName("table_box")->A.pos = mlr::Vector(targets.subRange(0,2));
   s.world->getJointByName("table_box")->A.rot.setRad(targets(3)*M_PI/180);
-  s.world->getJointByName("table_boxTarget")->A.pos = ors::Vector(targets.subRange(4,6));
+  s.world->getJointByName("table_boxTarget")->A.pos = mlr::Vector(targets.subRange(4,6));
   s.world->getJointByName("table_boxTarget")->A.rot.setRad(targets(7)*M_PI/180);
   s.world->getJointByName("table_boxTargetVis")->A = s.world->getJointByName("table_boxTarget")->A;
   s.world->getJointByName("table_boxTargetVis2")->A = s.world->getJointByName("table_boxTarget")->A;
@@ -314,7 +314,7 @@ void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weig
   t->setCostSpecs(s.MP->T,s.MP->T, {0.}, param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T),1,3));
   pC++;
-  t = s.MP->addTask("vecT", new DefaultTaskMap(vecAlignTMT, *s.world, "box", ors::Vector(0.,1.,0), "boxTarget",ors::Vector(0.,1.,0)));
+  t = s.MP->addTask("vecT", new DefaultTaskMap(vecAlignTMT, *s.world, "box", mlr::Vector(0.,1.,0), "boxTarget",mlr::Vector(0.,1.,0)));
   t->setCostSpecs(s.MP->T,s.MP->T, {1.}, param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T),1,1));
   pC++;
@@ -331,7 +331,7 @@ void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weig
   t->setCostSpecs(pre,pre, ARR(s.world->getShapeByName("preContact")->X.pos), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(pre,pre),1,3));
   pC++;
-  t = s.MP->addTask("rotPre", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffC", ors::Vector(0.,0.,1.),"preContact",ors::Vector(1.,0.,0.)));
+  t = s.MP->addTask("rotPre", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffC", mlr::Vector(0.,0.,1.),"preContact",mlr::Vector(1.,0.,0.)));
   t->setCostSpecs(pre,pre, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(pre,pre),1,1));
   pC++;
@@ -383,7 +383,7 @@ void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weig
 void MotionFactory::createSceneTestRBF(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   uint optTestParam = mlr::getParameter<uint>("optTestParam");
 
-  s.world = new ors::KinematicWorld("sceneTest");
+  s.world = new mlr::KinematicWorld("sceneTest");
   arr q, qdot;
   s.world->getJointState(q, qdot);
 
@@ -396,9 +396,9 @@ void MotionFactory::createSceneTestRBF(Scene &s, mlr::Array<CostWeight> &weights
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.2,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
-  ors::Body *tar2 = s.world->getBodyByName("target2");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
+  mlr::Body *tar2 = s.world->getBodyByName("target2");
 
   /// Set task costs
   arr param = ARR(1e-2,1e5);
@@ -471,7 +471,7 @@ void MotionFactory::createSceneTestRBF(Scene &s, mlr::Array<CostWeight> &weights
 void MotionFactory::createSceneTestGaussian(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
   uint optTestParam = mlr::getParameter<uint>("optTestParam");
 
-  s.world = new ors::KinematicWorld("sceneTest");
+  s.world = new mlr::KinematicWorld("sceneTest");
   arr q, qdot;
   s.world->getJointState(q, qdot);
 
@@ -484,9 +484,9 @@ void MotionFactory::createSceneTestGaussian(Scene &s, mlr::Array<CostWeight> &we
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.2,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
-  ors::Body *tar2 = s.world->getBodyByName("target2");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
+  mlr::Body *tar2 = s.world->getBodyByName("target2");
 
   /// Set task costs
   arr param = ARR(1e-2,1e4,1e4,27.);
@@ -557,7 +557,7 @@ void MotionFactory::createSceneTestGaussian(Scene &s, mlr::Array<CostWeight> &we
 
 
 void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
-  s.world = new ors::KinematicWorld("model.kvg");
+  s.world = new mlr::KinematicWorld("model.kvg");
 
 //    s.world->watch(true);
   cout << "Joints: " << endl;
@@ -625,11 +625,11 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
     arr tmpPos,tmpVec;
     s.world->kinematicsPos(tmpPos,NoArr,s.world->getBodyByName("l_wrist_roll_link"),&s.world->getShapeByName("endeffL")->rel.pos);
     xDemTaskPos.append(~tmpPos);
-    ors::Vector vv = ors::Vector(0.,1.,0.);
+    mlr::Vector vv = mlr::Vector(0.,1.,0.);
     s.world->kinematicsVec(tmpVec,NoArr,s.world->getShapeByName("endeffL")->body,&vv);
     xDemTaskVec.append(~tmpVec);
     //          cout << t<< endl;
-    ors::Vector tmp = tmpPos-s.world->getShapeByName("target1")->X.pos;
+    mlr::Vector tmp = tmpPos-s.world->getShapeByName("target1")->X.pos;
     //          cout << tmp.length() << endl;
     tmpDist.append(tmp.length());
     //          cout << tmpVec << endl;
@@ -678,14 +678,14 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
   weights.append(CostWeight(CostWeight::Block,1,ARR(P,P),s.MP->T,3));
   pC++;
 
-  t =s.MP->addTask("vecC", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL",ors::Vector(1.,0.,0.),"handle",ors::Vector(-1.,0.,0.)));
+  t =s.MP->addTask("vecC", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL",mlr::Vector(1.,0.,0.),"handle",mlr::Vector(-1.,0.,0.)));
   t->setCostSpecs(C,C, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(C,C),s.MP->T,1));
   pC++;
 
-  ors::Vector vecTarget = ors::Vector(0., 0.9939, -0.1104);
+  mlr::Vector vecTarget = mlr::Vector(0., 0.9939, -0.1104);
   vecTarget.normalize();
-  t =s.MP->addTask("vecUF", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL",ors::Vector(0.,1.,0.),"handle",vecTarget));
+  t =s.MP->addTask("vecUF", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL",mlr::Vector(0.,1.,0.),"handle",vecTarget));
   t->setCostSpecs(U, F, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(U,F),s.MP->T,1));
   pC++;
@@ -752,7 +752,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 
 /*
 void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
-  s.world = new ors::KinematicWorld("model.kvg");
+  s.world = new mlr::KinematicWorld("model.kvg");
 
   cout << "Joints: " << endl;
   for (uint i = 0;i<s.world->joints.d0;i++){
@@ -808,7 +808,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 //    arr tmpPos,tmpVec;
 //    s.world->kinematicsPos(tmpPos,NoArr,s.world->getBodyByName("l_wrist_roll_link"),&s.world->getShapeByName("endeffL")->rel.pos);
 //    xDemTaskPos.append(~tmpPos);
-//    ors::Vector vv = ors::Vector(0.,0.,1.);
+//    mlr::Vector vv = mlr::Vector(0.,0.,1.);
 //    s.world->kinematicsVec(tmpVec,NoArr,s.world->getShapeByName("endeffL")->body,&vv);
 //    xDemTaskVec.append(~tmpVec);
 //  }
@@ -848,12 +848,12 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
   weights.append(CostWeight(CostWeight::Block,1,ARR(C,C+5),s.MP->T,3));
   pC++;
 
-  t = s.MP->addTask("vecC", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t = s.MP->addTask("vecC", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", mlr::Vector(0.,1.,0.),"handle",mlr::Vector(0.,0.,1.)));
   t->setCostSpecs(C, C, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(C,C),s.MP->T,1));
   pC++;
 
-  t = s.MP->addTask("vecC2", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", ors::Vector(0.,1.,0.),"handle",ors::Vector(0.,0.,1.)));
+  t = s.MP->addTask("vecC2", new TaskMap_Default(vecAlignTMT, *s.world, "endeffL", mlr::Vector(0.,1.,0.),"handle",mlr::Vector(0.,0.,1.)));
   t->setCostSpecs(U, F, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(U,F),s.MP->T,1));
   pC++;
@@ -867,7 +867,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 //  pC=pC+20;
 
 
-  t =s.MP->addTask("vecU", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL",ors::Vector(1.,0.,0.),"handle",ors::Vector(-1.,0.,0.)));
+  t =s.MP->addTask("vecU", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffL",mlr::Vector(1.,0.,0.),"handle",mlr::Vector(-1.,0.,0.)));
   t->setCostSpecs(C, C, ARR(1.), param(pC));
   weights.append(CostWeight(CostWeight::Block,1,ARR(C,C),s.MP->T,1));
   pC++;
@@ -930,7 +930,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 
 /*
 void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
-  s.world = new ors::KinematicWorld("scene");
+  s.world = new mlr::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
   makeConvexHulls(s.world->shapes);
@@ -947,8 +947,8 @@ void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.1,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
   arr param = ARR(1.,1e2);
@@ -1013,7 +1013,7 @@ void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint
 }
 
 void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
-  s.world = new ors::KinematicWorld("scene");
+  s.world = new mlr::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
   makeConvexHulls(s.world->shapes);
@@ -1030,8 +1030,8 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.1,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
 //  arr param = ARR(1.,1e3,80.);
@@ -1114,7 +1114,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
 
 void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint i)
 {
-  s.world = new ors::KinematicWorld("scene");
+  s.world = new mlr::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
   makeConvexHulls(s.world->shapes);
@@ -1131,8 +1131,8 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.1,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
   arr param = ARR(1.,1e2,90.,1.5);
@@ -1188,7 +1188,7 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
 
 void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint i)
 {
-  s.world = new ors::KinematicWorld("scene");
+  s.world = new mlr::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
   makeConvexHulls(s.world->shapes);
@@ -1206,12 +1206,12 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   FILE("data/push2m2_contact_idx") >> contactIdxDem;
 
   arr refFrame = ARR(s.world->getBodyByName("torso_lift_link")->X.pos);
-  ors::Quaternion refFrameQuat = s.world->getBodyByName("torso_lift_link")->X.rot;
+  mlr::Quaternion refFrameQuat = s.world->getBodyByName("torso_lift_link")->X.rot;
 
   // compute mean orientation of object
   arr mObjQuat = sum(fabs(markerQuatDem),0)/double(markerQuatDem.d0);
   mObjQuat = mObjQuat %(markerQuatDem[0]/fabs(markerQuatDem[0]));
-  ors::Quaternion objQuat = refFrameQuat*ors::Quaternion(mObjQuat);//markerQuatDem[0]);
+  mlr::Quaternion objQuat = refFrameQuat*mlr::Quaternion(mObjQuat);//markerQuatDem[0]);
 
   arr markerOffset = objQuat.getArr()*ARR(-0.126,0.0,0.0415);
 
@@ -1249,7 +1249,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
     arr tmpPos,tmpVec;
     s.world->kinematicsPos(tmpPos,NoArr,s.world->getBodyByName("endeffR"));
     xDemTaskPos.append(~tmpPos);
-    ors::Vector vv = ors::Vector(1.,0.,0.);
+    mlr::Vector vv = mlr::Vector(1.,0.,0.);
     s.world->kinematicsVec(tmpVec,NoArr,s.world->getBodyByName("endeffR"),&vv);
     xDemTaskVec.append(~tmpVec);
 
@@ -1281,12 +1281,12 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   s.MP->x0 = q0;
   s.world->getBodyByName("drawer1")->X.pos = objPos0;
 
-  ors::Shape *grasp = s.world->getShapeByName("endeffR");
-  ors::Body *tar = s.world->getBodyByName("drawer1");
+  mlr::Shape *grasp = s.world->getShapeByName("endeffR");
+  mlr::Body *tar = s.world->getBodyByName("drawer1");
 
   // add graph operator
-  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
-  op1->symbol = ors::KinematicSwitch::addRigid;
+  mlr::KinematicSwitch *op1 = new mlr::KinematicSwitch();
+  op1->symbol = mlr::KinematicSwitch::addRigid;
   op1->timeOfApplication = contactTime;
   op1->fromId = s.world->getBodyByName("endeffR")->index;
   op1->toId = s.world->getBodyByName("drawer1")->index;
@@ -1307,11 +1307,11 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   c =s.MP->addTask("posC", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(contactTime,contactTime, objPos0, param(N++));
 
-  c =s.MP->addTask("vecT", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =s.MP->addTask("vecT", new TaskMap_Default(vecTMT, grasp->index,mlr::Vector(1.,0.,0)) );
   c->setCostSpecs(s.MP->T,s.MP->T, xDemTaskVec[s.MP->T], param(N++));
   cout << "xDemTaskVec[s.MP->T]: "<< xDemTaskVec[s.MP->T] << endl;
 
-  c =s.MP->addTask("vecC", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =s.MP->addTask("vecC", new TaskMap_Default(vecTMT, grasp->index,mlr::Vector(1.,0.,0)) );
   c->setCostSpecs(contactTime,contactTime, xDemTaskVec[s.MP->T], param(N++));
 
   c =s.MP->addTask("velT", new TaskMap_Default(posTMT, grasp->index) );
@@ -1354,7 +1354,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   //    param.append(ARR(1.));
   //    c->active=true;
 
-  //    c =s.MP->addTask(STRING("vec"<<idx), new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  //    c =s.MP->addTask(STRING("vec"<<idx), new TaskMap_Default(vecTMT, grasp->index,mlr::Vector(1.,0.,0)) );
   //    c->setCostSpecs(costGrid(idx),costGrid(idx), xDemTaskVec[costGrid(idx)], 1e2);
   //    param.append(ARR(1.));
   //    c->active=true;
@@ -1405,7 +1405,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
 
 
 void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint i) {
-  s.world = new ors::KinematicWorld("scene");
+  s.world = new mlr::KinematicWorld("scene");
   arr q, qdot;
   s.world->getJointState(q, qdot);
   makeConvexHulls(s.world->shapes);
@@ -1422,8 +1422,8 @@ void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint
   //-- setup new motion problem
   s.world->getBodyByName("target")->X.pos += double(i)*ARR(0.,0.1,0.);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *tar = s.world->getBodyByName("target");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *tar = s.world->getBodyByName("target");
 
   /// Set task costs
   arr param = ARR(1.,1e3);
@@ -1497,34 +1497,34 @@ arr markerQuat0; markerQuat0 << FILE(STRING(demoPath<<"_markerQuat0").p);
 arr refFrame = ARR(s.world->getBodyByName("torso_lift_link")->X.pos);
 
 
-ors::Quaternion torso_rot = s.world->getBodyByName("torso_lift_link")->X.rot;
+mlr::Quaternion torso_rot = s.world->getBodyByName("torso_lift_link")->X.rot;
 s.world->getBodyByName("marker")->X.pos = ARR(1.,1.,0.1);
 s.world->getBodyByName("marker")->X.rot = torso_rot;
 
-ors::Quaternion world_rot = s.world->getBodyByName("world")->X.rot;
+mlr::Quaternion world_rot = s.world->getBodyByName("world")->X.rot;
 s.world->getBodyByName("marker2")->X.pos = ARR(1.,1.,.5);
 s.world->getBodyByName("marker2")->X.rot = world_rot;
 
-ors::Quaternion obj_rot = s.world->getBodyByName("door")->X.rot;
+mlr::Quaternion obj_rot = s.world->getBodyByName("door")->X.rot;
 s.world->getBodyByName("marker3")->X.pos = ARR(1.,1.,1.);
 s.world->getBodyByName("marker3")->X.rot = obj_rot;
 
-ors::Quaternion door1_rot = ors::Quaternion(markerQuat0[1]);
+mlr::Quaternion door1_rot = mlr::Quaternion(markerQuat0[1]);
 s.world->getBodyByName("marker4")->X.pos = ARR(1.,1.,1.5);
 s.world->getBodyByName("marker4")->X.rot = door1_rot;
 
-ors::Quaternion door1_trans = torso_rot*door1_rot;
+mlr::Quaternion door1_trans = torso_rot*door1_rot;
 s.world->getBodyByName("marker5")->X.pos = ARR(1.,1.,2.);
 s.world->getBodyByName("marker5")->X.rot = door1_trans;
 
-ors::Quaternion door1_xRot; door1_xRot.setRad(M_PI_2,ors::Vector(1.,0.,0.));
-ors::Quaternion door1_trans2 = door1_xRot*door1_trans;
+mlr::Quaternion door1_xRot; door1_xRot.setRad(M_PI_2,mlr::Vector(1.,0.,0.));
+mlr::Quaternion door1_trans2 = door1_xRot*door1_trans;
 s.world->getBodyByName("marker6")->X.pos = ARR(1.,1.,2.5);
 s.world->getBodyByName("marker6")->X.rot = door1_trans2;
 
-ors::Quaternion door1_xRot2; door1_xRot2.setRad(M_PI_2,door1_trans2.getY());
-ors::Quaternion door1_trans3 = door1_xRot2*door1_trans2;
-ors::Quaternion door1_zRot; door1_zRot.setRad(M_PI_2,door1_trans3.getZ());
+mlr::Quaternion door1_xRot2; door1_xRot2.setRad(M_PI_2,door1_trans2.getY());
+mlr::Quaternion door1_trans3 = door1_xRot2*door1_trans2;
+mlr::Quaternion door1_zRot; door1_zRot.setRad(M_PI_2,door1_trans3.getZ());
 door1_trans3 =door1_trans3*door1_zRot;
 s.world->getBodyByName("marker7")->X.pos = ARR(1.,1.,3.);
 s.world->getBodyByName("marker7")->X.rot = door1_trans3;

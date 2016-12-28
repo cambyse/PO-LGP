@@ -35,13 +35,14 @@ struct OdeInterface;
 
 //===========================================================================
 
-namespace ors {
+
+namespace mlr{
+
 /// @addtogroup ors_basic_data_structures
 /// @{
-enum ShapeType { noneST=-1, boxST=0, sphereST, cappedCylinderST, meshST, cylinderST, markerST, SSBoxST, pointCloudST, ssCvxST, ssBoxST };
+enum ShapeType { ST_none=-1, ST_box=0, ST_sphere, ST_capsule, ST_mesh, ST_cylinder, ST_marker, ST_retired_SSBox, ST_pointCloud, ST_ssCvx, ST_ssBox };
 enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall=11, JT_phiTransXY=12, JT_glue, JT_free };
-enum BodyType  { noneBT=-1, dynamicBT=0, kinematicBT, staticBT };
-const char* name(JointType jt);
+enum BodyType  { BT_none=-1, BT_dynamic=0, BT_kinematic, BT_static };
 /// @}
 
 struct Joint;
@@ -54,16 +55,16 @@ struct KinematicSwitch;
 
 //===========================================================================
 
-typedef mlr::Array<ors::Joint*> JointL;
-typedef mlr::Array<ors::Shape*> ShapeL;
-typedef mlr::Array<ors::Body*>  BodyL;
-typedef mlr::Array<ors::Proxy*> ProxyL;
-typedef mlr::Array<ors::KinematicSwitch*> KinematicSwitchL;
-typedef mlr::Array<ors::KinematicWorld*> WorldL;
+typedef mlr::Array<mlr::Joint*> JointL;
+typedef mlr::Array<mlr::Shape*> ShapeL;
+typedef mlr::Array<mlr::Body*>  BodyL;
+typedef mlr::Array<mlr::Proxy*> ProxyL;
+typedef mlr::Array<mlr::KinematicSwitch*> KinematicSwitchL;
+typedef mlr::Array<mlr::KinematicWorld*> WorldL;
 
 //===========================================================================
 
-namespace ors {
+namespace mlr {
 /// @addtogroup ors_basic_data_structures
 /// @{
 
@@ -80,7 +81,7 @@ struct Body {
   Graph ats;   ///< list of any-type attributes
   
   //dynamic properties
-  BodyType type;          ///< is globally fixed?
+  Enum<BodyType> type;          ///< is globally fixed?
   double mass;           ///< its mass
   Matrix inertia;      ///< its inertia tensor
   Vector com;          ///< its center of gravity
@@ -118,7 +119,7 @@ struct Joint {
   JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
   mlr::String name;      ///< name
-  JointType type;       ///< joint type
+  Enum<JointType> type;       ///< joint type
   Transformation A;     ///< transformation from parent body to joint (attachment, usually static)
   Transformation Q;     ///< transformation within the joint (usually dynamic)
   Transformation B;     ///< transformation from joint to child body (attachment, usually static)
@@ -141,7 +142,7 @@ struct Joint {
   void reset();
   void parseAts();
   uint qDim();
-  void applyTransformation(ors::Transformation& f, const arr& q);
+  void applyTransformation(mlr::Transformation& f, const arr& q);
   void write(std::ostream& os) const;
   void read(std::istream& is);
   Joint &data() { return *this; }
@@ -158,7 +159,7 @@ struct Shape : GLDrawer{
   mlr::String name;     ///< name
   Transformation X;
   Transformation rel;  ///< relative translation/rotation of the bodies geometry
-  ShapeType type;
+  Enum<ShapeType> type;
   double size[4];  //TODO: obsolete: directly translate to mesh?
   double color[3]; //TODO: obsolete: directly translate to mesh?
   Mesh mesh, sscCore;
@@ -182,7 +183,7 @@ struct Shape : GLDrawer{
 /// as return value from external collision libs
 struct Proxy {
   //TODO: have a ProxyL& L as above...
-  int a;              ///< index of shape A (-1==world) //TODO: would it be easier if this were ors::Shape* ? YES -> Do it!
+  int a;              ///< index of shape A (-1==world) //TODO: would it be easier if this were mlr::Shape* ? YES -> Do it!
   int b;              ///< index of shape B
   Vector posA, cenA;  ///< contact or closest point position on surface of shape A (in world coordinates)
   Vector posB, cenB;  ///< contact or closest point position on surface of shape B (in world coordinates)
@@ -212,11 +213,11 @@ struct KinematicWorld : GLDrawer{
   
   /// @name constructors
   KinematicWorld();
-  KinematicWorld(const ors::KinematicWorld& other);
+  KinematicWorld(const mlr::KinematicWorld& other);
   KinematicWorld(const char* filename);
   virtual ~KinematicWorld();
-  void operator=(const ors::KinematicWorld& G){ copy(G); }
-  void copy(const ors::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy=false);
+  void operator=(const mlr::KinematicWorld& G){ copy(G); }
+  void copy(const mlr::KinematicWorld& G, bool referenceMeshesAndSwiftOnCopy=false);
   
   /// @name initializations
   void init(const char* filename);
@@ -243,7 +244,7 @@ struct KinematicWorld : GLDrawer{
   //-- low level: don't use..
   void revertJoint(Joint *e);
   void reconfigureRoot(Body *root);  ///< n becomes the root of the kinematic tree; joints accordingly reversed; lists resorted
-  void transformJoint(Joint *e, const ors::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
+  void transformJoint(Joint *e, const mlr::Transformation &f); ///< A <- A*f, B <- f^{-1}*B
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
   void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); analyzeJointStateDimensions(); }
@@ -278,12 +279,12 @@ struct KinematicWorld : GLDrawer{
 
   /// @name kinematics
   void kinematicsPos (arr& y, arr& J, Body *b, const Vector& rel=NoVector) const; //TODO: make vector& not vector*
-  void kinematicsVec (arr& y, arr& J, Body *b, const ors::Vector& vec=NoVector) const;
+  void kinematicsVec (arr& y, arr& J, Body *b, const mlr::Vector& vec=NoVector) const;
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
-  void hessianPos(arr& H, Body *b, ors::Vector *rel=0) const;
+  void hessianPos(arr& H, Body *b, mlr::Vector *rel=0) const;
   void axesMatrix(arr& J, Body *b) const;
-  void kinematicsRelPos (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2, const ors::Vector& vec2) const;
-  void kinematicsRelVec (arr& y, arr& J, Body *b1, const ors::Vector& vec1, Body *b2) const;
+  void kinematicsRelPos (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2, const mlr::Vector& vec2) const;
+  void kinematicsRelVec (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2) const;
   void kinematicsRelRot (arr& y, arr& J, Body *b1, Body *b2) const;
 
   void kinematicsProxyDist(arr& y, arr& J, Proxy *p, double margin=.02, bool useCenterDist=true, bool addValues=false) const;
@@ -291,12 +292,12 @@ struct KinematicWorld : GLDrawer{
   void kinematicsProxyCost(arr& y, arr& J, double margin=.02, bool useCenterDist=true) const;
   void kinematicsProxyConstraint(arr& g, arr& J, Proxy *p, double margin=.02) const;
   void kinematicsContactConstraints(arr& y, arr &J) const; //TODO: deprecated?
-  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const ors::Vector& rel, Shape *s) const;
+  void kinematicsPos_wrtFrame(arr& y, arr& J, Body *b, const mlr::Vector& rel, Shape *s) const;
   void getLimitsMeasure(arr &x, const arr& limits, double margin=.1) const;
   void kinematicsLimitsCost(arr& y, arr& J, const arr& limits, double margin=.1) const;
 
   /// @name High level (inverse) kinematics
-  void inverseKinematicsPos(Body& body, const arr& ytarget, const ors::Vector& rel_offset=NoVector, int max_iter=3);
+  void inverseKinematicsPos(Body& body, const arr& ytarget, const mlr::Vector& rel_offset=NoVector, int max_iter=3);
 
   /// @name dynamics
   void fwdDynamics(arr& qdd, const arr& qd, const arr& tau);
@@ -310,15 +311,15 @@ struct KinematicWorld : GLDrawer{
 
   double getEnergy();
   double getJointErrors() const;
-  ors::Proxy* getContact(uint a, uint b) const;
+  mlr::Proxy* getContact(uint a, uint b) const;
 
   /// @name get infos
   arr getHmetric() const;
 
   /// @name forces and gravity
   void clearForces();
-  void addForce(ors::Vector force, Body *n);
-  void addForce(ors::Vector force, Body *n, ors::Vector pos);
+  void addForce(mlr::Vector force, Body *n);
+  void addForce(mlr::Vector force, Body *n, mlr::Vector pos);
   void contactsToForces(double hook=.01, double damp=.0003);
   void gravityToForces();
   void frictionToForces(double coeff);
@@ -348,36 +349,37 @@ struct KinematicWorld : GLDrawer{
 
 //===========================================================================
 
-struct KinematicSwitch{
-  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo };
-  OperatorSymbol symbol;
-  JointType jointType;
+struct KinematicSwitch{ //TODO: move to src/Motion
+  enum OperatorSymbol{ none=-1, deleteJoint=0, addJointZero, addJointAtFrom, addJointAtTo, addActuated, addSliderMechanism };
+  Enum<OperatorSymbol> symbol;
+  Enum<JointType> jointType;
   uint timeOfApplication;
   uint fromId, toId;
-  ors::Transformation jA,jB;
+  mlr::Transformation jA,jB;
   KinematicSwitch();
+  void setTimeOfApplication(double time, bool before, int stepsPerPhase, uint T);
 //  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
   void temporallyAlign(const KinematicWorld& Gprevious, KinematicWorld& G, bool copyFromBodies);
   mlr::String shortTag(const KinematicWorld* G) const;
   void write(std::ostream& os) const;
-  static KinematicSwitch* newSwitch(const Node *specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
-  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0, const ors::Transformation& jFrom=NoTransformation, const ors::Transformation& jTo=NoTransformation);
+  static KinematicSwitch* newSwitch(const Node *specs, const mlr::KinematicWorld& world, int stepsPerPhase, uint T);
+  static KinematicSwitch* newSwitch(const mlr::String& type, const char* ref1, const char* ref2, const mlr::KinematicWorld& world, uint _timeOfApplication, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
   static const char* name(OperatorSymbol s);
 };
 /// @} // END of group ors_basic_data_structures
 } // END ors namespace
-stdOutPipe(ors::KinematicSwitch)
+stdOutPipe(mlr::KinematicSwitch)
 
 //===========================================================================
 //
 // constants
 //
 
-extern ors::Body& NoBody;
-extern ors::Shape& NoShape;
-extern ors::Joint& NoJoint;
-extern ors::KinematicWorld& NoWorld;
+extern mlr::Body& NoBody;
+extern mlr::Shape& NoShape;
+extern mlr::Joint& NoJoint;
+extern mlr::KinematicWorld& NoWorld;
 
 
 //===========================================================================
@@ -385,7 +387,7 @@ extern ors::KinematicWorld& NoWorld;
 // operators
 //
 
-namespace ors {
+namespace mlr {
 //std::istream& operator>>(std::istream&, Body&);
 //std::istream& operator>>(std::istream&, Joint&);
 //std::istream& operator>>(std::istream&, Shape&);
@@ -401,14 +403,14 @@ stdPipes(KinematicWorld);
 // OpenGL static draw functions
 //
 
-namespace ors {
+namespace mlr {
 void glDrawGraph(void *classP);
 }
 
 #ifndef MLR_ORS_ONLY_BASICS
 
 uintA stringListToShapeIndices(const mlr::Array<const char*>& names, const ShapeL& shapes);
-uintA shapesToShapeIndices(const mlr::Array<ors::Shape*>& shapes);
+uintA shapesToShapeIndices(const mlr::Array<mlr::Shape*>& shapes);
 
 //===========================================================================
 //
@@ -419,17 +421,17 @@ void lib_ors();
 void makeConvexHulls(ShapeL& shapes);
 void makeSSBoxApproximations(ShapeL& shapes);
 void computeMeshNormals(ShapeL& shapes);
-double forceClosureFromProxies(ors::KinematicWorld& C, uint bodyIndex,
+double forceClosureFromProxies(mlr::KinematicWorld& C, uint bodyIndex,
                                double distanceThreshold=0.01,
                                double mu=.5,     //friction coefficient
                                double discountTorques=1.);  //friction coefficient
 
-void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
-void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
-void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
-void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
-void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
-void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const ors::KinematicWorld& to, const ors::KinematicWorld& from);
+void transferQbetweenTwoWorlds(arr& qto, const arr& qfrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from);
+void transferQDotbetweenTwoWorlds(arr& qDotTo, const arr& qDotFrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from);
+void transferKpBetweenTwoWorlds(arr& KpTo, const arr& KpFrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from);
+void transferKdBetweenTwoWorlds(arr& KdTo, const arr& KdFrom, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from);
+void transferU0BetweenTwoWorlds(arr& u0To, const arr& u0From, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from);
+void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const mlr::KinematicWorld& to, const mlr::KinematicWorld& from);
 
 //===========================================================================
 // routines using external interfaces.
@@ -447,15 +449,15 @@ extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawM
 extern double orsDrawAlpha;
 extern uint orsDrawLimit;
 
-void displayState(const arr& x, ors::KinematicWorld& G, const char *tag);
-void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
-inline void displayTrajectory(const arr& x, int steps, ors::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false){
+void displayState(const arr& x, mlr::KinematicWorld& G, const char *tag);
+void displayTrajectory(const arr& x, int steps, mlr::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
+inline void displayTrajectory(const arr& x, int steps, mlr::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false){
   displayTrajectory(x, steps, G, {}, tag, delay, dim_z, copyG);
 }
-void editConfiguration(const char* orsfile, ors::KinematicWorld& G);
-void animateConfiguration(ors::KinematicWorld& G, struct Inotify *ino=NULL);
-//void init(ors::KinematicWorld& G, OpenGL& gl, const char* orsFile);
-void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
+void editConfiguration(const char* orsfile, mlr::KinematicWorld& G);
+void animateConfiguration(mlr::KinematicWorld& G, struct Inotify *ino=NULL);
+//void init(mlr::KinematicWorld& G, OpenGL& gl, const char* orsFile);
+void bindOrsToOpenGL(mlr::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
 /// @} // END of group ors_interface_opengl
 
 
@@ -463,16 +465,16 @@ void bindOrsToOpenGL(ors::KinematicWorld& graph, OpenGL& gl); //TODO: should be 
 /// @defgroup ors_interface_featherstone FEATHERSTONE Interface.
 /// @todo is all the following stuff really featherstone? MT: yes
 /// @{
-namespace ors {
+namespace mlr {
 struct Link {
   int type;
   int qIndex;
   int parent;
-  ors::Transformation
+  mlr::Transformation
   X, A, Q;
-  ors::Vector com, force, torque;
+  mlr::Vector com, force, torque;
   double mass;
-  ors::Matrix inertia;
+  mlr::Matrix inertia;
   uint dof() { if(type>=JT_hingeX && type<=JT_transZ) return 1; else return 0; }
   
   arr _h, _A, _Q, _I, _f; //featherstone types
@@ -486,7 +488,7 @@ struct Link {
   }
 };
 
-typedef mlr::Array<ors::Link> LinkTree;
+typedef mlr::Array<mlr::Link> LinkTree;
 
 void equationOfMotion(arr& M, arr& F, const LinkTree& tree,  const arr& qd);
 void fwdDynamics_MF(arr& qdd, const LinkTree& tree, const arr& qd, const arr& u);
@@ -495,17 +497,17 @@ void fwdDynamics_aba_1D(arr& qdd, const LinkTree& tree, const arr& qd, const arr
 void invDynamics(arr& tau, const LinkTree& tree, const arr& qd, const arr& qdd);
 
 }
-stdOutPipe(ors::Link);
+stdOutPipe(mlr::Link);
 
-void GraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
-void updateGraphToTree(ors::LinkTree& tree, const ors::KinematicWorld& C);
+void GraphToTree(mlr::LinkTree& tree, const mlr::KinematicWorld& C);
+void updateGraphToTree(mlr::LinkTree& tree, const mlr::KinematicWorld& C);
 /// @}
 
 
 //===========================================================================
 /// @defgroup ors_interface_blender Blender interface.
 /// @{
-inline void readBlender(const char* filename, ors::Mesh& mesh, ors::KinematicWorld& bl){ NICO }
+inline void readBlender(const char* filename, mlr::Mesh& mesh, mlr::KinematicWorld& bl){ NICO }
 /// @}
 
 /// @} // END of group ors_interfaces

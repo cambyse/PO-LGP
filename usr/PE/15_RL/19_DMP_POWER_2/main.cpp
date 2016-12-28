@@ -3,7 +3,7 @@
 #include <Core/array_t.h>
 #include <Gui/plot.h>
 #include <Motion/motion.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Motion/taskMaps.h>
 #include <Motion/dynamicMovementPrimitives.h>
 #include <Optim/optimization.h>
@@ -27,13 +27,13 @@ struct Power_DMP {
   double duration;
   uintA s_ReturnI;
   double dt;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
 
-  Power_DMP(arr &xDemo_, double duration_,uint n_base_,double var_,ors::KinematicWorld &world_, arr &Xn, arr &constraintCP_) {
+  Power_DMP(arr &xDemo_, double duration_,uint n_base_,double var_,mlr::KinematicWorld &world_, arr &Xn, arr &constraintCP_) {
     xDemo = xDemo_;
     duration = duration_;
     n_base = n_base_;
-    world = new ors::KinematicWorld(world_);
+    world = new mlr::KinematicWorld(world_);
     constraintCP = constraintCP_;
 
     // compute endeffector trajectory
@@ -87,7 +87,7 @@ struct Power_DMP {
 
     Task *t;
     t = MP->addTask("tra", new TransitionTaskMap(*world));
-    ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+    ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
     t->map.order=2;
     t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 
@@ -219,7 +219,7 @@ void evaluate(arr &Xn){
 
   Task *t;
   t = MP->addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
   t->map.order=2;
   t->setCostSpecs(0, MP->T, ARR(0.), 1e-1);
 
@@ -275,7 +275,7 @@ int main(int argc,char **argv){
   double duration = mlr::getParameter<double>("duration");
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
 
-  ors::KinematicWorld world(STRING("model.kvg"));
+  mlr::KinematicWorld world(STRING("model.kvg"));
   DoorTask *task = new DoorTask(world);
   Motion_Interface *mi;
   if (useRos) mi = new Motion_Interface(world);

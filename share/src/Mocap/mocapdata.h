@@ -43,7 +43,7 @@ struct MocapID {
   int sensor_rn(const char *sensor) const;
   const String &sensor_type(const char *sensor) const;
   const String &sensor_mesh(const char *sensor) const;
-  const ors::Transformation &sensor_meshtr(const char *sensor) const;
+  const mlr::Transformation &sensor_meshtr(const char *sensor) const;
   const String &root() const;
 
 
@@ -140,7 +140,7 @@ struct MocapRec: Parametric {
   MocapSeq *seq(const char *sens1, const char *sens2);
   MocapSeqL seqlist(const char *obj1 = nullptr, const char *obj2 = nullptr);
 
-  ors::KinematicWorld *newKW();
+  mlr::KinematicWorld *newKW();
 
   void write(std::ostream &os = std::cout) const;
 };

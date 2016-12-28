@@ -11,17 +11,17 @@ void drawEnv(void*){
   glStandardLight(NULL);
   //glDrawFloor(4.,1,1,1);
 }
-void init(ors::KinematicWorld& ors,OpenGL& gl,const char *filename){
+void init(mlr::KinematicWorld& ors,OpenGL& gl,const char *filename){
   ors.init(filename);
   
   gl.add(drawEnv,0);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.setClearColors(1.,1.,1.,1.);
   //gl.setPosition(.0,0.,10.);
   //gl.focus(.0,0,0);
 }
 
-void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,uint T){
+void defineReachControlVariables(SocSystem_Ors& soci,mlr::KinematicWorld& ors,uint T){
   //set task variables
   TaskVariable *x0 = new TaskVariable("finger-tip",ors,posTVT ,"effector","<t(0 0 .2)>",0,0,0);
   TaskVariable *x1 = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
@@ -43,7 +43,7 @@ void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,ui
 }
 
 void TEST(Soc){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   SocSystem_Ors soci;
@@ -67,7 +67,7 @@ void TEST(Soc){
 }
 
 /*struct soc::OrsSocWorkspace{
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   SwiftInterface *swift;
   ControlVariableList CVlist;
   
@@ -78,7 +78,7 @@ void TEST(Soc){
 };*/
 
 void TEST(Gradients){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   SocSystem_Ors soci;
@@ -153,7 +153,7 @@ void TEST(Gradients){
 }
 
 void TEST(Plan){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   SocSystem_Ors soci;

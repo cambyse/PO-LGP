@@ -11,15 +11,13 @@ share/src/Core/geo.h
 share/src/Core/geo.cpp
 share/src/Core/thread.h
 share/src/Core/thread.cpp
-share/src/Core/Makefile.gof
-share/src/Core/makefile
+share/src/Core/Makefile
 
 share/src/Gui/opengl.cpp
 share/src/Gui/opengl_gtk.cxx
 share/src/Gui/opengl.h
 share/src/Gui/gtk.h
 share/src/Gui/gtk.cpp
-share/src/Gui/Makefile.gof
-share/src/Gui/makefile
+share/src/Gui/Makefile
 
 share/examples/Gui/opengl-mini

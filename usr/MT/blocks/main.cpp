@@ -9,23 +9,23 @@
 #include <Optim/constrained.h>
 #include <Ors/ors_swift.h>
 
-void createWorld(ors::KinematicWorld &G){
+void createWorld(mlr::KinematicWorld &G){
   G.init("blocks.kvg");
 
   int K=1;
   for(int x=-K-1;x<=K+1;x++) for(int y=-K;y<=K;y++){
-    ors::Body *b = new ors::Body(G);
+    mlr::Body *b = new mlr::Body(G);
     b->X.pos.set(.3*x, .3*y, 1.15);
-    ors::Shape *s = new ors::Shape(G, *b);
-    s->type=ors::sphereST;
+    mlr::Shape *s = new mlr::Shape(G, *b);
+    s->type=mlr::sphereST;
     s->size[0]=s->size[1]=.1; s->size[2]=.2; s->size[3]=.08;
     s->color[0]=.9; s->color[1]=s->color[2]=.2;
     s->parseAts();
     s->cont = true;
 
-    ors::Joint *j = new ors::Joint(G, G.bodies(0), b);
+    mlr::Joint *j = new mlr::Joint(G, G.bodies(0), b);
     j->X = b->X;
-    j->type = ors::JT_trans3;
+    j->type = mlr::JT_trans3;
   }
   G.calc_missingAB_from_BodyAndJointFrames();
   G.getJointStateDimension();
@@ -36,7 +36,7 @@ void createWorld(ors::KinematicWorld &G){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   createWorld(G);
 
   arr q0,qT;
@@ -71,7 +71,7 @@ int main(int argc,char** argv){
   //-- create the Optimization problem (of type kOrderMarkov)
   MotionProblemFunction MF(MP);
   Convert CP(MF);
-  UnconstrainedProblem UCP(CP);
+  LagrangianProblem UCP(CP);
   UCP.mu = 10.;
 
   //gradient check

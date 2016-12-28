@@ -3,7 +3,7 @@
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <RosCom/actions.h>
 #include <RosCom/actionMachine.h>
@@ -21,7 +21,7 @@
 
 //VideoEncoder_libav_simple *vid;
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const double& height, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const double& height, uint horizon){
     /////////////
 
 
@@ -64,17 +64,17 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
 
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
+  LagrangianProblem LagrangianP(ConstrainedP);
+  LagrangianP.mu = 10.;
 
   for(uint k=0;k<5;k++){
-    optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
+    optNewton(x, LagrangianP, OPT(verbose=0, stopIters=100, damping=1e-3, stopTolerance=1e-4, maxStep=.5));
     P.costReport(false);
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.aulaUpdate(.9,x);
+    LagrangianP.aulaUpdate(.9,x);
 
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
+    P.dualMatrix = LagrangianP.lambda;
+    LagrangianP.mu *= 2.;
 
   }
   //get the final optimal cost at each time slice
@@ -92,8 +92,8 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
   uint index = 0;
   dual.resize(x.d0);
   if(&dual) {
-      for(int i=0;i<UnConstrainedP.lambda.d0;i=i+2){
-          dual(index) = UnConstrainedP.lambda(i);
+      for(int i=0;i<LagrangianP.lambda.d0;i=i+2){
+          dual(index) = LagrangianP.lambda(i);
 
           index++;
       }
@@ -101,7 +101,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 }
 
   /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, const arr& dual, int num){
+void POMDPExecution(mlr::KinematicWorld& world, const arr& x, const arr& y, const arr& dual, int num){
 
 
     arr q, qdot;
@@ -109,10 +109,10 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
 
     ofstream data(STRING("data-"<<num<<".dat"));
 
-    ors::Shape *endeff = world.getShapeByName("endeffR");
-    ors::Shape *true_target = world.getShapeByName("truetarget");
-    ors::Body *est_target = world.getBodyByName("target");
-    ors::Body *table = world.getBodyByName("table");
+    mlr::Shape *endeff = world.getShapeByName("endeffR");
+    mlr::Shape *true_target = world.getShapeByName("truetarget");
+    mlr::Body *est_target = world.getBodyByName("target");
+    mlr::Body *table = world.getBodyByName("table");
 
 
     double mean_table_height = table->X.pos.z;
@@ -223,17 +223,17 @@ void POMDPExecution(ors::KinematicWorld& world, const arr& x, const arr& y, cons
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
 void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, const arr& dual, int num){
 
-  ors::KinematicWorld& world = activity.machine->s->world;
+  mlr::KinematicWorld& world = activity.machine->s->world;
 
   arr q, qdot;
   world.getJointState(q, qdot);
 
   ofstream data(STRING("data-"<<num<<".dat"));
 
-  ors::Shape *endeff = world.getShapeByName("endeffR");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeffR");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
 
 
   double mean_table_height = table->X.pos.z;
@@ -366,30 +366,30 @@ struct MySystem{
 };
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, const arr& dual, int num){
+void PR2_ActionMachine(mlr::KinematicWorld& world, const arr& x, const arr& y, const arr& dual, int num){
 
 
    ofstream data(STRING("data-"<<num<<".dat"));
 
 
 
- // ors::KinematicWorld& world = activity.machine->s->world;
+ // mlr::KinematicWorld& world = activity.machine->s->world;
   MySystem S;
   threadOpenModules(true);
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-  ors::Shape *ftL_shape=world.getShapeByName("endeffL");
+  mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
+  mlr::Shape *ftL_shape=world.getShapeByName("endeffL");
 
-  ors::KinematicWorld worldCopy = world;
+  mlr::KinematicWorld worldCopy = world;
 
-  //world.gl().add(ors::glDrawGraph, &worldCopy);
+  //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
   TaskController MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = world.getHmetric();
 
   bool useRos = mlr::getParameter<bool>("useRos", false);
   if(useRos){
@@ -422,10 +422,10 @@ void PR2_ActionMachine(ors::KinematicWorld& world, const arr& x, const arr& y, c
   MP.qitselfPD.active=true;
 
 
-  ors::Shape *endeff = world.getShapeByName("endeffR");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeffR");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
 
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
@@ -570,7 +570,7 @@ int main(int argc, char** argv)
   mlr::initCmdLine(argc, argv);
 
 #if 0
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
   //ActionSystem activity;
   //activity.machine->add(new CoreTasks());
 

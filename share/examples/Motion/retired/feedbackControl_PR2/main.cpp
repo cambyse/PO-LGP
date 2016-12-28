@@ -112,7 +112,7 @@ void executeTrajectoryWholeBody(String scene){
   String folder = STRING("out/"<<scene);
   cout << scene << endl;
 
-  ors::KinematicWorld world(scene);
+  mlr::KinematicWorld world(scene);
   cout << world.getJointStateDimension() << endl;
 #if VISUALIZE
   world.gl().resize(800, 800);
@@ -133,19 +133,19 @@ void executeTrajectoryWholeBody(String scene){
   arr Lgoal = conv_vec2arr(P.world.getBodyByName("LgoalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  c = P.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeffR", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, Rgoal, 1e5);
-  c = P.addTask("position_right_hand_vel", new TaskMap_Default(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_right_hand_vel", new TaskMap_Default(posTMT,world,"endeffR", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e2);
 
-  c = P.addTask("position_left_hand", new TaskMap_Default(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_left_hand", new TaskMap_Default(posTMT,world,"endeffL", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, Lgoal, 1e5);
-  c = P.addTask("position_left_hand_vel", new TaskMap_Default(posTMT,world,"endeffL", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_left_hand_vel", new TaskMap_Default(posTMT,world,"endeffL", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e2);
 
-  //  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  //  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
@@ -349,7 +349,7 @@ void executeTrajectoryRightArm(String scene){
   String folder = STRING("out/"<<scene);
   cout << scene << endl;
 
-  ors::KinematicWorld world(scene);
+  mlr::KinematicWorld world(scene);
   cout << world.getJointStateDimension() << endl;
 #if VISUALIZE
   world.gl().resize(800, 800);
@@ -372,11 +372,11 @@ void executeTrajectoryRightArm(String scene){
   arr Rgoal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
 
   //-- create an optimal trajectory to trainTarget
-  c = P.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeffR", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeffR", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, Rgoal, 1e4);
   //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
-  //  c = P.addTaskMap("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 1.)));
+  //  c = P.addTaskMap("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
   //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 

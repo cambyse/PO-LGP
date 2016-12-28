@@ -4,7 +4,7 @@
 int main(int argc, char **argv){
 
   OpenGL gl;
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   init(G, gl, "racer.ors");
 
   uint n=G.joints.N;

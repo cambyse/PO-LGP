@@ -37,7 +37,7 @@ struct OrsStereoCamera
   double whRatio;
 };
 
-void set_pos(ors::Body* b, const doubleA& p);
+void set_pos(mlr::Body* b, const doubleA& p);
 
 void init_OrsStereoCamera
 (
@@ -66,9 +66,9 @@ void gl_grab_stereo_image
  const OrsStereoCamera& cam
 );
 
-ors::Body* get_chessboard(floatA& world_coords, uint nx, uint ny, double l);
-void get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, uint ny, double l);
-void get_chessboard_corners_3d(floatA& world_coords, const ors::Body* chessboard, uint nx, uint ny);
+mlr::Body* get_chessboard(floatA& world_coords, uint nx, uint ny, double l);
+void get_chessboard(mlr::Body*& chessboard, floatA& world_coords, uint nx, uint ny, double l);
+void get_chessboard_corners_3d(floatA& world_coords, const mlr::Body* chessboard, uint nx, uint ny);
 } // namespace np
 
 std::ostream& operator<<(std::ostream& os,const np::OrsStereoCamera& osc);

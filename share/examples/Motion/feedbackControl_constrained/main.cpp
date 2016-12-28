@@ -3,7 +3,7 @@
 #include <Motion/taskMaps.h>
 
 void reach(){
-  ors::KinematicWorld world("man.ors");
+  mlr::KinematicWorld world("man.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
 

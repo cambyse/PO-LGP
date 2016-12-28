@@ -10,7 +10,7 @@
 //===========================================================================
 
 void TEST(SSBoxFit){
-  ors::Mesh org, box;
+  mlr::Mesh org, box;
 
   struct Transparent:GLDrawer{
     void glDraw(OpenGL &){ glColor(1,.5,.0,.5); }

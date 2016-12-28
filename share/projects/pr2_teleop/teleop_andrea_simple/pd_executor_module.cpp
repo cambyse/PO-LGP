@@ -1,6 +1,6 @@
 #include "pd_executor_module.h"
 #include <Ors/ors.h>
-#include <Motion/pr2_heuristics.h>
+
 
 // ############################################################################
 // Executor
@@ -13,7 +13,7 @@ PDExecutor::PDExecutor()
 {
   // fmc setup
   world.getJointState(q, qdot);
-  fmc.H_rate_diag = pr2_reasonable_W(world);
+  fmc.H_rate_diag = world.getHmetric();
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(2., 5.);
 
@@ -83,17 +83,17 @@ PDExecutor::PDExecutor()
 // void PDExecutor::visualizeSensors() {
 //   arrf rh = poses_rh.get();
 //   if(rh.N) {
-//     // world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
-//     // world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
-//     world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh[0]);
-//     world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh[1]);
+//     // world.getShapeByName("sensor_rh_thumb")->rel.pos = mlr::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
+//     // world.getShapeByName("sensor_rh_index")->rel.pos = mlr::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
+//     world.getShapeByName("sensor_rh_thumb")->rel.pos = mlr::Vector(rh[0]);
+//     world.getShapeByName("sensor_rh_index")->rel.pos = mlr::Vector(rh[1]);
 //   }
 //   arrf lh = poses_lh.get();
 //   if(lh.N) {
-//     // world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
-//     // world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
-//     world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh[0]);
-//     world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh[1]);
+//     // world.getShapeByName("sensor_lh_thumb")->rel.pos = mlr::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
+//     // world.getShapeByName("sensor_lh_index")->rel.pos = mlr::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
+//     world.getShapeByName("sensor_lh_thumb")->rel.pos = mlr::Vector(lh[0]);
+//     world.getShapeByName("sensor_lh_index")->rel.pos = mlr::Vector(lh[1]);
 //   }
 // }
 
@@ -238,10 +238,10 @@ void PDExecutor::trackHead() {
 }
 
 void PDExecutor::rigidTransf(arrf &pose) {
-  ors::Transformation T;
+  mlr::Transformation T;
 
-  ors::Vector v_mocap(pose(0), pose(1), pose(2));
-  ors::Quaternion q_mocap(pose(3), pose(4), pose(5), pose(6));
+  mlr::Vector v_mocap(pose(0), pose(1), pose(2));
+  mlr::Quaternion q_mocap(pose(3), pose(4), pose(5), pose(6));
   // T.appendInvTransformation(transf_mocap_robot);
 
   // T.addRelativeTranslation(.55, .5, 1.);
@@ -251,8 +251,8 @@ void PDExecutor::rigidTransf(arrf &pose) {
 
   // cout << "before: " << v << " " << q << endl;
 
-  ors::Vector v_robot = transf * v_mocap;
-  ors::Quaternion q_robot = transf.rot * q_mocap;
+  mlr::Vector v_robot = transf * v_mocap;
+  mlr::Quaternion q_robot = transf.rot * q_mocap;
 
   // cout << "after: " << v << " " << q << endl;
 
@@ -306,10 +306,10 @@ void PDExecutor::trackHand(const arrf &thumb, const arrf &index, CtrlTask *effPo
 }
 
 arr PDExecutor::makeHandOrientation(const arrf &thumb, const arrf &index, bool right) {
-  ors::Quaternion quat;
-  ors::Vector x_thumb, x_index;
-  ors::Vector pos_thumb, pos_index;
-  ors::Vector x_pr2, y_pr2, z_pr2;
+  mlr::Quaternion quat;
+  mlr::Vector x_thumb, x_index;
+  mlr::Vector pos_thumb, pos_index;
+  mlr::Vector x_pr2, y_pr2, z_pr2;
 
   // cout << "right: " << right << endl;
   pos_thumb.set(thumb(0), thumb(1), thumb(2));

@@ -17,7 +17,7 @@ struct G4Display : Thread {
 
   struct sG4Display *s;
 
-  ors::KinematicWorld &kw();
+  mlr::KinematicWorld &kw();
   MocapID *mid();
 };
 

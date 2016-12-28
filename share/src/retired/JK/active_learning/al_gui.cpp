@@ -7,7 +7,7 @@
 class sGui {
   public:
     OpenGL gl;
-    ors::KinematicWorld ors;
+    mlr::KinematicWorld ors;
 
     sGui(const char* orsFile);
   

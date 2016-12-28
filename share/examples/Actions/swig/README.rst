@@ -11,7 +11,7 @@ Install & Dependencies
 You must be able to compile the MLR "Actions" code::
 
     cd ~/git/mlr/share/src/Actions
-    make -f Makefile.gof
+    make -f Makefile
 
 You need the following dependencies:
 

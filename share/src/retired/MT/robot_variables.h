@@ -65,7 +65,7 @@ struct q_currentReferenceVar:public Variable {
 };
 
 struct CurrentSceneInformation:public Variable {
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
 
   CurrentSceneInformation():Variable("current scnene information"){}
 };
@@ -81,7 +81,7 @@ struct SkinPressureVar:public Variable {
 
 /** The list of current proxies (=near-to-collisions) */
 struct currentProxiesVar:public Variable {
-  mlr::Array<ors::Proxy*> proxies;
+  mlr::Array<mlr::Proxy*> proxies;
   
   currentProxiesVar():Variable("proxies"){}
 };

@@ -14,7 +14,7 @@ class RRTPlannerTest : public ::testing::Test {
     arr start;
     arr target;
 
-    ors::KinematicWorld G;
+    mlr::KinematicWorld G;
 
     double stepsize; // RRT stepsize
     double eps;      // eps environment size
@@ -38,7 +38,7 @@ RRTPlannerTest::RRTPlannerTest() {
   c->setCostSpecs(0, P.T, {0.}, 1e-0);
   c->threshold = 0;
 
-  ors::RRTPlanner planner(&G, P, stepsize);
+  mlr::RRTPlanner planner(&G, P, stepsize);
 
   planner.joint_max = { 6, 6, 1.};
   planner.joint_min = { -6, -6, 1. };

@@ -14,7 +14,7 @@
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
   TaskManager *tm = new DonutTask();
-  ors::KinematicWorld world("donut.ors");
+  mlr::KinematicWorld world("donut.ors");
   arr Xdemo;
   tm->createSynthethicDemonstration(Xdemo,world);
   //  displayTrajectory(Xdemo,-1,world,"Xdemo");

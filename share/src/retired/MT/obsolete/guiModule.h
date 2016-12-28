@@ -28,7 +28,7 @@ struct RobotProcessGroup;
 struct Object;
 struct PerceptionOutput;
 struct BumblebeeModule;
-namespace ors { struct Graph; }
+namespace mlr { struct Graph; }
 
 struct GuiModule:public Process {
   q_currentReferenceVar *q_referenceVar;
@@ -50,14 +50,14 @@ struct GuiModule:public Process {
   //INTERNAL
   bool useOpengl, logData, plotData;
   OpenGL *gl;
-  ors::KinematicWorld *ors, *ors2;
+  mlr::KinematicWorld *ors, *ors2;
   RobotProcessGroup  *ctrl;
   bool isOpen;
   
   GuiModule();
   ~GuiModule();
   
-  void createOrsClones(ors::KinematicWorld *_ors);
+  void createOrsClones(mlr::KinematicWorld *_ors);
   
   void open();
   void step();

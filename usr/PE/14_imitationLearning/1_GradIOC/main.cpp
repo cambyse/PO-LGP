@@ -148,7 +148,7 @@ struct Dfdw:ConstrainedProblem {
 };
 
 void simpleMotion(){
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
 
@@ -159,7 +159,7 @@ void simpleMotion(){
   arr refGoal = ARR(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
 
-  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 25);
   MP.x0 = {0.,0.,0.};
   MotionProblemFunction MPF(MP);

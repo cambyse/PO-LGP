@@ -9,7 +9,7 @@
 //===========================================================================
 
 void LGPplayer(){
-  ors::KinematicWorld display;
+  mlr::KinematicWorld display;
 
   TowerProblem_new towers; //generates a randomize towers problem
 

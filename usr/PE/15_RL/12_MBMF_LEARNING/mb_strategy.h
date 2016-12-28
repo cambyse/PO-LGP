@@ -11,10 +11,10 @@ struct MB_strategy
 {
   arr xDemo;
   MotionProblem* MP;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
   MotionProblemFunction* MPF;
 
-  MB_strategy(arr &xDemo_, ors::KinematicWorld &world, TaskManager &tm);
+  MB_strategy(arr &xDemo_, mlr::KinematicWorld &world, TaskManager &tm);
 
   void evaluate(arr &X);
 };

@@ -3,7 +3,7 @@
 //#include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 //#include <RosCom/actions.h>
 //#include <RosCom/actionMachine.h>
@@ -64,11 +64,11 @@ void switchToNormal(void*){
 
 
 /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String> active_joints,const double tableW, const double tableL, ors::KinematicWorld& world,ors::KinematicWorld& world_plan, int num, const arr target, int type,const arr &center){
+void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String> active_joints,const double tableW, const double tableL, mlr::KinematicWorld& world,mlr::KinematicWorld& world_plan, int num, const arr target, int type,const arr &center){
 
     ofstream data(STRING("data-"<<num<<".dat"));
     TaskController MP(world, true); // true means using swift
-    MP.H_rate_diag = pr2_reasonable_W(world);
+    MP.H_rate_diag = world.getHmetric();
   ////////////////////////////////////////////////////////////////////////////////////////
   // PLANNING
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -122,10 +122,10 @@ void OnlineSubmodularity(arr &q, arr &qdot,MySystem &S,  mlr::Array<mlr::String>
   MP.qitselfPD.active=true;
 
 
-  ors::Shape *endeff = world.getShapeByName("endeffR");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeffR");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
 
 
 
@@ -281,9 +281,9 @@ int main(int argc, char** argv)
 
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   ////////////////////////////////////////////////////////////////////////////////////////
-  ors::KinematicWorld world_plan("model_reduced.kvg");
+  mlr::KinematicWorld world_plan("model_reduced.kvg");
 
   arr q, qdot; // joints states of pr2 world
   arr qP,qPdot; // joints states of planned world
@@ -305,7 +305,7 @@ int main(int argc, char** argv)
 
 
   uint T = 200; //time horizon
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Body *table = world.getBodyByName("table");
   double tableW = table->shapes(0)->size[1];
   double tableL = table->shapes(0)->size[0];
   double tableT = table->shapes(0)->size[2];
@@ -325,10 +325,10 @@ int main(int argc, char** argv)
 
       world >>FILE("z.ors");
 
-      //ors::Joint *trans=world.getJointByName("worldTranslationRotation");
-      ors::Shape *ftL_shape=world.getShapeByName("endeffR");
+      //mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
+      mlr::Shape *ftL_shape=world.getShapeByName("endeffR");
 
-      //world.gl().add(ors::glDrawGraph, &worldCopy);
+      //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
 
 

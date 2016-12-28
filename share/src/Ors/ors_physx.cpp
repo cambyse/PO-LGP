@@ -64,7 +64,7 @@ static PxSimulationFilterShader gDefaultFilterShader=PxDefaultSimulationFilterSh
  * @param gl the gl output.
  * @param physx the PhyxXInteface which handles the ors graph.
  */
-void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
+void bindOrsToPhysX(mlr::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
 //  physx.create(graph);
   
   MLR_MSG("I don't understand this: why do you need a 2nd opengl window? (This is only for sanity check in the example.)")
@@ -72,7 +72,7 @@ void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& phys
   gl.add(glPhysXInterface, &physx);
   gl.setClearColors(1., 1., 1., 1.);
   
-  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  mlr::Body* glCamera = graph.getBodyByName("glCamera");
   if(glCamera) {
     gl.camera.X = glCamera->X;
   } else {
@@ -85,12 +85,12 @@ void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& phys
 
 // ============================================================================
 
-void PxTrans2OrsTrans(ors::Transformation& f, const PxTransform& pose) {
+void PxTrans2OrsTrans(mlr::Transformation& f, const PxTransform& pose) {
   f.pos.set(pose.p.x, pose.p.y, pose.p.z);
   f.rot.set(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
 }
 
-PxTransform OrsTrans2PxTrans(const ors::Transformation& f) {
+PxTransform OrsTrans2PxTrans(const mlr::Transformation& f) {
   return PxTransform(PxVec3(f.pos.x, f.pos.y, f.pos.z), PxQuat(f.rot.x, f.rot.y, f.rot.z, f.rot.w));
 }
 
@@ -143,16 +143,16 @@ struct sPhysXInterface {
   
   sPhysXInterface():gScene(NULL) {}
 
-  void addBody(ors::Body *b, physx::PxMaterial *material);
-  void addJoint(ors::Joint *jj);
+  void addBody(mlr::Body *b, physx::PxMaterial *material);
+  void addJoint(mlr::Joint *jj);
 
-  void lockJoint(PxD6Joint *joint, ors::Joint *ors_joint);
-  void unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint);
+  void lockJoint(PxD6Joint *joint, mlr::Joint *ors_joint);
+  void unlockJoint(PxD6Joint *joint, mlr::Joint *ors_joint);
 };
 
 // ============================================================================
 
-PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NULL) {
+PhysXInterface::PhysXInterface(mlr::KinematicWorld& _world): world(_world), s(NULL) {
   s = new sPhysXInterface;
 
   if(!mFoundation) {
@@ -208,10 +208,10 @@ PhysXInterface::PhysXInterface(ors::KinematicWorld& _world): world(_world), s(NU
   s->gScene->addActor(*plane);
   // create ORS equivalent in PhysX
   // loop through ors
-  for_list(ors::Body,  b,  world.bodies) s->addBody(b, mMaterial);
+  for_list(mlr::Body,  b,  world.bodies) s->addBody(b, mMaterial);
 
   /// ADD joints here!
-  for(ors::Joint *jj : world.joints) s->addJoint(jj);
+  for(mlr::Joint *jj : world.joints) s->addJoint(jj);
 
   /// save data for the PVD
   if(mlr::getParameter<bool>("physx_debugger", false)) {
@@ -231,12 +231,12 @@ PhysXInterface::~PhysXInterface() {
 
 void PhysXInterface::step(double tau) {
   //-- push positions of all kinematic objects
-  for_list(ors::Body, b, world.bodies) if(b->type==ors::kinematicBT) {
+  for_list(mlr::Body, b, world.bodies) if(b->type==mlr::BT_kinematic) {
     ((PxRigidDynamic*)s->actors(b_COUNT))->setKinematicTarget(OrsTrans2PxTrans(b->X));
   }
 
   mlr::Array<PxTransform> goal_poses(world.joints.N);
-  for_list(ors::Joint, j, world.joints) {
+  for_list(mlr::Joint, j, world.joints) {
     PxD6Joint *px_joint = s->joints(j_COUNT);
     if(j->locker and j->locker->lock()) {
       s->lockJoint(px_joint, j);
@@ -254,7 +254,7 @@ void PhysXInterface::step(double tau) {
   //-- dynamic simulation
   s->gScene->simulate(tau);
   
-  //for_list(ors::Joint, jj, world.joints) {
+  //for_list(mlr::Joint, jj, world.joints) {
     //PxD6Joint *px_joint = s->joints(jj_COUNT);
     //if(px_joint) { 
       //px_joint->setDrivePosition(goal_poses(jj_COUNT));
@@ -270,16 +270,16 @@ void PhysXInterface::step(double tau) {
 }
 
 void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
-  for(ors::Joint* j:world.joints){
+  for(mlr::Joint* j:world.joints){
     if(j->agent==agent){
-      if(j->from->type==ors::dynamicBT) j->from->type=ors::kinematicBT;
-      if(j->to->type==ors::dynamicBT) j->to->type=ors::kinematicBT;
+      if(j->from->type==mlr::BT_dynamic) j->from->type=mlr::BT_kinematic;
+      if(j->to->type==mlr::BT_dynamic) j->to->type=mlr::BT_kinematic;
     }
   }
-  for(ors::Body *b: world.bodies) {
-    if(b->type==ors::kinematicBT)
+  for(mlr::Body *b: world.bodies) {
+    if(b->type==mlr::BT_kinematic)
       ((PxRigidDynamic*)s->actors(b->index))->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-    if(b->type==ors::dynamicBT)
+    if(b->type==mlr::BT_dynamic)
       ((PxRigidDynamic*)s->actors(b->index))->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, false);
   }
 }
@@ -291,15 +291,15 @@ void PhysXInterface::setArticulatedBodiesKinematic(uint agent){
  * - create PhysX equivalent to the ors graph
  */
 
-void sPhysXInterface::addJoint(ors::Joint *jj) {
+void sPhysXInterface::addJoint(mlr::Joint *jj) {
   while(joints.N <= jj->index+1)
     joints.append(NULL);
   PxTransform A = OrsTrans2PxTrans(jj->A);
   PxTransform B = OrsTrans2PxTrans(jj->B);
   switch(jj->type) {
-    case ors::JT_hingeX: 
-    case ors::JT_hingeY:
-    case ors::JT_hingeZ: {
+    case mlr::JT_hingeX: 
+    case mlr::JT_hingeY:
+    case mlr::JT_hingeZ: {
 
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       CHECK(desc, "PhysX joint creation failed.");
@@ -334,19 +334,19 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       joints(jj->index) = desc;
     }
     break;
-    case ors::JT_rigid: {
+    case mlr::JT_rigid: {
       // PxFixedJoint* desc =
       PxFixedJointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       // desc->setProjectionLinearTolerance(1e10);
       // desc->setProjectionAngularTolerance(3.14);
     }
     break;
-    case ors::JT_trans3: {
+    case mlr::JT_trans3: {
       break; 
     }
-    case ors::JT_transX: 
-    case ors::JT_transY:
-    case ors::JT_transZ:
+    case mlr::JT_transX: 
+    case mlr::JT_transY:
+    case mlr::JT_transZ:
     {
       PxD6Joint *desc = PxD6JointCreate(*mPhysics, actors(jj->from->index), A, actors(jj->to->index), B.getInverse());
       CHECK(desc, "PhysX joint creation failed.");
@@ -379,23 +379,23 @@ void sPhysXInterface::addJoint(ors::Joint *jj) {
       NIY;
   }
 }
-void sPhysXInterface::lockJoint(PxD6Joint *joint, ors::Joint *ors_joint) {
+void sPhysXInterface::lockJoint(PxD6Joint *joint, mlr::Joint *ors_joint) {
   joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
   joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
   joint->setTwistLimit(PxJointAngularLimitPair(joint->getTwist()-.001, joint->getTwist()+.001));
 }
-void sPhysXInterface::unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint) {
+void sPhysXInterface::unlockJoint(PxD6Joint *joint, mlr::Joint *ors_joint) {
   switch(ors_joint->type) {
-    case ors::JT_hingeX:
-    case ors::JT_hingeY:
-    case ors::JT_hingeZ:
+    case mlr::JT_hingeX:
+    case mlr::JT_hingeY:
+    case mlr::JT_hingeZ:
       //joint->setMotion(PxD6Axis::eX, PxD6Motion::eLIMITED);
       //joint->setLinearLimit(PxJointLimit(ors_joint->Q.rot.getRad(), ors_joint->Q.rot.getRad()));
       joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
       break;
-    case ors::JT_transX:
-    case ors::JT_transY:
-    case ors::JT_transZ:
+    case mlr::JT_transX:
+    case mlr::JT_transY:
+    case mlr::JT_transZ:
       //joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLOCKED);
       joint->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
       break;
@@ -404,42 +404,42 @@ void sPhysXInterface::unlockJoint(PxD6Joint *joint, ors::Joint *ors_joint) {
   }
 }
 
-void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
+void sPhysXInterface::addBody(mlr::Body *b, physx::PxMaterial *mMaterial) {
   PxRigidDynamic* actor;
   switch(b->type) {
-    case ors::staticBT:
+    case mlr::BT_static:
       actor = (PxRigidDynamic*) mPhysics->createRigidStatic(OrsTrans2PxTrans(b->X));
       break;
-    case ors::dynamicBT:
+    case mlr::BT_dynamic:
       actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       break;
-    case ors::kinematicBT:
+    case mlr::BT_kinematic:
       actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       actor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
       break;
-    case ors::noneBT:
+    case mlr::BT_none:
       HALT("this shoudn't be none BT!?")
 //      actor = mPhysics->createRigidDynamic(OrsTrans2PxTrans(b->X));
       break;
   }
   CHECK(actor, "create actor failed!");
-  for_list(ors::Shape,  s,  b->shapes) {
+  for_list(mlr::Shape,  s,  b->shapes) {
     PxGeometry* geometry;
     switch(s->type) {
-      case ors::boxST: {
+      case mlr::ST_box: {
         geometry = new PxBoxGeometry(.5 * s->size[0], .5 * s->size[1], .5 * s->size[2]);
       }
       break;
-      case ors::sphereST: {
+      case mlr::ST_sphere: {
         geometry = new PxSphereGeometry(s->size[3]);
       }
       break;
-      case ors::cappedCylinderST: {
+      case mlr::ST_capsule: {
         geometry = new PxCapsuleGeometry(s->size[3], s->size[2]);
       }
       break;
-      case ors::cylinderST:
-      case ors::meshST: {
+      case mlr::ST_cylinder:
+      case mlr::ST_mesh: {
         // Note: physx can't decompose meshes itself.
         // Physx doesn't support triangle meshes in dynamic objects! See:
         // file:///home/mtoussai/lib/PhysX/Documentation/PhysXGuide/Manual/Shapes.html
@@ -456,7 +456,7 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
         geometry = new PxConvexMeshGeometry(triangleMesh);
       }
       break;
-      case ors::markerST: {
+      case mlr::ST_marker: {
         geometry = NULL;
       }
       break;
@@ -469,7 +469,7 @@ void sPhysXInterface::addBody(ors::Body *b, physx::PxMaterial *mMaterial) {
     }
     //actor = PxCreateDynamic(*mPhysics, OrsTrans2PxTrans(s->X), *geometry, *mMaterial, 1.f);
   }
-  if(b->type == ors::dynamicBT) {
+  if(b->type == mlr::BT_dynamic) {
     if(b->mass) {
       PxRigidBodyExt::setMassAndUpdateInertia(*actor, b->mass);
     }
@@ -496,9 +496,9 @@ void PhysXInterface::pullFromPhysx(double tau) {
       PxVec3 vel = px_body->getLinearVelocity();
       PxVec3 angvel = px_body->getAngularVelocity();
 #if 0
-      ors::Vector newvel(vel[0], vel[1], vel[2]);
-      ors::Vector newangvel(angvel[0], angvel[1], angvel[2]);
-      ors::Body *b = world.bodies(a_COUNT);
+      mlr::Vector newvel(vel[0], vel[1], vel[2]);
+      mlr::Vector newangvel(angvel[0], angvel[1], angvel[2]);
+      mlr::Body *b = world.bodies(a_COUNT);
       b->force = b->mass * ((b->X.vel - newvel)/tau);
       b->torque = b->mass * ((b->X.angvel - newangvel)/tau);
       b->X.vel = newvel;
@@ -513,7 +513,7 @@ void PhysXInterface::pullFromPhysx(double tau) {
 
 void PhysXInterface::pushToPhysx() {
   PxMaterial* mMaterial = mPhysics->createMaterial(1.f, 1.f, 0.5f);
-  for_list(ors::Body, b, world.bodies) {
+  for_list(mlr::Body, b, world.bodies) {
     if(s->actors.N > b_COUNT) {
       s->actors(b_COUNT)->setGlobalPose(OrsTrans2PxTrans(b->X));
     } else {
@@ -531,7 +531,7 @@ void PhysXInterface::ShutdownPhysX() {
   mPhysics->release();
 }
 
-void DrawActor(PxRigidActor* actor, ors::Body *body) {
+void DrawActor(PxRigidActor* actor, mlr::Body *body) {
   PxU32 nShapes = actor->getNbShapes();
   PxShape** shapes=new PxShape*[nShapes];
   //cout <<"#shapes=" <<nShapes;
@@ -541,10 +541,10 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
     PxShape *shape = shapes[nShapes];
 
     // use the color of the first shape of the body for the entire body
-    ors::Shape *s = body->shapes(0);
+    mlr::Shape *s = body->shapes(0);
     glColor(s->color[0], s->color[1], s->color[2], .8);
 
-    ors::Transformation f;
+    mlr::Transformation f;
     double mat[16];
     PxTrans2OrsTrans(f, PxShapeExt::getGlobalPose(*shape, *actor));
     glLoadMatrixd(f.getAffineMatrixGL(mat));
@@ -571,7 +571,7 @@ void DrawActor(PxRigidActor* actor, ors::Body *body) {
         PxConvexMeshGeometry g;
         shape->getConvexMeshGeometry(g);
         floatA Vfloat((float*)g.convexMesh->getVertices(), 3*g.convexMesh->getNbVertices()); //reference
-        ors::Mesh mesh;
+        mlr::Mesh mesh;
         copy(mesh.V,Vfloat);
         mesh.V.reshape(g.convexMesh->getNbVertices(),3);
         mesh.makeConvexHull();
@@ -596,13 +596,13 @@ void glPhysXInterface(void *classP) {
   ((PhysXInterface*)classP)->glDraw();
 }
 
-void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) {
+void PhysXInterface::addForce(mlr::Vector& force, mlr::Body* b) {
   PxVec3 px_force = PxVec3(force.x, force.y, force.z);
   PxRigidBody *actor = (PxRigidBody*) (s->actors(b->index)); // dynamic_cast fails for missing RTTI in physx
   actor->addForce(px_force);
 }
 
-void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) {
+void PhysXInterface::addForce(mlr::Vector& force, mlr::Body* b, mlr::Vector& pos) {
   PxVec3 px_force = PxVec3(force.x, force.y, force.z);
   PxVec3 px_pos = PxVec3(pos.x, pos.y, pos.z);
   PxRigidBody *actor = (PxRigidBody*)(s->actors(b->index));
@@ -616,7 +616,7 @@ void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos
 #else //MLR_PHYSX
 
 #include "ors_physx.h"
-PhysXInterface::PhysXInterface(ors::KinematicWorld& _world) : world(_world), s(NULL) { NICO }
+PhysXInterface::PhysXInterface(mlr::KinematicWorld& _world) : world(_world), s(NULL) { NICO }
 PhysXInterface::~PhysXInterface() { NICO }
   
 void PhysXInterface::step(double tau) { NICO }
@@ -625,11 +625,11 @@ void PhysXInterface::pullFromPhysx(double tau) { NICO }
 void PhysXInterface::setArticulatedBodiesKinematic(uint agent) { NICO }
 void PhysXInterface::ShutdownPhysX() { NICO }
 void PhysXInterface::glDraw() { NICO }
-void PhysXInterface::addForce(ors::Vector& force, ors::Body* b) { NICO }
-void PhysXInterface::addForce(ors::Vector& force, ors::Body* b, ors::Vector& pos) { NICO }
+void PhysXInterface::addForce(mlr::Vector& force, mlr::Body* b) { NICO }
+void PhysXInterface::addForce(mlr::Vector& force, mlr::Body* b, mlr::Vector& pos) { NICO }
 
 void glPhysXInterface(void *classP) { NICO }
-void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
+void bindOrsToPhysX(mlr::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) { NICO }
 
 #endif
 /** @} */

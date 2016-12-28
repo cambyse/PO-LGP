@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Ors Gui Core
+DEPEND = Geo Ors Gui Core
 
-include $(BASE)/make-generic
+include $(BASE)/build/generic.mk

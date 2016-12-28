@@ -1,5 +1,5 @@
-#include <FOL/fol.h>
-#include <FOL/fol_mcts_world.h>
+#include <Logic/fol.h>
+#include <Logic/fol_mcts_world.h>
 
 //===========================================================================
 

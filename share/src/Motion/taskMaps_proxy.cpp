@@ -27,7 +27,7 @@ TaskMap_Proxy::TaskMap_Proxy(PTMtype _type,
   cout <<"creating TaskMap_Proxy with shape list" <<shapes <<endl;
 }
 
-void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
+void TaskMap_Proxy::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   uintA shapes_t;
   shapes_t.referTo(shapes);
 
@@ -36,13 +36,13 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
 
   switch(type) {
     case allPTMT:
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
         p->colorCode = 1;
       }
       break;
     case listedVsListedPTMT:
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         if(shapes.contains(p->a) && shapes.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
@@ -51,7 +51,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       break;
     case allVsListedPTMT: {
       if(t && shapes.nd==2) shapes_t.referToDim(shapes,t);
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         if(shapes_t.contains(p->a) || shapes_t.contains(p->b)) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 2;
@@ -59,7 +59,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       }
     } break;
     case allExceptListedPTMT:
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         if(!(shapes.contains(p->a) && shapes.contains(p->b))) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
           p->colorCode = 3;
@@ -67,7 +67,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       }
       break;
     case bipartitePTMT:
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         if((shapes.contains(p->a) && shapes2.contains(p->b)) ||
             (shapes.contains(p->b) && shapes2.contains(p->a))) {
           G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
@@ -79,7 +79,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for(ors::Proxy *p: G.proxies) if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies) if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -95,7 +95,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       shapes.reshape(shapes.N/2,2);
       // only explicit paris in 2D array shapes
       uint j;
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -112,7 +112,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
       y.resize(shapes.d0, 1);  y.setZero();
       if(&J){ J.resize(shapes.d0,J.d1);  J.setZero(); }
       uint j;
-      for(ors::Proxy *p: G.proxies)  if(p->d<margin) {
+      for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {
         for(j=0; j<shapes.d0; j++) {
           if((shapes(j,0)==(uint)p->a && shapes(j,1)==(uint)p->b) || (shapes(j,0)==(uint)p->b && shapes(j,1)==(uint)p->a))
             break;
@@ -128,7 +128,7 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
   }
 }
 
-uint TaskMap_Proxy::dim_phi(const ors::KinematicWorld& G){
+uint TaskMap_Proxy::dim_phi(const mlr::KinematicWorld& G){
   switch(type) {
   case allPTMT:
   case listedVsListedPTMT:

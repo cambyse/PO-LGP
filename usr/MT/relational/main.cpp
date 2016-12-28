@@ -2,27 +2,27 @@
 #include "manipSim.h"
 #include <Ors/ors.h>
 
-ors::KinematicWorld* world=NULL;
+mlr::KinematicWorld* world=NULL;
 
-void OrsGraph2RelationalGraph(Graph& G, ors::KinematicWorld& W){
+void OrsGraph2RelationalGraph(Graph& G, mlr::KinematicWorld& W){
   G.clear();
 
   //do this first to ensure they have the same indexing
-  for(ors::Body *b:world->bodies){
-    G.newNode<ors::Body>({"body", b->name}, b);
+  for(mlr::Body *b:world->bodies){
+    G.newNode<mlr::Body>({"body", b->name}, b);
   }
 
-  for(ors::Body *b:world->bodies){
-    G.newNode<ors::Transformation>({"pose"}, ARRAY(G(b->index)), new ors::Transformation(b->X));
+  for(mlr::Body *b:world->bodies){
+    G.newNode<mlr::Transformation>({"pose"}, ARRAY(G(b->index)), new mlr::Transformation(b->X));
 //    if(b->ats["ctrlable"]) G.newNode<bool>({"controllable"}, ARRAY(G(b->index)), NULL);
     if(b->ats["canGrasp"]) G.newNode<bool>({"canGrasp"}, ARRAY(G(b->index)), NULL);
     if(b->ats["fixed"])    G.newNode<bool>({"fixed"}, ARRAY(G(b->index)), NULL);
   }
 
-  for(ors::Joint *j:world->joints){
-    if(j->type==ors::JT_rigid)
+  for(mlr::Joint *j:world->joints){
+    if(j->type==mlr::JT_rigid)
       G.newNode<bool>({"rigid"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
-    if(j->type==ors::JT_transXYPhi)
+    if(j->type==mlr::JT_transXYPhi)
       G.newNode<bool>({"support"}, ARRAY(G(j->from->index), G(j->to->index)), NULL);
   }
 
@@ -35,7 +35,7 @@ uint Domain::numObjects(){
 void Domain::getInitialState(State &s){
 //  enum JointType { JT_none=-1, JT_hingeX=0, JT_hingeY=1, JT_hingeZ=2, JT_transX=3, JT_transY=4, JT_transZ=5, JT_transXY=6, JT_trans3=7, JT_transXYPhi=8, JT_universal=9, JT_rigid=10, JT_quatBall, JT_glue };
 
-//  for(ors::Body *b:world->bodies){
+//  for(mlr::Body *b:world->bodies){
 //    Pose *p = new Pose;
 //    p->mean = b->X;
 //    p->max = p->mean.pos;
@@ -50,7 +50,7 @@ void Domain::getInitialState(State &s){
 //===========================================================================
 
 void sample(){
-  ors::KinematicWorld W("model.kvg");
+  mlr::KinematicWorld W("model.kvg");
   world = &W;
 
   //-- fwd expansion

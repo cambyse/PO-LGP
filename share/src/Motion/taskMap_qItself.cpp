@@ -20,24 +20,24 @@ TaskMap_qItself::TaskMap_qItself(const arr& _M, bool relative_q0) : moduloTwoPi(
 
 TaskMap_qItself::TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true), relative_q0(false) { M=zeros(1,qN); M(0,singleQ)=1.; }
 
-TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, ors::Joint* j)
+TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, mlr::Joint* j)
   : moduloTwoPi(true), relative_q0(false)  {
   M = zeros(j->qDim(), G.getJointStateDimension() );
   M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
 }
 
-TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName)
+TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName)
   : moduloTwoPi(true), relative_q0(false)  {
-  ors::Joint *j = G.getJointByName(jointName);
+  mlr::Joint *j = G.getJointByName(jointName);
   if(!j) return;
   M = zeros(j->qDim(), G.getJointStateDimension() );
   M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
 }
 
-TaskMap_qItself::TaskMap_qItself(const ors::KinematicWorld& G, const char* jointName1, const char* jointName2)
+TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName1, const char* jointName2)
   : moduloTwoPi(true), relative_q0(false)  {
-  ors::Joint *j1 = G.getJointByName(jointName1);
-  ors::Joint *j2 = G.getJointByName(jointName2);
+  mlr::Joint *j1 = G.getJointByName(jointName1);
+  mlr::Joint *j2 = G.getJointByName(jointName2);
   M = zeros(j1->qDim() + j2->qDim(), G.getJointStateDimension() );
   M.setMatrixBlock(eye(j1->qDim()), 0, j1->qIndex);
   M.setMatrixBlock(eye(j2->qDim()), j1->qDim(), j2->qIndex);
@@ -47,11 +47,11 @@ TaskMap_qItself::TaskMap_qItself(uintA _selectedBodies, bool relative_q0)
   : selectedBodies(_selectedBodies), moduloTwoPi(true), relative_q0(relative_q0){
 }
 
-void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMap_qItself::phi(arr& q, arr& J, const mlr::KinematicWorld& G, int t) {
   if(!selectedBodies.N){
     G.getJointState(q);
     if(relative_q0){
-      for(ors::Joint* j:G.joints) if(j->q0 && j->qDim()==1) q(j->qIndex) -= j->q0;
+      for(mlr::Joint* j:G.joints) if(j->q0 && j->qDim()==1) q(j->qIndex) -= j->q0;
     }
     if(M.N){
       if(M.nd==1){
@@ -69,7 +69,7 @@ void TaskMap_qItself::phi(arr& q, arr& J, const ors::KinematicWorld& G, int t) {
     if(&J) J.resize(n, G.q.N).setZero();
     uint m=0;
     for(uint b:selectedBodies){
-      ors::Joint *j = G.bodies.elem(b)->inLinks.scalar();
+      mlr::Joint *j = G.bodies.elem(b)->inLinks.scalar();
       for(uint k=0;k<j->qDim();k++){
         q(m) = G.q.elem(j->qIndex+k);
         if(relative_q0) q(m) -= j->q0;
@@ -106,9 +106,9 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
     boolA useIt(nJoints);
     useIt = true;
     for(uint j_idx=0; j_idx<nJoints; j_idx++){
-      ors::Joint *j=G(offset)->joints(j_idx);
+      mlr::Joint *j=G(offset)->joints(j_idx);
       for(uint i=0;i<=k;i++){
-        ors::Joint *jmatch = G(offset+i)->getJointByBodyNames(j->from->name, j->to->name);
+        mlr::Joint *jmatch = G(offset+i)->getJointByBodyNames(j->from->name, j->to->name);
         if(jmatch && j->type!=jmatch->type) jmatch=NULL;
         if(!jmatch){ useIt(j_idx) = false; break; }
         jointMatchLists(i, j_idx) = jmatch;
@@ -159,7 +159,7 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
 }
 
 
-uint TaskMap_qItself::dim_phi(const ors::KinematicWorld& G) {
+uint TaskMap_qItself::dim_phi(const mlr::KinematicWorld& G) {
   if(selectedBodies.N){
     uint n=0;
     for(uint b:selectedBodies) n+=G.bodies.elem(b)->inLinks.scalar()->qDim();
@@ -196,8 +196,8 @@ void TaskMap_qZeroVels::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   //-- read out the task variable from the k+1 configurations
   uint offset = G.N-1-k; //G.N might contain more configurations than the order of THIS particular task -> the front ones are not used
 
-  for(ors::Joint *j:G.last()->joints) if(j->constrainToZeroVel){
-    ors::Joint *jmatch = G.last(-2)->getJointByBodyIndices(j->from->index, j->to->index);
+  for(mlr::Joint *j:G.last()->joints) if(j->constrainToZeroVel){
+    mlr::Joint *jmatch = G.last(-2)->getJointByBodyIndices(j->from->index, j->to->index);
     if(jmatch && j->type!=jmatch->type) jmatch=NULL;
     if(jmatch){
       for(uint i=0;i<j->qDim();i++){
@@ -243,18 +243,18 @@ uint TaskMap_qZeroVels::dim_phi(const WorldL& G, int t){
 
 //===========================================================================
 
-mlr::Array<ors::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnly){
-  mlr::Array<ors::Joint*> matchingJoints;
-  mlr::Array<ors::Joint*> matches(G.N);
+mlr::Array<mlr::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnly){
+  mlr::Array<mlr::Joint*> matchingJoints;
+  mlr::Array<mlr::Joint*> matches(G.N);
   bool matchIsGood;
 
-  for(ors::Joint *j:G.last()->joints) if(!zeroVelJointsOnly || j->constrainToZeroVel){
+  for(mlr::Joint *j:G.last()->joints) if(!zeroVelJointsOnly || j->constrainToZeroVel){
     matches.setZero();
     matches.last() = j;
     matchIsGood=true;
 
     for(uint k=0;k<G.N-1;k++){ //go through other configs
-      ors::Joint *jmatch = G(k)->getJointByBodyIndices(j->from->index, j->to->index);
+      mlr::Joint *jmatch = G(k)->getJointByBodyIndices(j->from->index, j->to->index);
       if(!jmatch || j->type!=jmatch->type || j->constrainToZeroVel!=jmatch->constrainToZeroVel){
         matchIsGood=false;
         break;
@@ -270,11 +270,12 @@ mlr::Array<ors::Joint*> getMatchingJoints(const WorldL& G, bool zeroVelJointsOnl
 
 //===========================================================================
 
-mlr::Array<ors::Joint*> getSwitchedJoints(const ors::KinematicWorld& G0, const ors::KinematicWorld& G1, int verbose){
-  mlr::Array<ors::Joint*> switchedJoints;
+mlr::Array<mlr::Joint*> getSwitchedJoints(const mlr::KinematicWorld& G0, const mlr::KinematicWorld& G1, int verbose){
+  mlr::Array<mlr::Joint*> switchedJoints;
 
-  for(ors::Joint *j1:G1.joints) {
-    ors::Joint *j0 = G0.getJointByBodyIndices(j1->from->index, j1->to->index);
+  for(mlr::Joint *j1:G1.joints) {
+    if(j1->from->index>=G0.bodies.N || j1->to->index>=G0.bodies.N) continue;
+    mlr::Joint *j0 = G0.getJointByBodyIndices(j1->from->index, j1->to->index);
     if(!j0 || j0->type!=j1->type){
       if(G0.bodies(j1->to->index)->inLinks.N==1){ //out-body had (in G0) one inlink...
         j0 = G0.bodies(j1->to->index)->inLinks.scalar();

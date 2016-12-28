@@ -37,7 +37,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   J_ft_invR.clear();
 
   //read out gain parameters from ors data structure
-  { for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
+  { for_list(mlr::Joint, j, world.joints) if(j->qDim()>0){
     arr *info;
     info = j->ats.find<arr>("gains");  if(info){ Kp_base(j->qIndex)=info->elem(0); Kd_base(j->qIndex)=info->elem(1); }
     info = j->ats.find<arr>("limits");  if(info){ limits(j->qIndex,0)=info->elem(0); limits(j->qIndex,1)=info->elem(1); }
@@ -47,7 +47,7 @@ bool TreeControllerClass::init(pr2_mechanism_model::RobotState *robot, ros::Node
   //match joint names with ros joints
   ROS_joints.resize(world.q.N);
   ROS_joints = NULL;
-  for_list(ors::Joint, j, world.joints) if(j->qDim()>0){
+  for_list(mlr::Joint, j, world.joints) if(j->qDim()>0){
     pr2_mechanism_model::JointState *pr2_joint = robot->getJointState(j->name.p);
     if(pr2_joint){
       ROS_joints(j->qIndex) = pr2_joint;

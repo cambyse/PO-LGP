@@ -16,7 +16,7 @@
 //#include <RosCom/actionMachine.h>
 //#include "manipSim.h"
 #include <Ors/ors.h>
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 
 
 void runMonteCarlo(Graph& G){
@@ -61,7 +61,7 @@ void runMonteCarlo(Graph& G){
         return;
       }else{
         //-- pick a random decision
-        uint deci = mlr::rnd(decisions.N);
+        uint deci = rnd(decisions.N);
         std::pair<Node*, NodeL>& d = decisions(deci);
         if(verbose>2){ cout <<"*** decision = " <<deci <<':' <<d.first->keys(1) <<" SUBS "; listWrite(d.second, cout); cout <<endl; }
 

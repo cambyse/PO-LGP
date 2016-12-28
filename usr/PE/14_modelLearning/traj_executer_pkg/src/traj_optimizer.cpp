@@ -29,7 +29,7 @@ void drawActTraj(void* classP){
 }
 
 
-TrajOptimizer::TrajOptimizer(ors::KinematicWorld &_world)
+TrajOptimizer::TrajOptimizer(mlr::KinematicWorld &_world)
 {
   world = _world;
 }

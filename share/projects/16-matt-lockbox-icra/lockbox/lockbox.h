@@ -98,7 +98,7 @@ struct Lockbox:Module{
 //  bool update = true;
   bool usingRos = false;
 
-  ors::KinematicWorld lockbox_world;
+  mlr::KinematicWorld lockbox_world;
 
   CtrlTaskL joint_fixed_tasks;
   CtrlTask* grip_task;

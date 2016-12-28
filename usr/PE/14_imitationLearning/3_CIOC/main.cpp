@@ -265,7 +265,7 @@ void simpleMotion(){
   mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   MotionProblem MP(world,true);
@@ -274,7 +274,7 @@ void simpleMotion(){
 
   arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
-  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 1e4);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","obstacle",0.1));
   c->setCostSpecs(0, MP.T, {0.}, 1.);
@@ -305,7 +305,7 @@ void simpleMotion(){
 
 
   // define toy demonstration 2
-  ors::KinematicWorld world2("scene");
+  mlr::KinematicWorld world2("scene");
   world2.getJointState(q, qdot);
   MotionProblem MP2(world2,true);
   MP2.loadTransitionParameters();
@@ -314,7 +314,7 @@ void simpleMotion(){
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.,0.1);
   arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
-  c2 = MP2.addTask("position_right_hand",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = MP2.addTask("position_right_hand",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);
   c2 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","obstacle",0.1));
   MP2.setInterpolatingCosts(c2, MotionProblem::constant, {0.}, 1.);

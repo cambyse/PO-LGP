@@ -56,6 +56,6 @@ int pr2System::getDof() const {
 ::Eigen::MatrixXd pr2System::getFramePose(const std::string& frame_id) const {
     std::string frame = frame_id;
     if(frame == "EE") frame = "endeffR";
-    ors::Transformation relative = const_cast<pr2System*>(this)->interface.getFramePose(frame);
+    mlr::Transformation relative = const_cast<pr2System*>(this)->interface.getFramePose(frame);
     return mt2eigen(relative.getAffineMatrix());
 }

@@ -1,6 +1,6 @@
 #include <Ors/ors.h>
 #include <Motion/motion.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 
 
@@ -111,8 +111,8 @@ public:
   }
 };
 
-void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos, const ors::Quaternion &markerQuat) {
-  ors::KinematicWorld* world = new ors::KinematicWorld("scene");
+void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos, const mlr::Quaternion &markerQuat) {
+  mlr::KinematicWorld* world = new mlr::KinematicWorld("scene");
   arr q, qdot;
   world->getJointState(q, qdot);
   makeConvexHulls(world->shapes);
@@ -134,8 +134,8 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
 
 
   arr refFrame = ARR(world->getBodyByName("torso_lift_link")->X.pos);
-  ors::Quaternion refFrameQuat = world->getBodyByName("torso_lift_link")->X.rot;
-  ors::Quaternion objQuat = refFrameQuat*markerQuat;
+  mlr::Quaternion refFrameQuat = world->getBodyByName("torso_lift_link")->X.rot;
+  mlr::Quaternion objQuat = refFrameQuat*markerQuat;
   arr markerOffset = objQuat.getArr()*{0.126,0.0,0.0415};
 
   markerOffset= markerOffset + {0.01,0.,0.};
@@ -182,19 +182,19 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   MP->tau = dt;
   MP->x0 = q0;
 
-  ors::Shape *grasp = world->getShapeByName("endeffR");
-  ors::Body *tar = world->getBodyByName("drawer1");
+  mlr::Shape *grasp = world->getShapeByName("endeffR");
+  mlr::Body *tar = world->getBodyByName("drawer1");
 
   // add graph operator
-  ors::KinematicSwitch *op1 = new ors::KinematicSwitch();
-  op1->symbol = ors::KinematicSwitch::addRigid;
+  mlr::KinematicSwitch *op1 = new mlr::KinematicSwitch();
+  op1->symbol = mlr::KinematicSwitch::addRigid;
   op1->timeOfApplication = contactTime;
   op1->fromId = world->getBodyByName("endeffR")->index;
   op1->toId = world->getBodyByName("drawer1")->index;
   world->operators.append(op1);
 
   arr xDemTaskVec;
-  ors::Vector *tmp = new ors::Vector(0.,-1.,0);
+  mlr::Vector *tmp = new mlr::Vector(0.,-1.,0);
   world->kinematicsVec(xDemTaskVec,NoArr,world->getBodyByName("goalDrawer1"),tmp);
   cout << "xDemTaskVec: "<< xDemTaskVec << endl;
   /// set motion parameter
@@ -208,9 +208,9 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   c->setCostSpecs(MP->T,MP->T, objPosT, param(N++));
   c =MP->addTask("posC", new TaskMap_Default(posTMT, grasp->index) );
   c->setCostSpecs(contactTime,contactTime, objPos0, param(N++));
-  c =MP->addTask("vecT", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =MP->addTask("vecT", new TaskMap_Default(vecTMT, grasp->index,mlr::Vector(1.,0.,0)) );
   c->setCostSpecs(MP->T,MP->T, xDemTaskVec, param(N++));
-  c =MP->addTask("vecC", new TaskMap_Default(vecTMT, grasp->index,ors::Vector(1.,0.,0)) );
+  c =MP->addTask("vecC", new TaskMap_Default(vecTMT, grasp->index,mlr::Vector(1.,0.,0)) );
   c->setCostSpecs(contactTime,contactTime, xDemTaskVec, param(N++));
   c =MP->addTask("velT", new TaskMap_Default(posTMT, grasp->index) );
   c->map.order = 1;
@@ -273,11 +273,11 @@ int main(int argc, char** argv)
   ros::ServiceClient get_init_goal_client = nh.serviceClient<goal_publisher::GetGoal>("/get_goal");
   goal_publisher::GetGoal goalMarker;
   arr marker;
-  ors::Quaternion markerQuat;
+  mlr::Quaternion markerQuat;
   if (get_init_goal_client.waitForExistence(ros::Duration(10.0))){
     get_init_goal_client.call(goalMarker);
     marker = ARR(goalMarker.response.x,goalMarker.response.y,goalMarker.response.z);
-    markerQuat = ors::Quaternion(goalMarker.response.q_w,goalMarker.response.q_x,goalMarker.response.q_y,goalMarker.response.q_z);
+    markerQuat = mlr::Quaternion(goalMarker.response.q_w,goalMarker.response.q_x,goalMarker.response.q_y,goalMarker.response.q_z);
   }
   cout << "Marker position: " << marker << endl;
   cout << "Marker quaternion: " << markerQuat << endl;

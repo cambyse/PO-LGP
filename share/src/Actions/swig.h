@@ -72,5 +72,5 @@ struct ActionSwigInterface{
 
   //-- testing...
   void execScript(const char* filename);
-  ors::Transformation getFramePose(const std::string& frame_id);
+  mlr::Transformation getFramePose(const std::string& frame_id);
 };

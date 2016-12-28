@@ -31,21 +31,24 @@ struct SwiftInterface {
   intA INDEXswift2shape, INDEXshape2swift;
   double cutoff;
 
-  SwiftInterface(const ors::KinematicWorld& world, double _cutoff=.2);
+  SwiftInterface(const mlr::KinematicWorld& world, double _cutoff=.2);
   ~SwiftInterface();
 
   void setCutoff(double _cutoff){ cutoff=_cutoff; }
 
-  void step(ors::KinematicWorld& world, bool dumpReport=false);
-  void pushToSwift(const ors::KinematicWorld& world);
-  void pullFromSwift(ors::KinematicWorld& world, bool dumpReport);
+  void step(mlr::KinematicWorld& world, bool dumpReport=false);
+  void pushToSwift(const mlr::KinematicWorld& world);
+  void pullFromSwift(mlr::KinematicWorld& world, bool dumpReport);
 
-  void reinitShape(const ors::Shape *s);
+  void reinitShape(const mlr::Shape *s);
 //  void close();
-  void deactivate(ors::Shape *s1, ors::Shape *s2);
-  void deactivate(const mlr::Array<ors::Shape*>& shapes);
-  void deactivate(const mlr::Array<ors::Body*>& bodies);
-  void initActivations(const ors::KinematicWorld& world, uint parentLevelsToDeactivate=3);
+  void activate(mlr::Shape *s);
+  void deactivate(mlr::Shape *s);
+  void deactivate(mlr::Shape *s1, mlr::Shape *s2);
+  void deactivate(const mlr::Array<mlr::Shape*>& shapes);
+  void deactivate(const mlr::Array<mlr::Body*>& bodies);
+
+  void initActivations(const mlr::KinematicWorld& world, uint parentLevelsToDeactivate=3);
   void swiftQueryExactDistance();
 };
 /** @} */

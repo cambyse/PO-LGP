@@ -22,7 +22,7 @@ extern double stickyWeight;
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   //initial prior: position 2e2; collision (0.04; 0.5e1)
   //world.setJointState(ARR(-0.130734, 0.200912, -0.0176154, -0.541507, -0.743056, -0.415109, -0.0146599 ));
@@ -40,7 +40,7 @@ int main(int argc,char **argv){
   arr y0;
   double dual;
   arr x0 = world.getJointState();
-  ors::Shape *endeff = world.getShapeByName("peg");
+  mlr::Shape *endeff = world.getShapeByName("peg");
 
   y0.resize(3);
 

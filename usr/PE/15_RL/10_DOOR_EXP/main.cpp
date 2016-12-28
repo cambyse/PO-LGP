@@ -9,7 +9,7 @@
 #include "../src/phase_optimization.h"
 #include "../src/traj_factory.h"
 
-arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
+arr createDoorDemonstration(mlr::KinematicWorld &world, arr &tp) {
   arr q; world.getJointState(q);
   world.setJointState(q,q*0.);
 
@@ -28,8 +28,8 @@ arr createDoorDemonstration(ors::KinematicWorld &world, arr &tp) {
 
 
   t =MP.addTask("pre_pos", new DefaultTaskMap(posTMT,world,"endeffL"));
-  t->setCostSpecs(tp(0),tp(0), ARR(world.getBodyByName("handle")->X.pos - ors::Vector(0.1,0,0.)), 1e2);
-  t =MP.addTask("pre_vec", new DefaultTaskMap(vecAlignTMT,world,"endeffL",ors::Vector(0.,1.,0.),__null,ors::Vector(0.,0.,-1.)));
+  t->setCostSpecs(tp(0),tp(0), ARR(world.getBodyByName("handle")->X.pos - mlr::Vector(0.1,0,0.)), 1e2);
+  t =MP.addTask("pre_vec", new DefaultTaskMap(vecAlignTMT,world,"endeffL",mlr::Vector(0.,1.,0.),__null,mlr::Vector(0.,0.,-1.)));
   t->setCostSpecs(tp(0),tp(0), ARR(1.), 1e2);
   t =MP.addTask("handle_pos", new TaskMap_qItself(world.getJointByName("door_handle")->qIndex,world.getJointStateDimension()));
   t->setCostSpecs(tp(2)-2,tp(2), ARR(0.3), 1e3);
@@ -69,7 +69,7 @@ int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   arr tp;
-  ors::KinematicWorld world("robot_door.ors");
+  mlr::KinematicWorld world("robot_door.ors");
   arr xDem = createDoorDemonstration(world,tp);
 
   TrajFactory tf;
@@ -122,7 +122,7 @@ int main(int argc,char **argv){
   world.gl().add(drawBluePoints,&(wC2));
 
   ConstrainedProblemMix CPM = Convert(MPF);
-  UnconstrainedProblemMix UPM(CPM, o.constrainedMethod);
+  LagrangianProblemMix UPM(CPM, o.constrainedMethod);
   OptNewton opt(X, UPM, o);
 
 
@@ -214,7 +214,7 @@ int main(int argc,char **argv){
   arr uC1,uC2;
 
 //  for(uint l=0;l<10; l++){
-//    OptNewton(Xmf, UnconstrainedProblemMix(Convert(MPF2), o2.constrainedMethod), o2).step();
+//    OptNewton(Xmf, LagrangianProblemMix(Convert(MPF2), o2.constrainedMethod), o2).step();
 //    tf.compFeatTraj(Xmf,uC1,world,new DefaultTaskMap(posTMT,world,"endeffC1"));
 //    tf.compFeatTraj(Xmf,uC2,world,new DefaultTaskMap(posTMT,world,"endeffC2"));
 //    displayTrajectory(Xmf,Xmf.d0,world,"Xmf");

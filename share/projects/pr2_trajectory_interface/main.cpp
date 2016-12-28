@@ -2,17 +2,17 @@
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Motion/phase_optimization.h>
-#include <Optim/opt-constrained.h>
+#include <Optim/lagrangian.h>
 
 #include <RosCom/roscom.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/trajectoryInterface.h>
 
 void TEST(TrajectoryInterface){
-  ors::KinematicWorld world_plan("model_plan.kvg");
-  ors::KinematicWorld world_robot("model.kvg");
+  mlr::KinematicWorld world_plan("model_plan.kvg");
+  mlr::KinematicWorld world_robot("model.kvg");
   makeConvexHulls(world_plan.shapes);
   TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_robot);
 
@@ -54,8 +54,8 @@ void TEST(TrajectoryInterface){
 }
 
 void TEST(RecordReplay) {
-  ors::KinematicWorld world_plan("model_plan.kvg");
-  ors::KinematicWorld world_robot("model.kvg");
+  mlr::KinematicWorld world_plan("model_plan.kvg");
+  mlr::KinematicWorld world_robot("model.kvg");
 
   TrajectoryInterface *ti = new TrajectoryInterface(world_plan,world_robot);
 

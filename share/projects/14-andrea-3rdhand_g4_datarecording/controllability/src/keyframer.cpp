@@ -30,7 +30,7 @@ typedef graph<node_vector_type, edge_vector_type>::kernel_1a_c graph_type;
 typedef matrix<double,0,1> vector_type;
 
 struct KeyFramer::sKeyFramer {
-  ors::KinematicWorld *kw;
+  mlr::KinematicWorld *kw;
   G4Data *g4d;
 
   uint nbodies, ndofs;
@@ -67,8 +67,8 @@ KeyFramer::~KeyFramer() {
   delete s;
 }
 
-ors::KinematicWorld& KeyFramer::kw() {
-  if(!s->kw) s->kw = new ors::KinematicWorld;
+mlr::KinematicWorld& KeyFramer::kw() {
+  if(!s->kw) s->kw = new mlr::KinematicWorld;
   return *s->kw;
 }
 
@@ -82,12 +82,12 @@ G4Data& KeyFramer::g4d() {
 #define PREC_ORI 1e-1
 void KeyFramer::updateOrs(uint f, bool show) {
   arr sensor_pos, sensor_quat;
-  ors::Quaternion quat;
-  ors::Vector x_vec(1, 0, 0),
+  mlr::Quaternion quat;
+  mlr::Vector x_vec(1, 0, 0),
               y_vec(0, 1, 0),
               z_vec(0, 0, 1);
-  ors::Body *b;
-  ors::Shape *sh;
+  mlr::Body *b;
+  mlr::Shape *sh;
 
   arr y, J, yVec, JVec;
   arr Phi, PhiJ, PhiJT;
@@ -111,7 +111,7 @@ void KeyFramer::updateOrs(uint f, bool show) {
 
       sensor_pos.referTo(g4d().query("pos", sensor, f));
       sensor_quat.referTo(g4d().query("quat", sensor, f));
-      quat = ors::Quaternion(sensor_quat);
+      quat = mlr::Quaternion(sensor_quat);
 
       kw().kinematicsPos(y, J, sh->body, &sh->rel.pos);
       Phi.append((y - sensor_pos) / PREC_POS);
@@ -405,8 +405,8 @@ void KeyFramer::computeDPos(const String &b, bool force) {
   posX = g4d().query("pos", b);
   posY = g4d().query("pos");
   quatX = g4d().query("quat", b);
-  ors::Vector v1, v2, v, A;
-  ors::Quaternion q1;
+  mlr::Vector v1, v2, v, A;
+  mlr::Quaternion q1;
   for(uint j = 0; j < nsensors; j++) {
     for(uint f = 0; f < nframes; f++) {
       v1.set(posX[f].p);
@@ -441,7 +441,7 @@ void KeyFramer::computeDQuat(const String &b, bool force) {
   arr quatX, quatY;
   quatX = g4d().query("quat", b);
   quatY = g4d().query("quat");
-  ors::Quaternion q1, q2, q, A;
+  mlr::Quaternion q1, q2, q, A;
   for(uint j = 0; j < nsensors; j++) {
     for(uint f = 0; f < nframes; f++) {
       q1.set(quatX[f].p);
@@ -468,8 +468,8 @@ void KeyFramer::computeDist(uint f) {
   uint idsa, idsb, ida, idb;
   double d;
   bool aa, ab;
-  ors::Shape *sa, *sb;
-  ors::Body *ba, *bb;
+  mlr::Shape *sa, *sb;
+  mlr::Body *ba, *bb;
 
   // MY SWIFT STUFF FOR DISTANCES
   int np, *oids;
@@ -524,7 +524,7 @@ void KeyFramer::computeDist() {
 
   // swift preparations
   cout << " * deactivating proxies within bodies:" << endl;
-  for(ors::Body *b: kw().bodies) {
+  for(mlr::Body *b: kw().bodies) {
     cout << " *** " << b->name << endl;
     kw().swift().deactivate(b->shapes);
   }
@@ -3914,16 +3914,16 @@ void KeyFramer::play() {
   double col_off[3] = { 1, 1, 1 };
 
   for(uint f = 0; f < g4d().numFrames(); f++) {
-    for(ors::Shape *sh: kw().shapes)
+    for(mlr::Shape *sh: kw().shapes)
       memcpy(sh->color, col_off, 3*sizeof(double));
     for(uint i1 = 0; i1 < g4d().id().sensors().N; i1++) {
       for(uint i2 = i1+1; i2 < g4d().id().sensors().N; i2++) {
         String &s1 = g4d().id().sensors().elem(i1);
         String &s2 = g4d().id().sensors().elem(i2);
         if(annOf(s1, s2).elem(f) == 1) {
-          for(ors::Shape *sh: kw().getBodyByName(s1)->shapes)
+          for(mlr::Shape *sh: kw().getBodyByName(s1)->shapes)
             memcpy(sh->color, col_on, 3*sizeof(double));
-          for(ors::Shape *sh: kw().getBodyByName(s2)->shapes)
+          for(mlr::Shape *sh: kw().getBodyByName(s2)->shapes)
             memcpy(sh->color, col_on, 3*sizeof(double));
         }
       }
@@ -3960,17 +3960,17 @@ void KeyFramer::playScene(Graph &kvg, const StringA &name_subjs, bool record) {
 
   for(uint f = 0; f < g4d().numFrames(); f++) {
     for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
-      for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
+      for(mlr::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
           memcpy(shape->color, gray, 3*sizeof(double));
 
     for(uint ns = 0; ns < name_subjs.N; ns++) {
       auto name_subj = name_subjs(ns);
       int ind_subj = g4d().id().subjects().findValue(name_subj);
       for(const String &digit: g4d().id().digitsof(name_subj))
-        for(ors::Shape *shape: kw().getBodyByName(digit)->shapes)
+        for(mlr::Shape *shape: kw().getBodyByName(digit)->shapes)
           memcpy(shape->color, col_subj[ns], 3*sizeof(double));
       for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
-        for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
+        for(mlr::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
           if((*p_vit)(ind_subj, ind_obj, f))
             memcpy(shape->color, col_obj[ns], 3*sizeof(double));
     }
@@ -3992,14 +3992,14 @@ void KeyFramer::playScene(Graph &kvg, const String &name_subj, bool record) {
   double col_obj[3] = { 1, .5, .5 };
 
   for(const String &digit: g4d().id().digitsof(name_subj))
-    for(ors::Shape *shape: kw().getBodyByName(digit)->shapes)
+    for(mlr::Shape *shape: kw().getBodyByName(digit)->shapes)
       memcpy(shape->color, col_subj, 3*sizeof(double));
 
   int ind_subj = g4d().id().subjects().findValue(name_subj);
   arr *p_vit = kvg.find<arr>("vit");
   for(uint f = 0; f < g4d().numFrames(); f++) {
     for(uint ind_obj = 0; ind_obj < g4d().id().objects().N; ind_obj++)
-      for(ors::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
+      for(mlr::Shape *shape: kw().getBodyByName(g4d().id().objects().elem(ind_obj))->shapes)
         if((*p_vit)(ind_subj, ind_obj, f))
           memcpy(shape->color, col_obj, 3*sizeof(double));
         else

@@ -37,14 +37,14 @@ void drawBase(void*){
   glColor(1.,.5,0.);
 }
 
-void loadOrsFile(ors::KinematicWorld& C, OpenGL& gl,const char *file="../../data/configurations/schunk.ors"){
+void loadOrsFile(mlr::KinematicWorld& C, OpenGL& gl,const char *file="../../data/configurations/schunk.ors"){
   char *path,*name,cwd[200];
   mlr::decomposeFilename(path,name,file);
   getcwd(cwd,200);
   chdir(path);
   
   gl.add(drawBase,0);
-  gl.add(ors::glDrawGraph,&C);
+  gl.add(mlr::glDrawGraph,&C);
   //gl->setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(7.,-0.,2.);
   gl.camera.focus(0,0,.8);

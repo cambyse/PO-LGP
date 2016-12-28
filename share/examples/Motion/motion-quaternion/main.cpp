@@ -10,9 +10,9 @@
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
-  for(ors::Shape *s:G.shapes) s->cont=true;
+  for(mlr::Shape *s:G.shapes) s->cont=true;
   G.getShapeByName("target")->cont=false;
   cout <<"loaded model: n=" <<G.q.N <<endl;
 //  G.gl().watch();

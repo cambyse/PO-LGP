@@ -39,7 +39,7 @@ struct Scene {
 
   /// scene description
   MotionProblem* MP;
-  ors::KinematicWorld* world;
+  mlr::KinematicWorld* world;
 
   /// reference solutions
   arr lambdaRef;
