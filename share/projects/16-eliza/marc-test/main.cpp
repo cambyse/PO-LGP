@@ -127,6 +127,7 @@ void testOptimization(){
 
 //==============================================================================
 
+#if 0
 void testOptimizationBlackBox(){
   RacerEnvironment R;
   LinearPolicy pi;
@@ -142,6 +143,7 @@ void testOptimizationBlackBox(){
   LocalModelBasedOptim opt(theta, f, OPT(verbose=2, initStep=1e-1));
   opt.run(300);
 }
+#endif
 
 //==============================================================================
 
@@ -222,8 +224,8 @@ int main(int argn, char** argv){
 //  rnd.clockSeed();
 
 //  testGradients();
-//  testOptimization();
-  testOptimizationBlackBox();
+  testOptimization();
+//  testOptimizationBlackBox();
 //  testLSPI();
 
   return 0;
