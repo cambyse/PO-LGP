@@ -28,13 +28,13 @@ void TEST(ModuleSorter){
 
   cout <<registry() <<endl <<"----------------------------" <<endl;
 #if 0
-  for(uint i=0;i<N;i++) S.addVariable<int>(STRING("int"<<i));
+  for(uint i=0;i<N;i++) S.addAccessData<int>(STRING("int"<<i));
   for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), {i-1, i});
 #else
   for(uint i=1;i<N;i++) new PairSorter( STRING("int"<<i-1), STRING("int"<<i) );
 #endif
   cout <<registry() <<endl <<"----------------------------" <<endl;
-  auto vars = registry().getValuesOfType<Variable<int> >();
+  auto vars = registry().getValuesOfType<AccessData<int> >();
 
   threadOpenModules(true);
 

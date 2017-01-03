@@ -100,7 +100,7 @@ void DecisionMakingModule::step() {
     sim.getObjects(objects);
     if (DEBUG>0) {PRINT(objects);}
     
-//     TermTypeA objects_types;
+//     ObjectiveTypeA objects_types;
 //     sim.getTypes(objects_types, objects, le->types);
 //     le->setConstants(objects, objects_types);
     relational::reason::setConstants(objects);

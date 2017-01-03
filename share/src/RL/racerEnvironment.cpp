@@ -23,12 +23,14 @@ void RacerEnvironment::resetFilter(){
 }
 
 bool RacerEnvironment::transition(arr& observation, double& reward, const arr& action){
+  t++;
+
   //-- dynamics
   R.getDynamicsAB(A,a,B); //only to be stored for Kalman filter
 
   R.stepDynamics(action.scalar());
   if(display){
-    R.gl().text.clear() <<t <<" ; " <<R.q(0) << " ; " <<R.q(1);
+    R.gl().text.clear() <<"t=" <<t <<" time=" <<t*R.tau <<" q= " <<R.q(0) << ", " <<R.q(1);
     R.gl().update();
   }
 

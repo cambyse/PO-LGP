@@ -3,7 +3,7 @@ void MotionProblem::costReport(bool gnuplt) {
 
   HALT("deprecated")
   arr& phi = phiMatrix.scalar();
-  TermTypeA& tt = ttMatrix.scalar();
+  ObjectiveTypeA& tt = ttMatrix.scalar();
 
   arr plotData=zeros(T,tasks.N);
 
@@ -21,11 +21,11 @@ void MotionProblem::costReport(bool gnuplt) {
       if(tt.N) for(uint i=0;i<d;i++) CHECK(tt(M+i)==c->type,"");
 
       if(d){
-        if(c->type==sumOfSqrTT){
+        if(c->type==OT_sumOfSqr){
           taskC(i) += a = sumOfSqr(phi.sub(M,M+d-1));
           plotData(t,i) = a;
         }
-        if(c->type==ineqTT){
+        if(c->type==OT_ineq){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
             double g=phi(M+j);
@@ -35,7 +35,7 @@ void MotionProblem::costReport(bool gnuplt) {
           taskG(i) += gpos;
           plotData(t,i) = gpos; //gall;
         }
-        if(c->type==eqTT){
+        if(c->type==OT_eq){
           double gpos=0.,gall=0.;
           for(uint j=0;j<d;j++){
             double h=phi(M+j);
@@ -74,7 +74,7 @@ void MotionProblem::costReport(bool gnuplt) {
     fil <<c->name <<' '; // <<'[' <<d <<"] ";
   }
   for(auto c:tasks){
-    if(c->type==ineqTT && dualSolution.N){
+    if(c->type==OT_ineq && dualSolution.N){
       fil <<c->name <<"_dual ";
     }
   }

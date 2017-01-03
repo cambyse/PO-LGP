@@ -82,7 +82,7 @@ void TEST(GradCheck) {
 
 
 //  arr phi, grad;
-//  TermTypeA tt;
+//  ObjectiveTypeA tt;
 //  ConstrainedProblemMix v = Convert(MPF);
 //  ConstrainedProblemMix UCP = Convert(MPF);
 //  UCP(phi, grad, tt, x);

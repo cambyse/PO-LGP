@@ -18,7 +18,7 @@ Some behaviors are sequential like a finite state machine.
 #include <motion/FeedbackControlTasks.h>
 
 #define VAR(Type) \
-  Type *_##Type;  biros().getVariable<Type>(_##Type, #Type, NULL);
+  Type *_##Type;  biros().getAccessData<Type>(_##Type, #Type, NULL);
 
 void wait(double sec){
   VAR(MotionPrimitive);

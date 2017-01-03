@@ -70,8 +70,8 @@ struct KOMO{ //TODO: rename ManipOp
   }
 
   //-- tasks (cost/constraint terms) low-level
-  struct Task* setTask(double startTime, double endTime, TaskMap* map, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
-//  struct Task* setTask(double startTime, double endTime, const char* mapSpecs, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=100., uint order=0);
+  struct Task* setTask(double startTime, double endTime, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=100., uint order=0);
+//  struct Task* setTask(double startTime, double endTime, const char* mapSpecs, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=100., uint order=0);
   void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
 
 
@@ -84,11 +84,11 @@ struct KOMO{ //TODO: rename ManipOp
 
   //-- tasks (tasks) mid-level
   void setHoldStill(double startTime, double endTime, const char* shape, double prec=1e2);
-  void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
-  void setVelocity(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
-  void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), TermType type=sumOfSqrTT, const arr& target=ARR(1.), double prec=1e2);
-  void setTouch(double startTime, double endTime, const char* shape1, const char* shape2, TermType type=sumOfSqrTT, const arr& target=NoArr, double prec=1e2);
-  void setAlignedStacking(double time, const char* object, TermType type=sumOfSqrTT, double prec=1e2);
+  void setPosition(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2);
+  void setVelocity(double startTime, double endTime, const char* shape, const char* shapeRel=NULL, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2);
+  void setAlign(double startTime, double endTime, const char* shape,  const arr& whichAxis=ARR(1.,0.,0.), const char* shapeRel=NULL, const arr& whichAxisRel=ARR(1.,0.,0.), ObjectiveType type=OT_sumOfSqr, const arr& target=ARR(1.), double prec=1e2);
+  void setTouch(double startTime, double endTime, const char* shape1, const char* shape2, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2);
+  void setAlignedStacking(double time, const char* object, ObjectiveType type=OT_sumOfSqr, double prec=1e2);
   void setLastTaskToBeVelocity();
   void setCollisions(bool hardConstraint, double margin=.05, double prec=1.);
   void setLimits(bool hardConstraint, double margin=.05, double prec=1.);

@@ -28,11 +28,11 @@
 
 struct Task {
   TaskMap& map;
-  const TermType type;  ///< element of {sumOfSqr, inequality, equality}
+  const ObjectiveType type;  ///< element of {sumOfSqr, inequality, equality}
   mlr::String name;
   arr target, prec;     ///< optional linear, time-dependent, rescaling (with semantics of target & precision)
 
-  Task(TaskMap* m, const TermType& type) : map(*m), type(type){}
+  Task(TaskMap* m, const ObjectiveType& type) : map(*m), type(type){}
 
   void setCostSpecs(int fromTime, int toTime,
                     const arr& _target=ARR(0.),
@@ -74,7 +74,7 @@ struct MotionProblem {
   
   //-- buffers of all feature values computed on last set_x -- used for reporting only
   arrA featureValues;                  ///< storage of all features in all time slices
-  mlr::Array<TermTypeA> featureTypes;  ///< storage of all feature-types in all time slices
+  mlr::Array<ObjectiveTypeA> featureTypes;  ///< storage of all feature-types in all time slices
   arr dualSolution;                    ///< the dual solution computed during constrained optimization
 
   struct OpenGL *gl; //internal only: used in 'displayTrajectory'
@@ -88,7 +88,7 @@ struct MotionProblem {
   void setTiming(uint steps, double duration);
 
   /// core method to add tasks
-  Task* addTask(const char* name, TaskMap *map, const TermType& termType); ///< manually add a task
+  Task* addTask(const char* name, TaskMap *map, const ObjectiveType& termType); ///< manually add a task
 
   //-- setting costs in a task space via specs
   void parseTasks(const Graph& specs, int stepsPerPhase=-1);     ///< read all tasks from a graph
@@ -120,11 +120,11 @@ struct MotionProblem {
     MotionProblem& MP;
     Conv_MotionProblem_InvKinProblem(MotionProblem& P) : MP(P){}
 
-    void phi(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x){
+    void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x){
       MP.inverseKinematics(phi, J, H, tt, x);
     };
   } invKin_problem;
-  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
+  void inverseKinematics(arr& y, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x);
 
   struct Conv_MotionProblem_KOMO_Problem : KOMO_Problem{
     MotionProblem& MP;
@@ -133,8 +133,8 @@ struct MotionProblem {
     Conv_MotionProblem_KOMO_Problem(MotionProblem& P) : MP(P){}
 
     virtual uint get_k(){ return MP.k_order; }
-    virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes);
-    virtual void phi(arr& phi, arrA& J, arrA& H, TermTypeA& tt, const arr& x);
+    virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, ObjectiveTypeA& featureTypes);
+    virtual void phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x);
   } komo_problem;
 };
 

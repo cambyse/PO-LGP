@@ -11,13 +11,13 @@ struct EndStateProgram:ConstrainedProblem{
   EndStateProgram(mlr::KinematicWorld& world, Graph& symbolicState, int verbose)
     : world(world), symbolicState(symbolicState), verbose(verbose){
     ConstrainedProblem::operator=(
-      [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+      [this](arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) -> void {
         return this -> phi(phi, J, H, tt, x);
       }
     );
   }
 
-  void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
+  void phi(arr& phi, arr& phiJ, ObjectiveTypeA& tt, const arr& x){
     world.setJointState(x);
     if(verbose>1) world.gl().update();
     if(verbose>2) world.gl().watch();
@@ -58,7 +58,7 @@ struct EndStateProgram:ConstrainedProblem{
         phiJ.append( J[1]);
         phiJ.append(-J[1]);
       }
-      if(&tt) tt.append(ineqTT, 4);
+      if(&tt) tt.append(OT_ineq, 4);
     }
 
     //-- supporters below object -> maximize their distances
@@ -94,7 +94,7 @@ struct EndStateProgram:ConstrainedProblem{
           arr normal = y/d;
           phi.append( 1.-d );
           if(&phiJ) phiJ.append( ~normal*(-J+cenJ) );
-          if(&tt) tt.append(sumOfSqrTT, 1);
+          if(&tt) tt.append(OT_sumOfSqr, 1);
         }
       }
     }
@@ -130,7 +130,7 @@ struct EndStateProgram:ConstrainedProblem{
         world.kinematicsPos(y, J, b);
         phi.append( 1e-3*(y-cen) );
         if(&phiJ) phiJ.append( 1e-3*(J-cenJ) );
-        if(&tt) tt.append(sumOfSqrTT, 3);
+        if(&tt) tt.append(OT_sumOfSqr, 3);
       }
     }
 

@@ -24,8 +24,8 @@ double mlr::Rollouts::rollout(uint numRollouts, const arr& theta, double thetaNo
 
   for(uint m=0;m<M;m++){
     if(fixedRandomSeed>=0) rnd.seed(fixedRandomSeed);
-    env.resetEnvironment();
-    fil.resetFilter();
+    env.resetEnvironment(); //TODO: this should return a first observation!
+    fil.resetFilter();      //TODO: this should receive a first observation!
     double totalReturn = 0.;
     double discount=1.;
 
@@ -45,11 +45,11 @@ double mlr::Rollouts::rollout(uint numRollouts, const arr& theta, double thetaNo
       obs .referToDim(observations, m, t);
       reward = &rewards(m, t);
 
-      feat = fil.getFeatures();
+      feat = fil.getFeatures(); //h_t
 
-      pi.sampleAction(act, dAct, feat, thet);
+      pi.sampleAction(act, dAct, feat, thet); //a_t
 
-      terminal = env.transition(obs, *reward, act);
+      terminal = env.transition(obs, *reward, act); //(r_t, y_{t+1}) TODO: time indexing of y is inconsistent!
 
       fil.updateFilter(act, obs);
 

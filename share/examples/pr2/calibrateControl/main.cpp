@@ -32,10 +32,10 @@ struct Poser{
 //    komo.setSquaredQVelocities();
 //    komo.setCollisions(true);
 //    komo.setLimits(true);
-//    komo.setPosition(1., 1., "endeffR", NULL, sumOfSqrTT, posR);
-//    komo.setPosition(1., 1., "endeffL", NULL, sumOfSqrTT, posL);
-//    komo.setAlign(1., 1., "endeffR", ARR(1.,0.,0.), NULL, vecR, sumOfSqrTT, {1.});
-//    komo.setAlign(1., 1., "endeffL", ARR(1.,0.,0.), NULL, vecL, sumOfSqrTT, {1.});
+//    komo.setPosition(1., 1., "endeffR", NULL, OT_sumOfSqr, posR);
+//    komo.setPosition(1., 1., "endeffL", NULL, OT_sumOfSqr, posL);
+//    komo.setAlign(1., 1., "endeffR", ARR(1.,0.,0.), NULL, vecR, OT_sumOfSqr, {1.});
+//    komo.setAlign(1., 1., "endeffL", ARR(1.,0.,0.), NULL, vecL, OT_sumOfSqr, {1.});
 //    komo.reset();
 //    komo.run();
 
@@ -57,33 +57,33 @@ struct Poser{
     Task *t;
     MP.world.setJointState(qInit);
 
-    t = MP.addTask("transitions", new TaskMap_Transition(W), sumOfSqrTT);
+    t = MP.addTask("transitions", new TaskMap_Transition(W), OT_sumOfSqr);
     t->map.order=2; //make this an acceleration task!
     t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-    t = MP.addTask("endeffR", new TaskMap_Default(posTMT,W,"endeffR"), sumOfSqrTT);
+    t = MP.addTask("endeffR", new TaskMap_Default(posTMT,W,"endeffR"), OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, posR, 1e2);
-    t = MP.addTask("endeffL", new TaskMap_Default(posTMT,W,"endeffL"), sumOfSqrTT);
+    t = MP.addTask("endeffL", new TaskMap_Default(posTMT,W,"endeffL"), OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, posL, 1e2);
-    t = MP.addTask("alignL", new TaskMap_Default(vecAlignTMT,W,"endeffL",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(vecL)), sumOfSqrTT);
+    t = MP.addTask("alignL", new TaskMap_Default(vecAlignTMT,W,"endeffL",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(vecL)), OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, {1.}, 1e1);
-    t = MP.addTask("alignR", new TaskMap_Default(vecAlignTMT,W,"endeffR",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(vecR)), sumOfSqrTT);
+    t = MP.addTask("alignR", new TaskMap_Default(vecAlignTMT,W,"endeffR",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(vecR)), OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, {1.}, 1e1);
 
-    t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
+    t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), OT_ineq);
     t->setCostSpecs(0, MP.T, {0.}, 1.);
-    t = MP.addTask("limits", new LimitsConstraint(0.05), ineqTT);
+    t = MP.addTask("limits", new LimitsConstraint(0.05), OT_ineq);
     t->setCostSpecs(0, MP.T, {0.}, 1.);
 
     // sample a head joint
     arr lim = W.getLimits();
     uint qIdx = W.getJointByName("head_pan_joint")->qIndex;
     double qh = lim(qIdx,0)+rand(1).last()*(lim(qIdx,1)-lim(qIdx,0));
-    t = MP.addTask("head1", new TaskMap_qItself(qIdx,W.getJointStateDimension()), sumOfSqrTT);
+    t = MP.addTask("head1", new TaskMap_qItself(qIdx,W.getJointStateDimension()), OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, ARR(qh), 1.);
     qIdx = W.getJointByName("head_tilt_joint")->qIndex;
     qh = lim(qIdx,0)+rand(1).last()*(lim(qIdx,1)-lim(qIdx,0));
-    t = MP.addTask("head2", new TaskMap_qItself(qIdx,W.getJointStateDimension()), sumOfSqrTT);
+    t = MP.addTask("head2", new TaskMap_qItself(qIdx,W.getJointStateDimension()), OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, ARR(qh), 1.);
 
     //-- create the Optimization problem (of type kOrderMarkov)

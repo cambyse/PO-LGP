@@ -54,7 +54,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
   //-- transitions
   {
     Task *t;
-    t = MP.addTask("transitions", new TaskMap_Transition(world), sumOfSqrTT);
+    t = MP.addTask("transitions", new TaskMap_Transition(world), OT_sumOfSqr);
     if(microSteps>3) t->map.order=2;
     else t->map.order=1;
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
@@ -63,7 +63,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
   //-- pose damping
   {
     Task *t;
-    t = MP.addTask("pose", new TaskMap_qItself(), sumOfSqrTT);
+    t = MP.addTask("pose", new TaskMap_qItself(), OT_sumOfSqr);
     t->map.order=0;
     t->setCostSpecs(0, MP.T, {0.}, 1e-5);
   }
@@ -73,7 +73,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     Task *t;
     TaskMap_Default *m;
     //pick & place position
-    t = MP.addTask("pap_pos", m=new TaskMap_Default(posDiffTMT), sumOfSqrTT);
+    t = MP.addTask("pap_pos", m=new TaskMap_Default(posDiffTMT), OT_sumOfSqr);
     m->referenceIds.resize(MP.T+1,2) = -1;
     t->prec.resize(MP.T+1).setZero();
     t->target.resize(MP.T+1,3).setZero();
@@ -91,7 +91,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     }
 
     //pick & place quaternion
-    t = MP.addTask("psp_quat", m=new TaskMap_Default(quatDiffTMT), sumOfSqrTT);
+    t = MP.addTask("psp_quat", m=new TaskMap_Default(quatDiffTMT), OT_sumOfSqr);
     m->referenceIds.resize(MP.T+1,2) = -1;
     t->prec.resize(MP.T+1).setZero();
     t->target.resize(MP.T+1,4).setZero();
@@ -110,7 +110,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
 
     // zero position velocity
     if(microSteps>3){
-      t = MP.addTask("psp_zeroPosVel", m=new TaskMap_Default(posTMT, endeff_index), sumOfSqrTT);
+      t = MP.addTask("psp_zeroPosVel", m=new TaskMap_Default(posTMT, endeff_index), OT_sumOfSqr);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -119,7 +119,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
       }
 
       // zero quaternion velocity
-      t = MP.addTask("pap_zeroQuatVel", new TaskMap_Default(quatTMT, endeff_index), sumOfSqrTT);
+      t = MP.addTask("pap_zeroQuatVel", new TaskMap_Default(quatTMT, endeff_index), OT_sumOfSqr);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -134,7 +134,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     M.setZero();
     for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
     cout <<M <<endl;
-    t = MP.addTask("graspJoint", new TaskMap_qItself(M), sumOfSqrTT);
+    t = MP.addTask("graspJoint", new TaskMap_qItself(M), OT_sumOfSqr);
     t->map.order=1;
     t->prec.resize(MP.T+1).setZero();
     for(uint i=0;i<actions.N;i++){
@@ -143,7 +143,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
 
     // up/down velocities after/before pick/place
     if(microSteps>3){
-      t = MP.addTask("pap_upDownPosVel", new TaskMap_Default(posTMT, endeff_index), sumOfSqrTT);
+      t = MP.addTask("pap_upDownPosVel", new TaskMap_Default(posTMT, endeff_index), OT_sumOfSqr);
       t->map.order=1;
       t->prec.resize(MP.T+1).setZero();
       t->target.resize(MP.T+1,3).setZero();
@@ -164,7 +164,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
 
     //of the object itself
     if(microSteps>3){
-      t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), ineqTT);
+      t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), OT_ineq);
       m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -176,7 +176,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     }
 
     //of the hand
-    t = MP.addTask("hand_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), ineqTT);
+    t = MP.addTask("hand_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), OT_ineq);
     m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
     t->prec.resize(MP.T+1).setZero();
     for(uint time=0;time<=MP.T; time++){

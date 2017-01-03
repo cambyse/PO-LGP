@@ -13,11 +13,11 @@ int main(int argc, char **argv){
 
   //-- construct the NN
   Net N;
-  Variable *x = N.newConstant("x_0", TUP(h(0)) );
+  Variable *x = N.newConstant("x_0", TUP(h(0)), true );
   Variable *z;
   for(uint l=1;l<=L+1;l++){
-    Variable *W = N.newConstant(STRING("W_"<<l-1), TUP(h(l), h(l-1)) );
-    Variable *b = N.newConstant(STRING("b_"<<l-1), TUP(h(l)) );
+    Variable *W = N.newConstant(STRING("W_"<<l-1), TUP(h(l), h(l-1)), true );
+    Variable *b = N.newConstant(STRING("b_"<<l-1), TUP(h(l)), true );
     z = N.newFunction(STRING("z_"<<l), {x, W, b}, new Linear(), TUP(h(l)) );
     if(l<=L)
       x = N.newFunction(STRING("x_"<<l), {z}, new Sigmoid(), TUP(h(l)) );
@@ -26,24 +26,24 @@ int main(int argc, char **argv){
   N.G.displayDot();
 
   //-- set random weights
-  N.randConstants();
+  N.randParameters();
 
   //-- define vector-valued function
   VectorFunction f =
       [&N,out](arr& y, arr& J, const arr& x)->void{
-    N.setAllConstants(x);
+    N.setAllParameters(x);
     N.fwdCompute();
     y = out->value;
     if(&J){
       N.zeroAllPartialDerivatives(y.N);
       out->del.setId();
       N.bwdCompute();
-      J = N.getAllConstantJacobians(y.N, x.N);
+      J = N.getAllParameterJacobians(y.N, x.N);
     }
   };
 
   //-- check gradient w.r.t. all constants (input and weights
-  arr w = N.getAllConstants();
+  arr w = N.getAllParameters();
   checkJacobian(f, w, 1e-4);
 
   return 0;

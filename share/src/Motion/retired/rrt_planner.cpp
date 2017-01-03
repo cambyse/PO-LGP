@@ -41,11 +41,11 @@ namespace mlr {
 
 bool mlr::sRRTPlanner::isFeasible(const arr& q) {
   arr phi;
-  TermTypeA tt;
+  ObjectiveTypeA tt;
   p->problem.configurations(0)->setJointState(q, NoArr);
   p->problem.phi_t(phi, NoArr, tt, 0);
   for(uint i=0;i<phi.N;i++)
-    if(tt(i)==ineqTT && phi(i)>0.) return false;
+    if(tt(i)==OT_ineq && phi(i)>0.) return false;
   return true;
 }
 

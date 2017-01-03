@@ -155,7 +155,7 @@ void MotionFactory::createScenes(uint sID,mlr::Array<Scene> &trainScenes, mlr::A
   // compute number of parameters
   numParam = 0;
   for (uint c=0;c<trainScenes(0).MP->taskCosts.N;c++) {
-    if (trainScenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (trainScenes(0).MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       numParam++;
     }
   }
@@ -246,7 +246,7 @@ void MotionFactory::createSceneTest(Scene &s, mlr::Array<CostWeight> &weights, u
 
   // set all costs in s.MP equal to 0 or 1
   for (uint c=0;c < s.MP->taskCosts.N;c++) {
-    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (s.MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       s.MP->taskCosts(c)->prec /= (s.MP->taskCosts(c)->prec+1e-12);
       s.MP->taskCosts(c)->active=true;
       cout << s.MP->taskCosts(c)->prec << endl;
@@ -369,7 +369,7 @@ void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weig
 //  t->active=false;
   // set all costs in s.MP equal to 0 or 1
   for (uint c=0;c < s.MP->taskCosts.N;c++) {
-    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (s.MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       s.MP->taskCosts(c)->prec /= (s.MP->taskCosts(c)->prec+1e-12);
       cout << s.MP->taskCosts(c)->prec << endl;
     }
@@ -453,7 +453,7 @@ void MotionFactory::createSceneTestRBF(Scene &s, mlr::Array<CostWeight> &weights
 
   // set all costs in s.MP equal to 0 or 1
   for (uint c=0;c < s.MP->taskCosts.N;c++) {
-    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (s.MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       if (weights(c).type == CostWeight::RBF) {
         s.MP->taskCosts(c)->prec =1.;
       }else{
@@ -538,7 +538,7 @@ void MotionFactory::createSceneTestGaussian(Scene &s, mlr::Array<CostWeight> &we
 
   // set all costs in s.MP equal to 0 or 1
   for (uint c=0;c < s.MP->taskCosts.N;c++) {
-    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (s.MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       if (weights(c).type == CostWeight::RBF || weights(c).type == CostWeight::Gaussian) {
         s.MP->taskCosts(c)->prec =1.;
       }else{
@@ -728,7 +728,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 
   // set all costs in s.MP equal to 0 or 1
   for (uint c=0;c < s.MP->taskCosts.N;c++) {
-    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (s.MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       if (weights(c).type == CostWeight::RBF) {
         s.MP->taskCosts(c)->prec = 1;
       } else {
@@ -906,7 +906,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 
   // set all costs in s.MP equal to 0 or 1
   for (uint c=0;c < s.MP->taskCosts.N;c++) {
-    if (s.MP->taskCosts(c)->map.type==sumOfSqrTT) {
+    if (s.MP->taskCosts(c)->map.type==OT_sumOfSqr) {
       if (weights(c).type == CostWeight::RBF) {
         s.MP->taskCosts(c)->prec = 1;
       } else {

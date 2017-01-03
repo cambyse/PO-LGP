@@ -36,7 +36,7 @@ EffectivePoseProblem::EffectivePoseProblem(mlr::KinematicWorld& effKinematics_be
    */
 
   // ConstrainedProblem::operator=(
-  //       [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+  //       [this](arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) -> void {
   //   return this -> phi(phi, J, H, tt, x);
   // } );
 
@@ -80,7 +80,7 @@ EffectivePoseProblem::EffectivePoseProblem(mlr::KinematicWorld& effKinematics_be
   effKinematics.getJointState(x0);
 }
 
-void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const arr& x){
+void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, ObjectiveTypeA& tt, const arr& x){
   effKinematics.setJointState(x);
   if(verbose>1) effKinematics.gl().timedupdate(.1);
   if(verbose>2) effKinematics.gl().watch();
@@ -96,7 +96,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
   double prec=1e+0;
   phi.append(prec*(x-x0));
   if(&phiJ) phiJ.append(prec*eye(x.N));
-  if(&tt) tt.append(sumOfSqrTT, x.N);
+  if(&tt) tt.append(OT_sumOfSqr, x.N);
 
   //-- touch symbols -> constraints of being inside!
   //LATER: This is not yet transferred to the new LGP!
@@ -110,7 +110,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
     gjk.phi(y, (&phiJ?J:NoArr), effKinematics);
     phi.append(y);
     if(&phiJ) phiJ.append(J);
-    if(&tt) tt.append(eqTT, y.N);
+    if(&tt) tt.append(OT_eq, y.N);
   }
 
   //-- support symbols -> constraints of being inside!
@@ -151,7 +151,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       phiJ.append(prec*( J[1]));
       phiJ.append(prec*(-J[1]));
     }
-    if(&tt) tt.append(ineqTT, 4);
+    if(&tt) tt.append(OT_ineq, 4);
   }
 
   //-- supporters below object -> maximize their distances to center
@@ -190,7 +190,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
         arr normal = y/d;
         phi.append( prec*(1.-d) );
         if(&phiJ) phiJ.append( prec*(~normal*(-J+cenJ)) );
-        if(&tt) tt.append(sumOfSqrTT, 1);
+        if(&tt) tt.append(OT_sumOfSqr, 1);
       }
 
       //-- align center with object center
@@ -199,7 +199,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       effKinematics.kinematicsPos(y, J, b);
       phi.append( prec*(y-cen) );
       if(&phiJ) phiJ.append( prec*(J-cenJ) );
-      if(&tt) tt.append(sumOfSqrTT, 3);
+      if(&tt) tt.append(OT_sumOfSqr, 3);
     }
 
     prec=1e-0;
@@ -214,7 +214,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
         effKinematics.kinematicsPos(y2, J2, b2);
         phi.append( prec*(y1-y2) );
         if(&phiJ) phiJ.append( prec*(J1-J2) );
-        if(&tt) tt.append(sumOfSqrTT, 3);
+        if(&tt) tt.append(OT_sumOfSqr, 3);
       }
     }
   }
@@ -254,7 +254,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
         arr normal = y/d;
         phi.append( prec*(1.-d) );
         if(&phiJ) phiJ.append( prec*(~normal*(-J+cenJ)) );
-        if(&tt) tt.append(sumOfSqrTT, 1);
+        if(&tt) tt.append(OT_sumOfSqr, 1);
       }
 
       //-- align center with object center
@@ -263,7 +263,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
       effKinematics.kinematicsPos(y, J, b);
       phi.append( prec*(y-cen) );
       if(&phiJ) phiJ.append( prec*(J-cenJ) );
-      if(&tt) tt.append(sumOfSqrTT, 3);
+      if(&tt) tt.append(OT_sumOfSqr, 3);
     }
 
     prec=1e-0;
@@ -277,7 +277,7 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const
         effKinematics.kinematicsPos(y2, J2, b2);
         phi.append( prec*(y1-y2) );
         if(&phiJ) phiJ.append( prec*(J1-J2) );
-        if(&tt) tt.append(sumOfSqrTT, 3);
+        if(&tt) tt.append(OT_sumOfSqr, 3);
       }
     }
   }

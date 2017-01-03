@@ -9,7 +9,7 @@ struct IpoptConstrainedProblem : TNLP{
   //-- buffers to avoid recomputing gradients
   arr x;          ///< point where P was last evaluated
   arr phi_x, J_x, H_x; ///< everything else at x
-  TermTypeA tt_x; ///< everything else at x
+  ObjectiveTypeA tt_x; ///< everything else at x
 
 
   virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
@@ -20,7 +20,7 @@ struct IpoptConstrainedProblem : TNLP{
     P(phi_x, J_x, H_x, tt_x, x0);
 
     m=0;
-    for(auto t:tt_x) if(t==ineqTT || t=eqTT) m++;
+    for(auto t:tt_x) if(t==OT_ineq || t=OT_eq) m++;
     nnz_jac_g = m*n;
     nnz_h_lag = n*n;
     index_style = TNLP::C_STYLE;
@@ -33,8 +33,8 @@ struct IpoptConstrainedProblem : TNLP{
 
     uint ng=0;
     for(auto t:tt_x){
-      if(t==ineqTT){ g_l[ng]=-1e10; g_u[ng]=0.; }
-      if(t==eqTT){ g_l[ng]=g_u[ng]=0.; }
+      if(t==OT_ineq){ g_l[ng]=-1e10; g_u[ng]=0.; }
+      if(t==OT_eq){ g_l[ng]=g_u[ng]=0.; }
       ng++;
     }
     CHECK(ng==m,"");
@@ -62,8 +62,8 @@ struct IpoptConstrainedProblem : TNLP{
 
     double f=0.;
     for(uint i=0;i<phi_x.N;i++){
-      if(            tt_x(i)==fTT                    ) f += phi_x(i);                // direct cost term
-      if(            tt_x(i)==sumOfSqrTT             ) f += mlr::sqr(phi_x(i));       // sumOfSqr term
+      if(            tt_x(i)==OT_f                    ) f += phi_x(i);                // direct cost term
+      if(            tt_x(i)==OT_sumOfSqr             ) f += mlr::sqr(phi_x(i));       // sumOfSqr term
     }
     obj_value = f;
   }
@@ -76,13 +76,13 @@ struct IpoptConstrainedProblem : TNLP{
 
     arr coeff=zeros(phi_x.N);
     for(uint i=0;i<phi_x.N;i++){
-      if(            tt_x(i)==fTT                    ) coeff(i) += 1.;              // direct cost term
-      if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.* phi_x(i);    // sumOfSqr terms
-      if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) -= (muLB/phi_x(i)); //log barrier, check feasibility
-      if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu*phi_x(i);  //g-penalty
-      if(lambda.N && tt_x(i)==ineqTT && lambda(i)>0. ) coeff(i) += lambda(i);       //g-lagrange terms
-      if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu*phi_x(i);  //h-penalty
-      if(lambda.N && tt_x(i)==eqTT                   ) coeff(i) += lambda(i);       //h-lagrange terms
+      if(            tt_x(i)==OT_f                    ) coeff(i) += 1.;              // direct cost term
+      if(            tt_x(i)==OT_sumOfSqr             ) coeff(i) += 2.* phi_x(i);    // sumOfSqr terms
+      if(muLB     && tt_x(i)==OT_ineq                 ) coeff(i) -= (muLB/phi_x(i)); //log barrier, check feasibility
+      if(mu       && tt_x(i)==OT_ineq && I_lambda_x(i)) coeff(i) += 2.*mu*phi_x(i);  //g-penalty
+      if(lambda.N && tt_x(i)==OT_ineq && lambda(i)>0. ) coeff(i) += lambda(i);       //g-lagrange terms
+      if(nu       && tt_x(i)==OT_eq                   ) coeff(i) += 2.*nu*phi_x(i);  //h-penalty
+      if(lambda.N && tt_x(i)==OT_eq                   ) coeff(i) += lambda(i);       //h-lagrange terms
     }
     dL = comp_At_x(J_x, coeff);
     dL.reshape(x.N);
@@ -103,11 +103,11 @@ struct IpoptConstrainedProblem : TNLP{
       arr coeff=zeros(phi_x.N);
       int fterm=-1;
       for(uint i=0;i<phi_x.N;i++){
-        if(            tt_x(i)==fTT){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
-        if(            tt_x(i)==sumOfSqrTT             ) coeff(i) += 2.;      // sumOfSqr terms
-        if(muLB     && tt_x(i)==ineqTT                 ) coeff(i) += (muLB/mlr::sqr(phi_x(i)));  //log barrier, check feasibility
-        if(mu       && tt_x(i)==ineqTT && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
-        if(nu       && tt_x(i)==eqTT                   ) coeff(i) += 2.*nu;   //h-penalty
+        if(            tt_x(i)==OT_f){ if(fterm!=-1) HALT("There must only be 1 f-term (in the current implementation)");  fterm=i; }
+        if(            tt_x(i)==OT_sumOfSqr             ) coeff(i) += 2.;      // sumOfSqr terms
+        if(muLB     && tt_x(i)==OT_ineq                 ) coeff(i) += (muLB/mlr::sqr(phi_x(i)));  //log barrier, check feasibility
+        if(mu       && tt_x(i)==OT_ineq && I_lambda_x(i)) coeff(i) += 2.*mu;   //g-penalty
+        if(nu       && tt_x(i)==OT_eq                   ) coeff(i) += 2.*nu;   //h-penalty
       }
       arr tmp = J_x;
       for(uint i=0;i<phi_x.N;i++) tmp[i]() *= sqrt(coeff(i));

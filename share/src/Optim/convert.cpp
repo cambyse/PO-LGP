@@ -30,7 +30,7 @@ Convert::~Convert() {
   if(cpm){ delete cpm; cpm=NULL; }
 }
 
-//void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x);
+//void conv_KOrderMarkovFunction_ConstrainedProblem(KOrderMarkovFunction& f, arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x);
 double conv_VectorFunction_ScalarFunction(VectorFunction f, arr& g, arr& H, const arr& x){
   arr y,J;
   f(y, (&g?J:NoArr), x);
@@ -108,7 +108,7 @@ ScalarFunction conv_VectorFunction2ScalarFunction(const VectorFunction& f) {
   };
 }
 
-void Conv_linearlyReparameterize_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& z){
+void Conv_linearlyReparameterize_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& z){
   arr x = B*z;
   P.phi(phi, J, H, tt, x);
   if(&J) J = comp_A_x(J,B);
@@ -131,5 +131,5 @@ Convert::operator ConstrainedProblem&() {
 //===========================================================================
 
 RUN_ON_INIT_BEGIN()
-mlr::Array<TermType>::memMove=true;
+mlr::Array<ObjectiveType>::memMove=true;
 RUN_ON_INIT_END()

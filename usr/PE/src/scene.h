@@ -39,7 +39,7 @@ struct Scenario {
     for (uint i = 0; i<scenes.d0;i++){
       uint pc = 0;
       for (uint c=0;c<scenes(i).MP->tasks.N;c++) {
-        if (scenes(i).MP->tasks(c)->map.type == sumOfSqrTT) {
+        if (scenes(i).MP->tasks(c)->map.type == OT_sumOfSqr) {
           arr w;
           weights(c).compWeights(w,NoArr,NoArr,paramNorm.subRange(pc,pc+weights(c).numParam - 1),true);
           if (reset) w = 1.;

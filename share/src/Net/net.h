@@ -16,6 +16,7 @@
 
 #include <Core/array.h>
 #include <Core/graph.h>
+#include <Optim/optimization.h>
 
 struct Variable;
 typedef mlr::Array<Variable*> VariableL;
@@ -24,6 +25,7 @@ typedef mlr::Array<Variable*> VariableL;
 
 struct Function{
   virtual void fwd(arr& out, const arrA& in) = 0;
+  /// for each input x, computes "dF/dx = dF/dout * del_out/del_x" or "Jin(i) = Jout * (del out / del in(i))"
   virtual void bwd(arrA& Jin, const arr& Jout, const arr& out, const arrA& in) = 0;
 };
 
@@ -32,7 +34,6 @@ struct Function{
 struct Variable{
   Node *n;       ///< node in the graph structure
   Function *f;   ///< function
-  Type *type;    ///< true type of function
 
   uintA dim;     ///< dimensions of this variable
 
@@ -41,7 +42,9 @@ struct Variable{
   arr del, J;    ///< partial and total derivatives
   arrA Jin;      ///< buffer of push backs of total derivatives
 
-  Variable() : n(NULL), f(NULL), type(NULL) {}
+  ObjectiveType ot; ///< declare if this an objective variable (cost, sumOfSqr, eq, ineq)
+
+  Variable() : n(NULL), f(NULL), ot(OT_none) {}
 
   void write(ostream &os) const;
 };
@@ -52,12 +55,13 @@ stdOutPipe(Variable)
 //===========================================================================
 
 
-struct Net{
+struct Net : ConstrainedProblem{
   Graph G;
 
   //-- constructing the net
-  Variable* newConstant(const char* key, const uintA& dim);
-  Variable* newFunction(const char* key, const VariableL& parents, Function* f, uintA dim);
+  Variable* newConstant(const char* key, const uintA& dim, bool isParameter); //(yes, here dim is required)
+  Variable* newConstant(const char* key, const arr& value, bool isParameter);
+  Variable* newFunction(const char* key, const VariableL& parents, Function* f, uintA dim, ObjectiveType ot=OT_none); //TODO: do you need to know dim here?
 
   //-- fwd and backward computation
   void fwdCompute();
@@ -68,11 +72,16 @@ struct Net{
   void setPartialDerivative(Variable *n, const arr& del); ///< set the partial derivative del_L/del_x of the loss w.r.t. a variable
   const arr& getTotalDerivative(Variable *n); ///< return the total derivative dL/dx w.r.t a variable
 
-  void randConstants();
-  arr getAllConstants();
-  arr getAllConstantJacobians(uint ddim, uint wdim);
-  void setAllConstants(const arr& w);
-  void reportAllConstants();
+  void randParameters();
+  arr getAllParameters();
+  arr getAllParameterJacobians(uint ddim, uint wdim);
+  void setAllParameters(const arr& w);
+  void reportAllParameters();
+
+  void checkAllDerivatives(Variable* out);
+
+  virtual void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x);
+
 
   void write(ostream &os) const;
 

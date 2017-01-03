@@ -77,7 +77,7 @@ int main(int argc,char **argv){
   //  cout << KOMF(NoArr,NoArr,X) << endl;
 
 //  arr phi, J;
-//  TermTypeA tt;
+//  ObjectiveTypeA tt;
 //  ConstrainedProblemMix v = Convert(MPF);
 
 //  for(uint l=0;l<100; l++){

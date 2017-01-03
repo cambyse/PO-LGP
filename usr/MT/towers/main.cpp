@@ -15,13 +15,13 @@ struct TowerProgram:ConstrainedProblem{
   TowerProgram(mlr::KinematicWorld& world, Graph& symbolicState, const arr& x0, int verbose)
     : world(world), logicState(symbolicState), x0(x0), verbose(verbose){
     ConstrainedProblem::operator=(
-          [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+          [this](arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) -> void {
       return this -> phi(phi, J, H, tt, x);
     }
     );
   }
 
-  void phi(arr& phi, arr& phiJ, TermTypeA& tt, const arr& x){
+  void phi(arr& phi, arr& phiJ, ObjectiveTypeA& tt, const arr& x){
     world.setJointState(x);
     if(verbose>1) world.gl().timedupdate(.1);
     if(verbose>2) world.gl().watch();
@@ -36,21 +36,21 @@ struct TowerProgram:ConstrainedProblem{
     double prec=1e-4;
     phi.append(prec*(x-x0));
     if(&phiJ) phiJ.append(prec*eye(x.N));
-    if(&tt) tt.append(sumOfSqrTT, x.N);
+    if(&tt) tt.append(OT_sumOfSqr, x.N);
 
     //-- height -> last z
     mlr::Body *last = world.bodies.last();
     world.kinematicsPos(y, (&phiJ?J:NoArr), last);
     phi.append(y(2)-6.);
     if(&phiJ) phiJ.append(J[2]);
-    if(&tt) tt.append(sumOfSqrTT, 1);
+    if(&tt) tt.append(OT_sumOfSqr, 1);
 
     //-- height -> first z
     mlr::Body *first = world.bodies(1);
     world.kinematicsPos(y, (&phiJ?J:NoArr), first);
     phi.append(y(2));
     if(&phiJ) phiJ.append(J[2]);
-    if(&tt) tt.append(eqTT, 1);
+    if(&tt) tt.append(OT_eq, 1);
 
     //-- touch -> GJK is zero
     if(true){
@@ -65,7 +65,7 @@ struct TowerProgram:ConstrainedProblem{
       gjk.phi(y, (&phiJ?J:NoArr), world);
       phi.append(y);
       if(&phiJ) phiJ.append(J);
-      if(&tt) tt.append(eqTT, y.N);
+      if(&tt) tt.append(OT_eq, y.N);
     }
     }
 

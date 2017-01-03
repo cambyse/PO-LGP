@@ -5,11 +5,11 @@
 #include <gtk/gtk.h>
 
 
-struct ExampleVar:Variable {
+struct ExampleVar:AccessData {
   int i;
   byteA rgb;
   mlr::Mesh mesh;
-  ExampleVar():Variable("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
+  ExampleVar():AccessData("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
 };
 
 

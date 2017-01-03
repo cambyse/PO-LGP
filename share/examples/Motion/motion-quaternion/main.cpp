@@ -21,14 +21,14 @@ int main(int argc,char** argv){
 
   //-- setup the motion problem
   Task *c;
-  c = MP.addTask("transitions", new TaskMap_Transition(G), sumOfSqrTT);
+  c = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
   c->map.order=2; //make this an acceleration task!
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  c = MP.addTask("position", new TaskMap_Default(posDiffTMT, G, "endeff", NoVector, "target"), sumOfSqrTT);
+  c = MP.addTask("position", new TaskMap_Default(posDiffTMT, G, "endeff", NoVector, "target"), OT_sumOfSqr);
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
-  c = MP.addTask("quat", new TaskMap_Default(quatDiffTMT, G, "endeff", NoVector, "target"), sumOfSqrTT);
+  c = MP.addTask("quat", new TaskMap_Default(quatDiffTMT, G, "endeff", NoVector, "target"), OT_sumOfSqr);
   c->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 //  c = MP.addTask("q_vel", new TaskMap_qItself());

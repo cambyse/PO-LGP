@@ -1,0 +1,17 @@
+set style data lines
+set samples 200
+
+# plot 'z.data' us 0:(5*($2-.163)) t 'acc_theta' smooth sbezier,\
+#      '' us 0:(tan($7)) t 'ref_th',\
+#     'z.yorg' us 0:1 t 'ax',\
+#      '' us 0:2 t 'az',\
+#      '' us 0:(3*atan($1/$2)) t 'XXX',\
+ 
+plot 'z.data' us 0:2 t 'x',\
+    '' us 0:3 t 'th',\
+    '' us 0:4 t 'xdot',\
+    '' us 0:5 t 'thdot',\
+    '' us ($0+0):17 t 'ref_x',\
+    '' us ($0+0):18 t 'ref_th',\
+    '' us ($0+0):19 t 'ref_xdot',\
+    '' us ($0+0):20 t 'ref_thdot',\

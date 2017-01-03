@@ -24,7 +24,7 @@ void TEST(UsingKomo){
 //  komo.setSquaredQAccelerations();
   komo.setSquaredQVelocities();
 
-  komo.setTask(1., 1., new TaskMap_GJK(W, "ball", "block", true), sumOfSqrTT, NoArr, 1e2);
+  komo.setTask(1., 1., new TaskMap_GJK(W, "ball", "block", true), OT_sumOfSqr, NoArr, 1e2);
 
   double above = .06;
   mlr::Transformation rel;
@@ -32,12 +32,12 @@ void TEST(UsingKomo){
   komo.setKinematicSwitch(1., true, "delete", "table","ball");
   komo.setKinematicSwitch(1., true, "transXActuated", "table", "ball", rel);
 
-  komo.setTask(2., 2., new TaskMap_Default(posTMT, W, "ball"), sumOfSqrTT, ARR(.5,.06,.5), 1e2, 0);
+  komo.setTask(2., 2., new TaskMap_Default(posTMT, W, "ball"), OT_sumOfSqr, ARR(.5,.06,.5), 1e2, 0);
 
   komo.setKinematicSwitch(1., false, "delete", "table","ball");
   komo.setKinematicSwitch(1., false, "freeActuated", "table", "ball");
 
-  komo.setTask(3., 3., new TaskMap_Default(posTMT, W, "ball"), sumOfSqrTT, ARR(.8,-.3,.5), 1e2, 0);
+  komo.setTask(3., 3., new TaskMap_Default(posTMT, W, "ball"), OT_sumOfSqr, ARR(.8,-.3,.5), 1e2, 0);
 
   komo.reset();
   komo.run();

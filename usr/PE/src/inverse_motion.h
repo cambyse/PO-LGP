@@ -28,7 +28,7 @@ struct InverseMotionProblem:ConstrainedProblem {
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
   void costReport(arr param, arr param0);
 
-  virtual void fc(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) {
+  virtual void fc(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) {
     arr df,Hf,g,Jg,h,Jh;
     double costs = 0.;
 
@@ -68,9 +68,9 @@ struct InverseMotionProblem:ConstrainedProblem {
     phi.append(g); if(&J) J.append(Jg);
     phi.append(h); if(&J) J.append(Jh);
     if(&tt) {
-      tt.append(fTT);
-      for (uint i=0;i<g.d0;i++) { tt.append(ineqTT); }
-      for (uint i=0;i<h.d0;i++) { tt.append(eqTT); }
+      tt.append(OT_f);
+      for (uint i=0;i<g.d0;i++) { tt.append(OT_ineq); }
+      for (uint i=0;i<h.d0;i++) { tt.append(OT_eq); }
     }
   }
 

@@ -24,23 +24,23 @@ void TEST(PR2reach){
   //-- setup the motion problem
   Task *t;
 
-  t = MP.addTask("transitions", new TaskMap_Transition(G), sumOfSqrTT);
+  t = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 //  t = MP.addTask("final_vel", new TaskMap_Transition(G));
-  t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff"), sumOfSqrTT);
+  t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff"), OT_sumOfSqr);
   t->map.order=1; //make this a velocity task!
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
-  t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, MP.world.getShapeByName("target")->X.pos), sumOfSqrTT);
+  t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, MP.world.getShapeByName("target")->X.pos), OT_sumOfSqr);
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 #define CONSTRAINT
 #ifndef CONSTRAINT
-  t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, .1), sumOfSqrTT);
+  t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, .1), OT_sumOfSqr);
 #else
-  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
+  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), OT_ineq);
 #endif
   t->setCostSpecs(0, MP.T, {0.}, 1.);
 
@@ -77,23 +77,23 @@ void TEST(Basics){
   //-- setup the motion problem
   Task *t;
 
-  t = MP.addTask("transitions", new TaskMap_Transition(G), sumOfSqrTT);
+  t = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   //#define CONSTRAINT
   #ifndef CONSTRAINT
-  t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, .1), sumOfSqrTT);
+  t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, .1), OT_sumOfSqr);
   #else
-  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
+  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), OT_ineq);
   #endif
   t->setCostSpecs(0, MP.T, {0.}, 1.);
 
-  t = MP.addTask("final_vel", new TaskMap_Transition(G), sumOfSqrTT);
+  t = MP.addTask("final_vel", new TaskMap_Transition(G), OT_sumOfSqr);
   t->map.order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e1);
 
-  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", mlr::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos), sumOfSqrTT);
+  t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", mlr::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos), OT_sumOfSqr);
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e3);
 
 

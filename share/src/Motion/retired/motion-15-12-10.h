@@ -33,7 +33,7 @@
 //
 
 struct TaskMap {
-  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
+  ObjectiveType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
   uint order;       ///< 0=position, 1=vel, etc
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1) = 0; ///< this needs to be overloaded
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
@@ -46,7 +46,7 @@ struct TaskMap {
     };
   }
 
-  TaskMap():type(sumOfSqrTT),order(0) {}
+  TaskMap():type(OT_sumOfSqr),order(0) {}
   virtual ~TaskMap() {};
 };
 
@@ -113,7 +113,7 @@ struct MotionProblem {
   //-- return values of an optimizer
   arrA phiMatrix;
   arr dualMatrix;
-  mlr::Array<TermTypeA> ttMatrix;
+  mlr::Array<ObjectiveTypeA> ttMatrix;
 
   MotionProblem(mlr::KinematicWorld& _world, bool useSwift=true);
   
@@ -133,7 +133,7 @@ struct MotionProblem {
 //                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
+  bool getPhi(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
   uint dim_phi(const mlr::KinematicWorld& G, uint t);
   uint dim_g(const mlr::KinematicWorld& G, uint t);
   uint dim_h(const mlr::KinematicWorld& G, uint t);
@@ -153,10 +153,10 @@ struct MotionProblem {
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
   //-- inverse Kinematics
-  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
+  void inverseKinematics(arr& y, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x);
 
   ConstrainedProblem InvKinProblem(){
-    return [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+    return [this](arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) -> void {
       this->inverseKinematics(phi, J, H, tt, x);
     };
   }
@@ -180,7 +180,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   uint dim_g_h(){ uint d=0; for(uint t=0;t<=MP.T;t++) d += dim_g(t) + dim_h(t); return d; }
 
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+  virtual void phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { return MP.k_order; }
@@ -206,7 +206,7 @@ struct MotionProblem_EndPoseFunction{
   MotionProblem_EndPoseFunction(MotionProblem& _MP);
 
   //VectorFunction definitions
-  void Phi(arr& phi, arr& J, TermTypeA& tt, const arr& x);
+  void Phi(arr& phi, arr& J, ObjectiveTypeA& tt, const arr& x);
   virtual void fv(arr& phi, arr& J, const arr& x);
 };
 

@@ -30,7 +30,7 @@ struct EffectivePoseProblem:ConstrainedProblem{
   EffectivePoseProblem(mlr::KinematicWorld& effKinematics_before,
                        const Graph& KB, const Graph& symbolicState_before, const Graph& symbolicState_after,
                        int verbose);
-  void phi(arr& phi, arr& phiJ, arr& H, TermTypeA& tt, const arr& x);
+  void phi(arr& phi, arr& phiJ, arr& H, ObjectiveTypeA& tt, const arr& x);
 
   double optimize(arr& x);
 };

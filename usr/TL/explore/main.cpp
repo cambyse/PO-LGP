@@ -216,7 +216,7 @@ void showMovie(const char* filename) {
   initSimulator(start_config_path, take_movie);
   uintA objects;
   sim.getObjects(objects);
-  TermTypeL objects_types;
+  ObjectiveTypeL objects_types;
   sim.getTypes(objects_types, objects, TL::logicObjectManager::types);
   TL::logicObjectManager::setConstants(objects, objects_types);
   
@@ -787,7 +787,7 @@ void experiment_exploration() {
       
       uintA objects;
       sim.getObjects(objects);
-      TermTypeL objects_types;
+      ObjectiveTypeL objects_types;
       sim.getTypes(objects_types, objects, TL::logicObjectManager::types);
       uintA blocks;
       sim.getBlocks(blocks);

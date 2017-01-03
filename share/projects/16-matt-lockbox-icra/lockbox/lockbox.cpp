@@ -497,7 +497,7 @@ void Lockbox::update()
     cout << "Alvar: " << i << " seen." << endl;
 
     mlr::String lockbox_marker_name = STRING("lockbox_marker" << i);
-    komo.setPosition(1., 1., lockbox_marker_name, NULL, sumOfSqrTT, alvar->X.pos.getArr());
+    komo.setPosition(1., 1., lockbox_marker_name, NULL, OT_sumOfSqr, alvar->X.pos.getArr());
   }
 
   komo.reset();
@@ -549,10 +549,10 @@ bool Lockbox::updatedJointPose(const uint joint_num, arr& new_q)
 //  cout << "Full Q before: " << my_copy.q << endl;
 //  cout << "Model world Q: " << myBaxter->getModelWorld().q << endl;
 
-  komo.setPosition(1., 1., lockbox_marker_name, NULL, sumOfSqrTT, alvar->X.pos.getArr(), 10000);
-  komo.setAlign(1., 1., lockbox_marker_name, ARR(1, 0, 0), NULL, alvar->X.rot.getX().getArr(), sumOfSqrTT);
-  komo.setAlign(1., 1., lockbox_marker_name, ARR(0, 1, 0), NULL, alvar->X.rot.getY().getArr(), sumOfSqrTT);
-  komo.setAlign(1., 1., lockbox_marker_name, ARR(0, 0, 1), NULL, alvar->X.rot.getZ().getArr(), sumOfSqrTT);
+  komo.setPosition(1., 1., lockbox_marker_name, NULL, OT_sumOfSqr, alvar->X.pos.getArr(), 10000);
+  komo.setAlign(1., 1., lockbox_marker_name, ARR(1, 0, 0), NULL, alvar->X.rot.getX().getArr(), OT_sumOfSqr);
+  komo.setAlign(1., 1., lockbox_marker_name, ARR(0, 1, 0), NULL, alvar->X.rot.getY().getArr(), OT_sumOfSqr);
+  komo.setAlign(1., 1., lockbox_marker_name, ARR(0, 0, 1), NULL, alvar->X.rot.getZ().getArr(), OT_sumOfSqr);
 
   komo.reset();
   komo.run();

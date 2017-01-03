@@ -98,38 +98,38 @@ void TEST(Door){
 
     //-- setup the motion problem
     Task *t;
-    t = MP.addTask("transitions", new TaskMap_Transition(G),sumOfSqrTT);
+    t = MP.addTask("transitions", new TaskMap_Transition(G),OT_sumOfSqr);
     t->map.order=2; //make this an acceleration task!
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
     double contactT = MP.T/2.;
     // position task maps
-    t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeffL", NoVector, "cp1",NoVector),sumOfSqrTT);
+    t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeffL", NoVector, "cp1",NoVector),OT_sumOfSqr);
     t->setCostSpecs(contactT-10., contactT, {0.}, 1e2);
 
-    t = MP.addTask("handle_joint", new TaskMap_qItself(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()),sumOfSqrTT);
+    t = MP.addTask("handle_joint", new TaskMap_qItself(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()),OT_sumOfSqr);
     t->setCostSpecs(contactT+10., contactT+10., {-.3}, 1e3);
 
-    t = MP.addTask("door_joint", new TaskMap_qItself(G.getJointByName("frame_door")->qIndex, G.getJointStateDimension()),sumOfSqrTT);
+    t = MP.addTask("door_joint", new TaskMap_qItself(G.getJointByName("frame_door")->qIndex, G.getJointStateDimension()),OT_sumOfSqr);
     t->setCostSpecs(MP.T-1, MP.T, {-.7}, 1e2);
 
     // constraints
-    t = MP.addTask("contact", new PointEqualityConstraint(G, "endeffC1",NoVector, "cp1",NoVector),eqTT);
+    t = MP.addTask("contact", new PointEqualityConstraint(G, "endeffC1",NoVector, "cp1",NoVector),OT_eq);
     t->setCostSpecs(contactT, MP.T, {0.}, 1.);
-    t = MP.addTask("contact", new PointEqualityConstraint(G, "endeffC2",NoVector, "cp2",NoVector),eqTT);
+    t = MP.addTask("contact", new PointEqualityConstraint(G, "endeffC2",NoVector, "cp2",NoVector),OT_eq);
     t->setCostSpecs(contactT, MP.T, {0.}, 1.);
 
-    t = MP.addTask("door_fixation", new qItselfConstraint(G.getJointByName("frame_door")->qIndex, G.getJointStateDimension()),eqTT);
+    t = MP.addTask("door_fixation", new qItselfConstraint(G.getJointByName("frame_door")->qIndex, G.getJointStateDimension()),OT_eq);
     t->setCostSpecs(0.,contactT+10, {0.}, 1.);
 
-    t = MP.addTask("handle_fixation", new qItselfConstraint(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()),eqTT);
+    t = MP.addTask("handle_fixation", new qItselfConstraint(G.getJointByName("door_handle")->qIndex, G.getJointStateDimension()),OT_eq);
     t->setCostSpecs(0.,contactT, {0.}, 1.);
 
     ShapeL except = G.getBodyByName("l_wrist_roll_link")->shapes;
-    t = MP.addTask("collision", new ProxyConstraint(allExceptListedPTMT, shapesToShapeIndices(except), 0.05),ineqTT);
+    t = MP.addTask("collision", new ProxyConstraint(allExceptListedPTMT, shapesToShapeIndices(except), 0.05),OT_ineq);
     t->setCostSpecs(0., MP.T, {0.}, 1.);
 
-    t = MP.addTask("qLimits", new LimitsConstraint(),ineqTT);
+    t = MP.addTask("qLimits", new LimitsConstraint(),OT_ineq);
     t->setCostSpecs(0., MP.T, {0.}, 1.);
 
     //-- create the Optimization problem (of type kOrderMarkov)
