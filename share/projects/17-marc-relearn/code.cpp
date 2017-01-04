@@ -168,55 +168,107 @@ void createNet(Net& N){
 
   uint T = h.d0;
 
-//  T=600;
+//  T=200;
 
-  // parameters
-  arr Wh = randn(4,4); //ARR(4, 4, {0., 1, 0, 0});
-  arr Wu = randn(4,1); //ARR(4, 1, {0., 1, 0, 0});
-  arr Wy = randn(4,4); //ARR(4, 3, {0.,0,1, 0,0,0, 0,0,0, 0,1,0});
-  arr Wy0 = randn(4,4); //ARR(4, 1, {0., 0, 1, 0});
-  arr b = randn(4); //ARR(4, {0,0,0,0});
-  Variable *_Wh = N.newConstant(STRING("Wh"), Wh, true );
-  Variable *_Wu = N.newConstant(STRING("Wu"), Wu, true );
-  Variable *_Wy = N.newConstant(STRING("Wy"), Wy, true );
-  Variable *_Wy0 = N.newConstant(STRING("Wy0"), Wy0, true );
-  Variable *_b = N.newConstant(STRING("b"), b, true );
+  // filter parameters
+  Variable *_Hh = N.newConstant(STRING("Hh"), randn(4,4), true );
+  Variable *_Hu = N.newConstant(STRING("Hu"), randn(4,1), true );
+  Variable *_Hy = N.newConstant(STRING("Hy"), randn(4,4), true );
+  Variable *_Hy0 = N.newConstant(STRING("Hy0"), randn(4,4), true );
+  Variable *_H0 = N.newConstant(STRING("H0"), randn(4), true );
 
-  N.G.getRenderingInfo(_Wh->n).skip=true;
-  N.G.getRenderingInfo(_Wu->n).skip=true;
-  N.G.getRenderingInfo(_Wy->n).skip=true;
-  N.G.getRenderingInfo(_Wy0->n).skip=true;
-  N.G.getRenderingInfo(_b->n).skip=true;
+  // toy dynamics parameters
+  Variable *_Ss = N.newConstant(STRING("Ss"), ARR(1,1, {1.} ), false ); //not subject to optimization!
+  Variable *_Su = N.newConstant(STRING("Su"), ARR(1,1, {.01} ), false );
+  Variable *_Sa = N.newConstant(STRING("Sa"), ARR(1, {0.} ), false );
 
+  // toy state parameters
+  Variable *_Sh = N.newConstant(STRING("Sh"), ARR(1,4, {1., 0,0,0} ), false ); //not subject to optimization!
+  Variable *_S0 = N.newConstant(STRING("S0"), ARR(1, {.0} ), false );
 
-  // filter initialization (should be initialized with observation_zero, which is missing!
-  Variable *_h = N.newConstant(STRING("h_0"), zeros(h.d1), false );
+  // toy action parameters
+  Variable *_Ah = N.newConstant(STRING("Ah"), randn(1,4), true ); //not subject to optimization!
+  Variable *_Au = N.newConstant(STRING("Au"), randn(1,1), true );
+  Variable *_A0 = N.newConstant(STRING("A0"), randn(1), true );
+
+  // decoded control parameters
+  Variable *_Uh = N.newConstant(STRING("Uh"), randn(1,4), true ); //not subject to optimization!
+  Variable *_Ua = N.newConstant(STRING("Ua"), randn(1,1), true );
+  Variable *_U0 = N.newConstant(STRING("U0"), randn(1), true );
+
+  N.G.getRenderingInfo(_Hh->n).skip=true;
+  N.G.getRenderingInfo(_Hu->n).skip=true;
+  N.G.getRenderingInfo(_Hy->n).skip=true;
+  N.G.getRenderingInfo(_Hy0->n).skip=true;
+  N.G.getRenderingInfo(_H0->n).skip=true;
+  N.G.getRenderingInfo(_Ss->n).skip=true;
+  N.G.getRenderingInfo(_Su->n).skip=true;
+  N.G.getRenderingInfo(_Sa->n).skip=true;
+  N.G.getRenderingInfo(_Sh->n).skip=true;
+  N.G.getRenderingInfo(_S0->n).skip=true;
+  N.G.getRenderingInfo(_Ah->n).skip=true;
+  N.G.getRenderingInfo(_Au->n).skip=true;
+  N.G.getRenderingInfo(_A0->n).skip=true;
+
+  //-- initializations (should be initialized with observation_zero, which is missing!)
+  Variable *_h = N.newConstant(STRING("h_0"), zeros(h.d1), false ); //not subject to optimization!
   Variable *_y = N.newConstant(STRING("y_0"), zeros(y.d1), false );
+  Variable *_s = N.newConstant(STRING("s_0"), zeros(1), false );
 
   for(uint t=0;t<T;t++){
     // data constants
     Variable *_u = N.newConstant(STRING("u_"<<t), u[t], false );
     Variable *_yDash = N.newConstant(STRING("y_"<<t+1), y[t], false ); //TODO: the time indexing of y is wrong!!!
     Variable *_hDashRef = N.newConstant(STRING("href_"<<t+1), h[t], false );
-    // filter variables
-//    Variable *_uIDash = N.newFunction(STRING("u_"<<t+1), {_uI, _u, _Wuint, _auint}, new HighPassIntegrator(), TUP(u.d1));
-//    Variable *_hIDash = N.newFunction(STRING("hI_"<<t+1), {_hI, _yDash, _Wint, _aint}, new HighPassIntegrator(), TUP(Wint.d0) );
-//    Variable *_hFDash = N.newFunction(STRING("hF_"<<t+1), {_hF, _yDash, _Wfil, _afil}, new LowPassFilter(), TUP(Wfil.d0) );
-//    Variable *_hDash = N.newFunction(STRING("h_"<<t+1), {_hIDash, _hFDash, _yDash, _uIDash, _WhI, _WhF, _Wy, _WuI, _b}, new Linear(), TUP(h.d1) );
-    Variable *_hDash = N.newFunction(STRING("h_"<<t+1), {_h, _u, _yDash, _y, _Wh, _Wu, _Wy, _Wy0, _b}, new Linear(), TUP(h.d1) );
+    // filter
+    Variable *_hDash = N.newFunction(STRING("h_"<<t+1), {_h, _u, _yDash, _y, _Hh, _Hu, _Hy, _Hy0, _H0}, new Linear(), TUP(h.d1) );
+
+    // toy action
+    Variable *_a = N.newFunction(STRING("a_"<<t), {_h, _u, _Ah, _Au, _A0}, new Linear(), TUP(1) );
+    // toy state
+    Variable *_sDash = N.newFunction(STRING("s_"<<t+1), {_hDash, _Sh, _S0}, new Linear(), TUP(1) );
+    Variable *_sDashRef = N.newFunction(STRING("sref_"<<t+1), {_s, _a, _Ss, _Su, _S0}, new Linear(), TUP(1) );
+
+    // decoded control
+    Variable *_uRef = N.newFunction(STRING("uref_"<<t), {_h, _a, _Uh, _Ua, _U0}, new Linear(), TUP(u.d1) );
+
+
     _y = _yDash;
     _h = _hDash;
+    _s = _sDash;
 
-    if(!(t%2)){
-      Variable *err = N.newFunction(STRING("err_"<<t+1), {_hDash, _hDashRef}, new Difference(), TUP(h.d1), OT_sumOfSqr);
+    if(!(t%5)){
+      Variable *err_h = N.newFunction(STRING("errh_"<<t+1), {_hDash, _hDashRef}, new Difference(1.), TUP(h.d1), OT_sumOfSqr);
+      Variable *err_s = N.newFunction(STRING("errs_"<<t+1), {_sDash, _sDashRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
+      Variable *err_u = N.newFunction(STRING("erru_"<<t+1), {_u, _uRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
     }
+  }
 
-//    N.G.getRenderingInfo(_u->n).dotstyle <<"rank=" <<3*t;
-//    N.G.getRenderingInfo(_yDash->n).dotstyle <<"rank=" <<3*t+1;
-//    N.G.getRenderingInfo(_uIDash->n).dotstyle <<"rank=" <<3*t+1;
-//    N.G.getRenderingInfo(_hDash->n).dotstyle <<"rank=" <<3*t+2;
-//    N.G.getRenderingInfo(_hDashRef->n).dotstyle <<"rank=" <<3*t+2;
-//    "constraint=false"
+  layoutNet(N);
+
+}
+
+//==============================================================================
+
+void layoutNet(Net& N){
+  N.G.getRenderingInfo(NULL).dotstyle <<", layout=\"neato\", splines=\"true\""; //overlap=\"false\",
+  uintA yt;
+  for(Node *n:N.G){
+    Variable& var = n->get<Variable>();
+    if(var.ot) N.G.getRenderingInfo(n).dotstyle <<", color=red";
+    Constant *f = dynamic_cast<Constant*>(var.f);
+    if(N.G.getRenderingInfo(n).skip){
+      N.G.getRenderingInfo(n).dotstyle <<", shape=box";
+      N.G.getRenderingInfo(n).skip = true;// && f->isParameter){
+    }else{
+      mlr::String s;
+      uint t;
+      s.read(n->keys(0),"","_", 1);
+      n->keys(0) >>t;
+      if(t>=yt.N) yt.append(consts<uint>(0, t-yt.N+1));
+      N.G.getRenderingInfo(n).dotstyle <<", pos=\""<<2*t<<"," <<yt(t) <<"!\"";
+      yt(t)++;
+    }
   }
 }
 
@@ -226,14 +278,16 @@ void writeData(Net& N){
   ofstream fil("z.data");
 
   for(Node *n:N.G){
+    if(n->keys(0).startsWith("u_")) fil <<endl;
     if(n->keys(0).startsWith("h_")
        || n->keys(0).startsWith("href_")
        || n->keys(0).startsWith("y_")
+       || n->keys(0).startsWith("s_")
+       || n->keys(0).startsWith("sref_")
+       || n->keys(0).startsWith("u_")
+       || n->keys(0).startsWith("uref_")
        )
       fil <<n->keys(0) <<' ' <<n->get<Variable>().value <<' ';
-
-    if(n->keys(0).startsWith("err"))
-      fil <<n->keys(0) <<' ' <<n->get<Variable>().value <<endl;
   }
 
   fil.close();

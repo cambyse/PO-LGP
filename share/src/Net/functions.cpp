@@ -77,7 +77,7 @@ void Difference::fwd(arr& out, const arrA& in){
   const arr& x = in.elem(0);
   const arr& y = in.elem(1);
 
-  out = x-y;
+  out = weight*(x-y);
 }
 
 void Difference::bwd(arrA& Jin, const arr& Jout, const arr& out, const arrA& in){
@@ -85,8 +85,8 @@ void Difference::bwd(arrA& Jin, const arr& Jout, const arr& out, const arrA& in)
   const arr& y = in.elem(1);
 
   Jin.resize(in.N);
-  Jin(0) = Jout;
-  Jin(1) = -Jout;
+  Jin(0) = weight*Jout;
+  Jin(1) = -weight*Jout;
 }
 
 //===========================================================================

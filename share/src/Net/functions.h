@@ -27,6 +27,8 @@ struct Linear : Function {
 //===========================================================================
 
 struct Difference : Function{
+  double weight;
+  Difference(double weight) : weight(weight) {}
   virtual void fwd(arr& out, const arrA& in);
   virtual void bwd(arrA& Jin, const arr& Jout, const arr& out, const arrA& in);
 };

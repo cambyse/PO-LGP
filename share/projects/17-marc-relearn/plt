@@ -7,11 +7,19 @@ set samples 200
 #      '' us 0:2 t 'az',\
 #      '' us 0:(3*atan($1/$2)) t 'XXX',\
  
-plot 'z.data' us 0:2 t 'x',\
-    '' us 0:3 t 'th',\
-    '' us 0:4 t 'xdot',\
-    '' us 0:5 t 'thdot',\
-    '' us ($0+0):17 t 'ref_x',\
-    '' us ($0+0):18 t 'ref_th',\
-    '' us ($0+0):19 t 'ref_xdot',\
-    '' us ($0+0):20 t 'ref_thdot',\
+plot 'z.data' \
+       us 0:9 t 'href_x' lw 3,\
+    '' us 0:14 t 'h_x' lw 3,\
+    '' us 0:19 t 's',\
+    '' us 0:21 t 'sref',\
+    '' us 0:2 t 'u',\
+    '' us 0:23 t 'uref',\
+
+
+#    '' us 0:10 t 'href_th' lw 3,\
+#    '' us 0:11 t 'href_xdot' lw 3,\
+#    '' us 0:13 t 'href_thdot' lw 3,\
+#    '' us 0:15 t 'h_x',\
+#    '' us 0:16 t 'h_th',\
+#    '' us 0:17 t 'h_xdot',\
+#    '' us 0:18 t 'h_thdot',\

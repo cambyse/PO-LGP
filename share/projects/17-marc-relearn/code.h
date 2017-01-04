@@ -17,6 +17,7 @@ arr getModelPolicyParameters();
 void collectData();
 
 void createNet(Net& N);
+void layoutNet(Net& N);
 void writeData(Net& N);
 
 //==============================================================================

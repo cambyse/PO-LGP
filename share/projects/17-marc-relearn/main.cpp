@@ -8,24 +8,25 @@ int main(int argn, char** argv){
   Net N;
   createNet(N);
 //  N.G.displayDot();
-  N.fwdCompute();
+//  N.fwdCompute();
 //  N.reportAllParameters();
 //  N.checkAllDerivatives(N.G.last()->getValue<Variable>());
 
   arr x = N.getAllParameters();
 //  checkJacobianCP(N, x, 1e-4);
 
-  x <<FILE("z.x_opt");
+  arr h_opt = FILE("h_opt");
+  x.setVectorBlock(h_opt, 0);
   N.setAllParameters(x);
+
+  FILE("z.x_opt") >>x;
   N.fwdCompute();
+
+  optConstrained(x, NoArr, N, OPT(verbose=2));
+
+  x >>FILE("z.x_opt");
+
   writeData(N);
-
-
-//  optConstrained(x, NoArr, N, OPT(verbose=2));
-
-//  x >>FILE("z.x_opt");
-
-//  writeData(N);
   return 0;
 }
 

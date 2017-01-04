@@ -54,7 +54,6 @@ stdOutPipe(Variable)
 
 //===========================================================================
 
-
 struct Net : ConstrainedProblem{
   Graph G;
 
