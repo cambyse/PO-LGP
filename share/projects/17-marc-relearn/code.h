@@ -10,14 +10,22 @@
 
 //==============================================================================
 
+//-- standard/previous RL methods to find ok parameters for the racer (using Kalman)
 void testGradients();
-
 arr getModelPolicyParameters();
-
 void collectData();
 
-void createNet(Net& N);
-void layoutNet(Net& N);
-void writeData(Net& N);
+struct ReLearn{
+  Net N;
+
+  void createNet(int T=-1, uint errSteps=10);
+  void checkNet(const arr& x=ARR());
+  void trainModel();
+
+  void layoutNet();
+  void writeData(const arr& x);
+};
+
+
 
 //==============================================================================

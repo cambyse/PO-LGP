@@ -1,5 +1,6 @@
 set style data lines
 set samples 200
+set key autotitle columnhead
 
 # plot 'z.data' us 0:(5*($2-.163)) t 'acc_theta' smooth sbezier,\
 #      '' us 0:(tan($7)) t 'ref_th',\
@@ -8,12 +9,12 @@ set samples 200
 #      '' us 0:(3*atan($1/$2)) t 'XXX',\
  
 plot 'z.data' \
-       us 0:9 t 'href_x' lw 3,\
-    '' us 0:14 t 'h_x' lw 3,\
-    '' us 0:19 t 's',\
-    '' us 0:21 t 'sref',\
-    '' us 0:2 t 'u',\
-    '' us 0:23 t 'uref',\
+       us 0:"href.0" lw 3,\
+    '' us 0:"h.0"    lw 3,\
+    '' us 0:"s.0" ,\
+    '' us 0:"sref.0" ,\
+    '' us 0:"u.0" ,\
+    '' us 0:"uref.0" ,\
 
 
 #    '' us 0:10 t 'href_th' lw 3,\

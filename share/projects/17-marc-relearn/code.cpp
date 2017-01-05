@@ -1,4 +1,5 @@
 #include "code.h"
+#include <Optim/lagrangian.h>
 
 //==============================================================================
 
@@ -161,14 +162,12 @@ void collectData(){
 
 //==============================================================================
 
-void createNet(Net& N){
+void ReLearn::createNet(int T, uint errSteps){
   arr h = FILE("z.h");
   arr u = FILE("z.u");
   arr y = FILE("z.yorg");
 
-  uint T = h.d0;
-
-//  T=200;
+  if(T==-1) T = h.d0;
 
   // filter parameters
   Variable *_Hh = N.newConstant(STRING("Hh"), randn(4,4), true );
@@ -237,29 +236,51 @@ void createNet(Net& N){
     _h = _hDash;
     _s = _sDash;
 
-    if(!(t%5)){
+    if(!(t%errSteps)){
       Variable *err_h = N.newFunction(STRING("errh_"<<t+1), {_hDash, _hDashRef}, new Difference(1.), TUP(h.d1), OT_sumOfSqr);
       Variable *err_s = N.newFunction(STRING("errs_"<<t+1), {_sDash, _sDashRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
       Variable *err_u = N.newFunction(STRING("erru_"<<t+1), {_u, _uRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
     }
   }
 
-  layoutNet(N);
+  layoutNet();
 
 }
 
 //==============================================================================
 
-void layoutNet(Net& N){
+void ReLearn::checkNet(const arr& x){
+  arr z = x;
+  if(!z.N) z = N.getAllParameters();
+
+  N.setAllParameters(z);
+  N.fwdCompute();
+//  N.reportAllParameters();
+  for(uint i=0;i<10;i++){
+    for(;;){ //pick a random node with vectorial value
+      Variable *v = N.G.rndElem()->getValue<Variable>();
+      if(v->value.nd==1){
+        N.checkAllDerivatives(v);
+        break;
+      }
+    }
+  }
+
+  checkJacobianCP(N, z, 1e-4);
+}
+
+//==============================================================================
+
+void ReLearn::layoutNet(){
   N.G.getRenderingInfo(NULL).dotstyle <<", layout=\"neato\", splines=\"true\""; //overlap=\"false\",
   uintA yt;
   for(Node *n:N.G){
     Variable& var = n->get<Variable>();
     if(var.ot) N.G.getRenderingInfo(n).dotstyle <<", color=red";
     Constant *f = dynamic_cast<Constant*>(var.f);
-    if(N.G.getRenderingInfo(n).skip){
+    if(N.G.getRenderingInfo(n).skip  || (f && f->isParameter)){ //N.G.getRenderingInfo(n).skip){
       N.G.getRenderingInfo(n).dotstyle <<", shape=box";
-      N.G.getRenderingInfo(n).skip = true;// && f->isParameter){
+      N.G.getRenderingInfo(n).skip = true;
     }else{
       mlr::String s;
       uint t;
@@ -274,9 +295,42 @@ void layoutNet(Net& N){
 
 //==============================================================================
 
-void writeData(Net& N){
+void ReLearn::writeData(const arr& x){
+  N.setAllParameters(x);
+  N.fwdCompute();
+
   ofstream fil("z.data");
 
+  //-- write header
+  bool skip=true;
+  for(Node *n:N.G){
+    if(n->keys(0).startsWith("u_")){
+      if(!skip){ fil <<endl; break; }
+      skip=false;
+    }
+    if(!skip){
+      uint d = n->get<Variable>().value.N;
+      mlr::String s;
+      n->keys(0).resetIstream();
+      s.read(n->keys(0),"","_");
+      fil <<s <<' ';
+      for(uint i=0;i<d;i++) fil <<s <<'.' <<i <<' ';
+    }
+  }
+
+  //-- write data
+  skip=true;
+  for(Node *n:N.G){
+    if(n->keys(0).startsWith("u_")){
+      if(!skip) fil <<endl;
+      skip=false;
+    }
+    if(!skip){
+      fil <<n->keys(0) <<' ' <<n->get<Variable>().value <<' ';
+    }
+  }
+
+#if 0
   for(Node *n:N.G){
     if(n->keys(0).startsWith("u_")) fil <<endl;
     if(n->keys(0).startsWith("h_")
@@ -289,6 +343,29 @@ void writeData(Net& N){
        )
       fil <<n->keys(0) <<' ' <<n->get<Variable>().value <<' ';
   }
+#endif
 
   fil.close();
 }
+
+//==============================================================================
+
+void ReLearn::trainModel(){
+  arr x = N.getAllParameters();
+  //checkJacobianCP(N, x, 1e-4);
+
+  //-- load optimal parameters for filter (optimized before)
+  arr h_opt = FILE("h_opt");
+  x.setVectorBlock(h_opt, 0);
+  N.setAllParameters(x);
+
+  FILE("x_opt") >>x; //load from previous iteration
+
+  optConstrained(x, NoArr, N, OPT(verbose=2));
+
+  x >>FILE("z.x_opt");
+
+  writeData(x);
+}
+
+//==============================================================================
