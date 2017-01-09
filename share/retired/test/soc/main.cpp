@@ -18,7 +18,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   sys.os=&std::cout;
  
   //-- setup the control variables (problem definition)
-  TaskVariable *pos = new DefaultTaskVariable("position", sys.getOrs(), posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position", sys.getOrs(), posTVT,"endeff","<t(0 0 .2)>",0,0,arr());
   pos->y_target = conv_vec2arr(sys.getOrs().getBodyByName("target")->X.pos);
   
   TaskVariable *col = new DefaultTaskVariable("collision", sys.getOrs(), collTVT,0,0,0,0,ARR(.15));

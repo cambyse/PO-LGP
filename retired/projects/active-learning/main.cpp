@@ -89,10 +89,10 @@ int main(int argc, char** argv) {
   //train.data = sample;
   
   // VERSION 2: fixed sample
-  //train.data.append(ARR(0.159201, -1.00565, 0.838));
-  //train.data.append(ARR( 0.08)); 
-  //train.data.append(ARR(0.157674, -1.00132, 0.73 ));
-  //train.data.append(ARR(0.08));
+  //train.data.append({0.159201, -1.00565, 0.838});
+  //train.data.append({ 0.08}); 
+  //train.data.append({0.157674, -1.00132, 0.73 });
+  //train.data.append({0.08});
   
   // VERSION 3: use sampler
   do {

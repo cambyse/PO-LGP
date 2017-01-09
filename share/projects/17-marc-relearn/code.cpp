@@ -200,13 +200,13 @@ void ReLearn::createNet(int T, uint errSteps){
   Variable *_H0 = N.newConstant(STRING("H0"), randn(4), true );
 
   // toy dynamics parameters
-  Variable *_Ss = N.newConstant(STRING("Ss"), ARR(1,1, {1.} ), false ); //not subject to optimization!
-  Variable *_Su = N.newConstant(STRING("Su"), ARR(1,1, {.01} ), false );
-  Variable *_Sa = N.newConstant(STRING("Sa"), ARR(1, {0.} ), false );
+  Variable *_Ss = N.newConstant(STRING("Ss"), arr(1,1, {1.} ), false ); //not subject to optimization!
+  Variable *_Su = N.newConstant(STRING("Su"), arr(1,1, {.01} ), false );
+  Variable *_Sa = N.newConstant(STRING("Sa"), arr(1, {0.} ), false );
 
   // toy state parameters
-  Variable *_Sh = N.newConstant(STRING("Sh"), ARR(1,4, {1., 0,0,0} ), false ); //not subject to optimization!
-  Variable *_S0 = N.newConstant(STRING("S0"), ARR(1, {.0} ), false );
+  Variable *_Sh = N.newConstant(STRING("Sh"), arr(1,4, {1., 0,0,0} ), false ); //not subject to optimization!
+  Variable *_S0 = N.newConstant(STRING("S0"), arr(1, {.0} ), false );
 
   // toy action parameters
   Variable *_Ah = N.newConstant(STRING("Ah"), randn(1,4), true ); //not subject to optimization!

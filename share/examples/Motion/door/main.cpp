@@ -41,16 +41,16 @@ void addDoor(mlr::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, dou
 
   mlr::Joint *frame_door = new mlr::Joint(G,frame,door);
   frame_door->name = "frame_door";
-  frame_door->A.pos = ARR(0, 0, .0);
-  frame_door->B.pos = ARR(0, -door_w/2.-0.0085, .0);
+  frame_door->A.pos = {0, 0, .0};
+  frame_door->B.pos = {0, -door_w/2.-0.0085, .0};
   frame_door->type = mlr::JointType::JT_hingeZ;
 
   mlr::Joint *door_handle = new mlr::Joint(G,door,handle);
   door_handle->name = "door_handle";
-  door_handle->A.pos = ARR(-0.07, -door_w/2.+handle_y, -door_h/2.+handle_z);
-  door_handle->B.pos = ARR(0, handle_w/2. -0.015, .0);
+  door_handle->A.pos = {-0.07, -door_w/2.+handle_y, -door_h/2.+handle_z};
+  door_handle->B.pos = {0, handle_w/2. -0.015, .0};
   door_handle->type = mlr::JointType::JT_hingeX;
-  door_handle->limits = ARR(-0.5,0.5);
+  door_handle->limits = {-0.5,0.5};
 
   mlr::Shape *cp1 = new mlr::Shape(G,*handle);
   cp1->name = "cp1";

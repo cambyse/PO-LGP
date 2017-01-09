@@ -21,7 +21,7 @@ struct ReLearn{
   Net N;
 
   void createNet(int T=-1, uint errSteps=10);
-  void checkNet(const arr& x=ARR());
+  void checkNet(const arr& x=arr());
   void trainModel();
 
   void layoutNet();

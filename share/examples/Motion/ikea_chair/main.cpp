@@ -77,7 +77,7 @@ finalpos(0) -= 0.2 * i;
 
   c = MP2.addTask("transition",	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, MP.T, {0.},1e-2);
 
  c = MP2.addTask("position", new TaskMap_Default(posTMT, G, targets(current), mlr::Vector(0, 0, 0)));
  c->setCostSpecs(MP2.T, MP2.T, finalpos, 1e3);
@@ -95,8 +95,8 @@ if (current<5) orient.set(0,1,0);
 
 //  c = MP2.addTask("upAlign", new TaskMap_Default(vecAlignTMT, G, targets(current), mlr::Vector(1, 0, 0),"reference", orient ,NoArr));
  
-//if (current<5) c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
- // c->setCostSpecs(MP2.T, MP2.T, ARR(-1.), 1e3);
+//if (current<5) c->setCostSpecs(MP2.T, MP2.T, {-1.}, 1e3);
+ // c->setCostSpecs(MP2.T, MP2.T, {-1.}, 1e3);
   //c = MP2.addTask("orientation", new TaskMap_Default(vecTMT, G, targets(current), mlr::Vector(0, 0, 0)));
   //c->setCostSpecs(MP2.T, MP2.T, {0.,0.,1.}, 1e3);
 /*
@@ -105,7 +105,7 @@ if (current<5) orient.set(0,1,0);
   c->setCostSpecs(MP2.T, MP2.T, NoArr, 1e1);
 */
  //   c = MP2.addTask("collision",
- //                  new TaskMap_Default(collTMT, G, NULL, NoVector, NULL, NoVector, ARR(.1)));
+ //                  new TaskMap_Default(collTMT, G, NULL, NoVector, NULL, NoVector, {.1}));
  //   c->setCostSpecs(0, MP2.T, {0.}, 1e-0);
  
 cout << "TEST\n";
@@ -196,7 +196,7 @@ cout << "POS = "<<G.getBodyByName("chair_sitting")->X<<"---------"<< finalpos<< 
   Task *c;
   c = MP.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, MP.T, {0.},1e-2);
 
   double shift; if (i>3) shift=0; else shift =  -0.18;
   c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), mlr::Vector(0, 0,shift)));
@@ -337,7 +337,7 @@ for (uint i=0;i<5;i++)  {
       Task *c;
       c = MP.addTask("transition", 	new TaskMap_Transition(G));
       c->map.order=2; //make this an acceleration task!
-      c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+      c->setCostSpecs(0, MP.T, {0.},1e-2);
 
       c = MP.addTask("position", new TaskMap_Default(posTMT, G, targets(i), mlr::Vector(0, 0,0)));
       c->setCostSpecs(MP.T, MP.T, finalpos, 1e3);

@@ -50,7 +50,7 @@ ImitateTaskVariable::ImitateTaskVariable(const char* _name, mlr::KinematicWorld&
 	nCounter = 1;//change time for dynamic case
 	nIterations = mlr::getParameter<int>("iterations");
 
-	set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+	set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 
 
 	userUpdate();//initial values...

@@ -41,10 +41,10 @@ void test_quatTMT() {
   TaskController MP(world, false);
 
   auto effOrientationL = MP.addPDTask("orientationL", 1., .8, quatTMT, "handL", {0, 0, 0});
-  effOrientationL->y_ref = ARR(1, 0, 0, 0);
+  effOrientationL->y_ref = ARR(1., 0, 0, 0);
 
   auto effOrientationR = MP.addPDTask("orientationR", 1., .8, quatTMT, "handR", {0, 0, 0});
-  effOrientationR->y_ref = ARR(0, 1, 0, 0);
+  effOrientationR->y_ref = ARR(0., 1, 0, 0);
 
   run(MP, world);
 }

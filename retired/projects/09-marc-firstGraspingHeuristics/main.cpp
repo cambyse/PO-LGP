@@ -24,7 +24,7 @@ void init(mlr::KinematicWorld& ors,OpenGL& gl,const char *filename){
 void defineReachControlVariables(SocSystem_Ors& soci,mlr::KinematicWorld& ors,uint T){
   //set task variables
   TaskVariable *x0 = new TaskVariable("finger-tip",ors,posTVT ,"effector","<t(0 0 .2)>",0,0,0);
-  TaskVariable *x1 = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *x1 = new TaskVariable("collision", ors,collTVT,0,0,0,0,{.05});
   soci.setTaskVariables({x0,x1});
 
   double midPrec,endPrec,balPrec,colPrec;
@@ -95,7 +95,7 @@ void TEST(Gradients){
   TaskVariable *n2  = new TaskVariable("normal2",ors,zoriTVT,"fingb2","<d( 90 1 0 0)>",0,0,0);
   TaskVariable *p1  = new TaskVariable("pos1",ors,posTVT,"finga2","<t(0 -.065 .02)>",0,0,0);
   TaskVariable *p2  = new TaskVariable("pos2",ors,posTVT,"fingb2","<t(0  .065 .02)>",0,0,0);
-  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,{.05});
   soci.setTaskVariables({arm,n1,n2,p1,p2,col});
   
   //n1->setGains(.001,0.);
@@ -179,10 +179,10 @@ void TEST(Plan){
   TaskVariable *za = new TaskVariable("align",ors,zalignTVT,"finga2","<d(-90 1 0 0)>","fingb2","<d( 90 1 0 0)>",0);
   TaskVariable *p1 = new TaskVariable("pos1",ors,posTVT,"finga2","<t(0 -.065 .02)>",0,0,0);
   TaskVariable *p2 = new TaskVariable("pos2",ors,posTVT,"fingb2","<t(0  .065 .02)>",0,0,0);
-  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,{.05});
   soci.setTaskVariables({n1,n2,za,p1,p2,col});
 
-  //n1->x_target = -n2->x; //ARR(1.,0.,0.);
+  //n1->x_target = -n2->x; //{1.,0.,0.};
   //n2->x_target = -n1->x;
   arr target;
   target.setCarray(ors.getBodyByName("target")->X.pos.p,3);

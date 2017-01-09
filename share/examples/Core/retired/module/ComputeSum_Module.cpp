@@ -9,7 +9,7 @@ void ComputeSum::step(){
 }
 
 bool ComputeSum::test(){
-  x.set() = ARR(1., 2., 3.);
+  x.set() = {1., 2., 3.};
   step();
   double S = s.get();
   CHECK_EQ(S,6.,"");

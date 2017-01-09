@@ -522,7 +522,7 @@ void MotionProblem::reportFeatures(bool brief) {
           cout <<' ' <<c->prec(t);
           if(ttMatrix.N){
             cout <<' ' <<ttMatrix(t).elem(m)
-                <<' ' <<sumOfSqr(phiMatrix(t).refRange(m,m+d-1));
+                <<' ' <<sumOfSqr(phiMatrix(t)({m,m+d-1}));
           }
           cout <<endl;
         }
@@ -808,7 +808,7 @@ void MotionProblemFunction::phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, 
   arr _phi, _J;
   ObjectiveTypeA _tt;
 #ifdef NEWCODE
-  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations.refRange(t,t+k), MP.tau);
+  MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations({t,t+k}), MP.tau);
 #else
   MP.getPhi(_phi, (&J?_J:NoArr), (&tt?_tt:NoTermTypeA), t, MP.configurations, MP.tau);
 #endif

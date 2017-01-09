@@ -27,7 +27,7 @@ void TEST(GraspHeuristic){
     Task *c;
     c = MP.addTask("transition", new TaskMap_Transition(G));
     c->map.order=2; //make this an acceleration task!
-    c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+    c->setCostSpecs(0, MP.T, {0.},1e-2);
 
 
     MotionProblemFunction F(MP);
@@ -78,7 +78,7 @@ void TEST(PickAndPlace){
   Task *t;
   t = MP.addTask("transition", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
-  t->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+  t->setCostSpecs(0, MP.T, {0.},1e-2);
 
 
 

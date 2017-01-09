@@ -80,7 +80,7 @@ void cartPole_Filter::computeFeature_PO()
     else //if not enough observations available, complete the rest with zeros
     {
         currentFeature = zeros(windowSize, dim1);
-        currentFeature.refRange(0, dim0-1) = observationHistory;
+        currentFeature({0, dim0-1}) = observationHistory;
     }
 
     currentFeature.reshape(windowSize * dim1); //vector

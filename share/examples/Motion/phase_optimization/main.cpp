@@ -19,7 +19,7 @@ void TEST(PhaseOptimization){
   Task *t;
   t = MP.addTask("tra", new TaskMap_Transition(world));
   t->map.order=1;
-  t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
+  t->setCostSpecs(0, MP.T, {0.}, 1e-2);
   t =MP.addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   t->setCostSpecs(MP.T-3,MP.T,conv_vec2arr(target->X.pos),1e2);
   MotionProblemFunction MPF(MP);

@@ -123,8 +123,8 @@ void TaskMap_qItself::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
           qidx=jointMatchLists(i,j_idx)->qIndex;
           qdim=jointMatchLists(i,j_idx)->qDim();
           if(qdim){
-            q_bar_mapped(i).append(q_bar(i).refRange(qidx, qidx+qdim-1));
-            J_bar_mapped(i).append(J_bar(i).refRange(qidx, qidx+qdim-1));
+            q_bar_mapped(i).append(q_bar(i)({qidx, qidx+qdim-1}));
+            J_bar_mapped(i).append(J_bar(i)({qidx, qidx+qdim-1}));
           }
         }
       }

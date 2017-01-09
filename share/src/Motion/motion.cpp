@@ -172,7 +172,7 @@ uint MotionProblem::dim_phi(uint t) {
   for(Task *c: tasks) {
 //        CHECK(c->prec.N<=T,"");
     if(c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
+      m += c->map.dim_phi(configurations({t,t+k_order}), t); //counts also constraints
   }
   return m;
 }
@@ -181,7 +181,7 @@ uint MotionProblem::dim_g(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->type==OT_ineq && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(configurations.refRange(t,t+k_order), t);
+      m += c->map.dim_phi(configurations({t,t+k_order}), t);
   }
   return m;
 }
@@ -190,7 +190,7 @@ uint MotionProblem::dim_h(uint t) {
   uint m=0;
   for(Task *c: tasks) {
     if(c->type==OT_eq && c->prec.N>t && c->prec(t))
-      m += c->map.dim_phi(configurations.refRange(t,t+k_order), t);
+      m += c->map.dim_phi(configurations({t,t+k_order}), t);
   }
   return m;
 }
@@ -228,7 +228,7 @@ void MotionProblem::set_x(const arr& x){
     uint x_dim = dim_x(t); //configurations(s)->getJointStateDimension();
 //    temporallyAlignKinematicSwitchesInConfiguration(t); //this breaks the jacobian check
     if(x_dim){
-      if(x.nd==1) configurations(s)->setJointState(x.refRange(x_count, x_count+x_dim-1));
+      if(x.nd==1) configurations(s)->setJointState(x({x_count, x_count+x_dim-1}));
       else        configurations(s)->setJointState(x[t]);
       if(useSwift) configurations(s)->stepSwift();
       x_count += x_dim;
@@ -291,7 +291,7 @@ void MotionProblem::phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t) {
   arr y, Jy, Jtmp;
   uint dimPhi_t=0;
   for(Task *task: tasks) if(task->prec.N>t && task->prec(t)){
-    task->map.phi(y, (&J?Jy:NoArr), configurations.refRange(t,t+k_order), tau, t);
+    task->map.phi(y, (&J?Jy:NoArr), configurations({t,t+k_order}), tau, t);
     if(!y.N) continue;
     dimPhi_t += y.N;
     if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
@@ -332,7 +332,7 @@ StringA MotionProblem::getPhiNames(uint t){
   uint m=0;
   for(Task *c: tasks) if(c->prec.N>t && c->prec(t)){
     if(c->type==OT_sumOfSqr) {
-      uint d = c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
+      uint d = c->map.dim_phi(configurations({t,t+k_order}), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_f" <<i;
@@ -342,7 +342,7 @@ StringA MotionProblem::getPhiNames(uint t){
   }
   for(Task *c: tasks) if(c->prec.N>t && c->prec(t)){
     if(c->type==OT_ineq) {
-      uint d = c->map.dim_phi(configurations.refRange(t,t+k_order), t); //counts also constraints
+      uint d = c->map.dim_phi(configurations({t,t+k_order}), t); //counts also constraints
       for(uint i=0;i<d;i++){
         names(m+i)=c->name;
         names(m+i) <<"_g" <<i;
@@ -385,7 +385,7 @@ void MotionProblem::reportFeatures(bool brief, ostream& os) {
     for(uint i=0; i<tasks.N; i++) {
       Task *task = tasks(i);
       if(!task->isActive(t)) continue;
-      uint d=task->map.dim_phi(configurations.refRange(t,t+k_order), t);
+      uint d=task->map.dim_phi(configurations({t,t+k_order}), t);
       if(brief){
         if(d){
           os <<"  " <<t <<' ' <<i <<' ' <<d
@@ -395,7 +395,7 @@ void MotionProblem::reportFeatures(bool brief, ostream& os) {
           os <<' ' <<task->prec(t);
           if(featureTypes.N){
             os <<' ' <<featureTypes.scalar().elem(M)
-                <<' ' <<sumOfSqr(featureValues.scalar().refRange(M,M+d-1));
+                <<' ' <<sumOfSqr(featureValues.scalar()({M,M+d-1}));
           }
           os <<endl;
         }
@@ -449,7 +449,7 @@ Graph MotionProblem::getReport(bool gnuplt) {
     for(uint i=0; i<tasks.N; i++) {
       Task *task = tasks(i);
       if(task->prec.N>t && task->prec(t)){
-        uint d=task->map.dim_phi(configurations.refRange(t,t+k_order), t);
+        uint d=task->map.dim_phi(configurations({t,t+k_order}), t);
         for(uint i=0;i<d;i++) CHECK(tt(M+i)==task->type,"");
         if(d){
           if(task->type==OT_sumOfSqr){
@@ -550,7 +550,7 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variabl
   for(uint t=0;t<MP.T;t++){
     for(Task *task: MP.tasks) if(task->prec.N>t && task->prec(t)){
 //      CHECK(task->prec.N<=MP.T,"");
-      uint m = task->map.dim_phi(MP.configurations.refRange(t,t+MP.k_order), t); //dimensionality of this task
+      uint m = task->map.dim_phi(MP.configurations({t,t+MP.k_order}), t); //dimensionality of this task
       featureTimes.append(consts<uint>(t, m));
       featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
@@ -572,7 +572,7 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA
   uint M=0;
   for(uint t=0;t<MP.T;t++){
     for(Task *task: MP.tasks) if(task->prec.N>t && task->prec(t)){
-      task->map.phi(y, (&J?Jy:NoArr), MP.configurations.refRange(t,t+MP.k_order), MP.tau, t);
+      task->map.phi(y, (&J?Jy:NoArr), MP.configurations({t,t+MP.k_order}), MP.tau, t);
       if(!y.N) continue;
       if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
 

@@ -10,9 +10,9 @@ void reach(){
   TaskController MP(world, true);
   MP.addPDTask("endeff1", .3, .8, posTMT, "handR", NoVector, "rightTarget");
 //  CtrlTask *t = MP.addPDTask("endeff1", .1, .8, posTMT, "handL");
-//  t->y_ref=ARR(0,-.5,1);
+//  t->y_ref={0,-.5,1};
 
-//  ConstraintForceTask *ct = MP.addConstraintForceTask("touchTable", new PlaneConstraint(world, "handL", ARR(0,0,-1,.5)));
+//  ConstraintForceTask *ct = MP.addConstraintForceTask("touchTable", new PlaneConstraint(world, "handL", {0,0,-1,.5}));
   ConstraintForceTask *ct = MP.addConstraintForceTask("touchTable", new PairCollisionConstraint(world, "handL", "table"));
   ct->desiredForce=0.;
 

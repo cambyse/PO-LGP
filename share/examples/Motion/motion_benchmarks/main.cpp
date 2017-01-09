@@ -64,14 +64,14 @@ void circle_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
-  //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
+  //  c->setCostSpecs(0, MP.T, {1.,1.,1.}, 1e4);
   c->setCostSpecs(0, MP.T, traj, 1e4);
   c->target = traj;
-  c->prec.refRange(0,20)=0.;
+  c->prec({0,20})=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
-  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, {0.}, 1e4);
+  c->setCostSpecs(0, MP.T, {0.}, 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -168,14 +168,14 @@ void star_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
-//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
+//  c->setCostSpecs(0, MP.T, {1.,1.,1.}, 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
-//  c->prec.refRange(0,20)=0.;
+//  c->prec({0,20})=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
-  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, {0.}, 1e4);
+  c->setCostSpecs(0, MP.T, {0.}, 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -273,14 +273,14 @@ void eight_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
-//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
+//  c->setCostSpecs(0, MP.T, {1.,1.,1.}, 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
-//  c->prec.refRange(0,20)=0.;
+//  c->prec({0,20})=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
-  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, {0.}, 1e4);
+  c->setCostSpecs(0, MP.T, {0.}, 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;

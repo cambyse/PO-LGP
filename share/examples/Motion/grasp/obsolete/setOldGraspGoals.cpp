@@ -72,19 +72,19 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   //V=listFindByName(sys.vars, "pos3");  V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
 
   double radius = .05;
-  V=new DefaultTaskVariable("hook1", *sys.ors, posTVT, "tipNormal1", NULL, ARR());
+  V=new DefaultTaskVariable("hook1", *sys.ors, posTVT, "tipNormal1", NULL, arr());
   ((DefaultTaskVariable*)V)->irel.addRelativeTranslation(0,0,radius);
   V->updateState();
   V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   sys.vars.append(V);
 
-  V=new DefaultTaskVariable("hook2", *sys.ors, posTVT, "tipNormal2", NULL, ARR());
+  V=new DefaultTaskVariable("hook2", *sys.ors, posTVT, "tipNormal2", NULL, arr());
   ((DefaultTaskVariable*)V)->irel.addRelativeTranslation( .033,0,radius);
   V->updateState();
   V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
   sys.vars.append(V);
 
-  V=new DefaultTaskVariable("hook3", *sys.ors, posTVT, "tipNormal3", NULL, ARR());
+  V=new DefaultTaskVariable("hook3", *sys.ors, posTVT, "tipNormal3", NULL, arr());
   ((DefaultTaskVariable*)V)->irel.addRelativeTranslation(-.033,0,radius);
   V->updateState();
   V->y_target = xtarget;  V->setInterpolatedTargetsEndPrecisions(T, midPrec, endPrec, 0., 0.);
@@ -105,7 +105,7 @@ void setOldGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   s = listFindByName(sys.ors->shapes, "target");  shapes.append(s->index);
   //shapes.append(shapeId);
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
-  V->y_target = ARR(.0,.0,.0);  V->v_target = ARR(.0,.0,.0);
+  V->y_target = {.0,.0,.0};  V->v_target = {.0,.0,.0};
   V->y_prec = colPrec;
   V->setInterpolatedTargetsConstPrecisions(T,colPrec,0.);
   sys.vars.append(V);

@@ -14,8 +14,8 @@ void loadUSPS(arr& X,arr& y,const char* filename){
   X.reshape(X.N/2560,10,256);
   arr X2(X.d0,2,256);
   for(uint i=0;i<X.d0;i++){
-    X2.refDim(i,0)() = X.refDim(1,1);
-    X2.refDim(i,1)() = X.refDim(1,7);
+    X2(i,0, {})() = X(1,1, {});
+    X2(i,1, {})() = X(1,7, {});
   }
   X.reshape(X.N/256,256);
   X2.reshape(X2.N/256,256);

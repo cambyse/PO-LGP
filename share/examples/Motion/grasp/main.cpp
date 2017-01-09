@@ -35,7 +35,7 @@ void TEST(GraspHeuristic){
     Task *c;
     c = P.addTask("transition", new TaskMap_Transition(G), OT_sumOfSqr);
     c->map.order=2; //make this an acceleration task!
-    c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+    c->setCostSpecs(0, P.T, {0.},1e-2);
 
     sineProfile(x, P.world.getJointState(), xT, P.T);
 

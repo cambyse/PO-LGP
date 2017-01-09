@@ -37,7 +37,7 @@ uint T=50;
   //-- setup the control variables (problem definition)
   arr q;
   soc.getq0(q); 
-  TaskVariable *pos = new TaskVariable("position",ors, posTVT,"arm10","<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *pos = new TaskVariable("position",ors, posTVT,"arm10","<t(0 0 .2)>",0,0,arr());
   pos->setGainsAsNatural(20,.2);
   pos->targetType=positionGainsTT;
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);
@@ -66,7 +66,7 @@ uint T=50;
               
       
 
-  TaskVariable *qit = new TaskVariable("qit",ors,  qItselfTVT,NULL,"<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *qit = new TaskVariable("qit",ors,  qItselfTVT,NULL,"<t(0 0 .2)>",0,0,arr());
   qit->setGainsAsNatural(20,.2);
   qit->targetType=positionGainsTT;
   q(10)=-1.0;

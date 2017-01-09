@@ -21,7 +21,7 @@ struct Poser{
   }
 
   arr getPose(arr &qInit){
-    arr posR = .3*randn(3);  posR += ARR(.6, -.3, 1.);
+    arr posR = .3*randn(3);  posR += {.6, -.3, 1.};
     arr posL = .3*randn(3);  posL += ARR(.6,  .3, 1.);
     arr vecR = randn(3); if(vecR(0)<0.) vecR(0) *=-1.;  vecR/=length(vecR);
     arr vecL = randn(3); if(vecL(0)<0.) vecL(0) *=-1.;  vecL/=length(vecL);
@@ -45,7 +45,7 @@ struct Poser{
 //    double constraints = result.get<double>({"total","constraints"});
 
 //    if(constraints<.1 && cost<5.){
-//      komo.x.refRange(0,2)=0.;
+//      komo.x({0,2})=0.;
 //      W.setJointState(komo.x);
 //    }else{
 //      return getPose(qInit);

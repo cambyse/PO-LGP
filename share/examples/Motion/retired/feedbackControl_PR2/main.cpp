@@ -126,7 +126,7 @@ void executeTrajectoryWholeBody(String scene){
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
 
   arr Rgoal = conv_vec2arr(P.world.getBodyByName("RgoalRef")->X.pos);
@@ -226,9 +226,9 @@ void executeTrajectoryWholeBody(String scene){
   //  MP.qitselfPD.prec=0.;
   MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
-  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",{0.,0.,1.});
   taskPosL = MP.addPDTask("posL", tau_plan*5, 1, posTMT, "endeffL");
-  taskVecL = MP.addPDTask("vecL", tau_plan*5, 1, vecTMT, "endeffL",ARR(0.,0.,1.));
+  taskVecL = MP.addPDTask("vecL", tau_plan*5, 1, vecTMT, "endeffL",{0.,0.,1.});
   taskHome = MP.addPDTask("home", .02, 0.5, new TaskMap_qItself());
   taskLimits = MP.addPDTask("limits", .02, 0.5, new TaskMap_qLimits());
 
@@ -264,7 +264,7 @@ void executeTrajectoryWholeBody(String scene){
   q_bk = ~q;
   x_bk = ~x0_R;
   goal_bk = ~goalMO_R.position;
-  ct_bk = ARR(0);
+  ct_bk = ARR(0.);
 
   world.setJointState(q,qdot);
   arr state,stateVec;
@@ -286,10 +286,10 @@ void executeTrajectoryWholeBody(String scene){
       arr yNext, ydNext;
       amexL->iterate(state);
       amexL->getNextState(yNext,ydNext);
-      taskPosL->y_ref = yNext.refRange(0,2);
-      taskPosL->v_ref = ydNext.refRange(0,2);
-      taskVecL->y_ref = yNext.refRange(3,5);
-      taskVecL->v_ref = ydNext.refRange(3,5);
+      taskPosL->y_ref = yNext({0,2});
+      taskPosL->v_ref = ydNext({0,2});
+      taskVecL->y_ref = yNext({3,5});
+      taskVecL->v_ref = ydNext({3,5});
 
       world.kinematicsPos(state,NoArr,P.world.getBodyByName("endeffR"));
       world.kinematicsVec(stateVec,NoArr,P.world.getBodyByName("endeffR"));
@@ -297,10 +297,10 @@ void executeTrajectoryWholeBody(String scene){
 
       amexR->iterate(state);
       amexR->getNextState(yNext,ydNext);
-      taskPosR->y_ref = yNext.refRange(0,2);
-      taskPosR->v_ref = ydNext.refRange(0,2);
-      taskVecR->y_ref = yNext.refRange(3,5);
-      taskVecR->v_ref = ydNext.refRange(3,5);
+      taskPosR->y_ref = yNext({0,2});
+      taskPosR->v_ref = ydNext({0,2});
+      taskVecR->y_ref = yNext({3,5});
+      taskVecR->v_ref = ydNext({3,5});
 
 #if VISUALIZE
       current_dir = state;
@@ -335,9 +335,9 @@ void executeTrajectoryWholeBody(String scene){
   write(LIST<arr>(ct_bk),STRING(folder<<"ct_bk.output"));
 
   write(LIST<arr>(xRefR),STRING(folder<<"xRef.output"));
-  write(LIST<arr>(ARR(tau_control)),STRING(folder<<"tau_control.output"));
-  write(LIST<arr>(ARR(tau_plan)),STRING(folder<<"tau_plan.output"));
-  write(LIST<arr>(ARR(numScenes)),STRING(folder<<"numScenes.output"));
+  write(LIST<arr>({tau_control}),STRING(folder<<"tau_control.output"));
+  write(LIST<arr>({tau_plan}),STRING(folder<<"tau_plan.output"));
+  write(LIST<arr>({numScenes}),STRING(folder<<"numScenes.output"));
 
   return;
 }
@@ -366,7 +366,7 @@ void executeTrajectoryRightArm(String scene){
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
 
   arr Rgoal = conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos);
@@ -448,7 +448,7 @@ void executeTrajectoryRightArm(String scene){
   //  MP.nullSpacePD.prec=0.;
   MP.qitselfPD.active=false;
   taskPosR = MP.addPDTask("posR", tau_plan*5, 1, posTMT, "endeffR");
-  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",ARR(0.,0.,1.));
+  taskVecR = MP.addPDTask("vecR", tau_plan*5, 1, vecTMT, "endeffR",{0.,0.,1.});
   qitself = MP.addPDTask("qitself", .1, 1., new TaskMap_qItself(0.01*MP.H_rate_diag));
   cout << MP.H_rate_diag << endl;
   double t_PD = tau_plan/4.;
@@ -483,7 +483,7 @@ void executeTrajectoryRightArm(String scene){
   q_bk = ~q;
   x_bk = ~x0_R;
   goal_bk = ~goalMO.position;
-  ct_bk = ARR(0);
+  ct_bk = ARR(0.);
 
   world.setJointState(q,qdot);
   arr state,stateVec;
@@ -504,15 +504,15 @@ void executeTrajectoryRightArm(String scene){
       arr yNext, ydNext;
       amexR->iterate(state);
       amexR->getNextState(yNext,ydNext);
-      taskPosR->y_ref = yNext.refRange(0,2);
-      taskPosR->v_ref = ydNext.refRange(0,2);
-      taskVecR->y_ref = yNext.refRange(3,5);
-      taskVecR->v_ref = ydNext.refRange(3,5);
+      taskPosR->y_ref = yNext({0,2});
+      taskPosR->v_ref = ydNext({0,2});
+      taskVecR->y_ref = yNext({3,5});
+      taskVecR->v_ref = ydNext({3,5});
 
 //      taskPosR->y_ref = goalMO.position;
-//      taskPosR->v_ref = 0.;//ydNext.refRange(0,2);
-//      taskVecR->y_ref = goalMO.orientation;//yNext.refRange(3,5);
-//      taskVecR->v_ref = 0.;//ydNext.refRange(3,5);
+//      taskPosR->v_ref = 0.;//ydNext({0,2});
+//      taskVecR->y_ref = goalMO.orientation;//yNext({3,5});
+//      taskVecR->v_ref = 0.;//ydNext({3,5});
 
 
 #if VISUALIZE

@@ -73,7 +73,7 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   shapes.reshape(2,3); shapes = ~shapes;
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .05, true);
   double grip=.9; //specifies the desired proxy value
-  V->y_target = ARR(grip,grip,grip);  V->v_target = ARR(.0,.0,.0);
+  V->y_target = {grip,grip,grip};  V->v_target = {.0,.0,.0};
   V->y_prec = colPrec;
   V->setInterpolatedTargetsEndPrecisions(T,colPrec,1e1,0.,0.);
   for(uint t=0;t<=T;t++){ //interpolation: 0 up to 4/5 of the trajectory, then interpolating in the last 1/5
@@ -85,7 +85,7 @@ void setNewGraspGoals(OrsSystem& sys, uint T, uint shapeId, uint side, uint phas
   //collisions with other objects
   shapes = {shapeId};
   V = new ProxyTaskVariable("otherCollisions", *sys.ors, allExceptListedCTVT, shapes, .04, true);
-  V->y_target = ARR(0.);  V->v_target = ARR(.0);
+  V->y_target = {0.};  V->v_target = {.0};
   V->y_prec = colPrec;
   V->setConstTargetsConstPrecisions(T);
   if(V->y(0)>0.){ //we are in collision/proximity -> depart slowly

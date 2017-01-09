@@ -49,7 +49,7 @@ void box1(arr &y){
   Task *t;
   t = MP.addTask("transitions", new TaskMap_Transition(world), OT_sumOfSqr);
   t->map.order=2; //make this an acceleration task!
-  t->setCostSpecs(0, MP.T, ARR(0.),param(pC));pC++;
+  t->setCostSpecs(0, MP.T, {0.},param(pC));pC++;
   ((TaskMap_Transition*)&t->map)->H_rate_diag = 1.;
 
   cout << MP.T << endl;
@@ -70,7 +70,7 @@ void box1(arr &y){
   t = MP.addTask("posPre", new TaskMap_Default(posTMT, world, "endeffM", NoVector),OT_sumOfSqr);
   t->setCostSpecs(conT-70,conT-70, conv_vec2arr(world.getShapeByName("preContact")->X.pos), param(pC));pC++;
   t = MP.addTask("rotPre", new TaskMap_Default(vecAlignTMT, world, "endeffC", mlr::Vector(0.,0.,1.),"preContact",mlr::Vector(1.,0.,0.)),OT_sumOfSqr);
-  t->setCostSpecs(conT-70,conT-70, ARR(1.), param(pC));pC++;
+  t->setCostSpecs(conT-70,conT-70, {1.}, param(pC));pC++;
 
   // constraints
   t = MP.addTask("contact1", new PointEqualityConstraint(world, "endeffL",NoVector, "boxP1",NoVector),OT_eq);
@@ -79,11 +79,11 @@ void box1(arr &y){
   t->setCostSpecs(conT, MP.T, {0.}, 1.);
 
   t = MP.addTask("box_fixation0", new qItselfConstraint(world.getJointByName("table_box")->qIndex, world.getJointStateDimension()),OT_eq);
-  t->setCostSpecs(0.,conT, ARR(0.), 1.);
+  t->setCostSpecs(0.,conT, {0.}, 1.);
   t = MP.addTask("box_fixation1", new qItselfConstraint(world.getJointByName("table_box")->qIndex+1, world.getJointStateDimension()),OT_eq);
-  t->setCostSpecs(0.,conT, ARR(0.), 1.);
+  t->setCostSpecs(0.,conT, {0.}, 1.);
   t = MP.addTask("box_fixation2", new qItselfConstraint(world.getJointByName("table_box")->qIndex+2, world.getJointStateDimension()),OT_eq);
-  t->setCostSpecs(0.,conT, ARR(0.), 1.);
+  t->setCostSpecs(0.,conT, {0.}, 1.);
   t = MP.addTask("velocity_dir2", new VelAlignConstraint(world, "endeffM",NoVector, "box", mlr::Vector(1,0,0),.99),OT_ineq);
   t->setCostSpecs(conT, MP.T, {0.}, 1.);
 

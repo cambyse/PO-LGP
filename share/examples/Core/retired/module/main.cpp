@@ -13,7 +13,7 @@
 
 void way0(){
   ComputeSum C;
-  C.x.set() = ARR(1., 2., 3.);
+  C.x.set() = {1., 2., 3.};
   C.open();
   C.step();
   C.close();

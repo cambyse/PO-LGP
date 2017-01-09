@@ -17,7 +17,7 @@ arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
   cout << pr2_get_shapes(G) << endl;
 
@@ -45,7 +45,7 @@ arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = mlr::getParameter<uintA>("agent_shapes");
@@ -68,7 +68,7 @@ arr optimize_trajectory(mlr::KinematicWorld& G, const arr& init_trajectory) {
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);

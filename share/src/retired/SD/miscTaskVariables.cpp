@@ -4,7 +4,7 @@ zOpposeTaskVariable::zOpposeTaskVariable(const char* _name,
                                          mlr::KinematicWorld& _ors,
                                          ShapeList& _refs){
   refs=_refs;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 void zOpposeTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
@@ -33,7 +33,7 @@ zFocusTargetTaskVariable::zFocusTargetTaskVariable(const char* _name,
     mlr::KinematicWorld& _ors,
     ShapeList& _refs){
   refs=_refs;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 void zFocusTargetTaskVariable::userUpdate(const mlr::KinematicWorld& ors){

@@ -1419,7 +1419,7 @@ void mlr::KinematicWorld::kinematicsPos(arr& y, arr& J, Body *b, const mlr::Vect
           uint offset = (j->type==JT_free)?3:0;
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
           Jrot = crossProduct(Jrot, conv_vec2arr(pos_world-(j->X.pos+j->X.rot*j->Q.pos)) ); //cross-product of all 4 w-vectors with lever
-          Jrot /= sqrt(sumOfSqr(q.refRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr( q({j->qIndex+offset, j->qIndex+offset+3}) )); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
         }
       }
@@ -1595,7 +1595,7 @@ void mlr::KinematicWorld::axesMatrix(arr& J, Body *b) const {
         if(j->type==JT_quatBall || j->type==JT_free) {
           uint offset = (j->type==JT_free)?3:0;
           arr Jrot = j->X.rot.getArr() * j->Q.rot.getJacobian(); //transform w-vectors into world coordinate
-          Jrot /= sqrt(sumOfSqr(q.refRange(j->qIndex+offset,j->qIndex+offset+3))); //account for the potential non-normalization of q
+          Jrot /= sqrt(sumOfSqr(q({j->qIndex+offset,j->qIndex+offset+3}))); //account for the potential non-normalization of q
           for(uint i=0;i<4;i++) for(uint k=0;k<3;k++) J(k,j_idx+offset+i) += Jrot(k,i);
         }
         //all other joints: J=0 !!

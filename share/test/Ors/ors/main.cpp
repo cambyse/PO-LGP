@@ -67,7 +67,7 @@ void TEST(Kinematics){
     vec2.setRandom();
     arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
-//    x/=sqrt(sumOfSqr(x.refRange(0,3)));
+//    x/=sqrt(sumOfSqr(x({0,3})));
 
     cout <<"kinematicsPos:   "; checkJacobian(MyFct(MyFct::Pos   , G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsRelPos:"; checkJacobian(MyFct(MyFct::RelPos, G, b, vec, b2, vec2)(), x, 1e-5);

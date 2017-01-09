@@ -7,7 +7,7 @@ PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
                               PotentialField& _f){
   refs=_refs;
   f=&_f;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 void PotentialValuesTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
@@ -31,7 +31,7 @@ PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _na
     PotentialField& _f){
   refs=_refs;
   f=&_f;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 /** Compute current value and jacobian of the TV.
@@ -63,7 +63,7 @@ GPVarianceTaskVariable::GPVarianceTaskVariable(const char* _name,
                               GraspObject_GP& _f){
   refs=_refs;
   f=&_f;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 /** $ \dfdx{\vec y_i}{\vec q} =  2 (\vec{G^{-1}}\vec\kappa) \vec\kappa'\vec Ji $

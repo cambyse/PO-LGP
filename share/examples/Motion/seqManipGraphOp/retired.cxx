@@ -62,7 +62,7 @@ void TEST(PickAndPlace){
   t->setCostSpecs(MP.T, MP.T, {}, 1e1);
 
   t = MP.addTask("_MinSumOfSqr_quatDiff_obj1_target", new TaskMap_Default(quatDiffTMT, grasp->index, NoVector, tar->index), OT_sumOfSqr);
-  t->setCostSpecs(MP.T, MP.T, ARR(1.,0.,0.,0.), 1e3);
+  t->setCostSpecs(MP.T, MP.T, {1.,0.,0.,0.}, 1e3);
 
   // zero grasp joint motion during holding
   mlr::Joint *j_grasp = MP.world.getJointByName("graspJoint");

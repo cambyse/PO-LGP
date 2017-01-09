@@ -103,12 +103,12 @@ void planTrajectory(arr &x,mlr::KinematicWorld &world) {
 
 void initDoor(mlr::KinematicWorld &world, arr &marker_pose){
   arr doorMarker = marker_pose[4];
-  arr doorMarkerPos = doorMarker.refRange(0,2);
-  mlr::Quaternion doorMarkerQuat = mlr::Quaternion(doorMarker.refRange(3,6));
+  arr doorMarkerPos = doorMarker({0,2});
+  mlr::Quaternion doorMarkerQuat = mlr::Quaternion(doorMarker({3,6}));
 
   arr wallMarker = marker_pose[17];
-  arr wallMarkerPos = wallMarker.refRange(0,2);
-  mlr::Quaternion wallMarkerQuat = mlr::Quaternion(wallMarker.refRange(3,6));
+  arr wallMarkerPos = wallMarker({0,2});
+  mlr::Quaternion wallMarkerQuat = mlr::Quaternion(wallMarker({3,6}));
 
   arr refFrame = conv_vec2arr(world.getBodyByName("torso_lift_link")->X.pos);
 

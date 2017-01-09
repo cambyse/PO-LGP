@@ -167,12 +167,12 @@ void soc::SocSystem_Ors::initStandardReachProblem(uint rand_seed, uint T, bool _
   double balPrec=mlr::getParameter<double>("balPrec");
   double margin =mlr::getParameter<double>("margin");
   //-- setup the control variables (problem definition)
-  TaskVariable *pos = new DefaultTaskVariable("position" , *ors, posTVT, endeffShapeName, 0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position" , *ors, posTVT, endeffShapeName, 0, arr());
   TaskVariable *col;
   if(!mlr::getParameter<bool>("useTruncation"))
     col = new DefaultTaskVariable("collision", *ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));
-  TaskVariable *com = new DefaultTaskVariable("balance", *ors, comTVT, 0, 0, 0, 0, ARR());
+  TaskVariable *com = new DefaultTaskVariable("balance", *ors, comTVT, 0, 0, 0, 0, arr());
   setTaskVariables({pos, col, com});
 
   pos->y_target = conv_vec2arr(ors->getShapeByName("target")->X.pos);
@@ -253,7 +253,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
   double midPrec=mlr::getParameter<double>("midPrec");
   double colPrec=mlr::getParameter<double>("colPrec");
   //-- setup the control variables (problem definition)
-  TaskVariable *pos = new DefaultTaskVariable("position" , *ors, posTVT, endeff->name, STRING("<t(0 0 " <<.5/K <<")>"), 0, 0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position" , *ors, posTVT, endeff->name, STRING("<t(0 0 " <<.5/K <<")>"), 0, 0, arr());
   TaskVariable *col;
   if(!useTruncation) col = new DefaultTaskVariable("collision", *ors, collTVT, 0, 0, 0, 0, ARR(margin));
   else               col = new DefaultTaskVariable("collision", *ors, colConTVT, 0, 0, 0, 0, ARR(margin));

@@ -28,7 +28,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   //-- create a grasp object for the ors shape
   GraspObject *graspobj;
   switch(obj->type){
-      //graspobj = new GraspObject_InfCylinder(conv_vec2arr(obj->X.pos), ARR(0,0,1), .04, 1.);
+      //graspobj = new GraspObject_InfCylinder(conv_vec2arr(obj->X.pos), ARR(0.,0,1), .04, 1.);
     case mlr::ST_cylinder:  graspobj = new GraspObject_Cylinder1(obj);  break;
     case mlr::ST_box:  graspobj = new GraspObject_Box(obj);  break;
     default: NIY;
@@ -59,7 +59,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
 #else // graspCenter -> negative level
   //MT: somehow this doesn't work: it seems the gradients inside are just too messy!
   V = new PotentialValuesTaskVariable("graspCenterInsideLevel", *sys.ors, ARRAY(sys.ors->getShapeByName("graspCenter")), *graspobj);
-  V->y_target = ARR(-.01);
+  V->y_target = {-.01};
   V->y_prec = 1e4;
   V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
   sys.vars.append(V);
@@ -108,15 +108,15 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   /* inside gradients just don't work :-(
   V = new PotentialValuesTaskVariable("hooksInsideLevel", *sys.ors, hooksN, *graspobj);
   //V=listGetByName(sys.vars,"zeroLevel");
-  V->y_target = ARR(-.01,-.01,-.01);
+  V->y_target = {-.01,-.01,-.01};
   V->y_prec = 1e4;
   V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
   //sys.vars.append(V); */
 
   //replaced by proxyTV
   V = new PotentialValuesTaskVariable("tipsOnZeroLevel", *sys.ors, tipsN, *graspobj);
-  V->y_target = ARR(.005,.005,.005); 
-  V->v_target = ARR(-1.,-1.,-1.); 
+  V->y_target = {.005,.005,.005}; 
+  V->v_target = {-1.,-1.,-1.}; 
   V->y_prec = 1e3;
   V->setInterpolatedTargetsEndPrecisions(T,1e2,0.);
   //for(uint t=0;t<T;t++) V->y_trajectory[t]()=.2;  V->y_trajectory[T]=V->y_target;
@@ -125,7 +125,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
 
   /* not really necessary
   V = new PotentialFieldAlignTaskVariable("tips z align", *sys.ors, tipsN, *graspobj);
-  V->y_target = ARR(-1.,-1.,-1.); 
+  V->y_target = {-1.,-1.,-1.}; 
   V->y_prec = 1e2;
   V->setInterpolatedTargetsEndPrecisions(T,0.,0.);
   sys.vars.append(V);
@@ -136,7 +136,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
                        "tip2Shape", "target",
                        "tip3Shape", "target"}, sys.ors->shapes);
   V = new ProxyTaskVariable("graspContacts", *sys.ors, vectorCTVT, shapes, .04, true);
-  V->y_target = ARR(.9,.9,.9);  V->v_target = ARR(.9,.9,.9);
+  V->y_target = {.9,.9,.9};  V->v_target = {.9,.9,.9};
   V->y_prec = colPrec;
   V->setInterpolatedTargetsEndPrecisions(T,colPrec,1e1,0.,0.);
   sys.vars.append(V);
@@ -151,7 +151,7 @@ void setNewGraspGoals_explore(OrsSystem& sys, uint T, uint shapeId, uint side, u
   V=listFindByName(sys.vars, "qitself");
   V->y_prec=mlr::getParameter<double>("reachPlanHomeComfort");
   V->v_prec=mlr::getParameter<double>("reachPlanEndVelPrec");
-  //V->y_target = ARR(0,0,0,0,0,0,0);
-  //V->y_target.append(ARR(0,-.8,.6,-.8,.6,-.8,.6));
+  //V->y_target = ARR(0.,0,0,0,0,0,0);
+  //V->y_target.append({0,-.8,.6,-.8,.6,-.8,.6});
   V->y=0.;  V->y_target=V->y;  V->v=0.;  V->v_target=V->v;  V->setInterpolatedTargetsEndPrecisions(T, V->y_prec, V->y_prec, midPrec, V->v_prec);
 }

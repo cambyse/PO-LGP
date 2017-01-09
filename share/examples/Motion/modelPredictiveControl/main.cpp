@@ -135,7 +135,7 @@ void scenario1() {
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
   c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T,  conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -154,10 +154,10 @@ void scenario1() {
 
   double v0 = 0.03;
 
-  arr x0 = ARR(0.1,0.1,0.1,0.1,0.1,0.1,0.1);
+  arr x0 = {0.1,0.1,0.1,0.1,0.1,0.1,0.1};
   arr prefix(2,n);
-  prefix[0] = x0-2*dt*v0*ARR(1.,1.,1.,1.,1.,1.,1.);
-  prefix[1] = x0-dt*v0*ARR(1.,1.,1.,1.,1.,1.,1.);
+  prefix[0] = x0-2*dt*v0*{1.,1.,1.,1.,1.,1.,1.};
+  prefix[1] = x0-dt*v0*{1.,1.,1.,1.,1.,1.,1.};
 
 
   P.prefix = prefix;
@@ -187,7 +187,7 @@ void scenario2() {
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
   c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T,  conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
@@ -261,7 +261,7 @@ void scenario2() {
   cout << "\na[0] before: " << a0 << endl;
   cout << "a[0] after: " << (x[1]+prefix[1]-(2.*x[0]))/(dt*dt) << endl;
 
-  cout << sum((x- xRef.refRange(i,xRef.d0-1))%(x- xRef.refRange(i,xRef.d0-1))) << endl;
+  cout << sum((x- xRef({i,xRef.d0-1}))%(x- xRef({i,xRef.d0-1}))) << endl;
 
   displayTrajectory(x, 1, G, "planned trajectory");
 
@@ -285,7 +285,7 @@ void scenario3() {
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
   c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, goalRef, 1e4);

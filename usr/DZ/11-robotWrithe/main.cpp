@@ -160,7 +160,7 @@ void problem7(){
   sys.setq0(q0);
   uint wrsize=5;  
    double eps =1e1;   
- TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"endeff","<t(0 0 .0)>",0,0,ARR()); //arm20
+ TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"endeff","<t(0 0 .0)>",0,0,arr()); //arm20
   arr xtarget; 
   xtarget.setCarray(sys.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   

@@ -156,7 +156,7 @@ int problem4(){
   col->y_target = ARR(0.);  
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);//1e0
   //! END of col 
-    TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 -.36)>",0,0,ARR()); //arm20 -0.26
+    TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 -.36)>",0,0,arr()); //arm20 -0.26
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -336,7 +336,7 @@ int problem41(){
   col->y_target = ARR(0.); 
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -421,7 +421,7 @@ int problem42(){
   col->y_target = ARR(0.);
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
   //! END of col
-   TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+   TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -587,7 +587,7 @@ wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);
   col->y_target = ARR(0.);
   col->setInterpolatedTargetsConstPrecisions(T,1e1,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -697,7 +697,7 @@ int problem6(){
   col->y_target = ARR(0.);   
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;    

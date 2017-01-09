@@ -16,7 +16,7 @@ void MotionProblem::costReport(bool gnuplt) {
     for(uint i=0; i<tasks.N; i++) {
       Task *c = tasks(i);
       if(!c->isActive(t)) continue;
-      uint d=c->map.dim_phi(configurations.refRange(t,t+k_order), t);
+      uint d=c->map.dim_phi(configurations({t,t+k_order}), t);
 
       if(tt.N) for(uint i=0;i<d;i++) CHECK(tt(M+i)==c->type,"");
 

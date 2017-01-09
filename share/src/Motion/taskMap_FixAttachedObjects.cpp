@@ -47,19 +47,19 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
 #if 1 //absolute velocities
     TaskMap_Default pos(posDiffTMT, j0->to->shapes.first()->index);
     pos.order=1;
-    pos.TaskMap::phi(y.refRange(M*i,M*i+2)(), (&J?J.refRange(M*i,M*i+2)():NoArr), G, tau, t);
+    pos.TaskMap::phi(y({M*i,M*i+2})(), (&J?J({M*i,M*i+2})():NoArr), G, tau, t);
 
     TaskMap_Default quat(quatDiffTMT, j0->to->shapes.first()->index);
     quat.order=1;
-    quat.TaskMap::phi(y.refRange(M*i+3,M*i+6)(), (&J?J.refRange(M*i+3,M*i+6)():NoArr), G, tau, t);
+    quat.TaskMap::phi(y({M*i+3,M*i+6})(), (&J?J({M*i+3,M*i+6})():NoArr), G, tau, t);
 #else //relative velocities
     TaskMap_Default pos(posDiffTMT, j0->to->shapes.first()->index, NoVector, j0->from->shapes.first()->index);
     pos.order=1;
-    pos.TaskMap::phi(y.refRange(M*i,M*i+2)(), (&J?J.refRange(M*i,M*i+2)():NoArr), G, tau, t);
+    pos.TaskMap::phi(y({M*i,M*i+2})(), (&J?J({M*i,M*i+2})():NoArr), G, tau, t);
 
     TaskMap_Default quat(quatDiffTMT, j0->to->shapes.first()->index/*, NoVector, j0->from->shapes.first()->index*/);
     quat.order=1;
-    quat.TaskMap::phi(y.refRange(M*i+3,M*i+6)(), (&J?J.refRange(M*i+3,M*i+6)():NoArr), G, tau, t);
+    quat.TaskMap::phi(y({M*i+3,M*i+6})(), (&J?J({M*i+3,M*i+6})():NoArr), G, tau, t);
 #endif
   }
 }

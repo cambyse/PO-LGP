@@ -117,7 +117,7 @@ void JsonRec::load(const char *recdir) {
   dataquatprev = data[0].sub(0, -1, 3, -1);
   for(uint f = 1; f < data.d0; f++) {
     for(uint sid = 0; sid < data.d1; sid++) {
-      dataquat.referToRange(data.refDim(f, sid)(), 3, -1);
+      dataquat.referToRange(data(f, sid, {})(), 3, -1);
       if(sum(dataquat % dataquatprev[sid]) < 0)
         dataquat *= -1.;
       // if(!length(dataquatprev[sid]) || length(dataquat))
@@ -216,7 +216,7 @@ void JsonRec::load(const char *recdir) {
           for(uint i = 0; root.size(); i++) {
             uint onat = root[i]["on@"].asUInt();
             uint offat = root[i]["off@"].asUInt();
-            ann.refRange(onat, offat) = 1;
+            ann({onat, offat}) = 1;
           }
 
           targetkvg.newNode<arr*>({"ann"}, {}, &ann);
@@ -244,7 +244,7 @@ void JsonRec::load(const char *recdir) {
       // for(Node *lock: pair->graph()) {
       //   from = (uint)lock->graph()->get<double>("from");
       //   to = (uint)lock->graph()->get<double>("to");
-      //   ann->refRange(from, to) = 1;
+      //   ann->operator()({from, to}) = 1;
       // }
       // pair->graph().append("ann", ann);
     }
@@ -272,7 +272,7 @@ void JsonRec::load(const char *recdir) {
     //   for(Node *lock: pair->graph()) {
     //     from = (uint)lock->graph()->get<double>("from");
     //     to = (uint)lock->graph()->get<double>("to");
-    //     ann->refRange(from, to) = 1;
+    //     ann->operator()({from, to}) = 1;
     //   }
     //   pair->graph().append("ann", ann);
     // }

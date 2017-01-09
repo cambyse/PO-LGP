@@ -28,8 +28,8 @@ void agumentDataWithF(mlr::String filename){
   for(uint i=0;i<n;i++){
     if(!(i%10)) cout <<i <<endl;
     const arr& Di = D[i];
-    arr q = Di.refRange(0,16);
-    arr u = Di.refRange(17,-1);
+    arr q = Di({0,16});
+    arr u = Di({17,-1});
     W.setJointState(q);
     W.gl().update();
     arr M,F;

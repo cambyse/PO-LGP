@@ -1059,7 +1059,7 @@ void RobotManipulationSimulator::grab_final(const char *manipulator,const char *
   if(t==Tabort) { indicateFailure(); return; }
 
 #else
-  DefaultTaskVariable x("endeffector", *this, posTVT, manipulator, 0, 0, 0, ARR());
+  DefaultTaskVariable x("endeffector", *this, posTVT, manipulator, 0, 0, 0, arr());
   x.setGainsAsAttractor(20, .2);
   x.y_prec=1000.;
   

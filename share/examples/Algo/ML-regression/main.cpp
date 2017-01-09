@@ -369,7 +369,7 @@ void TEST(CV){
   FILE("z.train") <<catCol(X, y);
 
   uint k_fold = mlr::getParameter<uint>("k_fold",10);
-  cv.crossValidateMultipleLambdas(Phi, y, ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5), k_fold, false);
+  cv.crossValidateMultipleLambdas(Phi, y, {1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5}, k_fold, false);
   cv.plot();
   cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;
 }
@@ -438,7 +438,7 @@ void exercise2() {
   //cross valide
   Phi = makeFeatures(X);
   cv.crossValidateMultipleLambdas(Phi, y,
-				  ARR(1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5),
+				  {1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4,1e5},
 				  10, false);
   cv.plot();
   cout <<"10-fold CV:\n  costMeans= " <<cv.scoreMeans <<"\n  costSDVs= " <<cv.scoreSDVs <<endl;

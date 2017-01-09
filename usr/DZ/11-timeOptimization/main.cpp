@@ -61,7 +61,7 @@ arr kBinv,b;
  
  
  
- TaskVariable *pos = new DefaultTaskVariable("position",ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
+ TaskVariable *pos = new DefaultTaskVariable("position",ors, posTVT,"endeff","<t(0 0 .2)>",0,0,arr());
   pos->setGainsAsNatural(20,.2);
   pos->targetType=positionGainsTT;
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);

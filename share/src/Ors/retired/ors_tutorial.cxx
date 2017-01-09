@@ -234,7 +234,7 @@ void ActionInterface::relaxPosition(){
   x.y_target=q0;
   x.state_tol=.2;
   
-//   /*TaskVariable c("collision",*C,collTVT,0,0,0,0,ARR());*/
+//   /*TaskVariable c("collision",*C,collTVT,0,0,0,0,arr());*/
 //   c.setGainsAsAttractor(20,.1);
 //   c.y_prec=10000.;
 //   c.state_tol=.005;
@@ -251,7 +251,7 @@ void ActionInterface::relaxPosition(){
 }
 
 // void ActionInterface::catchObject(const char *man_id,const char *obj_id){
-//   TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,ARR());
+//   TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,arr());
 //   x.setGainsAsAttractor(20,.2);
 //   x.y_prec=1000.;
 //   mlr::KinematicWorld::node obj=C->getName(obj_id);
@@ -279,7 +279,7 @@ void ActionInterface::relaxPosition(){
 // }
 
 void ActionInterface::moveTo(const char *man_id,const arr& target){
-  TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,ARR());
+  TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,arr());
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   
@@ -299,11 +299,11 @@ void ActionInterface::moveTo(const char *man_id,const arr& target){
 void ActionInterface::grab(const char *man_id,const char *obj_id){
   mlr::Body *obj=C->getBodyByName(obj_id);
 	
-  TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,ARR());
+  TaskVariable x("endeffector",*C,posTVT,man_id,0,0,0,arr());
   x.setGainsAsAttractor(20,.2);
   x.y_prec=1000.;
   
-//   TaskVariable c("collision",*C,collTVT,0,0,0,0,ARR());
+//   TaskVariable c("collision",*C,collTVT,0,0,0,0,arr());
 //   c.setGainsAsAttractor(20,.1);
 //   c.y_prec=10000.;
 //   c.state_tol=.005;
@@ -371,7 +371,7 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   else
     obj_id1 = "fing1c";
   
-  TaskVariable x("obj",*C,posTVT,obj_id1,0,0,0,ARR());
+  TaskVariable x("obj",*C,posTVT,obj_id1,0,0,0,arr());
   TaskVariable z;
   //
   int obj_index=C->getBodyByName(obj_id1)->index;
@@ -387,10 +387,10 @@ void ActionInterface::dropObjectAbove(const char *obj_id55, const char *rel_id){
   if((rot*(-Vector_z))(2)>maxz){ upvec=-Vector_z; maxz=(rot*upvec)(2); }
   mlr::Transformation f;
   f.rot.setDiff(Vector_z, upvec);
-  z.set("obj-z-align",*C,zalignTVT,obj_index,f,-1,Transformation_Id,ARR());
+  z.set("obj-z-align",*C,zalignTVT,obj_index,f,-1,Transformation_Id,arr());
   //
   TaskVariable r("full state",*C,qLinearTVT,0,0,0,0,I);
-  TaskVariable c("collision",*C,collTVT,0,0,0,0,ARR());
+  TaskVariable c("collision",*C,collTVT,0,0,0,0,arr());
   
   r.setGainsAsAttractor(50,.1);
   r.y_prec=1.;

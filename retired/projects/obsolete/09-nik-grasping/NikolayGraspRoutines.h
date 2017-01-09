@@ -132,7 +132,7 @@ void InitSOC(OrsSocImplementation & soci, mlr::KinematicWorld & ors, SwiftInterf
   
   CV_x    = new ControlVariable("endeffector",ors, posCVT,"m9","<t(0 0 -.23)>",0,0,0);
   CV_rot  = new ControlVariable("endeffector rotation",ors, rotCVT,"m9",0,0,0,0);
-  CV_col  = new ControlVariable("collision", ors, collCVT,0,0,0,0,ARR(.03)); //MARGIN, perhaps .05?
+  CV_col  = new ControlVariable("collision", ors, collCVT,0,0,0,0,{.03}); //MARGIN, perhaps .05?
   CV_lim  = new ControlVariable("limits", ors, qLimitsCVT,0,0,0,0,limits);
   CV_q    = new ControlVariable("qlinear", ors, qLinearCVT,0,0,0,0,I);
   //CV_skin = new ControlVariable("skin", ors, skinCVT,0,0,0,0,skinIdx);
