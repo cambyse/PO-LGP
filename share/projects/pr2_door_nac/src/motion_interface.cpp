@@ -21,7 +21,7 @@ Motion_Interface::Motion_Interface(mlr::KinematicWorld &world_)
   //-- wait for first q observation!
   cout <<"** Waiting for ROS message on initial configuration.." <<endl;
   for(;;){
-    S.ctrl_obs.var->waitForNextRevision();
+    S.ctrl_obs.data->waitForNextRevision();
     cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
     cout <<"LOCAL  joint dimension=" <<world->q.N <<endl;
 

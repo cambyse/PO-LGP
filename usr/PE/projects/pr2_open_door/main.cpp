@@ -187,7 +187,7 @@ void run(){
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
-      S.ctrl_obs.var->waitForNextRevision();
+      S.ctrl_obs.data->waitForNextRevision();
       if(S.ctrl_obs.get()->q.N==world_pr2.q.N &&S.ctrl_obs.get()->qdot.N==world_pr2.q.N)
         break;
     }
@@ -211,7 +211,7 @@ void run(){
 
     //-- wait for first marker observation
     for(;;){
-      S.marker_pose.var->waitForNextRevision();
+      S.marker_pose.data->waitForNextRevision();
       if(S.marker_pose.get()->N > 0 /*&& S.marker_pose.get()->[4].length()>0 &&S.marker_pose.get()[17].length()>0*/)
         break;
     }

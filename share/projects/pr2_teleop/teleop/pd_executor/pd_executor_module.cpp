@@ -409,7 +409,7 @@ void PDExecutor::initRos()
   cout << "** Waiting for ROS message on initial configuration.." << endl;
   // get robot state from the robot
   for (;;) {
-    ctrl_obs.var->waitForNextRevision();
+    ctrl_obs.data->waitForNextRevision();
     CtrlMsg obs = ctrl_obs.get();
 
     cout << "================================================\n"

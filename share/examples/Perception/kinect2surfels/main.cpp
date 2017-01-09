@@ -44,13 +44,13 @@ void TEST(Kinect2Surfels){
   gl2.add(glDrawSurfels, &S);
   gl2.camera = gl.camera;
 
-  for(uint i=0;i<10;i++) Sys.kinect_points.var->waitForNextRevision();
+  for(uint i=0;i<10;i++) Sys.kinect_points.data->waitForNextRevision();
 
   for(uint k=0;;k++){
     if(moduleShutdown().getValue()>0) break;
 //    if(k>20) break;
 
-    Sys.kinect_points.var->waitForNextRevision();
+    Sys.kinect_points.data->waitForNextRevision();
 
     arr pts = Sys.kinect_points.get();
     arr cols = Sys.kinect_pointColors.get();

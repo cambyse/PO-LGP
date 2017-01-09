@@ -36,7 +36,7 @@ void TEST(Simulator){
   threadOpenModules(true);
 
   for(;;){
-    S.qdot_obs.var->waitForNextRevision();
+    S.qdot_obs.data->waitForNextRevision();
     arr gamepad = S.gamepadState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");

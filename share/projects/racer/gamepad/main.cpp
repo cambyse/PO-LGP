@@ -16,7 +16,7 @@ void TEST(Gamepad){
   threadOpenModules(true);
 
   for(int i = 0;; ++i){
-    S.gamepadState.var->waitForNextRevision();
+    S.gamepadState.data->waitForNextRevision();
     arr J = S.gamepadState.get();
     cout <<"\r gamepad=" <<J <<std::flush;
     if(moduleShutdown().getValue()) break;
@@ -58,7 +58,7 @@ void run(){
   double x_ref = 0.;
 
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextRevision();
+    S.stateEstimate.data->waitForNextRevision();
     arr x = S.stateEstimate.get();
     arr J = S.gamepadState.get();
 
@@ -76,7 +76,7 @@ void run(){
     uint mode = uint(J(0));
     if(mode&0x10 || mode&0x20 || mode&0x40 || mode&0x80){
       S.controls.set()() = ARR(0, 0, 10.);
-      S.encoderData.var->waitForNextRevision();
+      S.encoderData.data->waitForNextRevision();
       break;
     }
 

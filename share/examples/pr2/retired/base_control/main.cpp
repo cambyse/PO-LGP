@@ -66,7 +66,7 @@ int main(int argc, char** argv){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     uint trials=0;
     for(;useRos;){
-      S.ctrl_obs.var->waitForNextRevision();
+      S.ctrl_obs.data->waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<world.q.N <<endl;
 

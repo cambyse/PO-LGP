@@ -90,7 +90,7 @@ void TEST(Sensors){
     arr gamepadState = S.gamepadState.get();
     if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
     if(moduleShutdown().getValue()>0) break;
-    S.gamepadState.var->waitForNextRevision();
+    S.gamepadState.data->waitForNextRevision();
 
     //-- update world
     gl.lock.writeLock();

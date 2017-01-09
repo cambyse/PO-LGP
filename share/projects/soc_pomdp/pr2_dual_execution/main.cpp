@@ -396,7 +396,7 @@ void PR2_ActionMachine(mlr::KinematicWorld& world, const arr& x, const arr& y, c
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for(;;){
-      S.ctrl_obs.var->waitForNextRevision();
+      S.ctrl_obs.data->waitForNextRevision();
       if(S.ctrl_obs.get()->q.N==MP.world.q.N
          && S.ctrl_obs.get()->qdot.N==MP.world.q.N)
         break;

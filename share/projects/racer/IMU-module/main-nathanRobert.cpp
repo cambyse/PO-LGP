@@ -21,7 +21,7 @@ void testIMU(){
 
 
   for(;;){
-    S.imuData.var->waitForNextRevision();
+    S.imuData.data->waitForNextRevision();
     if(S.imuData.get()->(0)>10.) break;
   }
 
@@ -57,8 +57,8 @@ void findBalancePoint(){
 
   double start_time = -1;
   for(;;){
-    //S.imuData.var->waitForNextRevision();
-    S.stateEstimate.var->waitForNextRevision();
+    //S.imuData.data->waitForNextRevision();
+    S.stateEstimate.data->waitForNextRevision();
     if (start_time == -1) start_time = S.get_time();
 
     S.controls.set() = ARR(0., 0., 0.);
@@ -152,7 +152,7 @@ void testBalance(){
   Sigmoid sigmoid(10.);
   double prev_time = -1;
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextRevision();
+    S.stateEstimate.data->waitForNextRevision();
     arr x = S.stateEstimate.get();
 
     double current_time = S.get_time();

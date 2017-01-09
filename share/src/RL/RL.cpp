@@ -47,7 +47,7 @@ double mlr::Rollouts::rollout(uint numRollouts, const arr& theta, double thetaNo
 
       feat = fil.getFeatures(); //h_t
 
-      pi.sampleAction(act, dAct, feat, thet); //a_t
+      pi.sampleAction(act, dAct, feat, thet, t); //a_t
 
       terminal = env.transition(obs, *reward, act); //(r_t, y_{t+1}) TODO: time indexing of y is inconsistent!
 

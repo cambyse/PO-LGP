@@ -8,7 +8,7 @@ struct RacerEnvironment : mlr::Environment, mlr::Filter{
   uint t;
   bool display;
   double noise;
-  double theta0;
+  double x0, theta0;
 
   Racer R;
   Kalman K;
@@ -31,5 +31,5 @@ struct RacerEnvironment : mlr::Environment, mlr::Filter{
 
   void resetFilter();
   void updateFilter(const arr& action, const arr& observation);
-  arr& getFeatures(){ return features; }
+  arr getFeatures(){ return features; }
 };

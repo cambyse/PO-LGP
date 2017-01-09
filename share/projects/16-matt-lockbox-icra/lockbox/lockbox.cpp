@@ -71,7 +71,7 @@ void Lockbox::step()
 {
   if (readyToTest)
   {
-    int rev = test_joint.var->revisionNumber();
+    int rev = test_joint.data->revisionNumber();
     if (rev > test_joint_revision)
     {
       uint joint = test_joint.get()().data;
@@ -80,7 +80,7 @@ void Lockbox::step()
       test_joint_publisher.publish(result);
       test_joint_revision = rev;
     }
-    rev = get_joint_position.var->revisionNumber();
+    rev = get_joint_position.data->revisionNumber();
     if (rev > joint_position_revision)
     {
        uint joint = get_joint_position.get()().data;

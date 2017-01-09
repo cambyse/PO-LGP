@@ -60,14 +60,14 @@ void TEST(Sensors){
 
   tf::TransformListener listener;
 
-  S.kinect_rgb.var->waitForRevisionGreaterThan(10);
+  S.kinect_rgb.data->waitForRevisionGreaterThan(10);
 
   Metronome tic(.05);
 
   for(uint t=0;;t++){
 //    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
     if(moduleShutdown().getValue()>0) break;
-    S.kinect_rgb.var->waitForNextRevision();
+    S.kinect_rgb.data->waitForNextRevision();
 //    tic.waitForTic();
 
     FILE("z.kinect_depth") <<S.kinect_depth.get()();

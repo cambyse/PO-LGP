@@ -154,7 +154,7 @@ int main(int argn, char ** args) {
                 cout << "Error: no input method defined" << endl;
                 input_cloud->clear();
             } else {
-                S.kinect_points.var->waitForNextRevision();
+                S.kinect_points.data->waitForNextRevision();
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_cloud = S.pcl_cloud.get();
                 if(kinect_cloud) {
                     pcl::copyPointCloud(*kinect_cloud,*input_cloud);

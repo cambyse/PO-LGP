@@ -808,7 +808,7 @@ void testDemonstration() {
   modelWorld->watch(true, "press to start");
 
   while(true){
-    gamepadState.var->waitForNextRevision();
+    gamepadState.data->waitForNextRevision();
     arr state = gamepadState.get()();
     if(state(0) == 1) {
       mlr::wait(1.0);
@@ -1017,7 +1017,7 @@ void controllerExample(mlr::String mode) {
     controller->addLinTaskSpaceAccLaw(limitsLaw);
 
     while(true){
-      gamepadState.var->waitForNextRevision();
+      gamepadState.data->waitForNextRevision();
       arr state = gamepadState.get()();
       if(state(0) == 1) {
         posLaw->setGains(zeros(3,3), zeros(3,3));
@@ -1056,7 +1056,7 @@ void controllerExample(mlr::String mode) {
     controller->addLinTaskSpaceAccLaw(limitsLaw);
 
     while(true){
-      gamepadState.var->waitForNextRevision();
+      gamepadState.data->waitForNextRevision();
       arr state = gamepadState.get()();
       if(state(0) == 1) {
         posLaw->setGains(zeros(3,3), zeros(3,3));
@@ -1099,7 +1099,7 @@ void controllerExample(mlr::String mode) {
     controller->addLinTaskSpaceAccLaw(limitsLaw);
 
     while(true){
-      gamepadState.var->waitForNextRevision();
+      gamepadState.data->waitForNextRevision();
       arr state = gamepadState.get()();
       if(state(0) == 1) {
         posLaw->setGains(zeros(3,3), zeros(3,3));

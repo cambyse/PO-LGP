@@ -337,7 +337,7 @@ int main(int argc, char** argv)
         //-- wait for first q observation!
         cout <<"** Waiting for ROS message on initial configuration.." <<endl;
         for(;;){
-          S.ctrl_obs.var->waitForNextRevision();
+          S.ctrl_obs.data->waitForNextRevision();
           if(S.ctrl_obs.get()->q.N==world.q.N
              && S.ctrl_obs.get()->qdot.N==world.q.N)
             break;

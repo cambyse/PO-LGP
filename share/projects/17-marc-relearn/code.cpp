@@ -3,6 +3,23 @@
 
 //==============================================================================
 
+
+void runFilterWithLinearPolicy(const arr& h_opt, const arr& th_opt, uint T){
+  RacerEnvironment R;
+  LinearPolicy pi;
+  MyFilter F(h_opt);
+
+  mlr::Rollouts xi(R, pi, F, T, 1.);
+
+  R.display = true;
+  R.noise = .1;
+  arr th = th_opt;
+  xi.rollout(1, th.reshape(1,4));
+  cout <<"terminalTime=" <<xi.terminalTimes.first() <<" R=" <<xi.avgReturn <<endl;
+}
+
+//==============================================================================
+
 arr getModelPolicyParameters(){
   RacerEnvironment R;
   LinearPolicy pi;
@@ -13,7 +30,7 @@ arr getModelPolicyParameters(){
 
   ScalarFunction f = [&xi](arr& g, arr& H, const arr& x) -> double{
     if(&g){
-      xi.rollout(30, x, 1e-2);   g = -xi.getGradient_LinearRegression();
+      xi.rollout(30, x, 2e-2);   g = -xi.getGradient_LinearRegression();
       //      xi.rollout(30, x);   g = -xi.getGradient_GPOMDP();
       //      xi.rollout(30, x);   g = -xi.getGradient_REINFORCE();
       return -xi.avgReturn;
@@ -31,7 +48,12 @@ arr getModelPolicyParameters(){
   //  optGradDescent(theta, f, OPT(verbose=2));
   optGrad(theta, f, OPT(verbose=2));
 
-  xi.T = 150;
+//  xi.T = 100;
+//  //  optRprop(theta, f, OPT(verbose=2));
+//  //  optGradDescent(theta, f, OPT(verbose=2));
+//  optGrad(theta, f, OPT(verbose=2));
+
+  xi.T = 200;
   //  optRprop(theta, f, OPT(verbose=2));
   //  optGradDescent(theta, f, OPT(verbose=2));
   optGrad(theta, f, OPT(verbose=2));
@@ -132,11 +154,12 @@ void collectData(){
 
   RacerEnvironment R;
   LinearPolicy pi;
+  pi.shiftOffsetInterval = 200;
 
   mlr::Rollouts xi(R, pi, R, 1000, 1.);
 
   R.display = true;
-  R.noise = .6;
+  R.noise = .1;
   xi.rollout(1, theta);
 
   arr h = xi.features[0];
@@ -214,11 +237,11 @@ void ReLearn::createNet(int T, uint errSteps){
   Variable *_y = N.newConstant(STRING("y_0"), zeros(y.d1), false );
   Variable *_s = N.newConstant(STRING("s_0"), zeros(1), false );
 
-  for(uint t=0;t<T;t++){
+  for(uint t=0;t<T-1;t++){
     // data constants
     Variable *_u = N.newConstant(STRING("u_"<<t), u[t], false );
     Variable *_yDash = N.newConstant(STRING("y_"<<t+1), y[t], false ); //TODO: the time indexing of y is wrong!!!
-    Variable *_hDashRef = N.newConstant(STRING("href_"<<t+1), h[t], false );
+    Variable *_hDashRef = N.newConstant(STRING("href_"<<t+1), h[t+1], false );
     // filter
     Variable *_hDash = N.newFunction(STRING("h_"<<t+1), {_h, _u, _yDash, _y, _Hh, _Hu, _Hy, _Hy0, _H0}, new Linear(), TUP(h.d1) );
 
@@ -238,8 +261,8 @@ void ReLearn::createNet(int T, uint errSteps){
 
     if(!(t%errSteps)){
       Variable *err_h = N.newFunction(STRING("errh_"<<t+1), {_hDash, _hDashRef}, new Difference(1.), TUP(h.d1), OT_sumOfSqr);
-      Variable *err_s = N.newFunction(STRING("errs_"<<t+1), {_sDash, _sDashRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
-      Variable *err_u = N.newFunction(STRING("erru_"<<t+1), {_u, _uRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
+//      Variable *err_s = N.newFunction(STRING("errs_"<<t+1), {_sDash, _sDashRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
+//      Variable *err_u = N.newFunction(STRING("erru_"<<t+1), {_u, _uRef}, new Difference(10.), TUP(1), OT_sumOfSqr);
     }
   }
 
@@ -359,7 +382,8 @@ void ReLearn::trainModel(){
   x.setVectorBlock(h_opt, 0);
   N.setAllParameters(x);
 
-  FILE("x_opt") >>x; //load from previous iteration
+  FILE("z.x_opt") >>x; //load from previous iteration
+  N.setAllParameters(x);
 
   optConstrained(x, NoArr, N, OPT(verbose=2));
 
@@ -369,3 +393,5 @@ void ReLearn::trainModel(){
 }
 
 //==============================================================================
+
+

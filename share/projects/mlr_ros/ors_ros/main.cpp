@@ -74,13 +74,13 @@ public:
 
   virtual void step() {
     // if world has been changed externally
-    if(revision < world.var->revisionNumber()) {
+    if(revision < world.data->revisionNumber()) {
       w = world.get();
     }
     if(do_physics.get()) {
       w.physx().step();
       world.set() = w;
-      revision = world.var->revisionNumber();
+      revision = world.data->revisionNumber();
     }
   }
 };

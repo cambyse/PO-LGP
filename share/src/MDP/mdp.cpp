@@ -1123,7 +1123,7 @@ void mdp::generalNode0Transition(arr& P01y0,
   uint i, j, k;
   P01y0 = uni;
   rndUniform(P01y0, .0, noise, true);
-  for(i=0; i<d0; i++) for(j=0; j<d1; j++) for(k=0; k<dy; k++) P01y0(TUP(i, j, k, i))+=stay;
+  for(i=0; i<d0; i++) for(j=0; j<d1; j++) for(k=0; k<dy; k++) P01y0.elem(TUP(i, j, k, i))+=stay;
   tensorCondNormalize(P01y0, 1);
   tensorCheckCondNormalization(P01y0, 1, 1e-10);
 }
@@ -1136,7 +1136,7 @@ void mdp::generalNode1Transition(arr& P1y01,
   uint i, j, k;
   P1y01 = uni;
   rndUniform(P1y01, .0, noise, true);
-  for(i=0; i<d1; i++) for(j=0; j<dy; j++) for(k=0; k<d0; k++) P1y01(TUP(i, j, k, i))+=stay;
+  for(i=0; i<d1; i++) for(j=0; j<dy; j++) for(k=0; k<d0; k++) P1y01.elem(TUP(i, j, k, i))+=stay;
   tensorCondNormalize(P1y01, 1);
   tensorCheckCondNormalization(P1y01, 1, 1e-10);
 }
@@ -1186,16 +1186,16 @@ void mdp::hierarchicalToFactors(FSC_lev2& fsc){
   arr P01ye0;
   P01ye0.resize(TUP(d0, d1, dy, 2, d0));
   for(i=0; i<d0; i++) for(j=0; j<d1; j++) for(k=0; k<dy; k++) for(l=0; l<d0; l++){
-          P01ye0(TUP(i, j, k, 0, l)) = fsc.P_E_0y0(i, k, l);
-          P01ye0(TUP(i, j, k, 1, l)) = fsc.PE_01(i, j);
+          P01ye0.elem(TUP(i, j, k, 0, l)) = fsc.P_E_0y0(i, k, l);
+          P01ye0.elem(TUP(i, j, k, 1, l)) = fsc.PE_01(i, j);
         }
   tensorCheckCondNormalization(P01ye0, 1, 1e-10);
   
   arr P1ye1;
   P1ye1.resize(TUP(d1, dy, 2, d1));
   for(i=0; i<d1; i++) for(j=0; j<dy; j++) for(k=0; k<d1; k++){
-        P1ye1(TUP(i, j, 0, k)) = fsc.P_E_11(i, k);
-        P1ye1(TUP(i, j, 1, k)) = fsc.PE_1y1(i, j, k);
+        P1ye1.elem(TUP(i, j, 0, k)) = fsc.P_E_11(i, k);
+        P1ye1.elem(TUP(i, j, 1, k)) = fsc.PE_1y1(i, j, k);
       }
   tensorCheckCondNormalization(P1ye1, 1, 1e-10);
   
@@ -1434,7 +1434,7 @@ void mdp::SetAMPLPolicy(arr& P0y0, arr& Pa0){
       for(uint l=0; l < P0y0.d2; l++){ // switch the order of l and k since
         for(uint k=0; k < P0ay0.d2; k++){ // the AMPL input is actually P0a0y
           cout <<"\nlet x[" <<i <<", " <<j <<", " <<l <<", " <<k
-               <<"] := "    <<P0ay0(TUP(i, j, k, l))/*return4DNumber(P0ay0, i, j, k, l)*/ <<";";
+               <<"] := "    <<P0ay0.elem(TUP(i, j, k, l))/*return4DNumber(P0ay0, i, j, k, l)*/ <<";";
         }
       }
     }

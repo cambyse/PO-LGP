@@ -55,7 +55,7 @@ void TEST(Gamepad){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     uint trials=0;
     for(;useRos;){
-      ctrl_obs.var->waitForNextRevision();
+      ctrl_obs.data->waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<MP.world.q.N <<endl;
 
@@ -71,7 +71,7 @@ void TEST(Gamepad){
 
     //-- wait for first odometry observation!
     for(trials=0;useRos;){
-      pr2_odom.var->waitForNextRevision();
+      pr2_odom.data->waitForNextRevision();
       if(pr2_odom.get()->N==3) break;
 
       trials++;
@@ -97,7 +97,7 @@ void TEST(Gamepad){
   mlr::arrayBrackets="  ";
 
   for(uint t=0;;t++){
-    gamepadState.var->waitForNextRevision();
+    gamepadState.data->waitForNextRevision();
     arr gamepad = gamepadState.get();
     bool gamepad_shutdown = j2t.updateTasks(gamepad);
 //    if(t>10 && gamepad_shutdown) moduleShutdown().incrementValue();

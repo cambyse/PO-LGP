@@ -34,7 +34,7 @@ struct Pr2GamepadController : Thread {
       //-- wait for first q observation!
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       for(;;){
-        ctrl_obs.var->waitForNextRevision();
+        ctrl_obs.data->waitForNextRevision();
         if(ctrl_obs.get()->q.N==MP->world.q.N
            && ctrl_obs.get()->qdot.N==MP->world.q.N)
           break;

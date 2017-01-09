@@ -4,6 +4,7 @@ RacerEnvironment::RacerEnvironment()
   : t(0){
   display = mlr::getParameter<bool>("Racer/BalancingBenchmark/display", true);
   noise = mlr::getParameter<double>("Racer/BalancingBenchmark/noise", .1);
+  x0 = mlr::getParameter<double>("Racer/BalancingBenchmark/x0", .0);
   theta0 = mlr::getParameter<double>("Racer/BalancingBenchmark/theta0", .2);
 }
 
@@ -12,7 +13,8 @@ void RacerEnvironment::resetEnvironment(){
   R.q=0.;
   R.q_dot=0.;
 
-  R.q(1)=theta0;
+  R.q(0) = x0;
+  R.q(1) = theta0;
   R.noise_dynamics = noise;
 
 }
@@ -36,6 +38,9 @@ bool RacerEnvironment::transition(arr& observation, double& reward, const arr& a
 
   //-- observations
   R.getObservation(observation, C,c,W);
+
+  //-- time modulation
+//  if((t/50)%2==1) observation.elem(0) += 1.;
 
   //-- costs
   double costs = -1.; //basic reward for being alive

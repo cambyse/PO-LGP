@@ -16,7 +16,7 @@ void convert(LoopyBP& lbp,BinaryBPNet& net){
   uint i;
   for_list(Type, n, net.nodes) vars.append(new Variable(2,STRING("var"<<i)));
   for_list(Type, e, net.edges){
-    f=new Factor(TUPLE(vars(e->ifrom),vars(e->ito)));
+    f=new Factor.elem(TUPLE(vars(e->ifrom),vars(e->ito)));
     facs.append(f);
     double g=exp(e->J);
     f->setP(ARR(g,1./g,1./g,g));
