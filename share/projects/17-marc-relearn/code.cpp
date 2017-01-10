@@ -7,6 +7,7 @@
 void runFilterWithLinearPolicy(const arr& h_opt, const arr& th_opt, uint T){
   RacerEnvironment R;
   LinearPolicy pi;
+  pi.shiftOffsetInterval = 200;
   MyFilter F(h_opt);
 
   mlr::Rollouts xi(R, pi, F, T, 1.);
@@ -196,7 +197,7 @@ void ReLearn::createNet(int T, uint errSteps){
   Variable *_Hh = N.newConstant(STRING("Hh"), randn(4,4), true );
   Variable *_Hu = N.newConstant(STRING("Hu"), randn(4,1), true );
   Variable *_Hy = N.newConstant(STRING("Hy"), randn(4,4), true );
-  Variable *_Hy0 = N.newConstant(STRING("Hy0"), randn(4,4), true );
+  Variable *_Hy0= N.newConstant(STRING("Hy0"), randn(4,4), true );
   Variable *_H0 = N.newConstant(STRING("H0"), randn(4), true );
 
   // toy dynamics parameters

@@ -21,7 +21,7 @@ void learnModel(){
 //  collectData();
 //  return;
   ReLearn R;
-  R.createNet(-1, 10);
+  R.createNet(-1, 1);
 
 //  R.N.G.displayDot();
 //  R.checkNet();
