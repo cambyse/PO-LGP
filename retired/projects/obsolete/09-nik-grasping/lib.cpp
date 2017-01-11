@@ -1,7 +1,7 @@
 #define MLR_IMPLEMENTATION
-#include <MT/ors.h>
-#include <MT/ors_opengl.h>
-#include <MT/ors_swift.h>
+#include <MT/kin.h>
+#include <MT/kin_opengl.h>
+#include <MT/kin_swift.h>
 #include <MT/opengl.h>
 #include <MT/soc.h>
 

@@ -15,7 +15,7 @@
 
 //#include <RosCom/actionMachine.h>
 //#include "manipSim.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Logic/fol.h>
 
 

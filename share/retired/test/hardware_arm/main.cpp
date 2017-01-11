@@ -2,7 +2,7 @@
 //#include <MT/socSystem_ors.h>
 //#include <MT/soc_inverseKinematics.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 //this is usually not included -- only here to acess directly
 #define NTCAN_CLEAN_NAMESPACE

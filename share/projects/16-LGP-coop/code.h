@@ -7,14 +7,14 @@
 
 #include <Motion/komo.h>
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <LGP/manipulationTree.h>
 
-#include <Ors/ors.h>
-#include <Ors/orsViewer.h>
+#include <Kin/kin.h>
+#include <Kin/kinViewer.h>
 #include <Gui/opengl.h>
 #include <Gui/graphview.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 #include <LGP/LGP.h>

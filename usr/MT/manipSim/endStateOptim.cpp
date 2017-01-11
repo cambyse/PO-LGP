@@ -1,5 +1,5 @@
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 
 //===========================================================================

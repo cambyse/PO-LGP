@@ -1,5 +1,5 @@
 #include <MT/socNew.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/soc_orsSystem.h> //socSystem_ors.h>
 #include <Gui/opengl.h>
 #include <Core/util.h>

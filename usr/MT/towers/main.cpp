@@ -3,7 +3,7 @@
 
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/taskMaps.h>
 
 

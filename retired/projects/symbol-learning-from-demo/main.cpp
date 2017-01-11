@@ -1,6 +1,6 @@
 ex#include <relational/robotManipulationDomain.h>
 #include <relational/robotManipulationSampling.h>
-#include <MT/ors_sceneGui.h>
+#include <MT/kin_sceneGui.h>
 #include <MT/symbolLearning.h>
 
 

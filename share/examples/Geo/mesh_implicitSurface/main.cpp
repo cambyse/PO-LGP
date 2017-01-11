@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
 

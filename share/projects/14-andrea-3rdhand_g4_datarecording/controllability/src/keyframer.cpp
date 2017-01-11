@@ -1,6 +1,6 @@
-#include <Ors/SWIFT/SWIFT.h>
+#include <Kin/SWIFT/SWIFT.h>
 #include <Gui/opengl.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Algo/gaussianProcess.h>
 #include <Perception/videoEncoder.h>
 #include "keyframer.h"

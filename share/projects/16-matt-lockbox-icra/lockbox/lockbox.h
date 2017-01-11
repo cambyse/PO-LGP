@@ -2,7 +2,7 @@
 
 #include <Core/module.h>
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <RosCom/filterObject.h>
 #include <Control/TaskControllerModule.h>
 

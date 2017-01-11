@@ -5,7 +5,7 @@
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
 #include <iomanip>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 
 void saveTrajectory(const arr& x, mlr::KinematicWorld& G, OpenGL& gl) {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "mocapdata.h"
 
 typedef std::function<void(mlr::KinematicWorld &kw)> kw_init_function;

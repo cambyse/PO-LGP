@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Motion Core Geo Ors Gui Optim Perception
+DEPEND = Motion Core Geo Kin Gui Optim Perception
 
 include $(BASE)/build/generic.mk

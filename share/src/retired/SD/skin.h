@@ -2,7 +2,7 @@
 #define SD_skin_h
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/schunk.h>
 
 struct tactile_arr_t {

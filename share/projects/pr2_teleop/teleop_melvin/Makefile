@@ -4,6 +4,6 @@ PLIB = 1
 ROS = 1
 
 OBJS = main.o calibrator_module.o
-DEPEND = Core Geo Mocap Hardware_gamepad Hardware_G4 Motion Ors Perception RosCom Actions
+DEPEND = Core Geo Mocap Hardware_gamepad Hardware_G4 Motion Kin Perception RosCom Actions
 
 include $(BASE)/build/generic.mk

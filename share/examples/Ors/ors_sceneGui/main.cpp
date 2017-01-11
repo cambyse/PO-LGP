@@ -1,4 +1,4 @@
-#include <Ors/ors_sceneGui.h>
+#include <Kin/kin_sceneGui.h>
 
 int main(int argc,char **argv){
 

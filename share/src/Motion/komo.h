@@ -13,7 +13,7 @@
     --------------------------------------------------------------  */
 
 #pragma once
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 #include <Optim/lagrangian.h>
 #include <Motion/motion.h>

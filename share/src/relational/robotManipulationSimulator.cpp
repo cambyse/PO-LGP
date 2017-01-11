@@ -25,11 +25,11 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include "utilTL.h"
-#include <Ors/ors_ode.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_ode.h>
+#include <Kin/kin_swift.h>
 #include <Control/taskController.h>
 #ifndef NEW_FEEDBACK_CONTROL
-#  include <Ors/ors_oldTaskVariables.h>
+#  include <Kin/kin_oldTaskVariables.h>
 #endif
 
 #include "robotManipulationSimulator.h"

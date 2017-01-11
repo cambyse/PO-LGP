@@ -3,7 +3,7 @@
 #include <Algo/spline.h>
 #include <Optim/optimization.h>
 #include <Motion/motion.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/taskMaps.h>
 
 int main(int argc,char **argv){

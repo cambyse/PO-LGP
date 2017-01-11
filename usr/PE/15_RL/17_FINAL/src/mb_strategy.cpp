@@ -1,6 +1,6 @@
 #include "mb_strategy.h"
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,double duration_,TaskManager &task)
 {

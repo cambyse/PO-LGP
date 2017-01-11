@@ -1,7 +1,7 @@
 #ifndef IOC_H
 #define IOC_H
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>

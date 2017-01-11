@@ -1,5 +1,5 @@
 #include <MT/soc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>

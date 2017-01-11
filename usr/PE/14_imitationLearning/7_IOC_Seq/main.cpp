@@ -8,7 +8,7 @@
 #include <Motion/taskMap_constrained.h>
 #include <Motion/taskMap_transition.h>
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Motion/taskMap_proxy.h>
 
 void testSliding() {

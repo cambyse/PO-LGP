@@ -27,7 +27,7 @@
 
 
 #include "soc_orsSystem.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 

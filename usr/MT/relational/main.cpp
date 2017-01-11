@@ -1,6 +1,6 @@
 //#include <RosCom/actionMachine.h>
 #include "manipSim.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 mlr::KinematicWorld* world=NULL;
 

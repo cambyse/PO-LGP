@@ -1,6 +1,6 @@
-#include <Ors/ors.h>
-#include <Ors/ors_swift.h>
-#include <Ors/ors_ode.h>
+#include <Kin/kin.h>
+#include <Kin/kin_swift.h>
+#include <Kin/kin_ode.h>
 #include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>

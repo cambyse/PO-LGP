@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Core Ors Gui
+DEPEND = Core Kin Gui
 LIBS += -lgtest
 
 include $(BASE)/build/generic.mk

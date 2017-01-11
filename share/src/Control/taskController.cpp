@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 #include "taskController.h"
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 

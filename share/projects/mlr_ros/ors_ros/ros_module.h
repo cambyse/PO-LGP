@@ -2,7 +2,7 @@
 #define ROS_MODULE_H
 
 #include <Core/thread.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 BEGIN_MODULE(RosTf)
   ACCESS(mlr::KinematicWorld, world)

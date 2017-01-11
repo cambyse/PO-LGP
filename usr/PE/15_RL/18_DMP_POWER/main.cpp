@@ -7,7 +7,7 @@
 #include <Motion/taskMaps.h>
 #include <Motion/dynamicMovementPrimitives.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <System/engine.h>
 #include "../17_FINAL/src/motion_interface.h"

@@ -3,6 +3,6 @@ BASE = ../../../share
 GL = 1
 OBJS = main.o
 
-DEPEND = Motion Core Geo Ors Gui Optim
+DEPEND = Motion Core Geo Kin Gui Optim
 
 include $(BASE)/build/generic.mk

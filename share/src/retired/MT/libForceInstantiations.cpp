@@ -88,7 +88,7 @@ template std::map<std::string,std::string> mlr::ParameterMap<std::string>::m;
 #undef T
 #undef NOFLOAT
 
-//-- from ors.h
+//-- from kin.h
 //template mlr::Array<mlr::Transformation*>::Array();
 //template mlr::Array<mlr::Transformation*>::~Array();
 

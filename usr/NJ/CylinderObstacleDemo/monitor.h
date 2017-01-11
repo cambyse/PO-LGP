@@ -6,7 +6,7 @@
 #  include "gui_ui.h"
 #endif
 #include <MT/ipc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 
 struct RobotController ;
 

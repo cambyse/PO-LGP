@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Geo Ors Gui Core
+DEPEND = Geo Kin Gui Core
 
 ODE=0
 PHYSX = 1

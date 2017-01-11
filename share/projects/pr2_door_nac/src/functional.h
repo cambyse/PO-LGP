@@ -14,7 +14,7 @@
 #include "traj_factory.h"
 #include "task_door.h"
 #include "src/motion_interface.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 

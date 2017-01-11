@@ -20,7 +20,7 @@
     along with libPRADA.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "relational/robotManipulationSymbols.h"
 #include "relational/robotManipulationInterface.h"
 #include "relational/reason.h"

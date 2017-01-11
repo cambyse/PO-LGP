@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <Perception/videoEncoder.h>
 #include <Perception/g4data.h>

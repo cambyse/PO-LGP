@@ -1,7 +1,7 @@
 #ifndef SD_surface_helpers_h
 #define SD_surface_helpers_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <SD/utils.h>
 #include "graspObjects.h"
 

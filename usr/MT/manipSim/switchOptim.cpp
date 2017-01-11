@@ -2,7 +2,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/convert.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 //===========================================================================
 

@@ -6,7 +6,7 @@
 #include <Motion/taskMaps.h>
 #include <GL/glu.h>
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 
 void drawTraj(uint color, arr& p, uint lineStyle) {

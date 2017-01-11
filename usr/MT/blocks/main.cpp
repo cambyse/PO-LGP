@@ -7,7 +7,7 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Optim/constrained.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 void createWorld(mlr::KinematicWorld &G){
   G.init("blocks.kvg");

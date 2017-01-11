@@ -1,4 +1,4 @@
-#include<Ors/ors.h>
+#include<Kin/kin.h>
 //#include<MT/aico.h> // retired
 #include<Algo/algos.h>
 #include<Gui/opengl.h>

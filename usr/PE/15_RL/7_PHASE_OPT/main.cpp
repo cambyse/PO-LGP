@@ -1,7 +1,7 @@
 #include <Optim/optimization.h>
 #include <Motion/taskMaps.h>
 #include <Gui/plot.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 #include "../src/plotUtil.h"
 #include "../src/phase_optimization.h"

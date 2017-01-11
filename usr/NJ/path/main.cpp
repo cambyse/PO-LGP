@@ -1,6 +1,6 @@
 #define MLR_IMPLEMENTATION
 #include <MT/util.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 
 #include <MT/motion_planning.h>
 #include <MT/gamepad.h>

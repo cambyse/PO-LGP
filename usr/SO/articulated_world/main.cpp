@@ -17,7 +17,7 @@
 #include <biros/biros.h>
 #include <biros/biros_views.h>
 
-#include <MT/ors_physx.h>
+#include <MT/kin_physx.h>
 #include <MT/opengl.h>
 
 #include <motion/motion.h>

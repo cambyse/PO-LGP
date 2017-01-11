@@ -22,7 +22,7 @@
 #include <FL/fl_draw.H>
 
 #include "opengl.h"
-#include "ors.h"
+#include "kin.h"
 
 
 //===========================================================================

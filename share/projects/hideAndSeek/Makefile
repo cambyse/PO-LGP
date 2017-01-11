@@ -2,6 +2,6 @@ BASE = ../..
 
 LIBS += -lpthread
 GL = 1
-DEPEND = Core Geo Gui Ors
+DEPEND = Core Geo Gui Kin
 
 include $(BASE)/build/generic.mk

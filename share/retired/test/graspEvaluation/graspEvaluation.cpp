@@ -1,7 +1,7 @@
 #include "graspEvaluation.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 
 struct sGraspEvaluation{
   SwiftInterface swift;

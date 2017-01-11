@@ -1,6 +1,6 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 
 struct CoveringSpheresProblem:ConstrainedProblem {

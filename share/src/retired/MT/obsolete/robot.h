@@ -5,7 +5,7 @@
 
 #include "robot_variables.h"
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "gamepad.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>

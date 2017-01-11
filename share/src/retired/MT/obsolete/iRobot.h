@@ -5,7 +5,7 @@
 //#include <cstdlib>
 #include <Gui/opengl.h>
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/gamepad.h>
 #include <MT/soc.h>
 #include <NJ/UrgInterface.h>

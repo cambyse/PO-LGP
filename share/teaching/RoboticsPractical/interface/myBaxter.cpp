@@ -3,7 +3,7 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
-#include <Ors/orsViewer.h>
+#include <Kin/kinViewer.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
 #include <RosCom/serviceRAP.h>

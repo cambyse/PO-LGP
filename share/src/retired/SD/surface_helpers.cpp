@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "ISF_GP.h"
 #include "utils.h"
 #include "surface_helpers.h"

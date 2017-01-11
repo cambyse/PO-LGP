@@ -1,7 +1,7 @@
 BASE = ../../../../share
 
 OBJS = main.o ../src/ikmo.o ../src/motion_factory.o ../src/gaussian_costs.o ../src/rbf_costs.o
-DEPEND = Core Motion Gui Optim Algo Ors
+DEPEND = Core Motion Gui Optim Algo Kin
 PTHREAD = 1
 PHYSX = 1
 include $(BASE)/build/generic.mk

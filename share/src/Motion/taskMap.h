@@ -14,7 +14,7 @@
 
 
 #pragma once
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 /// defines only a map (task space), not yet the costs in this space
 struct TaskMap {

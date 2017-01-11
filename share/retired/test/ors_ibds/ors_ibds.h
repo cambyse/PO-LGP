@@ -1,7 +1,7 @@
 #ifndef MLR_ors_ibds_h
 #define MLR_ors_ibds_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 namespace IBDS{ class Simulation; class RigidBody; }
 

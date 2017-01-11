@@ -4,7 +4,7 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <iomanip>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 
 void addDoor(mlr::KinematicWorld &G, double door_h=2.8, double door_w = 1.2, double handle_h = 0.03, double handle_w = 0.4, double handle_y = 0.05,double handle_z=1.) {

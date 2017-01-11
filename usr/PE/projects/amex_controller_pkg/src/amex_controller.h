@@ -13,7 +13,7 @@
 #include <tree_controller_pkg/SetNaturalGains.h>
 #include <tree_controller_pkg/SetFilterGains.h>
 #include <goal_publisher/GetGoal.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 struct AmexController {

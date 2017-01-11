@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Core/thread.h>
 
 struct DecisionMakingModule : Thread {

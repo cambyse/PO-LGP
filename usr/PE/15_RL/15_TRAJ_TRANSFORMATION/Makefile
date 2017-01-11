@@ -1,7 +1,7 @@
 BASE = ../../../../share
 
 OBJS = main.o ../12_MBMF_LEARNING/task_manager.o ../src/traj_factory.o ../12_MBMF_LEARNING/motion_interface.o
-DEPEND = Core Ors Gui Algo Motion Optim System pr2 Hardware_gamepad Actions
+DEPEND = Core Kin Gui Algo Motion Optim System pr2 Hardware_gamepad Actions
 PTHREAD = 0
 PHYSX = 0
 include $(BASE)/build/generic.mk

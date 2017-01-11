@@ -4,8 +4,8 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <iomanip>
-#include <Ors/ors_swift.h>
-#include <Ors/ors.h>
+#include <Kin/kin_swift.h>
+#include <Kin/kin.h>
 
 void TEST(Button){
   mlr::KinematicWorld world("model.kvg");

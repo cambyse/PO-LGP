@@ -1,7 +1,7 @@
 #include <MT/soc.h> 
 #include <MT/util.h>
 #include <MT/opengl.h>
-#include <MT/ors.h>     
+#include <MT/kin.h>     
 #include <MT/plot.h>    
 #include <Core/array.h> 
 #include "TriMesh.h"

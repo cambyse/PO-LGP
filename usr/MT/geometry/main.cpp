@@ -1,4 +1,4 @@
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 
 void addRndShape(mlr::KinematicWorld& ors){

@@ -1,7 +1,7 @@
 #ifndef MLR_robotActionInterface_h
 #define MLR_robotActionInterface_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "perceptionModule.h"
 #include "motionPlannerModule.h"
 

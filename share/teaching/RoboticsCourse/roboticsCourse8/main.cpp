@@ -1,4 +1,4 @@
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 
 void inferCameraProjectionMatrix(){
   uint N = 100;

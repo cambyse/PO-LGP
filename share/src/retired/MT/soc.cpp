@@ -19,7 +19,7 @@
 #include "soc.h"
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 //===========================================================================

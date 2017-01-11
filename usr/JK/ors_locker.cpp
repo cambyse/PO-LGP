@@ -13,8 +13,8 @@
     --------------------------------------------------------------  */
 
 
-#include "ors_locker.h"
-#include "ors.h"
+#include "kin_locker.h"
+#include "kin.h"
 
 namespace mlr {
   JointDependentLocker::JointDependentLocker() {

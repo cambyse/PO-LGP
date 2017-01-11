@@ -5,7 +5,7 @@ OBJS = main.o swig.o interface/myBaxter.o lockbox/lockbox.o
 OUTPUT := x.exe swig_wrap.cxx _swig.so
 
 ROS = 1
-DEPEND = Core Geo Control Gui RosCom Ors Motion
+DEPEND = Core Geo Control Gui RosCom Kin Motion
 
 default: $(OUTPUT)
 

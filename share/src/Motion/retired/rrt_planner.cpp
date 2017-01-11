@@ -14,7 +14,7 @@
 
 #include "rrt_planner.h"
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Algo/rrt.h>
 #include <Motion/motion.h>
 

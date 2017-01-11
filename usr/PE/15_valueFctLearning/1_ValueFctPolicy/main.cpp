@@ -5,7 +5,7 @@
 //#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 
 void run() {

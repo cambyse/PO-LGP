@@ -15,7 +15,7 @@
 #include "motion.h"
 #include "taskMaps.h"
 #include <Gui/opengl.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <climits>
 #include <iomanip>
 

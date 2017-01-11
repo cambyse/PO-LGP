@@ -18,7 +18,7 @@
 #ifndef _MT_motion_h
 #define _MT_motion_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 /* Notes

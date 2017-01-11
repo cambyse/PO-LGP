@@ -2,7 +2,7 @@
 #define ACTIVE_LEARNING_PROCESS_H_
 
 #include <System/biros.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 class ActiveLearner;
 class ActiveLearningProblem;

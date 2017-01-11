@@ -2,7 +2,7 @@
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsViewer.h>
+#include <Kin/kinViewer.h>
 
 // =================================================================================================
 int main(int argc, char** argv){

@@ -15,7 +15,7 @@
 
 #include "pathProblem.h"
 #include <Motion/taskMaps.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Optim/lagrangian.h>
 
 //===========================================================================

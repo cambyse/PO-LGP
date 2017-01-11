@@ -1,5 +1,5 @@
-#include <Ors/ors.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 
 int dir = 1;

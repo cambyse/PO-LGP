@@ -8,7 +8,7 @@
 #include <Optim/benchmarks.h>
 #include <Optim/convert.h>
 #include <Optim/lagrangian.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 //===========================================================================
 

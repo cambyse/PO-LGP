@@ -2,7 +2,7 @@
 #ifndef MLR_graspObjects_h
 #define MLR_graspObjects_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "ISF_GP.h"
 
 //MT: move this to cpp file

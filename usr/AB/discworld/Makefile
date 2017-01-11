@@ -1,6 +1,6 @@
 BASE = ../../../share/
 
-DEPEND = Geo Ors Gui Core Perception
+DEPEND = Geo Kin Gui Core Perception
 PHYSX = 1
 
 CXX = clang++

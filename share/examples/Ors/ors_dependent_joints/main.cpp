@@ -1,6 +1,6 @@
-#include <Ors/ors.h>
-#include <Ors/ors_locker.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin.h>
+#include <Kin/kin_locker.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 
 void TEST(OrsPhysx) {

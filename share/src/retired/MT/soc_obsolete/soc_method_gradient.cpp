@@ -15,7 +15,7 @@
     -----------------------------------------------------------------  */
 
 #include "soc.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 #ifdef MLR_HSL
 #  include "hslModule.h"

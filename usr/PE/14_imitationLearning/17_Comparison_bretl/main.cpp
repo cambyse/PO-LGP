@@ -5,7 +5,7 @@
 //#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include "../src/motion_factory.h"
 #include "../src/ikmo_bretl.h"
 

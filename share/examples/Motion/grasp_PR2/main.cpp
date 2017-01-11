@@ -5,7 +5,7 @@
 
 #include <Motion/taskMaps.h>
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;

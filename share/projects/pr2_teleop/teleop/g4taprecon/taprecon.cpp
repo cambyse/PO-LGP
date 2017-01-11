@@ -1,6 +1,6 @@
 #include "taprecon.h"
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Mocap/mocapdata.h>
 #include <Core/array.h>
 #include <Core/thread.h>

@@ -3,7 +3,7 @@
 #include <Motion/phase_optimization.h>
 #include <Optim/lagrangian.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 void TEST(PhaseOptimization){
   /// create reference motion

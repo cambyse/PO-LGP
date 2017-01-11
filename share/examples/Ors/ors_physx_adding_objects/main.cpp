@@ -3,7 +3,7 @@
  * was modified.
  */
 
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 
 void addRandomObject(mlr::KinematicWorld &ors) {

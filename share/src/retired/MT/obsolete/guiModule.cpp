@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 #include "guiModule.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "perceptionModule.h"
 #include <Gui/plot.h>
 #include <Gui/opengl.h>

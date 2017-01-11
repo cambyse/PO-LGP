@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <gtest/gtest.h>
 
 #define TEST_DIFF_ZERO(expr) { \

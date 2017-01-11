@@ -18,7 +18,7 @@
 #ifndef MLR_specialTaskVariables_h
 #define MLR_specialTaskVariables_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "socNew.h"
 #include "soc_orsSystem.h"
 

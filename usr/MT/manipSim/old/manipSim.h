@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 template<class NodeT>
 mlr::Array<NodeT*> backtrack(const mlr::Array<NodeT*>& T, const NodeT *leaf);

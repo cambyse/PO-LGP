@@ -9,7 +9,7 @@
  */
 
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 
 // ============================================================================

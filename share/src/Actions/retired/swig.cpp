@@ -5,7 +5,7 @@
 //#include <Actions/actions.h>
 //#include <Motion/motionHeuristics.h>
 #include <Logic/fol.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 struct sActionSwigInterface{
   ActionSystem activity;

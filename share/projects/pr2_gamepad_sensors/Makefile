@@ -4,7 +4,7 @@ ROS = 1
 PLIB = 1
 PCL = 1
 GL = 1
-DEPEND = Core Geo Hardware_gamepad Motion Ors Gui RosCom Perception
+DEPEND = Core Geo Hardware_gamepad Motion Kin Gui RosCom Perception
 
 LPATHS += /opt/ros/indigo/lib
 

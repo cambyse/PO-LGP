@@ -16,7 +16,7 @@
 #ifndef _ORS_LOCKER_H_
 #define _ORS_LOCKER_H_
 
-#include "ors.h"
+#include "kin.h"
 
 namespace mlr {
 struct JointLocker {

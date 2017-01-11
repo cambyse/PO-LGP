@@ -17,7 +17,7 @@
 #include "motion.h"
 #include <Algo/spline.h>
 #include <iomanip>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Motion/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Motion/taskMap_FixAttachedObjects.h>

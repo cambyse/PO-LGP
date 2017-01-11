@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 arr spline(const arr&, double);
 arr spline_vel(const arr&, double);

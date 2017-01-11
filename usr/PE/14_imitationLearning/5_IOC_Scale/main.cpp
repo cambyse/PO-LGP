@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
@@ -10,7 +10,7 @@
 #include <future>
 #include <GL/glu.h>
 #include <Gui/opengl.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space

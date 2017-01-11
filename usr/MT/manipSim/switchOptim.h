@@ -1,5 +1,5 @@
 #include <Core/graph.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 double optimSwitchConfigurations(
     mlr::KinematicWorld& world_initial,

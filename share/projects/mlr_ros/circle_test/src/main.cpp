@@ -3,8 +3,8 @@
 #include <actionlib/client/simple_action_client.h>
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Ors/roboticsCourse.h>
-#include <Ors/ors_swift.h>
+#include <Kin/roboticsCourse.h>
+#include <Kin/kin_swift.h>
 #include <Gui/opengl.h>
 
 

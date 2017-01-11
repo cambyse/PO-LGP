@@ -1,5 +1,5 @@
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 void draw1(void*){

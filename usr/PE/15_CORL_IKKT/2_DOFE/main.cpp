@@ -1,7 +1,7 @@
 #include <Core/array.h>
 #include <Geo/geo.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Motion/feedbackControl.h>
 

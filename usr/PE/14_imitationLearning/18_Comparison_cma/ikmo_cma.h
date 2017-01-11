@@ -1,7 +1,7 @@
 #ifndef IKMO_H
 #define IKMO_H
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
 #include <Motion/taskMaps.h>

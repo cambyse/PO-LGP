@@ -5,7 +5,7 @@
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Motion/phase_optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <RosCom/trajectoryInterface.h>
 

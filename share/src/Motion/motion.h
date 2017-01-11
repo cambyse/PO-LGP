@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 #include <Optim/KOMO_Problem.h>
 #include "taskMap.h"

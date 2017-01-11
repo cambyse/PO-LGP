@@ -1,8 +1,8 @@
-#include <Ors/ors.h>
-#include <Ors/orsViewer.h>
+#include <Kin/kin.h>
+#include <Kin/kinViewer.h>
 #include <Gui/opengl.h>
 #include <Gui/graphview.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 #include <LGP/LGP.h>

@@ -17,7 +17,7 @@
 
 #include <MT/opengl.h>
 #include <MT/array_t.cxx>
-#include <MT/ors.h>
+#include <MT/kin.h>
 
 #include <csignal>
 

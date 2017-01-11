@@ -8,7 +8,7 @@
 #include <Motion/komo.h>
 
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 //===========================================================================
 

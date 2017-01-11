@@ -4,7 +4,7 @@
 #include "../pcl_sprint_module/methods.h"
 
 #include "dataStructures.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 struct MySystem{

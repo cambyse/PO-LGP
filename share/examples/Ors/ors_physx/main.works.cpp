@@ -12,7 +12,7 @@
 //#include <PxMat33Legacy.h> 
 #include <PxSimpleFactory.h>
 
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 
 using namespace std;

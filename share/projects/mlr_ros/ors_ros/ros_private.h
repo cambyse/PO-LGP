@@ -1,7 +1,7 @@
 #ifndef ROS_PRIVATE_H
 #define ROS_PRIVATE_H
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 

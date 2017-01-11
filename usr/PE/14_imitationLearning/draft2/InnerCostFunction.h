@@ -1,6 +1,6 @@
 #ifndef INNERCOSTFUNCTION_H
 #define INNERCOSTFUNCTION_H
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/taskMaps.h>
 
 

@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Algo Core Gui Ors Motion Optim extern_SWIFT
+DEPEND = Algo Core Gui Kin Motion Optim extern_SWIFT
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

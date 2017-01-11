@@ -1,7 +1,7 @@
 #ifndef _DISC_WORLD_
 #define _DISC_WORLD_
 
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 

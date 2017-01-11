@@ -8,7 +8,7 @@
 #ifndef ORSIMITATE_H_
 #define ORSIMITATE_H_
 
-//#include "ors.h"
+//#include "kin.h"
 #include <MT/robot.h>
 
 struct ImitateTask:public TaskAbstraction{

@@ -3,7 +3,7 @@
 #include <Geo/geo.h>
 #include <Core/graph.h>
 #include <json/json.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "mocapdata.h"
 
 #define ONLY_OBSERVED

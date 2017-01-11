@@ -9,7 +9,7 @@
  */
 
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Algo/gaussianProcess.h>
 #include <Gui/opengl.h>
 #include <SD/ISF_GP.h>

@@ -1,5 +1,5 @@
 #include "simulator.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Core/util.h>
 #include <Gui/opengl.h>
 

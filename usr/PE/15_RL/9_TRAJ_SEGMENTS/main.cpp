@@ -3,7 +3,7 @@
 #include <Algo/spline.h>
 #include <Optim/optimization.h>
 #include <Motion/motion.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/taskMaps.h>
 #include "../src/plotUtil.h"
 #include "../src/phase_optimization.h"

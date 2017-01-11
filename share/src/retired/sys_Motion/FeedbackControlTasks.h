@@ -1,7 +1,7 @@
 #ifndef motion_FeedbackControlTasks_h
 #define motion_FeedbackControlTasks_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 struct GamepadState;
 struct SkinPressure;

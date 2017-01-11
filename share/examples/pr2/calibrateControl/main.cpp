@@ -4,7 +4,7 @@
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsViewer.h>
+#include <Kin/kinViewer.h>
 #include <Algo/MLcourse.h>
 
 #include <sensor_msgs/JointState.h>

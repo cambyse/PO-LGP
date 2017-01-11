@@ -6,7 +6,7 @@
 // G4Player
 //
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 struct G4Player {
   struct sG4Player {
     mlr::KinematicWorld *kw;

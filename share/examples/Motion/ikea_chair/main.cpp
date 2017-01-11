@@ -4,7 +4,7 @@
 //#include <Motion/motionHeuristics.h>
 
 #include <Motion/taskMaps.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 void pickandplace(arr finalpos){
   mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));

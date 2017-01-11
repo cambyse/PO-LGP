@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 void GetWritheMatrix(arr& WM, const arr& rope1, const arr& rope2,int dim1,int dim2);
 

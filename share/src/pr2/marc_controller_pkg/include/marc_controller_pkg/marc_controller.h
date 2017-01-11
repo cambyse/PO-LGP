@@ -4,7 +4,7 @@
 #include <pr2_mechanism_model/tree.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <marc_controller_pkg/JointState.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 namespace marc_controller_ns{
 
@@ -14,7 +14,7 @@ private:
   Mutex mutex; //callbacks are not thread safe!!!!!!!!!!!!!
   mlr::KinematicWorld world;
 
-  // Ors related variables
+  // Kin related variables
   arr u, Kd_base, Kp_base;
   arr q, qd;
   arr q_ref, qdot_ref;

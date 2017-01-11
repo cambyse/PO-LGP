@@ -1,7 +1,7 @@
 #include <unistd.h>
-#include <Ors/ors.h>
-#include <Ors/ors_physx.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin.h>
+#include <Kin/kin_physx.h>
+#include <Kin/kin_swift.h>
 #include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>

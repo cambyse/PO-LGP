@@ -19,7 +19,7 @@
 #define MLR_perceptionModule_h
 
 #include "vision.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <System/biros.h>
 
 #include "robot_variables.h"

@@ -1,7 +1,7 @@
 #include <Control/taskController.h>
 //#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 
 #include <RosCom/roscom.h>

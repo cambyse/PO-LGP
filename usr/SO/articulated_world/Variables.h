@@ -2,7 +2,7 @@
 #define VARIABLES_H__
 
 #include <biros/biros.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 
 // ============================================================================
 class PerceptsVar : public Variable {

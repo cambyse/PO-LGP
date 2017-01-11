@@ -1,6 +1,6 @@
 #include <system/engine.h>
 #include <views/views.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
 

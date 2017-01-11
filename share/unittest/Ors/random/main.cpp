@@ -1,9 +1,9 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Geo/mesh.h>
 #include <gtest/gtest.h>
 
 //=============================================================================
-GTEST_TEST(Ors, getSubMeshPos_numberOfParts) {
+GTEST_TEST(Kin, getSubMeshPos_numberOfParts) {
   const char* filename = "example.obj";
   auto positions = getSubMeshPositions(filename);
 
@@ -28,7 +28,7 @@ GTEST_TEST(Ors, getSubMeshPos_numberOfParts) {
 }
 
 //=============================================================================
-GTEST_TEST(Ors, ParseObjFirstPart) {
+GTEST_TEST(Kin, ParseObjFirstPart) {
   mlr::Mesh mesh;
   mesh.parsing_pos_start = 0;
   mesh.parsing_pos_end = 50;
@@ -49,7 +49,7 @@ GTEST_TEST(Ors, ParseObjFirstPart) {
   EXPECT_EQ(mesh.T, T_correct);
 }
 
-GTEST_TEST(Ors, ParseObjSecondPart) {
+GTEST_TEST(Kin, ParseObjSecondPart) {
   mlr::Mesh mesh;
   mesh.parsing_pos_start = 50;
   mesh.parsing_pos_end = 100;

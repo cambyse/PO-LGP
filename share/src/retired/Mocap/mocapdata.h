@@ -3,7 +3,7 @@
 #include <climits>
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "utilAB.h"
 
 #define Target_list(f) f(NO_TARGET) f(TS) f(CE)

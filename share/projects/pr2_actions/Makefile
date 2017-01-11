@@ -1,7 +1,7 @@
 BASE = ../..
 
 PLIB = 1
-DEPEND = Core Ors RosCom Motion Hardware_gamepad
+DEPEND = Core Kin RosCom Motion Hardware_gamepad
 
 LPATHS += /opt/ros/groovy/lib
 

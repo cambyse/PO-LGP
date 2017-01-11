@@ -3,7 +3,7 @@
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
 #include <pr2_mechanism_model/tree.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Control/taskController.h>
 #include <Algo/MLcourse.h>
 #include <tree_controller_pkg/SetVecTarget.h>
@@ -43,7 +43,7 @@ private:
   KDL::JntArrayVel jnt_vel_;
   KDL::JntArray jnt_efforts_;
 
-  // Ors related variables
+  // Kin related variables
   TaskController* MP;
   mlr::KinematicWorld* world;
   CtrlTask *taskPos, *taskVec, *taskHome, *taskLimits;

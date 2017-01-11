@@ -8,7 +8,7 @@
 
 
 #include <Optim/optimization.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 #include <Gui/plot.h>
 #include "../src/gaussian_costs.h"

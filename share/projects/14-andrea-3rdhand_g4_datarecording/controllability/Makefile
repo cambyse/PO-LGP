@@ -2,6 +2,6 @@ BASE = ../../..
 
 OBJS = main.o feedgnuplot.o
 
-DEPEND = Core Ors Gui Perception extern_SWIFT
+DEPEND = Core Kin Gui Perception extern_SWIFT
 
 include $(BASE)/build/generic.mk

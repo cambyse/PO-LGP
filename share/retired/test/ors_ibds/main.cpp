@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 
-#include "ors_ibds.h"
+#include "kin_ibds.h"
 
 
 int main(int argc, char **argv) {

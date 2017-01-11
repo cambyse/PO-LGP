@@ -2,7 +2,7 @@
 #define TRAJ_FACTORY_H
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/taskMaps.h>
 
 struct TrajFactory{

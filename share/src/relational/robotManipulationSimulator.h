@@ -23,7 +23,7 @@
 #define robotManipulationSimulator_h
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 struct RobotManipulationSimulator : mlr::KinematicWorld {
   

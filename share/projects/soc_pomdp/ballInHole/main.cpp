@@ -1,4 +1,4 @@
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>

@@ -8,7 +8,7 @@
 
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 

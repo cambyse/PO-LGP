@@ -2,7 +2,7 @@
 //#define NIKOLAY
 
 #include <signal.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/robot.h>
 #include <MT/soc.h>

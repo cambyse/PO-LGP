@@ -1,6 +1,6 @@
 #include <GL/glu.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 void drawTraj(uint color, arr& p, uint lineStyle);
 

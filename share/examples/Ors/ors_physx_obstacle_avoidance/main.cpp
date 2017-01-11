@@ -1,8 +1,8 @@
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 /*----------------------------------------------------------------------------*/
 

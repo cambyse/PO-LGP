@@ -2,7 +2,7 @@
 #include <pr2_controllers_msgs/JointTrajectoryAction.h>
 #include <actionlib/client/simple_action_client.h>
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>
 #include <ctime>

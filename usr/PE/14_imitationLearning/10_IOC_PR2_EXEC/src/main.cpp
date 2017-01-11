@@ -1,11 +1,11 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 //#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 
 
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 
 #include <ros/ros.h>

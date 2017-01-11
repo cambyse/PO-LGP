@@ -1,8 +1,8 @@
 //#include <RosCom/actionMachine.h>
 //#include "manipSim.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 #include "endStateOptim.h"

@@ -8,7 +8,7 @@
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsViewer.h>
+#include <Kin/kinViewer.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>

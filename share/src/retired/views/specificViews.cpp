@@ -3,7 +3,7 @@
 #ifdef MLR_GTK
 
 #include <Gui/gtk.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <gtk/gtk.h>
 
