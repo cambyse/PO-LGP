@@ -67,6 +67,7 @@ struct Net : ConstrainedProblem{
   void bwdCompute();
 
   const arr& getValue(Variable *n); ///< query the value of a variable (e.g., output)
+  void clearAllPartialDerivatives(); ///< set the partial derivative del_L/del_x of the loss w.r.t. a variable
   void zeroAllPartialDerivatives(uint d); ///< set the partial derivative del_L/del_x of the loss w.r.t. a variable
   void setPartialDerivative(Variable *n, const arr& del); ///< set the partial derivative del_L/del_x of the loss w.r.t. a variable
   const arr& getTotalDerivative(Variable *n); ///< return the total derivative dL/dx w.r.t a variable

@@ -26,15 +26,17 @@ void learnModel(){
 //  R.N.G.displayDot();
 //  R.checkNet();
 
-  R.trainModel();
+  R.trainModel(true);
   R.writeData(arr(FILE("z.x_opt")));
 }
 
 int main(int argn, char** argv){
+  rnd.clockSeed();
 
 //  optimalController();
 //  learnModel();
   runFilterWithLinearPolicy(FILE("z.x_opt"), FILE("z.thetaOpt"), 1000);
+//  runFilterWithMyPolicy(1000);
 
   return 0;
 }
