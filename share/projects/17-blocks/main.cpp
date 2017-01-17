@@ -5,6 +5,8 @@
 #include <Ors/ors_swift.h>
 #include <Motion/taskMaps.h>
 
+#include "physx.h"
+
 using namespace std;
 
 #define collisionsOff(x) komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName(x))
@@ -366,7 +368,47 @@ void trial33(){
 
 
 
+//===========================================================================
 
+void testPhysX(){
+#if 1
+  //============= CUT copied from tria4, needs refactoring to clean the code!!
+  KOMO komo;
+  mlr::KinematicWorld W, Wfin;
+
+  init(komo, 4, W, Wfin, 6.);
+
+  collisionsOff("blue");
+  collisionsOff("yellow");
+  collisionsOff("red");
+
+  komo.setTask(5.9,6., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+
+  komo.setGrasp(1., "humanL", "blue", 0, .8);
+  //komo.setplace(2.5, "humanr", "blue", "table");
+  //komo.setgrasp(3.5, "humanl", "blue", 0, 0.8);
+
+  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
+  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
+
+  komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
+
+  komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+  //============= CUT end
+
+
+  komo.reset();
+  komo.run();
+
+  cout <<komo.getReport(false);
+
+  mlr::KinematicWorld& K = *komo.MP->configurations.last();
+#else
+  mlr::KinematicWorld K("model_physx.g");
+#endif
+
+  runPhysX(K, 1.);
+}
 
 
 //===========================================================================
@@ -376,9 +418,12 @@ int main(int argc,char** argv){
 
   orsDrawAlpha=1.;
 
+  testPhysX();
+  return 0;
+
 // trial1(); 
 //  trial2();
- trial4();
+  trial4();
 //  trial5();
 //  trial3();
 //  trial3b();

@@ -1,6 +1,6 @@
 BASE = ../..
 
-OBJS = main.o
+OBJS = main.o physx.o
 
 DEPEND = Motion Core Geo Ors Gui Optim
 
