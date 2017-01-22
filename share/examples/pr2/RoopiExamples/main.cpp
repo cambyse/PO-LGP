@@ -3,7 +3,14 @@
 #include <Control/TaskControllerModule.h>
 
 void basicRoopi() {
+#if 1
+  //this works
   Roopi R;
+#else
+  //this does work only with debugger
+  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors"));
+  Roopi R(world);
+#endif
 
   //Goto specific joint position
   arr jointState = FILE("jointStatePredefined");
@@ -23,7 +30,7 @@ void basicRoopi() {
 
   //get actual position and modify it
   arr newPos = R.getTaskValue(posEndeffR);
-  newPos(1) += 0.3;
+  newPos(1) += 0.2;
 
 
   //activate tasks
@@ -34,21 +41,21 @@ void basicRoopi() {
   //interpolate to new target -- non threaded
   R.interpolateToReference(posEndeffR, 5.0, newPos);
 
-  newPos(0) -= 0.3;
+  newPos(0) -= 0.2;
   R.interpolateToReference(posEndeffR, 5.0, newPos);
 
-  newPos(1) -= 0.3;
+  newPos(1) -= 0.2;
   R.interpolateToReference(posEndeffR, 5.0, newPos);
 
 
   //interpolate to new target -- now with thread!
   TaskReferenceInterpolAct* refT = R.createTaskReferenceInterpolAct("moveEndeffR", posEndeffR);
 
-  newPos(0) += 0.3;
+  newPos(0) += 0.2;
   R.interpolateToReference(refT, 5.0, newPos);
   R.waitForFinishedTaskReferenceInterpolAct(refT);
 
-  newPos(1) -= 0.3;
+  newPos(1) -= 0.2;
   R.interpolateToReference(refT, 5.0, newPos);
   R.waitForFinishedTaskReferenceInterpolAct(refT);
 

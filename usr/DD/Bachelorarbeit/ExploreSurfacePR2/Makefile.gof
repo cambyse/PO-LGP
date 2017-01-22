@@ -1,0 +1,12 @@
+BASE = ../../../../share
+
+
+OBJS = main.o ../src/objectGenerator.o ../src/surfaceVisualizationModule.o ../src/surfaceModelModule.o
+PLIB = 1
+ROS = 1
+
+LAPACK = 1
+
+DEPEND = Core RosCom Control Gui Actions Hardware_gamepad Ors Motion Geo Roopi Algo Optim
+
+include $(BASE)/build/generic.mk
