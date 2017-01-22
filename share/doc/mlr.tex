@@ -1869,5 +1869,40 @@ this representation; and automate scripting (learning scripts).
 
 ...
 
+\begin{code}
+\begin{verbatim}
+
+act a = R.startTaskController();
+act b = R.startCommunicationWithBaxter();
+
+act liftHand = ControlTask(TaskMap(...), target, naturalGains);
+
+//busy wait
+for(;;){
+  if(liftHand==R_done) break; //-> when status of liftHand is R_done
+}
+
+//idle wait
+for(;;) if(wait(liftHand)==R_done) break;
+//equivalently
+wait(liftHand, R_done);
+
+//idle wait for multiple activities conjunctive
+waitAnd({liftHand, gazeBall});
+//or
+waitAnd({liftHand, gazeBall}, {R_done, R_done});
+
+//idle wait for multiple activities disjunctive
+waitOr({liftHand, gazeBall}, {R_done, R_done});
+
+while(wait(
+for(;;){
+  while(liftHand()){ //
+
+
+
+\end{verbatim}
+\end{code}
+
 
 \end{document}
