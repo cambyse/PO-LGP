@@ -5,7 +5,7 @@
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Kin/orsviewer.h>
+#include <Kin/kinViewer.h>
 #include <Motion/motion.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
@@ -20,6 +20,8 @@
 #include <RosCom/publishDatabase.h>
 
 #include <Roopi/loggingModule.h>
+
+#include <Optim/lagrangian.h>
 
 
 #define baxter 0
@@ -95,7 +97,7 @@ struct Roopi_private {
   //-- display and interaction
   GamepadInterface gamepad;
 
-  ors::KinematicWorld* cu;
+  mlr::KinematicWorld* cu;
 
   //OrsViewer view;
   OrsPoseViewer* ctrlView;
@@ -117,7 +119,7 @@ struct Roopi_private {
 
 
 
-  Roopi_private(ors::KinematicWorld& world)
+  Roopi_private(mlr::KinematicWorld& world)
     : jointState(NULL, "jointState"),
       ctrl_ref(NULL, "ctrl_ref"),
       ctrl_obs(NULL, "ctrl_obs"),
@@ -140,9 +142,9 @@ struct Roopi_private {
     #endif
 
     if(&world) {
-      cu = new ors::KinematicWorld(world);
+      cu = new mlr::KinematicWorld(world);
     } else {
-      cu = new ors::KinematicWorld(tcm.realWorld);
+      cu = new mlr::KinematicWorld(tcm.realWorld);
     }
 
     if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
@@ -166,7 +168,7 @@ struct Roopi_private {
 
 //==============================================================================
 
-Roopi::Roopi(ors::KinematicWorld& world)
+Roopi::Roopi(mlr::KinematicWorld& world)
   : s(new Roopi_private(world)){
   planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
   mlr::timerStart(true); //TODO is that necessary? Is the timer global?
@@ -360,7 +362,7 @@ bool Roopi::waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime, dou
 //  return ct;
 //}
 
-//CtrlTask* Roopi::_addDefaultCtrlTask(const char* name, const TaskMap_DefaultType type, const char* iShapeName, const ors::Vector& iVec, const char* jShapeName, const ors::Vector& jVec) {
+//CtrlTask* Roopi::_addDefaultCtrlTask(const char* name, const TaskMap_DefaultType type, const char* iShapeName, const mlr::Vector& iVec, const char* jShapeName, const mlr::Vector& jVec) {
 //  CtrlTask* ct = createCtrlTask(name, new TaskMap_Default(type, tcm()->modelWorld.get()(), iShapeName, iVec, jShapeName, jVec), false);
 //  return ct;
 //}
@@ -461,7 +463,7 @@ void Roopi::syncPlanWorld() {
   planWorld.setJointState(qPlan);
 }
 
-ors::KinematicWorld& Roopi::getPlanWorld() {
+mlr::KinematicWorld& Roopi::getPlanWorld() {
   return planWorld;
 }
 
@@ -555,23 +557,23 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   MotionProblem MP(planWorld);
 
   Task *t;
-  t = MP.addTask("transitions", new TaskMap_Transition(MP.world), sumOfSqrTT);
+  t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);
   t->map.order=2; //acceleration task
   t->setCostSpecs(0, MP.T, {0.}, 1.0);
 
-  t = MP.addTask("collisions", new CollisionConstraint(0.11), ineqTT);
+  t = MP.addTask("collisions", new CollisionConstraint(0.11), OT_ineq);
   t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.05), ineqTT); //TODO!!!!!!!!!!!!!!! margin
+  t = MP.addTask("qLimits", new LimitsConstraint(0.05), OT_ineq); //TODO!!!!!!!!!!!!!!! margin
   t->setCostSpecs(5, MP.T, {0.}, 1.0);
 
   for(CtrlTask* ct : tasks) {
-    t = MP.addTask(ct->name, &ct->map, sumOfSqrTT);
+    t = MP.addTask(ct->name, &ct->map, OT_sumOfSqr);
     t->setCostSpecs(MP.T-5, MP.T, ct->y_ref, 5.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
   }
 
   path->path = MP.getInitialization();
 
-  optConstrained(path->path , NoArr, Convert(MP), OPT(verbose=verbose)); //TODO options
+  optConstrained(path->path , NoArr, Convert(MP.komo_problem), OPT(verbose=verbose)); //TODO options
   //if(verbose) MP.reportFull(); //TODO fails
   Graph result = MP.getReport();
   path->path.reshape(MP.T, path->path.N/MP.T);

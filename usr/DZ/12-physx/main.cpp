@@ -20,9 +20,9 @@ void createOrs(mlr::KinematicWorld& ors, OpenGL& gl) {
     b->X.setRandom(); 
     b->X.pos(2) += 1.;
     b->name <<"Box_" <<k;
-    b->type = mlr::staticBT;
+    b->type = mlr::BT_static;
     mlr::Shape *s = new mlr::Shape(ors, b);
-    s->type=mlr::boxST;
+    s->type=mlr::ST_box;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
   for(uint k=0; k<3; k++) {
@@ -31,7 +31,7 @@ void createOrs(mlr::KinematicWorld& ors, OpenGL& gl) {
     b->X.pos(2) += 1.;
     b->name <<"Sphere_" <<k;
     mlr::Shape *s = new mlr::Shape(ors, b);
-    s->type=mlr::sphereST;
+    s->type=mlr::ST_sphere;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
    
@@ -81,7 +81,7 @@ void problem2(){
   
   ors.init("complex_writhe.ors");
  //  ors.init("box.ors");
-  ors.getBodyByName("arm1")->type = mlr::staticBT;
+  ors.getBodyByName("arm1")->type = mlr::BT_static;
      //!
    
        
@@ -111,8 +111,8 @@ void problem3(){
    OpenGL gl, phys_gl; 
    ors.init("complex_writhe.ors");
   
-   ors.getBodyByName("center")->type = mlr::kinematicBT;
-    ors.getBodyByName("arm1")->type = mlr::kinematicBT;
+   ors.getBodyByName("center")->type = mlr::BT_kinematic;
+    ors.getBodyByName("arm1")->type = mlr::BT_kinematic;
     
    gl.add(glStandardScene,NULL);
    gl.add(mlr::glDrawGraph,&ors);
@@ -164,9 +164,9 @@ void problem4(){
   }
    */
     for_list(Type, bb, ors.bodies){
-      if (bb->index>7) bb->type  = mlr::dynamicBT; 
+      if (bb->index>7) bb->type  = mlr::BT_dynamic; 
      else 
-	bb->type = mlr::kinematicBT; ;//mlr::staticBT; 
+	bb->type = mlr::BT_kinematic; ;//mlr::BT_static; 
   } 
     
    gl.add(glStandardScene,NULL);

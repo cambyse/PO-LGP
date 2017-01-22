@@ -353,7 +353,7 @@ void problem5(){
   ors.init(mlr::getParameter<mlr::String>("orsFile"));
   mlr::Shape *pc = new mlr::Shape(ors, ors.getBodyByName("OBJECTS"));
   pc->mesh = o->m; /* add point cloud to ors */
-  pc->type = mlr::pointCloudST; 
+  pc->type = mlr::ST_pointCloud; 
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
   gl.add(glStandardScene);

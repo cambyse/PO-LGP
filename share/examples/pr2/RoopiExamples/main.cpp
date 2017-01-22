@@ -16,7 +16,7 @@ void basicRoopi() {
   R.modifyCtrlTaskGains(posEndeffR, 10.0, 5.0);
 
   //EndeffR orientation task
-  CtrlTask* oriEndeffR = R.createCtrlTask("oriEndeffR", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(1.0,0.0,0.0)));
+  CtrlTask* oriEndeffR = R.createCtrlTask("oriEndeffR", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", mlr::Vector(1.0,0.0,0.0)));
   R.modifyCtrlC(oriEndeffR, ARR(1000.0));
   R.modifyCtrlTaskGains(oriEndeffR, 10.0, 5.0);
   R.modifyCtrlTaskReference(oriEndeffR, ARR(0.0,0.0,-1.0));

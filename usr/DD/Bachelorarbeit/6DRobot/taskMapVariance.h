@@ -11,11 +11,11 @@ struct TaskMapVariance : TaskMap {
   GaussianProcess& gp;
   TaskMap_Default taskMap;
 
-  void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t = -1) { HALT("can only be of higher order") }
+  void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t = -1) { HALT("can only be of higher order") }
   void phi(arr& y, arr& J, const WorldL& G, double tau, int t = -1);
-  uint dim_phi(const ors::KinematicWorld& G) { return 1; }
+  uint dim_phi(const mlr::KinematicWorld& G) { return 1; }
 
-  TaskMapVariance(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName);
+  TaskMapVariance(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName);
 
 };
 
@@ -24,10 +24,10 @@ struct TaskMapGPGradient : TaskMap {
   TaskMap_Default taskMap;
   TaskMap_Default positionMap;
 
-  void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t = -1);
-  uint dim_phi(const ors::KinematicWorld& G) { return 1; }
+  void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t = -1);
+  uint dim_phi(const mlr::KinematicWorld& G) { return 1; }
 
-  TaskMapGPGradient(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector);
+  TaskMapGPGradient(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName, mlr::Vector vector);
 
 };
 
@@ -36,10 +36,10 @@ struct TaskMapGPGradientThread : TaskMap {
   TaskMap_Default taskMap;
   TaskMap_Default positionMap;
 
-  void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t = -1);
-  uint dim_phi(const ors::KinematicWorld& G) { return 1; }
+  void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t = -1);
+  uint dim_phi(const mlr::KinematicWorld& G) { return 1; }
 
-  TaskMapGPGradientThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector);
+  TaskMapGPGradientThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName, mlr::Vector vector);
 
 };
 
@@ -48,10 +48,10 @@ struct TaskMapGP : TaskMap {
   GaussianProcess& gp;
   TaskMap_Default taskMap;
 
-  void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t = -1);
-  uint dim_phi(const ors::KinematicWorld& G) { return 1; }
+  void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t = -1);
+  uint dim_phi(const mlr::KinematicWorld& G) { return 1; }
 
-  TaskMapGP(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName);
+  TaskMapGP(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName);
 
 };
 
@@ -59,40 +59,40 @@ struct TaskMapGP1D : TaskMap {
   GaussianProcess& gp;
   TaskMap_Default positionMap;
 
-  void phi(arr &y, arr &J, const ors::KinematicWorld &G, int t);
-  uint dim_phi(const ors::KinematicWorld &G) { return 1; }
+  void phi(arr &y, arr &J, const mlr::KinematicWorld &G, int t);
+  uint dim_phi(const mlr::KinematicWorld &G) { return 1; }
 
-  TaskMapGP1D(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName);
+  TaskMapGP1D(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName);
 };
 
 struct TaskMapGP1DThread : TaskMap {
   Access_typed<GaussianProcess> gp;
   TaskMap_Default positionMap;
 
-  void phi(arr &y, arr &J, const ors::KinematicWorld &G, int t);
-  uint dim_phi(const ors::KinematicWorld &G) { return 1; }
+  void phi(arr &y, arr &J, const mlr::KinematicWorld &G, int t);
+  uint dim_phi(const mlr::KinematicWorld &G) { return 1; }
 
-  TaskMapGP1DThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName);
+  TaskMapGP1DThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName);
 };
 
 struct TaskMapGPVariance1DThread : TaskMap {
   Access_typed<GaussianProcess> gp;
   TaskMap_Default positionMap;
 
-  void phi(arr &y, arr &J, const ors::KinematicWorld &G, int t);
-  uint dim_phi(const ors::KinematicWorld &G) { return 1; }
+  void phi(arr &y, arr &J, const mlr::KinematicWorld &G, int t);
+  uint dim_phi(const mlr::KinematicWorld &G) { return 1; }
 
-  TaskMapGPVariance1DThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName);
+  TaskMapGPVariance1DThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName);
 };
 
 struct TaskMap1DPosOrientation : TaskMap {
   TaskMap_Default orientationMap;
   TaskMap_Default positionMap;
 
-  void phi(arr &y, arr &J, const ors::KinematicWorld &G, int t);
-  uint dim_phi(const ors::KinematicWorld &G) { return 1; }
+  void phi(arr &y, arr &J, const mlr::KinematicWorld &G, int t);
+  uint dim_phi(const mlr::KinematicWorld &G) { return 1; }
 
-  TaskMap1DPosOrientation(const ors::KinematicWorld& world, const char* shapeName, const ors::Vector& vec);
+  TaskMap1DPosOrientation(const mlr::KinematicWorld& world, const char* shapeName, const mlr::Vector& vec);
 };
 
 #endif // TASKMAPVARIANCE_H

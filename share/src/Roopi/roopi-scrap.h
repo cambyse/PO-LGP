@@ -55,11 +55,11 @@ struct Roopi {
   struct Roopi_private* s;
 
   CtrlTaskL activeTasks;
-  ors::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
+  mlr::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
 
   CtrlTask* holdPositionTask;
 
-  Roopi(ors::KinematicWorld& world = NoWorld);
+  Roopi(mlr::KinematicWorld& world = NoWorld);
   ~Roopi();
 
   //-- general control flow activities
@@ -142,7 +142,7 @@ struct Roopi {
 
   /// sync the joint configuration of the model world into the planWorld
   void syncPlanWorld();
-  ors::KinematicWorld& getPlanWorld();
+  mlr::KinematicWorld& getPlanWorld();
 
   double getLimitConstraint(double margin = 0.05);
   double getCollisionConstraint(double margin = 0.1);

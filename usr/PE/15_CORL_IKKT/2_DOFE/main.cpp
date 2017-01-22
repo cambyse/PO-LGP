@@ -70,11 +70,11 @@ void detectButtonDOF() {
   /// add new joint to world
   mlr::Body *b1 = new mlr::Body(world);
   b1->name = "b1";
-  b1->type = mlr::BodyType::dynamicBT;
+  b1->type = mlr::BodyType::BT_dynamic;
   b1->X.pos = Xcp[0];
   b1->X.rot = rot;
   mlr::Shape *b1_shape = new mlr::Shape(world,*b1);
-  b1_shape->type = mlr::ShapeType::boxST;
+  b1_shape->type = mlr::ShapeType::ST_box;
   b1_shape->name = "b1_shape";
   arr size = ARRAY(0.1, 0.1, 0.001, 0.);
   memmove(b1_shape->size, size.p, 4*sizeof(double));
@@ -83,11 +83,11 @@ void detectButtonDOF() {
 
   mlr::Body *b2 = new mlr::Body(world);
   b2->name = "b2";
-  b2->type = mlr::BodyType::dynamicBT;
+  b2->type = mlr::BodyType::BT_dynamic;
   b2->X.pos = Xcp[0];
   b2->X.rot = rot;
   mlr::Shape *b2_shape = new mlr::Shape(world,*b2);
-  b2_shape->type = mlr::ShapeType::boxST;
+  b2_shape->type = mlr::ShapeType::ST_box;
   b2_shape->name = "b2_shape";
   size = ARRAY(0.1,0.1, 0.001, 0.);
   memmove(b2_shape->size, size.p, 4*sizeof(double));
@@ -97,7 +97,7 @@ void detectButtonDOF() {
 
   mlr::Shape *cp1 = new mlr::Shape(world,*b1);
   cp1->name = "cp1";
-  cp1->type = mlr::ShapeType::markerST;
+  cp1->type = mlr::ShapeType::ST_marker;
   cp1->rel.pos = mlr::Vector(0.,0.,0.);
   size = ARRAY(0.01,0., 0., 0.);
   memmove(cp1->size, size.p, 4*sizeof(double));

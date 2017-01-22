@@ -93,12 +93,12 @@ void trial2(){
   collisionsOn("blue");
   collisionsOn("yellow");
   
-  komo.setTask(3.9,4., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
  
   komo.setGrasp(1., "humanR", "red", 0, 0.8); //weight?
   komo.setPlaceFixed(2.0, "humanR", "red", "blue", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("blue")->X );
   
-  komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+  komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
@@ -190,18 +190,18 @@ void trial4(){
   collisionsOff("yellow");
   collisionsOff("red");
   
-  komo.setTask(5.9,6., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(5.9,6., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
   
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   //komo.setplace(2.5, "humanr", "blue", "table");
   //komo.setgrasp(3.5, "humanl", "blue", 0, 0.8);
 
-  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
-  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
+  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
+  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
 
   komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
 
-  komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+  komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 } 
@@ -218,13 +218,13 @@ void trial5(){
   collisionsOn("yellow");
 
   //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
 
 
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   komo.setPlaceFixed(2., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
  
-  komo.setTask(1., 2.5, new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+  komo.setTask(1., 2.5, new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
@@ -242,7 +242,7 @@ void trial10(){
   init(komo, 10, W, Wfin);
 
   //-- fix last configuration
-  komo.setTask(3.9, 4., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(3.9, 4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
 
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   komo.setGrasp(1.5, "humanR", "yellow", 0, .8);
@@ -251,8 +251,8 @@ void trial10(){
   komo.setPlaceFixed(3., "humanR", "yellow", "blue", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("blue")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
-//  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), ineqTT, ARR(-.02), 1e2, 0);
-//  komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+//  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
+//  komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
@@ -271,7 +271,7 @@ void trial11(){
   init(komo, 11, W, Wfin);
 
   //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
 
   komo.setGrasp(1., "humanL", "yellow", 0, .8);
   komo.setGrasp(1.5, "humanR", "blue", 0, .8);
@@ -280,8 +280,8 @@ void trial11(){
   komo.setPlaceFixed(3., "humanL", "yellow", "blue", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("blue")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
-//  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), ineqTT, ARR(-.02), 1e2, 0);
-  komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+//  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
+  komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
@@ -346,7 +346,7 @@ void trial33(){
 //  komo.MP->world.swift().activate(komo.MP->world.getShapeByName("red"));
 
   //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
 
   //komo.setGrasp(1., "humanR", "red", 0, .1);
 //  komo.setPlace(1.8, "humanR", "blue", "tableC");
@@ -360,8 +360,8 @@ void trial33(){
   //komo.setPlaceFixed(3., "humanR", "red", "yellow", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("yellow")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
-//  komo.setTask(1.5, 2.5, new TaskMap_GJK(komo.world, "yellow", "blue", true, true), ineqTT, ARR(-.05), 1e2, 0);
-  komo.setTask(1., 2.5, new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+//  komo.setTask(1.5, 2.5, new TaskMap_GJK(komo.world, "yellow", "blue", true, true), OT_ineq, ARR(-.05), 1e2, 0);
+  komo.setTask(1., 2.5, new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
@@ -382,18 +382,18 @@ void testPhysX(){
   collisionsOff("yellow");
   collisionsOff("red");
 
-  komo.setTask(5.9,6., new TaskMap_qItself(), sumOfSqrTT, Wfin.getJointState(), 1e3, 0);
+  komo.setTask(5.9,6., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
 
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   //komo.setplace(2.5, "humanr", "blue", "table");
   //komo.setgrasp(3.5, "humanl", "blue", 0, 0.8);
 
-  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
-  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), sumOfSqrTT, NoArr, 1e2, 1);
+  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
+  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
 
   komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
 
-  komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), sumOfSqrTT, NoArr, 1e2);
+  komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
   //============= CUT end
 
 

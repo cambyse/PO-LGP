@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Algo/gaussianProcess.h>
@@ -8,7 +8,7 @@
 #include <Gui/plot.h>
 #include <Roopi/roopi.h>
 #include <Control/TaskControllerModule.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 
 void testForceControl() {
   Roopi R;
@@ -24,11 +24,11 @@ void testForceControl() {
   R.activateCtrlTask(holdLeftArm);
   R.activateCtrlTask(ho);
   mlr::wait(1.0);
-  CtrlTask* orientation = R.createCtrlTask("orientation", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(1.0,0.0,0.0)));
+  CtrlTask* orientation = R.createCtrlTask("orientation", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", mlr::Vector(1.0,0.0,0.0)));
   R.modifyCtrlTaskGains(orientation, 10.0, 5.0);
   R.modifyCtrlTaskReference(orientation, ARR(0.0,0.0,-1.0));
   R.activateCtrlTask(orientation);
-  CtrlTask* move1D = R.createCtrlTask("move1D", new TaskMap_Default(pos1DTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(0.0,0.0,-1.0)));
+  CtrlTask* move1D = R.createCtrlTask("move1D", new TaskMap_Default(pos1DTMT, R.tcm()->modelWorld.get()(), "endeffR", mlr::Vector(0.0,0.0,-1.0)));
   R.modifyCtrlTaskGains(move1D, ARR(0.0), ARR(15.0));
   R.modifyCtrlTaskReference(move1D, ARR(0.0), ARR(0.1));
   R.modifyForce(move1D, ARR(-4.0), 0.005, 0.999);

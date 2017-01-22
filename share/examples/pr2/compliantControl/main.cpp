@@ -93,7 +93,7 @@ void tests() {
 }
 
 void testKugel() {
-  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  mlr::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
   world.watch(true);
 }
 
@@ -111,11 +111,11 @@ void testForceControl() {
   R.activateCtrlTask(holdLeftArm);
   R.activateCtrlTask(ho);
   mlr::wait(1.0);
-  CtrlTask* orientation = R.createCtrlTask("orientation", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(1.0,0.0,0.0)));
+  CtrlTask* orientation = R.createCtrlTask("orientation", new TaskMap_Default(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", mlr::Vector(1.0,0.0,0.0)));
   R.modifyCtrlTaskGains(orientation, 10.0, 5.0);
   R.modifyCtrlTaskReference(orientation, ARR(0.0,0.0,-1.0));
   R.activateCtrlTask(orientation);
-  CtrlTask* move1D = R.createCtrlTask("move1D", new TaskMap_Default(pos1DTMT, R.tcm()->modelWorld.get()(), "endeffR", ors::Vector(0.0,0.0,-1.0)));
+  CtrlTask* move1D = R.createCtrlTask("move1D", new TaskMap_Default(pos1DTMT, R.tcm()->modelWorld.get()(), "endeffR", mlr::Vector(0.0,0.0,-1.0)));
   R.modifyCtrlTaskGains(move1D, ARR(0.0), ARR(15.0));
   R.modifyCtrlTaskReference(move1D, ARR(0.0), ARR(0.1));
   R.tcm()->ctrlTasks.writeAccess();

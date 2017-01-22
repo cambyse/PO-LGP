@@ -92,13 +92,13 @@ void TaskMapVariance::phi(arr& y, arr& J, const WorldL& G, double tau, int t) {
 #endif
 }
 
-TaskMapVariance::TaskMapVariance(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName) : gp(gp), taskMap(posTMT, world, shapeName) {}
+TaskMapVariance::TaskMapVariance(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName) : gp(gp), taskMap(posTMT, world, shapeName) {}
 
 
 //================================================================
 
 
-void TaskMapGPGradient::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMapGPGradient::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr pos, JacPos;
   positionMap.phi(pos, JacPos, G);
   arr grad, hess;
@@ -122,13 +122,13 @@ void TaskMapGPGradient::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t)
   }
 }
 
-TaskMapGPGradient::TaskMapGPGradient(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector)
+TaskMapGPGradient::TaskMapGPGradient(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName, mlr::Vector vector)
   : gp(gp)
   , taskMap(vecTMT, world, shapeName, vector)
   , positionMap(posTMT, world, shapeName) {}
 
 
-void TaskMapGPGradientThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMapGPGradientThread::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr pos, JacPos;
   positionMap.phi(pos, JacPos, G);
   arr grad, hess;
@@ -147,13 +147,13 @@ void TaskMapGPGradientThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
   }
 }
 
-TaskMapGPGradientThread::TaskMapGPGradientThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName, ors::Vector vector)
+TaskMapGPGradientThread::TaskMapGPGradientThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName, mlr::Vector vector)
   : gp(gp)
   , taskMap(vecTMT, world, shapeName, vector)
   , positionMap(posTMT, world, shapeName) {}
 
 
-void TaskMapGP::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMapGP::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr pos, JPos;
   taskMap.phi(pos, JPos, G);
   arr gradF;
@@ -165,12 +165,12 @@ void TaskMapGP::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 }
 
-TaskMapGP::TaskMapGP(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName)
+TaskMapGP::TaskMapGP(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , taskMap(posTMT, world, shapeName) {}
 
 
-void TaskMap1DPosOrientation::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMap1DPosOrientation::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr ori;
   orientationMap.phi(ori, NoArr, G);
   arr pos, JPos;
@@ -181,12 +181,12 @@ void TaskMap1DPosOrientation::phi(arr& y, arr& J, const ors::KinematicWorld& G, 
   }
 }
 
-TaskMap1DPosOrientation::TaskMap1DPosOrientation(const ors::KinematicWorld& world, const char* shapeName, const ors::Vector& vec)
+TaskMap1DPosOrientation::TaskMap1DPosOrientation(const mlr::KinematicWorld& world, const char* shapeName, const mlr::Vector& vec)
   : orientationMap(vecTMT, world, shapeName, vec)
   , positionMap(posTMT, world, shapeName) {}
 
 
-void TaskMapGP1D::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMapGP1D::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr pos, JPos;
   positionMap.phi(pos, JPos, G);
   arr grad, H;
@@ -200,12 +200,12 @@ void TaskMapGP1D::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
   }
 }
 
-TaskMapGP1D::TaskMapGP1D(GaussianProcess& gp, const ors::KinematicWorld& world, const char* shapeName)
+TaskMapGP1D::TaskMapGP1D(GaussianProcess& gp, const mlr::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , positionMap(posTMT, world, shapeName) {}
 
 
-void TaskMapGP1DThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMapGP1DThread::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr pos, JPos;
   positionMap.phi(pos, JPos, G);
   arr grad, H;
@@ -219,12 +219,12 @@ void TaskMapGP1DThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t)
   }
 }
 
-TaskMapGP1DThread::TaskMapGP1DThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName)
+TaskMapGP1DThread::TaskMapGP1DThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , positionMap(posTMT, world, shapeName) {}
 
 
-void TaskMapGPVariance1DThread::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t) {
+void TaskMapGPVariance1DThread::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr actPos, JPos;
   positionMap.phi(actPos, JPos, G);
   arr gradGP, gradV;
@@ -242,6 +242,6 @@ void TaskMapGPVariance1DThread::phi(arr& y, arr& J, const ors::KinematicWorld& G
 
 }
 
-TaskMapGPVariance1DThread::TaskMapGPVariance1DThread(Access_typed<GaussianProcess>& gp, const ors::KinematicWorld& world, const char* shapeName)
+TaskMapGPVariance1DThread::TaskMapGPVariance1DThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , positionMap(posTMT, world, shapeName) {}

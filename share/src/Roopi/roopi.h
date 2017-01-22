@@ -23,7 +23,7 @@ struct Roopi {
 
   CtrlTask* holdPositionTask;
 
-  Roopi(ors::KinematicWorld& world = NoWorld);
+  Roopi(mlr::KinematicWorld& world = NoWorld);
   ~Roopi();
 
   //-- control tasks
@@ -77,8 +77,8 @@ struct Roopi {
   //  /// creates inactive default task with zero gains and adds it to the taskController
   //  CtrlTask* _addDefaultCtrlTask(const char* name,
   //                               const TaskMap_DefaultType type,
-  //                               const char* iShapeName, const ors::Vector& iVec = NoVector,
-  //                               const char* jShapeName = NULL, const ors::Vector& jVec = NoVector);
+  //                               const char* iShapeName, const mlr::Vector& iVec = NoVector,
+  //                               const char* jShapeName = NULL, const mlr::Vector& jVec = NoVector);
 
   //-- trajectory tasks
 
@@ -120,7 +120,7 @@ struct Roopi {
 
   /// sync the joint configuration of the model world into the planWorld
   void syncPlanWorld();
-  ors::KinematicWorld& getPlanWorld();
+  mlr::KinematicWorld& getPlanWorld();
 
   double getLimitConstraint(double margin = 0.05);
   double getCollisionConstraint(double margin = 0.1);

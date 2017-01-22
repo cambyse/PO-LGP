@@ -115,7 +115,7 @@ void problem1(){
   b->X.pos(2) += 2.5;
   b->name <<"carpet";
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::meshST;
+  s->type=mlr::ST_mesh;
   s->mesh = newM;
   ors.calcShapeFramesFromBodies();
   gl.watch();
@@ -174,14 +174,14 @@ void problem2(){
   for (uint i=0; i<N; i++)
   {
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::sphereST;
+  s->type=mlr::ST_sphere;
   s->size[0]=s->size[1]=s->size[2]=s->size[3]=0.05;
   s->color[0]=s->color[1]=s->color[2]=0.5;
   s->rel.pos = bcp[i]();
   }
   //! end of Bezier Control Points  part
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::meshST;
+  s->type=mlr::ST_mesh;
   s->mesh = newM;
   ors.calcShapeFramesFromBodies();
   //! HERE we compute Bezier Surface from Bezier Control Points 
@@ -238,14 +238,14 @@ void problem3(){
   bcp[i]() = arr(ors.getBodyByName(names(i))->X.pos.p,3);
 //  if (i<4) {bcp(i,2) += (2-i)*0.02; }
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::sphereST;
+  s->type=mlr::ST_sphere;
   s->size[0]=s->size[1]=s->size[2]=s->size[3]=0.001;
   s->color[0]=s->color[1]=s->color[2]=0.5;
   s->rel.pos = bcp[i]();
   }
   //! end of Bezier Control Points  part
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::meshST;
+  s->type=mlr::ST_mesh;
   s->mesh = newM;
   s->color[0]=1.0;
   ors.calcShapeFramesFromBodies();
