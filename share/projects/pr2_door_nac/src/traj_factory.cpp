@@ -11,7 +11,7 @@ void TrajFactory::transform(const arr &y, const arr &trans, arr &y_trans, double
 }
 
 
-void TrajFactory::compFeatTraj(const arr &x, arr &y, ors::KinematicWorld &world, TaskMap *tm) {
+void TrajFactory::compFeatTraj(const arr &x, arr &y, mlr::KinematicWorld &world, TaskMap *tm) {
   y.resize(x.d0,tm->dim_phi(world)).setZero();
   for (uint i=0;i<y.d0;i++) {
     arr y_t;

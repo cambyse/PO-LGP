@@ -17,7 +17,7 @@ static const double colorsTab[6][3] = {
 
 void test(){
   uint16A kinect_depth(FILE("z.kinect_depth"));
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   arr& pts = mesh.V;
   arr& cols = mesh.C;
   arr costs;

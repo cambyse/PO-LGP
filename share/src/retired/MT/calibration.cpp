@@ -31,7 +31,7 @@ void decomposeCameraProjectionMatrix(arr& K, arr& R, arr& t, const arr& P, bool 
   t.reshape(3);
   K /= K(2, 2);   //the scaling of K is arbitrary, convention: $K_{3, 3}=1$
   //R[2]() *= -1.; //OpenGL is flipping the z-axis...
-  //ors::Quaternion r;  r.setMatrix(R.p);
+  //mlr::Quaternion r;  r.setMatrix(R.p);
   
   arr PP=~(K*R);  PP.append(-K*R*t);  PP=~PP;  PP/=PP.elem(0);  cout <<PP <<P <<endl;
   

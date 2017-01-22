@@ -1,6 +1,6 @@
 #include "calibrator_module.h"
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Mocap/mocapdata.h>
 
 //////////////////////////////////////////////////////////////////////////////
@@ -24,31 +24,31 @@ void G4HutoRoMap::getshoulderpos(floatA tempshoulderpos)
     dp_i.append(~temp);
     if(dp_i.d0 == SN)
     {
-        rpmean =rpmean+(1./SN)*~(temp.refRange(0,2));
-        lpmean =lpmean+(1./SN)*~(temp.refRange(3,5));
-        rP=rP+(1./SN)*((temp.refRange(0,2))*~temp.refRange(0,2));
-        lP=lP+(1./SN)*((temp.refRange(3,5))*~temp.refRange(3,5));
-        rp=rp+(1./SN)*((temp.refRange(0,2)*~temp.refRange(0,2)*temp.refRange(0,2)));
-        lp=lp+(1./SN)*((temp.refRange(3,5)*~temp.refRange(3,5)*temp.refRange(3,5)));
-        rpp=rpp+((1./SN)*(~temp.refRange(0,2)*temp.refRange(0,2)))(0);
-        lpp=lpp+((1./SN)*(~temp.refRange(3,5)*temp.refRange(3,5)))(0);
+        rpmean =rpmean+(1./SN)*~(temp({0,2}));
+        lpmean =lpmean+(1./SN)*~(temp({3,5}));
+        rP=rP+(1./SN)*((temp({0,2}))*~temp({0,2}));
+        lP=lP+(1./SN)*((temp({3,5}))*~temp({3,5}));
+        rp=rp+(1./SN)*((temp({0,2})*~temp({0,2})*temp({0,2})));
+        lp=lp+(1./SN)*((temp({3,5})*~temp({3,5})*temp({3,5})));
+        rpp=rpp+((1./SN)*(~temp({0,2})*temp({0,2})))(0);
+        lpp=lpp+((1./SN)*(~temp({3,5})*temp({3,5})))(0);
     }
     else if(dp_i.d0>SN)
     {
-        rpmean =rpmean+(1./SN)*(~(temp.refRange(0,2))-~(dp_i[0].refRange(0,2)));
-        lpmean =lpmean+(1./SN)*(~(temp.refRange(3,5))-~(dp_i[0].refRange(3,5)));
-        rP=rP+((1./SN)*(((temp.refRange(0,2))*~(temp.refRange(0,2)))
-        -((dp_i[0].refRange(0,2))*~(dp_i[0].refRange(0,2)))));
-        lP=lP+((1./SN)*(((temp.refRange(3,5))*~(temp.refRange(3,5)))
-        -((dp_i[0].refRange(3,5))*~(dp_i[0].refRange(3,5)))));
-        rp=rp+(1./SN)*((temp.refRange(0,2)*~temp.refRange(0,2)*temp.refRange(0,2))
-        -(dp_i[0].refRange(0,2)*~dp_i[0].refRange(0,2)*dp_i[0].refRange(0,2)));
-        lp=lp+(1./SN)*((temp.refRange(3,5)*~temp.refRange(3,5)*temp.refRange(3,5))
-        -(dp_i[0].refRange(3,5)*~dp_i[0].refRange(3,5)*dp_i[0].refRange(3,5)));
-        rpp=rpp+((1./SN)*(~temp.refRange(0,2)*temp.refRange(0,2)
-        -~dp_i[0].refRange(0,2)*dp_i[0].refRange(0,2)))(0);
-        lpp=lpp+((1./SN)*(~temp.refRange(3,5)*temp.refRange(3,5)
-        -~dp_i[0].refRange(3,5)*dp_i[0].refRange(3,5)))(0);
+        rpmean =rpmean+(1./SN)*(~(temp({0,2}))-~(dp_i[0]({0,2})));
+        lpmean =lpmean+(1./SN)*(~(temp({3,5}))-~(dp_i[0]({3,5})));
+        rP=rP+((1./SN)*(((temp({0,2}))*~(temp({0,2})))
+        -((dp_i[0]({0,2}))*~(dp_i[0]({0,2})))));
+        lP=lP+((1./SN)*(((temp({3,5}))*~(temp({3,5})))
+        -((dp_i[0]({3,5}))*~(dp_i[0]({3,5})))));
+        rp=rp+(1./SN)*((temp({0,2})*~temp({0,2})*temp({0,2}))
+        -(dp_i[0]({0,2})*~dp_i[0]({0,2})*dp_i[0]({0,2})));
+        lp=lp+(1./SN)*((temp({3,5})*~temp({3,5})*temp({3,5}))
+        -(dp_i[0]({3,5})*~dp_i[0]({3,5})*dp_i[0]({3,5})));
+        rpp=rpp+((1./SN)*(~temp({0,2})*temp({0,2})
+        -~dp_i[0]({0,2})*dp_i[0]({0,2})))(0);
+        lpp=lpp+((1./SN)*(~temp({3,5})*temp({3,5})
+        -~dp_i[0]({3,5})*dp_i[0]({3,5})))(0);
 
        arr tempshift = dp_i;
 
@@ -63,14 +63,14 @@ void G4HutoRoMap::getshoulderpos(floatA tempshoulderpos)
     }
     else
     {
-        rpmean =rpmean+(1./SN)*~(temp.refRange(0,2));
-        lpmean =lpmean+(1./SN)*~(temp.refRange(3,5));
-        rP=rP+(1./SN)*((temp.refRange(0,2))*~temp.refRange(0,2));
-        lP=lP+(1./SN)*((temp.refRange(3,5))*~temp.refRange(3,5));
-        rp=rp+(1./SN)*((temp.refRange(0,2)*~temp.refRange(0,2)*temp.refRange(0,2)));
-        lp=lp+(1./SN)*((temp.refRange(3,5)*~temp.refRange(3,5)*temp.refRange(3,5)));
-        rpp=rpp+((1./SN)*(~temp.refRange(0,2)*temp.refRange(0,2)))(0);
-        lpp=lpp+((1./SN)*(~temp.refRange(3,5)*temp.refRange(3,5)))(0);
+        rpmean =rpmean+(1./SN)*~(temp({0,2}));
+        lpmean =lpmean+(1./SN)*~(temp({3,5}));
+        rP=rP+(1./SN)*((temp({0,2}))*~temp({0,2}));
+        lP=lP+(1./SN)*((temp({3,5}))*~temp({3,5}));
+        rp=rp+(1./SN)*((temp({0,2})*~temp({0,2})*temp({0,2})));
+        lp=lp+(1./SN)*((temp({3,5})*~temp({3,5})*temp({3,5})));
+        rpp=rpp+((1./SN)*(~temp({0,2})*temp({0,2})))(0);
+        lpp=lpp+((1./SN)*(~temp({3,5})*temp({3,5})))(0);
        return;
     }
 
@@ -233,8 +233,8 @@ if(button & BTN_A)
     if (button & BTN_B)
     {
       cout << "calibrating side" << endl;
-      posesSideR = mid.query(tmpPoses, STRING("/human/rh/index")).refRange(0, 2)-centerpos;
-      posesSideL = mid.query(tmpPoses, STRING("/human/lh/index")).refRange(0, 2)-centerpos;
+      posesSideR = mid.query(tmpPoses, STRING("/human/rh/index"))({0, 2})-centerpos;
+      posesSideL = mid.query(tmpPoses, STRING("/human/lh/index"))({0, 2})-centerpos;
 
     }
     else if (button & BTN_A)
@@ -250,8 +250,8 @@ if(button & BTN_A)
     else if (button & BTN_Y)
     {
       cout <<"calibrating front gripper"<<endl;
-      posesFrontR = mid.query(tmpPoses, STRING("/human/rh/index")).refRange(0, 2)-centerpos;
-      posesFrontL = mid.query(tmpPoses, STRING("/human/lh/index")).refRange(0, 2)-centerpos;
+      posesFrontR = mid.query(tmpPoses, STRING("/human/rh/index"))({0, 2})-centerpos;
+      posesFrontL = mid.query(tmpPoses, STRING("/human/lh/index"))({0, 2})-centerpos;
     }
     else if (button & BTN_BACK
              && posesSideR.N != 0
@@ -360,12 +360,12 @@ floatA CORDtranstoRo(const floatA& input,floatA centera)
 {
     //-90° from G4 to roboto
 
-    ors::Vector PosToRobot;
-    ors::Quaternion OrToRobot;
-    ors::Quaternion trans;
+    mlr::Vector PosToRobot;
+    mlr::Quaternion OrToRobot;
+    mlr::Quaternion trans;
     trans.setDeg(-90,0.,0.,1.);
 
-    ors::Vector center;
+    mlr::Vector center;
     center.set(centera(0),centera(1),centera(2));
     PosToRobot.set(input(0),input(1),input(2));
     OrToRobot.set(input(3) , input(4), input(5), input(6));
@@ -380,13 +380,13 @@ floatA CORDtranstoRo(const floatA& input,floatA centera)
 floatA transcenter(const floatA& tempData,const floatA& ref )
 {
     floatA TtempData(tempData);
-    ors::Transformation transform;
+    mlr::Transformation transform;
 
-    ors::Vector refVector;
-    ors::Quaternion refOrien;
+    mlr::Vector refVector;
+    mlr::Quaternion refOrien;
     refVector.set(ref(0),ref(1),ref(2));
     refOrien.set(ref(3),ref(4),ref(5),ref(6));
-    ors::Quaternion flip;
+    mlr::Quaternion flip;
     flip.setDeg(180,0.,0.,1.);
 
     refOrien.alignWith(Vector_z);
@@ -396,9 +396,9 @@ floatA transcenter(const floatA& tempData,const floatA& ref )
 
     for(uint i =0 ;i<tempData.d0;i++)
     {
-        ors::Vector tempV;
+        mlr::Vector tempV;
         tempV.set(tempData[i](0),tempData[i](1),tempData[i](2));
-        ors::Quaternion tempQ;
+        mlr::Quaternion tempQ;
         tempQ.set(tempData[i](3),tempData[i](4),tempData[i](5),tempData[i](6));
         tempV = transform*tempV;
         tempV = refOrien/tempV;
@@ -413,9 +413,9 @@ floatA transcenter(const floatA& tempData,const floatA& ref )
 floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& shoulderOR)
 {
     floatA TtempData(shoulder);
-    ors::Transformation transform;
+    mlr::Transformation transform;
 
-    ors::Quaternion refOrien;
+    mlr::Quaternion refOrien;
     refOrien.set(ref(0),ref(1),ref(2),ref(3));
 
     transform.addRelativeRotation(refOrien);
@@ -424,7 +424,7 @@ floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& sho
     transform.addRelativeRotation(refOrien.invert());
     //transform.setInverse(transform);
 
-    ors::Vector shoulderV;
+    mlr::Vector shoulderV;
     shoulderV.set(shoulder[0](0),shoulder[0](1),shoulder[0](2));
     shoulderV = transform *shoulderV;
 
@@ -434,16 +434,16 @@ floatA transfshoulder(const floatA& shoulder,const floatA& ref,const floatA& sho
 void G4HutoRoMap::calcparameters(floatA tempData)
 {
 
-    floatA poses_thumb_rh = mid.query(tempData, STRING("/human/rh/thumb")).refRange(0,2);
-    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).refRange(0,2);
+    floatA poses_thumb_rh = mid.query(tempData, STRING("/human/rh/thumb"))({0,2});
+    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index"))({0,2});
 
     floatA TI_vec = poses_thumb_rh-poses_index_rh;
    // cout<<TI_vec<<endl;
-    floatA quats = mid.query(tempData, STRING("/human/rh/thumb")).refRange(3,6);
+    floatA quats = mid.query(tempData, STRING("/human/rh/thumb"))({3,6});
 
     TI_vec = TI_vec/length(TI_vec);
    // cout<<TI_vec<<endl;
-    ors::Quaternion orsquats;
+    mlr::Quaternion orsquats;
     orsquats.set(double(quats(0)),double(quats(1)),double(quats(2)),double(quats(3)));
     x = (double)TI_vec(0);
     y = (double)TI_vec(1);
@@ -522,9 +522,9 @@ void G4HutoRoMap::initdriving(floatA tempData,int button)
     }
 
     cout<<"\x1B[2J\x1B[H";
-    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).refRange(0,2);
+    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index"))({0,2});
 
-    floatA pose_foot=mid.query(tempData,STRING("/human/rl/rf")).refRange(0,2);
+    floatA pose_foot=mid.query(tempData,STRING("/human/rl/rf"))({0,2});
 
    if(button & BTN_X && length(driveposX) == 0)
     {
@@ -613,8 +613,8 @@ void G4HutoRoMap::initdriving(floatA tempData,int button)
 
 void G4HutoRoMap::patterndriving(floatA tempData)
 {
-    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index")).refRange(0,2);
-    floatA poses_rf = mid.query(tempData, STRING("/human/rl/rf")).refRange(0,2);
+    floatA poses_index_rh = mid.query(tempData, STRING("/human/rh/index"))({0,2});
+    floatA poses_rf = mid.query(tempData, STRING("/human/rl/rf"))({0,2});
     double turnrate = 0.;
     
     drive.set()={0.,0.,0.};
@@ -636,11 +636,11 @@ void G4HutoRoMap::patterndriving(floatA tempData)
 
     if(poses_index_rh(2)>=driveposX(2)-0.02 && poses_index_rh(2)<=driveposX(2)+0.02 )
     {
-        floatA poses_index_rht =poses_index_rh.refRange(0,1);
-        floatA driveposXt=driveposX.refRange(0,1);
-        floatA drivenegXt=drivenegX.refRange(0,1);
-        floatA driveLYt=driveLY.refRange(0,1);
-        floatA driveRYt=driveRY.refRange(0,1);
+        floatA poses_index_rht =poses_index_rh({0,1});
+        floatA driveposXt=driveposX({0,1});
+        floatA drivenegXt=drivenegX({0,1});
+        floatA driveLYt=driveLY({0,1});
+        floatA driveRYt=driveRY({0,1});
         floatA xd = {2.f,0.f};
         floatA yd = {0.f,2.f};
 
@@ -776,9 +776,9 @@ floatA temp;
     ///////////////////////////////////////////////////////////////////////
 
 
-    //centerpos =  mid.query(tempData,STRING("/human/torso/chest")).refRange(0,2);
+    //centerpos =  mid.query(tempData,STRING("/human/torso/chest"))({0,2});
 
-   // centerORI =  mid.query(tempData,STRING("/human/torso/chest")).refRange(3,6);
+   // centerORI =  mid.query(tempData,STRING("/human/torso/chest"))({3,6});
 
    // tempData=transcenter(tempData,centerORI);
     // pusblish raw sensor data
@@ -870,10 +870,10 @@ floatA transformPosition(const floatA& thumb, const floatA& index, const floatA&
 
 
 floatA transformOrientation(const floatA &pose_thumb, const floatA &pose_index,bool right) {
-  ors::Quaternion quat;
-  ors::Vector x_thumb, x_index;
-  ors::Vector pos_thumb, pos_index;
-  ors::Vector x_pr2, y_pr2, z_pr2;
+  mlr::Quaternion quat;
+  mlr::Vector x_thumb, x_index;
+  mlr::Vector pos_thumb, pos_index;
+  mlr::Vector x_pr2, y_pr2, z_pr2;
 
 
 
@@ -946,7 +946,7 @@ void G4HutoRoMap::transform(const floatA& poses_raw)
       // calibrated_gripper_rh.set() = clip(
       //     length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh,
       //     0.f, 1.f);
-      dummy = length(poses_thumb_rh.refRange(0, 2) - poses_index_rh.refRange(0, 2)) ;// * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
+      dummy = length(poses_thumb_rh({0, 2}) - poses_index_rh({0, 2})) ;// * 1./(distrhmaxopen) -distrhminopen/distrhmaxopen;
       clip(dummy, 0.f, 0.9f);
       calibrated_gripper_rh.set() = dummy;
     //  cout<<"calibrated_gripper_rh "<<dummy<<endl;
@@ -954,7 +954,7 @@ void G4HutoRoMap::transform(const floatA& poses_raw)
       // calibrated_gripper_lh.set() = clip(
       //     length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
       //     0.f, 1.f);
-      dummy = length(poses_thumb_lh.refRange(0, 2) - poses_index_lh.refRange(0, 2)) ;// *  1./(distlhmaxopen) - distlhminopen/distlhmaxopen ;
+      dummy = length(poses_thumb_lh({0, 2}) - poses_index_lh({0, 2})) ;// *  1./(distlhmaxopen) - distlhminopen/distlhmaxopen ;
       clip(dummy, 0.f, 0.9f);
       calibrated_gripper_lh.set() = dummy;
 
@@ -993,7 +993,7 @@ void G4HutoRoMap::doinitsendROS( floatA poses_raw)
       // calibrated_gripper_rh.set() = clip(
       //     length(poses_thumb_rh.sub(0, 2) - poses_index_rh.sub(0, 2)) * m_rh + q_rh,
       //     0.f, 1.f);
-      dummy = length(poses_thumb_rh.refRange(0, 2) - poses_index_rh.refRange(0, 2))-0.05;
+      dummy = length(poses_thumb_rh({0, 2}) - poses_index_rh({0, 2}))-0.05;
       clip(dummy, 0.0f, 0.09f);
       calibrated_gripper_rh.set() = dummy;
     //  cout<<"calibrated_gripper_rh "<<dummy<<endl;
@@ -1001,7 +1001,7 @@ void G4HutoRoMap::doinitsendROS( floatA poses_raw)
       // calibrated_gripper_lh.set() = clip(
       //     length(poses_thumb_lh.sub(0, 2) - poses_index_lh.sub(0, 2)) * m_lh + q_lh,
       //     0.f, 1.f);
-      dummy = length(poses_thumb_lh.refRange(0, 2) - poses_index_lh.refRange(0, 2))-0.05;
+      dummy = length(poses_thumb_lh({0, 2}) - poses_index_lh({0, 2}))-0.05;
       clip(dummy, 0.f, 0.09f);
       calibrated_gripper_lh.set() = dummy;
 

@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 template<class NodeT>
 mlr::Array<NodeT*> backtrack(const mlr::Array<NodeT*>& T, const NodeT *leaf);
@@ -38,9 +38,9 @@ typedef mlr::Array<Action*> ActionL_;
 //===========================================================================
 
 struct Pose{
-  ors::Transformation mean;
-  ors::Vector min,max; //< min and max positions (translational freedom)
-  ors::Vector rotRange; //< rotational pose range
+  mlr::Transformation mean;
+  mlr::Vector min,max; //< min and max positions (translational freedom)
+  mlr::Vector rotRange; //< rotational pose range
   void write(ostream& os) const{ os <<mean <<" [" <<min <<',' <<max <<"] [" <<rotRange <<"]"; }
 };
 stdOutPipe(Pose)

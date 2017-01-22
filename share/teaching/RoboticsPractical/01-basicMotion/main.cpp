@@ -2,7 +2,7 @@
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 #include <RosCom/baxter.h>
 
 // =================================================================================================

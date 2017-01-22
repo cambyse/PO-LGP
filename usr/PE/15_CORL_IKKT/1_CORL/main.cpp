@@ -5,7 +5,7 @@
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Motion/phase_optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <RosCom/trajectoryInterface.h>
 
@@ -34,14 +34,14 @@ int main(int argc,char **argv){
   uint markerID; if (useMarker) markerID = mlr::getParameter<uint>("markerID");
 
   // init worlds + trajectory interface
-  ors::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world_pr2("../../../../share/projects/pr2_gamepadControl/model.kvg");
+  mlr::KinematicWorld world;
   switch (mode) {
     case DEMO_REC:
-      world = ors::KinematicWorld(STRING(folder<<"model.kvg"));
+      world = mlr::KinematicWorld(STRING(folder<<"model.kvg"));
       break;
     case CORL_OPT:
-      world = ors::KinematicWorld(STRING(folder<<"modelaug.kvg"));
+      world = mlr::KinematicWorld(STRING(folder<<"modelaug.kvg"));
       break;
   }
   TrajectoryInterface *ti;

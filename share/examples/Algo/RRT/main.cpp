@@ -15,8 +15,8 @@ void TEST(RRT) {
   rndUniform(q_start,-1.,1.,false); //random start point
   rndUniform(q_goal , 1.,1.,false); //random goal  point
 
-  q_start = ARR(-.5,-.5);
-  q_goal  = ARR( 1., 1.);
+  q_start = {-.5,-.5};
+  q_goal  = { 1., 1.};
   
   ANN ann[2];      //ann[fb] also stores all points added to the tree in ann[fb].X
   uintA parent[2]; //for each point we also store the index of the parent node

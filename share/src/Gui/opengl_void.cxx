@@ -61,8 +61,8 @@ struct sOpenGL {
   }
   void beginGlContext(){}
   void endGlContext(){}
-  ors::Vector downVec, downPos, downFoc;
-  ors::Quaternion downRot;
+  mlr::Vector downVec, downPos, downFoc;
+  mlr::Quaternion downRot;
 };
 
 void OpenGL::postRedrawEvent(bool){}

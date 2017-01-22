@@ -1,7 +1,7 @@
 #define MLR_IMPLEMENTATION
 //#define NIKOLAY
 
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/soc.h>
 int useDisplay = -1;
@@ -16,11 +16,11 @@ void drawEnv(void*){
   glStandardLight(NULL);
   //glDrawFloor(4.,1,1,1);
 }
-void init(ors::KinematicWorld& ors,OpenGL& gl,const char *filename){
+void init(mlr::KinematicWorld& ors,OpenGL& gl,const char *filename){
   ors.init(filename);
   
   gl.add(drawEnv,0);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(.0,0.,10.);
   gl.camera.focus(.0,0,0);
@@ -28,7 +28,7 @@ void init(ors::KinematicWorld& ors,OpenGL& gl,const char *filename){
 
 
 void TEST(Plan){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   nShape = mlr::getParameter<int>("nShape");

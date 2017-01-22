@@ -26,7 +26,7 @@ void DiscWorld::clearGui() {
   delete gl;
   delete physx;
 
-  ors = new ors::KinematicWorld;
+  ors = new mlr::KinematicWorld;
   gl = new OpenGL;
   physx = new PhysXInterface;
 }
@@ -36,17 +36,17 @@ void DiscWorld::initBodies() {
 
   clearGui();
 
-  ors::Body *b;
-  ors::Shape *s;
+  mlr::Body *b;
+  mlr::Shape *s;
   for(int i = 0; i < N; i++) {
-    b = new ors::Body(*ors);
+    b = new mlr::Body(*ors);
     if(i == 0) {
       b->name << "A";
-      b->type = ors::kinematicBT;
+      b->type = mlr::kinematicBT;
     }
     else {
       b->name << i;
-      b->type = ors::dynamicBT;
+      b->type = mlr::dynamicBT;
     }
     b->X.pos.setZero();
     b->X.rot.setZero();
@@ -54,8 +54,8 @@ void DiscWorld::initBodies() {
     b->X.pos.z = HEIGHT/2;
     names.append(new mlr::String(b->name));
 
-    s = new ors::Shape(*ors, b);
-    s->type = ors::cylinderST;
+    s = new mlr::Shape(*ors, b);
+    s->type = mlr::cylinderST;
     s->size[2] = HEIGHT;
     s->size[3] = RADIUS;
     if(i == 0) {
@@ -67,14 +67,14 @@ void DiscWorld::initBodies() {
   }
 
   // goal body
-  b = new ors::Body(*ors);
+  b = new mlr::Body(*ors);
   b->name << "G";
-  b->type = ors::kinematicBT;
+  b->type = mlr::kinematicBT;
   b->X.pos.setZero();
   b->X.pos.z = GOAL_HEIGHT;
   b->X.rot.setZero();
-  s = new ors::Shape(*ors, b);
-  s->type = ors::sphereST;
+  s = new mlr::Shape(*ors, b);
+  s->type = mlr::sphereST;
   s->size[2] = 2*HEIGHT;
   s->size[3] = .1;
   s->color[0] = 0;
@@ -86,7 +86,7 @@ void DiscWorld::initBodies() {
   
   gl->clear();
   gl->add(glStandardScene, NULL);
-  gl->add(ors::glDrawGraph, ors);
+  gl->add(mlr::glDrawGraph, ors);
   gl->setClearColors(1., 1., 1., 1.);
   gl->camera.setPosition(0., 0., 50.);
   gl->camera.focus(0, 0, 0);
@@ -98,8 +98,8 @@ void DiscWorld::initBodies() {
 
 void DiscWorld::play() {
   initBodies();
-  ors::Body *agent = ors->getBodyByName("A");
-  ors::Body *goal = ors->getBodyByName("G");
+  mlr::Body *agent = ors->getBodyByName("A");
+  mlr::Body *goal = ors->getBodyByName("G");
 
   kf.clearFrames();
 
@@ -129,17 +129,17 @@ void DiscWorld::play() {
 void DiscWorld::resetBodies() {
   clearGui();
 
-  ors::Body *b;
-  ors::Shape *s;
+  mlr::Body *b;
+  mlr::Shape *s;
   for(int i = 0; i < N; i++) {
-    b = new ors::Body(*ors);
+    b = new mlr::Body(*ors);
     b->name << *names(i);
-    b->type = ors::kinematicBT;
+    b->type = mlr::kinematicBT;
     b->X.rot.setZero();
     names.append(new mlr::String(b->name));
 
-    s = new ors::Shape(*ors, b);
-    s->type = ors::cylinderST;
+    s = new mlr::Shape(*ors, b);
+    s->type = mlr::cylinderST;
     s->size[2] = HEIGHT;
     s->size[3] = RADIUS;
     if(i == 0) {
@@ -157,7 +157,7 @@ void DiscWorld::resetBodies() {
   
   gl->clear();
   gl->add(glStandardScene, NULL);
-  gl->add(ors::glDrawGraph, ors);
+  gl->add(mlr::glDrawGraph, ors);
   gl->setClearColors(1., 1., 1., 1.);
   gl->camera.setPosition(0., 0., 50.);
   gl->camera.focus(0, 0, 0);
@@ -213,7 +213,7 @@ void DiscWorld::replay() {
   gl->watch();
 }
 
-void DiscWorld::setGoal(ors::Body *goal, int g) {
+void DiscWorld::setGoal(mlr::Body *goal, int g) {
   if(g < G)
     goal->X.pos = goals(g);
   else
@@ -221,8 +221,8 @@ void DiscWorld::setGoal(ors::Body *goal, int g) {
   goal->X.pos.z = GOAL_HEIGHT;
 }
 
-bool DiscWorld::move(ors::Body *agent, ors::Body *goal) {
-  ors::Vector dir = goal->X.pos - agent->X.pos;
+bool DiscWorld::move(mlr::Body *agent, mlr::Body *goal) {
+  mlr::Vector dir = goal->X.pos - agent->X.pos;
   dir.z = 0;
 
   bool arrived = (dir.length() <= speed);
@@ -235,7 +235,7 @@ bool DiscWorld::move(ors::Body *agent, ors::Body *goal) {
 
 void DiscWorld::recStep(int t) {
   arr st;
-  ors::Body *b;
+  mlr::Body *b;
   for(int n = 0; n < ors->bodies.N; n++) {
     b = ors->bodies(n);
     if(b->name == "G") // this is fine because the goal is the last body
@@ -247,7 +247,7 @@ void DiscWorld::recStep(int t) {
 }
 
 void DiscWorld::playStep(int t) {
-  ors::Body *b;
+  mlr::Body *b;
   arr st = kf.getState(t);
   for(int n = 0; n < ors->bodies.N; n++) {
     b = ors->getBodyByName(*names(n));
@@ -262,7 +262,7 @@ void DiscWorld::setTMode(int t) { mode = true; if(t > 0) T = t; }
 void DiscWorld::setGMode() { mode = false; }
 
 void DiscWorld::addBody(int n) {
-  ors::Vector p;
+  mlr::Vector p;
   for(int i = 0; i < n; ) {
     p.setRandom(3);
     p.z = HEIGHT/2;
@@ -273,10 +273,10 @@ void DiscWorld::addBody(int n) {
 }
 
 bool DiscWorld::addBody(float x, float y) {
-  return addBody(ors::Vector(x, y, 0));
+  return addBody(mlr::Vector(x, y, 0));
 }
 
-bool DiscWorld::addBody(const ors::Vector &p) {
+bool DiscWorld::addBody(const mlr::Vector &p) {
   for(int i = 0; i < bodies.N; i++)
     if((bodies(i) - p).length() <= 2*RADIUS)
       return false;
@@ -288,7 +288,7 @@ bool DiscWorld::addBody(const ors::Vector &p) {
 }
 
 void DiscWorld::addGoal(int n) {
-  ors::Vector p;
+  mlr::Vector p;
   for(int i = 0; i < n; i++) {
     p.setRandom(3);
     addGoal(p);
@@ -296,10 +296,10 @@ void DiscWorld::addGoal(int n) {
 }
 
 void DiscWorld::addGoal(float x, float y) {
-  addGoal(ors::Vector(x, y, 0));
+  addGoal(mlr::Vector(x, y, 0));
 }
 
-void DiscWorld::addGoal(const ors::Vector &p) {
+void DiscWorld::addGoal(const mlr::Vector &p) {
   G++;
   goals.append(p);
 }

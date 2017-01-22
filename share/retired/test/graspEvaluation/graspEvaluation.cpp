@@ -1,7 +1,7 @@
 #include "graspEvaluation.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 
 struct sGraspEvaluation{
   SwiftInterface swift;
@@ -19,7 +19,7 @@ void GraspEvaluation::closeFingers(){
   s->swift.init(grasp);
   s->swift.computeProxies(grasp, false);
   uint pi;
-  ors::Proxy *p;
+  mlr::Proxy *p;
   double dmin, step=.01;
   arr q;
   grasp.getJointState(q);
@@ -54,9 +54,9 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
   }
   //grasp.reportProxies();
   uint i;
-  ors::Proxy *p;
+  mlr::Proxy *p;
   for_list(Type, p, grasp.proxies){
-    ors::Vector contact, normal;
+    mlr::Vector contact, normal;
     if(grasp.shapes(p->a)->body->index==0){ //index==0 is the object
       contact=p->posA; normal=-p->normal;
     }else{
@@ -79,7 +79,7 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
   score_wrenchClosure = forceClosureFromProxies(grasp, 0, 0.01, .2, 1.);
 
   //forceClosureMeassure = forceClosure(contactPoints, contactNormals,
-  //ors::Vector(mean),
+  //mlr::Vector(mean),
   //5., 1., NULL);
 
   cout <<"force  closure = " <<score_forceClosure  <<endl;
@@ -87,18 +87,18 @@ void GraspEvaluation::getContactPoints(double distanceThreshold){
   cout <<"wrench closure = " <<score_wrenchClosure <<endl;
 }
 
-void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
+void GraspEvaluation::copyGraspFromOrs(const mlr::KinematicWorld& all,
 				       const char* palmBodyName,
 				       const char* objShapeName){
   uint i,j;
-  ors::Shape *s;
-  ors::Body *b;
-  ors::Joint *l;
+  mlr::Shape *s;
+  mlr::Body *b;
+  mlr::Joint *l;
 
   //collect all bodies of the hand along the tree
-  ors::Body *palm = all.getBodyByName(palmBodyName);
-  ors::Shape *obj = all.getShapeByName(objShapeName);
-  mlr::Array<ors::Body*> handBodies;
+  mlr::Body *palm = all.getBodyByName(palmBodyName);
+  mlr::Shape *obj = all.getShapeByName(objShapeName);
+  mlr::Array<mlr::Body*> handBodies;
   handBodies.append(palm);
   for_list(Type, b, handBodies) for_list(Type, l, b->outLinks) handBodies.append(l->to);
   cout <<"hand bodies:";  listWrite(handBodies, cout);
@@ -107,26 +107,26 @@ void GraspEvaluation::copyGraspFromOrs(const ors::KinematicWorld& all,
   grasp.clear();
   
   //copy obj (always has index 0)
-  ors::Body *objBody  = new ors::Body(grasp);
+  mlr::Body *objBody  = new mlr::Body(grasp);
   objBody->X = obj->X;
   objBody->name = "object";
-  ors::Shape *s_new;
-  s_new = new ors::Shape(grasp, objBody, obj);
+  mlr::Shape *s_new;
+  s_new = new mlr::Shape(grasp, objBody, obj);
   s_new->rel.setZero();
   
   //copy hand
-  mlr::Array<ors::Body*> bodyMap(all.bodies.N);
+  mlr::Array<mlr::Body*> bodyMap(all.bodies.N);
   for_list(Type, b, handBodies){
-    bodyMap(b->index) = new ors::Body(grasp, b);
-    bodyMap(b->index)->type = ors::kinematicBT;
+    bodyMap(b->index) = new mlr::Body(grasp, b);
+    bodyMap(b->index)->type = mlr::BT_kinematic;
     for_list(Type, s, b->shapes){
-      new ors::Shape(grasp, bodyMap(b->index), s);
+      new mlr::Shape(grasp, bodyMap(b->index), s);
     }
   }
   for_list(Type, b, handBodies){
     for_list(Type, l, b->outLinks){
       CHECK_EQ(l->from->index , b->index,"");
-      new ors::Joint(grasp, bodyMap(l->from->index), bodyMap(l->to->index), l);
+      new mlr::Joint(grasp, bodyMap(l->from->index), bodyMap(l->to->index), l);
     }
   }
 
@@ -156,8 +156,8 @@ void GraspEvaluation::simulateInPhysX(){
     //check if object still in hand
     
     //jiggle at the grasp hand
-    ors::Quaternion &rot(grasp.bodies(1)->X.rot);
-    ors::Quaternion a,b,c;
+    mlr::Quaternion &rot(grasp.bodies(1)->X.rot);
+    mlr::Quaternion a,b,c;
     if(t>100){
       c.setDeg(3.,0,0,1);
       switch((t/100)%3){
@@ -174,4 +174,4 @@ void GraspEvaluation::simulateInPhysX(){
 }
 
 #include <Core/array.tpp>
-template mlr::Array<ors::Body*>::Array(uint);
+template mlr::Array<mlr::Body*>::Array(uint);

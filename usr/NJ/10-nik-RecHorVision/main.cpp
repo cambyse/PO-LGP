@@ -1,7 +1,7 @@
 #define MLR_IMPLEMENTATION
 
 #include <signal.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/robot.h>
 #include <MT/soc.h>
@@ -18,18 +18,18 @@ ofstream pos_file("onlinePos.dat");
 
 OpenGL *globalGL=NULL;
 struct SimpleTrack{
-	ors::Vector v;//speed
-	ors::Vector p;//last position
+	mlr::Vector v;//speed
+	mlr::Vector p;//last position
 	double t ;//last time
 	int Smooth;//smooth type
 
-	void addSample(ors::Vector pos, double time){
+	void addSample(mlr::Vector pos, double time){
 		cout << " timeee " << (time-t) << endl;
 		v = (pos-p)/(time-t);
 		p = pos;
 		t = time;
 	}
-	ors::Vector predict(double time){
+	mlr::Vector predict(double time){
 		return p + v*(time-t);
 	}
 	arr R1,R2,R12,xk,Pk;
@@ -129,8 +129,8 @@ struct SimpleTrack{
 		if (oldx.N > 0 && Smooth == 3)
 			x = 0.5*(oldx +x);//simple average smoother..
 
-		p = ors::Vector(x(0),x(1),x(2));
-		v = ors::Vector(x(3),x(4),x(5));
+		p = mlr::Vector(x(0),x(1),x(2));
+		v = mlr::Vector(x(3),x(4),x(5));
 		x = oldx;//to avoid smoothing self effect..
 	}
 };
@@ -187,7 +187,7 @@ struct ReceedingHorizon:public StepThread{
 		aico.initMessages();
 		activateAll(sys->vars,false);
 		//activate collision testing with target shape - no collisions for me
-		ors::Body *obj = sys->ors->getBodyByName(objShape);
+		mlr::Body *obj = sys->ors->getBodyByName(objShape);
 		/*obj->cont=true;  sys->swift->initActivations(*sys->ors);*/
 		TaskVariable *V;
 		double midPrec,endPrec;
@@ -210,7 +210,7 @@ struct ReceedingHorizon:public StepThread{
 struct RHV:public TaskAbstraction {
 	uint visStep;
 	TaskVariable * TV_fNew;
-	ors::Body * obst,*obstV,*future,*target;
+	mlr::Body * obst,*obstV,*future,*target;
 	SimpleTrack track, Kal1, Kal2;
 	bool started_track, bGoTarget;
 	arr Pl,Pr;
@@ -218,12 +218,12 @@ struct RHV:public TaskAbstraction {
 	virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
 	virtual void initTaskVariables(ControllerModule *ctrl);
 	void init(RobotProcessGroup *robot);
-	ors::Vector CameraLocation(const arr & p);
+	mlr::Vector CameraLocation(const arr & p);
 	ReceedingHorizon recho;
 };
 
 //from camera parameters to camera center, cf. Zisserman
-ors::Vector RHV::CameraLocation(const arr & p){
+mlr::Vector RHV::CameraLocation(const arr & p){
 	double X,Y,Z,T;
 	arr a(3,3);
 
@@ -245,7 +245,7 @@ ors::Vector RHV::CameraLocation(const arr & p){
 		else
 			a(i,j)= p(i,j);
 	Z = determinant(a);
-	ors::Vector ans(X/T,Y/T,Z/T);
+	mlr::Vector ans(X/T,Y/T,Z/T);
 	return ans;
 }
 
@@ -264,15 +264,15 @@ void RHV::init(RobotProcessGroup *robot){
 	robot->gui.gl->camera.focus(0., -0.5, 1.);
 
 	//find camera location
-	ors::Body * b = new ors::Body(robot->gui.ors->bodies);
-	ors::Shape * s=new ors::Shape(robot->gui.ors->shapes,b);
+	mlr::Body * b = new mlr::Body(robot->gui.ors->bodies);
+	mlr::Shape * s=new mlr::Shape(robot->gui.ors->shapes,b);
 	s->type=1;
 	s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
 	s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
 	b->X.p = CameraLocation(Pl);
 
-	ors::Body * br = new ors::Body(robot->gui.ors->bodies);
-	ors::Shape * sr=new ors::Shape(robot->gui.ors->shapes,br);
+	mlr::Body * br = new mlr::Body(robot->gui.ors->bodies);
+	mlr::Shape * sr=new mlr::Shape(robot->gui.ors->shapes,br);
 	sr->type=1;
 	sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
 	sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -281,10 +281,10 @@ void RHV::init(RobotProcessGroup *robot){
 	arr Rot;
 	Rot <<FILE("RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
 	Rot = Rot*-1.0;//hack to get positive trace and determinant 1
-	ors::Quaternion q;
+	mlr::Quaternion q;
 	q.setMatrix(Rot.p);
 	cout <<"Rot = " <<Rot <<"Q=" <<q <<endl;
-	ors::Vector z; ors::Quaternion q2;
+	mlr::Vector z; mlr::Quaternion q2;
 	q.getZ(z);q2.setRad(PI,z);
 	q = q2*q;
 	/*robot->gui.gl->camera.X->r = q;
@@ -299,7 +299,7 @@ void RHV::init(RobotProcessGroup *robot){
 }
 
 void RHV::initTaskVariables(ControllerModule *ctrl){
-	ors::KinematicWorld &ors=ctrl->ors;
+	mlr::KinematicWorld &ors=ctrl->ors;
 	TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
 	TV_fNew->targetType=directTT;
 	TVall.append(TV_fNew);
@@ -317,8 +317,8 @@ void RHV::findObstacle(RobotProcessGroup *robot){
 			vision1(i) = 	robot->evis.hsvCenters(i);
 			vision2(i) = 	robot->evis.hsvCenters(i+4);
 		}
-		arr val1a =   Find3dPoint(Pl,Pr,vision1);ors::Vector val1(val1a(0),val1a(1),val1a(2));
-		arr val2a =   Find3dPoint(Pl,Pr,vision2);ors::Vector val2(val2a(0),val2a(1),val2a(2));
+		arr val1a =   Find3dPoint(Pl,Pr,vision1);mlr::Vector val1(val1a(0),val1a(1),val1a(2));
+		arr val2a =   Find3dPoint(Pl,Pr,vision2);mlr::Vector val2(val2a(0),val2a(1),val2a(2));
 
 		//track.addSample(val1,time);
 		Kal1.addSample(vision1,Pl,Pr,time);
@@ -329,11 +329,11 @@ void RHV::findObstacle(RobotProcessGroup *robot){
 		pos_file << val1 << " " << val2 << " " << Kal1.v << " " << Kal2.v << " " << vision1 << " " << vision2 << endl;
 		//pos_file << val1 << " " << Kal1.p << " " << track.v << " " << Kal1.v << endl;
 
-		ors::Vector oriVal = val2-val1;oriVal = oriVal/oriVal.length();
-		ors::Vector v = val2 + oriVal*0.2;//green marker 0.2 from center
+		mlr::Vector oriVal = val2-val1;oriVal = oriVal/oriVal.length();
+		mlr::Vector v = val2 + oriVal*0.2;//green marker 0.2 from center
 		obst->X.p =  v;
-		ors::Frame f;
-		f.r.setDiff(ors::Vector(0,0,1),oriVal);
+		mlr::Frame f;
+		f.r.setDiff(mlr::Vector(0,0,1),oriVal);
 		obst->X.r = f.r;
 		obstV->X =  obst->X;//is there a better way = 2 ors stucts for vision and collision...
 		future->X = obst->X;
@@ -408,7 +408,7 @@ int main(int argc,char** argv){
 
 	arr atarget; mlr::getParameter(atarget,"target");
 	demo.target = robot.gui.ors->getBodyByName("target");
-	demo.target->X.p =  ors::Vector(atarget(0),atarget(1),atarget(2));
+	demo.target->X.p =  mlr::Vector(atarget(0),atarget(1),atarget(2));
 	robot.ctrl.ors.getBodyByName("target")->X.p = demo.target->X.p ;//planenr thread uses this actually, not GL body !!!
 
 	demo.recho.threadOpen();

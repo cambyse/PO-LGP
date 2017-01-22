@@ -1,7 +1,7 @@
 #ifndef ROS_PRIVATE_H
 #define ROS_PRIVATE_H
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 
@@ -10,7 +10,7 @@ private:
   tf::TransformBroadcaster tf_sender;
 
 public:
-  void publish_bodies(const ros::Time& time, const ors::KinematicWorld& w);
+  void publish_bodies(const ros::Time& time, const mlr::KinematicWorld& w);
 };
 
 class MarkerSender {
@@ -22,7 +22,7 @@ private:
 public:
   MarkerSender();
   virtual ~MarkerSender();
-  void publish_bodies(const ros::Time& time, const ors::KinematicWorld& w);
+  void publish_bodies(const ros::Time& time, const mlr::KinematicWorld& w);
 };
 
 #endif // ROS_PRIVATE_H

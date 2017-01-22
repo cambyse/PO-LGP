@@ -1,7 +1,7 @@
 #ifndef MLR_robotActionInterface_h
 #define MLR_robotActionInterface_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "perceptionModule.h"
 #include "motionPlannerModule.h"
 
@@ -28,7 +28,7 @@ struct RobotActionInterface {
   void homing();
   void reach(const char* shapeName, const arr& posGoal, double maxVel=.1);
   void reachAndAlign(const char* shapeName, const arr& posGoal, const arr& vecGoal, double maxVel=.1);
-  void setMesh(const char* shapeName, const ors::Mesh& mesh);
+  void setMesh(const char* shapeName, const mlr::Mesh& mesh);
   
   // -- planned motions
   void perceiveObjects(PerceptionModule perc);

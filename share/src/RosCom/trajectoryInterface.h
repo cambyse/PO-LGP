@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Control/ctrlMsg.h>
@@ -11,8 +11,8 @@
 struct TrajectoryInterface {
   struct sTrajectoryInterface *S;
   arr q,qdot;
-  ors::KinematicWorld *world_robot;
-  ors::KinematicWorld *world_plan;
+  mlr::KinematicWorld *world_robot;
+  mlr::KinematicWorld *world_plan;
   bool useRos, fixBase,fixTorso, useMarker;
 
   CtrlMsg refs;
@@ -22,7 +22,7 @@ struct TrajectoryInterface {
   arr logXdes,logXref,logXplan,logX,logFL,logFR,logT,logU;
   arrA logM;
 
-  TrajectoryInterface(ors::KinematicWorld &world_plan_, ors::KinematicWorld& world_robot_);
+  TrajectoryInterface(mlr::KinematicWorld &world_plan_, mlr::KinematicWorld& world_robot_);
   ~TrajectoryInterface(){ threadCloseModules(); }
 
   /// execute trajectory X in T seconds

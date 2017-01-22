@@ -3,15 +3,15 @@
 #include <actionlib/client/simple_action_client.h>
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Ors/roboticsCourse.h>
-#include <Ors/ors_swift.h>
+#include <Kin/roboticsCourse.h>
+#include <Kin/kin_swift.h>
 #include <Gui/opengl.h>
 
 
 typedef actionlib::SimpleActionClient< pr2_controllers_msgs::JointTrajectoryAction > TrajClient;
 
 struct sSimulator {
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   OpenGL gl;
   SwiftInterface swift;
   double margin;
@@ -152,7 +152,7 @@ void circle(){
   //goal.trajectory.joint_names.push_back("r_shoulder_pan_joint");
 
   S.watch();
-  ors::KinematicWorld& G=S.s->G;
+  mlr::KinematicWorld& G=S.s->G;
   for(uint i=0;i<G.joints.N;i++){
        goal.trajectory.joint_names.push_back(G.joints(i)->name.p);
        cout << G.joints(i)->name <<endl;

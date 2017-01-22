@@ -37,7 +37,7 @@ GraspISFTask::GraspISFTask(){
 }
 
 double
-GraspISFTask::phiAtFrame(ors::Transformation& X, arr &grad,double *sig){
+GraspISFTask::phiAtFrame(mlr::Transformation& X, arr &grad,double *sig){
   arr x;
   double _sig;
   x.setCarray(X.pos.p,3);
@@ -92,7 +92,7 @@ GraspISFTask::initTaskVariables(ControllerProcess *ctrl){
   // palm position
   TV_palm = new DefaultTaskVariable();
   ((DefaultTaskVariable*)TV_palm)->set("palm pos",ctrl->ors, posTVT,
-                                       palm->body->index,palm->rel, -1, Transformation_Id,ARR());
+                                       palm->body->index,palm->rel, -1, Transformation_Id,arr());
   TV_palm->y_prec = 50;
   TV_palm->setGains(.1,.0);
   TVs_all.append(TV_palm);

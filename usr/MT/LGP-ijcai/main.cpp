@@ -1,6 +1,6 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 #include <LGP/LGP.h>
@@ -21,7 +21,7 @@ void ijcaiExperiment(){
 
     ManipulationTree_Node *root = new ManipulationTree_Node(towers);
 
-    ors::KinematicWorld world_display;
+    mlr::KinematicWorld world_display;
     double MCTS_time=0., lev1_time=0., lev2_time=0.;
 
     uint repeat;
@@ -65,7 +65,7 @@ void ijcaiExperiment(){
 //===========================================================================
 
 void newMethod(){
-  ors::KinematicWorld display;
+  mlr::KinematicWorld display;
 
   TowerProblem_new towers; //generates a randomize towers problem
 

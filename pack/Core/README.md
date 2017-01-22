@@ -1,4 +1,6 @@
-# The Core package of the MLR code base
+# Core package of the Machine Learning & Robotics code base
+
+(Linear Algebra, Array, Graph, Thread)
 
 This code is a slice of the full MLR code base, containing
 optimization methods. This is also the reason for the unusual

@@ -1,25 +1,25 @@
 #include <Motion/taskMaps.h>
 #include <Motion/motion.h>
 #include <Motion/phase_optimization.h>
-#include <Optim/opt-constrained.h>
+#include <Optim/lagrangian.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 void TEST(PhaseOptimization){
   /// create reference motion
-  ors::KinematicWorld world("test.ors");
+  mlr::KinematicWorld world("test.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MP(world,false);
   MP.T = 100;
   MP.tau = 0.01;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target = world.getBodyByName("target");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target = world.getBodyByName("target");
   Task *t;
   t = MP.addTask("tra", new TaskMap_Transition(world));
   t->map.order=1;
-  t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
+  t->setCostSpecs(0, MP.T, {0.}, 1e-2);
   t =MP.addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
   t->setCostSpecs(MP.T-3,MP.T,conv_vec2arr(target->X.pos),1e2);
   MotionProblemFunction MPF(MP);

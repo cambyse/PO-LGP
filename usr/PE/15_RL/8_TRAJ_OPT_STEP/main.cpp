@@ -3,7 +3,7 @@
 #include <Algo/spline.h>
 #include <Optim/optimization.h>
 #include <Motion/motion.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/taskMaps.h>
 #include "../src/plotUtil.h"
 
@@ -11,16 +11,16 @@ int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
   /// create reference motion
-  ors::KinematicWorld world("test.ors");
+  mlr::KinematicWorld world("test.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
   MotionProblem MPref(world,false);
   MPref.T = 50;
   MPref.tau = 0.01;
-  ors::Shape *grasp = world.getShapeByName("endeff");
-  ors::Body *target = world.getBodyByName("target");
-  ors::Body *target2 = world.getBodyByName("target2");
+  mlr::Shape *grasp = world.getShapeByName("endeff");
+  mlr::Body *target = world.getBodyByName("target");
+  mlr::Body *target2 = world.getBodyByName("target2");
   Task *t;
   t = MPref.addTask("tra", new TransitionTaskMap(world));
   t->map.order=1;
@@ -77,7 +77,7 @@ int main(int argc,char **argv){
   //  cout << KOMF(NoArr,NoArr,X) << endl;
 
 //  arr phi, J;
-//  TermTypeA tt;
+//  ObjectiveTypeA tt;
 //  ConstrainedProblemMix v = Convert(MPF);
 
 //  for(uint l=0;l<100; l++){
@@ -91,7 +91,7 @@ int main(int argc,char **argv){
 //  }
 
   /*
-  UnconstrainedProblemMix UCP(KOMF,ConstrainedMethodType::augmentedLag);
+  LagrangianProblemMix UCP(KOMF,ConstrainedMethodType::augmentedLag);
 
   cout << X << endl;
   arr a = newton.x;
@@ -106,7 +106,7 @@ int main(int argc,char **argv){
     double alpha = 1e-7;
     X = X - alpha*repmat(L,X.d0,X.d1);
   }
-  //  UnconstrainedProblemMix KOMF = Convert(MPF);
+  //  LagrangianProblemMix KOMF = Convert(MPF);
   //  KOMF(X);
   //  optConstrainedMix(X, NoArr, Convert(MPF), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 

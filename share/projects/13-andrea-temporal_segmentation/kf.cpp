@@ -306,9 +306,9 @@ arr KFLogitReg::sigma(G4FeatSeq &seq) {
   uint thinning = *seq.params.get<uint>("thinning");
 
   for(uint f_thin = 0; f_thin < seq.nframes_thin; f_thin++)
-    sigma.refRange(f_thin * thinning, (f_thin + 1) * thinning - 1)() = mlr::sigmoid(scalarProduct(beta, seq.data[f_thin]));
+    sigma({f_thin * thinning, (f_thin + 1) * thinning - 1})() = mlr::sigmoid(scalarProduct(beta, seq.data[f_thin]));
   if(seq.nframes_thin * thinning < seq.nframes)
-    sigma.refRange(seq.nframes_thin * thinning + 1, -1)() = sigma_thin.last();
+    sigma({seq.nframes_thin * thinning + 1, -1})() = sigma_thin.last();
 
   return sigma;
 }

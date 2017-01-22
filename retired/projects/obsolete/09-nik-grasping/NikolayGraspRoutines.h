@@ -110,7 +110,7 @@ void SetRelTarget(OrsSocImplementation & soci){
   
 }
 
-void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
+void InitSOC(OrsSocImplementation & soci, mlr::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
   uint T=300;
   arr W;
   W <<"[.1 .1 .2 .2 1 1 5    1 1 1 1 1 1 1 1 1]";
@@ -132,7 +132,7 @@ void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterf
   
   CV_x    = new ControlVariable("endeffector",ors, posCVT,"m9","<t(0 0 -.23)>",0,0,0);
   CV_rot  = new ControlVariable("endeffector rotation",ors, rotCVT,"m9",0,0,0,0);
-  CV_col  = new ControlVariable("collision", ors, collCVT,0,0,0,0,ARR(.03)); //MARGIN, perhaps .05?
+  CV_col  = new ControlVariable("collision", ors, collCVT,0,0,0,0,{.03}); //MARGIN, perhaps .05?
   CV_lim  = new ControlVariable("limits", ors, qLimitsCVT,0,0,0,0,limits);
   CV_q    = new ControlVariable("qlinear", ors, qLinearCVT,0,0,0,0,I);
   //CV_skin = new ControlVariable("skin", ors, skinCVT,0,0,0,0,skinIdx);
@@ -197,15 +197,15 @@ void InitSOC(OrsSocImplementation & soci, ors::KinematicWorld & ors, SwiftInterf
   //CV_lim->active=false; 
 }
 
-void PlanGraspM( ors::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
+void PlanGraspM( mlr::KinematicWorld & ors, SwiftInterface & swift, OpenGL & gl){
   uint nTry=mlr::getParameter<uint>("nTry");
   uint nStartTry=mlr::getParameter<uint>("nStartTry");
   double eps=mlr::getParameter<double>("reachPlanEps");
   double rate=mlr::getParameter<double>("reachPlanRate");
   uint K=mlr::getParameter<uint>("reachPlanK");
   ofstream f1(String("graspcost.txt") + nShape);
-  ors::Body * target =  ors.getName("target");
-  ors::Vector orig = target->X.p;
+  mlr::Body * target =  ors.getName("target");
+  mlr::Vector orig = target->X.p;
   arr q; ors.getJointState(q);
   for(uint i = nStartTry; i < nTry; i++){//different trials
     cout << "starting trial " << i << endl;

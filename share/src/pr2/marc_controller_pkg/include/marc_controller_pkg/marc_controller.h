@@ -4,7 +4,7 @@
 #include <pr2_mechanism_model/tree.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <marc_controller_pkg/JointState.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 namespace marc_controller_ns{
 
@@ -12,9 +12,9 @@ class TreeControllerClass: public pr2_controller_interface::Controller
 {
 private:
   Mutex mutex; //callbacks are not thread safe!!!!!!!!!!!!!
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
 
-  // Ors related variables
+  // Kin related variables
   arr u, Kd_base, Kp_base;
   arr q, qd;
   arr q_ref, qdot_ref;
@@ -32,7 +32,7 @@ private:
 
   //matching joint indices
   mlr::Array<pr2_mechanism_model::JointState*> ROS_joints;
-  ors::Joint *j_worldTranslationRotation;
+  mlr::Joint *j_worldTranslationRotation;
 
   //subscriber and publishers
   ros::Publisher jointState_publisher;

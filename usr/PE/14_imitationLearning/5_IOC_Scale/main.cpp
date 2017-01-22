@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
@@ -10,7 +10,7 @@
 #include <future>
 #include <GL/glu.h>
 #include <Gui/opengl.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space
@@ -267,7 +267,7 @@ void simpleMotion(){
   mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   MotionProblem MP(world,true);
@@ -276,9 +276,9 @@ void simpleMotion(){
   arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("goal1")->X.pos);
   arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("goal2")->X.pos);
   TaskCost *c;
-  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e4);
-  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(120,120,refGoal2,1e3);
   c = MP.addTask("collisionConstraints", new PairCollisionConstraint(MP.world,"endeff","table",0.1));
   c->setCostSpecs(0, MP.T, {0.}, 1.);
@@ -299,7 +299,7 @@ void simpleMotion(){
 
 
   // create MP for learning
-  ors::KinematicWorld world2("scene");
+  mlr::KinematicWorld world2("scene");
   world2.getJointState(q, qdot);
   MotionProblem MP2(world2,true);
   MP2.loadTransitionParameters();
@@ -309,13 +309,13 @@ void simpleMotion(){
   arr idx = linspace(0,T,10); idx.reshapeFlat();
   cout <<idx << endl;
   for (uint i =1;i<idx.d0;i++) {
-    c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+    c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
     c1->setCostSpecs(idx(i),idx(i),refGoal1,1.);
   }
 
   TaskCost *c2;
   for (uint i =1;i<idx.d0;i++) {
-    c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+    c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
     c2->setCostSpecs(idx(i),idx(i),refGoal2,1.);
   }
 

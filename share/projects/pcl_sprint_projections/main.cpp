@@ -4,7 +4,7 @@
 #include "../pcl_sprint_module/methods.h"
 
 #include "dataStructures.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 struct MySystem{
@@ -63,7 +63,7 @@ void TEST(Projections){
   gl.camera = kinectCam;
   gl.add(glStandardScene, NULL);
   primitives.G.init("model.kvg");
-  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
+  mlr::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();
@@ -76,7 +76,7 @@ void TEST(Projections){
     arr gamepadState = S.gamepadState.get();
     if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
     if(moduleShutdown().getValue()>0) break;
-    S.gamepadState.var->waitForNextRevision();
+    S.gamepadState.data->waitForNextRevision();
 
     // joint state
     arr q    = S.ctrl_obs.get()->q;

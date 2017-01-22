@@ -3,22 +3,22 @@
  * was modified.
  */
 
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 
-void addRandomObject(ors::KinematicWorld &ors) {
-  ors::Body *b = new ors::Body(ors);
+void addRandomObject(mlr::KinematicWorld &ors) {
+  mlr::Body *b = new mlr::Body(ors);
   b->X.setRandom();
   b->X.pos.z += 1.;
 
-  ors::Shape *s = new ors::Shape(ors, *b);
-  s->type = ors::sphereST;
+  mlr::Shape *s = new mlr::Shape(ors, *b);
+  s->type = mlr::ST_sphere;
   s->size[0] = .1; s->size[1] = .1; s->size[2] = .1; s->size[3] = .1;
 }
 
 
 void TEST(OrsPhysx) {
-  ors::KinematicWorld graph;
+  mlr::KinematicWorld graph;
   addRandomObject(graph);
 
   OpenGL glPh("PhysX");

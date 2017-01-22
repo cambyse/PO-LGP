@@ -1,8 +1,8 @@
-#include <Ors/ors.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kin.h>
+#include <Kin/kinViewer.h>
 #include <Gui/opengl.h>
 #include <Gui/graphview.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 #include <LGP/LGP.h>
@@ -11,7 +11,7 @@
 //===========================================================================
 
 void LGPplayer(){
-  ors::KinematicWorld kin("LGP-coop-kin.g");
+  mlr::KinematicWorld kin("LGP-coop-kin.g");
   FOL_World fol(FILE("LGP-coop-fol.g"));
   makeConvexHulls(kin.shapes);
 

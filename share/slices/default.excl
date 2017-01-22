@@ -12,7 +12,6 @@ MT.log
 *_doc/*
 html
 Makefile.dep
-Makefile.gof
 retired
 obsolete
 
@@ -42,6 +41,5 @@ m494.chr
 
 CMake*
 *.cmake
-Makefile
 
 .lastMake

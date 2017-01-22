@@ -125,7 +125,7 @@ int extractMarker(arr& point, pcl::PointCloud<PointT>::Ptr &marked, pcl::PointCl
   marked = cloud_cluster;
 
 
-  arr mean = ARR(0.,0.,0.);
+  arr mean = {0.,0.,0.};
   for (int i = 0; i < marked->size(); ++i) {
     mean += ARR((*marked)[i].x, (*marked)[i].y, (*marked)[i].z);
   }
@@ -185,7 +185,7 @@ int extractMarker(arr& point, pcl::PointCloud<PointT>::Ptr &marked, pcl::PointCl
   //cloud_cluster->is_dense = true;
   //marked = cloud_cluster;
 
-  //arr mean = ARR(0.,0.,0.);
+  //arr mean = {0.,0.,0.};
   //for (int i = 0; i < marked->size(); ++i) {
     //mean += ARR((*marked)[i].x, (*marked)[i].y, (*marked)[i].z);
   //}
@@ -339,9 +339,9 @@ void extractMode() {
   //viewer->addPointCloud(cloud, "marked");
   viewer->addPointCloud(cloud, "cloud");
   viewer->addSphere(PointT(), 0.02, "sphere");
-  arr last_saved_ors_point = ARR(0., 0., 0.);
-  arr last_saved_kinect_point = ARR(0., 0., 0.);
-  arr old_point = ARR(0., 0., 0.);
+  arr last_saved_ors_point = {0., 0., 0.};
+  arr last_saved_kinect_point = {0., 0., 0.};
+  arr old_point = {0., 0., 0.};
   while(!viewer->wasStopped() && !newFrame && !selectionFinished){
     cloud = 
       kinectData3d.get_point_cloud(NULL)->makeShared(); // TODO: perform copy in getter method!
@@ -362,7 +362,7 @@ void extractMode() {
 
   //viewer->addPointCloud(cloud, "cloud");
   //viewer->addPointCloud(cloud, "marked");
-  //arr old_ors = ARR(0., 0., 0.);
+  //arr old_ors = {0., 0., 0.};
   //while(!viewer->wasStopped() && !newFrame && !selectionFinished){
     //cloud = 
       //kinectData3d.get_point_cloud(NULL)->makeShared(); // TODO: perform copy in getter method!
@@ -421,7 +421,7 @@ void extractMode() {
         viewer->addSphere(*filteredObjects.objects(0)->pcl_object, "sphere");
 
         geometricState.writeAccess(NULL);
-        ors::Shape *ball = geometricState.ors.getShapeByName("target1");
+        mlr::Shape *ball = geometricState.ors.getShapeByName("target1");
         ball->X.pos.set(array_pos.p);
         ball->rel.setDifference(ball->body->X, ball->X);
         geometricState.deAccess(NULL);
@@ -463,9 +463,9 @@ void extractMode() {
     ////shape << finger + 1;
     ////std::cout << shape  << std::endl;
     //double* orsPos = geometricState.ors.getShapeByName("marker")->X.pos.p;
-    ////ors::Vector orsPos = geometricState.ors.getBodyByName("m9")->X.pos;
+    ////mlr::Vector orsPos = geometricState.ors.getBodyByName("m9")->X.pos;
     ////std::cout << orsPos << std::endl;
-    ////ors::Shape *s = geometricState.ors.getShapeByName("marker");
+    ////mlr::Shape *s = geometricState.ors.getShapeByName("marker");
     ////geometricState.ors.kinematicsPos(orsPt,s->body->index,&s->rel.pos);
     //geometricState.deAccess(NULL);
     ////std::cout << *orsPos << *(orsPos+1) << *(orsPos+2);

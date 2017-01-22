@@ -49,8 +49,8 @@ struct sOpenGL: QGLWidget {
   Q_OBJECT
 public:
   OpenGL *gl;
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
+  mlr::Vector downVec,downPos,downFoc;
+  mlr::Quaternion downRot;
   bool quitLoopOnTimer;
   
   sOpenGL(OpenGL *_gl,const char* title,int w,int h,int posx,int posy);

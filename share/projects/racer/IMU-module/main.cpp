@@ -22,7 +22,7 @@ void TEST(IMU){
 
 
   for(;;){
-    S.stateEstimate.var->waitForNextRevision();
+    S.stateEstimate.data->waitForNextRevision();
     arr x = S.stateEstimate.get();
 //    arr enc = S.encoderData.get();
     cout <<"\r state = " <<x <<std::flush;
@@ -93,7 +93,7 @@ void TEST(Balance){
   double motor_vel=0.;
 
   for(int i = 0;; ++i){
-    S.stateEstimate.var->waitForNextRevision();
+    S.stateEstimate.data->waitForNextRevision();
     arr x = S.stateEstimate.get();
     arr enc = S.encoderData.get();
 

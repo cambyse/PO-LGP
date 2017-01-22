@@ -1,13 +1,13 @@
 #include <Core/util.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <Algo/MLcourse.h>
 
 // =================================================================================================
 
 void printJointIndices(){
-  ors::KinematicWorld W("rawbaxter.ors");
-  for(ors::Joint *j:W.joints){
+  mlr::KinematicWorld W("rawbaxter.ors");
+  for(mlr::Joint *j:W.joints){
     cout <<j->qIndex <<' ' <<j->qDim() <<' ' <<j->name <<endl;
   }
 }
@@ -19,7 +19,7 @@ void agumentDataWithF(mlr::String filename){
   uint n=D.d0;
   CHECK_EQ(D.d1, 2*17,"");
 
-  ors::KinematicWorld W("rawbaxter.ors");
+  mlr::KinematicWorld W("rawbaxter.ors");
 
   filename <<"_Faugmented";
   ofstream fil(filename);
@@ -28,8 +28,8 @@ void agumentDataWithF(mlr::String filename){
   for(uint i=0;i<n;i++){
     if(!(i%10)) cout <<i <<endl;
     const arr& Di = D[i];
-    arr q = Di.refRange(0,16);
-    arr u = Di.refRange(17,-1);
+    arr q = Di({0,16});
+    arr u = Di({17,-1});
     W.setJointState(q);
     W.gl().update();
     arr M,F;

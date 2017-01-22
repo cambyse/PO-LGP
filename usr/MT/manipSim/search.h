@@ -1,4 +1,4 @@
 #include <Core/graph.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 void runMonteCarlo(Graph& symbols);

@@ -28,7 +28,7 @@
 
 //===========================================================================
 #include "soc.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 //===========================================================================
 namespace soc {
@@ -38,7 +38,7 @@ namespace soc {
  * @{
  */
 struct SocSystem_Ors: public virtual SocSystemAbstraction {
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   SwiftInterface *swift;
   mlr::Array<TaskVariable*> vars;
   struct sSocSystem_Ors *s;
@@ -48,7 +48,7 @@ struct SocSystem_Ors: public virtual SocSystemAbstraction {
   SocSystem_Ors* newClone(bool deep) const;
 
   /// @name initialization methods
-  void initBasics(ors::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
+  void initBasics(mlr::KinematicWorld *_ors, SwiftInterface *_swift, OpenGL *_gl,
                   uint trajectory_steps, double trajectory_time, bool _dynamic, arr *W);
   void setTimeInterval(double trajectory_time, uint trajectory_steps);
   void setTaskVariables(const TaskVariableList& CVlist);

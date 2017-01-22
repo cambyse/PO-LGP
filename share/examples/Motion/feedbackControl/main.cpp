@@ -1,10 +1,10 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Control/taskController.h>
 
 // ============================================================================
 // helper function to execute the motion problem
 
-void run(TaskController& MP, ors::KinematicWorld& world) {
+void run(TaskController& MP, mlr::KinematicWorld& world) {
   arr q, qdot;
   world.getJointState(q, qdot);
 
@@ -25,7 +25,7 @@ void run(TaskController& MP, ors::KinematicWorld& world) {
 // ============================================================================
 
 void test_reach() {
-  ors::KinematicWorld world("man.ors");
+  mlr::KinematicWorld world("man.ors");
   TaskController MP(world, false);
 
   MP.addPDTask("endeff1", .2, .8, posTMT, "handR", NoVector, "rightTarget");
@@ -37,14 +37,14 @@ void test_reach() {
 // ============================================================================
 
 void test_quatTMT() {
-  ors::KinematicWorld world("man.ors");
+  mlr::KinematicWorld world("man.ors");
   TaskController MP(world, false);
 
   auto effOrientationL = MP.addPDTask("orientationL", 1., .8, quatTMT, "handL", {0, 0, 0});
-  effOrientationL->y_ref = ARR(1, 0, 0, 0);
+  effOrientationL->y_ref = ARR(1., 0, 0, 0);
 
   auto effOrientationR = MP.addPDTask("orientationR", 1., .8, quatTMT, "handR", {0, 0, 0});
-  effOrientationR->y_ref = ARR(0, 1, 0, 0);
+  effOrientationR->y_ref = ARR(0., 1, 0, 0);
 
   run(MP, world);
 }
@@ -52,7 +52,7 @@ void test_quatTMT() {
 // ============================================================================
 
 void test_qSingleTMT() {
-  ors::KinematicWorld world("man.ors");
+  mlr::KinematicWorld world("man.ors");
   TaskController MP(world, false);
 
   int jointID = world.getJointByBodyNames("waist", "back")->qIndex;
@@ -69,7 +69,7 @@ void test_qSingleTMT() {
 // ============================================================================
 
 void checkAnalytics(){
-  ors::KinematicWorld world("man.ors");
+  mlr::KinematicWorld world("man.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
 

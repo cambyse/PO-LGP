@@ -218,7 +218,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
   ConstrainedProblem v = Convert(MPF);
 
   arr PHI_T, J_T; // total PHI and J
-  TermTypeA tt;
+  ObjectiveTypeA tt;
   v(PHI_T,J_T,tt,xDem);
 //  cout << PHI_T << endl;
   // split up PHI_T and J_T into costs and constraints
@@ -230,12 +230,12 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
     RowShifted *J_T_aux = (RowShifted*)J_T.aux;
 
     uintA f;
-    tt.findValues(f,sumOfSqrTT);
+    tt.findValues(f,OT_sumOfSqr);
     uint xN = f.N;
 
-    tt.findValues(f,ineqTT);
+    tt.findValues(f,OT_ineq);
     uint gN = f.N;
-    tt.findValues(f,eqTT);
+    tt.findValues(f,OT_eq);
     gN = gN + f.N;
 
     uint xC = 0;
@@ -247,13 +247,13 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
 
     for (uint i= 0;i<tt.d0;i++){
       switch (tt(i)) {
-        case sumOfSqrTT:
+        case OT_sumOfSqr:
           JxP[xC] = J_T[i];
           Jx_aux->rowShift(xC) = J_T_aux->rowShift(i);
           PHI.append(PHI_T(i));
           xC++;
           break;
-        case ineqTT:
+        case OT_ineq:
           if (PHI_T(i)>0){
             JgP[gC] = J_T[i];
             Jg_aux->rowShift(gC) = J_T_aux->rowShift(i);
@@ -262,7 +262,7 @@ void Scene::initCosts(uintA &_phi_perm, bool _optConstraintsParam, bool _optNonl
             gC++;
           }
           break;
-        case eqTT:
+        case OT_eq:
           JgP[gC] = J_T[i];
           Jg_aux->rowShift(gC) = J_T_aux->rowShift(i);
           g.append(PHI_T(i));
@@ -428,7 +428,7 @@ IKMO::IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP
   arr counts=zeros(weights.N);
   arr Dpdp;
   for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) { // task costs;
-    if (scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT){
+    if (scenes(0).MP->taskCosts(c)->map.type==OT_sumOfSqr){
       cost_counts.append(0.);
       for (uint t=0;t<=nT;t++) {
         uint dim = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
@@ -449,7 +449,7 @@ IKMO::IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP
 
     // add task cost elements
     for (uint c=0;c<scenes(0).MP->taskCosts.N;c++) {
-      if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && scenes(0).MP->taskCosts(c)->map.type==sumOfSqrTT) {
+      if ( scenes(0).MP->taskCosts(c)->prec.N >t && (scenes(0).MP->taskCosts(c)->prec(t) > 0) && scenes(0).MP->taskCosts(c)->active && scenes(0).MP->taskCosts(c)->map.type==OT_sumOfSqr) {
         uint m;
         m = scenes(0).MP->taskCosts(c)->dim_phi(*scenes(0).world,t);
         double b = (c==0)?0.:sum(cost_counts.subRef(0,c-1));
@@ -584,7 +584,7 @@ void IKMO::setParam(MotionProblem &MP, const arr &param)
   arr paramNorm = costScale*param/length(param);
 
   for (uint c=0;c<MP.taskCosts.N;c++) {
-    if (MP.taskCosts(c)->map.type == sumOfSqrTT) {
+    if (MP.taskCosts(c)->map.type == OT_sumOfSqr) {
       arr w;
       weights(c).compWeights(w,NoArr,NoArr,paramNorm.subRef(c,c+weights(c).numParam - 1),true);
       if (weights(c).type==CostWeight::Block){
@@ -618,7 +618,7 @@ void IKMO::costReport(arr param,arr param0) {
   cout << "\nReference parameter | Learned parameter | Learned parameter (unnormalized) | Initialized parameter" << endl;
   uint c =0;
   for (uint i=0;i<scenes(0).MP->taskCosts.N;i++) {
-    if (scenes(0).MP->taskCosts(i)->map.type==sumOfSqrTT) {
+    if (scenes(0).MP->taskCosts(i)->map.type==OT_sumOfSqr) {
       if (weights(i).numParam>1){
         //        cout << "-- Task " << scenes(0).MP->taskCosts(i)->name << " : " << paramNorm.subRef(c,c+weights(i).numParam-1) << " | \n" << paramRefNorm.subRef(c,c+weights(i).numParam-1) <<  " | \n" << paramRef.subRef(c,c+weights(i).numParam-1) << endl;
       }else {
@@ -647,7 +647,7 @@ void IKMO::costReport(arr param,arr param0) {
   c = 0;
 
   for (uint i=0;i<scenes(0).MP->taskCosts.N;i++) {
-    if (scenes(0).MP->taskCosts(i)->map.type==sumOfSqrTT) {
+    if (scenes(0).MP->taskCosts(i)->map.type==OT_sumOfSqr) {
 
       arr w;
       if (weights(i).type == CostWeight::Block) {

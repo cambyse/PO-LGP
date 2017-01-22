@@ -57,13 +57,13 @@ void testGradDescent(const ScalarFunction& F){
 // that can include penalties, log barriers, and augmented lagrangian terms
 //
 
-// struct UnconstrainedProblem:ScalarFunction{
+// struct LagrangianProblem:ScalarFunction{
 //   VectorFunction &f; // see below for the meaning of the VectorFunction
 //   double muLB;   // log barrier weight
 //   double mu;     // squared penalty weight
 //   arr lambda;    // lagrange multiplier in augmented lagrangian
 
-//   UnconstrainedProblem(VectorFunction &_f):f(_f), muLB(0.), mu(0.) {}
+//   LagrangianProblem(VectorFunction &_f):f(_f), muLB(0.), mu(0.) {}
 
 //   virtual double fs(arr& g, arr& H, const arr& x){
 //     //the VectorFunction F describes the cost function f(x) as well as the constraints g(x)
@@ -126,7 +126,7 @@ void testConstraint(const ConstrainedProblem& f, arr& x_start=NoArr, uint iters=
 
   ConstrainedMethodType method = (ConstrainedMethodType)mlr::getParameter<int>("method");
 
-  UnconstrainedProblem F(f, method);
+  LagrangianProblem F(f, method);
 
   //switch on penalty terms
   switch(method){

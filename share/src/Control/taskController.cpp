@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 #include "taskController.h"
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 
@@ -171,15 +171,15 @@ void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y
   }
 }
 
-void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const ors::KinematicWorld& world){
+void CtrlTask::getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const mlr::KinematicWorld& world){
   //-- get necessary Jacobians
   TaskMap_Default *m = dynamic_cast<TaskMap_Default*>(&map);
   CHECK(m,"this only works for the default position task map");
   CHECK(m->type==posTMT,"this only works for the default positioni task map");
   CHECK(m->i>=0,"this only works for the default position task map");
-  ors::Body *body = world.shapes(m->i)->body;
-  ors::Vector vec = world.shapes(m->i)->rel*m->ivec;
-  ors::Shape* l_ft_sensor = world.getShapeByName("l_ft_sensor");
+  mlr::Body *body = world.shapes(m->i)->body;
+  mlr::Vector vec = world.shapes(m->i)->rel*m->ivec;
+  mlr::Shape* l_ft_sensor = world.getShapeByName("l_ft_sensor");
   arr J_ft, J;
   world.kinematicsPos         (NoArr, J,   body, vec);
   world.kinematicsPos_wrtFrame(NoArr, J_ft,body, vec, l_ft_sensor);
@@ -250,7 +250,7 @@ void ConstraintForceTask::updateConstraintControl(const arr& _g, const double& l
 
 //===========================================================================
 
-TaskController::TaskController(ors::KinematicWorld& _world, bool _useSwift)
+TaskController::TaskController(mlr::KinematicWorld& _world, bool _useSwift)
   : world(_world), qNullCostRef(NULL, NULL), useSwift(_useSwift) {
   computeMeshNormals(world.shapes);
   if(useSwift) {
@@ -270,8 +270,8 @@ CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double d
 CtrlTask* TaskController::addPDTask(const char* name,
                                          double decayTime, double dampingRatio,
                                          TaskMap_DefaultType type,
-                                         const char* iShapeName, const ors::Vector& ivec,
-                                         const char* jShapeName, const ors::Vector& jvec){
+                                         const char* iShapeName, const mlr::Vector& ivec,
+                                         const char* jShapeName, const mlr::Vector& jvec){
   return tasks.append(new CtrlTask(name, new TaskMap_Default(type, world, iShapeName, ivec, jShapeName, jvec),
                                    decayTime, dampingRatio, 1., 1.));
 }
@@ -462,9 +462,9 @@ void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, doubl
   for(CtrlTask* law : this->tasks) if(law->active && law->f_ref.N){
     nForceTasks++;
     TaskMap_Default& map = dynamic_cast<TaskMap_Default&>(law->map);
-    ors::Body* body = world.shapes(map.i)->body;
-    ors::Vector vec = world.shapes(map.i)->rel.pos;
-    ors::Shape* lFtSensor = world.getShapeByName("r_ft_sensor");
+    mlr::Body* body = world.shapes(map.i)->body;
+    mlr::Vector vec = world.shapes(map.i)->rel.pos;
+    mlr::Shape* lFtSensor = world.getShapeByName("r_ft_sensor");
     arr y, J, J_ft;
     law->map.phi(y, J, world);
     world.kinematicsPos_wrtFrame(NoArr, J_ft, body, vec, lFtSensor);

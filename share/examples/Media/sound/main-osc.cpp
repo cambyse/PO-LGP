@@ -36,15 +36,15 @@ struct SineSound{
     double omega = MLR_2PI*freq;
     double Kp = omega*omega + xi*xi;
     double Kd = 2.*xi;
-    x.append( ARR(amp,0.) );
+    x.append( {amp,0.} );
     arr Abig(A.d0+2,A.d0+2);
     Abig.setZero();
     if(A.N) Abig.setMatrixBlock(A,0,0);
-    Abig.setMatrixBlock( ARR(0.,1.,-Kp,-Kd).reshape(2,2) ,A.d0, A.d0);
+    Abig.setMatrixBlock( {0.,1.,-Kp,-Kd}.reshape(2,2) ,A.d0, A.d0);
     A=Abig;
   }
 
-  void reset(){ x=ARR(1,0); }
+  void reset(){ x=ARR(1.,0); }
   float get(){
     x = rk4(x,A,1./8000);
     double sum=0.;

@@ -13,19 +13,19 @@ def writeShape(link):
 
     elem = link.find("geometry/box")
     if elem is not None:
-        print 'type=0 size=[%s 0]' % elem.attrib['size'],
+        print 'type=ST_box size=[%s 0]' % elem.attrib['size'],
 
     elem = link.find("geometry/sphere")
     if elem is not None:
-        print 'type=1 size=[0 0 0 %s]' % elem.attrib['radius'],
+        print 'type=ST_sphere size=[0 0 0 %s]' % elem.attrib['radius'],
 
     elem = link.find("geometry/cylinder")
     if elem is not None:
-        print 'type=2 size=[0 0 %s %s]' % (elem.attrib['length'], elem.attrib['radius']),
+        print 'type=ST_capsule size=[0 0 %s %s]' % (elem.attrib['length'], elem.attrib['radius']),
 
     elem = link.find("geometry/mesh")
     if elem is not None:
-        print 'type=3 mesh=\'%s\'' % elem.attrib['filename'],
+        print 'type=ST_mesh mesh=\'%s\'' % elem.attrib['filename'],
 
     elem = link.find("material/color")
     if elem is not None:
@@ -79,11 +79,11 @@ for joint in joints:
         # figure out joint type
         att = joint.attrib.get('type')
         if att in ["revolute", "continuous"]:
-            print ' type=0',
+            print ' type=JT_hingeX',
         if att == "prismatic":
-            print ' type=3',
+            print ' type=JT_transX',
         if att == "fixed":
-            print ' type=10',
+            print ' type=JT_rigid',
 
         elem = joint.find("mimic")
         if elem is not None:

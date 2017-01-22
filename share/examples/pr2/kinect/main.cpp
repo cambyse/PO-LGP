@@ -1,9 +1,9 @@
 #include <Control/taskController.h>
 //#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>
@@ -49,7 +49,7 @@ void TEST(Sensors){
   gl.camera.setKinect();
   gl.add(glStandardScene, NULL);
   primitives.G.init("model.kvg");
-  ors::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
+  mlr::Shape *kinShape = primitives.G.getShapeByName("endeffKinect");
   gl.add(glDrawPrimitives, &primitives);
   gl.update();
   gl.lock.writeLock();
@@ -60,19 +60,19 @@ void TEST(Sensors){
 
   tf::TransformListener listener;
 
-  S.kinect_rgb.var->waitForRevisionGreaterThan(10);
+  S.kinect_rgb.data->waitForRevisionGreaterThan(10);
 
   Metronome tic(.05);
 
   for(uint t=0;;t++){
 //    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
     if(moduleShutdown().getValue()>0) break;
-    S.kinect_rgb.var->waitForNextRevision();
+    S.kinect_rgb.data->waitForNextRevision();
 //    tic.waitForTic();
 
     FILE("z.kinect_depth") <<S.kinect_depth.get()();
 
-    ors::Transformation X;
+    mlr::Transformation X;
     double tstamp = S.kinect_depth.get().v->data_time;
     cout <<tstamp <<endl;
     try{

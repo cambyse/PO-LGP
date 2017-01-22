@@ -2,7 +2,7 @@
 
 #include <Core/module.h>
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <RosCom/filterObject.h>
 #include <Control/TaskControllerModule.h>
 
@@ -98,7 +98,7 @@ struct Lockbox:Module{
 //  bool update = true;
   bool usingRos = false;
 
-  ors::KinematicWorld lockbox_world;
+  mlr::KinematicWorld lockbox_world;
 
   CtrlTaskL joint_fixed_tasks;
   CtrlTask* grip_task;

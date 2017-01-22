@@ -31,7 +31,7 @@ struct Filter{
   virtual void updateFilter(const arr& action, const arr& observation) = 0;
 
   /// get the policy input feature given the filter state
-  virtual arr& getFeatures() = 0;
+  virtual arr getFeatures() = 0;
 };
 
 //==============================================================================
@@ -46,7 +46,7 @@ struct Policy{
   /// given parameter theta and input features, sample an action (typically randomized)
   /// if gradLog!=NoArr, gradLog = $\del log P(a|phi)/\del theta$, for all dims of a
   /// return value is log P(a|phi)
-  virtual double sampleAction(arr& action, arr& dLogPAction, const arr& inputFeatures, const arr& theta) = 0;
+  virtual double sampleAction(arr& action, arr& dLogPAction, const arr& inputFeatures, const arr& theta, uint t) = 0;
 };
 
 //==============================================================================

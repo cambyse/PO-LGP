@@ -1,7 +1,0 @@
-BASE = ../../../../share/
-
-GL = 1
-DEPEND = Core Motion Ors Gui Optim Algo
-PTHREAD = 1
-include $(BASE)/build/generic.mk
-

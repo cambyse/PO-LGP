@@ -15,30 +15,34 @@
 
 #include "benchmarks.h"
 #include "motion.h"
+//#include <Optim/kOrderMarkov.h>
+#include <Optim/convert.h>
 
 void setTasks(MotionProblem& MP,
-              ors::Shape &endeff,
-              ors::Shape& target,
+              mlr::Shape &endeff,
+              mlr::Shape& target,
               byte whichAxesToAlign,
               uint iterate,
               int timeSteps,
               double duration);
 
 struct sPR2EndPoseProblem{
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   MotionProblem MP;
+  Convert *CP;
   sPR2EndPoseProblem()
-    :world ("model.kvg"), MP(world){}
+    :world ("model.kvg"), MP(world), CP(NULL){}
 };
 
 PR2EndPoseProblem::PR2EndPoseProblem()
   : s(*(new sPR2EndPoseProblem())){
 
-  for(ors::Shape *sh:s.world.shapes) sh->cont=true;
+  for(mlr::Shape *sh:s.world.shapes) sh->cont=true;
 
   setTasks(s.MP, *s.world.getShapeByName("endeff"), *s.world.getShapeByName("target"), 0, 1, 0, 5.);
 
-  ConstrainedProblem::operator=( conv_KOrderMarkovFunction2ConstrainedProblem(s.MP) );
+  s.CP = new Convert(s.MP.komo_problem);
+  ConstrainedProblem::operator=( *s.CP );//conv_KOrderMarkovFunction2ConstrainedProblem(s.MP.komo_problem) );
 }
 
 arr PR2EndPoseProblem::getInitialization(){

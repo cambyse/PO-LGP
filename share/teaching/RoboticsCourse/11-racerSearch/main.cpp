@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 #include <Motion/motion.h>
-#include <Optim/search.h>
+#include <Optim/blackbox.h>
 #include <Core/util.h>
 
 #include <Hardware/racer/racer.h>

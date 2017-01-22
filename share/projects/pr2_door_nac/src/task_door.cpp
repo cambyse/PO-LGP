@@ -1,5 +1,5 @@
 #include "task_door.h"
-#include <Motion/pr2_heuristics.h>
+
 #include "plotUtil.h"
 #include "traj_factory.h"
 
@@ -21,7 +21,7 @@ void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
 
 }
 
-void DoorTask::updateVisualization(ors::KinematicWorld &world,arr &X) {
+void DoorTask::updateVisualization(mlr::KinematicWorld &world,arr &X) {
   drawLine(world,X,Pdemo1f,"endeffC1",0,0,constraintCP(0));
   drawLine(world,X,Pdemo1c,"endeffC1",2,constraintCP(0),constraintCP(1));
   drawLine(world,X,Pdemo2f,"endeffC2",0,0,constraintCP(0));
@@ -35,7 +35,7 @@ void DoorTask::computeConstraintTime(const arr &F,const arr &X) {
   for (uint t=0;t<F.d0;t++){
     if(fabs(F(t,5))> mlr::getParameter<double>("contact_threshold")) {
 //      constraintTime(t) = 1.;
-      constraintTime.refRange(t-5,t) = 1.;
+      constraintTime({t-5,t}) = 1.;
     }
   }
   constraintCP = ARR(constraintTime.findValue(1.),F.d0); constraintCP.reshapeFlat();
@@ -65,9 +65,9 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
 
   for (uint t=0;t<Xdemo.d0;t++) {
     world->setJointState(Xdemo[t]);
-    ors::Body *handle = world->getBodyByName("handle");
-    ors::Shape *ec1 = world->getShapeByName("endeffC1");
-    ors::Shape *ec2 = world->getShapeByName("endeffC2");
+    mlr::Body *handle = world->getBodyByName("handle");
+    mlr::Shape *ec1 = world->getShapeByName("endeffC1");
+    mlr::Shape *ec2 = world->getShapeByName("endeffC2");
 
     handle->X.pos = (C1demo[t]+C2demo[t])/2.;
     handle->X.rot = ec1->X.rot;
@@ -116,7 +116,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
   t = MP.addTask("tra", new TaskMap_Transition(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
-  ((TaskMap_Transition*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TaskMap_Transition*)&t->map)->H_rate_diag = world->getHmetric();
 
   t =MP.addTask("posC1", new TaskMap_Default(posTMT,*world,"endeffC1"));
   t->setCostSpecs(0,MP.T, C1trans, 1e3);

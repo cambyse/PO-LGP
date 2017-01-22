@@ -19,7 +19,7 @@
 
 #include "execution.h"
 
-void dualExecution(const arr& x, const arr& y, const arr& ori, const arr &dual, ors::KinematicWorld &world, double tau){
+void dualExecution(const arr& x, const arr& y, const arr& ori, const arr &dual, mlr::KinematicWorld &world, double tau){
 #if 0
   std::string end_effector_name("R_HAND");
   std::string stack_name_cart("RightArmCartesianControl");

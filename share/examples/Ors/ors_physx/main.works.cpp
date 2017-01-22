@@ -12,7 +12,7 @@
 //#include <PxMat33Legacy.h> 
 #include <PxSimpleFactory.h>
 
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 
 using namespace std;
@@ -212,14 +212,14 @@ void InitializePhysX() {
     boxes.append(actor);
 }
 
-void addOrs(ors::KinematicWorld& ors){
+void addOrs(mlr::KinematicWorld& ors){
   uint i,j;
-  ors::Body *b;
-  ors::Shape *s;
+  mlr::Body *b;
+  mlr::Shape *s;
   PxMaterial* mMaterial = gPhysicsSDK->createMaterial(0.5,0.5,0.5);
   
-  for_list(ors::Body, b, ors.bodies){
-    for_list(ors::Shape, s, b->shapes){
+  for_list(mlr::Body, b, ors.bodies){
+    for_list(mlr::Shape, s, b->shapes){
       //2) Create cube	 
       PxTransform transform(PxVec3(s->X.pos.x, s->X.pos.y, s->X.pos.z), PxQuat(s->X.rot.p[1], s->X.rot.p[2], s->X.rot.p[3], s->X.rot.p[0]));
       PxBoxGeometry geometry(PxVec3(s->size[0], s->size[1], s->size[2]));
@@ -426,24 +426,24 @@ void OnIdle() {
 
 
 
-void createOrs(ors::KinematicWorld& ors, OpenGL& gl){
+void createOrs(mlr::KinematicWorld& ors, OpenGL& gl){
   ors.clear();
   
   for(uint k=0;k<10;k++){
-    ors::Body *b = new ors::Body(ors);
+    mlr::Body *b = new mlr::Body(ors);
     b->X.setRandom();
     //b->X.pos.z += 1.;
     b->X.pos.y += 1.;
     b->name <<"rndSphere_" <<k;
-    ors::Shape *s = new ors::Shape(ors, b);
-    s->type=(ors::ShapeType)0;
+    mlr::Shape *s = new mlr::Shape(ors, b);
+    s->type=(mlr::ShapeType)0;
     s->size[0]=.1;s->size[1]=.1;s->size[2]=.1;s->size[3]=.1;
   }
   ors.calcShapeFramesFromBodies();
   cout <<ors <<endl;
   
   gl.add(glStandardScene,NULL);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(10.,-15.,8.);
   gl.camera.focus(0,0,1.);
@@ -452,7 +452,7 @@ void createOrs(ors::KinematicWorld& ors, OpenGL& gl){
 
 
 int main(int argc, char** argv) {
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   OpenGL gl;
   createOrs(ors, gl);
   

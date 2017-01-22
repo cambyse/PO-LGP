@@ -54,7 +54,7 @@ void threadedRun() {
   /*
   for(t=0; ; t++){
     if(moduleShutdown().getValue()) break;
-    S.ueye_rgb.var->waitForNextRevision();
+    S.ueye_rgb.data->waitForNextRevision();
     rgbImg = S.ueye_rgb.get();
     if(rgbImg.N>0) {
       gl.background = rgbImg;

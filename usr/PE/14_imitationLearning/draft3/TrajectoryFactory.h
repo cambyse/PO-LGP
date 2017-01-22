@@ -1,7 +1,7 @@
 #ifndef TRAJECTORYFACTORY_H
 #define TRAJECTORYFACTORY_H
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 
 #include "Demonstration.h"

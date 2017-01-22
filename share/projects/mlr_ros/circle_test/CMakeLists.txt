@@ -1,5 +1,0 @@
-if(ROSBUILD)
-    include(.sources.cmake)
-    rosbuild_add_executable(x_circle_test ${SOURCES})
-    target_link_libraries(x_circle_test Core Ors Gui )
-endif(ROSBUILD)

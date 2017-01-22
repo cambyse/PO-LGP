@@ -19,7 +19,7 @@
 #define MLR_perceptionModule_h
 
 #include "vision.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <System/biros.h>
 
 #include "robot_variables.h"
@@ -43,10 +43,10 @@ struct PerceptionModule:public Process {
   void close(){};
 };
 
-void realizeObjectsInOrs(ors::KinematicWorld& ors, const mlr::Array<Object>& objects);
+void realizeObjectsInOrs(mlr::KinematicWorld& ors, const mlr::Array<Object>& objects);
 
-//void copyShapeInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B);
-void copyBodyInfos(ors::KinematicWorld& A, const ors::KinematicWorld& B);
+//void copyShapeInfos(mlr::KinematicWorld& A, const mlr::KinematicWorld& B);
+void copyBodyInfos(mlr::KinematicWorld& A, const mlr::KinematicWorld& B);
 
 #ifdef  MLR_IMPLEMENTATION
 #  include "perceptionModule.cpp"

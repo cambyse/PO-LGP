@@ -20,22 +20,22 @@ TaskMap_AboveBox::TaskMap_AboveBox(int iShape, int jShape)
 }
 
 
-TaskMap_AboveBox::TaskMap_AboveBox(const ors::KinematicWorld& G, const char* iShapeName, const char* jShapeName)
+TaskMap_AboveBox::TaskMap_AboveBox(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName)
   :i(-1), j(-1){
-  ors::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
-  ors::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
+  mlr::Shape *a = iShapeName ? G.getShapeByName(iShapeName):NULL;
+  mlr::Shape *b = jShapeName ? G.getShapeByName(jShapeName):NULL;
   if(a) i=a->index;
   if(b) j=b->index;
 }
 
-void TaskMap_AboveBox::phi(arr& y, arr& J, const ors::KinematicWorld& G, int t){
-  ors::Shape *s1=G.shapes(i);
-  ors::Shape *s2=G.shapes(j);
-  if(s2->type!=ors::ssBoxST){ //switch roles
-    ors::Shape *z=s1;
+void TaskMap_AboveBox::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
+  mlr::Shape *s1=G.shapes(i);
+  mlr::Shape *s2=G.shapes(j);
+  if(s2->type!=mlr::ST_ssBox){ //switch roles
+    mlr::Shape *z=s1;
     s1=s2; s2=z;
   }
-  CHECK(s2->type==ors::ssBoxST,"");//s1 should be the board
+  CHECK(s2->type==mlr::ST_ssBox,"");//s1 should be the board
   arr pos,posJ;
   G.kinematicsRelPos(pos, posJ, s1->body, s1->rel.pos, s2->body, s2->rel.pos);
   arr range(3);

@@ -1,7 +1,0 @@
-BASE = ../../../../share
-
-OBJS = main.o ../src/motion_factory.o
-DEPEND = Core Motion Gui Optim Algo Ors
-PTHREAD = 1
-PHYSX = 1
-include $(BASE)/build/generic.mk

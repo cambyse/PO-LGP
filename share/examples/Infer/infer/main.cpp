@@ -98,13 +98,13 @@ void TEST(Burglary){
   infer::VariableList variables = LIST(bl,eq,al,ma,jo);
 
   infer::Factor
-    p_bl(LIST(bl), ARR( .999, .001)),
-    p_eq(LIST(eq), ARR( .998, .002 )),
-    p_al(LIST(al, bl, eq), ARR(0.999, 0.71, 0.06, 0.05, 0.001, 0.29, 0.94, 0.95)),
-    p_ma(LIST(ma, al), ARR(0.99, 0.3, 0.01, 0.7)),
-    p_jo(LIST(jo, al), ARR(0.95, 0.1, 0.05, 0.9));
+    p_bl(LIST(bl), { .999, .001}),
+    p_eq(LIST(eq), { .998, .002 }),
+    p_al(LIST(al, bl, eq), {0.999, 0.71, 0.06, 0.05, 0.001, 0.29, 0.94, 0.95}),
+    p_ma(LIST(ma, al), {0.99, 0.3, 0.01, 0.7}),
+    p_jo(LIST(jo, al), {0.95, 0.1, 0.05, 0.9});
   
-  infer::Factor evid(LIST(jo), ARR( 0, 1.0 ));
+  infer::Factor evid(LIST(jo), { 0, 1.0 });
   
   p_bl.checkCondNormalization();
   p_eq.checkCondNormalization();
@@ -190,15 +190,15 @@ void createHMM(infer::FactorList& factors, infer::VariableList& states, infer::V
 
   infer::Factor* f;
   // t=0
-  f = new infer::Factor(LIST(*states(0)), ARR(0.5, 0.5));
+  f = new infer::Factor(LIST(*states(0)), {0.5, 0.5});
   factors.append(f);
   // t>0
   for (i=0; i<timesteps-1; i++) {
-    f = new infer::Factor(LIST(*states(i+1), *states(i)), ARR( 0.9, 0.2, 0.1, 0.8 ));
+    f = new infer::Factor(LIST(*states(i+1), *states(i)), { 0.9, 0.2, 0.1, 0.8 });
     factors.append(f);
   }
   for (i=0; i<timesteps; i++) {
-    f = new infer::Factor(LIST(*obs(i), *states(i)), ARR( 0.95, 0.3, 0.05, 0.7 ));
+    f = new infer::Factor(LIST(*obs(i), *states(i)), { 0.95, 0.3, 0.05, 0.7 });
     factors.append(f);
   }
 }
@@ -216,9 +216,9 @@ void testHMMInference(uint T) {
   vars.append(obs);
   
   // Specifying some evidence
-  factors.append(new infer::Factor({states(0)}, ARR(0.0, 1.0)));
-  factors.append(new infer::Factor({states(1)}, ARR(1.0, 0.0)));
-  factors.append(new infer::Factor({states(5)}, ARR(1.0, 0.0)));
+  factors.append(new infer::Factor({states(0)}, {0.0, 1.0}));
+  factors.append(new infer::Factor({states(1)}, {1.0, 0.0}));
+  factors.append(new infer::Factor({states(5)}, {1.0, 0.0}));
 
   arr p1,p2;
 
@@ -251,7 +251,7 @@ void TEST(Loop){
   infer::Variable C(2, "C");
   infer::VariableList vars = LIST(A,B,C);
   
-  arr coupling = ARR(.75, .25, .25, .75);
+  arr coupling = {.75, .25, .25, .75};
   coupling.reshape(2,2);
   //coupling.setText("[ 1 0 ; 0 1]");
   
@@ -260,7 +260,7 @@ void TEST(Loop){
   infer::Factor f_ca(LIST(C,A), coupling);
   infer::FactorList facs = LIST(f_ab, f_bc, f_ca);
   
-  arr p_evid = ARR(.2,.8);
+  arr p_evid = {.2,.8};
   infer::Factor evid(LIST(A), p_evid);
   facs.append(&evid);
   
@@ -308,7 +308,7 @@ void testGridBP2(){
   evid(0,0,0)=.2;
   evid(0,0,1)=.8;
 
-  arr coupling = ARR(.75, .25, .25, .75);
+  arr coupling = {.75, .25, .25, .75};
   coupling.reshape(2,2);
   
   arr post;

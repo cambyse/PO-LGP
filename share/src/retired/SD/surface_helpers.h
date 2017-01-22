@@ -1,19 +1,19 @@
 #ifndef SD_surface_helpers_h
 #define SD_surface_helpers_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <SD/utils.h>
 #include "graspObjects.h"
 
 /* These obbjects are used in the commented out code for debug
 struct dbg_obj_t{ // for visual debugging of points and frames
-  ors::Shape s;
-  ors::Frame f;
+  mlr::Shape s;
+  mlr::Frame f;
 
   void siz(double a,double b,double c,double d){s.size[0]=a;s.size[1]=b;s.size[2]=c;s.size[3]=d;};
   void col(double r,double g,double b){s.color[0]=r;s.color[1]=g;s.color[2]=b;};
   void pos(double *p){f.p.set(p);};
-  void ori(double *z){ ors::Vector z1(0,0,1), z2; z2.set(z); f.r.setDiff(z1,z2);};
+  void ori(double *z){ mlr::Vector z1(0,0,1), z2; z2.set(z); f.r.setDiff(z1,z2);};
 
   void set(double* sz, double *cl, double *p, double *z ){
     memcpy(s.size, sz, 4); memcpy(s.color, cl, 3);
@@ -69,9 +69,9 @@ in show()
  * http://www.softsurfer.com/Archive/algorithm_0105/algorithm_0105.htm#intersect_RayTriangle()
  */
 int
-intersect3d_tri_line(ors::Vector &intersec,
-    const ors::Vector &ta, const ors::Vector &tb, const ors::Vector &tc,
-    const ors::Vector &lp, const ors::Vector &lv);
+intersect3d_tri_line(mlr::Vector &intersec,
+    const mlr::Vector &ta, const mlr::Vector &tb, const mlr::Vector &tc,
+    const mlr::Vector &lp, const mlr::Vector &lv);
 
 /** return true if line intersects mesh (but not if l ine lies in a face);
  * false otherwise
@@ -79,8 +79,8 @@ intersect3d_tri_line(ors::Vector &intersec,
  * return al points at which the line intersects with the mesh.
  */
 bool
-intersect3d_mesh_line(arr &sec, uintA &tri, const ors::Mesh &mesh,
-    const ors::Vector &lp, const ors::Vector &lv);
+intersect3d_mesh_line(arr &sec, uintA &tri, const mlr::Mesh &mesh,
+    const mlr::Vector &lp, const mlr::Vector &lv);
 
 /* ******  similarity of  surfaces */
 
@@ -90,7 +90,7 @@ intersect3d_mesh_line(arr &sec, uintA &tri, const ors::Mesh &mesh,
  * intersections with real and estimated surface. Average the distance by N.
  * Normalize by the volume of the cuboid.
  */
-double mesh_similar_view(ors::Mesh &mtrue, ors::Mesh &mestm);
+double mesh_similar_view(mlr::Mesh &mtrue, mlr::Mesh &mestm);
 
 /** take the common volume of real and estimated object as measure of similarity.
  * Iterative naive implementation. */
@@ -111,12 +111,12 @@ double ISF_common_volume(PotentialField *ot,PotentialField *oe, int impl=2);
  */
 void get_observs_gradwalk(arr& pts, arr& grads, PotentialField *ot , const arr &mins, const arr &maxs, uint obs_N=30);
 
-void get_observs_vrtx(arr& pts, arr& grads, ors::Mesh &m, const uint obs_N=30);
+void get_observs_vrtx(arr& pts, arr& grads, mlr::Mesh &m, const uint obs_N=30);
 
 /* append obseravions by sampling rays and taling the intersection points with
  * the mesh
  */
-void get_observs_ray(arr& pts, arr& grads, ors::Mesh &m, const uint obs_N=30);
+void get_observs_ray(arr& pts, arr& grads, mlr::Mesh &m, const uint obs_N=30);
 
 
 #ifdef  MLR_IMPLEMENTATION

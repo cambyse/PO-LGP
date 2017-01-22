@@ -362,7 +362,7 @@ TaskAbstraction::TaskAbstraction(){
 }
 
 void TaskAbstraction::initTaskVariables(ControllerProcess* ctrl){
-  ors::KinematicWorld &ors=ctrl->ors;
+  mlr::KinematicWorld &ors=ctrl->ors;
   
   // get refs to gamepad and plan from controller (SSD)
   planVar = ctrl->planVar;

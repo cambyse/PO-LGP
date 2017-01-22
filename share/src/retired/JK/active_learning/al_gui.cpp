@@ -1,13 +1,13 @@
 #include "al_gui.h"
 
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <relational/robotManipulationSimulator.h>
 
 class sGui {
   public:
     OpenGL gl;
-    ors::KinematicWorld ors;
+    mlr::KinematicWorld ors;
 
     sGui(const char* orsFile);
   

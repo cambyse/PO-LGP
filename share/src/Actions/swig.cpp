@@ -1,7 +1,7 @@
 #include "swig.h"
 
-#include <FOL/fol.h>
-#include <Ors/ors.h>
+#include <Logic/fol.h>
+#include <Kin/kin.h>
 #include <Control/TaskControllerModule.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
@@ -14,7 +14,7 @@
 #include <csignal>
 #include <Perception/perception.h>
 #include <Perception/kinect2pointCloud.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 
 #ifdef MLR_ROS
 #  include <RosCom/roscom.h>
@@ -30,7 +30,7 @@ struct SwigSystem {
   ACCESSname(RelationalMachine, RM)
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
-  ACCESSname(ors::KinematicWorld, modelWorld)
+  ACCESSname(mlr::KinematicWorld, modelWorld)
 #ifdef MLR_ROS
   ACCESSname(ar::AlvarMarkers, ar_pose_markers)
   ACCESSname(visualization_msgs::MarkerArray, perceptionObjects)
@@ -44,7 +44,7 @@ struct SwigSystem {
 
   ACCESSname(byteA, kinect_rgb)
   ACCESSname(uint16A, kinect_depth)
-  ACCESSname(ors::Transformation, kinect_frame)
+  ACCESSname(mlr::Transformation, kinect_frame)
 
   ACCESSname(arr, wrenchL)
   ACCESSname(arr, wrenchR)
@@ -165,7 +165,7 @@ ActionSwigInterface::ActionSwigInterface(bool setSignalHandler): S(new SwigSyste
   }
   S->LOG(1) <<"Shape Symbols:";
   S->modelWorld.writeAccess();
-  for(ors::Shape *sh:S->modelWorld().shapes){
+  for(mlr::Shape *sh:S->modelWorld().shapes){
     S->LOG(1) <<"  adding symbol for Shape " <<sh->name;
     createNewSymbol(sh->name.p);
   }
@@ -197,7 +197,7 @@ stringV ActionSwigInterface::getShapeList(){
   stringV strs;
   std::stringstream tmp;
   S->modelWorld.readAccess();
-  for(ors::Shape *shape: S->modelWorld().shapes){
+  for(mlr::Shape *shape: S->modelWorld().shapes){
     tmp.str(""),
     tmp.clear();
     tmp <<shape->name;
@@ -211,7 +211,7 @@ stringV ActionSwigInterface::getBodyList(){
   stringV strs;
   std::stringstream tmp;
   S->modelWorld.readAccess();
-  for(ors::Body *body: S->modelWorld().bodies){
+  for(mlr::Body *body: S->modelWorld().bodies){
     tmp.str(""),
     tmp.clear();
     tmp << body->name;
@@ -225,7 +225,7 @@ stringV ActionSwigInterface::getJointList(){
   stringV strs;
   std::stringstream tmp;
   S->modelWorld.readAccess();
-  for(ors::Joint *joint: S->modelWorld().joints){
+  for(mlr::Joint *joint: S->modelWorld().joints){
     tmp.str(""),
     tmp.clear();
     tmp << joint->name;
@@ -239,7 +239,7 @@ stringV ActionSwigInterface::getJointList(){
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
   dict D;
   S->modelWorld.readAccess();
-  ors::Body *body = S->modelWorld().getBodyByName(bodyName.c_str());
+  mlr::Body *body = S->modelWorld().getBodyByName(bodyName.c_str());
   D["name"]= bodyName;
   D["type"] = std::to_string(body->type);
   D["Q"] =  STRING('[' <<body->X.rot<<']');
@@ -255,7 +255,7 @@ dict ActionSwigInterface::getBodyByName(std::string bodyName){
 dict ActionSwigInterface::getJointByName(std::string jointName){
   dict D;
   S->modelWorld.readAccess();
-  ors::Joint *joint = S->modelWorld().getJointByName(jointName.c_str());
+  mlr::Joint *joint = S->modelWorld().getJointByName(jointName.c_str());
   D["name"]= jointName;
   D["type"] = std::to_string(joint->type);
   D["Q"] =  STRING('[' <<joint->X.rot<<']');
@@ -280,7 +280,7 @@ dict ActionSwigInterface::getJointByName(std::string jointName){
 dict ActionSwigInterface::getShapeByName(std::string shapeName){
   dict D;
   S->modelWorld.readAccess();
-  ors::Shape *shape = S->modelWorld().getShapeByName(shapeName.c_str());
+  mlr::Shape *shape = S->modelWorld().getShapeByName(shapeName.c_str());
   D["name"]= shapeName;
   D["type"] = std::to_string(shape->type);
   D["Q"] =  STRING('[' <<shape->X.rot<<']');
@@ -525,7 +525,7 @@ void ActionSwigInterface::execScript(const char* filename){
   }
 }
 
-ors::Transformation ActionSwigInterface::getFramePose(const std::string& frame_id) {
-  ors::Transformation frame = S->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
+mlr::Transformation ActionSwigInterface::getFramePose(const std::string& frame_id) {
+  mlr::Transformation frame = S->modelWorld.get()->getShapeByName(frame_id.c_str())->X;
   return frame;
 }

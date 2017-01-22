@@ -18,6 +18,7 @@
 
 #include <Optim/optimization.h>
 #include <Algo/spline.h>
+#include <Optim/kOrderMarkov.h>
 
 struct PhaseOptimization:KOrderMarkovFunction {
   //options of the problem
@@ -33,7 +34,7 @@ struct PhaseOptimization:KOrderMarkovFunction {
   void getSolution(arr &xOpt, arr &sOpt);
 
   //implementations of the kOrderMarkov virtuals
-  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+  void phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar);
   uint get_T(){ return T; }
   uint get_k(){ return k; }
   uint dim_x(){ return 1; }

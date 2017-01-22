@@ -55,7 +55,7 @@ void RelationalMachineModule::step(){
   effects().clear();
   effects.deAccess();
 
-  LOG(1) <<std::setprecision(2) <<std::fixed <<mlr::realTime() <<"sec: it=" <<RM.var->revision.getValue()<<" EFFECT=" <<effs;
+  LOG(1) <<std::setprecision(2) <<std::fixed <<mlr::realTime() <<"sec: it=" <<RM.data->revision.getValue()<<" EFFECT=" <<effs;
 
   RM.writeAccess();
   if(effs.N) RM().applyEffect(effs);

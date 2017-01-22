@@ -19,7 +19,7 @@ struct Roopi {
   struct Roopi_private* s;
 
   CtrlTaskL activeTasks;
-  ors::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
+  mlr::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
 
   CtrlTask* holdPositionTask;
 

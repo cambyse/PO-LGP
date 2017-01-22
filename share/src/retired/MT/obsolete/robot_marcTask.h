@@ -21,7 +21,7 @@ struct TrivialBwdMsgTask:public TaskAbstraction {
 // helper
 //
 
-void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
+void reattachShape(mlr::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
 
 
 //===========================================================================
@@ -41,7 +41,7 @@ struct MarcsRobotTask:public RobotProcessGroup, public TaskAbstraction { //one c
   void openHand(const char* objShape);
   
   void reactivateCollisions(const mlr::Array<const char*>& shapes);
-  void reactivateCollisions(const mlr::Array<ors::Shape*>& shapes);
+  void reactivateCollisions(const mlr::Array<mlr::Shape*>& shapes);
   void loadTrajectory(const char* filename="z.plan");
   void loadPlainTrajectory(const char* filename="z.plan");
   

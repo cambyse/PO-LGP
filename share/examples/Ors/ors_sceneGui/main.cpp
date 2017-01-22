@@ -1,4 +1,4 @@
-#include <Ors/ors_sceneGui.h>
+#include <Kin/kin_sceneGui.h>
 
 int main(int argc,char **argv){
 
@@ -7,7 +7,7 @@ int main(int argc,char **argv){
     cout <<"opening standard file `" <<file <<"'" <<endl;
   }else file=argv[1];
   
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init(file);
   
   OrsSceneGui gui(ors);

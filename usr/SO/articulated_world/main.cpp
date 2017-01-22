@@ -17,7 +17,7 @@
 #include <biros/biros.h>
 #include <biros/biros_views.h>
 
-#include <MT/ors_physx.h>
+#include <MT/kin_physx.h>
 #include <MT/opengl.h>
 
 #include <motion/motion.h>
@@ -31,19 +31,19 @@
  *
  * @return pointer to the robot body.
  */
-ors::Body* createRobot(ors::KinematicWorld& graph) {
-  ors::Body* robot = new ors::Body(graph);
+mlr::Body* createRobot(mlr::KinematicWorld& graph) {
+  mlr::Body* robot = new mlr::Body(graph);
   robot->X.setRandom();
   robot->X.pos.x -= .5;
   robot->X.pos.y -= .5;
   robot->X.pos.z += 1.;
   robot->name << "robot";
-  robot->type = ors::kinematicBT;
+  robot->type = mlr::kinematicBT;
   /* cout << "robot: " << robot->X << endl; */
   /* cout << "robot.pos.pos: " << robot->X.pos << endl; */
 
-  ors::Shape* robotShape = new ors::Shape(graph, robot);
-  robotShape->type = ors::sphereST;
+  mlr::Shape* robotShape = new mlr::Shape(graph, robot);
+  robotShape->type = mlr::sphereST;
   robotShape->size[0] = .05;
   robotShape->size[1] = .05;
   robotShape->size[2] = .05;
@@ -53,7 +53,7 @@ ors::Body* createRobot(ors::KinematicWorld& graph) {
 }
 
 /*----------------------------------------------------------------------------*/
-void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
+void bindOrsToPhysX(mlr::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx) {
   physx.G = &graph;
   physx.create();
 
@@ -61,7 +61,7 @@ void bindOrsToPhysX(ors::KinematicWorld& graph, OpenGL& gl, PhysXInterface& phys
   gl.add(glPhysXInterface, &physx);
   gl.setClearColors(1., 1., 1., 1.);
 
-  ors::Body* glCamera = graph.getBodyByName("glCamera");
+  mlr::Body* glCamera = graph.getBodyByName("glCamera");
   if (glCamera) {
     *(gl.camera.X) = glCamera->X;
   } else {
@@ -79,10 +79,10 @@ int main(int argc, char** argv) {
 
   // Load ORS into a varbiable
   GeometricState geometricState;
-  ors::KinematicWorld& graph = geometricState.get_ors();
+  mlr::KinematicWorld& graph = geometricState.get_ors();
 
   // add simple robot to graph
-  ors::Body* robot = createRobot(graph);
+  mlr::Body* robot = createRobot(graph);
   /* createRobot(graph); */
   // graph.calcBodyFramesFromJoints();
 

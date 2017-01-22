@@ -41,7 +41,7 @@ void scenario1() {
 
 //** optimized trajectory in joint space **//
 void scenario2() {
-  ors::KinematicWorld world("scenes/scene1.ors");
+  mlr::KinematicWorld world("scenes/scene1.ors");
   world.gl().resize(800, 800);
 
   makeConvexHulls(world.shapes);
@@ -53,15 +53,15 @@ void scenario2() {
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
@@ -124,7 +124,7 @@ void scenario2() {
 
 //** optimized trajectory in cartesian space **//
 void scenario3() {
-  ors::KinematicWorld G("scenes/scene1.ors");
+  mlr::KinematicWorld G("scenes/scene1.ors");
   G.gl().resize(800, 800);
 
   makeConvexHulls(G.shapes);
@@ -136,14 +136,14 @@ void scenario3() {
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
@@ -226,7 +226,7 @@ void scenario3() {
     y_target = d.Y;
 
     // task 1: POSITION
-    yPos_target = y_target.refRange(0,2);
+    yPos_target = y_target({0,2});
     costs = (yPos - yPos_target)/ fPos_deviation;
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
@@ -246,7 +246,7 @@ void scenario3() {
 void scenario4() {
   bool useOrientation = true;
 
-  ors::KinematicWorld G("scenes/scene1.ors");
+  mlr::KinematicWorld G("scenes/scene1.ors");
   G.gl().resize(800, 800);
 
   makeConvexHulls(G.shapes);
@@ -258,21 +258,21 @@ void scenario4() {
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,G,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
-    c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",ors::Vector(0., 1., 0.)));
+    c = P.addTask("orientation", new TaskMap_Default(vecTMT,G,"endeff",mlr::Vector(0., 1., 0.)));
     c->setCostSpecs(P.T, P.T,
                             {1.,0.,0.}, 1e3,
                             {0.,0.,0.}, 1e-3);
@@ -365,14 +365,14 @@ void scenario4() {
     y_target.append(d_vec.Y);
 
     // task 1: POSITION
-    yPos_target = y_target.refRange(0,2);
+    yPos_target = y_target({0,2});
     costs = (yPos - yPos_target)/ fPos_deviation;
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
 
     // task  2: ORIENTATION
     if (useOrientation) {
-      yVec_target = y_target.refRange(3,5);
+      yVec_target = y_target({3,5});
       costs = (yVec - yVec_target)/ fVec_deviation;
       Phi.append(costs);
       PhiJ.append(JVec / fVec_deviation);

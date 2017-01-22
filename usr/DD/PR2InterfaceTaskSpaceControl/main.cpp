@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <Motion/motion.h>
 #include <RosCom/roscom.h>
@@ -33,9 +33,9 @@ arr generateBrezel() {
 }
 
 void followTrajectory() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);  
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -60,7 +60,7 @@ void followTrajectory() {
   posLawl->setRef(trajStart);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -93,7 +93,7 @@ void followTrajectory() {
   arr Kp = eye(3)*30.0;
   posLaw->setGains(Kp,eye(3)*5.0);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -144,7 +144,7 @@ void followTrajectory() {
   arr Kp = eye(3)*10.0;
   posLaw->setGains(Kp,eye(3)*5.0);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -182,9 +182,9 @@ void followTrajectory() {
 }
 
 void qDotRefInConstraint() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -207,7 +207,7 @@ void qDotRefInConstraint() {
   posLawl->setRef(trajStart);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -241,7 +241,7 @@ void qDotRefInConstraint() {
   Kd(2,2) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -292,9 +292,9 @@ void qDotRefInConstraint() {
 }
 
 void qDotRefInConstraintAndSlide() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -317,7 +317,7 @@ void qDotRefInConstraintAndSlide() {
   posLawl->setRef(trajStart);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -351,7 +351,7 @@ void qDotRefInConstraintAndSlide() {
   Kd(2,2) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -383,7 +383,7 @@ void qDotRefInConstraintAndSlide() {
   arr velTraj = repmat(~ARR(0.0,0.0,-.05), 3, 1);
   */
 
-  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", mlr::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*15.0);
@@ -435,9 +435,9 @@ void qDotRefInConstraintAndSlide() {
 }
 
 void openSchublade() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -469,7 +469,7 @@ void openSchublade() {
   Kd(2,2) = 5.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -479,7 +479,7 @@ void openSchublade() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -517,9 +517,9 @@ void openSchublade() {
 
 
 void testTorsoLiftLink() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -548,9 +548,9 @@ void testTorsoLiftLink() {
 
 
 void openSchublade2() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -586,7 +586,7 @@ void openSchublade2() {
 
   modelWorld->watch(true,"wait for marker to be found");
 
-  ors::Transformation markerSchublade = modelWorld->getShapeByName("marker2")->X;
+  mlr::Transformation markerSchublade = modelWorld->getShapeByName("marker2")->X;
 
 
   arr markerSchubladePos = conv_vec2arr(markerSchublade.pos);
@@ -607,12 +607,12 @@ void openSchublade2() {
   posLawl->setRef(markerSchubladePos);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(1.0,0.0,0.0));
   laws.append(orientationLawl);
 
-  TaskMap* orientationMapl2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMapl2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLawl2 = new LinTaskSpaceAccLaw(orientationMapl2, modelWorld, "endeffLOrientation");
   orientationLawl2->setRef(ARR(0.0,0.0,1.0));
   //laws.append(orientationLawl2);
@@ -643,7 +643,7 @@ void openSchublade2() {
   Kd(0,0) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*30.0,eye(3)*5.0);
@@ -653,7 +653,7 @@ void openSchublade2() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -679,7 +679,7 @@ void openSchublade2() {
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
 
-  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1.0,0.0,.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", mlr::Vector(1.0,0.0,.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*15.0);
@@ -725,7 +725,7 @@ void openSchublade2() {
   Kd(2,2) = 5.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -735,7 +735,7 @@ void openSchublade2() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -780,9 +780,9 @@ void testDemonstration() {
   ACCESS(arr, gamepadState);
   GamepadInterface gamepad;
 
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -808,7 +808,7 @@ void testDemonstration() {
   modelWorld->watch(true, "press to start");
 
   while(true){
-    gamepadState.var->waitForNextRevision();
+    gamepadState.data->waitForNextRevision();
     arr state = gamepadState.get()();
     if(state(0) == 1) {
       mlr::wait(1.0);
@@ -825,9 +825,9 @@ void testDemonstration() {
 
 
 void openSchublade3() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -878,7 +878,7 @@ void openSchublade3() {
   Kd(0,0) = 0.0;
   posLaw->setGains(Kp,Kd);
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -888,7 +888,7 @@ void openSchublade3() {
   orientationTrajectory.append(~ARR(1.0,0.0,0.0));
   orientationLaw->setTrajectory(orientationTrajectory.d0, orientationTrajectory);
 
-  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(0.,1.,0.));
+  TaskMap* orientationMap2 = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(0.,1.,0.));
   LinTaskSpaceAccLaw* orientationLaw2 = new LinTaskSpaceAccLaw(orientationMap2, modelWorld, "endeffLOrientation2");
   orientationLaw2->setC(eye(3)*1000.0);
   orientationLaw2->setGains(eye(3)*10.0,eye(3)*3.0);
@@ -914,7 +914,7 @@ void openSchublade3() {
   qDampingLaw->setTrajectory(3,zeros(3,qDampingLaw->getPhiDim()), zeros(3,qDampingLaw->getPhiDim()));
 
 
-  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1.0,0.0,.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", mlr::Vector(1.0,0.0,.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "vel");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*9.0);
@@ -981,9 +981,9 @@ void controllerExample(mlr::String mode) {
   ACCESS(arr, gamepadState);
   GamepadInterface gamepad;
 
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -1017,7 +1017,7 @@ void controllerExample(mlr::String mode) {
     controller->addLinTaskSpaceAccLaw(limitsLaw);
 
     while(true){
-      gamepadState.var->waitForNextRevision();
+      gamepadState.data->waitForNextRevision();
       arr state = gamepadState.get()();
       if(state(0) == 1) {
         posLaw->setGains(zeros(3,3), zeros(3,3));
@@ -1038,7 +1038,7 @@ void controllerExample(mlr::String mode) {
     posLaw->setGains(Kp,Kd);
     posLaw->setRef(posLaw->getPhi());
 
-    TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+    TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
     LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
     orientationLaw->setC(eye(3)*1000.0);
     orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1056,7 +1056,7 @@ void controllerExample(mlr::String mode) {
     controller->addLinTaskSpaceAccLaw(limitsLaw);
 
     while(true){
-      gamepadState.var->waitForNextRevision();
+      gamepadState.data->waitForNextRevision();
       arr state = gamepadState.get()();
       if(state(0) == 1) {
         posLaw->setGains(zeros(3,3), zeros(3,3));
@@ -1080,7 +1080,7 @@ void controllerExample(mlr::String mode) {
     posLaw->setGains(Kp,Kd);
     posLaw->setRef(posLaw->getPhi());
 
-    TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+    TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
     LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
     orientationLaw->setC(eye(3)*1000.0);
     orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1099,7 +1099,7 @@ void controllerExample(mlr::String mode) {
     controller->addLinTaskSpaceAccLaw(limitsLaw);
 
     while(true){
-      gamepadState.var->waitForNextRevision();
+      gamepadState.data->waitForNextRevision();
       arr state = gamepadState.get()();
       if(state(0) == 1) {
         posLaw->setGains(zeros(3,3), zeros(3,3));
@@ -1139,9 +1139,9 @@ void controllerExample(mlr::String mode) {
 
 
 void tischTouchdown_1() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -1181,7 +1181,7 @@ void tischTouchdown_1() {
   posLawl->setRef(preTouchPos);
   laws.append(posLawl);
 
-  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMapl = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setRef(ARR(0.0,0.0,-1.0));
   laws.append(orientationLawl);
@@ -1210,7 +1210,7 @@ void tischTouchdown_1() {
   posLaw->setGains(Kp,Kd);
   posLaw->setRef();
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1228,7 +1228,7 @@ void tischTouchdown_1() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setRef(zeros(qDampingLaw->getPhiDim()),zeros(qDampingLaw->getPhiDim()));
 
-  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", mlr::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "qDotRefInConstraint");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*25.0);
@@ -1262,9 +1262,9 @@ void tischTouchdown_1() {
 }
 
 void tischTouchdown_2() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -1300,7 +1300,7 @@ void tischTouchdown_2() {
   posLaw->setGains(Kp,Kd);
   posLaw->setRef();
 
-  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  TaskMap* orientationMap = new TaskMap_Default(vecTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLaw = new LinTaskSpaceAccLaw(orientationMap, modelWorld, "endeffLOrientation");
   orientationLaw->setC(eye(3)*1000.0);
   orientationLaw->setGains(eye(3)*10.0,eye(3)*5.0);
@@ -1318,7 +1318,7 @@ void tischTouchdown_2() {
   qDampingLaw->setGains(zeros(qDampingLaw->getPhiDim(),qDampingLaw->getPhiDim()), eye(qDampingLaw->getPhiDim())*1.0);
   qDampingLaw->setRef(zeros(qDampingLaw->getPhiDim()),zeros(qDampingLaw->getPhiDim()));
 
-  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(.0,0.0,-1.0));
+  TaskMap* velMap = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", mlr::Vector(.0,0.0,-1.0));
   ConstrainedTaskLaw* velLaw = new ConstrainedTaskLaw(velMap, modelWorld, "qDotRefInConstraint");
   velLaw->setC(eye(1)*1000.0);
   velLaw->setGains(eye(1)*0.0, eye(1)*20.0);
@@ -1355,9 +1355,9 @@ void tischTouchdown_2() {
 }
 
 void tests() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);
@@ -1378,7 +1378,7 @@ void tests() {
   pr2->goToPosition(preTouchPos, "endeffL");
 
   mlr::Array<LinTaskSpaceAccLaw*> laws;
-  TaskMap* posTaskl = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", ors::Vector(1/sqrt(2),1/sqrt(2),0.0));
+  TaskMap* posTaskl = new TaskMap_Default(pos1DTMT, *modelWorld, "endeffL", mlr::Vector(1/sqrt(2),1/sqrt(2),0.0));
   LinTaskSpaceAccLaw* posLawl = new LinTaskSpaceAccLaw(posTaskl, modelWorld, "endeffLPos");
   posLawl->setC(eye(1)*1000.0);
   posLawl->setGains(eye(1)*10.0, eye(1)*5.0);
@@ -1389,7 +1389,7 @@ void tests() {
   traj.d1 = 1;
   posLawl->setTrajectory(3,traj);
 
-  /*TaskMap* orientationMapl = new TaskMap_Default(quatTMT, *modelWorld,"endeffL",ors::Vector(1.,0.,0.));
+  /*TaskMap* orientationMapl = new TaskMap_Default(quatTMT, *modelWorld,"endeffL",mlr::Vector(1.,0.,0.));
   LinTaskSpaceAccLaw* orientationLawl = new LinTaskSpaceAccLaw(orientationMapl, modelWorld, "endeffLOrientation");
   orientationLawl->setC(eye(4)*1000.0);
   orientationLawl->setGains(eye(4)*10.0, eye(4)*5.0);
@@ -1447,9 +1447,9 @@ void tests() {
 }
 
 void testDifferentMetric() {
-  ors::KinematicWorld* modelWorld = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new ors::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
-  ors::KinematicWorld* realWorld = new ors::KinematicWorld("pr2_model/pr2_model.ors");
-  ors::KinematicWorld* realWorldSimulation = new ors::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
+  mlr::KinematicWorld* modelWorld = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");//new mlr::KinematicWorld("pr2_model_for_tasks/pr2_model_for_tasks.ors");
+  mlr::KinematicWorld* realWorld = new mlr::KinematicWorld("pr2_model/pr2_model.ors");
+  mlr::KinematicWorld* realWorldSimulation = new mlr::KinematicWorld("pr2_model_for_simulation/pr2_model_for_simulation.ors");
 
   modelWorld->gl().add(changeAlpha);
   modelWorld->gl().add(glDrawPlot, &plotModule);

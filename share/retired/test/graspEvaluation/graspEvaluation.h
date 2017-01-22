@@ -1,10 +1,10 @@
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 struct GraspEvaluation{
   struct sGraspEvaluation *s;
   
-  ors::KinematicWorld grasp; ///< the isolated grasp with only two bodies: hand and object
+  mlr::KinematicWorld grasp; ///< the isolated grasp with only two bodies: hand and object
   OpenGL gl;
   arr contactPoints, contactNormals;
 
@@ -15,7 +15,7 @@ struct GraspEvaluation{
   GraspEvaluation();
   
   
-  void copyGraspFromOrs(const ors::KinematicWorld& all,
+  void copyGraspFromOrs(const mlr::KinematicWorld& all,
 			const char* palmBodyName,
 			const char* objShapeName);
   

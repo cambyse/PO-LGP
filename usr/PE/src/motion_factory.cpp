@@ -73,10 +73,10 @@ void MotionFactory::loadScenarioSimple(Scenario &scenario, uint nScenes, bool us
     Scene s;
 
     /// create world and motion problem
-    s.world = new ors::KinematicWorld("sceneTest");
+    s.world = new mlr::KinematicWorld("sceneTest");
     s.world->swift();
 
-    s.world->getBodyByName("targetE")->X.pos += ors::Vector(0.,0.,0.2)*iS;
+    s.world->getBodyByName("targetE")->X.pos += mlr::Vector(0.,0.,0.2)*iS;
 
     s.MP = new MotionProblem(*s.world,false);
     s.MP->useSwift=true;
@@ -84,8 +84,8 @@ void MotionFactory::loadScenarioSimple(Scenario &scenario, uint nScenes, bool us
     s.MP->tau = 0.01;
     s.x0 = s.world->getJointState();
 
-    ors::Shape *grasp = s.world->getShapeByName("endeff");
-    ors::Body *targetE = s.world->getBodyByName("targetE");
+    mlr::Shape *grasp = s.world->getShapeByName("endeff");
+    mlr::Body *targetE = s.world->getBodyByName("targetE");
 
 
     arr param = ARR(1e-1,1e2);
@@ -130,7 +130,7 @@ void MotionFactory::loadScenarioComplex(Scenario& scenario) {
     Scene s;
 
     /// create world and motion problem
-    s.world = new ors::KinematicWorld("sceneComplex");
+    s.world = new mlr::KinematicWorld("sceneComplex");
     s.world->swift();
 
     s.MP = new MotionProblem(*s.world,false);
@@ -139,8 +139,8 @@ void MotionFactory::loadScenarioComplex(Scenario& scenario) {
     s.MP->tau = 0.01;
     s.x0 = s.world->getJointState();
 
-    ors::Shape *grasp = s.world->getShapeByName("endeff");
-    ors::Body *target0 = s.world->getBodyByName("target0");
+    mlr::Shape *grasp = s.world->getShapeByName("endeff");
+    mlr::Body *target0 = s.world->getBodyByName("target0");
 
 
     arr param = ARR(1e-1,1e2,1e1);
@@ -160,7 +160,7 @@ void MotionFactory::loadScenarioComplex(Scenario& scenario) {
     t->target = conv_vec2arr(target0->X.pos);
     if (iS==0) scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T-3,s.MP->T),1,3));
 
-    t =s.MP->addTask("vec", new DefaultTaskMap(vecAlignTMT, grasp->index,ors::Vector(0.,0.,1.),-1,ors::Vector(1.,0.,0.)) );
+    t =s.MP->addTask("vec", new DefaultTaskMap(vecAlignTMT, grasp->index,mlr::Vector(0.,0.,1.),-1,mlr::Vector(1.,0.,0.)) );
     t->target = ARR(1.);
     if (iS==0) scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(s.MP->T*.5,s.MP->T),1,1));
 
@@ -192,7 +192,7 @@ void MotionFactory::loadScenarioTestRbf(Scenario &scenario) {
   Scene s;
 
   /// create world and motion problem
-  s.world = new ors::KinematicWorld("sceneTest");
+  s.world = new mlr::KinematicWorld("sceneTest");
   s.world->swift();
 
   s.MP = new MotionProblem(*s.world,false);
@@ -201,9 +201,9 @@ void MotionFactory::loadScenarioTestRbf(Scenario &scenario) {
   s.MP->tau = 0.01;
   s.x0 = s.world->getJointState();
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *targetE = s.world->getBodyByName("targetE");
-  ors::Body *targetC = s.world->getBodyByName("targetC");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *targetE = s.world->getBodyByName("targetE");
+  mlr::Body *targetC = s.world->getBodyByName("targetC");
 
   arr paramDemo = ARR(1e-1,1e2,1e2);
   paramDemo = paramDemo/sum(paramDemo)*scenario.costScale;
@@ -253,7 +253,7 @@ void MotionFactory::loadScenarioTestFeatSelect(Scenario &scenario) {
   Scene s;
 
   /// create world and motion problem
-  s.world = new ors::KinematicWorld("sceneFeatSelect");
+  s.world = new mlr::KinematicWorld("sceneFeatSelect");
   s.world->swift();
 
   s.MP = new MotionProblem(*s.world,false);
@@ -262,7 +262,7 @@ void MotionFactory::loadScenarioTestFeatSelect(Scenario &scenario) {
   s.MP->tau = 0.01;
   s.x0 = s.world->getJointState();
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
 
   arr param = ARR(1e-1);
 
@@ -321,7 +321,7 @@ void MotionFactory::loadDemonstration(arr &x,arr &lambda, MotionProblem &MP) {
   t->map.order=2;
   ((TransitionTaskMap*)&t->map)->H_rate_diag = 1.;
   t->setCostSpecs(0.,b.T,ARR(0.),1e-2);
-  ors::Shape *grasp = b.world.getShapeByName("endeff");
+  mlr::Shape *grasp = b.world.getShapeByName("endeff");
   t = b.addTask("t1", new DefaultTaskMap(posTMT, grasp->index) );
   t->setCostSpecs(20.,20.,conv_vec2arr(b.world.getBodyByName("t1")->X.pos),1e2);
   t = b.addTask("t4", new DefaultTaskMap(posTMT, grasp->index) );
@@ -342,7 +342,7 @@ void MotionFactory::loadScenarioTestDemonstrations(Scenario &scenario) {
   Scene s;
 
   /// create world and motion problem
-  s.world = new ors::KinematicWorld("sceneFeatSelect");
+  s.world = new mlr::KinematicWorld("sceneFeatSelect");
   s.world->swift();
 
   s.MP = new MotionProblem(*s.world,false);
@@ -353,7 +353,7 @@ void MotionFactory::loadScenarioTestDemonstrations(Scenario &scenario) {
 
   loadDemonstration(x,lambda,*s.MP);
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
   arr param = ARR(1e-1);
   // transition costs
   Task *t;
@@ -399,7 +399,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
     Scene s;
 
     /// create world and motion problem
-    s.world = new ors::KinematicWorld("sceneBox");
+    s.world = new mlr::KinematicWorld("sceneBox");
     s.world->swift();
 
     s.MP = new MotionProblem(*s.world,false);
@@ -413,9 +413,9 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
     arr targets = ft[iS];
 
     // set some visualization properties
-    s.world->getJointByName("table_box")->A.pos = ors::Vector(targets.subRange(0,2));
+    s.world->getJointByName("table_box")->A.pos = mlr::Vector(targets.subRange(0,2));
     s.world->getJointByName("table_box")->A.rot.setRad(targets(3)*M_PI/180);
-    s.world->getJointByName("table_boxTarget")->A.pos = ors::Vector(targets.subRange(4,6));
+    s.world->getJointByName("table_boxTarget")->A.pos = mlr::Vector(targets.subRange(4,6));
     s.world->getJointByName("table_boxTarget")->A.rot.setRad(targets(7)*M_PI/180);
     s.world->getJointByName("table_boxTargetVis")->A = s.world->getJointByName("table_boxTarget")->A;
     s.world->getJointByName("table_boxTargetVis2")->A = s.world->getJointByName("table_boxTarget")->A;
@@ -458,7 +458,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
       param.append(ARR(1e3));
     }
 
-    t =s.MP->addTask("vec", new DefaultTaskMap(vecAlignTMT, *s.world, "box", ors::Vector(1.,0.,0), "boxTarget",ors::Vector(1.,0.,0)) );
+    t =s.MP->addTask("vec", new DefaultTaskMap(vecAlignTMT, *s.world, "box", mlr::Vector(1.,0.,0), "boxTarget",mlr::Vector(1.,0.,0)) );
     t->target = ARR(1.);
     if (iS==0) {
       N_RBF = 80;
@@ -468,7 +468,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
       param.append(ARR(1e2));
     }
 
-    t =s.MP->addTask("vecFake1", new DefaultTaskMap(vecAlignTMT, *s.world, "box", ors::Vector(0.,1.,0), "boxTarget",ors::Vector(1.,0.,0)) );
+    t =s.MP->addTask("vecFake1", new DefaultTaskMap(vecAlignTMT, *s.world, "box", mlr::Vector(0.,1.,0), "boxTarget",mlr::Vector(1.,0.,0)) );
     t->target = ARR(1.);
     if (iS==0) {
       N_RBF = 80;
@@ -506,7 +506,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
       param.append(ARR(4e2));
     }
 
-    t = s.MP->addTask("rotPre", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffC", ors::Vector(0.,0.,1.),"preContact",ors::Vector(1.,0.,0.)));
+    t = s.MP->addTask("rotPre", new DefaultTaskMap(vecAlignTMT, *s.world, "endeffC", mlr::Vector(0.,0.,1.),"preContact",mlr::Vector(1.,0.,0.)));
     t->target = ARR(1.);
     if (iS==0) {
       N_RBF = 20;
@@ -537,7 +537,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
     t = s.MP->addTask("box_fix3", new qItselfConstraint(s.world->getJointByName("table_box")->qIndex+2, s.world->getJointStateDimension()));
     t->setCostSpecs(0.,conT-1, ARR(0.), 1.);
 
-    t = s.MP->addTask("velocity_dir", new VelAlignConstraint(*s.world, "endeffC",NoVector, "box", ors::Vector(1,0,0),.95));
+    t = s.MP->addTask("velocity_dir", new VelAlignConstraint(*s.world, "endeffC",NoVector, "box", mlr::Vector(1,0,0),.95));
     t->setCostSpecs(conT, finT, ARR(0.), 1.);
     s.optConstraintsParam = true;
 
@@ -566,7 +566,7 @@ void MotionFactory::loadScenarioParamEval(Scenario &scenario,uint type) {
   Scene s;
 
   /// create world and motion problem
-  s.world = new ors::KinematicWorld("sceneTest");
+  s.world = new mlr::KinematicWorld("sceneTest");
   s.world->swift();
 
   s.MP = new MotionProblem(*s.world,false);
@@ -575,8 +575,8 @@ void MotionFactory::loadScenarioParamEval(Scenario &scenario,uint type) {
   s.MP->tau = 0.01;
   s.x0 = s.world->getJointState();
 
-  ors::Shape *grasp = s.world->getShapeByName("endeff");
-  ors::Body *targetE = s.world->getBodyByName("targetE");
+  mlr::Shape *grasp = s.world->getShapeByName("endeff");
+  mlr::Body *targetE = s.world->getBodyByName("targetE");
 
   arr param;
   if (type == 0) { // single parameter weights
@@ -667,7 +667,7 @@ void MotionFactory::loadScenarioParamEval(Scenario &scenario,uint type) {
 }
 
 
-void MotionFactory::loadScenarioButton(Scenario &scenario,ors::KinematicWorld &world) {
+void MotionFactory::loadScenarioButton(Scenario &scenario,mlr::KinematicWorld &world) {
   arr x,lambda;
   Scene s;
   /// create world and motion problem
@@ -729,18 +729,18 @@ void MotionFactory::loadScenarioButton(Scenario &scenario,ors::KinematicWorld &w
 
   // orientation at contact start, downwards
   s.world->setJointState(s.xDem[conStart(0)]);
-  s.world->kinematicsVec(tmp1,NoArr,s.world->getShapeByName("endeffC1")->body,ors::Vector(1.,0.,0.));
+  s.world->kinematicsVec(tmp1,NoArr,s.world->getShapeByName("endeffC1")->body,mlr::Vector(1.,0.,0.));
   tmp1 += 1e-1*randn(3);
   tmp1 = tmp1/length(tmp1);
-  t =s.MP->addTask("vecConStart", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp1)) );
+  t =s.MP->addTask("vecConStart", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(tmp1)) );
   t->target = ARR(1.);
   scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conStart(0),conStart(0)),1,1));
   // orientation at contact end, downwards
   s.world->setJointState(s.xDem[conEnd(0)]);
-  s.world->kinematicsVec(tmp2,NoArr,s.world->getShapeByName("endeffC1")->body,ors::Vector(1.,0.,0.));
+  s.world->kinematicsVec(tmp2,NoArr,s.world->getShapeByName("endeffC1")->body,mlr::Vector(1.,0.,0.));
   tmp2 += 1e0*randn(3);
   tmp2 = tmp2/length(tmp2);
-  t = s.MP->addTask("vecConEnd", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",ors::Vector(1.,0.,0.),NULL,ors::Vector(tmp2)) );
+  t = s.MP->addTask("vecConEnd", new DefaultTaskMap(vecAlignTMT, *s.world,"endeffC1",mlr::Vector(1.,0.,0.),NULL,mlr::Vector(tmp2)) );
   t->target = ARR(1.);
   scenario.weights.append(CostWeight(CostWeight::Block,1,ARR(conEnd(0),conEnd(0)),1,1));
   // pre contact position
@@ -809,10 +809,10 @@ void MotionFactory::loadScenarioVelocity(Scenario& scenario) {
     Scene s;
 
     /// create world and motion problem
-    s.world = new ors::KinematicWorld("sceneTest");
+    s.world = new mlr::KinematicWorld("sceneTest");
     s.world->swift();
 
-    s.world->getBodyByName("targetE")->X.pos += ors::Vector(0.,0.,0.2)*iS;
+    s.world->getBodyByName("targetE")->X.pos += mlr::Vector(0.,0.,0.2)*iS;
 
     s.MP = new MotionProblem(*s.world,false);
     s.MP->useSwift=true;
@@ -820,8 +820,8 @@ void MotionFactory::loadScenarioVelocity(Scenario& scenario) {
     s.MP->tau = 0.01;
     s.x0 = s.world->getJointState();
 
-    ors::Shape *grasp = s.world->getShapeByName("endeff");
-    ors::Body *targetE = s.world->getBodyByName("targetE");
+    mlr::Shape *grasp = s.world->getShapeByName("endeff");
+    mlr::Body *targetE = s.world->getBodyByName("targetE");
 
 
     arr param = ARR(1e-1,1e2,1e1);

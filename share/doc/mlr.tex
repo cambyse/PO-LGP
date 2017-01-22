@@ -1,0 +1,1908 @@
+
+\documentclass[10pt,fleqn,twoside]{article}
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{eucal}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{framed}
+  \definecolor{shadecolor}{gray}{0.9}
+  \setlength{\FrameSep}{3pt}
+
+\usepackage[round]{natbib}
+\bibliographystyle{abbrvnat}
+%\usepackage[german]{babel}
+%\usepackage[utf8]{inputenc}
+
+\graphicspath{{pics/}{figs/}{~/write/tex/pics/}{~/write/tex/figs/}{~/teaching/pics-all/}}
+\usepackage{geometry}
+\geometry{a4paper,hdivide={35mm,*,35mm},vdivide={35mm,*,35mm}}
+\renewcommand{\baselinestretch}{1.1}
+
+\newenvironment{items}{
+\par\small
+\begin{list}{--}{\leftmargin4ex \rightmargin0ex \labelsep1ex \labelwidth2ex
+\topsep0pt \parsep0ex \itemsep3pt}
+}{
+\end{list}
+}
+
+\input{macros}
+
+\newcommand{\rf}{{\text{ref}}}
+\newcommand{\eig}{{\text{eig}}}
+\newcommand{\bJ}{{\mathbf{J}}}
+\newcommand{\bh}{{\mathbf{h}}}
+\newcommand{\bH}{{\mathbf{H}}}
+\newcommand{\ft}{\text{ft}}
+
+\newcommand{\pos}{{\textsf{p}}}
+\newcommand{\eff}{{\textsf{eff}}}
+\newcommand{\rotvec}{{\textsf{w}}}
+\newcommand{\veC}{{\textsf{v}}}
+\newcommand{\quat}{{\textsf{q}}}
+\newcommand{\col}{{\textsf{col}}}
+\newcommand{\TR}[2]{T_{{#1}\rightarrow{#2}}}
+\newcommand{\RO}[2]{R_{{#1}\rightarrow{#2}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pdflatex
+\usepackage{fancyvrb}
+\DefineShortVerb{\@}
+\fvset{numbers=none,xleftmargin=5ex,fontsize=\footnotesize}
+
+\title{Guide to the MLR Code}
+\author{M Toussaint}
+
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Code needs mathematical grounding.
+\end{abstract}
+
+{\footnotesize\tableofcontents
+
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Linear Algebra}
+
+I spare the description of the @mlr::Array@ class -- it is a standard
+tensor storage. It's implementation and interface is very similar to
+Octave's Array class.
+
+Instead I just provide my recommentation for C++ operator overloading
+for easy linear algebra syntax.
+
+\noindent
+\begin{tabular}{|p{.25\columnwidth}|p{.4\columnwidth}|p{.4\columnwidth}|}
+\hline
+& Tensor/Matlab notation
+& C++
+\\
+\hline
+``inner'' product\footnotemark[1]
+& $C_{ijl} = \sum_k A_{ijk} B_{kl}$
+& @A * B@
+\\
+index-wise product\footnotemark[2]
+& $c_i = a_i b_i$ ~or~ $c=a\circ b$
+& @a % b@
+\\
+& $C_{ijkl} = A_{ijk} B_{kl}$
+& @A % B@
+\\
+diag
+& $\diag(a)$
+& @diag(a)@
+\\
+& $\diag(a) B$ ~or~ $c_i = a_i B_{ij}$
+& @a % B@ ~or~ @diag(a) * B@
+\\
+element-wise product
+& $c_i = a_i b_i$ ~or~ $c=a\circ b$
+& @a % b@
+\\
+& $C_{ij} = A_{ij} B_{ij}$  ~or~ $C=A\circ B$
+& no operator-overload!\footnotemark[3]\newline @elemWiseProduct(A,B)@
+\\
+outer product
+& $C_{ijklm} = A_{ijk} B_{lm}$
+& @A ^ B@
+\\
+& $a b^\T$ ~ (vectors)
+& @a ^ b@
+\\
+transpose
+& $A_{ij} = B_{ji}$
+& @A = ~B@
+\\
+inverse
+& $A B^\1 C$
+& @A*(1/B)*C@
+\\
+& $A^\1 b$ ~ (or @A\b@ in Matlab)
+& @A|b@ %(\footnotemark[4])
+\\
+\hline
+element \emph{reference}\footnotemark[5]
+& $A_{103}$
+& @A(1,0,3)@
+\\
+& $A_{(n-2)03}$
+& @A(-2,0,3)@
+\\
+sub-\emph{references!}\footnotemark[6]
+& $x_i=A_{2i}$
+& @A(2,{})@ ~or~ @A[2]@
+\\
+& $C_{i} = A_{20i}$ ~or~ @C=A[2,0,:]@
+& @A(2,0,{})@ ~ (\footnotemark[7])
+\\
+&  $C_{ijk} = A_{20ijk}$
+& @A(2,0,{})@ ~ {\tiny (trailing @{},{}..@ are implicit)}
+\\
+sub-refercing ranges\footnotemark[8]
+& @C=A[2:4,:,:]@
+& @A({2,4})@ ~ {\tiny (trailing @{},{}..@ are implicit)}
+\\
+& @A[2,1:3,:]@
+& @A(2,{1,3})@
+\\
+\hline
+sub-\emph{copies}\footnotemark[9]
+& @A(1:3, :, 5:)@
+& @A.sub(1,3, 0,-1, 5,-1)@
+\\
+sub-selected-copies
+& @A[{1,3,4},:,{2,3},2:5]@
+& @A.sub({1,3,4}, 0,-1, {2,3}, 2,5)@
+\\
+\hline
+sub-assignment\footnotemark[10]
+& @A[4:6, 2:5] = B@ ~ ($B\in\RRR^{3\times 4}$)
+& @A.setBlock(B, 4, 2)@
+\\
+& @x[4:6] = b@ ~ ($b\in\RRR^3$)
+& @x.setBlock(b, 4)@ ~or~ @x({4,6}) = b@
+\\
+\hline
+initialization
+& @A=[1 2 3]'@
+& @arr A={1.,2,3}@ ~or~ @arr A(3, {1.,2,3})@
+\\
+& @A=[1 2 3]@
+& @arr A=~arr({1.,2,3})@ ~or~ @arr A(1, 3, {1.,2,3})@
+\\
+& @A=[1 2; 3 4]@
+& @arr A(2,2, {1.,2,3,4})@
+\\
+\hline
+concatenation
+& $(x^\T,y^\T,z^\T)^\T$ ~ (stacked vectors)
+& @(x,y,z)@
+\\
+& @cat(1,A,B)@ ~ (stacked matrices)
+& @(A,B)@ ~ (memory serial)
+\\
+\hline
+\end{tabular}
+\footnotetext[1]{The word ``inner'' product should,
+  strictly, be used to refer to a general 2-form $\<\cdot,\cdot\>$
+  which, depending on coordinates, may have a non-Euclidean metric
+  tensor. However, here we use it in the sense of ``assuming Euclidean
+  metric''.}
+\footnotetext[2]{For matrices or tensors, this is \emph{not} the
+  element-wise (Hadamard) product!}
+\footnotetext[3]{The elem-wize product for
+  matricies/tensors is much less used within equations than what I call 'index-wise product'.}
+%% \footnotetext[4]{Caution! This is notation is somewhat awkward -- it calls a special solver for $A^\1 b$
+%%   instead of computing $A^\1$ separately.}
+\footnotetext[5]{Negative indices are always interpreted as $n-index$. As
+we start indexing from 0, the index $n$ is already out of range. $n-1$
+is the last entry. An index of -1 therefore means 'last'.}
+\footnotetext[6]{In C++, assuming the last index to be
+  memory aligned, sub-referencing is only efficient w.r.t.\ major
+  indices: the reference then points to the same memory as the parent
+  tensor.}
+\footnotetext[7]{As a counter example, \texttt{A[:,0,2]} could be referenced in a memory aligned manner. It can only be copied with \texttt{A.sub(0,-1,0,0,2,2)}}
+\footnotetext[8]{again, this can only be ranges
+  w.r.t.\ the major index, to ensure memory alignment}
+%% \footnotetext[1]{Note: The same for \emph{copying} would be
+%%   @A.sub(2,4,0,-1,0,-1)@ resp.\ @A.sub(2,2,1,3,0,-1)@ }
+\footnotetext[9]{this is a $\RRR^{3\times ...}$
+  matrix: The '3' is \emph{included} in the range.}
+\footnotetext[10]{As the assignments are not memory-aligned,
+  they can't be done with returned references.}
+
+\section{Graph}
+
+Our graph syntax is a bit different to standard conventions. Actually,
+our graph could be called a \emph{key-value hierarchical hyper graph}:
+nodes can play the role of normal nodes, or hypernodes (=edges or
+factors/cliques) that connect other nodes. Every node also has a set
+of keys (or tags, to retrieve the node by name) and a typed value
+(every node can be of a different type). This value can also be a
+graph, allowing to represent hierarchies of graphs and subgraphs.
+\begin{itemize}
+\item A graph is a set of nodes
+\item Every node has three properties:
+\begin{items}
+\item A tuple of \textbf{keys} (=strings)
+\item A tuple of \textbf{parents} (=references to other nodes)
+\item A typed \textbf{value} (the type may differ for every node)
+\end{items}
+\end{itemize}
+Therefore, depending on the use case, such a graph could represent
+just a key-value list, an 'any-type' container (container of things of
+varying types), a normal graph, a hierarchical graph, or an xml data
+structure.
+
+We use the graph in particular also to define a generic file format,
+which we use for configuration (parameter) files, files that define
+robot kinematic and geometry, or any other structured data. This ascii
+file format of a graph helps to also understand the data
+structure. Here is the @example.g@ from @test/Core/graph@:
+\begin{shaded}
+\begin{Verbatim}[fontfamily=courier,fontsize=\tiny]
+## a trivial graph
+x            # a 'vertex': key=x, value=true, parents=none
+y            # another 'vertex': key=y, value=true, parents=none
+(x y)        # an 'edge': key=none, value=true, parents=x y
+x            # key=x, value=true, parents=none
+y            # key=y, value=true, parents=none
+(x y)        # key=none, value=true, parents=x y
+(-1 -2)      # key=none, value=true, parents=the previous and the y-node
+
+## a bit more verbose graph
+node A{ color=blue }         # keys=node A, value=<Graph>, parents=none
+node B{ color=red, value=5 } # keys=node B, value=<Graph>, parents=none
+edge C(A,B){ width=2 }       # keys=edge C, value=<Graph>, parents=A B
+hyperedge(A B C) = 5         # keys=hyperedge, value=5, parents=A B C
+
+## standard value types
+a=string      # MT::String (except for keywords 'true' and 'false' and 'Mod' and 'Include')
+b="STRING"    # MT::String (does not require a '=')
+c='file.txt'  # MT::FileToken (does not require a '=')
+d=-0.1234     # double
+e=[1 2 3 0.5] # MT::arr (does not require a '=')
+#f=(c d e)    # DEPRECATED!! MT::Array<*Node> (list of other nodes in the Graph)
+g!            # bool (default: true, !means false)
+h=true        # bool
+i=false       # bool
+j={ a=0 }     # sub-Graph (special: does not require a '=')
+
+## parsing: = {..} (..) , and \n are separators for parsing key-value-pairs
+b0=false b1 b2, b3() b4   # 4 boolean nodes with keys 'b0', 'b1 b2', 'b3', 'b4'
+k={ a, b=0.2 x="hallo"     # sub-Graph with 6 nodes
+  y
+  z()=filename.org x }
+
+## special Node Keys
+
+## editing: after reading all nodes, the Graph takes all Edit nodes, deletes the Edit tag, and calls a edit()
+## this example will modify/append the respective attributes of k
+Edit k { y=false, z=otherString, b=7, c=newAttribute }
+
+## including
+Include = 'example_include.g'   # first creates a normal FileToken node then opens and includes the file directly
+
+## any types
+#trans=<T t(10 0 0)>  # 'T' is the tag for an arbitrary type (here an ors::Transformation)
+                      # which was registered somewhere in the code using the registry()
+                      # (does not require a '=')
+
+## strange notations
+a()       # key=a, value=true, parents=none
+()        # key=none, value=true, parents=none
+[1 2 3 4] # key=none, value=MT::arr, parents=none
+\end{Verbatim}
+\end{shaded}
+
+A special case is when a node has a Graph-typed value. This is
+considered a \textbf{subgraph}. Subgraphs are sometimes handled
+special: their nodes can have parents from the containing graph, or
+from other subgraphs of the containing graph. Some methods of the
+@Graph@ class (to find nodes by key or type) allow to specify whether
+also nodes in subgraphs or parentgraphs are to be searched.
+
+\section{Logic -- A graph implementation of First Order Logic}
+
+We represent everything, a full knowledge base (KB), as a graph:
+\begin{itemize}
+\item Symbols (both, constants and predicate symbols) are nil-valued
+  nodes. We assume that they are declared in the root scope of the
+  graph
+\item A grounded literal is a tuple of symbols, for instance
+  @(on box1 box2)@. Note that we can equally write this as
+  @(box1 on box2)@. There is no need to have the 'predicate' first. In
+  fact, the basic methods do not distinguish between predicate and
+  contant symbols.
+\item A universal quantification $\forall X$ is represented as a scope
+  (=subgraph) which first declares the logic variables as nil-valued
+  nodes as the subgraph, then the rest. The rest is typically an
+  implication, i.e., a rule. For instance
+$$\forall X Y~ p(X, Y) q(Y) \To q(X)$$
+ is represented as @{X, Y, { (p X Y) (q Y) } { (q X) }@
+where the precondition and postconditions are subgraphs of the
+rule-subgraph.
+\end{itemize}
+Here is how the standard FOL example from Stuart Russell's lecture is represented:
+\begin{shaded}
+\begin{Verbatim}[fontfamily=courier,fontsize=\tiny]
+Constant M1
+Constant M2
+Constant Nono
+Constant America
+Constant West
+
+American
+Weapon
+Sells
+Hostile
+Criminal
+Missile
+Owns
+Enemy
+
+STATE {
+(Owns Nono M1),
+(Missile M1),
+(Missile M2),
+(American West),
+(Enemy Nono America)
+}
+
+Query { (Criminal West) }
+
+Rule {
+x, y, z,
+{ (American x) (Weapon y) (Sells x y z) (Hostile z) }
+{ (Criminal x) }
+}
+
+Rule {
+x
+{ (Missile x) (Owns Nono x) }
+{ (Sells West x Nono) }
+}
+
+Rule {
+x
+{ (Missile x) }
+{ (Weapon x) }
+}
+
+Rule {
+x
+{ (Enemy x America) }
+{ (Hostile x) }
+}
+\end{Verbatim}
+\end{shaded}
+
+By default all tuples in the graph are boolean-valued with default
+value true. In the above example all literals are actually
+true-valued. A rule @{X, Y, { (p X Y) (q Y) } { (q X)! }@
+means $\forall X Y~ p(X, Y) q(Y) \To \neg q(X)$. If in the KB we only
+store true facts, this would 'delete' the fact @(q X)!@ from the KB
+(for some $X$).
+
+As nodes of our graph can be of any type, we can represent predicates
+of any type, for instance @{X, Y, { (p X Y) (q Y)=3 } { (q X)=4 }@
+would let $p(X)$ be double-typed.
+
+
+\subsection{Methods}
+
+The most important methods are the following:
+\begin{itemize}
+\item Checking whether \textbf{two facts are equal}. Facts are
+  grounded literals. Equality is simply checked by checking if all
+  symbols (predicate or constant) in the tuples are equal. Optionally
+  (by default), it is also checked if the fact values are equal.
+\item Checking whether \textbf{a fact equals a
+  literal+substitution}. The literal is a tuple of symbols, some of
+  which may be first order variables. All variables must be of the
+  same scope (=declared in the same subgraph, in the same rule). The
+  substitution is a mapping of these variables to root-level symbols
+  (predicate of constant symbols). The methods loops through the
+  literal's symbols; whenever a symbol is in the substitution scope it
+  replaces it by the substitution; then compares to the fact
+  symbol. Optionally (by default) also the value is checked for equality.
+\item Check whether \textbf{a fact is directly true in a KB (or
+  scope)} (without inference). This uses the graph connectivity to
+  quickly find any KB-fact that shares the same symbols; then checks
+  these for exact equality.
+\item Check whether \textbf{a literal+substitution is directly true in
+  a KB} (without inference).
+\item Given a single literal with only ONE logic variable, and a KB of facts,
+  \textbf{compute the domain} (=possible values of the variable) for the
+  literal to be true. If the literal is negated the $D \gets
+  D\setminus d$, otherwise $D \gets D \cup d$ if the $d$ is the domain
+  for true facts in the KB. [TODO: do this also for multi-variable literals]
+\item \textbf{Compute the set of possible substitutions for a
+  conjunction of literals} (typically precondition of a rule) to be
+  true in a KB.
+\item \textbf{Apply a set of 'effect literals'} (RHS of a rule): generate facts
+  that are substituted literals
+\end{itemize}
+
+Given these methods, forward chaining, or forward simulation (for
+MCTS) is straight-forward. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Optim -- data structures to represent non-linear programs, and
+  basic solvers}
+
+The optimization code contributes a nice way to represent (structured)
+optimization problems, and a few basic solvers for constrained and
+unconstrained, black-box, gradient-, and hessian-available problems.
+
+\subsection{Representing Optimization Problems}
+
+The data structures to represent optimization problems are
+
+A \textbf{standard unconstrained problem}
+\begin{align}
+\min_x f(x)
+\end{align}
+\begin{shaded}
+\begin{Verbatim}
+typedef std::function<double(arr& df, arr& Hf, const arr& x)> ScalarFunction;
+\end{Verbatim}
+\end{shaded}
+The double return value is $f(x)$. The gradient @df@ is returned only
+on request (for @df!=NoArr@). The hessian @Hf@ is returned only on
+request. If the caller requests @df@ or @Hf@ but the implementation
+cannot compute gradient or hessian, the implementation should @HALT@.
+
+These can be implemented using a lambda expression or setting it equal
+to a C-function. See the examples. 
+
+A \textbf{sum-of-squares problem} (Gauss-Newton type)
+\begin{align}
+\min_x y(x)^\T y(x)
+\end{align}
+\begin{shaded}
+\begin{Verbatim}
+typedef std::function<void(arr& y, arr& Jy, const arr& x)> VectorFunction;
+\end{Verbatim}
+\end{shaded}
+where the vector @y@ must always be returned. The Jacobian @Jy@ is
+returned on request (@Jy!=NoArr@).
+
+A \textbf{constrained problem} (for vector valued functions $f,y,g,h$)
+\begin{align}\label{eqConstrained}
+\min_x \sum_i f_i(x) + y(x)^\T y(x) \st g(x) \le 0\comma h(x) = 0
+\end{align}
+Note that we can rewrite this as
+\begin{align}
+\min_x \sum_{t\in F} \phi_t(x) + \sum_{t\in Y} \phi_t(x)^\T \phi_t(x)
+\st \forall_{t\in G}:~ \phi_t(x)\le 0\comma \forall_{t\in H}:~ \phi_t(x)=0 ~,
+\end{align}
+where the vector-valued \emph{feature} function $\phi$ contains all $f_i, y_i, g_i,
+h_i$, and the disjoint partition $F \cup Y \cup G \cup H = \{1,..,T\}$ indicates whether the
+$t$-th feature contributes a scalar objective, sum-of-square objective,
+inequality constraint or equality constraint. We represent this as
+\begin{shaded}
+\begin{Verbatim}
+enum TermType { noTT=0, fTT, sumOfSqrTT, ineqTT, eqTT };
+typedef mlr::Array<TermType> TermTypeA;
+struct ConstrainedProblem{
+  virtual ~ConstrainedProblem() = default;
+  virtual void phi(arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) = 0;
+};
+\end{Verbatim}
+\end{shaded}
+Here, the returned @phi@ is the feature vector and the returned @tt@
+indicates for every @phi@-entry its type
+%
+(@fTT, sumOfSqrTT, ineqTT, eqTT@). The (on request) returned @J@ is the Jacobian of @phi@. The
+(on request) returned @H@ is the Hessian \emph{of the scalar features
+  only}, that is, the Hessian of $\sum_i f_i(x)$.
+
+A \textbf{structured constrained problem}: Assume we have $N$ decision
+variables $x_i \in \RRR^{d_i}$, each with its own dimensionality
+$d_i$. Assume we have $J$ features $\phi_{j=1,..,J}$, but each feature $\phi_j$
+depends on only a tuples $X_j \subseteq \{x_1,..,x_N\}$ of variables. We minimize
+\begin{align}\label{eqGraphOpt}
+\min_{x_{1:N}} \sum_{j\in F} \phi_j(X_j) + \sum_{j\in Y} \phi_j(X_j)^\T \phi_j(X_j)
+\st \forall_{j\in G}:~ \phi_j(X_j)\le 0\comma \forall_{j\in H}:~ \phi_j(X_j)=0 ~.
+\end{align}
+\begin{shaded}
+\begin{Verbatim}
+struct GraphProblem {
+  virtual void getStructure(uintA& variableDimensions, uintAA& featureVariables, TermTypeA& featureTypes) = 0;
+  virtual void phi(arr& phi, arrA& J, arrA& H, const arr& x) = 0;
+};
+\end{Verbatim}
+\end{shaded}
+Here we decided to provide a method that first allows the optimizer to
+query the structure of the problem: return $N$, $d_{i=1,..,N}$, $J$,
+$X_{t=1,..,J}$, and @tt@$_{i=1,..,J}$. This allows the optimizer to
+setup its own data structures or so. Then, in each iteration the
+optimizer only queries @phi(...)@. This always returns the
+$J$-dimensional feature vector @phi@, which contains an $f_i$, $y_i$,
+$g_i$ or $h_i$-value, depending on @tt(j)@. This @phi(j)@ may only
+depend on the decision variables $X_j$. On request it returns the
+gradient @J(j)@ of @phi(j)@ w.r.t.\ $X_j$. Note that the
+dimensionality of $X_j$ may vary---therefore we return an array of
+gradients instead of a Jacobian. On request also a hessian @H(j)@ is
+returned for the scalar objectives (when @tt(j)==fTT@).
+
+A \textbf{k-order Markov Optimization} problem. We have $T$ decision
+variables $x_{1,..,T}$, each with potentially different dimensionality
+$d_{1,..,T}$. We have $J$ features $\phi_{1,..,J}$, each of which may
+only depend on $k+1$ consecutive variables $X_j=(x_{t_j-k},..,x_{t_j})$, where
+$t_j$ tells us which $k+1$-tuple feature $\phi_j$ depends on. We
+minimize again \refeq{eqGraphOpt}. For easier readibility, this is equivalent to a problem of the form:
+\begin{align}\label{eqKOMO}
+\min_{x_{1:T}}&
+\sum_{t=1}^{T} y_t(x_{t-k:t})^\T y_t(x_{t-k:t})
+\st
+ \forall_t:~ g_t(x_{t-k:t}) \le 0\comma h_t(x_{t-k:t}) = 0 ~,
+\end{align}
+where the feature with same $t_k=t$ have been collected in different
+vector-value functions $y_t, g_t, h_t$.
+\begin{shaded}
+\begin{Verbatim}
+struct KOMO_Problem {
+  virtual uint get_k() = 0;
+  virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, TermTypeA& featureTypes)=0;
+  virtual void phi(arr& phi, arrA& J, arrA& H, TermTypeA& tt, const arr& x) = 0;
+};
+\end{Verbatim}
+\end{shaded}
+Here, the structure function returns $N$, $d_{1,..,N}$, $J$, $t_j$,
+@tt(j)@.
+
+
+%% /** NOTE: Why do I define the functions with many arguments to return f, J, and constraints all at once,
+%%  * instead of having nice individual methods to return those?
+%%  *
+%%  * 1) Because I want these problem definitions (classes) to be STATE-LESS. That is, there should not be a set_x(x); before a get_f();
+%%  *    I really have bad experience with non-stateless problem definitions.
+%%  *
+%%  * 2) Because the computation of quantities is expensive and it is usually most efficient to compute all needed quantities together
+%%  *    (Instead of calling get_f(x); and then get_J(x); separately)
+%%  *
+%%  * The methods allow some returns to be optional: use NoArr
+%%  *
+%%  */
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Kinematics -- data structures to represent kinematic
+  configurations, interface models/optimizers/simulators, represent
+  task spaces}
+
+\subsection{Task Spaces}
+
+\subsubsection{Purpose}
+
+Task spaces are defined by a mapping $\phi:~ q\to y$ from the joint
+state $q\in\RRR^n$ to a task space $y\in\RRR^m$. They are central in
+designing motion and manipulation, both, in the context of trajectory
+optimization as well as in specifying position/force/impedance
+controllers:
+
+For \textbf{trajectory optimization}, cost functions are defined by
+costs or constraints in task spaces. Given a single task space $\phi$,
+we may define
+\begin{items}
+\item costs $\norm{\phi(q)}^2$,
+\item an inequality constraint $\phi(q)\le 0$ (element-wise inequality),
+\item an equality constraint $\phi(q) = 0$.
+\end{items}
+All three assume that the `target' is at zero. For convenience, the
+code allows to specify an additional linear transform $\tilde\phi(q)
+\gets \rho(\phi(q)-y_\text{ref})$, defined by a target reference
+$y_\text{ref}$ and a scaling $\rho$. In KOMO, costs and constraints
+can also be defined on $k+1$-tuples of consecutive states in task
+space, allowing to have cost and constraints on task space velocities
+or accelerations. Trajectory optimization problems are defined by many
+such costs/constraints in various task spaces at various time steps.
+
+For simple \textbf{feedback control}, in each task space we may have
+\begin{items}
+\item a desired linear acceleration behavior in the task space
+\item a desired force or force constraint (upper bound) in the task
+  space
+\item a desired impedance around a reference
+\end{items}
+All of these can be fused to a joint-level force-feedback controller
+(details, see controller docu). On the higher level, the control mode
+is specified by defining multiple task spaces and the desired
+behaviors in these. (The activity of such tasks (on the symbolic
+level) is controlled by the RelationalMachine, see its docu.)
+
+In both cases, defining task spaces is the core.
+
+\subsubsection{Basic notation}
+
+We follow the notation in the robotics lecture slides. We enumerate
+all bodies by $i\in\BB$. We typically use $v,w\in\RRR^3$ to denote
+vectors attached to bodies. $\TR{W}{i}$ is the 4-by-4 homogeneous
+transform from world frame to the frame of shape $i$, and $\RO{W}{i}$
+is its rotation matrix only. In the text (not in equations) we
+sometimes write
+$$(i+ v)$$
+where $i$ denotes a body and $v\in\RRR^3$ a relative 3D-vector. The
+rigorous notation for this would be $\TR{W}{i} v$, which is the
+position of $i$ plus the relative displacement $v$.
+
+To numerically evaluate kinematics we assume that, for a certain joint
+configuration $q$, the positions $p_k$ and axes $a_k$ of all joints
+$k\in JJ$ have been precomputed. The boolean expression
+$$[k\prec i] $$ iff joint $k$ is ``below'' body $i$ in the kinematic
+tree, that is, joint $k$ is between root and body $i$ and therefore
+moves it.
+
+Sometimes we write $J_{\cdot k}=...$, which means that the $k$th
+column of $J$ is defined as given.
+
+Let's first define
+\begin{align}
+(A_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ rotational}]~ a_k && \text{axes matrix below $i$}
+\end{align}
+This matrix contains all rotational axes below $i$ as columns and will
+turn out convenient, because it captures all axes that make $i$
+move. Many Jacobians can easily be described using $A_i$. Analogously
+we define
+\begin{align}
+(T_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ prismatic}]~ a_k && \text{prism matrix below $i$}
+\end{align}
+This captures all prismatic joints. Note the following relation to
+Featherstone's notation: In his notation, $h_k\in\RRR^6$ denotes, for
+very joint $k$, how much the joints contributes to rotation and translation,
+expressed in the link frame. The two matrices $A_i$ and $T_i$ together
+express the same, but in world coordinates. While typically axes have
+unit length (and entries of $h$ are zeros or ones), this is not necessary
+in general, allowing for arbitrary scaling of joint configurations $q$
+with these axis (e.g., using degree instead of radial units).
+
+For convenience, for a matrix of 3D columns $A\in\RRR^{n\times 3}$, we write
+$$B = A\times p \iff B_{\cdot k} = A_{\cdot k} \times p$$
+which is the column-wise cross product. Also, we define
+\begin{align}
+(\hat A_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ rotational}]~ a_k \times p_k && \text{axes
+    position matrix below $i$}
+\end{align}
+which could also be written as $\hat A_i = A_i \times P$ if $P$
+contains all axes positions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Task Spaces}
+
+\paragraph{Position}
+
+\begin{align}
+\phi^\pos_{iv}(q)
+ &= \TR{W}{i}~ v
+ && \text{position of $(i+v)$} \\
+J^\pos_{iv}(q)_{\cdot k}
+ &= [k\prec i]~ a_k \times(\phi^\pos_{iv}(q) - p_k) \\
+J^\pos_{iv}(q)
+ &= A_i \times \phi^\pos_{iv}(q) - \hat A_i \\
+\phi^\pos_{iv-jw}(q)
+ &= \phi^\pos_{iv} - \phi^\pos_{jw}
+ && \text{position difference} \\
+J^\pos_{iv-jw}(q)
+ & = J^\pos_{iv} - J^\pos_{jw} \\
+\phi^\pos_{iv|jw}(q)
+ & = R_j^\1 (\phi^\pos_{iv} - \phi^\pos_{jw})
+ && \text{relative position} \\
+J^\pos_{iv|jw}(q)
+ & = R_j^\1 [J^\pos_{iv}-J^\pos_{jw} - A_j \times (\phi^\pos_{iv} - \phi^\pos_{jw})]
+\end{align}
+
+Derivation: For $y=R p$ the derivative w.r.t.\ a rotation around axis
+$a$ is $y' = R p' + R' p = R p' + a \times R p$. For $y=R^\1 p$ the
+derivative is $y' = R^\1 p' - R^\1 (R') R^\1 p = R^\1 (p' - a \times
+p)$.  (For details see
+\url{http://ipvs.informatik.uni-stuttgart.de/mlr/marc/notes/3d-geometry.pdf})
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Vector}
+
+\begin{align}
+\phi^\veC_{iv}(q)
+ &= \RO{W}{i}~ v
+ && \text{vector} \\
+J^\veC_{iv}(q)
+ &= A_i\times \phi^\veC_{iv}(q) \\
+\phi^\veC_{iv-jw}(q)
+ &= \phi^\veC_{iv} - \phi^\veC_{jw}
+ && \text{vector difference} \\
+J^\veC_{iv-jw}(q)
+ &= J^\veC_{iv} - J^\veC_{jw} \\
+\phi^\veC_{iv|j}(q)
+ &= R_j^\1 \phi^\veC_{iv}
+ && \text{relative vector} \\
+J^\veC_{iv|j}(q)
+ &= R_j^\1 [J^\veC_{iv} - A_j \times \phi^\veC_{iv}]
+\end{align}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Quaternion}
+
+See equation (15) in the geometry notes for explaining the jacobian.
+\begin{align}
+\phi^\quat_{i}(q)
+ &= \text{quaternion}(\RO{W}{i})
+ && \text{quaternion $\in\RRR^4$} \\
+J^\quat_{i}(q)_{\cdot k}
+ &= \mat{c}{0 \\ \half (A_i)_{\cdot k}} \circ \phi^\quat_{i}(q)
+ && J^\quat_{i}(q)\in\RRR^{4 \times n} \\
+\phi^\quat_{i-j}(q)
+ &= \phi^\quat_{i} - \phi^\quat_{j}
+ && \text{difference $\in\RRR^4$} \\
+J^\quat_{i-j}(q)
+ &= J^\quat_{i} - J^\quat_{j} \\
+\phi^\quat_{i|j}(q)
+ &= (\phi^\quat_{j})^\1 \circ \phi^\quat_{i}
+ && \text{relative} \\
+J^\quat_{i|j}(q)
+ &= \text{not implemented}
+\end{align}
+
+A relative rotation can also be measured in terms of the 3D rotation
+vector. Lets define
+$$w(r) = \frac{2 \p}{\sin(\p)} \bar r \comma
+\p=\acos(r_0)$$
+as the rotation for a quaternion. We have
+\begin{align}
+\phi^\rotvec_{i|j}(q)
+ &= w(\phi^\quat_{j})^\1 \circ \phi^\quat_{i})
+ && \text{relative rotation vector $\in\RRR^3$} \\
+J^\rotvec_{i|j}(q)
+ &= AJ^\quat_{i} - J^\quat_{j} \\
+\end{align}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Alignment}
+
+parameters: shape indices $i,j$, attached vectors $v,w$
+
+$\phi^\text{align}_{iv|jw}(q) = (\phi^\veC_{jw})^\T~ \phi^\veC_{iv}$
+
+$J^\text{align}_{iv|jw}(q) = (\phi^\veC_{jw})^\T~ J^\veC_{iv} +\phi^\veC_{iv}{}^\T~ J^\veC_{jw}$
+
+Note: \quad $\phi^\text{align}=1 \oto $ align \quad $\phi^\text{align}=-1 \oto $ anti-align \quad $\phi^\text{align}=0 \oto $ orthog.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Gaze}
+
+2D orthogonality measure of object relative to camera plane
+
+parameters: eye index $i$ with offset $v$; target index $j$ with
+offset $w$
+
+\begin{align}
+\phi^\text{gaze}_{iv,jw}(q)
+ &= \mat{c}{
+\phi^\veC_{i,e_x}{}^\T (\phi^\pos_{jw} - \phi^\pos_{iv}) \\
+\phi^\veC_{i,e_y}{}^\T (\phi^\pos_{jw} - \phi^\pos_{iv}) } \quad\in\RRR^2
+\end{align}
+Here $e_x=(1,0,0)$ and $e_y=(0,1,0)$ are the camera plane axes.
+
+Jacobians straight-forward
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{qItself}
+
+$\phi^\text{qItself}_{iv,jw}(q) = q$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Joint limits measure}
+
+parameters: joint limits $q_{\text{low}}, q_{\text{hi}}$, margin $m$
+
+$\phi_{\text{limits}}(q) = \frac{1}{m}\sum_{i=1}^n [m-q_i+q_{\text{low}}]^+ + [m+q_i-q_{\text{hi}}]^+$
+
+$J_{\text{limits}}(q)_{1,i} = - \frac{1}{m}[m-q_i+q_{\text{low}}>0] + \frac{1}{m}[m+q_i-q_{\text{hi}}>0]$
+
+$[x]^+ = x>0\text{?}x:0$ \qquad $[\cdots]$: indicator function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Collision limits measure}
+
+parameters: margin $m$
+
+$\phi_{\text{col}}(q) = \frac{1}{m}\sum_{k=1}^K [m-|p^a_k - p^b_k|]^+$
+
+$J_{\text{col}}(q) = \frac{1}{m} \sum_{k=1}^K [m-|p^a_k - p^b_k|>0]
+(- J^\pos_{p^a_k} + J^\pos_{p^b_k})^\T \frac{p^a_k - p^b_k}{|p^a_k - p^b_k|}$ 
+
+A collision detection engine returns a set $\{
+(a,b,p^a,p^b)_{k=1}^K \}$ of potential collisions between shape $a_k$
+and $b_k$, with nearest points $p^a_k$ on $a$ and $p^b_k$ on $b$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Shape distance measures (using SWIFT)}
+
+\begin{items}
+\item  allPTMT, //phi=sum over all proxies (as is standard)
+\item  listedVsListedPTMT, //phi=sum over all proxies between listed shapes
+\item  allVsListedPTMT, //phi=sum over all proxies against listed shapes
+\item  allExceptListedPTMT, //as above, but excluding listed shapes
+\item  bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
+\item  pairsPTMT, //sum over proxies of explicitly listed pairs (shapes is n-times-2)
+\item  allExceptPairsPTMT, //sum excluding these pairs
+\item  vectorPTMT //vector of all pair proxies (this is the only case
+  where dim(phi)>1)
+\end{items}
+
+\paragraph{GJK pairwise shape distance (including negative)}
+
+\paragraph{Plane distance}
+
+\subsubsection{Application}
+
+Just get a glimpse on how task space definitions are used to script
+motions, here is a script of a little PR2 dance. (The 'logic' below
+the script implements kind of macros -- that's part of the RAP.)
+(\texttt{wheels} is the same as qItself, but refers only to the 3 base coordinates)
+
+\begin{shaded}
+\begin{Verbatim}[fontfamily=courier,fontsize=\tiny]
+cleanAll #this only declares a novel symbol...
+
+Script {
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffR) }  #this waits for convergence of activities
+  (cleanAll) #this switches off the current activities
+  (cleanAll)! #this switches off the switching-off
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}
+  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffL) }
+  (cleanAll)
+  (cleanAll)!
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv MyTask endeffL) }
+  (cleanAll)
+  (cleanAll)!
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}
+  (HomingActivity)
+  { (conv HomingActivity) (conv FollowReferenceActivity wheels) }
+}
+
+
+Rule {
+    X, Y, 
+    { (cleanAll) (conv X Y) }
+    { (conv X Y)! }
+}
+
+Rule {
+    X, 
+    { (cleanAll) (MyTask X) }
+    { (MyTask X)! }
+}
+
+Rule {
+    X, 
+    { (cleanAll) (FollowReferenceActivity X) }
+    { (FollowReferenceActivity X)! }
+}
+\end{Verbatim}
+\end{shaded}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{KOMO}
+
+I do not introduce the KOMO concepts here. Read this\footnote{
+M. Toussaint: A tutorial on Newton methods for constrained trajectory
+optimization and relations to SLAM, Gaussian Process smoothing,
+optimal control, and probabilistic inference. In Geometric and
+Numerical Foundations of Movements, Springer, 2016.}
+\url{http://ipvs.informatik.uni-stuttgart.de/mlr/papers/16-toussaint-Newton.pdf} !
+
+The goal of the implementation is the separation between the code of
+optimizers and code to specify motion problems. The problem
+form \refeq{eqKOMO} provides the abstraction for that interface. The
+optimization methods all assume the general form
+\begin{align}\label{eqOpt}
+\min_x f(x) \st g(x)\le 0 \comma h(x) = 0
+\end{align}
+of a non-linear constrained optimization problem, with the additional
+assumption that the (approximate) Hessian $\he f(x)$ can be provided
+and is semi-pos-def. Therefore, the KOMO code essentially does the
+following
+\begin{itemize}
+\item Provide interfaces to define sets of $k$-order task spaces and
+costs/constraints in these task spaces at various time slices; which
+constitutes a MotionProblem. Such a MotionProblem definition is very
+semantic, referring to the kinematics of the robot.
+\item Abstracts and converts a MotionProblem definition into the general
+form \refeq{eqKOMO} using a kinematics engine. The resulting
+MotionProblemFunction is not semantic anymore and provides the
+interface to the generic optimization code.
+\item Converts the problem definition \refeq{eqKOMO} into the general
+forms \refeq{eqConstrained} and \refeq{eqOpt} using appropriate matrix packings
+to exploit the chain structure of the problem. This code does not
+refer to any robotics or kinematics anymore.
+\item Applies various optimizers. This is generic code.
+\end{itemize}
+
+The code introduces specialized matrix packings to exploit the
+structure of $J$ and to efficiently compute the banded matrix $J^\T
+J$. Note that the rows of $J$ have at most $(k+1)n$ non-zero elements
+since a row refers to exactly one task and depends only on one
+specific tuple $(x_{t-k},..,x_t)$. Therefore, although $J$ is
+generally a $D\times (T+1)n$ matrix (with $D=\sum_t \dim(f_t)$),
+each row can be packed to store only $(k+1)n$ non-zero elements. We
+introduced a \emph{row-shifted} matrix packing representation for
+this. Using specialized methods to compute $J^\T J$ and $J^\T x$ for
+any vector $x$ for the row-shifted packing, we can efficiently compute
+the banded Hessian and any other terms we need in Gauss-Newton
+methods.
+
+
+\subsection{Formal problem representation}
+
+The following definitions also document the API of the code.
+\begin{description}
+\item[KinematicEngine] is a mapping $\G:~ x \mapsto \G(x)$
+that maps a joint configuration to a data structure $\G(x)$ which
+allows to efficiently evaluate task maps. Typically $\G(x)$ stores
+the frames of all bodies/shapes/objects and collision
+information. More abstractly, $\G(x)$ is any data structure that is
+sufficient to define the task maps below.
+
+Note: In the code there is yet no abstraction KinematicEngine. Only
+one specific engine (KinematicWorld) is used. It would be
+straight-forward to introduce an abstraction for kinematic engines
+pin-pointing exactly their role for defining task maps.
+
+\item[TaskMap] is a mapping $\phi:~ (\G_{-k},..,\G_0) \mapsto
+(y,J)$ which gets $k+1$ kinematic data structures as input and returns
+some vector $y\in\RRR^d$ and (on request) its Jacobian $J\in\RRR(d\times n)$.
+
+\item[Task] is a tuple $c=(\phi, \r_{1:T},
+ y^*_{1:T},\textsf{tt})$ where $\phi$ is a TaskMap and the
+parameters $\r_{1:T},y^*_{1:T} \in\RRR^{T\times d}$ allow for an
+additional linear transformation in each time slice. Here,
+$d=\dim(\phi)$ is the dimensionality of the task map. This defines the
+transformed task map
+\begin{align}
+\hat\phi_t(x_{t-k},..,x_t)
+& = \diag(\r_t) (\phi(\G(x_{t-k}),..,\G(x_t)) - y^*_t) ~,
+\end{align}
+which depending on $\textsf{tt}\in\{\textsf{fTT, sumOfSqrTT, ineqT, eqT}\}$ is
+interpreted as cost or constraint feature. Note that, in the cost case,
+$y^*_{1:T}$ has the semantics of a reference target for the task
+variable, and $\r^*_{1:T}$ of a precision. In the code,
+$\r_{1:T},y^*_{1:T}$ may optionally be given as $1\times 1$, $1\times
+T\po$, $d\times 1$, or $d\times T\po$ matrices---and are interpreted
+constant along the missing dimensions.
+
+\item[MotionProblem] is a tuple $(T,\CC,x_{-k+1:0})$ which gives
+the number of time steps, a list $\CC=\{c_i\}$ of Tasks, and
+a \emph{prefix} $x_{-k:-1} \in\RRR^{k\times n}$. The prefix allows to
+evaluate tasks also for time $t\le k$, where the prefix defines the
+kinematic configurations $\G(x_{-k+1}),..,\G(x_0)$ at negative
+times. This defines the KOMO problem.
+
+\end{description}
+
+
+
+
+\subsection{User Interfaces}
+
+\subsubsection{Easy}
+
+For convenience there is a single high-level method to call the
+optimization, defined in @<Motion/komo.h>@
+\begin{code}
+\begin{verbatim}
+/// Return a trajectory that moves the endeffector to a desired target position
+arr moveTo(ors::KinematicWorld& world, //in initial state
+           ors::Shape& endeff,         //endeffector to be moved
+           ors::Shape& target,         //target shape
+           byte whichAxesToAlign=0,    //bit coded options to align axes
+           uint iterate=1);            //usually the optimization methods may be called just
+                                       //once; multiple calls -> safety
+\end{verbatim}
+\end{code}
+The method returns an optimized joint space trajectory so that the
+endeff reaches the target. Optionally the optimizer additionaly
+aligns some axes between the coordinate frames. This is just one
+typical use case; others would include constraining vector-alignments
+to zero (orthogonal) instead of +1 (parallel), or directly specifying
+quaternions, or using many other existing task maps. See expert
+interface.
+
+This interface specifies the relevant coordinate frames by referring
+to Shapes. Shapes (@ors::Shape@) are rigidly attached to bodies
+(``links'') and usually represent a (convex) collision
+mesh/primitive. However, a Shape can also just be a marker frame
+(@ShapeType markerST=5@), in which case it is just a convenience to
+define reference frames attached to bodies. So, the best way to
+determine the geometric parameters of the endeffector and target
+(offsets, relative orientations etc) is by transforming the respective
+shape frames (@Shape::rel@).
+
+The method uses implicit parameters (grabbed from cfg file or command line or default):
+\begin{code}
+\begin{verbatim}
+  double posPrec = MT::getParameter<double>("KOMO/moveTo/precision", 1e3);
+  double colPrec = MT::getParameter<double>("KOMO/moveTo/collisionPrecision", -1e0);
+  double margin = MT::getParameter<double>("KOMO/moveTo/collisionMargin", .1);
+  double zeroVelPrec = MT::getParameter<double>("KOMO/moveTo/finalVelocityZeroPrecision", 1e1);
+  double alignPrec = MT::getParameter<double>("KOMO/moveTo/alignPrecision", 1e3);
+\end{verbatim}
+\end{code}
+
+
+\subsubsection{Using a specs file}
+
+Example:
+\begin{code}
+\begin{verbatim}
+KOMO{
+  T = 100
+  duration = 5
+}
+
+Task sqrAccelerations{
+  map={ type=qItself }
+  order=2    # accelerations (default is 0)
+  time=[0 1] # from start to end (default is [0 1])
+  type=cost  # squared costs (default is 'cost')
+  scale=1    # factor of the map (default is [1])
+  target=[0] # offset of the map (default is [0])
+}
+
+Task finalHandPosition{
+  map={ type=pos ref1=hand ref2=obj vec1=[0 0 .1] }
+  time=[1 1] # only final
+  type=equal # hard equality constraint
+}
+
+Task finalAlignmentPosition{
+  map={ type=vecAlign ref1=hand vec1=[1 0 0] vec2=[0 1 0]}
+  time=[1 1] # only final
+  type=equal # hard equality constraint
+  target=[1] # scalar product between vec1@hand and vec2@world shall be 1
+}
+
+Task collisions{
+  map={ type=collisionIneq margin=0.05 }
+  type=inEq # hard inequality constraint
+}
+\end{verbatim}
+\end{code}
+
+
+
+\subsubsection{Expert using the included kinematics engine}
+
+See the implementation of @moveTo@! This really is the core guide to
+build your own cost functions.
+
+More generically, if the user would like to implement new TaskMaps or
+use some of the existing ones:
+\begin{itemize}
+\item The user can define new $k$-order task maps by instantiating the
+abstraction. There exist a number of predefined task maps. The
+specification of a task map usually has only a few parameters like
+``which endeffector shape(s) are you referring to''. Typically, a good
+convention is to define task maps in a way such that \emph{zero} is a
+desired state or the constraint boundary, such as relative
+coordinates, alignments or orientation. (But that is not necessary,
+see the linear transformation below.)
+
+\item To define an optimization problem, the user creates a list of
+tasks, where each task is defined by a task map and parameters that
+define how the map is interpreted as a) a cost term or b) an inequality
+constraint. This interpretation allows: a linear
+transformation separately for each $t$ (=setting a reference/target
+and precision); how maps imply a constraint. This interpretation has a
+significant number of parameters: for each time slice different
+targets/precisions could be defined.
+\end{itemize}
+
+
+\subsubsection{Expert with own kinematics engine}
+
+The code needs a data structure $\G(q_t)$ to represent the
+(kinematic) state $q_t$, where coordinate frames of all
+bodies/shapes/objects have been precomputed so that evaluation of task
+maps is fast. Currently this is @KinematicWorld@.
+
+Users that prefer using the own kinematics engine can instantiate the
+abstraction. Note that the engine needs to fulfill two roles: it must
+have a @setJointState@ method that also precomputes all frames of all
+bodies/shapes/objects. And it must be siffucient as argument of your
+task map instantiations.
+
+\subsubsection{Optimizers}
+
+The user can also only use the optimizers, directly instantiating the
+$k$-order Markov problem abstraction; or, yet a level below, directly
+instantiating the @ConstrainedProblem@ abstraction. Examples are given
+in @examples/Optim/kOrderMarkov@ and
+@examples/Optim/constrained@. Have a look at the specific
+implementations of the benchmark problems, esp.\ the
+@ParticleAroundWalls@ problem.
+
+\subsubsection{Parameters \& Reporting}
+
+Every run of the code generates a MT.log file, which tells about every
+parameter that was internally used. You can overwrite any of these
+parameters on command line or in an MT.cfg file.
+
+Inspecting the cost report after an optimization is
+important. Currently, the code goes through the task list $\CC$ and
+reports for each the costs associated to it. There are also methods to
+display the cost arising in the different tasks over time.
+
+
+%% \subsection{Special Cases}
+
+%% \subsubsection{``True'' dynamics for fully articulated systems}
+
+%% %% penalize $u = M\ddot q + C\dot q + G$
+
+%% %% Our kinematics: no efficient implementation of C!! Approximate $C\dot q
+%% %% + G = F$ indep of $\dot q$; and all terms indep of $q$!!
+
+%% \subsubsection{Jerk optimization: 3-order}
+
+%% \subsubsection{Gaussian Process priors: kernel regularization}\label{secKernel}
+
+%% \subsubsection{Inverse Kinematics: 1-order 1-step}
+
+%% \subsubsection{Operational Space Control: 2-order 1-step}
+
+%% \subsubsection{Endpose Optimization: 2-order 1-step}
+
+%% \subsubsection{Multipose Optimization}
+
+
+%% \subsection{Time Optimization}
+
+\subsection{Potential Improvements}
+
+There is many places the code code be improved (beyond documenting it
+better):
+\begin{items}
+\item The KinematicEngine should be abstracted to allow for easier
+plugin of alternative engines.
+
+\item Our kinematics engine uses SWIFT++ for proximity and penetration
+computation. The methods would profit enormously from better (faster,
+more accurate) proximity engines (signed distance functions, sphere-swept
+primitives).
+\end{items}
+
+\subsection{Disclaimer}
+
+This document by no means aims to document all aspects of the code,
+esp.\ those relating to the used kinematics engine etc. It only tries
+to introduce to the concepts and design decisions behind the KOMO
+code.
+
+More documentation of optimization and kinematics concepts used in the
+code can be drawn from my teaching lectures on Optimization and
+Robotics.
+
+%\appendix
+
+%\input{old2}
+%\input{old}
+
+
+\section{Control}
+
+
+\subsection{Slow and fast control loop}
+
+There are two nested control loops:
+
+In the slow loop ($\sim 50$Hz, non-strict, non-real-time) the
+controller has full access to the results of pre-computed
+optimizations, full models of the robots kinematics (dynamics?) and
+potentially delayed information on the robot (current pose, forces,
+contacts, etc). The slow loop may realize computationally complex
+things, e.g., operational space control, re-adaptation of a plan
+(phase adaptation, recalibration of task maps), model predictive
+control, online planning, etc.
+
+The fast loop is 1kHz, strictly and real-time. It has direct access to
+the current robot state $q$ (needs to compute $\dot q$ from filtered
+differentiation of $q$) as well as the current readouts of the F/T
+sensors $u_\ft$. \textbf{We constrain the fast controller to be a linear
+regulator in these observables and their integral:}
+\begin{align}
+e
+&\gets \g e + (f^* - J_\ft^\dag u_\ft)
+  \quad\text{or}\quad \dot e = (f^*-J_\ft^\dag u_\ft) + (1-\g)e\\
+u
+&= u_0 + k_p^\text{base} \cdot K_p (q^* - q) + k_d^\text{base} \cdot K_d (\dot q^* - \dot q) + K_I e ~.
+\end{align}
+This a (redundant) parameterization of a regulator linear in $(q, \dot
+q, e)$. We choose this parameterization because $q^*, \dot q^*, f^*$
+can be interpreted as ``references''. But actually, we could just drop
+them (absorb them in $u_0$) without loosing generality. In addition to
+this, the fast loop respects control limits by clipping
+$u \gets \texttt{clip}(u, -u_{max}, u_{max}$ element-wise. $u_{max}$
+is a constant set in configuration files, not a
+fluent. \todo{Additional mechanisms should also in the fast loop
+guarantee velocity and joint limits.}
+
+The parameter vectors $k_p^\text{base}$ and $k_d^\text{base}$ are
+constants set in the PR2 configuration files. They are hand-tuned so
+that setting $K_p=K_d=I$ leads to acceptable (rather low gain)
+behavior. The $\cdot$ denotes an element-wise product.
+
+About the integral term: $J_\ft^\dag$ allows us to linearly project the
+sensor signals to any other space in which we have a target $f^*$ and
+integrate the error.
+
+$K_p, K_d, K_I, J_\ft^\dag$ are arbitrary matrices; $u_0$ an arbitrary
+control bias. Therefore, the \textbf{control mode} of the fast loop is
+determined by the tuple
+\begin{align}
+M = (q^*, \dot q^*, f^*, u_0, K_p, K_d, K_I, J_\ft^\dag, \g) ~.
+\end{align}
+This is the message that the slow loop needs to send to the fast loop
+-- the slow loop can change the control mode at any time.
+
+Inversely, the fast loop passes the message
+\begin{align}
+(q, \dot q, f, u)
+\end{align}
+to the slow loop, giving it information on the true current state
+ $(q, \dot q)$, sensor readings $f$, and computed controls $u$.
+
+The core question therefore is how the slow loop computes the message
+$M$ to realize the desired control behaviors. The list of basic desired
+control behaviors is:
+\begin{enumerate}
+\item Follow a pre-computed trajectory $(q_{0:T},\tau)$, where $\tau$
+is the time resolution
+\item Follow the position-reference that is online computed by a
+operational space (or inverse kinematics) controller; the $K_p$ should
+such that P-gains can be set/added/removed along \emph{endeffector}
+spaces rather than only uniformly configuration space
+\item Establish a contact
+\item Stabalize a contact force
+\item Limit F/T (to avoid breaking a handle)
+\item Sliding (moving tangentially) on a surface (or along a DOF like
+  an opening door) which is perceived via the F/T signal
+\end{enumerate}
+
+
+\subsection{Operational Space Control: Computing gains by projecting
+operational space gains}
+
+The appendix B derived the necessary equations in all generality. In
+practise, it is sufficient to modify the $K_p$ only, using the
+Jacobian of the desired task space. In equation \refeq{eqProjGains} we have
+\begin{align}
+\bar K_p = A^\1 J^\T C K_p J \comma A = H + J^\T C J ~,
+\end{align}
+where we assumed $M=\Id$ (quasi-dynamic model) and no other
+tasks. Further, assuming $C=c$ and $K_p=k$ are scalars we have
+\begin{align}
+\bar K_p = k(H/c+J^\T J)^\1 J^\T J ~.
+\end{align}
+I actually tested just $k J^\T J$.
+
+TODO: Let @FeedbackController@ really compute these projected PD
+behaviors, instead of only $q^*,\dot q^*$! Then all of this is
+automatic!
+
+
+
+\subsection{Controlling the F/T signal---the \emph{sensed} force}
+
+\subsubsection{Preliminaries: Understanding force transmission}
+
+The following law of force propagation is well known,
+\begin{align}\label{eqForce}
+u = J^\T f
+\end{align}
+where $f$ is a force in the endeffector (e.g., the negative
+of its gravity load), $J$ the position Jacobian of the endeffector,
+and $u$ are the torques ``perceived'' in each of the joints due to the
+force $f$. This law is correct only under the assumption that nothing
+moves. Inversely, this law is typically used to compensate forces:
+Assume you have a load on an endeffector, gravity pulls it down. The
+gravity force pulling the load down propagates to torques $u$ in each
+joint -- if you want to compensate this torque the motors need to
+create the reative torque.
+
+The same also holds for force-torque $f\in\RRR^6$, where the Jacobian
+is the stacking of the position and the axial Jacobian.
+
+Typically, $f$ is lower-dimensional than $u$. So, actually, there
+should be many $u$ that generate a desired $f^*$? What is the optimal
+one? Well, assume $f^*=0$ for a moment. Then, any choice of $u$ will
+accelerate the robot (assuming gravity compensation). The only choice
+to generate $f^*=0$ and not to accelerate the robot is $u=0$. Equally,
+the only choice to generate any $f^*$ without accelerating the robot
+is $u = J^\T f^*$.
+
+When we include system dynamics in the equation, we have the general
+\begin{align}\label{eqDyn}
+u = M \ddot q + h + J^\T f ~.
+\end{align}
+where $M$ (the inertia matrix) and $h$ (the coreolis and gravity
+forces) depend on $(q,\dot q)$. One way to read this equation is: the
+torques you ``feel'' in the joints are the reactive torques of the
+robot's inertia (that derive the acceleration) plus the torque you
+feel from the endeff force $f$.
+
+
+\subsubsection{Controlling the direct F/T signal with a fixated endeff}
+
+Consider the following exercise: Fix the endeffector rigidly, e.g.\ to
+a table with a clamp (Schraubzwinge). Write a controller that
+generates any desired $f^*$ in the F/T sensor with the least effort,
+and stably, and staying close to a desired homing posture.
+
+If we unrealistically assume that our model is correct then the
+solution simply is \refeq{eqDyn}; for $\ddot q =0$ and a
+gravity-compensated robot just \refeq{eqForce}; where
+\begin{align}
+J = J_\ft ~,
+\end{align}
+which is the position and axial Jacobian of the F/T sensor w.r.t.\ q.
+
+However, this equation \textbf{does not use any F/T sensor feedback}
+to generate the desired F/T signal. This cannot work well in practise.
+We can resolve this with an I-controller on the F/T signal error.
+\begin{align}\label{ctrlInt}
+e
+&= \int_t dt [f^* - f] \\
+u
+&= J^\T \a e ~.
+\end{align}
+
+The $\a$ here has the meaning of an exponential decay of the signal
+error---which we can show assuming the perfect model. Under perfect
+model assumption, the F/T sensor measures
+\begin{align}
+f
+&= J^\dag u \comma J^\dag J^\T \equiv \Id \comma J^\dag = (J J^\T)^\1 J \\
+& \quad \text{Note: } J^\dag u = J^\dag J^\T f = (J J^\T)^\1 J J^\T f = f \\
+\end{align}
+Note that $J J^\T$ is a $d\times d$-matrix and invertible and $J^\dag$
+the appropriate left-pseudo-inverse of $J^\T$. Inserting
+this perfect-model measurement in the control law \refeq{ctrlInt} we
+get
+\begin{align}
+\dot e
+&= f^* - J^\dag u \\
+\dot u
+&= J^\T \a (f^* - J^\dag u) = \a J^\T f^* - \a \underbrace{J^\T
+J^\dag}{=\Id} u = \a (J^\T f^* - u)  ~.
+\end{align}
+Here, $J^\T J^\dag = J^\T (J J^\T)^\1 J^\T$ is actually the
+projection that projects any joint torques $u$ into the space that
+directly relates to endeffector forces and not to
+accelerations. However, if the $u$ was chosen by some law $J^\T f$,
+then $u$ will always lie within this projection (will never lead to
+accelerations of the robot), and therefore it actually is the identity
+matrix.
+
+Now, the above states that $\dot u = \a (J^\T f^* - u)$, which says
+that $u$ exponentially approaches the perfect-model correct torque
+$J^\T f^*$, which a decay rate $\a$. Therefore, $\a$ can be considered
+a decay rate.
+
+\textbf{Open:} What if we have a $\ddot q$ as well? Two possibilities: 1)
+Reiterate the above reasoning with $\ddot q$. 2) Just add the signals.
+
+
+\subsubsection{Control the indirectly sensed contact force of endeff}
+
+Exercise: We have the F/T sensor, but attached to it a hand and a
+contact point with some relative transformation to the F/T
+sensor. This point is in contact with a table. What we want to control
+is the force between point and table, which is just a 1D thing.
+
+This is best addressed by thinking of the F/T sensor as if it was a 6D
+joint (like a ball joint). If we have a force $f$ at some
+endeffector then we ``feel'' this force in all joints of the robot as
+$u = J^\T f$. This includes the F/T sensor joints! So the Jacobian of the
+endeffector variable (be it 1D or 3D) w.r.t.\ the sensor pseudo-ball-joint
+exactly gives the measurement equation. Let's denote this Jacobian as
+\begin{align}
+J_\ft \in \RRR^{d\times 6} ~,
+\end{align}
+where $d=1$ if it is only the distance to the table, or $d=3$ if it is
+all forces. Further, let's denote by
+\begin{align}
+J \in \RRR^{d\times n}
+\end{align}
+the Jacobian w.r.t.\ all the real robot joints.
+
+As above, the \emph{perceived} endeffector force (this time perceived
+by the F/T sensor) is
+\begin{align}
+u_\ft = J^\T_\ft f \quad\To\quad f = J^\dag_\ft u_\ft ~,
+\end{align}
+where $u_\ft\in\RRR^6$ is the F/T signal. Again we may use an I-controller
+to correct for the error between desired endeffector force $f^*$ and
+perceived one:
+\begin{align}
+\dot e
+&= f^* - f
+ = f^* - J^\dag_\ft u_\ft \\
+u
+&= J^\T \a e ~.
+\end{align}
+Note that the last equation generates joint torques proportional to
+the normal endeffector Jacobian $J$ because $e$ is an error in
+endeffector force space (not F/T signal space).
+
+This fits to our contoller setup by
+\begin{align}
+J^\dag_\ft &\gets J^\dag_\ft \comma
+f^* \gets f^* \comma
+\g  \gets 1 \comma
+K_I \gets \a J^\T ~.
+\end{align}
+When force control is turned off, we need to remember to set $\g=0, e=0$ to
+ensure that next time it is turned on again it doesn't blow.
+
+\textbf{Open:} What happens for $\g<1$? Is this equivalent to $\a<1$? Perhaps not.
+($\sum_{t=0}^\infty \g^t = \frac{1}{1-\g}$)
+
+
+%% Given a force $f_e$ at the endeff point, the F/T sensor reads
+%% (assuming no motions)
+%% \begin{align}
+%% f
+%% &= (f_e; \tau) \\
+%% \tau_i
+%% &= r_i \times f_e \\
+%% r_i
+%% &= (\Id - a_i a_i^\T) (p_e - p_\ft)
+%% \end{align}
+%% where $\tau$ is the measured force, $a_i$ is the $i$th F/T
+%% axis $a_i$ (the $i$th axis around which torque is measured), $r_i$ the lever for $a_i$, that is, $r_i$ is the part of $(p_e - p_\ft)$ that is
+%% orthogonal to $a_i$, $p_e$ the position of the endeff point, and
+%% $p_\ft$ the origin of the F/T sensor. All this is linear, so let's
+%% write
+%% \begin{align}
+%% \tau = R f_e
+%% \end{align}
+
+%% Now, given that we want to control the contact force, we can set a
+%% desired $f_e^*$, translate this to the desired $f^*$ and control
+%% this. BUT, is this what we want? Because that would control a 6D F/T
+%% signal although we originally wanted to control only a 1D contact
+%% force???
+
+%% \textbf{this is not good thinking}
+
+
+\subsubsection{$q$-control under force constraints}
+
+Assume we have a P(I)D controller on $q$---typically a PID in some
+task space that has been projected to joint space. We would like to
+execute that desired reference behavior but subject to constraints on
+the sensed endeffector force
+\begin{align}
+f_{lo} \le J^\dag_\ft f \le f_{hi} ~.
+\end{align}
+These are $2 d$ constraints.
+
+As with lagrange parameters, we can simply activate the constraints
+when violated: When one of the components violates the constraint,
+control the force to be exactly $f_{lo|hi}$. For the latter, use the
+$f$-error-integral method as above. This should eventually have higher
+priority to any other gains (keep other I-gains limited!).
+
+\subsubsection{I-gains on position?}
+
+
+
+\subsection{Technical Details and Issues}
+
+\subsubsection{Ctrl-Message documentation}
+
+One message type for setting the control mode AND feedback from the
+controller.
+
+Setting the control model: $(q^*, \dot q^*, f^*, u_0, K_p, K_d,
+K_f)$. Can be set any time.
+
+Feedback from the controller: $(q, \dot q, f, u)$. Published with 1kHz.
+
+
+\subsubsection{Filtering of the differentiation of $q$}
+
+[Peter: please fill in]
+
+\subsection{Enforcing control, velocity, joint and force limits}
+
+Enforcing control limits is really simple: Just clip the computed $u$.
+
+Enforcing velocity limits turned out difficult: The velocity
+signal is so noisy, a direct feedback coupling was bad. Also, the
+IF-case of velocity-limit-violation turned off and on quickly and
+introduced even more noise (rattling motors...)
+
+I have ignored limits totally so far -- should be handled (as
+collisions) in the slow loop.
+
+FORCE LIMITS! Not idea how to handle this.
+
+Maybe a route to a more principled approach to all of these: Take the
+Augmented Lagrangian way to handle constraints as a template: First
+associate only a soft squared penalty with margin penetration. Then
+compute/update the respective dual parameters that push you out of the
+margin.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+
+\subsection{Reference: General OPEN-LOOP ideal contact force controller}
+
+\subsubsection{General case}
+
+This controller is sort-of open loop! It does not take into account any F/T
+feedback. What is receives as a specification is $\ddot y^*$ (desired
+endeff accel) and $\l^*$ (desired contact force); as well as models of
+the maps $\phi, J_\phi, g, J_g$. We discuss below how this can properly
+be made a feedback regulator. We write the problem as a general constraint problem
+\begin{align}
+\min_{u, \ddot q, \l}\quad
+ & \norm{u-a}^2_H \\
+\st
+ & u = M \ddot q + h + J_g^\T \lambda \\
+ & J_\phi\ddot q = c \\
+ & \l = \l^* \\
+ & \color{blue}J_g\ddot q = b
+\end{align}
+Notes:
+\begin{items}
+\item The role of $a$ becomes clearer when we treat the blue
+constraint below
+\item The 2nd constraint relates to an arbitrary task map
+$\phi:~ q \mapsto y$ with Jacobian $J_\phi$, $c = \ddot y^* - \dot
+J_\phi \dot q$ and some desired task space acceleration $\ddot y^*$.
+\item We have a set of functions $g:~ q \to \RRR^m$ with Jacobian
+$J_g$ which play the role of inequality constraints
+\item The 3rd constraint captures desired contact forces with the constraints
+\item The blue constraint expresses that a) assuming the contact is
+active there must not be acceleration w.r.t.\ $g$ or b) if the contact
+is not active we might want to control the acceleration towards it
+(to make it active). (This constrains the dynamics. Without this
+constraint the dynamics could assume that the contact forces $\l$ are
+generated while the endeff is moving (e.g., by strange external
+forces). This constraint makes it consistent.)
+\end{items}
+
+To derive closed form solutions, each of these equality constraints
+can be handled in two ways: relax it to become a squared penalty
+(and then potentially taking the infinite precision limit); or
+resolve it.
+
+We resolve the 1st and 3rd constraint, and relax the 2nd and 4th to
+later take the limit. The solution is
+\begin{align}
+\bh
+&:= h+J_g^\T\l^*  \\
+f(\ddot q)
+&=\norm{M\ddot q - (a-\bh)}^2_H
+ + \norm{J_g \ddot q - b}^2_B
+ + \norm{J_\phi \ddot q - c}^2_C \\
+\ddot q^*
+&= (M^\T H M + J_g^\T B J_g + J_\phi^\T C J_\phi)^\1 [ M^\T H (a-\bh) + J_g^\T B b + J_\phi^\T C c]
+\end{align}
+The limit $B\to\infty$:
+\begin{align}
+\ddot q^*
+&= (X + J_g^\T B J_g)^\1 [ J_g^\T B b + x ] \\
+&= J_g{}^\#_{XB} b + (\Id - J_g{}^\#_{XB} J_g)~ (X^\1 x)
+\end{align}
+And note that $(X^\1 x)$ is the solution to only having the other
+terms.
+% Because $J_g^\T \l^*$ is certainly not in the nullspace of
+%$J_g$ one can neglect it (in the limit $B\to\infty$) ---
+Given $\ddot q^*$, the optimal control is computed as $u=M\ddot q + h
++ J_g^\T \l^*$. We still did not take the limit of the $C$-term
+(endeffector position control). We could using the hierarchical limit
+case.
+
+\subsection{Reference: Pullback of operational space linear controllers}
+
+The above assumes that at any instance in time we want a certain
+task-space acceleration $\ddot y^*$ and translates this to an optimal
+joint control in that instant in time. If we want to implement a
+certain feedback behavior in the task space, that is, we have a
+desired feedback control law $\pi:~ y,\dot y \mapsto \ddot y$, we can
+evaluate $\pi$ at every point in time and project to operational space
+control.
+
+\begin{align}
+\ddot y
+ &= \ddot \phi(q) = \ddot (J q) = \dot (\dot J q + J \dot q) = 2 \dot J \dot q + J \ddot q \\
+\ddot y^*
+ &= K_p y + K_d \dot y + k \\
+J \ddot q
+ &\overset{!}= c = \ddot y^* - 2 \dot J \dot q
+  = K_p y + K_d \dot y + k - 2 \dot J \dot q \\
+ &\approx K_p (J(q-q_0)+\phi(q_0)) + K_d J \dot q + k \\
+ &= K_p J q + K_d J \dot q + k' \comma k' = k + K_p (\phi(q_0)-J q_0) \\
+\ddot q^*
+ &= A^\1 [... + J^\T C c] = A^\1 [... + J^\T C (K_p J q + K_d J \dot q + k')] \\
+ &= A^\1 [...] + A^\1 J^\T C K_p J q + A^\1 J^\T C K_d J \dot q + A^\1 J^\T C k' \\
+ &= \bar K_p q + \bar K_d \dot q + \bar k \comma
+\bar k =  A^\1 [...] + A^\1 J^\T C k'\comma \bar K_p = A^\1 J^\T C K_p
+ J\comma \bar K_d = A^\1 J^\T C K_d J \label{eqProjGains}
+\end{align}
+
+
+\subsection{How to make this FEEDBACK?}
+
+W.r.t.\ $y$ (endeff pos) it is clear how to make this feedback: We can
+impose a PD behavior on the endeffector
+$$ \ddot y^* = k_p (y^* - y) + k_d (\dot y^*-\dot y) $$
+and send this desired endeff accel to the general controller.
+
+What about $\l^*$??
+
+\subsection{What do we want?}
+
+\begin{description}
+\item[desired task space acceleration law]
+\begin{align}
+\ddot y^*
+ &= \ddot y^\rf + K_p(y^\rf-y) + K_d (\dot y^\rf -\dot y) + K_{Ip} \int (y^\rf-y) + K_{Id} \int (\dot y^\rf -\dot y)
+\end{align}
+That defines a desired \emph{acceleration}. But if the system was
+precise in enforcing this acceleration it would be
+non-compliant. Note: strictly speaking, if this law says $\ddot y^*=0$
+(e.g., because $K_p$ and $K_d$ are zero), then this is a strict
+(non-compliant) statement.
+
+\item[precision/compliance]
+Given a desried $\ddot y^*$, the precision along some
+dimensions may not that important. We may capture this with the
+precision (or compliance) matrix $C$. As a convention, let the
+$\eig(C)\in[0,1]$, and an eigenvalue of $1$ states full precision,
+while an eigen value of $0$ states full compliance.
+
+This implies an objective term
+$$\norm{J_\phi \ddot q - \ddot y^*}^2_C$$
+
+\item[Null cost reference] Typically one defines control costs
+  $\norm{u}^2_H = \norm{M \ddot q + F}^2_H$. However, this becomes
+  semantically tricky. When defining what is 'desired' I propose to
+  stay on the level of accelerations. So we have a desired ('null')
+  acceleration law
+\begin{align}
+\ddot q_0^*
+ &= \ddot q_0^\rf + K^q_p (q_0^\rf-q) + K^q_d (\dot q_0^\rf -\dot q)
+\end{align}
+and consider costs
+$$\norm{\ddot q - \ddot q_0^*}^2_H ~.$$ Note that, by appropriate
+choices of parameters, the typical control cost can be
+mimicked. However, the semantics is somewhat different. For instance,
+setting $K^q_d$ and $\dot q_0^\rf$ implies that we want to damp
+motion, and choosing controls $u$ that implement this daming are at
+\emph{null costs}. Equally, for non-zero $F$ and $\ddot q_0^*=0$,
+applying controls that ensure zero acceleration are at \emph{null
+  costs}. That's we I call it \emph{null cost reference}. This is
+rather different to generally penalize $\norm{u}^2_H$, which would
+imply costs for any controls $u$, even if they just implement
+counteracting $F$ of generating the null reference.
+
+\item[Optimal acceleration law] We compute the optimal acceperation
+  $\ddot q^*$ in its 1st order Taylor approximation w.r.t.\ $q$ and
+  $\dot q$:
+\begin{align}
+\ddot y^*
+ &= \ddot y^\rf + K_p(y^\rf-y) + K_d (\dot y^\rf -\dot y) \\
+ &\approx \ddot y^\rf + K_p y^\rf - K_p (J(q-q_0)+y_0) + K_d \dot y^\rf - K_d J \dot q \\
+ &= k - K_p J q - K_d J \dot q \comma k = \ddot y^\rf + K_p y^\rf+ K_d \dot y^\rf + K_p (J q_0 - y_0) \\
+\ddot q_0^*
+ &= k^q - K^q_p q - K^q_d \dot q
+\comma k^q = \ddot q_0^\rf + K^q_p q_0^\rf+ K^q_d \dot q_0^\rf \\
+\ddot q^*
+ &= \argmin_{\ddot q} \norm{\ddot q - \ddot q_0^*}^2_H + \norm{J \ddot q - \ddot y^*}^2_C \\
+ &= (H + J^\T C J)^\1 [H \ddot q_0^* + J^\T C \ddot y^*] \\
+ &\approx
+ \bar k - \bar K_p q - \bar K_d \dot q \\
+ &= \bar K_p (q_\rf - q) - \bar K_d \dot q \comma q_\rf = \bar K_p^\1 \bar k  \label{eqProjGains}\\
+\bar K_p
+ &= (H + J^\T C J)^\1 [H K^q_p + J^\T C K_p J] \\
+\bar K_d
+ &= (H + J^\T C J)^\1 [H K^q_d + J^\T C K_d J] \\
+\bar k
+ &= ~ (H + J^\T C J)^\1 [H k^q + J^\T C k]
+%% \ddot q^*
+%%  &= \argmin_{\ddot q} \norm{J \ddot q - \ddot y^*}^2_C \\
+%% \ddot q^*
+%%  &= (J^\T C J)^\1 [J^\T C \ddot y^*] \\
+%%  &\approx (J^\T C J)^\1 [J^\T C (k - K_p J q - K_d J \dot q)] \\
+%%  &= \bar k - \bar K_p q - \bar K_d \dot q  \label{eqProjGains}\\
+%% \bar K_p
+%%  &= (J^\T C J)^\1 J^\T C K_p J \\
+%% \bar K_d
+%%  &= (J^\T C J)^\1 J^\T C K_d J \\
+%% \bar k
+%%  &= ~ (J^\T C J)^\1 J^\T C k
+\end{align}
+
+%% $$\mat{cc}{H & 0 \\ 0 & C} \gets C \comma \mat{c}{\Id \\ J} \gets
+%% J ~.$$
+
+\item[Transfer to controls] Given an optimal acceleration law and the
+  system dynamics, we choose:
+\begin{align}
+\ddot q^*
+ &= \bar K_p q + \bar K_d \dot q + \bar k \\
+u^*
+ &= M \ddot q^* + F \\
+ &= M \bar K_p q + M \bar K_d \dot q + M \bar k + F
+\end{align}
+Note again, only here, the system dynamics enter. The specification of
+the optimal acceleration law is independent of the dynamics. (Unless
+$H$ and $\ddot q^\rf$ are chosen in relation to $M$ and $F$ to mimick
+typical control costs---but we explicitly avoid this to make desired
+system behavior somewhat less dependent on (possibly inaccurate)
+dynamics models).
+
+
+\item[Error correction of system dynamics]
+
+The optimal acceleration law gives an explicit desired
+acceleration. We may estimate the control error by a low pass filter
+on the acceleration errors. There are two options:
+
+Let $\<\ddot q^*\>$ be a low pass filter of the desired accellerations
+$\ddot q^*(q,\dot q)$; and $\<\ddot q\>$ a low pass of the actual true
+accelerations. We may define $g = \<\ddot q\> - \<\ddot q^*\>$ and
+control
+$$u=M (\ddot q^* + g) + F ~.$$
+
+Or we may assume system dynamics
+\begin{align}
+u=M \ddot q + F + g
+\end{align}
+for some unknown and variable (slowly changing) $g\in\RRR^n$ which
+reflects constant loads on the joints. We may estimate $g$ as a
+low-pass filter,
+\begin{align}
+g
+&= \< u - M \ddot q - F \>_\text{low pass}
+ = \< u \> - M \<\ddot q\> - F \\
+&= \<M \ddot q^* + F + g\> - M \<\ddot q\> - F \\
+&= M~ [ \< \ddot q^* + g\> - \<\ddot q\>]
+\end{align}
+which is puzzlingly different to the above. ($M$ is obvious, but the rest?)
+
+\item[Compliant error correction of system dynamics]
+
+The above describes a scheme that corrects any errors from the desired
+acceleration. However, in the case of contact, and desired compliance,
+we do not \emph{want} to enforce exact reference following along
+certain dimensions. E.g., in the case of a contact we systematically
+do not accelerate towards, leading to a systematic error in the system
+equations, an adaptation of $g$, and perhaps divergence.
+
+\item[Error correction on task space level]
+
+Let $\<\ddot y^*\>$ be a low pass filter of the desired task space
+accellerations and $\<\ddot y\>$ a low pass of the actual true
+accelerations. We may define $g=\<\ddot y\> - \<\ddot y^*\>$ and add
+$g$ to the $\ddot y^\rf$.
+
+Alternatively, we may define $g$ as integral error in the task space
+and add it to $\ddot y^\rf$.
+
+In both cases, $g$ adds to $k$, showing that it adds to $\ddot q^*$
+as $(H + J^\T C J)^\1 J^\T C g$.
+
+The matrix $C$ controls compliance.
+
+
+
+\item[Measured-force limits]
+
+\item[Limit Energy]
+
+\end{description}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Roopi -- Abstractions for scripting concurrent processes;
+  Robot Operating Interface}
+
+The conceptual and technical background is given in the "`Relational
+Activity Processes"' paper (ICRA'16). Initially I thought that
+behaviors should/could strictly be represented as relational
+machines.\footnote{By ``relational machine'' I mean a knowledge base
+  that controls a relational activity process, mostly by having
+  (non-decision) rules.} Then we tested a phase in our lab where we
+enforced a strict interface to a relational activity process via
+python, allowing online python scripting to control the
+process. However, as always, I now think that simpler is better. The
+following descripes C++ conventions/data structures on scripting a
+concurrent process. The behavior script is then directly in C++ (or
+python) rather than on some domain-specific language, enabling to
+all the logic these languages provide. This is a much thinner
+infrastructure than routing everything strictly through relational
+activity process or relational machine abstractions. But it still
+provides the abstractions that enable learning RAPs \emph{on top} of
+this representation; and automate scripting (learning scripts).
+
+\subsection{Scripting Concurrent Processes}
+
+...
+
+\begin{code}
+\begin{verbatim}
+
+act a = R.startTaskController();
+act b = R.startCommunicationWithBaxter();
+
+act liftHand = ControlTask(TaskMap(...), target, naturalGains);
+
+//busy wait
+for(;;){
+  if(liftHand==R_done) break; //-> when status of liftHand is R_done
+}
+
+//idle wait
+for(;;) if(wait(liftHand)==R_done) break;
+//equivalently
+wait(liftHand, R_done);
+
+//idle wait for multiple activities conjunctive
+waitAnd({liftHand, gazeBall});
+//or
+waitAnd({liftHand, gazeBall}, {R_done, R_done});
+
+//idle wait for multiple activities disjunctive
+waitOr({liftHand, gazeBall}, {R_done, R_done});
+
+while(wait(
+for(;;){
+  while(liftHand()){ //
+
+
+
+\end{verbatim}
+\end{code}
+
+
+\end{document}

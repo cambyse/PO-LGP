@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
@@ -10,7 +10,7 @@
 #include <future>
 #include <GL/glu.h>
 #include <Gui/opengl.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 
 struct IOC_DemoCost {
   arr x0;
@@ -199,7 +199,7 @@ void simpleMotion(){
   mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1
-  ors::KinematicWorld world("scene");
+  mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
   MotionProblem MP(world);
@@ -207,14 +207,14 @@ void simpleMotion(){
   MP.loadTransitionParameters();
   arr refGoal = conv_vec2arr(MP.world.getBodyByName("goal")->X.pos);
   TaskCost *c;
-  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(MP.T, MP.T, refGoal, 25);
-  c = MP.addTask("vec_right_hand", new TaskMap_Default(vecAlignTMT,world,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
+  c = MP.addTask("vec_right_hand", new TaskMap_Default(vecAlignTMT,world,"endeff", mlr::Vector(0., 0., 1.),"goal",mlr::Vector(0.,0.,-1.)));
   c->setCostSpecs(MP.T, MP.T, ARR(1.), 25);
   c = MP.addTask("qItselfTMT", new TaskMap_Default(qItselfTMT,world));
   c->setCostSpecs(MP.T, MP.T, zeros(MP.world.getJointStateDimension(),1), 1);
   c->map.order=1;
-  c = MP.addTask("position_right_hand2", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand2", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(0, MP.T, refGoal, 0);
 
   MP.x0 = {0.,0.,0.};
@@ -248,7 +248,7 @@ void simpleMotion(){
 
 
   // define toy demonstration 2
-  ors::KinematicWorld world2("scene");
+  mlr::KinematicWorld world2("scene");
   world.getJointState(q, qdot);
   MotionProblem MP2(world2);
   MP2.useSwift = false;
@@ -256,14 +256,14 @@ void simpleMotion(){
   MP2.world.getBodyByName("goal")->X.pos += ARR(0.,0.2,0.);
   arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
-  c2 = MP2.addTask("position_right_hand",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = MP2.addTask("position_right_hand",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 20);
-  c2 = MP2.addTask("vec_right_hand", new TaskMap_Default(vecAlignTMT,world2,"endeff", ors::Vector(0., 0., 1.),"goal",ors::Vector(0.,0.,-1.)));
+  c2 = MP2.addTask("vec_right_hand", new TaskMap_Default(vecAlignTMT,world2,"endeff", mlr::Vector(0., 0., 1.),"goal",mlr::Vector(0.,0.,-1.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, ARR(1.), 25);
   c2 = MP2.addTask("qItselfTMT", new TaskMap_Default(qItselfTMT,world));
   MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, zeros(MP2.world.getJointStateDimension(),1), 1);
   c2->map.order=1;
-  c2 = MP2.addTask("position_right_hand2", new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = MP2.addTask("position_right_hand2", new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
   MP2.setInterpolatingCosts(c2, MotionProblem::constant, refGoal2, 0);
   MP2.x0 = {0.,0.,0.};
   MotionProblemFunction MPF2(MP2);

@@ -1,6 +1,6 @@
 #include "calibrator_module.h"
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Mocap/mocapdata.h>
 
 // ############################################################################
@@ -100,23 +100,23 @@ void Calibrator::calibrate() {
   arrf p_open, p_closed;
   float dist_open, dist_closed;
 
-  p_side_rh = mid.query(posesSide, STRING("/human/rh/index")).refRange(0, 2);
-  p_side_lh = mid.query(posesSide, STRING("/human/lh/index")).refRange(0, 2);
+  p_side_rh = mid.query(posesSide, STRING("/human/rh/index"))({0, 2});
+  p_side_lh = mid.query(posesSide, STRING("/human/lh/index"))({0, 2});
   center = .5f * (p_side_rh + p_side_lh);
   radius = .5f * length(p_side_rh - p_side_lh);
 
 // Older calibration code
 //   // RIGHT HAND
 //   // ===========================================================================
-//   p_front = mid.query(posesFront, STRING("rh:index")).refRange(0, 2);
-//   p_side = mid.query(posesSide, STRING("rh:index")).refRange(0, 2);
+//   p_front = mid.query(posesFront, STRING("rh:index"))({0, 2});
+//   p_side = mid.query(posesSide, STRING("rh:index"))({0, 2});
 
 //   // assuming the first three coordinates are position
 //   diff = p_side - p_front;
 //   height = .5 * (p_front(2) + p_side(2));
 
-//   p_front_xy = p_front.refRange(0, 1);
-//   p_side_xy = p_side.refRange(0, 1);
+//   p_front_xy = p_front({0, 1});
+//   p_side_xy = p_side({0, 1});
 
 //   // assuming the first 2 coordinates are x-y
 //   dist = length(diff);
@@ -126,20 +126,20 @@ void Calibrator::calibrate() {
 //   orth(1) = diff(0);
 
 //   center_xy = .5f * (p_front_xy + p_side_xy - orth * dist);
-//   center_rh.refRange(0, 1) = center_xy;
+//   center_rh({0, 1}) = center_xy;
 //   center_rh(2) = height;
 
 //   // LEFT HAND
 //   // ===========================================================================
-//   p_front = mid.query(posesFront, STRING("lh:index")).refRange(0, 2);
-//   p_side = mid.query(posesSide, STRING("lh:index")).refRange(0, 2);
+//   p_front = mid.query(posesFront, STRING("lh:index"))({0, 2});
+//   p_side = mid.query(posesSide, STRING("lh:index"))({0, 2});
 
 //   // assuming the first three coordinates are position
 //   diff = p_side - p_front;
 //   height = .5 * (p_front(2) + p_side(2));
 
-//   p_front_xy = p_front.refRange(0, 1);
-//   p_side_xy = p_side.refRange(0, 1);
+//   p_front_xy = p_front({0, 1});
+//   p_side_xy = p_side({0, 1});
 
 //   // assuming the first 2 coordinates are x-y
 //   dist = length(diff);
@@ -149,7 +149,7 @@ void Calibrator::calibrate() {
 //   orth(1) = -diff(0);
 
 //   center_xy = .5f * (p_front_xy + p_side_xy - orth * dist);
-//   center_lh.refRange(0, 1) = center_xy;
+//   center_lh({0, 1}) = center_xy;
 //   center_lh(2) = height;
 
   // RIGHT GRIPPER
@@ -196,10 +196,10 @@ arrf transformPosition(const arrf& thumb, const arrf& index, const arrf& center,
 }
 
 arrf transformOrientation(const arrf &pose_thumb, const arrf &pose_index) {
-  ors::Quaternion quat;
-  ors::Vector x_thumb, x_index;
-  ors::Vector pos_thumb, pos_index;
-  ors::Vector x_pr2, y_pr2, z_pr2;
+  mlr::Quaternion quat;
+  mlr::Vector x_thumb, x_index;
+  mlr::Vector pos_thumb, pos_index;
+  mlr::Vector x_pr2, y_pr2, z_pr2;
 
   pos_thumb.set(pose_thumb(0), pose_thumb(1), pose_thumb(2));
   quat.set(pose_thumb(3), pose_thumb(4), pose_thumb(5), pose_thumb(6));
@@ -267,7 +267,7 @@ void Calibrator::transform(const arrf& poses_raw) {
 }
 
 void Calibrator::fixCoordinates(arrf &poses) {
-  ors::Transformation T, Tfix;
+  mlr::Transformation T, Tfix;
   Tfix.setZero();
   Tfix.addRelativeRotationDeg(-90, 0, 0, 1);
 

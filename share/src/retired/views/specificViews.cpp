@@ -3,7 +3,7 @@
 #ifdef MLR_GTK
 
 #include <Gui/gtk.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <gtk/gtk.h>
 
@@ -71,17 +71,17 @@ void RgbView::gtkUpdate(){
 
 //===========================================================================
 
-REGISTER_VIEW(MeshView, ors::Mesh);
+REGISTER_VIEW(MeshView, mlr::Mesh);
 
 void MeshView::glDraw() {
   glStandardLight(NULL);
-  ((ors::Mesh*)object)->glDraw();
+  ((mlr::Mesh*)object)->glDraw();
 }
 
 
 //===========================================================================
 
-REGISTER_VIEW(OrsView, ors::KinematicWorld);
+REGISTER_VIEW(OrsView, mlr::KinematicWorld);
 
 void OrsView::glInit() {
   gl->setClearColors(1.,1.,1.,1.);
@@ -93,7 +93,7 @@ void OrsView::glInit() {
 
 void OrsView::glDraw() {
   if(objectLock) objectLock->readLock();
-  orsCopy = *( (ors::KinematicWorld*) object );
+  orsCopy = *( (mlr::KinematicWorld*) object );
   if(objectLock) objectLock->unlock();
   glStandardScene(NULL);
   orsCopy.glDraw();

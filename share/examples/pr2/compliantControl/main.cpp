@@ -267,7 +267,7 @@ mlr::wait(100.0);
    posLaw->prec = 1000.0;
 //   robot->addTask(posLaw);
 
-   TaskMap_Default orientationMap(vecTMT, R.tcm()->modelWorld.get(), "endeffL", ors::Vector(1.0,0.0,0.0));
+   TaskMap_Default orientationMap(vecTMT, R.tcm()->modelWorld.get(), "endeffL", mlr::Vector(1.0,0.0,0.0));
    CtrlTask* orientationLaw = new CtrlTask("endeffMove", &orientationMap);
    orientationLaw->maxAcc = 0.1;
    orientationLaw->maxVel = 0.5;
@@ -296,7 +296,7 @@ mlr::wait(100.0);
    //posLaw->prec = eye(3)*10.0;
    //posLaw->prec(2,2) = 0.0;
 
-   TaskMap_Default forceMap(pos1DTMT, R.tcm()->modelWorld.get(), "endeffL", ors::Vector(.0,0.0,-1.0));
+   TaskMap_Default forceMap(pos1DTMT, R.tcm()->modelWorld.get(), "endeffL", mlr::Vector(.0,0.0,-1.0));
    CtrlTask* forceLaw = new CtrlTask("endeffForce", &forceMap);
    forceLaw->setGains(ARR(0.0), ARR(20.0));
    forceLaw->setTarget(ARR(0.), ARR(0.1));

@@ -1,17 +1,17 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Core/array.h>
 
-void GetWritheSegment(double& writhe,const ors::Vector& A,const ors::Vector& B,const ors::Vector& C,const ors::Vector& D){
+void GetWritheSegment(double& writhe,const mlr::Vector& A,const mlr::Vector& B,const mlr::Vector& C,const mlr::Vector& D){
 //  writhe between vectors AB and CD
-ors::Vector r_ac = A-C;
-ors::Vector r_ad = A-D;
-ors::Vector r_bc = B-C;
-ors::Vector r_bd = B-D;
+mlr::Vector r_ac = A-C;
+mlr::Vector r_ad = A-D;
+mlr::Vector r_bc = B-C;
+mlr::Vector r_bd = B-D;
 //
-ors::Vector n_a =  (r_ac^r_ad)/ (r_ac^r_ad).length();
-ors::Vector n_b =  (r_ad^r_bd)/ (r_ad^r_bd).length();
-ors::Vector n_c =  (r_bd^r_bc)/ (r_bd^r_bc).length();
-ors::Vector n_d =  (r_bc^r_ac)/ (r_bc^r_ac).length();
+mlr::Vector n_a =  (r_ac^r_ad)/ (r_ac^r_ad).length();
+mlr::Vector n_b =  (r_ad^r_bd)/ (r_ad^r_bd).length();
+mlr::Vector n_c =  (r_bd^r_bc)/ (r_bd^r_bc).length();
+mlr::Vector n_d =  (r_bc^r_ac)/ (r_bc^r_ac).length();
 /// TRICK
 double eps = 1e-10; n_a*=(1.0 - eps);n_b*=(1.0 - eps);n_c*=(1.0 - eps);n_d*=(1.0 - eps);/// trick against greater then 1.0 values
 
@@ -19,10 +19,10 @@ double eps = 1e-10; n_a*=(1.0 - eps);n_b*=(1.0 - eps);n_c*=(1.0 - eps);n_d*=(1.0
 }
 
 //column-wise cross-product
-arr cwcp(const arr& J, const ors::Vector& v){
+arr cwcp(const arr& J, const mlr::Vector& v){
   arr z,Jt;
   Jt = ~J;
-  ors::Vector temp;
+  mlr::Vector temp;
   z.resizeAs(Jt);
   for(uint i=0;i<z.d0;i++){
     temp.set(Jt[i].p);
@@ -33,7 +33,7 @@ arr cwcp(const arr& J, const ors::Vector& v){
 }
 
 // returns 1D jacobian part 
-arr Jr(ors::Vector& r1,ors::Vector& r2,ors::Vector& r3, uint d1, uint d2, uint d3, const arr& Jab){
+arr Jr(mlr::Vector& r1,mlr::Vector& r2,mlr::Vector& r3, uint d1, uint d2, uint d3, const arr& Jab){
 double B,D;
 arr A_prime, B_prime, C_prime, D_prime,A,C;
 uint n=Jab.d2;
@@ -50,15 +50,15 @@ CHECK(Jr.d0==1 && Jr.d1==n,"");
 return Jr;
 }
 
-void GetWritheJacobianSegment(arr& JTscalar,const ors::Vector& p_a,const ors::Vector& p_b,const ors::Vector& p_c,const ors::Vector& p_d, const arr& Jab){
+void GetWritheJacobianSegment(arr& JTscalar,const mlr::Vector& p_a,const mlr::Vector& p_b,const mlr::Vector& p_c,const mlr::Vector& p_d, const arr& Jab){
   CHECK(Jab.nd==3 && Jab.d0==2 && Jab.d1==3,"");
   uint n=Jab.d2;
   
   //  writhe between vectors AB and CD
-ors::Vector r_ac = p_a-p_c;
-ors::Vector r_ad = p_a-p_d;
-ors::Vector r_bc = p_b-p_c;
-ors::Vector r_bd = p_b-p_d;
+mlr::Vector r_ac = p_a-p_c;
+mlr::Vector r_ad = p_a-p_d;
+mlr::Vector r_bc = p_b-p_c;
+mlr::Vector r_bd = p_b-p_d;
 
 arr J1,J2,J3,J4;
 J1 = Jr(r_ac, r_ad, r_bd, 0, 0, 1,Jab);
@@ -70,7 +70,7 @@ JTscalar=J1+J2+J3+J4;
 }
 
 void GetWritheMatrix(arr& WM, const arr& rope1, const arr& rope2,int dim1,int dim2){
- ors::Vector A,B,C,D;
+ mlr::Vector A,B,C,D;
   double writhe; 
    WM = zeros(dim1,dim2);
   for (int i=0;i<dim1;i++) {
@@ -89,7 +89,7 @@ void WritheJacobian(arr& JM, const arr& rope1, const arr& rope2,arr& pointsJ,int
   int total_joint_number =  pointsJ.d1;
   pointsJ.reshape(dim1, 3, total_joint_number);
   
-  ors::Vector A,B,C,D;
+  mlr::Vector A,B,C,D;
   arr Jab(2,3,total_joint_number);
   arr jj; 
   JM.resize(dim1*dim2,total_joint_number);

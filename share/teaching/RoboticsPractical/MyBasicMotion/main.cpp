@@ -48,7 +48,7 @@ int main(int argc, char** argv){
     mlr::wait(2.);
 
     bax.reportPerceptionObjects();
-    ors::Vector closest_vec = bax.arPose();
+    mlr::Vector closest_vec = bax.arPose();
 
     if (closest_vec.length() == 0)
       closest_vec.set(0.5, 0.6, 1);

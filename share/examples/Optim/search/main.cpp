@@ -1,6 +1,6 @@
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Optim/search.h>
+#include <Optim/blackbox.h>
 
 
 void TEST(CMA){

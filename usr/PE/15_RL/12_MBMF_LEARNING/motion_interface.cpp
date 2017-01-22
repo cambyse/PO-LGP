@@ -1,18 +1,18 @@
 #include "motion_interface.h"
 #include <Algo/spline.h>
-#include <Motion/pr2_heuristics.h>
 
 
-Motion_Interface::Motion_Interface(ors::KinematicWorld &world_)
+
+Motion_Interface::Motion_Interface(mlr::KinematicWorld &world_)
 {
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
   world->q = world_.q;
   engine().open(S);
 
   //-- wait for first q observation!
   cout <<"** Waiting for ROS message on initial configuration.." <<endl;
   for(;;){
-    S.ctrl_obs.var->waitForNextRevision();
+    S.ctrl_obs.data->waitForNextRevision();
     cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
     cout <<"LOCAL  joint dimension=" <<world->q.N <<endl;
 
@@ -92,7 +92,7 @@ void Motion_Interface::gotoPosition(arr &x)
 
   Task *t;
   t = MP.addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 

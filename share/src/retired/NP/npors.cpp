@@ -85,7 +85,7 @@ inline void rotate(doubleA& xnew, const doubleA& R, const doubleA& x, const doub
   xnew(2) = xrot(2) + rc(2);
 };
 
-inline void get_pos(doubleA& p, const ors::Body* b)
+inline void get_pos(doubleA& p, const mlr::Body* b)
 {
   if(p.N != 3)
     p.resize(3);
@@ -96,7 +96,7 @@ inline void get_pos(doubleA& p, const ors::Body* b)
 //  p(3) = 1; 
 };
 
-void np::set_pos(ors::Body* b, const doubleA& p)
+void np::set_pos(mlr::Body* b, const doubleA& p)
 {
   b->X.p.v[0] = p(0);
   b->X.p.v[1] = p(1);
@@ -235,11 +235,11 @@ void np::gl_grab_stereo_image
 //      revel.addFrame(test.p);
 }
 
-ors::Body* np::get_chessboard(floatA& world_coords, uint nx, uint ny, double l)
+mlr::Body* np::get_chessboard(floatA& world_coords, uint nx, uint ny, double l)
 {
   double cx = ((double)nx)*l/2;
   double cy = ((double)ny)*l/2;
-  ors::Body *chessboard = new ors::Body();
+  mlr::Body *chessboard = new mlr::Body();
   chessboard->name = "chessboard";
   chessboard->X.setText("<t(0 0 0)>");
 
@@ -248,10 +248,10 @@ ors::Body* np::get_chessboard(floatA& world_coords, uint nx, uint ny, double l)
   {
     for (uint x=0; x < nx; x++)
     {
-      ors::Shape *s = new ors::Shape;
+      mlr::Shape *s = new mlr::Shape;
       chessboard->shapes.append(s);
       s->body=chessboard;
-      s->type = ors::boxST;
+      s->type = mlr::ST_box;
       s->size[0]=l; s->size[1]=l; s->size[2]=.01; s->size[3]=.1;
       if ((y+x)%2 == 0) {s->color[0]=0.; s->color[1]=0.; s->color[2]=0.;}
       else {s->color[0]=1.; s->color[1]=1.; s->color[2]=1.;}
@@ -285,11 +285,11 @@ ors::Body* np::get_chessboard(floatA& world_coords, uint nx, uint ny, double l)
   return chessboard;
 };
 
-void np::get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, uint ny, double l)
+void np::get_chessboard(mlr::Body*& chessboard, floatA& world_coords, uint nx, uint ny, double l)
 {
   double cx = ((double)nx)*l/2;
   double cy = ((double)ny)*l/2;
-//  ors::Body *chessboard = new ors::Body();
+//  mlr::Body *chessboard = new mlr::Body();
 //  chessboard->name = "chessboard";
 //  chessboard->X.setText("<t(0 0 0)>");
 
@@ -299,10 +299,10 @@ void np::get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, u
   {
     for (uint x=0; x < nx; x++)
     {
-      ors::Shape *s = new ors::Shape;
+      mlr::Shape *s = new mlr::Shape;
       chessboard->shapes.append(s);
       s->body=chessboard;
-      s->type = ors::boxST;
+      s->type = mlr::ST_box;
       s->size[0]=l; s->size[1]=l; s->size[2]=.01; s->size[3]=.1;
       if ((y+x)%2 == 0) {s->color[0]=0.; s->color[1]=0.; s->color[2]=0.;}
       else {s->color[0]=1.; s->color[1]=1.; s->color[2]=1.;}
@@ -311,14 +311,14 @@ void np::get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, u
       // add a inner-corner shape to query 3D world coordinates during sim
       if (y < (ny-1) && x < (nx-1))
       {
-        ors::Shape *c = new ors::Shape;
+        mlr::Shape *c = new mlr::Shape;
         chessboard->shapes.append(c);
         oss.str("");
         oss << (y)*(nx-1)+x;
         std::cout << oss.str() << std::endl;
         c->body=chessboard;
         c->name=oss.str().c_str();
-        c->type = ors::sphereST;
+        c->type = mlr::ST_sphere;
 #ifndef NP_DEBUG_CHESSBOARD
         c->size[0]=.001; c->size[1]=.001; c->size[2]=.001; c->size[3]=.001;
 #else
@@ -354,7 +354,7 @@ void np::get_chessboard(ors::Body*& chessboard, floatA& world_coords, uint nx, u
     }
 };
 
-void np::get_chessboard_corners_3d(floatA& world_coords, const ors::Body* chessboard, uint nx, uint ny)
+void np::get_chessboard_corners_3d(floatA& world_coords, const mlr::Body* chessboard, uint nx, uint ny)
 {
   uint inx = nx-1, iny = ny-1;
   std::ostringstream oss;

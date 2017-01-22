@@ -55,7 +55,7 @@ void ActionProgressor::step(){
   VAR(HardwareReference);
   arr x0 =  _HardwareReference->get_q_reference(this);
   x0.append(_HardwareReference->get_v_reference(this));
-  x0.refRange(x0.N/2,-1) = 0.;
+  x0({x0.N/2,-1}) = 0.;
   //cout <<"0-state! in motion progressor\n" <<x0 <<"\n ...frame=" <<f->currentFrame <<endl;
   mp1->writeAccess(this);
   mp1->frame0 = x0;
@@ -66,8 +66,8 @@ void ActionProgressor::step(){
   motionFuture->incrementFrame(this);
 }
 
-void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
-  ors::Shape *obj  = ors.getShapeByName(objShape);
+void reattachShape(mlr::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody){
+  mlr::Shape *obj  = ors.getShapeByName(objShape);
   obj->body->shapes.removeValue(obj);
   obj->body = ors.getBodyByName(toBody);
   obj->ibody = obj->body->index;

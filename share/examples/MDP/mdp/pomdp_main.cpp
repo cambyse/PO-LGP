@@ -59,15 +59,15 @@ void makeNodeActionDeterministic(FSC_lev2& fsc, arr& V_01_x, bool hierarchy) {
             for(uint ii=0;ii<d0New;++ii) for(uint jj=0;jj<d1;++jj){
               for(uint k=0;k<dy;++k) for(uint l=0;l<d0New;++l) {
                 if(ii==d0) // here scale by the previous prob of doing the action.
-                  fsc.P01y0(TUP(ii,jj,k,l)) = fsc.P01y0(TUP(oldNode,jj,k,l))*fsc.Pa0(i,j);
+                  fsc.P01y0.elem(TUP(ii,jj,k,l)) = fsc.P01y0.elem(TUP(oldNode,jj,k,l))*fsc.Pa0(i,j);
                 else if(l==d0)
-                  fsc.P01y0(TUP(ii,jj,k,l)) = fsc.P01y0(TUP(ii,jj,k,oldNode));
+                  fsc.P01y0.elem(TUP(ii,jj,k,l)) = fsc.P01y0.elem(TUP(ii,jj,k,oldNode));
               }
             }
             // similarly for P10y1
             for(uint ii=0;ii<d1;++ii) for(uint jj=0;jj<dy;++jj){
               for(uint l=0;l<d1;++l) {
-                fsc.P1y01(TUP(ii,jj,d0,l)) = fsc.P1y01(TUP(ii,jj,oldNode,l));
+                fsc.P1y01.elem(TUP(ii,jj,d0,l)) = fsc.P1y01.elem(TUP(ii,jj,oldNode,l));
               }
             }
           }else{
@@ -85,9 +85,9 @@ void makeNodeActionDeterministic(FSC_lev2& fsc, arr& V_01_x, bool hierarchy) {
             for(uint ii=0;ii<d0New;++ii) for(uint jj=0;jj<dy;++jj){
               for(uint k=0;k<d0New;++k) { 
                 if(ii==d0) // here scale by the previous prob of doing the action.
-                  fsc.P_E_0y0(TUP(ii,jj,k)) = fsc.P_E_0y0(TUP(oldNode,jj,k))*fsc.Pa0(i,j);
+                  fsc.P_E_0y0.elem(TUP(ii,jj,k)) = fsc.P_E_0y0.elem(TUP(oldNode,jj,k))*fsc.Pa0(i,j);
                 else if(k==d0)
-                  fsc.P_E_0y0(TUP(ii,jj,k)) = fsc.P_E_0y0(TUP(ii,jj,oldNode));
+                  fsc.P_E_0y0.elem(TUP(ii,jj,k)) = fsc.P_E_0y0.elem(TUP(ii,jj,oldNode));
               }
             }
             hierarchicalToFactors(fsc);
@@ -97,12 +97,12 @@ void makeNodeActionDeterministic(FSC_lev2& fsc, arr& V_01_x, bool hierarchy) {
           // First fix old transition to/from the old node
             for(uint jj=0;jj<d1;++jj){
               for(uint k=0;k<dy;++k) for(uint l=0;l<d0New;++l) {
-                fsc.P01y0(TUP(oldNode,jj,k,l)) *= fsc.Pa0(action,oldNode);
+                fsc.P01y0.elem(TUP(oldNode,jj,k,l)) *= fsc.Pa0(action,oldNode);
               }
             }
           }else{
             for(uint jj=0;jj<dy;++jj) for(uint k=0;k<d0New;++k) 
-                fsc.P_E_0y0(TUP(oldNode,jj,k)) *= fsc.Pa0(action,oldNode);
+                fsc.P_E_0y0.elem(TUP(oldNode,jj,k)) *= fsc.Pa0(action,oldNode);
 
             for(uint jj=0;jj<fsc.PE_01.d1;++jj)
               fsc.PE_01(oldNode,jj) *= fsc.Pa0(action,oldNode);
@@ -175,21 +175,21 @@ void fixPolicyH(FSC_lev2 &fsc) {
   // P01y0
   fsc.P01y0 = 0.0;
   // nodes 2&3 are exit nodes
-//  fsc.P01y0(TUP(1,0,0,0))=1.;fsc.P01y0(TUP(2,0,0,1))=1.;
-//  fsc.P01y0(TUP(1,1,0,0))=1.;fsc.P01y0(TUP(2,1,0,1))=1.;
-//  fsc.P01y0(TUP(1,2,0,0))=1.;fsc.P01y0(TUP(2,2,0,1))=1.;
-//  fsc.P01y0(TUP(1,3,0,0))=1.;fsc.P01y0(TUP(2,3,0,1))=1.;
-//  fsc.P01y0(TUP(0,0,0,2))=1.;fsc.P01y0(TUP(0,1,0,2))=1.;fsc.P01y0(TUP(0,2,0,2))=1.;fsc.P01y0(TUP(3,3,0,2))=1.;
-//  fsc.P01y0(TUP(0,0,0,3))=1.;fsc.P01y0(TUP(0,1,0,3))=1.;fsc.P01y0(TUP(0,2,0,3))=1.;//fsc.P01y0(TUP(0,3,0,3))=1.;
+//  fsc.P01y0.elem(TUP(1,0,0,0))=1.;fsc.P01y0.elem(TUP(2,0,0,1))=1.;
+//  fsc.P01y0.elem(TUP(1,1,0,0))=1.;fsc.P01y0.elem(TUP(2,1,0,1))=1.;
+//  fsc.P01y0.elem(TUP(1,2,0,0))=1.;fsc.P01y0.elem(TUP(2,2,0,1))=1.;
+//  fsc.P01y0.elem(TUP(1,3,0,0))=1.;fsc.P01y0.elem(TUP(2,3,0,1))=1.;
+//  fsc.P01y0.elem(TUP(0,0,0,2))=1.;fsc.P01y0.elem(TUP(0,1,0,2))=1.;fsc.P01y0.elem(TUP(0,2,0,2))=1.;fsc.P01y0.elem(TUP(3,3,0,2))=1.;
+//  fsc.P01y0.elem(TUP(0,0,0,3))=1.;fsc.P01y0.elem(TUP(0,1,0,3))=1.;fsc.P01y0.elem(TUP(0,2,0,3))=1.;//fsc.P01y0.elem(TUP(0,3,0,3))=1.;
 //  //fsc.P01y0.tensorCondNormalize(1);
 //  // P1y01
 //  fsc.P1y01 = 0.0;
-//  fsc.P1y01(TUP(1,0,0,0))=1.;fsc.P1y01(TUP(2,0,0,1))=1.0;fsc.P1y01(TUP(3,0,0,2))=1.;
-//  fsc.P1y01(TUP(0,0,0,3))=1.;
-////  fsc.P1y01(TUP(0,0,0,0))=1.;fsc.P1y01(TUP(0,0,1,0))=1.;fsc.P1y01(TUP(1,0,2,0))=1.;
-////  fsc.P1y01(TUP(1,0,0,1))=1.;fsc.P1y01(TUP(1,0,1,1))=1.;fsc.P1y01(TUP(2,0,2,1))=1.;
-////  fsc.P1y01(TUP(2,0,0,2))=1.;fsc.P1y01(TUP(2,0,1,2))=1.;fsc.P1y01(TUP(3,0,2,2))=1.;
-////   fsc.P1y01(TUP(0,0,0,3))=1.;fsc.P1y01(TUP(0,0,1,3))=1.;fsc.P1y01(TUP(0,0,2,3))=1.;fsc.P1y01(TUP(0,0,3,3))=1.;
+//  fsc.P1y01.elem(TUP(1,0,0,0))=1.;fsc.P1y01.elem(TUP(2,0,0,1))=1.0;fsc.P1y01.elem(TUP(3,0,0,2))=1.;
+//  fsc.P1y01.elem(TUP(0,0,0,3))=1.;
+////  fsc.P1y01.elem(TUP(0,0,0,0))=1.;fsc.P1y01.elem(TUP(0,0,1,0))=1.;fsc.P1y01.elem(TUP(1,0,2,0))=1.;
+////  fsc.P1y01.elem(TUP(1,0,0,1))=1.;fsc.P1y01.elem(TUP(1,0,1,1))=1.;fsc.P1y01.elem(TUP(2,0,2,1))=1.;
+////  fsc.P1y01.elem(TUP(2,0,0,2))=1.;fsc.P1y01.elem(TUP(2,0,1,2))=1.;fsc.P1y01.elem(TUP(3,0,2,2))=1.;
+////   fsc.P1y01.elem(TUP(0,0,0,3))=1.;fsc.P1y01.elem(TUP(0,0,1,3))=1.;fsc.P1y01.elem(TUP(0,0,2,3))=1.;fsc.P1y01.elem(TUP(0,0,3,3))=1.;
 //  //fsc.P1y01.tensorCondNormalize(1);
   ///
 
@@ -237,10 +237,10 @@ void fixPolicy2(FSC_lev2 &fsc) {
   // Fix transitions
   // (i,j,k,l), i=n0', j=n1, k=y, l=n0
   fsc.P01y0 = 0.0;
-  fsc.P01y0(TUP(1,0,0,0))=1.0;fsc.P01y0(TUP(2,0,0,1))=1.0;fsc.P01y0(TUP(3,0,0,2))=1.0;
-  fsc.P01y0(TUP(4,0,0,3))=1.0;fsc.P01y0(TUP(5,0,0,4))=1.0;fsc.P01y0(TUP(6,0,0,5))=1.0;
-  fsc.P01y0(TUP(7,0,0,6))=1.0;fsc.P01y0(TUP(8,0,0,7))=1.0;fsc.P01y0(TUP(9,0,0,8))=1.0;
-  fsc.P01y0(TUP(0,0,0,9))=1.0;
+  fsc.P01y0.elem(TUP(1,0,0,0))=1.0;fsc.P01y0.elem(TUP(2,0,0,1))=1.0;fsc.P01y0.elem(TUP(3,0,0,2))=1.0;
+  fsc.P01y0.elem(TUP(4,0,0,3))=1.0;fsc.P01y0.elem(TUP(5,0,0,4))=1.0;fsc.P01y0.elem(TUP(6,0,0,5))=1.0;
+  fsc.P01y0.elem(TUP(7,0,0,6))=1.0;fsc.P01y0.elem(TUP(8,0,0,7))=1.0;fsc.P01y0.elem(TUP(9,0,0,8))=1.0;
+  fsc.P01y0.elem(TUP(0,0,0,9))=1.0;
 
 }
 

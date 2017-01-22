@@ -96,7 +96,7 @@ void moveHand(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   arr x, y, ori, dual;
   getTrajectory(x, y, ori, dual, world);
@@ -109,7 +109,7 @@ int main(int argc,char** argv){
 //  world.getBodyByName("table")->X.pos.z += .1;
 //  world.setJointState(x[0]);
 
-  ors::Quaternion rotZ;
+  mlr::Quaternion rotZ;
   rotZ.setDeg(180,0,0,1);
   arr baseOrg={0, 0.2, 1.305};
   for(uint t=0;t<y.d0;t++){
@@ -117,7 +117,7 @@ int main(int argc,char** argv){
     y(t,0) *= -1.;
     y(t,1) *= -1.;
 
-    ors::Quaternion q;
+    mlr::Quaternion q;
     q.set(&ori(t,0));
     q = rotZ*q;
     ori[t]() = conv_quat2arr(q);

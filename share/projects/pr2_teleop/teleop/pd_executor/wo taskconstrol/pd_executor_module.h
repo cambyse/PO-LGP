@@ -26,7 +26,7 @@ struct PDExecutor: Thread{
 
   ACCESS(bool, initmapper);  
   // TaskController stuff
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   TaskController fmc;
   arr q, qdot;
 
