@@ -177,7 +177,7 @@ void move(){
   //komo.setTask(1.0, 3.0, new HeadPoseMap(), OT_sumOfSqr, targetArr1, 1e2);
 
   komo.setTask( 1.0, 2.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
-                                            ARR(  0.2, -0.5, 1.9 ) ),  // pivot position
+                                            ARR( -0.2, -0.5, 1.9 ) ),  // pivot position
                 OT_sumOfSqr, NoArr, 1e2 );
 
   //komo.setTask(.3, .5, new HandPositionMap(), OT_sumOfSqr, ARR(.5,.5,1.3), 1e2);

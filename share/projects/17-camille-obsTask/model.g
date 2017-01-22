@@ -6,8 +6,15 @@ Include = '../../data/man_model.ors'
 
 ### objs
 
-body target { X=<T t(.5 .5 1.3)> }
+body target { X=<T t(.5 -.2 1.4)> }
+#body target { X=<T t(0.0 -0.4 1.7)> }
 shape target(target) { type=1 size=[0 0 0 .05] color=[0 1 0] }
+
+body occluding_object { X=<T t(.0 -0.5 1.9)> }
+shape occluding_object(occluding_object) { type=9 size=[0.4 0.01 0.4 0.02] color=[1 0 0] }
+
+body target2 { X=<T t(.0 -1.0 1.9)> }
+shape target2(target2) { type=1 size=[0 0 0 .05] color=[1 0 0] }
 
 #Edit /human/base { X=<T t(1.5 0. 1.1) d(-180 0 0 1)> }
 
