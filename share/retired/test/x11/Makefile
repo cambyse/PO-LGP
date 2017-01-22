@@ -1,4 +1,6 @@
-BASE = ../..
+BASE = ../../..
+
+DEPEND = Core
 
 LIBS += -lX11
 

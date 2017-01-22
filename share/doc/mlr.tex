@@ -39,6 +39,15 @@
 \newcommand{\bH}{{\mathbf{H}}}
 \newcommand{\ft}{\text{ft}}
 
+\newcommand{\pos}{{\textsf{p}}}
+\newcommand{\eff}{{\textsf{eff}}}
+\newcommand{\rotvec}{{\textsf{w}}}
+\newcommand{\veC}{{\textsf{v}}}
+\newcommand{\quat}{{\textsf{q}}}
+\newcommand{\col}{{\textsf{col}}}
+\newcommand{\TR}[2]{T_{{#1}\rightarrow{#2}}}
+\newcommand{\RO}[2]{R_{{#1}\rightarrow{#2}}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \pdflatex
 \usepackage{fancyvrb}
@@ -52,6 +61,10 @@
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+Code needs mathematical grounding.
+\end{abstract}
 
 {\footnotesize\tableofcontents
 
@@ -300,7 +313,7 @@ from other subgraphs of the containing graph. Some methods of the
 @Graph@ class (to find nodes by key or type) allow to specify whether
 also nodes in subgraphs or parentgraphs are to be searched.
 
-\section{Logic}
+\section{Logic -- A graph implementation of First Order Logic}
 
 We represent everything, a full knowledge base (KB), as a graph:
 \begin{itemize}
@@ -426,8 +439,8 @@ Given these methods, forward chaining, or forward simulation (for
 MCTS) is straight-forward. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Optim}
+\section{Optim -- data structures to represent non-linear programs, and
+  basic solvers}
 
 The optimization code contributes a nice way to represent (structured)
 optimization problems, and a few basic solvers for constrained and
@@ -564,6 +577,343 @@ Here, the structure function returns $N$, $d_{1,..,N}$, $J$, $t_j$,
 %%  * The methods allow some returns to be optional: use NoArr
 %%  *
 %%  */
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Kinematics -- data structures to represent kinematic
+  configurations, interface models/optimizers/simulators, represent
+  task spaces}
+
+\subsection{Task Spaces}
+
+\subsubsection{Purpose}
+
+Task spaces are defined by a mapping $\phi:~ q\to y$ from the joint
+state $q\in\RRR^n$ to a task space $y\in\RRR^m$. They are central in
+designing motion and manipulation, both, in the context of trajectory
+optimization as well as in specifying position/force/impedance
+controllers:
+
+For \textbf{trajectory optimization}, cost functions are defined by
+costs or constraints in task spaces. Given a single task space $\phi$,
+we may define
+\begin{items}
+\item costs $\norm{\phi(q)}^2$,
+\item an inequality constraint $\phi(q)\le 0$ (element-wise inequality),
+\item an equality constraint $\phi(q) = 0$.
+\end{items}
+All three assume that the `target' is at zero. For convenience, the
+code allows to specify an additional linear transform $\tilde\phi(q)
+\gets \rho(\phi(q)-y_\text{ref})$, defined by a target reference
+$y_\text{ref}$ and a scaling $\rho$. In KOMO, costs and constraints
+can also be defined on $k+1$-tuples of consecutive states in task
+space, allowing to have cost and constraints on task space velocities
+or accelerations. Trajectory optimization problems are defined by many
+such costs/constraints in various task spaces at various time steps.
+
+For simple \textbf{feedback control}, in each task space we may have
+\begin{items}
+\item a desired linear acceleration behavior in the task space
+\item a desired force or force constraint (upper bound) in the task
+  space
+\item a desired impedance around a reference
+\end{items}
+All of these can be fused to a joint-level force-feedback controller
+(details, see controller docu). On the higher level, the control mode
+is specified by defining multiple task spaces and the desired
+behaviors in these. (The activity of such tasks (on the symbolic
+level) is controlled by the RelationalMachine, see its docu.)
+
+In both cases, defining task spaces is the core.
+
+\subsubsection{Basic notation}
+
+We follow the notation in the robotics lecture slides. We enumerate
+all bodies by $i\in\BB$. We typically use $v,w\in\RRR^3$ to denote
+vectors attached to bodies. $\TR{W}{i}$ is the 4-by-4 homogeneous
+transform from world frame to the frame of shape $i$, and $\RO{W}{i}$
+is its rotation matrix only. In the text (not in equations) we
+sometimes write
+$$(i+ v)$$
+where $i$ denotes a body and $v\in\RRR^3$ a relative 3D-vector. The
+rigorous notation for this would be $\TR{W}{i} v$, which is the
+position of $i$ plus the relative displacement $v$.
+
+To numerically evaluate kinematics we assume that, for a certain joint
+configuration $q$, the positions $p_k$ and axes $a_k$ of all joints
+$k\in JJ$ have been precomputed. The boolean expression
+$$[k\prec i] $$ iff joint $k$ is ``below'' body $i$ in the kinematic
+tree, that is, joint $k$ is between root and body $i$ and therefore
+moves it.
+
+Sometimes we write $J_{\cdot k}=...$, which means that the $k$th
+column of $J$ is defined as given.
+
+Let's first define
+\begin{align}
+(A_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ rotational}]~ a_k && \text{axes matrix below $i$}
+\end{align}
+This matrix contains all rotational axes below $i$ as columns and will
+turn out convenient, because it captures all axes that make $i$
+move. Many Jacobians can easily be described using $A_i$. Analogously
+we define
+\begin{align}
+(T_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ prismatic}]~ a_k && \text{prism matrix below $i$}
+\end{align}
+This captures all prismatic joints. Note the following relation to
+Featherstone's notation: In his notation, $h_k\in\RRR^6$ denotes, for
+very joint $k$, how much the joints contributes to rotation and translation,
+expressed in the link frame. The two matrices $A_i$ and $T_i$ together
+express the same, but in world coordinates. While typically axes have
+unit length (and entries of $h$ are zeros or ones), this is not necessary
+in general, allowing for arbitrary scaling of joint configurations $q$
+with these axis (e.g., using degree instead of radial units).
+
+For convenience, for a matrix of 3D columns $A\in\RRR^{n\times 3}$, we write
+$$B = A\times p \iff B_{\cdot k} = A_{\cdot k} \times p$$
+which is the column-wise cross product. Also, we define
+\begin{align}
+(\hat A_i)_{\cdot k}
+&= [k \prec i] [\text{$i$ rotational}]~ a_k \times p_k && \text{axes
+    position matrix below $i$}
+\end{align}
+which could also be written as $\hat A_i = A_i \times P$ if $P$
+contains all axes positions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Task Spaces}
+
+\paragraph{Position}
+
+\begin{align}
+\phi^\pos_{iv}(q)
+ &= \TR{W}{i}~ v
+ && \text{position of $(i+v)$} \\
+J^\pos_{iv}(q)_{\cdot k}
+ &= [k\prec i]~ a_k \times(\phi^\pos_{iv}(q) - p_k) \\
+J^\pos_{iv}(q)
+ &= A_i \times \phi^\pos_{iv}(q) - \hat A_i \\
+\phi^\pos_{iv-jw}(q)
+ &= \phi^\pos_{iv} - \phi^\pos_{jw}
+ && \text{position difference} \\
+J^\pos_{iv-jw}(q)
+ & = J^\pos_{iv} - J^\pos_{jw} \\
+\phi^\pos_{iv|jw}(q)
+ & = R_j^\1 (\phi^\pos_{iv} - \phi^\pos_{jw})
+ && \text{relative position} \\
+J^\pos_{iv|jw}(q)
+ & = R_j^\1 [J^\pos_{iv}-J^\pos_{jw} - A_j \times (\phi^\pos_{iv} - \phi^\pos_{jw})]
+\end{align}
+
+Derivation: For $y=R p$ the derivative w.r.t.\ a rotation around axis
+$a$ is $y' = R p' + R' p = R p' + a \times R p$. For $y=R^\1 p$ the
+derivative is $y' = R^\1 p' - R^\1 (R') R^\1 p = R^\1 (p' - a \times
+p)$.  (For details see
+\url{http://ipvs.informatik.uni-stuttgart.de/mlr/marc/notes/3d-geometry.pdf})
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Vector}
+
+\begin{align}
+\phi^\veC_{iv}(q)
+ &= \RO{W}{i}~ v
+ && \text{vector} \\
+J^\veC_{iv}(q)
+ &= A_i\times \phi^\veC_{iv}(q) \\
+\phi^\veC_{iv-jw}(q)
+ &= \phi^\veC_{iv} - \phi^\veC_{jw}
+ && \text{vector difference} \\
+J^\veC_{iv-jw}(q)
+ &= J^\veC_{iv} - J^\veC_{jw} \\
+\phi^\veC_{iv|j}(q)
+ &= R_j^\1 \phi^\veC_{iv}
+ && \text{relative vector} \\
+J^\veC_{iv|j}(q)
+ &= R_j^\1 [J^\veC_{iv} - A_j \times \phi^\veC_{iv}]
+\end{align}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Quaternion}
+
+See equation (15) in the geometry notes for explaining the jacobian.
+\begin{align}
+\phi^\quat_{i}(q)
+ &= \text{quaternion}(\RO{W}{i})
+ && \text{quaternion $\in\RRR^4$} \\
+J^\quat_{i}(q)_{\cdot k}
+ &= \mat{c}{0 \\ \half (A_i)_{\cdot k}} \circ \phi^\quat_{i}(q)
+ && J^\quat_{i}(q)\in\RRR^{4 \times n} \\
+\phi^\quat_{i-j}(q)
+ &= \phi^\quat_{i} - \phi^\quat_{j}
+ && \text{difference $\in\RRR^4$} \\
+J^\quat_{i-j}(q)
+ &= J^\quat_{i} - J^\quat_{j} \\
+\phi^\quat_{i|j}(q)
+ &= (\phi^\quat_{j})^\1 \circ \phi^\quat_{i}
+ && \text{relative} \\
+J^\quat_{i|j}(q)
+ &= \text{not implemented}
+\end{align}
+
+A relative rotation can also be measured in terms of the 3D rotation
+vector. Lets define
+$$w(r) = \frac{2 \p}{\sin(\p)} \bar r \comma
+\p=\acos(r_0)$$
+as the rotation for a quaternion. We have
+\begin{align}
+\phi^\rotvec_{i|j}(q)
+ &= w(\phi^\quat_{j})^\1 \circ \phi^\quat_{i})
+ && \text{relative rotation vector $\in\RRR^3$} \\
+J^\rotvec_{i|j}(q)
+ &= AJ^\quat_{i} - J^\quat_{j} \\
+\end{align}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Alignment}
+
+parameters: shape indices $i,j$, attached vectors $v,w$
+
+$\phi^\text{align}_{iv|jw}(q) = (\phi^\veC_{jw})^\T~ \phi^\veC_{iv}$
+
+$J^\text{align}_{iv|jw}(q) = (\phi^\veC_{jw})^\T~ J^\veC_{iv} +\phi^\veC_{iv}{}^\T~ J^\veC_{jw}$
+
+Note: \quad $\phi^\text{align}=1 \oto $ align \quad $\phi^\text{align}=-1 \oto $ anti-align \quad $\phi^\text{align}=0 \oto $ orthog.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Gaze}
+
+2D orthogonality measure of object relative to camera plane
+
+parameters: eye index $i$ with offset $v$; target index $j$ with
+offset $w$
+
+\begin{align}
+\phi^\text{gaze}_{iv,jw}(q)
+ &= \mat{c}{
+\phi^\veC_{i,e_x}{}^\T (\phi^\pos_{jw} - \phi^\pos_{iv}) \\
+\phi^\veC_{i,e_y}{}^\T (\phi^\pos_{jw} - \phi^\pos_{iv}) } \quad\in\RRR^2
+\end{align}
+Here $e_x=(1,0,0)$ and $e_y=(0,1,0)$ are the camera plane axes.
+
+Jacobians straight-forward
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{qItself}
+
+$\phi^\text{qItself}_{iv,jw}(q) = q$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Joint limits measure}
+
+parameters: joint limits $q_{\text{low}}, q_{\text{hi}}$, margin $m$
+
+$\phi_{\text{limits}}(q) = \frac{1}{m}\sum_{i=1}^n [m-q_i+q_{\text{low}}]^+ + [m+q_i-q_{\text{hi}}]^+$
+
+$J_{\text{limits}}(q)_{1,i} = - \frac{1}{m}[m-q_i+q_{\text{low}}>0] + \frac{1}{m}[m+q_i-q_{\text{hi}}>0]$
+
+$[x]^+ = x>0\text{?}x:0$ \qquad $[\cdots]$: indicator function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Collision limits measure}
+
+parameters: margin $m$
+
+$\phi_{\text{col}}(q) = \frac{1}{m}\sum_{k=1}^K [m-|p^a_k - p^b_k|]^+$
+
+$J_{\text{col}}(q) = \frac{1}{m} \sum_{k=1}^K [m-|p^a_k - p^b_k|>0]
+(- J^\pos_{p^a_k} + J^\pos_{p^b_k})^\T \frac{p^a_k - p^b_k}{|p^a_k - p^b_k|}$ 
+
+A collision detection engine returns a set $\{
+(a,b,p^a,p^b)_{k=1}^K \}$ of potential collisions between shape $a_k$
+and $b_k$, with nearest points $p^a_k$ on $a$ and $p^b_k$ on $b$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Shape distance measures (using SWIFT)}
+
+\begin{items}
+\item  allPTMT, //phi=sum over all proxies (as is standard)
+\item  listedVsListedPTMT, //phi=sum over all proxies between listed shapes
+\item  allVsListedPTMT, //phi=sum over all proxies against listed shapes
+\item  allExceptListedPTMT, //as above, but excluding listed shapes
+\item  bipartitePTMT, //sum over proxies between the two sets of shapes (shapes, shapes2)
+\item  pairsPTMT, //sum over proxies of explicitly listed pairs (shapes is n-times-2)
+\item  allExceptPairsPTMT, //sum excluding these pairs
+\item  vectorPTMT //vector of all pair proxies (this is the only case
+  where dim(phi)>1)
+\end{items}
+
+\paragraph{GJK pairwise shape distance (including negative)}
+
+\paragraph{Plane distance}
+
+\subsubsection{Application}
+
+Just get a glimpse on how task space definitions are used to script
+motions, here is a script of a little PR2 dance. (The 'logic' below
+the script implements kind of macros -- that's part of the RAP.)
+(\texttt{wheels} is the same as qItself, but refers only to the 3 base coordinates)
+
+\begin{shaded}
+\begin{Verbatim}[fontfamily=courier,fontsize=\tiny]
+cleanAll #this only declares a novel symbol...
+
+Script {
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffR) }  #this waits for convergence of activities
+  (cleanAll) #this switches off the current activities
+  (cleanAll)! #this switches off the switching-off
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, -.3, -.2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.7, -.2, .7], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.7, +.2, .7], PD=[.5, .9, .5, 10.]}
+  { (conv FollowReferenceActivity wheels)  (conv MyTask endeffL) }
+  (cleanAll)
+  (cleanAll)!
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, .3, .2], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffR){ type=pos, ref2=base_footprint, target=[.2, -.5, 1.3], PD=[.5, .9, .5, 10.]}
+  (MyTask endeffL){ type=pos, ref2=base_footprint, target=[.2, +.5, 1.3], PD=[.5, .9, .5, 10.]}
+  { (conv MyTask endeffL) }
+  (cleanAll)
+  (cleanAll)!
+
+  (FollowReferenceActivity wheels){ type=wheels, target=[0, 0, 0], PD=[.5, .9, .5, 10.]}
+  (HomingActivity)
+  { (conv HomingActivity) (conv FollowReferenceActivity wheels) }
+}
+
+
+Rule {
+    X, Y, 
+    { (cleanAll) (conv X Y) }
+    { (conv X Y)! }
+}
+
+Rule {
+    X, 
+    { (cleanAll) (MyTask X) }
+    { (MyTask X)! }
+}
+
+Rule {
+    X, 
+    { (cleanAll) (FollowReferenceActivity X) }
+    { (FollowReferenceActivity X)! }
+}
+\end{Verbatim}
+\end{shaded}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1492,11 +1842,32 @@ The matrix $C$ controls compliance.
 
 \end{description}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\section{Roopi -- Abstractions for scripting concurrent processes;
+  Robot Operating Interface}
 
+The conceptual and technical background is given in the "`Relational
+Activity Processes"' paper (ICRA'16). Initially I thought that
+behaviors should/could strictly be represented as relational
+machines.\footnote{By ``relational machine'' I mean a knowledge base
+  that controls a relational activity process, mostly by having
+  (non-decision) rules.} Then we tested a phase in our lab where we
+enforced a strict interface to a relational activity process via
+python, allowing online python scripting to control the
+process. However, as always, I now think that simpler is better. The
+following descripes C++ conventions/data structures on scripting a
+concurrent process. The behavior script is then directly in C++ (or
+python) rather than on some domain-specific language, enabling to
+all the logic these languages provide. This is a much thinner
+infrastructure than routing everything strictly through relational
+activity process or relational machine abstractions. But it still
+provides the abstractions that enable learning RAPs \emph{on top} of
+this representation; and automate scripting (learning scripts).
 
+\subsection{Scripting Concurrent Processes}
 
-\end{document}
+...
 
 
 \end{document}
