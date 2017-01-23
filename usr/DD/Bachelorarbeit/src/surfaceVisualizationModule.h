@@ -3,7 +3,7 @@
 
 #include <Core/array.h>
 #include <Core/thread.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 #include <Algo/gaussianProcess.h>
 #include <Algo/gpOp.h>
 #include <Geo/mesh.h>
@@ -34,7 +34,7 @@ struct SurfaceGeodesicPathModule : Thread {
 struct SurfaceSimilarityModule : Thread {
   Access_typed<SurfaceModelObject> surfaceModelObject;
   Access_typed<double> surfaceSimilarityMeasure;
-  Access_typed<ors::Mesh> trueSurfaceMesh;
+  Access_typed<mlr::Mesh> trueSurfaceMesh;
 
   SurfaceSimilarityModule();
 
@@ -46,13 +46,13 @@ struct SurfaceSimilarityModule : Thread {
 struct SurfaceVisualizationModule : Thread {
   Roopi& roopi;
   Access_typed<GaussianProcessOptimized> gpSurface;
-  Access_typed<ors::Mesh> trueSurfaceMesh;
+  Access_typed<mlr::Mesh> trueSurfaceMesh;
   Access_typed<SurfaceModelObject> surfaceModelObject;
   Access_typed<double> surfaceSimilarityMeasure;
 
   SurfaceSimilarityModule surfaceSimilarityModule;
 
-  ors::Mesh me;
+  mlr::Mesh me;
 
   OpenGL gl;
 
