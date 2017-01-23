@@ -29,7 +29,7 @@ void drawBluePoints(void* classP){  arr *p = (arr*)classP;  drawTraj(0,*p,1); }
 void drawYellowLine(void* classP){  arr *p = (arr*)classP;  drawTraj(1,*p,2); }
 void drawBlackPoints(void* classP){  arr *p = (arr*)classP;  drawTraj(1,*p,1); }
 
-void drawLine(ors::KinematicWorld &world, arr &x, uint color) {
+void drawLine(mlr::KinematicWorld &world, arr &x, uint color) {
   CHECK(x.d1 == 3,"x.d1 != 3");
   switch (color){
     case 0:
@@ -44,7 +44,7 @@ void drawLine(ors::KinematicWorld &world, arr &x, uint color) {
   }
 }
 
-void drawPoints(ors::KinematicWorld &world, arr &x, uint color) {
+void drawPoints(mlr::KinematicWorld &world, arr &x, uint color) {
   CHECK(x.d1 == 3,"x.d1 != 3");
   switch (color){
     case 0:
@@ -59,7 +59,7 @@ void drawPoints(ors::KinematicWorld &world, arr &x, uint color) {
   }
 }
 
-void drawLine(ors::KinematicWorld &world, arr &q,arr &x, const char *name ,uint color,uint lower=0,uint upper=0) {
+void drawLine(mlr::KinematicWorld &world, arr &q,arr &x, const char *name ,uint color,uint lower=0,uint upper=0) {
   x.clear();
   if (upper==0) upper = q.d0;
   for (uint i=lower;i<upper;i++) {
@@ -69,7 +69,7 @@ void drawLine(ors::KinematicWorld &world, arr &q,arr &x, const char *name ,uint 
   drawLine(world,x,color);
 }
 
-void drawPoints(ors::KinematicWorld &world, arr q,arr &x, const char *name ,uint color) {
+void drawPoints(mlr::KinematicWorld &world, arr q,arr &x, const char *name ,uint color) {
   x.clear();
   for (uint i=0;i<q.d0;i++) {
     world.setJointState(q[i]);

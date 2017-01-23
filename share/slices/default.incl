@@ -1,11 +1,5 @@
-share/lib/.force
-share/makefile
-share/Makefile.gof
-share/gofMake/generic.mk
-share/gofMake/config.mk
-share/gofMake/config.mk.default
-share/gofMake/defines.mk
-share/gofMake/make-path.sh
+share/Makefile
+share/build
 share/README.md
 share/README.mlr.md
 share/COPYING

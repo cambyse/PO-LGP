@@ -1,24 +1,23 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motionHeuristics.h>
-#include <Motion/pr2_heuristics.h>
-#include <Motion/taskMaps.h>
+//#include <Motion/motionHeuristics.h>
+
 #include <Motion/taskMaps.h>
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
   G.watch(true);
 
   MotionProblem MP(G);
 
-  ors::Shape *s = G.getShapeByName("target1");
+  mlr::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
 
     arr x, xT;
@@ -28,7 +27,7 @@ void TEST(GraspHeuristic){
     Task *c;
     c = MP.addTask("transition", new TaskMap_Transition(G));
     c->map.order=2; //make this an acceleration task!
-    c->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+    c->setCostSpecs(0, MP.T, {0.},1e-2);
 
 
     MotionProblemFunction F(MP);
@@ -67,7 +66,7 @@ void TEST(PickAndPlace){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
 
   //setup the problem
-  ors::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
   makeConvexHulls(G.shapes);
 //  G.watch(true);
 
@@ -79,7 +78,7 @@ void TEST(PickAndPlace){
   Task *t;
   t = MP.addTask("transition", new TaskMap_Transition(G));
   t->map.order=2; //make this an acceleration task!
-  t->setCostSpecs(0, MP.T, ARR(0.),1e-2);
+  t->setCostSpecs(0, MP.T, {0.},1e-2);
 
 
 
@@ -105,7 +104,7 @@ void TEST(PickAndPlace){
   MP.x0 = x[MP.T-1];
 
   Task *c;
-  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "target1", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "target1", mlr::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());
@@ -135,7 +134,7 @@ void TEST(PickAndPlace){
   listDelete(MP.tasks);
   MP.x0 = x[MP.T-1];
 
-  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "graspCenter", ors::Vector(0, 0, 0)));
+  c = MP.addTask("position", new TaskMap_Default(posTMT, G, "graspCenter", mlr::Vector(0, 0, 0)));
   c->setCostSpecs(MP.T, MP.T, conv_vec2arr(MP.world.getShapeByName("target2")->X.pos), 1e3);
 
   c = MP.addTask("q_vel", new TaskMap_qItself());

@@ -206,13 +206,13 @@ double Validate(RobotProcessGroup & robotOld,RobotProcessGroup & robot2,const ar
 	task2.open_skin = robot2.openSkin;// skin -> graspISFtask
 	get_skin_state(task2,robot2);
 	if(robot2.openGui && false)robot2.gui.gl->addView(0,glDrawMeshObject,task2.graspobj);
-	ors::Shape * o1 = robot2.ctrl.ors.getBodyByName("o1")->shapes(0);
-	robot2.ctrl.ors.getBodyByName("o1")->X.pos = ors::Vector(c(0),c(1),c(2));
+	mlr::Shape * o1 = robot2.ctrl.ors.getBodyByName("o1")->shapes(0);
+	robot2.ctrl.ors.getBodyByName("o1")->X.pos = mlr::Vector(c(0),c(1),c(2));
 	o1->type = 3;//mesh
 	o1->mesh.clear();
 	o1->mesh = ((GraspObject*)task2.graspobj)->m;
 	if(robot2.openGui){
-		robot2.gui.ors->getBodyByName("o1")->X.pos = ors::Vector(c(0),c(1),c(2));
+		robot2.gui.ors->getBodyByName("o1")->X.pos = mlr::Vector(c(0),c(1),c(2));
 		robot2.gui.ors->getBodyByName("o1")->shapes(0)->type = 3;
 		robot2.gui.ors->getBodyByName("o1")->shapes(0)->mesh.clear();
 		robot2.gui.ors->getBodyByName("o1")->shapes(0)->mesh = o1->mesh;
@@ -242,7 +242,7 @@ double Validate(RobotProcessGroup & robotOld,RobotProcessGroup & robot2,const ar
 	return C;
 }
 
-arr GetEndPath(const arr & joints, ors::KinematicWorld * ors){
+arr GetEndPath(const arr & joints, mlr::KinematicWorld * ors){
 	arr orig;
 	ors->getJointState(orig);
 	arr x(joints.d0,3);
@@ -294,17 +294,17 @@ int main(int argc,char** argv){
 		cout << " starting grasp " << endl;
 	}
 
-	ors::Shape * o1 = robot.ctrl.ors.getBodyByName("o1")->shapes(0);//change this , otherwise features will deviate from reading
-	robot.ctrl.ors.getBodyByName("o1")->X.pos = ors::Vector(c(0),c(1),c(2));
+	mlr::Shape * o1 = robot.ctrl.ors.getBodyByName("o1")->shapes(0);//change this , otherwise features will deviate from reading
+	robot.ctrl.ors.getBodyByName("o1")->X.pos = mlr::Vector(c(0),c(1),c(2));
 
-	ors::Quaternion rot;
+	mlr::Quaternion rot;
 	if (nMode != 3){//leave be in case of planner
 		o1->type = 3;//mesh
 		o1->mesh.clear();
 		o1->mesh = ((GraspObject*)task.graspobj)->m;
 		arr z = mlr::getParameter<arr>("orientation");
-		ors::Vector ax;robot.ctrl.ors.getBodyByName("o1")->X.rot.getZ(ax);
-		rot.setDiff(ax,ors::Vector(z(0),z(1),z(2)));
+		mlr::Vector ax;robot.ctrl.ors.getBodyByName("o1")->X.rot.getZ(ax);
+		rot.setDiff(ax,mlr::Vector(z(0),z(1),z(2)));
 		robot.ctrl.ors.getBodyByName("o1")->X.rot= robot.ctrl.ors.getBodyByName("o1")->X.rot*rot;
 	}
 	else{//make corect type
@@ -313,7 +313,7 @@ int main(int argc,char** argv){
 		o1->mesh.clear();
 	}
 	if(robot.openGui){
-		robot.gui.ors->getBodyByName("o1")->X.pos = ors::Vector(c(0),c(1),c(2));
+		robot.gui.ors->getBodyByName("o1")->X.pos = mlr::Vector(c(0),c(1),c(2));
 		robot.gui.ors->getBodyByName("o1")->shapes(0)->type = 3;
 		robot.gui.ors->getBodyByName("o1")->shapes(0)->mesh.clear();
 		robot.gui.ors->getBodyByName("o1")->shapes(0)->mesh = o1->mesh;

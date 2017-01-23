@@ -1,9 +1,9 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 
 #include "simulator.h"
 #include <Control/gamepad2tasks.h>
@@ -22,21 +22,21 @@ void TEST(Simulator){
     }
   } S;
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   arr q, qdot;
   world.getJointState(q, qdot);
 
   TaskController MP(world, false);
   MP.qitselfPD.y_ref = q;
   MP.qitselfPD.active=false;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = world.getHmetric();
   Gamepad2Tasks j2t(MP);
 
   //engine().enableAccessLog();
   threadOpenModules(true);
 
   for(;;){
-    S.qdot_obs.var->waitForNextRevision();
+    S.qdot_obs.data->waitForNextRevision();
     arr gamepad = S.gamepadState.get();
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");

@@ -48,7 +48,7 @@ void threadedRun(){
   threadOpenModules(true);
 
   for(;;){
-    S.poses.var->waitForNextRevision();
+    S.poses.data->waitForNextRevision();
     cout <<S.poses.get()() <<endl;
     if(moduleShutdown().getValue()>0) break;
   }

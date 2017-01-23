@@ -1,5 +1,5 @@
 #include <MT/soc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
@@ -19,7 +19,7 @@ void testRobotSystem(bool testFeedbackControl=false){
   sys.os=&std::cout;
  
   //-- setup the control variables (problem definition)
-  TaskVariable *pos = new DefaultTaskVariable("position", *sys.ors, posTVT,"endeff","<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position", *sys.ors, posTVT,"endeff","<t(0 0 .2)>",0,0,arr());
   pos->setGainsAsNatural(20,.2);
   pos->targetType=positionGainsTT;
   pos->y_target = arr(sys.ors->getBodyByName("target")->X.pos.p,3);

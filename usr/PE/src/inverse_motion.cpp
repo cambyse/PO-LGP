@@ -11,7 +11,7 @@ InverseMotionProblem::InverseMotionProblem(Scenario &_scenario):
 {
 //  ConstrainedProblem::operator=( [this](arr& df, arr& Hf, arr& g, arr& Jg, arr& h, arr& Jh, const arr& x) -> double{
 //                                 return this->fc(df, Hf, g, Jg, h, Jh, x);} );
-  ConstrainedProblem::operator=( [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+  ConstrainedProblem::operator=( [this](arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) -> void {
                                  return this->fc(phi,J,H,tt,x);} );
 
     nX = scenario.scenes(0).MP->world.getJointStateDimension();
@@ -25,7 +25,7 @@ InverseMotionProblem::InverseMotionProblem(Scenario &_scenario):
     arr counts=zeros(scenario.weights.N);
     arr Dpdp;
     for (uint c=0;c<scenario.scenes(0).MP->tasks.N;c++) { // task costs;
-      if (scenario.scenes(0).MP->tasks(c)->map.type==sumOfSqrTT){
+      if (scenario.scenes(0).MP->tasks(c)->map.type==OT_sumOfSqr){
         cost_counts.append(0.);
         for (uint t=0;t<=nT;t++) {
           uint dim = scenario.scenes(0).MP->tasks(c)->dim_phi(*scenario.scenes(0).world,t);
@@ -38,7 +38,7 @@ InverseMotionProblem::InverseMotionProblem(Scenario &_scenario):
     for (uint t=0;t<= nT;t++) {
       // add task cost elements
       for (uint c=0;c<scenario.scenes(0).MP->tasks.N;c++) {
-        if ( scenario.scenes(0).MP->tasks(c)->prec.N >t && (scenario.scenes(0).MP->tasks(c)->prec(t) > 0) && scenario.scenes(0).MP->tasks(c)->active && scenario.scenes(0).MP->tasks(c)->map.type==sumOfSqrTT) {
+        if ( scenario.scenes(0).MP->tasks(c)->prec.N >t && (scenario.scenes(0).MP->tasks(c)->prec(t) > 0) && scenario.scenes(0).MP->tasks(c)->active && scenario.scenes(0).MP->tasks(c)->map.type==OT_sumOfSqr) {
           uint m;
           m = scenario.scenes(0).MP->tasks(c)->dim_phi(*scenario.scenes(0).world,t);
           double b = (c==0)?0.:sum(cost_counts.subRange(0,c-1));
@@ -192,7 +192,7 @@ void InverseMotionProblem::setParam(MotionProblem &MP, const arr &param)
   arr paramNorm = scenario.costScale*param/sum(param);
 
   for (uint c=0;c<MP.tasks.N;c++) {
-    if (MP.tasks(c)->map.type == sumOfSqrTT) {
+    if (MP.tasks(c)->map.type == OT_sumOfSqr) {
       arr w;
       scenario.weights(c).compWeights(w,NoArr,NoArr,paramNorm.subRange(c,c+scenario.weights(c).numParam - 1),true);
       if (scenario.weights(c).type==CostWeight::Block){
@@ -234,7 +234,7 @@ void InverseMotionProblem::costReport(arr param,arr param0) {
   cout << "|--------------------+--------------+--------------+--------------+--------------+--------------|" << endl;
   uint c =0;
   for (uint i=0;i<scenario.scenes(0).MP->tasks.N;i++) {
-    if (scenario.scenes(0).MP->tasks(i)->map.type==sumOfSqrTT) {
+    if (scenario.scenes(0).MP->tasks(i)->map.type==OT_sumOfSqr) {
       if (scenario.weights(i).numParam>1){
         //        cout << "-- Task " << scenes(0).MP->tasks(i)->name << " : " << paramNorm.subRange(c,c+weights(i).numParam-1) << " | \n" << paramRefNorm.subRange(c,c+weights(i).numParam-1) <<  " | \n" << paramRef.subRange(c,c+weights(i).numParam-1) << endl;
         cout << "|  Task " <<std::setw(12)<< scenario.scenes(0).MP->tasks(i)->name << " | " <<std::setw(12)<< param.subRange(c,c+scenario.weights(i).numParam-1) << endl;
@@ -269,7 +269,7 @@ void InverseMotionProblem::costReport(arr param,arr param0) {
   c = 0;
 
   for (uint i=0;i<scenario.scenes(0).MP->tasks.N;i++) {
-    if (scenario.scenes(0).MP->tasks(i)->map.type==sumOfSqrTT) {
+    if (scenario.scenes(0).MP->tasks(i)->map.type==OT_sumOfSqr) {
       arr w;
       if (scenario.weights(i).type == CostWeight::Block) {
         w = zeros(t.d0);

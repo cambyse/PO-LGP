@@ -23,13 +23,13 @@ template<class T> T* Biros::getVariable(const char* name, Module_Thread *p, bool
 }
 
 template<class T> T* Biros::getOrCreateVariable(const char* name, Module_Thread *p){
-  T *v = getVariable<T>(name, p, false);
+  T *v = getAccessData<T>(name, p, false);
   if(!v) v = new T(name);
   return v;
 }
 
 template<class T> void Biros::getVariable(T*& v, const char* name, Module_Thread *p, bool required){
-  v = getVariable<T>(name, p, required);
+  v = getAccessData<T>(name, p, required);
 }
 
 template<class T>  T* Biros::getProcess(const char* name, Module_Thread *caller, bool required) {

@@ -18,10 +18,10 @@
 // ============================================================================
 // VARIBALES
 /** This is just an int */
-struct IntVar : public Variable {
+struct IntVar : public AccessData {
   int x;
   
-  IntVar(const char* name) : Variable(name) {
+  IntVar(const char* name) : AccessData(name) {
     reg_x();
     x = 0;
   }

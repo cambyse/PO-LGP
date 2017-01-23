@@ -1,15 +1,15 @@
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 /*----------------------------------------------------------------------------*/
 
 void TEST(PhysxObstacleAvoidance) {
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init("doorComplex.ors");
-  ors::Body* robot = ors.getBodyByName("robot");
+  mlr::Body* robot = ors.getBodyByName("robot");
 
   OpenGL glPh("PhysX");
   //bindOrsToPhysX(ors, glPh, physx);
@@ -24,7 +24,7 @@ void TEST(PhysxObstacleAvoidance) {
   arr x, goal;
   arr dirObs(3,1);
   arr dir(3,1);
-  ors::Proxy *p;
+  mlr::Proxy *p;
 
   x = conv_vec2arr(robot->X.pos);
 

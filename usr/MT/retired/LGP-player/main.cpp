@@ -1,6 +1,6 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 #include <LGP/LGP.h>
@@ -9,7 +9,7 @@
 //===========================================================================
 
 void LGPplayer(){
-  ors::KinematicWorld display;
+  mlr::KinematicWorld display;
 
   TowerProblem_new towers; //generates a randomize towers problem
 

@@ -1,7 +1,7 @@
 #include <MT/soc.h> 
 #include <MT/util.h>
 #include <MT/opengl.h>
-#include <MT/ors.h>     
+#include <MT/kin.h>     
 #include <MT/plot.h>    
 #include <Core/array.h> 
 #include "TriMesh.h"
@@ -135,16 +135,16 @@ cout <<maxn<<endl;
 
 void problem1(){   
   cout <<"\n= Sample trimesh functions test=\n" <<endl;
-   ors::KinematicWorld ors; ors.init("clear.ors");
-   OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
+   mlr::KinematicWorld ors; ors.init("clear.ors");
+   OpenGL gl; gl.add(glStandardScene); gl.add(mlr::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-5,6);  gl.camera.focus(0,0,2);
 
-  ors::Mesh newM;
-  ors::Body *b = new ors::Body(ors);
+  mlr::Mesh newM;
+  mlr::Body *b = new mlr::Body(ors);
   b->X.pos(2) += 2.5;
   b->name <<"main";
-  ors::Shape *s = new ors::Shape(ors, b);
-  s->type=ors::meshST;
+  mlr::Shape *s = new mlr::Shape(ors, b);
+  s->type=mlr::ST_mesh;
   const char * filename = "input1.obj";
   const char * outfilename = "output1.ply";  //! PLY works with colors, but ORS can not currently read it properly
   int scale = 0.1;
@@ -163,16 +163,16 @@ void problem1(){
 
 void problem2(){   
   cout <<"\n= Sample trimesh functions test=\n" <<endl;
-   ors::KinematicWorld ors; ors.init("clear.ors");
-   OpenGL gl; gl.add(glStandardScene); gl.add(ors::glDrawGraph,&ors); 
+   mlr::KinematicWorld ors; ors.init("clear.ors");
+   OpenGL gl; gl.add(glStandardScene); gl.add(mlr::glDrawGraph,&ors); 
    gl.camera.setPosition(0,-5,6);  gl.camera.focus(0,0,2);
 
-  ors::Mesh newM;
-  ors::Body *b = new ors::Body(ors);
+  mlr::Mesh newM;
+  mlr::Body *b = new mlr::Body(ors);
   b->X.pos(2) += 2.5;
   b->name <<"main";
-  ors::Shape *s = new ors::Shape(ors, b);
-  s->type=ors::meshST;
+  mlr::Shape *s = new mlr::Shape(ors, b);
+  s->type=mlr::ST_mesh;
   const char * filename = "input1.obj";
  // const char * filename = "body_clean.obj";
   const char * outfilename = "output1.ply";  //! PLY works with colors, but ORS can not currently read it properly

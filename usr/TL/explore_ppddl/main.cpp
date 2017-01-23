@@ -3,7 +3,7 @@
 #include <ctime>
 #include <stdlib.h>
 #include <cstdlib>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/util.h>
 #include <TL/logicDefinitions.h>

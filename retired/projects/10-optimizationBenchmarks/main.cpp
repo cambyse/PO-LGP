@@ -16,7 +16,7 @@ void problem1(){
   sys.initBasics(NULL,NULL,&gl,T,3.,false,NULL);
   
   //setup the task
-  TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, arr());
   sys.setTaskVariables({pos});
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,1e-2,1e4,0.,0.);
@@ -61,7 +61,7 @@ void problem2(){
   sys.initBasics(NULL,NULL,&gl,T,4.,true,NULL);
   
   //setup the task
-  TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position" , *sys.ors, posTVT, "graspCenter", 0, arr());
   sys.setTaskVariables({pos});
   pos->y_target = arr(sys.ors->getShapeByName("target")->X.pos.p,3);
   pos->setInterpolatedTargetsEndPrecisions(T,

@@ -8,7 +8,7 @@ REGISTER_MODULE(G4Display)
 struct sG4Display {
   uint sensors;
   OpenGL gl;
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   MocapID *mid;
 
   sG4Display(): mid(nullptr) {}
@@ -18,7 +18,7 @@ G4Display::G4Display() : Thread("G4Display", .01){
   s = new sG4Display;
 }
 
-ors::KinematicWorld &G4Display::kw() {
+mlr::KinematicWorld &G4Display::kw() {
   return s->ors;
 }
 
@@ -43,10 +43,10 @@ void G4Display::open(){
     //add shapes to the sensors that don't have a shape
     for(const String &sen_name: s->mid->sensors()) {
       if(!s->ors.getBodyByName(sen_name)) {
-        ors::Body *b = new ors::Body(s->ors);
+        mlr::Body *b = new mlr::Body(s->ors);
         b->name = sen_name;
-        ors::Shape *sh = new ors::Shape(s->ors, *b);
-        sh->type = ors::boxST;
+        mlr::Shape *sh = new mlr::Shape(s->ors, *b);
+        sh->type = mlr::ST_box;
         memmove(sh->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
         memmove(sh->color,ARR(1, 0, 0).p, 3*sizeof(double));
       }
@@ -56,20 +56,20 @@ void G4Display::open(){
     // older, didn't consider that there might be a world
     // add shapes for the sensors
     for(uint sen=0; sen<s->sensors; sen++){
-      ors::Body *b = new ors::Body(s->ors);
-      ors::Shape *sh = new ors::Shape(s->ors, *b);
+      mlr::Body *b = new mlr::Body(s->ors);
+      mlr::Shape *sh = new mlr::Shape(s->ors, *b);
 
-      sh->type = ors::boxST;
+      sh->type = mlr::ST_box;
       memmove(sh->size, ARR(.10, .04, .01, 0).p, 4*sizeof(double));
       memmove(sh->color, ARR(1, 0, 0).p, 3*sizeof(double));
     }
   }
 
   //add a marker
-  ors::Body *b = new ors::Body(s->ors);
+  mlr::Body *b = new mlr::Body(s->ors);
   b->name = STRING("world");
-  ors::Shape *sh = new ors::Shape(s->ors, *b);
-  sh->type = ors::markerST;
+  mlr::Shape *sh = new mlr::Shape(s->ors, *b);
+  sh->type = mlr::ST_marker;
   sh->size[0] = .5;
 }
 
@@ -85,7 +85,7 @@ void G4Display::step(){
   if(s->mid) {
     floatA pose;
     for(const String &sen_name: s->mid->sensors()) {
-      ors::Body *b = s->ors.getBodyByName(sen_name);
+      mlr::Body *b = s->ors.getBodyByName(sen_name);
       pose = s->mid->query(p, sen_name);
       b->X.pos.set(pose(0), pose(1), pose(2));
       b->X.rot.set(pose(3), pose(4), pose(5), pose(6));

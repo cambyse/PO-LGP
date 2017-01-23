@@ -5,11 +5,11 @@
 
 #include <Motion/rrt_planner.h>
 #include <Motion/motion.h>
-#include <Motion/pr2_heuristics.h>
-#include <Motion/motionHeuristics.h>
+
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <ctime>
 
@@ -85,18 +85,18 @@ public:
 };
 
 
-arr create_endpose(ors::KinematicWorld& G) {
+arr create_endpose(mlr::KinematicWorld& G) {
   MotionProblem P(&G);
 
   P.loadTransitionParameters();
-  P.H_rate_diag = pr2_reasonable_W();
+  P.H_rate_diag = .getHmetric();
 
   // add a collision cost with threshold 0 to avoid collisions
   uintA shapes = pr2_get_shapes(G);
   Task *c = P.addTask("proxyColls", new TaskMap_Proxy(allVersusListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, 1e-0);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
 
@@ -106,7 +106,7 @@ arr create_endpose(ors::KinematicWorld& G) {
   return x;
 }
 
-arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
+arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
   double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
   // create MotionProblem
@@ -119,7 +119,7 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   c->setCostSpecs(0, P.T, {0.}, 1e-0);
   c->threshold = 0;
 
-  ors::RRTPlanner planner(&G, P, stepsize);
+  mlr::RRTPlanner planner(&G, P, stepsize);
   arr q = { 0.999998, 0.500003, 0.999998, 1.5, -2, 0, 0.500003 };
   planner.joint_max = q + ones(q.N,q.N);
   planner.joint_min = q - ones(q.N,q.N);
@@ -128,11 +128,11 @@ arr create_rrt_trajectory(ors::KinematicWorld& G, arr& target) {
   return planner.getTrajectoryTo(target);
 }
 
-arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
+arr optimize_trajectory(mlr::KinematicWorld& G, arr& init_trajectory) {
   // create MotionProblem
   MotionProblem P(&G);
   P.loadTransitionParameters();
-  P.H_rate_diag = pr2_reasonable_W();
+  P.H_rate_diag = .getHmetric();
   P.T = init_trajectory.d0-1;
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -140,7 +140,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   Task *c = P.addTask("proxyColls", new TaskMap_Proxy(allVersusListedPTMT, shapes, .01, true));
   c->setCostSpecs(0, P.T, {0.}, 1e1);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", ors::Vector(0, 0, .0)));
+  c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
   P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
 
@@ -150,7 +150,7 @@ arr optimize_trajectory(ors::KinematicWorld& G, arr& init_trajectory) {
   return x;
 }
 
-void show_trajectory(ors::KinematicWorld& G, OpenGL& gl, arr& trajectory, const char* title) {
+void show_trajectory(mlr::KinematicWorld& G, OpenGL& gl, arr& trajectory, const char* title) {
   arr start;
   G.getJointState(start);
   displayTrajectory(trajectory, trajectory.d0, G, gl, title);
@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
 
   rnd.seed(seed);
 
-  ors::KinematicWorld G("world.ors");
+  mlr::KinematicWorld G("world.ors");
   makeConvexHulls(G.shapes);
 
   OpenGL gl;

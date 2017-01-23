@@ -1,7 +1,7 @@
 #define HAVE_CSTDDEF
 #include <coin/IpTNLP.hpp>
 
-#include <Optim/opt-constrained.h>
+#include <Optim/lagrangian.h>
 
 using namespace Ipopt;
 

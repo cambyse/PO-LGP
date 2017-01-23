@@ -18,7 +18,7 @@
 #ifndef MLR_specialTaskVariables_h
 #define MLR_specialTaskVariables_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "socNew.h"
 #include "soc_orsSystem.h"
 
@@ -27,7 +27,7 @@
 // types
 //
 
-typedef mlr::Array<ors::Shape*> ShapeList;
+typedef mlr::Array<mlr::Shape*> ShapeList;
 
 //===========================================================================
 //

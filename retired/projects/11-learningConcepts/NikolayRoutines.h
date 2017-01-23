@@ -14,12 +14,12 @@
 
 
 
-void ResetObjects(ors::KinematicWorld * C,const uintA & objects){
-	ors::Body * table = C->getBodyByName("table");
+void ResetObjects(mlr::KinematicWorld * C,const uintA & objects){
+	mlr::Body * table = C->getBodyByName("table");
 	cout << " table " << table->X.pos << endl;
 	//	for(uint z = 0; z < 1000; z++)		cout << rnd.uni() << endl;
 	for(uint i = 0; i < objects.N-1; i++){
-		ors::Body * temp = C->bodies(objects(i));
+		mlr::Body * temp = C->bodies(objects(i));
 		temp->X.pos(0) = table->X.pos(0) + (rnd.uni()-0.5)*0.8;
 		while( (temp->X.pos(0) > -0.15 && temp->X.pos(0) < 0.15)){
 			double r = rnd.uni();
@@ -34,13 +34,13 @@ void ResetObjects(ors::KinematicWorld * C,const uintA & objects){
 	sim.simulate(50);
 	cout << endl << " resetting done " << endl << endl;
 	for(uint i = 0; i < objects.N-1; i++){
-		ors::Body * temp = C->bodies(objects(i));
+		mlr::Body * temp = C->bodies(objects(i));
 		cout << temp->X.pos << endl;
 	}
 }
 
 //print objects sorting by object acted on
-void PrintData(const uintA & objs, const uint & nTarget, ors::KinematicWorld * C, ofstream & f, ofstream & f2){
+void PrintData(const uintA & objs, const uint & nTarget, mlr::KinematicWorld * C, ofstream & f, ofstream & f2){
 	mlr::IOraw = true;
 	mlr::Array< arr > objects_data;
 	relational::getFeatureVectors(objects_data, *C, objs);

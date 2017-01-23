@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <gtest/gtest.h>
 
 #define TEST_DIFF_ZERO(expr) { \
@@ -7,7 +7,7 @@
 
 TEST(OrsTest, testQuaternions) {
   for(uint k=0;k<10;k++){
-    ors::Quaternion A,B,C;
+    mlr::Quaternion A,B,C;
     A.setRandom();
     B.setRandom();
     C.setRandom();
@@ -19,7 +19,7 @@ TEST(OrsTest, testQuaternions) {
 
 TEST(OrsTest, testTransformations) {
   for(uint k=0;k<10;k++){
-    ors::Transformation A,B,C;
+    mlr::Transformation A,B,C;
     A.setRandom();
     B.setRandom();
     C.setDifference(A,B);
@@ -29,11 +29,11 @@ TEST(OrsTest, testTransformations) {
 
 TEST(OrsTest, testGraph) {
   {
-    ors::KinematicWorld G;
+    mlr::KinematicWorld G;
     G.init("world.ors");
   }
   {
-    ors::KinematicWorld *G2 = new ors::KinematicWorld();
+    mlr::KinematicWorld *G2 = new mlr::KinematicWorld();
     G2->init("world-complex.ors");
     delete G2;
   }

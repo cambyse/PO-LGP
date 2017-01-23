@@ -2,7 +2,7 @@
 //#define NIKOLAY
 
 #include <signal.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/robot.h>
 #include <MT/soc.h>
@@ -25,8 +25,8 @@ struct MultiPlan:public TaskAbstraction {
   double TVariance;//value for good sensing
   uint visStep;
   TaskVariable * TV_fNew;
-  ors::Body * obst,*obstV,*obstV2,*future,*target;
-  ors::Vector lastTargetMa, lastTargetMi;
+  mlr::Body * obst,*obstV,*obstV2,*future,*target;
+  mlr::Vector lastTargetMa, lastTargetMi;
   AverageTrackPos Kal;
   bool started_track, bGoTarget, bFirstSense;
   double goodCost, colPrec;
@@ -61,15 +61,15 @@ void MultiPlan::init(RobotProcessGroup *_master){
     robotProcesses->gui.gl->views(0).camera.focus(-0.1, -0.6, 0);
     //find camera location
     if(false){
-    ors::Body * b = new ors::Body(robotProcesses->gui.ors->bodies);
-    ors::Shape * s=new ors::Shape(robotProcesses->gui.ors->shapes,b);
+    mlr::Body * b = new mlr::Body(robotProcesses->gui.ors->bodies);
+    mlr::Shape * s=new mlr::Shape(robotProcesses->gui.ors->shapes,b);
     s->type=1;
     s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
     s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
     b->X.pos = CameraLocation(Pl);
 
-    ors::Body * br = new ors::Body(robotProcesses->gui.ors->bodies);
-    ors::Shape * sr=new ors::Shape(robotProcesses->gui.ors->shapes,br);
+    mlr::Body * br = new mlr::Body(robotProcesses->gui.ors->bodies);
+    mlr::Shape * sr=new mlr::Shape(robotProcesses->gui.ors->shapes,br);
     sr->type=1;
     sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
     sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -87,7 +87,7 @@ void MultiPlan::init(RobotProcessGroup *_master){
 }
 
 void MultiPlan::initTaskVariables(ControllerModule *ctrl){
-  ors::KinematicWorld &ors=ctrl->ors;
+  mlr::KinematicWorld &ors=ctrl->ors;
   TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( -.0000031   .000002 -.357)>",0,0,0);//.031   .02 -.357 for opposite finger, better chose another
   TV_fNew->targetType=directTT;
   TVall.append(TV_fNew);//keep in mind, this is in place 0, others come after it
@@ -114,7 +114,7 @@ bool MultiPlan::findTarget(){
         && Kal.p(1) > -1.5 && Kal.p(1) < -0.5
       && Kal.p(2) > 0.5 && Kal.p(2) < 1.25)    {
      // if(true){
-      ors::Vector val = Kal.p;
+      mlr::Vector val = Kal.p;
       target->X.pos = val; recho.UpdateExtState(target);
       robotProcesses->gui.ors->getBodyByName("target")->X.pos = val;
       robotProcesses->gui.ors2->getBodyByName("target")->X.pos = val;
@@ -142,8 +142,8 @@ void MultiPlan::Change(){
 }
 
 int MultiPlan::ChangeMagnitude(){
-  ors::Vector val = target->X.pos ;
-  ors::Vector o = obst->X.pos;
+  mlr::Vector val = target->X.pos ;
+  mlr::Vector o = obst->X.pos;
   double COdif = o(1) - val(1);
   double LOdif = o(1)  - lastTargetMa(1);
   double CLdif = val(1)  - lastTargetMa(1);
@@ -158,9 +158,9 @@ int MultiPlan::ChangeMagnitude(){
 }
 
 void MultiPlan::CustomJump(){
-  ors::Vector val = target->X.pos ;
+  mlr::Vector val = target->X.pos ;
   TV_fNew->updateState();
-  ors::Vector diff = val - ors::Vector(TV_fNew->y(0),TV_fNew->y(1),TV_fNew->y(2));
+  mlr::Vector diff = val - mlr::Vector(TV_fNew->y(0),TV_fNew->y(1),TV_fNew->y(2));
   bool OnTarget = diff.length() < 0.025;//is it on target
   if(OnTarget) counter ++;
   if(bDATAMODE ||false){
@@ -168,20 +168,20 @@ void MultiPlan::CustomJump(){
       val = NextRandom(obst->X.pos,lastTargetMa);
       /*int rI = rnd.uni()*4;
 		//if( val(0) > 0.0 && fabs(val(1)-0.64)< fabs(val(1)-0.84) )
-		if(rI == 0)	val = ors::Vector(-0.2,-0.64,1);
+		if(rI == 0)	val = mlr::Vector(-0.2,-0.64,1);
 		//else  if( val(0) < 0.0 && fabs(val(1)-0.64)< fabs(val(1)-0.84))
-		if(rI == 1)	val = ors::Vector(-0.2,-0.84,1);
+		if(rI == 1)	val = mlr::Vector(-0.2,-0.84,1);
 		//	else  if( val(0) < 0.0 && fabs(val(1)-0.64)> fabs(val(1)-0.84))
-		if(rI == 2)	val = ors::Vector(0.28,-0.84,1);
+		if(rI == 2)	val = mlr::Vector(0.28,-0.84,1);
 		//else  if( val(0) > 0.0 && fabs(val(1)-0.64)> fabs(val(1)-0.84))
-		if(rI == 3)	val = ors::Vector(0.28,-0.64,1);
+		if(rI == 3)	val = mlr::Vector(0.28,-0.64,1);
 		counter = 0;*/
     }
     else if(rnd.uni() < 0.02)//small perturbations
-      val = ors::Vector(val(0)+ (rnd.uni()-0.5)*0.03,val(1)+ (rnd.uni()-0.5)*0.03,val(2)+ (rnd.uni()-0.5)*0.03);
+      val = mlr::Vector(val(0)+ (rnd.uni()-0.5)*0.03,val(1)+ (rnd.uni()-0.5)*0.03,val(2)+ (rnd.uni()-0.5)*0.03);
   }
   else{
-    if(OnTarget) {val =  ors::Vector(val(0)- 0.08*rnd.uni() - 0.04,-0.9,0.95);lastTargetMa(0) = 6666;}//to force init change
+    if(OnTarget) {val =  mlr::Vector(val(0)- 0.08*rnd.uni() - 0.04,-0.9,0.95);lastTargetMa(0) = 6666;}//to force init change
   }
   target->X.pos = val;recho.UpdateExtState(target);
   if(robotProcesses->openGui){
@@ -341,16 +341,16 @@ int main(int argc,char** argv){
 
   demo.obst = robotProcesses.ctrl.ors.getBodyByName("obstacle");
   if(demo.nMod >= 3 || demo.nMod == 1){//dummy obstacle first, ease up
-    ors::Shape * s = demo.obst->shapes(0);
+    mlr::Shape * s = demo.obst->shapes(0);
     arr size = ARR(0,0,0.53,0.08);//if(demo.nMod == 1){size(2) = 0.72; size(3) = 0.06;demo.obst->X.pos(2) += 0.1;demo.obst->X.pos(1) -= 0.16;}
-    memmove(s->size, size.p, 4*sizeof(double));    //demo.obst->X.pos = ors::Vector(0.0,-0.7,0.98);
+    memmove(s->size, size.p, 4*sizeof(double));    //demo.obst->X.pos = mlr::Vector(0.0,-0.7,0.98);
     if(robotProcesses.openGui){
       copyBodyInfos(*robotProcesses.gui.ors,robotProcesses.ctrl.ors);
       copyBodyInfos(*robotProcesses.gui.ors2,robotProcesses.ctrl.ors);
     }
   }
   arr atarget; mlr::getParameter(atarget,"target");
-  ors::Vector itarget =  ors::Vector(atarget(0),atarget(1),atarget(2));
+  mlr::Vector itarget =  mlr::Vector(atarget(0),atarget(1),atarget(2));
   robotProcesses.ctrl.ors.getBodyByName("target")->X.pos = itarget;//planner thread uses this actually, not GL body !!!
   robotProcesses.ctrl.ors.calcBodyFramesFromJoints();///stupid bugg, otherwise target has other values.... yess now fixed
   if(robotProcesses.openGui){

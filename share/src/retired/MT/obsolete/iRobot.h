@@ -5,7 +5,7 @@
 //#include <cstdlib>
 #include <Gui/opengl.h>
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/gamepad.h>
 #include <MT/soc.h>
 #include <NJ/UrgInterface.h>
@@ -81,7 +81,7 @@ struct ControllerProcess{ //--non-threaded!!
   arr q_home; //posture as loaded from the ors file
   
   //INTERNAL
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OrsSystem sys;
   CycleTimer timer;

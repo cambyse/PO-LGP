@@ -41,15 +41,15 @@ void MPC::replan(arr &_goal, arr &_q) {
   }
 
   Task *c2;
-  c2 = P.addTask("position", new TaskMap_Default(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = P.addTask("position", new TaskMap_Default(posTMT,P.world,"endeff", mlr::Vector(0., 0., 0.)));
   c2->setCostSpecs(P.T, P.T, _goal, 1e4);
-  c2 = P.addTask("position", new TaskMap_Default(posTMT,P.world,"endeff", ors::Vector(0., 0., 0.)));
+  c2 = P.addTask("position", new TaskMap_Default(posTMT,P.world,"endeff", mlr::Vector(0., 0., 0.)));
   c2->map.order=1;
   c2->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 
-  c2 = P.addTask("orientation", new TaskMap_Default(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
+  c2 = P.addTask("orientation", new TaskMap_Default(vecTMT,P.world,"endeff",mlr::Vector(0., 0., 1.)));
   c2->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
-  c2 = P.addTask("orientation", new TaskMap_Default(vecTMT,P.world,"endeff",ors::Vector(0., 0., 1.)));
+  c2 = P.addTask("orientation", new TaskMap_Default(vecTMT,P.world,"endeff",mlr::Vector(0., 0., 1.)));
   c2->map.order=1;
   c2->setCostSpecs(P.T, P.T, {0.,0.,0.}, 1e3);
 

@@ -2,17 +2,17 @@
 #include "graspObjects.h"
 
 PotentialValuesTaskVariable::PotentialValuesTaskVariable(const char* _name,
-                              ors::KinematicWorld& _ors,
+                              mlr::KinematicWorld& _ors,
                               const ShapeList& _refs,
                               PotentialField& _f){
   refs=_refs;
   f=&_f;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
-void PotentialValuesTaskVariable::userUpdate(const ors::KinematicWorld& ors){
+void PotentialValuesTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
   uint i;
-  ors::Shape *s;
+  mlr::Shape *s;
   arr xi,Ji,grad;
   y.resize(refs.N);
   J.resize(refs.N,ors.getJointStateDimension());
@@ -26,21 +26,21 @@ void PotentialValuesTaskVariable::userUpdate(const ors::KinematicWorld& ors){
 }
 
 PotentialFieldAlignTaskVariable::PotentialFieldAlignTaskVariable(const char* _name,
-    ors::KinematicWorld& _ors,
+    mlr::KinematicWorld& _ors,
     const ShapeList& _refs,
     PotentialField& _f){
   refs=_refs;
   f=&_f;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 /** Compute current value and jacobian of the TV.
  * (compare  to mlr/stanio/notes/Jacobian_of_field_align_TV.tex)
  */
-void PotentialFieldAlignTaskVariable::userUpdate(const ors::KinematicWorld& ors){
+void PotentialFieldAlignTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
   uint i;
-  ors::Shape *s;
-  ors::Vector tmp;
+  mlr::Shape *s;
+  mlr::Vector tmp;
   arr xi,zi,Jzi,Jxi,grad,hess;
   y.resize(refs.N);
   J.resize(refs.N,ors.getJointStateDimension());
@@ -58,20 +58,20 @@ void PotentialFieldAlignTaskVariable::userUpdate(const ors::KinematicWorld& ors)
 }
 
 GPVarianceTaskVariable::GPVarianceTaskVariable(const char* _name,
-                              ors::KinematicWorld& _ors,
+                              mlr::KinematicWorld& _ors,
                               const ShapeList& _refs,
                               GraspObject_GP& _f){
   refs=_refs;
   f=&_f;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 /** $ \dfdx{\vec y_i}{\vec q} =  2 (\vec{G^{-1}}\vec\kappa) \vec\kappa'\vec Ji $
  * need: inverse Gram, kappa, and derivative of kappa
  */
-void GPVarianceTaskVariable::userUpdate(const ors::KinematicWorld& ors){
+void GPVarianceTaskVariable::userUpdate(const mlr::KinematicWorld& ors){
   uint i;
-  ors::Shape *s;
+  mlr::Shape *s;
   arr xi,Ji,ki,dki,*Ginv;
 
   y.resize(refs.N);

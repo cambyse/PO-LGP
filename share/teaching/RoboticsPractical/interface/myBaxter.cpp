@@ -3,7 +3,7 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Control/TaskControllerModule.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
 #include <RosCom/serviceRAP.h>
@@ -19,12 +19,12 @@
 
 #include <baxter_core_msgs/JointCommand.h>
 
-baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const ors::KinematicWorld& baxterModel, const char* prefix);
+baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const mlr::KinematicWorld& baxterModel, const char* prefix);
 
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
   ACCESSname(FilterObjects, object_database)
-  ACCESSname(ors::KinematicWorld, modelWorld)
+  ACCESSname(mlr::KinematicWorld, modelWorld)
 
   TaskControllerModule tcm;
 
@@ -127,8 +127,8 @@ CtrlTask* MyBaxter::task(const char* name,
 
 CtrlTask*MyBaxter::task(const char* name,
                         TaskMap_DefaultType type,
-                        const char* iShapeName, const ors::Vector& ivec,
-                        const char* jShapeName, const ors::Vector& jvec,
+                        const char* iShapeName, const mlr::Vector& ivec,
+                        const char* jShapeName, const mlr::Vector& jvec,
                         const arr& target,
                         double decayTime, double dampingRatio, double maxVel, double maxAcc){
   TaskMap *map = new TaskMap_Default(type, s->tcm.modelWorld.get()(),
@@ -214,9 +214,9 @@ void MyBaxter::waitConv(const CtrlTaskL& tasks){
     if(allConv) return;
   }
 
-  for (ors::Joint* joint : s->tcm.modelWorld.get()().joints)
+  for (mlr::Joint* joint : s->tcm.modelWorld.get()().joints)
   {
-    if (joint->type != ors::JT_rigid)
+    if (joint->type != mlr::JT_rigid)
     {
       cout << "Joint: " << joint->qIndex << ' ' << joint->name << endl;
     }
@@ -346,7 +346,7 @@ double MyBaxter::setTestJointState(const arr &q){
   return y.scalar();
 }
 
-double MyBaxter::updateLockbox(const ors::Transformation& tf){
+double MyBaxter::updateLockbox(const mlr::Transformation& tf){
   ///////////////////
   s->tcm.realWorld.getBodyByName("lockbox")->X = tf;
   for (auto shape : s->tcm.realWorld.getBodyByName("lockbox")->shapes)
@@ -424,17 +424,17 @@ arr MyBaxter::getJointState(){
   return s->tcm.realWorld.q;
 }
 
-ors::Vector MyBaxter::closestCluster(){
+mlr::Vector MyBaxter::closestCluster(){
   s->object_database.readAccess();
 
-  ors::Vector toReturn(0,0,0);
+  mlr::Vector toReturn(0,0,0);
 
   double max_dist = DBL_MIN;
   for(FilterObject* fo : s->object_database())
   {
     if (fo->type == FilterObject::FilterObjectType::cluster)
     {
-      ors::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
+      mlr::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
       double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
       if (max_dist < dist)
       {
@@ -452,16 +452,16 @@ arr MyBaxter::q0(){
   return s->tcm.q0;
 }
 
-ors::Vector MyBaxter::arPose(){
+mlr::Vector MyBaxter::arPose(){
   s->object_database.readAccess();
 
-  ors::Vector toReturn(0,0,0);
+  mlr::Vector toReturn(0,0,0);
 
   for(FilterObject* fo : s->object_database())
   {
     if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
     {
-      ors::Transformation pos = fo->frame * fo->transform;
+      mlr::Transformation pos = fo->frame * fo->transform;
       toReturn = pos.pos;
       std::cout << toReturn << std::endl;
     }
@@ -481,11 +481,11 @@ void MyBaxter::publishTorque(const arr& u, const char* prefix){
   }
 }
 
-const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
+const mlr::KinematicWorld& MyBaxter::getKinematicWorld(){
   return s->tcm.realWorld;
 }
 
-const ors::KinematicWorld& MyBaxter::getModelWorld(){
+const mlr::KinematicWorld& MyBaxter::getModelWorld(){
   return s->tcm.modelWorld.get();
 }
 
@@ -559,7 +559,7 @@ void MyBaxter::grip(){
 void MyBaxter::grip(const bool toGrip, const bool sim){
   NIY;
   arr q = s->tcm.modelWorld.get()->q;
-  ors::Joint *j = s->tcm.modelWorld.get()->getJointByName("l_gripper_l_finger_joint");
+  mlr::Joint *j = s->tcm.modelWorld.get()->getJointByName("l_gripper_l_finger_joint");
   isGripping = toGrip;
   toGrip ? q(j->qIndex) = 0 : q(j->qIndex) = 1;
 

@@ -16,7 +16,7 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot, ors::KinematicWorld& world)
+TaskControllerModule::TaskControllerModule(const char* _robot, mlr::KinematicWorld& world)
   : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -91,7 +91,7 @@ void TaskControllerModule::open(){
 #if 1
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
-  modelWorld().gl().add(ors::glDrawGraph, &realWorld);
+  modelWorld().gl().add(mlr::glDrawGraph, &realWorld);
   modelWorld().gl().add(changeColor2);
   modelWorld.deAccess();
 #endif
@@ -109,7 +109,7 @@ void TaskControllerModule::step(){
   static uint t=0;
   t++;
 
-  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
+  mlr::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
 
   //-- read real state
   if(useRos || !oldfashioned){
@@ -122,7 +122,7 @@ void TaskControllerModule::step(){
       qdot_real = ctrl_obs.get()->qdot;
       arr pr2odom = pr2_odom.get();
       if(q_real.N==realWorld.q.N && pr2odom.N==3){
-        q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
+        q_real({trans->qIndex, trans->qIndex+2}) = pr2odom;
       }
 
       if(qLastReading.d0 > 0) {

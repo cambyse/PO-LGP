@@ -1,6 +1,6 @@
 #include "taprecon.h"
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Mocap/mocapdata.h>
 #include <Core/array.h>
 #include <Core/thread.h>
@@ -17,8 +17,8 @@ floatA transform(floatA samplestart,floatA sample)
 {
     floatA tempDatapos;
     tempDatapos = sample.cols(0,3)-samplestart.cols(0,3);
-    ors::Quaternion tempDataquat;
-    ors::Quaternion startSamplequat;
+    mlr::Quaternion tempDataquat;
+    mlr::Quaternion startSamplequat;
     startSamplequat.set(
     (double)samplestart(0,3),
     (double)samplestart(0,4),

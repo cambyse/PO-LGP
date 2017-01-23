@@ -509,7 +509,7 @@ struct sCamera{
 
 Camera::Camera():Process("BumblebeeCamera"){
   s = new sCamera;
-  s->camL = biros().getVariable<Image>("CameraL", this);
+  s->camL = biros().getAccessData<Image>("CameraL", this);
   biros().getVariable(s->camR, "CameraR", this);
   mlr::String filename = biros().getParameter<mlr::String>("DummyCameraFile", STRING("DummyCameraImage_"), this);
   read_ppm(s->dummyL, STRING(filename <<"L.ppm"));

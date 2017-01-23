@@ -17,7 +17,7 @@ void TEST(KinectModules) {
   //  gl.add(glStandardScene, NULL);
   //  gl.add(glDrawPrimitives, &primitives);
   //  primitives.P.append(new Plane(1,1,1,2.));
-  //  ors::Shape *s = new ors::Shape(primitives.G, NoBody)->type=ors::boxST;
+  //  mlr::Shape *s = new mlr::Shape(primitives.G, NoBody)->type=mlr::ST_box;
   //  gl.update();
 
   PCL_ModuleSystem S;
@@ -35,7 +35,7 @@ void TEST(KinectModules) {
 
   for(;;){
     if(moduleShutdown().getValue()>0) break;
-    S.kinect_points.var->waitForNextRevision();
+    S.kinect_points.data->waitForNextRevision();
 
     cloud = S.pcl_cloud.get();
 

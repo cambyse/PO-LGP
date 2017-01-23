@@ -6,11 +6,11 @@ struct Pr2GamepadController : Thread {
   ACCESS(CtrlMsg, ctrl_obs)
   ACCESS(arr, gamepadState)
 
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   arr q, qdot, zero_qdot;
   TaskController *MP;
-  ors::Shape *ftL_shape;
-  ors::Joint *trans;
+  mlr::Shape *ftL_shape;
+  mlr::Joint *trans;
   Gamepad2Tasks *j2t;
   CtrlMsg refs;
 
@@ -26,7 +26,7 @@ struct Pr2GamepadController : Thread {
 
     MP = new TaskController(world, true);
     MP->qitselfPD.y_ref = q;
-    MP->H_rate_diag = pr2_reasonable_W(world);
+    MP->H_rate_diag = world.getHmetric();
     j2t = new Gamepad2Tasks(*MP);
 
 
@@ -34,7 +34,7 @@ struct Pr2GamepadController : Thread {
       //-- wait for first q observation!
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
       for(;;){
-        ctrl_obs.var->waitForNextRevision();
+        ctrl_obs.data->waitForNextRevision();
         if(ctrl_obs.get()->q.N==MP->world.q.N
            && ctrl_obs.get()->qdot.N==MP->world.q.N)
           break;

@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 arr spline(const arr&, double);
 arr spline_vel(const arr&, double);
@@ -20,7 +20,7 @@ struct FastControllerInterface{
   void getEndeffForce(arr& forceVector);
 };
 
-void dualExecution(const arr& x, const arr& y, const arr& ori, const arr& dual, ors::KinematicWorld& world, double tau);
+void dualExecution(const arr& x, const arr& y, const arr& ori, const arr& dual, mlr::KinematicWorld& world, double tau);
 
 
 //struct OuterController{

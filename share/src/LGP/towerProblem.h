@@ -15,12 +15,12 @@
 
 #pragma once
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 //===========================================================================
 
 struct TowerProblem{
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   Graph symbols;
   uint nObjects;
 
@@ -30,5 +30,5 @@ struct TowerProblem{
     nObjects = world.bodies.N - nObjects;
   }
   void setRandom();
-  double reward(const ors::KinematicWorld& world, const Graph& symbols);
+  double reward(const mlr::KinematicWorld& world, const Graph& symbols);
 };

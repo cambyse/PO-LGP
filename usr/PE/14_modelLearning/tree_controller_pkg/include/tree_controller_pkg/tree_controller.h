@@ -4,7 +4,7 @@
 #include <std_srvs/Empty.h>
 #include <pr2_mechanism_model/tree.h>
 #include <pr2_mechanism_model/chain.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Control/taskController.h>
 #include <Algo/MLcourse.h>
 #include <tree_controller_pkg/GetJointGains.h>
@@ -37,7 +37,7 @@ private:
   KDL::JntArrayVel jnt_vel_;
   KDL::JntArray jnt_efforts_;
 
-  // Ors related variables
+  // Kin related variables
   arr u;
   double tau_control, tau_plan;
   arr Kp,Kd;

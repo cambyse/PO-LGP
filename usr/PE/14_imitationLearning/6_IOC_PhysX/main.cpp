@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>
 #include <Optim/optimization.h>
@@ -10,7 +10,7 @@
 #include <future>
 #include <GL/glu.h>
 #include <Gui/opengl.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 
 struct IOC_DemoCost {
   arr x0; // Demonstrated joint space
@@ -290,8 +290,8 @@ void simpleMotion(){
   mlr::Array<Demonstration*> demos;
 
   // define toy demonstration 1 with object movement
-  ors::KinematicWorld world("scene");
-  for_list(ors::Joint, j, world.joints) {
+  mlr::KinematicWorld world("scene");
+  for_list(mlr::Joint, j, world.joints) {
     j->locked = false;
   }
   world.getBodyByName("box")->stiction = 0.;
@@ -315,11 +315,11 @@ void simpleMotion(){
   arr refGoal2 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,-0.2,0.};
   cout << refGoal1 << refGoal2 << endl;
   TaskCost *c;
-  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(200,200,refGoal1,1e5);
-  c = MP.addTask("orientation_right_hand_1",new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 0., 1.)));
+  c = MP.addTask("orientation_right_hand_1",new TaskMap_Default(vecTMT,world,"endeff", mlr::Vector(0., 0., 1.)));
   c->setCostSpecs(130,130,ARR(0.,1.,0.),1e1);
-  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = MP.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(140,140,refGoal2,1e4);
 
   c = MP.addTask("qItselfTMT", new TaskMap_Default(qItselfTMT,world));
@@ -347,7 +347,7 @@ void simpleMotion(){
     arr tmp;
     world.kinematicsPos(tmp,NoArr,world.getBodyByName("endeff"));
     xPosTraj.append(~tmp);
-    //    ors::Vector a(0.,0.,1.);
+    //    mlr::Vector a(0.,0.,1.);
     world.kinematicsVec(tmp,NoArr,world.getBodyByName("endeff"));
     xVecTraj.append(~tmp);
     world.physx().step(MP.tau);
@@ -363,8 +363,8 @@ void simpleMotion(){
 
 
   // create MP for learning
-  ors::KinematicWorld world2("scene");
-  for_list(ors::Joint, j2, world2.joints) {
+  mlr::KinematicWorld world2("scene");
+  for_list(mlr::Joint, j2, world2.joints) {
     j2->locked = false;
   }
   world2.getBodyByName("box")->stiction = 0.;  world2.getBodyByName("box")->friction = 0.2;  world2.getBodyByName("box")->restitution = .1;
@@ -376,17 +376,17 @@ void simpleMotion(){
   MotionProblem MP2(world2,true);
   MP2.loadTransitionParameters();
   MP2.makeContactsAttractive=false;
-  TaskCost *c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  TaskCost *c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
   c1->setCostSpecs(138,138,xPosTraj[138],1.);
 
-  TaskCost *c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", ors::Vector(0., 0., 0.)));
+  TaskCost *c2 = MP2.addTask("position_right_hand_2",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
   c2->setCostSpecs(200,200,xPosTraj[200],1.);
 
-  TaskCost *c6 = MP2.addTask("vec_right_hand_1",new TaskMap_Default(vecTMT,world2,"endeff", ors::Vector(0., 0., 1.)));
+  TaskCost *c6 = MP2.addTask("vec_right_hand_1",new TaskMap_Default(vecTMT,world2,"endeff", mlr::Vector(0., 0., 1.)));
   c6->setCostSpecs(138,138,xVecTraj[138],1.);
 
 
-  TaskCost *c7 = MP2.addTask("vec_right_hand_2",new TaskMap_Default(vecTMT,world2,"endeff", ors::Vector(0., 0., 1.)));
+  TaskCost *c7 = MP2.addTask("vec_right_hand_2",new TaskMap_Default(vecTMT,world2,"endeff", mlr::Vector(0., 0., 1.)));
   c7->setCostSpecs(200,200,xVecTraj[200],1.);
 
 //  TaskMap *tm_contact = new PairCollisionConstraint(MP2.world,"box","endeff",0.01);

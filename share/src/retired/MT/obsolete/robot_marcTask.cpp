@@ -62,7 +62,7 @@ void MarcsRobotTask::watch(){
 
 void MarcsRobotTask::watchTrajectory(){
   if(!gui.gl) return;
-  gui.gl->add(ors::glDrawGraph, &ctrl.ors);
+  gui.gl->add(mlr::glDrawGraph, &ctrl.ors);
   ctrl.sys.gl=gui.gl;
   arr q;
   do {
@@ -138,7 +138,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){
   if(avg_c3d_counter < 3)
     std::cout <<"avg_c3d_counter < 3" <<std::endl;
     
-  ors::Vector pos;
+  mlr::Vector pos;
   avg_c3d/=(double)avg_c3d_counter;
   pos.set(avg_c3d.p);
   cout <<pos <<endl;
@@ -148,7 +148,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){
   cout <<pos <<endl;
   objectPosition.setCarray(pos.v, 3);
   
-  ors::Shape *s = ors.getShapeByName(D(0)->identifier.c_str());
+  mlr::Shape *s = ors.getShapeByName(D(0)->identifier.c_str());
   s->X.p=pos;
   s->rel.setDifference(s->body->X, s->X);
   cout <<"localized relative position = " <<s->rel.p <<endl;
@@ -163,7 +163,7 @@ void MarcsRobotTask::localizeObject(const char* identifier){NIY;}
 #endif
 
 //   byteA left, right;
-//   ors::Vector pos;
+//   mlr::Vector pos;
 //   for(uint k=0;k<3 && !signalStop;k++){
 //     bumble.capture(left, right);
 //     localizeHsv(objectPosition, left, right, ARRAY<float>(.0, 1., 1.), ARRAY<float>(.2, .5, .5), 3);
@@ -192,7 +192,7 @@ void MarcsRobotTask::reachObject(){
 }
 
 void MarcsRobotTask::positionObjectRandomlyInSimulation(){
-  ors::Body *target = ctrl.ors.getBodyByName("target");
+  mlr::Body *target = ctrl.ors.getBodyByName("target");
   target->X.pos.x = 0.  + (rnd.uni()-0.5)*0.5;
   target->X.pos.y = -.5 + rnd.uni()*0.2-0.2;
   target->X.pos.z = .9  + (rnd.uni()-0.5)*0.35;
@@ -213,7 +213,7 @@ void MarcsRobotTask::planGraspTrajectory(const char* objShape){
   setGraspGoals(*planSys, T, objShape);
   // see r3293 for the original task variable setting in this code
   
-  if(gui.gl) gui.gl->add(ors::glDrawGraph, planSys->ors);
+  if(gui.gl) gui.gl->add(mlr::glDrawGraph, planSys->ors);
   if(gui.gl) planSys->gl=gui.gl;
   
   arr q;
@@ -298,7 +298,7 @@ void MarcsRobotTask::planPlaceTrajectory(const char* objShape, const char* below
   setPlaceGoals(*planSys, T, objShape, belowFromShape, belowToShape);
   // see r3293 for the original task variable setting in this code
   
-  if(gui.gl) gui.gl->add(ors::glDrawGraph, planSys->ors);
+  if(gui.gl) gui.gl->add(mlr::glDrawGraph, planSys->ors);
   if(gui.gl) planSys->gl=gui.gl;
   
   mlr::timerStart();
@@ -386,8 +386,8 @@ void MarcsRobotTask::followTrajectory(){
 
 void MarcsRobotTask::closeHand(const char* objShape, const char* belowShape){
   //deactivate collision testing with target shape
-  ors::Shape *obj  =ctrl.ors.getShapeByName(objShape);
-  ors::Shape *below=ctrl.ors.getShapeByName(belowShape);
+  mlr::Shape *obj  =ctrl.ors.getShapeByName(objShape);
+  mlr::Shape *below=ctrl.ors.getShapeByName(belowShape);
   obj->cont=false;
   below->cont=false;
   ctrl.swift.initActivations(ctrl.ors);
@@ -439,7 +439,7 @@ void MarcsRobotTask::openHand(const char* objShape){
   for(uint t=0; t<10; t++) NIY; //();
   
   //attach shape to back to target-body
-  ors::Shape *obj=ctrl.ors.getShapeByName(objShape);
+  mlr::Shape *obj=ctrl.ors.getShapeByName(objShape);
   obj->body->shapes.removeValue(obj);
   obj->body = ctrl.ors.getBodyByName("OBJECTS");
   obj->ibody = obj->body->index;
@@ -468,16 +468,16 @@ void MarcsRobotTask::reactivateCollisions(const mlr::Array<const char*>& shapes)
   ctrl.swift.initActivations(ctrl.ors);
 }
 
-void MarcsRobotTask::reactivateCollisions(const mlr::Array<ors::Shape*>& shapes){
+void MarcsRobotTask::reactivateCollisions(const mlr::Array<mlr::Shape*>& shapes){
   if(signalStop) return;
-  ors::Shape *s;
+  mlr::Shape *s;
   uint i;
   for_list(Type,  s,  shapes) s->cont=true;
   ctrl.swift.initActivations(ctrl.ors);
 }
 
 /*void MarcsRobotTask::deactivateInterCollisions(const mlr::Array<const char*>& shapes){
-  ors::BodyList L;
+  mlr::BodyList L;
   for_list(Type,  s,  shapes) L->setAppend(ors.getShapeByName(s)->body);
   swift.deactivate(L);
 }*/

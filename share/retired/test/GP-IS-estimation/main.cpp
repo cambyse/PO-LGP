@@ -9,7 +9,7 @@
  */
 
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Algo/gaussianProcess.h>
 #include <Gui/opengl.h>
 #include <SD/ISF_GP.h>
@@ -117,7 +117,7 @@ append_observs_gradwalk(GaussianProcess& gp, PotentialField *ot , const arr &min
 }
 
 void
-append_observs_vrtx(GaussianProcess &gp, ors::Mesh &m, const uint obs_N=30){
+append_observs_vrtx(GaussianProcess &gp, mlr::Mesh &m, const uint obs_N=30){
 
   arr pts, grads;
   uint i;
@@ -134,7 +134,7 @@ append_observs_vrtx(GaussianProcess &gp, ors::Mesh &m, const uint obs_N=30){
  * the mesh
  */
 void
-append_observs_ray(GaussianProcess &gp, ors::Mesh &m, const uint obs_N=30){
+append_observs_ray(GaussianProcess &gp, mlr::Mesh &m, const uint obs_N=30){
 
   arr pts, grads;
   uint i;
@@ -310,14 +310,14 @@ test_mesh_object_learning(uint obs=30){
 void
 test_intersec(){
 
-  ors::Vector a,b,c,lp,lv;
-  ors::Vector pi;
+  mlr::Vector a,b,c,lp,lv;
+  mlr::Vector pi;
 
-  a = mlr::Parameter<ors::Vector>("tri_a");
-  b = mlr::Parameter<ors::Vector>("tri_b");
-  c = mlr::Parameter<ors::Vector>("tri_c");
-  lp = mlr::Parameter<ors::Vector>("line_p");
-  lv = mlr::Parameter<ors::Vector>("line_v");
+  a = mlr::Parameter<mlr::Vector>("tri_a");
+  b = mlr::Parameter<mlr::Vector>("tri_b");
+  c = mlr::Parameter<mlr::Vector>("tri_c");
+  lp = mlr::Parameter<mlr::Vector>("line_p");
+  lv = mlr::Parameter<mlr::Vector>("line_v");
 
   int res = intersect3d_tri_line(pi,a,b,c,lp,lv);
 

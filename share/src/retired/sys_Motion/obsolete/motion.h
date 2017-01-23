@@ -20,7 +20,7 @@ struct PoseViewer:Process {
 //     geo->deAccess(this);
     gl = new OpenGL(var->name);
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, &geo().ors);
+    gl->add(mlr::glDrawGraph, &geo().ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();
@@ -70,7 +70,7 @@ struct OrsViewer:Process {
 //     geo->deAccess(this);
     gl = new OpenGL(var->name);
     gl->add(glStandardScene);
-    gl->add(ors::glDrawGraph, &geo().ors);
+    gl->add(mlr::glDrawGraph, &geo().ors);
     gl->camera.setPosition(5, -10, 10);
     gl->camera.focus(0, 0, 1);
     gl->camera.upright();

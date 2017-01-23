@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 #include "guiModule.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "perceptionModule.h"
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
@@ -32,7 +32,7 @@ GuiModule::GuiModule():Process("GuiProcess"){
   ors=ors2=NULL;
 }
 
-void GuiModule::createOrsClones(ors::KinematicWorld *_ors){
+void GuiModule::createOrsClones(mlr::KinematicWorld *_ors){
   if(_ors) ors  = _ors->newClone(); else ors =NULL;
   if(_ors) ors2 = _ors->newClone(); else ors2=NULL;
 }
@@ -64,13 +64,13 @@ void GuiModule::open(){
   
   if(ors){
     gl->addView(0, glStandardLight, NULL);
-    gl->addView(0, ors::glDrawGraph, ors);
+    gl->addView(0, mlr::glDrawGraph, ors);
     gl->views(0).camera.setPosition(7., -0., 2.);
     gl->views(0).camera.focus(0, 0, .8);
     gl->views(0).camera.upright();
     
     gl->addView(2, glStandardLight, NULL);
-    gl->addView(2, ors::glDrawGraph, ors2);
+    gl->addView(2, mlr::glDrawGraph, ors2);
     gl->views(2).camera.setPosition(7., -0., 2.);
     gl->views(2).camera.focus(0, 0, .8);
     gl->views(2).camera.upright();

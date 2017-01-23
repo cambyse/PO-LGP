@@ -1,21 +1,21 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <Perception/videoEncoder.h>
 #include <Perception/g4data.h>
 
-void setup_opengl_for_g4(ors::KinematicWorld& ors, OpenGL& gl, uint hubs){
+void setup_opengl_for_g4(mlr::KinematicWorld& ors, OpenGL& gl, uint hubs){
   bindOrsToOpenGL(ors, gl);
   gl.camera.setPosition(7., .5, 3.);
   gl.camera.focus(0, .5, .5);
   gl.camera.upright();
 
-  ors::Shape *s = new ors::Shape(ors, NoBody);
-  s->type = ors::markerST;
+  mlr::Shape *s = new mlr::Shape(ors, NoBody);
+  s->type = mlr::ST_marker;
   s->size[0] = .5;
 
   for(uint m=0;m<hubs;m++){
-    ors::Shape *s = new ors::Shape(ors, NoBody);
-    s->type = ors::boxST;
+    mlr::Shape *s = new mlr::Shape(ors, NoBody);
+    s->type = mlr::ST_box;
     memmove(s->size ,ARR(.10, .04, .01, 0).p, 4*sizeof(double));
     memmove(s->color,ARR(1, 0, 0).p, 3*sizeof(double));
   }
@@ -33,7 +33,7 @@ void display(G4Data &g4d) {
   VideoEncoder_x264_simple video(videoname, 120, 0, true);
 
   OpenGL gl;
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   setup_opengl_for_g4(ors, gl, pos.d0);
 
   CHECK(pos.nd==3 && pos.d2==3,"wrong sized g4 pos dataset");

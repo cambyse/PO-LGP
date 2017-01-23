@@ -98,7 +98,7 @@ void MotionPlannerModuleGroup::step(){
   if(!graspShapeName) return;
   static bool first=true;
   if(recho.isIdle() && first){
-    //ors::Shape *s = recho.sys->ors->bodies(graspTargetBodyId)->shapes(0);
+    //mlr::Shape *s = recho.sys->ors->bodies(graspTargetBodyId)->shapes(0);
     cout <<"*** triggering motion planning to shape " <<graspShapeName <<endl;
     setGraspGoals(*recho.sys, recho.sys->get_T(), graspShapeName); ///HERE IS THE LINK TO THE BRAIN!
     arr q;

@@ -79,12 +79,12 @@ struct SecKinPlanner:public StepThread{
 #endif
   }
 
-  ors::Vector	EndEffPos(ors::KinematicWorld * C, const arr & q){
+  mlr::Vector	EndEffPos(mlr::KinematicWorld * C, const arr & q){
     C->setJointState(q);
     C->calcNodeFramesFromEdges();
 
-    ors::Frame f=C->getBodyByName("m9")->X;
-    f.addRelativeFrame(ors::Frame().setText("<t( .02   .022 -.366)>"));
+    mlr::Frame f=C->getBodyByName("m9")->X;
+    f.addRelativeFrame(mlr::Frame().setText("<t( .02   .022 -.366)>"));
     return f.p;
   }
 
@@ -141,7 +141,7 @@ struct SecKinPlanner:public StepThread{
     sys->setq0AsCurrent();
     // aico.initMessages(); !!!! thi hacks my intiializations
     activateAll(sys->vars,false);
-    ors::Shape *obj = sys->ors->getShapeByName(objShape);
+    mlr::Shape *obj = sys->ors->getShapeByName(objShape);
     TaskVariable *V;
 
     arr xtarget;
@@ -209,7 +209,7 @@ struct SecKinPlanner:public StepThread{
       setKGraspGoals(target);
   }
 
-  void UpdateExtState(ors::Body * b){
+  void UpdateExtState(mlr::Body * b){
     int ind = b->index;
     sys->ors->bodies(ind)->X.r = b->X.r;//thus give orientation as well, pos is given to external state
     sys->ors->bodies(ind)->X.p = b->X.p;//actually, X.p is read in goals without ext state, so change pos as well
@@ -246,7 +246,7 @@ struct ThreadPlanner:public StepThread{
   ThreadPlanner():StepThread("dynamicplanner"){};
 
   //current position and velocity in m/s of body
-  void UpdateExtState(ors::Body * b){
+  void UpdateExtState(mlr::Body * b){
     for(uint i = 0; i < helpers.N; i++)
       helpers(i)-> UpdateExtState(b);
   }

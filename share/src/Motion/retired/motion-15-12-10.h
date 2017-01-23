@@ -18,7 +18,7 @@
 #ifndef _MT_motion_h
 #define _MT_motion_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 /* Notes
@@ -33,20 +33,20 @@
 //
 
 struct TaskMap {
-  TermType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
+  ObjectiveType type; // element of {cost_feature, inequality, equality} MAYBE: move this to Task?
   uint order;       ///< 0=position, 1=vel, etc
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1) = 0; ///< this needs to be overloaded
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1) = 0; ///< this needs to be overloaded
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
-  virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
+  virtual uint dim_phi(const mlr::KinematicWorld& G) = 0; //the dimensionality of $y$
 
-  VectorFunction vf(ors::KinematicWorld& G){
+  VectorFunction vf(mlr::KinematicWorld& G){
     return [this, &G](arr& y, arr& J, const arr& x) -> void {
       G.setJointState(x);
       phi(y, J, G, -1);
     };
   }
 
-  TaskMap():type(sumOfSqrTT),order(0) {}
+  TaskMap():type(OT_sumOfSqr),order(0) {}
   virtual ~TaskMap() {};
 };
 
@@ -63,7 +63,7 @@ struct Task {
   bool active;
   arr target, prec;  ///< optional linear, potentially time-dependent, rescaling (with semantics of target & precision)
 
-  uint dim_phi(const ors::KinematicWorld& G, uint t){
+  uint dim_phi(const mlr::KinematicWorld& G, uint t){
     if(!active || prec.N<=t || !prec(t)) return 0; return map.dim_phi(G); }
 
   Task(TaskMap* m):map(*m), active(true){} //TODO: require type here!!
@@ -74,7 +74,7 @@ struct Task {
 };
 
 
-Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterval, uint Tzero=0);
+Task* newTask(const Node* specs, const mlr::KinematicWorld& world, uint Tinterval, uint Tzero=0);
 
 //===========================================================================
 //
@@ -84,7 +84,7 @@ Task* newTask(const Node* specs, const ors::KinematicWorld& world, uint Tinterva
 /// This class allows you to DESCRIBE a motion planning problem, nothing more
 struct MotionProblem {
   //engines to compute things
-  ors::KinematicWorld& world;  ///< the original world
+  mlr::KinematicWorld& world;  ///< the original world
   WorldL configurations;       ///< copies for each time slice; including kinematic switches
   bool useSwift;
   
@@ -94,7 +94,7 @@ struct MotionProblem {
   mlr::Array<Task*> tasks;
 
   //-- kinematic switches along the motion
-  mlr::Array<ors::KinematicSwitch*> switches;
+  mlr::Array<mlr::KinematicSwitch*> switches;
 
   //-- trajectory length and tau
   uint T; ///< number of time steps
@@ -113,9 +113,9 @@ struct MotionProblem {
   //-- return values of an optimizer
   arrA phiMatrix;
   arr dualMatrix;
-  mlr::Array<TermTypeA> ttMatrix;
+  mlr::Array<ObjectiveTypeA> ttMatrix;
 
-  MotionProblem(ors::KinematicWorld& _world, bool useSwift=true);
+  MotionProblem(mlr::KinematicWorld& _world, bool useSwift=true);
   
   MotionProblem& operator=(const MotionProblem& other);
 
@@ -133,12 +133,12 @@ struct MotionProblem {
 //                             const arr& y_finalTarget, double y_finalPrec, const arr& y_midTarget=NoArr, double y_midPrec=-1., double earlyFraction=-1.);
 
   //-- cost infos
-  bool getPhi(arr& phi, arr& J, TermTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
-  uint dim_phi(const ors::KinematicWorld& G, uint t);
-  uint dim_g(const ors::KinematicWorld& G, uint t);
-  uint dim_h(const ors::KinematicWorld& G, uint t);
-  StringA getPhiNames(const ors::KinematicWorld& G, uint t);
-  void reportFull(bool brief=false);
+  bool getPhi(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const WorldL& G, double tau); ///< the general task vector and its Jacobian
+  uint dim_phi(const mlr::KinematicWorld& G, uint t);
+  uint dim_g(const mlr::KinematicWorld& G, uint t);
+  uint dim_h(const mlr::KinematicWorld& G, uint t);
+  StringA getPhiNames(const mlr::KinematicWorld& G, uint t);
+  void reportFeatures(bool brief=false);
   void costReport(bool gnuplt=true); ///< also computes the costMatrix
   Graph getReport();
 
@@ -153,10 +153,10 @@ struct MotionProblem {
   void displayTrajectory(int steps, const char *tag, double delay=0.);
 
   //-- inverse Kinematics
-  void inverseKinematics(arr& y, arr& J, arr& H, TermTypeA& tt, const arr& x);
+  void inverseKinematics(arr& y, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x);
 
   ConstrainedProblem InvKinProblem(){
-    return [this](arr& phi, arr& J, arr& H, TermTypeA& tt, const arr& x) -> void {
+    return [this](arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x) -> void {
       this->inverseKinematics(phi, J, H, tt, x);
     };
   }
@@ -180,7 +180,7 @@ struct MotionProblemFunction:KOrderMarkovFunction {
   uint dim_g_h(){ uint d=0; for(uint t=0;t<=MP.T;t++) d += dim_g(t) + dim_h(t); return d; }
 
   //KOrderMarkovFunction definitions
-  virtual void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+  virtual void phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar);
   //functions to get the parameters $T$, $k$ and $n$ of the $k$-order Markov Process
   virtual uint get_T() { return MP.T; }
   virtual uint get_k() { return MP.k_order; }
@@ -206,7 +206,7 @@ struct MotionProblem_EndPoseFunction{
   MotionProblem_EndPoseFunction(MotionProblem& _MP);
 
   //VectorFunction definitions
-  void Phi(arr& phi, arr& J, TermTypeA& tt, const arr& x);
+  void Phi(arr& phi, arr& J, ObjectiveTypeA& tt, const arr& x);
   virtual void fv(arr& phi, arr& J, const arr& x);
 };
 

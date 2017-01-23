@@ -212,7 +212,7 @@ void getVector_StateLiterals(arr& vec, relational::ContinuousState& cs, const ml
 	getVector_StateLiterals(vec, ss);
 }
 
-void getVector_StateLiterals(arr& vec, ors::KinematicWorld* C, const mlr::Array<relational::GroundedSymbol*> gsl) {
+void getVector_StateLiterals(arr& vec, mlr::KinematicWorld* C, const mlr::Array<relational::GroundedSymbol*> gsl) {
 	relational::ContinuousState* cs = relational::getContinuousState(*C, TL::logicObjectManager::constants);
 	getVector_StateLiterals(vec, *cs, gsl);
 	delete cs;

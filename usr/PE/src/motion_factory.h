@@ -19,7 +19,7 @@ struct MotionFactory {
   // scenarios
   void loadScenarioSimple(Scenario &scenario,uint nScenes=1, bool useConstraints=false);
   void loadScenarioComplex(Scenario &scenario);
-  void loadScenarioButton(Scenario &scenario,ors::KinematicWorld &world);
+  void loadScenarioButton(Scenario &scenario,mlr::KinematicWorld &world);
   void loadScenarioVelocity(Scenario &scenario);
 
 

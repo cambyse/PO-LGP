@@ -1,5 +1,5 @@
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 void draw1(void*){
@@ -14,7 +14,7 @@ void draw1(void*){
 
 int main(int argc, const char* argv[]){
 
-  ors::KinematicWorld world("world.ors");
+  mlr::KinematicWorld world("world.ors");
 
   OpenGL gl("bla",800,600);
 //  gl.camera.setKinect();
@@ -25,7 +25,7 @@ int main(int argc, const char* argv[]){
   orsDrawMarkers=orsDrawJoints=false;
   arr q;
   world.getJointState(q);
-  ors::Shape *s = world.getShapeByName("kinect");
+  mlr::Shape *s = world.getShapeByName("kinect");
   gl.camera.setKinect();
   for(uint i=0;i<10;i++){
     q = randn(q.N);

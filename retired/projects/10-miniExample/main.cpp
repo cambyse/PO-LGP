@@ -15,7 +15,7 @@ void MyTask::updateTaskVariables(ControllerProcess *ctrl){
     TV_eff->y_target = TV_eff->y_target + ARR(0.,0.,.002); //move upward
   }else{ //velocity control
     TV_eff->v_prec =1e3;
-    TV_eff->v_target = ARR(0.,0.,.05); //move upward (recall tau=0.01 -> results in same speed)
+    TV_eff->v_target = {0.,0.,.05}; //move upward (recall tau=0.01 -> results in same speed)
   }
 }
 

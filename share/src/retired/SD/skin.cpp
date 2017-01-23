@@ -1,6 +1,6 @@
 #include "skin.h"
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/schunk.h>
 
 #define SD_SIZE(s, s1, s2, s3, s4)  s[0]=(s1); s[1]=(s2); s[2]=(s3); s[3]=(s4);
@@ -49,28 +49,28 @@ tactile_arr_t::update_shapes(){
 }
 
 void
-tactile_arr_t::add_sensor_shapes(ors::KinematicWorld &G){
-  ors::Shape *s1,*s2;
+tactile_arr_t::add_sensor_shapes(mlr::KinematicWorld &G){
+  mlr::Shape *s1,*s2;
   mlr::String *n,*a; 
   uint i,j;
   FOR2D(tr,i,j){
     mlr::String s; s<<tr(i,j);
 
-    s1 =  new ors::Shape(G, b);
+    s1 =  new mlr::Shape(G, b);
     s1->reset();
     a = new mlr::String("a"); *a<<i<<" "<<j;
     s1->name = a->p;
-    s1->type=ors::boxST;
+    s1->type=mlr::ST_box;
     s1->rel.setText(s.p);
     SD_SIZE(s1->size, .0034, .0034, .001, .0034);
     SD_COL(s1->color, .8, .1, .1 );
     sh_s.append(s1);
 
-    s2 =  new ors::Shape(G, b);
+    s2 =  new mlr::Shape(G, b);
     s2->reset();
     n = new mlr::String("n"); *a<<i<<" "<<j;
     s2->name = n->p;
-    s2->type=ors::cylinderST;
+    s2->type=mlr::ST_cylinder;
     s2->rel.setText(s.p);
     SD_SIZE(s2->size, .0034, .0034, .02, .00003);
     SD_COL(s2->color, .1, .8, .1  );
@@ -80,7 +80,7 @@ tactile_arr_t::add_sensor_shapes(ors::KinematicWorld &G){
   sh_n.reshapeAs(sh_s);
 }
 
-grobi_skin_t::grobi_skin_t(ors::KinematicWorld &ors){
+grobi_skin_t::grobi_skin_t(mlr::KinematicWorld &ors){
   uint i;
 
   /* 3 fingers */

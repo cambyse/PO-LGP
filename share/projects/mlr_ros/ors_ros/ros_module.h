@@ -2,11 +2,11 @@
 #define ROS_MODULE_H
 
 #include <Core/thread.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 BEGIN_MODULE(RosTf)
-  ACCESS(ors::KinematicWorld, world)
-  void publish(const ors::KinematicWorld&);
+  ACCESS(mlr::KinematicWorld, world)
+  void publish(const mlr::KinematicWorld&);
 END_MODULE()
 
 BEGIN_MODULE(PhysicsMenu)

@@ -1,5 +1,5 @@
 #include "task_manager.h"
-#include <Motion/pr2_heuristics.h>
+
 #include "traj_factory.h"
 #include "plotUtil.h"
 #include <Motion/phase_optimization.h>
@@ -29,7 +29,7 @@ void ButtonTask::addModelConstraints(MotionProblem *MP,arr &target) {
   t->setCostSpecs(constraintCP(1),constraintCP(1),target,1e1);
 }
 
-void ButtonTask::updateVisualization(ors::KinematicWorld &world,arr &X, arr &Y) {
+void ButtonTask::updateVisualization(mlr::KinematicWorld &world,arr &X, arr &Y) {
   drawLine(world,X,Pdemo1f,"endeffC1",0,0,conStart(0));
   drawLine(world,X,Pdemo1c,"endeffC1",2,conStart(0),conEnd(0));
   drawLine(world,X,Pdemo2f,"endeffC1",0,conEnd(0),X.d0);
@@ -80,7 +80,7 @@ bool ButtonTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-1);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
 
   arr prec = constraintTime*1e5;
   t = MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));
@@ -141,7 +141,7 @@ bool ButtonTask::transformTrajectoryDof(arr& Xn, const arr& x_dof, arr& Xdemo){
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
   /// add contact constraint
   t = MP.addTask("b2_b1_con", new PointEqualityConstraint(MP.world,"endeffC1",NoVector,"cp1"));
   t->target = zeros(prec.d0,3);

@@ -4,11 +4,11 @@
 #include <biros/biros_views.h>
 #include <gtk/gtk.h>
 
-//-- standard Variable containing only an integer
-struct Integer:public Variable {
+//-- standard AccessData containing only an integer
+struct Integer:public AccessData {
   int x;
   
-  Integer():Variable("IntVar") { reg_x(); x=rnd(100); }
+  Integer():AccessData("IntVar") { reg_x(); x=rnd(100); }
 };
 
 //-- process creator
@@ -107,8 +107,8 @@ template<class T> struct WriteToken{
 
 template<class T>
 struct Ref{
-  T *var;             ///< pointer to the Variable (T must be derived from Variable)
-  Process *p;         ///< pointer to the Process that might want to access the Variable
+  T *var;             ///< pointer to the AccessData (T must be derived from AccessData)
+  Process *p;         ///< pointer to the Process that might want to access the AccessData
   uint last_revision; ///< last revision of a read/write access
 
 

@@ -20,16 +20,16 @@
 
 //===========================================================================
 
-struct PathProblem:ConstrainedProblem{
-  ors::KinematicWorld world;
+struct PathProblem{
+  mlr::KinematicWorld world;
   const Graph& symbolicState;
   uint microSteps;
   int verbose;
 
   MotionProblem MP;
 
-  PathProblem(const ors::KinematicWorld& world_initial,
-              const ors::KinematicWorld& world_final,
+  PathProblem(const mlr::KinematicWorld& world_initial,
+              const mlr::KinematicWorld& world_final,
               const Graph& symbolicState,
               uint microSteps,
               int verbose);

@@ -1,7 +1,7 @@
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 #include <MCTS/solver_marc.h>
 #include <MCTS/solver_PlainMC.h>
-#include <FOL/fol_mcts_world.h>
+#include <Logic/fol_mcts_world.h>
 
 
 //===========================================================================
@@ -55,9 +55,11 @@ void TEST(MC){
   fol.verbFil=0;
   mc.verbose=0;
 
+#if 0
   Graph& dataset = fol.KB.newSubgraph({"dataset"}, {})->value;
   for(auto* s:getSymbolsOfScope(fol.KB)) dataset.newNode<bool>(s->keys, {}, true);
   for(auto* r:fol.KB.getNodes("DecisionRule"))   dataset.newNode<bool>(r->keys, {}, true);
+#endif
 
   for(uint s=0;s<100;s++){
     cout <<"******************************************** STEP " <<s <<endl;
@@ -66,6 +68,7 @@ void TEST(MC){
     mc.report();
 
     //save all estimated returns
+#if 0
     Graph &data = dataset.newSubgraph({}, {})->value;
     data.newSubgraph({"state"}, {}, *fol.state);
     for(uint i=0;i<mc.D.N;i++){
@@ -73,6 +76,7 @@ void TEST(MC){
       data.newNode<bool>({"action"}, d->getTuple(), true);
       data.newNode<double>({"return"}, {}, mc.D(i).X.first());
     }
+#endif
 
     auto a = mc.getBestAction();
     cout <<"******** ACTION " <<*a <<endl;
@@ -80,9 +84,15 @@ void TEST(MC){
     fol.transition(a);
     if(fol.is_terminal_state()) break;
     fol.make_current_state_default();
+
+    break;
   }
 
+  FILE("z.fol") <<fol;
+
+#if 0
   FILE("z.data").getOs() <<dataset <<endl;
+#endif
 }
 
 //===========================================================================
@@ -166,7 +176,7 @@ void TEST(Determinism){
 //===========================================================================
 
 int main(int argn, char** argv){
-  rnd.clockSeed();
+  //  rnd.clockSeed();
   //srand(rnd());
 
 //  testMCTS();

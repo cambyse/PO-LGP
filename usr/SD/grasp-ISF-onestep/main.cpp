@@ -16,8 +16,8 @@ void
 createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   createStandardRobotTaskVariables(sys);
   
-  mlr::Array<ors::Shape*> tipsN, fingN;
-  ors::Shape *palm; // palm center wrt wrist body
+  mlr::Array<mlr::Shape*> tipsN, fingN;
+  mlr::Shape *palm; // palm center wrt wrist body
 
   /* ------- Task Vars -------- */
   TaskVariableList TVs_all; 
@@ -48,7 +48,7 @@ createISPTaskVariables(soc::SocSystem_Ors& sys, GraspObject *graspobj){
   TV_tipAlign = new PotentialFieldAlignTaskVariable("tips z align",
       *sys.ors, tipsN, *graspobj);
   /* position of the palm center marker */
-  mlr::Array<ors::Shape*> palmL; palmL.append(palm);
+  mlr::Array<mlr::Shape*> palmL; palmL.append(palm);
   TV_palm = new PotentialValuesTaskVariable("palm pos",
       *sys.ors, palmL, *graspobj);
   TV_palmAlignField = new PotentialFieldAlignTaskVariable("palm ori",
@@ -317,7 +317,7 @@ void problem5(){
 
   //setup the problem
   soc::SocSystem_Ors sys,sys2;
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   OpenGL gl;
   GraspObject *o;
   arr c=mlr::Parameter<arr>("center");
@@ -351,13 +351,13 @@ void problem5(){
 
   if (!o->m.V.N)  o->buildMesh();
   ors.init(mlr::getParameter<mlr::String>("orsFile"));
-  ors::Shape *pc = new ors::Shape(ors, ors.getBodyByName("OBJECTS"));
+  mlr::Shape *pc = new mlr::Shape(ors, ors.getBodyByName("OBJECTS"));
   pc->mesh = o->m; /* add point cloud to ors */
-  pc->type = ors::pointCloudST; 
+  pc->type = mlr::ST_pointCloud; 
   gl.add(glDrawMeshObject, o);
   gl.add(glDrawPlot,&plotModule); // eureka! we plot field
   gl.add(glStandardScene);
-  gl.add(ors::glDrawGraph, &ors);
+  gl.add(mlr::glDrawGraph, &ors);
   gl.camera.setPosition(5,-10,10);
   gl.camera.focus(0,0,1);
   sys.initBasics(&ors,NULL,&gl,T,/*t,t_min*/t,true,NULL);

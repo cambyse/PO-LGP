@@ -3,7 +3,7 @@
 
 #include <Core/util.h>
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Motion/motion.h>

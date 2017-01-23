@@ -127,12 +127,12 @@ private:
 
 
 
-void setInitialPose(const arr y, ors::KinematicWorld& world);
+void setInitialPose(const arr y, mlr::KinematicWorld& world);
 
 
-void OptimizeFSC(ors::KinematicWorld& world, NODE *&node, int horizon);
-void OptimizeFSC_Edges(ors::KinematicWorld& world, NODE *&node, int horizon);
-void OptimizeFSC_Test(ors::KinematicWorld& world, NODE *&node, int horizon);
+void OptimizeFSC(mlr::KinematicWorld& world, NODE *&node, int horizon);
+void OptimizeFSC_Edges(mlr::KinematicWorld& world, NODE *&node, int horizon);
+void OptimizeFSC_Test(mlr::KinematicWorld& world, NODE *&node, int horizon);
 
 NODE* addNode_MultiParticle(NODE*& node,Observation obs, int steps);
 NODE* addNode_SingleParticle(NODE*& node,Observation obs, int steps, double height, int  horizon);

@@ -1,4 +1,4 @@
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 
 void peg_in_a_hole(){
   Simulator S("pegInAHole.ors");

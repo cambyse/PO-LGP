@@ -55,14 +55,14 @@ struct System:ModuleL{
 
 
   //-- add variables
-  template<class T> Variable<T>* addVariable(const char *name){
-    Variable<T> *v = new Variable<T>(name);
+  template<class T> AccessData<T>* addVariable(const char *name){
+    AccessData<T> *v = new AccessData<T>(name);
     vars.append(v);
     return v;
   }
 
   //-- access vars
-  template<class T> Variable<T>* getVar(uint i){ return dynamic_cast<Variable<T>* >(vars.elem(i)); }
+  template<class T> AccessData<T>* getVar(uint i){ return dynamic_cast<AccessData<T>* >(vars.elem(i)); }
   template<class T> Access_typed<T> getConnectedAccess(const char* varName){
     Access_typed<T> acc(varName);
     RevisionedAccessGatedClass *v = listFindByName(vars, varName);

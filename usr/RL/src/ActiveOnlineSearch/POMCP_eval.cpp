@@ -18,7 +18,7 @@
 #include "Environment/MC_versus_DP.h"
 #include "Environment/Stochastic1D.h"
 #include "Environment/NastyStochastic1D.h"
-//#include "../../../../share/src/FOL/fol_mcts_world.h"
+//#include "../../../../share/src/Logic/fol_mcts_world.h"
 //#include "../../../../share/src/POMCP/mcts.h"
 
 #include <omp.h>

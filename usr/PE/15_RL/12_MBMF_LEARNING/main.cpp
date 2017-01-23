@@ -4,7 +4,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <System/engine.h>
 #include "../src/plotUtil.h"
@@ -27,7 +27,7 @@ int main(int argc,char **argv){
   /// -----------------------------------------------------------
   mlr::String sceneName = mlr::getParameter<mlr::String>("sceneName");
   cout <<"Task: "<< sceneName << endl;
-  ors::KinematicWorld world(STRING(sceneName<<".ors"));
+  mlr::KinematicWorld world(STRING(sceneName<<".ors"));
 
   TaskManager *tm;
   if (sceneName=="donut") {

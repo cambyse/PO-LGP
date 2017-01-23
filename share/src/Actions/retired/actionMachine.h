@@ -34,7 +34,7 @@ struct ActionMachine : Thread {
 
   arr Kp, Kd;
   //-- user methods
-  const ors::KinematicWorld *world;
+  const mlr::KinematicWorld *world;
   ofstream fil;
   bool initStateFromRos;
 

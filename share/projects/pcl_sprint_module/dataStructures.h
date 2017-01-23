@@ -4,7 +4,7 @@
 #include <pcl/point_types.h>
 #include <Geo/geo.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 #include "methods.h"
 
@@ -33,7 +33,7 @@ struct PclCloudView:Primitive{
 
 struct DisplayPrimitives{
   mlr::Array<Primitive*> P;
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
 
   void glDraw(){
     for(Primitive* p:P) p->glDraw();

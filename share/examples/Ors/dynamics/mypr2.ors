@@ -1,5 +1,0 @@
-Include = '../../../data/pr2_model/pr2_model.ors'
-
-#Edit worldTranslationRotation { type=10 }
-
-Edit torso_lift_joint { type=10 }

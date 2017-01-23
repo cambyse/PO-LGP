@@ -19,7 +19,7 @@
 #include "soc.h"
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 
 //===========================================================================
@@ -53,9 +53,9 @@ void soc::getPhaseTrajectory(arr& x, const arr& q, double tau){
   uint T=q.d0-1, n=q.d1, t;
   x.resize(T+1, 2, n);
   for(t=0; t<=T; t++){
-    x.refDim(t, 0)=q[t];
-    if(t<T) x.refDim(t, 1)=(q[t+1]-q[t])/tau;
-    else  x.refDim(t, 1)=0.;
+    x(t, 0, {})=q[t];
+    if(t<T) x(t, 1, {})=(q[t+1]-q[t])/tau;
+    else  x(t, 1, {})=0.;
   }
   x.reshape(T+1, 2*n);
 }

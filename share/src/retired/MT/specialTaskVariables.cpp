@@ -74,7 +74,7 @@ void setGraspGoals(OrsSystem& sys, uint T, uint shapeId){
   activateAll(sys.vars(), false);
   
   //activate collision testing with target shape
-  ors::Shape *obj = sys.getOrs().shapes(shapeId);
+  mlr::Shape *obj = sys.getOrs().shapes(shapeId);
   obj->cont=true;
   sys.getSwift().initActivations(sys.getOrs());
   
@@ -125,9 +125,9 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   activateAll(sys.vars(), false);
   
   //activate collision testing with target shape
-  ors::Shape *obj  = sys.getOrs().getShapeByName(objShape);
-  ors::Shape *from = sys.getOrs().getShapeByName(belowFromShape);
-  ors::Shape *onto = sys.getOrs().getShapeByName(belowToShape);
+  mlr::Shape *obj  = sys.getOrs().getShapeByName(objShape);
+  mlr::Shape *from = sys.getOrs().getShapeByName(belowFromShape);
+  mlr::Shape *onto = sys.getOrs().getShapeByName(belowToShape);
   CHECK_EQ(obj->body,sys.getOrs().getBodyByName("m9"), "called planPlaceTrajectory without right object in hand");
   obj->cont=true;
   onto->cont=false;
@@ -190,8 +190,8 @@ void setHomingGoals(OrsSystem& sys, uint T, const char* objShape, const char* be
   //deactivate all variables
   activateAll(sys.vars(), false);
   
-  ors::Shape *obj  = sys.getOrs().getShapeByName(objShape);
-  ors::Shape *onto = sys.getOrs().getShapeByName(belowToShape);
+  mlr::Shape *obj  = sys.getOrs().getShapeByName(objShape);
+  mlr::Shape *onto = sys.getOrs().getShapeByName(belowToShape);
   obj->cont=true;
   onto->cont=true;
   sys.getSwift().initActivations(sys.getOrs());

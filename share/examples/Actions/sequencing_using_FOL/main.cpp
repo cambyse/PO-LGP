@@ -13,7 +13,7 @@ struct MySystem {
   ACCESSname(RelationalMachine, RM)
   ACCESSname(mlr::String, effects)
   ACCESSname(mlr::String, state)
-  ACCESSname(ors::KinematicWorld, modelWorld)
+  ACCESSname(mlr::KinematicWorld, modelWorld)
 
   TaskControllerModule *tcm;
 

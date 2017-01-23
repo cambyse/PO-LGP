@@ -35,7 +35,7 @@ int minimum(arr Heights)
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
   uint T = 200; //time horizon
   uint numSamples = 100;
 
@@ -43,7 +43,7 @@ int main(int argc,char** argv){
   arr y0;
   double dual;
   arr x0 = world.getJointState();
-  ors::Shape *endeff = world.getShapeByName("endeff");
+  mlr::Shape *endeff = world.getShapeByName("endeff");
 
   y0.resize(3);
 
@@ -118,7 +118,7 @@ int main(int argc,char** argv){
   orsDrawJoints=orsDrawProxies=orsDrawMarkers=false;
 
 
-  ors::Body *est_target = world.getBodyByName("target");
+  mlr::Body *est_target = world.getBodyByName("target");
 
   double est = 0.55;
 

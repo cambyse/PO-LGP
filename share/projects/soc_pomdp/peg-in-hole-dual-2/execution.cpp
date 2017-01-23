@@ -1,7 +1,7 @@
 #include "execution.h"
 #include "pomdp.h"
 #include <Motion/taskMaps.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include <Geo/geo.h>
 #include <vector>
 
@@ -9,7 +9,7 @@
 using namespace std;
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0, const arr& model, bool stickyness, uint horizon){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0, const arr& model, bool stickyness, uint horizon){
     /////////////
 
 
@@ -76,18 +76,18 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   MotionProblemFunction MF(P);
   Convert ConstrainedP(MF);
 
-  UnconstrainedProblem UnConstrainedP(ConstrainedP);
-  UnConstrainedP.mu = 10.;
+  LagrangianProblem LagrangianP(ConstrainedP);
+  LagrangianP.mu = 10.;
 
 
 
   for(uint k=0;k<20;k++){
-   optNewton(x, UnConstrainedP, OPT(verbose=0, stopIters=300, damping=1e-4, stopTolerance=1e-5, maxStep=.5));
+   optNewton(x, LagrangianP, OPT(verbose=0, stopIters=300, damping=1e-4, stopTolerance=1e-5, maxStep=.5));
     P.costReport(false);
 //    displayTrajectory(x, 1, G, gl,"planned trajectory");
-    UnConstrainedP.aulaUpdate(.9,x);
-    P.dualMatrix = UnConstrainedP.lambda;
-    UnConstrainedP.mu *= 2.;
+    LagrangianP.aulaUpdate(.9,x);
+    P.dualMatrix = LagrangianP.lambda;
+    LagrangianP.mu *= 2.;
  }
 
   //get the final optimal cost at each time slice
@@ -104,8 +104,8 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
   uint index = 0;
   dual.resize(x.d0);
   if(&dual) {
-      for(int i=1;i<UnConstrainedP.lambda.d0;i=i+2){
-          dual(index) = UnConstrainedP.lambda(i);
+      for(int i=1;i<LagrangianP.lambda.d0;i=i+2){
+          dual(index) = LagrangianP.lambda(i);
 
           index++;
       }
@@ -116,7 +116,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr x0
 
 
   /// Online execution: Using POMDP policy (solve the POMDP online, using offline value functions from SOC)
-void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
+void POMDPExecution(FSC fsc, mlr::KinematicWorld& world, int num, double est){
 
 
 
@@ -126,10 +126,10 @@ void POMDPExecution(FSC fsc, ors::KinematicWorld& world, int num, double est){
 
     ofstream data(STRING("data-"<<num<<".dat"));
 
-    ors::Shape *endeff = world.getShapeByName("peg");
-    ors::Shape *true_target = world.getShapeByName("target");
-    ors::Body *est_target = world.getBodyByName("target");
-    ors::Body *table = world.getBodyByName("hole");
+    mlr::Shape *endeff = world.getShapeByName("peg");
+    mlr::Shape *true_target = world.getShapeByName("target");
+    mlr::Body *est_target = world.getBodyByName("target");
+    mlr::Body *table = world.getBodyByName("hole");
 
 
     //est_target->X.pos.z  = est;

@@ -9,7 +9,7 @@ void Scene::initCosts(bool _optNonlinearParam){
 
   arr PHI_T, J_T; // total PHI and J
   arr lambdaRef;
-  TermTypeA tt;
+  ObjectiveTypeA tt;
   v(PHI_T,J_T,NoArr,tt,xDem);
 
   // split up PHI_T and J_T into costs and constraints
@@ -21,9 +21,9 @@ void Scene::initCosts(bool _optNonlinearParam){
     RowShiftedPackedMatrix *J_T_aux = (RowShiftedPackedMatrix*)J_T.aux;
 
     uintA f;
-    tt.findValues(f,sumOfSqrTT);
+    tt.findValues(f,OT_sumOfSqr);
     uint xN = f.N;
-    tt.findValues(f,ineqTT);
+    tt.findValues(f,OT_ineq);
     // count active inequality constraints
     uint gN = 0;
     for (uint i=0;i<f.N;i++){
@@ -31,7 +31,7 @@ void Scene::initCosts(bool _optNonlinearParam){
         gN++;
       }
     }
-    tt.findValues(f,eqTT);
+    tt.findValues(f,OT_eq);
     gN = gN + f.N;
 
     uint xC = 0;
@@ -41,13 +41,13 @@ void Scene::initCosts(bool _optNonlinearParam){
 
     for (uint i= 0;i<tt.d0;i++){
       switch (tt(i)) {
-        case sumOfSqrTT:
+        case OT_sumOfSqr:
           JxP[xC] = J_T[i];
           Jx_aux->rowShift(xC) = J_T_aux->rowShift(i);
           PHI.append(PHI_T(i));
           xC++;
           break;
-        case ineqTT:
+        case OT_ineq:
           if (PHI_T(i)>0.){ // include only active inequality constraints
             JgP[gC] = J_T[i];
             Jg_aux->rowShift(gC) = J_T_aux->rowShift(i);
@@ -56,15 +56,15 @@ void Scene::initCosts(bool _optNonlinearParam){
             gC++;
           }
           break;
-        case eqTT:
+        case OT_eq:
           JgP[gC] = J_T[i];
           Jg_aux->rowShift(gC) = J_T_aux->rowShift(i);
           G.append(PHI_T(i));
           lambdaRef.append(1.);
           gC++;
           break;
-        case noTT:
-          HALT("TaskMap of type noTT!");
+        case OT_none:
+          HALT("TaskMap of type OT_none!");
           break;
       }
     }

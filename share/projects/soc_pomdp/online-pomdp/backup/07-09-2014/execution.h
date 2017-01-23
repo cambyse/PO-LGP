@@ -15,7 +15,7 @@
 extern double stickyWeight;
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, arr y0, const double& height, bool stickyness, uint horizon);
-void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::KinematicWorld& world, int num);
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr y0, const double& height, bool stickyness, uint horizon);
+void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, mlr::KinematicWorld& world, int num);
 
 #endif // EXECUTION_H

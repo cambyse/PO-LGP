@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Core/thread.h>
 
 struct DecisionMakingModule : Thread {
@@ -10,7 +10,7 @@ struct DecisionMakingModule : Thread {
   const static uint SYMBOLIC_ACTION__PUTON = 3;
   
   //INPUT
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   
   //OUTPUT
   uint action;

@@ -26,7 +26,7 @@ Process* newMotionController(HardwareReference* hw, MotionPrimitive* mp, MotionF
 struct sMotionController {
   WorkingCopy<GeometricState> geo;
   
-  //ors::KinematicWorld *ors;
+  //mlr::KinematicWorld *ors;
   OrsSystem sys;
   
   double tau;
@@ -268,9 +268,9 @@ void MotionController::step() {
     hardwareReference->set_v_reference(v_reference, this);
     
     //push proxies to the geometric state
-    s->geo.var->writeAccess(this);
-    s->geo.var->ors = s->geo().ors;
-    s->geo.var->deAccess(this);
+    s->geo.data->writeAccess(this);
+    s->geo.data->ors = s->geo().ors;
+    s->geo.data->deAccess(this);
     //MLR_MSG("TODO");
     /* Eigentlich spielt controller iM eine double role: als
        q_reference berechnen, und die kinematic/proxies/taskvariables

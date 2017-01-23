@@ -43,8 +43,8 @@ struct Robot{
 
 
   //-- get position closest cluster
-  ors::Vector closestCluster();
-  ors::Vector arPose();
+  mlr::Vector closestCluster();
+  mlr::Vector arPose();
 
   void disablePosControl();
   void enablePosControl();
@@ -53,7 +53,7 @@ struct Robot{
   void disableTotalTorqueMode();
   void publishTorque(const arr& u, const char* prefix="right_");
 
-  const ors::KinematicWorld& getKinematicWorld();
+  const mlr::KinematicWorld& getKinematicWorld();
 
   double getCollisionScalar();
 

@@ -4,11 +4,11 @@
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <iomanip>
-#include <Ors/ors_swift.h>
-#include <Ors/ors.h>
+#include <Kin/kin_swift.h>
+#include <Kin/kin.h>
 
 void TEST(Button){
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
 
   world.meldFixedJoints();
   world.removeUselessBodies();
@@ -25,23 +25,23 @@ void TEST(Button){
   cout << "joint dimensionality=" <<q.N <<endl;
 
   Task *t;
-  t = MP.addTask("transitions", new TaskMap_Transition(world),sumOfSqrTT);
+  t = MP.addTask("transitions", new TaskMap_Transition(world),OT_sumOfSqr);
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
   double contactT = MP.T/2.;
-  t = MP.addTask("prePos", new TaskMap_Default(posTMT, world, "endeffL", NoVector, "button",ors::Vector(0.,0.,0.2)),sumOfSqrTT);
+  t = MP.addTask("prePos", new TaskMap_Default(posTMT, world, "endeffL", NoVector, "button",mlr::Vector(0.,0.,0.2)),OT_sumOfSqr);
   t->setCostSpecs(contactT-10., contactT-10, {0.}, 1e2);
-  t = MP.addTask("preVec", new TaskMap_Default(vecAlignTMT, world, "endeffL", ors::Vector(1.,0.,0.), "button",ors::Vector(0.,0.,-1.)),sumOfSqrTT);
+  t = MP.addTask("preVec", new TaskMap_Default(vecAlignTMT, world, "endeffL", mlr::Vector(1.,0.,0.), "button",mlr::Vector(0.,0.,-1.)),OT_sumOfSqr);
   t->setCostSpecs(contactT-10., contactT-10, {1.}, 1e2);
-  t = MP.addTask("button_joint", new TaskMap_qItself(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),sumOfSqrTT);
+  t = MP.addTask("button_joint", new TaskMap_qItself(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),OT_sumOfSqr);
   t->setCostSpecs(MP.T, MP.T, {-.1}, 1e2);
 
-  t = MP.addTask("endeff_button", new PointEqualityConstraint(world,"endeffL",NoVector,"cp1",NoVector),eqTT);
+  t = MP.addTask("endeff_button", new PointEqualityConstraint(world,"endeffL",NoVector,"cp1",NoVector),OT_eq);
   t->setCostSpecs(contactT+1,MP.T, {0.}, 1.);
-  t = MP.addTask("button_fixation", new qItselfConstraint(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),eqTT);
+  t = MP.addTask("button_fixation", new qItselfConstraint(world.getJointByName("stand_button")->qIndex, world.getJointStateDimension()),OT_eq);
   t->setCostSpecs(0.,contactT, {0.}, 1.);
-  t = MP.addTask("qLimits", new LimitsConstraint(),ineqTT);
+  t = MP.addTask("qLimits", new LimitsConstraint(),OT_ineq);
   t->setCostSpecs(0., MP.T, {0.}, 1.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -55,7 +55,7 @@ void TEST(Button){
   cout << X.d0 << endl;
 
 
-  ors::KinematicWorld world_pr2("../../../projects/pr2_gamepadControl/model.kvg");
+  mlr::KinematicWorld world_pr2("../../../projects/pr2_gamepadControl/model.kvg");
   world_pr2.watch(true);
   arr X_pr2;
   transferQbetweenTwoWorlds(X_pr2,X,world_pr2,world);

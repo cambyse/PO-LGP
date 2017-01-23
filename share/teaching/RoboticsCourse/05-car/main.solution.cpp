@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 
 //resample a set of particles to become a set of unit-weight particles

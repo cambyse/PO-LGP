@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 #include <Algo/algos.h>
 
@@ -99,7 +99,7 @@ struct RacerState : VectorFunction{
 void glDrawRacer(void *classP){
   RacerState *s=(RacerState*)classP;
   double GLmatrix[16];
-  ors::Transformation f;
+  mlr::Transformation f;
   f.setZero();
   //wheels
   f.addRelativeTranslation(s->q(0), 0, s->r);

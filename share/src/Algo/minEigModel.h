@@ -40,7 +40,7 @@ struct MinEigModel : GLDrawer{
   boolA included; ///< binary indicator encoding of pts (is equivalent to pts)
 
   //cvx hull
-  ors::Mesh convexHull;
+  mlr::Mesh convexHull;
   double density;
 
   //label

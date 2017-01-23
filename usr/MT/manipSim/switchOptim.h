@@ -1,9 +1,9 @@
 #include <Core/graph.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 double optimSwitchConfigurations(
-    ors::KinematicWorld& world_initial,
-    ors::KinematicWorld& world_final,
+    mlr::KinematicWorld& world_initial,
+    mlr::KinematicWorld& world_final,
     Graph& symbolicState,
     uint microSteps);
 

@@ -15,11 +15,11 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
-//implemented in ors_opengl.cpp
-void editConfiguration(const char* filename, ors::KinematicWorld& C, OpenGL& gl);
+//implemented in kin_opengl.cpp
+void editConfiguration(const char* filename, mlr::KinematicWorld& C, OpenGL& gl);
 
-void getFeatureVector(arr& fab, const ors::KinematicWorld& ors, uint a, uint b);
-void getFeatureVector(arr& fa, const ors::KinematicWorld& ors, uint a);
+void getFeatureVector(arr& fab, const mlr::KinematicWorld& ors, uint a, uint b);
+void getFeatureVector(arr& fa, const mlr::KinematicWorld& ors, uint a);
 

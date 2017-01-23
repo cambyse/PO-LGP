@@ -1,9 +1,9 @@
 #include <Actions/actionMachine.h>
 #include <Actions/actionMachine_internal.h>
 #include <Actions/actions.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 
-#include <FOL/fol.h>
+#include <Logic/fol.h>
 
 
 //===========================================================================

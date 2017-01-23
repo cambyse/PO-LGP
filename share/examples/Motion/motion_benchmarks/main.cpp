@@ -1,12 +1,12 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motionHeuristics.h>
-#include <Motion/pr2_heuristics.h>
+#include <Motion/motion.h>
+
 #include <Motion/taskMaps.h>
 #include <GL/glu.h>
 
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 
 
 void drawTraj(uint color, arr& p, uint lineStyle) {
@@ -35,7 +35,7 @@ void drawActTraj(void* classP){
 }
 
 void circle_BM(){
-  ors::KinematicWorld world("pr2_my_arm.ors");
+  mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
   MotionProblem MP(world);
@@ -64,14 +64,14 @@ void circle_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
-  //  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e4);
+  //  c->setCostSpecs(0, MP.T, {1.,1.,1.}, 1e4);
   c->setCostSpecs(0, MP.T, traj, 1e4);
   c->target = traj;
-  c->prec.refRange(0,20)=0.;
+  c->prec({0,20})=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
-  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, {0.}, 1e4);
+  c->setCostSpecs(0, MP.T, {0.}, 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -99,7 +99,7 @@ void circle_BM(){
 }
 
 void star_BM(){
-  ors::KinematicWorld world("pr2_my_arm.ors");
+  mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
   MotionProblem MP(world);
@@ -168,14 +168,14 @@ void star_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
-//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
+//  c->setCostSpecs(0, MP.T, {1.,1.,1.}, 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
-//  c->prec.refRange(0,20)=0.;
+//  c->prec({0,20})=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
-  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, {0.}, 1e4);
+  c->setCostSpecs(0, MP.T, {0.}, 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;
@@ -213,7 +213,7 @@ void star_BM(){
 }
 
 void eight_BM(){
-  ors::KinematicWorld world("pr2_my_arm.ors");
+  mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
   MotionProblem MP(world);
@@ -273,14 +273,14 @@ void eight_BM(){
   c->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   c = MP.addTask("circle_pos", new TaskMap_Default(posTMT,world,"endeffR"));
-//  c->setCostSpecs(0, MP.T, ARR(1.,1.,1.), 1e5);
+//  c->setCostSpecs(0, MP.T, {1.,1.,1.}, 1e5);
   c->setCostSpecs(0, MP.T, traj, 1e5);
 //  c->target = traj;
-//  c->prec.refRange(0,20)=0.;
+//  c->prec({0,20})=0.;
 
   c = MP.addTask("q_limit",new TaskMap_qLimits());
-//  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
-  c->setCostSpecs(0, MP.T, ARR(0.), 1e4);
+//  c->setCostSpecs(0, MP.T, {0.}, 1e4);
+  c->setCostSpecs(0, MP.T, {0.}, 1e4);
 
   //-- create the Optimization problem (of type kOrderMarkov)
   MP.x0 = q0;

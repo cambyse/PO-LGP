@@ -42,21 +42,21 @@ enum TaskMap_DefaultType {
 struct TaskMap_Default:TaskMap {
   TaskMap_DefaultType type;
   int i, j;               ///< which shapes does it refer to?
-  ors::Vector ivec, jvec; ///< additional position or vector
+  mlr::Vector ivec, jvec; ///< additional position or vector
   arr params;             ///< parameters of the variable (e.g., liner coefficients, limits, etc)
 
   TaskMap_Default(TaskMap_DefaultType type,
-                 int iShape=-1, const ors::Vector& ivec=NoVector,
-                 int jShape=-1, const ors::Vector& jvec=NoVector,
+                 int iShape=-1, const mlr::Vector& ivec=NoVector,
+                 int jShape=-1, const mlr::Vector& jvec=NoVector,
                  const arr& params=NoArr);
 
-  TaskMap_Default(TaskMap_DefaultType type, const ors::KinematicWorld& G,
-                 const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                 const char* jShapeName=NULL, const ors::Vector& jvec=NoVector,
+  TaskMap_Default(TaskMap_DefaultType type, const mlr::KinematicWorld& G,
+                 const char* iShapeName=NULL, const mlr::Vector& ivec=NoVector,
+                 const char* jShapeName=NULL, const mlr::Vector& jvec=NoVector,
                  const arr& params=NoArr);
 
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G);
-  virtual uint dim_phi(const ors::KinematicWorld& G);
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G);
+  virtual uint dim_phi(const mlr::KinematicWorld& G);
 };
 
 #endif

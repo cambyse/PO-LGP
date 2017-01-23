@@ -1,5 +1,5 @@
 #include <MT/soc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
@@ -103,14 +103,14 @@ void sine_trajectory(const arr& q,arr& sine_q,const uint _N)
 }
 
 int problem4(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));//e.g._test
   bool usebwd=mlr::getParameter<double>("usebwd") ;
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
  // gl.camera.setPosition(5,-10,10);  
    gl.camera.setPosition(5,-10,5);  
   
@@ -156,7 +156,7 @@ int problem4(){
   col->y_target = ARR(0.);  
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);//1e0
   //! END of col 
-    TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 -.36)>",0,0,ARR()); //arm20 -0.26
+    TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 -.36)>",0,0,arr()); //arm20 -0.26
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -286,13 +286,13 @@ wr->userUpdate();
        
 
 int problem41(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -336,7 +336,7 @@ int problem41(){
   col->y_target = ARR(0.); 
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -376,13 +376,13 @@ soc.gl->watch();
 
 
 int problem42(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -421,7 +421,7 @@ int problem42(){
   col->y_target = ARR(0.);
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
   //! END of col
-   TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+   TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -464,13 +464,13 @@ soc.gl->watch();
 }
 
 int problem43(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -533,13 +533,13 @@ soc.gl->watch();
 }
 
 int problem5(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);   
   OpenGL gl;  
   gl.add(glStandardScene); 
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -587,7 +587,7 @@ wr->setInterpolatedTargetsEndPrecisions(T,eps,eps,0.,eps);
   col->y_target = ARR(0.);
   col->setInterpolatedTargetsConstPrecisions(T,1e1,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   
@@ -642,13 +642,13 @@ Tlist.append(reach);
 
 
 int problem6(){      
-  ors::KinematicWorld ors;  
+  mlr::KinematicWorld ors;  
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope_grasp_20.ors")));
   SwiftInterface swift;
   swift.init(ors,.5);    
   OpenGL gl;  
   gl.add(glStandardScene);  
-  gl.add(ors::glDrawGraph,&ors); 
+  gl.add(mlr::glDrawGraph,&ors); 
   gl.camera.setPosition(5,-10,10); 
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -697,7 +697,7 @@ int problem6(){
   col->y_target = ARR(0.);   
   col->setInterpolatedTargetsConstPrecisions(T,1e0,0.);
   
-  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,ARR()); //arm20
+  TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"arm20","<t(0 0 .2)>",0,0,arr()); //arm20
   arr xtarget;
   xtarget.setCarray(soc.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;    

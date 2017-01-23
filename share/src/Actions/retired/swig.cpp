@@ -4,8 +4,8 @@
 //#include <Actions/actionMachine_internal.h>
 //#include <Actions/actions.h>
 //#include <Motion/motionHeuristics.h>
-#include <FOL/fol.h>
-#include <Ors/ors.h>
+#include <Logic/fol.h>
+#include <Kin/kin.h>
 
 struct sActionSwigInterface{
   ActionSystem activity;
@@ -35,21 +35,21 @@ ActionSwigInterface::~ActionSwigInterface(){
 
 dict ActionSwigInterface::getBodyByName(std::string bodyName){
 dict D;
-ors::Body *body = s->activity.machine->world->getBodyByName(bodyName.c_str());
+mlr::Body *body = s->activity.machine->world->getBodyByName(bodyName.c_str());
 D["pos"] = "[" + std::to_string(body->X.pos.x) + ", " + std::to_string(body->X.pos.y) + ", " + std::to_string(body->X.pos.z) + "]";
 return D;
 }
 
 dict ActionSwigInterface::getShapeByName(std::string shapeName){
 dict D;
-ors::Shape *shape = s->activity.machine->world->getShapeByName(shapeName.c_str());
+mlr::Shape *shape = s->activity.machine->world->getShapeByName(shapeName.c_str());
 D["pos"] = "[" + std::to_string(shape->X.pos.x) + ", " + std::to_string(shape->X.pos.y) + ", " + std::to_string(shape->X.pos.z) + "]";
 return D;
 }
 
 dict ActionSwigInterface::getJointByName(std::string jointName){
 dict D;
-ors::Joint *joint = s->activity.machine->world->getJointByName(jointName.c_str());
+mlr::Joint *joint = s->activity.machine->world->getJointByName(jointName.c_str());
 D["pos"] = "[" + std::to_string(joint->X.pos.x) + ", " + std::to_string(joint->X.pos.y) + ", " + std::to_string(joint->X.pos.z) + "]";
 return D;
 }

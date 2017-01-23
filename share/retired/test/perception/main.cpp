@@ -19,9 +19,9 @@ int main(int argc,char** argv) {
   mlr::initCmdLine(argc,argv);
   signal(SIGINT,shutdown);
   
-  ors::KinematicWorld G;
+  mlr::KinematicWorld G;
   G <<FILE("schunk.ors");
-  //ors::Body * o = G.getBodyByName("OBJECTS");
+  //mlr::Body * o = G.getBodyByName("OBJECTS");
   //o->X.p(0) = 100;
   
   //Variables

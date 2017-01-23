@@ -87,7 +87,7 @@ struct PlaneFitter : Thread {
 void TEST(Kinect2Planes){
   ACCESSname(byteA, kinect_rgb);
   ACCESSname(uint16A, kinect_depth);
-  ACCESSname(ors::Transformation, kinect_frame)
+  ACCESSname(mlr::Transformation, kinect_frame)
 
   uint kinectSource = mlr::getParameter<uint>("kinectSource", 0);
   if(kinectSource==0){

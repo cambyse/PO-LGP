@@ -5,8 +5,8 @@
 #include <monitor.h>
 
 struct MyTask:public TaskAbstraction{
-	ors::Vector c;//(0,-0.8,1);
-	ors::Vector y;//(0,-1,0);
+	mlr::Vector c;//(0,-0.8,1);
+	mlr::Vector y;//(0,-1,0);
 	double target_radius;
 	
 	void init();
@@ -28,7 +28,7 @@ void MyTask::init(){
 // 	cout << "init TV_eff->y="<<TV_eff->y << endl;
 	
 	
-	ors::Vector e;
+	mlr::Vector e;
 	e.set(TV_eff->y.p);
 	c(0) = e(0); c(1) = e(1); c(2) = e(2)-0.15;
 	target_radius = (e-c).length();
@@ -54,19 +54,19 @@ void MyTask::updateTaskVariables(RobotController *ctrl) {
   TV_eff->active=true;
 	mlr::IOraw = true;
 
-	ors::Vector e;
+	mlr::Vector e;
 	e.set(TV_eff->y.p);
-	y = ors::Vector(0,-1,0);
+	y = mlr::Vector(0,-1,0);
 	
-	ors::Vector c2e = e - c;
-	ors::Vector x = c2e ^ y;
+	mlr::Vector c2e = e - c;
+	mlr::Vector x = c2e ^ y;
 	x = x / x.length() * 0.25;
 	#if 0
-	ors::Vector q = e + x;
-	ors::Vector c2q = q - c;
-	ors::Vector c2q_scaled = c2q / c2q.length() * target_radius;
-	ors::Vector e_neu = c + c2q_scaled;
-	ors::Vector directions = e_neu - e;
+	mlr::Vector q = e + x;
+	mlr::Vector c2q = q - c;
+	mlr::Vector c2q_scaled = c2q / c2q.length() * target_radius;
+	mlr::Vector e_neu = c + c2q_scaled;
+	mlr::Vector directions = e_neu - e;
 	TV_eff->v_target = arr(directions.v,3);
 	#endif
  	TV_eff->v_prec =1e2;

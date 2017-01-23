@@ -121,8 +121,8 @@ struct Fitting{
                 double ay = coefficients_cylinder->values[4];
                 double az = coefficients_cylinder->values[5];
 
-                ors::Quaternion quat;
-                quat.setDiff(ors::Vector(0,0,1), ors::Vector(ax, ay, az));
+                mlr::Quaternion quat;
+                quat.setDiff(mlr::Vector(0,0,1), mlr::Vector(ax, ay, az));
 
 
                 marker_add.pose.orientation.x = quat.x;
@@ -145,7 +145,7 @@ struct Fitting{
             }
 
 
-            ors::Quaternion orientation;
+            mlr::Quaternion orientation;
             arr center(3);
             arr length(3);
             std::vector<pcl::ModelCoefficients::Ptr> outCoefficients;
@@ -237,8 +237,8 @@ struct Fitting{
                     double ay = outCoefficients[ii]->values[1];
                     double az = outCoefficients[ii]->values[2];
 
-                    ors::Quaternion quat;
-                    quat.setDiff(ors::Vector(1,0,0), ors::Vector(ax, ay, az));
+                    mlr::Quaternion quat;
+                    quat.setDiff(mlr::Vector(1,0,0), mlr::Vector(ax, ay, az));
 
 
                     marker_add.pose.orientation.x = quat.x;

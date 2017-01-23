@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Algo/ann.h>
 #include <Gui/plot.h>
 #include <Optim/optimization.h>
@@ -11,7 +11,7 @@ struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
   Simulator *S;
   uint T;
   arr x0, xT;
-  void phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar);
+  void phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar);
 
 
   uint get_T(){ return T; }
@@ -263,7 +263,7 @@ int main(int argc,char **argv){
   return 0;
 }
 
-void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, TermTypeA& tt, uint t, const arr& x_bar){//phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
+void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar){//phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   double col_prec=1e-1;

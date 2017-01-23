@@ -23,9 +23,9 @@
 #define robotManipulationSimulator_h
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
-struct RobotManipulationSimulator : ors::KinematicWorld {
+struct RobotManipulationSimulator : mlr::KinematicWorld {
   
  /************************************************
   * 
@@ -185,12 +185,12 @@ struct RobotManipulationSimulator : ors::KinematicWorld {
   ************************************************/
 
 namespace relational {
-void generateOrsBlocksSample(ors::KinematicWorld& ors, const uint numOfBlocks);
-void generateOrsFromSample(ors::KinematicWorld& ors, const mlr::Array<arr>& sample);
-//void generateOrsFromTraySample(ors::KinematicWorld& ors, const mlr::Array<arr>& sample);
+void generateOrsBlocksSample(mlr::KinematicWorld& ors, const uint numOfBlocks);
+void generateOrsFromSample(mlr::KinematicWorld& ors, const mlr::Array<arr>& sample);
+//void generateOrsFromTraySample(mlr::KinematicWorld& ors, const mlr::Array<arr>& sample);
 void generateBlocksSample(mlr::Array<arr>& sample, uint numOfBlocks);
-void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color, const arr& size);
-void createCylinder(ors::KinematicWorld& G, ors::Body& cyl, const ors::Vector& pos, const arr& color);
+void createCylinder(mlr::KinematicWorld& G, mlr::Body& cyl, const mlr::Vector& pos, const arr& color, const arr& size);
+void createCylinder(mlr::KinematicWorld& G, mlr::Body& cyl, const mlr::Vector& pos, const arr& color);
 }
 
 

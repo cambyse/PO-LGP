@@ -1,15 +1,15 @@
 #include <system/engine.h>
 #include <views/views.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <MT/gtk.h>
 #include <gtk/gtk.h>
 
 
-struct ExampleVar:Variable {
+struct ExampleVar:AccessData {
   int i;
   byteA rgb;
-  ors::Mesh mesh;
-  ExampleVar():Variable("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
+  mlr::Mesh mesh;
+  ExampleVar():AccessData("ExampleVar") { } // reg_i(); reg_rgb(); reg_mesh(); }
 };
 
 

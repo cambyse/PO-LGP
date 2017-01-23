@@ -20,14 +20,14 @@ struct TaskControllerModule : Thread {
   ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
   ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
   ACCESS(mlr::String, effects)
-  ACCESS(ors::KinematicWorld, modelWorld)
+  ACCESS(mlr::KinematicWorld, modelWorld)
   ACCESS(bool, fixBase)
   ACCESS(arr, pr2_odom)
 
   ACCESS(arr, qSign)
 
 //private:
-  ors::KinematicWorld realWorld;
+  mlr::KinematicWorld realWorld;
   TaskController *taskController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
@@ -50,13 +50,13 @@ struct TaskControllerModule : Thread {
 
   arr qLastReading;
 
-//  ors::KinematicWorld& customModelWorld;
+//  mlr::KinematicWorld& customModelWorld;
 
   arr fRInitialOffset;
 
 
 public:
-  TaskControllerModule(const char* robot="pr2", ors::KinematicWorld& world = NoWorld);
+  TaskControllerModule(const char* robot="pr2", mlr::KinematicWorld& world = NoWorld);
   ~TaskControllerModule();
 
   void open();
