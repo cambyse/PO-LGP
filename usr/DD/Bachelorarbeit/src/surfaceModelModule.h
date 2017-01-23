@@ -26,6 +26,7 @@ struct SurfaceModelObject {
 
   double calculateGaussianCurvature(const arr& pos);
   void calculateGaussianCurvatureOnSurface();
+  void plotGaussianCurvatureOnSurface();
 
   /// (approximate) shortest paths between two points unsing dijkstra
   arr computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);

@@ -48,7 +48,7 @@ void SurfaceGeodesicPathModule::step() {
   arr path = SurfaceModelObject::computeGeodesicEuklideanPathOnSurface(start, target, me, NoArr, realTarget);
   //arr path = SurfaceModelObject::computeGeodesicVariancePathOnSurface(start, target, me, variance, NoArr, realTarget);
 
-  path = surfaceModelObject.set()->smoothGeodesicPathWithKOMO(path);
+  //path = surfaceModelObject.set()->smoothGeodesicPathWithKOMO(path);
 
   realTargetOnSurface.set() = realTarget;
   shortestPath.set() = path;

@@ -107,7 +107,7 @@ void surfaceExploration_1() {
     arr newPos = actPos + 0.08*gradVT;
 
     if(newPos(2) < 0.55) {
-      newPos(2) = 0.55 + rnd.uni()*0.08;
+      newPos(2) = 0.55;// + rnd.uni()*0.08;
       if(fabs(scalarProduct(gradVT,ARR(0.0,0.0,-1.0))-1.0) < 0.1) {
         cout << "blub" << endl;
         gradVT(2) = -gradVT(2);
@@ -150,11 +150,40 @@ void surfaceExploration_1() {
   mlr::wait(1000.0);
 }
 
+void changeColorA(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
+void changeColor2A(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
+
+void showClip() {
+  ors::KinematicWorld world(mlr::mlrPath("data/pr2_model/pr2_model.ors"));
+
+  Object o(world);
+  o.generateObject("b", 0.16, 0.16, 0.1, 0.55, -0.1, 0.55); //0.5 for x
+  Object ob(world);
+  ob.generateObject("trueShape", 0.17, 0.17, 0.12, 0.55, -0.1, 0.55, false);
+  world.gl().add(changeColor2A);
+  world.gl().add(glDrawPlot, &plotModule);
+
+  arr X;
+  double x = 0.4, y = 0.4;
+  X.append(~ARR(0.55+x,-0.1+y,0.55));
+  X.append(~ARR(0.55-x,-0.1+y,0.55));
+  X.append(~ARR(0.55-x,-0.1-y,0.55));
+  X.append(~ARR(0.55+x,-0.1-y,0.55));
+
+  ors::Mesh me;
+  me.V = X;
+  me.T.append(~ARRAY<uint>(0,1,3));
+  me.T.append(~ARRAY<uint>(1,2,3));
+  world.gl().add(me);
+
+  world.watch(true);
+}
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  surfaceExploration_1();
+  //surfaceExploration_1();
+  showClip();
 
   return 0;
 }

@@ -136,6 +136,25 @@ void SurfaceModelObject::calculateGaussianCurvatureOnSurface() {
   }
 }
 
+void SurfaceModelObject::plotGaussianCurvatureOnSurface() {
+  CHECK(gaussianCurvatureOnSurface.d0 == mesh.V.d0 && mesh.V.d0, "Curvature on surface not calculated")
+  double minVar = gaussianCurvatureOnSurface.min();
+  double maxVar = gaussianCurvatureOnSurface.max();
+  //minVar = 0.1; //uncomment these if the color should be scaled the same from beginning to end
+  //maxVar = 0.5;
+  double a = (0.0-240.0)/(maxVar-minVar);
+  double b = 240.0 - a*minVar;
+  arr C = zeros(mesh.V.d0,3);
+  for(uint i = 0; i < mesh.V.d0; i++) {
+    mlr::Color color;
+    color.setHsv(round(a*gaussianCurvatureOnSurface(i)+b)+1, 255, 255);
+    C[i](0) = color.r;
+    C[i](1) = color.g;
+    C[i](2) = color.b;
+  }
+  mesh.C = C;
+}
+
 arr SurfaceModelObject::computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, arr& startOnSurface, arr& targetOnSurface) {
   return computeGeodesicEuklideanPathOnSurface(startPos, targetPos, this->mesh, startOnSurface, targetOnSurface);
 }
@@ -210,7 +229,7 @@ arr SurfaceModelObject::computeGeodesicVariancePathOnSurface(const arr& startPos
 }
 
 arr SurfaceModelObject::smoothGeodesicPathWithKOMO(const arr& dijkstraPath) {
-  ors::KinematicWorld world("3DRobot.ors");
+  ors::KinematicWorld world(mlr::mlrPath("../usr/DD/Bachelorarbeit/src/3DRobot.ors"));
   world.setJointState(dijkstraPath[0]);
   MotionProblem MP(world, false);
   //MP.k_order = 1;
@@ -222,7 +241,7 @@ arr SurfaceModelObject::smoothGeodesicPathWithKOMO(const arr& dijkstraPath) {
   t->setCostSpecs(0, MP.T, {0.}, 1.0);
 
   t = MP.addTask("onSurface", new TaskMap_GPISP(this->gp, MP.world, "endeffR"), sumOfSqrTT);
-  t->setCostSpecs(0, MP.T, {0.0}, 100.0);
+  t->setCostSpecs(0, MP.T, {0.0}, 1000.0);
 
   t = MP.addTask("start", new TaskMap_Default(posTMT, MP.world, "endeffR"), sumOfSqrTT);
   t->setCostSpecs(0,0, dijkstraPath[0], 10.0);

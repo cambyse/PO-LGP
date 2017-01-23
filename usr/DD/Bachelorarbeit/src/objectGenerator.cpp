@@ -23,10 +23,23 @@ void Object::generateObject(const char* name, double xScale, double yScale, doub
       return z*z + (1.-r)*(1.-r) - .1;
   };
 
+#if 1
   ScalarFunction cub = [](arr&,arr&, const arr& X){
       double x=X(0), y=X(1), z=X(2);
       return sqrt(x*x)*sqrt(x*x)*sqrt(x*x)/**sqrt(x*x)*/ + sqrt(y*y)*sqrt(y*y)*sqrt(y*y)/**sqrt(y*y)*/ + sqrt(z*z)*sqrt(z*z)*sqrt(z*z)/**sqrt(z*z)*/ - 1.0 + 0.1*fabs(x-y);
   };
+ #else
+  ScalarFunction cub = [](arr&,arr&, const arr& X){
+      double x=X(0), y=X(1), z=X(2);
+      return pow(fabs(x),8.0) + pow(fabs(y),8.0) + pow(fabs(z),8.0) - 1.0;
+  };
+#endif
+
+  ScalarFunction cubb = [](arr&,arr&, const arr& X){
+      double x=X(0), y=X(1), z=X(2);
+      return pow(fabs(x),4.0) + pow(fabs(y),4.0) + pow(fabs(z),4.0) - 1.0;
+  };
+
 
   /*ScalarFunction sphere=[](arr&,arr&, const arr& X){
       double x=X(0), y=X(1), z=X(2);
