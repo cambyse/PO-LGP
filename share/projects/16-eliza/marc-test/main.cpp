@@ -1,5 +1,5 @@
 
-#include "racerEnvironment.h"
+#include <RL/racerEnvironment.h>
 #include <RL/RL.h>
 #include <RL/linearPolicy.h>
 #include <Optim/gradient.h>
