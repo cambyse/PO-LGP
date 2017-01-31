@@ -37,19 +37,33 @@ TaskControllerModule::TaskControllerModule(const char* _robot, mlr::KinematicWor
 
   robot = mlr::getParameter<mlr::String>("robot", _robot);
 
+  //-- deciding on the kinematic model. Priority:
+  // 1) an explicit model is given as argument
+  // 2) modelWorld has been set before
+  // 3) the "robot" flag in cfg file
+  // 4) the "robot" argument here
+
+
   if(&world) {
     realWorld = world;
-    if(robot != "pr2" && robot != "baxter") {
-      HALT("robot not known!")
-    }
+    modelWorld.set()() = realWorld;
   } else {
-    if(robot=="pr2") {
-      realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
-    } else if(robot=="baxter") {
-      realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
-    } else {
-      HALT("robot not known!")
+    if(modelWorld.get()->q.N){ //modelWorld has been set before
+      realWorld = modelWorld.get();
+    }else{
+      if(robot=="pr2") {
+        realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+      } else if(robot=="baxter") {
+        realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
+      } else {
+        HALT("robot not known!")
+      }
+      modelWorld.set()() = realWorld;
     }
+  }
+
+  if(robot != "pr2" && robot != "baxter" && robot != "none") {
+    HALT("robot not known!")
   }
 
   q0 = realWorld.q;

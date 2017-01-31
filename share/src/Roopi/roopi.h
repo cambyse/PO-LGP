@@ -7,24 +7,47 @@
 #include <Control/taskController.h>
 
 
+struct Act;
+struct CtrlTaskAct;
+typedef mlr::Array<Act*> ActL;
+
+
 struct CtrlTask;
 struct Roopi_Path;
 struct TaskReferenceInterpolAct;
 typedef mlr::Array<CtrlTask*> CtrlTaskL;
 //struct RelationalMachineModule;
 
+struct act{
+  mlr::String name;
+  Thread* th;
+};
+
 //==============================================================================
 
 struct Roopi {
   struct Roopi_private* s;
 
-  CtrlTaskL activeTasks;
-  mlr::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
-
-  CtrlTask* holdPositionTask;
-
-  Roopi(mlr::KinematicWorld& world = NoWorld);
+  Roopi(bool autoStartup=false);
+  Roopi(mlr::KinematicWorld& world);
   ~Roopi();
+
+  void setKinematics(const char* filename);
+  void setKinematics(const mlr::KinematicWorld& K);
+  act startTaskController();
+  act startControllerLog();
+  void startRosCommunication();
+
+  void startRobotCommunication(const char* robot);
+  act sendGamepadToCtrlTasks();
+
+  void hold(bool still);
+
+
+  ReadToken<mlr::KinematicWorld> getKinematics();
+
+  CtrlTaskAct newCtrlTask();
+  bool waitAnd(std::initializer_list<Act*> acts, double timeout=5.);
 
   //-- control tasks
 
@@ -41,14 +64,6 @@ struct Roopi {
 
   /// modifies CtrlTasks
   void modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef = NoArr);
-  void modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
-  void modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
-  void modifyCtrlC(CtrlTask* ct, const arr& C);
-  /// force related
-  void modifyForceRef(CtrlTask* ct, const arr& fRef);
-  void modifyForceAlpha(CtrlTask* ct, double fAlpha);
-  void modifyForceGamma(CtrlTask* ct, double fGamma);
-  void modifyForce(CtrlTask* ct, const arr& fRef, const double& fAlpha, const double& fGamma);
 
   /// holds all joints in position. Desactivates all other tasks
   void holdPosition();
@@ -119,8 +134,9 @@ struct Roopi {
   arr getTaskValue(CtrlTask* task);
 
   /// sync the joint configuration of the model world into the planWorld
-  void syncPlanWorld();
+  void syncWorldWithReal(mlr::KinematicWorld& K);
   mlr::KinematicWorld& getPlanWorld();
+  void copyModelWorld(mlr::KinematicWorld& K);
 
   double getLimitConstraint(double margin = 0.05);
   double getCollisionConstraint(double margin = 0.1);
@@ -147,12 +163,15 @@ struct Roopi_CtrlTask{
 
 struct Roopi_Path{
   Roopi &roopi;
+  mlr::KinematicWorld K;
   arr path;
   double executionTime;
   double cost;
   double constraints;
   bool isGood;
-  Roopi_Path(Roopi& r, double executionTime) : roopi(r), executionTime(executionTime), isGood(false){}
+  Roopi_Path(Roopi& r, double executionTime) : roopi(r), executionTime(executionTime), isGood(false){
+    roopi.copyModelWorld(K);
+  }
 };
 
 
@@ -178,3 +197,4 @@ struct TaskReferenceInterpolAct : Thread {
   void close();
 };
 
+//==============================================================================
