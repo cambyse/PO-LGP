@@ -16,7 +16,7 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot, mlr::KinematicWorld& world)
+TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::KinematicWorld& world)
   : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -35,7 +35,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, mlr::KinematicWor
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 
-  robot = mlr::getParameter<mlr::String>("robot", _robot);
+  robot = _robot;
 
   //-- deciding on the kinematic model. Priority:
   // 1) an explicit model is given as argument
@@ -51,7 +51,9 @@ TaskControllerModule::TaskControllerModule(const char* _robot, mlr::KinematicWor
     if(modelWorld.get()->q.N){ //modelWorld has been set before
       realWorld = modelWorld.get();
     }else{
-      if(robot=="pr2") {
+      if(robot=="none"){
+        robot = mlr::getParameter<mlr::String>("robot");
+      } else if(robot=="pr2") {
         realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
       } else if(robot=="baxter") {
         realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
@@ -206,8 +208,8 @@ void TaskControllerModule::step(){
   if(oldfashioned){
 
     //now operational space control
-    ctrlTasks.readAccess();
     modelWorld.writeAccess();
+    ctrlTasks.readAccess();
     taskController->tasks = ctrlTasks();
     for(uint tt=0;tt<10;tt++){
       arr a = taskController->operationalSpaceControl();
@@ -224,8 +226,8 @@ void TaskControllerModule::step(){
       taskController->setState(q_model, qdot_model);
     }
     if(verbose) taskController->reportCurrentState();
-    modelWorld.deAccess();
     ctrlTasks.deAccess();
+    modelWorld.deAccess();
 
     //arr Kp, Kd, k, JCJ;
     //taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);

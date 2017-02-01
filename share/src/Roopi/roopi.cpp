@@ -5,6 +5,7 @@
 #include <Control/TaskControllerModule.h>
 #include <Motion/motion.h>
 #include <Optim/lagrangian.h>
+#include <Perception/viewer.h>
 
 
 #define baxter 0
@@ -86,14 +87,11 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
   CHECK(s->modelWorld.get()->q.N==0, "has been set before???");
   s->modelWorld.set() = K;
 
-  s->cu = K;
-
   if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
-    s->ctrlView = new OrsPoseViewer({"ctrl_q_real", "ctrl_q_ref"}, s->cu);
+    s->ctrlView = new OrsPoseViewer({"ctrl_q_ref", "ctrl_q_real"}, s->modelWorld.set());
   } else {
-    s->ctrlView = new OrsPoseViewer({"ctrl_q_real"}, s->cu);
+    s->ctrlView = new OrsPoseViewer({"ctrl_q_real"}, s->modelWorld.set());
   }
-
 }
 
 act Roopi::startTaskController(){
@@ -105,9 +103,9 @@ act Roopi::startTaskController(){
 //  modifyCtrlC(s->holdPositionTask, ARR(1000.0));
 //  activateCtrlTask(s->holdPositionTask);
 
-  s->holdPositionTask2 = newCtrlTask();
   s->holdPositionTask2.setMap(new TaskMap_qItself);
-  s->holdPositionTask2.set()->setGains(30.0, 5.0);
+  s->holdPositionTask2.set()->y_ref = s->holdPositionTask2.y0;
+  s->holdPositionTask2.set()->setGainsAsNatural(1., .9);
   s->holdPositionTask2.start();
 
   s->tcm->threadLoop();
@@ -157,7 +155,11 @@ void Roopi::hold(bool still){
 
 }
 
-ReadToken<mlr::KinematicWorld> Roopi::getKinematics(){
+WToken<mlr::KinematicWorld> Roopi::setKinematics(){
+  return s->modelWorld.set();
+}
+
+RToken<mlr::KinematicWorld> Roopi::getKinematics(){
   return s->modelWorld.get();
 }
 
@@ -168,6 +170,14 @@ ReadToken<mlr::KinematicWorld> Roopi::getKinematics(){
 
 CtrlTaskAct Roopi::newCtrlTask(){
   return CtrlTaskAct(this);
+}
+
+CtrlTaskAct Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
+  return CtrlTaskAct(this, map, PD, target, prec);
+}
+
+CtrlTaskAct Roopi::newCtrlTask(const char* specs){
+  return CtrlTaskAct(this, GRAPH(specs));
 }
 
 bool Roopi::waitAnd(std::initializer_list<Act*> acts, double timeout){
@@ -190,6 +200,26 @@ bool Roopi::waitAnd(std::initializer_list<Act*> acts, double timeout){
     mlr::wait(0.1);
   }
   return false;
+}
+
+void Roopi::newCameraView(){
+  ImageViewer *v = new ImageViewer("cameraView");
+  v->flipImage = true;
+  v->threadOpen(true);
+  new ComputeCameraView(30);
+}
+
+mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
+  s->modelWorld.writeAccess();
+  mlr::Shape *sh = new mlr::Shape(s->modelWorld(), NoBody);
+  sh->name = name;
+  sh->type = mlr::ST_marker;
+  sh->color[0]=.8; sh->color[1]=sh->color[2]=.0;
+  sh->size[0]=.1;
+  sh->X.pos = sh->rel.pos = pos;
+  s->ctrlView->recopyKinematics(s->modelWorld());
+  s->modelWorld.deAccess();
+  return sh;
 }
 
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {

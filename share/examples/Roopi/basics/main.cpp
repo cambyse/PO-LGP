@@ -1,22 +1,29 @@
 #include <Roopi/roopi.h>
 #include <Roopi/CtrlTaskAct.h>
+#include <Control/TaskControllerModule.h>
 
 //===============================================================================
 
 void Prototyping(){
   Roopi R(true);
 
+  R.newCameraView();
+
   {
+    mlr::Shape *s = R.getKinematics()->getShapeByName("endeffL");
+    auto leftTarget = R.newMarker("targetL", conv_vec2arr(s->X.pos)+ARR(.0,-.2,.3));
+
+
     auto leftHand = R.newCtrlTask();
-    leftHand.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
+    leftHand.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL", NoVector, "targetL"));
     leftHand.set()->setGainsAsNatural(1., .8);
-    leftHand.set()->y_ref += ARR(.0, .0, .3);
+    leftHand.set()->y_ref = .0;
     leftHand.start();
 
     auto rightHand = R.newCtrlTask();
     rightHand.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffR"));
     rightHand.set()->setGainsAsNatural(1., .8);
-    rightHand.set()->y_ref += ARR(.0, .0, .6);
+    rightHand.set()->y_ref += ARR(.0, .2, .6);
     rightHand.start();
 
     R.hold(false);
@@ -34,7 +41,8 @@ void Prototyping(){
       }
     }
 
-    leftHand.set()->y_ref = leftHand.y0();
+    leftTarget->rel.pos.z -=.3;
+//    leftHand.set()->y_ref = leftHand.y0();
     rightHand.set()->y_ref = rightHand.y0();
     R.waitAnd({&leftHand, &rightHand}, 3.); //with timeout
 
@@ -69,6 +77,32 @@ void Prototyping(){
 #endif
 }
 
+//===============================================================================
+
+void TEST(PickAndPlace) {
+  Roopi R(true);
+
+  R.newCameraView();
+  R.tcm()->verbose=true;
+
+  {
+    auto look = R.newCtrlTask("type=gazeAt ref1=endeffKinect ref2=obj1 PD=[1 .9 0 0]");
+    auto up = R.newCtrlTask(new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), {1, .9}, {0.,0.,1.});
+    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R", NoVector, "obj1", NoVector));
+    auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_x, "obj1", Vector_x), {1,.9}, {}, {1e1});
+//    auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_y, "obj1", Vector_x), {}, {}, {1e1});
+
+    R.hold(false);
+
+    R.waitAnd({&look, &up});
+    mlr::wait();
+  }
+
+  R.hold(true);
+
+  mlr::wait(3.);
+
+}
 
 //===============================================================================
 
@@ -103,8 +137,11 @@ void TEST(Basics) {
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
+
 //  testBasics();
 
-  Prototyping();
+  testPickAndPlace();
+
+//  Prototyping();
   return 0;
 }

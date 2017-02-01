@@ -57,6 +57,10 @@ void CtrlTask::setTarget(const arr& yref, const arr& vref){
   if(&vref) v_ref=vref; else v_ref.resizeAs(y_ref).setZero();
 }
 
+void CtrlTask::setTargetToCurrent(){
+  y_ref = y;
+}
+
 void CtrlTask::setGains(const arr& _Kp, const arr& _Kd) {
   //active=true; //TODO
   Kp = _Kp;

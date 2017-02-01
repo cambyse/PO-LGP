@@ -1,6 +1,28 @@
 #include "CtrlTaskAct.h"
 #include "roopi-private.h"
 
+CtrlTaskAct::CtrlTaskAct(Roopi* r, const Graph& specs)
+  : roopi(r){
+  map = TaskMap::newTaskMap(specs, roopi->getKinematics());
+  task = new CtrlTask(map->shortTag(roopi->getKinematics()), *map, specs);
+  task->active = true;
+  setTask(task, false);
+}
+
+CtrlTaskAct::CtrlTaskAct(Roopi* r, TaskMap* map, const arr& PD, const arr& target, const arr& prec)
+  : roopi(r), map(map){
+  task = new CtrlTask(map->shortTag(roopi->getKinematics()), map);
+  if(PD.N) task->setGainsAsNatural(PD(0), PD(1));
+  if(PD.N>2){
+    task->maxVel=PD(2);
+    task->maxAcc=PD(3);
+  }
+  if(target.N) task->y_ref = target;
+  if(prec.N) task->prec = prec;
+  task->active = true;
+  setTask(task, false);
+}
+
 CtrlTaskAct::~CtrlTaskAct(){
   if(task){
     roopi->s->ctrlTasks.set()->removeValue(task);
@@ -35,13 +57,20 @@ WToken<CtrlTask> CtrlTaskAct::set(){
 }
 
 void CtrlTaskAct::setMap(TaskMap* m){
-  map = m;
-  task = new CtrlTask(map->shortTag(roopi->getKinematics()), map);
+  setTask(new CtrlTask(m->shortTag(roopi->getKinematics()), m));
+}
+
+void CtrlTaskAct::setTask(CtrlTask *t, bool setDefaults){
+  task = t;
+  map = &task->map;
   map->phi(y0, NoArr, roopi->getKinematics()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
   task->y = y0;
-  task->y_ref = y0;
-  task->setGains(0.0,0.0);
-  task->setC(eye(task->y_ref.d0)*1000.0); //TODO
+  if(setDefaults){
+    task->y_ref = zeros(y0.N); //y0
+    task->setGains(0.0,0.0);
+    //  task->setC(eye(task->y_ref.d0)*1000.0); //TODO
+    task->active = false;
+  }
   roopi->s->ctrlTasks.set()->append(task);
 }
 

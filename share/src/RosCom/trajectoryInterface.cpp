@@ -50,7 +50,7 @@ TrajectoryInterface::TrajectoryInterface(mlr::KinematicWorld &world_plan_,mlr::K
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for (;;) {
-      S->ctrl_obs.data->waitForNextRevision();
+      S->ctrl_obs.waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<S->ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<world_robot->q.N <<endl;
 

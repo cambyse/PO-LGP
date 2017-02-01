@@ -54,7 +54,7 @@ struct TaskControllerModule : Thread {
 
 
 public:
-  TaskControllerModule(const char* robot="none", mlr::KinematicWorld& world = NoWorld);
+  TaskControllerModule(const char* robot="none", const mlr::KinematicWorld& world = NoWorld);
   ~TaskControllerModule();
 
   void open();

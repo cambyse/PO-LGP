@@ -44,10 +44,20 @@ struct Roopi {
   void hold(bool still);
 
 
-  ReadToken<mlr::KinematicWorld> getKinematics();
+  WToken<mlr::KinematicWorld> setKinematics();
+  RToken<mlr::KinematicWorld> getKinematics();
 
   CtrlTaskAct newCtrlTask();
+  CtrlTaskAct newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
+  CtrlTaskAct newCtrlTask(const char* specs);
   bool waitAnd(std::initializer_list<Act*> acts, double timeout=5.);
+
+  //-- starting up controllers/communications/views
+  void newCameraView();
+
+  //-- kinematic editing
+  mlr::Shape* newMarker(const char* name, const arr& pos);
+
 
   //-- control tasks
 

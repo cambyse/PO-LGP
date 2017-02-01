@@ -70,7 +70,7 @@ void TaskMap::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
 
 TaskMap *TaskMap::newTaskMap(const Graph& params, const mlr::KinematicWorld& world){
   //-- get tags
-  mlr::String& type=params.get<mlr::String>("map");
+  const mlr::String& type=params.get<mlr::String>("map", "default");
 
   //-- create a task map
   TaskMap *map;

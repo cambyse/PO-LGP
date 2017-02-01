@@ -151,9 +151,9 @@ int main(int argc,char **argv){
 
 //  testUsingSpecs();
 
-//  testUsingKomo();
+  testUsingKomo();
 
-  testSlide();
+//  testSlide();
 
   return 0;
 }
