@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 
 void drawEnv(void*);
@@ -56,7 +56,7 @@ struct CartPoleState{
 void glDrawCartPole(void *classP){
   CartPoleState *s=(CartPoleState*)classP;
   double GLmatrix[16];
-  ors::Transformation f;
+  mlr::Transformation f;
   //cart
   f.addRelativeTranslation(s->x,0.,1.);
   f.getAffineMatrixGL(GLmatrix);

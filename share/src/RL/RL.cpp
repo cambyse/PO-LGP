@@ -24,8 +24,8 @@ double mlr::Rollouts::rollout(uint numRollouts, const arr& theta, double thetaNo
 
   for(uint m=0;m<M;m++){
     if(fixedRandomSeed>=0) rnd.seed(fixedRandomSeed);
-    env.resetEnvironment();
-    fil.resetFilter();
+    env.resetEnvironment(); //TODO: this should return a first observation!
+    fil.resetFilter();      //TODO: this should receive a first observation!
     double totalReturn = 0.;
     double discount=1.;
 
@@ -45,11 +45,11 @@ double mlr::Rollouts::rollout(uint numRollouts, const arr& theta, double thetaNo
       obs .referToDim(observations, m, t);
       reward = &rewards(m, t);
 
-      feat = fil.getFeatures();
+      feat = fil.getFeatures(); //h_t
 
-      pi.sampleAction(act, dAct, feat, thet);
+      pi.sampleAction(act, dAct, feat, thet, t); //a_t
 
-      terminal = env.transition(obs, *reward, act);
+      terminal = env.transition(obs, *reward, act); //(r_t, y_{t+1}) TODO: time indexing of y is inconsistent!
 
       fil.updateFilter(act, obs);
 
@@ -92,11 +92,11 @@ void mlr::Rollouts::getBatchData(mlr::BatchData& D){
 
   uint i=0;
   for(uint m=0;m<M;m++) for(uint t=0;t<terminalTimes(m)-1;t++){
-    D.S.append(features.refDim(m,t));
-    D.A.append(actions.refDim(m,t));
+    D.S.append(features(m,t, {}));
+    D.A.append(actions(m,t, {}));
     D.R.append(rewards(m,t));
-    D.Sn.append(features.refDim(m,t+1));
-    D.An.append(actions.refDim(m,t+1));
+    D.Sn.append(features(m,t+1, {}));
+    D.An.append(actions(m,t+1, {}));
     D.Q.append(returnToGo(m,t));
     i++;
   }
@@ -153,7 +153,7 @@ arr mlr::Rollouts::getGradient_GPOMDP(){
   arr dLPA_sum = dLogPActions;
   for(uint m=0; m<M; m++){
     for(uint j=1; j<T; j++){
-      dLPA_sum.refDim(m,j) += dLPA_sum.refDim(m,j-1); //this integrates
+      dLPA_sum(m,j, {}) += dLPA_sum(m,j-1, {}); //this integrates
     }
   }
 
@@ -162,7 +162,7 @@ arr mlr::Rollouts::getGradient_GPOMDP(){
   arr den = zeros(T, dLogPActions.d2);
   for(uint m=0; m<M; m++){
     for(uint j=0;j<T;j++){
-      arr aux = dLPA_sum.refDim(m,j) % dLPA_sum.refDim(m,j);
+      arr aux = dLPA_sum(m,j, {}) % dLPA_sum(m,j, {});
       nom[j] += aux*rewards(m,j);
       den[j] += aux;
     }
@@ -175,7 +175,7 @@ arr mlr::Rollouts::getGradient_GPOMDP(){
   arr grad = zeros(dLogPActions.d2);
   for(uint m=0; m<M; m++){
     for(uint j=1; j<T; j++){ //HACK!!! USE at least window size 1?!
-      grad += dLPA_sum.refDim(m,j) % (rewards(m,j) - b[j]);
+      grad += dLPA_sum(m,j, {}) % (rewards(m,j) - b[j]);
     }
   }
   grad /= (double)M;
@@ -219,9 +219,9 @@ arr mlr::Rollouts::getFisherMatrix(){
 }
 
 arr mlr::Rollouts::getQuadraticFeature(uint m, uint t, const arr& theta){
-  arr s = features.refDim(m,t);
+  arr s = features(m,t, {});
   arr a;
-  if(!&theta) a = actions.refDim(m,t);
+  if(!&theta) a = actions(m,t, {});
   else a = theta*s;
   arr x = cat(ARR(1.), s, a); //state-action vector
   arr xx = x ^ x;
@@ -234,7 +234,7 @@ arr mlr::Rollouts::getPolynomialFeatures(){
   arr phi;
 
   for(uint m=0;m<M;m++) for(uint t=0;t<T;t++){
-    arr sa = cat(ARR(1.), features.refDim(m,t), actions.refDim(m,t)); //state-action vector
+    arr sa = cat(ARR(1.), features(m,t, {}), actions(m,t, {})); //state-action vector
     arr _phi = sa ^ sa;
     for(uint i=0;i<phi.d0;i++) for(uint j=0;j<=i;j++) phi.append(_phi(i,j));
   }

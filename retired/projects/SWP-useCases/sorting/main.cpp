@@ -1,18 +1,18 @@
 #include <biros/biros.h>
 #include <MT/util.h>
 
-struct RandomNumber:public Variable{
+struct RandomNumber:public AccessData{
   mlr::Rnd rnd;
   uint getRnd(uint modulo){ writeAccess(NULL); uint i=rnd(modulo); deAccess(NULL); return i; }
   void seed(uint s){ rnd.seed(s); }
-  RandomNumber():Variable("RandomNumber"){}
+  RandomNumber():AccessData("RandomNumber"){}
 };
 
-struct Integer:public Variable{
+struct Integer:public AccessData{
   int x;
   
   void init(RandomNumber &rnd){ x=rnd.getRnd(100); }
-  Integer():Variable("IntVar"){ x=0; reg_x(); }
+  Integer():AccessData("IntVar"){ x=0; reg_x(); }
 };
 
 struct PairSorter:public Process{

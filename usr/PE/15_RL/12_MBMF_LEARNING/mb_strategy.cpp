@@ -1,10 +1,10 @@
 #include "mb_strategy.h"
-#include <Motion/pr2_heuristics.h>
 
-MB_strategy::MB_strategy(arr &xDemo_,ors::KinematicWorld &world_,TaskManager &tm):
+
+MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,TaskManager &tm):
   xDemo(xDemo_)
 {
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
   MP = new MotionProblem(*world,false);
 
   MP->T = xDemo.d0-1;
@@ -13,7 +13,7 @@ MB_strategy::MB_strategy(arr &xDemo_,ors::KinematicWorld &world_,TaskManager &tm
 
   Task *t;
   t = MP->addTask("tra", new TransitionTaskMap(*world));
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
   t->map.order=2;
 
   t->setCostSpecs(0, MP->T, ARR(0.), 1e-2);
@@ -34,7 +34,7 @@ void MB_strategy::evaluate(arr &X)
   OptOptions o; o.maxStep = mlr::getParameter<double>("MB_maxStep");
   o.stopTolerance = 1e-5; o.constrainedMethod=anyTimeAula; o.verbose=1;
   ConstrainedProblemMix CPM = Convert(*MPF);
-  UnconstrainedProblemMix UPM(CPM, o.constrainedMethod);
+  LagrangianProblemMix UPM(CPM, o.constrainedMethod);
   OptNewton opt(X, UPM, o);
 
   opt.step();

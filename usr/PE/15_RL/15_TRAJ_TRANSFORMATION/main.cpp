@@ -4,7 +4,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <System/engine.h>
 #include "../12_MBMF_LEARNING/task_manager.h"
@@ -12,14 +12,14 @@
 #include "../src/traj_factory.h"
 #include "../src/plotUtil.h"
 #include <pr2/roscom.h>
-#include <Motion/pr2_heuristics.h>
+
 
 #include <System/engine.h>
 
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
   bool useRos = mlr::getParameter<bool>("useRos");
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   world.gl().resize(800,800);
   arr X;
   X << FILE("data/door1/Xact2.dat");
@@ -35,15 +35,15 @@ int main(int argc,char **argv){
 
   for (uint t=0;t<X.d0;t++) {
     world.setJointState(X[t]);
-    ors::Body *handle = world.getBodyByName("handle");
-    ors::Shape *ec1 = world.getShapeByName("endeffC1");
-    ors::Shape *ec2 = world.getShapeByName("endeffC2");
+    mlr::Body *handle = world.getBodyByName("handle");
+    mlr::Shape *ec1 = world.getShapeByName("endeffC1");
+    mlr::Shape *ec2 = world.getShapeByName("endeffC2");
 
     handle->X.pos = (P1[t]+P2[t])/2.;
-//    ors::Vector x_axis(0.,1.,0.);
-//    ors::Vector y_axis(0.,1.,0.);
-//    ors::Vector z_axis(0.,.0,1.);
-//    ors::Vector v  = ec1->X.rot.getY();
+//    mlr::Vector x_axis(0.,1.,0.);
+//    mlr::Vector y_axis(0.,1.,0.);
+//    mlr::Vector z_axis(0.,.0,1.);
+//    mlr::Vector v  = ec1->X.rot.getY();
 //    handle->X.rot.setDiff(x_axis,v);
 //    handle->X.rot.setDiff(y_axis,ec1->X.rot.getZ());
 
@@ -124,7 +124,7 @@ int main(int argc,char **argv){
   t = MP.addTask("tra", new TransitionTaskMap(world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world.getHmetric();
 
 
   t =MP.addTask("posC1", new DefaultTaskMap(posTMT,world,"endeffC1"));

@@ -1,6 +1,6 @@
 //
 
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/soc.h>
 #include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
@@ -16,7 +16,7 @@ int main(int argc,char **argv){
   // initialization of the simulator (should be ok for the lab)
   
   // load the ors file
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("iCub.ors")));
   // start the collision computation engine
   SwiftInterface swift;
@@ -24,7 +24,7 @@ int main(int argc,char **argv){
   // start the OpenGL engine
   OpenGL gl;
   gl.add(glStandardScene);          //add a standard static draw routine for the floor...
-  gl.add(ors::glDrawGraph,&ors);    //adds a draw routine to draw the geometry
+  gl.add(mlr::glDrawGraph,&ors);    //adds a draw routine to draw the geometry
   gl.camera.setPosition(5,-10,10);  //sets the perspective...
   gl.camera.focus(0,0,1);
   gl.watch("loaded configuration - press ENTER");
@@ -44,16 +44,16 @@ int main(int argc,char **argv){
   //                array of parameters);
   
   // the endeffector task variable (3D)
-  TaskVariable *pos = new DefaultTaskVariable("position",ors,posTVT, "endeff","<t(0 .04 0)>", 0,0, ARR());
+  TaskVariable *pos = new DefaultTaskVariable("position",ors,posTVT, "endeff","<t(0 .04 0)>", 0,0, arr());
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);  //set its final target equal to the current position of "target"
   
   // the collision task variable (1D)
-  TaskVariable *col = new DefaultTaskVariable("collision",ors,collTVT, 0,0, 0,0, ARR(.05)); //collision margin=5cm
-  col->y_target = ARR(0.);   //set the target equal to ZERO collision
+  TaskVariable *col = new DefaultTaskVariable("collision",ors,collTVT, 0,0, 0,0, {.05}); //collision margin=5cm
+  col->y_target = {0.};   //set the target equal to ZERO collision
 
   // a 3D variable representing the `palm normal' of the endeffector (to control its orientation)
-  //TaskVariable *handup = new TaskVariable("hand up",ors,zoriTVT, "endeff","<d(90 0 1 0)>", 0,0, ARR());
-  //handup->x_target = ARR(0.,0.,1.);   //set the target to pointing upwards (in world coordinates)
+  //TaskVariable *handup = new TaskVariable("hand up",ors,zoriTVT, "endeff","<d(90 0 1 0)>", 0,0, arr());
+  //handup->x_target = {0.,0.,1.};   //set the target to pointing upwards (in world coordinates)
 
   // tell SOC that these variables exists!
   soc.setTaskVariables({pos,col});  //,handup));
@@ -95,7 +95,7 @@ int main(int argc,char **argv){
   //with minimal precision on the way, but very high precision at the final step
   //with no velocity precision on the way, but high velocity precision at the final step
 
-  //pos->x_trajectory[50]()=ARR(0,-.3,.5);
+  //pos->x_trajectory[50]()={0,-.3,.5};
   //pos->prec_trajectory(50)=1e2;
   
   //handup->setInterpolatedTargetTrajectory(T);      //pos should follow linear interpolation to the target

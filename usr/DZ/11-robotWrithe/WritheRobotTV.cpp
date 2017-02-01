@@ -4,14 +4,14 @@
 #include "MT/plot.h"
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
-                                         ors::KinematicWorld& _ors,
+                                         mlr::KinematicWorld& _ors,
                                          const char* _obj_name,
 				         int _segments,
 				         int _param){
   obj_name=_obj_name;
   param=_param;
   segments=_segments;
-  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, ARR());
+  set(_name, _ors, userTVT, -1, Transformation_Id, -1, Transformation_Id, arr());
 }
 
 
@@ -24,7 +24,7 @@ void plot_writhe(arr WM,int dim)
  plot(false);
 }
 
-void GetRopes(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points,const char* _name){
+void GetRopes(arr& r1,arr& r2,mlr::KinematicWorld& _ors,int rope_points,const char* _name){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points,3); 
@@ -32,7 +32,7 @@ void GetRopes(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points,const ch
   arr ty;
   
   uint start_body = 2; 
-  ors::Vector rel; rel.set(0.,0.,0.0);// rel.setZero();
+  mlr::Vector rel; rel.set(0.,0.,0.0);// rel.setZero();
   
   for (int i=0;i<rope_points;i++) {// start with second body part
       _ors.kinematicsPos(ty,i+start_body,  &rel); 
@@ -65,7 +65,7 @@ void WritheTaskVariable::userUpdate(){
     
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobianPos(Jp,k+2,&ors::Vector(0.,0.,.0)); // Zero jacobian? +1
+       this->ors->jacobianPos(Jp,k+2,&mlr::Vector(0.,0.,.0)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        
@@ -98,7 +98,7 @@ transpose(Jt,J);
 // //cout <<y<<endl;
 //     ///////////Jacobian
 //       for (int k=0;k<segments;k++){
-//        this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+//        this->ors->jacobianPos(Jp,k,&mlr::Vector(0.,0.,.1)); // Zero jacobian? +1
 // 	 points.append(Jp);
 //        } 
 //        ScalarJacobian(JM,rope1,rope2,points,segments);  
@@ -133,7 +133,7 @@ arr delta_y;
     
     ///////////Jacobian
   for (int k=0;k<segments;k++){
-       this->ors->jacobianPos(Jp,k+1,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       this->ors->jacobianPos(Jp,k+1,&mlr::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        WritheJacobian(JM,rope1,rope2,points,segments);  
@@ -178,7 +178,7 @@ void WritheTaskVariable::delta_check(arr& delta_q){
 
     ///////////Jacobian
       for (int k=0;k<segments;k++){
-       this->ors->jacobianPos(Jp,k,&ors::Vector(0.,0.,.1)); // Zero jacobian? +1
+       this->ors->jacobianPos(Jp,k,&mlr::Vector(0.,0.,.1)); // Zero jacobian? +1
 	 points.append(Jp);
        } 
        ScalarJacobian(J,rope1,rope2,points,segments);  

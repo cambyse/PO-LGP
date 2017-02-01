@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/thread.h>
-#include <FOL/relationalMachine.h>
+#include <Logic/relationalMachine.h>
 #include <Actions/activity.h>
 
 struct RelationalMachineModule : Thread {

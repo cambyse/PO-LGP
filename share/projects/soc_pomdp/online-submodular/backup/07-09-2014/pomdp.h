@@ -119,13 +119,13 @@ private:
 
 
 
-void setInitialPose(const arr y, ors::KinematicWorld& world);
+void setInitialPose(const arr y, mlr::KinematicWorld& world);
 
 
-void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::KinematicWorld& world, int num);
+void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, mlr::KinematicWorld& world, int num);
 
-void OptimizeFSC(ors::KinematicWorld& world, NODE *&node, int horizon);
-void OptimizeFSC_Test(ors::KinematicWorld& world, NODE *&node, int horizon);
+void OptimizeFSC(mlr::KinematicWorld& world, NODE *&node, int horizon);
+void OptimizeFSC_Test(mlr::KinematicWorld& world, NODE *&node, int horizon);
 
 void write_to_graphviz(FSC fsc);
 //void add_node_to_graph(NODE*& root);

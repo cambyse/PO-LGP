@@ -1,7 +1,7 @@
 #define MLR_IMPLEMENTATION
 
 #include <signal.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/robot.h>
 #include <MT/soc.h>
@@ -12,7 +12,7 @@ ofstream pos_file("onlinePos.dat");
 struct MyDemo:public TaskAbstraction {
   uint visStep;
   TaskVariable * TV_fNew;
-  ors::Body * obst,*obstV,*future,*target;
+  mlr::Body * obst,*obstV,*future,*target;
   AverageTrack Kal1, Kal2;
   bool started_track, bGoTarget;
   arr Pl,Pr;
@@ -22,7 +22,7 @@ struct MyDemo:public TaskAbstraction {
   virtual void updateTaskVariables(ControllerModule *ctrl); //overloading the virtual
   virtual void initTaskVariables(ControllerModule *ctrl);
   void init(RobotProcessGroup *_master);
-  ors::Vector lastOri;
+  mlr::Vector lastOri;
 };
 
 
@@ -42,15 +42,15 @@ void MyDemo::init(RobotProcessGroup *_master){
   robotProcesses->gui.gl->camera.focus(0., -0.5, 1.);
 
   //find camera location
-  ors::Body * b = new ors::Body(robotProcesses->gui.ors->bodies);
-  ors::Shape * s=new ors::Shape(robotProcesses->gui.ors->shapes,b);
+  mlr::Body * b = new mlr::Body(robotProcesses->gui.ors->bodies);
+  mlr::Shape * s=new mlr::Shape(robotProcesses->gui.ors->shapes,b);
   s->type=1;
   s->size[0]=.0; s->size[1]=.0; s->size[2]=0.; s->size[3]=.02;
   s->color[0]=.5; s->color[1]=.2; s->color[2]=.8;
   b->X.p = CameraLocation(Pl);
 
-  ors::Body * br = new ors::Body(robotProcesses->gui.ors->bodies);
-  ors::Shape * sr=new ors::Shape(robotProcesses->gui.ors->shapes,br);
+  mlr::Body * br = new mlr::Body(robotProcesses->gui.ors->bodies);
+  mlr::Shape * sr=new mlr::Shape(robotProcesses->gui.ors->shapes,br);
   sr->type=1;
   sr->size[0]=.0; sr->size[1]=.0; sr->size[2]=0.; sr->size[3]=.02;
   sr->color[0]=.5; sr->color[1]=.7; sr->color[2]=.8;
@@ -59,10 +59,10 @@ void MyDemo::init(RobotProcessGroup *_master){
   arr Rot;
   Rot <<FILE("../../src/NJ/RotationMatrix");arr r2; transpose(r2,Rot);Rot = r2;
   Rot = Rot*-1.0;//hack to get positive trace and determinant 1
-  ors::Quaternion q;
+  mlr::Quaternion q;
   q.setMatrix(Rot.p);
   cout <<"Rot = " <<Rot <<"Q=" <<q <<endl;
-  ors::Vector z; ors::Quaternion q2;
+  mlr::Vector z; mlr::Quaternion q2;
   q.getZ(z);q2.setRad(PI,z);
   q = q2*q;
   robotProcesses->gui.gl->camera.X->r = q;
@@ -79,7 +79,7 @@ void MyDemo::init(RobotProcessGroup *_master){
 }
 
 void MyDemo::initTaskVariables(ControllerModule *ctrl){
-  ors::KinematicWorld &ors=ctrl->ors;
+  mlr::KinematicWorld &ors=ctrl->ors;
   TV_fNew   = new TaskVariable("posNew",ors,posTVT,"m9","<t( .02   .022 -.366)>",0,0,0);
   TV_fNew->targetType=directTT;
   TVall.append(TV_fNew);
@@ -106,17 +106,17 @@ void MyDemo::findObstacle(){
     vision1  = vision1*pow(2.0,robotProcesses->evis.downScale);
     vision2  = vision2*pow(2.0,robotProcesses->evis.downScale);
 
-    ors::Vector val1,val2;
+    mlr::Vector val1,val2;
     Kal1.addSample(vision1,Pl,Pr,time);
     Kal2.addSample(vision2,Pl,Pr,time);
     val1 = Kal1.p;val2 = Kal2.p;
     pos_file << val1 << " " << val2 << " " << Kal1.v << " " << Kal2.v << " " << vision1 << " " << vision2 << endl;
-    ors::Vector oriVal = val2-val1;oriVal = oriVal/oriVal.length();
-    ors::Vector poscenter = val2 + oriVal*0.2;//green marker 0.2 from center
+    mlr::Vector oriVal = val2-val1;oriVal = oriVal/oriVal.length();
+    mlr::Vector poscenter = val2 + oriVal*0.2;//green marker 0.2 from center
     obst->X.p =  poscenter;
     obst->X.v = (Kal1.v+Kal2.v)/2.0;//average speed of 2 tracked markers
-    ors::Frame f;
-    f.r.setDiff(ors::Vector(0,0,1),oriVal);
+    mlr::Frame f;
+    f.r.setDiff(mlr::Vector(0,0,1),oriVal);
     obst->X.r = f.r;
     obstV->X =  obst->X;//just vision, is there a better way = 2 ors stucts for vision and collision...
     future->X = obst->X;
@@ -212,7 +212,7 @@ int main(int argc,char** argv){
 
   arr atarget; mlr::getParameter(atarget,"target");
   demo.target = robotProcesses.gui.ors->getBodyByName("target");
-  demo.target->X.p =  ors::Vector(atarget(0),atarget(1),atarget(2));
+  demo.target->X.p =  mlr::Vector(atarget(0),atarget(1),atarget(2));
 
   for(;!robotProcesses.signalStop;){ //catches the ^C key
     robotProcesses.evis.lock.readLock();  perc.lock.writeLock();

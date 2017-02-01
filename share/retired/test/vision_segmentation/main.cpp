@@ -6,7 +6,7 @@
 
 #include <signal.h>
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 //#include <MT/BinaryBP.h>
 //#include <MT/vision.h>

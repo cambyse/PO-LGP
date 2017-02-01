@@ -117,8 +117,8 @@ struct sOpenGL {
   
   //-- private OpenGL data
   OpenGL *gl;
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
+  mlr::Vector downVec,downPos,downFoc;
+  mlr::Quaternion downRot;
 
   //-- engine specific data
   int windowID;                        ///< id of this window in the global glwins list

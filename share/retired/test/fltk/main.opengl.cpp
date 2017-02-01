@@ -8,7 +8,7 @@
 
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 
@@ -81,8 +81,8 @@ static void draw2(void*){
 
 void testMesh(){
   uint i,j,N=10;
-  ors::Vector v;
-  ors::Mesh mesh;
+  mlr::Vector v;
+  mlr::Mesh mesh;
 
   //add points to the mesh
   mesh.V.resize(N*N,3);
@@ -118,7 +118,7 @@ void testMesh(){
 /************ third test ************/
 
 void testObj(){
-  ors::Mesh mesh,mesh2;
+  mlr::Mesh mesh,mesh2;
 
   //mesh.readObjFile("../../external/3dmodel/obj/gipshand2-273k.obj");
   mesh.readObjFile("base-male-nude.obj");

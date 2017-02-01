@@ -2,7 +2,7 @@
 #define MF_STRATEGY_H
 
 #include <Core/array.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Algo/MLcourse.h>

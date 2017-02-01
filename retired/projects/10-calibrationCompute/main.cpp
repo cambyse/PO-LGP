@@ -1,5 +1,5 @@
 #define MLR_IMPLEMENTATION
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/optimization.h>
 #include <MT/calibration.h>
 
@@ -24,11 +24,11 @@ void loadCalibData(arr& viewData, arr& qData, uint n, const char *filename){
 
 struct MyOptimizationProblem:public OptimizationProblem{
   arr x,x0;
-  ors::Transformation rel;
+  mlr::Transformation rel;
   uint t_offset;
   arr q_offset;
 
-  ors::KinematicWorld C;
+  mlr::KinematicWorld C;
   OpenGL gl;
   int bodyIndex;
   
@@ -48,7 +48,7 @@ struct MyOptimizationProblem:public OptimizationProblem{
     bodyIndex=C.getBodyByName("m9")->index;
     rel.setText("<t(-.04 -.025 -0.18)>");
     gl.add(glStandardScene,&C);
-    gl.add(ors::glDrawGraph,&C);
+    gl.add(mlr::glDrawGraph,&C);
     gl.watch();
     q_offset = arr(14);
     q_offset = 0;
@@ -93,13 +93,13 @@ struct MyOptimizationProblem:public OptimizationProblem{
     P=~R; P.append(-R*t); P=~P;
     P /= P(2,3);
     gl.camera.setCameraProjectionMatrix(P); //M.gl.P);
-    /*ors::Quaternion rot,r2;
+    /*mlr::Quaternion rot,r2;
     rot.setMatrix((~R).p);
     r2.setDeg(180,0,1,0);
     rot = rot*r2;
     gl.camera.X.pos.set(t.p);
     gl.camera.X.rot=rot;*/
-    ors::Shape *s=C.getShapeByName("cameraMarker");
+    mlr::Shape *s=C.getShapeByName("cameraMarker");
     s->rel.pos.set(t.p);
     s->rel.rot.setMatrix((~R).p);
     for(i=0;i<qData.d0;i++){

@@ -152,7 +152,7 @@ void Racer::getObservation(arr& y, arr& C, arr& c, arr& W){
   acc += (q_dot(1) * J_C_dash * q_dot + J_C * q_ddot);
   arr y_acc = c1 * R * acc; //2D: accelerations
   double y_gyro = c3 * (q_dot(1)+c4); //1D: gyro
-  double y_encoder = c5 * (q(0)/r-q(1)); //1D: encoder
+  double y_encoder = c5 * (q(0)/r-q(1)); //1D: wheel encoder
   y = ARR( y_acc(0), y_acc(1), y_gyro, y_encoder );
 
   if(&C){
@@ -222,7 +222,7 @@ OpenGL& Racer::gl(){
 void Racer::glDraw(){
 #ifdef MLR_GL
   double GLmatrix[16];
-  ors::Transformation f;
+  mlr::Transformation f;
   f.setZero();
   //wheels
   f.addRelativeTranslation(q(0), 0, r);

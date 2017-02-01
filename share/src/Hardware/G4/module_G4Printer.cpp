@@ -1,7 +1,7 @@
 #include "module_G4Printer.h"
 
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 REGISTER_MODULE(G4Printer)
 

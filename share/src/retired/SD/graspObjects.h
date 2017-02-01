@@ -2,7 +2,7 @@
 #ifndef MLR_graspObjects_h
 #define MLR_graspObjects_h
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "ISF_GP.h"
 
 //MT: move this to cpp file
@@ -18,7 +18,7 @@ double staticPhi(arr*,arr*, const arr&, void *);
 
 //a generic 3D potential, e.g., to represent an implicit surface
 struct MeshObject {
-  ors::Mesh m;
+  mlr::Mesh m;
   MeshObject(char* meshfile, const arr& center, const double scale);
   MeshObject(){};
   void getEnclCube(double &lo, double &hi);
@@ -81,7 +81,7 @@ struct GraspObject_Cylinder1:public GraspObject { // poor man's cylinder
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_Cylinder1();
   GraspObject_Cylinder1(arr, arr, double, double, double);
-  GraspObject_Cylinder1(const ors::Shape* s);
+  GraspObject_Cylinder1(const mlr::Shape* s);
   arr center(){return c;};
 };
 
@@ -93,7 +93,7 @@ struct GraspObject_Box:public GraspObject {
   double distanceToSurface(arr *grad,arr *hess,const arr& x);
   GraspObject_Box();
   GraspObject_Box(const arr& center, double dx_, double  dy_, double dz_); //assumes box is axis aligned
-  GraspObject_Box(const ors::Shape* s);
+  GraspObject_Box(const mlr::Shape* s);
   arr center(){ return c; };
 };
 

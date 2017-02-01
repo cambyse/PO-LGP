@@ -16,17 +16,17 @@ void drawChecker(void*){
 }
 
 void TEST(StereoCapture){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init("capture_scene.ors");
 
   OpenGL gl;
   initChecker();
   gl.add(glStandardScene,NULL);
   gl.add(drawChecker,NULL);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   //gl.watch();
 
-  ors::Camera leftEye,rightEye;
+  mlr::Camera leftEye,rightEye;
   leftEye .X->setText("<t(0 -1 1) d(90 1 0 0)>");
   rightEye.X->setText("<t(.1 -1 1) d(90 1 0 0)>");
 

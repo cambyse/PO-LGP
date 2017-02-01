@@ -5,10 +5,10 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Optim/search.h>
-#include <Ors/ors.h>
+#include <Optim/blackbox.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <pr2/trajectoryInterface.h>
 
 #include "../../src/plotUtil.h"
@@ -95,7 +95,7 @@ int main(int argc,char **argv){
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
-  ors::KinematicWorld world(STRING("../model.kvg"));
+  mlr::KinematicWorld world(STRING("../model.kvg"));
   TrajectoryInterface *mi;
   DoorTask *task = new DoorTask(world);
   if (useRos) mi = new TrajectoryInterface(world);

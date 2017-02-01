@@ -4,7 +4,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <Motion/phase_optimization.h>
 #include <pr2/trajectoryInterface.h>
@@ -22,7 +22,7 @@ int main(int argc,char **argv){
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
   mlr::String taskName = mlr::getParameter<mlr::String>("taskName");
 
-  ors::KinematicWorld world(STRING("../model.kvg"));
+  mlr::KinematicWorld world(STRING("../model.kvg"));
   TaskManager *task;
   if (taskName == "door") {
     task = new DoorTask(world);

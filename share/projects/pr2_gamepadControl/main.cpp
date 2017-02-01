@@ -2,7 +2,7 @@
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -32,21 +32,21 @@ void TEST(Gamepad){
   //-- open modules
   threadOpenModules(true);
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
   arr q, qdot;
   world.getJointState(q, qdot);
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
+  mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
 
-  ors::KinematicWorld world_pr2 = world;
+  mlr::KinematicWorld world_pr2 = world;
   world.gl().add(changeColor);
   world.gl().addDrawer(&world_pr2);
   world.gl().add(changeColor2);
 
   TaskController MP(world, true);
   MP.qitselfPD.y_ref = q;
-  MP.H_rate_diag = pr2_reasonable_W(world);
+  MP.H_rate_diag = world.getHmetric();
   Gamepad2Tasks j2t(MP);
   MP.tasks = j2t.getTasks();
 
@@ -55,7 +55,7 @@ void TEST(Gamepad){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     uint trials=0;
     for(;useRos;){
-      ctrl_obs.var->waitForNextRevision();
+      ctrl_obs.data->waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<MP.world.q.N <<endl;
 
@@ -71,7 +71,7 @@ void TEST(Gamepad){
 
     //-- wait for first odometry observation!
     for(trials=0;useRos;){
-      pr2_odom.var->waitForNextRevision();
+      pr2_odom.data->waitForNextRevision();
       if(pr2_odom.get()->N==3) break;
 
       trials++;
@@ -84,7 +84,7 @@ void TEST(Gamepad){
     cout <<"** GO!" <<endl;
     q = ctrl_obs.get()->q;
     qdot = ctrl_obs.get()->qdot;
-    q.refRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+    q({trans->qIndex, trans->qIndex+2}) = pr2_odom.get();
     //arr fL_base = fL_obs.get();
     MP.setState(q, qdot);
   }
@@ -97,7 +97,7 @@ void TEST(Gamepad){
   mlr::arrayBrackets="  ";
 
   for(uint t=0;;t++){
-    gamepadState.var->waitForNextRevision();
+    gamepadState.data->waitForNextRevision();
     arr gamepad = gamepadState.get();
     bool gamepad_shutdown = j2t.updateTasks(gamepad);
 //    if(t>10 && gamepad_shutdown) moduleShutdown().incrementValue();
@@ -106,7 +106,7 @@ void TEST(Gamepad){
     //get joint state
     if(useRos){
       arr q_real =ctrl_obs.get()->q;
-      q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2_odom.get();
+      q_real({trans->qIndex, trans->qIndex+2}) = pr2_odom.get();
 
       world_pr2.setJointState(q_real, ctrl_obs.get()->qdot);
       fLobs = ctrl_obs.get()->fL;
@@ -135,7 +135,7 @@ void TEST(Gamepad){
 #else // apply force in direction fe
       arr f_des = ARR(0.,0.,-5.);
       double alpha = .003;
-      ors::Shape *ftL_shape = world.getShapeByName("endeffForceL");
+      mlr::Shape *ftL_shape = world.getShapeByName("endeffForceL");
       arr J_ft, J;
       MP.world.kinematicsPos(NoArr, J, ftL_shape->body, ftL_shape->rel.pos);
       MP.world.kinematicsPos_wrtFrame(NoArr, J_ft, ftL_shape->body, ftL_shape->rel.pos, MP.world.getShapeByName("l_ft_sensor"));
@@ -161,11 +161,11 @@ void TEST(Gamepad){
 
       // compute position gains that are 0 along force direction
 //      arr yVec_fL, JVec_fL;
-//      ors::Vector rel = ftL_shape->rel.rot*ors::Vector(fe/length(fe));
+//      mlr::Vector rel = ftL_shape->rel.rot*mlr::Vector(fe/length(fe));
 //      MP.world.kinematicsVec(yVec_fL, JVec_fL, ftL_shape->body,&rel);
 
-//      ors::Quaternion quat;
-//      quat.setDiff(ors::Vector(1.,0.,0.),yVec_fL);
+//      mlr::Quaternion quat;
+//      quat.setDiff(mlr::Vector(1.,0.,0.),yVec_fL);
 //      arr R = ~quat.getArr();
 //      arr J_fL0 = R*Jeq;
 //      J_fL0[0]=0.;

@@ -1,4 +1,4 @@
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Core/array.h>
 
 void TEST(Dynamics){

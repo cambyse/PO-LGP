@@ -1,11 +1,11 @@
 #include "task_manager.h"
 #include "../src/traj_factory.h"
-#include <Motion/pr2_heuristics.h>
+
 //#include "../src/plotUtil.h"
 
 
-void DonutTask::createSynthethicDemonstration(arr &X, ors::KinematicWorld &world_){
-  world = new ors::KinematicWorld(world_);
+void DonutTask::createSynthethicDemonstration(arr &X, mlr::KinematicWorld &world_){
+  world = new mlr::KinematicWorld(world_);
   MotionProblem MP(world_,false);
   MP.T = T;
   MP.tau = tau;
@@ -98,10 +98,10 @@ double DonutTask::rewardFunction(const arr &X)
   return -sumOfAbs(A);
 }
 
-void DoorTask::initTask(ors::KinematicWorld &world_, arr &Xdemo_)
+void DoorTask::initTask(mlr::KinematicWorld &world_, arr &Xdemo_)
 {
   Xdemo = Xdemo_;
-  world = new ors::KinematicWorld(world_);
+  world = new mlr::KinematicWorld(world_);
   T = Xdemo.d0-1;
   uint qI = world->getJointByName("l_gripper_joint")->qIndex;
   Cdemo = zeros(Xdemo.d0); Cdemo.flatten();
@@ -118,7 +118,7 @@ void DoorTask::initTask(ors::KinematicWorld &world_, arr &Xdemo_)
   cout <<"Cdemo: " << ~Cdemo << endl;
 }
 
-void DoorTask::createSynthethicDemonstration(arr &X, ors::KinematicWorld &world)
+void DoorTask::createSynthethicDemonstration(arr &X, mlr::KinematicWorld &world)
 {
 
 }
@@ -165,7 +165,7 @@ void DoorTask::applyModelFreeExploration(arr &X, const arr &X_base, const arr &p
   t = MP.addTask("tra", new TransitionTaskMap(*world));
   t->map.order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e-2);
-  ((TransitionTaskMap*)&t->map)->H_rate_diag = pr2_reasonable_W(*world);
+  ((TransitionTaskMap*)&t->map)->H_rate_diag = world->getHmetric();
 
 
   t =MP.addTask("posC1", new DefaultTaskMap(posTMT,*world,"endeffC1"));

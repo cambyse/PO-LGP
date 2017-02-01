@@ -48,20 +48,20 @@ void TEST(DerivativeObservations) {
 
   plotKernel1D(gp,-3.,3., pltPause);
 
-  gp.appendDerivativeObservation(ARR(0.),1,0);
-  gp.appendObservation(ARR(0.),0);
+  gp.appendDerivativeObservation({0.},1,0);
+  gp.appendObservation({0.},0);
   gp.recompute();
   plotBelief(gp,-5.,5., pltPause);
-  gp.appendObservation(ARR(1.),1);
+  gp.appendObservation({1.},1);
   gp.recompute();
   plotBelief(gp,-5.,5., pltPause);
-  gp.appendObservation(ARR(2.),0);
+  gp.appendObservation({2.},0);
   gp.recompute();
   plotBelief(gp,-5.,5., pltPause);
-  gp.appendObservation(ARR(.5),2);
+  gp.appendObservation({.5},2);
   gp.recompute();
   plotBelief(gp,-5.,5., pltPause);
-  gp.appendDerivativeObservation(ARR(2.),0,0);
+  gp.appendDerivativeObservation({2.},0,0);
   gp.recompute();
   plotBelief(gp,-5.,5., pltPause);
 }

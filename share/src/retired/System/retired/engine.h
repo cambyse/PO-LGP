@@ -23,7 +23,7 @@
 
 struct Module;
 typedef mlr::Array<Module*> ModuleL;
-typedef mlr::Array<RevisionedAccessGatedClass*> VariableL;
+typedef mlr::Array<RevisionedRWLock*> VariableL;
 
 //===========================================================================
 
@@ -55,17 +55,17 @@ struct System:ModuleL{
 
 
   //-- add variables
-  template<class T> Variable<T>* addVariable(const char *name){
-    Variable<T> *v = new Variable<T>(name);
+  template<class T> AccessData<T>* addVariable(const char *name){
+    AccessData<T> *v = new AccessData<T>(name);
     vars.append(v);
     return v;
   }
 
   //-- access vars
-  template<class T> Variable<T>* getVar(uint i){ return dynamic_cast<Variable<T>* >(vars.elem(i)); }
+  template<class T> AccessData<T>* getVar(uint i){ return dynamic_cast<AccessData<T>* >(vars.elem(i)); }
   template<class T> Access_typed<T> getConnectedAccess(const char* varName){
     Access_typed<T> acc(varName);
-    RevisionedAccessGatedClass *v = listFindByName(vars, varName);
+    RevisionedRWLock *v = listFindByName(vars, varName);
     if(v){ //variable exists -> link it
       acc.linkToVariable(v);
     }else{ //variable does not exist yet
@@ -108,7 +108,7 @@ struct System:ModuleL{
   void //connect();
 
   // [sort of private] check if Variable with variable_name and acc.type exists; if not, create one; then connect
-  RevisionedAccessGatedClass* connect(Access& acc, const char *variable_name);
+  RevisionedRWLock* connect(Access& acc, const char *variable_name);
 
   Graph graph() const;
   void write(ostream& os) const;
@@ -161,13 +161,13 @@ Engine& engine();
  */
 
 struct EventRecord{
-  const RevisionedAccessGatedClass *variable;
+  const RevisionedRWLock *variable;
   const Module *module;
   enum EventType{ read, write, stepBegin, stepEnd } type;
   uint revision;
   uint procStep;
   double time;
-  EventRecord(const RevisionedAccessGatedClass *v, const Module *m, EventType _type, uint _revision, uint _procStep, double _time):
+  EventRecord(const RevisionedRWLock *v, const Module *m, EventType _type, uint _revision, uint _procStep, double _time):
     variable(v), module(m), type(_type), revision(_revision), procStep(_procStep), time(_time){}
 };
 
@@ -196,19 +196,19 @@ struct EventController{
   EventController();
   ~EventController();
 
-  struct LoggerVariableData* getVariableData(const RevisionedAccessGatedClass *v);
+  struct LoggerVariableData* getVariableData(const RevisionedRWLock *v);
 
   //writing into a file
   void writeEventList(ostream& os, bool blockedEvents, uint max=0, bool clear=false);
   void dumpEventList();
 
   //methods called during write/read access from WITHIN the Variable
-  void queryReadAccess(RevisionedAccessGatedClass *v, const Module *p);
-  void queryWriteAccess(RevisionedAccessGatedClass *v, const Module *p);
-  void logReadAccess(const RevisionedAccessGatedClass *v, const Module *p);
-  void logReadDeAccess(const RevisionedAccessGatedClass *v, const Module *p);
-  void logWriteAccess(const RevisionedAccessGatedClass *v, const Module *p);
-  void logWriteDeAccess(const RevisionedAccessGatedClass *v, const Module *p);
+  void queryReadAccess(RevisionedRWLock *v, const Module *p);
+  void queryWriteAccess(RevisionedRWLock *v, const Module *p);
+  void logReadAccess(const RevisionedRWLock *v, const Module *p);
+  void logReadDeAccess(const RevisionedRWLock *v, const Module *p);
+  void logWriteAccess(const RevisionedRWLock *v, const Module *p);
+  void logWriteDeAccess(const RevisionedRWLock *v, const Module *p);
   void logStepBegin(const Module *p);
   void logStepEnd(const Module *p);
 

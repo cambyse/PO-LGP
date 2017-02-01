@@ -7,7 +7,7 @@ void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
   uint trajIter;
   for (trajIter=0;trajIter<2;trajIter++) {
 
-    ors::KinematicWorld world("scene");
+    mlr::KinematicWorld world("scene");
     arr q, qdot;
     world.getJointState(q, qdot);
 
@@ -18,7 +18,7 @@ void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
     refGoal(2) = refGoal(2) + trajIter*0.05;
 
     Task *c;
-    c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+    c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
     c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
     MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);

@@ -3,7 +3,7 @@
 #include <ctime>
 #include <stdlib.h>
 #include <cstdlib>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/util.h>
 #include <TL/robotManipulationDomain.h>
@@ -216,7 +216,7 @@ void showMovie(const char* filename) {
   initSimulator(start_config_path, take_movie);
   uintA objects;
   sim.getObjects(objects);
-  TermTypeL objects_types;
+  ObjectiveTypeL objects_types;
   sim.getTypes(objects_types, objects, TL::logicObjectManager::types);
   TL::logicObjectManager::setConstants(objects, objects_types);
   
@@ -778,7 +778,7 @@ void experiment_exploration() {
         initSimulator(file_ors, take_movie);
       else {
         initSimulator(files_ors(i_round), take_movie);
-        cout<<"Ors-file:  "<<files_ors(i_round)<<endl;
+        cout<<"Kin-file:  "<<files_ors(i_round)<<endl;
         
         if (STACK_EXPERIMENT  &&  representation == TL::RuleExplorer::relational) {
           ((TL::AbstractRuleExplorer*) explorer)->set_p_lower_bounds(p_lower_bound__noise_outcomeA(i_round), p_lower_bound__noise_outcome_in_default_ruleA(i_round));
@@ -787,7 +787,7 @@ void experiment_exploration() {
       
       uintA objects;
       sim.getObjects(objects);
-      TermTypeL objects_types;
+      ObjectiveTypeL objects_types;
       sim.getTypes(objects_types, objects, TL::logicObjectManager::types);
       uintA blocks;
       sim.getBlocks(blocks);
@@ -832,7 +832,7 @@ void experiment_exploration() {
       else {
         cout<<"from file \""<<files_reward(i_round)<<"\"... "<<flush;
         reward = TL::readReward(files_reward(i_round));
-        cout<<"Ors-file:  "<<files_reward(i_round)<<endl;
+        cout<<"Kin-file:  "<<files_reward(i_round)<<endl;
       }
       cout<<"done!"<<endl;
       cout<<"Candidate reward: ";  reward->writeNice(); cout<<endl;

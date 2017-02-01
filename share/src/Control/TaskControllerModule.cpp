@@ -16,7 +16,7 @@ struct sTaskControllerModule{
 struct sTaskControllerModule{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot)
+TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::KinematicWorld& world)
   : Thread("TaskControllerModule", .01)
   , s(NULL)
   , taskController(NULL)
@@ -27,6 +27,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   , verbose(false)
   , useDynSim(true)
   , compensateGravity(false)
+  , compensateFTSensors(false)
 {
 
   s = new sTaskControllerModule();
@@ -34,13 +35,45 @@ TaskControllerModule::TaskControllerModule(const char* _robot)
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 
-  robot = mlr::getParameter<mlr::String>("robot", _robot);
-  if(robot=="pr2") realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
-  else if(robot=="baxter") realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
-  else HALT("undefined robot '" <<robot <<"'");
+  robot = _robot;
+
+  //-- deciding on the kinematic model. Priority:
+  // 1) an explicit model is given as argument
+  // 2) modelWorld has been set before
+  // 3) the "robot" flag in cfg file
+  // 4) the "robot" argument here
+
+
+  if(&world) {
+    realWorld = world;
+    modelWorld.set()() = realWorld;
+  } else {
+    if(modelWorld.get()->q.N){ //modelWorld has been set before
+      realWorld = modelWorld.get();
+    }else{
+      if(robot=="none"){
+        robot = mlr::getParameter<mlr::String>("robot");
+      } else if(robot=="pr2") {
+        realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+      } else if(robot=="baxter") {
+        realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
+      } else {
+        HALT("robot not known!")
+      }
+      modelWorld.set()() = realWorld;
+    }
+  }
+
+  if(robot != "pr2" && robot != "baxter" && robot != "none") {
+    HALT("robot not known!")
+  }
+
   q0 = realWorld.q;
 
   qSign.set()() = zeros(q0.N);
+
+  fRInitialOffset = ARR(-0.17119, 0.544316, -1.2, 0.023718, 0.00802182, 0.0095804);
+
 }
 
 TaskControllerModule::~TaskControllerModule(){
@@ -50,15 +83,19 @@ void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
 void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
-  gc = new GravityCompensation(realWorld);
+  //gc = new GravityCompensation(realWorld);
   if(compensateGravity) {  
     //gc->loadBetas();
     gc->learnGCModel();
   }
+  if(compensateFTSensors) {
+    gc->learnFTModel();
+  }
 
-  gc->learnFTModel();
+  modelWorld.set()() = realWorld;
 
-  modelWorld.set() = realWorld;
+  makeConvexHulls(modelWorld.set()->shapes);
+ // modelWorld.set() = realWorld;
   taskController = new TaskController(modelWorld.set()(), false);
 
   modelWorld.get()->getJointState(q_model, qdot_model);
@@ -70,7 +107,7 @@ void TaskControllerModule::open(){
 #if 1
   modelWorld.writeAccess();
   modelWorld().gl().add(changeColor);
-  modelWorld().gl().add(ors::glDrawGraph, &realWorld);
+  modelWorld().gl().add(mlr::glDrawGraph, &realWorld);
   modelWorld().gl().add(changeColor2);
   modelWorld.deAccess();
 #endif
@@ -78,7 +115,7 @@ void TaskControllerModule::open(){
   if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
   if(!oldfashioned && !useRos) {
-    dynSim = new RTControllerSimulation(0.01, false, 0.);
+    dynSim = new RTControllerSimulation(realWorld, 0.01, false, 0.);
     dynSim->threadLoop();
   }
 }
@@ -88,7 +125,7 @@ void TaskControllerModule::step(){
   static uint t=0;
   t++;
 
-  ors::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
+  mlr::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
 
   //-- read real state
   if(useRos || !oldfashioned){
@@ -101,7 +138,7 @@ void TaskControllerModule::step(){
       qdot_real = ctrl_obs.get()->qdot;
       arr pr2odom = pr2_odom.get();
       if(q_real.N==realWorld.q.N && pr2odom.N==3){
-        q_real.refRange(trans->qIndex, trans->qIndex+2) = pr2odom;
+        q_real({trans->qIndex, trans->qIndex+2}) = pr2odom;
       }
 
       if(qLastReading.d0 > 0) {
@@ -125,7 +162,9 @@ void TaskControllerModule::step(){
 #endif
       qdot_real = zeros(q_real.N);
     }
+
     ctrl_q_real.set() = q_real;
+
     if(succ && q_real.N==realWorld.q.N && qdot_real.N==realWorld.q.N){ //we received a good reading
       realWorld.setJointState(q_real, qdot_real);
       if(syncModelStateWithReal){
@@ -169,8 +208,8 @@ void TaskControllerModule::step(){
   if(oldfashioned){
 
     //now operational space control
-    ctrlTasks.readAccess();
     modelWorld.writeAccess();
+    ctrlTasks.readAccess();
     taskController->tasks = ctrlTasks();
     for(uint tt=0;tt<10;tt++){
       arr a = taskController->operationalSpaceControl();
@@ -187,11 +226,11 @@ void TaskControllerModule::step(){
       taskController->setState(q_model, qdot_model);
     }
     if(verbose) taskController->reportCurrentState();
+    ctrlTasks.deAccess();
+    modelWorld.deAccess();
 
     //arr Kp, Kd, k, JCJ;
     //taskController->getDesiredLinAccLaw(Kp, Kd, k, JCJ);
-    modelWorld.deAccess();
-    ctrlTasks.deAccess();
 
     //Kp = .01 * JCJ;
     //Kp += .2*diag(ones(Kp.d0));
@@ -232,6 +271,8 @@ void TaskControllerModule::step(){
     ctrlTasks.readAccess();
     modelWorld.writeAccess();
     taskController->tasks = ctrlTasks();
+
+    modelWorld().stepSwift();
 
 #if 0
     arr u_bias, Kp, Kd;
@@ -294,24 +335,34 @@ void TaskControllerModule::step(){
 
     refs.q =  q_ref;
     refs.qdot = zeros(q_model.N);
-    refs.fL_gamma = gamma;
+    refs.fR_gamma = gamma;
     refs.Kp = Kp;
     refs.Kd = Kd;
     refs.Ki.clear();
-    refs.fL = fRef;
-    refs.fR = zeros(6);
-    refs.KiFTL = K_ft;
-    refs.J_ft_invL = J_ft_inv;
+    refs.fL = zeros(6);//fRef;
+    refs.fR = fRef;
+    refs.KiFTR = K_ft;
+    refs.J_ft_invR = J_ft_inv;
 
     if(compensateGravity) {
       //u_bias += gc->compensate(realWorld.getJointState(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint"
                                                // ,"l_wrist_flex_joint"});
-      u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_upper_arm_roll_joint","l_elbow_flex_joint","l_forearm_roll_joint","l_wrist_flex_joint"});
+      //u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"l_shoulder_pan_joint","l_shoulder_lift_joint","l_forearm_roll_joint","l_wrist_flex_joint"});
+      u_bias += gc->compensate(realWorld.getJointState(), qSign.get()(),{"r_shoulder_pan_joint"
+                                                                         ,"r_shoulder_lift_joint"
+                                                                         ,"r_forearm_roll_joint"
+                                                                         ,"r_wrist_flex_joint"
+                                                                          });
     }
     refs.u_bias = u_bias;
 
-    refs.fL_offset = gc->compensateFTL(realWorld.getJointState());
-    refs.fR_offset = gc->compensateFTR(realWorld.getJointState());
+    if(compensateFTSensors) {
+      refs.fL_offset = gc->compensateFTL(realWorld.getJointState());
+      refs.fR_offset = gc->compensateFTR(realWorld.getJointState()) + fRInitialOffset;
+    } else {
+      refs.fL_offset = zeros(6);
+      refs.fR_offset = zeros(6);
+    }
 
     refs.intLimitRatio = 0.7;
     refs.qd_filt = .99;

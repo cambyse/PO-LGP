@@ -78,12 +78,12 @@ real totalControlCost(const arr& q,soc::SocSystemAbstraction * sys){
 	return ctrlCsum;
 }
 
-ors::Vector NextRandom(ors::Vector posObst,ors::Vector last){
-	ors::Vector a,a0;
-	ors::Vector pos0 = posObst;pos0(2) = 0;//care only about radius of obstacle
+mlr::Vector NextRandom(mlr::Vector posObst,mlr::Vector last){
+	mlr::Vector a,a0;
+	mlr::Vector pos0 = posObst;pos0(2) = 0;//care only about radius of obstacle
 	bool bGood = false;
 	while(!bGood){
-		a = ors::Vector((rnd.uni()-0.5)*0.7,rnd.uni()*-0.25 - 0.6,rnd.uni()*0.3 + 0.85);
+		a = mlr::Vector((rnd.uni()-0.5)*0.7,rnd.uni()*-0.25 - 0.6,rnd.uni()*0.3 + 0.85);
 		a0 = a; a0(2) = 0;
 		if ((a0 - pos0).length() > 0.2 && (last - a).length() > 0.1)
 			bGood = true;
@@ -133,7 +133,7 @@ struct SecKinPlanner:public StepThread{
 	double costHack,controlcost;
 	//INPUT from dyn planner/hardware
 	arr q0, v0;
-	ors::Vector initTarget;
+	mlr::Vector initTarget;
 	uint bwdMsg_count;
 	SecKinPlanner(char *name, uint _T)
 	:StepThread(name)
@@ -189,7 +189,7 @@ struct SecKinPlanner:public StepThread{
 			sys->ors->setJointState(q[i]);
 			sys->ors->calcBodyFramesFromJoints();
 			V->updateState();
-			// ors::Vector temp = EndEffPos(sys->ors,q[i]);
+			// mlr::Vector temp = EndEffPos(sys->ors,q[i]);
 			// x(i,0) = temp(0);    x(i,1) = temp(1);    x(i,2) = temp(2);
 			x[i] = V->y;
 		}
@@ -201,12 +201,12 @@ struct SecKinPlanner:public StepThread{
 		return x;
 	}
 
-	ors::Vector EndEffPos(ors::KinematicWorld *C, const arr & q)
+	mlr::Vector EndEffPos(mlr::KinematicWorld *C, const arr & q)
 	{
 		C->setJointState(q);
 		C->calcBodyFramesFromJoints();
-		ors::Transformation f = C->getBodyByName("m9")->X;
-		f.appendTransformation(ors::Transformation().setText("<t( .0   .0 -.357)>"));
+		mlr::Transformation f = C->getBodyByName("m9")->X;
+		f.appendTransformation(mlr::Transformation().setText("<t( .0   .0 -.357)>"));
 		return f.pos;
 	}
 
@@ -405,7 +405,7 @@ struct SecKinPlanner:public StepThread{
 		file << " q0 set" << endl;
 		// aico.initMessages(); !!!! thi hacks my intiializations
 		activateAll(sys->vars, false);
-		ors::Shape *obj = sys->ors->getShapeByName(objShape);
+		mlr::Shape *obj = sys->ors->getShapeByName(objShape);
 		TaskVariable *V;
 		arr xtarget;
 		xtarget.setCarray(obj->X.pos.p, 3);
@@ -473,7 +473,7 @@ struct SecKinPlanner:public StepThread{
 		//		if (nMod == 2)
 		//			setKGraspGoals(target);
 	}
-	void UpdateExtState(ors::Body *b)
+	void UpdateExtState(mlr::Body *b)
 	{
 		int ind = b->index;
 		sys->ors->bodies(ind)->X.rot = b->X.rot; //thus give orientation as well, pos is given to external state
@@ -516,7 +516,7 @@ struct ThreadPlanner:public StepThread{
 	ThreadPlanner():StepThread("dynamicplanner"){};
 
 	//current position and velocity in m/s of body
-	void UpdateExtState(ors::Body * b){
+	void UpdateExtState(mlr::Body * b){
 		for(uint i = 0; i < helpers.N; i++)
 			helpers(i)-> UpdateExtState(b);
 	}

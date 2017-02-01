@@ -7,8 +7,7 @@ share/src/Core/array_instantiate.cxx
 share/src/Core/util.h
 share/src/Core/util_t.h
 share/src/Core/util.cpp
-share/src/Core/Makefile.gof
-share/src/Core/makefile
+share/src/Core/Makefile
 
 share/examples/Core/array
 

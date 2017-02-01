@@ -174,8 +174,8 @@ void MinEigModel::calcDensity(){
 void MinEigModel::glDraw(OpenGL& gl){
   if(eig.x_lo.N!=3) return;
   if(!convexHull.V.N){
-    ors::Quaternion rot;
-    rot.setDiff(Vector_z, ors::Vector(eig.x_lo));
+    mlr::Quaternion rot;
+    rot.setDiff(Vector_z, mlr::Vector(eig.x_lo));
     glPushMatrix();
     glTranslatef(mean(0), mean(1), mean(2));
     glRotate(rot);

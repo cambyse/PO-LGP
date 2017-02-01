@@ -67,8 +67,8 @@ struct ModelDrawer:GLDrawer{
   void glDraw(OpenGL &){
     uint c=0;
     for(MinEigModel &m:M) if(m.beta.N==3){
-      ors::Quaternion rot;
-      rot.setDiff(Vector_z, ors::Vector(m.beta));
+      mlr::Quaternion rot;
+      rot.setDiff(Vector_z, mlr::Vector(m.beta));
       arr mean=m.mu/m.n;
       glColor(c++);
       glPushMatrix();

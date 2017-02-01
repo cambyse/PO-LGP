@@ -1,6 +1,6 @@
 #include "pd_executor_module.h"
-#include <Ors/ors.h>
-#include <Motion/pr2_heuristics.h>
+#include <Kin/kin.h>
+
 
 
 //#ifdef WITH_ROS
@@ -17,7 +17,7 @@ PDExecutor::PDExecutor()
 {
   // fmc setup
   world.getJointState(q, qdot);
-  fmc.H_rate_diag = pr2_reasonable_W(world);
+  fmc.H_rate_diag = world.getHmetric();
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(2.3,10);
  // fmc.qitselfPD.active = false;
@@ -98,13 +98,13 @@ void PDExecutor::visualizeSensors()
 {
   floatA rh = poses_rh.get();
   if(rh.N) {
-    world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
-    world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
+    world.getShapeByName("sensor_rh_thumb")->rel.pos = mlr::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
+    world.getShapeByName("sensor_rh_index")->rel.pos = mlr::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
   }
   floatA lh = poses_lh.get();
   if(lh.N) {
-    world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
-    world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
+    world.getShapeByName("sensor_lh_thumb")->rel.pos = mlr::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
+    world.getShapeByName("sensor_lh_index")->rel.pos = mlr::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
   }
 }
 
@@ -153,9 +153,9 @@ void PDExecutor::step()
 
    CtrlMsg obs = ctrl_obs.get();
     cout<<obs.fL<<endl<<obs.fR<<endl;
- world.getShapeByName("endeffForceR")->rel.pos = ors::Vector(.01/*-obs.fR(0)*/,.01 /*-obs.fR(1)*/,.01 /*-obs.fR(2)*/);
+ world.getShapeByName("endeffForceR")->rel.pos = mlr::Vector(.01/*-obs.fR(0)*/,.01 /*-obs.fR(1)*/,.01 /*-obs.fR(2)*/);
 
-// world.getShapeByName("endeffForceR")->size[2]= ors::Vector(obs.fR(0), obs.fR(1), obs.fR(2)).length();
+// world.getShapeByName("endeffForceR")->size[2]= mlr::Vector(obs.fR(0), obs.fR(1), obs.fR(2)).length();
 
 
 /*  // only work with calibrated data
@@ -180,8 +180,8 @@ if(!init)
   // pos_shoulder_frame = pos + ARR(.4, -.1, 1.0);
   // effPosR->setTarget(pos_shoulder_frame);
   // x = clip(cal_pose_rh(0) * 1.2, 0., 1.2);
-  //ors::Vector baseV = world.getShapeByName("base_footprint")->rel.pos;
-  //ors::Quaternion baseQ = world.getShapeByName("base_footprint")->rel.rot;
+  //mlr::Vector baseV = world.getShapeByName("base_footprint")->rel.pos;
+  //mlr::Quaternion baseQ = world.getShapeByName("base_footprint")->rel.rot;
   x = cal_pose_rh(0) * 1;
  // clip(x, 0., 1.2);
   y = cal_pose_rh(1) * 1;
@@ -198,8 +198,8 @@ if(!init)
   };
   if(effOrientationR) effOrientationR->setTarget(quat);
 
-//  world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
-//  world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
+//  world.getShapeByName("XXXtargetR")->rel.pos = mlr::Vector(pos);
+//  world.getShapeByName("XXXtargetR")->rel.rot = mlr::Quaternion(quat);
 
   // avoid going behind your back
   // x = clip(cal_pose_lh(0) * 1.2, 0., 1.2);
@@ -219,8 +219,8 @@ if(!init)
   };
   if(effOrientationL) effOrientationL->setTarget(quat);
 
- // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
- // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
+ // world.getShapeByName("XXXtargetL")->rel.pos = mlr::Vector(pos);
+ // world.getShapeByName("XXXtargetL")->rel.rot = mlr::Quaternion(quat);
 
   // set gripper
   double cal_gripper;
@@ -285,7 +285,7 @@ void PDExecutor::initRos()
   cout << "** Waiting for ROS message on initial configuration.." << endl;
   // get robot state from the robot
   for (;;) {
-    ctrl_obs.var->waitForNextRevision();
+    ctrl_obs.data->waitForNextRevision();
     CtrlMsg obs = ctrl_obs.get();
 
     cout << "================================================\n"

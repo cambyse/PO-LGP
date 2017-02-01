@@ -104,7 +104,7 @@ int main(int argc, char** argv){
 
   cout <<registry() <<endl;
 
-  Variable *v = biros().getOrCreateVariable<Variable>("ximeaImage", NULL);
+  Variable *v = biros().getOrCreateAccessData<Variable>("ximeaImage", NULL);
 
   for (int images=0; images<1000 ;images++){
     // getting image from camera

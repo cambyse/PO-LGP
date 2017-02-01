@@ -14,29 +14,29 @@
 
 
 #pragma once
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 /// defines only a map (task space), not yet the costs in this space
 struct TaskMap {
   uint order;       ///< 0=position, 1=vel, etc
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1) = 0; ///< this needs to be overloaded
-  virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
-  virtual uint dim_phi(const ors::KinematicWorld& G) = 0; //the dimensionality of $y$
-  virtual uint dim_phi(const WorldL& G, int t){ return dim_phi(*G.last()); }
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& K, int t=-1) = 0; ///< this needs to be overloaded
+  virtual void phi(arr& y, arr& J, const WorldL& Ks, double tau, int t=-1); ///< if not overloaded this computes the generic pos/vel/acc depending on order
+  virtual uint dim_phi(const mlr::KinematicWorld& K) = 0; //the dimensionality of $y$
+  virtual uint dim_phi(const WorldL& Ks, int t){ return dim_phi(*Ks.last()); }
 
-  arr phi(const ors::KinematicWorld& G){ arr y; phi(y,NoArr,G); return y; }
+  arr phi(const mlr::KinematicWorld& K){ arr y; phi(y,NoArr,K); return y; }
 
-  VectorFunction vf(ors::KinematicWorld& G){
-    return [this, &G](arr& y, arr& J, const arr& x) -> void {
-      G.setJointState(x);
-      phi(y, J, G, -1);
+  VectorFunction vf(mlr::KinematicWorld& K){
+    return [this, &K](arr& y, arr& J, const arr& x) -> void {
+      K.setJointState(x);
+      phi(y, J, K, -1);
     };
   }
 
   TaskMap():order(0) {}
   virtual ~TaskMap() {}
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ NIY; }
+  virtual mlr::String shortTag(const mlr::KinematicWorld& K){ NIY; }
 
-  static TaskMap *newTaskMap(const Graph& specs, const ors::KinematicWorld& world); ///< creates a task map based on specs
-  static TaskMap *newTaskMap(const Node* specs, const ors::KinematicWorld& world); ///< creates a task map based on specs
+  static TaskMap *newTaskMap(const Graph& specs, const mlr::KinematicWorld& K); ///< creates a task map based on specs
+  static TaskMap *newTaskMap(const Node* specs, const mlr::KinematicWorld& K); ///< creates a task map based on specs
 };

@@ -1,5 +1,5 @@
 //#include <System/engine.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <RosCom/roscom.h>
 
@@ -16,7 +16,7 @@ int main(int argc, char** argv){
 
   threadOpenModules(true);
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
 
   bool useRos = true;
   initialSyncJointStateWithROS(world, ctrl_obs, useRos);

@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-#include <FOL/relationalMachine.h>
+#include <Logic/relationalMachine.h>
 #include <Core/thread.h>
 #include <RosCom/roscom.h>
 #include <Actions/RelationalMachineModule.h>

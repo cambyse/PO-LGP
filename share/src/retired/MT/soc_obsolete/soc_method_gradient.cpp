@@ -15,13 +15,13 @@
     -----------------------------------------------------------------  */
 
 #include "soc.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Optim/optimization.h>
 #ifdef MLR_HSL
 #  include "hslModule.h"
 #endif
 
-double attractorCostAndGradient(soc::SocSystemAbstraction& soci, arr& dCdvia, arr& q, const ors::Spline& spline, const arr& via, bool costOnly){ NIY; }
+double attractorCostAndGradient(soc::SocSystemAbstraction& soci, arr& dCdvia, arr& q, const mlr::Spline& spline, const arr& via, bool costOnly){ NIY; }
 
 //===========================================================================
 
@@ -31,7 +31,7 @@ struct SocProblem:public OptimizationProblem{
   soc::SocSystemAbstraction *sys;
   ostream *os;
   OpenGL *gl;
-  ors::Spline *spline;
+  mlr::Spline *spline;
   uint display;
 
   SocProblem(){ count=0; }
@@ -116,7 +116,7 @@ void soc::gradientOptimization(SocSystemAbstraction& soci,
   bool task_spline=false;
   //if(gradient_method==Attractor) task_spline=true;
 
-  ::ors::Spline spline;
+  ::mlr::Spline spline;
   if(spline_points){
     uint K=spline_points;
     spline.setUniformNonperiodicBasis(T, K, spline_degree);

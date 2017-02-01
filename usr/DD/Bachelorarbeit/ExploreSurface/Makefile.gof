@@ -1,0 +1,9 @@
+BASE = ../../../../share
+
+
+OBJS = main.o
+PLIB = 1
+ROS = 1
+DEPEND = Core RosCom Control Gui Actions Hardware_gamepad Ors Motion Geo Roopi Algo Optim
+
+include $(BASE)/build/generic.mk

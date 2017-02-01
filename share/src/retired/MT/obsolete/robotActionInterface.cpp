@@ -8,7 +8,7 @@
 #include "robot.h"
 #include "specialTaskVariables.h"
 
-void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
+void reattachShape(mlr::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape);
 
 //private space:
 struct sRobotActionInterface {
@@ -120,7 +120,7 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
   TV.updateState(*s->robotProcesses.ctrl.sys.ors);
   
   DefaultTaskVariable TValign("align", *s->robotProcesses.ctrl.sys.ors, zalignTVT, shapeName, NULL, 0);
-  ors::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
+  mlr::Vector vecGoalOrs; vecGoalOrs.set(vecGoal.p);
   TValign.jrel.rot.setDiff(Vector_z, vecGoalOrs);
   TValign.setGainsAsNatural(2., 1., false);
   TValign.y_prec = 1e1;  TValign.y_target = ARR(1.);
@@ -147,11 +147,11 @@ void RobotActionInterface::reachAndAlign(const char* shapeName, const arr& posGo
   s->robotProcesses.ctrl.change_task(Stop::a());
 }
 
-void RobotActionInterface::setMesh(const char* shapeName, const ors::Mesh& mesh){
-  ors::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
-  ors::Shape *shape = ors->getShapeByName(shapeName);
+void RobotActionInterface::setMesh(const char* shapeName, const mlr::Mesh& mesh){
+  mlr::KinematicWorld *ors = s->robotProcesses.ctrl.sys.ors;
+  mlr::Shape *shape = ors->getShapeByName(shapeName);
   shape->mesh = mesh;
-  shape->type = ors::meshST;
+  shape->type = mlr::ST_mesh;
   if(s->robotProcesses.openGui){
     s->robotProcesses.gui.ors->copyShapesAndJoints(*ors);
     s->robotProcesses.gui.ors2->copyShapesAndJoints(*ors);
@@ -168,7 +168,7 @@ void RobotActionInterface::perceiveObjects(PerceptionModule perc){
         if(perc.output->objects(0).found>5 &&
             perc.output->objects(1).found>5 &&
             perc.output->objects(2).found>5){
-          ors::Shape *sh=s->robotProcesses.ctrl.ors.getShapeByName("cyl1");
+          mlr::Shape *sh=s->robotProcesses.ctrl.ors.getShapeByName("cyl1");
           sh->rel.pos.set(perc.output->objects(0).center3d.p);
           sh->rel.pos -= sh->body->X.pos;
           sh=s->robotProcesses.ctrl.ors.getShapeByName("cyl2");
@@ -375,8 +375,8 @@ void RobotActionInterface::graspISF(){
   */
 }
 
-void reattachShape(ors::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape){
-  ors::Shape *obj  = ors.getShapeByName(objShape);
+void reattachShape(mlr::KinematicWorld& ors, SwiftInterface *swift, const char* objShape, const char* toBody, const char* belowShape){
+  mlr::Shape *obj  = ors.getShapeByName(objShape);
   obj->body->shapes.removeValue(obj);
   obj->body = ors.getBodyByName(toBody);
   obj->ibody = obj->body->index;

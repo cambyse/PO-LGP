@@ -14,7 +14,7 @@
 #include "traj_factory.h"
 #include "task_door.h"
 #include "src/motion_interface.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 
 
@@ -82,9 +82,9 @@ public:
 
     double ACTION_MAX;
     double ACTION_MIN;
-    ors::KinematicWorld *world;
+    mlr::KinematicWorld *world;
 
-    RKHSPol(ors::KinematicWorld& world_, bool useRos, double duration, arr Xdemo,arr FLdemo, arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations);
+    RKHSPol(mlr::KinematicWorld& world_, bool useRos, double duration, arr Xdemo,arr FLdemo, arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations);
 
     void setStart(const arr &start);
 

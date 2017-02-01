@@ -351,9 +351,9 @@ void relational::RBF_Grounding::write() const {
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 //
-// ors::KinematicWorld interface
+// mlr::KinematicWorld interface
 
-void relational::getFeatureVector(arr& f, const ors::KinematicWorld& C, uint obj) {
+void relational::getFeatureVector(arr& f, const mlr::KinematicWorld& C, uint obj) {
   f.clear();
   f.resize(4);
   f(0) = C.bodies(obj)->X.pos.x;  // position
@@ -367,7 +367,7 @@ void relational::getFeatureVector(arr& f, const ors::KinematicWorld& C, uint obj
 }
 
 
-void relational::getFeatureVectors(mlr::Array< arr >& fs, const ors::KinematicWorld& C, const uintA& objs) {
+void relational::getFeatureVectors(mlr::Array< arr >& fs, const mlr::KinematicWorld& C, const uintA& objs) {
   fs.clear();
   uint i;
   FOR1D(objs, i) {
@@ -378,7 +378,7 @@ void relational::getFeatureVectors(mlr::Array< arr >& fs, const ors::KinematicWo
 }
 
 
-void relational::calculateSymbols(LitL& lits, const mlr::Array<relational::GroundedSymbol*>& sgs, ors::KinematicWorld* C) {
+void relational::calculateSymbols(LitL& lits, const mlr::Array<relational::GroundedSymbol*>& sgs, mlr::KinematicWorld* C) {
   uint DEBUG = 0;
   if (DEBUG>0) {cout<<"GroundedSymbol::calculateSymbols [START]"<<endl;}
   
@@ -388,7 +388,7 @@ void relational::calculateSymbols(LitL& lits, const mlr::Array<relational::Groun
   for (i=1;;i++) {
     ss.str("");
     ss << "o" << i;
-    ors::Body* n = C->getBodyByName(ss.str().c_str());
+    mlr::Body* n = C->getBodyByName(ss.str().c_str());
     if (n==NULL)
       break;
     obj_ids.append(n->index);
@@ -447,7 +447,7 @@ bool relational::ContinuousState::operator!=(const ContinuousState& other) const
   return !(*this==other);
 }
 
-relational::ContinuousState* relational::getContinuousState(const ors::KinematicWorld& C, const uintA& objects) {
+relational::ContinuousState* relational::getContinuousState(const mlr::KinematicWorld& C, const uintA& objects) {
   mlr::Array< arr > objects_data;
   relational::getFeatureVectors(objects_data, C, objects);
   relational::ContinuousState* cont_state = new relational::ContinuousState;

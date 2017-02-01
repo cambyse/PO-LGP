@@ -39,7 +39,7 @@ void Monitor::open(){
   //-- opengl
   gl->add(glStandardScene,0);
   //gl->add(glDrawControlLoop,this);
-  gl->add(ors::glDrawGraph,&ors);
+  gl->add(mlr::glDrawGraph,&ors);
   gl->camera.setPosition(7.,-0.,2.);
   gl->camera.focus(0,0,.8);
   gl->update();

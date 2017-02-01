@@ -8,41 +8,41 @@
 #undef MIN
 #undef MAX
 
-struct RgbImage:Variable {
+struct RgbImage:AccessData {
   byteA rgb;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=rgb; deAccess(p); }
-  RgbImage():Variable("RgbImage") {}
+  RgbImage():AccessData("RgbImage") {}
 };
 
-struct GrayImage:Variable {
+struct GrayImage:AccessData {
   byteA gray;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=gray; deAccess(p); }
-  GrayImage():Variable("GrayImage") {}
+  GrayImage():AccessData("GrayImage") {}
 };
 
-struct HoughLines:Variable {
+struct HoughLines:AccessData {
   std::vector<cv::Vec4i> lines;
   byteA display;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
-  HoughLines():Variable("HoughLines") {}
+  HoughLines():AccessData("HoughLines") {}
 };
 
-struct PatchImage:Variable {
+struct PatchImage:AccessData {
   uintA patching; //for each pixel an integer
   arr pch_cen;    //patch centers
   uintA pch_edges; //patch Delauney edges
   floatA pch_rgb; //patch mean colors
   byteA display;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
-  PatchImage():Variable("PatchImage") {}
+  PatchImage():AccessData("PatchImage") {}
 };
 
-struct SURFfeatures:Variable {
+struct SURFfeatures:AccessData {
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
   byteA display;
   void get_dispImg(byteA& img,Process *p) { writeAccess(p); img=display; deAccess(p); }
-  SURFfeatures():Variable("SURFfeatures") {};
+  SURFfeatures():AccessData("SURFfeatures") {};
 };
 
 #endif

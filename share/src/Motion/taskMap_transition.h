@@ -25,10 +25,10 @@ struct TaskMap_Transition:TaskMap {
   arr H_rate_diag;            ///< cost rate (per TIME, not step), given as diagonal of the matrix H
   double H_rate;  ///< cost rate (per TIME, not step), given as scalar, will be multiplied by Joint->H (given in ors file)
   bool fixJointsOnly;
-  TaskMap_Transition(const ors::KinematicWorld& G, bool fixJointsOnly=false);
+  TaskMap_Transition(const mlr::KinematicWorld& G, bool fixJointsOnly=false);
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t=-1);
-  virtual void phi(arr& y, arr& J, const ors::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
-  virtual uint dim_phi(const ors::KinematicWorld& G){ return G.getJointStateDimension(); }
+  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1){ HALT("can only be of higher order"); }
+  virtual uint dim_phi(const mlr::KinematicWorld& G){ return G.getJointStateDimension(); }
   virtual uint dim_phi(const WorldL& G, int t);
-  virtual mlr::String shortTag(const ors::KinematicWorld& G){ return STRING("Transition_"<<(fixJointsOnly?"FIX":"") <<"_pos" <<posCoeff <<"_vel" <<velCoeff<<"_acc"<<accCoeff); }
+  virtual mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("Transition_"<<(fixJointsOnly?"FIX":"") <<"_pos" <<posCoeff <<"_vel" <<velCoeff<<"_acc"<<accCoeff); }
 };

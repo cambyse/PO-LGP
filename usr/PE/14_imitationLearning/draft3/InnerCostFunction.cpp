@@ -1,12 +1,12 @@
 #include "InnerCostFunction.h"
 
-SimpleICF::SimpleICF(ors::KinematicWorld world) {
-    TaskMap *tm = new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.));
+SimpleICF::SimpleICF(mlr::KinematicWorld world) {
+    TaskMap *tm = new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.));
     Task *c = new Task(tm);
     c->name = "pos_right_hand";
     taskCosts.append(c);
 
-    TaskMap *tm2 = new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 1., 0.));
+    TaskMap *tm2 = new TaskMap_Default(vecTMT,world,"endeff", mlr::Vector(0., 1., 0.));
     Task *c2 = new Task(tm2);
     c2->name = "vec_right_hand";
     taskCosts.append(c2);
@@ -19,7 +19,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
     numParam = 3;
   }
 
-  void SimpleICF::setParam(const arr &param,const ors::KinematicWorld &world,const uint T) {
+  void SimpleICF::setParam(const arr &param,const mlr::KinematicWorld &world,const uint T) {
     CHECK_EQ(param.d0,numParam,"Wrong parameter dimension");
     // pos right hand task
     taskCosts(0)->prec.resize(T+1).setZero();
@@ -48,9 +48,9 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
 //      taskCosts.append();
 //    }
 //    //  Task *c;
-//    //  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+//    //  c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
 //    //  c->setCostSpecs(MP.T, MP.T, refGoal, param(0));
-//    //  c = MP.addTask("vec_right_hand", new TaskMap_Default(vecTMT,world,"endeff", ors::Vector(0., 1., 0.)));
+//    //  c = MP.addTask("vec_right_hand", new TaskMap_Default(vecTMT,world,"endeff", mlr::Vector(0., 1., 0.)));
 //    //  c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
 //    //  c = MP.addTask("final_vel", new TaskMap_qItself());
 //    //  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));
@@ -63,7 +63,7 @@ SimpleICF::SimpleICF(ors::KinematicWorld world) {
 ////    }
 ////  }
 
-//  void setTarget(const ors::KinematicWorld &world) {
+//  void setTarget(const mlr::KinematicWorld &world) {
 
 //  }
 //};

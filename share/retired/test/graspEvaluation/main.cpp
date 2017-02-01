@@ -1,12 +1,12 @@
 #define MLR_IMPLEMENT_TEMPLATES
 #include <Gui/opengl.h>
-#include <Ors/ors.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin.h>
+#include <Kin/kin_physx.h>
 
 #include "graspEvaluation.h"
 
 void evaluate(){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   OpenGL gl;
   init(ors, gl, "test.ors");
   gl.update();

@@ -2,13 +2,13 @@
 #include <Gui/opengl.h>
 
 #include <Motion/motion.h>
-#include <Motion/motionHeuristics.h>
+//#include <Motion/motionHeuristics.h>
 #include <Motion/taskMaps.h>
 //
 //
 //
 #include <Optim/optimization.h>
-#include <Ors/ors_swift.h>
+#include <Kin/kin_swift.h>
 #include "../src/motion_factory.h"
 #include "../src/ikmo.h"
 

@@ -5,10 +5,10 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <RosCom/roscom.h>
 //#include <System/engine.h>
-#include <Motion/pr2_heuristics.h>
+
 #include "src/plotUtil.h"
 #include "src/traj_factory.h"
 #include "src/task_door.h"
@@ -28,7 +28,7 @@ int main(int argc,char **argv){
   mlr::String folder = mlr::getParameter<mlr::String>("folder");
 
 
-  ors::KinematicWorld world(STRING("model.kvg"));
+  mlr::KinematicWorld world(STRING("model.kvg"));
   DoorTask *task = new DoorTask(world);
   Motion_Interface *mi;
   if (useRos) mi = new Motion_Interface(world);

@@ -37,7 +37,7 @@ void testActionMachine()
 
     // activity.machine->waitForActionCompletion(a3);
 
-    // auto a4 = activity.machine->add(new PushForce("endeffR", ors::Vector(15, 0, 0), ARR(2, 0, 0)))
+    // auto a4 = activity.machine->add(new PushForce("endeffR", mlr::Vector(15, 0, 0), ARR(2, 0, 0)))
     // activity.machine->waitForActionCompletion(a4);
   // }
   threadCloseModules();
@@ -198,7 +198,7 @@ public:
 
   void run()
   {
-    ors::Transformation pose; pose.setZero();
+    mlr::Transformation pose; pose.setZero();
     mlr::wait(1.);
     // align
     pose = activity.machine->s->taskController.world.getShapeByName("endeffL")->X;

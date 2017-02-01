@@ -7,10 +7,10 @@
 
 void testNaiveBayesClassificator() {
   mlr::Array<arr> traindata;
-  traindata.append(ARR(0.61, 0.));
-  traindata.append(ARR(0.44, 0.));
-  traindata.append(ARR(0., 0.67));
-  traindata.append(ARR(0., 0.76));
+  traindata.append({0.61, 0.});
+  traindata.append({0.44, 0.});
+  traindata.append({0., 0.67});
+  traindata.append({0., 0.76});
 
   mlr::Array<int> classes;
   classes.resize(4);
@@ -24,12 +24,12 @@ void testNaiveBayesClassificator() {
   c.setTrainingsData(traindata, classes);
 
   mlr::Array<arr> testdata;
-  testdata.append(ARR(0., 0.7));
+  testdata.append({0., 0.7});
   testdata.reshape(1,1);
   int cl = c.classify(testdata);
   std::cout << "class of (0, 0.7): " << cl << std::endl;
 
-  testdata(0,0) = ARR(0.5, 0.);
+  testdata(0,0) = {0.5, 0.};
   cl = c.classify(testdata);
   std::cout << "class of (0.5, 0): " << cl << std::endl;
   
@@ -77,10 +77,10 @@ void testBayesOnRealData() {
 
 void testSampling() {
   mlr::Array<arr> traindata;
-  traindata.append(ARR(0.61, 0.));
-  traindata.append(ARR(0.44, 0.));
-  traindata.append(ARR(0., 0.67));
-  traindata.append(ARR(0., 0.76));
+  traindata.append({0.61, 0.});
+  traindata.append({0.44, 0.});
+  traindata.append({0., 0.67});
+  traindata.append({0., 0.76});
 
   mlr::Array<int> classes;
   classes.resize(4);

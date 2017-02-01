@@ -22,21 +22,21 @@
 #include "towerProblem.h"
 
 #include <Motion/motion.h>
-#include <FOL/fol_mcts_world.h>
+#include <Logic/fol_mcts_world.h>
 
 //===========================================================================
 
 struct LogicGeometricProgram{
-  ors::KinematicWorld world_root;
+  mlr::KinematicWorld world_root;
   FOL_World fol_root;
 
   LogicGeometricProgram(){}
   ~LogicGeometricProgram(){}
 
-  virtual bool isFeasible(const ors::KinematicWorld& world, const Graph& symbols) = 0;
-  virtual double psi(const ors::KinematicWorld& world, const Graph& symbols) = 0;
-  virtual MotionProblem& getPathProblem(const ors::KinematicWorld& world, const Graph& symbols) = 0;
-  virtual ConstrainedProblem& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols) = 0;
+  virtual bool isFeasible(const mlr::KinematicWorld& world, const Graph& symbols) = 0;
+  virtual double psi(const mlr::KinematicWorld& world, const Graph& symbols) = 0;
+  virtual MotionProblem& getPathProblem(const mlr::KinematicWorld& world, const Graph& symbols) = 0;
+  virtual ConstrainedProblem& getEffPoseProblem(const mlr::KinematicWorld& world, const Graph& symbols) = 0;
 };
 
 //===========================================================================
@@ -54,10 +54,10 @@ struct TowerProblem_new:LogicGeometricProgram{
   ~TowerProblem_new(){}
   void setRandom();
 
-  bool isFeasible(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  double psi(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  MotionProblem& getPathProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  ConstrainedProblem& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+  bool isFeasible(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
+  double psi(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
+  MotionProblem& getPathProblem(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
+  ConstrainedProblem& getEffPoseProblem(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
 };
 
 //===========================================================================
@@ -69,10 +69,10 @@ struct SticksProblem:LogicGeometricProgram{
   }
   ~SticksProblem(){}
 
-  bool isFeasible(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  double psi(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  MotionProblem& getPathProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
-  ConstrainedProblem& getEffPoseProblem(const ors::KinematicWorld& world, const Graph& symbols){ NIY }
+  bool isFeasible(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
+  double psi(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
+  MotionProblem& getPathProblem(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
+  ConstrainedProblem& getEffPoseProblem(const mlr::KinematicWorld& world, const Graph& symbols){ NIY }
 };
 
 

@@ -1,6 +1,6 @@
 #include "pd_executor_module.h"
-#include <Ors/ors.h>
-#include <Motion/pr2_heuristics.h>
+#include <Kin/kin.h>
+
 
 // ############################################################################
 // Executor
@@ -12,7 +12,7 @@ PDExecutor::PDExecutor()
 {
   // fmc setup
   world.getJointState(q, qdot);
-  fmc.H_rate_diag = pr2_reasonable_W(world);
+  fmc.H_rate_diag = world.getHmetric();
   fmc.qitselfPD.y_ref = q;
   fmc.qitselfPD.setGains(.3, 10.);
 
@@ -65,17 +65,17 @@ PDExecutor::PDExecutor()
 void PDExecutor::visualizeSensors() {
   arrf rh = poses_rh.get();
   if(rh.N) {
-    // world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
-    // world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
-    world.getShapeByName("sensor_rh_thumb")->rel.pos = ors::Vector(rh[0]);
-    world.getShapeByName("sensor_rh_index")->rel.pos = ors::Vector(rh[1]);
+    // world.getShapeByName("sensor_rh_thumb")->rel.pos = mlr::Vector(rh(0, 0), rh(0, 1), rh(0, 2));
+    // world.getShapeByName("sensor_rh_index")->rel.pos = mlr::Vector(rh(1, 0), rh(1, 1), rh(1, 2));
+    world.getShapeByName("sensor_rh_thumb")->rel.pos = mlr::Vector(rh[0]);
+    world.getShapeByName("sensor_rh_index")->rel.pos = mlr::Vector(rh[1]);
   }
   arrf lh = poses_lh.get();
   if(lh.N) {
-    // world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
-    // world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
-    world.getShapeByName("sensor_lh_thumb")->rel.pos = ors::Vector(lh[0]);
-    world.getShapeByName("sensor_lh_index")->rel.pos = ors::Vector(lh[1]);
+    // world.getShapeByName("sensor_lh_thumb")->rel.pos = mlr::Vector(lh(0, 0), lh(0, 1), lh(0, 2));
+    // world.getShapeByName("sensor_lh_index")->rel.pos = mlr::Vector(lh(1, 0), lh(1, 1), lh(1, 2));
+    world.getShapeByName("sensor_lh_thumb")->rel.pos = mlr::Vector(lh[0]);
+    world.getShapeByName("sensor_lh_index")->rel.pos = mlr::Vector(lh[1]);
   }
 }
 
@@ -129,8 +129,8 @@ void PDExecutor::step() {
   };
   if(effOrientationR) effOrientationR->setTarget(quat);
 
-  // world.getShapeByName("XXXtargetR")->rel.pos = ors::Vector(pos);
-  // world.getShapeByName("XXXtargetR")->rel.rot = ors::Quaternion(quat);
+  // world.getShapeByName("XXXtargetR")->rel.pos = mlr::Vector(pos);
+  // world.getShapeByName("XXXtargetR")->rel.rot = mlr::Quaternion(quat);
 
   // avoid going behind your back
   x = cal_pose_lh(0) * 1.2;
@@ -149,8 +149,8 @@ void PDExecutor::step() {
   };
   if(effOrientationL) effOrientationL->setTarget(quat);
 
-  // world.getShapeByName("XXXtargetL")->rel.pos = ors::Vector(pos);
-  // world.getShapeByName("XXXtargetL")->rel.rot = ors::Quaternion(quat);
+  // world.getShapeByName("XXXtargetL")->rel.pos = mlr::Vector(pos);
+  // world.getShapeByName("XXXtargetL")->rel.rot = mlr::Quaternion(quat);
 
   // set gripper
   double cal_gripper;
@@ -206,7 +206,7 @@ void PDExecutor::initRos() {
   cout << "** Waiting for ROS message on initial configuration.." << endl;
   // get robot state from the robot
   for (;;) {
-    ctrl_obs.var->waitForNextRevision();
+    ctrl_obs.data->waitForNextRevision();
     CtrlMsg obs = ctrl_obs.get();
 
     cout << "================================================\n"

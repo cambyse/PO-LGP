@@ -8,7 +8,7 @@
 #ifndef ORSIMITATE_H_
 #define ORSIMITATE_H_
 
-//#include "ors.h"
+//#include "kin.h"
 #include <MT/robot.h>
 
 struct ImitateTask:public TaskAbstraction{
@@ -20,16 +20,16 @@ struct ImitateTask:public TaskAbstraction{
 };
 
 struct ImitateTaskVariable:public TaskVariable{
-	mlr::Array<ors::Shape*> landmarks;
+	mlr::Array<mlr::Shape*> landmarks;
 	arr lastFeature,lastJoint;
 	virtual void userUpdate();
-	ImitateTaskVariable(const char* _name, ors::KinematicWorld& _ors);
+	ImitateTaskVariable(const char* _name, mlr::KinematicWorld& _ors);
 	int nCounter;
 	int nIterations;//when finding argin and using some last state
 };
 
 
-void PlanTrajectory(ors::KinematicWorld * ors,RobotProcessGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
+void PlanTrajectory(mlr::KinematicWorld * ors,RobotProcessGroup & robot,GraspObject* objM){//imitate variable and collisions, plan
 	soc::SocSystem_Ors sys;
 
 	uint T=mlr::getParameter<uint>("T");
@@ -90,7 +90,7 @@ void PlanTrajectory(ors::KinematicWorld * ors,RobotProcessGroup & robot,GraspObj
 	arr best = aico.q;
 	cout << " o1" << sys.ors->getBodyByName("o1")->X.pos << endl;
 	OpenGL gl;// = glold;
-	gl.add(ors::glDrawGraph,sys.ors);
+	gl.add(mlr::glDrawGraph,sys.ors);
 	gl.add(glDrawMeshObject,objM);
 	gl.setClearColors(1.,1.,1.,1.);
 	gl.camera.setPosition(.0,0.,10.);

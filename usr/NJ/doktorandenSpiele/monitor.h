@@ -6,7 +6,7 @@
 #  include "gui_ui.h"
 #endif
 #include <MT/ipc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 
 struct RobotController ;
 
@@ -17,7 +17,7 @@ NEVER DO THIS() forcing compiler error!
 #endif
   bool useOpengl,logData,plotData;
   OpenGL *gl;
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   RobotController  *ctrl;
   bool isOpen;
 	uint width,height;

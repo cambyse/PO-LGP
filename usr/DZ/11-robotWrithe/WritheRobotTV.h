@@ -1,4 +1,4 @@
-#include "MT/ors.h"
+#include "MT/kin.h"
 #include <sstream>
 
 
@@ -7,7 +7,7 @@ struct WritheTaskVariable:public DefaultTaskVariable{
   int param;
   int segments;
   
-  WritheTaskVariable(const char* _name,ors::KinematicWorld& _ors,
+  WritheTaskVariable(const char* _name,mlr::KinematicWorld& _ors,
                                          const char* _obj_name,
 				         int _segments,
 				         int _param);

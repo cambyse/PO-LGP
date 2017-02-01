@@ -1,4 +1,4 @@
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/opengl.h>
 #include <MT/soc.h>
 #include <MT/socSystem_ors.h>
@@ -11,20 +11,20 @@ void drawEnv(void*){
   glStandardLight(NULL);
   //glDrawFloor(4.,1,1,1);
 }
-void init(ors::KinematicWorld& ors,OpenGL& gl,const char *filename){
+void init(mlr::KinematicWorld& ors,OpenGL& gl,const char *filename){
   ors.init(filename);
   
   gl.add(drawEnv,0);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.setClearColors(1.,1.,1.,1.);
   //gl.setPosition(.0,0.,10.);
   //gl.focus(.0,0,0);
 }
 
-void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,uint T){
+void defineReachControlVariables(SocSystem_Ors& soci,mlr::KinematicWorld& ors,uint T){
   //set task variables
   TaskVariable *x0 = new TaskVariable("finger-tip",ors,posTVT ,"effector","<t(0 0 .2)>",0,0,0);
-  TaskVariable *x1 = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *x1 = new TaskVariable("collision", ors,collTVT,0,0,0,0,{.05});
   soci.setTaskVariables({x0,x1});
 
   double midPrec,endPrec,balPrec,colPrec;
@@ -43,7 +43,7 @@ void defineReachControlVariables(SocSystem_Ors& soci,ors::KinematicWorld& ors,ui
 }
 
 void TEST(Soc){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   SocSystem_Ors soci;
@@ -67,7 +67,7 @@ void TEST(Soc){
 }
 
 /*struct soc::OrsSocWorkspace{
-  ors::KinematicWorld *ors;
+  mlr::KinematicWorld *ors;
   SwiftInterface *swift;
   ControlVariableList CVlist;
   
@@ -78,7 +78,7 @@ void TEST(Soc){
 };*/
 
 void TEST(Gradients){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   SocSystem_Ors soci;
@@ -95,7 +95,7 @@ void TEST(Gradients){
   TaskVariable *n2  = new TaskVariable("normal2",ors,zoriTVT,"fingb2","<d( 90 1 0 0)>",0,0,0);
   TaskVariable *p1  = new TaskVariable("pos1",ors,posTVT,"finga2","<t(0 -.065 .02)>",0,0,0);
   TaskVariable *p2  = new TaskVariable("pos2",ors,posTVT,"fingb2","<t(0  .065 .02)>",0,0,0);
-  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,{.05});
   soci.setTaskVariables({arm,n1,n2,p1,p2,col});
   
   //n1->setGains(.001,0.);
@@ -153,7 +153,7 @@ void TEST(Gradients){
 }
 
 void TEST(Plan){
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   OpenGL gl;
   SocSystem_Ors soci;
@@ -179,10 +179,10 @@ void TEST(Plan){
   TaskVariable *za = new TaskVariable("align",ors,zalignTVT,"finga2","<d(-90 1 0 0)>","fingb2","<d( 90 1 0 0)>",0);
   TaskVariable *p1 = new TaskVariable("pos1",ors,posTVT,"finga2","<t(0 -.065 .02)>",0,0,0);
   TaskVariable *p2 = new TaskVariable("pos2",ors,posTVT,"fingb2","<t(0  .065 .02)>",0,0,0);
-  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,ARR(.05));
+  TaskVariable *col = new TaskVariable("collision", ors,collTVT,0,0,0,0,{.05});
   soci.setTaskVariables({n1,n2,za,p1,p2,col});
 
-  //n1->x_target = -n2->x; //ARR(1.,0.,0.);
+  //n1->x_target = -n2->x; //{1.,0.,0.};
   //n2->x_target = -n1->x;
   arr target;
   target.setCarray(ors.getBodyByName("target")->X.pos.p,3);

@@ -23,7 +23,7 @@ int main(int argc, char** argv){
     baxter.waitConv({posL, posR, alignL, alignR});
 
     baxter.reportPerceptionObjects();
-    ors::Vector closest_vec = baxter.arPose();
+    mlr::Vector closest_vec = baxter.arPose();
 
     if (closest_vec.length() == 0)
       closest_vec.set(0.5, 0.6, 1);

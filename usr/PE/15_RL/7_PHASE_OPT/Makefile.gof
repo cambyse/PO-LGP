@@ -1,7 +1,0 @@
-BASE = ../../../../share
-
-OBJS = main.o ../src/phase_optimization.o
-DEPEND = Core Algo Ors Gui Motion Optim Geo
-PTHREAD = 1
-PHYSX = 1
-include $(BASE)/build/generic.mk

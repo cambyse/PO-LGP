@@ -14,7 +14,7 @@ void Coop::prepareKin(){
 
   { //grab desired final configuration & create initial configuration, placing objects far on the table
 
-    for(ors::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
+    for(mlr::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
 
     //memorize their relative positionings
     targetAbs.resize(box.N);
@@ -22,7 +22,7 @@ void Coop::prepareKin(){
     for(uint i=0;i<box.N;i++){
       targetAbs(i) = box(i)->X;
       for(uint j=i+1;j<box.N;j++){
-        ors::Transformation rel;
+        mlr::Transformation rel;
         rel.setDifference(box(i)->X, box(j)->X);
         targetRel(i,j) = rel;
         if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_front") fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
@@ -34,8 +34,8 @@ void Coop::prepareKin(){
 
     //position them on the left table
     double xpos = -.6;
-    for(ors::Body *b:box){
-      ors::Joint *j = b->inLinks.scalar();
+    for(mlr::Body *b:box){
+      mlr::Joint *j = b->inLinks.scalar();
       tableC->outLinks.removeValue(j);
       j->from = tableL;
       tableL->outLinks.append(j);
@@ -55,7 +55,7 @@ void Coop::prepareFol(bool smaller){
 //  fol.verbose = 5;
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
-//  for(ors::Body *b:box) fol.addObject(b->name);
+//  for(mlr::Body *b:box) fol.addObject(b->name);
   if(!smaller) fol.addObject("/toolbox/handle");
   if(!smaller) fol.addObject("/toolbox/side_front");
   if(!smaller) fol.addObject("/toolbox/side_back");
@@ -136,8 +136,8 @@ mlr::String Coop::queryForChoice(){
 
 bool Coop::execRandomChoice(){
   mlr::String cmd;
-  if(mlr::rnd.uni()<.5){
-    switch(mlr::rnd.num(5)){
+  if(rnd.uni()<.5){
+    switch(rnd.num(5)){
       case 0: cmd="u"; break;
       case 1: cmd="p"; break;
       case 2: cmd="s"; break;

@@ -5,7 +5,7 @@
 
 #include "robot_variables.h"
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "gamepad.h"
 #include "socSystem_ors.h"
 #include <NJ/UrgInterface.h>
@@ -97,7 +97,7 @@ struct ControllerProcess:public Process { //--non-threaded!!
   arr q_home; //posture as loaded from the ors file
   
   //INTERNAL
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   SwiftInterface swift;
   soc::SocSystem_Ors sys;
   CycleTimer timer;

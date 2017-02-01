@@ -1,0 +1,63 @@
+\documentclass{article}
+
+\author{Johannes Kulick}
+\title{Joint Dependency}
+
+\usepackage[minnames=1, maxnames=2, maxbibnames=99, giveninits=true, backend=biber, style=authoryear-comp, dashed=false, uniquename=false, doi=false, isbn=false, url=false]{biblatex}
+\addbibresource{abbrv.bib}
+\addbibresource{references.bib}
+\usepackage{hyperref}
+\usepackage{fontspec}
+
+\begin{document}
+\maketitle
+
+\section{Intro}
+This is part of the documentation of my software artifacts developed during my
+PhD time at the MLR lab. I hope it might help others to use my software for
+their research.
+
+The joint dependency code was used for several experiments to learn about the
+dependency structure of joints, most notably the experiments from
+\textcite{kulick_active_2015}, but also \textcite{kulick_robots_2015,
+bernstein_opening_2017}. It uses the maximum cross entropy method developed by
+\textcite{kulick_advantage_2015}.
+
+\section{Package}
+
+The main repository is at my github account:
+\url{https://github.com/hildensia/joint_dependency}, a mirror is
+  at our own gitlab:
+  \url{https://animal.informatik.uni-stuttgart.de/johannes.kulick/joint_dependency}
+  (but be aware that I might update the github version but not the gitlab
+  version). The data from the ICRA paper \parencite{kulick_active_2015} are at
+  \url{https://github.com/hildensia/ICRA2015_Experimental_Data}.
+
+\subsection{Requirements}
+The package needs python, scipy ($>=0.15$), pandas, numpy, blessings, progressbar,
+cython, and my own \verb+bayesian_changepoint_detection+ (see accompanying
+documentation in this folder).
+
+\section{HowTo}
+To get the code up and running use \verb+pip install -e .+ and then run the
+\verb+experiment.py+ in \verb+joint_dependencies+.
+
+To understand, what's going on start in the \verb+run_experiment()+ function in that
+same file. It sets up a simulation (or the connection to the robot using ros) al
+the belief and runs the necessary exploration algorithms iteratively.
+
+If you want to change the world the code is run look at the
+\verb+create_lockbox()+
+function. That creates a set of joints corresponding to the joints on the
+physical lockbox.
+
+\verb+get_best_point()+ does the actual Monte-Carlo optimization. To change the
+sampling of the actions (which can indeed have a huge impact on the overall
+performance) look into the \verb+action_sampling_fnc+ here.
+
+The exploration measures are in \verb+inference_cy.pyx+ (and use cython to speed
+it up, so feel free to spice up your code with cython...). The actual interface
+to those methods changed quite a bit over time, so feel free to add parameters
+to it, but be sure that you change the signature of all those functions.
+\printbibliography[heading=bibintoc]
+\end{document}

@@ -17,7 +17,7 @@ struct PDExecutor: Thread{
   ACCESS(CtrlMsg, ctrl_obs);
 
   // TaskController stuff
-  ors::KinematicWorld world;
+  mlr::KinematicWorld world;
   TaskController fmc;
   arr q, qdot;
 
@@ -44,8 +44,8 @@ struct PDExecutor: Thread{
   CtrlTask* effHead, *effHead_ref;
 
   MocapID mid;
-  ors::Transformation transf_mocap_robot;
-  ors::Transformation transf;
+  mlr::Transformation transf_mocap_robot;
+  mlr::Transformation transf;
 
   PDExecutor();
 

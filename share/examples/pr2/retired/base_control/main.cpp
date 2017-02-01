@@ -3,7 +3,7 @@
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -31,11 +31,11 @@ void changeColor(void*){  orsDrawAlpha = .5; glColor(.5,.0,.0); }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
 void setOdom(arr& q, uint qIndex, const geometry_msgs::PoseWithCovarianceStamped &pose){
-  ors::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
-  ors::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
+  mlr::Quaternion quat(pose.pose.pose.orientation.w, pose.pose.pose.orientation.x, pose.pose.pose.orientation.y, pose.pose.pose.orientation.z);
+  mlr::Vector pos(pose.pose.pose.position.x, pose.pose.pose.position.y, pose.pose.pose.position.z);
 
   double angle;
-  ors::Vector rotvec;
+  mlr::Vector rotvec;
   quat.getRad(angle, rotvec);
   q(qIndex+0) = pos(0);
   q(qIndex+1) = pos(1);
@@ -50,15 +50,15 @@ int main(int argc, char** argv){
   MySystem S;
   threadOpenModules(true);
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   makeConvexHulls(world.shapes);
   world >>FILE("z.ors");
-  ors::KinematicWorld world_pr2 = world;
+  mlr::KinematicWorld world_pr2 = world;
   world.gl().add(changeColor);
-  world.gl().add(ors::glDrawGraph, &world_pr2);
+  world.gl().add(mlr::glDrawGraph, &world_pr2);
   world.gl().add(changeColor2);
 
-  ors::Joint *trans=world.getJointByName("worldTranslationRotation");
+  mlr::Joint *trans=world.getJointByName("worldTranslationRotation");
   arr q, qdot;
 
   if(useRos){
@@ -66,7 +66,7 @@ int main(int argc, char** argv){
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     uint trials=0;
     for(;useRos;){
-      S.ctrl_obs.var->waitForNextRevision();
+      S.ctrl_obs.data->waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<S.ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<world.q.N <<endl;
 

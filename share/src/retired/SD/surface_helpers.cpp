@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include "ISF_GP.h"
 #include "utils.h"
 #include "surface_helpers.h"
@@ -15,10 +15,10 @@
  * http://www.softsurfer.com/Archive/algorithm_0105/algorithm_0105.htm#intersect_RayTriangle()
  */
 int
-intersect3d_tri_line(ors::Vector &intersec, const ors::Vector &ta, const ors::Vector &tb, const ors::Vector &tc, const ors::Vector &lp, const ors::Vector &lv){
+intersect3d_tri_line(mlr::Vector &intersec, const mlr::Vector &ta, const mlr::Vector &tb, const mlr::Vector &tc, const mlr::Vector &lp, const mlr::Vector &lv){
 
-  ors::Vector vab, vac, tn;// triangle vectors and normal
-  ors::Vector ta2lp, vai; // triangle to line "begin", triangle to intersection
+  mlr::Vector vab, vac, tn;// triangle vectors and normal
+  mlr::Vector ta2lp, vai; // triangle to line "begin", triangle to intersection
   double ratio, pr1, pr2, s, t;
 
   // vectors defining the triangle plane
@@ -65,11 +65,11 @@ intersect3d_tri_line(ors::Vector &intersec, const ors::Vector &ta, const ors::Ve
  * return al points at which the line intersects with the mesh.
  */
 bool
-intersect3d_mesh_line(arr &sec, uintA &tri, const ors::Mesh &mesh, const ors::Vector &lp, const ors::Vector &lv){
+intersect3d_mesh_line(arr &sec, uintA &tri, const mlr::Mesh &mesh, const mlr::Vector &lp, const mlr::Vector &lv){
 
   uint i,j;
-  ors::Vector intersec;
-  ors::Vector t[3];
+  mlr::Vector intersec;
+  mlr::Vector t[3];
   int res;
 
   tri.clear();sec.clear();
@@ -100,7 +100,7 @@ intersect3d_mesh_line(arr &sec, uintA &tri, const ors::Mesh &mesh, const ors::Ve
  * Normalize by the volume of the cuboid.
  */
 double
-mesh_similar_view(ors::Mesh &mtrue, ors::Mesh &mestm){
+mesh_similar_view(mlr::Mesh &mtrue, mlr::Mesh &mestm){
 
   // FIX hmmmm! >:o|
   if ((mestm.T.N<10 && mtrue.V.N>4) || mtrue.V.N<10){ SD_ERR("mesh is empty!"); return 100;}
@@ -112,7 +112,7 @@ mesh_similar_view(ors::Mesh &mtrue, ors::Mesh &mestm){
   uintA facestrue, facesestm;
   arr intertrue, interestm;
   uint idiff = 0;
-  ors::Vector lp,lv;
+  mlr::Vector lp,lv;
 
   // find variance of mesh
   vertx_col = ~mtrue.V;
@@ -377,7 +377,7 @@ get_observs_gradwalk(arr& pts, arr& grads, PotentialField *ot , const arr &mins,
 }
 
 void
-get_observs_vrtx(arr& pts,arr& grads, ors::Mesh &m, const uint obs_N){
+get_observs_vrtx(arr& pts,arr& grads, mlr::Mesh &m, const uint obs_N){
 
   pts.resize(obs_N, 3);
   grads.resizeAs(pts);
@@ -410,12 +410,12 @@ get_observs_vrtx(arr& pts,arr& grads, ors::Mesh &m, const uint obs_N){
  * the mesh
  */
 void
-get_observs_ray(arr& pts,arr& grads, ors::Mesh &m, const uint obs_N){
+get_observs_ray(arr& pts,arr& grads, mlr::Mesh &m, const uint obs_N){
 
   uint d = m.V.d1;
   uint i;
   arr vertx_col, var(d), mins(d), maxs(d), obs;
-  ors::Vector lp,lv;
+  mlr::Vector lp,lv;
   uintA faces; arr inter;
 
   pts.resize(obs_N, 3);

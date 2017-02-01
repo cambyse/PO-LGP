@@ -1,0 +1,9 @@
+BASE = ../../../../share
+
+
+OBJS = main.o taskMapVariance.o objectGenerator.o surfaceVisualisationModule.o
+PLIB = 1
+ROS = 1
+DEPEND = Core RosCom Control Gui Actions Hardware_gamepad Ors Motion Geo Roopi Algo Optim
+
+include $(BASE)/gofMake/generic.mk

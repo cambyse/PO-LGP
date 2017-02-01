@@ -9,7 +9,7 @@ using namespace mlr;
 
 namespace mdp {
 
-RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, double duration, arr Xdemo,arr FLdemo,arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations)
+RKHSPol::RKHSPol(mlr::KinematicWorld& world_, bool useRos, double duration, arr Xdemo,arr FLdemo,arr Mdemo, arr paramLim, uint numCentre, uint horizon,uint numEps,uint kernel_Type, int numIterations)
     : Horizon(horizon),
       NumEps(numEps), Xdemo(Xdemo), FLdemo(FLdemo), Mdemo(Mdemo), paramLim(paramLim), useRos(useRos), duration(duration),
       NumCentre(numCentre),
@@ -17,7 +17,7 @@ RKHSPol::RKHSPol(ors::KinematicWorld& world_, bool useRos, double duration, arr 
       NumIterations(numIterations)
 
 {
-    world=new ors::KinematicWorld(world_);
+    world=new mlr::KinematicWorld(world_);
     task = new DoorTask(world_);
     if(useRos)mi = new Motion_Interface(world_);
     /// load demonstration from file

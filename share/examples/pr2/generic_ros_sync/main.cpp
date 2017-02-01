@@ -1,8 +1,9 @@
 //#include <System/engine.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <RosCom/roscom.h>
-#include <RosCom/rosmacro.h>
+#include <RosCom/spinner.h>
+//#include <RosCom/rosmacro.h>
 #include <std_msgs/String.h>
 
 

@@ -3,7 +3,7 @@
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <RosCom/roscom.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
@@ -35,7 +35,7 @@ int main(int argc, char** argv){
 
   return 0;
 
-  ors::KinematicWorld world("model.kvg");
+  mlr::KinematicWorld world("model.kvg");
   world.gl().resize(800,800);
   world.watch(true);
 

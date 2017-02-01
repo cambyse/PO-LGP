@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
     ActionSwigInterface S;
 //    S.setVerbose(true);
 
-    script1(S);
-//    script3(S);
+//    script1(S);
+    script3(S);
 //  forceControl(S);
 
     threadCloseModules();

@@ -4,7 +4,7 @@
 void augmentDataWithF(mlr::String filename){
   arr D = FILE(filename);
 
-  ors::KinematicWorld W("rawbaxter.ors");
+  mlr::KinematicWorld W("rawbaxter.ors");
 
   filename <<"_Faugmented";
   ofstream fil(filename);
@@ -13,8 +13,8 @@ void augmentDataWithF(mlr::String filename){
   for(uint i=0;i<D.d0;i++){
     if(!(i%10)) cout <<i <<endl;
     const arr& Di = D[i];
-    arr q = Di.refRange(0,16);
-    arr u = Di.refRange(17,-1);
+    arr q = Di({0,16});
+    arr u = Di({17,-1});
     W.setJointState(q);
     W.gl().update();
     arr M,F;
@@ -63,11 +63,11 @@ double MyBaxter::setModelJointState(const arr &q){
    return y.scalar();
 }
 
-const ors::KinematicWorld& MyBaxter::getKinematicWorld(){
+const mlr::KinematicWorld& MyBaxter::getKinematicWorld(){
   return tcmBax.realWorld;
 }
 
-const ors::KinematicWorld& MyBaxter::getModelWorld(){
+const mlr::KinematicWorld& MyBaxter::getModelWorld(){
   return tcmBax.modelWorld.get();
 }
 
@@ -189,7 +189,7 @@ void MyBaxter::changePosition(CtrlTask* position, arr pos){
     waitConv(set);
 }
 
-CtrlTask* MyBaxter::align(char *name, char* frame1, ors::Vector vec1, char* frame2, ors::Vector vec2, double ref){
+CtrlTask* MyBaxter::align(char *name, char* frame1, mlr::Vector vec1, char* frame2, mlr::Vector vec2, double ref){
     CtrlTask *align = new CtrlTask(name,
         new DefaultTaskMap(vecAlignTMT, tcmBax.modelWorld.get()(), frame1, vec1, frame2, vec2),
                         1., .8, 1., 1.);
@@ -212,17 +212,17 @@ uint MyBaxter::reportPerceptionObjects(){
   return n;
 }
 
-ors::Vector MyBaxter::closestCluster(){
+mlr::Vector MyBaxter::closestCluster(){
   object_database.readAccess();
 
-  ors::Vector toReturn(0,0,0);
+  mlr::Vector toReturn(0,0,0);
 
   double max_dist = DBL_MIN;
   for(FilterObject* fo : object_database())
   {
     if (fo->type == FilterObject::FilterObjectType::cluster)
     {
-      ors::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
+      mlr::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
       double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
       if (max_dist < dist)
       {
@@ -236,16 +236,16 @@ ors::Vector MyBaxter::closestCluster(){
   return toReturn;
 }
 
-ors::Vector MyBaxter::arPose(){
+mlr::Vector MyBaxter::arPose(){
   object_database.readAccess();
 
-  ors::Vector toReturn(0,0,0);
+  mlr::Vector toReturn(0,0,0);
 
   for(FilterObject* fo : object_database())
   {
     if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
     {
-      ors::Transformation pos = fo->frame * fo->transform;
+      mlr::Transformation pos = fo->frame * fo->transform;
       toReturn = pos.pos;
       std::cout << toReturn << std::endl;
     }

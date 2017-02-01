@@ -1,85 +1,85 @@
-body base { mass=19.7101  }
-body spine_1 { pose=<T 0 0 0.0808867 1 0 0 0 >  }
-body right_hip_0 { pose=<T 0 -0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  }
-body left_hip_0 { pose=<T 0 0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  }
-body spine_2 { pose=<T 0 0 0.0808867 0.707107 0 0 0.707107 >  }
-body right_hip_1 { pose=<T 0 -0.0799221 -0.0791087 -0.5 -0.5 -0.5 -0.5 >  }
-body left_hip_1 { pose=<T 0 0.0799221 -0.0791087 -0.5 -0.5 -0.5 -0.5 >  }
-body spine { pose=<T 0 0 0.0808867 -0.707107 0 0.707107 0 > mass=46.3045  }
-body right_hip { pose=<T 0 -0.0799221 -0.0791087 0.707107 -5.55112e-17 0.707107 -5.55112e-17 > mass=2.65296  }
-body left_hip { pose=<T 0 0.0799221 -0.0791087 0.707107 -5.55112e-17 0.707107 -5.55112e-17 > mass=2.65296  }
-body neck_0 { pose=<T 0 0 0.461022 1 0 0 -0 >  }
-body right_shoulder_0 { pose=<T 0 -0.178218 0.348539 1 0 0 2.44826e-12 >  }
-body left_shoulder_0 { pose=<T 0 0.178218 0.348539 2.44843e-12 0 0 1 >  }
-body right_knee { pose=<T 2.81855e-12 -0.0799221 -0.654679 0.707107 1.73123e-12 -1.7312e-12 -0.707107 > mass=0.433008  }
-body left_knee { pose=<T 2.81855e-12 0.0799221 -0.654679 0.707107 1.73123e-12 -1.7312e-12 -0.707107 > mass=0.433008  }
-body neck_1 { pose=<T 0 0 0.461022 0.707107 0 0 0.707107 >  }
-body right_shoulder_1 { pose=<T 0 -0.178218 0.348539 -0.5 0.5 0.5 0.5 >  }
-body left_shoulder_1 { pose=<T 0 0.178218 0.348539 -0.5 -0.5 0.5 -0.5 >  }
-body right_ankle_0 { pose=<T 4.73341e-12 -0.0799221 -1.04574 -0.707107 -3.46244e-12 0.707107 -1.11022e-16 >  }
-body left_ankle_0 { pose=<T 4.73341e-12 0.0799221 -1.04574 -0.707107 -3.46244e-12 0.707107 -1.11022e-16 >  }
-body neck { pose=<T 0 0 0.461022 -0.707107 0 0.707107 0 > mass=4.9052  }
-body right_shoulder { pose=<T 0 -0.178218 0.348539 0.707107 5.55112e-17 5.55112e-17 -0.707107 > mass=1.68843  }
-body left_shoulder { pose=<T 0 0.178218 0.348539 0.707107 0 5.55112e-17 0.707107 > mass=1.68843  }
-body right_ankle { pose=<T 4.73341e-12 -0.0799221 -1.04574 0.707107 1.73117e-12 -1.73116e-12 0.707107 > mass=0.003125  }
-body left_ankle { pose=<T 4.73341e-12 0.0799221 -1.04574 0.707107 1.73117e-12 -1.73116e-12 0.707107 > mass=0.003125  }
-body right_elbow_0 { pose=<T 1.61579e-12 -0.508175 0.348539 0.5 -0.5 -0.5 -0.5 >  }
-body left_elbow_0 { pose=<T 1.61568e-12 0.508175 0.348539 0.5 0.5 -0.5 0.5 >  }
-body right_elbow { pose=<T 1.61579e-12 -0.508175 0.348539 -0.707107 -1.11022e-16 -5.55112e-17 0.707107 > mass=0.345403  }
-body left_elbow { pose=<T 1.61568e-12 0.508175 0.348539 -0.707107 0 -5.55112e-17 -0.707107 > mass=0.345403  }
-body right_wrist_0 { pose=<T 3.09381e-12 -0.809999 0.348539 -0.5 0.5 0.5 0.5 >  }
-body left_wrist_0 { pose=<T 3.0936e-12 0.809999 0.348539 -0.5 -0.5 0.5 -0.5 >  }
-body right_wrist { pose=<T 3.09381e-12 -0.809999 0.348539 1 5.55112e-17 -5.55112e-17 2.44832e-12 > mass=0.003125  }
-body left_wrist { pose=<T 3.0936e-12 0.809999 0.348539 2.44849e-12 0 -2.77556e-17 1 > mass=0.003125  }
+body /human/base { mass=13.7561  }
+body /human/spine_1 { pose=<T 0 0 0.0666488 1 0 0 0 >  }
+body /human/right_hip_0 { pose=<T 0 -0.0693858 -0.106054 1 0 -2.44826e-12 0 >  }
+body /human/left_hip_0 { pose=<T 0 0.0693858 -0.106054 1 0 -2.44826e-12 0 >  }
+body /human/spine_2 { pose=<T 0 0 0.0666488 0.707107 0 0 0.707107 >  }
+body /human/right_hip_1 { pose=<T 0 -0.0693858 -0.106054 -0.5 -0.5 -0.5 -0.5 >  }
+body /human/left_hip_1 { pose=<T 0 0.0693858 -0.106054 -0.5 -0.5 -0.5 -0.5 >  }
+body /human/spine { pose=<T 0 0 0.0666488 -0.707107 0 0.707107 0 > mass=28.9813  }
+body /human/right_hip { pose=<T 0 -0.0693858 -0.106054 0.707107 -5.55112e-17 0.707107 -5.55112e-17 > mass=1.83226  }
+body /human/left_hip { pose=<T 0 0.0693858 -0.106054 0.707107 -5.55112e-17 0.707107 -5.55112e-17 > mass=1.83226  }
+body /human/neck_0 { pose=<T 0 0 0.392031 1 0 0 -0 >  }
+body /human/right_shoulder_0 { pose=<T 0 -0.154143 0.274392 1 0 0 2.44826e-12 >  }
+body /human/left_shoulder_0 { pose=<T 0 0.154143 0.274392 2.44843e-12 0 0 1 >  }
+body /human/right_knee { pose=<T 1.79513e-12 -0.0693858 -0.472635 0.707107 1.73123e-12 -1.7312e-12 -0.707107 > mass=0.412781  }
+body /human/left_knee { pose=<T 1.79513e-12 0.0693858 -0.472635 0.707107 1.73123e-12 -1.7312e-12 -0.707107 > mass=0.412781  }
+body /human/neck_1 { pose=<T 0 0 0.392031 0.707107 0 0 0.707107 >  }
+body /human/right_shoulder_1 { pose=<T 0 -0.154143 0.274392 -0.5 0.5 0.5 0.5 >  }
+body /human/left_shoulder_1 { pose=<T 0 0.154143 0.274392 -0.5 -0.5 0.5 -0.5 >  }
+body /human/right_ankle_0 { pose=<T 3.60911e-12 -0.0693858 -0.84309 -0.707107 -3.46244e-12 0.707107 -1.11022e-16 >  }
+body /human/left_ankle_0 { pose=<T 3.60911e-12 0.0693858 -0.84309 -0.707107 -3.46244e-12 0.707107 -1.11022e-16 >  }
+body /human/neck { pose=<T 0 0 0.392031 -0.707107 0 0.707107 0 > mass=5.0563  }
+body /human/right_shoulder { pose=<T 0 -0.154143 0.274392 0.707107 5.55112e-17 5.55112e-17 -0.707107 > mass=1.44295  }
+body /human/left_shoulder { pose=<T 0 0.154143 0.274392 0.707107 0 5.55112e-17 0.707107 > mass=1.44295  }
+body /human/right_ankle { pose=<T 3.60911e-12 -0.0693858 -0.84309 0.707107 1.73117e-12 -1.73116e-12 0.707107 > mass=0.003125  }
+body /human/left_ankle { pose=<T 3.60911e-12 0.0693858 -0.84309 0.707107 1.73117e-12 -1.73116e-12 0.707107 > mass=0.003125  }
+body /human/right_elbow_0 { pose=<T 1.30966e-12 -0.421587 0.274392 0.5 -0.5 -0.5 -0.5 >  }
+body /human/left_elbow_0 { pose=<T 1.30957e-12 0.421587 0.274392 0.5 0.5 -0.5 0.5 >  }
+body /human/right_elbow { pose=<T 1.30966e-12 -0.421587 0.274392 -0.707107 -1.11022e-16 -5.55112e-17 0.707107 > mass=0.271555  }
+body /human/left_elbow { pose=<T 1.30957e-12 0.421587 0.274392 -0.707107 0 -5.55112e-17 -0.707107 > mass=0.271555  }
+body /human/right_wrist_0 { pose=<T 2.41933e-12 -0.64819 0.274392 -0.5 0.5 0.5 0.5 >  }
+body /human/left_wrist_0 { pose=<T 2.41917e-12 0.64819 0.274392 -0.5 -0.5 0.5 -0.5 >  }
+body /human/right_wrist { pose=<T 2.41933e-12 -0.64819 0.274392 1 5.55112e-17 -5.55112e-17 2.44832e-12 > mass=0.003125  }
+body /human/left_wrist { pose=<T 2.41917e-12 0.64819 0.274392 2.44849e-12 0 -2.77556e-17 1 > mass=0.003125  }
 
-shape visual (base){ type=4 size=[0.129922 0.129922 0.169476 0.129922] rel=<T 0 0 -0.0395544 1 0 0 0 >  }
-shape visual (base){ type=4 size=[0.138218 0.138218 0.178662 0.138218] rel=<T 0 0 0.0404433 1 0 0 0 >  }
-shape visual (spine){ type=4 size=[0.158218 0.158218 0.294781 0.158218] rel=<T 0.136563 0 3.0323e-17 -0.707107 0 -0.707107 0 >  }
-shape visual (spine){ type=4 size=[0.178218 0.178218 0.231723 0.178218] rel=<T 0.32663 0 7.25265e-17 -0.707107 0 -0.707107 0 >  }
-shape visual (neck){ type=4 size=[0.04 0.04 0.142525 0.04] rel=<T 0.102525 0 2.27651e-17 -0.707107 0 -0.707107 0 >  }
-shape visual (neck){ type=1 size=[0.1 0.1 0.1 0.1] rel=<T 0.20505 0 4.55303e-17 -0.707107 0 -0.707107 0 >  }
-shape visual (right_shoulder){ type=4 size=[0.05 0.05 0.214978 0.05] rel=<T 0.164978 0 0 0.707107 0 0.707107 0 >  }
-shape visual (right_elbow){ type=4 size=[0.025 0.025 0.175912 0.025] rel=<T 0.150912 0 0 0.707107 0 0.707107 0 >  }
-shape visual (right_wrist){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
-shape visual (left_shoulder){ type=4 size=[0.05 0.05 0.214978 0.05] rel=<T 0.164978 0 0 0.707107 0 0.707107 0 >  }
-shape visual (left_elbow){ type=4 size=[0.025 0.025 0.175912 0.025] rel=<T 0.150912 0 0 0.707107 0 0.707107 0 >  }
-shape visual (left_wrist){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
-shape visual (right_hip){ type=4 size=[0.05 0.05 0.337785 0.05] rel=<T 0.287785 0 0 0.707107 0 0.707107 0 >  }
-shape visual (right_knee){ type=4 size=[0.025 0.025 0.220529 0.025] rel=<T 4.34162e-17 -0 -0.195529 -2.44843e-12 0 -1 0 >  }
-shape visual (right_ankle){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
-shape visual (left_hip){ type=4 size=[0.05 0.05 0.337785 0.05] rel=<T 0.287785 0 0 0.707107 0 0.707107 0 >  }
-shape visual (left_knee){ type=4 size=[0.025 0.025 0.220529 0.025] rel=<T 4.34162e-17 -0 -0.195529 -2.44843e-12 0 -1 0 >  }
-shape visual (left_ankle){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
+shape /human/base_1 (/human/base){ type=2 size=[0.119386 0.119386 0.172413 0.119386] rel=<T 0 0 -0.0530271 1 0 0 0 >  }
+shape /human/spine_0_1 (/human/base){ type=2 size=[0.114143 0.114143 0.147468 0.114143] rel=<T 0 0 0.0333244 1 0 0 0 >  }
+shape /human/spine_1 (/human/spine){ type=2 size=[0.134143 0.134143 0.258465 0.134143] rel=<T 0.124322 0 2.76051e-17 -0.707107 0 -0.707107 0 >  }
+shape /human/shoulder_center_1 (/human/spine){ type=2 size=[0.154143 0.154143 0.192512 0.154143] rel=<T 0.287013 0 6.37297e-17 -0.707107 0 -0.707107 0 >  }
+shape /human/neck_1 (/human/neck){ type=2 size=[0.04 0.04 0.172587 0.04] rel=<T 0.132587 0 2.94401e-17 -0.707107 0 -0.707107 0 >  }
+shape /human/head_1 (/human/neck){ type=1 size=[0.1 0.1 0.1 0.1] rel=<T 0.265173 0 5.88802e-17 -0.707107 0 -0.707107 0 >  }
+shape /human/right_shoulder_1 (/human/right_shoulder){ type=2 size=[0.05 0.05 0.183722 0.05] rel=<T 0.133722 0 0 0.707107 0 0.707107 0 >  }
+shape /human/right_elbow_1 (/human/right_elbow){ type=2 size=[0.025 0.025 0.138302 0.025] rel=<T 0.113302 0 0 0.707107 0 0.707107 0 >  }
+shape /human/right_wrist_1 (/human/right_wrist){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
+shape /human/left_shoulder_1 (/human/left_shoulder){ type=2 size=[0.05 0.05 0.183722 0.05] rel=<T 0.133722 0 0 0.707107 0 0.707107 0 >  }
+shape /human/left_elbow_1 (/human/left_elbow){ type=2 size=[0.025 0.025 0.138302 0.025] rel=<T 0.113302 0 0 0.707107 0 0.707107 0 >  }
+shape /human/left_wrist_1 (/human/left_wrist){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
+shape /human/right_hip_1 (/human/right_hip){ type=2 size=[0.05 0.05 0.23329 0.05] rel=<T 0.18329 0 0 0.707107 0 0.707107 0 >  }
+shape /human/right_knee_1 (/human/right_knee){ type=2 size=[0.025 0.025 0.210228 0.025] rel=<T 4.11289e-17 -0 -0.185228 -2.44843e-12 0 -1 0 >  }
+shape /human/right_ankle_1 (/human/right_ankle){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
+shape /human/left_hip_1 (/human/left_hip){ type=2 size=[0.05 0.05 0.23329 0.05] rel=<T 0.18329 0 0 0.707107 0 0.707107 0 >  }
+shape /human/left_knee_1 (/human/left_knee){ type=2 size=[0.025 0.025 0.210228 0.025] rel=<T 4.11289e-17 -0 -0.185228 -2.44843e-12 0 -1 0 >  }
+shape /human/left_ankle_1 (/human/left_ankle){ type=0 size=[0.05 0.025 0.0025 0] rel=<T 1.11022e-17 -0.05 0 -0.707107 0 0 0.707107 >  }
 
-joint spine_0 (base spine_1){ type=0 from=<T 0 0 0.0808867 1 0 0 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_hip_0 (base right_hip_0){ type=0 from=<T 0 -0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_hip_0 (base left_hip_0){ type=0 from=<T 0 0.0799221 -0.0791087 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint spine_1 (spine_1 spine_2){ type=0 from=<T -0 -0 -0 0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_hip_1 (right_hip_0 right_hip_1){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_hip_1 (left_hip_0 left_hip_1){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint spine_2 (spine_2 spine){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_hip_2 (right_hip_1 right_hip){ type=0 from=<T -0 -0 -0 -0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_hip_2 (left_hip_1 left_hip){ type=0 from=<T -0 -0 -0 -0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint neck_0 (spine neck_0){ type=0 from=<T 0.380135 0 8.4407e-17 -0.707107 0 -0.707107 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_shoulder_0 (spine right_shoulder_0){ type=0 from=<T 0.267653 -0.178218 5.94308e-17 -0.707107 -1.73118e-12 -0.707107 -1.73118e-12 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_shoulder_0 (spine left_shoulder_0){ type=0 from=<T 0.267653 0.178218 5.94308e-17 -1.7313e-12 -0.707107 -1.7313e-12 -0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_knee (right_hip right_knee){ type=0 from=<T 0.57557 0 0 0.5 0.5 -0.5 -0.5 >  limits=[ -3.14159 0.1 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_knee (left_hip left_knee){ type=0 from=<T 0.57557 0 0 0.5 0.5 -0.5 -0.5 >  limits=[ -3.14159 0.1 ]  ctrl_limits=[ 1 1 1 ]  }
-joint neck_1 (neck_0 neck_1){ type=0 from=<T -0 -0 -0 0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_shoulder_1 (right_shoulder_0 right_shoulder_1){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -1.5708 2.35619 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_shoulder_1 (left_shoulder_0 left_shoulder_1){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -2.35619 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_ankle_0 (right_knee right_ankle_0){ type=0 from=<T 8.68323e-17 -0 -0.391058 -0.5 -0.5 0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_ankle_0 (left_knee left_ankle_0){ type=0 from=<T 8.68323e-17 -0 -0.391058 -0.5 -0.5 0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint neck_2 (neck_1 neck){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_shoulder_2 (right_shoulder_1 right_shoulder){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_shoulder_2 (left_shoulder_1 left_shoulder){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_ankle_1 (right_ankle_0 right_ankle){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_ankle_1 (left_ankle_0 left_ankle){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_elbow_0 (right_shoulder right_elbow_0){ type=0 from=<T 0.329956 0 0 0.707107 0 -0.707107 0 >  limits=[ 0 3.14159 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_elbow_0 (left_shoulder left_elbow_0){ type=0 from=<T 0.329956 0 0 0.707107 0 -0.707107 0 >  limits=[ -3.14159 0 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_elbow_1 (right_elbow_0 right_elbow){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ 0 3.14159 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_elbow_1 (left_elbow_0 left_elbow){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -3.14159 0 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_wrist_0 (right_elbow right_wrist_0){ type=0 from=<T 0.301824 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_wrist_0 (left_elbow left_wrist_0){ type=0 from=<T 0.301824 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
-joint right_wrist_1 (right_wrist_0 right_wrist){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
-joint left_wrist_1 (left_wrist_0 left_wrist){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint spine_0 (/human/base /human/spine_1){ type=0 from=<T 0 0 0.0666488 1 0 0 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_hip_0 (/human/base /human/right_hip_0){ type=0 from=<T 0 -0.0693858 -0.106054 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_hip_0 (/human/base /human/left_hip_0){ type=0 from=<T 0 0.0693858 -0.106054 1 0 -2.44826e-12 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint spine_1 (/human/spine_1 /human/spine_2){ type=0 from=<T -0 -0 -0 0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_hip_1 (/human/right_hip_0 /human/right_hip_1){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_hip_1 (/human/left_hip_0 /human/left_hip_1){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint spine_2 (/human/spine_2 /human/spine){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_hip_2 (/human/right_hip_1 /human/right_hip){ type=0 from=<T -0 -0 -0 -0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_hip_2 (/human/left_hip_1 /human/left_hip){ type=0 from=<T -0 -0 -0 -0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint neck_0 (/human/spine /human/neck_0){ type=0 from=<T 0.325382 0 7.22493e-17 -0.707107 0 -0.707107 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_shoulder_0 (/human/spine /human/right_shoulder_0){ type=0 from=<T 0.207743 -0.154143 4.61282e-17 -0.707107 -1.73118e-12 -0.707107 -1.73118e-12 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_shoulder_0 (/human/spine /human/left_shoulder_0){ type=0 from=<T 0.207743 0.154143 4.61282e-17 -1.7313e-12 -0.707107 -1.7313e-12 -0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_knee (/human/right_hip /human/right_knee){ type=0 from=<T 0.36658 0 0 0.5 0.5 -0.5 -0.5 >  limits=[ -3.14159 0.1 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_knee (/human/left_hip /human/left_knee){ type=0 from=<T 0.36658 0 0 0.5 0.5 -0.5 -0.5 >  limits=[ -3.14159 0.1 ]  ctrl_limits=[ 1 1 1 ]  }
+joint neck_1 (/human/neck_0 /human/neck_1){ type=0 from=<T -0 -0 -0 0.707107 0 0 0.707107 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_shoulder_1 (/human/right_shoulder_0 /human/right_shoulder_1){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -1.5708 2.35619 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_shoulder_1 (/human/left_shoulder_0 /human/left_shoulder_1){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -2.35619 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_ankle_0 (/human/right_knee /human/right_ankle_0){ type=0 from=<T 8.22577e-17 -0 -0.370456 -0.5 -0.5 0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_ankle_0 (/human/left_knee /human/left_ankle_0){ type=0 from=<T 8.22577e-17 -0 -0.370456 -0.5 -0.5 0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint neck_2 (/human/neck_1 /human/neck){ type=0 from=<T -0 -0 -0 -0.5 0.5 0.5 0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_shoulder_2 (/human/right_shoulder_1 /human/right_shoulder){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_shoulder_2 (/human/left_shoulder_1 /human/left_shoulder){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_ankle_1 (/human/right_ankle_0 /human/right_ankle){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_ankle_1 (/human/left_ankle_0 /human/left_ankle){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_elbow_0 (/human/right_shoulder /human/right_elbow_0){ type=0 from=<T 0.267444 0 0 0.707107 0 -0.707107 0 >  limits=[ 0 3.14159 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_elbow_0 (/human/left_shoulder /human/left_elbow_0){ type=0 from=<T 0.267444 0 0 0.707107 0 -0.707107 0 >  limits=[ -3.14159 0 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_elbow_1 (/human/right_elbow_0 /human/right_elbow){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ 0 3.14159 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_elbow_1 (/human/left_elbow_0 /human/left_elbow){ type=0 from=<T -0 -0 -0 -0.707107 0 -0.707107 0 >  limits=[ -3.14159 0 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_wrist_0 (/human/right_elbow /human/right_wrist_0){ type=0 from=<T 0.226603 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_wrist_0 (/human/left_elbow /human/left_wrist_0){ type=0 from=<T 0.226603 0 0 0.707107 0 -0.707107 0 >  limits=[ -0.785398 0.785398 ]  ctrl_limits=[ 1 1 1 ]  }
+joint right_wrist_1 (/human/right_wrist_0 /human/right_wrist){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }
+joint left_wrist_1 (/human/left_wrist_0 /human/left_wrist){ type=0 from=<T -0 -0 -0 -0.5 -0.5 -0.5 -0.5 >  limits=[ -1.5708 1.5708 ]  ctrl_limits=[ 1 1 1 ]  }

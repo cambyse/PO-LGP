@@ -1,43 +1,43 @@
-#include <Ors/ors.h>
-#include <Ors/ors_physx.h>
+#include <Kin/kin.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 
-void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
+void createScene(mlr::KinematicWorld& ors, OpenGL& gl) {
   ors.clear();
   
   for(uint k=0; k<3; k++) {
-    ors::Body *b = new ors::Body(ors);
+    mlr::Body *b = new mlr::Body(ors);
     b->X.setRandom();
     b->X.pos.z += 1.;
     b->name <<"rndSphere_" <<k;
-    ors::Shape *s = new ors::Shape(ors, *b);
-    s->type=ors::boxST;
+    mlr::Shape *s = new mlr::Shape(ors, *b);
+    s->type=mlr::ST_box;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
   }
   for(uint k=0; k<3; k++) {
-    ors::Body *b = new ors::Body(ors);
+    mlr::Body *b = new mlr::Body(ors);
     b->X.setRandom();
     b->X.pos.z += 1.;
     b->name <<"thing_" <<k;
-    ors::Shape *s = new ors::Shape(ors, *b);
-    s->type=ors::sphereST;
+    mlr::Shape *s = new mlr::Shape(ors, *b);
+    s->type=mlr::ST_sphere;
     s->size[0]=.1; s->size[1]=.1; s->size[2]=.1; s->size[3]=.1;
     //s->mesh.readFile("pin1.off");
   }
   for(uint k=0; k<10; k++) {
-    ors::Body *b = new ors::Body(ors);
+    mlr::Body *b = new mlr::Body(ors);
     b->X.pos.setRandom();
     b->X.pos.z += .5;
     b->name <<"thing_" <<k;
-    ors::Shape *s = new ors::Shape(ors, *b);
-    s->type=ors::meshST;
+    mlr::Shape *s = new mlr::Shape(ors, *b);
+    s->type=mlr::ST_mesh;
     s->mesh.readFile("pin1.off");
   }
   ors.calc_fwdPropagateFrames();
   cout <<ors <<endl;
   
   gl.add(glStandardScene,NULL);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.setClearColors(1.,1.,1.,1.);
   gl.camera.setPosition(10.,-15.,8.);
   gl.camera.focus(0,0,1.);
@@ -45,13 +45,13 @@ void createScene(ors::KinematicWorld& ors, OpenGL& gl) {
 }
 
 void TEST(OrsPhysx) {
-  ors::KinematicWorld G;
+  mlr::KinematicWorld K;
   OpenGL glPh;
 
-  createScene(G, G.gl());
+  createScene(K, K.gl());
   
   glPh.add(glStandardScene, NULL);
-  glPh.add(glPhysXInterface, &G.physx());
+  glPh.add(glPhysXInterface, &K.physx());
   glPh.setClearColors(1.,1.,1.,1.);
   glPh.camera.setPosition(10.,-15.,8.);
   glPh.camera.focus(0,0,1.);
@@ -59,9 +59,9 @@ void TEST(OrsPhysx) {
   
   for(uint t=0; t<500; t++) {
     cout <<"\r t=" <<t <<std::flush;
-    G.physx().step();
+    K.physx().step();
     glPh.update();
-    G.watch(false);
+    K.watch(false);
   }
 }
 

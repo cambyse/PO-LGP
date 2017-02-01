@@ -10,7 +10,7 @@ void sampleData() {
   SetOfDataFiles logging("gcKugel_deleteMe");
   rnd.clockSeed();
   PoseGenerator poser(R.tcm()->modelWorld.get()());
-
+  
   for(uint i = 0; i < 1000; i++) {
     //try to find both a suitable random pose and a trajectory that transfers from the current configuration to the random pose
     while(true) {
@@ -20,14 +20,16 @@ void sampleData() {
     mlr::wait(0.5);
     R.holdPosition();
     mlr::wait(1.0);
-    double limits = R.getLimitConstraint();
+    double limits = R.getLimitConstraint(0.02); //TODO what margin. Limits are arghrgrhrgh
     cout << "Limits: " << limits << endl;
     if(limits > 0) {
+      cout << "not good" << endl;
+      mlr::wait(5.0);
       continue;
     }
     //wait a few seconds to ensure that the controller has converged
     mlr::wait(3.0);
-
+    
     //mean over 1 second with 10 samples
     arr q, qSign, fL, fR, u;
     for(uint j = 0; j < 10; j++) {
@@ -63,17 +65,17 @@ void testCollision() {
 
 void learnModel() {
   GravityCompensation gc(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
-
+  
   gc.learnGCModel();
-
+  
   StringA joints;
   joints.append(gc.leftJoints);
   joints.append(gc.rightJoints);
   joints.append(gc.headJoints);
-
-  cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), joints) << endl;
+  
+  //cout << gc.compensate(gc.world.getJointState(), gc.world.getJointState(), joints) << endl;
   //gc.learnFTModel();
-
+  
   //cout << gc.compensateFTL(gc.world.getJointState()) << endl;
 }
 
@@ -90,19 +92,22 @@ void testOnRobot() {
 void testFTCompensation() {
   Roopi R;
   PoseGenerator poseGenerator(R.tcm()->modelWorld.get()());
-  arr pose = poseGenerator.getRandomPose();
-  R.gotToJointConfiguration(pose, 10.0, true);
   while(true) {
-    cout << R.getFTLeft() << endl;
-    mlr::wait(1.0);
+    arr pose = poseGenerator.getRandomPose();
+    R.gotToJointConfiguration(pose, 10.0, true);
+    R.holdPosition();
+    for(uint i = 0; i < 10; i++) {
+      cout << R.getFTRight() << endl;
+      mlr::wait(1.0);
+    }
   }
 }
 
 // =================================================================================================
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
-  sampleData();
-  //learnModel();
+  //sampleData();
+  learnModel();
   //testCollision();
   //testOnRobot();
   //testFTCompensation();

@@ -2,7 +2,7 @@
 
 #include <hybrid_automaton/System.h>
 #include <Eigen/Dense>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 //#include <RosCom/roscom.h>
 #include <Actions/swig.h>
 

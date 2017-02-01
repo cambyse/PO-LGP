@@ -21,7 +21,7 @@
 #include <Core/util.h>
 #include <Core/array.h>
 #include <Core/array.tpp>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Core/util.h>
 #include <stdlib.h>
 #include "mobject.h"
@@ -30,7 +30,7 @@
 
 struct AdaptiveMotionExecution{
 
-    AdaptiveMotionExecution(ors::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
+    AdaptiveMotionExecution(mlr::KinematicWorld &_world, arr& _trajRef, double _dt, double _TRef, arr &_x0, arr &_q0, MObject &_goalMO, \
         bool _useOrientation);
     void printState();
     void plotState();
@@ -41,7 +41,7 @@ struct AdaptiveMotionExecution{
     void moveGoal(arr &_pos);
 
     void computeIK(arr &q, arr &qd);
-    ors::KinematicWorld *world;
+    mlr::KinematicWorld *world;
 
     double dt;
     double TRef;

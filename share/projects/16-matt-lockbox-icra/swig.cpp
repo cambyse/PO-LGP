@@ -50,19 +50,19 @@ sLockboxSwig::sLockboxSwig():L(&B){
     L.update();
     B.enablePosControl();
 
-//    ors::Transformation tf = B.getModelWorld().getShapeByName("alvar_10")->X;
+//    mlr::Transformation tf = B.getModelWorld().getShapeByName("alvar_10")->X;
 
 
 //    // Position task
 //    mlr::String str;
-//    ors::Vector target = tf*ors::Vector(-0.05, 0, 0.25);
+//    mlr::Vector target = tf*mlr::Vector(-0.05, 0, 0.25);
 //    str << "map=pos ref1=endeffL ref2=base_footprint vec2=[" << target.x << ", " << target.y << ", " << target.z << "] PD=[1., 1.2, .2, 1.]";
 
 //    auto approach = B.task(GRAPH(str));
 
-//    ors::Vector vecx = tf.rot * ors::Vector(0,0,-1); vecx.normalize();
-//    ors::Vector vecy = tf.rot * ors::Vector(1,0,0); vecy.normalize();
-//    ors::Vector vecz = tf.rot * ors::Vector(0,-1, 0); vecz.normalize();
+//    mlr::Vector vecx = tf.rot * mlr::Vector(0,0,-1); vecx.normalize();
+//    mlr::Vector vecy = tf.rot * mlr::Vector(1,0,0); vecy.normalize();
+//    mlr::Vector vecz = tf.rot * mlr::Vector(0,-1, 0); vecz.normalize();
 //    auto alignX = B.task("alignX", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[1 0 0] vec2=[" << vecx.x << ' ' << vecx.y << ' ' << vecx.z << "] target=[1] prec=[1000]  PD=[1., 1.2, .2, 1.]")));
 //    auto alignY = B.task("alignY", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 1 0] vec2=[" << vecy.x << ' ' << vecy.y << ' ' << vecy.z << "] target=[1] prec=[1000] PD=[1., 1.2, .2, 1.]")));
 //    auto alignZ = B.task("alignZ", GRAPH(STRING("map=vecAlign ref1=endeffL ref2=base_footprint vec1=[0 0 1] vec2=[" << vecz.x << ' ' << vecz.y << ' ' << vecz.z << "] target=[1] prec=[1000] PD=[1., 1.2, .2, 1.]")));

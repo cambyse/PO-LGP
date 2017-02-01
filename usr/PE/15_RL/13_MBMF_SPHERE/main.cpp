@@ -4,7 +4,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <pr2/roscom.h>
 #include <System/engine.h>
 #include "../12_MBMF_LEARNING/task_manager.h"
@@ -14,7 +14,7 @@
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
   TaskManager *tm = new DonutTask();
-  ors::KinematicWorld world("donut.ors");
+  mlr::KinematicWorld world("donut.ors");
   arr Xdemo;
   tm->createSynthethicDemonstration(Xdemo,world);
   //  displayTrajectory(Xdemo,-1,world,"Xdemo");

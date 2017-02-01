@@ -1,7 +1,7 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>

@@ -5,7 +5,7 @@
 #include <Motion/komo.h>
 #include <Motion/motion.h>
 
-PoseGenerator::PoseGenerator(const ors::KinematicWorld& W) : W(W) {
+PoseGenerator::PoseGenerator(const mlr::KinematicWorld& W) : W(W) {
   q0 = W.getJointState();
 }
 
@@ -28,15 +28,15 @@ arr PoseGenerator::getRandomPose(const arr& qInit) {
   komo.setSquaredQVelocities();
   komo.setCollisions(true, 0.15);
   komo.setLimits(true, 0.1);
-  komo.setPosition(1., 1., "endeffR", NULL, sumOfSqrTT, posR);
-  komo.setPosition(1., 1., "endeffL", NULL, sumOfSqrTT, posL);
-  komo.setAlign(1., 1., "endeffR", ARR(1.,0.,0.), NULL, vecR, sumOfSqrTT, {1.});
-  komo.setAlign(1., 1., "endeffL", ARR(1.,0.,0.), NULL, vecL, sumOfSqrTT, {1.});
+  komo.setPosition(1., 1., "endeffR", NULL, OT_sumOfSqr, posR);
+  komo.setPosition(1., 1., "endeffL", NULL, OT_sumOfSqr, posL);
+  komo.setAlign(1., 1., "endeffR", ARR(1.,0.,0.), NULL, vecR, OT_sumOfSqr, {1.});
+  komo.setAlign(1., 1., "endeffL", ARR(1.,0.,0.), NULL, vecL, OT_sumOfSqr, {1.});
 
   arr lim = W.getLimits();
   uint qIdx = W.getJointByName("head_tilt_joint")->qIndex;
   double qh = lim(qIdx,0)+rand(1).last()*(lim(qIdx,1)-lim(qIdx,0));
-  Task* t = komo.MP->addTask("headTilt", new TaskMap_qItself(qIdx,W.getJointStateDimension()), sumOfSqrTT);
+  Task* t = komo.MP->addTask("headTilt", new TaskMap_qItself(qIdx,W.getJointStateDimension()), OT_sumOfSqr);
   t->setCostSpecs(komo.MP->T-1, komo.MP->T, ARR(qh), 1.);
 
   komo.reset();
@@ -63,27 +63,27 @@ arr PoseGenerator::getTraj(arr qInit, arr qEnd) {
   Task *t;
   MP.world.setJointState(qInit);
 
-  t = MP.addTask("transitions", new TaskMap_Transition(W), sumOfSqrTT);
+  t = MP.addTask("transitions", new TaskMap_Transition(W), OT_sumOfSqr);
   t->map.order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
-  t = MP.addTask("q", new TaskMap_qItself, sumOfSqrTT);
+  t = MP.addTask("q", new TaskMap_qItself, OT_sumOfSqr);
   t->setCostSpecs(MP.T-1, MP.T, qEnd, 1e2);
 
-  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), ineqTT);
+  t = MP.addTask("collisionConstraints", new CollisionConstraint(.1), OT_ineq);
   t->setCostSpecs(0, MP.T, {0.}, 1.);
-  t = MP.addTask("limits", new LimitsConstraint(0.1), ineqTT);
+  t = MP.addTask("limits", new LimitsConstraint(0.1), OT_ineq);
   t->setCostSpecs(10, MP.T, {0.}, 1.);
 
   //    // sample a head joint
   //    arr lim = W.getLimits();
   //    uint qIdx = W.getJointByName("head_pan_joint")->qIndex;
   //    double qh = lim(qIdx,0)+rand(1).last()*(lim(qIdx,1)-lim(qIdx,0));
-  //    t = MP.addTask("head1", new TaskMap_qItself(qIdx,W.getJointStateDimension()), sumOfSqrTT);
+  //    t = MP.addTask("head1", new TaskMap_qItself(qIdx,W.getJointStateDimension()), OT_sumOfSqr);
   //    t->setCostSpecs(MP.T-1, MP.T, ARR(qh), 1.);
   //    qIdx = W.getJointByName("head_tilt_joint")->qIndex;
   //    qh = lim(qIdx,0)+rand(1).last()*(lim(qIdx,1)-lim(qIdx,0));
-  //    t = MP.addTask("head2", new TaskMap_qItself(qIdx,W.getJointStateDimension()), sumOfSqrTT);
+  //    t = MP.addTask("head2", new TaskMap_qItself(qIdx,W.getJointStateDimension()), OT_sumOfSqr);
   //    t->setCostSpecs(MP.T-1, MP.T, ARR(qh), 1.);
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -93,7 +93,7 @@ arr PoseGenerator::getTraj(arr qInit, arr qEnd) {
   //-- optimize
   optConstrained(x, NoArr, Convert(MP), OPT(verbose=1, stopIters=100, stopTolerance=1e-3, damping=1., maxStep=1.,aulaMuInc=2, nonStrictSteps=5));
   cout <<"** optimization time=" <<mlr::timerRead()
-      <<" setJointStateCount=" <<ors::KinematicWorld::setJointStateCount <<endl;
+      <<" setJointStateCount=" <<mlr::KinematicWorld::setJointStateCount <<endl;
   MP.costReport();
 
   Graph result = MP.getReport();

@@ -52,9 +52,9 @@ void soc::getPhaseTrajectory(arr& _q, const arr& q, double tau){
   _q.resize(T, 2, n);
   for(t=0;t<T;t++){
     getVelocity(vt, q, t, tau);
-    _q.refDim(t, 0)=q[t];
-    if(t) _q.refDim(t, 1)=(q[t]-q[t-1])/tau;
-    else  _q.refDim(t, 1)=0.;
+    _q(t, 0, {})=q[t];
+    if(t) _q(t, 1, {})=(q[t]-q[t-1])/tau;
+    else  _q(t, 1, {})=0.;
   }
   _q.reshape(T, 2*n);
 }

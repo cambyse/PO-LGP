@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 #include <Algo/kalman.h>
 #include <Motion/motion.h>
@@ -42,8 +42,8 @@ void testGradient(){
   arr y = zeros(M);
   for(uint m=0;m<M;m++){
     y(m) = RacerBalancingBenchmark.fs(NoArr, NoArr, k+X[m]);
-    arr Xsub = catCol(ones(m+1),X.refRange(0,m));
-    arr ysub = y.refRange(0,m);
+    arr Xsub = catCol(ones(m+1),X({0,m}));
+    arr ysub = y({0,m});
     cout <<inverse_SymPosDef(~Xsub*Xsub + 1e-6*eye(k.N+1))* ~Xsub * ysub <<endl;
   }
   X = catCol(ones(M),X);

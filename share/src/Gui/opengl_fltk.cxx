@@ -22,7 +22,7 @@
 #include <FL/fl_draw.H>
 
 #include "opengl.h"
-#include "ors.h"
+#include "kin.h"
 
 
 //===========================================================================
@@ -39,8 +39,8 @@ struct sOpenGL:public Fl_Gl_Window{
   OpenGL *gl;
   int w_old,h_old;
   
-  ors::Vector downVec,downPos,downFoc;
-  ors::Quaternion downRot;
+  mlr::Vector downVec,downPos,downFoc;
+  mlr::Quaternion downRot;
   
   void draw();
   int handle(int event);

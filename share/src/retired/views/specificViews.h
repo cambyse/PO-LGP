@@ -2,7 +2,7 @@
 #define SPECIFICVIEWS_H_
 
 #include "views.h"
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 
 //===========================================================================
 
@@ -30,23 +30,23 @@ struct RgbView:View{
 
 //===========================================================================
 
-namespace ors{ struct Mesh; }
+namespace mlr{ struct Mesh; }
 
 struct MeshView:View{
   MeshView():View(){}
-  MeshView(ors::Mesh& mesh, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&mesh; objectLock=_lock; gtkNew(container); }
+  MeshView(mlr::Mesh& mesh, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&mesh; objectLock=_lock; gtkNew(container); }
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }
 };
 
 //===========================================================================
 
-namespace ors{ struct Graph; }
+namespace mlr{ struct Graph; }
 
 struct OrsView:View {
-  ors::KinematicWorld orsCopy;
+  mlr::KinematicWorld orsCopy;
   OrsView():View(){}
-  OrsView(ors::KinematicWorld& ors, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&ors; objectLock=_lock; gtkNew(container); }
+  OrsView(mlr::KinematicWorld& ors, RWLock *_lock=NULL, GtkWidget *container=NULL):View(){ object=&ors; objectLock=_lock; gtkNew(container); }
   void glInit();
   void glDraw();
   void gtkNew(GtkWidget *container){ gtkNewGl(container); }

@@ -1,4 +1,4 @@
-#include <Ors/ors.h>
+#include <Kin/kin.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
 
@@ -36,7 +36,7 @@ ScalarFunction cylinder = [](arr&,arr&, const arr& X){
   };
 
 void TEST(SimpleImplicitSurfaces) {
-  ors::Mesh m;
+  mlr::Mesh m;
   OpenGL gl;
   gl.add(glStandardScene,NULL);
   gl.add(m);

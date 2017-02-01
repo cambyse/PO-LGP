@@ -58,12 +58,12 @@ void drawRefTraj(void* classP){
 
 
 
-void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal, arr dir=ARR(0.,0.,0.),arr axis=ARR(0.,0.,0.)) {
+void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal, arr dir={0.,0.,0.},arr axis={0.,0.,0.}) {
 
   //------------------------------------------------//
   // Compute optimal trajectory
   //------------------------------------------------//
-  ors::KinematicWorld world(scene);
+  mlr::KinematicWorld world(scene);
   world.gl().resize(1000,800);
 
 
@@ -77,28 +77,28 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   Task *c;
   c = P.addTask("transition", 	new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
-  c->setCostSpecs(0, P.T, ARR(0.),1e-2);
+  c->setCostSpecs(0, P.T, {0.},1e-2);
 
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
 
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                           {0.,0.,0.}, 1e-3);
-  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", ors::Vector(0., 0., 0.)));
+  c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->map.order=1;
   c->setCostSpecs(P.T, P.T,
                              {0.,0.,0.}, 1e3,
                              {0.,0.,0.}, 0.);
 
   if (useOrientation) {
-    c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",ors::Vector(0., 0., 0.)));
+    c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 0.)));
     c->setCostSpecs(P.T, P.T,
                             {0.,0.,1.}, 1e4,
                             {0.,0.,0.}, 1e-3);
   }
 
   if (useCollAvoid) {
-//    c = P.addTask("collision", new TaskMap_Default(collTMT, 0, ors::Vector(0., 0., 0.), 0, ors::Vector(0., 0., 0.), ARR(.1)));
+//    c = P.addTask("collision", new TaskMap_Default(collTMT, 0, mlr::Vector(0., 0., 0.), 0, mlr::Vector(0., 0., 0.), {.1}));
 //    c->setCostSpecs(0, P.T, {0.}, 1e0);
   }
 
@@ -214,12 +214,12 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
 
 
     // task 1: POSITION
-    yPos_target = yNext.refRange(0,2);
+    yPos_target = yNext({0,2});
     Phi = ((yPos - yPos_target)/ fPos_deviation);
     PhiJ = (JPos / fPos_deviation);
 
     // task  2: ORIENTATION
-    yVec_target = yNext.refRange(3,5);
+    yVec_target = yNext({3,5});
     Phi.append((yVec - yVec_target)/ fVec_deviation);
     PhiJ.append(JVec / fVec_deviation);
 
@@ -260,12 +260,12 @@ int main(int argc,char **argv){
 //  runAMEX(String("scenes/apollo_right_stat1"),true,true,false);
 //  runAMEX(String("scenes/apollo_right_stat2"),true,true,false);
 //  runAMEX(String("scenes/apollo_right_stat3"),true,true,false);
-//  runAMEX(String("scenes/apollo_right_dyn1"),true,true,true,ARR(0.5,0.3,1.));
-//  runAMEX(String("scenes/apollo_right_dyn2"),true,true,true,ARR(-1.,0.2,-1.));
-//  runAMEX(String("scenes/apollo_right_dyn3"),true,true,true,ARR(-1.,0.2,1.));
+//  runAMEX(String("scenes/apollo_right_dyn1"),true,true,true,{0.5,0.3,1.});
+//  runAMEX(String("scenes/apollo_right_dyn2"),true,true,true,{-1.,0.2,-1.});
+//  runAMEX(String("scenes/apollo_right_dyn3"),true,true,true,{-1.,0.2,1.});
 //  runAMEX(String("scenes/apollo_right_obs1"),true,true,false);
-//  runAMEX(String("scenes/apollo_right_obs2"),true,true,false,ARR(0.,0.,1.));
-//  runAMEX(String("scenes/apollo_right_obs3"),true,true,false,ARR(0.,0.,0.),ARR(1.,0,0.));
+//  runAMEX(String("scenes/apollo_right_obs2"),true,true,false,{0.,0.,1.});
+//  runAMEX(String("scenes/apollo_right_obs3"),true,true,false,{0.,0.,0.},{1.,0,0.});
 //    runAMEX(String("scenes/scene1"),true,false,false);
 //    runAMEX(String("scenes/scene3"),true,true);
   //  runAMEX(String("scenes/scene4"),true,true);

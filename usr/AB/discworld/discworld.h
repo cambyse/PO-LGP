@@ -1,7 +1,7 @@
 #ifndef _DISC_WORLD_
 #define _DISC_WORLD_
 
-#include <Ors/ors_physx.h>
+#include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 
@@ -13,14 +13,14 @@ class DiscWorld {
     static float const GOAL_HEIGHT;
     static float const RADIUS;
 
-    ors::KinematicWorld *ors;
+    mlr::KinematicWorld *ors;
     OpenGL *gl;
     PhysXInterface *physx;
 
     bool mode;
     int N, T, G;
-    mlr::Array<ors::Vector> bodies;
-    mlr::Array<ors::Vector> goals;
+    mlr::Array<mlr::Vector> bodies;
+    mlr::Array<mlr::Vector> goals;
     StringL names;
 
     KeyFramer kf;
@@ -39,11 +39,11 @@ class DiscWorld {
 
     void addBody(int n = 1);
     bool addBody(float x, float y);
-    bool addBody(const ors::Vector &p);
+    bool addBody(const mlr::Vector &p);
 
     void addGoal(int n);
     void addGoal(float x, float y);
-    void addGoal(const ors::Vector &p);
+    void addGoal(const mlr::Vector &p);
 
     void setSpeed(float s);
     void setNBodies(int n);
@@ -58,8 +58,8 @@ class DiscWorld {
 
     void clearGui();
 
-    void setGoal(ors::Body *goal, int g);
-    bool move(ors::Body *agent, ors::Body *goal);
+    void setGoal(mlr::Body *goal, int g);
+    bool move(mlr::Body *agent, mlr::Body *goal);
     void recStep(int t);
     void playStep(int t);
 };

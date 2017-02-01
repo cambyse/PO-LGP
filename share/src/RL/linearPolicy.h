@@ -5,6 +5,8 @@
 struct LinearPolicy : mlr::Policy{
   double exploration;
 
+  uint shiftOffsetInterval;
+
   LinearPolicy();
 
   uint getThetaDim(const mlr::Environment& E, const mlr::Filter& F) const{ return E.getActionDim()*F.getFeatureDim(); }
@@ -13,6 +15,6 @@ struct LinearPolicy : mlr::Policy{
     return  .1 * randn(E.getActionDim(), F.getFeatureDim());
   }
 
-  double sampleAction(arr& action, arr& dLogPAction, const arr& inputFeatures, const arr& theta);
+  double sampleAction(arr& action, arr& dLogPAction, const arr& inputFeatures, const arr& theta, uint t);
 
 };

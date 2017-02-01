@@ -1,4 +1,4 @@
-#include <Ors/roboticsCourse.h>
+#include <Kin/roboticsCourse.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
@@ -135,7 +135,7 @@ void peg_in_a_hole(){
 
 
 
-void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const double& height){
+void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const double& height){
 
   //set table height
   world.getBodyByName("hole")->X.pos.z = height;
@@ -189,16 +189,16 @@ void getTrajectory(arr& x, arr& y, arr& dual, ors::KinematicWorld& world, const 
 /// \param world
 /// \param num
 ///
-void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, ors::KinematicWorld& world, int num){
+void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, mlr::KinematicWorld& world, int num){
   arr q, qdot;
   world.getJointState(q, qdot);
 
   ofstream data(STRING("data-"<<num<<".dat"));
 
-  ors::Shape *endeff = world.getShapeByName("endeff");
-  ors::Shape *true_target = world.getShapeByName("truetarget");
-  ors::Body *est_target = world.getBodyByName("target");
-  ors::Body *table = world.getBodyByName("table");
+  mlr::Shape *endeff = world.getShapeByName("endeff");
+  mlr::Shape *true_target = world.getShapeByName("truetarget");
+  mlr::Body *est_target = world.getBodyByName("target");
+  mlr::Body *table = world.getBodyByName("table");
   double mean_table_height = table->X.pos.z;
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
@@ -350,8 +350,8 @@ int main(int argc,char **argv){
   //peg_in_a_hole();
   //ball_in_a_hole(); 
 
-  //ors::KinematicWorld world("pegInAHole.ors");
-  ors::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
+  //mlr::KinematicWorld world("pegInAHole.ors");
+  mlr::KinematicWorld world(mlr::getParameter<mlr::String>("orsFile"));
 
   mlr::timerStart(true);
 

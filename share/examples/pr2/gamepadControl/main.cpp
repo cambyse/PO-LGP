@@ -4,7 +4,7 @@
 #include <Actions/gamepadControl.h>
 #include <Control/TaskControllerModule.h>
 #include <Hardware/gamepad/gamepad.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 
 #include <sensor_msgs/JointState.h>
 #include <RosCom/baxter.h>
@@ -27,6 +27,7 @@ int main(int argc, char** argv){
   GamepadControlActivity gpc;
 //  OrsViewer view;
   OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
+#if 1
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
   if(mlr::getParameter<bool>("useRos")){
     mlr::String robot = mlr::getParameter<mlr::String>("robot", "pr2");
@@ -46,6 +47,7 @@ int main(int argc, char** argv){
   moduleShutdown().waitForValueGreaterThan(0);
 
   threadCloseModules();
+#endif
 
   //NodeL subs = registry().getNodesOfType<SubscriberType*>();
   //for(Node *n:subs){ delete n->get<SubscriberType*>(); delete n; }

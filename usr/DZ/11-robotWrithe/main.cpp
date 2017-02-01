@@ -1,5 +1,5 @@
 #include <MT/soc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/util.h>
 #include <Core/array.h>
 #include <MT/specialTaskVariables.h>
@@ -65,7 +65,7 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
   activateAll(sys.vars, false);
   
   //activate collision testing with target shape
- // ors::Shape *obj = sys.ors->GetShapeByName("target");
+ // mlr::Shape *obj = sys.ors->GetShapeByName("target");
  // obj->cont=true;
   sys.swift->initActivations(*sys.ors);
   
@@ -107,7 +107,7 @@ void setMyGraspGoals(soc::SocSystem_Ors& sys, uint T){
 }
                                       
   
-void GetRopesTest(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points){
+void GetRopesTest(arr& r1,arr& r2,mlr::KinematicWorld& _ors,int rope_points){
   //// TODO change it all!!!
   
   arr rope1=arr(rope_points,3); 
@@ -115,7 +115,7 @@ void GetRopesTest(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points){
   arr ty;
   
   uint start_body = 2; 
-  ors::Vector rel; rel.setZero();
+  mlr::Vector rel; rel.setZero();
   
   for (int i=0;i<rope_points;i++) {// start with second body part
       _ors.kinematicsPos(ty,i+start_body,  &rel); 
@@ -139,7 +139,7 @@ void GetRopesTest(arr& r1,arr& r2,ors::KinematicWorld& _ors,int rope_points){
 void problem7(){        
   cout <<"\n=Kuka ring task, severe problems with control=\n" <<endl;
   soc::SocSystem_Ors sys;  
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("kuka.ors")));
   OpenGL gl;                       
   arr p,q0;       
@@ -160,7 +160,7 @@ void problem7(){
   sys.setq0(q0);
   uint wrsize=5;  
    double eps =1e1;   
- TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"endeff","<t(0 0 .0)>",0,0,ARR()); //arm20
+ TaskVariable *reach = new DefaultTaskVariable("reach",ors, posTVT,"endeff","<t(0 0 .0)>",0,0,arr()); //arm20
   arr xtarget; 
   xtarget.setCarray(sys.ors->getShapeByName("cyl1")->X.pos.p, 3);
   reach->y_target = xtarget;   

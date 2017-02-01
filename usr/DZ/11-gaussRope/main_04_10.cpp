@@ -1,5 +1,5 @@
 #include <MT/soc.h>
-#include <MT/ors.h>
+#include <MT/kin.h>
 #include <MT/socSystem_ors.h>
 #include <MT/soc_inverseKinematics.h>
 #include <MT/opengl.h>
@@ -14,7 +14,7 @@ const char* USAGE="usage: ./x.exe -orsfile test.ors -dynamic 1 -Hcost 1e-3";
  
 int main(int argc,char **argv){     
   mlr::initCmdLine(argc,argv);
-  ors::KinematicWorld ors;
+  mlr::KinematicWorld ors;
   ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("rope.ors")));
  //ors.init(mlr::getParameter<mlr::String>("orsfile",mlr::String("writhe.ors")));
   SwiftInterface swift;
@@ -22,7 +22,7 @@ int main(int argc,char **argv){
   
   OpenGL gl;
   gl.add(glStandardScene);
-  gl.add(ors::glDrawGraph,&ors);
+  gl.add(mlr::glDrawGraph,&ors);
   gl.camera.setPosition(5,-10,10);
   gl.camera.focus(0,0,1);
  
@@ -37,7 +37,7 @@ uint T=50;
   //-- setup the control variables (problem definition)
   arr q;
   soc.getq0(q); 
-  TaskVariable *pos = new TaskVariable("position",ors, posTVT,"arm10","<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *pos = new TaskVariable("position",ors, posTVT,"arm10","<t(0 0 .2)>",0,0,arr());
   pos->setGainsAsNatural(20,.2);
   pos->targetType=positionGainsTT;
   pos->y_target = arr(ors.getBodyByName("target")->X.pos.p,3);
@@ -66,7 +66,7 @@ uint T=50;
               
       
 
-  TaskVariable *qit = new TaskVariable("qit",ors,  qItselfTVT,NULL,"<t(0 0 .2)>",0,0,ARR());
+  TaskVariable *qit = new TaskVariable("qit",ors,  qItselfTVT,NULL,"<t(0 0 .2)>",0,0,arr());
   qit->setGainsAsNatural(20,.2);
   qit->targetType=positionGainsTT;
   q(10)=-1.0;

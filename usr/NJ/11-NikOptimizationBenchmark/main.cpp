@@ -13,7 +13,7 @@
 //init in an awkward position and make movement by following init traj with IK
 void problem1(){
 	arr qhome = ARR(-1.32216, -0.731968 ,-1.725, -1.63269, -1.24208, 0.592419, -1.26379);
-    ors::Vector target(-0.336507, -0.9, 0.95);
+    mlr::Vector target(-0.336507, -0.9, 0.95);
     setTargetAndQ(qhome,target);
     arr Clust = inerpolateDatabaseMotion(3,T+1);//a cluster traj that solves the problem
     arr q = IKTrajWithInit(Clust);
@@ -31,7 +31,7 @@ void problem1(){
 //same as problem,s 1, but using conditioning withing planner instead of IK
 void problem2(){
 	arr qhome = ARR(-1.32216, -0.731968 ,-1.725, -1.63269, -1.24208, 0.592419, -1.26379);
-    ors::Vector target(-0.336507, -0.9, 0.95);
+    mlr::Vector target(-0.336507, -0.9, 0.95);
     setTargetAndQ(qhome,target);
     arr Clust = inerpolateDatabaseMotion(3,T+1);//a cluster traj that solves the problem
     setKReachGoals(Clust);

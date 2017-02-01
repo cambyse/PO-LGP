@@ -35,10 +35,10 @@ arr inerpolateDatabaseMotion(int nInit, uint time)  {
 	return a;
 }
 
-void setTargetAndQ(const arr & qhome,const ors::Vector target){
+void setTargetAndQ(const arr & qhome,const mlr::Vector target){
 	sys.ors->setJointState(qhome);
 	sys.ors->calcBodyFramesFromJoints();
-	ors::Body *obj = sys.ors->getBodyByName("target");
+	mlr::Body *obj = sys.ors->getBodyByName("target");
 	obj->X.pos = target;
 }
 

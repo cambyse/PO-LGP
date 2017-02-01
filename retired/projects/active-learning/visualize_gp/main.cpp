@@ -27,7 +27,7 @@
 SET_LOG(main, DEBUG);
 
 #include <MT/array_t.cxx>
-#include <MT/ors.h>
+#include <MT/kin.h>
 
 #include <csignal>
 
@@ -48,20 +48,20 @@ void generateTrueSamples(arr& n, arr& p, arr& fn, arr& fp, const ActiveLearner *
 
       
      //mlr::Array<arr> sample;
-     //sample.append(ARR(0.,0.,0.));
-     //sample.append(ARR(0));
-     //sample.append(ARR(x,y,z));
-     //sample.append(ARR(0));
+     //sample.append({0.,0.,0.});
+     //sample.append({0.});
+     //sample.append({x,y,z});
+     //sample.append({0.});
      sample.reshape(1,4);
      //if(sample(0,1)(0) == 7) {
      if(al->classify(sample) == o.classify(sample) && o.classify(sample)) {
        j++;
-       //inlier.append(ARR(-x, -y, -z));
+       //inlier.append({-x, -y, -z});
        p.append(sample(0,2) - sample(0,0));
      }
      else if(al->classify(sample) == o.classify(sample) && !o.classify(sample)) {
        m++;
-       //inlier.append(ARR(-x, -y, -z));
+       //inlier.append({-x, -y, -z});
        n.append(sample(0,2) - sample(0,0));
      }
      else if(o.classify(sample)){

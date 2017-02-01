@@ -68,6 +68,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   void set(const Graph& params);
   void setTarget(const arr& yref, const arr& vref=NoArr);
+  void setTargetToCurrent();
   void setGains(const arr& _Kp, const arr& _Kd);
   void setGains(double Kp, double Kd);
   void setGainsAsNatural(double decayTime, double dampingRatio); ///< the decayTime is the to decay to 10% of the initial offset/error
@@ -79,7 +80,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   arr getDesiredAcceleration(const arr& y, const arr& ydot);
   void getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0, const arr& y, const arr& ydot);
-  void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const ors::KinematicWorld& world);
+  void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& KfL, arr& J_ft, const mlr::KinematicWorld& world);
 
   double error();
   bool isConverged(double tolerance=1e-2);
@@ -107,21 +108,21 @@ struct ConstraintForceTask{
  * TaskController contains all individual motions/CtrlTasks.
  */
 struct TaskController {
-  ors::KinematicWorld& world;
+  mlr::KinematicWorld& world;
   mlr::Array<CtrlTask*> tasks;
   mlr::Array<ConstraintForceTask*> forceTasks;
   CtrlTask qNullCostRef;
   bool useSwift;
 
-  TaskController(ors::KinematicWorld& _world, bool _useSwift=true);
+  TaskController(mlr::KinematicWorld& _world, bool _useSwift=true);
 
   /// @{ @name adding tasks
   CtrlTask* addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map);
   CtrlTask* addPDTask(const char* name,
                     double decayTime, double dampingRatio,
                     TaskMap_DefaultType type,
-                    const char* iShapeName=NULL, const ors::Vector& ivec=NoVector,
-                    const char* jShapeName=NULL, const ors::Vector& jvec=NoVector);
+                    const char* iShapeName=NULL, const mlr::Vector& ivec=NoVector,
+                    const char* jShapeName=NULL, const mlr::Vector& jvec=NoVector);
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
   /// @}
 

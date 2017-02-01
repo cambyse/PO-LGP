@@ -2,9 +2,9 @@
 #include <Control/taskController.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
-#include <Motion/pr2_heuristics.h>
+
 #include <Motion/phase_optimization.h>
-#include <Optim/opt-constrained.h>
+#include <Optim/lagrangian.h>
 #include <RosCom/roscom.h>
 #include <RosCom/rosmacro.h>
 #include <RosCom/subscribeAlvarMarkers.h>
@@ -43,8 +43,8 @@ struct PR2Grasp {
   message_filters::TimeSynchronizer<obj_id_pkg::MarkerArray, obj_id_pkg::ObjId> *eyespy_sync;
 
 
-//  ors::KinematicWorld world;
-//  ors::KinematicWorld world_pr2;
+//  mlr::KinematicWorld world;
+//  mlr::KinematicWorld world_pr2;
   TrajectoryInterface *ti;
 
 //  PR2Grasp(ros::NodeHandle &nh_);
@@ -55,7 +55,7 @@ struct PR2Grasp {
   void eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid);
   bool eyespy_grasp_service(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
-  void graspObject(ors::Shape *object);
+  void graspObject(mlr::Shape *object);
   void home(void);
   void run(void);
 };
@@ -100,7 +100,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
 // void PR2Grasp::eyespy_grasp_callback(const object_recognition_msgs::TableArrayConstPtr &msg_ta, const obj_id_pkg::MarkerArrayConstPtr &msg_ma, const obj_id_pkg::ObjIdConstPtr &msg_oid) {
   cout << "eyespy_grasp_callback initiated" << endl;
 
-  // ors::KinematicWorld world("model_plan.kvg");
+  // mlr::KinematicWorld world("model_plan.kvg");
   // world.watch(false);
   // world.gl().resize(800,800);
   // world.gl().add(changeColor2);
@@ -121,7 +121,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
     {1, 1, 1},
   };
 
-  ors::Shape *object=nullptr;
+  mlr::Shape *object=nullptr;
 
   uint nobj=0;
   uint nmarkers = msg_ma->markers.size();
@@ -138,8 +138,8 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
     // if(true) {
     // if(zmin > .5) {
     if(zmin > .25) {
-      // ors::Shape *pcShape = new ors::Shape(*ti->world_plan, NoBody);
-      // pcShape->type = ors::pointCloudST;
+      // mlr::Shape *pcShape = new mlr::Shape(*ti->world_plan, NoBody);
+      // pcShape->type = mlr::ST_pointCloud;
       // pcShape->name = STRING("pcShape_"<<nobj);
 
       // pcShape->color[0] = colors[nobj][0];
@@ -157,14 +157,14 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
       arr dir = W.col(0); dir.flatten();
       dir(2) = 0;
 
-      ors::Body *boxBody = new ors::Body(*ti->world_plan);
+      mlr::Body *boxBody = new mlr::Body(*ti->world_plan);
       boxBody->name = STRING("boxBody_"<<nobj);
-      boxBody->type = ors::BodyType::dynamicBT;
+      boxBody->type = mlr::BodyType::BT_dynamic;
       boxBody->X.pos = center;
-      boxBody->X.rot.setDiff(ors::Vector(1.,0.,0.),dir);
+      boxBody->X.rot.setDiff(mlr::Vector(1.,0.,0.),dir);
 
-      ors::Shape *boxShape = new ors::Shape(*ti->world_plan, *boxBody);
-      boxShape->type = ors::boxST;
+      mlr::Shape *boxShape = new mlr::Shape(*ti->world_plan, *boxBody);
+      boxShape->type = mlr::ST_box;
       boxShape->name = STRING("boxShape_"<<nobj);
       arr size = ARRAY(Y.col(0).max()-Y.col(0).min(),Y.col(1).max()-Y.col(1).min(),points.col(2).max()-points.col(2).min(), 0.);
       memmove(boxShape->size, size.p, 4*sizeof(double));
@@ -182,7 +182,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
   graspObject(object);
 }
 
-void PR2Grasp::graspObject(ors::Shape *object) {
+void PR2Grasp::graspObject(mlr::Shape *object) {
   if(object) {
     arr X;
     MotionProblem MP(*ti->world_plan);
@@ -193,13 +193,13 @@ void PR2Grasp::graspObject(ors::Shape *object) {
     t->map.order=2; //make this an acceleration task!
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
 
-    t = MP.addTask("pos1", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.1)));
+    t = MP.addTask("pos1", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,mlr::Vector(0.,0.,0.1)));
     t->setCostSpecs(70, 80, {0.}, 1e2);
-    t = MP.addTask("rot1", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(1.,0.,0.), "base_link_0",ors::Vector(0.,0.,-1.)));
+    t = MP.addTask("rot1", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", mlr::Vector(1.,0.,0.), "base_link_0",mlr::Vector(0.,0.,-1.)));
     t->setCostSpecs(70, MP.T, {1.}, 1e1);
-    t = MP.addTask("rot2", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", ors::Vector(0.,0.,1.), object->name,ors::Vector(1.,0.,0.)));
+    t = MP.addTask("rot2", new TaskMap_Default(vecAlignTMT, *ti->world_plan, "endeffL", mlr::Vector(0.,0.,1.), object->name,mlr::Vector(1.,0.,0.)));
     t->setCostSpecs(70, MP.T, {1.}, 1e1);
-    t = MP.addTask("pos2", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,ors::Vector(0.,0.,0.)));
+    t = MP.addTask("pos2", new TaskMap_Default(posTMT, *ti->world_plan, "endeffL", NoVector, object->name,mlr::Vector(0.,0.,0.)));
     t->setCostSpecs(MP.T-5, MP.T, {0.}, 1e2);
     t = MP.addTask("limit", new LimitsConstraint());
     t->setCostSpecs(0, MP.T, ARR(0.), 1e2);
@@ -252,13 +252,13 @@ void PR2Grasp::run(void) {
 }
 
 void TEST(PointCloud) {
-  ors::KinematicWorld world("model_plan.kvg");
+  mlr::KinematicWorld world("model_plan.kvg");
   world.watch(false);
   world.gl().resize(800,800);
   world.gl().add(changeColor2);
 
-  ors::Shape *pcShape = new ors::Shape(world,NoBody);
-  pcShape->type = ors::pointCloudST;
+  mlr::Shape *pcShape = new mlr::Shape(world,NoBody);
+  pcShape->type = mlr::ST_pointCloud;
   pcShape->name = "pcShape";
   uint N=1000;
   arr scale = eye(3)*0.01;
@@ -279,13 +279,13 @@ void TEST(PointCloud) {
   pca(Y,v,W,points);
   arr dir = W.col(0); dir.flatten();
 
-  ors::Body *boxBody = new ors::Body(world);
+  mlr::Body *boxBody = new mlr::Body(world);
   boxBody->name = "boxBody";
-  boxBody->type = ors::BodyType::dynamicBT;
+  boxBody->type = mlr::BodyType::BT_dynamic;
   boxBody->X.pos = center;
-  boxBody->X.rot.setDiff(ors::Vector(1.,0.,0.),dir);
-  ors::Shape *boxShape = new ors::Shape(world,*boxBody);
-  boxShape->type = ors::boxST;
+  boxBody->X.rot.setDiff(mlr::Vector(1.,0.,0.),dir);
+  mlr::Shape *boxShape = new mlr::Shape(world,*boxBody);
+  boxShape->type = mlr::ST_box;
   boxShape->name = "boxShape";
   arr size = ARRAY(Y.col(0).max()-Y.col(0).min(),Y.col(1).max()-Y.col(1).min(),Y.col(2).max()-Y.col(2).min(), 0.);
   memmove(boxShape->size, size.p, 4*sizeof(double));
@@ -296,15 +296,15 @@ void TEST(PointCloud) {
 }
 
 void glDrawMesh(void *classP) {
-  ((ors::Mesh*)classP)->glDraw();
+  ((mlr::Mesh*)classP)->glDraw();
 }
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
 //  rosCheckInit("pr2_tabeltop_grasp");
-  ors::KinematicWorld world("model_plan.kvg");
-  ors::KinematicWorld world_pr2("model.kvg");
+  mlr::KinematicWorld world("model_plan.kvg");
+  mlr::KinematicWorld world_pr2("model.kvg");
 
 
   TrajectoryInterface *ti = new TrajectoryInterface(world,world_pr2);

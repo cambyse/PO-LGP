@@ -55,5 +55,5 @@ void TeleopControlActivity::close(){
 //===========================================================================
 
 RUN_ON_INIT_BEGIN(TeleopControl)
-registerActivity<TeleopControlActivity>("TeleopControlActivity");
+//registerActivity<TeleopControlActivity>("TeleopControlActivity");
 RUN_ON_INIT_END(TeleopControl)

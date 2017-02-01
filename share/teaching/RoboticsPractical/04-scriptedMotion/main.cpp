@@ -30,7 +30,7 @@ int main(int argc, char** argv){
     mlr::wait(3.);
 
     baxter.reportPerceptionObjects();
-    ors::Vector closest_vec = baxter.closestCluster();
+    mlr::Vector closest_vec = baxter.closestCluster();
 
     if (closest_vec.length() == 0)
       closest_vec.set(0.5, 0.6, 1);

@@ -45,7 +45,7 @@ void MotionPlanner::open() {
   if (s->verbose) {
     s->gl = new OpenGL("MotionPlanner");
     s->gl->add(glStandardScene);
-    s->gl->add(ors::glDrawGraph, &s->geo().ors);
+    s->gl->add(mlr::glDrawGraph, &s->geo().ors);
     s->gl->camera.setPosition(5, -10, 10);
     s->gl->camera.focus(0, 0, 1);
     s->gl->camera.upright();
@@ -137,8 +137,8 @@ void MotionPlanner::step() {
       } break;
       case sMotionPlanner::AICO_noinit: {
         //enforce zero velocity start/end vel
-        if (!s->sys.isKinematic()) x0.refRange(x0.N/2,-1) = 0.;
-        if (!s->sys.isKinematic()) xT.refRange(xT.N/2,-1) = 0.;
+        if (!s->sys.isKinematic()) x0({x0.N/2,-1}) = 0.;
+        if (!s->sys.isKinematic()) xT({xT.N/2,-1}) = 0.;
 
         //don't reuse AICO when plan in motion primitive has been cleared
         if(s->aico && m->get_q_plan(this).N==0){
