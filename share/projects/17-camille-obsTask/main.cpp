@@ -83,9 +83,19 @@ struct HeadGetSight:TaskMap{
     , objectPosition_( objectPosition )
     , pivotPoint_    ( pivotPoint )
     , headViewingDirection_( 0.0, -1.0, 0.0 )
+    , moveAroundPivotDefined_( false )
   {
     w1_ = objectPosition_ - pivotPoint_;
-    w1_ = w1_ * 1. / norm2( w1_ );
+
+    if( norm2( w1_ ) > 0 ) // normalize if the vector is not null
+    {
+      w1_ = w1_ * 1. / norm2( w1_ );
+      moveAroundPivotDefined_ = true;
+    }
+
+    // with current sensor position, determine which object occludes ( at least one triangle is traversed by the ray )
+
+    // determine the pivot point
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1){
@@ -96,41 +106,34 @@ struct HeadGetSight:TaskMap{
     arr headViewingDirection, headJViewingDirection;
     G.kinematicsVec( headViewingDirection, headJViewingDirection, head->body, headViewingDirection_ ); // get function to minimize and its jacobian in state G
 
-    // build u : vector between head and pivot point
-    arr u = pivotPoint_ - headPosition;
-    double uLength = norm2( u );
+    // build u : vector between head and object point
+    arr u = objectPosition_ - headPosition;
+    double normU = norm2( u );
     arr Ju = - headJPosition;
+    arr JnormU = Jnorm( u );  // get Jacobian of the norm operator
 
     // build v : orientation vector of the head
-    arr v = headViewingDirection;
-    arr Jv = headJViewingDirection;
-
-    // get Jacobian of the norm operator
-    arr JnormU = Jnorm( u );
+    arr v1 = headViewingDirection;
+    arr Jv1 = headJViewingDirection;
 
     // instantiate a temporary vector for cost and its Jacobian
     arr tmp_y = zeros( dim_ );
     arr tmp_J = zeros( dim_, headJPosition.dim(1) );
-    //arr tmp_J( dim_, headJPosition.dim(1) );
 
-    tmp_y.setVectorBlock( u - w1_ * uLength , 0 );  // cost corresponding to the head position
-    tmp_y.setVectorBlock( v - w1_ , u.d0 - 1 );     // cost corresponding to the head direction
+    // u - v
+    tmp_y.setVectorBlock( u  - v1  * normU                      , 0 );    // cost
+    tmp_J.setMatrixBlock( Ju -( v1 * JnormU * Ju + Jv1 * normU ),0 , 0 ); // jacobian
 
-    tmp_J.setMatrixBlock( Ju - w1_ * JnormU * Ju, 0, 0 );
-    tmp_J.setMatrixBlock( Jv, Ju.d0 - 1, 0 );
+    // u - w
+    if( moveAroundPivotDefined_ )
+    {
+      tmp_y.setVectorBlock( u -  w1_ * normU      , u.d0 - 1 );            // cost
+      tmp_J.setMatrixBlock( Ju - w1_ * JnormU * Ju, Ju.d0 - 1, 0 );        // jacobian
+    }
 
     // commit results
     y = tmp_y;
     if(&J) J = tmp_J;
-
-    // logs
-    //std::cout << "u - w1_ * uLength:" << u - w1_ * uLength<< std::endl;
-    //std::cout << "v - w1_:" << v - w1_ << std::endl;
-
-    //std::cout << "headPosition:" << headPosition<< std::endl;
-    //std::cout << "headViewingDirection" << headViewingDirection << std::endl;
-    //std::cout << "u/uL:" << u / uLength<< std::endl;
-    //std::cout << "w1_:" << w1_ << std::endl;
   }
 
   virtual uint dim_phi(const mlr::KinematicWorld& G){
@@ -148,6 +151,7 @@ private:
 
   // state
   arr w1_;
+  bool moveAroundPivotDefined_;
 };
 
 
@@ -177,8 +181,12 @@ void move(){
   //komo.setTask(1.0, 3.0, new HeadPoseMap(), OT_sumOfSqr, targetArr1, 1e2);
 
   komo.setTask( 1.0, 2.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
-                                            ARR( -0.2, -0.5, 1.9 ) ),  // pivot position
-                OT_sumOfSqr, NoArr, 1e2 );
+                                            ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
+                                            OT_sumOfSqr, NoArr, 1e2 );
+
+//  komo.setTask( 1.0, 2.0, new HeadGetSight( ARR(  1.0, -0.0, 1.9 ),    // object position
+//                                            ARR(  1.0, -0.0, 1.9 ) ),  // pivot position
+//                OT_sumOfSqr, NoArr, 1e2 );
 
   //komo.setTask(.3, .5, new HandPositionMap(), OT_sumOfSqr, ARR(.5,.5,1.3), 1e2);
   //komo.setTask(.8, 1., new HandPositionMap(), OT_sumOfSqr, ARR(.8,0.,1.3), 1e2);

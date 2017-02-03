@@ -1,9 +1,19 @@
+#include "search_space_tree.h"
 
-#include "code.h"
+#include <Core/util.tpp>
 
-Coop::Coop() : poseView("pose", 1., -0), seqView("sequence", 1., -0), pathView("path", .1, -1){}
+#include <Motion/komo.h>
+#include <Motion/motion.h>
+#include <Motion/taskMaps.h>
 
-void Coop::prepareKin(){
+#include <LGP/LGP.h>
+
+SearchSpaceTree::SearchSpaceTree()
+  : poseView("pose", 1., -0)
+  , seqView("sequence", 1., -0)
+  , pathView("path", .1, -1){}
+
+void SearchSpaceTree::prepareKin(){
   kin.init("LGP-coop-kin.g");
   //  kin.watch();
   computeMeshNormals(kin.shapes);
@@ -51,7 +61,7 @@ void Coop::prepareKin(){
 //  kin.watch(/*true*/);
 }
 
-void Coop::prepareFol(bool smaller){
+void SearchSpaceTree::prepareFol(bool smaller){
 //  fol.verbose = 5;
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
@@ -76,16 +86,16 @@ void Coop::prepareFol(bool smaller){
 
 }
 
-void Coop::prepareTree(){
+void SearchSpaceTree::prepareTree(){
   root = new ManipulationTree_Node(kin, fol);
   node = root;
 }
 
-void Coop::prepareDisplay(){
+void SearchSpaceTree::prepareDisplay(){
   threadOpenModules(true);
 }
 
-void Coop::updateDisplay(){
+void SearchSpaceTree::updateDisplay(){
   if(node->poseProblem && node->poseProblem->MP->configurations.N)
     poseView.setConfigurations(node->poseProblem->MP->configurations);
   if(node->seqProblem && node->seqProblem->MP->configurations.N)
@@ -108,7 +118,53 @@ void Coop::updateDisplay(){
   if(r) LOG(-1) <<"could not startup dot";
 }
 
-void Coop::printChoices(){
+bool SearchSpaceTree::execRandomChoice(){
+  mlr::String cmd;
+  if(rnd.uni()<.5){
+    switch(rnd.num(5)){
+      case 0: cmd="u"; break;
+      case 1: cmd="p"; break;
+      case 2: cmd="s"; break;
+      case 3: cmd="x"; break;
+      case 4: cmd="m"; break;
+    }
+  }else{
+    cmd <<rnd(node->children.N);
+  }
+  return execChoice(cmd);
+}
+
+bool SearchSpaceTree::execChoice( mlr::String cmd ){
+  cout <<"COMMAND: '" <<cmd <<"'" <<endl;
+
+  if(cmd=="q") return false;
+  else if(cmd=="u"){ if(node->parent) node = node->parent; }
+  else if(cmd=="p") node->solvePoseProblem();
+  else if(cmd=="s") node->solveSeqProblem();
+  else if(cmd=="x") node->solvePathProblem(20);
+  else if(cmd=="m") node->addMCRollouts(100,10);
+  else{
+    int choice;
+    cmd >> choice;
+    cout <<"CHOICE=" <<choice <<endl;
+    if(choice>=(int)node->children.N){
+      cout <<"--- there is no such choice" <<endl;
+    }else{
+      node = node->children(choice);
+      if(!node->isExpanded){
+        node->expand();
+        if(autoCompute){
+          node->solvePoseProblem();
+          //          node->solveSeqProblem();
+          //          node->solvePathProblem(20);
+        }
+      }
+    }
+  }
+  return true;
+}
+
+void SearchSpaceTree::printChoices() const{
   //-- query UI
   cout <<"********************" <<endl;
   cout <<"NODE:\n" <<*node <<endl;
@@ -126,7 +182,7 @@ void Coop::printChoices(){
   }
 }
 
-mlr::String Coop::queryForChoice(){
+mlr::String SearchSpaceTree::queryForChoice() const{
   mlr::String cmd;
   std::string tmp;
   getline(std::cin, tmp);
@@ -134,48 +190,51 @@ mlr::String Coop::queryForChoice(){
   return cmd;
 }
 
-bool Coop::execRandomChoice(){
-  mlr::String cmd;
-  if(rnd.uni()<.5){
-    switch(rnd.num(5)){
-      case 0: cmd="u"; break;
-      case 1: cmd="p"; break;
-      case 2: cmd="s"; break;
-      case 3: cmd="x"; break;
-      case 4: cmd="m"; break;
-    }
-  }else{
-    cmd <<rnd(node->children.N);
-  }
-  return execChoice(cmd);
+//===========================================================================
+
+double poseHeuristic(MNode* n){
+  return n->symCost;
 }
 
-bool Coop::execChoice(mlr::String cmd){
-  cout <<"COMMAND: '" <<cmd <<"'" <<endl;
+double mcHeuristic(MNode* n){
+  if(n->poseCount) return -10.+n->poseCost;
+  return 1.;
+}
 
-  if(cmd=="q") return false;
-  else if(cmd=="u"){ if(node->parent) node = node->parent; }
-  else if(cmd=="p") node->solvePoseProblem();
-  else if(cmd=="s") node->solveSeqProblem();
-  else if(cmd=="x") node->solvePathProblem(20);
-  else if(cmd=="m") node->addMCRollouts(100,10);
-  else{
-    int choice;
-    cmd >>choice;
-    cout <<"CHOICE=" <<choice <<endl;
-    if(choice>=(int)node->children.N){
-      cout <<"--- there is no such choice" <<endl;
-    }else{
-      node = node->children(choice);
-      if(!node->isExpanded){
-        node->expand();
-        if(autoCompute){
-          node->solvePoseProblem();
-          //          node->solveSeqProblem();
-          //          node->solvePathProblem(20);
-        }
-      }
-    }
-  }
-  return true;
+double seqHeuristic(MNode* n){
+  return n->symCost;
+}
+
+double poseCost(MNode* n){
+  if(!n->poseCount || !n->poseFeasible) return 100.;
+  return .1*n->symCost+n->poseCost;
+}
+
+double seqCost(MNode* n){
+  if(!n->seqCount || !n->seqFeasible) return 100.;
+  return .1*n->symCost+n->seqCost;
+}
+
+double pathHeuristic(MNode* n){
+  return seqCost(n);
+}
+
+double pathCost(MNode* n){
+  if(!n->path.N || !n->pathFeasible) return 100.;
+  return .1*n->symCost + n->seqCost + n->pathCost;
+}
+
+MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
+  if(!fringe.N) return NULL;
+  MNode* best=NULL;
+  for(MNode* n:fringe)
+    if(!best || heuristic(n)<heuristic(best)) best=n;
+  return best;
+}
+
+MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
+  if(!fringe.N) return NULL;
+  MNode* best=getBest(fringe, heuristic);
+  fringe.removeValue(best);
+  return best;
 }
