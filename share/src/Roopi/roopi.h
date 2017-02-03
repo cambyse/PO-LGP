@@ -6,13 +6,10 @@
 #include <Motion/taskMaps.h>
 #include <Control/taskController.h>
 
+#include "act.h"
+#include "act_CtrlTask.h"
+#include "act_PathOpt.h"
 
-struct Act;
-struct CtrlTaskAct;
-typedef mlr::Array<Act*> ActL;
-
-
-struct CtrlTask;
 struct Roopi_Path;
 struct TaskReferenceInterpolAct;
 typedef mlr::Array<CtrlTask*> CtrlTaskL;
@@ -42,6 +39,7 @@ struct Roopi {
   act sendGamepadToCtrlTasks();
 
   void hold(bool still);
+  CtrlTaskAct* home();
 
 
   WToken<mlr::KinematicWorld> setKinematics();
@@ -50,13 +48,18 @@ struct Roopi {
   CtrlTaskAct newCtrlTask();
   CtrlTaskAct newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
   CtrlTaskAct newCtrlTask(const char* specs);
-  bool waitAnd(std::initializer_list<Act*> acts, double timeout=5.);
+  bool wait(std::initializer_list<Act*> acts, double timeout=5.);
+
+  //-- path opt
+  Act_PathOpt newPathOpt();
 
   //-- starting up controllers/communications/views
   void newCameraView();
 
   //-- kinematic editing
   mlr::Shape* newMarker(const char* name, const arr& pos);
+  void kinematicSwitch(const char* object, const char* attachTo);
+
 
 
   //-- control tasks

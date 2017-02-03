@@ -62,9 +62,9 @@ struct KOMO{ //TODO: rename ManipOp
     setSquaredFixSwitchedObjects();
     setSquaredQVelocities();
   }
-  void setPathOpt(double _phases){
-    setTiming(_phases, 20, 5., 2, false);
-    setSquaredFixJointVelocities(-1., -1., 1e3);
+  void setPathOpt(double _phases, uint stepsPerPhase=20, double timePerPhase=5.){
+    setTiming(_phases, stepsPerPhase, timePerPhase, 2, false);
+    setSquaredFixJointVelocities();
     setSquaredFixSwitchedObjects();
     setSquaredQAccelerations();
   }

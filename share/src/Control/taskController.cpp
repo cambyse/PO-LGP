@@ -95,8 +95,7 @@ void makeGainsMatrices(arr& Kp, arr& Kd, uint n){
   CHECK(Kd.nd==2 && Kd.d0==n && Kd.d1==n,"");
 }
 
-arr CtrlTask::get_y_ref(const arr& _y){
-  if(&_y) y = _y;
+arr CtrlTask::get_y_ref(){
   if(y_ref.N!=y.N){
     if(!y_ref.N) y_ref = zeros(y.N); //by convention: no-references = zero references
     if(y_ref.N==1) y_ref = consts<double>(y_ref.scalar(), y.N); //by convention: scalar references = const vector references
@@ -110,8 +109,7 @@ arr CtrlTask::get_y_ref(const arr& _y){
   return y_ref;
 }
 
-arr CtrlTask::get_ydot_ref(const arr& _ydot){
-  if(&_ydot) this->v = _ydot;
+arr CtrlTask::get_ydot_ref(){
   if(v_ref.N!=v.N){
     if(!v_ref.N) v_ref = zeros(v.N);
     if(v_ref.N==1) v_ref = consts<double>(v_ref.scalar(), v.N);
@@ -126,42 +124,42 @@ arr CtrlTask::getC(){
   return prec;
 }
 
-arr CtrlTask::getDesiredAcceleration(const arr& y, const arr& ydot){
+arr CtrlTask::getDesiredAcceleration(){
   arr Kp_y = Kp;
   arr Kd_y = Kd;
   makeGainsMatrices(Kp_y, Kd_y, y.N);
-  arr a = Kp_y*(get_y_ref(y)-y) + Kd_y*(get_ydot_ref(ydot)-ydot);
+  arr a = Kp_y*(get_y_ref()-y) + Kd_y*(get_ydot_ref()-v);
 
   //check vel/acc limits
   double accNorm = length(a);
   if(accNorm<1e-4) return a;
   if(maxAcc>0. && accNorm>maxAcc) a *= maxAcc/accNorm;
   if(!maxVel) return a;
-  double velRatio = scalarProduct(ydot, a/accNorm)/maxVel;
+  double velRatio = scalarProduct(v, a/accNorm)/maxVel;
   if(velRatio>1.) a.setZero();
   else if(velRatio>.9) a *= 1.-10.*(velRatio-.9);
   return a;
 }
 
-void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y, const arr& y, const arr& ydot){
+void CtrlTask::getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y){
   Kp_y = Kp;
   Kd_y = Kd;
   makeGainsMatrices(Kp_y, Kd_y, y.N);
 
-  arr y_delta = get_y_ref(y) - y;
+  arr y_delta = get_y_ref() - y;
   double y_delta_length = length(y_delta);
   if(maxVel && y_delta_length>maxVel)
     y_delta *= maxVel/y_delta_length;
 
-  a0_y = Kp_y*(y+y_delta) + Kd_y*get_ydot_ref(ydot);
-  arr a = a0_y - Kp_y*y - Kd_y*ydot; //linear law
+  a0_y = Kp_y*(y+y_delta) + Kd_y*get_ydot_ref();
+  arr a = a0_y - Kp_y*y - Kd_y*v; //linear law
   double accNorm = length(a);
 
   return;
 
   //check vel limit -> change a0, no change in gains
   if(maxVel){
-    double velRatio = scalarProduct(ydot, a/accNorm)/maxVel;
+    double velRatio = scalarProduct(v, a/accNorm)/maxVel;
     if(velRatio>1.) a0_y -= a; //a becomes zero
     else if(velRatio>.9) a0_y -= a*(10.*(velRatio-.9));
   }
@@ -207,18 +205,17 @@ bool CtrlTask::isConverged(double tolerance){
 }
 
 void CtrlTask::reportState(ostream& os){
-  if(active) {
-    os <<"  CtrlTask " <<name;
-    if(y_ref.N==y.N && v_ref.N==v.N){
-      os <<":  y_ref=" <<y_ref <<" \ty=" <<y
-           <<"  Pterm=(" <<Kp <<'*' <<length(y_ref-y)
-           <<")   Dterm=(" <<Kd <<'*' <<length(v_ref-v) <<')'
-           <<endl;
-    }else{
-      os <<" -- y_ref.N!=y.N or v_ref.N!=v.N -- not initialized? -- "
-           <<" Pgain=" <<Kp
-           <<" Dgain=" <<Kd <<endl;
-    }
+  os <<"  CtrlTask " <<name;
+  if(!active) cout <<" INACTIVE";
+  if(y_ref.N==y.N && v_ref.N==v.N){
+    os <<":  y_ref=" <<y_ref <<" \ty=" <<y
+      <<"  Pterm=(" <<Kp <<'*' <<length(y_ref-y)
+     <<")   Dterm=(" <<Kd <<'*' <<length(v_ref-v) <<')'
+    <<endl;
+  }else{
+    os <<" -- y_ref.N!=y.N or v_ref.N!=v.N -- not initialized? -- "
+      <<" Pgain=" <<Kp
+     <<" Dgain=" <<Kd <<endl;
   }
 }
 
@@ -293,11 +290,12 @@ ConstraintForceTask* TaskController::addConstraintForceTask(const char* name, Ta
 void TaskController::getTaskCoeffs(arr& c, arr& J){
   c.clear();
   if(&J) J.clear();
-  arr y, J_y, yddot_des;
+  arr J_y, yddot_des;
   for(CtrlTask* t: tasks) {
+    t->map.phi(t->y, J_y, world);
+    t->v = J_y*world.qdot;
     if(t->active && !t->f_ref.N) {
-      t->map.phi(y, J_y, world);
-      yddot_des = t->getDesiredAcceleration(y, J_y*world.qdot);
+      yddot_des = t->getDesiredAcceleration();
       c.append(::sqrt(t->prec)%(yddot_des /*-Jdot*qdot*/));
       if(&J) J.append(::sqrt(t->prec)%J_y);
     }
@@ -306,6 +304,7 @@ void TaskController::getTaskCoeffs(arr& c, arr& J){
 }
 
 void TaskController::reportCurrentState(){
+  cout <<"** TaskController" <<endl;
   for(CtrlTask* t: tasks) t->reportState(cout);
 }
 
@@ -345,8 +344,10 @@ arr TaskController::operationalSpaceControl(){
   if(!c.N && !qNullCostRef.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr A = qNullCostRef.getC();
   arr a = zeros(A.d0);
+  qNullCostRef.y=world.q;
+  qNullCostRef.v=world.qdot;
   if(qNullCostRef.active){
-    a += qNullCostRef.getC() * qNullCostRef.getDesiredAcceleration(world.q, world.qdot);
+    a += qNullCostRef.getC() * qNullCostRef.getDesiredAcceleration();
   }
   if(c.N){
     A += comp_At_A(J);
@@ -358,7 +359,9 @@ arr TaskController::operationalSpaceControl(){
 
 arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
   arr Kp_y, Kd_y, k_y, C_y;
-  qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y, world.q, world.qdot);
+  qNullCostRef.y=world.q;
+  qNullCostRef.v=world.qdot;
+  qNullCostRef.getDesiredLinAccLaw(Kp_y, Kd_y, k_y);
   arr H = qNullCostRef.getC();
 
   Kp = H * Kp_y;
@@ -368,9 +371,10 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
   arr JCJ = zeros(world.q.N, world.q.N);
 
   for(CtrlTask* task : tasks) if(task->active){
-    arr y, J_y;
-    task->map.phi(y, J_y, world);
-    task->getDesiredLinAccLaw(Kp_y, Kd_y, k_y, y, J_y*world.qdot);
+    arr J_y;
+    task->map.phi(task->y, J_y, world);
+    task->v = J_y*world.qdot;
+    task->getDesiredLinAccLaw(Kp_y, Kd_y, k_y);
     C_y = task->getC();
 
     arr JtC_y = ~J_y*C_y;
@@ -379,7 +383,7 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k) {
 
     Kp += JtC_y*Kp_y*J_y;
     Kd += JtC_y*Kd_y*J_y;
-    k  += JtC_y*(k_y + Kp_y*(J_y*world.q - y));
+    k  += JtC_y*(k_y + Kp_y*(J_y*world.q - task->y));
   }
   arr invA = inverse_SymPosDef(H + JCJ);
 
@@ -422,11 +426,12 @@ arr TaskController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const
 //    a += H_rate_diag % qitselfPD.getDesiredAcceleration(world.q, world.qdot);
 //  }
   for(CtrlTask* law : tasks) if(law->active){
-    law->map.phi(y, J_y, world);
+    law->map.phi(law->y, J_y, world);
+    law->v = J_y*world.qdot;
     tempJPrec = ~J_y*law->getC();
     A += tempJPrec*J_y;
 
-    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y, y, J_y*world.qdot);
+    law->getDesiredLinAccLaw(Kp_y, Kd_y, a0_y);
 
     u0 += tempJPrec*a0_y;
 

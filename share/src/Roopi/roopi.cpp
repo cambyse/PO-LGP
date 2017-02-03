@@ -140,19 +140,23 @@ void Roopi::hold(bool still){
     for(CtrlTask *t:s->ctrlTasks()) t->active=false;
     s->ctrlTasks.deAccess();
 
-  /*CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
-  modifyCtrlTaskGains(ct, 30.0, 5.0);
-  modifyCtrlC(ct, ARR(1000.0));
-  activateCtrlTask(ct);*/
-
-  //modifyCtrlTaskReference(holdPositionTask, getKinematics()->getJointState());
+    s->holdPositionTask2.set()->setTargetToCurrent();
     s->holdPositionTask2.start();
 
   }else{
     s->holdPositionTask2.stop();
-//    deactivateCtrlTask(s->holdPositionTask);
   }
+}
 
+CtrlTaskAct *Roopi::home(){
+  s->ctrlTasks.writeAccess();
+  for(CtrlTask *t:s->ctrlTasks()) t->active=false;
+  s->ctrlTasks.deAccess();
+
+  s->holdPositionTask2.set()->y_ref = s->holdPositionTask2.y0;
+  s->holdPositionTask2.start();
+
+  return &s->holdPositionTask2;
 }
 
 WToken<mlr::KinematicWorld> Roopi::setKinematics(){
@@ -180,12 +184,12 @@ CtrlTaskAct Roopi::newCtrlTask(const char* specs){
   return CtrlTaskAct(this, GRAPH(specs));
 }
 
-bool Roopi::waitAnd(std::initializer_list<Act*> acts, double timeout){
+bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
   double startTime = mlr::realTime();
   for(;;){
     bool allConv = true;
     for(Act *act : acts){
-      if(act->status()<=0){
+      if(act->status.getValue()<=0){
         allConv = false;
         break;
       }
@@ -200,6 +204,10 @@ bool Roopi::waitAnd(std::initializer_list<Act*> acts, double timeout){
     mlr::wait(0.1);
   }
   return false;
+}
+
+Act_PathOpt Roopi::newPathOpt(){
+  return Act_PathOpt(this);
 }
 
 void Roopi::newCameraView(){
@@ -220,6 +228,17 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   s->ctrlView->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
   return sh;
+}
+
+void Roopi::kinematicSwitch(const char* object, const char* attachTo){
+  s->modelWorld.writeAccess();
+  mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, s->modelWorld(), 0);
+  mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, s->modelWorld(), 0);
+  sw1.apply(s->modelWorld());
+  sw2.apply(s->modelWorld());
+  s->modelWorld().getJointState(); //enforces that the q & qdot are recalculated!
+  s->ctrlView->recopyKinematics(s->modelWorld());
+  s->modelWorld.deAccess();
 }
 
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {

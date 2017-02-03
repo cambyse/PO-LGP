@@ -1,4 +1,4 @@
-#include "CtrlTaskAct.h"
+#include "act_CtrlTask.h"
 #include "roopi-private.h"
 
 CtrlTaskAct::CtrlTaskAct(Roopi* r, const Graph& specs)
@@ -12,13 +12,14 @@ CtrlTaskAct::CtrlTaskAct(Roopi* r, const Graph& specs)
 CtrlTaskAct::CtrlTaskAct(Roopi* r, TaskMap* map, const arr& PD, const arr& target, const arr& prec)
   : roopi(r), map(map){
   task = new CtrlTask(map->shortTag(roopi->getKinematics()), map);
-  if(PD.N) task->setGainsAsNatural(PD(0), PD(1));
-  if(PD.N>2){
+  if(&PD && PD.N) task->setGainsAsNatural(PD(0), PD(1));
+  else task->setGainsAsNatural(1., .9);
+  if(&PD && PD.N>2){
     task->maxVel=PD(2);
     task->maxAcc=PD(3);
   }
-  if(target.N) task->y_ref = target;
-  if(prec.N) task->prec = prec;
+  if(&target && target.N) task->y_ref = target;
+  if(&prec && prec.N) task->prec = prec;
   task->active = true;
   setTask(task, false);
 }
@@ -41,14 +42,15 @@ void CtrlTaskAct::stop(){
   set()->active = false;
 }
 
-ActStatus CtrlTaskAct::status(){
+ActStatus CtrlTaskAct::getStatus(){
   CHECK(task, "this is not yet configured!")
   bool conv = false;
   roopi->s->ctrlTasks.readAccess();
   if(task->isConverged(tolerance)) conv = true;
   roopi->s->ctrlTasks.deAccess();
-  if(conv) return AS_converged;
-  return AS_running;
+  if(conv) return AS_converged; //status.setValue(AS_converged);
+  return AS_running; //status.setValue(AS_running);
+//  return (ActStatus)status.getValue();
 }
 
 WToken<CtrlTask> CtrlTaskAct::set(){

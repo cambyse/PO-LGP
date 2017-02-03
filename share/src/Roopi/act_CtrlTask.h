@@ -19,7 +19,7 @@ struct CtrlTaskAct : Act{
 
   virtual void start();
   virtual void stop();
-  virtual ActStatus status();
+  virtual ActStatus getStatus();
 
   void setMap(TaskMap*); ///< use this to configure: set the map
   void setTask(CtrlTask*, bool setDefaults=true); ///< use this to configure: set the map
