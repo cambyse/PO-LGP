@@ -202,8 +202,8 @@ void plan_BHTS()
   SearchSpaceTree C;
 
   C.prepareFol(true);
-  C.prepareKin();
-  C.prepareTree();
+  C.prepareKin();       // parse initial scene LGP-coop-kin.g
+  C.prepareTree();      // create root node
   C.prepareDisplay();
 
   //  C.kin.watch(true);
