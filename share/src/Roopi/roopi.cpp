@@ -105,7 +105,7 @@ act Roopi::startTaskController(){
 
   s->holdPositionTask2.setMap(new TaskMap_qItself);
   s->holdPositionTask2.set()->y_ref = s->holdPositionTask2.y0;
-  s->holdPositionTask2.set()->setGainsAsNatural(1., .9);
+  s->holdPositionTask2.set()->setGains(30., 10.);
   s->holdPositionTask2.start();
 
   s->tcm->threadLoop();
@@ -148,7 +148,7 @@ void Roopi::hold(bool still){
   }
 }
 
-CtrlTaskAct *Roopi::home(){
+Act_CtrlTask *Roopi::home(){
   s->ctrlTasks.writeAccess();
   for(CtrlTask *t:s->ctrlTasks()) t->active=false;
   s->ctrlTasks.deAccess();
@@ -172,16 +172,16 @@ RToken<mlr::KinematicWorld> Roopi::getKinematics(){
 //
 // basic CtrlTask management
 
-CtrlTaskAct Roopi::newCtrlTask(){
-  return CtrlTaskAct(this);
+Act_CtrlTask Roopi::newCtrlTask(){
+  return Act_CtrlTask(this);
 }
 
-CtrlTaskAct Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
-  return CtrlTaskAct(this, map, PD, target, prec);
+Act_CtrlTask Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
+  return Act_CtrlTask(this, map, PD, target, prec);
 }
 
-CtrlTaskAct Roopi::newCtrlTask(const char* specs){
-  return CtrlTaskAct(this, GRAPH(specs));
+Act_CtrlTask Roopi::newCtrlTask(const char* specs){
+  return Act_CtrlTask(this, GRAPH(specs));
 }
 
 bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
@@ -239,6 +239,11 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
   s->modelWorld().getJointState(); //enforces that the q & qdot are recalculated!
   s->ctrlView->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
+}
+
+void Roopi::verboseControl(int verbose){
+  if(verbose) tcm()->verbose = true;
+  else tcm()->verbose = false;
 }
 
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {

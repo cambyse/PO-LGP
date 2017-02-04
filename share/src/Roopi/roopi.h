@@ -39,15 +39,15 @@ struct Roopi {
   act sendGamepadToCtrlTasks();
 
   void hold(bool still);
-  CtrlTaskAct* home();
+  Act_CtrlTask* home();
 
 
   WToken<mlr::KinematicWorld> setKinematics();
   RToken<mlr::KinematicWorld> getKinematics();
 
-  CtrlTaskAct newCtrlTask();
-  CtrlTaskAct newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
-  CtrlTaskAct newCtrlTask(const char* specs);
+  Act_CtrlTask newCtrlTask();
+  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
+  Act_CtrlTask newCtrlTask(const char* specs);
   bool wait(std::initializer_list<Act*> acts, double timeout=5.);
 
   //-- path opt
@@ -60,7 +60,8 @@ struct Roopi {
   mlr::Shape* newMarker(const char* name, const arr& pos);
   void kinematicSwitch(const char* object, const char* attachTo);
 
-
+  //-- verbosity
+  void verboseControl(int verbose=1);
 
   //-- control tasks
 

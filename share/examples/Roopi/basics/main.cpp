@@ -1,5 +1,7 @@
 #include <Roopi/roopi.h>
 #include <Control/TaskControllerModule.h>
+#include <Kin/kinViewer.h>
+#include <Roopi/act_PathFollow.h>
 
 //===============================================================================
 
@@ -82,7 +84,7 @@ void TEST(PickAndPlace) {
   Roopi R(true);
 
   R.newCameraView();
-  R.tcm()->verbose=true;
+  R.verboseControl(1);
 
   {
     //attention
@@ -158,21 +160,39 @@ void TEST(PickAndPlace2) {
   Roopi R(true);
 
 //  R.newCameraView();
-  R.tcm()->verbose=true;
+//  R.verboseControl(1);
 
   {
     auto path = R.newPathOpt();
     path.komo->setPathOpt(1, 20, 5.);
-    path.komo->setGrasp(1., "pr2R", "obj1");
-    path.komo->reset();
-    path.komo->run();
+    path.komo->setTask(1., 1., new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e1);
+    path.komo->setTask(1., 1., new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R", NoVector, "obj1", NoVector), OT_sumOfSqr, NoArr, 1e3);
+    path.komo->setTask(1., 1., new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_x, "obj1", Vector_y), OT_sumOfSqr, NoArr, 1e1);
+    path.komo->setTask(1., 1., new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_y, "obj1", Vector_x), OT_sumOfSqr, NoArr, 1e1);
+    path.komo->setSlowAround(1., .1);
 
-    cout <<path.komo->getReport(true);
+    path.start();
+//    path.komo->reset();
+//    path.komo->run();
+//    path.x.set() = path.komo->x;
 
-    while(path.komo->displayTrajectory(.1, true));
+    R.wait({&path});
 
-    mlr::wait();
+    cout <<"KOMO result\n" <<path.komo->getReport(true);
+
+    OrsPathViewer pv("PathOpt_x");
+    pv.setConfigurations(path.komo->MP->configurations);
+    pv.threadLoop();
+
+    R.hold(false);
+    auto follow = Act_FollowPath(&R, "bla", path.komo->x, new TaskMap_qItself(), 5.);
+    follow.start();
+
+    R.wait({&follow});
+    R.hold(true);
   }
+
+  mlr::wait();
 
 }
 
@@ -212,9 +232,9 @@ int main(int argc, char** argv){
 
 //  testBasics();
 
-  testPickAndPlace();
+//  testPickAndPlace();
 
-//  testPickAndPlace2();
+  testPickAndPlace2();
 
 //  Prototyping();
   return 0;

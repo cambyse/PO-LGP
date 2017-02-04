@@ -1,16 +1,16 @@
 #include "act_CtrlTask.h"
 #include "roopi-private.h"
 
-CtrlTaskAct::CtrlTaskAct(Roopi* r, const Graph& specs)
-  : roopi(r){
+Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
+  : Act(r){
   map = TaskMap::newTaskMap(specs, roopi->getKinematics());
   task = new CtrlTask(map->shortTag(roopi->getKinematics()), *map, specs);
   task->active = true;
   setTask(task, false);
 }
 
-CtrlTaskAct::CtrlTaskAct(Roopi* r, TaskMap* map, const arr& PD, const arr& target, const arr& prec)
-  : roopi(r), map(map){
+Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec)
+  : Act(r), map(map){
   task = new CtrlTask(map->shortTag(roopi->getKinematics()), map);
   if(&PD && PD.N) task->setGainsAsNatural(PD(0), PD(1));
   else task->setGainsAsNatural(1., .9);
@@ -24,7 +24,7 @@ CtrlTaskAct::CtrlTaskAct(Roopi* r, TaskMap* map, const arr& PD, const arr& targe
   setTask(task, false);
 }
 
-CtrlTaskAct::~CtrlTaskAct(){
+Act_CtrlTask::~Act_CtrlTask(){
   if(task){
     roopi->s->ctrlTasks.set()->removeValue(task);
     delete task;
@@ -34,15 +34,15 @@ CtrlTaskAct::~CtrlTaskAct(){
   }
 }
 
-void CtrlTaskAct::start(){
+void Act_CtrlTask::start(){
   set()->active = true;
 }
 
-void CtrlTaskAct::stop(){
+void Act_CtrlTask::stop(){
   set()->active = false;
 }
 
-ActStatus CtrlTaskAct::getStatus(){
+ActStatus Act_CtrlTask::getStatus(){
   CHECK(task, "this is not yet configured!")
   bool conv = false;
   roopi->s->ctrlTasks.readAccess();
@@ -53,16 +53,16 @@ ActStatus CtrlTaskAct::getStatus(){
 //  return (ActStatus)status.getValue();
 }
 
-WToken<CtrlTask> CtrlTaskAct::set(){
+WToken<CtrlTask> Act_CtrlTask::set(){
   CHECK(task, "this is not yet configured!")
   return WToken<CtrlTask>(*roopi->s->ctrlTasks.revLock, task);
 }
 
-void CtrlTaskAct::setMap(TaskMap* m){
+void Act_CtrlTask::setMap(TaskMap* m){
   setTask(new CtrlTask(m->shortTag(roopi->getKinematics()), m));
 }
 
-void CtrlTaskAct::setTask(CtrlTask *t, bool setDefaults){
+void Act_CtrlTask::setTask(CtrlTask *t, bool setDefaults){
   task = t;
   map = &task->map;
   map->phi(y0, NoArr, roopi->getKinematics()); // initialize with the current value. TODO taskControllerModule updates these only if they are active

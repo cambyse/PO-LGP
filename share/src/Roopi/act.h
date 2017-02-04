@@ -8,16 +8,14 @@ struct Act;
 typedef mlr::Array<Act*> ActL;
 
 struct Act{
+  struct Roopi *roopi;
   double startTime;
   ConditionVariable status;
 
-  Act();
+  Act(Roopi *r);
   virtual ~Act(){}
 
-  virtual void start() = 0;
-  virtual void stop() = 0;
   virtual ActStatus getStatus(){ return (ActStatus)status.getValue(); }
-
 
   double time();
 };

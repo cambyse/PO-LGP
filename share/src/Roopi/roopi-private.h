@@ -73,7 +73,7 @@ struct Roopi_private {
 
 
 //  CtrlTask* holdPositionTask = NULL;
-  CtrlTaskAct holdPositionTask2;
+  Act_CtrlTask holdPositionTask2;
 
   Roopi_private(Roopi *roopi)
     : jointState(NULL, "jointState"),

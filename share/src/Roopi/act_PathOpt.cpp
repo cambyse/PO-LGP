@@ -1,17 +1,42 @@
 #include "act_PathOpt.h"
 #include "roopi.h"
 
+#include <Core/thread.h>
+#include <Motion/komo.h>
+
+struct sAct_PathOpt : Thread{
+  Access_typed<arr> x;
+  KOMO *komo;
+  ConditionVariable *status;
+
+  Conv_KOMO_ConstrainedProblem *CP;
+  OptConstrained *opt;
+  sAct_PathOpt(KOMO *komo, ConditionVariable *status) : Thread("Act_PathOpt", 0.), x(this, "PathOpt_x"), komo(komo), status(status), CP(NULL), opt(NULL){}
+  virtual void open();
+  virtual void step();
+  virtual void close();
+};
+
+
 Act_PathOpt::Act_PathOpt(Roopi* r)
-  : Thread("Act_PathOpt", 0.), roopi(r), x(this, "PathOpt_x") {
+  : Act(r), s(NULL),  komo(NULL) {
   komo = new KOMO;
   komo->setModel(roopi->getKinematics());
+  s = new sAct_PathOpt(komo, &status);
+
 }
 
 Act_PathOpt::~Act_PathOpt(){
+  s->threadClose();
   delete komo;
+  delete s;
 }
 
-void Act_PathOpt::open(){
+void Act_PathOpt::start(){ s->threadLoop(); }
+
+void Act_PathOpt::stop(){ s->threadStop(); }
+
+void sAct_PathOpt::open(){
   komo->reset();
 
   if(CP) delete CP;
@@ -22,16 +47,16 @@ void Act_PathOpt::open(){
   opt->earlyPhase = true;
 }
 
-void Act_PathOpt::step(){
+void sAct_PathOpt::step(){
   bool stop = opt->step();
   x.set() = komo->x;
   if(stop){
-    status.setValue(AS_converged);
+    status->setValue(AS_converged);
     threadStop();
   }
 }
 
-void Act_PathOpt::close(){
+void sAct_PathOpt::close(){
   if(CP) delete CP;   CP=NULL;
   if(opt) delete opt;  opt=NULL;
   cout <<"KOMO PathOpt done:\n" <<komo->getReport() <<endl;
