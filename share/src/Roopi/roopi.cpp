@@ -94,24 +94,21 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
   }
 }
 
-act Roopi::startTaskController(){
-  CHECK(!s->tcm,"");
-  s->tcm = new TaskControllerModule("none", NoWorld);
-
-//  s->holdPositionTask = createCtrlTask("HoldPosition", new TaskMap_qItself);
-//  modifyCtrlTaskGains(s->holdPositionTask, 30.0, 5.0);
-//  modifyCtrlC(s->holdPositionTask, ARR(1000.0));
-//  activateCtrlTask(s->holdPositionTask);
+Act_TaskController* Roopi::startTaskController(){
 
   s->holdPositionTask2.setMap(new TaskMap_qItself);
   s->holdPositionTask2.set()->y_ref = s->holdPositionTask2.y0;
   s->holdPositionTask2.set()->setGains(30., 10.);
   s->holdPositionTask2.start();
 
-  s->tcm->threadLoop();
-  s->tcm->waitForOpened();
+//  CHECK(!s->tcm,"");
+//  s->tcm = new TaskControllerModule("none", NoWorld);
+//  s->tcm->threadLoop();
+//  s->tcm->waitForOpened();
+//  return {s->tcm->name, s->tcm};
 
-  return {s->tcm->name, s->tcm};
+  s->tcm = new Act_TaskController(this);
+  return s->tcm;
 }
 
 void Roopi::startRosCommunication(){
@@ -185,11 +182,12 @@ Act_CtrlTask Roopi::newCtrlTask(const char* specs){
 }
 
 bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
+#if 1
   double startTime = mlr::realTime();
   for(;;){
     bool allConv = true;
     for(Act *act : acts){
-      if(act->status.getValue()<=0){
+      if(act->getStatus()<=0){
         allConv = false;
         break;
       }
@@ -204,6 +202,21 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
     mlr::wait(0.1);
   }
   return false;
+#else
+  double startTime = mlr::realTime();
+  ConditionVariable waiter;
+  for(Act *act : acts) act->status.listeners.append(waiter);
+  for(bool go=true;go;){
+    if(timeout>0){
+      if(mlr::realTime()-startTime > timeout) return false;
+      if(!waiter.waitForSignal(timeout, false)) return false;
+    }else{
+      waiter.waitForSignal();
+    }
+    for(Act *act : acts) if(act->status.getValue()!=0){ go=false; break; }
+  }
+  return true;
+#endif
 }
 
 Act_PathOpt Roopi::newPathOpt(){
@@ -242,10 +255,11 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
 }
 
 void Roopi::verboseControl(int verbose){
-  if(verbose) tcm()->verbose = true;
-  else tcm()->verbose = false;
+  if(verbose) s->tcm->tcm->verbose = true;
+  else s->tcm->tcm->verbose = false;
 }
 
+#if 0
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
   CtrlTask* ct = new CtrlTask(name, map);
   map->phi(ct->y, NoArr, getKinematics()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
@@ -366,7 +380,7 @@ bool Roopi::waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime, dou
 
 
 TaskControllerModule* Roopi::tcm() {
-  return s->tcm;
+  return s->tcm->tcm;
 }
 
 void Roopi::interpolateToReferenceThread(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
@@ -671,4 +685,4 @@ void TaskReferenceInterpolAct::close() {
   //delete this;
 }
 
-
+#endif

@@ -1,7 +1,9 @@
 #include "act_PathFollow.h"
+#include "act_CtrlTask.h"
 
 #include <Algo/spline.h>
 #include <Core/thread.h>
+#include <Control/taskController.h>
 
 struct sAct_FollowPath : Thread{
   Act *a;
@@ -61,4 +63,5 @@ void sAct_FollowPath::step(){
   }
 
   ct.set()->y_ref = spline.eval(s);
+  ct.set()->v_ref = spline.eval(s, 1)/executionTime;
 }

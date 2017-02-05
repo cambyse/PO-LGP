@@ -33,8 +33,8 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double damp
   setGainsAsNatural(decayTime, dampingRatio);
 }
 
-CtrlTask::CtrlTask(const char* name, TaskMap& map, const Graph& params)
-  : map(map), name(name), active(true), prec(ARR(100.)), maxVel(0.), maxAcc(0.), f_alpha(0.), f_gamma(0.),
+CtrlTask::CtrlTask(const char* name, TaskMap* map, const Graph& params)
+  : map(*map), name(name), active(true), prec(ARR(100.)), maxVel(0.), maxAcc(0.), f_alpha(0.), f_gamma(0.),
     flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){
   if(!params["PD"]) setGainsAsNatural(3., .7);
   set(params);
@@ -353,7 +353,8 @@ arr TaskController::operationalSpaceControl(){
     A += comp_At_A(J);
     a += comp_At_x(J, c);
   }
-  arr q_ddot = inverse_SymPosDef(A) * a;
+//  arr q_ddot = inverse_SymPosDef(A) * a;
+  arr q_ddot = lapack_Ainv_b_sym(A,a); // inverse_SymPosDef(A) * a;
   return q_ddot;
 }
 

@@ -2,11 +2,11 @@
 
 #include "act.h"
 #include <Core/array.h>
-#include <Core/thread.h>
-#include <Control/taskController.h>
+
+struct CtrlTask;
+struct TaskMap;
 
 struct Act_CtrlTask : Act{
-  TaskMap *map = NULL;
   CtrlTask *task = NULL;
   arr y0;
   double tolerance = 1e-2;
@@ -16,8 +16,8 @@ struct Act_CtrlTask : Act{
   Act_CtrlTask(Roopi *r, const Graph& specs);
   virtual ~Act_CtrlTask();
 
-  virtual void start();
-  virtual void stop();
+  void start();
+  void stop();
   virtual ActStatus getStatus();
 
   void setMap(TaskMap*); ///< use this to configure: set the map

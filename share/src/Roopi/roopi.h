@@ -1,14 +1,13 @@
 #pragma once
 
 #include <Core/array.h>
-#include <Core/graph.h>
-#include <Core/thread.h>
-#include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Kin/kin.h>
 
 #include "act.h"
 #include "act_CtrlTask.h"
 #include "act_PathOpt.h"
+#include "act_PathFollow.h"
+#include "act_TaskController.h"
 
 struct Roopi_Path;
 struct TaskReferenceInterpolAct;
@@ -31,8 +30,8 @@ struct Roopi {
 
   void setKinematics(const char* filename);
   void setKinematics(const mlr::KinematicWorld& K);
-  act startTaskController();
-  act startControllerLog();
+  Act_TaskController* startTaskController();
+//  act startControllerLog();
   void startRosCommunication();
 
   void startRobotCommunication(const char* robot);
@@ -63,6 +62,7 @@ struct Roopi {
   //-- verbosity
   void verboseControl(int verbose=1);
 
+#if 0
   //-- control tasks
 
   /// creates a new CtrlTask; pass a 'newed' map as argument, it will be deleted later; after creation it is inactive
@@ -162,11 +162,13 @@ struct Roopi {
 //  //-- wait for & stop tasks
   void stop(const CtrlTaskL& tasks);
   void waitConv(const CtrlTaskL& tasks);
+#endif
 
 };
 
 //==============================================================================
 
+#if 0
 struct Roopi_CtrlTask{
   Roopi &roopi;
   CtrlTask *task;
@@ -212,3 +214,4 @@ struct TaskReferenceInterpolAct : Thread {
 };
 
 //==============================================================================
+#endif

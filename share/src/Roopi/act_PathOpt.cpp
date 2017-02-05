@@ -3,11 +3,13 @@
 
 #include <Core/thread.h>
 #include <Motion/komo.h>
+#include <Kin/kinViewer.h>
 
 struct sAct_PathOpt : Thread{
   Access_typed<arr> x;
   KOMO *komo;
   ConditionVariable *status;
+  OrsPathViewer *viewer;
 
   Conv_KOMO_ConstrainedProblem *CP;
   OptConstrained *opt;
@@ -27,6 +29,10 @@ Act_PathOpt::Act_PathOpt(Roopi* r)
 }
 
 Act_PathOpt::~Act_PathOpt(){
+  if(s->viewer){
+    s->viewer->threadClose();
+    delete s->viewer;
+  }
   s->threadClose();
   delete komo;
   delete s;
@@ -52,6 +58,16 @@ void sAct_PathOpt::step(){
   x.set() = komo->x;
   if(stop){
     status->setValue(AS_converged);
+
+    cout <<"KOMO PathOpt done:\n" <<komo->getReport() <<endl;
+    if(!viewer){
+      viewer = new OrsPathViewer("PathOpt_x");
+      viewer->threadLoop();
+    }
+    viewer->stepMutex.lock();
+    viewer->setConfigurations(komo->MP->configurations);
+    viewer->stepMutex.unlock();
+
     threadStop();
   }
 }
@@ -59,6 +75,5 @@ void sAct_PathOpt::step(){
 void sAct_PathOpt::close(){
   if(CP) delete CP;   CP=NULL;
   if(opt) delete opt;  opt=NULL;
-  cout <<"KOMO PathOpt done:\n" <<komo->getReport() <<endl;
 }
 

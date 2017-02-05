@@ -26,7 +26,7 @@ struct Roopi_private {
   ACCESSname(FilterObjects, object_database)
 
   //-- controller process
-  TaskControllerModule *tcm = NULL;
+  Act_TaskController *tcm = NULL;
 
   //-- logging
   LoggingModule *loggingModule = NULL;
@@ -102,7 +102,7 @@ struct Roopi_private {
     if(subCtrl) delete subCtrl;
     if(subOdom) delete subOdom;
     if(rosInit) delete rosInit;
-    if(tcm){ tcm->threadClose(); delete tcm; }
+    if(tcm) delete tcm;
     if(ctrlView){ ctrlView->threadClose(); delete ctrlView; }
 //    if(holdPositionTask) delete holdPositionTask;
 //    if(holdPositionTask2) delete holdPositionTask2;

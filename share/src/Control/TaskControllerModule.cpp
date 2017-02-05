@@ -211,6 +211,7 @@ void TaskControllerModule::step(){
     modelWorld.writeAccess();
     ctrlTasks.readAccess();
     taskController->tasks = ctrlTasks();
+#if 0
     for(uint tt=0;tt<10;tt++){
       arr a = taskController->operationalSpaceControl();
       q_model += .001*qdot_model;
@@ -225,6 +226,18 @@ void TaskControllerModule::step(){
       }
       taskController->setState(q_model, qdot_model);
     }
+#else
+    arr a = taskController->operationalSpaceControl();
+    double tau = .01;
+    q_model += tau*qdot_model + (.5*tau*tau)*a;
+    qdot_model += tau*a;
+    if(trans && fixBase.get()) {
+      qdot_model(trans->qIndex+0) = 0;
+      qdot_model(trans->qIndex+1) = 0;
+      qdot_model(trans->qIndex+2) = 0;
+    }
+    taskController->setState(q_model, qdot_model);
+#endif
     if(verbose) taskController->reportCurrentState();
     ctrlTasks.deAccess();
     modelWorld.deAccess();

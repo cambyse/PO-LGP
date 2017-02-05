@@ -64,7 +64,7 @@ struct CtrlTask{ //TODO: rename/refactor to become LinearAccelerationLaw (LAW) i
 
   CtrlTask(const char* name, TaskMap* map);
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
-  CtrlTask(const char* name, TaskMap& map, const Graph& params);
+  CtrlTask(const char* name, TaskMap* map, const Graph& params);
 
   void set(const Graph& params);
   void setTarget(const arr& yref, const arr& vref=NoArr);

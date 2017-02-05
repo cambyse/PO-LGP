@@ -4,11 +4,12 @@
 
 enum ActStatus { AS_preStart=-1, AS_running, AS_done, AS_stalled, AS_converged };
 
+struct Roopi;
 struct Act;
 typedef mlr::Array<Act*> ActL;
 
 struct Act{
-  struct Roopi *roopi;
+  Roopi *roopi;
   double startTime;
   ConditionVariable status;
 
