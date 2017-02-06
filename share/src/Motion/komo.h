@@ -46,6 +46,7 @@ struct KOMO{ //TODO: rename ManipOp
   //-- setup the problem
   void setModel(const mlr::KinematicWorld& W,
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
+  void useOnlyJointGroup(const StringA& groupNames);
   void setTiming(double _phases=1., uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
 
   //-- higher-level defaults

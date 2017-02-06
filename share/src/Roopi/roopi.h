@@ -30,7 +30,7 @@ struct Roopi {
 
   void setKinematics(const char* filename);
   void setKinematics(const mlr::KinematicWorld& K);
-  Act_TaskController* startTaskController();
+  Act_TaskController startTaskController();
 //  act startControllerLog();
   void startRosCommunication();
 
@@ -61,6 +61,8 @@ struct Roopi {
 
   //-- verbosity
   void verboseControl(int verbose=1);
+  void lockJointGroupControl(const char *groupname, bool lockThem=true);
+
 
 #if 0
   //-- control tasks

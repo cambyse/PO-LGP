@@ -55,38 +55,38 @@ Edit l_gripper_r_finger_link_0 { contact }
 Edit l_gripper_l_finger_tip_link_0 { contact }
 Edit l_gripper_r_finger_tip_link_0 { contact }
 
-Edit worldTranslationRotation { gains=[1 1] ctrl_limits=[1 1 1] }
+Edit worldTranslationRotation { gains=[1 1] ctrl_limits=[1 1 1] base }
 
 ## TORS0
-Edit torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] }
+Edit torso_lift_joint { q=.1    ctrl_H=3000  gains=[0 0] gains=[100000 10] torso }
 
 ## HEAD
-Edit head_pan_joint {    ctrl_H=.1 gains=[20 2] }
-Edit head_tilt_joint {   q=.4 ctrl_H=.1 gains=[60 4] }
+Edit head_pan_joint {    ctrl_H=.1 gains=[20 2] head }
+Edit head_tilt_joint {   q=.4 ctrl_H=.1 gains=[60 4] head }
 
 ## RIGHT
-Edit r_shoulder_pan_joint { q=-1   gains=[200 20]  }
-Edit r_shoulder_lift_joint { q=.5   gains=[160 10] }
-Edit r_upper_arm_roll_joint { q=-1   gains=[80 4] }
-Edit r_elbow_flex_joint {  q=-2  gains=[70 4] }
-Edit r_forearm_roll_joint { q=-1.5  gains=[10 1] }
-Edit r_wrist_flex_joint { q=-.5 gains=[30 1] }
-Edit r_wrist_roll_joint { q=-.5  gains=[15 1] }
+Edit r_shoulder_pan_joint { q=-1   gains=[200 20]  armR }
+Edit r_shoulder_lift_joint { q=.5   gains=[160 10] armR }
+Edit r_upper_arm_roll_joint { q=-1   gains=[80 4] armR }
+Edit r_elbow_flex_joint {  q=-2  gains=[70 4] armR }
+Edit r_forearm_roll_joint { q=-1.5  gains=[10 1] armR }
+Edit r_wrist_flex_joint { q=-.5 gains=[30 1] armR }
+Edit r_wrist_roll_joint { q=-.5  gains=[15 1] armR }
 
 ## LEFT
-Edit l_shoulder_pan_joint {   q=1   gains=[200 20] }
-Edit l_shoulder_lift_joint {  q=.5   gains=[160 10] }
-Edit l_upper_arm_roll_joint { q=1  gains=[80 4] }
-Edit l_elbow_flex_joint {     q=-2  gains=[70 4] }
-Edit l_forearm_roll_joint {   q=1.5  gains=[10 1] }
-Edit l_wrist_flex_joint {     q=-.5  gains=[30 1]}
-Edit l_wrist_roll_joint {     q=.5  gains=[15 1]}
+Edit l_shoulder_pan_joint {   q=1   gains=[200 20] armL }
+Edit l_shoulder_lift_joint {  q=.5   gains=[160 10] armL }
+Edit l_upper_arm_roll_joint { q=1  gains=[80 4] armL }
+Edit l_elbow_flex_joint {     q=-2  gains=[70 4] armL }
+Edit l_forearm_roll_joint {   q=1.5  gains=[10 1] armL }
+Edit l_wrist_flex_joint {     q=-.5  gains=[30 1] armL }
+Edit l_wrist_roll_joint {     q=.5  gains=[15 1] armL }
 
 ## GRIPPERS
-Edit r_gripper_l_finger_joint { q=.1 }
-Edit l_gripper_l_finger_joint { q=.1 }
-Edit r_gripper_joint {  gains=[1000 1] q=.01 }
-Edit l_gripper_joint {  gains=[1000 1] q=.01 }
+Edit r_gripper_l_finger_joint { q=.1 gripR }
+Edit l_gripper_l_finger_joint { q=.1 gripL }
+Edit r_gripper_joint {  gains=[1000 1] q=.01 gripR }
+Edit l_gripper_joint {  gains=[1000 1] q=.01 gripL }
 Edit r_gripper_l_finger_tip_frame { mass=.05 }
 Edit l_gripper_l_finger_tip_frame { mass=.05 }
 

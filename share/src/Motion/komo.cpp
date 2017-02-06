@@ -137,6 +137,24 @@ void KOMO::setModel(const mlr::KinematicWorld& W,
   FILE("z.komo.model") <<world;
 }
 
+void KOMO::useOnlyJointGroup(const StringA& groupNames){
+  for(mlr::Joint *j:world.joints){
+    bool lock=true;
+    for(const mlr::String& s:groupNames) if(j->ats.getNode(s)){ lock=false; break; }
+    if(lock) j->type = mlr::JT_rigid;
+  }
+  world.qdim.clear();
+  world.q.clear();
+  world.qdot.clear();
+
+  world.getJointState();
+
+  world.meldFixedJoints();
+  world.removeUselessBodies();
+
+  FILE("z.komo.model") <<world;
+}
+
 void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhase, uint k_order, bool useSwift){
   if(MP) delete MP;
   MP = new MotionProblem(world, useSwift);
@@ -740,6 +758,8 @@ void setTasks(MotionProblem& MP,
 }
 
 //===========================================================================
+
+
 
 
 

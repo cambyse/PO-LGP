@@ -94,8 +94,7 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
   }
 }
 
-Act_TaskController* Roopi::startTaskController(){
-
+Act_TaskController Roopi::startTaskController(){
   s->holdPositionTask2.setMap(new TaskMap_qItself);
   s->holdPositionTask2.set()->y_ref = s->holdPositionTask2.y0;
   s->holdPositionTask2.set()->setGains(30., 10.);
@@ -107,8 +106,10 @@ Act_TaskController* Roopi::startTaskController(){
 //  s->tcm->waitForOpened();
 //  return {s->tcm->name, s->tcm};
 
-  s->tcm = new Act_TaskController(this);
-  return s->tcm;
+  Act_TaskController tcm(this);
+  tcm.persist = true;
+  s->tcm = tcm.tcm;
+  return tcm;
 }
 
 void Roopi::startRosCommunication(){
@@ -255,9 +256,17 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
 }
 
 void Roopi::verboseControl(int verbose){
-  if(verbose) s->tcm->tcm->verbose = true;
-  else s->tcm->tcm->verbose = false;
+  if(verbose) s->tcm->verbose = true;
+  else s->tcm->verbose = false;
 }
+
+void Roopi::lockJointGroupControl(const char *groupname, bool lockThem){
+  s->tcm->waitForOpened();
+  s->tcm->stepMutex.lock();
+  s->tcm->taskController->lockJointGroup(groupname, lockThem);
+  s->tcm->stepMutex.unlock();
+}
+
 
 #if 0
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {

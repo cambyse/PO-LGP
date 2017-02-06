@@ -43,6 +43,19 @@ TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* joint
   M.setMatrixBlock(eye(j2->qDim()), j1->qDim(), j2->qIndex);
 }
 
+TaskMap_qItself::TaskMap_qItself(TaskMap_qItself_PickMode pickMode, const StringA& picks, const mlr::KinematicWorld& K, bool relative_q0)
+  : moduloTwoPi(true), relative_q0(relative_q0) {
+  if(pickMode==QIP_byJointGroups){
+    for(mlr::Joint *j:K.joints){
+      bool pick=false;
+      for(const mlr::String& s:picks) if(j->ats.getNode(s)){ pick=true; break; }
+      if(pick) selectedBodies.append(j->to->index);
+    }
+    return;
+  }
+  NIY
+}
+
 TaskMap_qItself::TaskMap_qItself(uintA _selectedBodies, bool relative_q0)
   : selectedBodies(_selectedBodies), moduloTwoPi(true), relative_q0(relative_q0){
 }
@@ -68,12 +81,15 @@ void TaskMap_qItself::phi(arr& q, arr& J, const mlr::KinematicWorld& G, int t) {
     G.getJointState();
     if(&J) J.resize(n, G.q.N).setZero();
     uint m=0;
+    uint qIndex=0;
     for(uint b:selectedBodies){
       mlr::Joint *j = G.bodies.elem(b)->inLinks.scalar();
+      CHECK_GE(j->qIndex, qIndex, "selectedBodies does not add joints in sorted order! I'm not sure this is correct!");
+      qIndex = j->qIndex;
       for(uint k=0;k<j->qDim();k++){
-        q(m) = G.q.elem(j->qIndex+k);
+        q(m) = G.q.elem(qIndex+k);
         if(relative_q0) q(m) -= j->q0;
-        if(&J) J(m,j->qIndex+k) = 1.;
+        if(&J) J(m,qIndex+k) = 1.;
         m++;
       }
     }

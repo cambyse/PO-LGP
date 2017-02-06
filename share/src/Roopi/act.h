@@ -10,6 +10,7 @@ typedef mlr::Array<Act*> ActL;
 
 struct Act{
   Roopi *roopi;
+  bool persist;
   double startTime;
   ConditionVariable status;
 

@@ -24,6 +24,8 @@ Act_TaskController::Act_TaskController(Roopi* r)
 }
 
 Act_TaskController::~Act_TaskController(){
-  tcm->threadClose();
-  delete tcm;
+  if(!persist){
+    tcm->threadClose();
+    delete tcm;
+  }
 }

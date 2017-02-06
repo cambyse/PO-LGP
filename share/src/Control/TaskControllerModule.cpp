@@ -220,21 +220,18 @@ void TaskControllerModule::step(){
         qdot_model(trans->qIndex+0) = 0;
         qdot_model(trans->qIndex+1) = 0;
         qdot_model(trans->qIndex+2) = 0;
-        //      q_model(trans->qIndex+0) = 0;
-        //      q_model(trans->qIndex+1) = 0;
-        //      q_model(trans->qIndex+2) = 0;
       }
       taskController->setState(q_model, qdot_model);
     }
 #else
     arr a = taskController->operationalSpaceControl();
     double tau = .01;
-    q_model += tau*qdot_model + (.5*tau*tau)*a;
-    qdot_model += tau*a;
+    q_model = modelWorld().q + tau*qdot_model + (.5*tau*tau)*a;
+    qdot_model = modelWorld().qdot + tau*a;
     if(trans && fixBase.get()) {
-      qdot_model(trans->qIndex+0) = 0;
-      qdot_model(trans->qIndex+1) = 0;
-      qdot_model(trans->qIndex+2) = 0;
+      qdot_model(trans->qIndex+0) = 0.;
+      qdot_model(trans->qIndex+1) = 0.;
+      qdot_model(trans->qIndex+2) = 0.;
     }
     taskController->setState(q_model, qdot_model);
 #endif

@@ -287,20 +287,39 @@ ConstraintForceTask* TaskController::addConstraintForceTask(const char* name, Ta
   return t;
 }
 
-void TaskController::getTaskCoeffs(arr& c, arr& J){
-  c.clear();
+void TaskController::lockJointGroup(const char* groupname, bool lockThem){
+  if(!groupname){
+    if(lockThem){
+      lockJoints = consts<bool>(true, world.q.N);
+      world.qdot.setZero();
+    }else lockJoints.clear();
+    return;
+  }
+  if(!lockJoints.N) lockJoints = consts<bool>(false, world.q.N);
+  for(mlr::Joint *j:world.joints){
+    if(j->ats.getNode(groupname)){
+      for(uint i=0;i<j->qDim();i++){
+        lockJoints(j->qIndex+i) = lockThem;
+        if(lockThem) world.qdot(j->qIndex+i) = 0.;
+      }
+    }
+  }
+}
+
+void TaskController::getTaskCoeffs(arr& yddot_des, arr& J){
+  yddot_des.clear();
   if(&J) J.clear();
-  arr J_y, yddot_des;
+  arr J_y, a_des;
   for(CtrlTask* t: tasks) {
     t->map.phi(t->y, J_y, world);
     t->v = J_y*world.qdot;
     if(t->active && !t->f_ref.N) {
-      yddot_des = t->getDesiredAcceleration();
-      c.append(::sqrt(t->prec)%(yddot_des /*-Jdot*qdot*/));
+      a_des = t->getDesiredAcceleration();
+      yddot_des.append(::sqrt(t->prec)%(a_des /*-Jdot*qdot*/));
       if(&J) J.append(::sqrt(t->prec)%J_y);
     }
   }
-  if(&J) J.reshape(c.N, world.q.N);
+  if(&J) J.reshape(yddot_des.N, world.q.N);
 }
 
 void TaskController::reportCurrentState(){
@@ -339,9 +358,9 @@ arr TaskController::getDesiredConstraintForces(){
 }
 
 arr TaskController::operationalSpaceControl(){
-  arr c, J;
-  getTaskCoeffs(c, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
-  if(!c.N && !qNullCostRef.active) return zeros(world.q.N,1).reshape(world.q.N);
+  arr yddot_des, J;
+  getTaskCoeffs(yddot_des, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
+  if(!yddot_des.N && !qNullCostRef.active) return zeros(world.q.N,1).reshape(world.q.N);
   arr A = qNullCostRef.getC();
   arr a = zeros(A.d0);
   qNullCostRef.y=world.q;
@@ -349,11 +368,18 @@ arr TaskController::operationalSpaceControl(){
   if(qNullCostRef.active){
     a += qNullCostRef.getC() * qNullCostRef.getDesiredAcceleration();
   }
-  if(c.N){
+  if(yddot_des.N){
     A += comp_At_A(J);
-    a += comp_At_x(J, c);
+    a += comp_At_x(J, yddot_des);
   }
-//  arr q_ddot = inverse_SymPosDef(A) * a;
+  if(lockJoints.N){
+    CHECK_EQ(lockJoints.N, a.N, "");
+    for(uint i=0;i<a.N;i++) if(lockJoints(i)){
+      a(i)=0.;
+      for(uint j=0;j<a.N;j++) A(i,j) = A(j,i) = 0.;
+      A(i,i)=1.;
+    }
+  }
   arr q_ddot = lapack_Ainv_b_sym(A,a); // inverse_SymPosDef(A) * a;
   return q_ddot;
 }

@@ -112,6 +112,7 @@ struct TaskController {
   mlr::Array<CtrlTask*> tasks;
   mlr::Array<ConstraintForceTask*> forceTasks;
   CtrlTask qNullCostRef;
+  boolA lockJoints;
   bool useSwift;
 
   TaskController(mlr::KinematicWorld& _world, bool _useSwift=true);
@@ -126,7 +127,9 @@ struct TaskController {
   ConstraintForceTask* addConstraintForceTask(const char* name, TaskMap *map);
   /// @}
 
-  void getTaskCoeffs(arr& c, arr& J); ///< the general (`big') task vector and its Jacobian
+  void lockJointGroup(const char *groupname, bool lockThem=true);
+
+  void getTaskCoeffs(arr& yddot_des, arr& J); ///< the general (`big') task vector and its Jacobian
   arr getDesiredConstraintForces(); ///< J^T lambda^*
   arr operationalSpaceControl();
   arr calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& M, const arr& F); ///< returns the linearized control law
