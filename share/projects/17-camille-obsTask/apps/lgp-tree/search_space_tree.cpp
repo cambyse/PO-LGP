@@ -13,81 +13,25 @@ SearchSpaceTree::SearchSpaceTree()
   , seqView("sequence", 1., -0)
   , pathView("path", .1, -1){}
 
-void SearchSpaceTree::prepareKin(){
-  kin.init("LGP-coop-kin.g");
+void SearchSpaceTree::prepareKin( const std::string & kinDescription ){
+  kin.init( kinDescription.c_str() );
   //  kin.watch();
   computeMeshNormals(kin.shapes);
 
-  tableC = kin.getBodyByName("tableC");
-  tableL = kin.getBodyByName("tableL");
-  tableR = kin.getBodyByName("tableR");
-
-  { //grab desired final configuration & create initial configuration, placing objects far on the table
-
-    for(mlr::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
-
-    //memorize their relative positionings
-    targetAbs.resize(box.N);
-    targetRel.resize(box.N, box.N);
-    for(uint i=0;i<box.N;i++){
-      targetAbs(i) = box(i)->X;
-      for(uint j=i+1;j<box.N;j++){
-        mlr::Transformation rel;
-        rel.setDifference(box(i)->X, box(j)->X);
-        targetRel(i,j) = rel;
-        if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_front") fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
-        if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_back")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
-        if(box(i)->name=="/toolbox/side_front" && box(j)->name=="/toolbox/side_left")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
-        if(box(i)->name=="/toolbox/side_front" && box(j)->name=="/toolbox/side_right")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
-      }
-    }
-
-    //position them on the left table
-    double xpos = -.6;
-    for(mlr::Body *b:box){
-      mlr::Joint *j = b->inLinks.scalar();
-      tableC->outLinks.removeValue(j);
-      j->from = tableL;
-      tableL->outLinks.append(j);
-      kin.checkConsistency();
-
-      j->B.setZero();
-      j->B.addRelativeTranslation(xpos, 0,0);
-      j->B.addRelativeRotationDeg(90,0,0,1);
-      xpos += .15;
-    }
-    kin.calc_fwdPropagateFrames();
-  }
+  kin.calc_fwdPropagateFrames();
 //  kin.watch(/*true*/);
 }
 
-void SearchSpaceTree::prepareFol(bool smaller){
-//  fol.verbose = 5;
-  fol.init(FILE("LGP-coop-fol.g"));
-  //-- prepare logic world
-//  for(mlr::Body *b:box) fol.addObject(b->name);
-  if(!smaller) fol.addObject("/toolbox/handle");
-  if(!smaller) fol.addObject("/toolbox/side_front");
-  if(!smaller) fol.addObject("/toolbox/side_back");
-  fol.addObject("screwdriverHandle");
-  fol.addObject("screwbox");
-  fol.addFact({"table","tableC"});
-  fol.addFact({"table","tableL"});
-  fol.addFact({"table","tableR"});
-  if(!smaller) fol.addAgent("baxterL");
-  fol.addAgent("baxterR");
-  fol.addAgent("handL");
-  fol.addAgent("handR");
+void SearchSpaceTree::prepareFol( const std::string & folDescription ){
 
-//  fol.addFact({"INFEASIBLE","activate_grasping","handR","screwdriverHandle"});
+  fol.init(FILE(folDescription.c_str()));
 
   fol.reset_state();
   FILE("z.start.fol") <<fol;
-
 }
 
 void SearchSpaceTree::prepareTree(){
-  root = new ManipulationTree_Node(kin, fol);
+  root = new ActionNode(kin, fol);
   node = root;
 }
 
@@ -106,7 +50,7 @@ void SearchSpaceTree::updateDisplay(){
   else pathView.clear();
 
 
-  ManipulationTree_NodeL all = root->getAll();
+  ActionNodeL all = root->getAll();
   for(auto& n:all) n->inFringe1=n->inFringe2=false;
   for(auto& n:poseFringe) n->inFringe1=true;
   //  for(auto& n:seqFringe) n->inFringe1=true;
@@ -177,7 +121,7 @@ void SearchSpaceTree::printChoices() const{
   cout <<"(x) path problem" <<endl;
   cout <<"(m) MC planning" <<endl;
   uint c=0;
-  for(ManipulationTree_Node* a:node->children){
+  for(ActionNode* a:node->children){
     cout <<"(" <<c++ <<") DECISION: " <<*a->decision <<endl;
   }
 }

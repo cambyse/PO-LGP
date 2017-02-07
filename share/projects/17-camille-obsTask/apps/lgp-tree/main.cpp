@@ -67,12 +67,12 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   //    C.root->checkConsistency();
   { //expand
     MNode* n = popBest(C.mcFringe, mcHeuristic);
-    //      ManipulationTree_Node* n = NULL;
+    //      ActionNode* n = NULL;
     //      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
     if(n)
     {
       n->expand();
-      for(ManipulationTree_Node* c:n->children)
+      for(ActionNode* c:n->children)
       {
         c->addMCRollouts(10,10);
         C.mcFringe.append(c);
@@ -87,7 +87,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   { //add additional MC rollouts
     for(uint mc=0;mc<10;mc++)
     {
-      ManipulationTree_Node* n = NULL;
+      ActionNode* n = NULL;
       for(uint k=0;k<10;k++)
       {
         n=C.root->treePolicy_random(); if(n) break;
@@ -178,7 +178,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   //    mlr::wait();
 
   //    { //optimize a path
-  //      ManipulationTree_Node* n = pqPath.pop();
+  //      ActionNode* n = pqPath.pop();
   //      if(n){
   //        n->solvePathProblem();
   //        if(n->symTerminal && n->pathFeasible){ //this is a symbolic solution
@@ -201,8 +201,15 @@ void plan_BHTS()
 {
   SearchSpaceTree C;
 
-  C.prepareFol(true);
-  C.prepareKin();       // parse initial scene LGP-coop-kin.g
+  //C.fol.verbose = 5;
+  //C.prepareFol("LGP-obs-fol.g");
+  //C.prepareKin("LGP-obs-kin.g");
+
+  C.prepareFol("LGP-coop-fol.g");
+  C.prepareKin("LGP-coop-kin.g");       // parse initial scene LGP-coop-kin.g
+
+
+
   C.prepareTree();      // create root node
   C.prepareDisplay();
 

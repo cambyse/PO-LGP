@@ -1,32 +1,32 @@
 #pragma once
 
 #include <Logic/fol_mcts_world.h>
-#include <LGP/manipulationTree.h>
 #include <Kin/kinViewer.h>
+#include "action_node.h"
 
 class SearchSpaceTree{
 public: // public members
   FOL_World fol;      // first order logic symbols
 
-  ManipulationTree_Node *root,*node; // root and "current" node
+  ActionNode *root,*node; // root and "current" node
 
   OrsPathViewer poseView;
   OrsPathViewer seqView;
   OrsPathViewer pathView;
 
-  mlr::Array<ManipulationTree_Node*> mcFringe;
-  mlr::Array<ManipulationTree_Node*> terminals;
-  mlr::Array<ManipulationTree_Node*> poseFringe;
-  mlr::Array<ManipulationTree_Node*> seqFringe;
-  mlr::Array<ManipulationTree_Node*> pathFringe;
-  mlr::Array<ManipulationTree_Node*> done;
+  mlr::Array<ActionNode*> mcFringe;
+  mlr::Array<ActionNode*> terminals;
+  mlr::Array<ActionNode*> poseFringe;
+  mlr::Array<ActionNode*> seqFringe;
+  mlr::Array<ActionNode*> pathFringe;
+  mlr::Array<ActionNode*> done;
 
 public: // public methods
   SearchSpaceTree();
 
   // modifiers
-  void prepareKin();
-  void prepareFol(bool smaller=false);
+  void prepareKin( const std::string & kinematicDescription );
+  void prepareFol( const std::string & folDescription );
   void prepareTree();
   void prepareDisplay();
 
@@ -47,19 +47,19 @@ private: // private methods
 private: // private members
   mlr::KinematicWorld kin;
 
-  BodyL box;
-  mlr::Body *tableC;
-  mlr::Body *tableL;
-  mlr::Body *tableR;
+//  BodyL box;
+//  mlr::Body *tableC;
+//  mlr::Body *tableL;
+//  mlr::Body *tableR;
 
-  mlr::Array<mlr::Transformation> targetAbs, targetRel;
+//  mlr::Array<mlr::Transformation> targetAbs, targetRel;
 
   bool autoCompute = false;
 };
 
 //============free functions==============================================
 
-typedef ManipulationTree_Node MNode;
+typedef ActionNode MNode;
 
 double poseHeuristic(MNode* n);
 double mcHeuristic(MNode* n);
