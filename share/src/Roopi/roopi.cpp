@@ -39,21 +39,56 @@ Maybe plan:
 */
 //==============================================================================
 
+Roopi_private::Roopi_private(Roopi* roopi)
+  : jointState(NULL, "jointState"),
+    ctrl_ref(NULL, "ctrl_ref"),
+    ctrl_obs(NULL, "ctrl_obs"),
+    pr2_odom(NULL, "pr2_odom"),
+    modelWorld(NULL, "modelWorld"),
+    holdPositionTask2(roopi)
+  #if baxter
+  spctb(tcm.realWorld),
+    #endif
+{
+#if baxter
+  if(mlr::getParameter<bool>("useRos", false)){
+    nh = new ros::NodeHandle;
+    pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
+  }
+#endif
+}
+
+Roopi_private::~Roopi_private(){
+  modulesReportCycleTimes();
+
+  if(_ComRos) delete _ComRos; //shut of the spinner BEFORE you close the pubs/subscribers..
+  if(_ComPR2) delete _ComPR2;
+
+  holdPositionTask2.kill();
+  if(tcm){ tcm->threadClose(); delete tcm; }
+  if(ctrlView){ ctrlView->threadClose(); delete ctrlView; }
+  //    if(holdPositionTask) delete holdPositionTask;
+  //    if(holdPositionTask2) delete holdPositionTask2;
+  threadCloseModules();
+  cout << "bye bye" << endl;
+}
 
 //==============================================================================
 
 Roopi::Roopi(bool autoStartup)
   : s(new Roopi_private(this)) {
   if(autoStartup){
+    mlr::String model = mlr::getParameter<mlr::String>("model", "model.g");
     mlr::String robot = mlr::getParameter<mlr::String>("robot", "pr2");
-    bool useRos = mlr::getParameter<bool>("useRos",false);
+    bool useRos = mlr::getParameter<bool>("useRos", false);
 
-    setKinematics(robot);
-    startTaskController();
     if(useRos){
-      startRosCommunication();
-      startRobotCommunication(robot);
+      s->_ComRos = new Act_ComRos(this);
+      s->_ComPR2 = new Act_ComPR2(this);
     }
+
+    setKinematics(model);
+    startTaskController();
   }
 }
 
@@ -110,26 +145,6 @@ Act_TaskController Roopi::startTaskController(){
   tcm.persist = true;
   s->tcm = tcm.tcm;
   return tcm;
-}
-
-void Roopi::startRosCommunication(){
-  if(!s->rosInit) s->rosInit = new RosInit("Roopi");
-  if(!s->rosSpinner) s->rosSpinner = new RosCom_Spinner();
-  if(!s->subJointState) s->subJointState = new Subscriber<sensor_msgs::JointState>("/robot/joint_states", s->jointState);
-}
-
-void Roopi::startRobotCommunication(const char* robot){
-  startRosCommunication();
-  if(!strcmp(robot,"pr2")){
-    s->subCtrl = new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", s->ctrl_obs);
-    s->pubCtrl = new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", s->ctrl_ref);
-    s->subOdom = new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", s->pr2_odom);
-  }
-}
-
-act Roopi::sendGamepadToCtrlTasks(){
-  if(!s->gamepad) s->gamepad = new GamepadInterface();
-  return {s->gamepad->name,s->gamepad};
 }
 
 void Roopi::hold(bool still){
@@ -218,10 +233,6 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
   }
   return true;
 #endif
-}
-
-Act_PathOpt Roopi::newPathOpt(){
-  return Act_PathOpt(this);
 }
 
 void Roopi::newCameraView(){
@@ -695,3 +706,5 @@ void TaskReferenceInterpolAct::close() {
 }
 
 #endif
+
+

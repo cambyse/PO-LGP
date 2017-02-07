@@ -25,11 +25,7 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& tar
 }
 
 Act_CtrlTask::~Act_CtrlTask(){
-  if(task){
-    roopi->s->ctrlTasks.set()->removeValue(task);
-    delete &task->map;
-    delete task;
-  }
+  kill();
 }
 
 void Act_CtrlTask::start(){
@@ -38,6 +34,15 @@ void Act_CtrlTask::start(){
 
 void Act_CtrlTask::stop(){
   set()->active = false;
+}
+
+void Act_CtrlTask::kill(){
+  if(task){
+    roopi->s->ctrlTasks.set()->removeValue(task);
+    delete &task->map;
+    delete task;
+    task = NULL;
+  }
 }
 
 ActStatus Act_CtrlTask::getStatus(){

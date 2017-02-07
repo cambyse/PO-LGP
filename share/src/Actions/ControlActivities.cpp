@@ -68,7 +68,7 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, m
   }else{
     HALT("need a type (the map type) in the specs");
   }
-  task = new CtrlTask(name, *map, specs);
+  task = new CtrlTask(name, map, specs);
   if((it=specs["tol"])) stopTolerance=it->get<double>(); else stopTolerance=1e-2;
 }
 

@@ -4,6 +4,8 @@
 #include <Gui/opengl.h>
 
 #include <RosCom/roscom.h>
+#include <RosCom/spinner.h>
+#include <Perception/viewer.h>
 #include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
@@ -36,11 +38,11 @@ struct MySystem {
     if(mlr::getParameter<bool>("useRos", true)){
       new RosCom_Spinner();
       new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/kinect_head/rgb/image_color", kinect_rgb);
-      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth/image_raw", kinect_depth, &kinect_frame);
-//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/left/image_rect_color", rgb_leftEye);
-//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/right/image_rect_color", rgb_rightEye);
-//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/l_forearm_cam/image_rect_color", rgb_leftArm);
-//      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/r_forearm_cam/image_rect_color", rgb_rightArm);
+      new SubscriberConv<sensor_msgs::Image, uint16A, &conv_image2uint16A>("/kinect_head/depth_registered/image_rect_raw", kinect_depth, &kinect_frame);
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/left/image_rect_color", rgb_leftEye);
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/wide_stereo/right/image_rect_color", rgb_rightEye);
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/l_forearm_cam/image_rect_color", rgb_leftArm);
+      new SubscriberConv<sensor_msgs::Image, byteA, &conv_image2byteA>("/r_forearm_cam/image_rect_color", rgb_rightArm);
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new SubscriberConv<geometry_msgs::WrenchStamped, arr, &conv_wrench2arr>("/ft_sensor/ft_compensated", wrenchL);
 
@@ -48,10 +50,10 @@ struct MySystem {
     new KinectDepthPacking();
     new ImageViewer("kinect_rgb");
     new ImageViewer("kinect_depthRgb");
-//    new ImageViewer("rgb_leftArm");
-//    new ImageViewer("rgb_rightArm");
-//    new ImageViewer("rgb_leftEye");
-//    new ImageViewer("rgb_rightEye");
+    new ImageViewer("rgb_leftArm");
+    new ImageViewer("rgb_rightArm");
+    new ImageViewer("rgb_leftEye");
+    new ImageViewer("rgb_rightEye");
     new Kinect2PointCloud();
     new PointCloudViewer();
 //    addModule<Pr2GamepadController>(NULL, /*Module::loopWithBeat,*/ .01);
@@ -90,7 +92,7 @@ void TEST(Sensors){
     arr gamepadState = S.gamepadState.get();
     if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
     if(moduleShutdown().getValue()>0) break;
-    S.gamepadState.data->waitForNextRevision();
+    S.gamepadState.waitForNextRevision();
 
     //-- update world
     gl.lock.writeLock();
@@ -118,8 +120,6 @@ void TEST(Sensors){
 
     gl.lock.unlock();
 
-    gl.lock.writeLock();
-    gl.lock.unlock();
     if(!(t%10)) gl.update();
 
     // force sensors
@@ -137,6 +137,7 @@ void TEST(Sensors){
 //      wrenchDispL->rel.rot.setVec(-1.*(rot*mlr::Vector(wL.sub(3,-1))));;
     }
   }
+mlr::wait();
 
   threadCloseModules();
   modulesReportCycleTimes();

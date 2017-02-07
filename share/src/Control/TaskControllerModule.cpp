@@ -35,7 +35,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::Kinema
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
 
-  robot = _robot;
+  robot = mlr::getParameter<mlr::String>("robot");
 
   //-- deciding on the kinematic model. Priority:
   // 1) an explicit model is given as argument
@@ -51,9 +51,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::Kinema
     if(modelWorld.get()->q.N){ //modelWorld has been set before
       realWorld = modelWorld.get();
     }else{
-      if(robot=="none"){
-        robot = mlr::getParameter<mlr::String>("robot");
-      } else if(robot=="pr2") {
+      if(robot=="pr2") {
         realWorld.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
       } else if(robot=="baxter") {
         realWorld.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
@@ -64,7 +62,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::Kinema
     }
   }
 
-  if(robot != "pr2" && robot != "baxter" && robot != "none") {
+  if(robot != "pr2" && robot != "baxter") {
     HALT("robot not known!")
   }
 
@@ -183,7 +181,7 @@ void TaskControllerModule::step(){
       requiresInitialSync = false;
     }else{
       cout <<"** Waiting for ROS message on initial configuration.." <<endl;
-      if(t>20){
+      if(t>10000){
         HALT("sync'ing real robot with simulated failed")
       }
     }

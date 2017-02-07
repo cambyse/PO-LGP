@@ -1,6 +1,7 @@
 #pragma once
 #include <Core/array.h>
 
+#if 0
 struct Pr2GamepadController : Thread {
   ACCESS(CtrlMsg, ctrl_ref)
   ACCESS(CtrlMsg, ctrl_obs)
@@ -103,3 +104,4 @@ struct Pr2GamepadController : Thread {
   void close(){
   }
 };
+#endif

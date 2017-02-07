@@ -82,8 +82,8 @@ void Prototyping(){
 void TEST(PickAndPlace) {
   Roopi R(true);
 
-  R.newCameraView();
-  R.verboseControl(1);
+//  R.newCameraView();
+//  R.verboseControl(1);
 
   {
     //attention
@@ -95,7 +95,7 @@ void TEST(PickAndPlace) {
     auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R", NoVector, "obj1"), {}, {0.,0.,.2});
 
     //alignment
-#if 0
+#if 1
     auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_x, "obj1", Vector_y) );
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_y, "obj1", Vector_x) );
 #else
@@ -166,7 +166,7 @@ void TEST(PickAndPlace2) {
 
     R.hold(false);
     R.wait({&ws, &look});
-    R.lockJointGroupControl("base");
+//    R.lockJointGroupControl("base");
     R.hold(true);
   }
 
@@ -223,6 +223,20 @@ void TEST(PickAndPlace2) {
 
 //===============================================================================
 
+void TEST(Gamepad) {
+  Roopi R(true);
+
+//  R.verboseControl(1);
+
+//  R.lockJointGroupControl("base");
+
+  auto gamepad = R.newGamepadControl();
+
+  R.wait({&gamepad}, -1.);
+}
+
+//===============================================================================
+
 void TEST(Basics) {
   Roopi R;
 
@@ -258,7 +272,8 @@ int main(int argc, char** argv){
 
 //  testPickAndPlace();
 
-  testPickAndPlace2();
+//  testPickAndPlace2();
+  testGamepad();
 
 //  Prototyping();
   return 0;

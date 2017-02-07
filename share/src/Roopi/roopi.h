@@ -8,6 +8,9 @@
 #include "act_PathOpt.h"
 #include "act_PathFollow.h"
 #include "act_TaskController.h"
+#include "act_GamepadControl.h"
+#include "act_ComRos.h"
+#include "act_ComPR2.h"
 
 struct Roopi_Path;
 struct TaskReferenceInterpolAct;
@@ -32,10 +35,8 @@ struct Roopi {
   void setKinematics(const mlr::KinematicWorld& K);
   Act_TaskController startTaskController();
 //  act startControllerLog();
-  void startRosCommunication();
 
-  void startRobotCommunication(const char* robot);
-  act sendGamepadToCtrlTasks();
+  Act_ComRos startRosCommunication(){ return Act_ComRos(this); }
 
   void hold(bool still);
   Act_CtrlTask* home();
@@ -50,7 +51,11 @@ struct Roopi {
   bool wait(std::initializer_list<Act*> acts, double timeout=5.);
 
   //-- path opt
-  Act_PathOpt newPathOpt();
+  Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
+
+  //-- path opt
+  Act_PathOpt newPathOpt(){ return Act_PathOpt(this); }
+  Act_ComPR2 newComPR2(){ return Act_ComPR2(this); }
 
   //-- starting up controllers/communications/views
   void newCameraView();

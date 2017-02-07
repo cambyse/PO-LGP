@@ -20,7 +20,6 @@ Act_TaskController::Act_TaskController(Roopi* r)
   tcm = new TaskControllerModule("none", NoWorld);
 
   tcm->threadLoop();
-  tcm->waitForOpened();
 }
 
 Act_TaskController::~Act_TaskController(){
