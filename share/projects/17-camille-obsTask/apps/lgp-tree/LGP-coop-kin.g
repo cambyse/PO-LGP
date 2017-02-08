@@ -1,8 +1,8 @@
-Include = '../../data/baxter_model/baxter.ors'
+Include = 'data/baxter_model/baxter.ors'
 Delete shape visual
 #Delete shape collision
 
-Include = '../../data/man_model.ors'
+Include = 'data/man_model.ors'
 
 
 Edit  waist { X=<T t(1.5 0. 1.) d(-90 0 0 1)> }
@@ -51,7 +51,7 @@ shape baxterL (left_wrist) { rel=<T d(-90 0 1 0) d(-90 0 0 1) t(0 0 -.26)> type=
 #shape baxterGraspRefL (left_wrist) { type=5 size=[.1 0 0 0] color=[1 0 0] rel=<T d(-90 0 1 0) d(-90 0 0 1) t(0 0 -.26)> }
 
 
-Include = '../../data/toolbox/toolbox.ors'
+Include = 'data/toolbox/toolbox.ors'
 
 joint (tableC /toolbox/handle) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 }
 joint (tableC /toolbox/side_front) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(-90 0 0 1) t(0 -.212 0)> type=10 }
@@ -61,7 +61,7 @@ joint (tableC /toolbox/side_right) { from=<T t(0 0 .04) t(0 0 .12)> to=<T d(180 
 joint (tableC /toolbox/floor_left) { from=<T t(0 0 .04)> to=<T t(.0 .069 .004) d(90 1 0 0)> type=10 }
 joint (tableC /toolbox/floor_right) { from=<T t(0 0 .04)> to=<T d(180 0 0 1) t(.0 .069 .004) d(90 1 0 0)> type=10 }
 
-Include = '../../data/screwdriver/screwdriver.ors'
+Include = 'data/screwdriver/screwdriver.ors'
 joint (tableR screwdriver) { from=<T t(0 0 .06)> to=<T t(-.5 .0 .0) > type=10 }
 #joint (tableR screwdriver) { from=<T t(0 0 .06)> to=<T t(.5 .0 .0) > type=10 }
 shape screwdriverHandle(screwdriver) { type=5 rel=<T d(90 0 0 1)> size=[.15 0 0 0] color=[1 1 0] }
