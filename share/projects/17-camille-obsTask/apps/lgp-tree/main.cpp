@@ -2,6 +2,8 @@
 
 #include "search_space_tree.h"
 
+#include <observation_tasks.h>
+
 //===========================================================================
 
 /*static void test(){
@@ -59,6 +61,14 @@
   threadCloseModules();
   cout <<"BYE BYE" <<endl;
 }*/
+
+//==================================================================
+//args : time, komo
+//komo.setTask( time, time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
+//                                          ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
+//                                          OT_sumOfSqr, NoArr, 1e2 );
+//
+
 
 //===========================================================================
 
@@ -197,24 +207,94 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
 
 //===========================================================================
 
+void groundGrasp( const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double time=n->get<double>();
+
+  komo.setGrasp( time, *symbols(0), *symbols(1), verbose);
+}
+
+void groundPlace( const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double time=n->get<double>();
+
+  komo.setPlace( time, *symbols(0), *symbols(1), *symbols(2), verbose);
+}
+
+void groundHandover( const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double time=n->get<double>();
+
+  komo.setHandover( time, *symbols(0), *symbols(1), *symbols(2), verbose);
+}
+
+void groundAttach( const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double time=n->get<double>();
+
+  Node *attachableSymbol = facts.getNode("attachable");
+  CHECK(attachableSymbol!=NULL,"");
+  Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
+  mlr::Transformation rel = attachableFact->get<mlr::Transformation>();
+  komo.setAttach( time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
+}
+
+void groundHeadGetSight( const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  double time=n->get<double>();
+
+  komo.setTask( time, time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
+                                                    ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
+                                                    OT_sumOfSqr, NoArr, 1e2 );
+}
+
+void groundObserve( const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+
+}
+
+//===========================================================================
+
 void plan_BHTS()
 {
-  SearchSpaceTree C;
+  // register symbols
+  KOMOFactory komoFactory;
+  komoFactory.registerTask( "komoGrasp"       , groundGrasp );
+  komoFactory.registerTask( "komoPlace"       , groundPlace );
+  komoFactory.registerTask( "komoHandover"    , groundHandover );
+  komoFactory.registerTask( "komoAttach"      , groundAttach );
+  komoFactory.registerTask( "komoGetSight"    , groundHeadGetSight );
+  komoFactory.registerTask( "komoObserve"     , groundObserve );
+
+  // instanciate search tree
+  SearchSpaceTree C( komoFactory );
 
   //C.fol.verbose = 5;
-  //C.prepareFol("LGP-obs-fol.g");
-  //C.prepareKin("LGP-obs-kin.g");
+  C.prepareFol("LGP-obs-fol.g");
+  C.prepareKin("LGP-obs-kin.g");
 
-  C.prepareFol("LGP-coop-fol.g");
-  C.prepareKin("LGP-coop-kin.g");       // parse initial scene LGP-coop-kin.g
-
-
+  //C.prepareFol("LGP-coop-fol.g");
+  //C.prepareKin("LGP-coop-kin.g");       // parse initial scene LGP-coop-kin.g
 
   C.prepareTree();      // create root node
   C.prepareDisplay();
 
   //  C.kin.watch(true);
   //  mlr::wait();
+
+  // algo starts here
 
   C.mcFringe.append(C.root);
   C.poseFringe.append(C.root);

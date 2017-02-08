@@ -22,7 +22,7 @@ public: // public members
   mlr::Array<ActionNode*> done;
 
 public: // public methods
-  SearchSpaceTree();
+  SearchSpaceTree( const KOMOFactory & );
 
   // modifiers
   void prepareKin( const std::string & kinematicDescription );
@@ -47,12 +47,7 @@ private: // private methods
 private: // private members
   mlr::KinematicWorld kin;
 
-//  BodyL box;
-//  mlr::Body *tableC;
-//  mlr::Body *tableL;
-//  mlr::Body *tableR;
-
-//  mlr::Array<mlr::Transformation> targetAbs, targetRel;
+  KOMOFactory komoFactory_;
 
   bool autoCompute = false;
 };

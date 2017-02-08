@@ -8,10 +8,12 @@
 
 #include <LGP/LGP.h>
 
-SearchSpaceTree::SearchSpaceTree()
+SearchSpaceTree::SearchSpaceTree( const KOMOFactory & komoFactory )
   : poseView("pose", 1., -0)
   , seqView("sequence", 1., -0)
-  , pathView("path", .1, -1){}
+  , pathView("path", .1, -1)
+  , komoFactory_(komoFactory)
+{}
 
 void SearchSpaceTree::prepareKin( const std::string & kinDescription ){
   kin.init( kinDescription.c_str() );
@@ -31,7 +33,7 @@ void SearchSpaceTree::prepareFol( const std::string & folDescription ){
 }
 
 void SearchSpaceTree::prepareTree(){
-  root = new ActionNode(kin, fol);
+  root = new ActionNode(kin, fol, komoFactory_);
   node = root;
 }
 
@@ -40,13 +42,13 @@ void SearchSpaceTree::prepareDisplay(){
 }
 
 void SearchSpaceTree::updateDisplay(){
-  if(node->poseProblem && node->poseProblem->MP->configurations.N)
-    poseView.setConfigurations(node->poseProblem->MP->configurations);
-  if(node->seqProblem && node->seqProblem->MP->configurations.N)
-    seqView.setConfigurations(node->seqProblem->MP->configurations);
+  if(node->komoPoseProblem && node->komoPoseProblem->MP->configurations.N)
+    poseView.setConfigurations(node->komoPoseProblem->MP->configurations);
+  if(node->komoSeqProblem && node->komoSeqProblem->MP->configurations.N)
+    seqView.setConfigurations(node->komoSeqProblem->MP->configurations);
   else seqView.clear();
-  if(node->pathProblem && node->pathProblem->MP->configurations.N)
-    pathView.setConfigurations(node->pathProblem->MP->configurations);
+  if(node->komoPathProblem && node->komoPathProblem->MP->configurations.N)
+    pathView.setConfigurations(node->komoPathProblem->MP->configurations);
   else pathView.clear();
 
 

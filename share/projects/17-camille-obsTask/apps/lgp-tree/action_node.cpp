@@ -25,16 +25,71 @@ uint COUNT_poseOpt=0;
 uint COUNT_seqOpt=0;
 uint COUNT_pathOpt=0;
 
-ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol)
+//==============KOMOFactory==============================================
+
+void KOMOFactory::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+{
+  tasks_[ type ] = grounder;
+}
+
+std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
+{
+  auto komo = std::make_shared< ExtensibleKOMO >();
+  for ( auto task : tasks_ )
+  {
+    komo->registerTask( task.first, task.second );
+  }
+
+  return komo;
+}
+
+
+//==============ExtensibleKOMO==============================================
+
+ExtensibleKOMO::ExtensibleKOMO()
+  : KOMO()
+{
+
+}
+
+void ExtensibleKOMO::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+{
+  tasks_[ type ] = grounder;
+}
+
+void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose )
+{
+  for(Node *n:facts)
+  {
+    if(!n->parents.N) continue; // skip not relevant node
+    StringL symbols;
+    for(Node *p:n->parents) symbols.append(&p->keys.last());// gather symbols
+
+    if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
+    {
+      mlr::String type = n->keys.last();
+      tasks_[ type ]( facts, n, *this, verbose ); // ground the symbol
+    }
+    else if(n->keys.N && n->keys.last().startsWith("komo"))
+    {
+      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
+    }
+  }
+}
+
+//===========================================================================
+ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFactory & komoFactory )
   : parent(NULL), s(0),
     fol(_fol), folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
     startKinematics(kin), effKinematics(),
     rootMC(NULL), mcStats(NULL),
-    poseProblem(NULL), seqProblem(NULL), pathProblem(NULL),
+    komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
     mcCount(0), poseCount(0), seqCount(0), pathCount(0),
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
     poseFeasible(false), seqFeasible(false), pathFeasible(false),
-    inFringe1(false), inFringe2(false) {
+    inFringe1(false), inFringe2(false)
+  , komoFactory_( komoFactory )
+{
   //this is the root node!
   fol.reset_state();
   folState = fol.createStateCopy();
@@ -42,16 +97,18 @@ ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol)
   rootMC->verbose = 0;
 }
 
-ActionNode::ActionNode(ActionNode* parent, MCTS_Environment::Handle& a)
+ActionNode::ActionNode(ActionNode* parent, MCTS_Environment::Handle& a, const KOMOFactory & komoFactory )
   : parent(parent), fol(parent->fol),
      folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
     startKinematics(parent->startKinematics), effKinematics(),
     rootMC(NULL), mcStats(NULL),
-    poseProblem(NULL), seqProblem(NULL), pathProblem(NULL),
+    komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
     mcCount(0), poseCount(0), seqCount(0), pathCount(0),
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
     poseFeasible(false), seqFeasible(false), pathFeasible(false),
-    inFringe1(false), inFringe2(false) {
+    inFringe1(false), inFringe2(false)
+  , komoFactory_( komoFactory )
+{
   s=parent->s+1;
   parent->children.append(this);
   fol.setState(parent->folState, parent->s);
@@ -75,7 +132,7 @@ void ActionNode::expand(){
   auto actions = fol.get_actions();
   for(FOL_World::Handle& a:actions){
 //    cout <<"  EXPAND DECISION: " <<*a <<endl;
-    new ActionNode(this, a);
+    new ActionNode(this, a, komoFactory_);
   }
   if(!children.N) isTerminal=true;
   isExpanded=true;
@@ -151,37 +208,37 @@ void ActionNode::solvePoseProblem(){
   //-- collect 'path nodes'
   ActionNodeL treepath = getTreePath();
 
-  poseProblem = new KOMO();
-  KOMO& komo(*poseProblem);
-  komo.setModel(effKinematics);
-  komo.setTiming(1., 2, 5., 1, false);
+  komoPoseProblem = komoFactory_.createKomo();
+  komoPoseProblem->setModel(effKinematics);
+  komoPoseProblem->setTiming(1., 2, 5., 1, false);
 
-  komo.setHoming(-1., -1., 1e-1); //gradient bug??
-  komo.setSquaredQVelocities();
+  komoPoseProblem->setHoming(-1., -1., 1e-1); //gradient bug??
+  komoPoseProblem->setSquaredQVelocities();
 //  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komoPoseProblem->setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
-  komo.setAbstractTask(0., *folState);
+  //komoPoseProblem->setAbstractTask(0., *folState);
+  komoPoseProblem->groundTasks( 0., *folState );
 //  for(mlr::KinematicSwitch *sw: poseProblem->MP->switches){
 //    sw->timeOfApplication=2;
 //  }
 
   DEBUG( FILE("z.fol") <<fol; )
-  DEBUG( komo.MP->reportFeatures(true, FILE("z.problem")); )
-  komo.reset();
+  DEBUG( komoPoseProblem->MP->reportFeatures(true, FILE("z.problem")); )
+  komoPoseProblem->reset();
   try{
-    komo.run();
+    komoPoseProblem->run();
   } catch(const char* msg){
     cout <<"KOMO FAILED: " <<msg <<endl;
   }
-  COUNT_evals += komo.opt->newton.evals;
+  COUNT_evals += komoPoseProblem->opt->newton.evals;
   COUNT_kin += mlr::KinematicWorld::setJointStateCount;
   COUNT_poseOpt++;
   poseCount++;
 
-  DEBUG( komo.MP->reportFeatures(true, FILE("z.problem")); )
+  DEBUG( komoPoseProblem->MP->reportFeatures(true, FILE("z.problem")); )
 
-  Graph result = komo.getReport();
+  Graph result = komoPoseProblem->getReport();
   DEBUG( FILE("z.problem.cost") <<result; )
   double cost = result.get<double>({"total","sqrCosts"});
   double constraints = result.get<double>({"total","constraints"});
@@ -192,15 +249,15 @@ void ActionNode::solvePoseProblem(){
     poseCost = cost;
     poseConstraints = constraints;
     poseFeasible = (constraints<.5);
-    pose = komo.x;
+    pose = komoPoseProblem->x;
   }
 
   if(!poseFeasible)
     labelInfeasible();
 
-  effKinematics = *poseProblem->MP->configurations.last();
+  effKinematics = *komoPoseProblem->MP->configurations.last();
 
-  for(mlr::KinematicSwitch *sw: poseProblem->MP->switches){
+  for(mlr::KinematicSwitch *sw: komoPoseProblem->MP->switches){
 //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
     if(sw->timeOfApplication>=2) sw->apply(effKinematics);
   }
@@ -216,37 +273,36 @@ void ActionNode::solveSeqProblem(int verbose){
   //-- collect 'path nodes'
   ActionNodeL treepath = getTreePath();
 
-  seqProblem = new KOMO();
-  KOMO& komo(*seqProblem);
-  komo.setModel(startKinematics);
-  komo.setTiming(time, 2, 5., 1, false);
+  komoSeqProblem = komoFactory_.createKomo();
+  komoSeqProblem->setModel(startKinematics);
+  komoSeqProblem->setTiming(time, 2, 5., 1, false);
 
-  komo.setHoming(-1., -1., 1e-1); //gradient bug??
-  komo.setSquaredQVelocities();
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komoSeqProblem->setHoming(-1., -1., 1e-1); //gradient bug??
+  komoSeqProblem->setSquaredQVelocities();
+  komoSeqProblem->setSquaredFixJointVelocities(-1., -1., 1e3);
+  komoSeqProblem->setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
   for(ActionNode *node:treepath){
-    komo.setAbstractTask((node->parent?node->parent->time:0.), *node->folState);
+    komoSeqProblem->groundTasks((node->parent?node->parent->time:0.), *node->folState);
   }
 
   DEBUG( FILE("z.fol") <<fol; )
-  DEBUG( komo.MP->reportFeatures(true, FILE("z.problem")); )
-  komo.reset();
+  DEBUG( komoSeqProblem->MP->reportFeatures(true, FILE("z.problem")); )
+  komoSeqProblem->reset();
   try{
-    komo.run();
+    komoSeqProblem->run();
   } catch(const char* msg){
     cout <<"KOMO FAILED: " <<msg <<endl;
   }
-  COUNT_evals += komo.opt->newton.evals;
+  COUNT_evals += komoSeqProblem->opt->newton.evals;
   COUNT_kin += mlr::KinematicWorld::setJointStateCount;
   COUNT_seqOpt++;
   seqCount++;
 
-  DEBUG( komo.MP->reportFeatures(true, FILE("z.problem")); )
+  DEBUG( komoSeqProblem->MP->reportFeatures(true, FILE("z.problem")); )
 //  komo.checkGradients();
 
-  Graph result = komo.getReport();
+  Graph result = komoSeqProblem->getReport();
   DEBUG( FILE("z.problem.cost") <<result; )
   double cost = result.get<double>({"total","sqrCosts"});
   double constraints = result.get<double>({"total","constraints"});
@@ -255,7 +311,7 @@ void ActionNode::solveSeqProblem(int verbose){
     seqCost = cost;
     seqConstraints = constraints;
     seqFeasible = (constraints<.5);
-    seq = komo.x;
+    seq = komoSeqProblem->x;
   }
 
   if(!seqFeasible)
@@ -269,37 +325,36 @@ void ActionNode::solvePathProblem(uint microSteps, int verbose){
   //-- collect 'path nodes'
   ActionNodeL treepath = getTreePath();
 
-  pathProblem = new KOMO();
-  KOMO& komo(*pathProblem);
-  komo.setModel(startKinematics);
-  komo.setTiming(time, microSteps, 5., 2, false);
+  komoPathProblem = komoFactory_.createKomo();
+  komoPathProblem->setModel(startKinematics);
+  komoPathProblem->setTiming(time, microSteps, 5., 2, false);
 
-  komo.setHoming(-1., -1., 1e-2); //gradient bug??
-  komo.setSquaredQAccelerations();
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komoPathProblem->setHoming(-1., -1., 1e-2); //gradient bug??
+  komoPathProblem->setSquaredQAccelerations();
+  komoPathProblem->setSquaredFixJointVelocities(-1., -1., 1e3);
+  komoPathProblem->setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
   for(ActionNode *node:treepath){
-    komo.setAbstractTask((node->parent?node->parent->time:0.), *node->folState);
+    komoPathProblem->groundTasks((node->parent?node->parent->time:0.), *node->folState);
   }
 
   DEBUG( FILE("z.fol") <<fol; )
-  DEBUG( komo.MP->reportFeatures(true, FILE("z.problem")); )
-  komo.reset();
+  DEBUG( komoPathProblem->MP->reportFeatures(true, FILE("z.problem")); )
+  komoPathProblem->reset();
   try{
-    komo.run();
+    komoPathProblem->run();
   } catch(const char* msg){
     cout <<"KOMO FAILED: " <<msg <<endl;
   }
-  COUNT_evals += komo.opt->newton.evals;
+  COUNT_evals += komoPathProblem->opt->newton.evals;
   COUNT_kin += mlr::KinematicWorld::setJointStateCount;
   COUNT_pathOpt++;
   pathCount++;
 
-  DEBUG( komo.MP->reportFeatures(true, FILE("z.problem")); )
+  DEBUG( komoPathProblem->MP->reportFeatures(true, FILE("z.problem")); )
 //  komo.checkGradients();
 
-  Graph result = komo.getReport();
+  Graph result = komoPathProblem->getReport();
   DEBUG( FILE("z.problem.cost") <<result; )
   double cost = result.get<double>({"total","sqrCosts"});
   double constraints = result.get<double>({"total","constraints"});
@@ -308,7 +363,7 @@ void ActionNode::solvePathProblem(uint microSteps, int verbose){
     pathCost = cost;
     pathConstraints = constraints;
     pathFeasible = (constraints<.5);
-    path = komo.x;
+    path = komoPathProblem->x;
   }
 
   if(!pathFeasible)

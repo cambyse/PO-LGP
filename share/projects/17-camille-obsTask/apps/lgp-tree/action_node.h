@@ -28,6 +28,35 @@ typedef mlr::Array<ActionNode*> ActionNodeL;
 
 extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_seqOpt, COUNT_pathOpt;
 
+//=====ExtensibleKOMO==============================================
+
+class ExtensibleKOMO : public KOMO
+{
+  typedef std::function<void( const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
+
+public:
+  ExtensibleKOMO();
+
+  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  void groundTasks( double phase, const Graph& facts, int verbose=0 );
+
+private:
+  std::map< mlr::String, SymbolGrounder > tasks_;
+};
+
+//=====ExtensibleKOMO==============================================
+
+class KOMOFactory
+{
+  typedef std::function<void( const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
+
+public:
+  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  std::shared_ptr< ExtensibleKOMO > createKomo() const;
+private:
+  std::map< mlr::String, SymbolGrounder > tasks_;
+};
+
 //===========================================================================
 
 struct ActionNode{
@@ -58,7 +87,7 @@ struct ActionNode{
 //  MotionProblem *poseProblem, *seqProblem, *pathProblem;
   PlainMC *rootMC;
   MCStatistics *mcStats;
-  KOMO *poseProblem, *seqProblem, *pathProblem;
+  std::shared_ptr<ExtensibleKOMO> komoPoseProblem, komoSeqProblem, komoPathProblem;
   Graph *poseProblemSpecs, *seqProblemSpecs, *pathProblemSpecs;
   arr pose, seq, path;
   uint mcCount, poseCount, seqCount, pathCount;
@@ -68,10 +97,10 @@ struct ActionNode{
   bool inFringe1, inFringe2;
 
   /// root node init
-  ActionNode(mlr::KinematicWorld& kin, FOL_World& fol);
+  ActionNode(mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory );
 
   /// child node creation
-  ActionNode(ActionNode *parent, FOL_World::Handle& a);
+  ActionNode(ActionNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory );
 
   //- computations on the node
   void expand();           ///< expand this node (symbolically: compute possible decisions and add their effect nodes)
@@ -98,26 +127,12 @@ struct ActionNode{
   Graph getGraph(){ Graph G; getGraph(G, NULL); G.checkConsistency(); return G; }
   void getAll(ActionNodeL& L);
   ActionNodeL getAll(){ ActionNodeL L; getAll(L); return L; }
+
+private:
+  const KOMOFactory & komoFactory_;
 };
 
 inline ostream& operator<<(ostream& os, const ActionNode& n){ n.write(os); return os; }
 
 //===========================================================================
 
-//struct ManipulationTree{
-//  ActionNode root;
-
-//  LGP lgp;
-
-//  ManipulationTree(const mlr::KinematicWorld& world_root, const Graph& symbols_root)
-//    : root(world_root, symbols_root), fol(FILE("fol.g")), mc(fol) {}
-
-//  ActionNode& getRndNode();
-//  void addRollout(){
-//    mc.addRollout(100);
-//  }
-
-//  void optimEffPose(ActionNode& n);
-//  void optimPath(ActionNode& n);
-
-//}
