@@ -1,35 +1,20 @@
 #pragma once
 
 #include "roopi.h"
-#include "act_CtrlTask.h"
-#include "loggingModule.h"
 
-#include <Control/TaskControllerModule.h>
-#include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
-
-#include <RosCom/roscom.h>
-#include <RosCom/spinner.h>
-#include <RosCom/filterObject.h>
 
 
 struct Roopi_private {
-  Access_typed<sensor_msgs::JointState> jointState;
-  Access_typed<CtrlMsg> ctrl_ref;
-  Access_typed<CtrlMsg> ctrl_obs;
-  Access_typed<arr>     pr2_odom;
   Access_typed<mlr::KinematicWorld> modelWorld;
-
   ACCESSname(mlr::Array<CtrlTask*>, ctrlTasks)
-
-  //-- perception
-  ACCESSname(FilterObjects, object_database)
+//  ACCESSname(FilterObjects, object_database)
 
   //-- controller process
-  TaskControllerModule *tcm = NULL;
+  struct TaskControllerModule *tcm = NULL;
 
   //-- logging
-  LoggingModule *loggingModule = NULL;
+  struct LoggingModule *loggingModule = NULL;
 
 
   //TODO
@@ -50,7 +35,7 @@ struct Roopi_private {
   #endif
 
   //-- display and interaction
-  GamepadInterface *gamepad = NULL;
+  struct GamepadInterface *gamepad = NULL;
 
   mlr::KinematicWorld cu;
 

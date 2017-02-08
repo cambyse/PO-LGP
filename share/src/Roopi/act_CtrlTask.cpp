@@ -1,5 +1,6 @@
 #include "act_CtrlTask.h"
 #include "roopi-private.h"
+#include <Control/taskController.h>
 
 Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
   : Act(r){

@@ -272,8 +272,8 @@ int main(int argc, char** argv){
 
 //  testPickAndPlace();
 
-//  testPickAndPlace2();
-  testGamepad();
+  testPickAndPlace2();
+//  testGamepad();
 
 //  Prototyping();
   return 0;

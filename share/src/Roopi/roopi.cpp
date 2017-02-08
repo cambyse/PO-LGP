@@ -40,11 +40,7 @@ Maybe plan:
 //==============================================================================
 
 Roopi_private::Roopi_private(Roopi* roopi)
-  : jointState(NULL, "jointState"),
-    ctrl_ref(NULL, "ctrl_ref"),
-    ctrl_obs(NULL, "ctrl_obs"),
-    pr2_odom(NULL, "pr2_odom"),
-    modelWorld(NULL, "modelWorld"),
+  : modelWorld(NULL, "modelWorld"),
     holdPositionTask2(roopi)
   #if baxter
   spctb(tcm.realWorld),
@@ -184,10 +180,6 @@ RToken<mlr::KinematicWorld> Roopi::getKinematics(){
 //==============================================================================
 //
 // basic CtrlTask management
-
-Act_CtrlTask Roopi::newCtrlTask(){
-  return Act_CtrlTask(this);
-}
 
 Act_CtrlTask Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
   return Act_CtrlTask(this, map, PD, target, prec);

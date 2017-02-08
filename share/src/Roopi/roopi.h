@@ -12,15 +12,9 @@
 #include "act_ComRos.h"
 #include "act_ComPR2.h"
 
-struct Roopi_Path;
-struct TaskReferenceInterpolAct;
-typedef mlr::Array<CtrlTask*> CtrlTaskL;
-//struct RelationalMachineModule;
-
-struct act{
-  mlr::String name;
-  Thread* th;
-};
+//struct Roopi_Path;
+//struct TaskReferenceInterpolAct;
+//typedef mlr::Array<CtrlTask*> CtrlTaskL;
 
 //==============================================================================
 
@@ -31,42 +25,43 @@ struct Roopi {
   Roopi(mlr::KinematicWorld& world);
   ~Roopi();
 
-  void setKinematics(const char* filename);
-  void setKinematics(const mlr::KinematicWorld& K);
-  Act_TaskController startTaskController();
-//  act startControllerLog();
-
-  Act_ComRos startRosCommunication(){ return Act_ComRos(this); }
-
-  void hold(bool still);
-  Act_CtrlTask* home();
-
-
-  WToken<mlr::KinematicWorld> setKinematics();
-  RToken<mlr::KinematicWorld> getKinematics();
-
-  Act_CtrlTask newCtrlTask();
-  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
-  Act_CtrlTask newCtrlTask(const char* specs);
+  //-- scripting
   bool wait(std::initializer_list<Act*> acts, double timeout=5.);
 
-  //-- path opt
-  Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
-
-  //-- path opt
-  Act_PathOpt newPathOpt(){ return Act_PathOpt(this); }
-  Act_ComPR2 newComPR2(){ return Act_ComPR2(this); }
-
-  //-- starting up controllers/communications/views
-  void newCameraView();
+  //-- initialization
+  //  act startControllerLog();
 
   //-- kinematic editing
+  void setKinematics(const char* filename);
+  void setKinematics(const mlr::KinematicWorld& K);
   mlr::Shape* newMarker(const char* name, const arr& pos);
   void kinematicSwitch(const char* object, const char* attachTo);
-
-  //-- verbosity
-  void verboseControl(int verbose=1);
+  WToken<mlr::KinematicWorld> setKinematics();
+  RToken<mlr::KinematicWorld> getKinematics();
   void lockJointGroupControl(const char *groupname, bool lockThem=true);
+
+  //-- control
+  Act_TaskController startTaskController();
+  void verboseControl(int verbose=1);
+  Act_CtrlTask newCtrlTask()         { return Act_CtrlTask(this); }
+  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
+  Act_CtrlTask newCtrlTask(const char* specs);
+  void hold(bool still);  // hold the robot still
+  Act_CtrlTask* home();   // homing (TODO: slower)
+
+  //-- activate gamepad to set controls
+  Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
+
+  //-- ROS communication
+  Act_ComRos startRosCommunication() { return Act_ComRos(this); }
+  Act_ComPR2 newComPR2()             { return Act_ComPR2(this); }
+
+  //-- path optimization
+  Act_PathOpt newPathOpt()           { return Act_PathOpt(this); }
+
+  //-- compute and display the camera view
+  void newCameraView();
+
 
 
 #if 0
