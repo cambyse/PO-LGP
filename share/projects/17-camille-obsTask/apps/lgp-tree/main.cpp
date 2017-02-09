@@ -207,37 +207,37 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
 
 //===========================================================================
 
-void groundGrasp( const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundGrasp( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
   double time=n->get<double>();
 
-  komo.setGrasp( time, *symbols(0), *symbols(1), verbose);
+  komo.setGrasp( phase+time, *symbols(0), *symbols(1), verbose);
 }
 
-void groundPlace( const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundPlace( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
   double time=n->get<double>();
 
-  komo.setPlace( time, *symbols(0), *symbols(1), *symbols(2), verbose);
+  komo.setPlace( phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
 }
 
-void groundHandover( const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundHandover( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
   double time=n->get<double>();
 
-  komo.setHandover( time, *symbols(0), *symbols(1), *symbols(2), verbose);
+  komo.setHandover( phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
 }
 
-void groundAttach( const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundAttach( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
@@ -248,19 +248,30 @@ void groundAttach( const Graph& facts, Node *n, KOMO & komo, int verbose )
   CHECK(attachableSymbol!=NULL,"");
   Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
   mlr::Transformation rel = attachableFact->get<mlr::Transformation>();
-  komo.setAttach( time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
+  komo.setAttach( phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
 }
 
-void groundHeadGetSight( const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundHeadGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
   double time=n->get<double>();
 
-  komo.setTask( time, time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
-                                                    ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
-                                                    OT_sumOfSqr, NoArr, 1e2 );
+  mlr::String arg = *symbols(0);
+
+  if( arg == "target_location" )  // tmp, pivot point and object location has to be deduced from the scene!!
+    komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
+                                                      ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
+                                                      OT_sumOfSqr, NoArr, 1e2 );
+  else if( arg == "target_location_2" ) // tmp, pivot point and object location has to be deduced from the scene!!!
+    komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR( -1.0,  0.0, 1.9 ),    // object position
+                                                      ARR( -0.6, -0.2, 1.9 ) ),  // pivot position
+                                                      OT_sumOfSqr, NoArr, 1e2 );
+
 }
 
-void groundObserve( const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundObserve( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
 
 }
@@ -282,8 +293,11 @@ void plan_BHTS()
   SearchSpaceTree C( komoFactory );
 
   //C.fol.verbose = 5;
-  C.prepareFol("LGP-obs-fol.g");
-  C.prepareKin("LGP-obs-kin.g");
+//  C.prepareFol("LGP-obs-fol.g");
+//  C.prepareKin("LGP-obs-kin.g");
+
+  C.prepareFol("LGP-obs-fol-2.g");        // with two candidate positions
+  C.prepareKin("LGP-obs-kin-2.g");
 
   //C.prepareFol("LGP-coop-fol.g");
   //C.prepareKin("LGP-coop-kin.g");       // parse initial scene LGP-coop-kin.g
@@ -311,7 +325,7 @@ void plan_BHTS()
   }
   fil.close();
 
-  C.pathView.writeToFiles=true;
+  C.pathView.writeToFiles=false; // camille
   C.updateDisplay();
   mlr::wait(.1);
   //mlr::wait();

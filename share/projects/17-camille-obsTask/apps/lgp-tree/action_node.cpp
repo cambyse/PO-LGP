@@ -68,7 +68,7 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
     if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
     {
       mlr::String type = n->keys.last();
-      tasks_[ type ]( facts, n, *this, verbose ); // ground the symbol
+      tasks_[ type ]( phase, facts, n, *this, verbose ); // ground the symbol
     }
     else if(n->keys.N && n->keys.last().startsWith("komo"))
     {
@@ -283,7 +283,7 @@ void ActionNode::solveSeqProblem(int verbose){
   komoSeqProblem->setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
   for(ActionNode *node:treepath){
-    komoSeqProblem->groundTasks((node->parent?node->parent->time:0.), *node->folState);
+    komoSeqProblem->groundTasks((node->parent?node->parent->time:0.), *node->folState);//groundTasks((node->parent?node->parent->time:0.), *node->folState);
   }
 
   DEBUG( FILE("z.fol") <<fol; )

@@ -32,7 +32,7 @@ extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_seqOpt, COUNT_pathOpt;
 
 class ExtensibleKOMO : public KOMO
 {
-  typedef std::function<void( const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
+  typedef std::function<void( double, const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
 
 public:
   ExtensibleKOMO();
@@ -48,7 +48,7 @@ private:
 
 class KOMOFactory
 {
-  typedef std::function<void( const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
+  typedef std::function<void( double, const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
 
 public:
   void registerTask( const mlr::String & type, const SymbolGrounder & grounder );

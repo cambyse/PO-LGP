@@ -13,7 +13,11 @@ SearchSpaceTree::SearchSpaceTree( const KOMOFactory & komoFactory )
   , seqView("sequence", 1., -0)
   , pathView("path", .1, -1)
   , komoFactory_(komoFactory)
-{}
+{
+//  poseView.writeToFiles = false;
+//  seqView.writeToFiles = false;
+//  pathView.writeToFiles = false;
+}
 
 void SearchSpaceTree::prepareKin( const std::string & kinDescription ){
   kin.init( kinDescription.c_str() );
