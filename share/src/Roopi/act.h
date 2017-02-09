@@ -10,12 +10,11 @@ typedef mlr::Array<Act*> ActL;
 
 struct Act{
   Roopi *roopi;
-  bool persist;
   double startTime;
   ConditionVariable status;
 
   Act(Roopi *r);
-  virtual ~Act(){}
+  virtual ~Act();
 
   virtual ActStatus getStatus(){ return (ActStatus)status.getValue(); }
 

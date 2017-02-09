@@ -83,7 +83,7 @@ void TEST(PickAndPlace) {
   Roopi R(true);
 
 //  R.newCameraView();
-//  R.verboseControl(1);
+//  R.taskController().verbose(1);
 
   {
     //attention
@@ -155,7 +155,7 @@ void TEST(PickAndPlace2) {
   Roopi R(true);
 
 //  R.newCameraView();
-//  R.verboseControl(1);
+//  R.taskController().verbose(1);
 
   if(true){
 
@@ -166,7 +166,7 @@ void TEST(PickAndPlace2) {
 
     R.hold(false);
     R.wait({&ws, &look});
-//    R.lockJointGroupControl("base");
+    R.taskController().lockJointGroupControl("base");
     R.hold(true);
   }
 
@@ -226,9 +226,9 @@ void TEST(PickAndPlace2) {
 void TEST(Gamepad) {
   Roopi R(true);
 
-//  R.verboseControl(1);
+//  R.taskController().verbose(1);
 
-//  R.lockJointGroupControl("base");
+//  R.taskController().lockJointGroupControl("base");
 
   auto gamepad = R.newGamepadControl();
 
@@ -242,7 +242,7 @@ void TEST(Basics) {
 
   R.setKinematics("pr2");
   R.startTaskController();
-//  R.verboseControl(1);
+//  R.taskController().verbose(1);
 
   auto posL = R.newCtrlTask();
   posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));

@@ -1852,7 +1852,7 @@ Activity Processes"' paper (ICRA'16). Initially I thought that
 behaviors should/could strictly be represented as relational
 machines.\footnote{By ``relational machine'' I mean a knowledge base
   that controls a relational activity process, mostly by having
-  (non-decision) rules.} Then we tested a phase in our lab where we
+  (non-decision) rules.} We then had a test phase in our lab where we
 enforced a strict interface to a relational activity process via
 python, allowing online python scripting to control the
 process. However, as always, I now think that simpler is better. The
@@ -1865,7 +1865,36 @@ activity process or relational machine abstractions. But it still
 provides the abstractions that enable learning RAPs \emph{on top} of
 this representation; and automate scripting (learning scripts).
 
+
 \subsection{Scripting Concurrent Processes}
+
+\begin{itemize}
+\item We have a set of activities (\textbf{acts})
+\item Each act has an integer (discrete!) \textbf{status}. (While Access data
+  is often continuous (arrays), with update revisions in high
+  frequencies, the status of an act should correspond to a categorial
+  change (change of state/fact in RAP), perhaps triggering a script to
+  respond to this change.)
+\item Example acts are: control tasks (CtrlTask), controller loops
+  (TaskController), sensor triggers (listening to ROS topics or
+  accesses and translating them to status signals), computational
+  threads (kinect processing, path planning), visualization threads
+  (KinViewer, PathViewer), physical simulation threads (Physx),
+  communication threads (ROS).
+\item Each act may create/destroy other acts (Actor
+  Model in Computer Science)
+\item The core way to react on status signals is via the
+  \textbf{wait}: It pauses the execution of a script until the status
+  of some acts changes. After that the script queries the status and
+  branches (if-then-else) based on that.
+\item An act can be a \textbf{policy}, meaning that it is itself a
+  script that creates/destroys other acts depending on status signals
+  and data. That is: Often we just have a single serial main
+  script. However, we can encapsulate such scripts to become policies
+  and run them in parallel reactively. (This is in analogy to Rules in
+  RAPs.)
+\end{itemize}
+
 
 ...
 

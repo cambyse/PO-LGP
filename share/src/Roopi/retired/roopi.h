@@ -11,7 +11,6 @@
 #include "act_GamepadControl.h"
 #include "act_ComRos.h"
 #include "act_ComPR2.h"
-#include "act_Thread.h"
 
 //struct Roopi_Path;
 //struct TaskReferenceInterpolAct;
@@ -22,13 +21,12 @@
 struct Roopi {
   struct Roopi_private* s;
 
-  Access_typed<ActL> acts;
-
   Roopi(bool autoStartup=false);
+  Roopi(mlr::KinematicWorld& world);
   ~Roopi();
 
   //-- scripting
-  bool wait(std::initializer_list<Act*> acts, double timeout=-1.);
+  bool wait(std::initializer_list<Act*> acts, double timeout=5.);
 
   //-- initialization
   //  act startControllerLog();
@@ -44,7 +42,6 @@ struct Roopi {
   //-- control
   Act_TaskController& startTaskController();
   Act_TaskController& taskController();
-
   Act_CtrlTask newCtrlTask()         { return Act_CtrlTask(this); }
   Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
   Act_CtrlTask newCtrlTask(const char* specs);

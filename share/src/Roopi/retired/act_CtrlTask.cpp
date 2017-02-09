@@ -2,20 +2,8 @@
 #include "roopi-private.h"
 #include <Control/taskController.h>
 
-//struct GlobalCtrlTasks{
-//  struct CtrlTaskUpdater* ctrlTaskUpdater= NULL;
-//  GlobalCtrlTasks();
-//  ~GlobalCtrlTasks();
-//};
-
-//Singleton<GlobalCtrlTasks> globalCtrlTasks;
-
-Act_CtrlTask::Act_CtrlTask(Roopi* r) : Act(r) {
-//  globalCtrlTasks();
-}
-
 Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
-  : Act_CtrlTask(r){
+  : Act(r){
   TaskMap *map = TaskMap::newTaskMap(specs, roopi->getKinematics());
   task = new CtrlTask(map->shortTag(roopi->getKinematics()), map, specs);
   task->active = true;
@@ -23,7 +11,7 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
 }
 
 Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec)
-  : Act_CtrlTask(r){
+  : Act(r){
   task = new CtrlTask(map->shortTag(roopi->getKinematics()), map);
   if(&PD && PD.N) task->setGainsAsNatural(PD(0), PD(1));
   else task->setGainsAsNatural(1., .9);
@@ -70,11 +58,7 @@ ActStatus Act_CtrlTask::getStatus(){
 }
 
 WToken<CtrlTask> Act_CtrlTask::set(){
-  CHECK(task, "this is not yet configured!");
-  if(status.getValue()!=0){
-    cout <<"resetting status: " <<task->name <<endl;
-    status.setValue(AS_running);
-  }
+  CHECK(task, "this is not yet configured!")
   return WToken<CtrlTask>(*roopi->s->ctrlTasks.revLock, task);
 }
 
@@ -95,19 +79,75 @@ void Act_CtrlTask::setTask(CtrlTask *t, bool setDefaults){
   roopi->s->ctrlTasks.set()->append(task);
 }
 
-//==============================================================================
 
-
-//GlobalCtrlTasks::GlobalCtrlTasks(){
-//  ctrlTaskUpdater = new CtrlTaskUpdater;
-//  ctrlTaskUpdater->threadLoop();
+//CtrlTaskAct& CtrlTaskAct::setGainsAsNatural(double decayTime, double dampingRatio){
+//  set()->setGainsAsNatural(decayTime, dampingRatio);
+//  return *this;
 //}
 
-//GlobalCtrlTasks::~GlobalCtrlTasks(){
-//  ctrlTaskUpdater->threadClose();
-//  delete ctrlTaskUpdater;
+//CtrlTaskAct& CtrlTaskAct::setGains(double kp, double kd){
+//  set()->setGains(kp, kd);
+//  return *this;
 //}
 
-RUN_ON_INIT_BEGIN(Act_CtrlTask)
-mlr::Array<Act_CtrlTask*>::memMove = true;
-RUN_ON_INIT_END(Act_CtrlTask)
+//CtrlTaskAct& CtrlTaskAct::setReference(const arr& y_ref, bool relativeToCurrentReference){
+//  if(relativeToCurrentReference) set()->y_ref += y_ref;
+//  else set()->y_ref = y_ref;
+//  return *this;
+//}
+
+
+
+//void Roopi::modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef) {
+//  s->ctrlTasks.writeAccess();
+//  ct->setTarget(yRef, yDotRef);
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel, const double maxAcc) {
+//  s->ctrlTasks.writeAccess();
+//  ct->setGains(Kp, Kd);
+//  ct->maxVel = maxVel;
+//  ct->maxAcc = maxAcc;
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel, const double maxAcc) {
+//  s->ctrlTasks.writeAccess();
+//  ct->setGains(Kp, Kd);
+//  ct->maxVel = maxVel;
+//  ct->maxAcc = maxAcc;
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
+//  s->ctrlTasks.writeAccess();
+//  ct->setC(C);
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyForceRef(CtrlTask* ct, const arr& fRef) {
+//  s->ctrlTasks.writeAccess();
+//  ct->f_ref = fRef;
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyForceAlpha(CtrlTask* ct, double fAlpha) {
+//  s->ctrlTasks.writeAccess();
+//  ct->f_alpha = fAlpha;
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyForceGamma(CtrlTask* ct, double fGamma) {
+//  s->ctrlTasks.writeAccess();
+//  ct->f_gamma = fGamma;
+//  s->ctrlTasks.deAccess();
+//}
+
+//void Roopi::modifyForce(CtrlTask* ct, const arr& fRef, const double& fAlpha, const double& fGamma) {
+//  s->ctrlTasks.writeAccess();
+//  if(&fRef) ct->f_ref = fRef;
+//  if(&fAlpha) ct->f_alpha = fAlpha;
+//  if(&fGamma) ct->f_gamma = fGamma;
+//  s->ctrlTasks.deAccess();
+//}

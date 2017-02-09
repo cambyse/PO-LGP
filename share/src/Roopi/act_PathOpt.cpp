@@ -9,11 +9,12 @@ struct sAct_PathOpt : Thread{
   Access_typed<arr> x;
   KOMO *komo;
   ConditionVariable *status;
-  OrsPathViewer *viewer;
+  OrsPathViewer *viewer=NULL;
 
-  Conv_KOMO_ConstrainedProblem *CP;
-  OptConstrained *opt;
-  sAct_PathOpt(KOMO *komo, ConditionVariable *status) : Thread("Act_PathOpt", 0.), x(this, "PathOpt_x"), komo(komo), status(status), CP(NULL), opt(NULL){}
+  Conv_KOMO_ConstrainedProblem *CP=NULL;
+  OptConstrained *opt = NULL;
+  sAct_PathOpt(KOMO *komo, ConditionVariable *status)
+    : Thread("Act_PathOpt", 0.), x(this, "PathOpt_x"), komo(komo), status(status){}
   virtual void open();
   virtual void step();
   virtual void close();

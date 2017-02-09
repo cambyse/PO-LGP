@@ -2,19 +2,6 @@
 
 #include <Control/TaskControllerModule.h>
 
-//struct sAct_TaskController : Thread {
-//  ACCESSname(mlr::Array<CtrlTask*>, ctrlTasks)
-
-//  sAct_TaskController() : Thread("CtrlTaskUpdater", .05) {}
-
-//  virtual void open();
-//  virtual void step(){
-//    ctrlTasks.
-//  }
-//  virtual void close();
-
-//};
-
 Act_TaskController::Act_TaskController(Roopi* r)
   : Act(r){
   tcm = new TaskControllerModule("none", NoWorld);
@@ -23,8 +10,18 @@ Act_TaskController::Act_TaskController(Roopi* r)
 }
 
 Act_TaskController::~Act_TaskController(){
-  if(!persist){
-    tcm->threadClose();
-    delete tcm;
-  }
+  tcm->threadClose();
+  delete tcm;
+}
+
+void Act_TaskController::verbose(int verbose){
+  if(verbose) tcm->verbose = true;
+  else tcm->verbose = false;
+}
+
+void Act_TaskController::lockJointGroupControl(const char *groupname, bool lockThem){
+  tcm->waitForOpened();
+  tcm->stepMutex.lock();
+  tcm->taskController->lockJointGroup(groupname, lockThem);
+  tcm->stepMutex.unlock();
 }

@@ -10,8 +10,10 @@ struct Roopi_private {
   ACCESSname(mlr::Array<CtrlTask*>, ctrlTasks)
 //  ACCESSname(FilterObjects, object_database)
 
-  //-- controller process
-  struct TaskControllerModule *tcm = NULL;
+  // persistent acts
+  Act_TaskController *_tcm = NULL;
+  Act_CtrlTask *_holdPositionTask = NULL;
+  Act *_ComRos=NULL, *_ComPR2=NULL;
 
   //-- logging
   struct LoggingModule *loggingModule = NULL;
@@ -51,8 +53,6 @@ struct Roopi_private {
 
 
 //  CtrlTask* holdPositionTask = NULL;
-  Act_CtrlTask holdPositionTask2;
-  Act *_ComRos=NULL, *_ComPR2=NULL;
 
   Roopi_private(Roopi *roopi);
 

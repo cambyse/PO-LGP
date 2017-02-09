@@ -40,7 +40,18 @@ Maybe plan:
 //==============================================================================
 
 Roopi_private::Roopi_private(Roopi* roopi)
-  : modelWorld(NULL, "modelWorld"){
+  : modelWorld(NULL, "modelWorld"),
+    _holdPositionTask(roopi)
+  #if baxter
+  spctb(tcm.realWorld),
+    #endif
+{
+#if baxter
+  if(mlr::getParameter<bool>("useRos", false)){
+    nh = new ros::NodeHandle;
+    pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
+  }
+#endif
 }
 
 Roopi_private::~Roopi_private(){
@@ -49,7 +60,7 @@ Roopi_private::~Roopi_private(){
   //delete persistant acts
   if(_ComRos) delete _ComRos; //shut of the spinner BEFORE you close the pubs/subscribers..
   if(_ComPR2) delete _ComPR2;
-  if(_holdPositionTask) delete _holdPositionTask;
+  _holdPositionTask.kill();
   if(_tcm) delete _tcm;
 
   if(ctrlView){ ctrlView->threadClose(); delete ctrlView; }
@@ -62,7 +73,7 @@ Roopi_private::~Roopi_private(){
 //==============================================================================
 
 Roopi::Roopi(bool autoStartup)
-  : s(new Roopi_private(this)), acts(NULL, "acts"){
+  : s(new Roopi_private(this)) {
   if(autoStartup){
     mlr::String model = mlr::getParameter<mlr::String>("model", "model.g");
     mlr::String robot = mlr::getParameter<mlr::String>("robot", "pr2");
@@ -77,6 +88,14 @@ Roopi::Roopi(bool autoStartup)
     startTaskController();
   }
 }
+
+
+Roopi::Roopi(mlr::KinematicWorld& world)
+  : s(new Roopi_private(this)){
+  setKinematics(world);
+  startTaskController();
+}
+
 
 Roopi::~Roopi(){
   delete s;
@@ -105,46 +124,19 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
   } else {
     s->ctrlView = new OrsPoseViewer({"ctrl_q_real"}, s->modelWorld.set());
   }
-  s->ctrlView->threadOpen();
 }
 
-struct CtrlTaskUpdater : Thread {
-  ACCESS(ActL, acts)
-  ACCESS(CtrlTaskL, ctrlTasks)
-
-  CtrlTaskUpdater() : Thread("CtrlTaskUpdater", .05) {}
-
-  virtual void open(){}
-  virtual void step(){
-    acts.readAccess();
-    for(Act *a:acts()){
-      Act_CtrlTask *c = dynamic_cast<Act_CtrlTask*>(a);
-      if(c && c->task){
-        ctrlTasks.readAccess();
-        bool conv = c->task->isConverged();
-        ctrlTasks.deAccess();
-        bool sconv = (c->status.getValue()==AS_converged);
-        if(conv!=sconv){
-          cout <<"setting status: " <<c->task->name <<" conv=" <<conv <<endl;
-          c->status.setValue(conv?AS_converged:AS_running);
-        }
-      }
-    }
-    acts.deAccess();
-  }
-  virtual void close(){}
-
-};
-
-
 Act_TaskController& Roopi::startTaskController(){
-  if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(this);
-  s->_holdPositionTask->setMap(new TaskMap_qItself);
-  s->_holdPositionTask->set()->y_ref = s->_holdPositionTask->y0;
-  s->_holdPositionTask->set()->setGains(30., 10.);
-  s->_holdPositionTask->start();
+  s->_holdPositionTask.setMap(new TaskMap_qItself);
+  s->_holdPositionTask.set()->y_ref = s->_holdPositionTask.y0;
+  s->_holdPositionTask.set()->setGains(30., 10.);
+  s->_holdPositionTask.start();
 
-  new Act_Thread<CtrlTaskUpdater>(this);
+//  CHECK(!s->tcm,"");
+//  s->tcm = new TaskControllerModule("none", NoWorld);
+//  s->tcm->threadLoop();
+//  s->tcm->waitForOpened();
+//  return {s->tcm->name, s->tcm};
 
   s->_tcm = new Act_TaskController(this);
   return *s->_tcm;
@@ -160,26 +152,23 @@ void Roopi::hold(bool still){
     for(CtrlTask *t:s->ctrlTasks()) t->active=false;
     s->ctrlTasks.deAccess();
 
-    s->_holdPositionTask->set()->setTargetToCurrent();
-    s->_holdPositionTask->set()->setGains(30., 10.);
-    s->_holdPositionTask->start();
+    s->_holdPositionTask.set()->setTargetToCurrent();
+    s->_holdPositionTask.start();
 
   }else{
-    s->_holdPositionTask->stop();
+    s->_holdPositionTask.stop();
   }
 }
 
-Act_CtrlTask* Roopi::home(){
+Act_CtrlTask *Roopi::home(){
   s->ctrlTasks.writeAccess();
   for(CtrlTask *t:s->ctrlTasks()) t->active=false;
   s->ctrlTasks.deAccess();
 
-  s->_holdPositionTask->set()->y_ref = s->_holdPositionTask->y0;
-  s->_holdPositionTask->set()->setGainsAsNatural(2.,.9);
-  s->_holdPositionTask->set()->maxVel=1.;
-  s->_holdPositionTask->start();
+  s->_holdPositionTask.set()->y_ref = s->_holdPositionTask.y0;
+  s->_holdPositionTask.start();
 
-  return s->_holdPositionTask;
+  return &s->_holdPositionTask;
 }
 
 WToken<mlr::KinematicWorld> Roopi::setKinematics(){
@@ -204,11 +193,16 @@ Act_CtrlTask Roopi::newCtrlTask(const char* specs){
 }
 
 bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
-#if 0
+#if 1
   double startTime = mlr::realTime();
   for(;;){
     bool allConv = true;
-    for(Act *act : acts) if(act->getStatus()<=0){ allConv=false; break; }
+    for(Act *act : acts){
+      if(act->getStatus()<=0){
+        allConv = false;
+        break;
+      }
+    }
     if(allConv) return true;
 
     if(timeout>0 && mlr::realTime() - startTime > timeout) {
@@ -222,25 +216,15 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
 #else
   double startTime = mlr::realTime();
   ConditionVariable waiter;
-  for(Act *act : acts) waiter.listenTo(&act->status);
-  for(;;){
-    waiter.mutex.lock();
-    bool allConv = true;
-    for(Act *act : acts) if(act->status.getValue()<=0){ allConv=false; break; }
-    if(allConv){ waiter.mutex.unlock(); return true; }
+  for(Act *act : acts) act->status.listeners.append(waiter);
+  for(bool go=true;go;){
     if(timeout>0){
-      if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
-      if(!waiter.waitForSignal(timeout, true)){
-        cout << "not converged, timeout reached" << endl;
-        waiter.mutex.unlock(); return false;
-      }
+      if(mlr::realTime()-startTime > timeout) return false;
+      if(!waiter.waitForSignal(timeout, false)) return false;
     }else{
-      waiter.waitForSignal(true);
+      waiter.waitForSignal();
     }
-    allConv = true;
-    for(Act *act : acts) if(act->status.getValue()<=0){ allConv=false; break; }
-    if(allConv){ waiter.mutex.unlock(); return true; }
-    waiter.mutex.unlock();
+    for(Act *act : acts) if(act->status.getValue()!=0){ go=false; break; }
   }
   return true;
 #endif
