@@ -605,7 +605,7 @@ void MotionProblem::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA
 
 //===========================================================================
 
-arr getH_rate_diag(mlr::KinematicWorld& world) {
+arr getH_rate_diag(const mlr::KinematicWorld& world) {
   //transition cost metric
   arr W_diag;
   if(mlr::checkParameter<arr>("Wdiag")) {

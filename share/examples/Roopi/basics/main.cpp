@@ -16,14 +16,14 @@ void Prototyping(){
 
     auto leftHand = R.newCtrlTask();
     leftHand.setMap(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffL", NoVector, "targetL"));
-    leftHand.task->setGainsAsNatural(1., .8);
-    leftHand.task->y_ref = .0;
+    leftHand.task->PD().setGainsAsNatural(1., .8);
+    leftHand.task->PD().y_target = .0;
     leftHand.start();
 
     auto rightHand = R.newCtrlTask();
     rightHand.setMap(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffR"));
-    rightHand.task->setGainsAsNatural(1., .8);
-    rightHand.task->y_ref = rightHand.y0 + ARR(.0, .2, .6);
+    rightHand.task->PD().setGainsAsNatural(1., .8);
+    rightHand.task->PD().y_target = rightHand.y0 + ARR(.0, .2, .6);
     rightHand.start();
 
     R.hold(false);
@@ -33,17 +33,17 @@ void Prototyping(){
       if(leftHand.getStatus()==AS_converged && rightHand.getStatus()==AS_converged) break; //good
       if(leftHand.getStatus()==AS_stalled && leftHand.time()>5.){
         cout <<"leftHand failed - taking back" <<endl;
-        leftHand.set()->y_ref = leftHand.y0;
+        leftHand.set()->PD().y_target = leftHand.y0;
       }
       if(rightHand.getStatus()==AS_stalled && rightHand.time()>5.){
         cout <<"rightHand failed - taking back" <<endl;
-        rightHand.set()->y_ref = rightHand.y0;
+        rightHand.set()->PD().y_target = rightHand.y0;
       }
     }
 
     leftTarget->rel.pos.z -=.3;
-//    leftHand.set()->y_ref = leftHand.y0;
-    rightHand.set()->y_ref = rightHand.y0;
+//    leftHand.set()->PD().y_target = leftHand.y0;
+    rightHand.set()->PD().y_target = rightHand.y0;
     R.wait({&leftHand, &rightHand}, 3.); //with timeout
 
     R.hold(true);
@@ -116,14 +116,14 @@ void TEST(PickAndPlace) {
 
     //lowering
     double above = obj1size(2)*.5 + obj1size(3);
-    pos.set()->y_ref = ARR(0,0,above);
+    pos.set()->PD().y_target = ARR(0,0,above);
 
     R.wait({&pos});
 
     //close gripper
     gripSize = obj1size(1) + 2.*obj1size(3);
-    gripperR.set()->y_ref = gripSize;
-    gripper2R.set()->y_ref = ::asin(gripSize/(2.*.10));
+    gripperR.set()->PD().y_target = gripSize;
+    gripper2R.set()->PD().y_target = ::asin(gripSize/(2.*.10));
 
     R.wait({&pos,&gripperR});
 
@@ -133,9 +133,9 @@ void TEST(PickAndPlace) {
 
   {
     auto lift = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "pr2R"));
-    lift.set()->setTargetToCurrent();
-    lift.set()->setGains(0, 10.);
-    lift.set()->v_ref = ARR(0,0,.2);
+    lift.set()->PD().setTarget(lift.task->y);
+    lift.set()->PD().setGains(0, 10.);
+    lift.set()->PD().v_target = ARR(0,0,.2);
 
     R.hold(false);
 
@@ -246,8 +246,8 @@ void TEST(Basics) {
 
   auto posL = R.newCtrlTask();
   posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
-  posL.task->y_ref = posL.y0 + ARR(0,0,.3);
-  posL.task->setGainsAsNatural(1., .9);
+  posL.task->PD().y_target = posL.y0 + ARR(0,0,.3);
+  posL.task->PD().setGainsAsNatural(1., .9);
   posL.start();
 
   R.hold(false);

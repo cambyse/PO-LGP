@@ -7,7 +7,8 @@
 struct sAct_GamepadControl : Thread{
   struct Gamepad2Tasks *g2t;
   ACCESS(arr, gamepadState)
-  ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESS(CtrlTaskL, ctrlTasks)
+  ACCESS(mlr::KinematicWorld, modelWorld);
 
   Act_GamepadControl* P;
   GamepadInterface *gamepadTh;
@@ -36,7 +37,7 @@ Act_GamepadControl::Act_GamepadControl(Roopi *r) : Act(r) {
 Act_GamepadControl::~Act_GamepadControl(){
   s->threadClose();
   delete s;
-  roopi->hold(true);
+  roopi.hold(true);
 }
 
 //===========================================================================
@@ -53,7 +54,7 @@ void sAct_GamepadControl::step(){
     taskController->waitForOpened();
     tc = taskController->taskController;
     if(!tc) return;
-    g2t = new Gamepad2Tasks(*tc, taskController->q0);
+    g2t = new Gamepad2Tasks(*tc, modelWorld.get(), taskController->q0);
 
     ctrlTasks.writeAccess();
     taskController->taskController->qNullCostRef.active = false;
@@ -64,7 +65,7 @@ void sAct_GamepadControl::step(){
 
   arr gamepad = gamepadState.get();
   ctrlTasks.writeAccess();
-  g2t->updateTasks(gamepad);
+  g2t->updateTasks(gamepad, modelWorld.get());
   ctrlTasks.deAccess();
 
   if(stopButtons(gamepad)) P->status.setValue(AS_done);

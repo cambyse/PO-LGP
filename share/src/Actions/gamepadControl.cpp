@@ -25,13 +25,13 @@ void GamepadControlActivity::open(){
 void GamepadControlActivity::step(){
   if(!g2t){
     if(!taskController->taskController) return;
-    g2t = new Gamepad2Tasks(*taskController->taskController, taskController->q0);
+    g2t = new Gamepad2Tasks(*taskController->taskController, modelWorld.get(), taskController->q0);
     ctrlTasks.set() = g2t->getTasks();
 //    taskController->verbose = true;
   }
   arr gamepad = gamepadState.get();
   ctrlTasks.writeAccess();
-  g2t->updateTasks(gamepad);
+  g2t->updateTasks(gamepad, modelWorld.get());
   ctrlTasks.deAccess();
 //  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 }

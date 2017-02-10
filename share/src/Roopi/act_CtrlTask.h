@@ -22,6 +22,6 @@ struct Act_CtrlTask : Act{
   virtual ActStatus getStatus();
 
   void setMap(TaskMap*); ///< use this to configure: set the map
-  void setTask(CtrlTask*, bool setDefaults=true); ///< use this to configure: set the map
+  void setTask(CtrlTask*); ///< use this to configure: set the map
   WToken<CtrlTask> set(); ///< use this to directly access the CtrlTask (in a threadsafe way) and do anything to it
 };

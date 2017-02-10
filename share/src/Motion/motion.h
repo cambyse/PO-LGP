@@ -144,7 +144,7 @@ struct MotionProblem {
 // basic helpers (TODO: move to a different place)
 //
 
-arr getH_rate_diag(mlr::KinematicWorld& world);
+arr getH_rate_diag(const mlr::KinematicWorld& world);
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T);
 arr reverseTrajectory(const arr& q);
 void getVel(arr& v, const arr& q, double tau);

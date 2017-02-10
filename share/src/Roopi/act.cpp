@@ -3,12 +3,12 @@
 #include <Core/util.h>
 
 Act::Act(Roopi *r)
-  : roopi(r), startTime(mlr::realTime()) {
-  roopi->acts.set()->append(this);
+  : roopi(*r), startTime(mlr::realTime()) {
+  roopi.acts.set()->append(this);
 }
 
 Act::~Act(){
-  roopi->acts.set()->removeValue(this);
+  roopi.acts.set()->removeValue(this);
 }
 
 double Act::time(){ return mlr::realTime()-startTime; }

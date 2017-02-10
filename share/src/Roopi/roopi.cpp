@@ -121,7 +121,7 @@ struct CtrlTaskUpdater : Thread {
       Act_CtrlTask *c = dynamic_cast<Act_CtrlTask*>(a);
       if(c && c->task){
         ctrlTasks.readAccess();
-        bool conv = c->task->isConverged();
+        bool conv = c->task->ref->isDone();
         ctrlTasks.deAccess();
         bool sconv = (c->status.getValue()==AS_converged);
         if(conv!=sconv){
@@ -140,8 +140,8 @@ struct CtrlTaskUpdater : Thread {
 Act_TaskController& Roopi::startTaskController(){
   if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(this);
   s->_holdPositionTask->setMap(new TaskMap_qItself);
-  s->_holdPositionTask->set()->y_ref = s->_holdPositionTask->y0;
-  s->_holdPositionTask->set()->setGains(30., 10.);
+  s->_holdPositionTask->set()->PD().y_target = s->_holdPositionTask->y0;
+  s->_holdPositionTask->set()->PD().setGains(30., 10.);
   s->_holdPositionTask->start();
 
   new Act_Thread<CtrlTaskUpdater>(this);
@@ -160,8 +160,8 @@ void Roopi::hold(bool still){
     for(CtrlTask *t:s->ctrlTasks()) t->active=false;
     s->ctrlTasks.deAccess();
 
-    s->_holdPositionTask->set()->setTargetToCurrent();
-    s->_holdPositionTask->set()->setGains(30., 10.);
+    s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
+    s->_holdPositionTask->set()->PD().setGains(30., 10.);
     s->_holdPositionTask->start();
 
   }else{
@@ -174,9 +174,9 @@ Act_CtrlTask* Roopi::home(){
   for(CtrlTask *t:s->ctrlTasks()) t->active=false;
   s->ctrlTasks.deAccess();
 
-  s->_holdPositionTask->set()->y_ref = s->_holdPositionTask->y0;
-  s->_holdPositionTask->set()->setGainsAsNatural(2.,.9);
-  s->_holdPositionTask->set()->maxVel=1.;
+  s->_holdPositionTask->set()->PD().y_target = s->_holdPositionTask->y0;
+  s->_holdPositionTask->set()->PD().setGainsAsNatural(2.,.9);
+  s->_holdPositionTask->set()->PD().maxVel=1.;
   s->_holdPositionTask->start();
 
   return s->_holdPositionTask;
@@ -284,7 +284,7 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
 CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
   CtrlTask* ct = new CtrlTask(name, map);
   map->phi(ct->y, NoArr, getKinematics()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
-  ct->y_ref = ct->y;
+  ct->y_target = ct->y;
   ct->active = active;
   if(active) ct->setGainsAsNatural(1., .8);
   else       ct->setGains(0.0,0.0);
@@ -298,7 +298,7 @@ void Roopi::activateCtrlTask(CtrlTask* t, bool reinitializeReferences){
   if(reinitializeReferences) {
     arr currentValue = getTaskValue(t);
     t->y = currentValue;
-    t->y_ref = currentValue;
+    t->y_target = currentValue;
   }
   t->active = true;
   s->ctrlTasks.deAccess();

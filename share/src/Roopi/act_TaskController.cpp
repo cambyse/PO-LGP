@@ -1,4 +1,5 @@
 #include "act_TaskController.h"
+#include "roopi.h"
 
 #include <Control/TaskControllerModule.h>
 
@@ -22,6 +23,6 @@ void Act_TaskController::verbose(int verbose){
 void Act_TaskController::lockJointGroupControl(const char *groupname, bool lockThem){
   tcm->waitForOpened();
   tcm->stepMutex.lock();
-  tcm->taskController->lockJointGroup(groupname, lockThem);
+  tcm->taskController->lockJointGroup(groupname, roopi.setKinematics(), lockThem);
   tcm->stepMutex.unlock();
 }

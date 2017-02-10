@@ -12,7 +12,7 @@ struct sAct_FollowPath : Thread{
   mlr::Spline spline;
 
   sAct_FollowPath(Act *a, const char* name, const arr& path, TaskMap* map, double executionTime)
-    : Thread(name, .02), a(a), ct(a->roopi), executionTime(executionTime) {
+    : Thread(name, .02), a(a), ct(&a->roopi), executionTime(executionTime) {
     ct.setMap(map);
 
     uint qdim = ct.y0.N;
@@ -20,8 +20,8 @@ struct sAct_FollowPath : Thread{
     spline.points.reshape(path.N/qdim, qdim);
     spline.setUniformNonperiodicBasis();
 
-    ct.task->y_ref = spline.eval(0.);
-    ct.task->setGainsAsNatural(.1, .9);
+    ct.task->PD().y_target = spline.eval(0.);
+    ct.task->PD().setGainsAsNatural(.1, .9);
   //  ct.task->setGains(30., 10.);
   }
 
@@ -62,6 +62,6 @@ void sAct_FollowPath::step(){
     threadStop();
   }
 
-  ct.set()->y_ref = spline.eval(s);
-  ct.set()->v_ref = spline.eval(s, 1)/executionTime;
+  ct.set()->PD().y_target = spline.eval(s);
+  ct.set()->PD().v_target = spline.eval(s, 1)/executionTime;
 }

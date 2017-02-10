@@ -9,7 +9,7 @@ struct Act;
 typedef mlr::Array<Act*> ActL;
 
 struct Act{
-  Roopi *roopi;
+  Roopi& roopi;
   double startTime;
   ConditionVariable status;
 
