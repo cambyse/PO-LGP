@@ -22,6 +22,18 @@
 
 //===========================================================================
 
+void MotionProfile_Sine::update(double tau, const arr& y, const arr& ydot){
+  t+=tau;
+  if(y_init.N!=y.N) y_init=y; //initialization
+}
+
+void MotionProfile_Sine::getReference(arr& y, arr& ydot){
+  y = y_init + (.5*(1.-cos(MLR_PI*t/T))) * (y_target - y_init);
+  ydot = zeros(y.N);
+}
+
+//===========================================================================
+
 MotionProfile_PD::MotionProfile_PD()
   : kp(0.), kd(0.), maxVel(0.), maxAcc(0.), flipTargetSignOnNegScalarProduct(false), makeTargetModulo2PI(false){}
 
@@ -145,17 +157,17 @@ bool MotionProfile_PD::isConverged(double tolerance){
 //===========================================================================
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map)
-  : map(map), name(name), active(true), prec(ARR(10.)){
-  ref = new MotionProfile_PD();
+  : map(map), name(name), active(true), ref(NULL), prec(ARR(10.)){
+//  ref = new MotionProfile_PD();
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
-  : map(map), name(name), active(true), prec(ARR(10.)){
+  : CtrlTask(name, map){
   ref = new MotionProfile_PD({}, decayTime, dampingRatio, maxVel, maxAcc);
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, const Graph& params)
-  : map(map), name(name), active(true), prec(ARR(10.)){
+  : CtrlTask(name, map){
   ref = new MotionProfile_PD(params);
   Node *n;
   if((n=params["prec"])) prec = n->get<arr>();
@@ -164,11 +176,15 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, const Graph& params)
 void CtrlTask::update(double tau, const mlr::KinematicWorld& world){
   map->phi(y, J_y, world);
   if(world.qdot.N) v = J_y*world.qdot; else v.resize(y.N).setZero();
-  ref->update(tau, y, v);
-  ref->getReference(y_ref, v_ref);
+  if(ref){
+    CHECK(ref, "this CtrlTask does not have a motion profile yet");
+    ref->update(tau, y, v);
+    ref->getReference(y_ref, v_ref);
+  }
 }
 
 MotionProfile_PD& CtrlTask::PD(){
+  if(!ref) ref = new MotionProfile_PD();
   MotionProfile_PD *pd = dynamic_cast<MotionProfile_PD*>(ref);
   CHECK(pd, "");
   return *pd;
@@ -284,19 +300,23 @@ void TaskController::getTaskCoeffs(arr& yddot_des, arr& J){
   if(&J && J.N) J.reshape(yddot_des.N, J.N/yddot_des.N);
 }
 
-arr TaskController::inverseKinematics(const arr& H){
+arr TaskController::inverseKinematics(arr& qdot, const arr& H){
   arr y;
+  arr v;
   arr J;
   for(CtrlTask* t: tasks) {
     if(t->active && t->ref) {
       y.append(t->prec%(t->y_ref - t->y));
       J.append(t->prec%(t->J_y));
+      if(&qdot) v.append(t->prec%(t->v_ref));
     }
   }
   if(!y.N) return zeros(H.d0);
 
   J.reshape(y.N, J.N/y.N);
-  return pseudoInverse(J, oneover(H), 1e-8) * y;
+  arr Jinv = pseudoInverse(J, oneover(H), 1e-8);
+  if(&qdot) qdot = Jinv*v;
+  return Jinv*y;
 }
 
 void TaskController::reportCurrentState(){

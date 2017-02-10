@@ -195,8 +195,8 @@ void TaskControllerModule::step(){
   taskController->tasks = ctrlTasks();
   taskController->updateCtrlTasks(.01, modelWorld());
 
-  q_model += taskController->inverseKinematics(modelWorld().getHmetric());
-  modelWorld().setJointState(q_model);
+  q_model += taskController->inverseKinematics(qdot_model, modelWorld().getHmetric());
+  modelWorld().setJointState(q_model, qdot_model);
 
   if(verbose) taskController->reportCurrentState();
   ctrlTasks.deAccess();

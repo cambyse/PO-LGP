@@ -18,6 +18,7 @@
 #pragma once
 
 #include <Motion/taskMaps.h>
+#include <Algo/spline.h>
 
 /**
  * @file
@@ -33,9 +34,7 @@ typedef mlr::Array<CtrlTask*> CtrlTaskL;
 
 
 //===========================================================================
-/**
- * A CtrlTask defines a motion in operational space.
- */
+
 struct MotionProfile{
   virtual ~MotionProfile(){}
   virtual void update(double tau,const arr& y, const arr& ydot) = 0;
@@ -43,26 +42,22 @@ struct MotionProfile{
   virtual bool isDone() = 0;
 };
 
+//===========================================================================
+
 struct MotionProfile_Sine : MotionProfile{
   arr y_init, y_target;
   double t;
   double T;
   MotionProfile_Sine(const arr& y_target, double duration) : y_target(y_target), t(0.), T(duration){}
-  virtual void update(double tau,const arr& y, const arr& ydot){
-    t+=tau;
-    if(y_init.N!=y.N) y_init=y; //initialization
-  }
-  virtual void getReference(arr& y, arr& ydot){
-    y = y_init + (.5*(1.-cos(MLR_PI*t/T))) * (y_target - y_init);
-    ydot = zeros(y.N);
-  }
+  virtual void update(double tau,const arr& y, const arr& ydot);
+  virtual void getReference(arr& y, arr& ydot);
   virtual bool isDone(){ return t>=T; }
 };
 
+//===========================================================================
+
 struct MotionProfile_PD: MotionProfile{
-private:
   arr y_ref, v_ref;
-public:
   arr y_target, v_target;
   double kp, kd;
   double maxVel, maxAcc;
@@ -80,19 +75,39 @@ public:
   virtual void getReference(arr& y, arr& v);
 
   arr getDesiredAcceleration();
-
   void getDesiredLinAccLaw(arr& Kp_y, arr& Kd_y, arr& a0_y);
 
   double error();
   bool isConverged(double tolerance=1e-2);
   virtual bool isDone(){ return isConverged(); }
-
 };
 
 //===========================================================================
-/**
- * A CtrlTask defines a motion in operational space.
- */
+
+struct MotionProfile_Path: MotionProfile{
+  mlr::Spline spline;
+  double executionTime;
+  double phase;
+  MotionProfile_Path(const arr& path, double executionTime) : executionTime(executionTime), phase(0.){
+    CHECK(path.nd==2,"need a properly shaped path!");
+    spline.points = path;
+    spline.setUniformNonperiodicBasis();
+  }
+  virtual void update(double tau,const arr& y, const arr& ydot){
+    phase += tau/executionTime;
+    if(phase > 1.) phase=1.;
+  }
+  virtual void getReference(arr& y, arr& ydot){
+    y    = spline.eval(phase);
+    ydot = spline.eval(phase, 1)/executionTime;
+  }
+  virtual bool isDone(){
+    return phase>=1.;
+  }
+};
+
+//===========================================================================
+
 struct CtrlTask{
   TaskMap *map;
   mlr::String name;
@@ -118,7 +133,6 @@ struct CtrlTask{
   arr f_ref;
   double f_alpha, f_gamma;
 
-
   CtrlTask(const char* name, TaskMap* map);
   CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc);
   CtrlTask(const char* name, TaskMap* map, const Graph& params);
@@ -127,7 +141,6 @@ struct CtrlTask{
 
   arr getPrec();
   void getForceControlCoeffs(arr& f_des, arr& u_bias, arr& K_I, arr& J_ft_inv, const mlr::KinematicWorld& world);
-
 
   MotionProfile_PD& PD();
 
@@ -156,7 +169,7 @@ struct TaskController {
   void lockJointGroup(const char *groupname, mlr::KinematicWorld& world, bool lockThem=true);
 
   void getTaskCoeffs(arr& yddot_des, arr& J); ///< the general (`big') task vector and its Jacobian
-  arr inverseKinematics(const arr& H);
+  arr inverseKinematics(arr& qdot, const arr& H);
   arr operationalSpaceControl();
   arr calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& q, const arr& qdot, const arr& M, const arr& F); ///< returns the linearized control law
   arr getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &u0, const arr& q, const arr& qdot); ///< returns the linearized control law
