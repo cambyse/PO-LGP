@@ -9,7 +9,7 @@ struct Pr2GamepadController : Thread {
 
   mlr::KinematicWorld world;
   arr q, qdot, zero_qdot;
-  TaskController *MP;
+  TaskControlMethods *MP;
   mlr::Shape *ftL_shape;
   mlr::Joint *trans;
   Gamepad2Tasks *j2t;
@@ -25,7 +25,7 @@ struct Pr2GamepadController : Thread {
     trans=world.getJointByName("worldTranslationRotation");
     ftL_shape=world.getShapeByName("endeffL");
 
-    MP = new TaskController(world, true);
+    MP = new TaskControlMethods(world, true);
     MP->qitselfPD.y_ref = q;
     MP->H_rate_diag = world.getHmetric();
     j2t = new Gamepad2Tasks(*MP);

@@ -1,5 +1,5 @@
 #include <Kin/kin.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -26,7 +26,7 @@ void TEST(Simulator){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  TaskController MP(world, false);
+  TaskControlMethods MP(world, false);
   MP.qitselfPD.y_ref = q;
   MP.qitselfPD.active=false;
   MP.H_rate_diag = world.getHmetric();

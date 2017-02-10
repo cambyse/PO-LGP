@@ -4,7 +4,7 @@
 
 #include <Core/util.h>
 #include "../interface/myBaxter.h"
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <vector>
 #include <Core/array.h>
 #include <fstream>

@@ -1,7 +1,7 @@
 #include "act_PathFollow.h"
 #include "act_CtrlTask.h"
 
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 Act_FollowPath::Act_FollowPath(Roopi *r, const char* name, const arr& path, TaskMap* map, double executionTime)
   : Act_CtrlTask(r){

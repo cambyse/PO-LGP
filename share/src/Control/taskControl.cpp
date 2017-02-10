@@ -15,21 +15,18 @@
     You should have received a COPYING file of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
-#include "taskController.h"
+#include "taskControl.h"
 #include <Kin/kin_swift.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 
 //===========================================================================
 
-void MotionProfile_Sine::update(double tau, const arr& y, const arr& ydot){
+void MotionProfile_Sine::update(arr& yRef, arr& ydotRef, double tau, const arr& y, const arr& ydot){
   t+=tau;
   if(y_init.N!=y.N) y_init=y; //initialization
-}
-
-void MotionProfile_Sine::getReference(arr& y, arr& ydot){
-  y = y_init + (.5*(1.-cos(MLR_PI*t/T))) * (y_target - y_init);
-  ydot = zeros(y.N);
+  yRef = y_init + (.5*(1.-cos(MLR_PI*t/T))) * (y_target - y_init);
+  ydotRef = zeros(y.N);
 }
 
 //===========================================================================
@@ -76,7 +73,7 @@ void MotionProfile_PD::setGainsAsNatural(double decayTime, double dampingRatio) 
   setGains(mlr::sqr(1./lambda), 2.*dampingRatio/lambda);
 }
 
-void MotionProfile_PD::update(double tau, const arr& y, const arr& ydot){
+void MotionProfile_PD::update(arr& yRef, arr& vRef, double tau, const arr& y, const arr& ydot){
   //only on initialization the true state is used; otherwise ignored!
   if(y_ref.N!=y.N){ y_ref=y; v_ref=ydot; }
 //   y_ref=y; v_ref=ydot;//TODO: exactly DONT DO THAT!
@@ -95,11 +92,9 @@ void MotionProfile_PD::update(double tau, const arr& y, const arr& ydot){
 
   y_ref += tau*v_ref + (.5*tau*tau)*a;
   v_ref += tau*a;
-}
 
-void MotionProfile_PD::getReference(arr& y, arr& v){
-  y=y_ref;
-  v=v_ref;
+  yRef = y_ref;
+  vRef = v_ref;
 }
 
 arr MotionProfile_PD::getDesiredAcceleration(){
@@ -156,9 +151,24 @@ bool MotionProfile_PD::isConverged(double tolerance){
 
 //===========================================================================
 
+MotionProfile_Path::MotionProfile_Path(const arr& path, double executionTime) : executionTime(executionTime), phase(0.){
+  CHECK(path.nd==2,"need a properly shaped path!");
+  spline.points = path;
+  spline.setUniformNonperiodicBasis();
+}
+
+void MotionProfile_Path::update(arr& yRef, arr& ydotRef, double tau, const arr& y, const arr& ydot){
+  phase += tau/executionTime;
+  if(phase > 1.) phase=1.;
+  yRef    = spline.eval(phase);
+  ydotRef = spline.eval(phase, 1)/executionTime;
+}
+
+//===========================================================================
+
 CtrlTask::CtrlTask(const char* name, TaskMap* map)
   : map(map), name(name), active(true), ref(NULL), prec(ARR(10.)){
-//  ref = new MotionProfile_PD();
+  //  ref = new MotionProfile_PD();
 }
 
 CtrlTask::CtrlTask(const char* name, TaskMap* map, double decayTime, double dampingRatio, double maxVel, double maxAcc)
@@ -176,11 +186,7 @@ CtrlTask::CtrlTask(const char* name, TaskMap* map, const Graph& params)
 void CtrlTask::update(double tau, const mlr::KinematicWorld& world){
   map->phi(y, J_y, world);
   if(world.qdot.N) v = J_y*world.qdot; else v.resize(y.N).setZero();
-  if(ref){
-    CHECK(ref, "this CtrlTask does not have a motion profile yet");
-    ref->update(tau, y, v);
-    ref->getReference(y_ref, v_ref);
-  }
+  if(ref) ref->update(y_ref, v_ref, tau, y, v);
 }
 
 MotionProfile_PD& CtrlTask::PD(){
@@ -233,23 +239,23 @@ void CtrlTask::reportState(ostream& os){
 
 //===========================================================================
 
-TaskController::TaskController(const mlr::KinematicWorld& world)
-  : qNullCostRef("qNullPD", new TaskMap_qItself()) {
-  qNullCostRef.PD().setGains(0.,100.);
-  qNullCostRef.prec = ::sqrt(world.getHmetric());
+TaskControlMethods::TaskControlMethods(const mlr::KinematicWorld& world)
+  : Hmetric(world.getHmetric()), qNullCostRef("qNullPD", new TaskMap_qItself()) {
+  qNullCostRef.PD().setGains(0.,1.);
+  qNullCostRef.prec = ::sqrt(mlr::getParameter<double>("Hrate", .1)*Hmetric);
   qNullCostRef.PD().setTarget( world.q );
 }
 
-void TaskController::updateCtrlTasks(double tau, const mlr::KinematicWorld& world){
+void TaskControlMethods::updateCtrlTasks(double tau, const mlr::KinematicWorld& world){
   qNullCostRef.update(tau, world);
   for(CtrlTask* t: tasks) t->update(tau, world);
 }
 
-CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
+CtrlTask* TaskControlMethods::addPDTask(const char* name, double decayTime, double dampingRatio, TaskMap *map){
   return tasks.append(new CtrlTask(name, map, decayTime, dampingRatio, 1., 1.));
 }
 
-//CtrlTask* TaskController::addPDTask(const char* name,
+//CtrlTask* TaskControlMethods::addPDTask(const char* name,
 //                                         double decayTime, double dampingRatio,
 //                                         TaskMap_DefaultType type,
 //                                         const char* iShapeName, const mlr::Vector& ivec,
@@ -258,7 +264,7 @@ CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double d
 //                                   decayTime, dampingRatio, 1., 1.));
 //}
 
-//ConstraintForceTask* TaskController::addConstraintForceTask(const char* name, TaskMap *map){
+//ConstraintForceTask* TaskControlMethods::addConstraintForceTask(const char* name, TaskMap *map){
 //  ConstraintForceTask *t = new ConstraintForceTask(map);
 //  t->name=name;
 //  t->desiredApproach.name=STRING(name <<"_PD");
@@ -268,7 +274,7 @@ CtrlTask* TaskController::addPDTask(const char* name, double decayTime, double d
 //  return t;
 //}
 
-void TaskController::lockJointGroup(const char* groupname, mlr::KinematicWorld& world, bool lockThem){
+void TaskControlMethods::lockJointGroup(const char* groupname, mlr::KinematicWorld& world, bool lockThem){
   if(!groupname){
     if(lockThem){
       lockJoints = consts<bool>(true, world.q.N);
@@ -287,20 +293,7 @@ void TaskController::lockJointGroup(const char* groupname, mlr::KinematicWorld& 
   }
 }
 
-void TaskController::getTaskCoeffs(arr& yddot_des, arr& J){
-  yddot_des.clear();
-  if(&J) J.clear();
-  for(CtrlTask* t: tasks) {
-    if(t->active && !t->f_ref.N) {
-      arr a_des = t->PD().getDesiredAcceleration();
-      yddot_des.append(t->prec%(a_des /*-Jdot*qdot*/));
-      if(&J) J.append(t->prec%t->J_y);
-    }
-  }
-  if(&J && J.N) J.reshape(yddot_des.N, J.N/yddot_des.N);
-}
-
-arr TaskController::inverseKinematics(arr& qdot, const arr& H){
+arr TaskControlMethods::inverseKinematics(arr& qdot){
   arr y;
   arr v;
   arr J;
@@ -311,20 +304,20 @@ arr TaskController::inverseKinematics(arr& qdot, const arr& H){
       if(&qdot) v.append(t->prec%(t->v_ref));
     }
   }
-  if(!y.N) return zeros(H.d0);
+  if(!y.N) return zeros(Hmetric.d0);
 
   J.reshape(y.N, J.N/y.N);
-  arr Jinv = pseudoInverse(J, oneover(H), 1e-8);
+  arr Jinv = pseudoInverse(J, oneover(Hmetric), 1e-8);
   if(&qdot) qdot = Jinv*v;
   return Jinv*y;
 }
 
-void TaskController::reportCurrentState(){
-  cout <<"** TaskController" <<endl;
+void TaskControlMethods::reportCurrentState(){
+  cout <<"** TaskControlMethods" <<endl;
   for(CtrlTask* t: tasks) t->reportState(cout);
 }
 
-//void TaskController::updateConstraintControllers(){
+//void TaskControlMethods::updateConstraintControllers(){
 //  arr y;
 //  for(ConstraintForceTask* t: forceTasks){
 //    if(t->active){
@@ -334,7 +327,7 @@ void TaskController::reportCurrentState(){
 //  }
 //}
 
-//arr TaskController::getDesiredConstraintForces(){
+//arr TaskControlMethods::getDesiredConstraintForces(){
 //  arr Jl(world.q.N, 1);
 //  Jl.setZero();
 //  arr y, J_y;
@@ -349,15 +342,26 @@ void TaskController::reportCurrentState(){
 //  return Jl;
 //}
 
-arr TaskController::operationalSpaceControl(){
+arr TaskControlMethods::operationalSpaceControl(){
+  //-- get the stacked task coefficient ($J_\phi$ and $c$ in the reference (they include C^{1/2}))
   arr yddot_des, J;
-  getTaskCoeffs(yddot_des, J); //this corresponds to $J_\phi$ and $c$ in the reference (they include C^{1/2})
+  for(CtrlTask* t: tasks) {
+    if(t->active && !t->f_ref.N) {
+      arr a_des = t->PD().getDesiredAcceleration();
+      yddot_des.append(t->prec%(a_des /*-Jdot*qdot*/));
+      J.append(t->prec%t->J_y);
+    }
+  }
+  if(yddot_des.N) J.reshape(yddot_des.N, J.N/yddot_des.N);
   if(!yddot_des.N && !qNullCostRef.active) return zeros(J.d1);
+
+  //regularization: null-cost-behavior
   arr A = qNullCostRef.getPrec();
   arr a = zeros(A.d0);
   if(qNullCostRef.active){
     a += qNullCostRef.getPrec() * qNullCostRef.PD().getDesiredAcceleration();
   }
+  //all the tasks
   if(yddot_des.N){
     A += comp_At_A(J);
     a += comp_At_x(J, yddot_des);
@@ -374,7 +378,7 @@ arr TaskController::operationalSpaceControl(){
   return q_ddot;
 }
 
-arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, const arr& q, const arr& qdot) {
+arr TaskControlMethods::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, const arr& q, const arr& qdot) {
   arr Kp_y, Kd_y, k_y, C_y;
   qNullCostRef.PD().getDesiredLinAccLaw(Kp_y, Kd_y, k_y);
   arr H = qNullCostRef.getPrec();
@@ -417,7 +421,7 @@ arr TaskController::getDesiredLinAccLaw(arr &Kp, arr &Kd, arr &k, const arr& q, 
 }
 
 
-arr TaskController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& q, const arr& qdot, const arr& M, const arr& F) {
+arr TaskControlMethods::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const arr& q, const arr& qdot, const arr& M, const arr& F) {
   uint n=F.N;
 
 //  arr q0, q, qDot;
@@ -463,7 +467,7 @@ arr TaskController::calcOptimalControlProjected(arr &Kp, arr &Kd, arr &u0, const
   return u0 + Kp*q + Kd*qdot;
 }
 
-void TaskController::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0, mlr::KinematicWorld& world){
+void fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0, mlr::KinematicWorld& world){
   arr M, F;
   world.equationOfMotion(M, F, false);
 
@@ -478,7 +482,7 @@ void TaskController::fwdSimulateControlLaw(arr& Kp, arr& Kd, arr& u0, mlr::Kinem
   }
 }
 
-void TaskController::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma, const mlr::KinematicWorld& world) {
+void TaskControlMethods::calcForceControl(arr& K_ft, arr& J_ft_inv, arr& fRef, double& gamma, const mlr::KinematicWorld& world) {
   uint nForceTasks=0;
   for(CtrlTask* task : this->tasks) if(task->active && task->f_ref.N){
     nForceTasks++;

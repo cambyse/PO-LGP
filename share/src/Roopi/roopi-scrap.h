@@ -4,7 +4,7 @@
 #include <Core/graph.h>
 #include <Core/module.h>
 #include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 
 //==============================================================================

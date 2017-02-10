@@ -2,7 +2,7 @@
 
 #include <Core/thread.h>
 #include <Control/ctrlMsg.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Control/RTControllerSimulation.h>
 #include <Control/gravityCompensation.h>
 
@@ -28,7 +28,7 @@ struct TaskControllerModule : Thread {
 
 //private:
   mlr::KinematicWorld realWorld;
-  TaskController *taskController;
+  TaskControlMethods *taskController;
   arr q_real, qdot_real; //< real state
   arr q_model, qdot_model; //< model state
   arr q0; //< homing pose
@@ -55,7 +55,7 @@ struct TaskControllerModule : Thread {
 
 public:
   TaskControllerModule(const char* robot="none", const mlr::KinematicWorld& world = NoWorld);
-  ~TaskControllerModule();
+  ~TaskControllerModule(){}
 
   void open();
   void step();

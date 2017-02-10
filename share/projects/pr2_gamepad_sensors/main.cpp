@@ -1,4 +1,4 @@
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kin.h>
 #include <Gui/opengl.h>

@@ -5,7 +5,7 @@
 #include <Motion/taskMap_default.h>
 #include <Motion/taskMap_proxy.h>
 #include <Motion/taskMap_constrained.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>

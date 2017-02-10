@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 #include <Actions/actions.h>
 #include <RosCom/roscom.h>
@@ -20,9 +20,9 @@ struct PDExecutor: Thread{
   ACCESS(arrf, poses_rh);
   ACCESS(arrf, poses_lh);
 
-  // TaskController stuff
+  // TaskControlMethods stuff
   mlr::KinematicWorld world;
-  TaskController fmc;
+  TaskControlMethods fmc;
   arr q, qdot;
 
   bool started, useros;

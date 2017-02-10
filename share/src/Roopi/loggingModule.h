@@ -4,7 +4,7 @@
 #include <Core/array.h>
 #include <Core/thread.h>
 #include <Control/ctrlMsg.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 /// Struct for logging data
 struct SetOfDataFiles {

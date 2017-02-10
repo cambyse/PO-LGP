@@ -1,7 +1,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
@@ -68,7 +68,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, mlr::KinematicWo
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  TaskController MC(world, false);
+  TaskControlMethods MC(world, false);
   MC.qitselfPD.active=true;
 
   //position PD task

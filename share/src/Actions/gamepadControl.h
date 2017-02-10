@@ -2,7 +2,7 @@
 
 #include "activity.h"
 #include <Control/ctrlMsg.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 // ============================================================================
 

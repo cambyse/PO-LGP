@@ -17,7 +17,7 @@ int main(int argc, char** argv){
   {
     Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-    //-- setup a more complex 'system', mainly composed of the TaskController and the RelationalMachine
+    //-- setup a more complex 'system', mainly composed of the TaskControlMethods and the RelationalMachine
     TaskControllerModule tcm("baxter");
     RelationalMachineModule rm;
     ActivitySpinnerModule aspin;

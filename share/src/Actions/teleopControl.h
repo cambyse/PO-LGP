@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activity.h"
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Control/ctrlMsg.h>
 
 // ============================================================================

@@ -136,7 +136,7 @@ void POMDPExecution(FSC fsc, mlr::KinematicWorld& world, int num, double est){
     mlr::Body *table = world.getBodyByName("table");
 
 
-    TaskController MC(world);
+    TaskControlMethods MC(world);
     MC.qitselfPD.active=false;
 
     //position PD task:  decayTime = 0.1, dampingRatio = 0.8

@@ -71,44 +71,21 @@ TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::Kinema
   qSign.set()() = zeros(q0.N);
 
   fRInitialOffset = ARR(-0.17119, 0.544316, -1.2, 0.023718, 0.00802182, 0.0095804);
-
 }
-
-TaskControllerModule::~TaskControllerModule(){
-}
-
-void changeColor(void*){  orsDrawColors=false; glColor(.5, 1., .5, .7); }
-void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void TaskControllerModule::open(){
-  //gc = new GravityCompensation(realWorld);
-  if(compensateGravity) {  
-    //gc->loadBetas();
+  modelWorld.set() = realWorld;
+  modelWorld.get()->getJointState(q_model, qdot_model);
+  makeConvexHulls(modelWorld.set()->shapes);
+
+  taskController = new TaskControlMethods(modelWorld.get());
+
+  if(compensateGravity) {
     gc->learnGCModel();
   }
   if(compensateFTSensors) {
     gc->learnFTModel();
   }
-
-  modelWorld.set()() = realWorld;
-
-  makeConvexHulls(modelWorld.set()->shapes);
- // modelWorld.set() = realWorld;
-  taskController = new TaskController(modelWorld.get()());
-
-  modelWorld.get()->getJointState(q_model, qdot_model);
-
-  taskController->qNullCostRef.PD().y_target = q0;
-  taskController->qNullCostRef.PD().setGains(0., 1.);
-  taskController->qNullCostRef.prec = mlr::getParameter<double>("Hrate", .1)*modelWorld.get()->getHmetric();
-
-#if 1
-  modelWorld.writeAccess();
-  modelWorld().gl().add(changeColor);
-  modelWorld().gl().add(mlr::glDrawGraph, &realWorld);
-  modelWorld().gl().add(changeColor2);
-  modelWorld.deAccess();
-#endif
 
   if(useRos || !oldfashioned) syncModelStateWithReal=true;
 
@@ -123,7 +100,7 @@ void TaskControllerModule::step(){
   static uint t=0;
   t++;
 
-  mlr::Joint *trans= realWorld.getJointByName("worldTranslationRotation", false);
+  mlr::Joint *trans = realWorld.getJointByName("worldTranslationRotation", false);
 
   //-- read real state
   if(useRos || !oldfashioned){
@@ -195,7 +172,7 @@ void TaskControllerModule::step(){
   taskController->tasks = ctrlTasks();
   taskController->updateCtrlTasks(.01, modelWorld());
 
-  q_model += taskController->inverseKinematics(qdot_model, modelWorld().getHmetric());
+  q_model += taskController->inverseKinematics(qdot_model);
   modelWorld().setJointState(q_model, qdot_model);
 
   if(verbose) taskController->reportCurrentState();

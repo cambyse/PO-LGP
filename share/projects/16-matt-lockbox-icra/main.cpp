@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include "interface/myBaxter.h"
 #include "lockbox/lockbox.h"
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Motion/komo.h>
 
 // =================================================================================================

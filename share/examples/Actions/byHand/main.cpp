@@ -1,4 +1,4 @@
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>

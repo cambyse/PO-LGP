@@ -1,5 +1,5 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/joystick/joystick.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -70,7 +70,7 @@ void PR2_ActionMachine(FSC fsc, mlr::KinematicWorld& world, int num){
 
   //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
-  TaskController MP(world, true); // true means using swift
+  TaskControlMethods MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = world.getHmetric();
 

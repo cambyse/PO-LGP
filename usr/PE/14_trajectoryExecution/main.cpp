@@ -1,5 +1,5 @@
 #include <Kin/kin.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Optim/optimization.h>
@@ -184,7 +184,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0005, dir);
 
-  TaskController MP(world, false);
+  TaskControlMethods MP(world, false);
   CtrlTask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
   double regularization = 1e-3;
 

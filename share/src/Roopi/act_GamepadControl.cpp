@@ -12,7 +12,7 @@ struct sAct_GamepadControl : Thread{
 
   Act_GamepadControl* P;
   GamepadInterface *gamepadTh;
-  TaskController *tc;
+  TaskControlMethods *tc;
 
 
   sAct_GamepadControl(Act_GamepadControl* P)

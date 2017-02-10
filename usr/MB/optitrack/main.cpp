@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include "../../share/teaching/RoboticsPractical/interface/myBaxter.h"
 #include "RosCom/subscribeOptitrack.h"
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 // =================================================================================================
 
