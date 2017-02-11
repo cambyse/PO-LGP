@@ -14,12 +14,12 @@ public: // public members
   OrsPathViewer seqView;
   OrsPathViewer pathView;
 
-  mlr::Array<ActionNode*> mcFringe;
-  mlr::Array<ActionNode*> terminals;
-  mlr::Array<ActionNode*> poseFringe;
-  mlr::Array<ActionNode*> seqFringe;
-  mlr::Array<ActionNode*> pathFringe;
-  mlr::Array<ActionNode*> done;
+  mlr::Array<ActionNode*> mcFringe;     // all nodes on which Rollouts have been computed
+  mlr::Array<ActionNode*> terminals;    // all nodes that are terminal (reach symbolic goal)
+  mlr::Array<ActionNode*> poseFringe;   // nodes on which to compute the pose-optimization
+  mlr::Array<ActionNode*> seqFringe;    // nodes on which to comoute the sequence
+  mlr::Array<ActionNode*> pathFringe;   // nodes on which to compute the path
+  mlr::Array<ActionNode*> done;         // nodes on which the optimization has been performed
 
 public: // public methods
   SearchSpaceTree( const KOMOFactory & );

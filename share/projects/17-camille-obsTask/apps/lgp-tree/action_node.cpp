@@ -169,9 +169,6 @@ void ActionNode::addMCRollouts(uint num, int stepAbort){
 
 //  cout <<"DECISION PATH = "; listWrite(prefixDecisions); cout <<endl;
 
-#if 0
-  arr R = generateRootMCRollouts(num, stepAbort, prefixDecisions);
-#else
   arr R;
   for(uint k=0;k<num;k++){
     rootMC->initRollout(prefixDecisions);
@@ -179,13 +176,13 @@ void ActionNode::addMCRollouts(uint num, int stepAbort){
     double r = rootMC->finishRollout(stepAbort);
     R.append( r );
   }
-#endif
 
+  // the gathered rewards are inserted into the previous nodes
   for(ActionNode* n:treepath){
     if(!n->mcStats) n->mcStats = new MCStatistics;
     for(auto& r:R){
-      n->mcStats->add(r);
-      n->symCost = - n->mcStats->X.first();
+      n->mcStats->add(r);                  // is kept sorted!
+      n->symCost = - n->mcStats->X.first();// take the best
     }
   }
 
@@ -205,9 +202,7 @@ void ActionNode::solvePoseProblem(){
   if(!parent) effKinematics = startKinematics;
   else effKinematics = parent->effKinematics;
 
-  //-- collect 'path nodes'
-  ActionNodeL treepath = getTreePath();
-
+  //-- no need to collect 'path nodes'
   komoPoseProblem = komoFactory_.createKomo();
   komoPoseProblem->setModel(effKinematics);
   komoPoseProblem->setTiming(1., 2, 5., 1, false);

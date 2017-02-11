@@ -29,7 +29,13 @@ void SearchSpaceTree::prepareKin( const std::string & kinDescription ){
 }
 
 void SearchSpaceTree::prepareFol( const std::string & folDescription ){
+  // get number of worlds
+  //Graph KB;
+  //KB.read(FILE(folDescription.c_str()));
+  //auto bs = &KB.get<Graph>("BELIEF_START_STATE");
+  //bs->d;
 
+  // generate all the possible fol
   fol.init(FILE(folDescription.c_str()));
 
   fol.reset_state();

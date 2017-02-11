@@ -57,21 +57,24 @@ private:
   std::map< mlr::String, SymbolGrounder > tasks_;
 };
 
-//===========================================================================
+//=============done==============================================================
 
 struct ActionNode{
   ActionNode *parent;
-  mlr::Array<ActionNode*> children;
+  mlr::Array<ActionNode*> children; ///< all reacheable children
   uint s;               ///< decision depth/step of this node
   double time;          ///< real time
   uint graphIndex=0;
 
   //-- info on the state and action this node represents
   FOL_World& fol; ///< the symbolic KB (all Graphs below are subgraphs of this large KB)
+  //pobs//List of FOL_World?
   FOL_World::Handle decision; ///< the decision that led to this node
-  Graph *folState; ///< the symbolic state after the decision
+  //pobs//FOL_World::Handle observation; ///< the observation that led to this node
+  Graph *folState;    ///< the symbolic state after the decision //and observation
   Node  *folDecision; ///< the predicate in the folState that represents the decision
-  double folReward;  ///< the reward collected with this transition step
+  //pobs//Node  *folObservation; ///< the predicate in the folState that represents the decision
+  double folReward;   ///< the reward collected with this transition step
   Graph *folAddToState; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
 
   //-- kinematics: the kinematic structure of the world after the decision path
@@ -84,17 +87,16 @@ struct ActionNode{
   bool isTerminal=false;
 
   //-- specs and results of the three optimization problems
-//  MotionProblem *poseProblem, *seqProblem, *pathProblem;
-  PlainMC *rootMC;
-  MCStatistics *mcStats;
-  std::shared_ptr<ExtensibleKOMO> komoPoseProblem, komoSeqProblem, komoPathProblem;
-  Graph *poseProblemSpecs, *seqProblemSpecs, *pathProblemSpecs;
-  arr pose, seq, path;
-  uint mcCount, poseCount, seqCount, pathCount;
-  double symCost, poseCost, poseConstraints, seqCost, seqConstraints, pathCost, pathConstraints;
+  PlainMC *rootMC;    ///< monte carlo engine
+  //pobs// list of PlainMC* ??
+  MCStatistics *mcStats;  ///< statitics (list of the reward of each rollout)
+  std::shared_ptr<ExtensibleKOMO> komoPoseProblem, komoSeqProblem, komoPathProblem; ///< trajectory optimization engines
+  arr pose, seq, path;    ///< current best solutions (concatenation of x vectors)
+  uint mcCount, poseCount, seqCount, pathCount; ///< total number of mc, pose opt, seq opt, path opt run so far
+  double symCost, poseCost, poseConstraints, seqCost, seqConstraints, pathCost, pathConstraints; ///< costs of the best solution so far
   bool symTerminal, poseFeasible, seqFeasible, pathFeasible;
 
-  bool inFringe1, inFringe2;
+  bool inFringe1, inFringe2; ///< used only when generating reports
 
   /// root node init
   ActionNode(mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory );

@@ -75,10 +75,10 @@
 static void iterate( SearchSpaceTree & C, ofstream & fil )
 {
   //    C.root->checkConsistency();
+  // Symbolic level
   { //expand
     MNode* n = popBest(C.mcFringe, mcHeuristic);
-    //      ActionNode* n = NULL;
-    //      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
+
     if(n)
     {
       n->expand();
@@ -112,7 +112,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   C.root->recomputeAllMCStats();
 
   //    C.updateDisplay();
-
+  // Pose level
   { //optimize a pose
     MNode* n = popBest(C.poseFringe, poseHeuristic);
     if(n)
@@ -128,7 +128,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
       C.node = n;
     }
   }
-
+  // Seq level
   { //optimize a seq
     MNode* n = popBest(C.seqFringe, seqHeuristic);
     if(n)
@@ -144,14 +144,14 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
       C.node = n;
     }
   }
-
+  // Path level
   { //optimize a path
     MNode* n = popBest(C.pathFringe, pathHeuristic);
     if(n)
     {
       //      cout <<"### PATH TESTING node " <<*n <<endl;
       //      mlr::wait();
-      n->solvePathProblem(10);
+      n->solvePathProblem(10);  // param = number of micro-steps
       if(n->pathFeasible) C.done.append(n);
       C.node = n;
     }
@@ -169,6 +169,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
     //      C.updateDisplay();
   }
 
+  // retrieve best solutions
   MNode *bt = getBest(C.terminals, seqCost);
   MNode *bp = getBest(C.done, pathCost);
   mlr::String out;
@@ -182,6 +183,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   fil  <<out <<endl;
   cout <<out <<endl;
 
+  // set best solutions to viewers
   if(bt) C.node=bt;
   if(bp) C.node=bp;
   C.updateDisplay();
@@ -260,7 +262,7 @@ void groundHeadGetSight( double phase, const Graph& facts, Node *n, KOMO & komo,
 
   mlr::String arg = *symbols(0);
 
-  if( arg == "target_location" )  // tmp, pivot point and object location has to be deduced from the scene!!
+  if( arg == "target_location_1" )  // tmp, pivot point and object location has to be deduced from the scene!!
     komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
                                                       ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
                                                       OT_sumOfSqr, NoArr, 1e2 );
@@ -271,7 +273,7 @@ void groundHeadGetSight( double phase, const Graph& facts, Node *n, KOMO & komo,
 
 }
 
-void groundObserve( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
 
 }
@@ -287,7 +289,7 @@ void plan_BHTS()
   komoFactory.registerTask( "komoHandover"    , groundHandover );
   komoFactory.registerTask( "komoAttach"      , groundAttach );
   komoFactory.registerTask( "komoGetSight"    , groundHeadGetSight );
-  komoFactory.registerTask( "komoObserve"     , groundObserve );
+  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
 
   // instanciate search tree
   SearchSpaceTree C( komoFactory );
@@ -296,7 +298,7 @@ void plan_BHTS()
 //  C.prepareFol("LGP-obs-fol.g");
 //  C.prepareKin("LGP-obs-kin.g");
 
-  C.prepareFol("LGP-obs-fol-2.g");        // with two candidate positions
+  C.prepareFol("LGP-obs-fol-2-simple.g");        // with two candidate positions
   C.prepareKin("LGP-obs-kin-2.g");
 
   //C.prepareFol("LGP-coop-fol.g");
