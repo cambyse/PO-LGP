@@ -13,7 +13,9 @@ struct Roopi_private {
   // persistent acts
   Act_TaskController *_tcm = NULL;
   Act_CtrlTask *_holdPositionTask = NULL;
+  Act_Tweets *_tweets = NULL;
   Act *_ComRos=NULL, *_ComPR2=NULL;
+
 
   //-- logging
   struct LoggingModule *loggingModule = NULL;

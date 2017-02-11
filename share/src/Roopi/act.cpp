@@ -4,11 +4,12 @@
 
 Act::Act(Roopi *r)
   : roopi(*r), startTime(mlr::realTime()) {
-  roopi.acts.set()->append(this);
+  roopi.registerAct(this);
+  setValue(AS_create);
 }
 
 Act::~Act(){
-  roopi.acts.set()->removeValue(this);
+  roopi.deregisterAct(this);
 }
 
 double Act::time(){ return mlr::realTime()-startTime; }

@@ -12,6 +12,7 @@
 #include "act_ComRos.h"
 #include "act_ComPR2.h"
 #include "act_Thread.h"
+#include "act_Tweets.h"
 
 //struct Roopi_Path;
 //struct TaskReferenceInterpolAct;
@@ -63,6 +64,10 @@ struct Roopi {
 
   //-- compute and display the camera view
   void newCameraView();
+
+
+  void registerAct(Act*);
+  void deregisterAct(Act*);
 
 
 

@@ -2,21 +2,20 @@
 
 #include <Core/thread.h>
 
-enum ActStatus { AS_preStart=-1, AS_running, AS_done, AS_stalled, AS_converged };
+enum ActStatus { AS_create=-1, AS_running, AS_done, AS_stalled, AS_converged };
 
 struct Roopi;
 struct Act;
 typedef mlr::Array<Act*> ActL;
 
-struct Act{
+struct Act : ConditionVariable{
   Roopi& roopi;
   double startTime;
-  ConditionVariable status;
 
   Act(Roopi *r);
   virtual ~Act();
 
-  virtual ActStatus getStatus(){ return (ActStatus)status.getValue(); }
+  virtual ActStatus getStatus(){ return (ActStatus)getValue(); }
 
   double time();
 };

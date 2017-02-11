@@ -2,16 +2,7 @@
 #include "roopi-private.h"
 #include <Control/taskControl.h>
 
-//struct GlobalCtrlTasks{
-//  struct CtrlTaskUpdater* ctrlTaskUpdater= NULL;
-//  GlobalCtrlTasks();
-//  ~GlobalCtrlTasks();
-//};
-
-//Singleton<GlobalCtrlTasks> globalCtrlTasks;
-
 Act_CtrlTask::Act_CtrlTask(Roopi* r) : Act(r) {
-//  globalCtrlTasks();
 }
 
 Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
@@ -71,9 +62,9 @@ ActStatus Act_CtrlTask::getStatus(){
 
 WToken<CtrlTask> Act_CtrlTask::set(){
   CHECK(task, "this is not yet configured!");
-  if(status.getValue()!=0){
+  if(getValue()!=0){
     cout <<"resetting status: " <<task->name <<endl;
-    status.setValue(AS_running);
+    setValue(AS_running);
   }
   return WToken<CtrlTask>(*roopi.s->ctrlTasks.revLock, task);
 }

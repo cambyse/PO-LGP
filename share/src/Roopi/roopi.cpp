@@ -51,6 +51,7 @@ Roopi_private::~Roopi_private(){
   if(_ComPR2) delete _ComPR2;
   if(_holdPositionTask) delete _holdPositionTask;
   if(_tcm) delete _tcm;
+  if(_tweets) delete _tweets;
 
   if(ctrlView){ ctrlView->threadClose(); delete ctrlView; }
   //    if(holdPositionTask) delete holdPositionTask;
@@ -73,6 +74,7 @@ Roopi::Roopi(bool autoStartup)
       s->_ComPR2 = new Act_ComPR2(this);
     }
 
+    s->_tweets = new Act_Tweets(this);
     setKinematics(model);
     startTaskController();
   }
@@ -123,10 +125,10 @@ struct CtrlTaskUpdater : Thread {
         ctrlTasks.readAccess();
         bool conv = c->task->ref->isDone();
         ctrlTasks.deAccess();
-        bool sconv = (c->status.getValue()==AS_converged);
+        bool sconv = (c->getValue()==AS_converged);
         if(conv!=sconv){
           cout <<"setting status: " <<c->task->name <<" conv=" <<conv <<endl;
-          c->status.setValue(conv?AS_converged:AS_running);
+          c->setValue(conv?AS_converged:AS_running);
         }
       }
     }
@@ -222,11 +224,11 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
 #else
   double startTime = mlr::realTime();
   ConditionVariable waiter;
-  for(Act *act : acts) waiter.listenTo(&act->status);
+  for(Act *act : acts) waiter.listenTo(act);
   for(;;){
     waiter.mutex.lock();
     bool allConv = true;
-    for(Act *act : acts) if(act->status.getValue()<=0){ allConv=false; break; }
+    for(Act *act : acts) if(act->getValue()<=0){ allConv=false; break; }
     if(allConv){ waiter.mutex.unlock(); return true; }
     if(timeout>0){
       if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
@@ -238,7 +240,7 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
       waiter.waitForSignal(true);
     }
     allConv = true;
-    for(Act *act : acts) if(act->status.getValue()<=0){ allConv=false; break; }
+    for(Act *act : acts) if(act->getValue()<=0){ allConv=false; break; }
     if(allConv){ waiter.mutex.unlock(); return true; }
     waiter.mutex.unlock();
   }
@@ -251,6 +253,16 @@ void Roopi::newCameraView(){
   v->flipImage = true;
   v->threadOpen(true);
   new ComputeCameraView(30);
+}
+
+void Roopi::registerAct(Act* a){
+  acts.set()->append(a);
+  if(s->_tweets) s->_tweets->registerAct(a);
+}
+
+void Roopi::deregisterAct(Act* a){
+  if(s->_tweets) s->_tweets->deregisterAct(a);
+  acts.set()->removeValue(a);
 }
 
 mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
