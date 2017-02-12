@@ -210,7 +210,7 @@ void TEST(Gamepad){
       ctrl_ref.set() = refs;
     }
 
-    if(moduleShutdown().getValue()/* || !rosOk()*/) break;
+    if(moduleShutdown().getStatus()/* || !rosOk()*/) break;
   }
 
   threadCloseModules();

@@ -15,7 +15,7 @@ struct Act : ConditionVariable{
   Act(Roopi *r);
   virtual ~Act();
 
-  virtual ActStatus getStatus(){ return (ActStatus)getValue(); }
+//  virtual ActStatus getStatus(){ return (ActStatus)getStatus(); }
 
   double time();
 };

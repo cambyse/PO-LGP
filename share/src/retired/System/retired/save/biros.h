@@ -206,7 +206,7 @@ struct WorkingCopy {
     var=_v;
     var->readAccess(p);
     copy = *var;
-    last_revision = var->revision.getValue();
+    last_revision = var->revision.getStatus();
     var->deAccess(p);
     copy.name <<"_WorkingCopy_" <<(p?p->module->name:STRING("GLOBAL"));
   }
@@ -226,10 +226,10 @@ struct WorkingCopy {
     var->deAccess(p);
   }
   void pull() {
-    if (last_revision == var->revision.getValue()) return;
+    if (last_revision == var->revision.getStatus()) return;
     var->readAccess(p);
     copy = *var;
-    last_revision = var->revision.getValue();
+    last_revision = var->revision.getStatus();
     var->deAccess(p);
   }
 };

@@ -140,7 +140,7 @@ struct Engine{
   void close(System& S=NoSystem);
   void cancel(System& S=NoSystem);
 
-  void waitForShutdownSignal(){ moduleShutdown().waitForValueGreaterThan(0); }
+  void waitForShutdownSignal(){ moduleShutdown().waitForStatusGreaterThan(0); }
 
   /// @name event control
   void enableAccessLog();

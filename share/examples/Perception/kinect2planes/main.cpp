@@ -111,12 +111,12 @@ void TEST(Kinect2Planes){
 
 #if 0
   for(uint t=0;t<100;t++){
-    if(moduleShutdown().getValue()>0) break;
+    if(moduleShutdown().getStatus()>0) break;
     pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;
   }
 #else
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 #endif
 
   threadCloseModules();

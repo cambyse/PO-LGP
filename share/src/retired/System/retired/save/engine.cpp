@@ -226,19 +226,19 @@ void Engine::dumpAccessLog(){
 }
 
 void Engine::blockAllAccesses(){
-  acc->blockMode.setValue(2);
+  acc->blockMode.setStatus(2);
 }
 
 void Engine::unblockAllAccesses(){
-  acc->blockMode.setValue(0);
+  acc->blockMode.setStatus(0);
 }
 
 void Engine::stepToNextAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 void Engine::stepToNextWriteAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 
@@ -297,9 +297,9 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
 void EventController::queryReadAccess(Variable *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, 0.);
+    Event *e = new Event(v, p, Event::read, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2; //1: only ONE reader
     blockedEvents.removeValue(e);
     delete e;
@@ -310,9 +310,9 @@ void EventController::queryReadAccess(Variable *v, const Module *p){
 void EventController::queryWriteAccess(Variable *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, 0.);
+    Event *e = new Event(v, p, Event::write, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2;
     blockedEvents.removeValue(e);
     delete e;
@@ -322,7 +322,7 @@ void EventController::queryWriteAccess(Variable *v, const Module *p){
 
 void EventController::logReadAccess(const Variable *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  Event *e = new Event(v, p, Event::read, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -331,7 +331,7 @@ void EventController::logReadAccess(const Variable *v, const Module *p) {
 
 void EventController::logWriteAccess(const Variable *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  Event *e = new Event(v, p, Event::write, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();

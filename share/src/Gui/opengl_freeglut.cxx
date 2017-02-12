@@ -127,7 +127,7 @@ struct sOpenGL {
   
   static void _Void() { }
   static void _Draw() {
-    accessOpengl();  OpenGL *gl=SingleOpengl().glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); deaccessOpengl(); gl->isUpdating.setValue(0);
+    accessOpengl();  OpenGL *gl=SingleOpengl().glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); deaccessOpengl(); gl->isUpdating.setStatus(0);
   }
   static void _Key(unsigned char key, int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Key(key,x,y); deaccessOpengl(); }
   static void _Mouse(int button, int updown, int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Mouse(button,updown,x,y); deaccessOpengl(); }

@@ -100,7 +100,7 @@ void run() {
 
   // run it
   threadOpenModules(true);
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 
   cout << "bye bye" << endl;
   threadCloseModules();

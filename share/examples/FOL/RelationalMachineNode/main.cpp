@@ -110,7 +110,7 @@ void testIntegratedRM(){
   ServiceRAP RAPservice;
 
   threadOpenModules(true);
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
   threadCloseModules();
   cout <<"BYE BYE" <<endl;
 }

@@ -224,7 +224,7 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
     }else{
       waiter.waitForSignal();
     }
-    for(Act *act : acts) if(act->status.getValue()!=0){ go=false; break; }
+    for(Act *act : acts) if(act->status.getStatus()!=0){ go=false; break; }
   }
   return true;
 #endif
@@ -680,7 +680,7 @@ void TaskReferenceInterpolAct::step() {
     //cout << "finished" << endl;
     roopi.modifyCtrlTaskReference(task, reference);
     s = 1.0;
-    this->state.setValue(tsCLOSE); //TODO I have no glue if this is save :-)
+    this->state.setStatus(tsCLOSE); //TODO I have no glue if this is save :-)
   }
   arr actRef = initialRef + (reference - initialRef)*0.5*(1.0-cos(MLR_PI*s)); //TODO is this a good motion profile? Robotics lecture says yes :-)
   roopi.modifyCtrlTaskReference(task, actRef);

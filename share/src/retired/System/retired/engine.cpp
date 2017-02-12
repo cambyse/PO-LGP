@@ -75,7 +75,7 @@ System& NoSystem = *((System*)NULL);
 //  engine().acc->queryReadAccess(this, p);
 //  rwlock.readLock();
 //  engine().acc->logReadAccess(this, p);
-//  return revision.getValue();
+//  return revision.getStatus();
 //}
 
 //int Variable_SharedMemory::writeAccess(Module *m) {
@@ -98,7 +98,7 @@ System& NoSystem = *((System*)NULL);
 //  } else {
 //    engine().acc->logReadDeAccess(this,p);
 //  }
-//  int rev=revision.getValue();
+//  int rev=revision.getStatus();
 //  rwlock.unlock();
 //  return rev;
 //}
@@ -108,7 +108,7 @@ System& NoSystem = *((System*)NULL);
 //}
 
 //int Variable_SharedMemory::revisionNumber(){
-//  return revision.getValue();
+//  return revision.getStatus();
 //}
 
 //int Variable_SharedMemory::waitForNextRevision(){
@@ -121,7 +121,7 @@ System& NoSystem = *((System*)NULL);
 
 //int Variable_SharedMemory::waitForRevisionGreaterThan(int rev) {
 //  revision.lock();
-//  revision.waitForValueGreaterThan(rev, true);
+//  revision.waitForStatusGreaterThan(rev, true);
 //  rev = revision.value;
 //  revision.unlock();
 //  return rev;
@@ -393,19 +393,19 @@ void Engine::dumpAccessLog(){
 }
 
 void Engine::blockAllAccesses(){
-  acc->blockMode.setValue(2);
+  acc->blockMode.setStatus(2);
 }
 
 void Engine::unblockAllAccesses(){
-  acc->blockMode.setValue(0);
+  acc->blockMode.setStatus(0);
 }
 
 void Engine::stepToNextAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 void Engine::stepToNextWriteAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 
@@ -464,9 +464,9 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
 void EventController::queryReadAccess(RevisionedRWLock *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, 0.);
+    EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2; //1: only ONE reader
     blockedEvents.removeValue(e);
     delete e;
@@ -477,9 +477,9 @@ void EventController::queryReadAccess(RevisionedRWLock *v, const Module *p){
 void EventController::queryWriteAccess(RevisionedRWLock *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, 0.);
+    EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2;
     blockedEvents.removeValue(e);
     delete e;
@@ -489,7 +489,7 @@ void EventController::queryWriteAccess(RevisionedRWLock *v, const Module *p){
 
 void EventController::logReadAccess(const RevisionedRWLock *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -498,7 +498,7 @@ void EventController::logReadAccess(const RevisionedRWLock *v, const Module *p) 
 
 void EventController::logWriteAccess(const RevisionedRWLock *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();

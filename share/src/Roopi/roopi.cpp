@@ -47,13 +47,13 @@ Roopi_private::~Roopi_private(){
   modulesReportCycleTimes();
 
   //delete persistant acts
-  if(_ComRos) delete _ComRos; //shut of the spinner BEFORE you close the pubs/subscribers..
-  if(_ComPR2) delete _ComPR2;
-  if(_holdPositionTask) delete _holdPositionTask;
-  if(_tcm) delete _tcm;
-  if(_tweets) delete _tweets;
+  if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
+  if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
+  if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
+  if(_tweets) delete _tweets; _tweets=NULL;
+  if(_tcm) delete _tcm; _tcm=NULL;
 
-  if(ctrlView){ ctrlView->threadClose(); delete ctrlView; }
+  if(ctrlView){ ctrlView->threadClose(); delete ctrlView; } ctrlView=NULL;
   //    if(holdPositionTask) delete holdPositionTask;
   //    if(holdPositionTask2) delete holdPositionTask2;
   threadCloseModules();
@@ -99,7 +99,7 @@ void Roopi::setKinematics(const char* filename){
 }
 
 void Roopi::setKinematics(const mlr::KinematicWorld& K){
-  CHECK(s->modelWorld.get()->q.N==0, "has been set before???");
+//  CHECK(s->modelWorld.get()->q.N==0, "has been set before???");
   s->modelWorld.set() = K;
 
   if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
@@ -125,10 +125,10 @@ struct CtrlTaskUpdater : Thread {
         ctrlTasks.readAccess();
         bool conv = c->task->ref->isDone();
         ctrlTasks.deAccess();
-        bool sconv = (c->getValue()==AS_converged);
+        bool sconv = (c->getStatus()==AS_converged);
         if(conv!=sconv){
           cout <<"setting status: " <<c->task->name <<" conv=" <<conv <<endl;
-          c->setValue(conv?AS_converged:AS_running);
+          c->setStatus(conv?AS_converged:AS_running);
         }
       }
     }
@@ -226,23 +226,25 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
   ConditionVariable waiter;
   for(Act *act : acts) waiter.listenTo(act);
   for(;;){
-    waiter.mutex.lock();
     bool allConv = true;
-    for(Act *act : acts) if(act->getValue()<=0){ allConv=false; break; }
-    if(allConv){ waiter.mutex.unlock(); return true; }
-    if(timeout>0){
-      if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
-      if(!waiter.waitForSignal(timeout, true)){
-        cout << "not converged, timeout reached" << endl;
-        waiter.mutex.unlock(); return false;
+    for(Act *act : acts) if(act->getStatus()<=0) allConv=false;
+    if(allConv) return true;
+
+    waiter.statusLock();
+    if(waiter.status==0){ //no new signals
+      if(timeout>0){
+        if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
+        if(!waiter.waitForSignal(timeout, true)){
+          cout << "not converged, timeout reached" << endl;
+          waiter.statusUnlock(); return false;
+        }
+      }else{
+        waiter.waitForSignal(true);
       }
-    }else{
-      waiter.waitForSignal(true);
     }
-    allConv = true;
-    for(Act *act : acts) if(act->getValue()<=0){ allConv=false; break; }
-    if(allConv){ waiter.mutex.unlock(); return true; }
-    waiter.mutex.unlock();
+    waiter.status=0;
+    waiter.statusUnlock();
+
   }
   return true;
 #endif
@@ -257,11 +259,11 @@ void Roopi::newCameraView(){
 
 void Roopi::registerAct(Act* a){
   acts.set()->append(a);
-  if(s->_tweets) s->_tweets->registerAct(a);
+//  if(s->_tweets) s->_tweets->registerAct(a);
 }
 
 void Roopi::deregisterAct(Act* a){
-  if(s->_tweets) s->_tweets->deregisterAct(a);
+//  if(s->_tweets) s->_tweets->deregisterAct(a);
   acts.set()->removeValue(a);
 }
 
@@ -708,7 +710,7 @@ void TaskReferenceInterpolAct::step() {
     //cout << "finished" << endl;
     roopi.modifyCtrlTaskReference(task, reference);
     s = 1.0;
-    this->state.setValue(tsCLOSE); //TODO I have no glue if this is save :-)
+    this->state.setStatus(tsCLOSE); //TODO I have no glue if this is save :-)
   }
   arr actRef = initialRef + (reference - initialRef)*0.5*(1.0-cos(MLR_PI*s)); //TODO is this a good motion profile? Robotics lecture says yes :-)
   roopi.modifyCtrlTaskReference(task, actRef);

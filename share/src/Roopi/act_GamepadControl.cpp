@@ -68,7 +68,7 @@ void sAct_GamepadControl::step(){
   g2t->updateTasks(gamepad, modelWorld.get());
   ctrlTasks.deAccess();
 
-  if(stopButtons(gamepad)) P->setValue(AS_done);
+  if(stopButtons(gamepad)) P->setStatus(AS_done);
 
 //  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
 }

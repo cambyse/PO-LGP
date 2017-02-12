@@ -36,7 +36,7 @@ int main(int argc, char** argv){
     //-- run script
     threadOpenModules(true);
     rm.runScript("script.g");
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown().waitForStatusGreaterThan(0);
     threadCloseModules();
   }
 

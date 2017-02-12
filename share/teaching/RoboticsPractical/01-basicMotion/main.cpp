@@ -50,7 +50,7 @@ int main(int argc, char** argv){
 
 
     mlr::wait(5.);
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown().waitForStatusGreaterThan(0);
 
     //-- create a homing with
     CtrlTask homing("homing",
@@ -61,7 +61,7 @@ int main(int argc, char** argv){
     tcm.ctrlTasks.set() = { &homing };
 
     mlr::wait(5.);
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown().waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

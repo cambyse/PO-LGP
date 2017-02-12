@@ -49,24 +49,30 @@ void Act_CtrlTask::kill(){
   }
 }
 
-ActStatus Act_CtrlTask::getStatus(){
-  CHECK(task, "this is not yet configured!")
-  bool conv = false;
-  roopi.s->ctrlTasks.readAccess();
-  if(task->PD().isConverged(tolerance)) conv = true;
-  roopi.s->ctrlTasks.deAccess();
-  if(conv) return AS_converged; //status.setValue(AS_converged);
-  return AS_running; //status.setValue(AS_running);
-//  return (ActStatus)status.getValue();
-}
+//ActStatus Act_CtrlTask::getStatus(){
+//  HALT("not yere!");
+//  CHECK(task, "this is not yet configured!")
+//  bool conv = false;
+//  roopi.s->ctrlTasks.readAccess();
+//  if(task->PD().isConverged(tolerance)) conv = true;
+//  roopi.s->ctrlTasks.deAccess();
+//  if(conv) return AS_converged; //status.setStatus(AS_converged);
+//  return AS_running; //status.setStatus(AS_running);
+////  return (ActStatus)status.getStatus();
+//}
 
 WToken<CtrlTask> Act_CtrlTask::set(){
   CHECK(task, "this is not yet configured!");
-  if(getValue()!=0){
+  if(getStatus()!=0){
     cout <<"resetting status: " <<task->name <<endl;
-    setValue(AS_running);
+    setStatus(AS_running);
   }
   return WToken<CtrlTask>(*roopi.s->ctrlTasks.revLock, task);
+}
+
+RToken<CtrlTask> Act_CtrlTask::get(){
+  CHECK(task, "this is not yet configured!");
+  return RToken<CtrlTask>(*roopi.s->ctrlTasks.revLock, task);
 }
 
 void Act_CtrlTask::setMap(TaskMap* m){

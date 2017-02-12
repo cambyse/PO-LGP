@@ -58,7 +58,7 @@ void sAct_PathOpt::step(){
   bool stop = opt->step();
   x.set() = komo->x;
   if(stop){
-    status->setValue(AS_converged);
+    status->setStatus(AS_converged);
 
     cout <<"KOMO PathOpt done:\n" <<komo->getReport() <<endl;
     if(!viewer){

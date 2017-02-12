@@ -55,7 +55,7 @@ void RelationalMachineModule::step(){
   effects().clear();
   effects.deAccess();
 
-  LOG(1) <<std::setprecision(2) <<std::fixed <<mlr::realTime() <<"sec: it=" <<RM.data->revLock.revision.getValue()<<" EFFECT=" <<effs;
+  LOG(1) <<std::setprecision(2) <<std::fixed <<mlr::realTime() <<"sec: it=" <<RM.data->revLock.revision.getStatus()<<" EFFECT=" <<effs;
 
   RM.writeAccess();
   if(effs.N) RM().applyEffect(effs);
@@ -108,7 +108,7 @@ void RelationalMachineModule::setFact(const char* fact){
 void RelationalMachineModule::waitForCondition(const char* query){
   for(;;){
     if(RM.get()->queryCondition(query)) return;
-    if(stopWaiting.getValue()>0) return;
+    if(stopWaiting.getStatus()>0) return;
     state.waitForNextRevision();
   }
 }

@@ -75,7 +75,7 @@ int main(int argc, char** argv){
 
   lockbox.readyToTest = true;
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 
 
 

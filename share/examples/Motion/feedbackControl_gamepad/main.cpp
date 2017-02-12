@@ -50,7 +50,7 @@ void TEST(Simulator){
     }
     S.q_ref.set() = q;
     S.qdot_ref.set() = qdot;
-    if(moduleShutdown().getValue()) break; //waitForSignal();
+    if(moduleShutdown().getStatus()) break; //waitForSignal();
   }
 
   threadCloseModules();

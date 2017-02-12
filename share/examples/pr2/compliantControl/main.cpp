@@ -91,7 +91,7 @@ void tests() {
 
   FollowPath fp(R, "circle", traj, new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffR"), 15.0);
 fp.threadLoop();
-  //moduleShutdown().waitForValueGreaterThan(0);
+  //moduleShutdown().waitForStatusGreaterThan(0);
   */
 }
 
@@ -289,7 +289,7 @@ mlr::wait(100.0);
      if(orientationLaw->isConverged(.05)) break;
      cout <<"ori err=" <<orientationLaw->error() <<endl;
      mlr::wait(0.1);
-     if(moduleShutdown().getValue()>0) break;
+     if(moduleShutdown().getStatus()>0) break;
    }
    cout << "converged" << endl;
 
@@ -322,10 +322,10 @@ mlr::wait(100.0);
 //  for(;;){
 ////    cout <<R.tcm()->ctrl_obs.get()->fL <<endl;
 
-//    if(moduleShutdown().getValue()>0) break;
+//    if(moduleShutdown().getStatus()>0) break;
 //  }
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 
 #if 0
   threadCloseModules();

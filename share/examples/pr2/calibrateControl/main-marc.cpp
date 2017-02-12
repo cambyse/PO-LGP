@@ -192,7 +192,7 @@ void recordData() {
     }
   }
 
-  //  moduleShutdown().waitForValueGreaterThan(0);
+  //  moduleShutdown().waitForStatusGreaterThan(0);
 
   threadCloseModules();
   cout <<"bye bye" <<endl;

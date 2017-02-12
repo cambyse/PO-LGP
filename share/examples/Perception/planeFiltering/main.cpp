@@ -38,7 +38,7 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
-    for(;!moduleShutdown().getValue();){
+    for(;!moduleShutdown().getStatus();){
       perceptual_inputs.waitForNextRevision();
 
       uint i=0;

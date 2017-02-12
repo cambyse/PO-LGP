@@ -135,7 +135,7 @@ int main(int argc, char** argv){
 
       mlr::wait(10);
     }
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown().waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

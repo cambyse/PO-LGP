@@ -217,7 +217,7 @@ void TEST(PickAndPlace2) {
     R.hold(true);
   }
 
-  mlr::wait();
+//  mlr::wait();
 
 }
 
@@ -272,7 +272,7 @@ int main(int argc, char** argv){
 
 //  testPickAndPlace();
 
-  testPickAndPlace2();
+  for(;;) testPickAndPlace2();
 //  testGamepad();
 
 //  Prototyping();

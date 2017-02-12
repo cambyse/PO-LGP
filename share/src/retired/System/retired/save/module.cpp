@@ -37,7 +37,7 @@ int Variable::readAccess(Module *p) {
   engine().acc->queryReadAccess(this, p);
   rwlock.readLock();
   engine().acc->logReadAccess(this, p);
-  return revision.getValue();
+  return revision.getStatus();
 }
 
 int Variable::writeAccess(Module *p) {
@@ -58,7 +58,7 @@ int Variable::deAccess(Module *p) {
   } else {
     engine().acc->logReadDeAccess(this,p);
   }
-  int rev=revision.getValue();
+  int rev=revision.getStatus();
   rwlock.unlock();
   return rev;
 }
@@ -69,7 +69,7 @@ void Variable::waitForNextRevision(){
 
 int Variable::waitForRevisionGreaterThan(int rev) {
   revision.lock();
-  revision.waitForValueGreaterThan(rev, true);
+  revision.waitForStatusGreaterThan(rev, true);
   rev = revision.value;
   revision.unlock();
   return rev;

@@ -55,7 +55,7 @@ int main(int argc, char** argv){
     task.prec = ARR(0., 100., 0.);
 //    task.Kp = ARR(0., 20., 0.);
 
-    moduleShutdown().waitForValueGreaterThan(0);
+    moduleShutdown().waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

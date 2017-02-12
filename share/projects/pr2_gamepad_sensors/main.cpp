@@ -91,7 +91,7 @@ void TEST(Sensors){
   for(uint t=0;;t++){
     arr gamepadState = S.gamepadState.get();
     if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
-    if(moduleShutdown().getValue()>0) break;
+    if(moduleShutdown().getStatus()>0) break;
     S.gamepadState.waitForNextRevision();
 
     //-- update world

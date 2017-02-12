@@ -52,9 +52,9 @@ ActStatus Act_CtrlTask::getStatus(){
   roopi->s->ctrlTasks.readAccess();
   if(task->isConverged(tolerance)) conv = true;
   roopi->s->ctrlTasks.deAccess();
-  if(conv) return AS_converged; //status.setValue(AS_converged);
-  return AS_running; //status.setValue(AS_running);
-//  return (ActStatus)status.getValue();
+  if(conv) return AS_converged; //status.setStatus(AS_converged);
+  return AS_running; //status.setStatus(AS_running);
+//  return (ActStatus)status.getStatus();
 }
 
 WToken<CtrlTask> Act_CtrlTask::set(){
