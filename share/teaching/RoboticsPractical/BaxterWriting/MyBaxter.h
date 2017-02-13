@@ -12,7 +12,7 @@
 #include <RosCom/filterObject.h>
 #include <RosCom/publishDatabase.h>
 
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
@@ -37,7 +37,7 @@ class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
     ACCESSname(FilterObjects, object_database)
 
-    TaskControllerModule tcmBax;
+    TaskControlThread tcmBax;
     RosInit rosInit;    
 
     SubscribeTabletop tabletop_subscriber;
@@ -147,7 +147,7 @@ public:
     double getCollisionScalar();
 
     //-- inner access
-    struct TaskControllerModule& getTaskControllerModule();
+    struct TaskControlThread& getTaskControlThread();
 
     const mlr::KinematicWorld& getModelWorld();
     void sendJoints(const arr &q);

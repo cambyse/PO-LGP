@@ -4,26 +4,40 @@
 
 #include <Control/taskControl.h>
 
-struct Callbacks : GraphEditCallback {
-  Act_Tweets *T;
-  Callbacks(Act_Tweets *T) : T(T){}
-
-  virtual void cb_new(Node* n){
-    if(n->isOfType<Act*>()){
-      T->registerAct(n->get<Act*>());
-    }
-  }
-  virtual void cb_delete(Node* n){
-    if(n->isOfType<Act*>()){
-      T->deregisterAct(n->get<Act*>());
-    }
-  }
-};
 
 struct sAct_Tweets : Thread{
-  Callbacks callbacks;
 
-  sAct_Tweets(Act_Tweets *T) : Thread("Act_Tweets", -1.), callbacks(T){}
+  struct Callbacks : GraphEditCallback {
+    sAct_Tweets *T;
+    Callbacks(sAct_Tweets *T) : T(T){}
+
+    virtual void cb_new(Node* n){
+      if(n->isOfType<Act*>()) T->reg(n->get<Act*>());
+//      if(n->isOfType<Thread*>()) T->reg(n->get<Thread*>());
+    }
+    virtual void cb_delete(Node* n){
+      if(n->isOfType<Act*>()) T->dereg(n->get<Act*>());
+//      if(n->isOfType<Thread*>()) T->dereg(n->get<Thread*>());
+    }
+  } callbacks;
+
+  void reg(ConditionVariable* c){
+    if(c!=this){
+      stepMutex.lock();
+      listenTo(c);
+      stepMutex.unlock();
+    }
+  }
+
+  void dereg(ConditionVariable* c){
+    if(c!=this){
+      stepMutex.lock();
+      stopListenTo(c);
+      stepMutex.unlock();
+    }
+  }
+
+  sAct_Tweets(Act_Tweets *T) : Thread("Act_Tweets", -1.), callbacks(this){}
   virtual void open(){}
   virtual void close(){}
   virtual void step(){
@@ -63,18 +77,3 @@ Act_Tweets::~Act_Tweets(){
   delete s;
 }
 
-void Act_Tweets::registerAct(Act* a){
-  if(a!=this){
-    s->stepMutex.lock();
-    s->listenTo(a);
-    s->stepMutex.unlock();
-  }
-}
-
-void Act_Tweets::deregisterAct(Act* a){
-  if(a!=this){
-    s->stepMutex.lock();
-    s->stopListenTo(a);
-    s->stepMutex.unlock();
-  }
-}

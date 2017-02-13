@@ -82,7 +82,7 @@ struct MyBaxter{
 
   CtrlTask* gripTask;
   //-- inner access
-  struct TaskControllerModule& getTaskControllerModule();
+  struct TaskControlThread& getTaskControlThread();
 
   //-- info
   arr q0();

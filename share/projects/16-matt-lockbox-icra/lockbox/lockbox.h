@@ -4,7 +4,7 @@
 #include <Core/array.h>
 #include <Kin/kin.h>
 #include <RosCom/filterObject.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 #include "../interface/myBaxter.h"
 #include <unordered_map>

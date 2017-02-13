@@ -182,7 +182,7 @@ struct Roopi {
   double getCollisionConstraint(double margin = 0.1);
 
   // low-level ctr - use is discouraged!!
-  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
+  struct TaskControlThread* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 
   //-- TODO
 

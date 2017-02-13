@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Gui/color.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <limits>
 
 #include <boost/config.hpp>

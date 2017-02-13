@@ -9,8 +9,8 @@
 
 /// The task controller generates the message send to the RT_Controller
 /// the problem is defined by the list of CtrlTasks
-struct TaskControllerModule : Thread {
-  struct sTaskControllerModule *s;
+struct TaskControlThread : Thread {
+  struct sTaskControlThread *s;
 
   //protected access points
   ACCESS(arr, ctrl_q_real)
@@ -54,8 +54,8 @@ struct TaskControllerModule : Thread {
 
 
 public:
-  TaskControllerModule(const char* robot="none", const mlr::KinematicWorld& world = NoWorld);
-  ~TaskControllerModule();
+  TaskControlThread(const char* robot="none", const mlr::KinematicWorld& world = NoWorld);
+  ~TaskControlThread();
 
   void open();
   void step();

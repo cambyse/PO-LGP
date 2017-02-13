@@ -1,5 +1,5 @@
 #include <Core/thread.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Roopi/roopi.h>
 #include <Roopi/loggingModule.h>
 

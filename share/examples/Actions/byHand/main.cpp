@@ -2,7 +2,7 @@
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 // ============================================================================
 
@@ -64,7 +64,7 @@ void forceControl(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffL)");
 
   //-- direct access to the task controller -- a bit awkward, but generic
-  TaskControllerModule *taskController = getThread<TaskControllerModule>("TaskControllerModule");
+  TaskControlThread *taskController = getThread<TaskControlThread>("TaskControlThread");
   taskController->verbose = true;
 
 #if 0

@@ -96,7 +96,7 @@ struct Roopi {
   bool waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime = -1, double tolerance = 1e-2);
 
   // low-level ctr - use is discouraged!!
-  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
+  struct TaskControlThread* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 //  void addCtrlTask(CtrlTask* ct); ///< adds CtrlTask directly to the taskController
 //  void addCtrlTasks(CtrlTaskL cts); ///< adds multiple CtrlTasks directly to the taskController
 

@@ -1,6 +1,6 @@
 #include <Core/thread.h>
 #include <Roopi/roopi.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 #include <Roopi/act_followPath.h>
 
@@ -165,7 +165,7 @@ int main(int argc, char** argv){
 #if 0
 // =================================================================================================
 
-void setMoveUpTask(TaskControllerModule& tcm){
+void setMoveUpTask(TaskControlThread& tcm){
   TaskMap_Default *map = new TaskMap_Default(posTMT, tcm.modelWorld.get(), "endeffL");
   arr y;
   map->phi(y, NoArr, tcm.modelWorld.get());
@@ -180,7 +180,7 @@ void setMoveUpTask(TaskControllerModule& tcm){
 
 // =================================================================================================
 
-void setForceLimitTask(TaskControllerModule& tcm){
+void setForceLimitTask(TaskControlThread& tcm){
   TaskMap_Default *map = new TaskMap_Default(posTMT, tcm.modelWorld.get(), "endeffL");
   arr y;
   map->phi(y, NoArr, tcm.modelWorld.get());
@@ -231,7 +231,7 @@ mlr::wait(100.0);
   Access_typed<arr> q_ref(NULL, "q_ref");
   Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
 
   OrsViewer view;
   OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);

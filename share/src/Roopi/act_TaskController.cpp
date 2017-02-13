@@ -1,11 +1,11 @@
 #include "act_TaskController.h"
 #include "roopi.h"
 
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 Act_TaskController::Act_TaskController(Roopi* r)
   : Act(r){
-  tcm = new TaskControllerModule("none", NoWorld);
+  tcm = new TaskControlThread("none", NoWorld);
 
   tcm->threadLoop();
 }

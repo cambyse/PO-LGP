@@ -1,6 +1,6 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <RosCom/baxter.h>

@@ -2,7 +2,7 @@
 #include "roopi-private.h"
 
 #include <Algo/spline.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Motion/motion.h>
 #include <Optim/lagrangian.h>
 #include <Perception/viewer.h>
@@ -52,8 +52,10 @@ Roopi_private::~Roopi_private(){
   if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
   if(_tweets) delete _tweets; _tweets=NULL;
   if(_tcm) delete _tcm; _tcm=NULL;
+  if(_updater) delete _updater; _updater=NULL;
 
-  if(ctrlView){ ctrlView->threadClose(); delete ctrlView; } ctrlView=NULL;
+//  if(ctrlView){ ctrlView->threadClose(); delete ctrlView; } ctrlView=NULL;
+  if(ctrlView) delete ctrlView; ctrlView=NULL;
   //    if(holdPositionTask) delete holdPositionTask;
   //    if(holdPositionTask2) delete holdPositionTask2;
   threadCloseModules();
@@ -103,41 +105,11 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
   s->modelWorld.set() = K;
 
   if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
-    s->ctrlView = new OrsPoseViewer({"ctrl_q_ref", "ctrl_q_real"}, s->modelWorld.set());
+    s->ctrlView = new Act_Thread<OrsPoseViewer>(this, new OrsPoseViewer({"ctrl_q_ref", "ctrl_q_real"}, s->modelWorld.set()), false);
   } else {
-    s->ctrlView = new OrsPoseViewer({"ctrl_q_real"}, s->modelWorld.set());
+    s->ctrlView = new Act_Thread<OrsPoseViewer>(this, new OrsPoseViewer({"ctrl_q_real"}, s->modelWorld.set()), false);
   }
-  s->ctrlView->threadOpen();
 }
-
-struct CtrlTaskUpdater : Thread {
-  ACCESS(ActL, acts)
-  ACCESS(CtrlTaskL, ctrlTasks)
-
-  CtrlTaskUpdater() : Thread("CtrlTaskUpdater", .05) {}
-
-  virtual void open(){}
-  virtual void step(){
-    acts.readAccess();
-    for(Act *a:acts()){
-      Act_CtrlTask *c = dynamic_cast<Act_CtrlTask*>(a);
-      if(c && c->task){
-        ctrlTasks.readAccess();
-        bool conv = c->task->ref->isDone();
-        ctrlTasks.deAccess();
-        bool sconv = (c->getStatus()==AS_converged);
-        if(conv!=sconv){
-          cout <<"setting status: " <<c->task->name <<" conv=" <<conv <<endl;
-          c->setStatus(conv?AS_converged:AS_running);
-        }
-      }
-    }
-    acts.deAccess();
-  }
-  virtual void close(){}
-
-};
-
 
 Act_TaskController& Roopi::startTaskController(){
   if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(this);
@@ -146,7 +118,7 @@ Act_TaskController& Roopi::startTaskController(){
   s->_holdPositionTask->set()->PD().setGains(30., 10.);
   s->_holdPositionTask->start();
 
-  new Act_Thread<CtrlTaskUpdater>(this);
+  s->_updater = new Act_Thread<CtrlTaskUpdater>(this, new CtrlTaskUpdater, true);
 
   s->_tcm = new Act_TaskController(this);
   return *s->_tcm;
@@ -257,16 +229,6 @@ void Roopi::newCameraView(){
   new ComputeCameraView(30);
 }
 
-void Roopi::registerAct(Act* a){
-  acts.set()->append(a);
-//  if(s->_tweets) s->_tweets->registerAct(a);
-}
-
-void Roopi::deregisterAct(Act* a){
-//  if(s->_tweets) s->_tweets->deregisterAct(a);
-  acts.set()->removeValue(a);
-}
-
 mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   s->modelWorld.writeAccess();
   mlr::Shape *sh = new mlr::Shape(s->modelWorld(), NoBody);
@@ -275,7 +237,7 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   sh->color[0]=.8; sh->color[1]=sh->color[2]=.0;
   sh->size[0]=.1;
   sh->X.pos = sh->rel.pos = pos;
-  s->ctrlView->recopyKinematics(s->modelWorld());
+  s->ctrlView->thread->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
   return sh;
 }
@@ -287,7 +249,7 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
   sw1.apply(s->modelWorld());
   sw2.apply(s->modelWorld());
   s->modelWorld().getJointState(); //enforces that the q & qdot are recalculated!
-  s->ctrlView->recopyKinematics(s->modelWorld());
+  s->ctrlView->thread->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
 }
 
@@ -414,7 +376,7 @@ bool Roopi::waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime, dou
 
 
 
-TaskControllerModule* Roopi::tcm() {
+TaskControlThread* Roopi::tcm() {
   return s->tcm->tcm;
 }
 

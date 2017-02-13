@@ -1,6 +1,6 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <Actions/RelationalMachineModule.h>
@@ -18,7 +18,7 @@ int main(int argc, char** argv){
     Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
     //-- setup a more complex 'system', mainly composed of the TaskControlMethods and the RelationalMachine
-    TaskControllerModule tcm("baxter");
+    TaskControlThread tcm("baxter");
     RelationalMachineModule rm;
     ActivitySpinnerModule aspin;
 

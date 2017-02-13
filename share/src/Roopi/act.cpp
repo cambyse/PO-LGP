@@ -8,13 +8,13 @@ template<> const char* mlr::Enum<ActStatus>::names []={
 
 Act::Act(Roopi *r)
   : roopi(*r), startTime(mlr::realTime()) {
-  registryNode = registry().newNode<Act*>({"Act", "bla"}, {}, this);
-  roopi.registerAct(this);
+  registryNode = registry().newNode<Act*>({"Act", typeid(*this).name()}, {}, this);
+  roopi.acts.set()->append(this);
   setStatus(AS_create);
 }
 
 Act::~Act(){
-  roopi.deregisterAct(this);
+  roopi.acts.set()->removeValue(this);
   delete registryNode;
 }
 

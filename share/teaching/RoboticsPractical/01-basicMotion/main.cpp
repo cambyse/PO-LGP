@@ -1,6 +1,6 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <RosCom/baxter.h>
@@ -14,7 +14,7 @@ int main(int argc, char** argv){
 
     Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-    TaskControllerModule tcm("baxter");
+    TaskControlThread tcm("baxter");
     GamepadInterface gamepad;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
     SendPositionCommandsToBaxter spctb;

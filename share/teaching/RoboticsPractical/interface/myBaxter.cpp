@@ -2,7 +2,7 @@
 
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Kin/kinViewer.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
@@ -26,7 +26,7 @@ struct MyBaxter_private{
   ACCESSname(FilterObjects, object_database)
   ACCESSname(mlr::KinematicWorld, modelWorld)
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
 
   RosInit rosInit;
 //  SubscribeTabletop tabletop_subscriber;
@@ -532,7 +532,7 @@ double MyBaxter::getCollisionScalar(){
   return y.scalar();
 }
 
-TaskControllerModule& MyBaxter::getTaskControllerModule(){
+TaskControlThread& MyBaxter::getTaskControlThread(){
   return s->tcm;
 }
 

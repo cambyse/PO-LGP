@@ -49,8 +49,8 @@ struct Roopi {
   Act_CtrlTask newCtrlTask()         { return Act_CtrlTask(this); }
   Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
   Act_CtrlTask newCtrlTask(const char* specs);
-  void hold(bool still);  // hold the robot still
-  Act_CtrlTask* home();   // homing (TODO: slower)
+  void hold(bool still);
+  Act_CtrlTask* home();
 
   //-- activate gamepad to set controls
   Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
@@ -64,11 +64,6 @@ struct Roopi {
 
   //-- compute and display the camera view
   void newCameraView();
-
-
-  void registerAct(Act*);
-  void deregisterAct(Act*);
-
 
 
 #if 0
@@ -104,7 +99,7 @@ struct Roopi {
   bool waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime = -1, double tolerance = 1e-2);
 
   // low-level ctr - use is discouraged!!
-  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
+  struct TaskControlThread* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 //  void addCtrlTask(CtrlTask* ct); ///< adds CtrlTask directly to the taskController
 //  void addCtrlTasks(CtrlTaskL cts); ///< adds multiple CtrlTasks directly to the taskController
 
@@ -175,52 +170,3 @@ struct Roopi {
 
 };
 
-//==============================================================================
-
-#if 0
-struct Roopi_CtrlTask{
-  Roopi &roopi;
-  CtrlTask *task;
-  Roopi_CtrlTask(Roopi& r, CtrlTask *t) : roopi(r), task(t) {}
-};
-
-//==============================================================================
-
-struct Roopi_Path{
-  Roopi &roopi;
-  mlr::KinematicWorld K;
-  arr path;
-  double executionTime;
-  double cost;
-  double constraints;
-  bool isGood;
-  Roopi_Path(Roopi& r, double executionTime) : roopi(r), executionTime(executionTime), isGood(false){
-    roopi.copyModelWorld(K);
-  }
-};
-
-
-
-//==============================================================================
-
-struct TaskReferenceInterpolAct : Thread {
-  Roopi& roopi;
-  CtrlTask* task;
-  double executionTime;
-  arr reference;
-  arr initialRef;
-  double startTime;
-
-  TaskReferenceInterpolAct(Roopi& roopi, const char* name, CtrlTask* task);
-  ~TaskReferenceInterpolAct();
-
-  void startExecution(double executionTime, const arr& reference, const arr& startState = NoArr);
-  void stopExecution();
-
-  void open();
-  void step();
-  void close();
-};
-
-//==============================================================================
-#endif

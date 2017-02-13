@@ -3,7 +3,7 @@
 #include "act.h"
 
 struct Act_TaskController : Act{
-  struct TaskControllerModule *tcm = NULL;
+  struct TaskControlThread *tcm = NULL;
 
   Act_TaskController(Roopi *r);
   ~Act_TaskController();

@@ -2,7 +2,7 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv){
   Access_typed<arr> q_ref(NULL, "q_ref");
   Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
 //  OrsViewer view;

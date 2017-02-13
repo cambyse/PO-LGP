@@ -2,7 +2,7 @@
 #include "roopi-private.h"
 
 #include <Algo/spline.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Motion/motion.h>
 #include <Optim/lagrangian.h>
 #include <Perception/viewer.h>
@@ -133,7 +133,7 @@ Act_TaskController& Roopi::startTaskController(){
   s->_holdPositionTask.start();
 
 //  CHECK(!s->tcm,"");
-//  s->tcm = new TaskControllerModule("none", NoWorld);
+//  s->tcm = new TaskControlThread("none", NoWorld);
 //  s->tcm->threadLoop();
 //  s->tcm->waitForOpened();
 //  return {s->tcm->name, s->tcm};
@@ -384,7 +384,7 @@ bool Roopi::waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime, dou
 
 
 
-TaskControllerModule* Roopi::tcm() {
+TaskControlThread* Roopi::tcm() {
   return s->tcm->tcm;
 }
 

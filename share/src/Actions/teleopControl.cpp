@@ -1,12 +1,12 @@
 #include "teleopControl.h"
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Control/teleop2tasks.h>
 
 //===========================================================================
 
 TeleopControlActivity::TeleopControlActivity()
   : Thread("TeleopControlActivity", 0.01), taskController(NULL), t2t(NULL){
-  taskController = getThread<TaskControllerModule>("TaskControllerModule");
+  taskController = getThread<TaskControlThread>("TaskControlThread");
   CHECK(taskController,"that didn't work");
 }
 

@@ -1,5 +1,5 @@
 #include "act_GamepadControl.h"
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Control/gamepad2tasks.h>
 #include <Hardware/gamepad/gamepad.h>
 #include "roopi.h"
@@ -49,7 +49,7 @@ void sAct_GamepadControl::open(){
 
 void sAct_GamepadControl::step(){
   if(!g2t){
-    TaskControllerModule *taskController = getThread<TaskControllerModule>("TaskControllerModule");
+    TaskControlThread *taskController = getThread<TaskControlThread>("TaskControlThread");
     CHECK(taskController,"that didn't work");
     taskController->waitForOpened();
     tc = taskController->taskController;

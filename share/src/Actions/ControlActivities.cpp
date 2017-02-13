@@ -1,10 +1,10 @@
 #include <Control/taskControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include "SensorActivities.h"
 #include "ControlActivities.h"
 
 void ControlActivity::configure() {
-  taskController = getThread<TaskControllerModule>("TaskControllerModule");
+  taskController = getThread<TaskControlThread>("TaskControlThread");
   CHECK(taskController,"that didn't work");
   configureControl(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);

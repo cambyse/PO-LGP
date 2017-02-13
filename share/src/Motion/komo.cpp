@@ -288,7 +288,7 @@ void KOMO::setVelocity(double startTime, double endTime, const char* shape, cons
 }
 
 void KOMO::setLastTaskToBeVelocity(){
-  MP->tasks.last()->map.order = 1; //set to be velocity!
+  MP->tasks.last()->map->order = 1; //set to be velocity!
 }
 
 void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose, double weightFromTop){
@@ -722,15 +722,15 @@ void setTasks(MotionProblem& MP,
 
   t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);
   if(timeSteps!=0){
-    t->map.order=2; //make this an acceleration task!
+    t->map->order=2; //make this an acceleration task!
   }else{
-    t->map.order=1; //make this a velocity task!
+    t->map->order=1; //make this a velocity task!
   }
   t->setCostSpecs(0, MP.T-1, {0.}, 1e0);
 
   if(timeSteps!=0){
     t = MP.addTask("final_vel", new TaskMap_qItself(), OT_sumOfSqr);
-    t->map.order=1; //make this a velocity task!
+    t->map->order=1; //make this a velocity task!
     t->setCostSpecs(MP.T-4, MP.T-1, {0.}, zeroVelPrec);
   }
 

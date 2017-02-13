@@ -43,7 +43,6 @@ void Act_CtrlTask::stop(){
 void Act_CtrlTask::kill(){
   if(task){
     roopi.s->ctrlTasks.set()->removeValue(task);
-    delete task->map;
     delete task;
     task = NULL;
   }
@@ -67,12 +66,12 @@ WToken<CtrlTask> Act_CtrlTask::set(){
     cout <<"resetting status: " <<task->name <<endl;
     setStatus(AS_running);
   }
-  return WToken<CtrlTask>(*roopi.s->ctrlTasks.revLock, task);
+  return WToken<CtrlTask>(*roopi.s->ctrlTasks.data, task);
 }
 
 RToken<CtrlTask> Act_CtrlTask::get(){
   CHECK(task, "this is not yet configured!");
-  return RToken<CtrlTask>(*roopi.s->ctrlTasks.revLock, task);
+  return RToken<CtrlTask>(*roopi.s->ctrlTasks.data, task);
 }
 
 void Act_CtrlTask::setMap(TaskMap* m){

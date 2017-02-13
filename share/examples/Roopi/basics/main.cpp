@@ -157,9 +157,7 @@ void TEST(PickAndPlace2) {
 //  R.newCameraView();
 //  R.taskController().verbose(1);
 
-  if(true){
-
-
+  {
     //attention
     auto look = R.newCtrlTask("type=gazeAt ref1=endeffKinect ref2=obj1 PD=[1 .9 0 0]");
     auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
@@ -272,9 +270,10 @@ int main(int argc, char** argv){
 
 //  testPickAndPlace();
 
-  for(;;) testPickAndPlace2();
+  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();
 
 //  Prototyping();
+//  cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
   return 0;
 }

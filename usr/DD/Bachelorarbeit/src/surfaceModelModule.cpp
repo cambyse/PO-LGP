@@ -1,6 +1,6 @@
 #include "surfaceModelModule.h"
 
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Control/RTControllerSimulation.h>
 #include <Kin/kinViewer.h>
 #include <Gui/opengl.h>

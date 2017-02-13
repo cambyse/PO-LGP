@@ -1,4 +1,4 @@
-#include "TaskControllerModule.h"
+#include "TaskControlThread.h"
 #include <Gui/opengl.h>
 #include <RosCom/baxter.h>
 
@@ -9,15 +9,15 @@ void lowPassUpdate(arr& lowPass, const arr& signal, double rate=.1){
 }
 
 #ifdef MLR_ROS
-struct sTaskControllerModule{
+struct sTaskControlThread{
    ACCESSname(sensor_msgs::JointState, jointState)
 };
 #else
-struct sTaskControllerModule{};
+struct sTaskControlThread{};
 #endif
 
-TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::KinematicWorld& world)
-  : Thread("TaskControllerModule", .01)
+TaskControlThread::TaskControlThread(const char* _robot, const mlr::KinematicWorld& world)
+  : Thread("TaskControlThread", .01)
   , s(NULL)
   , taskController(NULL)
   , oldfashioned(true)
@@ -30,7 +30,7 @@ TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::Kinema
   , compensateFTSensors(false)
 {
 
-  s = new sTaskControllerModule();
+  s = new sTaskControlThread();
   useRos = mlr::getParameter<bool>("useRos",false);
   oldfashioned = mlr::getParameter<bool>("oldfashinedTaskControl", true);
   useDynSim = !oldfashioned && !useRos; //mlr::getParameter<bool>("useDynSim", true);
@@ -73,7 +73,11 @@ TaskControllerModule::TaskControllerModule(const char* _robot, const mlr::Kinema
   fRInitialOffset = ARR(-0.17119, 0.544316, -1.2, 0.023718, 0.00802182, 0.0095804);
 }
 
-void TaskControllerModule::open(){
+TaskControlThread::~TaskControlThread(){
+  if(s) delete s; s=NULL;
+}
+
+void TaskControlThread::open(){
   modelWorld.set() = realWorld;
   modelWorld.get()->getJointState(q_model, qdot_model);
   makeConvexHulls(modelWorld.set()->shapes);
@@ -96,7 +100,7 @@ void TaskControllerModule::open(){
 }
 
 
-void TaskControllerModule::step(){
+void TaskControlThread::step(){
   static uint t=0;
   t++;
 
@@ -231,6 +235,6 @@ void TaskControllerModule::step(){
   }
 }
 
-void TaskControllerModule::close(){
+void TaskControlThread::close(){
   delete taskController;
 }

@@ -2,7 +2,7 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <Algo/MLcourse.h>
@@ -126,7 +126,7 @@ void recordData() {
   Access_typed<arr> q_ref(NULL, "q_ref");
   Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   OrsViewer view;
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 

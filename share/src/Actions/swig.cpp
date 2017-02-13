@@ -2,7 +2,7 @@
 
 #include <Logic/fol.h>
 #include <Kin/kin.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
@@ -54,7 +54,7 @@ struct SwigSystem {
 
   ACCESSname(arr, gamepadState)
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   RelationalMachineModule rmm;
   OrsViewer orsviewer;
   OrsPoseViewer controlview;

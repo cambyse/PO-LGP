@@ -1,12 +1,12 @@
 #include "gamepadControl.h"
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Control/gamepad2tasks.h>
 
 //===========================================================================
 
 GamepadControlActivity::GamepadControlActivity()
   : Thread("GamepadControlActivity", 0.01), taskController(NULL), g2t(NULL){
-  taskController = getThread<TaskControllerModule>("TaskControllerModule");
+  taskController = getThread<TaskControlThread>("TaskControlThread");
   CHECK(taskController,"that didn't work");
 }
 

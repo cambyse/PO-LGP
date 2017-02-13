@@ -1,7 +1,7 @@
 #include <Core/thread.h>
 #include <RosCom/roscom.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Perception/perception.h>
 #include <Kin/kinViewer.h>
@@ -16,7 +16,7 @@ int main(int argc, char** argv){
   ACCESSname(arr, pr2_odom)
   ACCESSname(byteA, modelCameraView)
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
   OrsViewer orsviewer("modelWorld", true);

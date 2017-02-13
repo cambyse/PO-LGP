@@ -26,7 +26,7 @@ struct TeleopControlActivity : Activity, Thread {
 
   ACCESS(arr, drive)
 
-  struct TaskControllerModule *taskController;
+  struct TaskControlThread *taskController;
   struct Teleop2Tasks *t2t;
 
   TeleopControlActivity();

@@ -1,6 +1,6 @@
 #include <Core/thread.h>
 #include <Roopi/roopi.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 void basicRoopi() {
 #if 1

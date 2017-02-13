@@ -2,14 +2,13 @@
 
 template<class T> struct Act_Thread : Act{
   T* thread;
-  Act_Thread(Roopi *r, bool loop=true)
-    : Act(r){
-    thread = new T;
+  Act_Thread(Roopi *r, T* th, bool loop=true)
+    : Act(r), thread(th){
     if(loop) thread->threadLoop();
     else thread->threadOpen();
   }
   ~Act_Thread(){
-    thread->close();
+    thread->threadClose();
     delete thread;
   }
 };

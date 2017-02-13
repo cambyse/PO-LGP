@@ -6,7 +6,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Roopi/roopi.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Ors/orsviewer.h>
 #include <Algo/ann.h>
 
