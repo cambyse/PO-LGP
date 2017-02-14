@@ -115,8 +115,12 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   // Pose level
   { //optimize a pose
     MNode* n = popBest(C.poseFringe, poseHeuristic);
+
     if(n)
     {
+      //for( auto a : n->getTreePath() )
+      //std::cout << "action:" << a->actionId << std::endl;
+
       //      cout <<"### POSE TESTING node " <<*n <<endl;
       //      mlr::wait();
       n->solvePoseProblem();

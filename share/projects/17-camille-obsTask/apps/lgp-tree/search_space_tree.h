@@ -7,7 +7,6 @@
 class SearchSpaceTree{
 public: // public members
   FOL_World fol;      // first order logic symbols
-
   ActionNode *root,*node; // root and "current" node
 
   OrsPathViewer poseView;
@@ -45,6 +44,9 @@ public: // public methods
 private: // private methods
 
 private: // private members
+  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  arr bs_;  // initial belief state
+
   mlr::KinematicWorld kin;
 
   KOMOFactory komoFactory_;

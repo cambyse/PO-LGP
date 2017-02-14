@@ -29,21 +29,44 @@ void SearchSpaceTree::prepareKin( const std::string & kinDescription ){
 }
 
 void SearchSpaceTree::prepareFol( const std::string & folDescription ){
-  // get number of worlds
-  //Graph KB;
-  //KB.read(FILE(folDescription.c_str()));
-  //auto bs = &KB.get<Graph>("BELIEF_START_STATE");
-  //bs->d;
+  // get number of possible worlds
+  Graph KB;
+  KB.read(FILE(folDescription.c_str()));
+  auto bsGraph = &KB.get<Graph>("BELIEF_START_STATE");
+  uint nWorlds = bsGraph->d0;
 
   // generate all the possible fol
-  fol.init(FILE(folDescription.c_str()));
+  folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( nWorlds );
+  bs_ = arr( nWorlds );
+  for( uint w = 0; w < nWorlds; w++ )
+  {
+    // retrieve the facts of the belief state
+    std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
+    fol->init(FILE(folDescription.c_str()));
+    auto n = bsGraph->elem(w);
+    StringA fact;
+    // add fact
+    for( auto s : n->parents ) fact.append( s->keys.last() );//std::cout << n->parents.last()->keys << std::endl;
+    fol->addFact(fact);
 
+    // tag this fact as not observable
+    StringA notObservableFact; notObservableFact.append( "NOT_OBSERVABLE" );
+    for( auto s : fact ) notObservableFact.append( s );
+
+    fol->addFact(notObservableFact);
+    fol->reset_state();
+
+    //std::cout << *fol << std::endl; // tmp
+    folWorlds_(w) = fol;
+    bs_(w) = n->get<double>();
+  }
+
+  fol.init(FILE(folDescription.c_str()));
   fol.reset_state();
-  FILE("z.start.fol") <<fol;
 }
 
 void SearchSpaceTree::prepareTree(){
-  root = new ActionNode(kin, fol, komoFactory_);
+  root = new ActionNode(kin, fol, folWorlds_, bs_, komoFactory_);
   node = root;
 }
 

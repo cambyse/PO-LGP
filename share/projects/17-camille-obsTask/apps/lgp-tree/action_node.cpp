@@ -14,6 +14,9 @@
 
 
 #include "action_node.h"
+
+#include <list>
+
 #include <MCTS/solver_PlainMC.h>
 
 #define DEBUG(x) //x
@@ -65,7 +68,7 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
     StringL symbols;
     for(Node *p:n->parents) symbols.append(&p->keys.last());// gather symbols
 
-    if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
+    if(n->keys.N && tasks_.count( n->keys.last() ) != 0 )
     {
       mlr::String type = n->keys.last();
       tasks_[ type ]( phase, facts, n, *this, verbose ); // ground the symbol
@@ -78,11 +81,19 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
 }
 
 //===========================================================================
-ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFactory & komoFactory )
+ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World & _fol, mlr::Array< std::shared_ptr<FOL_World> > & folWorlds, const arr & bs, const KOMOFactory & komoFactory )
   : parent(NULL), s(0),
-    fol(_fol), folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
+    fol(_fol),
+    folWorlds_( folWorlds ),
+    bs_( bs ),
+    folState(NULL),
+    folStates_( folWorlds.d0 ),
+    folDecision(NULL), folReward(0.), folAddToState(NULL),
+    actionId( -1 ),
     startKinematics(kin), effKinematics(),
-    rootMC(NULL), mcStats(NULL),
+    //rootMC(NULL),
+    mcStats(NULL),
+    rootMcEngines_(folWorlds.d0),
     komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
     mcCount(0), poseCount(0), seqCount(0), pathCount(0),
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
@@ -93,15 +104,28 @@ ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFact
   //this is the root node!
   fol.reset_state();
   folState = fol.createStateCopy();
-  rootMC = new PlainMC(fol);
-  rootMC->verbose = 0;
+  //rootMC = new PlainMC(fol);
+  //rootMC->verbose = 0;
+
+  for( auto w = 0 ; w < folWorlds.d0; w++ )
+  {
+    folWorlds(w)->reset_state();
+    folStates_(w).reset( folWorlds(w)->createStateCopy() );
+    rootMcEngines_(w) = std::make_shared< PlainMC >( *folWorlds(w) );
+    rootMcEngines_(w)->verbose = 0;
+  }
 }
 
-ActionNode::ActionNode(ActionNode* parent, MCTS_Environment::Handle& a, const KOMOFactory & komoFactory )
+ActionNode::ActionNode(ActionNode* parent, std::size_t a, const KOMOFactory & komoFactory )
   : parent(parent), fol(parent->fol),
-     folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
+    folWorlds_( parent->folWorlds_ ),
+    bs_( parent->bs_ ),
+    folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
+    actionId( a ),
+    folStates_( folWorlds_.d0 ),
     startKinematics(parent->startKinematics), effKinematics(),
-    rootMC(NULL), mcStats(NULL),
+    //rootMC(NULL),
+    mcStats(NULL),
     komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
     mcCount(0), poseCount(0), seqCount(0), pathCount(0),
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
@@ -112,21 +136,42 @@ ActionNode::ActionNode(ActionNode* parent, MCTS_Environment::Handle& a, const KO
   s=parent->s+1;
   parent->children.append(this);
   fol.setState(parent->folState, parent->s);
-  CHECK(a,"giving a 'NULL' shared pointer??");
-  fol.transition(a);
+  auto action = fol.get_actions()[actionId];
+  CHECK(action,"giving a 'NULL' shared pointer??");
+  //fol.verbose = 3;
+  fol.transition(action);
+
+  for( auto w = 0 ; w < folWorlds_.d0; w++ )
+  {
+    folWorlds_(w)->setState(parent->folStates_(w).get(), parent->s);
+    auto action = folWorlds_(w)->get_actions()[actionId];
+    CHECK(action,"giving a 'NULL' shared pointer??");
+    //std::cout << "folWorlds_(w):" << *folWorlds_(w) << std::endl;
+    //std::cout << "a:" << *a << std::endl;
+    //folWorlds_(w)->verbose = 3;
+    folWorlds_(w)->transition(action);
+    folStates_(w).reset( folWorlds_(w)->createStateCopy() );
+  }
   time=parent->time+fol.lastStepDuration;
   folReward = fol.lastStepReward;
-  isTerminal = fol.successEnd;
+  //isTerminal = fol.successEnd;
+  //if( isTerminal )
+  //  std::cout << "terminal node!" << std::endl;
+  bool tmp = true;
+  for( auto w = 0 ; w < folWorlds_.d0; w++ ) tmp = tmp && folWorlds_(w)->successEnd;
+  isTerminal = tmp;
+
   if(fol.deadEnd) isInfeasible=true;
   folState = fol.createStateCopy();
   folAddToState = NULL; //fresh creation -> notion to add
   folDecision = folState->getNode("decision");
-  decision = a;
-  rootMC = parent->rootMC;
+  decision = fol.get_actions()[a];
+  //rootMC = parent->rootMC;
+  rootMcEngines_ = parent->rootMcEngines_;
 }
 
 void ActionNode::expand(){
-  CHECK(!isExpanded,"");
+  /*CHECK(!isExpanded,"");
   if(isTerminal) return;
   fol.setState(folState, s);
   auto actions = fol.get_actions();
@@ -134,49 +179,131 @@ void ActionNode::expand(){
 //    cout <<"  EXPAND DECISION: " <<*a <<endl;
     new ActionNode(this, a, komoFactory_);
   }
-  if(!children.N) isTerminal=true;
+  if(!children.N) isTerminal=true;*/
+
+//  CHECK(!isExpanded,"");
+//  if(isTerminal) return;
+//  for( auto w = 0; w < folWorlds_.d0; w++ )
+//  {
+//    folWorlds_(w)->setState(folStates_(w).get(), s);
+//    auto actions = folWorlds_(w)->get_actions();
+//    for(FOL_World::Handle& a:actions){
+//      //    cout <<"  EXPAND DECISION: " <<*a <<endl;
+//      new ActionNode(this, a, komoFactory_);
+//    }
+//  }
+//  if(!children.N) isTerminal=true;
+
+    CHECK(!isExpanded,"");
+    if(isTerminal) return;
+
+    // determine the possible action set in each world and store it in the map
+    std::map< std::list< std::size_t >, std::list< std::size_t > > possibleActionSetMap;
+
+    for( auto w = 0; w < folWorlds_.d0; w++ )
+    {
+      folWorlds_(w)->setState(folStates_(w).get(), s);
+      auto actions = folWorlds_(w)->get_actions();
+      folWorlds_(w)->getState();
+
+      std::list< std::size_t > actionsHashs;
+      //std::cout << "actions possible in world(" << w << "):" << std::endl;
+      for(FOL_World::Handle& a:actions)
+      {
+        //cout <<*a << " " << a << " " << a->get_hash() << endl;
+        actionsHashs.push_back( a->get_hash() );
+      }
+      possibleActionSetMap[ actionsHashs ].push_back( w );
+    }
+
+    // Create nodes
+    for( auto actionMapping : possibleActionSetMap )
+    {
+      auto actions = actionMapping.first;
+      auto worlds  = actionMapping.second;
+
+      for( auto a : actions )
+        new ActionNode(this, a, komoFactory_);
+    }
+
   isExpanded=true;
 }
 
 arr ActionNode::generateRootMCRollouts(uint num, int stepAbort, const mlr::Array<MCTS_Environment::Handle>& prefixDecisions){
   CHECK(!parent, "generating rollouts needs to be done by the root only");
 
-  fol.reset_state();
-//  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
-  if(!rootMC){
-    rootMC = new PlainMC(fol);
-    rootMC->verbose = 0;
-  }
-
-  arr R;
+//  fol.reset_state();
+////  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
+  /*arr R;
 
   for(uint k=0;k<num;k++){
     rootMC->initRollout(prefixDecisions);
     fol.setState(folState);
     double r = rootMC->finishRollout(stepAbort);
     R.append( r );
-  }
+  }*/
+  arr R;
 
+  for(uint k=0;k<num;k++)
+  {
+    double expectedReward = 0;
+    for( auto w = 0; w < folWorlds_.d0; ++w )
+    {
+        folWorlds_(w)->reset_state();
+      //  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
+      rootMcEngines_(w)->initRollout(prefixDecisions);
+      folWorlds_(w)->setState(folStates_(w).get());
+      double r = bs_(w) * rootMcEngines_(w)->finishRollout(stepAbort);
+      expectedReward += bs_(w) * r;
+    }
+
+    R.append( expectedReward );
+  }
   return R;
 }
 
 void ActionNode::addMCRollouts(uint num, int stepAbort){
   //-- collect decision path
   ActionNodeL treepath = getTreePath();
-  mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
+  //mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
+  mlr::Array<std::size_t> prefixDecisionIds(treepath.N-1);
   for(uint i=1;i<treepath.N;i++)
-    prefixDecisions(i-1) = treepath(i)->decision;
+    prefixDecisionIds(i-1) = treepath(i)->actionId;
 
-//  cout <<"DECISION PATH = "; listWrite(prefixDecisions); cout <<endl;
+ // cout <<"DECISION PATH = "; listWrite(prefixDecisionIds); cout <<endl;
 
   arr R;
-  for(uint k=0;k<num;k++){
+  /*for(uint k=0;k<num;k++){
     rootMC->initRollout(prefixDecisions);
     fol.setState(folState);
     double r = rootMC->finishRollout(stepAbort);
     R.append( r );
   }
 
+  // the gathered rewards are inserted into the previous nodes
+  for(ActionNode* n:treepath){
+    if(!n->mcStats) n->mcStats = new MCStatistics;
+    for(auto& r:R){
+      n->mcStats->add(r);                  // is kept sorted!
+      n->symCost = - n->mcStats->X.first();// take the best
+    }
+  }*/
+  for(uint k=0;k<num;k++)
+  {
+    double expectedReward = 0;
+    for( auto w = 0; w < folWorlds_.d0; ++w )
+    {
+      mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
+      for( auto a = 0; a < treepath.N-1; ++a )
+        prefixDecisions(a) = folWorlds_(w)->get_actions()[prefixDecisionIds(a)];
+
+      rootMcEngines_(w)->initRollout(prefixDecisions);
+      folWorlds_(w)->setState(folStates_(w).get());
+      double r = rootMcEngines_(w)->finishRollout(stepAbort);
+      expectedReward += bs_(w) * r;
+    }
+    R.append( expectedReward );
+  }
   // the gathered rewards are inserted into the previous nodes
   for(ActionNode* n:treepath){
     if(!n->mcStats) n->mcStats = new MCStatistics;

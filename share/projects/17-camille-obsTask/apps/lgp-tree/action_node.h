@@ -68,11 +68,15 @@ struct ActionNode{
 
   //-- info on the state and action this node represents
   FOL_World& fol; ///< the symbolic KB (all Graphs below are subgraphs of this large KB)
-  //pobs//List of FOL_World?
+  mlr::Array< std::shared_ptr<FOL_World> > & folWorlds_;
+  arr bs_;  // initial belief state
+
   FOL_World::Handle decision; ///< the decision that led to this node
   //pobs//FOL_World::Handle observation; ///< the observation that led to this node
-  Graph *folState;    ///< the symbolic state after the decision //and observation
+  Graph *folState;    ///< the symbolic state after the decision
+  mlr::Array< std::shared_ptr<Graph> > folStates_; ///< the array of symbolic state after the decision //and observation
   Node  *folDecision; ///< the predicate in the folState that represents the decision
+  std::size_t actionId; ///< the action hash that led to this node
   //pobs//Node  *folObservation; ///< the predicate in the folState that represents the decision
   double folReward;   ///< the reward collected with this transition step
   Graph *folAddToState; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
@@ -87,8 +91,9 @@ struct ActionNode{
   bool isTerminal=false;
 
   //-- specs and results of the three optimization problems
-  PlainMC *rootMC;    ///< monte carlo engine
-  //pobs// list of PlainMC* ??
+  //PlainMC *rootMC;    ///< monte carlo engine
+  mlr::Array< std::shared_ptr<PlainMC> > rootMcEngines_;
+
   MCStatistics *mcStats;  ///< statitics (list of the reward of each rollout)
   std::shared_ptr<ExtensibleKOMO> komoPoseProblem, komoSeqProblem, komoPathProblem; ///< trajectory optimization engines
   arr pose, seq, path;    ///< current best solutions (concatenation of x vectors)
@@ -99,10 +104,11 @@ struct ActionNode{
   bool inFringe1, inFringe2; ///< used only when generating reports
 
   /// root node init
-  ActionNode(mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory );
+  ActionNode(mlr::KinematicWorld& kin, FOL_World & fol, mlr::Array< std::shared_ptr<FOL_World> > & fols, const arr & bs, const KOMOFactory & komoFactory );
 
   /// child node creation
-  ActionNode(ActionNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory );
+  //ActionNode(ActionNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory );
+  ActionNode(ActionNode *parent, std::size_t a, const KOMOFactory & komoFactory );
 
   //- computations on the node
   void expand();           ///< expand this node (symbolically: compute possible decisions and add their effect nodes)
