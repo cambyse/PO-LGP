@@ -80,7 +80,6 @@ void sAct_GamepadControl::close(){
 
   delete g2t;
   g2t=NULL;
-  gamepadTh->threadClose();
   delete gamepadTh;
 }
 

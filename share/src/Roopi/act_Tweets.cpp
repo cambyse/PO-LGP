@@ -38,6 +38,8 @@ struct sAct_Tweets : Thread{
   }
 
   sAct_Tweets(Act_Tweets *T) : Thread("Act_Tweets", -1.), callbacks(this){}
+  ~sAct_Tweets(){ threadClose(); }
+
   virtual void open(){}
   virtual void close(){}
   virtual void step(){
@@ -73,7 +75,6 @@ Act_Tweets::Act_Tweets(Roopi *r)
 
 Act_Tweets::~Act_Tweets(){
   registry().callbacks.removeValue(&s->callbacks);
-  s->threadClose();
   delete s;
 }
 

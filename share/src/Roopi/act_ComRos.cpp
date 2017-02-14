@@ -11,6 +11,5 @@ Act_ComRos::Act_ComRos(Roopi* r)
 }
 
 Act_ComRos::~Act_ComRos(){
-  rosSpinner->threadClose();
   delete rosSpinner;
 }

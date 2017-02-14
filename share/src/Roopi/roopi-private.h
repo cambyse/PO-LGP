@@ -8,8 +8,10 @@
 struct CtrlTaskUpdater : Thread {
   ACCESS(ActL, acts)
   ACCESS(CtrlTaskL, ctrlTasks)
+  int verbose;
 
-  CtrlTaskUpdater() : Thread("CtrlTaskUpdater", .05) {}
+  CtrlTaskUpdater(int verbose=0) : Thread("CtrlTaskUpdater", .05), verbose(verbose) {}
+  ~CtrlTaskUpdater(){ threadClose(); }
 
   virtual void open(){}
   virtual void step(){
@@ -22,7 +24,7 @@ struct CtrlTaskUpdater : Thread {
         ctrlTasks.deAccess();
         bool sconv = (c->getStatus()==AS_converged);
         if(conv!=sconv){
-          cout <<"setting status: " <<c->task->name <<" conv=" <<conv <<endl;
+          if(verbose) cout <<"setting status: " <<c->task->name <<" conv=" <<conv <<endl;
           c->setStatus(conv?AS_converged:AS_running);
         }
       }
@@ -43,8 +45,8 @@ struct Roopi_private {
   Act_CtrlTask *_holdPositionTask = NULL;
   Act_Tweets *_tweets = NULL;
   Act *_ComRos=NULL, *_ComPR2=NULL;
-  Act_Thread<OrsPoseViewer> *ctrlView = NULL;
-  Act_Thread<CtrlTaskUpdater> *_updater = NULL;
+  Act_Thread *ctrlView = NULL;
+  Act_Thread *_updater = NULL;
 
 
   //-- logging

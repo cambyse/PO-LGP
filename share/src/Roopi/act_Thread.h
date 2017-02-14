@@ -1,14 +1,9 @@
 #include "act.h"
 
-template<class T> struct Act_Thread : Act{
-  T* thread;
-  Act_Thread(Roopi *r, T* th, bool loop=true)
-    : Act(r), thread(th){
-    if(loop) thread->threadLoop();
-    else thread->threadOpen();
-  }
-  ~Act_Thread(){
-    thread->threadClose();
-    delete thread;
-  }
+struct Act_Thread : Act{
+  Thread* th;
+  Act_Thread(Roopi *r, Thread* th, bool loop=true);
+  ~Act_Thread();
+
+  template<class T> T* get(){ return dynamic_cast<T*>(th); }
 };

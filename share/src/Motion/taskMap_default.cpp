@@ -226,13 +226,12 @@ void TaskMap_Default::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
 
   if(type==gazeAtTMT){
     CHECK(i>=0, "sym2 is not set!");
-    if(ivec.length()<1e-10) ivec.set(0.,0.,-1.);
 
     // i    := index of shape to look with (i.e. the shape with the camera)
-    // ivec := where in the shape is the camera
+    // ivec := relative position of the camera center
     // j    := index of shape to look at
-    // jvec := where in the target shape should we look. If jvec is not set,
-    //         this is a vector in world coordinates
+    // jvec := relative position on the target shape; where in the target shape should we look.
+    //         If j is not set, the target shape is WORLD and jvec is a vector in world coordinates
 
     mlr::Vector vec_i = G.shapes(i)->rel*ivec;
     mlr::Vector vec_xi = G.shapes(i)->rel.rot*Vector_x;
@@ -242,7 +241,7 @@ void TaskMap_Default::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
     G.kinematicsPos(pi, Jpi, body_i, vec_i);
     G.kinematicsVec(xi, Jxi, body_i, vec_xi);
     G.kinematicsVec(yi, Jyi, body_i, vec_yi);
-    if(body_j==NULL) {
+    if(body_j==NULL) { //we look at WORLD
       pj = conv_vec2arr(vec_j);
       if(&J) { Jpj.resizeAs(Jpi); Jpj.setZero(); }
     } else {

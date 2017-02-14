@@ -1,42 +1,10 @@
 #include "roopi.h"
 #include "roopi-private.h"
 
-#include <Algo/spline.h>
-#include <Control/TaskControlThread.h>
-#include <Motion/motion.h>
-#include <Optim/lagrangian.h>
 #include <Perception/viewer.h>
-
 
 #define baxter 0
 
-//==============================================================================
-/*
-
-(mt) The mid-term concept should be: Roopi allows you to create (and return) little
-handles on 'tasks' or 'things'. These tasks or things can be:
--- control tasks
--- a task following
--- trajectories
--- motion planning problems
--- system level processes (like subscriptions, perceptual processes, etc)
--- interfaces (gamepad, orsviewers, etc)
-
-The template for now is
-
-auto* handle = Roopi::createX(...)
-handle->setParameters
-handle->run
-handle->quit or Roopi::destroyX(handle)
-
-Maybe plan:
--- first just control tasks & motion planning
--- make path following a thread
--- make logging just such a thread and 'handle'
--- next the system processes (perception threads)
--- the activities we already have
-
-*/
 //==============================================================================
 
 Roopi_private::Roopi_private(Roopi* roopi)
@@ -54,10 +22,7 @@ Roopi_private::~Roopi_private(){
   if(_tcm) delete _tcm; _tcm=NULL;
   if(_updater) delete _updater; _updater=NULL;
 
-//  if(ctrlView){ ctrlView->threadClose(); delete ctrlView; } ctrlView=NULL;
   if(ctrlView) delete ctrlView; ctrlView=NULL;
-  //    if(holdPositionTask) delete holdPositionTask;
-  //    if(holdPositionTask2) delete holdPositionTask2;
   threadCloseModules();
   cout << "bye bye" << endl;
 }
@@ -104,21 +69,22 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
 //  CHECK(s->modelWorld.get()->q.N==0, "has been set before???");
   s->modelWorld.set() = K;
 
-  if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
-    s->ctrlView = new Act_Thread<OrsPoseViewer>(this, new OrsPoseViewer({"ctrl_q_ref", "ctrl_q_real"}, s->modelWorld.set()), false);
+  if(mlr::getParameter<bool>("useRos", false)){
+//  if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
+    s->ctrlView = new Act_Thread(this, new OrsPoseViewer({"ctrl_q_ref", "ctrl_q_real"}, s->modelWorld.set()), false);
   } else {
-    s->ctrlView = new Act_Thread<OrsPoseViewer>(this, new OrsPoseViewer({"ctrl_q_real"}, s->modelWorld.set()), false);
+    s->ctrlView = new Act_Thread(this, new OrsPoseViewer({"ctrl_q_ref"}, s->modelWorld.set()), false);
   }
 }
 
 Act_TaskController& Roopi::startTaskController(){
   if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(this);
   s->_holdPositionTask->setMap(new TaskMap_qItself);
-  s->_holdPositionTask->set()->PD().y_target = s->_holdPositionTask->y0;
+  s->_holdPositionTask->set()->PD().setTarget( s->_holdPositionTask->y0 );
   s->_holdPositionTask->set()->PD().setGains(30., 10.);
   s->_holdPositionTask->start();
 
-  s->_updater = new Act_Thread<CtrlTaskUpdater>(this, new CtrlTaskUpdater, true);
+  s->_updater = new Act_Thread(this, new CtrlTaskUpdater, true);
 
   s->_tcm = new Act_TaskController(this);
   return *s->_tcm;
@@ -148,7 +114,7 @@ Act_CtrlTask* Roopi::home(){
   for(CtrlTask *t:s->ctrlTasks()) t->active=false;
   s->ctrlTasks.deAccess();
 
-  s->_holdPositionTask->set()->PD().y_target = s->_holdPositionTask->y0;
+  s->_holdPositionTask->set()->PD().setTarget( s->_holdPositionTask->y0 );
   s->_holdPositionTask->set()->PD().setGainsAsNatural(2.,.9);
   s->_holdPositionTask->set()->PD().maxVel=1.;
   s->_holdPositionTask->start();
@@ -203,8 +169,9 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
     if(allConv) return true;
 
     waiter.statusLock();
+    // The typical pattern (also in Thread): CondVar status==0 -> idle; CondVar status>0 -> there is work to do (and 'messengers' lists who set it to 1)
     if(waiter.status==0){ //no new signals
-      if(timeout>0){
+      if(timeout>0.){
         if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
         if(!waiter.waitForSignal(timeout, true)){
           cout << "not converged, timeout reached" << endl;
@@ -222,11 +189,11 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
 #endif
 }
 
-void Roopi::newCameraView(){
+Act_Thread Roopi::newCameraView(){
   ImageViewer *v = new ImageViewer("cameraView");
   v->flipImage = true;
   v->threadOpen(true);
-  new ComputeCameraView(30);
+  return Act_Thread(this, new ComputeCameraView(30), false);
 }
 
 mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
@@ -237,7 +204,7 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   sh->color[0]=.8; sh->color[1]=sh->color[2]=.0;
   sh->size[0]=.1;
   sh->X.pos = sh->rel.pos = pos;
-  s->ctrlView->thread->recopyKinematics(s->modelWorld());
+  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
   return sh;
 }
@@ -249,11 +216,9 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
   sw1.apply(s->modelWorld());
   sw2.apply(s->modelWorld());
   s->modelWorld().getJointState(); //enforces that the q & qdot are recalculated!
-  s->ctrlView->thread->recopyKinematics(s->modelWorld());
+  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
 }
-
-
 
 
 #if 0

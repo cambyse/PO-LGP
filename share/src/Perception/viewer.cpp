@@ -12,6 +12,10 @@ struct sImageViewer{
   sImageViewer(const char* tit) : gl(tit) {}
 };
 
+ImageViewer::ImageViewer(const char* img_name) : Thread(STRING("ImageViewer_"<<img_name), -1), img(this, img_name, true){}
+
+ImageViewer::~ImageViewer(){ threadClose(); }
+
 void ImageViewer::open(){
   s = new sImageViewer(STRING("ImageViewer '"<<img.data->name<<'\''));
   s->gl.openWindow();
@@ -47,12 +51,19 @@ void glDrawAxes(void*){
   glDrawAxes(1.);
 }
 
+PointCloudViewer::PointCloudViewer(const char* pts_name, const char* cols_name)
+  : Thread(STRING("PointCloudViewer_"<<pts_name <<'_' <<cols_name), .1),
+    pts(this, pts_name),
+    cols(this, cols_name){}
+
+PointCloudViewer::~PointCloudViewer(){ threadClose(); }
+
 void PointCloudViewer::open(){
   s = new sPointCloudViewer;
   s->gl.add(glDrawAxes);
   s->gl.add(s->pc);
   s->gl.camera.setKinect();
-//  s->gl.reportSelects = true;
+  //  s->gl.reportSelects = true;
 }
 
 void PointCloudViewer::close(){

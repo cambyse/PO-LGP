@@ -15,6 +15,7 @@ struct sAct_PathOpt : Thread{
   OptConstrained *opt = NULL;
   sAct_PathOpt(KOMO *komo, ConditionVariable *status)
     : Thread("Act_PathOpt", 0.), x(this, "PathOpt_x"), komo(komo), status(status){}
+  ~sAct_PathOpt(){ threadClose(); }
   virtual void open();
   virtual void step();
   virtual void close();
@@ -26,7 +27,6 @@ Act_PathOpt::Act_PathOpt(Roopi* r)
   komo = new KOMO;
   komo->setModel(roopi.getKinematics());
   s = new sAct_PathOpt(komo, this);
-
 }
 
 Act_PathOpt::~Act_PathOpt(){
@@ -34,9 +34,8 @@ Act_PathOpt::~Act_PathOpt(){
     s->viewer->threadClose();
     delete s->viewer;
   }
-  s->threadClose();
-  delete komo;
   delete s;
+  delete komo;
 }
 
 void Act_PathOpt::start(){ s->threadLoop(); }

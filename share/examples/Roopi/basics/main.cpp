@@ -7,7 +7,7 @@
 void Prototyping(){
   Roopi R(true);
 
-  R.newCameraView();
+  auto view = R.newCameraView();
 
   {
     mlr::Shape *s = R.getKinematics()->getShapeByName("endeffL");
@@ -82,17 +82,26 @@ void Prototyping(){
 void TEST(PickAndPlace) {
   Roopi R(true);
 
-//  R.newCameraView();
+//  auto view = R.newCameraView();
 //  R.taskController().verbose(1);
 
+  R.taskController().lockJointGroupControl("torso");
+
+  arr objSize(R.getKinematics()->getShapeByName("obj1")->size, 4, false);
+  double width = 2.*objSize(1);
+  double above = objSize(2);
+
   {
+    //homing reference
+    //auto home = R.newCtrlTask(new TaskMap_qItself(), {}, {}); //(R.getKinematics()->getHmetric()+1.));
+
     //attention
-    auto look = R.newCtrlTask("type=gazeAt ref1=endeffKinect ref2=obj1 PD=[1 .9 0 0]");
+    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, "obj1"));
     auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
 
     //gripper positioning
-    auto up = R.newCtrlTask(new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), {1, .9}, {0.,0.,1.});
-    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R", NoVector, "obj1"), {}, {0.,0.,.2});
+    auto up = R.newCtrlTask(new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), {}, {0.,0.,1.});
+    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R", NoVector, "obj1"), {}, {0.,0.,above+.1});
 
     //alignment
 #if 1
@@ -104,26 +113,24 @@ void TEST(PickAndPlace) {
 #endif
 
     //open gripper
-    arr obj1size(R.getKinematics()->getShapeByName("obj1")->size, 4);
-    double gripSize = obj1size(1) + 2.*obj1size(3) + .05;
-    auto gripperR = R.newCtrlTask(new TaskMap_qItself(R.getKinematics()->getJointByName("r_gripper_joint")->qIndex, R.getKinematics()->getJointStateDimension()), {}, {gripSize});
-    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(R.getKinematics()->getJointByName("r_gripper_l_finger_joint")->qIndex, R.getKinematics()->getJointStateDimension()), {}, {::asin(gripSize/(2.*.10))});
+    double gripSize = width + .05;
+    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getKinematics()), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getKinematics()), {}, {::asin(gripSize/(2.*.10))});
 
     //go
     R.hold(false);
 
-    R.wait({&pos, &gripperR});
+    R.wait({&pos, &gripperR, &look, &ws, &up});
 
     //lowering
-    double above = obj1size(2)*.5 + obj1size(3);
-    pos.set()->PD().y_target = ARR(0,0,above);
+    pos.set()->PD().setTarget( ARR(0,0,above-.03) );
 
     R.wait({&pos});
 
     //close gripper
-    gripSize = obj1size(1) + 2.*obj1size(3);
-    gripperR.set()->PD().y_target = gripSize;
-    gripper2R.set()->PD().y_target = ::asin(gripSize/(2.*.10));
+    gripSize = width;
+    gripperR.set()->PD().setTarget( {gripSize} );
+    gripper2R.set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
 
     R.wait({&pos,&gripperR});
 
@@ -132,16 +139,53 @@ void TEST(PickAndPlace) {
   }
 
   {
-    auto lift = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "pr2R"));
+    auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R"));
     lift.set()->PD().setTarget(lift.task->y);
     lift.set()->PD().setGains(0, 10.);
     lift.set()->PD().v_target = ARR(0,0,.2);
 
     R.hold(false);
-
     mlr::wait(1.);
+    R.hold(true);
   }
 
+  {
+    //attention
+    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, "obj1"));
+    auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
+
+    //gripper positioning
+    auto up = R.newCtrlTask(new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), {}, {0.,0.,1.});
+    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "obj1", NoVector, "objTarget"), {2.,.9}, {0.,0.,above+.1});
+
+    R.hold(false);
+    R.wait({&look, &ws, &up, &pos});
+
+    //lowering
+    pos.set()->PD().setTarget( ARR(0,0,above) );
+
+    R.wait({&pos});
+
+    R.kinematicSwitch("obj1","table2");
+
+    //open gripper
+    double gripSize = width + .05;
+    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getKinematics()), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getKinematics()), {}, {::asin(gripSize/(2.*.10))});
+
+    R.wait({&gripperR});
+  }
+
+  {
+    auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R"));
+    lift.set()->PD().setTarget(lift.task->y);
+    lift.set()->PD().setGains(0, 10.);
+    lift.set()->PD().v_target = ARR(0,0,.2);
+
+    R.hold(false);
+    mlr::wait(1.);
+    R.hold(true);
+  }
 
   auto home = R.home();
 
@@ -154,12 +198,12 @@ void TEST(PickAndPlace) {
 void TEST(PickAndPlace2) {
   Roopi R(true);
 
-//  R.newCameraView();
+  auto view = R.newCameraView();
 //  R.taskController().verbose(1);
 
   {
     //attention
-    auto look = R.newCtrlTask("type=gazeAt ref1=endeffKinect ref2=obj1 PD=[1 .9 0 0]");
+    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, "obj1"));
     auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
 
     R.hold(false);
@@ -184,17 +228,15 @@ void TEST(PickAndPlace2) {
     path.komo->setTask(t1, 1., new TaskMap_Default(vecAlignTMT, K, "pr2R", Vector_x, "obj1", Vector_y), OT_sumOfSqr, NoArr, 1e1);
     path.komo->setTask(t1, 1., new TaskMap_Default(vecAlignTMT, K, "pr2R", Vector_x, "obj1", Vector_z), OT_sumOfSqr, NoArr, 1e1);
     //open gripper
-    path.komo->setTask(t1, .85, new TaskMap_qItself(K.getJointByName("r_gripper_joint")->qIndex, K.getJointStateDimension()), OT_sumOfSqr, {gripSize + .05});
-    path.komo->setTask(t1, .85, new TaskMap_qItself(K.getJointByName("r_gripper_l_finger_joint")->qIndex, K.getJointStateDimension()), OT_sumOfSqr, {::asin((gripSize + .05)/(2.*.10))});
+    path.komo->setTask(t1, .85, new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, K), OT_sumOfSqr, {gripSize + .05});
+    path.komo->setTask(t1, .85, new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, K), OT_sumOfSqr, {::asin((gripSize + .05)/(2.*.10))});
     //close gripper
-    path.komo->setTask(.95, 1., new TaskMap_qItself(K.getJointByName("r_gripper_joint")->qIndex, K.getJointStateDimension()), OT_sumOfSqr, {gripSize});
-    path.komo->setTask(.95, 1., new TaskMap_qItself(K.getJointByName("r_gripper_l_finger_joint")->qIndex, K.getJointStateDimension()), OT_sumOfSqr, {::asin((gripSize)/(2.*.10))});
+    path.komo->setTask(.95, 1., new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, K), OT_sumOfSqr, {gripSize});
+    path.komo->setTask(.95, 1., new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, K), OT_sumOfSqr, {::asin((gripSize)/(2.*.10))});
     path.komo->setTask(.9, 1., new TaskMap_Default(posDiffTMT, K, "pr2R", NoVector, "obj1", NoVector), OT_sumOfSqr, {0.,0.,above}, 1e3);
     path.komo->setSlowAround(1., .05, 1e3);
     path.start();
 
-
-    /////////////
 
     R.wait({&path});
 
@@ -208,8 +250,8 @@ void TEST(PickAndPlace2) {
   {
     arr obj1size(R.getKinematics()->getShapeByName("obj1")->size, 4);
     double gripSize = obj1size(1) + 2.*obj1size(3);
-    auto gripperR = R.newCtrlTask(new TaskMap_qItself(R.getKinematics()->getJointByName("r_gripper_joint")->qIndex, R.getKinematics()->getJointStateDimension()), {}, {gripSize});
-    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(R.getKinematics()->getJointByName("r_gripper_l_finger_joint")->qIndex, R.getKinematics()->getJointStateDimension()), {}, {::asin(gripSize/(2.*.10))});
+    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getKinematics()), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getKinematics()), {}, {::asin(gripSize/(2.*.10))});
 
     R.wait({&gripperR});
     R.hold(true);
@@ -244,7 +286,7 @@ void TEST(Basics) {
 
   auto posL = R.newCtrlTask();
   posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
-  posL.task->PD().y_target = posL.y0 + ARR(0,0,.3);
+  posL.task->PD().setTarget( posL.y0 + ARR(0,0,.3) );
   posL.task->PD().setGainsAsNatural(1., .9);
   posL.start();
 
@@ -268,7 +310,7 @@ int main(int argc, char** argv){
 
 //  testBasics();
 
-//  testPickAndPlace();
+  for(;;) testPickAndPlace();
 
   /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();

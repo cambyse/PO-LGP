@@ -53,6 +53,14 @@ TaskMap_qItself::TaskMap_qItself(TaskMap_qItself_PickMode pickMode, const String
     }
     return;
   }
+  if(pickMode==QIP_byJointNames){
+    for(mlr::Joint *j:K.joints){
+      bool pick=false;
+      for(const mlr::String& s:picks) if(j->name==s){ pick=true; break; }
+      if(pick) selectedBodies.append(j->to->index);
+    }
+    return;
+  }
   NIY
 }
 

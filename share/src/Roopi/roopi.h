@@ -14,10 +14,6 @@
 #include "act_Thread.h"
 #include "act_Tweets.h"
 
-//struct Roopi_Path;
-//struct TaskReferenceInterpolAct;
-//typedef mlr::Array<CtrlTask*> CtrlTaskL;
-
 //==============================================================================
 
 struct Roopi {
@@ -63,7 +59,10 @@ struct Roopi {
   Act_PathOpt newPathOpt()           { return Act_PathOpt(this); }
 
   //-- compute and display the camera view
-  void newCameraView();
+  Act_Thread newCameraView();
+};
+
+//==============================================================================
 
 
 #if 0
@@ -168,5 +167,4 @@ struct Roopi {
   void waitConv(const CtrlTaskL& tasks);
 #endif
 
-};
 

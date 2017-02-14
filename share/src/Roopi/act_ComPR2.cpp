@@ -24,7 +24,6 @@ struct sAct_ComPR2{
 
   ~sAct_ComPR2(){
     pubCtrl->stopListenTo(ctrl_ref.data); //ensure that the publisher is not stepped and reopened AFTER being already closed
-    pubCtrl->threadClose();
     if(pubCtrl) delete pubCtrl;
     if(subCtrl) delete subCtrl;
     if(subOdom) delete subOdom;
