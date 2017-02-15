@@ -13,6 +13,10 @@
 #include "act_ComPR2.h"
 #include "act_Thread.h"
 #include "act_Tweets.h"
+#include "act_Script.h"
+#include "act_Physx.h"
+#include "script_PickAndPlace.h"
+
 
 //==============================================================================
 
@@ -47,6 +51,7 @@ struct Roopi {
   Act_CtrlTask newCtrlTask(const char* specs);
   void hold(bool still);
   Act_CtrlTask* home();
+  Act_CtrlTask* lookAt(const char* shapeName);
 
   //-- activate gamepad to set controls
   Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
@@ -66,10 +71,12 @@ struct Roopi {
   // MACROS, which build on the above basic methods
   //
 
-  void graspBox(const char* objName, bool rightNotLeft);
-  void place(const char* objName, const char* ontoName);
-
-
+  Act_Script graspBox(const char* objName, bool rightNotLeft){
+    return Act_Script(this, [this, objName, rightNotLeft](){ return Script_graspBox(*this, objName, rightNotLeft); } );
+  }
+  Act_Script place(const char* objName, const char* ontoName){
+    return Act_Script(this, [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
+  }
 };
 
 //==============================================================================

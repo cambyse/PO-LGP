@@ -8,7 +8,7 @@ struct sAct_GamepadControl : Thread{
   struct Gamepad2Tasks *g2t;
   ACCESS(arr, gamepadState)
   ACCESS(CtrlTaskL, ctrlTasks)
-  ACCESS(mlr::KinematicWorld, modelWorld);
+  ACCESS(mlr::KinematicWorld, modelWorld)
 
   Act_GamepadControl* P;
   GamepadInterface *gamepadTh;

@@ -303,6 +303,14 @@ uint TaskMap_Default::dim_phi(const mlr::KinematicWorld& G) {
   }
 }
 
+mlr::String TaskMap_Default::shortTag(const mlr::KinematicWorld& G){
+  mlr::String s="Default";
+  s <<':' <<TaskMap_DefaultType2String[type];
+  s <<':' <<(i<0?"WORLD":G.shapes(i)->name);
+  s <<'/' <<(j<0?"WORLD":G.shapes(j)->name);
+  return s;
+}
+
 
 //===========================================================================
 

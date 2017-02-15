@@ -208,6 +208,20 @@ uint TaskMap_qItself::dim_phi(const WorldL& G, int t){
   return dimPhi(t);
 }
 
+mlr::String TaskMap_qItself::shortTag(const mlr::KinematicWorld& G){
+  mlr::String s="qItself";
+  if(selectedBodies.N){
+    if(selectedBodies.N<=3){
+      for(uint b:selectedBodies) s <<':' <<G.bodies(b)->name;
+    }else{
+      s <<'#' <<selectedBodies.N;
+    }
+  }else{
+    s <<":ALL";
+  }
+  return s;
+}
+
 //===========================================================================
 
 void TaskMap_qZeroVels::phi(arr& y, arr& J, const WorldL& G, double tau, int t){

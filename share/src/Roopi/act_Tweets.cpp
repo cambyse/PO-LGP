@@ -43,8 +43,8 @@ struct sAct_Tweets : Thread{
   virtual void open(){}
   virtual void close(){}
   virtual void step(){
-    cout <<"TWEETs #" <<step_count <<' ';
     for(ConditionVariable *c:messengers){
+      cout <<"TWEETs #" <<step_count <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
       Act *a = dynamic_cast<Act*>(c);
       if(a){
         Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
@@ -61,8 +61,8 @@ struct sAct_Tweets : Thread{
 //        cout <<typeid(*c).name() <<" sends " <<c->getStatus() <<' ';
         }
       }
+      cout <<endl;
     }
-    cout <<endl;
     messengers.clear();
   }
 };

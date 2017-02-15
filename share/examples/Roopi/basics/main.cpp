@@ -29,6 +29,27 @@ void TEST(Basics) {
 
 //===============================================================================
 
+void TEST(PhysX) {
+  {
+    Roopi R(true);
+
+    auto ph = Act_PhysX(&R);
+
+//    mlr::wait();
+
+    auto g = R.graspBox("obj2", false);
+
+    R.wait({&g});
+
+    auto p = R.place("obj2", "objTarget");
+
+    R.wait({&p});
+
+  }
+}
+
+//===============================================================================
+
 void Prototyping(){
   Roopi R(true);
 
@@ -90,7 +111,7 @@ void Prototyping(){
   }
 #endif
 
-#if 0
+#if 0 //PLAN
   switchToKinestheticTeachingMode();
   recordPose(taskSpace..);
   recordTrajectory();
@@ -112,8 +133,22 @@ void TEST(PickAndPlace) {
 
   R.taskController().lockJointGroupControl("torso");
 
-  R.graspBox("obj1", true);
-  R.place("obj1", "objTarget");
+  auto ph = Act_PhysX(&R);
+
+#if 0
+  Script_graspBox(R, "obj1", true);
+  Script_place(R, "obj1", "objTarget");
+#else
+  auto pick1 = R.graspBox("obj2", false);
+  mlr::wait(.5);
+  auto pick2 = R.graspBox("obj1", true);
+  R.wait({&pick1,&pick2});
+
+  auto place1 = R.place("obj2", "objTarget");
+  R.wait({&place1});
+  auto place2 = R.place("obj1", "obj2");
+  R.wait({&place2});
+#endif
 
   auto home = R.home();
   R.wait({home});
@@ -208,6 +243,7 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
 //  testBasics();
+//  testPhysX();
 //  Prototyping();
 
   for(;;) testPickAndPlace();

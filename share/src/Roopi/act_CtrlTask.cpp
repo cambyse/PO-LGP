@@ -64,7 +64,6 @@ void Act_CtrlTask::kill(){
 WToken<CtrlTask> Act_CtrlTask::set(){
   CHECK(task, "this is not yet configured!");
   if(getStatus()!=0){
-//    cout <<"resetting status: " <<task->name <<endl;
     setStatus(AS_running);
   }
   return WToken<CtrlTask>(*roopi.s->ctrlTasks.data, task);

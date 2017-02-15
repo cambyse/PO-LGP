@@ -47,6 +47,7 @@ struct Roopi_private {
   // persistent acts
   Act_TaskController *_tcm = NULL;
   Act_CtrlTask *_holdPositionTask = NULL;
+  Act_CtrlTask *_watchTask = NULL;
   Act_Tweets *_tweets = NULL;
   Act *_ComRos=NULL, *_ComPR2=NULL;
   Act_Thread *ctrlView = NULL;
