@@ -40,6 +40,10 @@ struct Roopi_private {
   Access_typed<mlr::KinematicWorld> modelWorld;
   ACCESSname(mlr::Array<CtrlTask*>, ctrlTasks)
 
+  mlr::String model;
+  mlr::String robot;
+  bool useRos;
+
   // persistent acts
   Act_TaskController *_tcm = NULL;
   Act_CtrlTask *_holdPositionTask = NULL;

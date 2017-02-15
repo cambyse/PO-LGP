@@ -4,6 +4,31 @@
 
 //===============================================================================
 
+void TEST(Basics) {
+  {
+    Roopi R;
+
+    R.setKinematics("pr2");
+    R.startTaskController();
+    //  R.taskController().verbose(1);
+
+    {
+      auto posL = R.newCtrlTask();
+      posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
+      posL.task->PD().setTarget( posL.y0 + ARR(0,0,.3) );
+      posL.task->PD().setGainsAsNatural(1., .9);
+      posL.start();
+
+      R.hold(false);
+      R.wait({&posL});
+      R.hold(true);
+    }
+  }
+  cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
+}
+
+//===============================================================================
+
 void Prototyping(){
   Roopi R(true);
 
@@ -17,13 +42,13 @@ void Prototyping(){
     auto leftHand = R.newCtrlTask();
     leftHand.setMap(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffL", NoVector, "targetL"));
     leftHand.task->PD().setGainsAsNatural(1., .8);
-    leftHand.task->PD().y_target = .0;
+    leftHand.task->PD().setTarget( {.0} );
     leftHand.start();
 
     auto rightHand = R.newCtrlTask();
     rightHand.setMap(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffR"));
     rightHand.task->PD().setGainsAsNatural(1., .8);
-    rightHand.task->PD().y_target = rightHand.y0 + ARR(.0, .2, .6);
+    rightHand.task->PD().setTarget( rightHand.y0 + ARR(.0, .2, .6) );
     rightHand.start();
 
     R.hold(false);
@@ -33,17 +58,17 @@ void Prototyping(){
       if(leftHand.getStatus()==AS_converged && rightHand.getStatus()==AS_converged) break; //good
       if(leftHand.getStatus()==AS_stalled && leftHand.time()>5.){
         cout <<"leftHand failed - taking back" <<endl;
-        leftHand.set()->PD().y_target = leftHand.y0;
+        leftHand.set()->PD().setTarget( leftHand.y0 );
       }
       if(rightHand.getStatus()==AS_stalled && rightHand.time()>5.){
         cout <<"rightHand failed - taking back" <<endl;
-        rightHand.set()->PD().y_target = rightHand.y0;
+        rightHand.set()->PD().setTarget( rightHand.y0 );
       }
     }
 
     leftTarget->rel.pos.z -=.3;
-//    leftHand.set()->PD().y_target = leftHand.y0;
-    rightHand.set()->PD().y_target = rightHand.y0;
+//    leftHand.set()->PD().setTarget( leftHand.y0 );
+    rightHand.set()->PD().setTarget( rightHand.y0 );
     R.wait({&leftHand, &rightHand}, 3.); //with timeout
 
     R.hold(true);
@@ -87,110 +112,11 @@ void TEST(PickAndPlace) {
 
   R.taskController().lockJointGroupControl("torso");
 
-  arr objSize(R.getKinematics()->getShapeByName("obj1")->size, 4, false);
-  double width = 2.*objSize(1);
-  double above = objSize(2);
-
-  {
-    //homing reference
-    //auto home = R.newCtrlTask(new TaskMap_qItself(), {}, {}); //(R.getKinematics()->getHmetric()+1.));
-
-    //attention
-    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, "obj1"));
-    auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
-
-    //gripper positioning
-    auto up = R.newCtrlTask(new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), {}, {0.,0.,1.});
-    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R", NoVector, "obj1"), {}, {0.,0.,above+.1});
-
-    //alignment
-#if 1
-    auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_x, "obj1", Vector_y) );
-    auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_y, "obj1", Vector_x) );
-#else
-    auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_x, "obj1", Vector_x) );
-    auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, R.getKinematics(), "pr2R", Vector_y, "obj1", Vector_y) );
-#endif
-
-    //open gripper
-    double gripSize = width + .05;
-    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getKinematics()), {}, {gripSize});
-    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getKinematics()), {}, {::asin(gripSize/(2.*.10))});
-
-    //go
-    R.hold(false);
-
-    R.wait({&pos, &gripperR, &look, &ws, &up});
-
-    //lowering
-    pos.set()->PD().setTarget( ARR(0,0,above-.03) );
-
-    R.wait({&pos});
-
-    //close gripper
-    gripSize = width;
-    gripperR.set()->PD().setTarget( {gripSize} );
-    gripper2R.set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
-
-    R.wait({&pos,&gripperR});
-
-    R.kinematicSwitch("obj1","pr2R");
-    R.hold(true);
-  }
-
-  {
-    auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R"));
-    lift.set()->PD().setTarget(lift.task->y);
-    lift.set()->PD().setGains(0, 10.);
-    lift.set()->PD().v_target = ARR(0,0,.2);
-
-    R.hold(false);
-    mlr::wait(1.);
-    R.hold(true);
-  }
-
-  {
-    //attention
-    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, "obj1"));
-    auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
-
-    //gripper positioning
-    auto up = R.newCtrlTask(new TaskMap_Default(vecTMT, R.getKinematics(), "pr2R", Vector_z), {}, {0.,0.,1.});
-    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "obj1", NoVector, "objTarget"), {2.,.9}, {0.,0.,above+.1});
-
-    R.hold(false);
-    R.wait({&look, &ws, &up, &pos});
-
-    //lowering
-    pos.set()->PD().setTarget( ARR(0,0,above) );
-
-    R.wait({&pos});
-
-    R.kinematicSwitch("obj1","table2");
-
-    //open gripper
-    double gripSize = width + .05;
-    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getKinematics()), {}, {gripSize});
-    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getKinematics()), {}, {::asin(gripSize/(2.*.10))});
-
-    R.wait({&gripperR});
-  }
-
-  {
-    auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "pr2R"));
-    lift.set()->PD().setTarget(lift.task->y);
-    lift.set()->PD().setGains(0, 10.);
-    lift.set()->PD().v_target = ARR(0,0,.2);
-
-    R.hold(false);
-    mlr::wait(1.);
-    R.hold(true);
-  }
+  R.graspBox("obj1", true);
+  R.place("obj1", "objTarget");
 
   auto home = R.home();
-
   R.wait({home});
-
 }
 
 //===============================================================================
@@ -275,33 +201,6 @@ void TEST(Gamepad) {
   R.wait({&gamepad}, -1.);
 }
 
-//===============================================================================
-
-void TEST(Basics) {
-  Roopi R;
-
-  R.setKinematics("pr2");
-  R.startTaskController();
-//  R.taskController().verbose(1);
-
-  auto posL = R.newCtrlTask();
-  posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
-  posL.task->PD().setTarget( posL.y0 + ARR(0,0,.3) );
-  posL.task->PD().setGainsAsNatural(1., .9);
-  posL.start();
-
-  R.hold(false);
-
-  R.wait({&posL});
-
-  R.hold(true);
-
-
-  cout <<"DONE" <<endl;
-  mlr::wait(1.);
-  cout <<"GONE" <<endl;
-
-}
 
 //===============================================================================
 
@@ -309,13 +208,12 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
 //  testBasics();
+//  Prototyping();
 
   for(;;) testPickAndPlace();
 
-  /*for(;;)*/ testPickAndPlace2();
+//  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();
 
-//  Prototyping();
-//  cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
   return 0;
 }

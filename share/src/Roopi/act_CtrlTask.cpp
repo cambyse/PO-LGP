@@ -13,7 +13,7 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
   set()->active = true;
 }
 
-Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec)
+Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec, double tolerance)
   : Act_CtrlTask(r){
   task = new CtrlTask(map->shortTag(roopi.getKinematics()), map);
   if(&PD && PD.N) task->PD().setGainsAsNatural(PD(0), PD(1));
@@ -24,6 +24,7 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& tar
   }
   if(&target && target.N) task->PD().y_target = target;
   if(&prec && prec.N) task->prec = prec;
+  task->PD().tolerance = tolerance;
   setTask(task);
   set()->active = true;
 }
@@ -83,8 +84,6 @@ void Act_CtrlTask::setTask(CtrlTask *t){
   task->update(0., roopi.getKinematics());
   y0 = task->y;
   task->active = false;
-//  task->map->phi(y0, NoArr, roopi.getKinematics()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
-//  task->y = y0;
   roopi.s->ctrlTasks.set()->append(task);
 }
 

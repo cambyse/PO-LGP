@@ -16,32 +16,32 @@
 #include <climits>
 #include "taskMap_qItself.h"
 
-TaskMap_qItself::TaskMap_qItself(const arr& _M, bool relative_q0) : moduloTwoPi(true), relative_q0(relative_q0) { if(&_M) M=_M; }
+TaskMap_qItself::TaskMap_qItself(bool relative_q0) : moduloTwoPi(true), relative_q0(relative_q0) {}
 
-TaskMap_qItself::TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true), relative_q0(false) { M=zeros(1,qN); M(0,singleQ)=1.; }
+//TaskMap_qItself::TaskMap_qItself(uint singleQ, uint qN) : moduloTwoPi(true), relative_q0(false) { M=zeros(1,qN); M(0,singleQ)=1.; }
 
-TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, mlr::Joint* j)
-  : moduloTwoPi(true), relative_q0(false)  {
-  M = zeros(j->qDim(), G.getJointStateDimension() );
-  M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
-}
+//TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, mlr::Joint* j)
+//  : moduloTwoPi(true), relative_q0(false)  {
+//  M = zeros(j->qDim(), G.getJointStateDimension() );
+//  M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
+//}
 
-TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName)
-  : moduloTwoPi(true), relative_q0(false)  {
-  mlr::Joint *j = G.getJointByName(jointName);
-  if(!j) return;
-  M = zeros(j->qDim(), G.getJointStateDimension() );
-  M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
-}
+//TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName)
+//  : moduloTwoPi(true), relative_q0(false)  {
+//  mlr::Joint *j = G.getJointByName(jointName);
+//  if(!j) return;
+//  M = zeros(j->qDim(), G.getJointStateDimension() );
+//  M.setMatrixBlock(eye(j->qDim()), 0, j->qIndex);
+//}
 
-TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName1, const char* jointName2)
-  : moduloTwoPi(true), relative_q0(false)  {
-  mlr::Joint *j1 = G.getJointByName(jointName1);
-  mlr::Joint *j2 = G.getJointByName(jointName2);
-  M = zeros(j1->qDim() + j2->qDim(), G.getJointStateDimension() );
-  M.setMatrixBlock(eye(j1->qDim()), 0, j1->qIndex);
-  M.setMatrixBlock(eye(j2->qDim()), j1->qDim(), j2->qIndex);
-}
+//TaskMap_qItself::TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName1, const char* jointName2)
+//  : moduloTwoPi(true), relative_q0(false)  {
+//  mlr::Joint *j1 = G.getJointByName(jointName1);
+//  mlr::Joint *j2 = G.getJointByName(jointName2);
+//  M = zeros(j1->qDim() + j2->qDim(), G.getJointStateDimension() );
+//  M.setMatrixBlock(eye(j1->qDim()), 0, j1->qIndex);
+//  M.setMatrixBlock(eye(j2->qDim()), j1->qDim(), j2->qIndex);
+//}
 
 TaskMap_qItself::TaskMap_qItself(TaskMap_qItself_PickMode pickMode, const StringA& picks, const mlr::KinematicWorld& K, bool relative_q0)
   : moduloTwoPi(true), relative_q0(relative_q0) {
@@ -74,15 +74,15 @@ void TaskMap_qItself::phi(arr& q, arr& J, const mlr::KinematicWorld& G, int t) {
     if(relative_q0){
       for(mlr::Joint* j:G.joints) if(j->q0 && j->qDim()==1) q(j->qIndex) -= j->q0;
     }
-    if(M.N){
-      if(M.nd==1){
-        q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
-      }else{
-        q=M*q; if(&J) J=M;
-      }
-    }else{
+//    if(M.N){
+//      if(M.nd==1){
+//        q=M%q; if(&J) J.setDiag(M); //this fails if the dimensionalities of q are non-stationary!
+//      }else{
+//        q=M*q; if(&J) J=M;
+//      }
+//    }else{
       if(&J) J.setId(q.N);
-    }
+//    }
   }else{
     uint n=dim_phi(G);
     q.resize(n);
@@ -189,7 +189,7 @@ uint TaskMap_qItself::dim_phi(const mlr::KinematicWorld& G) {
     for(uint b:selectedBodies) n+=G.bodies.elem(b)->inLinks.scalar()->qDim();
     return n;
   }
-  if(M.nd==2) return M.d0;
+//  if(M.nd==2) return M.d0;
   return G.getJointStateDimension();
 }
 

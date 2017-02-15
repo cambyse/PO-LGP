@@ -52,7 +52,7 @@ struct Roopi {
   Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
 
   //-- ROS communication
-  Act_ComRos startRosCommunication() { return Act_ComRos(this); }
+  Act_ComRos newComROS()             { return Act_ComRos(this); }
   Act_ComPR2 newComPR2()             { return Act_ComPR2(this); }
 
   //-- path optimization
@@ -60,6 +60,16 @@ struct Roopi {
 
   //-- compute and display the camera view
   Act_Thread newCameraView();
+
+  //==============================================================================
+  //
+  // MACROS, which build on the above basic methods
+  //
+
+  void graspBox(const char* objName, bool rightNotLeft);
+  void place(const char* objName, const char* ontoName);
+
+
 };
 
 //==============================================================================

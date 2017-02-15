@@ -12,7 +12,7 @@ struct Act_CtrlTask : Act{
   double tolerance = 1e-2;
 
   Act_CtrlTask(Roopi *r);
-  Act_CtrlTask(Roopi *r, TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
+  Act_CtrlTask(Roopi *r, TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.}, double tolerance=1e-2);
   Act_CtrlTask(Roopi *r, const Graph& specs);
   virtual ~Act_CtrlTask();
 
