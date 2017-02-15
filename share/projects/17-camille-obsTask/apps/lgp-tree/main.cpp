@@ -251,7 +251,7 @@ void groundAttach( double phase, const Graph& facts, Node *n, KOMO & komo, int v
   komo.setAttach( phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
 }
 
-void groundHeadGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
@@ -271,7 +271,7 @@ void groundHeadGetSight( double phase, const Graph& facts, Node *n, KOMO & komo,
 
 }
 
-void groundObserve( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
 
 }
@@ -286,8 +286,8 @@ void plan_BHTS()
   komoFactory.registerTask( "komoPlace"       , groundPlace );
   komoFactory.registerTask( "komoHandover"    , groundHandover );
   komoFactory.registerTask( "komoAttach"      , groundAttach );
-  komoFactory.registerTask( "komoGetSight"    , groundHeadGetSight );
-  komoFactory.registerTask( "komoObserve"     , groundObserve );
+  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
+  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
 
   // instanciate search tree
   SearchSpaceTree C( komoFactory );
@@ -296,7 +296,7 @@ void plan_BHTS()
 //  C.prepareFol("LGP-obs-fol.g");
 //  C.prepareKin("LGP-obs-kin.g");
 
-  C.prepareFol("LGP-obs-fol-2.g");        // with two candidate positions
+  C.prepareFol("LGP-obs-fol-2-simple.g");        // with two candidate positions
   C.prepareKin("LGP-obs-kin-2.g");
 
   //C.prepareFol("LGP-coop-fol.g");
