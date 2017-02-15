@@ -16,17 +16,18 @@
 #include "action_node.h"
 
 #include <list>
+#include <set>
+#include <unordered_map>
 
 #include <MCTS/solver_PlainMC.h>
 
 #define DEBUG(x) //x
 #define DEL_INFEASIBLE(x) x
 
-uint COUNT_kin=0;
-uint COUNT_evals=0;
-uint COUNT_poseOpt=0;
-uint COUNT_seqOpt=0;
-uint COUNT_pathOpt=0;
+static double epsilon()
+{
+  return std::numeric_limits< double >::epsilon();
+}
 
 //==============KOMOFactory==============================================
 
@@ -116,10 +117,12 @@ ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World & _fol, mlr::Array< s
   }
 }
 
-ActionNode::ActionNode(ActionNode* parent, std::size_t a, const KOMOFactory & komoFactory )
-  : parent(parent), fol(parent->fol),
+ActionNode::ActionNode(ActionNode* parent, double pHistory, const arr & bs/*, Graph * stateBeforeAction*/, std::size_t a, const KOMOFactory & komoFactory )
+  : parent(parent),
+    fol(parent->fol),
     folWorlds_( parent->folWorlds_ ),
-    bs_( parent->bs_ ),
+    pHistory_( pHistory ),
+    bs_( bs ),
     folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
     actionId( a ),
     folStates_( folWorlds_.d0 ),
@@ -136,10 +139,49 @@ ActionNode::ActionNode(ActionNode* parent, std::size_t a, const KOMOFactory & ko
   s=parent->s+1;
   parent->children.append(this);
   fol.setState(parent->folState, parent->s);
+
+  //std::cout << "state:" << *observableFol.getState() << std::endl;
+  //std::cout << "state+percept:" << *stateBeforeAction << std::endl;
+
+  //std::cout << "state:" << *observableFol.getState() << std::endl;
+
+//  /////////////////Integrate percept//////////////////////////
+//  for( Node * n : *stateBeforeAction )
+//  {
+//    std::stringstream sn; sn << *n;
+
+//    bool found = false;
+//    for( Node * m : *observableFol.getState() )
+//    {
+//      std::stringstream sm; sm << *m;
+
+//      //std::cout << sn.str() <<  " " << sm.str() << std::endl;
+
+//      if( sn.str() == sm.str() )
+//        found = true;
+//    }
+
+//    if( ! found )
+//    {
+//      //auto clone  = n->newClone( *observableFol.getState() );
+//    }
+//  }
+
+  //std::cout << "state with obs:" << *observableFol.getState() << std::endl;
+  /////////////////Integrate action////////////////////////
   auto action = fol.get_actions()[actionId];
   CHECK(action,"giving a 'NULL' shared pointer??");
   //fol.verbose = 3;
   fol.transition(action);
+
+  ////////////////Do stuff
+  if(fol.deadEnd) isInfeasible=true;
+  fol.createStateCopy();
+  folState = fol.createStateCopy();
+  folAddToState = NULL; //fresh creation -> notion to add
+  folDecision = folState->getNode("decision");
+  decision = fol.get_actions()[a];
+  ////////////////////////////////
 
   for( auto w = 0 ; w < folWorlds_.d0; w++ )
   {
@@ -158,14 +200,14 @@ ActionNode::ActionNode(ActionNode* parent, std::size_t a, const KOMOFactory & ko
   //if( isTerminal )
   //  std::cout << "terminal node!" << std::endl;
   bool tmp = true;
-  for( auto w = 0 ; w < folWorlds_.d0; w++ ) tmp = tmp && folWorlds_(w)->successEnd;
+  for( auto w = 0 ; w < folWorlds_.d0; w++ )
+  {
+    if( bs_( w ) > epsilon() )
+      tmp = tmp && folWorlds_(w)->successEnd;
+  }
   isTerminal = tmp;
 
-  if(fol.deadEnd) isInfeasible=true;
-  folState = fol.createStateCopy();
-  folAddToState = NULL; //fresh creation -> notion to add
-  folDecision = folState->getNode("decision");
-  decision = fol.get_actions()[a];
+
   //rootMC = parent->rootMC;
   rootMcEngines_ = parent->rootMcEngines_;
 }
@@ -194,37 +236,80 @@ void ActionNode::expand(){
 //  }
 //  if(!children.N) isTerminal=true;
 
-    CHECK(!isExpanded,"");
-    if(isTerminal) return;
+  CHECK(!isExpanded,"");
+  if(isTerminal) return;
 
-    // determine the possible action set in each world and store it in the map
-    std::map< std::list< std::size_t >, std::list< std::size_t > > possibleActionSetMap;
+  // determine the possible action set in each world and store it in the map
+  struct ObservableSateActionMapping
+  {
+    Graph * state;
+    std::list< std::size_t > actions;
+  };
 
-    for( auto w = 0; w < folWorlds_.d0; w++ )
+  auto compare = []( const ObservableSateActionMapping & a, const ObservableSateActionMapping & b ) -> bool
+  {
+    return *a.state < *b.state;
+  };
+
+  std::map< ObservableSateActionMapping, std::list< std::size_t> , decltype(compare) > observableStates(compare);
+
+  for( auto w = 0; w < folWorlds_.d0; w++ )
+  {
+    //std::cout << folWorlds_(w)->KB << std::endl;
+    Graph* stateGraph = folWorlds_(w)->createStateCopy();
+
+    //folWorlds_(w)->KB == folWorlds_(w+1)->KB;
+
+    CHECK( stateGraph, "the state of this node could not be retrieved!" );
+
+    // Retrieve observable state
+    Graph*  observableStateGraph = stateGraph;
+    for( Node * n : *observableStateGraph )
     {
-      folWorlds_(w)->setState(folStates_(w).get(), s);
-      auto actions = folWorlds_(w)->get_actions();
-      folWorlds_(w)->getState();
-
-      std::list< std::size_t > actionsHashs;
-      //std::cout << "actions possible in world(" << w << "):" << std::endl;
-      for(FOL_World::Handle& a:actions)
+      std::stringstream ss;
+      n->write( ss );
+      std::string atom  = ss.str();
+      if( atom.find( "NOT_OBSERVABLE" ) != -1 )
       {
-        //cout <<*a << " " << a << " " << a->get_hash() << endl;
-        actionsHashs.push_back( a->get_hash() );
+        observableStateGraph->removeValue( n );
       }
-      possibleActionSetMap[ actionsHashs ].push_back( w );
     }
 
-    // Create nodes
-    for( auto actionMapping : possibleActionSetMap )
+    //std::cout << "observable state:" << *observableStateGraph << std::endl;
+    // Retrieve its possible actions
+    auto actions = folWorlds_(w)->get_actions();
+    std::list< std::size_t > actionsHashs;
+    for(FOL_World::Handle& a: actions)
     {
-      auto actions = actionMapping.first;
-      auto worlds  = actionMapping.second;
-
-      for( auto a : actions )
-        new ActionNode(this, a, komoFactory_);
+      actionsHashs.push_back( a->get_hash() );
     }
+
+    ObservableSateActionMapping obsState { observableStateGraph, actionsHashs };
+
+    observableStates[ obsState ].push_back( w );
+  }
+
+  // Create nodes
+  for( auto observableState : observableStates )
+  {
+    auto actions = observableState.first.actions;
+    auto worlds  = observableState.second;
+
+    // build new belief state
+    double sum = 0;
+    arr bs( folWorlds_.d0 );
+    for( auto w : worlds )
+    {
+      bs( w ) = bs_( w );
+      sum += bs( w );
+    }
+    bs /= sum;
+    double pHistory = sum;
+
+    // expand
+    for( auto a : actions )
+      new ActionNode( this, pHistory, bs/*, observableState.first.state*/, a, komoFactory_ );
+  }
 
   isExpanded=true;
 }
@@ -249,12 +334,15 @@ arr ActionNode::generateRootMCRollouts(uint num, int stepAbort, const mlr::Array
     double expectedReward = 0;
     for( auto w = 0; w < folWorlds_.d0; ++w )
     {
+      if( bs_( w ) > epsilon() )
+      {
         folWorlds_(w)->reset_state();
-      //  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
-      rootMcEngines_(w)->initRollout(prefixDecisions);
-      folWorlds_(w)->setState(folStates_(w).get());
-      double r = bs_(w) * rootMcEngines_(w)->finishRollout(stepAbort);
-      expectedReward += bs_(w) * r;
+        //  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
+        rootMcEngines_(w)->initRollout(prefixDecisions);
+        folWorlds_(w)->setState(folStates_(w).get());
+        double r = bs_(w) * rootMcEngines_(w)->finishRollout(stepAbort);
+        expectedReward += bs_(w) * r;
+      }
     }
 
     R.append( expectedReward );
@@ -293,14 +381,17 @@ void ActionNode::addMCRollouts(uint num, int stepAbort){
     double expectedReward = 0;
     for( auto w = 0; w < folWorlds_.d0; ++w )
     {
-      mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
-      for( auto a = 0; a < treepath.N-1; ++a )
-        prefixDecisions(a) = folWorlds_(w)->get_actions()[prefixDecisionIds(a)];
+      if( bs_( w ) > epsilon() )
+      {
+        mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
+        for( auto a = 0; a < treepath.N-1; ++a )
+          prefixDecisions(a) = folWorlds_(w)->get_actions()[prefixDecisionIds(a)];
 
-      rootMcEngines_(w)->initRollout(prefixDecisions);
-      folWorlds_(w)->setState(folStates_(w).get());
-      double r = rootMcEngines_(w)->finishRollout(stepAbort);
-      expectedReward += bs_(w) * r;
+        rootMcEngines_(w)->initRollout(prefixDecisions);
+        folWorlds_(w)->setState(folStates_(w).get());
+        double r = rootMcEngines_(w)->finishRollout(stepAbort);
+        expectedReward += bs_(w) * r;
+      }
     }
     R.append( expectedReward );
   }
@@ -583,8 +674,14 @@ ActionNode *ActionNode::treePolicy_softMax(double temperature){
 
 bool ActionNode::recomputeAllFolStates(){
   if(!parent){ //this is root
-    folState->copy(*fol.start_state);
-    if(folAddToState) applyEffectLiterals(*folState, *folAddToState, {}, NULL);
+    for( auto w = 0; w < folWorlds_.d0; ++w )
+    {
+      if( bs_(w) > epsilon() )
+      {
+        folStates_(w)->copy(*folWorlds_(w)->start_state);
+        if(folAddToState) applyEffectLiterals(*folStates_(w), *folAddToState, {}, NULL);
+      }
+    }
   }else{
     fol.setState(parent->folState, parent->s);
     if(fol.is_feasible_action(decision)){
@@ -643,15 +740,21 @@ void ActionNode::checkConsistency(){
 
   //-- check that each child exactly matches a decision, in same order
   if(children.N){
-    fol.setState(folState, s);
-    auto actions = fol.get_actions();
-    CHECK_EQ(children.N, actions.size(), "");
-    uint i=0;
-    for(FOL_World::Handle& a:actions){
-//      cout <<"  DECISION: " <<*a <<endl;
-      FOL_World::Handle& b = children(i)->decision;
-      CHECK_EQ(*a, *b, "children do not match decisions");
-      i++;
+    for( auto w = 0; w < folWorlds_.d0; ++w )
+    {
+      FOL_World& _fol = *(folWorlds_(w));
+      Graph * _folState = folStates_(w).get();
+
+      _fol.setState(_folState, s);
+      auto actions = fol.get_actions();
+      CHECK_EQ(children.N, actions.size(), "");
+      uint i=0;
+      for(FOL_World::Handle& a:actions){
+        //      cout <<"  DECISION: " <<*a <<endl;
+        FOL_World::Handle& b = children(i)->decision;
+        CHECK_EQ(*a, *b, "children do not match decisions");
+        i++;
+      }
     }
   }
 

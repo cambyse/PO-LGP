@@ -59,6 +59,12 @@ private:
 
 //=============done==============================================================
 
+struct PartiallyObservableNode{
+  mlr::Array< ActionNode* > nodes_;
+  double pHistory_;
+  arr bs_;  // initial belief state
+};
+
 struct ActionNode{
   ActionNode *parent;
   mlr::Array<ActionNode*> children; ///< all reacheable children
@@ -67,15 +73,16 @@ struct ActionNode{
   uint graphIndex=0;
 
   //-- info on the state and action this node represents
-  FOL_World& fol; ///< the symbolic KB (all Graphs below are subgraphs of this large KB)
+  FOL_World& fol; ///< the symbolic KB (all Graphs below are subgraphs of this large KB)      ///DOOMED
   mlr::Array< std::shared_ptr<FOL_World> > & folWorlds_;
+  double pHistory_;
   arr bs_;  // initial belief state
 
-  FOL_World::Handle decision; ///< the decision that led to this node
+  FOL_World::Handle decision; ///< the decision that led to this node                         ///DOOMED
   //pobs//FOL_World::Handle observation; ///< the observation that led to this node
-  Graph *folState;    ///< the symbolic state after the decision
+  Graph *folState;    ///< the symbolic state after the decision                              ///DOOMED
   mlr::Array< std::shared_ptr<Graph> > folStates_; ///< the array of symbolic state after the decision //and observation
-  Node  *folDecision; ///< the predicate in the folState that represents the decision
+  Node  *folDecision; ///< the predicate in the folState that represents the decision         ///DOOMED
   std::size_t actionId; ///< the action hash that led to this node
   //pobs//Node  *folObservation; ///< the predicate in the folState that represents the decision
   double folReward;   ///< the reward collected with this transition step
@@ -108,7 +115,7 @@ struct ActionNode{
 
   /// child node creation
   //ActionNode(ActionNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory );
-  ActionNode(ActionNode *parent, std::size_t a, const KOMOFactory & komoFactory );
+  ActionNode(ActionNode *parent, double pHistory, const arr & beliefState/*, Graph * stateBeforeAction*/, std::size_t a, const KOMOFactory & komoFactory );
 
   //- computations on the node
   void expand();           ///< expand this node (symbolically: compute possible decisions and add their effect nodes)
