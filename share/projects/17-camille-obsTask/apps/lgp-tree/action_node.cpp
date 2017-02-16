@@ -78,8 +78,8 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
 }
 
 //===========================================================================
-ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFactory & komoFactory )
-  : parent(NULL), s(0),
+ActionNode::ActionNode(PartiallyObservableNode * pobNode, mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFactory & komoFactory )
+  : pobNode( pobNode ), parent(NULL), s(0),
     fol(_fol), folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
     startKinematics(kin), effKinematics(),
     rootMC(NULL), mcStats(NULL),
@@ -97,9 +97,10 @@ ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFact
   rootMC->verbose = 0;
 }
 
-ActionNode::ActionNode(ActionNode* parent, MCTS_Environment::Handle& a, const KOMOFactory & komoFactory )
-  : parent(parent), fol(parent->fol),
-     folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
+ActionNode::ActionNode(PartiallyObservableNode * pobNode, ActionNode* parent, MCTS_Environment::Handle& a, const KOMOFactory & komoFactory )
+  : pobNode( pobNode ),
+    parent(parent), fol(parent->fol),
+    folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
     startKinematics(parent->startKinematics), effKinematics(),
     rootMC(NULL), mcStats(NULL),
     komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
@@ -132,7 +133,7 @@ void ActionNode::expand(){
   auto actions = fol.get_actions();
   for(FOL_World::Handle& a:actions){
 //    cout <<"  EXPAND DECISION: " <<*a <<endl;
-    new ActionNode(this, a, komoFactory_);
+    new ActionNode(pobNode, this, a, komoFactory_);
   }
   if(!children.N) isTerminal=true;
   isExpanded=true;
@@ -588,6 +589,112 @@ void ActionNode::getAll(ActionNodeL& L){
   for(ActionNode *ch:children) ch->getAll(L);
 }
 
+//===========================================================================
+
+PartiallyObservableNode::PartiallyObservableNode(mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory )
+  : node_( new ActionNode( this, kin, fol, komoFactory ) )
+{
+
+}
+
+/// child node creation
+PartiallyObservableNode::PartiallyObservableNode(PartiallyObservableNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory )
+  : node_( new ActionNode( this, parent->node_, a, komoFactory ) )
+{
+
+}
+
+void PartiallyObservableNode::expand()
+{
+  node_->expand();
+}
+
+arr PartiallyObservableNode::generateRootMCRollouts(uint num, int stepAbort, const mlr::Array<MCTS_Environment::Handle>& prefixDecisions)
+{
+  return node_->generateRootMCRollouts( num, stepAbort, prefixDecisions );
+}
+
+void PartiallyObservableNode::addMCRollouts(uint num,int stepAbort)
+{
+  node_->addMCRollouts( num, stepAbort );
+}
+
+void PartiallyObservableNode::solvePoseProblem()
+{
+  node_->solvePoseProblem();
+}
+
+void PartiallyObservableNode::solveSeqProblem(int verbose)
+{
+  node_->solveSeqProblem(verbose);
+}
+
+void PartiallyObservableNode::solvePathProblem(uint microSteps, int verbose)
+{
+  node_->solvePathProblem(microSteps, verbose);
+}
+
+//-- helpers
+void PartiallyObservableNode::labelInfeasible()
+{
+  node_->labelInfeasible();
+}
+
+PartiallyObservableNodeL PartiallyObservableNode::getTreePath()
+{
+  PartiallyObservableNodeL path;
+  ActionNode *node=node_;
+  for(;node;){
+    path.prepend(node->pobNode);
+    node = node->parent;
+  }
+  return path;
+}
+
+PartiallyObservableNode* PartiallyObservableNode::getRoot()
+{
+  return node_->getRoot()->pobNode;
+}
+
+void getAllChildren(PartiallyObservableNodeL& tree);
+PartiallyObservableNode * PartiallyObservableNode::treePolicy_random()
+{
+  ActionNode* n = node_->treePolicy_random();
+  if( n )
+    return n->pobNode;
+  else
+    return nullptr;
+}
+
+//PartiallyObservableNode *treePolicy_softMax(double temperature);
+bool PartiallyObservableNode::recomputeAllFolStates()
+{
+  return node_->recomputeAllFolStates();
+}
+
+void PartiallyObservableNode::recomputeAllMCStats(bool excludeLeafs)
+{
+  node_->recomputeAllMCStats(excludeLeafs);
+}
+
+void PartiallyObservableNode::checkConsistency()
+{
+  node_->checkConsistency();
+}
+
+void PartiallyObservableNode::write(ostream& os, bool recursive) const
+{
+  node_->write(os, recursive);
+}
+
+void PartiallyObservableNode::getAll(PartiallyObservableNodeL& L)
+{
+  auto list = node_->getAll();
+  for( auto n : list )
+    L.append(n->pobNode);
+}
+
 RUN_ON_INIT_BEGIN(manipulationTree)
 ActionNodeL::memMove = true;
+PartiallyObservableNodeL::memMove = true;
 RUN_ON_INIT_END(manipulationTree)

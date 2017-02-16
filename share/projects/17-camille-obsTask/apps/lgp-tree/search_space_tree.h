@@ -6,20 +6,22 @@
 
 class SearchSpaceTree{
 public: // public members
-  FOL_World fol;      // first order logic symbols
+  //FOL_World fol;      // first order logic symbols
+  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  arr bs_;
 
-  ActionNode *root,*node; // root and "current" node
+  PartiallyObservableNode *root,*node; // root and "current" node
 
   OrsPathViewer poseView;
   OrsPathViewer seqView;
   OrsPathViewer pathView;
 
-  mlr::Array<ActionNode*> mcFringe;
-  mlr::Array<ActionNode*> terminals;
-  mlr::Array<ActionNode*> poseFringe;
-  mlr::Array<ActionNode*> seqFringe;
-  mlr::Array<ActionNode*> pathFringe;
-  mlr::Array<ActionNode*> done;
+  mlr::Array<PartiallyObservableNode*> mcFringe;
+  mlr::Array<PartiallyObservableNode*> terminals;
+  mlr::Array<PartiallyObservableNode*> poseFringe;
+  mlr::Array<PartiallyObservableNode*> seqFringe;
+  mlr::Array<PartiallyObservableNode*> pathFringe;
+  mlr::Array<PartiallyObservableNode*> done;
 
 public: // public methods
   SearchSpaceTree( const KOMOFactory & );
@@ -53,6 +55,16 @@ private: // private members
 };
 
 //============free functions==============================================
+
+double poseHeuristic(PartiallyObservableNode* n);
+double mcHeuristic(PartiallyObservableNode* n);
+double seqHeuristic(PartiallyObservableNode* n);
+double poseCost(PartiallyObservableNode* n);
+double seqCost(PartiallyObservableNode* n);
+double pathHeuristic(PartiallyObservableNode* n);
+double pathCost(PartiallyObservableNode* n);
+PartiallyObservableNode* getBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
+PartiallyObservableNode* popBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
 
 typedef ActionNode MNode;
 

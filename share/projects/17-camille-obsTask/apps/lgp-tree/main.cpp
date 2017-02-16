@@ -76,18 +76,18 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
 {
   //    C.root->checkConsistency();
   { //expand
-    MNode* n = popBest(C.mcFringe, mcHeuristic);
+    PartiallyObservableNode* n = popBest(C.mcFringe, mcHeuristic);
     //      ActionNode* n = NULL;
     //      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
     if(n)
     {
       n->expand();
-      for(ActionNode* c:n->children)
+      for(PartiallyObservableNode* c:n->children())
       {
         c->addMCRollouts(10,10);
         C.mcFringe.append(c);
-        if(c->isTerminal) C.terminals.append(c);
-        if(n->poseCount)  C.poseFringe.append(c);
+        if(c->isTerminal()) C.terminals.append(c);
+        if(n->poseCount())  C.poseFringe.append(c);
         //          if(n->seqCount) C.seqFringe.append(c);
         //if(c->isTerminal) C.seqFringe.append(c);
       }
@@ -97,7 +97,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   { //add additional MC rollouts
     for(uint mc=0;mc<10;mc++)
     {
-      ActionNode* n = NULL;
+      PartiallyObservableNode* n = NULL;
       for(uint k=0;k<10;k++)
       {
         n=C.root->treePolicy_random(); if(n) break;
@@ -114,53 +114,53 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   //    C.updateDisplay();
 
   { //optimize a pose
-    MNode* n = popBest(C.poseFringe, poseHeuristic);
+    PartiallyObservableNode* n = popBest(C.poseFringe, poseHeuristic);
     if(n)
     {
       //      cout <<"### POSE TESTING node " <<*n <<endl;
       //      mlr::wait();
       n->solvePoseProblem();
-      if(n->poseFeasible)
+      if(n->poseFeasible())
       {
-        for(MNode* c:n->children) C.poseFringe.append(c); //test all children
-        if(n->isTerminal) C.seqFringe.append(n); //test seq or path
+        for(PartiallyObservableNode* c:n->children()) C.poseFringe.append(c); //test all children
+        if(n->isTerminal()) C.seqFringe.append(n); //test seq or path
       }
       C.node = n;
     }
   }
 
   { //optimize a seq
-    MNode* n = popBest(C.seqFringe, seqHeuristic);
+    PartiallyObservableNode* n = popBest(C.seqFringe, seqHeuristic);
     if(n)
     {
       //      cout <<"### SEQ TESTING node " <<*n <<endl;
       //      mlr::wait();
       n->solveSeqProblem();
-      if(n->seqFeasible)
+      if(n->seqFeasible())
       {
         //          for(MNode* c:n->children) C.seqFringe.append(c);
-        if(n->isTerminal) C.pathFringe.append(n);
+        if(n->isTerminal()) C.pathFringe.append(n);
       }
       C.node = n;
     }
   }
 
   { //optimize a path
-    MNode* n = popBest(C.pathFringe, pathHeuristic);
+    PartiallyObservableNode* n = popBest(C.pathFringe, pathHeuristic);
     if(n)
     {
       //      cout <<"### PATH TESTING node " <<*n <<endl;
       //      mlr::wait();
       n->solvePathProblem(10);
-      if(n->pathFeasible) C.done.append(n);
+      if(n->pathFeasible()) C.done.append(n);
       C.node = n;
     }
   }
 
-  for(auto *n:C.terminals) CHECK(n->isTerminal,"");
+  for(auto *n:C.terminals) CHECK(n->isTerminal(),"");
 
   //    C.updateDisplay();
-  for(MNode *n:C.mcFringe) if(!n->mcStats->n)
+  for(PartiallyObservableNode *n:C.mcFringe) if(!n->mcStats()->n)
   {
     //      cout <<"recomputing MC rollouts for: " <<*n->decision <<endl;
     //      mlr::wait();
@@ -169,8 +169,8 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
     //      C.updateDisplay();
   }
 
-  MNode *bt = getBest(C.terminals, seqCost);
-  MNode *bp = getBest(C.done, pathCost);
+  PartiallyObservableNode *bt = getBest(C.terminals, seqCost);
+  PartiallyObservableNode *bp = getBest(C.done, pathCost);
   mlr::String out;
   out <<"TIME= "        <<mlr::cpuTime()  <<" KIN= " <<COUNT_kin    <<" EVALS= " <<COUNT_evals
       <<" POSE= "       <<COUNT_poseOpt   <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
@@ -260,7 +260,7 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int
 
   mlr::String arg = *symbols(0);
 
-  if( arg == "target_location" )  // tmp, pivot point and object location has to be deduced from the scene!!
+  if( arg == "target_location_1" )  // tmp, pivot point and object location has to be deduced from the scene!!
     komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
                                                       ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
                                                       OT_sumOfSqr, NoArr, 1e2 );

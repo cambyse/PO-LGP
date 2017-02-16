@@ -30,40 +30,72 @@ void SearchSpaceTree::prepareKin( const std::string & kinDescription ){
 
 void SearchSpaceTree::prepareFol( const std::string & folDescription ){
 
-  fol.init(FILE(folDescription.c_str()));
+  // get number of possible worlds
+  Graph KB;
+  KB.read(FILE(folDescription.c_str()));
+  auto bsGraph = &KB.get<Graph>("BELIEF_START_STATE");
+  uint nWorlds = bsGraph->d0;
 
-  fol.reset_state();
-  FILE("z.start.fol") <<fol;
+  // generate all the possible fol
+  folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( nWorlds );
+  bs_ = arr( nWorlds );
+  for( uint w = 0; w < nWorlds; w++ )
+  {
+    // retrieve the facts of the belief state
+    std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
+    fol->init(FILE(folDescription.c_str()));
+    auto n = bsGraph->elem(w);
+    StringA fact;
+    // add fact
+    for( auto s : n->parents ) fact.append( s->keys.last() );
+    fol->addFact(fact);
+
+    // tag this fact as not observable
+    StringA notObservableFact; notObservableFact.append( "NOT_OBSERVABLE" );
+    for( auto s : fact ) notObservableFact.append( s );
+
+    fol->addFact(notObservableFact);
+    fol->reset_state();
+
+    //std::cout << *fol << std::endl; // tmp
+    folWorlds_(w) = fol;
+    bs_(w) = n->get<double>();
+  }
+
+//  fol.init(FILE(folDescription.c_str()));
+//  fol.reset_state();
 }
 
 void SearchSpaceTree::prepareTree(){
-  root = new ActionNode(kin, fol, komoFactory_);
+  //root = new ActionNode(kin, fol, folWorlds_, bs_, komoFactory_);
+  root = new PartiallyObservableNode(kin, *folWorlds_(0), komoFactory_);
   node = root;
 }
+
 
 void SearchSpaceTree::prepareDisplay(){
   threadOpenModules(true);
 }
 
 void SearchSpaceTree::updateDisplay(){
-  if(node->komoPoseProblem && node->komoPoseProblem->MP->configurations.N)
-    poseView.setConfigurations(node->komoPoseProblem->MP->configurations);
-  if(node->komoSeqProblem && node->komoSeqProblem->MP->configurations.N)
-    seqView.setConfigurations(node->komoSeqProblem->MP->configurations);
+  if(node->komoPoseProblem() && node->komoPoseProblem()->MP->configurations.N)
+    poseView.setConfigurations(node->komoPoseProblem()->MP->configurations);
+  if(node->komoSeqProblem() && node->komoSeqProblem()->MP->configurations.N)
+    seqView.setConfigurations(node->komoSeqProblem()->MP->configurations);
   else seqView.clear();
-  if(node->komoPathProblem && node->komoPathProblem->MP->configurations.N)
-    pathView.setConfigurations(node->komoPathProblem->MP->configurations);
+  if(node->komoPathProblem() && node->komoPathProblem()->MP->configurations.N)
+    pathView.setConfigurations(node->komoPathProblem()->MP->configurations);
   else pathView.clear();
 
 
-  ActionNodeL all = root->getAll();
-  for(auto& n:all) n->inFringe1=n->inFringe2=false;
-  for(auto& n:poseFringe) n->inFringe1=true;
+  PartiallyObservableNodeL all = root->getAll();
+  for(auto& n:all) n->inFringe1()=n->inFringe2()=false;
+  for(auto& n:poseFringe()) n->inFringe1()=true;
   //  for(auto& n:seqFringe) n->inFringe1=true;
-  for(auto& n:mcFringe) n->inFringe2=true;
+  for(auto& n:mcFringe) n->inFringe2()=true;
 
   Graph dot=root->getGraph();
-  dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
+  dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex());
   int r = system("dot -Tpdf z.dot > z.pdf");
   if(r) LOG(-1) <<"could not startup dot";
 }
@@ -79,7 +111,7 @@ bool SearchSpaceTree::execRandomChoice(){
       case 4: cmd="m"; break;
     }
   }else{
-    cmd <<rnd(node->children.N);
+    cmd <<rnd(node->children().N);
   }
   return execChoice(cmd);
 }
@@ -88,7 +120,7 @@ bool SearchSpaceTree::execChoice( mlr::String cmd ){
   cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
   if(cmd=="q") return false;
-  else if(cmd=="u"){ if(node->parent) node = node->parent; }
+  else if(cmd=="u"){ if(node->parent()) node = node->parent(); }
   else if(cmd=="p") node->solvePoseProblem();
   else if(cmd=="s") node->solveSeqProblem();
   else if(cmd=="x") node->solvePathProblem(20);
@@ -97,11 +129,11 @@ bool SearchSpaceTree::execChoice( mlr::String cmd ){
     int choice;
     cmd >> choice;
     cout <<"CHOICE=" <<choice <<endl;
-    if(choice>=(int)node->children.N){
+    if(choice>=(int)node->children().N){
       cout <<"--- there is no such choice" <<endl;
     }else{
-      node = node->children(choice);
-      if(!node->isExpanded){
+      node = node->children()(choice);
+      if(!node->isExpanded()){
         node->expand();
         if(autoCompute){
           node->solvePoseProblem();
@@ -127,8 +159,8 @@ void SearchSpaceTree::printChoices() const{
   cout <<"(x) path problem" <<endl;
   cout <<"(m) MC planning" <<endl;
   uint c=0;
-  for(ActionNode* a:node->children){
-    cout <<"(" <<c++ <<") DECISION: " <<*a->decision <<endl;
+  for(PartiallyObservableNode* a:node->children()){
+    cout <<"(" <<c++ <<") DECISION: " <<*a->decision() <<endl;
   }
 }
 
@@ -138,6 +170,55 @@ mlr::String SearchSpaceTree::queryForChoice() const{
   getline(std::cin, tmp);
   cmd=tmp.c_str();
   return cmd;
+}
+
+//===========================================================================
+
+double poseHeuristic(PartiallyObservableNode* n){
+  return n->symCost();
+}
+
+double mcHeuristic(PartiallyObservableNode* n){
+  if(n->poseCount()) return -10.+n->poseCost();
+  return 1.;
+}
+
+double seqHeuristic(PartiallyObservableNode* n){
+  return n->symCost();
+}
+
+double poseCost(PartiallyObservableNode* n){
+  if(!n->poseCount() || !n->poseFeasible()) return 100.;
+  return .1*n->symCost()+n->poseCost();
+}
+
+double seqCost(PartiallyObservableNode* n){
+  if(!n->seqCount() || !n->seqFeasible()) return 100.;
+  return .1*n->symCost()+n->seqCost();
+}
+
+double pathHeuristic(PartiallyObservableNode* n){
+  return seqCost(n);
+}
+
+double pathCost(PartiallyObservableNode* n){
+  if(!n->path().N || !n->pathFeasible()) return 100.;
+  return .1*n->symCost() + n->seqCost() + n->pathCost();
+}
+
+PartiallyObservableNode* getBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*)){
+  if(!fringe.N) return NULL;
+  PartiallyObservableNode* best=NULL;
+  for(PartiallyObservableNode* n:fringe)
+    if(!best || heuristic(n)<heuristic(best)) best=n;
+  return best;
+}
+
+PartiallyObservableNode* popBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*)){
+  if(!fringe.N) return NULL;
+  PartiallyObservableNode* best=getBest(fringe, heuristic);
+  fringe.removeValue(best);
+  return best;
 }
 
 //===========================================================================
