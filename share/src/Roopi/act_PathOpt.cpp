@@ -30,10 +30,7 @@ Act_PathOpt::Act_PathOpt(Roopi* r)
 }
 
 Act_PathOpt::~Act_PathOpt(){
-  if(s->viewer){
-    s->viewer->threadClose();
-    delete s->viewer;
-  }
+  if(s->viewer) delete s->viewer;
   delete s;
   delete komo;
 }

@@ -17,7 +17,7 @@ ImageViewer::ImageViewer(const char* img_name) : Thread(STRING("ImageViewer_"<<i
 ImageViewer::~ImageViewer(){ threadClose(); }
 
 void ImageViewer::open(){
-  s = new sImageViewer(STRING("ImageViewer '"<<img.data->name<<'\''));
+  s = new sImageViewer(STRING("ImageViewer: "<<img.data->name));
   s->gl.openWindow();
   s->gl.update();
 }

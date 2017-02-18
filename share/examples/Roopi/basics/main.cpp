@@ -33,11 +33,11 @@ void TEST(PhysX) {
   {
     Roopi R(true);
 
-    auto ph = Act_PhysX(&R);
+    auto ph = R.newPhysX();
 
 //    mlr::wait();
 
-    auto g = R.graspBox("obj2", false);
+    auto g = R.graspBox("obj2", LR_left);
 
     R.wait({&g});
 
@@ -113,13 +113,14 @@ void Prototyping(){
 
 #if 0 //PLAN
   switchToKinestheticTeachingMode();
+
   recordPose(taskSpace..);
   recordTrajectory();
   newLog(); // type= arr, image, ctrlMsg, jointAndFTSensors, ctrlTasks (including force) //of only ONE variable (type arr)
   newImageLog(); //of only ONE variable (type byteA)
   newControllerLog();
 
-  newPhysicsSimulator();
+  *every act should ahve its own log (like LOG..)
 #endif
 }
 
@@ -133,15 +134,16 @@ void TEST(PickAndPlace) {
 
   R.taskController().lockJointGroupControl("torso");
 
-  auto ph = Act_PhysX(&R);
+//  auto ph = R.newPhysX();
+  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
 
 #if 0
   Script_graspBox(R, "obj1", true);
   Script_place(R, "obj1", "objTarget");
 #else
-  auto pick1 = R.graspBox("obj2", false);
+  auto pick1 = R.graspBox("obj2", LR_left);
   mlr::wait(.5);
-  auto pick2 = R.graspBox("obj1", true);
+  auto pick2 = R.graspBox("obj1", LR_right);
   R.wait({&pick1,&pick2});
 
   auto place1 = R.place("obj2", "objTarget");
@@ -156,22 +158,25 @@ void TEST(PickAndPlace) {
 
 //===============================================================================
 
+void focusWorkspace_pr2(Roopi& R, const char* objName){
+  //attention
+  auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, objName));
+  auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, objName), {}, {}, {1e1});
+
+  R.hold(false);
+  R.wait({&ws, &look});
+}
+
 void TEST(PickAndPlace2) {
   Roopi R(true);
 
   auto view = R.newCameraView();
 //  R.taskController().verbose(1);
 
-  {
-    //attention
-    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, "obj1"));
-    auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, "obj1"), {}, {}, {1e1});
 
-    R.hold(false);
-    R.wait({&ws, &look});
-    R.taskController().lockJointGroupControl("base");
-    R.hold(true);
-  }
+  focusWorkspace_pr2(R, "obj1");
+  R.taskController().lockJointGroupControl("base");
+  R.hold(true);
 
   {
     auto path = R.newPathOpt();
@@ -246,9 +251,9 @@ int main(int argc, char** argv){
 //  testPhysX();
 //  Prototyping();
 
-  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
-//  /*for(;;)*/ testPickAndPlace2();
+  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();
 
   return 0;

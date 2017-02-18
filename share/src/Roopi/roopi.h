@@ -15,6 +15,7 @@
 #include "act_Tweets.h"
 #include "act_Script.h"
 #include "act_Physx.h"
+#include "act_Recorder.h"
 #include "script_PickAndPlace.h"
 
 
@@ -63,6 +64,9 @@ struct Roopi {
   //-- path optimization
   Act_PathOpt newPathOpt()           { return Act_PathOpt(this); }
 
+  //-- PhysX simulation
+  Act_PhysX newPhysX()               { return Act_PhysX(this); }
+
   //-- compute and display the camera view
   Act_Thread newCameraView();
 
@@ -71,8 +75,8 @@ struct Roopi {
   // MACROS, which build on the above basic methods
   //
 
-  Act_Script graspBox(const char* objName, bool rightNotLeft){
-    return Act_Script(this, [this, objName, rightNotLeft](){ return Script_graspBox(*this, objName, rightNotLeft); } );
+  Act_Script graspBox(const char* objName, LeftOrRight lr){
+    return Act_Script(this, [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
   }
   Act_Script place(const char* objName, const char* ontoName){
     return Act_Script(this, [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );

@@ -1,4 +1,9 @@
-#include "roopi.h"
+#pragma once
 
-int Script_graspBox(Roopi& R, const char* objName, bool rightNotLeft);
+struct Roopi;
+
+enum LeftOrRight { LR_left, LR_right };
+
+int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize);
+int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl);
 int Script_place(Roopi& R, const char* objName, const char* ontoName);

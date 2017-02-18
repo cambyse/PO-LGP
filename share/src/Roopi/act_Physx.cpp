@@ -23,7 +23,10 @@ struct sAct_PhysX : Thread{
     physxWorld() = modelWorld.get();
     for(uint i=physxWorld().joints.N;i--;){
       mlr::Joint *j = physxWorld().joints.elem(i);
-      if(j->type==mlr::JT_rigid) delete j;
+      if(j->type==mlr::JT_rigid){
+        LOG(0) <<"removing fixed joint '" <<j->tag() <<"' (assuming it is not articulated)";
+        delete j;
+      }
     }
     physxWorld.deAccess();
     px = new PhysXInterface(physxWorld.set());

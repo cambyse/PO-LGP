@@ -2,7 +2,34 @@
 #include "roopi-private.h"
 #include <Control/taskControl.h>
 
-int Script_graspBox(Roopi& R, const char* objName, bool rightNotLeft){
+int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize){
+  //query some info from the kinematics first
+  uint grasp1, grasp2;
+  {
+    auto K = R.getKinematics();
+    if(R.s->robot=="pr2"){
+      if(lr==LR_right){
+        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
+        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+      }else{
+        grasp1 = K().getJointByName("l_gripper_joint")->to->index;
+        grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+      }
+    }else{
+      NIY;
+    }
+  }
+
+  {
+    auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
+    R.wait({&gripperR, &gripper2R});
+  }
+  return AS_done;
+}
+
+
+int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
   //query some info from the kinematics first
   double width, above;
@@ -18,7 +45,7 @@ int Script_graspBox(Roopi& R, const char* objName, bool rightNotLeft){
     //relevant shapes
     obj = K().getShapeByName(objName)->index;
     if(R.s->robot=="pr2"){
-      if(rightNotLeft){
+      if(rl==LR_right){
         eff = K().getShapeByName("pr2R")->index;
         grasp1 = K().getJointByName("r_gripper_joint")->to->index;
         grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
@@ -52,7 +79,7 @@ int Script_graspBox(Roopi& R, const char* objName, bool rightNotLeft){
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
     R.hold(false);
-    R.wait({&pos, &gripperR, &ws, &up});
+    R.wait({&pos, &gripperR, &gripper2R, &ws, &up});
 
     //lowering
     pos.set()->PD().setTarget( ARR(0,0,above-.05) );
