@@ -18,6 +18,9 @@ Edit br_caster_rotation_joint {   type=10   }
 Edit br_caster_l_wheel_joint {   type=10   }
 Edit br_caster_r_wheel_joint {   type=10   }
 
+Edit shape visual base_link_1 { meshscale=.1  }
+Edit shape visual head_mount_link_1 { meshscale=.001 }
+
 # Peter's I-gain limits added:
 Edit worldTranslationRotation {  ctrl_H=20  }
 Edit head_pan_joint{  ctrl_limits=[ 6 2.645 0.5]  }
@@ -37,4 +40,4 @@ Edit l_wrist_flex_joint {  ctrl_limits=[ 3.078 10 2]  }
 Edit r_wrist_roll_joint {  ctrl_limits=[ 3.6 10 2]  }
 Edit l_wrist_roll_joint {  ctrl_limits=[ 3.6 10 2]  }
 
-Delete shape visual
+Delete shape collision

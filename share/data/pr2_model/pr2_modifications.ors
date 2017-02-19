@@ -1,59 +1,59 @@
 
 ## SHAPES
-Edit base_link_0 { contact }
-Edit base_footprint_0 { contact }
-Edit base_bellow_link_0 { contact }
-Edit fl_caster_rotation_link_0 { contact }
-Edit fl_caster_l_wheel_link_0 { contact }
-Edit fl_caster_r_wheel_link_0 { contact }
-Edit fr_caster_rotation_link_0 { contact }
-Edit fr_caster_l_wheel_link_0 { contact }
-Edit fr_caster_r_wheel_link_0 { contact }
-Edit bl_caster_rotation_link_0 { contact }
-Edit bl_caster_l_wheel_link_0 { contact }
-Edit bl_caster_r_wheel_link_0 { contact }
-Edit br_caster_rotation_link_0 { contact }
-Edit br_caster_l_wheel_link_0 { contact }
-Edit br_caster_r_wheel_link_0 { contact }
-Edit torso_lift_link_0 { contact }
-Edit head_pan_link_0 { contact }
-Edit head_tilt_link_0 { contact }
-Edit head_plate_frame_0 { contact }
-Edit head_mount_link_0 { contact }
-Edit head_mount_kinect_ir_link_0 { contact }
-Edit head_mount_kinect_rgb_link_0 { contact }
-Edit head_mount_prosilica_link_0 { contact }
-Edit laser_tilt_mount_link_0 { contact }
-Edit r_shoulder_pan_link_0 { contact }
-Edit r_shoulder_lift_link_0 { contact }
-Edit r_upper_arm_roll_link_0 { contact }
-Edit r_upper_arm_link_0 { contact }
-Edit r_forearm_roll_link_0 { contact }
-Edit r_elbow_flex_link_0 { contact }
-Edit r_forearm_link_0 { contact }
-Edit r_wrist_flex_link_0 { contact }
-Edit r_wrist_roll_link_0 { contact }
-Edit r_gripper_palm_link_0 { contact }
-Edit r_gripper_motor_accelerometer_link_0 { contact }
-Edit r_gripper_l_finger_link_0 { contact }
-Edit r_gripper_r_finger_link_0 { contact }
-Edit r_gripper_l_finger_tip_link_0 { contact }
-Edit r_gripper_r_finger_tip_link_0 { contact }
-Edit l_shoulder_pan_link_0 { contact }
-Edit l_shoulder_lift_link_0 { contact }
-Edit l_upper_arm_roll_link_0 { contact }
-Edit l_upper_arm_link_0 { contact }
-Edit l_forearm_roll_link_0 { contact }
-Edit l_elbow_flex_link_0 { contact }
-Edit l_forearm_link_0 { contact }
-Edit l_wrist_flex_link_0 { contact }
-Edit l_wrist_roll_link_0 { contact }
-Edit l_gripper_palm_link_0 { contact }
-Edit l_gripper_motor_accelerometer_link_0 { contact }
-Edit l_gripper_l_finger_link_0 { contact }
-Edit l_gripper_r_finger_link_0 { contact }
-Edit l_gripper_l_finger_tip_link_0 { contact }
-Edit l_gripper_r_finger_tip_link_0 { contact }
+# Edit base_link_0 { contact }
+# Edit base_footprint_0 { contact }
+# Edit base_bellow_link_0 { contact }
+# Edit fl_caster_rotation_link_0 { contact }
+# Edit fl_caster_l_wheel_link_0 { contact }
+# Edit fl_caster_r_wheel_link_0 { contact }
+# Edit fr_caster_rotation_link_0 { contact }
+# Edit fr_caster_l_wheel_link_0 { contact }
+# Edit fr_caster_r_wheel_link_0 { contact }
+# Edit bl_caster_rotation_link_0 { contact }
+# Edit bl_caster_l_wheel_link_0 { contact }
+# Edit bl_caster_r_wheel_link_0 { contact }
+# Edit br_caster_rotation_link_0 { contact }
+# Edit br_caster_l_wheel_link_0 { contact }
+# Edit br_caster_r_wheel_link_0 { contact }
+# Edit torso_lift_link_0 { contact }
+# Edit head_pan_link_0 { contact }
+# Edit head_tilt_link_0 { contact }
+# Edit head_plate_frame_0 { contact }
+# Edit head_mount_link_0 { contact }
+# Edit head_mount_kinect_ir_link_0 { contact }
+# Edit head_mount_kinect_rgb_link_0 { contact }
+# Edit head_mount_prosilica_link_0 { contact }
+# Edit laser_tilt_mount_link_0 { contact }
+# Edit r_shoulder_pan_link_0 { contact }
+# Edit r_shoulder_lift_link_0 { contact }
+# Edit r_upper_arm_roll_link_0 { contact }
+# Edit r_upper_arm_link_0 { contact }
+# Edit r_forearm_roll_link_0 { contact }
+# Edit r_elbow_flex_link_0 { contact }
+# Edit r_forearm_link_0 { contact }
+# Edit r_wrist_flex_link_0 { contact }
+# Edit r_wrist_roll_link_0 { contact }
+# Edit r_gripper_palm_link_0 { contact }
+# Edit r_gripper_motor_accelerometer_link_0 { contact }
+# Edit r_gripper_l_finger_link_0 { contact }
+# Edit r_gripper_r_finger_link_0 { contact }
+# Edit r_gripper_l_finger_tip_link_0 { contact }
+# Edit r_gripper_r_finger_tip_link_0 { contact }
+# Edit l_shoulder_pan_link_0 { contact }
+# Edit l_shoulder_lift_link_0 { contact }
+# Edit l_upper_arm_roll_link_0 { contact }
+# Edit l_upper_arm_link_0 { contact }
+# Edit l_forearm_roll_link_0 { contact }
+# Edit l_elbow_flex_link_0 { contact }
+# Edit l_forearm_link_0 { contact }
+# Edit l_wrist_flex_link_0 { contact }
+# Edit l_wrist_roll_link_0 { contact }
+# Edit l_gripper_palm_link_0 { contact }
+# Edit l_gripper_motor_accelerometer_link_0 { contact }
+# Edit l_gripper_l_finger_link_0 { contact }
+# Edit l_gripper_r_finger_link_0 { contact }
+# Edit l_gripper_l_finger_tip_link_0 { contact }
+# Edit l_gripper_r_finger_tip_link_0 { contact }
 
 Edit worldTranslationRotation { gains=[1 1] ctrl_limits=[1 1 1] base }
 

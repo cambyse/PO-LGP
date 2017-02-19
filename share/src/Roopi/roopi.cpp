@@ -233,7 +233,7 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   mlr::Shape *sh = new mlr::Shape(s->modelWorld(), NoBody);
   sh->name = name;
   sh->type = mlr::ST_marker;
-  sh->color[0]=.8; sh->color[1]=sh->color[2]=.0;
+  sh->color[0]=.8; sh->color[1]=sh->color[2]=.0; sh->color[3]=1.;
   sh->size[0]=.1;
   sh->X.pos = sh->rel.pos = pos;
   s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(s->modelWorld());
