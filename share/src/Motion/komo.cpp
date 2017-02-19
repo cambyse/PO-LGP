@@ -83,9 +83,9 @@ void KOMO::init(const Graph& _specs){
   if(glob["makeConvexHulls"])
     makeConvexHulls(world.shapes);
 
-  if(glob["makeSSBoxes"]){
+  if(glob["computeOptimalSSBoxes"]){
     NIY;
-    //for(mlr::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    //for(mlr::Shape *s: world.shapes) s->mesh.computeOptimalSSBox(s->mesh.V);
     world.gl().watch();
   }
 
@@ -109,7 +109,7 @@ void KOMO::setFact(const char* fact){
 }
 
 void KOMO::setModel(const mlr::KinematicWorld& W,
-                    bool meldFixedJoints, bool makeConvexHulls, bool makeSSBoxes, bool activateAllContacts){
+                    bool meldFixedJoints, bool makeConvexHulls, bool computeOptimalSSBoxes, bool activateAllContacts){
 
   world.copy(W);
 
@@ -123,9 +123,9 @@ void KOMO::setModel(const mlr::KinematicWorld& W,
   }
   computeMeshNormals(world.shapes);
 
-  if(makeSSBoxes){
+  if(computeOptimalSSBoxes){
     NIY;
-    //for(mlr::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    //for(mlr::Shape *s: world.shapes) s->mesh.computeOptimalSSBox(s->mesh.V);
     world.gl().watch();
   }
 
@@ -530,7 +530,7 @@ void KOMO::setConfigFromFile(){
         W,
         mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
         mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
-        mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
+        mlr::getParameter<bool>("KOMO/computeOptimalSSBoxes", false),
         mlr::getParameter<bool>("KOMO/activateAllContact", false)
         );
   setTiming(

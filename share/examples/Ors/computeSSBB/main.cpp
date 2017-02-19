@@ -24,7 +24,7 @@ void computeSSBB() {
   for(Node *n:G){
     if(n->isGraph()){
       Graph& g = n->graph();
-      if(g["contact"] && g["mesh"]){
+      if(n->keys(1)=="visual" && g["mesh"]){
         mlr::FileToken& f = g["mesh"]->get<mlr::FileToken>();
         if(!done.contains(f.name)){
           cout <<"shape " <<*g["mesh"] <<endl;
@@ -33,16 +33,16 @@ void computeSSBB() {
 //          gl.watch();
           arr x;
           mlr::Transformation t;
-          m2.makeSSBox(x, t, m.V);
-//          gl.watch();
+          m2.computeOptimalSSBox(x, t, m.V, 2);
+          gl.watch();
           //cleanup:
-          for(uint i=0;i<3;i++) if(x(i)<2e-3){x(3) += x(i); x(i)=0.; } //thin
+//          for(uint i=0;i<3;i++) if(x(i)<2e-3){x(3) += x(i); x(i)=0.; } //thin
           for(uint i=0;i<3;i++) if(fabs(t.pos(i))<1e-4) t.pos(i)=0.;
           for(uint i=1;i<=3;i++) if(fabs(t.rot(i))<1e-3) t.rot(i)=0.;
           t.rot.normalize();
-          m2.setSSBox(2.*x(0), 2.*x(1), 2.*x(2), x(3));
+          m2.setSSBox(x(0), x(1), x(2), x(3));
           t.applyOnPointArray(m2.V);
-          gl.update();
+          gl.watch();
 
           g.newNode<arr>({"ssbb"},{}, x({0,3}));
           g.newNode<mlr::Transformation>({"ssbb_rel"},{}, t);
@@ -120,8 +120,8 @@ void postProcess() {
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-//  computeSSBB();
-  postProcess();
+  computeSSBB();
+//  postProcess();
 
   return 0;
 }

@@ -34,7 +34,7 @@ void TEST(OrsEditor) {
   G.checkConsistency();
   G >>FILE("z.ors");
 //  makeConvexHulls(G.shapes);
-//  makeSSBoxApproximations(G.shapes);
+//  computeOptimalSSBoxes(G.shapes);
 //  G >>FILE("z.ors");
 //    G.watch(true);
 //    return;
