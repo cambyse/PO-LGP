@@ -2,7 +2,7 @@
 
 #include <Logic/fol_mcts_world.h>
 #include <Kin/kinViewer.h>
-#include "action_node.h"
+#include "partially_observable_node.h"
 
 class SearchSpaceTree{
 public: // public members

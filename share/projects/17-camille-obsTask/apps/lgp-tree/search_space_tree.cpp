@@ -68,7 +68,7 @@ void SearchSpaceTree::prepareFol( const std::string & folDescription ){
 
 void SearchSpaceTree::prepareTree(){
   //root = new ActionNode(kin, fol, folWorlds_, bs_, komoFactory_);
-  root = new PartiallyObservableNode(kin, *folWorlds_(0), komoFactory_);
+  root = new PartiallyObservableNode(kin, *folWorlds_(1), komoFactory_);
   node = root;
 }
 
