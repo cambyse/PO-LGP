@@ -13,6 +13,7 @@ struct Act : ConditionVariable{
   double startTime;
 
   Act(Roopi *r);
+//  Act(Act&& a); //move constructor
   virtual ~Act();
 
 //  virtual ActStatus getStatus(){ return (ActStatus)getStatus(); }

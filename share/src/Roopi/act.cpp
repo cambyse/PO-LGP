@@ -13,9 +13,16 @@ Act::Act(Roopi *r)
   setStatus(AS_create);
 }
 
+//Act::Act(Act&& a)
+//  : roopi(a.roopi), ConditionVariable(a.status){
+//  registryNode = a.registryNode;
+//  registryNode->get<Act*>() = this;
+//  a.registryNode = NULL;
+//}
+
 Act::~Act(){
   roopi.acts.set()->removeValue(this);
-  delete registryNode;
+  if(registryNode) delete registryNode;
 }
 
 double Act::time(){ return mlr::realTime()-startTime; }

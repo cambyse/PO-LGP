@@ -32,7 +32,7 @@ struct sAct_Tweets : Thread{
   void dereg(ConditionVariable* c){
     if(c!=this){
       stepMutex.lock();
-      stopListenTo(c);
+      if(listensTo.contains(c)) stopListenTo(c);
       stepMutex.unlock();
     }
   }
@@ -43,6 +43,7 @@ struct sAct_Tweets : Thread{
   virtual void open(){}
   virtual void close(){}
   virtual void step(){
+//    statusLock();
     for(ConditionVariable *c:messengers){
       cout <<"TWEETs #" <<step_count <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
       Act *a = dynamic_cast<Act*>(c);
@@ -64,6 +65,7 @@ struct sAct_Tweets : Thread{
       cout <<endl;
     }
     messengers.clear();
+//    statusUnlock();
   }
 };
 

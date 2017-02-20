@@ -135,10 +135,11 @@ void TEST(PickAndPlace) {
   R.taskController().lockJointGroupControl("torso");
 
 //  auto ph = R.newPhysX();
-  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
+//  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
+  R.collisions(true);
 
 #if 0
-  Script_graspBox(R, "obj1", true);
+  Script_graspBox(R, "obj1", LR_right);
   Script_place(R, "obj1", "objTarget");
 #else
   auto pick1 = R.graspBox("obj2", LR_left);
@@ -251,9 +252,9 @@ int main(int argc, char** argv){
 //  testPhysX();
 //  Prototyping();
 
-//  for(;;) testPickAndPlace();
+  for(;;) testPickAndPlace();
 
-  /*for(;;)*/ testPickAndPlace2();
+//  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();
 
   return 0;

@@ -39,8 +39,8 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
     //get obj size
     arr objSize(K().getShapeByName(objName)->size, 4, false);
-    width = 2.*objSize(1);
-    above = objSize(2);
+    width = objSize(1);
+    above = .5*objSize(2);
 
     //relevant shapes
     obj = K().getShapeByName(objName)->index;
@@ -65,7 +65,8 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     //attention, gripper positioning, alignment, open gripper
 //    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, cam, NoVector, obj));
     R.lookAt(objName);
-    auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {1e-2});
+    auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {1e1});
+    mlr::wait(1.);
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
 #if 1
@@ -76,8 +77,10 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, eff, Vector_y, obj, Vector_y) );
 #endif
     double gripSize = width + .05;
+    double gripSize2 = ::asin(gripSize/(2.*.10));
+    CHECK_EQ(gripSize2, gripSize2, "the object is too think to be grasped??");
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
-    auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {gripSize2});
     R.hold(false);
     R.wait({&pos, &gripperR, &gripper2R, &ws, &up});
 
@@ -122,8 +125,8 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName){
     //get obj size
     arr objSize(K().getShapeByName(objName)->size, 4, false);
     arr ontoSize(K().getShapeByName(ontoName)->size, 4, false);
-    width = 2.*objSize(1);
-    above = objSize(2)+ontoSize(2);
+    width = objSize(1);
+    above = .5*objSize(2)+.5*ontoSize(2);
 
     //relevant shapes
     mlr::Shape *ob = K().getShapeByName(objName);

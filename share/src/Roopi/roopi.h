@@ -34,6 +34,7 @@ struct Roopi {
 
   //-- initialization
   //  act startControllerLog();
+  Act* startTweets(bool go=true);
 
   //-- kinematic editing
   void setKinematics(const char* filename);
@@ -53,6 +54,11 @@ struct Roopi {
   void hold(bool still);
   Act_CtrlTask* home();
   Act_CtrlTask* lookAt(const char* shapeName);
+  Act_CtrlTask* collisions(bool on);
+
+  Act_CtrlTask newCollisionAvoidance();
+
+
 
   //-- activate gamepad to set controls
   Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }

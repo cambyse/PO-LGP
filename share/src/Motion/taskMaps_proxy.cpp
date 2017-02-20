@@ -40,6 +40,8 @@ void TaskMap_Proxy::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
         G.kinematicsProxyCost(y, J, p, margin, useCenterDist, true);
         p->colorCode = 1;
       }
+//      cout <<"allPTMT=" <<y.scalar() <<endl;
+//      G.reportProxies();
       break;
     case listedVsListedPTMT:
       for(mlr::Proxy *p: G.proxies)  if(p->d<margin) {

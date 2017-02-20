@@ -18,6 +18,8 @@ Roopi_private::~Roopi_private(){
   if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
   if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
   if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
+  if(_watchTask) delete _watchTask; _watchTask=NULL;
+  if(_collTask) delete _collTask; _collTask=NULL;
   if(_tweets) delete _tweets; _tweets=NULL;
   if(_tcm) delete _tcm; _tcm=NULL;
   if(_updater) delete _updater; _updater=NULL;
@@ -26,6 +28,13 @@ Roopi_private::~Roopi_private(){
   threadCloseModules();
   cout << "bye bye" << endl;
 }
+
+//==============================================================================
+
+template<class T> struct PersistScope : T{
+  PersistScope(T act):T(act){}
+  ~PersistScope(){}
+};
 
 //==============================================================================
 
@@ -41,7 +50,7 @@ Roopi::Roopi(bool autoStartup)
       s->_ComPR2 = new Act_ComPR2(this);
     }
 
-    s->_tweets = new Act_Tweets(this);
+    startTweets();
     setKinematics(s->model);
     startTaskController();
   }
@@ -69,10 +78,11 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
 //  CHECK(s->modelWorld.get()->q.N==0, "has been set before???");
   s->modelWorld.set() = K;
 
-  if(mlr::getParameter<bool>("useRos", false)){
-    s->ctrlView = new Act_Thread(this, new OrsPoseViewer({"ctrl_q_ref", "ctrl_q_real"}, s->modelWorld.set(), .1), false);
+  if(s->useRos){
+    s->ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1), false);
   } else {
-    s->ctrlView = new Act_Thread(this, new OrsPoseViewer({"ctrl_q_ref"}, s->modelWorld.set(), .1), false);
+    s->ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1), false);
+//    s->ctrlView = new Act_Thread(this, new OrsViewer("modelWorld", .1), false);
   }
 }
 
@@ -89,6 +99,12 @@ Act_TaskController& Roopi::startTaskController(){
   return *s->_tcm;
 }
 
+Act* Roopi::startTweets(bool go){
+  if(!s->_tweets && go) s->_tweets = new Act_Tweets(this);
+  if(s->_tweets && !go){ delete s->_tweets; s->_tweets=NULL; }
+  return s->_tweets;
+}
+
 Act_TaskController& Roopi::taskController(){
   return *s->_tcm;
 }
@@ -96,7 +112,9 @@ Act_TaskController& Roopi::taskController(){
 void Roopi::hold(bool still){
   if(still){
     s->ctrlTasks.writeAccess();
-    for(CtrlTask *t:s->ctrlTasks()) t->active=false;
+    for(CtrlTask *t:s->ctrlTasks())
+      if(s->_collTask && t!=s->_collTask->task)
+        t->active=false;
     s->ctrlTasks.deAccess();
 
     s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
@@ -139,6 +157,21 @@ Act_CtrlTask* Roopi::lookAt(const char* shapeName){
     s->_watchTask->start();
   }
   return s->_watchTask;
+}
+
+Act_CtrlTask* Roopi::collisions(bool on){
+  if(!s->_collTask){
+    s->_collTask = new Act_CtrlTask(std::move(newCollisionAvoidance()));
+//    s->_collTask = new Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9});
+  }
+
+  if(on) s->_collTask->start();
+  else s->_collTask->stop();
+  return s->_collTask;
+}
+
+Act_CtrlTask Roopi::newCollisionAvoidance(){
+  return Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
 }
 
 WToken<mlr::KinematicWorld> Roopi::setKinematics(){

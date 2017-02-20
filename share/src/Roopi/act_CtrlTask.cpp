@@ -13,24 +13,36 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
   set()->active = true;
 }
 
+Act_CtrlTask::Act_CtrlTask(Act_CtrlTask&& a)
+  : Act(&a.roopi), task(a.task), y0(a.y0), tolerance(a.tolerance){
+  a.task = NULL;
+}
+
 Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec, double tolerance)
   : Act_CtrlTask(r){
   task = new CtrlTask(map->shortTag(roopi.getKinematics()), map);
+  if(&prec && prec.N) task->prec = prec;
+
+  //PD reference
   if(&PD && PD.N) task->PD().setGainsAsNatural(PD(0), PD(1));
   else task->PD().setGainsAsNatural(1., .9);
   if(&PD && PD.N>2){
     task->PD().maxVel=PD(2);
     task->PD().maxAcc=PD(3);
   }
-  if(&target && target.N) task->PD().y_target = target;
-  if(&prec && prec.N) task->prec = prec;
+  if(&target && target.N) task->PD().setTarget( target );
   task->PD().tolerance = tolerance;
+
   setTask(task);
   set()->active = true;
 }
 
 Act_CtrlTask::~Act_CtrlTask(){
-  kill();
+  if(task){
+    roopi.s->ctrlTasks.set()->removeValue(task);
+    delete task;
+    task = NULL;
+  }
 }
 
 void Act_CtrlTask::start(){
@@ -41,25 +53,9 @@ void Act_CtrlTask::stop(){
   set()->active = false;
 }
 
-void Act_CtrlTask::kill(){
-  if(task){
-    roopi.s->ctrlTasks.set()->removeValue(task);
-    delete task;
-    task = NULL;
-  }
-}
-
-//ActStatus Act_CtrlTask::getStatus(){
-//  HALT("not yere!");
-//  CHECK(task, "this is not yet configured!")
-//  bool conv = false;
-//  roopi.s->ctrlTasks.readAccess();
-//  if(task->PD().isConverged(tolerance)) conv = true;
-//  roopi.s->ctrlTasks.deAccess();
-//  if(conv) return AS_converged; //status.setStatus(AS_converged);
-//  return AS_running; //status.setStatus(AS_running);
-////  return (ActStatus)status.getStatus();
+//void Act_CtrlTask::kill(){
 //}
+
 
 WToken<CtrlTask> Act_CtrlTask::set(){
   CHECK(task, "this is not yet configured!");
