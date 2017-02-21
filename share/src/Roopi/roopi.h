@@ -49,7 +49,7 @@ struct Roopi {
   Act_TaskController& taskController();
 
   Act_CtrlTask newCtrlTask()         { return Act_CtrlTask(this); }
-  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={100.});
+  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
   Act_CtrlTask newCtrlTask(const char* specs);
   void hold(bool still);
   Act_CtrlTask* home();

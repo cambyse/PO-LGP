@@ -14,18 +14,18 @@ void TEST(LimitsCollisions) {
     //  R.taskController().verbose(1);
     R.collisions(true);
 
-    for(uint k=0;k<10;k++){
-      double box=.5;
-      auto posL = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
-      posL.set()->PD().setTarget(posL.y0 + box*rand(3) - (box/2.));
+    auto posL = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"), {1., .8});
+    auto posR = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "endeffR"), {1., .8});
+    for(uint k=0;k<100;k++){
+      double box=1.;
+      posL.set()->PD().setTarget(posL.y0 + box*randn(3));
 
-      auto posR = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "endeffR"));
-      posR.set()->PD().setTarget(posR.y0 + box*rand(3) - (box/2.));
+      posR.set()->PD().setTarget(posR.y0 + box*randn(3));
 
 
-      R.hold(false);
-      R.wait({&posL});
-      R.hold(true);
+//      R.hold(false);
+      R.wait({&posL, &posR});
+//      R.hold(true);
     }
   }
   cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;

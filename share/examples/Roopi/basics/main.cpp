@@ -250,11 +250,11 @@ void TEST(Gamepad) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  testBasics();
+//  testBasics();`
 //  testPhysX();
 //  Prototyping();
 
-//  for(;;) testPickAndPlace();
+  for(;;) testPickAndPlace();
 
 //  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();
