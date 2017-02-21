@@ -2,20 +2,22 @@
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
 
+#include <Control/ctrlMsg.h>
+
 //===============================================================================
 
 void TEST(Basics) {
   {
-    Roopi R;
+    Roopi R(true);
 
-    R.setKinematics("pr2");
-    R.startTaskController();
+//    R.setKinematics("pr2");
+//    R.startTaskController();
     //  R.taskController().verbose(1);
 
     {
       auto posL = R.newCtrlTask();
       posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
-      posL.task->PD().setTarget( posL.y0 + ARR(0,0,.3) );
+      posL.task->PD().setTarget( posL.y0 + ARR(0,-.1,-.3) );
       posL.task->PD().setGainsAsNatural(1., .9);
       posL.start();
 
@@ -248,11 +250,11 @@ void TEST(Gamepad) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-//  testBasics();
+  testBasics();
 //  testPhysX();
 //  Prototyping();
 
-  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
 //  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();

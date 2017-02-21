@@ -97,6 +97,7 @@ Edit r_wrist_roll_joint{ to=<T t(.0356 0 0)> }
 Edit l_wrist_roll_joint{ to=<T t(.0356 0 0)> }
 
 ## extra shapes
+shape base_footprint(base_footprint){ rel=<T > type=5 color=[1 0 0] size=[.5 0 0 0]}
 shape endeffBase(torso_lift_link){ rel=<T d(90 0 1 0) t(.2 0 0)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 shape endeffHead(head_tilt_link){ rel=<T  d(-90 0 0 1) t(.08 0 .12) d(-90 0 1 0) d(-90 0 0 1)> type=5 color=[1 0 0] size=[.1 0 0 0]}
 shape endeffWorkspace(torso_lift_link){ rel=<T d(90 0 1 0) t(.6 0 -.1) d(-90 0 0 1) > type=5 color=[1 0 0] size=[.1 0 0 0] }

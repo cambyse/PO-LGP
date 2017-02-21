@@ -1229,7 +1229,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
             cout<<"Default rule";
           FOR1D(old_experience_partitions, l) {
             uintA helfer = new_experience_partitions(k);
-            helfer.removeValueSafe(all_experiences.N-1);
+            helfer.removeValue(all_experiences.N-1, false);
             if (helfer == old_experience_partitions(l)) {
               break;
             }
@@ -1242,7 +1242,7 @@ void AbstractRuleExplorer::updateRules(bool always_re_learning) {
       }
       bool partitions_changed = false;
       FOR1D(new_experience_partitions, k) {
-        new_experience_partitions(k).removeValueSafe(all_experiences.N-1);  // remove latest experience-id
+        new_experience_partitions(k).removeValue(all_experiences.N-1, false);  // remove latest experience-id
         FOR1D(old_experience_partitions, l) {
           if (new_experience_partitions(k) == old_experience_partitions(l)) {
             break;
@@ -1391,7 +1391,7 @@ void AbstractRuleExplorer::addObservation(SymbolicState* state_pre, Atom* action
     // calculate which rule is covering
     uintA coveringRuleIDs;
     ruleReasoning::coveringRules_groundedAction(rulesC.rules, *state_pre, action, coveringRuleIDs);
-    coveringRuleIDs.removeValueSafe(0);
+    coveringRuleIDs.removeValue(0, false);
     rulesC.nonDefaultRules_per_experience.append(coveringRuleIDs);
     if (DEBUG>0) {PRINT(coveringRuleIDs);}
     // covering outcomes
@@ -1897,7 +1897,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
 //             cout<<"Default rule";
 //           FOR1D(old_experience_partitions, l) {
 //             uintA helfer = new_experience_partitions(k);
-//             helfer.removeValueSafe(all_experiences.N-1);
+//             helfer.removeValue(all_experiences.N-1, false);
 //             if (helfer == old_experience_partitions(l)) {
 //               break;
 //             }
@@ -1910,7 +1910,7 @@ void FactoredRuleExplorer::updateRules(bool always_re_learning) {
 //       }
 //       bool partitions_changed = false;
 //       FOR1D(new_experience_partitions, k) {
-//         new_experience_partitions(k).removeValueSafe(all_experiences.N-1);  // remove latest experience-id
+//         new_experience_partitions(k).removeValue(all_experiences.N-1, false);  // remove latest experience-id
 //         FOR1D(old_experience_partitions, l) {
 //           if (new_experience_partitions(k) == old_experience_partitions(l)) {
 //             break;
@@ -2032,7 +2032,7 @@ void FactoredRuleExplorer::addObservation(SymbolicState* state_pre, Atom* action
     // calculate which rule is covering
     uintA coveringRuleIDs;
     ruleReasoning::coveringGroundedRules_groundedAction(rulesC.rules, *state_pre, action, coveringRuleIDs);
-    coveringRuleIDs.removeValueSafe(0);
+    coveringRuleIDs.removeValue(0, false);
     if (DEBUG>0) {PRINT(coveringRuleIDs);}
     rulesC.nonDefaultRules_per_experience.append(coveringRuleIDs);
     // covering outcomes

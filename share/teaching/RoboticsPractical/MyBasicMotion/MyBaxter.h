@@ -210,7 +210,7 @@ CtrlTask* MyBaxter::goToPosition(const char* frame1, const char* frame2, arr pos
 //position.prec=100; weight
 
 void MyBaxter::changePosition(CtrlTask* position, arr pos){
-    set.removeValueSafe(position);
+    set.removeValue(position, false);
     tcmBax.ctrlTasks.set()=set;
     position->y_ref=pos;
 
