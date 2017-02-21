@@ -162,6 +162,7 @@ Act_CtrlTask* Roopi::lookAt(const char* shapeName){
 Act_CtrlTask* Roopi::collisions(bool on){
   if(!s->_collTask){
     s->_collTask = new Act_CtrlTask(std::move(newCollisionAvoidance()));
+    s->_collTask->set()->hierarchy=2;
 //    s->_collTask = new Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9});
   }
 
