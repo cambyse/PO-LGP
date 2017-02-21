@@ -74,6 +74,8 @@ void sAct_GamepadControl::step(){
 }
 
 void sAct_GamepadControl::close(){
+  gamepadTh->threadClose();
+
   ctrlTasks.writeAccess();
   tc->qNullCostRef.active = true;
   ctrlTasks.deAccess();

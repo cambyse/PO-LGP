@@ -122,7 +122,7 @@ for(uint t=0;t<=T;t++) x[t]() = MP2.x0;
  //! remove the joint
   G.getBodyByName(actuator)->outLinks.removeValue(G.getJointByName("test"));
   G.getBodyByName(targets(current))->inLinks.removeValue(G.getJointByName("test"));
-  G.joints.removeValueSafe(G.getJointByName("test"));
+  G.joints.removeValue(G.getJointByName("test", false));
   G.calc_fwdPropagateFrames();	
  //G.swift().initActivations();
 

@@ -168,7 +168,7 @@ CtrlTask* MyBaxter::modifyTarget(CtrlTask* t, const arr& target){
 }
 
 void MyBaxter::stop(const CtrlTaskL& tasks){
-  for(CtrlTask *t:tasks) { activeTasks.removeValueSafe(t); t->active = false;}
+  for(CtrlTask *t:tasks) { activeTasks.removeValue(t, false); t->active = false;}
   s->tcm.ctrlTasks.set() = activeTasks;
   for(CtrlTask *t:tasks){
     delete &t->map;
@@ -184,7 +184,7 @@ void MyBaxter::stopAll(){
   {
     CtrlTask* t = activeTasks.first();
     cout << "removing: " << i << " of " << count << ' ' << t->name << endl;
-    activeTasks.removeValueSafe(t);
+    activeTasks.removeValue(t, false);
     t->active = false;
     s->tcm.ctrlTasks.set() = activeTasks;
     delete &t->map;

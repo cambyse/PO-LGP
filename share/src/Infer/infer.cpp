@@ -1465,7 +1465,7 @@ void infer::computeEliminationOrder(infer::VariableList& elimOrder, const infer:
     DEBUG_INFER(1, cout <<"eliminating v" <<elimOrder(e) <<" '" <<elimOrder(e)->name <<"' (cost=" <<minCost <<")" <<endl);
     // Delete eliminated variable out of sets of connected variables of other vars
     for(v=0; v<elimVars.N; v++){
-      connectedVarSets(v).removeValueSafe(elimOrder(e));
+      connectedVarSets(v).removeValue(elimOrder(e, false));
       DEBUG_INFER(2, cout <<"  neighbors of v" <<elimVars(v) <<"=" <<connectedVarSets(v) <<endl);
     }
   }
