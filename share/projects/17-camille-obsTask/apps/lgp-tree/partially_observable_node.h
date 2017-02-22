@@ -40,38 +40,38 @@ class PartiallyObservableNode{
 
 public:
   /// root node init
-  PartiallyObservableNode(mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory );
+  PartiallyObservableNode(mlr::KinematicWorld& kin, mlr::Array< std::shared_ptr< FOL_World > > fols, const KOMOFactory & komoFactory );
 
   /// child node creation
-  PartiallyObservableNode(PartiallyObservableNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory );
+  PartiallyObservableNode(PartiallyObservableNode *parent, uint a );
 
 
   PartiallyObservableNodeL children() const;
 
   //- accessors
-  bool isTerminal() const { return node_->isTerminal; }
-  uint poseCount()  const { return node_->poseCount; }
-  bool poseFeasible() const { return node_->poseFeasible; }
-  bool seqFeasible() const { return node_->seqFeasible; }
-  bool pathFeasible() const { return node_->pathFeasible; }
-  MCStatistics * mcStats() const { return node_->mcStats; }
-  std::shared_ptr<ExtensibleKOMO> komoPoseProblem() const { return node_->komoPoseProblem; }
-  std::shared_ptr<ExtensibleKOMO> komoSeqProblem() const { return node_->komoSeqProblem; }
-  std::shared_ptr<ExtensibleKOMO> komoPathProblem() const { return node_->komoPathProblem; }
-  bool& inFringe1() const { return node_->inFringe1; } // also setter
-  bool& inFringe2() const { return node_->inFringe2; } // also setter
-  uint graphIndex() const { return node_->graphIndex; }
-  bool isExpanded() const { return node_->isExpanded; }
-  PartiallyObservableNode * parent() const{ return node_->parent->pobNode; }
-  FOL_World::Handle decision() const { return node_->decision; }
-  double symCost() const { return node_->symCost; }
-  double poseCost() const { return node_->poseCost; }
-  double seqCost() const { return node_->seqCost; }
-  double pathCost() const { return node_->pathCost; }
-  uint seqCount() const { return node_->seqCount; }
-  arr pose() const { return node_->pose; }
-  arr seq() const { return node_->seq; }
-  arr path() const { return node_->path; }
+  bool isTerminal() const { return getFirst()->isTerminal; }
+  uint poseCount()  const { return getFirst()->poseCount; }
+  bool poseFeasible() const { return getFirst()->poseFeasible; }
+  bool seqFeasible() const { return getFirst()->seqFeasible; }
+  bool pathFeasible() const { return getFirst()->pathFeasible; }
+  MCStatistics * mcStats() const { return getFirst()->mcStats; }
+  std::shared_ptr<ExtensibleKOMO> komoPoseProblem() const { return getFirst()->komoPoseProblem; }
+  std::shared_ptr<ExtensibleKOMO> komoSeqProblem() const { return getFirst()->komoSeqProblem; }
+  std::shared_ptr<ExtensibleKOMO> komoPathProblem() const { return getFirst()->komoPathProblem; }
+  bool& inFringe1() const { return getFirst()->inFringe1; } // also setter
+  bool& inFringe2() const { return getFirst()->inFringe2; } // also setter
+  uint graphIndex() const { return getFirst()->graphIndex; }
+  bool isExpanded() const { return getFirst()->isExpanded; }
+  PartiallyObservableNode * parent() const{ return getFirst()->parent->pobNode; }
+  FOL_World::Handle decision() const { return getFirst()->decision; }
+  double symCost() const { return getFirst()->symCost; }
+  double poseCost() const { return getFirst()->poseCost; }
+  double seqCost() const { return getFirst()->seqCost; }
+  double pathCost() const { return getFirst()->pathCost; }
+  uint seqCount() const { return getFirst()->seqCount; }
+  arr pose() const { return getFirst()->pose; }
+  arr seq() const { return getFirst()->seq; }
+  arr path() const { return getFirst()->path; }
 
   //- computations on the node
   void expand();           ///< expand this node (symbolically: compute possible decisions and add their effect nodes)
@@ -94,18 +94,20 @@ public:
   void checkConsistency();
 
   void write(ostream& os=cout, bool recursive=false) const;
-  void getGraph(Graph& G/*, Node *n=NULL*/) { node_->getGraph(G); }
+  void getGraph(Graph& G/*, Node *n=NULL*/) { getFirst()->getGraph(G); }
   Graph getGraph(){ Graph G; getGraph(G); G.checkConsistency(); return G; }
   void getAll(PartiallyObservableNodeL& L);
   PartiallyObservableNodeL getAll(){ PartiallyObservableNodeL L; getAll(L); return L; }
 
 private:
+  ActionNode * getFirst() const { return nodes_.first(); }
+private:
   //PartiallyObservableNode * root_;
   //PartiallyObservableNode * parent_;
   //PartiallyObservableNodeL children_;
 
-  ActionNode * node_;
+  mlr::Array< ActionNode * > nodes_;
 
 };
 
-inline ostream& operator<<(ostream& os, const PartiallyObservableNode& n){ n.node_->write(os); return os; }
+inline ostream& operator<<(ostream& os, const PartiallyObservableNode& n){ n.getFirst()->write(os); return os; }

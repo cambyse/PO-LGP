@@ -45,7 +45,7 @@ ActionNode::ActionNode(PartiallyObservableNode * pobNode, mlr::KinematicWorld& k
   rootMC->verbose = 0;
 }
 
-ActionNode::ActionNode(PartiallyObservableNode * pobNode, ActionNode* parent, MCTS_Environment::Handle& a, const KOMOFactory & komoFactory )
+ActionNode::ActionNode(PartiallyObservableNode * pobNode, ActionNode* parent, MCTS_Environment::Handle& a )
   : pobNode( pobNode ),
     parent(parent), fol(parent->fol),
     folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
@@ -56,7 +56,7 @@ ActionNode::ActionNode(PartiallyObservableNode * pobNode, ActionNode* parent, MC
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
     poseFeasible(false), seqFeasible(false), pathFeasible(false),
     inFringe1(false), inFringe2(false)
-  , komoFactory_( komoFactory )
+  , komoFactory_( parent->komoFactory_ )
 {
   s=parent->s+1;
   parent->children.append(this);
@@ -81,7 +81,7 @@ void ActionNode::expand(){
   auto actions = fol.get_actions();
   for(FOL_World::Handle& a:actions){
 //    cout <<"  EXPAND DECISION: " <<*a <<endl;
-    new ActionNode(pobNode, this, a, komoFactory_);
+    new ActionNode(pobNode, this, a );
   }
   if(!children.N) isTerminal=true;
   isExpanded=true;

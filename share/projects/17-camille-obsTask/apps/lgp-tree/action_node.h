@@ -73,7 +73,7 @@ struct ActionNode{
   ActionNode(PartiallyObservableNode * popNode, mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory );
 
   /// child node creation
-  ActionNode(PartiallyObservableNode * popNode, ActionNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory );
+  ActionNode(PartiallyObservableNode * popNode, ActionNode *parent, FOL_World::Handle& a );
 
   //- computations on the node
   void expand();           ///< expand this node (symbolically: compute possible decisions and add their effect nodes)

@@ -21,23 +21,29 @@
 
 //===========================================================================
 
-PartiallyObservableNode::PartiallyObservableNode(mlr::KinematicWorld& kin, FOL_World& fol, const KOMOFactory & komoFactory )
-  : node_( new ActionNode( this, kin, fol, komoFactory ) )
+PartiallyObservableNode::PartiallyObservableNode(mlr::KinematicWorld& kin, mlr::Array< std::shared_ptr< FOL_World > > fols, const KOMOFactory & komoFactory )
 {
-
+  for( auto fol : fols )
+  {
+    nodes_.append( new ActionNode( this, kin, *fol, komoFactory ) );
+  }
 }
 
 /// child node creation
-PartiallyObservableNode::PartiallyObservableNode(PartiallyObservableNode *parent, FOL_World::Handle& a, const KOMOFactory & komoFactory )
-  : node_( new ActionNode( this, parent->node_, a, komoFactory ) )
+PartiallyObservableNode::PartiallyObservableNode(PartiallyObservableNode *parent, uint a )
 {
-
+  for( auto parent_node : parent->nodes_ )
+  {
+    parent_node->fol.setState(parent_node->folState, parent_node->s);
+    auto actions = parent_node->fol.get_actions();
+    nodes_.append( new ActionNode( this, parent_node, actions[a] ) );
+  }
 }
 
 PartiallyObservableNodeL PartiallyObservableNode::children() const
 {
   PartiallyObservableNodeL children;
-  for( auto c : node_->children )
+  for( auto c : getFirst()->children )
     children.append( c->pobNode );
 
   return children;
@@ -47,51 +53,58 @@ void PartiallyObservableNode::expand()
 {
   CHECK(!isExpanded(),"");
   if(isTerminal()) return;
-  node_->fol.setState(node_->folState, node_->s);
-  auto actions = node_->fol.get_actions();
-  for(FOL_World::Handle& a:actions){
-//    cout <<"  EXPAND DECISION: " <<*a <<endl;
-    new PartiallyObservableNode(this, a, node_->komoFactory_);
+  getFirst()->fol.setState(getFirst()->folState, getFirst()->s);
+  auto actions = getFirst()->fol.get_actions();
+
+  for( uint a = 0; a < actions.size(); ++a )
+  {
+     cout <<"  EXPAND DECISION: " <<*actions[a] <<endl;
+     new PartiallyObservableNode( this, a );
   }
-  if(!node_->children.N) node_->isTerminal=true;
-  node_->isExpanded=true;
+//  for(FOL_World::Handle& a:actions){
+//    cout <<"  EXPAND DECISION: " <<*a <<endl;
+//    new PartiallyObservableNode(this, a);
+//  }
+  if(!getFirst()->children.N)
+    getFirst()->isTerminal=true;
+  getFirst()->isExpanded=true;
 }
 
 arr PartiallyObservableNode::generateRootMCRollouts(uint num, int stepAbort, const mlr::Array<MCTS_Environment::Handle>& prefixDecisions)
 {
-  return node_->generateRootMCRollouts( num, stepAbort, prefixDecisions );
+  return getFirst()->generateRootMCRollouts( num, stepAbort, prefixDecisions );
 }
 
 void PartiallyObservableNode::addMCRollouts(uint num,int stepAbort)
 {
-  node_->addMCRollouts( num, stepAbort );
+  getFirst()->addMCRollouts( num, stepAbort );
 }
 
 void PartiallyObservableNode::solvePoseProblem()
 {
-  node_->solvePoseProblem();
+  getFirst()->solvePoseProblem();
 }
 
 void PartiallyObservableNode::solveSeqProblem(int verbose)
 {
-  node_->solveSeqProblem(verbose);
+  getFirst()->solveSeqProblem(verbose);
 }
 
 void PartiallyObservableNode::solvePathProblem(uint microSteps, int verbose)
 {
-  node_->solvePathProblem(microSteps, verbose);
+  getFirst()->solvePathProblem(microSteps, verbose);
 }
 
 //-- helpers
 void PartiallyObservableNode::labelInfeasible()
 {
-  node_->labelInfeasible();
+  getFirst()->labelInfeasible();
 }
 
 PartiallyObservableNodeL PartiallyObservableNode::getTreePath()
 {
   PartiallyObservableNodeL path;
-  ActionNode *node=node_;
+  ActionNode *node=getFirst();
   for(;node;){
     path.prepend(node->pobNode);
     node = node->parent;
@@ -101,13 +114,12 @@ PartiallyObservableNodeL PartiallyObservableNode::getTreePath()
 
 PartiallyObservableNode* PartiallyObservableNode::getRoot()
 {
-  return node_->getRoot()->pobNode;
+  return getFirst()->getRoot()->pobNode;
 }
 
-void getAllChildren(PartiallyObservableNodeL& tree);
 PartiallyObservableNode * PartiallyObservableNode::treePolicy_random()
 {
-  ActionNode* n = node_->treePolicy_random();
+  ActionNode* n = getFirst()->treePolicy_random();
   if( n )
     return n->pobNode;
   else
@@ -117,27 +129,27 @@ PartiallyObservableNode * PartiallyObservableNode::treePolicy_random()
 //PartiallyObservableNode *treePolicy_softMax(double temperature);
 bool PartiallyObservableNode::recomputeAllFolStates()
 {
-  return node_->recomputeAllFolStates();
+  return getFirst()->recomputeAllFolStates();
 }
 
 void PartiallyObservableNode::recomputeAllMCStats(bool excludeLeafs)
 {
-  node_->recomputeAllMCStats(excludeLeafs);
+  getFirst()->recomputeAllMCStats(excludeLeafs);
 }
 
 void PartiallyObservableNode::checkConsistency()
 {
-  node_->checkConsistency();
+  getFirst()->checkConsistency();
 }
 
 void PartiallyObservableNode::write(ostream& os, bool recursive) const
 {
-  node_->write(os, recursive);
+  getFirst()->write(os, recursive);
 }
 
 void PartiallyObservableNode::getAll(PartiallyObservableNodeL& L)
 {
-  auto list = node_->getAll();
+  auto list = getFirst()->getAll();
   for( auto n : list )
     L.append(n->pobNode);
 }
