@@ -290,8 +290,8 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
   sw1.apply(s->modelWorld());
   sw2.apply(s->modelWorld());
   s->modelWorld().getJointState(); //enforces that the q & qdot are recalculated!
+  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
-  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(); //s->modelWorld());
 }
 
 

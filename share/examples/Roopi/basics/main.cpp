@@ -138,7 +138,7 @@ void TEST(PickAndPlace) {
 
 //  auto ph = R.newPhysX();
 //  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
-  R.collisions(true);
+//  R.collisions(true);
 
 #if 0
   Script_graspBox(R, "obj1", LR_right);
