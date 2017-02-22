@@ -112,9 +112,10 @@ Act_TaskController& Roopi::taskController(){
 void Roopi::hold(bool still){
   if(still){
     s->ctrlTasks.writeAccess();
-    for(CtrlTask *t:s->ctrlTasks())
-      if(s->_collTask && t!=s->_collTask->task)
+    for(CtrlTask *t:s->ctrlTasks()){
+      if(!s->_collTask || t!=s->_collTask->task)
         t->active=false;
+    }
     s->ctrlTasks.deAccess();
 
     s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
@@ -162,7 +163,7 @@ Act_CtrlTask* Roopi::lookAt(const char* shapeName){
 Act_CtrlTask* Roopi::collisions(bool on){
   if(!s->_collTask){
     s->_collTask = new Act_CtrlTask(std::move(newCollisionAvoidance()));
-    s->_collTask->set()->hierarchy=2;
+//    s->_collTask->set()->hierarchy=2;
 //    s->_collTask = new Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9});
   }
 

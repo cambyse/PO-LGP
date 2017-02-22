@@ -64,8 +64,9 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   {
     //attention, gripper positioning, alignment, open gripper
 //    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, cam, NoVector, obj));
+    R.hold(false);
     R.lookAt(objName);
-    auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {1e1});
+    auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {1e-1});
     mlr::wait(1.);
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
@@ -81,7 +82,6 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     CHECK_EQ(gripSize2, gripSize2, "the object is too think to be grasped??");
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {gripSize2});
-    R.hold(false);
     R.wait({&pos, &gripperR, &gripper2R, &ws, &up});
 
     //lowering
@@ -159,7 +159,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName){
     //attention & gripper positioning
 //    auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, cam, NoVector, obj));
     R.lookAt(objName);
-    auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {1e1});
+    auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {1e-1});
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {0.,0.,above+.1});
     R.hold(false);

@@ -89,7 +89,6 @@ struct Roopi {
   Act_Script place(const char* objName, const char* ontoName){
     return Act_Script(this, [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
-
 };
 
 //==============================================================================
