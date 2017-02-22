@@ -22,3 +22,11 @@ void TaskMap_qLimits::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   G.kinematicsLimitsCost(y, J, limits);
 }
 
+//===========================================================================
+
+void LimitsConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
+  if(!limits.N) limits = G.getLimits();
+  G.kinematicsLimitsCost(y, J, limits, margin);
+  y -= .5;
+}
+

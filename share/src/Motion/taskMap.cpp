@@ -163,7 +163,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const mlr::KinematicWorld& world
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(pairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+    map = new TaskMap_ProxyConstraint(pairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="collisionExceptPairs"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -171,7 +171,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const mlr::KinematicWorld& world
       CHECK(s,"No Shape '" <<specs->parents(i)->keys.last() <<"'");
       shapes.append(s->index);
     }
-    map = new ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+    map = new TaskMap_ProxyConstraint(allExceptPairsPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="collisionExcept"){
     uintA shapes;
     for(uint i=2;i<specs->parents.N;i++){
@@ -184,7 +184,7 @@ TaskMap *TaskMap::newTaskMap(const Node* specs, const mlr::KinematicWorld& world
         shapes.append(s->index);
       }
     }
-    map = new ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
+    map = new TaskMap_ProxyConstraint(allExceptListedPTMT, shapes, (params?params->get<double>("margin", 0.1):0.1));
   }else if(type=="proxy"){
     map = new TaskMap_Proxy(allPTMT, {0u}, (params?params->get<double>("margin", 0.1):0.1) );
   }else if(type=="qItself"){

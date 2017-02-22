@@ -13,15 +13,35 @@ void TEST(LimitsCollisions) {
     R.startTweets();
     //  R.taskController().verbose(1);
     R.collisions(true);
+    auto limit = R.newLimitAvoidance();
+    R.hold(false);
 
-    auto posL = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"), {1., .8});
-    auto posR = R.newCtrlTask(new TaskMap_Default(posTMT, R.getKinematics(), "endeffR"), {1., .8});
+    arr tL = R.getKinematics()->getShapeByName("endeffL")->X.pos.getArr();
+    arr tR = R.getKinematics()->getShapeByName("endeffR")->X.pos.getArr();
+//    arr tL=ARR(.5, .1, 1.);
+//    arr tR=ARR(.5, -.1, 1.);
+    auto L = R.newMarker("targetL", tL);
+    auto Re = R.newMarker("targetR", tR);
+
+    auto posL = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffL", NoVector, "targetL"), {1., .8});
+    auto posR = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffR", NoVector, "targetR"), {1., .8});
+
     for(uint k=0;k<100;k++){
-      double box=1.;
-      posL.set()->PD().setTarget(posL.y0 + box*randn(3));
-
-      posR.set()->PD().setTarget(posR.y0 + box*randn(3));
-
+      double box=.5;
+#if 0
+      posL.set()->PD().setTarget(box*randn(3));
+      posR.set()->PD().setTarget(box*randn(3));
+#else
+      posL.stop();
+      posR.stop();
+      L->rel.pos = tL + box*randn(3);
+      Re->rel.pos = tL + box*randn(3);
+      R.resyncView();
+      posL.set()->PD().setTarget({}); //box*randn(3));
+      posR.set()->PD().setTarget({}); //box*randn(3));
+      posL.start();
+      posR.start();
+#endif
 
 //      R.hold(false);
       R.wait({&posL, &posR});

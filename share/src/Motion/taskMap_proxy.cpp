@@ -12,7 +12,7 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "taskMaps.h"
+#include "taskMap_proxy.h"
 
 TaskMap_Proxy::TaskMap_Proxy(PTMtype _type,
                            uintA _shapes,
@@ -145,3 +145,20 @@ uint TaskMap_Proxy::dim_phi(const mlr::KinematicWorld& G){
   default: NIY;
   }
 }
+
+//===========================================================================
+
+
+TaskMap_ProxyConstraint::TaskMap_ProxyConstraint(PTMtype _type,
+                                 uintA _shapes,
+                                 double _margin,
+                                 bool _useCenterDist,
+                                 bool _useDistNotCost)
+  : proxyCosts(_type, _shapes, _margin, _useCenterDist, _useDistNotCost){
+}
+
+void TaskMap_ProxyConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
+  proxyCosts.phi(y, J, G, t);
+  y -= .5;
+}
+

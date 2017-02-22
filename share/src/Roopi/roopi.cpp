@@ -175,6 +175,10 @@ Act_CtrlTask Roopi::newCollisionAvoidance(){
   return Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
 }
 
+Act_CtrlTask Roopi::newLimitAvoidance(){
+  return Act_CtrlTask(this, new TaskMap_qLimits(getKinematics()->getLimits()), {.1, .9}, {}, {1e2});
+}
+
 WToken<mlr::KinematicWorld> Roopi::setKinematics(){
   return s->modelWorld.set();
 }
@@ -270,9 +274,13 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   sh->color[0]=.8; sh->color[1]=sh->color[2]=.0; sh->color[3]=1.;
   sh->size[0]=.1;
   sh->X.pos = sh->rel.pos = pos;
-  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
+  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(); //s->modelWorld());
   return sh;
+}
+
+void Roopi::resyncView(){
+  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(); //s->modelWorld());
 }
 
 void Roopi::kinematicSwitch(const char* object, const char* attachTo){
@@ -282,8 +290,8 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo){
   sw1.apply(s->modelWorld());
   sw2.apply(s->modelWorld());
   s->modelWorld().getJointState(); //enforces that the q & qdot are recalculated!
-  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();
+  s->ctrlView->get<OrsPoseViewer>()->recopyKinematics(); //s->modelWorld());
 }
 
 

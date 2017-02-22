@@ -43,6 +43,7 @@ struct Roopi {
   void kinematicSwitch(const char* object, const char* attachTo);
   WToken<mlr::KinematicWorld> setKinematics();
   RToken<mlr::KinematicWorld> getKinematics();
+  void resyncView();
 
   //-- control
   Act_TaskController& startTaskController();
@@ -57,6 +58,7 @@ struct Roopi {
   Act_CtrlTask* collisions(bool on);
 
   Act_CtrlTask newCollisionAvoidance();
+  Act_CtrlTask newLimitAvoidance();
 
 
 
@@ -87,6 +89,7 @@ struct Roopi {
   Act_Script place(const char* objName, const char* ontoName){
     return Act_Script(this, [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
+
 };
 
 //==============================================================================
