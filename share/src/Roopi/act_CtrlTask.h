@@ -19,8 +19,6 @@ struct Act_CtrlTask : Act{
 
   void start();
   void stop();
-//  void kill();
-//  virtual ActStatus getStatus();
 
   void setMap(TaskMap*); ///< use this to configure: set the map
   void setTask(CtrlTask*); ///< use this to configure: set the map
