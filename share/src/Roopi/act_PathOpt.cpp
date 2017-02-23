@@ -25,7 +25,7 @@ struct sAct_PathOpt : Thread{
 Act_PathOpt::Act_PathOpt(Roopi* r)
   : Act(r), s(NULL),  komo(NULL) {
   komo = new KOMO;
-  komo->setModel(roopi.getKinematics());
+  komo->setModel(roopi.getK());
   s = new sAct_PathOpt(komo, this);
 }
 

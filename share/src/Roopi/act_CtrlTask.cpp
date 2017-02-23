@@ -7,8 +7,8 @@ Act_CtrlTask::Act_CtrlTask(Roopi* r) : Act(r) {
 
 Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
   : Act_CtrlTask(r){
-  TaskMap *map = TaskMap::newTaskMap(specs, roopi.getKinematics());
-  task = new CtrlTask(map->shortTag(roopi.getKinematics()), map, specs);
+  TaskMap *map = TaskMap::newTaskMap(specs, roopi.getK());
+  task = new CtrlTask(map->shortTag(roopi.getK()), map, specs);
   setTask(task);
   set()->active = true;
 }
@@ -20,15 +20,16 @@ Act_CtrlTask::Act_CtrlTask(Act_CtrlTask&& a)
 
 Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec, double tolerance)
   : Act_CtrlTask(r){
-  task = new CtrlTask(map->shortTag(roopi.getKinematics()), map);
+  task = new CtrlTask(map->shortTag(roopi.getK()), map);
   if(&prec && prec.N) task->prec = prec;
 
   //PD reference
-  if(&PD && PD.N) task->PD().setGainsAsNatural(PD(0), PD(1));
-  else task->PD().setGainsAsNatural(1., .9);
-  if(&PD && PD.N>2){
-    task->PD().maxVel=PD(2);
-    task->PD().maxAcc=PD(3);
+  if(&PD && PD.N){
+    task->PD().setGainsAsNatural(PD(0), PD(1));
+    if(PD.N>2) task->PD().maxVel=PD(2);
+    if(PD.N>3) task->PD().maxAcc=PD(3);
+  }else{
+    task->PD().setGainsAsNatural(1., .9);
   }
   if(&target && target.N) task->PD().setTarget( target );
   task->PD().tolerance = tolerance;
@@ -71,12 +72,12 @@ RToken<CtrlTask> Act_CtrlTask::get(){
 }
 
 void Act_CtrlTask::setMap(TaskMap* m){
-  setTask(new CtrlTask(m->shortTag(roopi.getKinematics()), m));
+  setTask(new CtrlTask(m->shortTag(roopi.getK()), m));
 }
 
 void Act_CtrlTask::setTask(CtrlTask *t){
   task = t;
-  task->update(0., roopi.getKinematics());
+  task->update(0., roopi.getK());
   y0 = task->y;
   task->active = false;
   roopi.s->ctrlTasks.set()->append(task);

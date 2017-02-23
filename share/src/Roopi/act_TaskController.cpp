@@ -6,7 +6,7 @@
 Act_TaskController::Act_TaskController(Roopi* r)
   : Act(r){
   tcm = new TaskControlThread("none", NoWorld);
-  tcm->threadLoop();
+  tcm->threadLoop(true);
 }
 
 Act_TaskController::~Act_TaskController(){
@@ -19,9 +19,9 @@ void Act_TaskController::verbose(int verbose){
 }
 
 void Act_TaskController::lockJointGroupControl(const char *groupname, bool lockThem){
-  tcm->waitForOpened();
+  tcm->waitForStatusSmallerThan(tsOPENING);
   while(tcm->step_count<2) mlr::wait(.01);
   tcm->stepMutex.lock();
-  tcm->taskController->lockJointGroup(groupname, roopi.setKinematics(), lockThem);
+  tcm->taskController->lockJointGroup(groupname, roopi.setK(), lockThem);
   tcm->stepMutex.unlock();
 }

@@ -43,29 +43,31 @@ struct sAct_Tweets : Thread{
   virtual void open(){}
   virtual void close(){}
   virtual void step(){
-//    statusLock();
     for(ConditionVariable *c:messengers){
-      cout <<"TWEETs #" <<step_count <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
-      Act *a = dynamic_cast<Act*>(c);
-      if(a){
-        Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
-        if(t && t->task){
-          cout <<"Act_CtrlTask " <<t->get()->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)t->getStatus()) <<' ';
+      try{
+        cout <<"TWEETs #" <<step_count <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
+        Act *a = dynamic_cast<Act*>(c);
+        if(a){
+          Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
+          if(t && t->task){
+            cout <<"Act_CtrlTask " <<t->get()->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)t->getStatus()) <<' ';
+          }else{
+            cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)a->getStatus()) <<' ';
+          }
         }else{
-          cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)a->getStatus()) <<' ';
+          Thread *th = dynamic_cast<Thread*>(c);
+          if(th){
+            cout <<"Thread " <<th->name <<" hat status " <<th->getStatus() <<' ';
+          }else{
+            //        cout <<typeid(*c).name() <<" sends " <<c->getStatus() <<' ';
+          }
         }
-      }else{
-        Thread *th = dynamic_cast<Thread*>(c);
-        if(th){
-          cout <<"Thread " <<th->name <<" hat status " <<th->getStatus() <<' ';
-        }else{
-//        cout <<typeid(*c).name() <<" sends " <<c->getStatus() <<' ';
-        }
+        cout <<endl;
+      }catch(...){
+        LOG(-1) <<"TWEETING failed (perhaps the messenger was already destroyed";
       }
-      cout <<endl;
     }
     messengers.clear();
-//    statusUnlock();
   }
 };
 

@@ -16,15 +16,15 @@ void TEST(LimitsCollisions) {
     auto limit = R.newLimitAvoidance();
     R.hold(false);
 
-    arr tL = R.getKinematics()->getShapeByName("endeffL")->X.pos.getArr();
-    arr tR = R.getKinematics()->getShapeByName("endeffR")->X.pos.getArr();
+    arr tL = R.getK()->getShapeByName("endeffL")->X.pos.getArr();
+    arr tR = R.getK()->getShapeByName("endeffR")->X.pos.getArr();
 //    arr tL=ARR(.5, .1, 1.);
 //    arr tR=ARR(.5, -.1, 1.);
     auto L = R.newMarker("targetL", tL);
     auto Re = R.newMarker("targetR", tR);
 
-    auto posL = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffL", NoVector, "targetL"), {1., .8});
-    auto posR = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffR", NoVector, "targetR"), {1., .8});
+    auto posL = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getK(), "endeffL", NoVector, "targetL"), {}, {}, {1e-1});
+    auto posR = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getK(), "endeffR", NoVector, "targetR"), {}, {}, {1e-1});
 
     for(uint k=0;k<100;k++){
       double box=.5;

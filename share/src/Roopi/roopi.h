@@ -8,13 +8,11 @@
 #include "act_PathOpt.h"
 #include "act_PathFollow.h"
 #include "act_TaskController.h"
-#include "act_GamepadControl.h"
 #include "act_ComRos.h"
 #include "act_ComPR2.h"
 #include "act_Thread.h"
 #include "act_Tweets.h"
 #include "act_Script.h"
-#include "act_Physx.h"
 #include "act_Recorder.h"
 #include "script_PickAndPlace.h"
 
@@ -29,65 +27,72 @@ struct Roopi {
   Roopi(bool autoStartup=false);
   ~Roopi();
 
-  //-- scripting
+  //-- initialization (start... means persistent activities)
+  void setKinematics(const char* filename);          ///< set kinematics by hand (done in 'autoStartup')
+  void setKinematics(const mlr::KinematicWorld& K);  ///< set kinematics by hand (done in 'autoStartup')
+  Act_TaskController& startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
+  Act_Tweets& startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
+
+  //-- control flow
+  /** wait until the status of each act in the set if non-zero (zero usually means 'still running')
+      after this, you can query the status and make decisions based on that */
   bool wait(std::initializer_list<Act*> acts, double timeout=-1.);
 
-  //-- initialization
-  //  act startControllerLog();
-  Act* startTweets(bool go=true);
+  /** this takes an int-valued function (use a lambda expression to capture scope) and
+      run it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
+  Act_Script runScript(const std::function<int()>& script);
 
-  //-- kinematic editing
-  void setKinematics(const char* filename);
-  void setKinematics(const mlr::KinematicWorld& K);
-  mlr::Shape* newMarker(const char* name, const arr& pos);
-  void kinematicSwitch(const char* object, const char* attachTo);
-  WToken<mlr::KinematicWorld> setKinematics();
-  RToken<mlr::KinematicWorld> getKinematics();
+  //TODO: runScriptOnEvent(const std::function<int()>& script, Event, bool whenever=false);
+  //TODO: define the notion of an Event as a set of act and conditions of their status -> wait(Event)
+
+  //-- get some information
+  const mlr::String& getRobot();                     ///< returns "pr2", "baxter", or "none"
+  arr get_q0();                                      ///< return the 'homing pose' of the robot
+  Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
+
+  //-- kinematic editing (to be done more..)
+  mlr::Shape* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
+  void kinematicSwitch(const char* object, const char* attachTo); ///< switches kinematics in the model world
+  WToken<mlr::KinematicWorld> setK();                             ///< get write access to the model world
+  RToken<mlr::KinematicWorld> getK();                             ///< get read access to the model world
   void resyncView();
 
   //-- control
-  Act_TaskController& startTaskController();
-  Act_TaskController& taskController();
 
   Act_CtrlTask newCtrlTask()         { return Act_CtrlTask(this); }
   Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
   Act_CtrlTask newCtrlTask(const char* specs);
   void hold(bool still);
-  Act_CtrlTask* home();
-  Act_CtrlTask* lookAt(const char* shapeName);
+  Act_CtrlTask home();
+  Act_CtrlTask lookAt(const char* shapeName);
   Act_CtrlTask* collisions(bool on);
 
+  Act_CtrlTask newHoldingTask();
   Act_CtrlTask newCollisionAvoidance();
   Act_CtrlTask newLimitAvoidance();
 
 
+  //-- some activities
 
-  //-- activate gamepad to set controls
-  Act_GamepadControl newGamepadControl(){ return Act_GamepadControl(this); }
+  Act_Thread  newThread(Thread* th)  { return Act_Thread(this, th); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
+  Act_Thread  newComROS()            { return Act_Thread(this, newRosComSpinner()); } ///< thread for the ROS spinner
+  Act_ComPR2  newComPR2()            { return Act_ComPR2(this); } ///< subscribers/publishers that communicate with PR2
+  Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
 
-  //-- ROS communication
-  Act_ComRos newComROS()             { return Act_ComRos(this); }
-  Act_ComPR2 newComPR2()             { return Act_ComPR2(this); }
-
-  //-- path optimization
-  Act_PathOpt newPathOpt()           { return Act_PathOpt(this); }
-
-  //-- PhysX simulation
-  Act_PhysX newPhysX()               { return Act_PhysX(this); }
-
-  //-- compute and display the camera view
-  Act_Thread newCameraView();
+  Act_Thread newPhysX();           ///< run PhysX (nvidia physical simulator)
+  Act_Thread newGamepadControl();  ///< activate gamepad to set controls
+  Act_Thread newCameraView();      ///< compute and display the camera view
 
   //==============================================================================
   //
-  // MACROS, which build on the above basic methods
+  // MACROS, which call scripts
   //
 
   Act_Script graspBox(const char* objName, LeftOrRight lr){
-    return Act_Script(this, [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
+    return runScript( [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
   }
   Act_Script place(const char* objName, const char* ontoName){
-    return Act_Script(this, [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
+    return runScript( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
 };
 
