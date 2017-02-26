@@ -1,9 +1,14 @@
 #include <MCTS/solver_PlainMC.h>
 
-#include "search_space_tree.h"
+#include "ao_search.h"
 
 #include <observation_tasks.h>
 
+/*
+back track, take history into account
+sort nodes before expanding
+dot -Tpng -o tree.png tree.gv
+*/
 //===========================================================================
 
 /*static void test(){
@@ -72,7 +77,7 @@
 
 //===========================================================================
 
-static void iterate( SearchSpaceTree & C, ofstream & fil )
+/*static void iterate( SearchSpaceTree & C, ofstream & fil )
 {
   //    C.root->checkConsistency();
   { //expand
@@ -203,7 +208,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   //    cout <<"pathFringe:" <<C.pathFringe <<endl;
   //    cout <<"pqDone:" <<pqDone <<endl;
 
-}
+}*/
 
 //===========================================================================
 
@@ -278,7 +283,7 @@ void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbo
 
 //===========================================================================
 
-void plan_BHTS()
+/*void plan_BHTS()
 {
   // register symbols
   KOMOFactory komoFactory;
@@ -329,6 +334,71 @@ void plan_BHTS()
   C.updateDisplay();
   mlr::wait(.1);
   //mlr::wait();
+}*/
+
+void plan_AOS()
+{
+  // register symbols
+//  KOMOFactory komoFactory;
+//  komoFactory.registerTask( "komoGrasp"       , groundGrasp );
+//  komoFactory.registerTask( "komoPlace"       , groundPlace );
+//  komoFactory.registerTask( "komoHandover"    , groundHandover );
+//  komoFactory.registerTask( "komoAttach"      , groundAttach );
+//  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
+//  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
+
+  // instanciate search tree
+  AOSearch C;
+
+  C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
+  //C.prepareKin("LGP-obs-kin-2.g");
+
+  //C.prepareFol("LGP-coop-fol.g");
+  //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
+
+  C.prepareTree();      // create root node
+
+  // get node
+  auto s = 0;
+  while( ! C.isSolved() )
+  {
+    s++;
+    auto nodes = C.getNodesToExpand();
+
+    //std::cout << "number of nodes to expand:" << nodes.d0 << std::endl;
+
+    //if( nodes.d0 == 0 )
+    //  std::cout << "finished?" << std::endl;
+
+    for( auto node : nodes )
+    {
+      // expand
+      node->expand();
+
+      // generate rollouts for each child
+      for( auto f : node->families() )
+      {
+        for( auto c : f )
+        {
+          c->generateMCRollouts( 50, 10 );
+        }
+      }
+
+      // backtrack result
+      node->backTrackBestExpectedPolicy();
+    }
+  }
+
+  // display policy
+  std::stringstream ss;
+  C.printPolicy( ss );
+  std::cout << ss.str() << std::endl;
+
+  // save to file
+  std::ofstream fs;
+  fs.open( "policy.gv" );
+  fs << ss.str();
+  fs.close();
 }
 
 //===========================================================================
@@ -345,7 +415,7 @@ int main(int argc,char **argv){
   //  test();
   //}else{
     //    test();
-    plan_BHTS();
+    plan_AOS();
   //}
 
   return 0;
