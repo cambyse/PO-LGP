@@ -16,6 +16,7 @@
 #include "ao_node.h"
 
 #include <unordered_map>
+
 #include <list>
 
 #include <MCTS/solver_PlainMC.h>
@@ -27,11 +28,11 @@
 static double eps() { return std::numeric_limits< double >::epsilon(); }
 
 // outcome structure
-struct outcomeType
-{
-  //int folWorldID;
-  std::string observableState;
-};
+//struct outcomeType
+//{
+//  //int folWorldID;
+//  std::string observableState;
+//};
 
 //bool operator==( const outcomeType & a, const outcomeType & b )
 //{
@@ -48,6 +49,17 @@ struct outcomeType
 //}
 //};
 
+struct stringSetHash {
+size_t operator()( const std::set< std::string > & facts ) const
+{
+  std::string cont;
+  for( auto s : facts )
+    cont += s;
+
+  return std::hash<std::string>()( cont );
+}
+};
+
 static std::string toStdString( Node * node )
 {
   std::stringstream ss;
@@ -55,11 +67,10 @@ static std::string toStdString( Node * node )
   return ss.str();
 }
 
-static std::string getObservableStateStr( Graph * state )
+static std::set< std::string > getObservableStateStr( Graph * state )
 {
-  std::stringstream ss;
-
   // look for potential partial observability, we iterate over each fact
+  std::set< std::string > facts;
   for( auto node : * state )
   {
     //std::cout << * node << std::endl;
@@ -70,11 +81,18 @@ static std::string getObservableStateStr( Graph * state )
     }
     else
     {
+      std::stringstream ss;
       ss << * node;
+      facts.insert( ss.str() );
     }
   }
 
-  return ss.str();
+  return facts;
+//  std::string retString;
+//  for( auto s : facts )
+//    retString += s;
+
+//  return retString;
 }
 
 //===========================================================================
@@ -82,7 +100,7 @@ static std::string getObservableStateStr( Graph * state )
 static int nodeNumber = 0;
 
 /// root node init
-AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
+AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs, const KOMOFactory & komoFactory )
   : parent_( nullptr )
   , folWorlds_( fols )
   , folStates_( folWorlds_.d0 )
@@ -98,6 +116,8 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
   , mcStats_( new MCStatistics )
   , expectedReward_( 0 )
   , expectedBestA_( -1 )
+  , komoFactory_( komoFactory )
+  , id_( 0 )
 {
   for( auto w = 0; w < folWorlds_.d0; ++w )
   {
@@ -126,6 +146,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , mcStats_( new MCStatistics )
   , expectedReward_( 0 )
   , expectedBestA_( -1 )
+  , komoFactory_( parent->komoFactory_ )
 {
   // update the states
   bool isTerminal = true;
@@ -195,8 +216,8 @@ void AONode::expand()
   {
     //std::cout << "------------" << std::endl;
     //std::cout << "action:" << a << std::endl;
-
-    std::unordered_map< std::string, std::list< uint >/*, outcomeHash*/ > outcomesToWorlds;
+    stringSetHash f;
+    std::unordered_map< std::set< std::string >, std::list< uint >, stringSetHash > outcomesToWorlds;
 
     for( auto w = 0; w < folWorlds_.d0; ++w )
     {
@@ -208,16 +229,12 @@ void AONode::expand()
         logic->setState( state.get() );
 
         auto actions = logic->get_actions();
-
         auto action = actions[ a ];
 
         logic->transition( action );
 
         auto result = logic->getState();
-
         auto observableStateStr = getObservableStateStr( result );
-
-        //outcomeType outcome ( { /*w, a,*/ observableStateStr } );
 
         outcomesToWorlds[ observableStateStr ].push_back( w );
       }
@@ -225,16 +242,22 @@ void AONode::expand()
 
     //std::cout << outcomesToWorlds.size() << " possible outcomes" << std::endl;
 
+    // compute the observable facts intersection
+    std::set< std::string > intersection = outcomesToWorlds.begin()->first;
+    for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
+    {
+      auto facts  = outcome->first;
+      std::set_intersection( intersection.begin(), intersection.end(),
+                             facts.begin(), facts.end(),
+                             std::inserter( intersection, intersection.begin() ) );
+    }
+
     // create as many children as outcomes
     mlr::Array< AONode * > familiy;
     for( auto outcome : outcomesToWorlds )
     {
+      auto facts  = outcome.first;
       auto worlds = outcome.second;
-      //std::cout << "for worlds: ";
-      //for( auto world : outcome.second )
-       // std::cout << world << ",";
-      //std::cout << std::endl;
-      //std::cout << "observable state:" << outcome.first << std::endl;
 
       // update belief state
       arr bs = zeros( bs_.d0 );
@@ -254,6 +277,12 @@ void AONode::expand()
       auto n = new AONode( this, pHistory, bs, a );
       familiy.append( n );
 
+      // get the fact not in intersection
+      std::set< std::string > differenciatingFacts;
+      std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
+                           std::inserter(differenciatingFacts, differenciatingFacts.begin() ) );
+
+      n->indicateDifferentiatingFacts( differenciatingFacts );
       //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
     }
 

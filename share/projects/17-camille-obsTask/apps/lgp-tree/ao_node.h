@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include <set>
+
 #include <Kin/kin.h>
 #include <Logic/fol_mcts_world.h>
 #include <LGP/LGP.h>
@@ -45,7 +47,7 @@ class AONode
 {
 public:
   /// root node init
-  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
+  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs, const KOMOFactory & komoFactory );
 
   /// child node creation
   AONode( AONode *parent, double pHistory, const arr & bs, uint a );
@@ -69,6 +71,8 @@ public:
 
   // utility
   std::string bestActionStr() const { return actionStr( expectedBestA_ ); }
+  void indicateDifferentiatingFacts( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
+  std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
   uint getPossibleActionsNumber() const;
@@ -78,6 +82,8 @@ private:
 
 private:
   AONode * parent_;
+
+  // members for symbolic search
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   mlr::Array< std::shared_ptr<Graph> >     folStates_;
 
@@ -85,17 +91,13 @@ private:
   arr bs_;
 
   int a_;                                    ///< action id that leads to this node
-  mlr::Array< FOL_World::Handle > decisions_; ///< actions leading to this node ( one for each logic )
+  mlr::Array< FOL_World::Handle > decisions_;///< actions leading to this node ( one for each logic )
 
-  uint d_;               ///< decision depth/step of this node
-
-  bool isExpanded_;
-  bool isTerminal_;
-  bool isSolved_;
-  bool isInfeasible_;
+  uint d_;                                   ///< decision depth/step of this node
 
   mlr::Array< AONode * > andSiblings_;  /// on the same depth!
   mlr::Array< mlr::Array< AONode * > > families_;
+  std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
   mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
   MCStatistics * mcStats_;
@@ -103,6 +105,13 @@ private:
 
   int expectedBestA_;
   mlr::Array< AONode * > bestFamily_;
+
+  bool isExpanded_;
+  bool isTerminal_;
+  bool isSolved_;
+  bool isInfeasible_;
+
+  const KOMOFactory & komoFactory_;
 
   int id_;
 };

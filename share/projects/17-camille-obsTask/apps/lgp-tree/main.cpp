@@ -339,16 +339,16 @@ void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbo
 void plan_AOS()
 {
   // register symbols
-//  KOMOFactory komoFactory;
-//  komoFactory.registerTask( "komoGrasp"       , groundGrasp );
-//  komoFactory.registerTask( "komoPlace"       , groundPlace );
-//  komoFactory.registerTask( "komoHandover"    , groundHandover );
-//  komoFactory.registerTask( "komoAttach"      , groundAttach );
-//  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
-//  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
+  KOMOFactory komoFactory;
+  komoFactory.registerTask( "komoGrasp"       , groundGrasp );
+  komoFactory.registerTask( "komoPlace"       , groundPlace );
+  komoFactory.registerTask( "komoHandover"    , groundHandover );
+  komoFactory.registerTask( "komoAttach"      , groundAttach );
+  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
+  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
 
   // instanciate search tree
-  AOSearch C;
+  AOSearch C( komoFactory );
 
   C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   //C.prepareKin("LGP-obs-kin-2.g");
@@ -358,7 +358,7 @@ void plan_AOS()
 
   C.prepareTree();      // create root node
 
-  // get node
+  /// SYMBOLIC SEARCH
   auto s = 0;
   while( ! C.isSolved() )
   {
@@ -388,6 +388,8 @@ void plan_AOS()
       node->backTrackBestExpectedPolicy();
     }
   }
+
+  /// POSE OPTIMISATION
 
   // display policy
   std::stringstream ss;

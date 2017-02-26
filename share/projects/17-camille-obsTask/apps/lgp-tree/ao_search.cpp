@@ -8,7 +8,8 @@
 
 #include <LGP/LGP.h>
 
-AOSearch::AOSearch()
+AOSearch::AOSearch( const KOMOFactory & komoFactory )
+  : komoFactory_( komoFactory )
 {
 
 }
@@ -75,7 +76,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
 void AOSearch::prepareTree()
 {
   //root = new ActionNode(kin, fol, folWorlds_, bs_, komoFactory_);
-  root_ = new AONode( folWorlds_, bs_ );
+  root_ = new AONode( folWorlds_, bs_, komoFactory_ );
 }
 
 mlr::Array< AONode * > AOSearch::getNodesToExpand() const
@@ -119,11 +120,20 @@ void AOSearch::printPolicy( AONode * node, std::iostream & ss ) const
 {
   for( auto c : node->bestFamily() )
   {
-    ss << node->id() << "->" << c->id() << " [ label=\"" << node->bestActionStr() << "\" ]" << ";" << std::endl;
+    std::stringstream ss1;
+    ss1 << node->bestActionStr();
+
+    auto diffFacts = c->differentiatingFacts();
+
+    for( auto fact : c->differentiatingFacts() )
+      ss1 << std::endl << fact;
+
+    auto label = ss1.str();
+
+    ss << node->id() << "->" << c->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
 
     printPolicy( c, ss );
   }
-
 }
 //===========================================================================
 

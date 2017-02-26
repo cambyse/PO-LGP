@@ -7,7 +7,7 @@
 class AOSearch
 {
 public: // public methods
-  AOSearch();
+  AOSearch( const KOMOFactory & );
 
   // modifiers
   void prepareFol( const std::string & folDescription );
@@ -31,6 +31,8 @@ private:
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   arr bs_;
   AONode * root_; // root and "current" node
+
+  const KOMOFactory & komoFactory_;
 };
 
 //===========================================================================
