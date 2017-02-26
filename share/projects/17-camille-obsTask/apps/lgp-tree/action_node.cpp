@@ -14,87 +14,23 @@
 
 
 #include "action_node.h"
-
-#include <list>
-#include <set>
-#include <unordered_map>
-
 #include <MCTS/solver_PlainMC.h>
 
 #define DEBUG(x) //x
 #define DEL_INFEASIBLE(x) x
 
-static double epsilon()
-{
-  return std::numeric_limits< double >::epsilon();
-}
-
-//==============KOMOFactory==============================================
-
-void KOMOFactory::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
-{
-  tasks_[ type ] = grounder;
-}
-
-std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
-{
-  auto komo = std::make_shared< ExtensibleKOMO >();
-  for ( auto task : tasks_ )
-  {
-    komo->registerTask( task.first, task.second );
-  }
-
-  return komo;
-}
-
-
-//==============ExtensibleKOMO==============================================
-
-ExtensibleKOMO::ExtensibleKOMO()
-  : KOMO()
-{
-
-}
-
-void ExtensibleKOMO::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
-{
-  tasks_[ type ] = grounder;
-}
-
-void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose )
-{
-  for(Node *n:facts)
-  {
-    if(!n->parents.N) continue; // skip not relevant node
-    StringL symbols;
-    for(Node *p:n->parents) symbols.append(&p->keys.last());// gather symbols
-
-    if(n->keys.N && tasks_.count( n->keys.last() ) != 0 )
-    {
-      mlr::String type = n->keys.last();
-      tasks_[ type ]( phase, facts, n, *this, verbose ); // ground the symbol
-    }
-    else if(n->keys.N && n->keys.last().startsWith("komo"))
-    {
-      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
-    }
-  }
-}
+uint COUNT_kin=0;
+uint COUNT_evals=0;
+uint COUNT_poseOpt=0;
+uint COUNT_seqOpt=0;
+uint COUNT_pathOpt=0;
 
 //===========================================================================
-ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World & _fol, mlr::Array< std::shared_ptr<FOL_World> > & folWorlds, const arr & bs, const KOMOFactory & komoFactory )
-  : parent(NULL), s(0),
-    fol(_fol),
-    folWorlds_( folWorlds ),
-    bs_( bs ),
-    folState(NULL),
-    folStates_( folWorlds.d0 ),
-    folDecision(NULL), folReward(0.), folAddToState(NULL),
-    actionId( -1 ),
+ActionNode::ActionNode(PartiallyObservableNode * pobNode, mlr::KinematicWorld& kin, FOL_World& _fol, const KOMOFactory & komoFactory )
+  : pobNode( pobNode ), parent(NULL), s(0),
+    fol(_fol), folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
     startKinematics(kin), effKinematics(),
-    //rootMC(NULL),
-    mcStats(NULL),
-    rootMcEngines_(folWorlds.d0),
+    rootMC(NULL), mcStats(NULL),
     komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
     mcCount(0), poseCount(0), seqCount(0), pathCount(0),
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
@@ -105,302 +41,100 @@ ActionNode::ActionNode(mlr::KinematicWorld& kin, FOL_World & _fol, mlr::Array< s
   //this is the root node!
   fol.reset_state();
   folState = fol.createStateCopy();
-  //rootMC = new PlainMC(fol);
-  //rootMC->verbose = 0;
-
-  for( auto w = 0 ; w < folWorlds.d0; w++ )
-  {
-    folWorlds(w)->reset_state();
-    folStates_(w).reset( folWorlds(w)->createStateCopy() );
-    rootMcEngines_(w) = std::make_shared< PlainMC >( *folWorlds(w) );
-    rootMcEngines_(w)->verbose = 0;
-  }
+  rootMC = new PlainMC(fol);
+  rootMC->verbose = 0;
 }
 
-ActionNode::ActionNode(ActionNode* parent, double pHistory, const arr & bs/*, Graph * stateBeforeAction*/, std::size_t a, const KOMOFactory & komoFactory )
-  : parent(parent),
-    fol(parent->fol),
-    folWorlds_( parent->folWorlds_ ),
-    pHistory_( pHistory ),
-    bs_( bs ),
+ActionNode::ActionNode(PartiallyObservableNode * pobNode, ActionNode* parent, MCTS_Environment::Handle& a )
+  : pobNode( pobNode ),
+    parent(parent), fol(parent->fol),
     folState(NULL), folDecision(NULL), folReward(0.), folAddToState(NULL),
-    actionId( a ),
-    folStates_( folWorlds_.d0 ),
     startKinematics(parent->startKinematics), effKinematics(),
-    //rootMC(NULL),
-    mcStats(NULL),
+    rootMC(NULL), mcStats(NULL),
     komoPoseProblem(NULL), komoSeqProblem(NULL), komoPathProblem(NULL),
     mcCount(0), poseCount(0), seqCount(0), pathCount(0),
     symCost(0.), poseCost(0.), poseConstraints(0.), seqCost(0.), seqConstraints(0.), pathCost(0.), pathConstraints(0.),
     poseFeasible(false), seqFeasible(false), pathFeasible(false),
     inFringe1(false), inFringe2(false)
-  , komoFactory_( komoFactory )
+  , komoFactory_( parent->komoFactory_ )
 {
   s=parent->s+1;
   parent->children.append(this);
   fol.setState(parent->folState, parent->s);
-
-  //std::cout << "state:" << *observableFol.getState() << std::endl;
-  //std::cout << "state+percept:" << *stateBeforeAction << std::endl;
-
-  //std::cout << "state:" << *observableFol.getState() << std::endl;
-
-//  /////////////////Integrate percept//////////////////////////
-//  for( Node * n : *stateBeforeAction )
-//  {
-//    std::stringstream sn; sn << *n;
-
-//    bool found = false;
-//    for( Node * m : *observableFol.getState() )
-//    {
-//      std::stringstream sm; sm << *m;
-
-//      //std::cout << sn.str() <<  " " << sm.str() << std::endl;
-
-//      if( sn.str() == sm.str() )
-//        found = true;
-//    }
-
-//    if( ! found )
-//    {
-//      //auto clone  = n->newClone( *observableFol.getState() );
-//    }
-//  }
-
-  //std::cout << "state with obs:" << *observableFol.getState() << std::endl;
-  /////////////////Integrate action////////////////////////
-  auto action = fol.get_actions()[actionId];
-  CHECK(action,"giving a 'NULL' shared pointer??");
-  //fol.verbose = 3;
-  fol.transition(action);
-
-  ////////////////Do stuff
+  CHECK(a,"giving a 'NULL' shared pointer??");
+  fol.transition(a);
+  time=parent->time+fol.lastStepDuration;
+  folReward = fol.lastStepReward;
+  isTerminal = fol.successEnd;
   if(fol.deadEnd) isInfeasible=true;
-  fol.createStateCopy();
   folState = fol.createStateCopy();
   folAddToState = NULL; //fresh creation -> notion to add
   folDecision = folState->getNode("decision");
-  decision = fol.get_actions()[a];
-  ////////////////////////////////
-
-  for( auto w = 0 ; w < folWorlds_.d0; w++ )
-  {
-    folWorlds_(w)->setState(parent->folStates_(w).get(), parent->s);
-    auto action = folWorlds_(w)->get_actions()[actionId];
-    CHECK(action,"giving a 'NULL' shared pointer??");
-    //std::cout << "folWorlds_(w):" << *folWorlds_(w) << std::endl;
-    //std::cout << "a:" << *a << std::endl;
-    //folWorlds_(w)->verbose = 3;
-    folWorlds_(w)->transition(action);
-    folStates_(w).reset( folWorlds_(w)->createStateCopy() );
-  }
-  time=parent->time+fol.lastStepDuration;
-  folReward = fol.lastStepReward;
-  //isTerminal = fol.successEnd;
-  //if( isTerminal )
-  //  std::cout << "terminal node!" << std::endl;
-  bool tmp = true;
-  for( auto w = 0 ; w < folWorlds_.d0; w++ )
-  {
-    if( bs_( w ) > epsilon() )
-      tmp = tmp && folWorlds_(w)->successEnd;
-  }
-  isTerminal = tmp;
-
-
-  //rootMC = parent->rootMC;
-  rootMcEngines_ = parent->rootMcEngines_;
+  decision = a;
+  rootMC = parent->rootMC;
 }
 
 void ActionNode::expand(){
-  /*CHECK(!isExpanded,"");
+  CHECK(!isExpanded,"");
   if(isTerminal) return;
   fol.setState(folState, s);
   auto actions = fol.get_actions();
   for(FOL_World::Handle& a:actions){
 //    cout <<"  EXPAND DECISION: " <<*a <<endl;
-    new ActionNode(this, a, komoFactory_);
+    new ActionNode(pobNode, this, a );
   }
-  if(!children.N) isTerminal=true;*/
-
-//  CHECK(!isExpanded,"");
-//  if(isTerminal) return;
-//  for( auto w = 0; w < folWorlds_.d0; w++ )
-//  {
-//    folWorlds_(w)->setState(folStates_(w).get(), s);
-//    auto actions = folWorlds_(w)->get_actions();
-//    for(FOL_World::Handle& a:actions){
-//      //    cout <<"  EXPAND DECISION: " <<*a <<endl;
-//      new ActionNode(this, a, komoFactory_);
-//    }
-//  }
-//  if(!children.N) isTerminal=true;
-
-  CHECK(!isExpanded,"");
-  if(isTerminal) return;
-
-  // determine the possible action set in each world and store it in the map
-  struct ObservableSateActionMapping
-  {
-    Graph * state;
-    std::list< std::size_t > actions;
-  };
-
-  auto compare = []( const ObservableSateActionMapping & a, const ObservableSateActionMapping & b ) -> bool
-  {
-    return *a.state < *b.state;
-  };
-
-  std::map< ObservableSateActionMapping, std::list< std::size_t> , decltype(compare) > observableStates(compare);
-
-  for( auto w = 0; w < folWorlds_.d0; w++ )
-  {
-    //std::cout << folWorlds_(w)->KB << std::endl;
-    Graph* stateGraph = folWorlds_(w)->createStateCopy();
-
-    //folWorlds_(w)->KB == folWorlds_(w+1)->KB;
-
-    CHECK( stateGraph, "the state of this node could not be retrieved!" );
-
-    // Retrieve observable state
-    Graph*  observableStateGraph = stateGraph;
-    for( Node * n : *observableStateGraph )
-    {
-      std::stringstream ss;
-      n->write( ss );
-      std::string atom  = ss.str();
-      if( atom.find( "NOT_OBSERVABLE" ) != -1 )
-      {
-        observableStateGraph->removeValue( n );
-      }
-    }
-
-    //std::cout << "observable state:" << *observableStateGraph << std::endl;
-    // Retrieve its possible actions
-    auto actions = folWorlds_(w)->get_actions();
-    std::list< std::size_t > actionsHashs;
-    for(FOL_World::Handle& a: actions)
-    {
-      actionsHashs.push_back( a->get_hash() );
-    }
-
-    ObservableSateActionMapping obsState { observableStateGraph, actionsHashs };
-
-    observableStates[ obsState ].push_back( w );
-  }
-
-  // Create nodes
-  for( auto observableState : observableStates )
-  {
-    auto actions = observableState.first.actions;
-    auto worlds  = observableState.second;
-
-    // build new belief state
-    double sum = 0;
-    arr bs( folWorlds_.d0 );
-    for( auto w : worlds )
-    {
-      bs( w ) = bs_( w );
-      sum += bs( w );
-    }
-    bs /= sum;
-    double pHistory = sum;
-
-    // expand
-    for( auto a : actions )
-      new ActionNode( this, pHistory, bs/*, observableState.first.state*/, a, komoFactory_ );
-  }
-
+  if(!children.N) isTerminal=true;
   isExpanded=true;
 }
 
 arr ActionNode::generateRootMCRollouts(uint num, int stepAbort, const mlr::Array<MCTS_Environment::Handle>& prefixDecisions){
   CHECK(!parent, "generating rollouts needs to be done by the root only");
 
-//  fol.reset_state();
-////  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
-  /*arr R;
+  fol.reset_state();
+//  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
+  if(!rootMC){
+    rootMC = new PlainMC(fol);
+    rootMC->verbose = 0;
+  }
+
+  arr R;
 
   for(uint k=0;k<num;k++){
     rootMC->initRollout(prefixDecisions);
     fol.setState(folState);
     double r = rootMC->finishRollout(stepAbort);
     R.append( r );
-  }*/
-  arr R;
-
-  for(uint k=0;k<num;k++)
-  {
-    double expectedReward = 0;
-    for( auto w = 0; w < folWorlds_.d0; ++w )
-    {
-      if( bs_( w ) > epsilon() )
-      {
-        folWorlds_(w)->reset_state();
-        //  cout <<"********\n *** MC from STATE=" <<*fol.state->isNodeOfGraph <<endl;
-        rootMcEngines_(w)->initRollout(prefixDecisions);
-        folWorlds_(w)->setState(folStates_(w).get());
-        double r = bs_(w) * rootMcEngines_(w)->finishRollout(stepAbort);
-        expectedReward += bs_(w) * r;
-      }
-    }
-
-    R.append( expectedReward );
   }
+
   return R;
 }
 
 void ActionNode::addMCRollouts(uint num, int stepAbort){
   //-- collect decision path
   ActionNodeL treepath = getTreePath();
-  //mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
-  mlr::Array<std::size_t> prefixDecisionIds(treepath.N-1);
+  mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
   for(uint i=1;i<treepath.N;i++)
-    prefixDecisionIds(i-1) = treepath(i)->actionId;
+    prefixDecisions(i-1) = treepath(i)->decision;
 
- // cout <<"DECISION PATH = "; listWrite(prefixDecisionIds); cout <<endl;
+//  cout <<"DECISION PATH = "; listWrite(prefixDecisions); cout <<endl;
 
+#if 0
+  arr R = generateRootMCRollouts(num, stepAbort, prefixDecisions);
+#else
   arr R;
-  /*for(uint k=0;k<num;k++){
+  for(uint k=0;k<num;k++){
     rootMC->initRollout(prefixDecisions);
     fol.setState(folState);
     double r = rootMC->finishRollout(stepAbort);
     R.append( r );
   }
+#endif
 
-  // the gathered rewards are inserted into the previous nodes
   for(ActionNode* n:treepath){
     if(!n->mcStats) n->mcStats = new MCStatistics;
     for(auto& r:R){
-      n->mcStats->add(r);                  // is kept sorted!
-      n->symCost = - n->mcStats->X.first();// take the best
-    }
-  }*/
-  for(uint k=0;k<num;k++)
-  {
-    double expectedReward = 0;
-    for( auto w = 0; w < folWorlds_.d0; ++w )
-    {
-      if( bs_( w ) > epsilon() )
-      {
-        mlr::Array<MCTS_Environment::Handle> prefixDecisions(treepath.N-1);
-        for( auto a = 0; a < treepath.N-1; ++a )
-          prefixDecisions(a) = folWorlds_(w)->get_actions()[prefixDecisionIds(a)];
-
-        rootMcEngines_(w)->initRollout(prefixDecisions);
-        folWorlds_(w)->setState(folStates_(w).get());
-        double r = rootMcEngines_(w)->finishRollout(stepAbort);
-        expectedReward += bs_(w) * r;
-      }
-    }
-    R.append( expectedReward );
-  }
-  // the gathered rewards are inserted into the previous nodes
-  for(ActionNode* n:treepath){
-    if(!n->mcStats) n->mcStats = new MCStatistics;
-    for(auto& r:R){
-      n->mcStats->add(r);                  // is kept sorted!
-      n->symCost = - n->mcStats->X.first();// take the best
+      n->mcStats->add(r);
+      n->symCost = - n->mcStats->X.first();
     }
   }
 
@@ -420,7 +154,9 @@ void ActionNode::solvePoseProblem(){
   if(!parent) effKinematics = startKinematics;
   else effKinematics = parent->effKinematics;
 
-  //-- no need to collect 'path nodes'
+  //-- collect 'path nodes'
+  ActionNodeL treepath = getTreePath();
+
   komoPoseProblem = komoFactory_.createKomo();
   komoPoseProblem->setModel(effKinematics);
   komoPoseProblem->setTiming(1., 2, 5., 1, false);
@@ -674,14 +410,8 @@ ActionNode *ActionNode::treePolicy_softMax(double temperature){
 
 bool ActionNode::recomputeAllFolStates(){
   if(!parent){ //this is root
-    for( auto w = 0; w < folWorlds_.d0; ++w )
-    {
-      if( bs_(w) > epsilon() )
-      {
-        folStates_(w)->copy(*folWorlds_(w)->start_state);
-        if(folAddToState) applyEffectLiterals(*folStates_(w), *folAddToState, {}, NULL);
-      }
-    }
+    folState->copy(*fol.start_state);
+    if(folAddToState) applyEffectLiterals(*folState, *folAddToState, {}, NULL);
   }else{
     fol.setState(parent->folState, parent->s);
     if(fol.is_feasible_action(decision)){
@@ -740,21 +470,15 @@ void ActionNode::checkConsistency(){
 
   //-- check that each child exactly matches a decision, in same order
   if(children.N){
-    for( auto w = 0; w < folWorlds_.d0; ++w )
-    {
-      FOL_World& _fol = *(folWorlds_(w));
-      Graph * _folState = folStates_(w).get();
-
-      _fol.setState(_folState, s);
-      auto actions = fol.get_actions();
-      CHECK_EQ(children.N, actions.size(), "");
-      uint i=0;
-      for(FOL_World::Handle& a:actions){
-        //      cout <<"  DECISION: " <<*a <<endl;
-        FOL_World::Handle& b = children(i)->decision;
-        CHECK_EQ(*a, *b, "children do not match decisions");
-        i++;
-      }
+    fol.setState(folState, s);
+    auto actions = fol.get_actions();
+    CHECK_EQ(children.N, actions.size(), "");
+    uint i=0;
+    for(FOL_World::Handle& a:actions){
+//      cout <<"  DECISION: " <<*a <<endl;
+      FOL_World::Handle& b = children(i)->decision;
+      CHECK_EQ(*a, *b, "children do not match decisions");
+      i++;
     }
   }
 
@@ -813,6 +537,3 @@ void ActionNode::getAll(ActionNodeL& L){
   for(ActionNode *ch:children) ch->getAll(L);
 }
 
-RUN_ON_INIT_BEGIN(manipulationTree)
-ActionNodeL::memMove = true;
-RUN_ON_INIT_END(manipulationTree)

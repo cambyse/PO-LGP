@@ -30,12 +30,13 @@ NOT_OBSERVABLE
 ## constants
 target_location_1
 target_location_2
+target_location_3
 target
 
 ## initial state
-START_STATE { (object target) (location target_location_1) (location target_location_2) }
-BELIEF_START_STATE{ (at target target_location_1)=0.8 (at target target_location_2)=0.2 }
-### RULES
+START_STATE { (object target) (location target_location_1) (location target_location_2) (location target_location_3) }
+BELIEF_START_STATE{ (at target target_location_1)=0.4 (at target target_location_2)=0.35 (at target target_location_3)=0.25 }
+### RULES 
 
 #termination rule
 #Rule {
@@ -50,6 +51,11 @@ Rule {
 
 Rule {
   { (viewed target target_location_2)} # 
+  { (QUIT) }
+}
+
+Rule {
+  { (viewed target target_location_3)} # 
   { (QUIT) }
 }
 

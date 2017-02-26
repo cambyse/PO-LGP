@@ -1,9 +1,14 @@
 #include <MCTS/solver_PlainMC.h>
 
-#include "search_space_tree.h"
+#include "ao_search.h"
 
 #include <observation_tasks.h>
 
+/*
+back track, take history into account
+sort nodes before expanding
+dot -Tpng -o tree.png tree.gv
+*/
 //===========================================================================
 
 /*static void test(){
@@ -72,22 +77,22 @@
 
 //===========================================================================
 
-static void iterate( SearchSpaceTree & C, ofstream & fil )
+/*static void iterate( SearchSpaceTree & C, ofstream & fil )
 {
   //    C.root->checkConsistency();
-  // Symbolic level
   { //expand
-    MNode* n = popBest(C.mcFringe, mcHeuristic);
-
+    PartiallyObservableNode* n = popBest(C.mcFringe, mcHeuristic);
+    //      ActionNode* n = NULL;
+    //      for(uint k=0;k<10;k++){ n=C.root->treePolicy_softMax(0.); if(n) break; }
     if(n)
     {
       n->expand();
-      for(ActionNode* c:n->children)
+      for(PartiallyObservableNode* c:n->children())
       {
         c->addMCRollouts(10,10);
         C.mcFringe.append(c);
-        if(c->isTerminal) C.terminals.append(c);
-        if(n->poseCount)  C.poseFringe.append(c);
+        if(c->isTerminal()) C.terminals.append(c);
+        if(n->poseCount())  C.poseFringe.append(c);
         //          if(n->seqCount) C.seqFringe.append(c);
         //if(c->isTerminal) C.seqFringe.append(c);
       }
@@ -97,7 +102,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   { //add additional MC rollouts
     for(uint mc=0;mc<10;mc++)
     {
-      ActionNode* n = NULL;
+      PartiallyObservableNode* n = NULL;
       for(uint k=0;k<10;k++)
       {
         n=C.root->treePolicy_random(); if(n) break;
@@ -112,59 +117,55 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   C.root->recomputeAllMCStats();
 
   //    C.updateDisplay();
-  // Pose level
-  { //optimize a pose
-    MNode* n = popBest(C.poseFringe, poseHeuristic);
 
+  { //optimize a pose
+    PartiallyObservableNode* n = popBest(C.poseFringe, poseHeuristic);
     if(n)
     {
-      //for( auto a : n->getTreePath() )
-      //std::cout << "action:" << a->actionId << std::endl;
-
       //      cout <<"### POSE TESTING node " <<*n <<endl;
       //      mlr::wait();
       n->solvePoseProblem();
-      if(n->poseFeasible)
+      if(n->poseFeasible())
       {
-        for(MNode* c:n->children) C.poseFringe.append(c); //test all children
-        if(n->isTerminal) C.seqFringe.append(n); //test seq or path
+        for(PartiallyObservableNode* c:n->children()) C.poseFringe.append(c); //test all children
+        if(n->isTerminal()) C.seqFringe.append(n); //test seq or path
       }
       C.node = n;
     }
   }
-  // Seq level
+
   { //optimize a seq
-    MNode* n = popBest(C.seqFringe, seqHeuristic);
+    PartiallyObservableNode* n = popBest(C.seqFringe, seqHeuristic);
     if(n)
     {
       //      cout <<"### SEQ TESTING node " <<*n <<endl;
       //      mlr::wait();
       n->solveSeqProblem();
-      if(n->seqFeasible)
+      if(n->seqFeasible())
       {
         //          for(MNode* c:n->children) C.seqFringe.append(c);
-        if(n->isTerminal) C.pathFringe.append(n);
+        if(n->isTerminal()) C.pathFringe.append(n);
       }
       C.node = n;
     }
   }
-  // Path level
+
   { //optimize a path
-    MNode* n = popBest(C.pathFringe, pathHeuristic);
+    PartiallyObservableNode* n = popBest(C.pathFringe, pathHeuristic);
     if(n)
     {
       //      cout <<"### PATH TESTING node " <<*n <<endl;
       //      mlr::wait();
-      n->solvePathProblem(10);  // param = number of micro-steps
-      if(n->pathFeasible) C.done.append(n);
+      n->solvePathProblem(10);
+      if(n->pathFeasible()) C.done.append(n);
       C.node = n;
     }
   }
 
-  for(auto *n:C.terminals) CHECK(n->isTerminal,"");
+  for(auto *n:C.terminals) CHECK(n->isTerminal(),"");
 
   //    C.updateDisplay();
-  for(MNode *n:C.mcFringe) if(!n->mcStats->n)
+  for(PartiallyObservableNode *n:C.mcFringe) if(!n->mcStats()->n)
   {
     //      cout <<"recomputing MC rollouts for: " <<*n->decision <<endl;
     //      mlr::wait();
@@ -173,9 +174,8 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
     //      C.updateDisplay();
   }
 
-  // retrieve best solutions
-  MNode *bt = getBest(C.terminals, seqCost);
-  MNode *bp = getBest(C.done, pathCost);
+  PartiallyObservableNode *bt = getBest(C.terminals, seqCost);
+  PartiallyObservableNode *bp = getBest(C.done, pathCost);
   mlr::String out;
   out <<"TIME= "        <<mlr::cpuTime()  <<" KIN= " <<COUNT_kin    <<" EVALS= " <<COUNT_evals
       <<" POSE= "       <<COUNT_poseOpt   <<" SEQ= " <<COUNT_seqOpt <<" PATH= " <<COUNT_pathOpt
@@ -187,7 +187,6 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   fil  <<out <<endl;
   cout <<out <<endl;
 
-  // set best solutions to viewers
   if(bt) C.node=bt;
   if(bp) C.node=bp;
   C.updateDisplay();
@@ -209,7 +208,7 @@ static void iterate( SearchSpaceTree & C, ofstream & fil )
   //    cout <<"pathFringe:" <<C.pathFringe <<endl;
   //    cout <<"pqDone:" <<pqDone <<endl;
 
-}
+}*/
 
 //===========================================================================
 
@@ -257,7 +256,7 @@ void groundAttach( double phase, const Graph& facts, Node *n, KOMO & komo, int v
   komo.setAttach( phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
 }
 
-void groundHeadGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
@@ -284,7 +283,7 @@ void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbo
 
 //===========================================================================
 
-void plan_BHTS()
+/*void plan_BHTS()
 {
   // register symbols
   KOMOFactory komoFactory;
@@ -292,7 +291,7 @@ void plan_BHTS()
   komoFactory.registerTask( "komoPlace"       , groundPlace );
   komoFactory.registerTask( "komoHandover"    , groundHandover );
   komoFactory.registerTask( "komoAttach"      , groundAttach );
-  komoFactory.registerTask( "komoGetSight"    , groundHeadGetSight );
+  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
   komoFactory.registerTask( "komoTakeView"    , groundTakeView );
 
   // instanciate search tree
@@ -335,6 +334,71 @@ void plan_BHTS()
   C.updateDisplay();
   mlr::wait(.1);
   //mlr::wait();
+}*/
+
+void plan_AOS()
+{
+  // register symbols
+//  KOMOFactory komoFactory;
+//  komoFactory.registerTask( "komoGrasp"       , groundGrasp );
+//  komoFactory.registerTask( "komoPlace"       , groundPlace );
+//  komoFactory.registerTask( "komoHandover"    , groundHandover );
+//  komoFactory.registerTask( "komoAttach"      , groundAttach );
+//  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
+//  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
+
+  // instanciate search tree
+  AOSearch C;
+
+  C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
+  //C.prepareKin("LGP-obs-kin-2.g");
+
+  //C.prepareFol("LGP-coop-fol.g");
+  //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
+
+  C.prepareTree();      // create root node
+
+  // get node
+  auto s = 0;
+  while( ! C.isSolved() )
+  {
+    s++;
+    auto nodes = C.getNodesToExpand();
+
+    //std::cout << "number of nodes to expand:" << nodes.d0 << std::endl;
+
+    //if( nodes.d0 == 0 )
+    //  std::cout << "finished?" << std::endl;
+
+    for( auto node : nodes )
+    {
+      // expand
+      node->expand();
+
+      // generate rollouts for each child
+      for( auto f : node->families() )
+      {
+        for( auto c : f )
+        {
+          c->generateMCRollouts( 50, 10 );
+        }
+      }
+
+      // backtrack result
+      node->backTrackBestExpectedPolicy();
+    }
+  }
+
+  // display policy
+  std::stringstream ss;
+  C.printPolicy( ss );
+  std::cout << ss.str() << std::endl;
+
+  // save to file
+  std::ofstream fs;
+  fs.open( "policy.gv" );
+  fs << ss.str();
+  fs.close();
 }
 
 //===========================================================================
@@ -351,7 +415,7 @@ int main(int argc,char **argv){
   //  test();
   //}else{
     //    test();
-    plan_BHTS();
+    plan_AOS();
   //}
 
   return 0;
