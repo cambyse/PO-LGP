@@ -80,6 +80,14 @@ void Act_CtrlTask::setTask(CtrlTask *t){
   task->update(0., roopi.getK());
   y0 = task->y;
   task->active = false;
+  { //set the callback
+    task->callbacks.append(
+      [this](CtrlTask* t,int s){
+        CHECK_EQ(t,task,"");
+        this->setStatus(s);
+      }
+    );
+  }
   roopi.s->ctrlTasks.set()->append(task);
 }
 

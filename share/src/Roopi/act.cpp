@@ -10,7 +10,7 @@ Act::Act(Roopi *r)
   : roopi(*r), startTime(mlr::realTime()) {
   registryNode = registry().newNode<Act*>({"Act", typeid(*this).name()}, {}, this);
   roopi.acts.set()->append(this);
-  setStatus(AS_create);
+  setStatus(AS_init);
 }
 
 //Act::Act(Act&& a)

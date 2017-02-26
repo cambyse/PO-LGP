@@ -64,7 +64,7 @@ struct Roopi {
   Act_CtrlTask newCtrlTask(const char* specs);
   void hold(bool still);
   Act_CtrlTask home();
-  Act_CtrlTask lookAt(const char* shapeName);
+  Act_CtrlTask lookAt(const char* shapeName, double prec=1e-2);
   Act_CtrlTask* collisions(bool on);
 
   Act_CtrlTask newHoldingTask();
@@ -82,6 +82,7 @@ struct Roopi {
   Act_Thread newPhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread newGamepadControl();  ///< activate gamepad to set controls
   Act_Thread newCameraView();      ///< compute and display the camera view
+  Act_Thread newKinect2Pcl();
 
   //==============================================================================
   //

@@ -24,7 +24,15 @@ struct sAct_Tweets : Thread{
   void reg(ConditionVariable* c){
     if(c!=this){
       stepMutex.lock();
+#if 1
+      c->callbacks.append(Callback<void(ConditionVariable*,int)>(c,
+        [this](ConditionVariable* c,int s){
+          this->tweet(c,s);
+        } )
+      );
+#else
       listenTo(c);
+#endif
       stepMutex.unlock();
     }
   }
@@ -32,9 +40,35 @@ struct sAct_Tweets : Thread{
   void dereg(ConditionVariable* c){
     if(c!=this){
       stepMutex.lock();
+#if 1
+      c->callbacks.memMove=true;
+      c->callbacks.removeValue(Callback<void(ConditionVariable*,int)>(c));
+#else
       if(listensTo.contains(c)) stopListenTo(c);
+#endif
       stepMutex.unlock();
     }
+  }
+
+  void tweet(ConditionVariable* c, int s){
+      cout <<"TWEETs #" <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
+      Act *a = dynamic_cast<Act*>(c);
+      if(a){
+        Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
+        if(t && t->task){
+          cout <<"Act_CtrlTask " <<t->get()->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
+        }else{
+          cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
+        }
+      }else{
+        Thread *th = dynamic_cast<Thread*>(c);
+        if(th){
+          cout <<"Thread " <<th->name <<" hat status " <<s <<' ';
+        }else{
+          //        cout <<typeid(*c).name() <<" sends " <<c->getStatus() <<' ';
+        }
+      }
+      cout <<endl;
   }
 
   sAct_Tweets(Act_Tweets *T) : Thread("Act_Tweets", -1.), callbacks(this){}
@@ -43,26 +77,10 @@ struct sAct_Tweets : Thread{
   virtual void open(){}
   virtual void close(){}
   virtual void step(){
+    HALT("obsolete");
     for(ConditionVariable *c:messengers){
       try{
-        cout <<"TWEETs #" <<step_count <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
-        Act *a = dynamic_cast<Act*>(c);
-        if(a){
-          Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
-          if(t && t->task){
-            cout <<"Act_CtrlTask " <<t->get()->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)t->getStatus()) <<' ';
-          }else{
-            cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)a->getStatus()) <<' ';
-          }
-        }else{
-          Thread *th = dynamic_cast<Thread*>(c);
-          if(th){
-            cout <<"Thread " <<th->name <<" hat status " <<th->getStatus() <<' ';
-          }else{
-            //        cout <<typeid(*c).name() <<" sends " <<c->getStatus() <<' ';
-          }
-        }
-        cout <<endl;
+        tweet(c, c->getStatus());
       }catch(...){
         LOG(-1) <<"TWEETING failed (perhaps the messenger was already destroyed";
       }

@@ -5,6 +5,7 @@ Thread* newGamepadControlThread();
 Thread* newPhysXThread();
 
 #include <Perception/viewer.h>
+#include <Perception/kinect2pointCloud.h>
 
 #define baxter 0
 
@@ -82,7 +83,7 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K){
 }
 
 Act_TaskController& Roopi::startTaskController(){
-  s->_taskUpdater = new Act_Thread(this, new CtrlTaskUpdater);
+//  s->_taskUpdater = new Act_Thread(this, new CtrlTaskUpdater);
   s->_taskController = new Act_TaskController(this);
   return *s->_taskController;
 }
@@ -126,10 +127,10 @@ Act_CtrlTask Roopi::home(){
   return Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0());
 }
 
-Act_CtrlTask Roopi::lookAt(const char* shapeName){
+Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec){
   int cam = getK()->getShapeByName("endeffKinect")->index;
   int obj = getK()->getShapeByName(shapeName)->index;
-  return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {1e-1});
+  return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
 }
 
 //Act_CtrlTask* Roopi::lookAt(const char* shapeName){
@@ -252,13 +253,14 @@ const mlr::String& Roopi::getRobot(){
 
 Act_Thread Roopi::newCameraView(){
   //TODO: the viewer is never destroyed! (Make it a child activity of the ComputeCamView?
-  ImageViewer *v = new ImageViewer("cameraView");
-  v->flipImage = true;
-  v->threadOpen(true);
-  return Act_Thread(this, new ComputeCameraView(30));
+  return Act_Thread(this, {new ComputeCameraView(30), new ImageViewer("kinect_rgb")});
 }
 
-Act_Thread Roopi::newPhysX()             {
+Act_Thread Roopi::newKinect2Pcl(){
+  return Act_Thread(this, {new Kinect2PointCloud(), new PointCloudViewer()});
+}
+
+Act_Thread Roopi::newPhysX(){
   return Act_Thread(this, newPhysXThread());
 }
 

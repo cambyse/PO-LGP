@@ -124,31 +124,26 @@ struct sOpenGL {
   int windowID;                        ///< id of this window in the global glwins list
   
   //-- callbacks
-  
   static void _Void() { }
-  static void _Draw() {
-    accessOpengl();  OpenGL *gl=SingleOpengl().glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); deaccessOpengl(); gl->isUpdating.setStatus(0);
-  }
-  static void _Key(unsigned char key, int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Key(key,x,y); deaccessOpengl(); }
+  static void _Draw() { accessOpengl();  OpenGL *gl=SingleOpengl().glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); deaccessOpengl(); gl->isUpdating.setStatus(0); }
+  static void _Key(unsigned char key, int x, int y) {        accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Key(key,x,y); deaccessOpengl(); }
   static void _Mouse(int button, int updown, int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Mouse(button,updown,x,y); deaccessOpengl(); }
-  static void _Motion(int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Motion(x,y); deaccessOpengl(); }
-  static void _PassiveMotion(int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Motion(x,y); deaccessOpengl(); }
-  static void _Reshape(int w,int h) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Reshape(w,h); deaccessOpengl(); }
-  static void _MouseWheel(int wheel, int direction, int x, int y) { accessOpengl(); SingleOpengl().glwins(glutGetWindow())->MouseWheel(wheel,direction,x,y); deaccessOpengl(); }
+  static void _Motion(int x, int y) {                        accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Motion(x,y); deaccessOpengl(); }
+  static void _PassiveMotion(int x, int y) {                 accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Motion(x,y); deaccessOpengl(); }
+  static void _Reshape(int w,int h) {                        accessOpengl(); SingleOpengl().glwins(glutGetWindow())->Reshape(w,h); deaccessOpengl(); }
+  static void _MouseWheel(int wheel, int dir, int x, int y){ accessOpengl(); SingleOpengl().glwins(glutGetWindow())->MouseWheel(wheel,dir,x,y); deaccessOpengl(); }
   
   static void accessOpengl() {
     SingleOpengl().lock.lock();
-//    OpenGL *gl=SingleOpengl().glwins(glutGetWindow());
-//    CHECK(gl->s->windowID>=0,"window is not created");
-//    glutSetWindow(gl->s->windowID);
   }
   static void deaccessOpengl() {
-//#ifndef MLR_MSVC
-//    glXMakeCurrent(fgDisplay.Display, None, NULL);
-//#endif
     SingleOpengl().lock.unlock();
   }
-  void accessWindow() { accessOpengl(); CHECK(windowID>=0,"window is not created");  glutSetWindow(windowID); } //same as above, but also sets gl cocntext (glXMakeCurrent)
+  void accessWindow() {  //same as above, but also sets gl cocntext (glXMakeCurrent)
+    accessOpengl();
+    CHECK(windowID>=0,"window is not created");
+    glutSetWindow(windowID);
+  }
   void deaccessWindow() {
 #ifndef MLR_MSVC
     glXMakeCurrent(fgDisplay.Display, None, NULL);

@@ -127,7 +127,8 @@ void Prototyping(){
 void TEST(PickAndPlace) {
   Roopi R(true);
 
-//  auto view = R.newCameraView();
+  auto view = R.newCameraView();
+  auto pcl = R.newKinect2Pcl();
 //  R.taskController().verbose(1);
 
   R.getTaskController().lockJointGroupControl("torso");
@@ -220,6 +221,19 @@ void TEST(PickAndPlace2) {
 
 //===============================================================================
 
+void TEST(Kinect) {
+  Roopi R(true);
+
+  auto L = R.lookAt("endeffR");
+
+  auto view = R.newCameraView();
+  auto pcl = R.newKinect2Pcl();
+
+  mlr::wait();
+
+}
+//===============================================================================
+
 void TEST(Gamepad) {
   Roopi R(true);
 
@@ -242,6 +256,8 @@ int main(int argc, char** argv){
 //  testGripper();
 //  testPhysX();
 //  Prototyping();
+
+//  testKinect();
 
   for(;;) testPickAndPlace();
 

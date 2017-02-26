@@ -2,7 +2,7 @@
 
 #include <Core/thread.h>
 
-enum ActStatus { AS_create=-1, AS_running, AS_done, AS_stalled, AS_converged };
+enum ActStatus { AS_init=-1, AS_running, AS_done, AS_converged, AS_stalled };
 
 struct Roopi;
 struct Act;

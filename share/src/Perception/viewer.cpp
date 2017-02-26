@@ -12,7 +12,9 @@ struct sImageViewer{
   sImageViewer(const char* tit) : gl(tit) {}
 };
 
-ImageViewer::ImageViewer(const char* img_name) : Thread(STRING("ImageViewer_"<<img_name), -1), img(this, img_name, true){}
+ImageViewer::ImageViewer(const char* img_name) : Thread(STRING("ImageViewer_"<<img_name), -1), img(this, img_name, true){
+  threadOpen();
+}
 
 ImageViewer::~ImageViewer(){ threadClose(); }
 
@@ -25,10 +27,10 @@ void ImageViewer::open(){
 void ImageViewer::close(){ delete s; }
 
 void ImageViewer::step(){
-  s->gl.lock.writeLock();
+  s->gl.dataLock.writeLock();
   s->gl.background = img.get();
   if(flipImage) flip_image(s->gl.background);
-  s->gl.lock.unlock();
+  s->gl.dataLock.unlock();
   if(!s->gl.background.N) return;
   if(s->gl.height!= s->gl.background.d0 || s->gl.width!= s->gl.background.d1)
     s->gl.resize(s->gl.background.d1, s->gl.background.d0);
@@ -53,17 +55,27 @@ void glDrawAxes(void*){
 
 PointCloudViewer::PointCloudViewer(const char* pts_name, const char* cols_name)
   : Thread(STRING("PointCloudViewer_"<<pts_name <<'_' <<cols_name), .1),
-    pts(this, pts_name),
-    cols(this, cols_name){}
+    pts(this, pts_name, true),
+    cols(this, cols_name){
+  threadLoop();
+}
 
-PointCloudViewer::~PointCloudViewer(){ threadClose(); }
+PointCloudViewer::~PointCloudViewer(){
+  threadClose();
+}
 
 void PointCloudViewer::open(){
   s = new sPointCloudViewer;
+#if 0
   s->gl.add(glDrawAxes);
   s->gl.add(s->pc);
   s->gl.camera.setKinect();
   //  s->gl.reportSelects = true;
+#else
+  s->gl.add(glStandardScene);
+  s->gl.add(s->pc);
+  s->gl.camera.setDefault();
+#endif
 }
 
 void PointCloudViewer::close(){
