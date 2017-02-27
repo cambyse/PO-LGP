@@ -45,7 +45,7 @@ void ImageViewer::step(){
 
 struct sPointCloudViewer{
   OpenGL gl;
-  sPointCloudViewer():gl("PointCloudViewer",640,480){}
+  sPointCloudViewer(const char* tit):gl(tit,640,480){}
   mlr::Mesh pc;
 };
 
@@ -55,7 +55,7 @@ void glDrawAxes(void*){
 
 PointCloudViewer::PointCloudViewer(const char* pts_name, const char* cols_name)
   : Thread(STRING("PointCloudViewer_"<<pts_name <<'_' <<cols_name), .1),
-    pts(this, pts_name, true),
+    pts(this, pts_name),
     cols(this, cols_name){
   threadLoop();
 }
@@ -65,7 +65,7 @@ PointCloudViewer::~PointCloudViewer(){
 }
 
 void PointCloudViewer::open(){
-  s = new sPointCloudViewer;
+  s = new sPointCloudViewer(STRING("PointCloudViewer: "<<pts.name <<' ' <<cols.name));
 #if 0
   s->gl.add(glDrawAxes);
   s->gl.add(s->pc);
@@ -83,8 +83,52 @@ void PointCloudViewer::close(){
 }
 
 void PointCloudViewer::step(){
+  s->gl.dataLock.writeLock();
   s->pc.V=pts.get();
   s->pc.C=cols.get();
+  uint n=s->pc.V.N/3;
+  s->pc.V.reshape(n,3);
+  s->pc.C.reshape(n,3);
+  s->gl.dataLock.unlock();
   s->gl.update();
+}
+
+//===========================================================================
+//
+// MeshAViewer
+//
+
+struct sMeshAViewer{
+  OpenGL gl;
+
+  mlr::Mesh pc;
+};
+
+MeshAViewer::MeshAViewer(const char* meshes_name)
+  : Thread(STRING("MeshAViewer_"<<meshes_name), .1),
+    meshes(this, meshes_name){
+  threadLoop();
+}
+
+MeshAViewer::~MeshAViewer(){
+  threadClose();
+}
+
+void MeshAViewer::open(){
+  gl = new OpenGL(STRING("MeshAViewer: "<<meshes.name));
+  gl->add(glStandardScene);
+  gl->add(glDrawMeshes, &copy);
+  gl->camera.setDefault();
+}
+
+void MeshAViewer::close(){
+  delete gl;
+}
+
+void MeshAViewer::step(){
+  gl->dataLock.writeLock();
+  copy = meshes.get();
+  gl->dataLock.unlock();
+  gl->update();
 }
 

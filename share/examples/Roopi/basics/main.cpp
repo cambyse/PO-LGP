@@ -1,7 +1,9 @@
 #include <Roopi/roopi.h>
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
-
+#include <PCL/pclViewer.h>
+#include <PCL/pipeline.h>
+#include <Perception/viewer.h>
 
 //===============================================================================
 
@@ -221,13 +223,20 @@ void TEST(PickAndPlace2) {
 
 //===============================================================================
 
-void TEST(Kinect) {
+void TEST(Perception) {
   Roopi R(true);
 
   auto L = R.lookAt("endeffR");
 
   auto view = R.newCameraView();
   auto pcl = R.newKinect2Pcl();
+
+  Conv_arr_pcl cv("pclRawInput", "kinect_points", "kinect_pointColors");
+//  PclViewer v1("pclRawInput");
+  PclPipeline pipe("pclRawInput");
+  PclViewer v2("pcl_processed");
+
+  MeshAViewer v3;
 
   mlr::wait();
 
@@ -257,9 +266,9 @@ int main(int argc, char** argv){
 //  testPhysX();
 //  Prototyping();
 
-//  testKinect();
+  testPerception();
 
-  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
 //  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();
