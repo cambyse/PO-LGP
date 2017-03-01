@@ -100,17 +100,18 @@ static std::set< std::string > getObservableStateStr( Graph * state )
 static int nodeNumber = 0;
 
 /// root node init
-AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs, const KOMOFactory & komoFactory )
+AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory )
   : parent_( nullptr )
   , folWorlds_( fols )
   , folStates_( folWorlds_.d0 )
+  , startKinematics_( kins )
   , pHistory_( 1.0 )
   , bs_( bs )
   , a_( -1 )
   , d_( 0 )
   , isExpanded_( false )
   , isTerminal_( false )
-  , isSolved_( false )
+  , isSymbolicallySolved_( false )
   , isInfeasible_( false )
   , rootMCs_( folWorlds_.d0 )
   , mcStats_( new MCStatistics )
@@ -140,7 +141,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , d_( parent->d_ + 1 )
   , isExpanded_( false )
   , isTerminal_( false )
-  , isSolved_( false )
+  , isSymbolicallySolved_( false )
   , isInfeasible_( false )
   , rootMCs_( parent->rootMCs_ )
   , mcStats_( new MCStatistics )
@@ -179,7 +180,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   isTerminal_ = isTerminal;
 
   if( isTerminal )
-    isSolved_ = true;
+    isSymbolicallySolved_ = true;
 
   if( isTerminal_ )
   {
@@ -247,9 +248,11 @@ void AONode::expand()
     for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
     {
       auto facts  = outcome->first;
+      std::set< std::string > inter;
       std::set_intersection( intersection.begin(), intersection.end(),
                              facts.begin(), facts.end(),
-                             std::inserter( intersection, intersection.begin() ) );
+                             std::inserter( inter, inter.begin() ) );
+      intersection = inter;
     }
 
     // create as many children as outcomes
@@ -375,7 +378,7 @@ void AONode::backTrackBestExpectedPolicy()
       for( auto c : families_( i ) )
       {
         familyReward += c->pHistory_ * c->expectedReward_;
-        familySolved = familySolved && c->isSolved_;
+        familySolved = familySolved && c->isSymbolicallySolved_;
       }
 
       familyStatus( i ) = { familyReward, familySolved };
@@ -399,7 +402,7 @@ void AONode::backTrackBestExpectedPolicy()
     expectedReward_ = bestReward; // this one is more informed!
     expectedBestA_ = bestA;
     bestFamily_ = families_( bestFamilyId );
-    isSolved_ = familyStatus( bestFamilyId ).solved;
+    isSymbolicallySolved_ = familyStatus( bestFamilyId ).solved;
 
     // check
     //std::cout << familyRewards << std::endl;
@@ -410,6 +413,17 @@ void AONode::backTrackBestExpectedPolicy()
 
   if( parent_ )
     parent_->backTrackBestExpectedPolicy();
+}
+
+void AONode::solvePoseProblem()
+{
+  if( parent_ )
+  {
+    for( auto kin : parent_->effKinematics_ )
+    {
+      CHECK( kin->q.N, "parent needs to have computed the poses first!" )
+    }
+  }
 }
 
 mlr::Array< AONode * > AONode::getTreePath()

@@ -47,7 +47,7 @@ class AONode
 {
 public:
   /// root node init
-  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs, const KOMOFactory & komoFactory );
+  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
 
   /// child node creation
   AONode( AONode *parent, double pHistory, const arr & bs, uint a );
@@ -57,14 +57,16 @@ public:
   void setAndSiblings( const mlr::Array< AONode * > & siblings );
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy();
-  AONodeL bestFamily() const { return bestFamily_; }
+
+  void solvePoseProblem();
 
   // getters
   bool isExpanded() const { return isExpanded_; }
   AONodeLL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
-  bool isSolved() const { return isSolved_; }
+  bool isSolved() const { return isSymbolicallySolved_; }
   int id() const { return id_; }
+  AONodeL bestFamily() const { return bestFamily_; }
 
   AONodeL getTreePath();
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
@@ -87,6 +89,10 @@ private:
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   mlr::Array< std::shared_ptr<Graph> >     folStates_;
 
+  //-- kinematics: the kinematic structure of the world after the decision path
+  mlr::Array< std::shared_ptr< mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics
+  mlr::Array< std::shared_ptr< mlr::KinematicWorld > > effKinematics_; ///< the effective kinematics (computed from kinematics and symbolic state)
+
   double pHistory_;
   arr bs_;
 
@@ -106,9 +112,11 @@ private:
   int expectedBestA_;
   mlr::Array< AONode * > bestFamily_;
 
+
+  //-- status flags
   bool isExpanded_;
   bool isTerminal_;
-  bool isSolved_;
+  bool isSymbolicallySolved_;
   bool isInfeasible_;
 
   const KOMOFactory & komoFactory_;

@@ -351,7 +351,7 @@ void plan_AOS()
   AOSearch C( komoFactory );
 
   C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
-  //C.prepareKin("LGP-obs-kin-2.g");
+  C.prepareKin("LGP-obs-kin-3.g");
 
   //C.prepareFol("LGP-coop-fol.g");
   //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
@@ -360,15 +360,10 @@ void plan_AOS()
 
   /// SYMBOLIC SEARCH
   auto s = 0;
-  while( ! C.isSolved() )
+  while( ! C.isSymbolicallySolved() )
   {
     s++;
     auto nodes = C.getNodesToExpand();
-
-    //std::cout << "number of nodes to expand:" << nodes.d0 << std::endl;
-
-    //if( nodes.d0 == 0 )
-    //  std::cout << "finished?" << std::endl;
 
     for( auto node : nodes )
     {
@@ -390,6 +385,15 @@ void plan_AOS()
   }
 
   /// POSE OPTIMISATION
+  // gathers the terminal nodes of the current solution and optimize a pose
+  // auto nodes = C.getTerminalNodes()
+  // for( auto node : nodes )
+  // {
+  //    node->solvePoseProblem();
+  //    if( node->poseFeasible() )
+  //    {
+  //    }
+  // }
 
   // display policy
   std::stringstream ss;

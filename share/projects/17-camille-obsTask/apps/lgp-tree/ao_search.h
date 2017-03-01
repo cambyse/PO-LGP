@@ -11,11 +11,13 @@ public: // public methods
 
   // modifiers
   void prepareFol( const std::string & folDescription );
+  void prepareKin( const std::string & kinDescription );
+
   void prepareTree();
 
   // getters
   mlr::Array< AONode * > getNodesToExpand() const;
-  bool isSolved() const { return root_->isSolved(); }
+  bool isSymbolicallySolved() const { return root_->isSolved(); }
 
   // helpers
   void printPolicy( std::iostream & ) const;
@@ -29,10 +31,15 @@ private:
 private:
   //FOL_World fol;      // first order logic symbols
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  mlr::Array< std::shared_ptr< mlr::KinematicWorld > > kinematics_;
+
   arr bs_;
   AONode * root_; // root and "current" node
 
   const KOMOFactory & komoFactory_;
+
+  // params
+  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
 //===========================================================================

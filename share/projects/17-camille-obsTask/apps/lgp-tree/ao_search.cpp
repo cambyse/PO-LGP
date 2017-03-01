@@ -17,13 +17,12 @@ AOSearch::AOSearch( const KOMOFactory & komoFactory )
 // modifiers
 void AOSearch::prepareFol( const std::string & folDescription )
 {
-  const mlr::String beliefStateTag = "BELIEF_START_STATE";
   const mlr::String notObservableTag = "NOT_OBSERVABLE";
 
   Graph KB;
-  KB.read(FILE(folDescription.c_str()));
+  KB.read( FILE( folDescription.c_str() ) );
   // fully observable case
-  if( KB[ beliefStateTag ] == nullptr )
+  if( KB[ beliefStateTag_ ] == nullptr )
   {
     // create dummy array
     folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( 1 );
@@ -31,7 +30,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
     fol->init(FILE(folDescription.c_str()));
     folWorlds_( 0 ) = fol;
     fol->reset_state();
-    // create dummy bs
+    // create dummy bs in observable case
     bs_ = arr( 1 );
     bs_( 0 ) = 1.0;
   }
@@ -39,7 +38,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
   else
   {
     // get number of possible worlds
-    auto bsGraph = &KB.get<Graph>( beliefStateTag );
+    auto bsGraph = &KB.get<Graph>( beliefStateTag_ );
     const uint nWorlds = bsGraph->d0;
 
     // generate all the possible fol
@@ -68,15 +67,55 @@ void AOSearch::prepareFol( const std::string & folDescription )
       bs_(w) = n->get<double>();
     }
   }
+}
 
-  //  fol.init(FILE(folDescription.c_str()));
-  //  fol.reset_state();
+void AOSearch::prepareKin( const std::string & kinDescription )
+{
+  Graph G( kinDescription.c_str() );
+
+  if( G[ beliefStateTag_ ] == nullptr )
+  {
+    auto kin = std::make_shared< mlr::KinematicWorld >();
+    kin->init( kinDescription.c_str() );
+    computeMeshNormals( kin->shapes );
+    kin->calc_fwdPropagateFrames();
+    kin->watch(/*true*/);
+
+    kinematics_.append( kin );
+  }
+  else
+  {
+    auto bsGraph = &G.get<Graph>( beliefStateTag_ );
+    const uint nWorlds = bsGraph->d0;
+
+    // build the different worlds
+    for( uint w = 0; w < nWorlds; w++ )
+    {
+      Graph kinG( kinDescription.c_str() );
+
+      // copy unobservable facts
+      auto n = bsGraph->elem(w);
+
+      for( auto nn : n->graph() )
+      {
+        nn->newClone( kinG );
+      }
+
+      auto kin = std::make_shared< mlr::KinematicWorld >();
+      kin->init( kinG );
+      computeMeshNormals( kin->shapes );
+      kin->calc_fwdPropagateFrames();
+      //
+      kin->watch(/*true*/);
+      //
+      kinematics_.append( kin );
+    }
+  }
 }
 
 void AOSearch::prepareTree()
 {
-  //root = new ActionNode(kin, fol, folWorlds_, bs_, komoFactory_);
-  root_ = new AONode( folWorlds_, bs_, komoFactory_ );
+  root_ = new AONode( folWorlds_, kinematics_, bs_, komoFactory_ );
 }
 
 mlr::Array< AONode * > AOSearch::getNodesToExpand() const
