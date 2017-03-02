@@ -8,8 +8,8 @@
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 #include <Control/TaskControlThread.h>
@@ -35,7 +35,7 @@ baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const m
 
 class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
-    ACCESSname(FilterObjects, object_database)
+    ACCESSname(Percepts, percepts_filtered)
 
     TaskControlThread tcmBax;
     RosInit rosInit;    

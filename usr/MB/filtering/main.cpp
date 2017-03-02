@@ -6,7 +6,7 @@
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
+#include <Perception/filter.h>
 #include <RosCom/publishDatabase.h>
 
 int main(int argc, char** argv){

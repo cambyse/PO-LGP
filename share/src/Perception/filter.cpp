@@ -16,36 +16,36 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 #include <unordered_set>
-#include "perceptionFilter.h"
+#include "filter.h"
 
 Filter::Filter() : Thread("filter", -1),
-  perceptual_inputs(this, "perceptual_inputs", true),
-  object_database(this, "object_database", false)
+  percepts_input(this, "percepts_input", true),
+  percepts_filtered(this, "percepts_filtered", false)
 {}
 
 void Filter::step(){
-  perceptual_inputs.writeAccess();
-  object_database.writeAccess();
+  percepts_input.writeAccess();
+  percepts_filtered.writeAccess();
 
-  FilterObjects perceptualInputs = perceptual_inputs();
-  FilterObjects objectDatabase = object_database();
+  Percepts perceptualInputs = percepts_input();
+  Percepts objectDatabase = percepts_filtered();
 
   // If empty inputs, do nothing.
   if (perceptualInputs.N == 0 && objectDatabase.N == 0) {
-    object_database.deAccess();
-    perceptual_inputs.deAccess();
+    percepts_filtered.deAccess();
+    percepts_input.deAccess();
     return;
   }
 
-  FilterObjects filteredInputs;
-  FilterObjects DatabaseObjectsOfGivenType, PerceptualInputsOfGivenType;
+  Percepts filteredInputs;
+  Percepts DatabaseObjectsOfGivenType, PerceptualInputsOfGivenType;
 
   // For each type of inputs, run the algorithm.
-  for (auto const& type : {FilterObject::FilterObjectType::alvar,
-                           FilterObject::FilterObjectType::cluster,
-                           FilterObject::FilterObjectType::plane,
-                           FilterObject::FilterObjectType::optitrackbody,
-                           FilterObject::FilterObjectType::optitrackmarker})
+  for (auto const& type : {Percept::Type::alvar,
+                           Percept::Type::cluster,
+                           Percept::Type::plane,
+                           Percept::Type::optitrackbody,
+                           Percept::Type::optitrackmarker})
   {
     // Grab the subset from the inputs matching this type
     PerceptualInputsOfGivenType.clear();
@@ -73,31 +73,31 @@ void Filter::step(){
     Hungarian ha(costs);
 
     // Now we have the optimal matching. Assign values.
-    FilterObjects assignedObjects = assign(PerceptualInputsOfGivenType, DatabaseObjectsOfGivenType, ha);
+    Percepts assignedObjects = assign(PerceptualInputsOfGivenType, DatabaseObjectsOfGivenType, ha);
 
     filteredInputs.append(assignedObjects);
 
   }
 
   //-- delete objects in percepts and database that are not filtered
-  for (FilterObject* fo : perceptual_inputs()) {
+  for (Percept* fo : percepts_input()) {
     if (!filteredInputs.contains(fo))
       delete fo;
   }
-  for (FilterObject* fo : object_database()) {
+  for (Percept* fo : percepts_filtered()) {
     if (!filteredInputs.contains(fo))
       delete fo;
   }
 
   // Set the variable
-  object_database() = filteredInputs;
-  object_database.deAccess();
-  perceptual_inputs.deAccess();
+  percepts_filtered() = filteredInputs;
+  percepts_filtered.deAccess();
+  percepts_input.deAccess();
 }
 
-FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& database, const Hungarian& ha)
+Percepts Filter::assign(const Percepts& perceps, const Percepts& database, const Hungarian& ha)
 {
-  FilterObjects new_objects;
+  Percepts new_objects;
   std::unordered_set<int> matched_ids;
 
   uint num_old = database.N;
@@ -113,20 +113,20 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
     // Existed before, doesn't exist now.
     if ( i >= num_new ) {
       //std::cout<< "Existed before, doesn't now." << std::endl;
-      FilterObject *new_obj = database(col);
+      Percept *new_obj = database(col);
       new_obj->relevance *= relevance_decay_factor;
       new_objects.append(new_obj);
     } else {
       if ( ( col < num_old ) && (costs(i, col) < distance_threshold) ) { // Existed before
         //std::cout<< "Existed before, does now" << std::endl;
-        FilterObject *new_obj = perceps(i);
-        if (new_obj->type != FilterObject::FilterObjectType::alvar)
+        Percept *new_obj = perceps(i);
+        if (new_obj->type != Percept::Type::alvar)
           new_obj->id = database(col)->id;
         new_objects.append( new_obj );
       } else { // This didn't exist before. Add it in
         //std::cout<< "Didn't exist before, or not close enough." << std::endl;
-        FilterObject *new_obj = perceps(i);
-        if (new_obj->type != FilterObject::FilterObjectType::alvar) {
+        Percept *new_obj = perceps(i);
+        if (new_obj->type != Percept::Type::alvar) {
           new_obj->id = maxId;
           maxId++;
         }
@@ -141,12 +141,12 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   // For each of the old objects, update the relevance factor.
   for ( uint i = 0; i < database.N; ++i ) {
     if ( matched_ids.find(database(i)->id) == matched_ids.end() ) {
-      FilterObject *new_obj = database(i);
+      Percept *new_obj = database(i);
       new_obj->relevance *= relevance_decay_factor;
       new_objects.append(new_obj);      
     }
   }
-  FilterObjects cleaned;
+  Percepts cleaned;
   uint count = new_objects.N;
   for ( uint i = 0; i < count; ++i ) {
     if(new_objects(i)->relevance > relevance_threshold) {
@@ -157,7 +157,7 @@ FilterObjects Filter::assign(const FilterObjects& perceps, const FilterObjects& 
   return cleaned;
 }
 
-arr Filter::createCostMatrix(const FilterObjects& newObjects, const FilterObjects& oldObjects)
+arr Filter::createCostMatrix(const Percepts& newObjects, const Percepts& oldObjects)
 {
   // First, make a padded out matrix to ensure it is bipartite.
   uint num_new = newObjects.N;
