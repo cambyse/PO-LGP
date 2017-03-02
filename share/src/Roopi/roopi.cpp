@@ -4,7 +4,7 @@
 Thread* newGamepadControlThread();
 Thread* newPhysXThread();
 
-#include <Perception/viewer.h>
+#include <Gui/viewer.h>
 #include <Perception/kinect2pointCloud.h>
 
 #define baxter 0

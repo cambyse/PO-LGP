@@ -5,7 +5,7 @@
 #include <Control/TaskControlThread.h>
 #include <Motion/motion.h>
 #include <Optim/lagrangian.h>
-#include <Perception/viewer.h>
+#include <Gui/viewer.h>
 
 
 #define baxter 0

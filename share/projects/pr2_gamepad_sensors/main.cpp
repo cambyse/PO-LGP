@@ -5,7 +5,7 @@
 
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Perception/viewer.h>
+#include <Gui/viewer.h>
 #include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>

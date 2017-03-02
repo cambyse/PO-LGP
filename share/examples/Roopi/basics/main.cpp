@@ -3,7 +3,7 @@
 #include <Control/taskControl.h>
 #include <PCL/pclViewer.h>
 #include <PCL/pipeline.h>
-#include <Perception/viewer.h>
+#include <Gui/viewer.h>
 
 //===============================================================================
 
