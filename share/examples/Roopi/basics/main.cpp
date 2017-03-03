@@ -4,6 +4,9 @@
 #include <PCL/pclViewer.h>
 #include <PCL/pipeline.h>
 #include <Gui/viewer.h>
+#include <Perception/filter.h>
+#include <Perception/syncFiltered.h>
+#include <Perception/percViewer.h>
 
 //===============================================================================
 
@@ -234,10 +237,15 @@ void TEST(Perception) {
   Conv_arr_pcl cv("pclRawInput", "kinect_points", "kinect_pointColors");
 //  PclViewer v1("pclRawInput");
   PclPipeline pipe("pclRawInput");
-  PclViewer v2("pcl_processed");
+//  PclViewer v2("pcl_processed");
+  PercViewer v3("percepts_input");
 
-  MeshAViewer v3;
+  Filter filter;
+//  SyncFiltered sync;
 
+  PercViewer v4("percepts_filtered");
+
+  mlr::wait(1.);
   mlr::wait();
 
 }

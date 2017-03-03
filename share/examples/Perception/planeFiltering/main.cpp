@@ -29,8 +29,8 @@ int main(int argc, char** argv){
 
     Filter myFilter;
 
-    ACCESSname(Percepts, percepts_filtered)
-    ACCESSname(Percepts, percepts_input)
+    ACCESSname(PerceptL, percepts_filtered)
+    ACCESSname(PerceptL, percepts_input)
 
     PublishDatabase myPublisher;
 

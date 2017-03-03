@@ -253,7 +253,7 @@ const mlr::String& Roopi::getRobot(){
 
 Act_Thread Roopi::newCameraView(){
   //TODO: the viewer is never destroyed! (Make it a child activity of the ComputeCamView?
-  return Act_Thread(this, {new ComputeCameraView(30), new ImageViewer("kinect_rgb")});
+  return Act_Thread(this, {new ComputeCameraView(50), new ImageViewer("kinect_rgb")});
 }
 
 Act_Thread Roopi::newKinect2Pcl(){

@@ -35,7 +35,7 @@ baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const m
 
 class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
-    ACCESSname(Percepts, percepts_filtered)
+    ACCESSname(PerceptL, percepts_filtered)
 
     TaskControlThread tcmBax;
     RosInit rosInit;    

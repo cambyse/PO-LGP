@@ -36,7 +36,7 @@ int main(int argc, char** argv){
 
     Filter myFilter;
 
-    ACCESSname(Percepts, percepts_filtered)
+    ACCESSname(PerceptL, percepts_filtered)
     PublishDatabase myPublisher;
 
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
@@ -73,8 +73,8 @@ int main(int argc, char** argv){
     while (1)
     {
       percepts_filtered.readAccess();
-      Percepts filter_objects = percepts_filtered.get();
-      Percepts clusters;
+      PerceptL filter_objects = percepts_filtered.get();
+      PerceptL clusters;
       for (Percept* fo : filter_objects)
       {
           if (fo->type == Percept::Type::cluster)

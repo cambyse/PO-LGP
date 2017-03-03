@@ -28,7 +28,7 @@
 
 class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
-    ACCESSname(Percepts, percepts_filtered)
+    ACCESSname(PerceptL, percepts_filtered)
 
     TaskControlThread tcmBax;
     RosInit rosInit;    
@@ -235,7 +235,7 @@ CtrlTask* MyBaxter::align(char *name, char* frame1, mlr::Vector vec1, char* fram
 
 uint MyBaxter::reportPerceptionObjects(){
   percepts_filtered.readAccess();
-  Percepts clusters;
+  PerceptL clusters;
   uint n=0;
   for(Percept* fo : percepts_filtered()){
     fo->write(cout);

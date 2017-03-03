@@ -46,7 +46,7 @@ struct SubscribeTestJoint{
 struct Lockbox:Module{
   Access_typed<std_msgs::UInt8> test_joint;
   Access_typed<std_msgs::UInt8> get_joint_position;
-  Access_typed<Percepts> percepts_filtered;
+  Access_typed<PerceptL> percepts_filtered;
 
   SubscribeAlvar alvar_subscriber;
   SubscribeTestJoint test_joint_sub;

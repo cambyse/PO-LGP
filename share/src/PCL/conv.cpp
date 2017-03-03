@@ -23,18 +23,32 @@ void conv_ArrCloud_PclCloud(Pcl& cloud,
 void conv_PclCloud_ArrCloud(arr& pts,
                             arr& cols,
                             const Pcl& cloud){
-  pts.resize(cloud.size(),3);
-  cols.resize(cloud.size(),3);
+  double *p=NULL, *c=NULL;
+  if(&pts){
+    pts.resize(cloud.size(),3);
+    p=pts.p;
+  }
+  if(&cols){
+    cols.resize(cloud.size(),3);
+    c=cols.p;
+  }
+
   uint i=0;
-  for(const PointT& p:cloud){
-    pts(i,0) = p.x;
-    pts(i,1) = p.y;
-    pts(i,2) = p.z;
-    cols(i,0) = p.r/255.;
-    cols(i,1) = p.g/255.;
-    cols(i,2) = p.b/255.;
+  for(const PointT& pt:cloud){
+    if(p){
+      *(p++) = pt.x;
+      *(p++) = pt.y;
+      *(p++) = pt.z;
+    }
+    if(c){
+      *(c++) = pt.r/255.;
+      *(c++) = pt.g/255.;
+      *(c++) = pt.b/255.;
+    }
     i++;
   }
+  if(p) CHECK_EQ(p, pts.p+pts.N, "");
+  if(c) CHECK_EQ(c, cols.p+cols.N, "");
 }
 
 Conv_arr_pcl::Conv_arr_pcl(const char* cloud_name, const char* pts_name, const char* cols_name)

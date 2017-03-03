@@ -23,7 +23,7 @@ baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const m
 
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
-  ACCESSname(Percepts, percepts_filtered)
+  ACCESSname(PerceptL, percepts_filtered)
   ACCESSname(mlr::KinematicWorld, modelWorld)
 
   TaskControlThread tcm;
@@ -297,7 +297,7 @@ bool MyBaxter::testRealConv(const CtrlTaskL& tasks, const double waitSecs){
 
 uint MyBaxter::reportPerceptionObjects(){
   s->percepts_filtered.readAccess();
-  Percepts clusters;
+  PerceptL clusters;
   uint n=0;
   for(Percept* fo : s->percepts_filtered()){
     fo->write(cout);
