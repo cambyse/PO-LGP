@@ -35,6 +35,21 @@ typedef mlr::Array< mlr::Array<AONode*> > AONodeLL;
 
 extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_seqOpt, COUNT_pathOpt;
 
+class WorldID
+{
+public:
+  explicit WorldID( std::size_t id )
+    : id_( id )
+  {
+
+  }
+
+  std::size_t id() const { return id_; }
+
+private:
+  std::size_t id_;
+};
+
 //===========================================================================
 
 struct LogicAndState
@@ -47,7 +62,7 @@ class AONode
 {
 public:
   /// root node init
-  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
+  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
 
   /// child node creation
   AONode( AONode *parent, double pHistory, const arr & bs, uint a );
@@ -59,14 +74,25 @@ public:
   void backTrackBestExpectedPolicy();
 
   void solvePoseProblem();
+  void solveSeqProblem();
+  void solvePathProblem( uint microSteps );
+
+  void labelInfeasible();
 
   // getters
+  AONode * parent() const { return parent_; }
   bool isExpanded() const { return isExpanded_; }
   AONodeLL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
   bool isSolved() const { return isSymbolicallySolved_; }
   int id() const { return id_; }
   AONodeL bestFamily() const { return bestFamily_; }
+  double pHistory() const { return pHistory_; }
+  bool isRoot() const { return parent_ == nullptr; }
+  arr bs() const { return bs_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return komoPoseProblems_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return komoSeqProblems_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return komoPathProblems_; }
 
   AONodeL getTreePath();
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
@@ -77,10 +103,28 @@ public:
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
+  bool sameAgentTrajectories( const mlr::Array< ExtensibleKOMO::ptr > & komos );
   uint getPossibleActionsNumber() const;
   LogicAndState getWitnessLogicAndState() const;
+  template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
+  {
+    CHECK( array.d0 == bs_.d0, "wrong dimensions!" );
+    for( auto w = 0; w < array.d0; ++w )
+    {
+      if( bs_( w ) > std::numeric_limits< double >::epsilon() )
+      {
+        return array( w );
+      }
+    }
+  }
+  ExtensibleKOMO::ptr getWitnessPoseKomo()     const { return getWitnessElem( komoPoseProblems_ ); }
+  ExtensibleKOMO::ptr getWitnessSeqKomo()      const { return getWitnessElem( komoSeqProblems_ );  }
+  ExtensibleKOMO::ptr getWitnessPathKomo()     const { return getWitnessElem( komoPathProblems_ ); }
   mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
+
+  //mlr::Array< mlr::KinematicWorld > getPossibleKinematicWorlds() const;
+//  mlr::KinematicWorld getStartKinematic() const;
 
 private:
   AONode * parent_;
@@ -90,8 +134,8 @@ private:
   mlr::Array< std::shared_ptr<Graph> >     folStates_;
 
   //-- kinematics: the kinematic structure of the world after the decision path
-  mlr::Array< std::shared_ptr< mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics
-  mlr::Array< std::shared_ptr< mlr::KinematicWorld > > effKinematics_; ///< the effective kinematics (computed from kinematics and symbolic state)
+  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics
+  mlr::Array< mlr::KinematicWorld > effKinematics_;         ///< the effective kinematics (computed from kinematics and symbolic state)
 
   double pHistory_;
   arr bs_;
@@ -100,6 +144,7 @@ private:
   mlr::Array< FOL_World::Handle > decisions_;///< actions leading to this node ( one for each logic )
 
   uint d_;                                   ///< decision depth/step of this node
+  double time_;                              ///< real time
 
   mlr::Array< AONode * > andSiblings_;  /// on the same depth!
   mlr::Array< mlr::Array< AONode * > > families_;
@@ -112,14 +157,32 @@ private:
   int expectedBestA_;
   mlr::Array< AONode * > bestFamily_;
 
-
   //-- status flags
   bool isExpanded_;
   bool isTerminal_;
   bool isSymbolicallySolved_;
   bool isInfeasible_;
 
+  //-- komo factory
   const KOMOFactory & komoFactory_;
+
+  //-- pose opt
+  double poseCost_, poseConstraints_;
+  bool poseFeasible_;
+  arr pose_;
+  mlr::Array< ExtensibleKOMO::ptr > komoPoseProblems_;
+
+  //-- sequence opt
+  double seqCost_, seqConstraints_;
+  bool seqFeasible_;
+  arr seq_;
+  mlr::Array< ExtensibleKOMO::ptr > komoSeqProblems_;
+
+  //-- path opt
+  double pathCost_, pathConstraints_;
+  bool pathFeasible_;
+  arr path_;
+  mlr::Array< ExtensibleKOMO::ptr > komoPathProblems_;
 
   int id_;
 };

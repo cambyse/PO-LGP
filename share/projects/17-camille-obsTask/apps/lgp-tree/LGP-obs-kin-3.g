@@ -15,6 +15,9 @@ shape occluding_object(occluding_object) { type=9 size=[0.4 0.01 0.4 0.02] color
 body occluding_object_2 { X=<T t(-0.6 0 1.9)> }
 shape occluding_object_2(occluding_object_2) { type=9 size=[0.01 0.4 0.4 0.02] color=[1 0 0] }
 
+body occluding_object_3 { X=<T t( 0.6 0 1.9)> }
+shape occluding_object_3(occluding_object_3) { type=9 size=[0.01 0.4 0.4 0.02] color=[1 0 0] }
+
 #body  target_2 { X=<T t(-1.0 0.0 1.9)> }
 #shape target_2(target_2) { type=1 size=[0 0 0 .05] color=[1 0 0] }
 
@@ -27,4 +30,7 @@ BELIEF_START_STATE{
 
 	{ body  target { X=<T t(-1.0 0.0 1.9)> }
 	  shape target(target) { type=1 size=[0 0 0 .05] color=[0 1 0] } }
+
+	{ body  target { X=<T t( 1.0 0.0 1.9)> }
+	  shape target(target) { type=1 size=[0 0 0 .05] color=[0 0 1] } }
 }

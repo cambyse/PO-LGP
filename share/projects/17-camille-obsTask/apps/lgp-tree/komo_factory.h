@@ -24,6 +24,8 @@ class ExtensibleKOMO : public KOMO
   typedef std::function<void( double, const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
 
 public:
+  typedef std::shared_ptr< ExtensibleKOMO > ptr;
+public:
   ExtensibleKOMO();
 
   void registerTask( const mlr::String & type, const SymbolGrounder & grounder );

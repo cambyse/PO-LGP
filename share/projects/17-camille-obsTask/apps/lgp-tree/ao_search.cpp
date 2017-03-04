@@ -8,8 +8,15 @@
 
 #include <LGP/LGP.h>
 
+//=====================free functions======================
+static double eps() { return std::numeric_limits< double >::epsilon(); }
+
+//===========================================================================
 AOSearch::AOSearch( const KOMOFactory & komoFactory )
   : komoFactory_( komoFactory )
+  , poseView_( "pose" , 1., -0   )
+  , seqView_ ("sequence", 1., -0 )
+  , pathView_( "path", .1, -1    )
 {
 
 }
@@ -21,6 +28,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
 
   Graph KB;
   KB.read( FILE( folDescription.c_str() ) );
+
   // fully observable case
   if( KB[ beliefStateTag_ ] == nullptr )
   {
@@ -50,6 +58,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
       std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
       fol->init(FILE(folDescription.c_str()));
       auto n = bsGraph->elem(w);
+
       StringA fact;
       // add fact
       for( auto s : n->parents ) fact.append( s->keys.last() );
@@ -66,6 +75,12 @@ void AOSearch::prepareFol( const std::string & folDescription )
       folWorlds_(w) = fol;
       bs_(w) = n->get<double>();
     }
+
+    // check that the belief state sums to 1
+    double total = 0;
+    for( auto p : bs_ ) total += p;
+
+    CHECK( total == 1.00, "wrong belief state definition, the total of the probabilities doesn't sum to 1" );
   }
 }
 
@@ -79,7 +94,7 @@ void AOSearch::prepareKin( const std::string & kinDescription )
     kin->init( kinDescription.c_str() );
     computeMeshNormals( kin->shapes );
     kin->calc_fwdPropagateFrames();
-    kin->watch(/*true*/);
+    //kin->watch(/*true*/);
 
     kinematics_.append( kin );
   }
@@ -106,7 +121,7 @@ void AOSearch::prepareKin( const std::string & kinDescription )
       computeMeshNormals( kin->shapes );
       kin->calc_fwdPropagateFrames();
       //
-      kin->watch(/*true*/);
+      //kin->watch(/*true*/);
       //
       kinematics_.append( kin );
     }
@@ -115,7 +130,69 @@ void AOSearch::prepareKin( const std::string & kinDescription )
 
 void AOSearch::prepareTree()
 {
+  CHECK( folWorlds_.d0 == kinematics_.d0, "There should be as many logic worlds as kinematic worlds!, check the fol and kin description files!" );
+
   root_ = new AONode( folWorlds_, kinematics_, bs_, komoFactory_ );
+}
+
+void AOSearch::optimizePoses()
+{
+  optimizePoses( root_ );
+}
+
+void AOSearch::optimizeSequences()
+{
+  auto nodes = getTerminalNodes();
+
+  for( auto n : nodes )
+  {
+    n->solveSeqProblem();
+  }
+}
+
+void AOSearch::optimizePaths()
+{
+  auto nodes = getTerminalNodes();
+
+  for( auto n : nodes )
+  {
+    n->solvePathProblem( 20 );
+  }
+}
+
+void AOSearch::optimizePoses( AONode * node )
+{
+  node->solvePoseProblem();
+
+  for( auto c : node->bestFamily() )
+  {
+    optimizePoses( c );
+  }
+}
+
+void AOSearch::optimizeSequences( AONode * node )
+{
+//  node->solveSequenceProblem();
+
+//  for( auto c : node->bestFamily() )
+//  {
+//    optimizeSequences( c );
+//  }
+}
+void AOSearch::updateDisplay( const WorldID & w )
+{
+  // get the terminal node for the world w, in the case of stochaticity
+  AONode * node = getTerminalNode( w );
+
+  if( node->komoPoseProblems()( w.id() ) && node->komoPoseProblems()( w.id() )->MP->configurations.N )
+    poseView_.setConfigurations(node->komoPoseProblems()( w.id() )->MP->configurations );
+
+  if( node->komoSeqProblems()( w.id() ) && node->komoSeqProblems()( w.id() )->MP->configurations.N )
+    seqView_.setConfigurations(node->komoSeqProblems()( w.id() )->MP->configurations );
+
+  if( node->komoPathProblems()( w.id() ) && node->komoPathProblems()( w.id() )->MP->configurations.N )
+    pathView_.setConfigurations( node->komoPathProblems()( w.id() )->MP->configurations );
+  else pathView_.clear();
 }
 
 mlr::Array< AONode * > AOSearch::getNodesToExpand() const
@@ -146,6 +223,59 @@ mlr::Array< AONode * > AOSearch::getNodesToExpand( AONode * node ) const
   return nodes;
 }
 
+mlr::Array< AONode * > AOSearch::getTerminalNodes() const
+{
+  return getTerminalNodes( root_ );
+}
+
+mlr::Array< AONode * > AOSearch::getTerminalNodes( AONode * n ) const
+{
+  mlr::Array< AONode * > nodes;
+
+  if( n->isTerminal() )
+  {
+    nodes.append( n );
+  }
+  else
+  {
+    for( auto c : n->bestFamily() )
+    {
+      nodes.append( getTerminalNodes( c ) );
+    }
+  }
+
+  return nodes;
+}
+
+AONode * AOSearch::getTerminalNode( const WorldID & w ) const
+{
+  // could be more generale and return a list of node in case of stochastic world
+  return getTerminalNode( root_, w );
+}
+
+AONode * AOSearch::getTerminalNode( AONode * n, const WorldID & w ) const
+{
+  AONode * node = nullptr;
+  if( n->isTerminal() )
+  {
+    CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
+    node = n;
+  }
+  else
+  {
+    for( auto c : n->bestFamily() )
+    {
+      if( c->bs()( w.id() ) > eps() )
+      {
+        node = getTerminalNode( c, w );
+        break;
+      }
+    }
+  }
+
+  return node;
+}
+
 void AOSearch::printPolicy( std::iostream & ss ) const
 {
   ss << "digraph g{" << std::endl;
@@ -166,6 +296,12 @@ void AOSearch::printPolicy( AONode * node, std::iostream & ss ) const
 
     for( auto fact : c->differentiatingFacts() )
       ss1 << std::endl << fact;
+
+    if( node->bestFamily().N > 1 )
+    {
+      ss1 << std::endl << "p=" << c->pHistory();
+      ss1 << std::endl << "q=" << c->pHistory() / node->pHistory();
+    }
 
     auto label = ss1.str();
 

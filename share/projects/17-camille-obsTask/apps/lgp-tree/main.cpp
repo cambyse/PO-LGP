@@ -5,9 +5,12 @@
 #include <observation_tasks.h>
 
 /*
-back track, take history into account
-sort nodes before expanding
-dot -Tpng -o tree.png tree.gv
+back track, take history into account?
+sort nodes before expanding?
+labelInfeasible()
+back track result of pose computation when one of the pose is not possilbe or generally different between worlds!
+
+dot -Tpng -o policy.png policy.gv
 */
 //===========================================================================
 
@@ -265,13 +268,17 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int
 
   mlr::String arg = *symbols(0);
 
-  if( arg == "target_location_1" )  // tmp, pivot point and object location has to be deduced from the scene!!
+  if( arg == "target_location_0" )  // tmp, pivot point and object location has to be deduced from the scene!!
     komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
                                                       ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
                                                       OT_sumOfSqr, NoArr, 1e2 );
-  else if( arg == "target_location_2" ) // tmp, pivot point and object location has to be deduced from the scene!!!
+  else if( arg == "target_location_1" ) // tmp, pivot point and object location has to be deduced from the scene!!!
     komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR( -1.0,  0.0, 1.9 ),    // object position
                                                       ARR( -0.6, -0.2, 1.9 ) ),  // pivot position
+                                                      OT_sumOfSqr, NoArr, 1e2 );
+  else if( arg == "target_location_2" ) // tmp, pivot point and object location has to be deduced from the scene!!!
+    komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR( 1.0,  0.0, 1.9 ),    // object position
+                                                      ARR( 0.6, -0.2, 1.9 ) ),  // pivot position
                                                       OT_sumOfSqr, NoArr, 1e2 );
 
 }
@@ -349,7 +356,7 @@ void plan_AOS()
 
   // instanciate search tree
   AOSearch C( komoFactory );
-
+  C.prepareDisplay();
   C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   C.prepareKin("LGP-obs-kin-3.g");
 
@@ -384,9 +391,21 @@ void plan_AOS()
     }
   }
 
-  /// POSE OPTIMISATION
+  /// POSE OPTIMIZATION
+  C.optimizePoses();      // optimizes poses of the current best solution
+
+  /// SEQUENCE OPTIMIZATION
+  C.optimizeSequences();  // optimizes sequences of the current best solution
+
+  /// PATH OPTIMIZATION
+  C.optimizePaths();      // optimizes paths of the current best solution
+
+  // display
+  C.updateDisplay( WorldID( 2 ) );
+  mlr::wait( 30 );
+
   // gathers the terminal nodes of the current solution and optimize a pose
-  // auto nodes = C.getTerminalNodes()
+  // auto nodes = C.getTeprepareDisplayrminalNodes()
   // for( auto node : nodes )
   // {
   //    node->solvePoseProblem();

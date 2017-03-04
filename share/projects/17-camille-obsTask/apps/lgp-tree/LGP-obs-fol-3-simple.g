@@ -1,5 +1,5 @@
 Include = 'data/keywords.g'
-Include = 'LGP-obs-kin-2.g'
+#Include = 'LGP-obs-kin-3.g'
 
 FOL_World{
   hasWait=false
@@ -28,14 +28,14 @@ now_in_sight # getting sight of location X
 NOT_OBSERVABLE
 
 ## constants
+target_location_0
 target_location_1
 target_location_2
-target_location_3
 target
 
 ## initial state
-START_STATE { (object target) (location target_location_1) (location target_location_2) (location target_location_3) }
-BELIEF_START_STATE{ (at target target_location_1)=0.4 (at target target_location_2)=0.35 (at target target_location_3)=0.25 }
+START_STATE { (object target) (location target_location_0) (location target_location_1) (location target_location_2) }
+BELIEF_START_STATE{ (at target target_location_0)=0.8 (at target target_location_1)=0.1 (at target target_location_2)=0.1 }
 ### RULES 
 
 #termination rule
@@ -45,17 +45,17 @@ BELIEF_START_STATE{ (at target target_location_1)=0.4 (at target target_location
 #}
 
 Rule {
+  { (viewed target target_location_0)} # 
+  { (QUIT) }
+}
+
+Rule {
   { (viewed target target_location_1)} # 
   { (QUIT) }
 }
 
 Rule {
   { (viewed target target_location_2)} # 
-  { (QUIT) }
-}
-
-Rule {
-  { (viewed target target_location_3)} # 
   { (QUIT) }
 }
 

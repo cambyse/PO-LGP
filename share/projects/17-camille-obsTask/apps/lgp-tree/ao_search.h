@@ -12,11 +12,31 @@ public: // public methods
   // modifiers
   void prepareFol( const std::string & folDescription );
   void prepareKin( const std::string & kinDescription );
-
   void prepareTree();
+  void prepareDisplay(){ threadOpenModules( true ); }
+
+  void optimizePoses();
+  void optimizeSequences();
+  void optimizePaths();
+
+  void updateDisplay( const WorldID & w );
+
+private:
+  void optimizePoses( AONode * );
+  void optimizeSequences( AONode * );
+
+public:
 
   // getters
   mlr::Array< AONode * > getNodesToExpand() const;
+  mlr::Array< AONode * > getNodesToExpand( AONode * ) const;
+
+  mlr::Array< AONode * > getTerminalNodes() const;
+  mlr::Array< AONode * > getTerminalNodes( AONode * ) const;
+
+  AONode * getTerminalNode( const WorldID & w ) const;
+  AONode * getTerminalNode( AONode *, const WorldID & w ) const;
+
   bool isSymbolicallySolved() const { return root_->isSolved(); }
 
   // helpers
@@ -26,17 +46,19 @@ private:
   void printPolicy( AONode * node, std::iostream & ) const;
 
 private:
-  mlr::Array< AONode * > getNodesToExpand( AONode * ) const;
-
-private:
   //FOL_World fol;      // first order logic symbols
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
-  mlr::Array< std::shared_ptr< mlr::KinematicWorld > > kinematics_;
+  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > kinematics_;
 
   arr bs_;
   AONode * root_; // root and "current" node
 
   const KOMOFactory & komoFactory_;
+
+  // display
+  OrsPathViewer poseView_;
+  OrsPathViewer seqView_;
+  OrsPathViewer pathView_;
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

@@ -252,7 +252,7 @@ struct KinematicWorld : GLDrawer{
   void meldFixedJoints(int verbose=0);         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies(int verbose=0);     ///< prune non-articulated bodies; they become shapes of other bodies
   bool checkConsistency();
-  
+
   /// @name computations on the graph
   void calc_Q_from_q(int agent=-1); ///< from the set (q,qdot) compute the joint's Q transformations
   void calc_q_from_Q(int agent=-1);  ///< updates (q,qdot) based on the joint's Q transformations
@@ -283,7 +283,7 @@ struct KinematicWorld : GLDrawer{
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, mlr::Vector *rel=0) const;
   void axesMatrix(arr& J, Body *b) const;
-  void kinematicsRelPos (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2, const mlr::Vector& vec2) const;
+  void kineffKinematicsematicsRelPos (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2, const mlr::Vector& vec2) const;
   void kinematicsRelVec (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2) const;
   void kinematicsRelRot (arr& y, arr& J, Body *b1, Body *b2) const;
 
