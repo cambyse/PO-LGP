@@ -8,8 +8,9 @@
 
 struct sPclViewer{
   OpenGL gl;
-  sPclViewer(const char* tit):gl(tit,640,480){}
-  mlr::Mesh pc;
+  sPclViewer(const char* tit) : gl(tit/*,640,480*/){}
+  mlr::Mesh mesh;
+  byteA rgb;
 };
 
 void glDrawAxes(void*){
@@ -29,7 +30,7 @@ PclViewer::~PclViewer(){
 void PclViewer::open(){
   s = new sPclViewer(STRING("PclViewer: "<<cloud.name));
   s->gl.add(glStandardScene);
-  s->gl.add(s->pc);
+  s->gl.add(s->mesh);
   s->gl.camera.setDefault();
 }
 
@@ -40,9 +41,10 @@ void PclViewer::close(){
 void PclViewer::step(){
   cloud.readAccess();
   if(cloud().size()){
-    conv_PclCloud_ArrCloud(s->pc.V, s->pc.C, cloud());
+    conv_PclCloud_ArrCloud(s->mesh.V, s->rgb, cloud());
   }
   cloud.deAccess();
+  copy(s->mesh.C, s->rgb);   s->mesh.C /= 255.;
   s->gl.update();
 }
 

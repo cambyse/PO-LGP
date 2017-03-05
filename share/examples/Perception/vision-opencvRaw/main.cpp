@@ -36,15 +36,15 @@ void TEST(Surf){
   //-- Canny
   byteA edges(greyL),tmp(greyL);
   float th=mlr::getParameter<float>("cannyTh");
-  cv::Canny(cvMAT(greyL), cvMAT(edges), th, 4.f*th, 3);
-  //cvSmooth(cvMAT(edges), cvMAT(tmp), CV_BLUR, 3, 3);
+  cv::Canny(conv_Arr2CvRef(greyL), conv_Arr2CvRef(edges), th, 4.f*th, 3);
+  //cvSmooth(conv_Arr2CvRef(edges), conv_Arr2CvRef(tmp), CV_BLUR, 3, 3);
   cvShow(edges,"Canny",true);
 
   //-- SURF keypoints and features
   // CvSeq *imageKeypoints = 0, *imageDescriptors = 0;
   // CvMemStorage* storage = cvCreateMemStorage(0);
   // mlr::timerStart();
-  // cvExtractSURF(cvMAT(greyL), NULL,
+  // cvExtractSURF(conv_Arr2CvRef(greyL), NULL,
   //               &imageKeypoints, &imageDescriptors,
   //               storage, cvSURFParams(500, 1) );
   // cout <<"Image Descriptors =" <<imageDescriptors->total
@@ -55,7 +55,7 @@ void TEST(Surf){
   // for(int i=0; i<imageKeypoints->total; i++){
   //   const CvSURFPoint* kp = (const CvSURFPoint*)reader.ptr;
   //   CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
-  //   cvCircle(cvMAT(rgbDraw), cvPointFrom32f(kp->pt), 3, cvScalar(255,0,0));
+  //   cvCircle(conv_Arr2CvRef(rgbDraw), cvPointFrom32f(kp->pt), 3, cvScalar(255,0,0));
   //   /*cout <<i
   //   <<" pos=" <<kp->pt.x <<',' <<kp->pt.y
   //   <<" laplacian=" <<kp->laplacian
@@ -74,27 +74,27 @@ void TEST(Surf){
   // CvPoint2D32f corners[100];
   // int cornerCount;
   // mlr::timerStart();
-  // cvGoodFeaturesToTrack(cvMAT(greyL), cvMAT(tmp1), cvMAT(tmp2),
+  // cvGoodFeaturesToTrack(conv_Arr2CvRef(greyL), conv_Arr2CvRef(tmp1), conv_Arr2CvRef(tmp2),
   // 			corners, &cornerCount, .1f, 5, NULL, 5, 0);
   // cout <<"Good Corners #=" <<cornerCount <<" time=" <<mlr::timerRead() <<endl;
   // rgbDraw = rgbL;
   // for(int i=0; i<cornerCount; i++){
-  //   cvCircle(cvMAT(rgbDraw), cvPointFrom32f(corners[i]), 3, cvScalar(0,155,0));
+  //   cvCircle(conv_Arr2CvRef(rgbDraw), cvPointFrom32f(corners[i]), 3, cvScalar(0,155,0));
   // }
   // cvShow(rgbDraw,"left-keypoints",true);
  
   // //-- Star features
   // storage = cvCreateMemStorage(0);
   // CvSeq* keypoints = 0;
-  // keypoints = cvGetStarKeypoints( cvMAT(greyL), storage, cvStarDetectorParams(45) );
+  // keypoints = cvGetStarKeypoints( conv_Arr2CvRef(greyL), storage, cvStarDetectorParams(45) );
   // rgbDraw=rgbL;
   // for(int i=0; i<(keypoints?keypoints->total:0);i++){
   //   CvStarKeypoint kpt = *(CvStarKeypoint*)cvGetSeqElem(keypoints, i);
   //   int r = kpt.size/2;
-  //   cvCircle( cvMAT(rgbDraw), kpt.pt, r, CV_RGB(0,255,0));
-  //   cvLine(  cvMAT(rgbDraw), cvPoint(kpt.pt.x + r, kpt.pt.y + r),
+  //   cvCircle( conv_Arr2CvRef(rgbDraw), kpt.pt, r, CV_RGB(0,255,0));
+  //   cvLine(  conv_Arr2CvRef(rgbDraw), cvPoint(kpt.pt.x + r, kpt.pt.y + r),
   //            cvPoint(kpt.pt.x - r, kpt.pt.y - r), CV_RGB(0,255,0));
-  //   cvLine(  cvMAT(rgbDraw), cvPoint(kpt.pt.x - r, kpt.pt.y + r),
+  //   cvLine(  conv_Arr2CvRef(rgbDraw), cvPoint(kpt.pt.x - r, kpt.pt.y + r),
   //            cvPoint(kpt.pt.x + r, kpt.pt.y - r), CV_RGB(0,255,0));
   // }
   // cvShow(rgbDraw,"Star keypoints",true);
@@ -104,13 +104,13 @@ void TEST(Surf){
   // CvSeq* lines = 0;
   // cvShow(edges, "hough input");
   // mlr::timerStart();
-  // lines = cv::HoughLinesP( cvMAT(edges), storage,
+  // lines = cv::HoughLinesP( conv_Arr2CvRef(edges), storage,
   // 			   1, CV_PI/180, 50, 30, 10 );
   // cout <<"Hough #=" <<lines->total <<" time=" <<mlr::timerRead() <<endl;
   // rgbDraw = rgbL;
   // for(int i = 0; i < mlr::MIN(lines->total,100); i++ ){
   //   CvPoint* line = (CvPoint*)cvGetSeqElem(lines,i);
-  //   cvLine( cvMAT(rgbDraw), line[0], line[1], CV_RGB(255,0,0), 2.);
+  //   cvLine( conv_Arr2CvRef(rgbDraw), line[0], line[1], CV_RGB(255,0,0), 2.);
   // }
   // cvShow(rgbDraw, "Canny -- Hough", true);
 
@@ -122,8 +122,8 @@ void TEST(Surf){
 
   // CvStereoBMState* statebm = cvCreateStereoBMState(CV_STEREO_BM_BASIC, maxDisp);
   // mlr::timerStart();
-  // cvFindStereoCorrespondenceBM(cvMAT(greyL), cvMAT(greyR),
-  //                              cvMAT(dispL), statebm);
+  // cvFindStereoCorrespondenceBM(conv_Arr2CvRef(greyL), conv_Arr2CvRef(greyR),
+  //                              conv_Arr2CvRef(dispL), statebm);
   // dispL /= float(maxDisp);
   // cvReleaseStereoBMState( &statebm );
   // cout <<"stereo BM, time = " <<mlr::timerRead()
@@ -133,8 +133,8 @@ void TEST(Surf){
 
   // CvStereoGCState* stategc = cvCreateStereoGCState( maxDisp, 3 );
   // mlr::timerStart();
-  // cvFindStereoCorrespondenceGC(cvMAT(greyL), cvMAT(greyR),
-  //                              cvMAT(dispL), cvMAT(dispR),
+  // cvFindStereoCorrespondenceGC(conv_Arr2CvRef(greyL), conv_Arr2CvRef(greyR),
+  //                              conv_Arr2CvRef(dispL), conv_Arr2CvRef(dispR),
   //                              stategc);
   // dispL /= -float(maxDisp);
   // dispR /=  float(maxDisp);
@@ -179,8 +179,8 @@ void TEST(ShiftAnalysis){
   disp *= byte(255/maxD);
   cout <<"time = " <<mlr::timerRead() <<endl;
   // byteA tmp(disp);
-  // cvSmooth(cvMAT(disp), cvMAT(tmp), CV_BLUR, 5, 5);
-  // cvSmooth(cvMAT(tmp), cvMAT(disp), CV_BLUR, 5, 5);
+  // cvSmooth(conv_Arr2CvRef(disp), conv_Arr2CvRef(tmp), CV_BLUR, 5, 5);
+  // cvSmooth(conv_Arr2CvRef(tmp), conv_Arr2CvRef(disp), CV_BLUR, 5, 5);
   cvShow(disp, "disparity", true);
 }
 

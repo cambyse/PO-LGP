@@ -24,12 +24,12 @@ struct Roopi {
 
   Access_typed<ActL> acts;
 
-  Roopi(bool autoStartup=false);
+  Roopi(bool autoStartup=false, bool controlView=true);
   ~Roopi();
 
   //-- initialization (start... means persistent activities)
-  void setKinematics(const char* filename);          ///< set kinematics by hand (done in 'autoStartup')
-  void setKinematics(const mlr::KinematicWorld& K);  ///< set kinematics by hand (done in 'autoStartup')
+  void setKinematics(const char* filename, bool controlView=true);          ///< set kinematics by hand (done in 'autoStartup')
+  void setKinematics(const mlr::KinematicWorld& K, bool controlView=true);  ///< set kinematics by hand (done in 'autoStartup')
   Act_TaskController& startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
   Act_Tweets& startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
 
@@ -49,6 +49,7 @@ struct Roopi {
   const mlr::String& getRobot();                     ///< returns "pr2", "baxter", or "none"
   arr get_q0();                                      ///< return the 'homing pose' of the robot
   Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
+  void reportCycleTimes();
 
   //-- kinematic editing (to be done more..)
   mlr::Shape* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
@@ -81,8 +82,8 @@ struct Roopi {
 
   Act_Thread newPhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread newGamepadControl();  ///< activate gamepad to set controls
-  Act_Thread newCameraView();      ///< compute and display the camera view
-  Act_Thread newKinect2Pcl();
+  Act_Thread newCameraView(bool view=true);      ///< compute and display the camera view
+  Act_Thread newKinect2Pcl(bool view=true);
 
   //==============================================================================
   //

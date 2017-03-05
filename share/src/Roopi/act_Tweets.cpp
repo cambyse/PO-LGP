@@ -5,25 +5,20 @@
 #include <Control/taskControl.h>
 
 
-struct sAct_Tweets : Thread{
+struct sAct_Tweets : GraphEditCallback {
 
-  struct Callbacks : GraphEditCallback {
-    sAct_Tweets *T;
-    Callbacks(sAct_Tweets *T) : T(T){}
-
-    virtual void cb_new(Node* n){
-      if(n->isOfType<Act*>()) T->reg(n->get<Act*>());
-//      if(n->isOfType<Thread*>()) T->reg(n->get<Thread*>());
-    }
-    virtual void cb_delete(Node* n){
-      if(n->isOfType<Act*>()) T->dereg(n->get<Act*>());
-//      if(n->isOfType<Thread*>()) T->dereg(n->get<Thread*>());
-    }
-  } callbacks;
+  virtual void cb_new(Node* n){
+    if(n->isOfType<Act*>()) reg(n->get<Act*>());
+    //      if(n->isOfType<Thread*>()) T->reg(n->get<Thread*>());
+  }
+  virtual void cb_delete(Node* n){
+    if(n->isOfType<Act*>()) dereg(n->get<Act*>());
+    //      if(n->isOfType<Thread*>()) T->dereg(n->get<Thread*>());
+  }
 
   void reg(ConditionVariable* c){
-    if(c!=this){
-      stepMutex.lock();
+//    if(c!=this){
+//      stepMutex.lock();
 #if 1
       c->callbacks.append(Callback<void(ConditionVariable*,int)>(c,
         [this](ConditionVariable* c,int s){
@@ -33,21 +28,21 @@ struct sAct_Tweets : Thread{
 #else
       listenTo(c);
 #endif
-      stepMutex.unlock();
-    }
+//      stepMutex.unlock();
+//    }
   }
 
   void dereg(ConditionVariable* c){
-    if(c!=this){
-      stepMutex.lock();
+//    if(c!=this){
+//      stepMutex.lock();
 #if 1
       c->callbacks.memMove=true;
       c->callbacks.removeValue(Callback<void(ConditionVariable*,int)>(c));
 #else
       if(listensTo.contains(c)) stopListenTo(c);
 #endif
-      stepMutex.unlock();
-    }
+//      stepMutex.unlock();
+//    }
   }
 
   void tweet(ConditionVariable* c, int s){
@@ -71,32 +66,16 @@ struct sAct_Tweets : Thread{
       cout <<endl;
   }
 
-  sAct_Tweets(Act_Tweets *T) : Thread("Act_Tweets", -1.), callbacks(this){}
-  ~sAct_Tweets(){ threadClose(); }
-
-  virtual void open(){}
-  virtual void close(){}
-  virtual void step(){
-    HALT("obsolete");
-    for(ConditionVariable *c:messengers){
-      try{
-        tweet(c, c->getStatus());
-      }catch(...){
-        LOG(-1) <<"TWEETING failed (perhaps the messenger was already destroyed";
-      }
-    }
-    messengers.clear();
-  }
+  sAct_Tweets(Act_Tweets *T){}
 };
 
 Act_Tweets::Act_Tweets(Roopi *r)
   : Act(r), s(new sAct_Tweets(this)){
-  s->threadOpen();
-  registry().callbacks.append(&s->callbacks);
+  registry().callbacks.append(s);
 }
 
 Act_Tweets::~Act_Tweets(){
-  registry().callbacks.removeValue(&s->callbacks);
+  registry().callbacks.removeValue(s);
   delete s;
 }
 

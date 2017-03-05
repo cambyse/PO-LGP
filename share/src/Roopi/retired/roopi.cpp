@@ -55,7 +55,7 @@ Roopi_private::Roopi_private(Roopi* roopi)
 }
 
 Roopi_private::~Roopi_private(){
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
 
   //delete persistant acts
   if(_ComRos) delete _ComRos; //shut of the spinner BEFORE you close the pubs/subscribers..

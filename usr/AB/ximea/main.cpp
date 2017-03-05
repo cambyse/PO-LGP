@@ -619,8 +619,8 @@ struct xiRec : OpenGL::GLKeyCall {
                     /*
                 case XI_RAW8:
                     byteA rgb(img.d0, img.d1, 3);
-                    cv::Mat dst=cvMAT(rgb);
-                    cv::Mat src=cvMAT(img);
+                    cv::Mat dst=conv_Arr2CvRef(rgb);
+                    cv::Mat src=conv_Arr2CvRef(img);
                     cv::cvtColor(src, dst, CV_BayerBG2RGB);
 
                     FILE *pFile;

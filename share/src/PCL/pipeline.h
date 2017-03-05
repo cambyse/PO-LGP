@@ -18,3 +18,5 @@ struct PclPipeline : Thread{
   void close(){}
 };
 
+
+PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput);

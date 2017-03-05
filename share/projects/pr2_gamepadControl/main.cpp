@@ -214,7 +214,7 @@ void TEST(Gamepad){
   }
 
   threadCloseModules();
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

@@ -18,7 +18,7 @@ void getCam(){
 
   threadCloseModules();
 
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

@@ -120,7 +120,7 @@ void TEST(Kinect2Planes){
 #endif
 
   threadCloseModules();
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

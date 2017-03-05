@@ -22,7 +22,7 @@ int main(int argc, char** argv){
   threadOpenModules(true);
 
   moduleShutdown().waitForStatusGreaterThan(0);
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
 
   threadCloseModules();
   registry().clear();

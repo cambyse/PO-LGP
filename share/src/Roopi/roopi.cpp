@@ -16,7 +16,7 @@ Roopi_private::Roopi_private(Roopi* roopi)
 }
 
 Roopi_private::~Roopi_private(){
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
 
   //delete persistant acts
   if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
@@ -35,7 +35,7 @@ Roopi_private::~Roopi_private(){
 
 //==============================================================================
 
-Roopi::Roopi(bool autoStartup)
+Roopi::Roopi(bool autoStartup, bool controlView)
   : s(new Roopi_private(this)), acts(NULL, "acts"){
   s->model = mlr::getParameter<mlr::String>("model", "model.g");
   s->robot = mlr::getParameter<mlr::String>("robot", "pr2");
@@ -48,7 +48,7 @@ Roopi::Roopi(bool autoStartup)
     }
 
     startTweets();
-    setKinematics(s->model);
+    setKinematics(s->model, controlView);
     startTaskController();
   }
 }
@@ -57,7 +57,7 @@ Roopi::~Roopi(){
   delete s;
 }
 
-void Roopi::setKinematics(const char* filename){
+void Roopi::setKinematics(const char* filename, bool controlView){
   mlr::String name(filename);
   mlr::KinematicWorld K;
   if(name=="pr2") {
@@ -68,17 +68,19 @@ void Roopi::setKinematics(const char* filename){
     K.init(name);
   }
 
-  setKinematics(K);
+  setKinematics(K, controlView);
 }
 
-void Roopi::setKinematics(const mlr::KinematicWorld& K){
+void Roopi::setKinematics(const mlr::KinematicWorld& K, bool controlView){
   s->modelWorld.set() = K;
   s->q0 = K.q;
 
-  if(s->useRos){
-    s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1));
-  } else {
-    s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1));
+  if(controlView){
+    if(s->useRos){
+      s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1));
+    } else {
+      s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1));
+    }
   }
 }
 
@@ -96,6 +98,10 @@ Act_Tweets& Roopi::startTweets(bool go){
 
 Act_TaskController& Roopi::getTaskController(){
   return *s->_taskController;
+}
+
+void Roopi::reportCycleTimes(){
+  threadReportCycleTimes();
 }
 
 void Roopi::hold(bool still){
@@ -251,12 +257,13 @@ const mlr::String& Roopi::getRobot(){
   return s->robot;
 }
 
-Act_Thread Roopi::newCameraView(){
-  //TODO: the viewer is never destroyed! (Make it a child activity of the ComputeCamView?
-  return Act_Thread(this, {new ComputeCameraView(50), new ImageViewer("kinect_rgb")});
+Act_Thread Roopi::newCameraView(bool view){
+  if(!view) return Act_Thread(this, {new ComputeCameraView(.2)});
+  return Act_Thread(this, {new ComputeCameraView(.2), new ImageViewer("kinect_rgb")});
 }
 
-Act_Thread Roopi::newKinect2Pcl(){
+Act_Thread Roopi::newKinect2Pcl(bool view){
+  if(!view) return Act_Thread(this, {new Kinect2PointCloud()});
   return Act_Thread(this, {new Kinect2PointCloud(), new PointCloudViewer()});
 }
 

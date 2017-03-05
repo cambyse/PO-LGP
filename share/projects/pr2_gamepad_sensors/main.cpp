@@ -140,7 +140,7 @@ void TEST(Sensors){
 mlr::wait();
 
   threadCloseModules();
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 
