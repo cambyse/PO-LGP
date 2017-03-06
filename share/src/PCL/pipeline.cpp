@@ -131,7 +131,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
 
       //detect plane
       detectPlane(plane_coefficients, inliers, hull, meanPts, meanCol, cluster);
-      if(inliers->indices.size()<200) continue;
+      if(inliers->indices.size()<50) continue;
 
       //-- 2nd percept: the main plane
       normal = { plane_coefficients->values[0], plane_coefficients->values[1], plane_coefficients->values[2] };

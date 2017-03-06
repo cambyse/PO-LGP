@@ -228,9 +228,9 @@ void TEST(PickAndPlace2) {
 //===============================================================================
 
 void TEST(Perception) {
-  Roopi R(true, false);
+  Roopi R(true);
 
-  auto L = R.lookAt("endeffR");
+  auto L = R.lookAt("obj1");
 
   auto view = R.newCameraView(false);
   auto pcl = R.newKinect2Pcl(false);
