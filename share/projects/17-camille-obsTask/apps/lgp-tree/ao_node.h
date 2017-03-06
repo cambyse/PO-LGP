@@ -76,6 +76,7 @@ public:
   void solvePoseProblem();
   void solveSeqProblem();
   void solvePathProblem( uint microSteps );
+  void solvePathProblem2( uint microSteps, AONode * start );
 
   void labelInfeasible();
 
@@ -87,14 +88,18 @@ public:
   bool isSolved() const { return isSymbolicallySolved_; }
   int id() const { return id_; }
   AONodeL bestFamily() const { return bestFamily_; }
+  AONodeL andSiblings() const { return andSiblings_; }
   double pHistory() const { return pHistory_; }
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return komoPoseProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return komoSeqProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return komoPathProblems_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems2() const { return komoPathProblems2_; }
+  mlr::Array< WorldL > path2Configurations() const { return path2Configurations_; }
 
   AONodeL getTreePath();
+  AONodeL getTreePathFrom( AONode * start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
 
   // utility
@@ -120,6 +125,8 @@ private:
   ExtensibleKOMO::ptr getWitnessPoseKomo()     const { return getWitnessElem( komoPoseProblems_ ); }
   ExtensibleKOMO::ptr getWitnessSeqKomo()      const { return getWitnessElem( komoSeqProblems_ );  }
   ExtensibleKOMO::ptr getWitnessPathKomo()     const { return getWitnessElem( komoPathProblems_ ); }
+  ExtensibleKOMO::ptr getWitnessPathKomo2()    const { return getWitnessElem( komoPathProblems2_ ); }
+
   mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
 
@@ -136,6 +143,8 @@ private:
   //-- kinematics: the kinematic structure of the world after the decision path
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics
   mlr::Array< mlr::KinematicWorld > effKinematics_;         ///< the effective kinematics (computed from kinematics and symbolic state)
+  mlr::Array< mlr::KinematicWorld > effKinematicsPaths2_;         ///< the effective kinematics (computed from kinematics and symbolic state)
+  mlr::Array< bool > effKinematicsPaths2areSet_;
 
   double pHistory_;
   arr bs_;
@@ -184,6 +193,14 @@ private:
   arr path_;
   mlr::Array< ExtensibleKOMO::ptr > komoPathProblems_;
 
+  //-- path opt2
+  double pathCost2_, pathConstraints2_;
+  bool pathFeasible2_;
+  arr path2_;
+  mlr::Array< ExtensibleKOMO::ptr > komoPathProblems2_;
+  mlr::Array< WorldL > path2Configurations_;
+
+  //--
   int id_;
 };
 

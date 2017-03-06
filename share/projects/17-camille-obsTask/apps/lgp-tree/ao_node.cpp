@@ -85,6 +85,8 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , folStates_( folWorlds_.d0 )
   , startKinematics_( kins )
   , effKinematics_( kins.d0 )
+  , effKinematicsPaths2_( kins.d0 )
+  , effKinematicsPaths2areSet_( kins.d0 )
   , pHistory_( 1.0 )
   , bs_( bs )
   , a_( -1 )
@@ -105,6 +107,8 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , komoPoseProblems_( kins.d0 )
   , komoSeqProblems_( kins.d0 )
   , komoPathProblems_( kins.d0 )
+  , komoPathProblems2_( kins.d0 )
+  , path2Configurations_( kins.d0 )
   , id_( 0 )
 {
   for( auto w = 0; w < folWorlds_.d0; ++w )
@@ -118,6 +122,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   for( auto w = 0; w < startKinematics_.d0; ++w )
   {
     effKinematics_( w ) = mlr::KinematicWorld( * startKinematics_( w ) );
+    effKinematicsPaths2areSet_( w ) = false;
   }
 }
 
@@ -128,6 +133,8 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , folStates_( folWorlds_.d0 )
   , startKinematics_( parent->startKinematics_ )
   , effKinematics_( parent->effKinematics_ )
+  , effKinematicsPaths2_( parent->effKinematicsPaths2_ )
+  , effKinematicsPaths2areSet_( parent->effKinematicsPaths2areSet_.d0 )
   , decisions_( folWorlds_.d0 )
   , pHistory_( pHistory )
   , bs_( bs )
@@ -145,9 +152,11 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , poseCost_( 0.0 )
   , poseConstraints_( 0.0 )
   , poseFeasible_( false )
-  , komoPoseProblems_( parent->komoPoseProblems_.d0 )
-  , komoSeqProblems_( parent->komoSeqProblems_.d0 )
-  , komoPathProblems_( parent->komoPathProblems_.d0 )
+  , komoPoseProblems_( parent->komoPoseProblems_.d0   )
+  , komoSeqProblems_( parent->komoSeqProblems_.d0     )
+  , komoPathProblems_( parent->komoPathProblems_.d0   )
+  , komoPathProblems2_( parent->komoPathProblems2_.d0 )
+  , path2Configurations_( parent->path2Configurations_.d0 )
 {
   // update the states
   bool isTerminal = true;
@@ -182,9 +191,14 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   if( isTerminal )
     isSymbolicallySolved_ = true;
 
-  if( isTerminal_ )
+//  if( isTerminal_ )
+//  {
+//    std::cout << "found terminal node!" << bs_ << std::endl;
+//  }
+
+  for( auto w = 0; w < effKinematicsPaths2areSet_.d0; ++w )
   {
-    std::cout << "found terminal node!" << bs_ << std::endl;
+    effKinematicsPaths2areSet_( w ) = false;
   }
 
   // update time
@@ -505,6 +519,7 @@ void AONode::solvePoseProblem()
     if( bs_( w ) > eps() )
     {
       effKinematics_( w ) = *komoPoseProblems_( w )->MP->configurations.last();
+      //effKinematics_( w ).watch();
     }
   }
 
@@ -648,7 +663,7 @@ void AONode::solvePathProblem( uint microSteps )
   COUNT_pathOpt++;
 
   DEBUG( komoPathProblem->MP->reportFeatures(true, FILE("z.problem")); )
-//  komo.checkGradients();
+  //komo->checkGradients();
 
   Graph result = komo->getReport();
   DEBUG( FILE("z.problem.cost") << result; )
@@ -667,6 +682,119 @@ void AONode::solvePathProblem( uint microSteps )
     labelInfeasible();
 }
 
+void AONode::solvePathProblem2( uint microSteps, AONode * start )
+{
+  //-- collect 'path nodes'
+  AONodeL treepath = getTreePathFrom( start );
+
+  //std::cout << "from:" << start->id_ << " to:" << id_ << std::endl;
+
+  // build a kinematic world onto  which to optimize
+
+  // solve problem for all ( relevant ) worlds
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      mlr::KinematicWorld kin = start->isRoot() ? *startKinematics_( w ) : start->effKinematicsPaths2_( w );
+      //kin.watch();
+
+      if( ! start->isRoot() )
+        CHECK( start->effKinematicsPaths2areSet_( w ), "" );
+
+      // create komo
+      auto komo = komoFactory_.createKomo();
+      komoPathProblems2_( w ) = komo;
+
+      // set-up komo
+      komo->setModel( kin );
+      komo->setTiming( time_ - start->time_, microSteps, 5., 2, false );
+      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      komo->setSquaredQAccelerations();
+      komo->setSquaredFixSwitchedObjects(-1., -1., 1e3);
+
+      //std::cout << "---" << std::endl;
+
+      for( auto node:treepath ){
+        double t = (node->parent_?node->parent_->time_ - start->time_:0.);
+        //std::cout << "t:" << t << std::endl;
+        komo->groundTasks( t, *node->folStates_( w ) );
+      }
+      DEBUG( FILE("z.fol") <<fol; )
+      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      komo->reset();
+      try{
+        komo->run();
+      } catch(const char* msg){
+        cout << "KOMO FAILED: " << msg <<endl;
+      }
+
+      //komo->MP->configurations.last()->watch();
+
+      path2Configurations_( w ).append( start->path2Configurations_( w ) );           //
+      path2Configurations_( w ).append( komo->MP->configurations.sub( 1, -1 ) );      //
+    }
+  }
+
+  // check if all worlds lead to same agent sequence of positions
+  bool sameTrajectories = sameAgentTrajectories( komoPathProblems2_ );
+
+  if( ! sameTrajectories )
+    labelInfeasible();
+
+  // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
+  auto komo = getWitnessPathKomo2();                                //
+
+  COUNT_evals += komo->opt->newton.evals;
+  COUNT_kin += mlr::KinematicWorld::setJointStateCount;
+  COUNT_pathOpt++;
+
+  DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+  //komo->checkGradients();
+
+  Graph result = komo->getReport();
+  DEBUG( FILE("z.problem.cost") << result; )
+  double cost = result.get<double>({"total","sqrCosts"});
+  double constraints = result.get<double>({"total","constraints"});
+
+  if( ! path2_.N || cost < pathCost2_ )       //
+  {                                           //
+    pathCost2_ = cost;                        //
+    pathConstraints2_ = constraints;          //
+    pathFeasible2_ = (constraints<.5);        //
+  }                                           //
+
+  // inform symbolic level
+  if( ! pathFeasible2_ )
+    labelInfeasible();
+
+  // update effective kinematic
+  for( auto w = 0; w < effKinematicsPaths2_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      effKinematicsPaths2_( w ) = *komoPathProblems2_( w )->MP->configurations.last();
+      effKinematicsPaths2areSet_( w ) = true;
+    }
+  }
+
+  // update switch
+  for( auto w = 0; w < effKinematicsPaths2_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      for( mlr::KinematicSwitch *sw: komoPathProblems2_( w )->MP->switches )
+      {
+        //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
+        if( sw->timeOfApplication>=2 ) sw->apply( effKinematicsPaths2_( w ) );
+      }
+      effKinematicsPaths2_( w ).topSort();
+      DEBUG( effKinematicsPaths2_( w ).checkConsistency(); )
+        effKinematicsPaths2_( w ).getJointState();
+    }
+  }
+}
+
 void AONode::labelInfeasible()
 {
   // how to backtrack?
@@ -682,6 +810,24 @@ mlr::Array< AONode * > AONode::getTreePath()
     node = node->parent_;
   }
   return path;
+}
+
+mlr::Array< AONode * > AONode::getTreePathFrom( AONode * start )
+{
+  mlr::Array< AONode * > subPath;
+
+  AONode * node = this;
+  do
+  {
+    subPath.prepend( node );
+    node = node->parent_;
+
+//    if( node == start )
+//      std::cout << "node == start " << std::endl;
+
+  } while ( ( node != start ) && node );
+
+  return subPath;
 }
 
 bool AONode::sameAgentTrajectories( const mlr::Array< ExtensibleKOMO::ptr > & komos )

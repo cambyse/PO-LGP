@@ -18,12 +18,15 @@ public: // public methods
   void optimizePoses();
   void optimizeSequences();
   void optimizePaths();
+  void optimizePaths2();
+
 
   void updateDisplay( const WorldID & w );
 
 private:
   void optimizePoses( AONode * );
   void optimizeSequences( AONode * );
+  void optimizePaths2( AONode *, AONode * );
 
 public:
 
@@ -59,6 +62,7 @@ private:
   OrsPathViewer poseView_;
   OrsPathViewer seqView_;
   OrsPathViewer pathView_;
+  OrsPathViewer pathView2_;
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

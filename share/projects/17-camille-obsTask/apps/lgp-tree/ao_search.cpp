@@ -17,6 +17,7 @@ AOSearch::AOSearch( const KOMOFactory & komoFactory )
   , poseView_( "pose" , 1., -0   )
   , seqView_ ("sequence", 1., -0 )
   , pathView_( "path", .1, -1    )
+  , pathView2_( "path2", .1, -1  )
 {
 
 }
@@ -160,6 +161,32 @@ void AOSearch::optimizePaths()
   }
 }
 
+void AOSearch::optimizePaths2()
+{
+  optimizePaths2( root_, root_ );
+}
+
+void AOSearch::optimizePaths2( AONode * node, AONode * start )
+{
+  if( node->isTerminal() )
+  {
+    node->solvePathProblem2( 20, start );
+  }
+  else
+  {
+    if( node->andSiblings().d0 >= 1 )
+    {
+      node->solvePathProblem2( 20, start );
+      start = node;
+    }
+
+    for( auto c : node->bestFamily() )
+    {
+      optimizePaths2( c, start );
+    }
+  }
+}
+
 void AOSearch::optimizePoses( AONode * node )
 {
   node->solvePoseProblem();
@@ -170,15 +197,6 @@ void AOSearch::optimizePoses( AONode * node )
   }
 }
 
-void AOSearch::optimizeSequences( AONode * node )
-{
-//  node->solveSequenceProblem();
-
-//  for( auto c : node->bestFamily() )
-//  {
-//    optimizeSequences( c );
-//  }
-}
 void AOSearch::updateDisplay( const WorldID & w )
 {
   // get the terminal node for the world w, in the case of stochaticity
@@ -193,6 +211,10 @@ void AOSearch::updateDisplay( const WorldID & w )
   if( node->komoPathProblems()( w.id() ) && node->komoPathProblems()( w.id() )->MP->configurations.N )
     pathView_.setConfigurations( node->komoPathProblems()( w.id() )->MP->configurations );
   else pathView_.clear();
+
+  if( node->komoPathProblems2()( w.id() ) && node->komoPathProblems2()( w.id() )->MP->configurations.N )
+    pathView2_.setConfigurations( node->path2Configurations()( w.id() ) );
+  else pathView2_.clear();
 }
 
 mlr::Array< AONode * > AOSearch::getNodesToExpand() const

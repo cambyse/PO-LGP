@@ -101,6 +101,8 @@ void HeadGetSight::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
   double normU = norm2( u );
   arr Ju = - headJPosition;
   arr JnormU = Jnorm( u );  // get Jacobian of the norm operator
+  arr u1 = u / normU;
+  arr Ju1 = ( Ju * normU - u * JnormU * Ju ) / ( normU * normU ); // jacobian of u normalized
 
   // build v : orientation vector of the head
   arr v1 = headViewingDirection;
@@ -111,15 +113,96 @@ void HeadGetSight::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
   arr tmp_J = zeros( dim_, headJPosition.dim(1) );
 
   // u - v
-  tmp_y.setVectorBlock( u  - v1  * normU                      , 0 );    // cost
-  tmp_J.setMatrixBlock( Ju -( v1 * JnormU * Ju + Jv1 * normU ),0 , 0 ); // jacobian
+  tmp_y.setVectorBlock( 10.0 * ( u1  - v1)     , 0 );    // cost
+  tmp_J.setMatrixBlock( 10.0 * ( Ju1 - Jv1), 0 , 0 );    // jacobian
 
   // u - w
   if( moveAroundPivotDefined_ )
   {
-    tmp_y.setVectorBlock( u -  w1_ * normU      , u.d0 - 1 );            // cost
-    tmp_J.setMatrixBlock( Ju - w1_ * JnormU * Ju, Ju.d0 - 1, 0 );        // jacobian
+    tmp_y.setVectorBlock( u1 -  w1_     , u.d0 - 1 );            // cost
+    tmp_J.setMatrixBlock( Ju1, Ju.d0 - 1, 0 );                    // jacobian
   }
+
+  // commit results
+  y = tmp_y;
+  if(&J) J = tmp_J;
+}
+
+//===========================================================================
+
+HeadGetSightQuat::HeadGetSightQuat( const arr& objectPosition, const arr& pivotPoint )
+  : TaskMap()
+  , objectPosition_( objectPosition )
+  , pivotPoint_    ( pivotPoint )
+  , headViewingDirection_( 0.0, -1.0, 0.0 )
+  , moveAroundPivotDefined_( false )
+{
+  w1_ = objectPosition_ - pivotPoint_;
+  std::cout << "w1:" << w1_ << std::endl;
+  mlr::Quaternion targetQuat;
+  targetQuat.setDiff( mlr::Vector( 0, -1.0, 0 ), w1_ / norm2( w1_ ) );
+
+  targetQuat_ = conv_quat2arr( targetQuat );
+
+  if( norm2( w1_ ) > 0 ) // normalize if the vector is not null
+  {
+    w1_ = w1_ * 1. / norm2( w1_ );
+    moveAroundPivotDefined_ = true;
+  }
+
+  // with current sensor position, determine which object occludes ( at least one triangle is traversed by the ray )
+
+  // determine the pivot point
+}
+
+void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
+{
+  mlr::Shape *head = G.getShapeByName("manhead");
+  arr headPosition, headJPosition;
+  G.kinematicsPos( headPosition, headJPosition, head->body );
+
+  arr headQuat, JheadQuat;
+  G.kinematicsQuat( headQuat, JheadQuat, head->body ); // get function to minimize and its jacobian in state G
+
+  //arr headViewingDirection, headJViewingDirection;
+  //G.kinematicsQuat();
+  //G.kinematicsVec( headViewingDirection, headJViewingDirection, head->body, headViewingDirection_ ); // get function to minimize and its jacobian in state G
+
+  // build u : vector between head and object point
+  arr u = objectPosition_ - headPosition;
+  double normU = norm2( u );
+  arr Ju = - headJPosition;
+  arr JnormU = Jnorm( u );  // get Jacobian of the norm operator
+  arr u1 = u / normU;
+  arr Ju1 = ( Ju * normU - u * JnormU * Ju ) / ( normU * normU ); // jacobian of u normalized
+
+  // build v : orientation vector of the head
+  //arr v1 = headViewingDirection;
+  //arr Jv1 = headJViewingDirection;
+
+  // instantiate a temporary vector for cost and its Jacobian
+  arr tmp_y = zeros( dim_ );
+  arr tmp_J = zeros( dim_, headJPosition.dim(1) );
+
+  // head orientation
+  //tmp_y.setVectorBlock( 10.0*( u1  - v1)                       , 0 );    // cost
+  //tmp_J.setMatrixBlock( 10.0 * ( Ju1 - Jv1), 0 , 0 ); // jacobian
+
+  tmp_y.setVectorBlock( 1.0 * ( headQuat - targetQuat_ )       , 0 );    // cost
+  tmp_J.setMatrixBlock( 1.0 * ( JheadQuat              )  , 0 , 0 ); // jacobian
+
+  // head alignment
+  if( moveAroundPivotDefined_ )
+  {
+    tmp_y.setVectorBlock( u1 -   w1_, headQuat.d0 - 1 );                    // cost
+    tmp_J.setMatrixBlock( Ju1,   JheadQuat.d0 - 1, 0 );                    // jacobian
+  }
+
+  // head distance
+  arr norm_a = zeros( 1 );
+  norm_a( 0 ) = normU - 0.6;
+  tmp_y.setVectorBlock( norm_a,    headQuat.d0 + u1.d0 - 1 );
+  tmp_J.setMatrixBlock( JnormU * Ju,    JheadQuat.d0 + Ju1.d0 - 1, 0 );                    // jacobian
 
   // commit results
   y = tmp_y;

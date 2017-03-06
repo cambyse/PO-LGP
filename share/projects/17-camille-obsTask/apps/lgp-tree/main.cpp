@@ -9,6 +9,9 @@ back track, take history into account?
 sort nodes before expanding?
 labelInfeasible()
 back track result of pose computation when one of the pose is not possilbe or generally different between worlds!
+less rollouts?
+iterations
+build kinematic world for optimization, with all believed objects inserted as inert objects for colision avoidance at least!
 
 dot -Tpng -o policy.png policy.gv
 */
@@ -285,7 +288,6 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int
 
 void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
-
 }
 
 //===========================================================================
@@ -400,6 +402,20 @@ void plan_AOS()
   /// PATH OPTIMIZATION
   C.optimizePaths();      // optimizes paths of the current best solution
 
+  /// PATH OPTIMIZATION
+  C.optimizePaths2();      // optimizes paths of the current best solution
+
+  // save policy
+  std::stringstream ss;
+  C.printPolicy( ss );
+  //std::cout << ss.str() << std::endl;
+
+  // save to file
+  std::ofstream fs;
+  fs.open( "policy.gv" );
+  fs << ss.str();
+  fs.close();
+
   // display
   C.updateDisplay( WorldID( 2 ) );
   mlr::wait( 30 );
@@ -413,17 +429,6 @@ void plan_AOS()
   //    {
   //    }
   // }
-
-  // display policy
-  std::stringstream ss;
-  C.printPolicy( ss );
-  std::cout << ss.str() << std::endl;
-
-  // save to file
-  std::ofstream fs;
-  fs.open( "policy.gv" );
-  fs << ss.str();
-  fs.close();
 }
 
 //===========================================================================
