@@ -1,13 +1,6 @@
 #include <Roopi/roopi.h>
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
-#include <PCL/pclViewer.h>
-#include <PCL/pipeline.h>
-#include <Gui/viewer.h>
-#include <Kin/kinViewer.h>
-#include <Perception/filter.h>
-#include <Perception/syncFiltered.h>
-#include <Perception/percViewer.h>
 
 //===============================================================================
 
@@ -134,7 +127,7 @@ void TEST(PickAndPlace) {
   Roopi R(true);
 
   auto view = R.newCameraView();
-  auto pcl = R.newKinect2Pcl();
+//  auto pcl = R.newKinect2Pcl();
 //  R.taskController().verbose(1);
 
   R.getTaskController().lockJointGroupControl("torso");
@@ -231,21 +224,9 @@ void TEST(Perception) {
   Roopi R(true);
 
   auto L = R.lookAt("obj1");
-
   auto view = R.newCameraView(false);
-  auto pcl = R.newKinect2Pcl(false);
-
-  Conv_arr_pcl cv("pclRawInput", "kinect_points", "kinect_rgb");
-//  PclViewer v1("pclRawInput");
-  PclPipeline pipe("pclRawInput");
-//  PclViewer v2("pcl_processed");
-//  PercViewer v3("percepts_input");
-
-  Filter filter;
-  PercViewer v4("percepts_filtered");
-
-//  SyncFiltered sync;
-//  OrsViewer v5("percWorld", .05, false);
+  auto pcl = R.newPclPipeline(false);
+  auto filter = R.newPerceptionFilter(true);
 
   mlr::wait(1.);
   mlr::wait();

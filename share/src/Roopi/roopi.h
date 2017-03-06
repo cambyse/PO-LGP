@@ -8,7 +8,6 @@
 #include "act_PathOpt.h"
 #include "act_PathFollow.h"
 #include "act_TaskController.h"
-#include "act_ComRos.h"
 #include "act_ComPR2.h"
 #include "act_Thread.h"
 #include "act_Tweets.h"
@@ -59,31 +58,33 @@ struct Roopi {
   void resyncView();
 
   //-- control
-
-  Act_CtrlTask newCtrlTask()         { return Act_CtrlTask(this); }
+  Act_CtrlTask newCtrlTask(){ return Act_CtrlTask(this); }  ///< set the CtrlTask yourself (see newHoldingTask as example)
   Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
   Act_CtrlTask newCtrlTask(const char* specs);
-  void hold(bool still);
+  // predefined
   Act_CtrlTask home();
   Act_CtrlTask lookAt(const char* shapeName, double prec=1e-2);
-  Act_CtrlTask* collisions(bool on);
-
   Act_CtrlTask newHoldingTask();
   Act_CtrlTask newCollisionAvoidance();
   Act_CtrlTask newLimitAvoidance();
+  // persistent
+  void hold(bool still);
+  Act_CtrlTask* collisions(bool on);
 
 
   //-- some activities
-
   Act_Thread  newThread(Thread* th)  { return Act_Thread(this, th); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
-  Act_Thread  newComROS()            { return Act_Thread(this, newRosComSpinner()); } ///< thread for the ROS spinner
   Act_ComPR2  newComPR2()            { return Act_ComPR2(this); } ///< subscribers/publishers that communicate with PR2
   Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
 
+  Act_Thread newComROS(); ///< thread for the ROS spinner
   Act_Thread newPhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread newGamepadControl();  ///< activate gamepad to set controls
   Act_Thread newCameraView(bool view=true);      ///< compute and display the camera view
-  Act_Thread newKinect2Pcl(bool view=true);
+//  Act_Thread newKinect2Pcl(bool view=true);
+  Act_Thread newPclPipeline(bool view=false);
+  Act_Thread newPerceptionFilter(bool view=false);
+
 
   //==============================================================================
   //

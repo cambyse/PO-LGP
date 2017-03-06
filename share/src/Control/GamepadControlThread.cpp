@@ -56,4 +56,3 @@ void GamepadControlThread::close(){
 
 //===========================================================================
 
-Thread* newGamepadControlThread(){ return new GamepadControlThread(); }

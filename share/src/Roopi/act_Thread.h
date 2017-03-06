@@ -1,3 +1,5 @@
+#pragma once
+
 #include "act.h"
 
 struct Act_Thread : Act{

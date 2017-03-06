@@ -1,11 +1,12 @@
 #include "roopi.h"
 #include "roopi-private.h"
 
-Thread* newGamepadControlThread();
-Thread* newPhysXThread();
-
 #include <Gui/viewer.h>
-#include <Perception/kinect2pointCloud.h>
+#include <Kin/PhysXThread.h>
+#include <Control/GamepadControlThread.h>
+#include <RosCom/spinner.h>
+#include <Perception/roopi_Perception.h>
+#include <PCL/roopi_PCL.h>
 
 #define baxter 0
 
@@ -43,7 +44,7 @@ Roopi::Roopi(bool autoStartup, bool controlView)
 
   if(autoStartup){
     if(s->useRos){
-      s->_ComRos = new Act_Thread(this, newRosComSpinner());
+      s->_ComRos = new Act_Thread(this, new RosCom_Spinner());
       s->_ComPR2 = new Act_ComPR2(this);
     }
 
@@ -104,30 +105,19 @@ void Roopi::reportCycleTimes(){
   threadReportCycleTimes();
 }
 
-void Roopi::hold(bool still){
-  if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(std::move(newHoldingTask()));
-
-  if(still){
-//    s->ctrlTasks.writeAccess();
-//    for(CtrlTask *t:s->ctrlTasks()){
-//      if(!s->_collTask || t!=s->_collTask->task)
-//        t->active=false;
-//    }
-//    s->ctrlTasks.deAccess();
-
-    s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
-    s->_holdPositionTask->set()->PD().setGains(30., 10.);
-    s->_holdPositionTask->start();
-
-  }else{
-    s->_holdPositionTask->stop();
-  }
-}
-
 arr Roopi::get_q0(){
   CHECK(s->q0.N, "kinematics needs to be set first");
   return s->q0;
 }
+
+WToken<mlr::KinematicWorld> Roopi::setK(){
+  return s->modelWorld.set();
+}
+
+RToken<mlr::KinematicWorld> Roopi::getK(){
+  return s->modelWorld.get();
+}
+
 
 Act_CtrlTask Roopi::home(){
   return Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0());
@@ -137,6 +127,23 @@ Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec){
   int cam = getK()->getShapeByName("endeffKinect")->index;
   int obj = getK()->getShapeByName(shapeName)->index;
   return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
+}
+
+Act_CtrlTask Roopi::newHoldingTask(){
+  auto hold = Act_CtrlTask(this);
+  hold.setMap(new TaskMap_qItself);
+  hold.task->PD().setTarget( hold.y0 );
+  hold.task->PD().setGains(30., 10.);
+  hold.start();
+  return hold;
+}
+
+Act_CtrlTask Roopi::newCollisionAvoidance(){
+  return Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
+}
+
+Act_CtrlTask Roopi::newLimitAvoidance(){
+  return Act_CtrlTask(this, new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2});
 }
 
 //Act_CtrlTask* Roopi::lookAt(const char* shapeName){
@@ -159,36 +166,23 @@ Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec){
 //  return s->_watchTask;
 //}
 
+void Roopi::hold(bool still){
+  if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(std::move(newHoldingTask()));
+
+  if(still){
+    s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
+    s->_holdPositionTask->set()->PD().setGains(30., 10.);
+    s->_holdPositionTask->start();
+  }else{
+    s->_holdPositionTask->stop();
+  }
+}
+
 Act_CtrlTask* Roopi::collisions(bool on){
   if(!s->_collTask) s->_collTask = new Act_CtrlTask(std::move(newCollisionAvoidance()));
   if(on) s->_collTask->start();
   else s->_collTask->stop();
   return s->_collTask;
-}
-
-Act_CtrlTask Roopi::newHoldingTask(){
-  auto hold = Act_CtrlTask(this);
-  hold.setMap(new TaskMap_qItself);
-  hold.task->PD().setTarget( hold.y0 );
-  hold.task->PD().setGains(30., 10.);
-  hold.start();
-  return hold;
-}
-
-Act_CtrlTask Roopi::newCollisionAvoidance(){
-  return Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
-}
-
-Act_CtrlTask Roopi::newLimitAvoidance(){
-  return Act_CtrlTask(this, new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2});
-}
-
-WToken<mlr::KinematicWorld> Roopi::setK(){
-  return s->modelWorld.set();
-}
-
-RToken<mlr::KinematicWorld> Roopi::getK(){
-  return s->modelWorld.get();
 }
 
 //==============================================================================
@@ -257,14 +251,21 @@ const mlr::String& Roopi::getRobot(){
   return s->robot;
 }
 
+Act_Thread Roopi::newComROS(){
+  return Act_Thread(this, new RosCom_Spinner());
+}
+
 Act_Thread Roopi::newCameraView(bool view){
   if(!view) return Act_Thread(this, {new ComputeCameraView(.2)});
   return Act_Thread(this, {new ComputeCameraView(.2), new ImageViewer("kinect_rgb")});
 }
 
-Act_Thread Roopi::newKinect2Pcl(bool view){
-  if(!view) return Act_Thread(this, {new Kinect2PointCloud()});
-  return Act_Thread(this, {new Kinect2PointCloud(), new PointCloudViewer()});
+Act_Thread Roopi::newPclPipeline(bool view){
+  return Act_Thread(this, ::newPclPipeline(view));
+}
+
+Act_Thread Roopi::newPerceptionFilter(bool view){
+  return Act_Thread(this, ::newPerceptionFilter(view));
 }
 
 Act_Thread Roopi::newPhysX(){
@@ -272,7 +273,7 @@ Act_Thread Roopi::newPhysX(){
 }
 
 Act_Thread Roopi::newGamepadControl(){
-  return Act_Thread(this, newGamepadControlThread());
+  return Act_Thread(this, new GamepadControlThread());
 }
 
 

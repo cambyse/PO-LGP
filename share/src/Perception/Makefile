@@ -6,7 +6,7 @@ OUTPUT = lib$(NAME).so
 GL = 1
 LAPACK = 1
 OPENCV = 1
-#PCL = 1
+PCL = 0
 X264 = 0
 DEPEND = Core Geo Gui extern_libcolorseg Kin Algo
 
