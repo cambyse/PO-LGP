@@ -150,14 +150,14 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
 void testHRI() {
   Roopi R(true);
 
-  R.getTaskController().verbose(1);
+//  R.getTaskController().verbose(1);
   //R.getTaskController().lockJointGroupControl("torso");
   //R.hold(false);
   R.collisions(true);
 
-  //buildTower(R,"cube1","cube2","cube3","cube4","objTarget");
+  buildTower(R,"cube1","cube2","cube3","cube4","objTarget");
   //buildLine(R,"cube1","cube2","cube3","cube4","objTarget","objTarget2","objTarget3","objTarget4");
-  buildBridge(R,"cube1","cube2","rect1","objTarget","objTarget3");
+//  buildBridge(R,"cube1","cube2","rect1","objTarget","objTarget3");
   //buildHouse(R,"rect1","cube1","cube2","rect2","objTarget");
   //buildBox(R,"rect1","rect2","rect3","rect4","rect5","rect6","rect7","rect8","cube1","cube2","objTarget","objTarget5","objTarget6");
 

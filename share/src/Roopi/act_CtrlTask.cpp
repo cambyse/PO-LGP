@@ -46,6 +46,13 @@ Act_CtrlTask::~Act_CtrlTask(){
   }
 }
 
+void Act_CtrlTask::resetStatus(){
+  setStatus(AS_init);
+  roopi.s->ctrlTasks.writeAccess();
+  task->status=CT_init;
+  roopi.s->ctrlTasks.deAccess();
+}
+
 void Act_CtrlTask::start(){
   set()->active = true;
 }
@@ -60,9 +67,9 @@ void Act_CtrlTask::stop(){
 
 WToken<CtrlTask> Act_CtrlTask::set(){
   CHECK(task, "this is not yet configured!");
-  if(getStatus()!=0){
-    setStatus(AS_running);
-  }
+//  if(getStatus()!=0){
+//    setStatus(AS_init);
+//  }
   return WToken<CtrlTask>(*roopi.s->ctrlTasks.data, task);
 }
 
@@ -77,17 +84,18 @@ void Act_CtrlTask::setMap(TaskMap* m){
 
 void Act_CtrlTask::setTask(CtrlTask *t){
   task = t;
-  task->update(0., roopi.getK());
-  y0 = task->y;
-  task->active = false;
   { //set the callback
     task->callbacks.append(
       [this](CtrlTask* t,int s){
-        CHECK_EQ(t,task,"");
+//      if(!this->task) return;
+        CHECK_EQ(t, this->task, "");
         this->setStatus(s);
       }
     );
   }
+  task->update(0., roopi.getK()); //this might already call the callback
+  y0 = task->y;
+  task->active = false;
   roopi.s->ctrlTasks.set()->append(task);
 }
 

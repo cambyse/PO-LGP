@@ -17,6 +17,7 @@ struct Act_CtrlTask : Act{
   Act_CtrlTask(Act_CtrlTask&& a); //move constructor
   virtual ~Act_CtrlTask();
 
+  void resetStatus();
   void start();
   void stop();
 
