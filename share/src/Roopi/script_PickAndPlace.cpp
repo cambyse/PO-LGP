@@ -55,7 +55,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
         grasp1 = K().getJointByName("l_gripper_joint")->to->index;
         grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
       }
-      cam = K().getShapeByName("endeffKinect")->index;
+      //cam = K().getShapeByName("endeffKinect")->index;
       workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
@@ -81,7 +81,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     CHECK_EQ(gripSize2, gripSize2, "the object is too think to be grasped??");
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {gripSize2});
-    R.wait({&pos, &gripperR, &gripper2R, &ws, &up});
+    R.wait({&pos, &gripperR, &gripper2R, &up});
 
     //lowering
     pos.set()->PD().setTarget( ARR(0,0,above-.05) );

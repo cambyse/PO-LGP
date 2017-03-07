@@ -98,7 +98,7 @@ struct Roopi {
     return runScript( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
   Act_Script placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
-    return Act_Script(this, [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
+    //return Act_Script(this, [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
   }
 };
 
