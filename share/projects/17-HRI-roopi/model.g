@@ -1,7 +1,7 @@
 #Include = 'arm7.kvg'
 Include = '../../data/pr2_model/pr2_model.ors'
 
-body table{ type=0, X=<T t(0 -1.2 .5)>, size=[1. 1. .04 .02], color=[.8 .5 .3] }
+body table{ type=0, X=<T t(0 -1.2 .5)>, size=[1.2 1. .04 .02], color=[.8 .5 .3] }
 shape leg1(table) { rel=<T t(-.25 -.25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
 shape leg2(table) { rel=<T t(-.25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
 shape leg3(table) { rel=<T t( .25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
@@ -13,20 +13,72 @@ shape (table2) { rel=<T t(-.25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.
 shape (table2) { rel=<T t( .25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
 shape (table2) { rel=<T t( .25 -.25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
 
-body obj1 { size=[.1 .1 .2 .02] type=ST_ssBox }
-joint (table obj1) { from=<T t(0 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }
+body cube1 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube1) { from=<T t(-.1 .3 .02)> to=<T t(0 0 .05)> type=JT_rigid }
 
-body obj2 { size=[.1 .1 .2 .02] type=ST_ssBox X=<T t(0 -1.2 .6) t(.3 .3 .02) t(0 0 .1) t(0 0 .01)> }
-joint (table obj2) { from=<T t(.3 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }
+body cube2 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube2) { from=<T t(.1 .3 .02)> to=<T t(0 0 .05)> type=JT_rigid }
 
-body obj3 {}
-shape (obj3){ size=[.1 .1 .2 .02] type=ST_ssBox }
-joint (table2 obj3) { type=JT_rigid from=<T t(.3 .0 .02)> to=<T t(0 0 .05) d(90 1 0 0)>}
+body cube3 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube3) { from=<T t(-.1 .1 .02)> to=<T t(0 0 .05)> type=JT_rigid }
 
-body obj4 { size=[.1 .1 .2 .02] type=ST_ssBox }
-joint (table2 obj4) { type=JT_rigid from=<T t(.3 .3 .02)> to=<T t(0 0 .05) d(90 1 0 0)>}
+body cube4 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube4) { from=<T t(.1 .1 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body cube5 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube5) { from=<T t(.3 .3 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body cube6 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube6) { from=<T t(.3 .1 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body cube7 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube7) { from=<T t(.5 .3 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body cube8 { size=[.1 .1 .1 .02] type=ST_ssBox }
+joint (table cube8) { from=<T t(.5 .1 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect1 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect1) { from=<T t(-.5 -.2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect2 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect2) { from=<T t(-.3 -.2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect3 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect3) { from=<T t(-.1 -.2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect4 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect4) { from=<T t(.1 -.2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect5 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect5) { from=<T t(.3 -.2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect6 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect6) { from=<T t(.5 -.2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect7 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect7) { from=<T t(-.5 .2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+body rect8 { size=[.1 .3 .1 .02] type=ST_ssBox }
+joint (table rect8) { from=<T t(-.3 .2 .02)> to=<T t(0 0 .05)> type=JT_rigid }
+
+#body obj3 {}
+#shape (obj3){ size=[.1 .1 .2 .02] type=ST_ssBox }
+#joint (table2 obj3) { type=JT_rigid from=<T t(.3 .0 .02)> to=<T t(0 0 .05) d(90 1 0 0)>}
+
+#body obj4 { size=[.1 .1 .2 .02] type=ST_ssBox }
+#joint (table2 obj4) { type=JT_rigid from=<T t(.3 .3 .02)> to=<T t(0 0 .05) d(90 1 0 0)>}
+
+#body obj5 { size=[.1 .1 .1 .02] type=ST_ssBox }
+#joint (table2 obj5) { type=JT_rigid from=<T t(.3 .6 .02)> to=<T t(0 0 .05) d(90 1 0 0)>}
 
 shape objTarget(table2) { type=ST_marker rel=<T t(-.3 0 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+shape objTarget2(table2) { type=ST_marker rel=<T t(-.2 0 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+shape objTarget3(table2) { type=ST_marker rel=<T t(-.1 0 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+shape objTarget4(table2) { type=ST_marker rel=<T t(0 0 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+shape objTarget5(table2) { type=ST_marker rel=<T t(-.3 .1 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+shape objTarget6(table2) { type=ST_marker rel=<T t(-.3 .2 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+#shape objTarget6(table2) { type=ST_marker rel=<T t(-.3 0 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+#shape objTarget7(table2) { type=ST_marker rel=<T t(-.3 .4 .02) d(90 0 0 1)> size=[.3 0 0 0] color=[1 .5 0] }
 
-body ball { X=<T t(-1 -1.2 1.)>, size=[.1 .1 .2 .02] type=9 }
-body ball2 { X=<T t(-1 -1.2 1.5)>, size=[.1 .1 .2 .02] type=9 }
+#body ball { X=<T t(-1 -1.2 1.)>, size=[.1 .1 .2 .02] type=9 }
+#body ball2 { X=<T t(-1 -1.2 1.5)>, size=[.1 .1 .2 .02] type=9 }
