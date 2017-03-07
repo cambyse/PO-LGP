@@ -124,8 +124,8 @@ int main(int argc, char** argv){
 //        img.referTo((byte*)image.bp,image.height*image.width);
 //        img.reshape(image.height, image.width);
 //        byteA rgb(img.d0, img.d1, 3);
-//        cv::Mat dst=cvMAT(rgb);
-//        cv::Mat src=cvMAT(img);
+//        cv::Mat dst=conv_Arr2CvRef(rgb);
+//        cv::Mat src=conv_Arr2CvRef(img);
 //        cv::cvtColor(src, dst, CV_BayerBG2RGB);
 //        write_ppm(rgb, "pic-RAW8.ppm");
 

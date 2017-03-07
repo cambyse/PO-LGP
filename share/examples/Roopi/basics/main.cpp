@@ -2,8 +2,6 @@
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
 
-#include <Control/ctrlMsg.h>
-
 //===============================================================================
 
 void TEST(Basics) {
@@ -16,17 +14,25 @@ void TEST(Basics) {
 
     {
       auto posL = R.newCtrlTask();
-      posL.setMap(new TaskMap_Default(posTMT, R.getKinematics(), "endeffL"));
+      posL.setMap(new TaskMap_Default(posTMT, R.getK(), "endeffL"));
       posL.task->PD().setTarget( posL.y0 + ARR(0,-.1,-.3) );
       posL.task->PD().setGainsAsNatural(1., .9);
       posL.start();
 
-      R.hold(false);
       R.wait({&posL});
-      R.hold(true);
     }
   }
   cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
+}
+
+//===============================================================================
+
+void TEST(Gripper) {
+  Roopi R(true);
+  mlr::wait();
+  auto lim = R.newLimitAvoidance();
+  Script_setGripper(R, LR_left, .08);
+  Script_setGripper(R, LR_left, .0);
 }
 
 //===============================================================================
@@ -36,8 +42,7 @@ void TEST(PhysX) {
     Roopi R(true);
 
     auto ph = R.newPhysX();
-
-//    mlr::wait();
+//    ph.showInternalOpengl();
 
     auto g = R.graspBox("obj2", LR_left);
 
@@ -58,23 +63,20 @@ void Prototyping(){
   auto view = R.newCameraView();
 
   {
-    mlr::Shape *s = R.getKinematics()->getShapeByName("endeffL");
+    mlr::Shape *s = R.getK()->getShapeByName("endeffL");
     auto leftTarget = R.newMarker("targetL", conv_vec2arr(s->X.pos)+ARR(.0,-.2,.3));
 
-
     auto leftHand = R.newCtrlTask();
-    leftHand.setMap(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffL", NoVector, "targetL"));
+    leftHand.setMap(new TaskMap_Default(posDiffTMT, R.getK(), "endeffL", NoVector, "targetL"));
     leftHand.task->PD().setGainsAsNatural(1., .8);
     leftHand.task->PD().setTarget( {.0} );
     leftHand.start();
 
     auto rightHand = R.newCtrlTask();
-    rightHand.setMap(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffR"));
+    rightHand.setMap(new TaskMap_Default(posDiffTMT, R.getK(), "endeffR"));
     rightHand.task->PD().setGainsAsNatural(1., .8);
     rightHand.task->PD().setTarget( rightHand.y0 + ARR(.0, .2, .6) );
     rightHand.start();
-
-    R.hold(false);
 
     for(;;){
       R.wait({&leftHand, &rightHand}, 3.); //with timeout
@@ -93,23 +95,16 @@ void Prototyping(){
 //    leftHand.set()->PD().setTarget( leftHand.y0 );
     rightHand.set()->PD().setTarget( rightHand.y0 );
     R.wait({&leftHand, &rightHand}, 3.); //with timeout
-
-    R.hold(true);
-
-    leftHand.stop();
-    rightHand.stop();
   } //scope check's previous kill
 
 
 #if 0
   auto path = R.newJointPath(jointState, 5.0)
                .start();
-  R.hold(false);
 
   R.wait({path}, 4.);
   if(path.getStatus()!=AS_done){
     cout <<"not done yet!" <<endl;
-    R.hold(true);
   }
 #endif
 
@@ -131,10 +126,11 @@ void Prototyping(){
 void TEST(PickAndPlace) {
   Roopi R(true);
 
-//  auto view = R.newCameraView();
+  auto view = R.newCameraView();
+//  auto pcl = R.newKinect2Pcl();
 //  R.taskController().verbose(1);
 
-  R.taskController().lockJointGroupControl("torso");
+  R.getTaskController().lockJointGroupControl("torso");
 
 //  auto ph = R.newPhysX();
 //  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
@@ -156,35 +152,32 @@ void TEST(PickAndPlace) {
 #endif
 
   auto home = R.home();
-  R.wait({home});
+  R.wait({&home});
 }
 
 //===============================================================================
 
 void focusWorkspace_pr2(Roopi& R, const char* objName){
   //attention
-  auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getKinematics(), "endeffKinect", NoVector, objName));
-  auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getKinematics(), "endeffWorkspace", NoVector, objName), {}, {}, {1e1});
+  auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getK(), "endeffKinect", NoVector, objName));
+  auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getK(), "endeffWorkspace", NoVector, objName), {}, {}, {1e1});
 
-  R.hold(false);
   R.wait({&ws, &look});
 }
 
 void TEST(PickAndPlace2) {
   Roopi R(true);
 
-  auto view = R.newCameraView();
+//  auto view = R.newCameraView();
 //  R.taskController().verbose(1);
 
-
   focusWorkspace_pr2(R, "obj1");
-  R.taskController().lockJointGroupControl("base");
-  R.hold(true);
+  R.getTaskController().lockJointGroupControl("base");
 
   {
     auto path = R.newPathOpt();
     double t1=.75;
-    arr obj1size(R.getKinematics()->getShapeByName("obj1")->size, 4);
+    arr obj1size(R.getK()->getShapeByName("obj1")->size, 4);
     double gripSize = obj1size(1) + 2.*obj1size(3);
     double above = obj1size(2)*.5 + obj1size(3) - .02;
 
@@ -209,27 +202,37 @@ void TEST(PickAndPlace2) {
 
     R.wait({&path});
 
-    auto follow = Act_FollowPath(&R, "PathFollower", path.komo->x, new TaskMap_qItself(QIP_byJointGroups, {"armR","gripR"}, R.getKinematics()), 5.);
+    auto follow = Act_FollowPath(&R, "PathFollower", path.komo->x, new TaskMap_qItself(QIP_byJointGroups, {"armR","gripR"}, R.getK()), 5.);
     follow.start();
-    R.hold(false);
 
     R.wait({&follow});
   }
 
   {
-    arr obj1size(R.getKinematics()->getShapeByName("obj1")->size, 4);
+    arr obj1size(R.getK()->getShapeByName("obj1")->size, 4);
     double gripSize = obj1size(1) + 2.*obj1size(3);
-    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getKinematics()), {}, {gripSize});
-    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getKinematics()), {}, {::asin(gripSize/(2.*.10))});
+    auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getK()), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getK()), {}, {::asin(gripSize/(2.*.10))});
 
     R.wait({&gripperR});
-    R.hold(true);
   }
-
-//  mlr::wait();
-
 }
 
+//===============================================================================
+
+void TEST(Perception) {
+  Roopi R(true);
+
+  auto L = R.lookAt("obj1");
+  auto view = R.newCameraView(false);
+  auto pcl = R.newPclPipeline(false);
+  auto filter = R.newPerceptionFilter(true);
+
+  mlr::wait(1.);
+  mlr::wait();
+
+  R.reportCycleTimes();
+}
 //===============================================================================
 
 void TEST(Gamepad) {
@@ -250,11 +253,14 @@ void TEST(Gamepad) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-//  testBasics();`
+//  testBasics();
+//  testGripper();
 //  testPhysX();
 //  Prototyping();
 
-  for(;;) testPickAndPlace();
+  testPerception();
+
+//  for(;;) testPickAndPlace();
 
 //  /*for(;;)*/ testPickAndPlace2();
 //  testGamepad();

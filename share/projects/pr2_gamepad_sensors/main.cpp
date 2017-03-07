@@ -5,7 +5,7 @@
 
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Perception/viewer.h>
+#include <Gui/viewer.h>
 #include <Control/gamepad2tasks.h>
 #include <Perception/perception.h>
 #include <Perception/depth_packing.h>
@@ -140,7 +140,7 @@ void TEST(Sensors){
 mlr::wait();
 
   threadCloseModules();
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

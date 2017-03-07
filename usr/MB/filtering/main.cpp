@@ -6,7 +6,7 @@
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
+#include <Perception/filter.h>
 #include <RosCom/publishDatabase.h>
 
 int main(int argc, char** argv){
@@ -22,7 +22,7 @@ int main(int argc, char** argv){
   threadOpenModules(true);
 
   moduleShutdown().waitForStatusGreaterThan(0);
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
 
   threadCloseModules();
   registry().clear();

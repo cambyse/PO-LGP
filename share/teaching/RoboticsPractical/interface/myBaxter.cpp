@@ -13,8 +13,8 @@
 #include <RosCom/subscribeTabletop.h>
 #include "RosCom/subscribeOptitrack.h"
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 #include <baxter_core_msgs/JointCommand.h>
@@ -23,7 +23,7 @@ baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const m
 
 struct MyBaxter_private{
   Access_typed<sensor_msgs::JointState> jointState;
-  ACCESSname(FilterObjects, object_database)
+  ACCESSname(PerceptL, percepts_filtered)
   ACCESSname(mlr::KinematicWorld, modelWorld)
 
   TaskControlThread tcm;
@@ -296,15 +296,15 @@ bool MyBaxter::testRealConv(const CtrlTaskL& tasks, const double waitSecs){
 }
 
 uint MyBaxter::reportPerceptionObjects(){
-  s->object_database.readAccess();
-  FilterObjects clusters;
+  s->percepts_filtered.readAccess();
+  PerceptL clusters;
   uint n=0;
-  for(FilterObject* fo : s->object_database()){
+  for(Percept* fo : s->percepts_filtered()){
     fo->write(cout);
     cout <<endl;
     n++;
   }
-  s->object_database.deAccess();
+  s->percepts_filtered.deAccess();
   return n;
 }
 
@@ -425,14 +425,14 @@ arr MyBaxter::getJointState(){
 }
 
 mlr::Vector MyBaxter::closestCluster(){
-  s->object_database.readAccess();
+  s->percepts_filtered.readAccess();
 
   mlr::Vector toReturn(0,0,0);
 
   double max_dist = DBL_MIN;
-  for(FilterObject* fo : s->object_database())
+  for(Percept* fo : s->percepts_filtered())
   {
-    if (fo->type == FilterObject::FilterObjectType::cluster)
+    if (fo->type == Percept::Type::cluster)
     {
       mlr::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
       double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
@@ -443,7 +443,7 @@ mlr::Vector MyBaxter::closestCluster(){
       }
     }
   }
-  s->object_database.deAccess();
+  s->percepts_filtered.deAccess();
 
   return toReturn;
 }
@@ -453,20 +453,20 @@ arr MyBaxter::q0(){
 }
 
 mlr::Vector MyBaxter::arPose(){
-  s->object_database.readAccess();
+  s->percepts_filtered.readAccess();
 
   mlr::Vector toReturn(0,0,0);
 
-  for(FilterObject* fo : s->object_database())
+  for(Percept* fo : s->percepts_filtered())
   {
-    if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
+    if ((fo->id == 2) && (fo->type == Percept::Type::alvar))
     {
       mlr::Transformation pos = fo->frame * fo->transform;
       toReturn = pos.pos;
       std::cout << toReturn << std::endl;
     }
   }
-  s->object_database.deAccess();
+  s->percepts_filtered.deAccess();
 
   return toReturn;
 }

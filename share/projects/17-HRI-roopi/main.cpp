@@ -135,7 +135,7 @@ void testHRI() {
   Roopi R(true);
 
 //  R.taskController().verbose(1);
-  R.taskController().lockJointGroupControl("torso");
+  R.getTaskController().lockJointGroupControl("torso");
   R.hold(false);
   R.collisions(true);
 

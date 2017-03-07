@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 //  forceControl(S);
 
     threadCloseModules();
-    modulesReportCycleTimes();
+    threadReportCycleTimes();
   }
 
   cout <<registry() <<endl;

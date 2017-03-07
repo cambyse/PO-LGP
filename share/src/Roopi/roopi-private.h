@@ -10,7 +10,9 @@ struct CtrlTaskUpdater : Thread {
   ACCESS(CtrlTaskL, ctrlTasks)
   int verbose;
 
-  CtrlTaskUpdater(int verbose=0) : Thread("CtrlTaskUpdater", .05), verbose(verbose) {}
+  CtrlTaskUpdater(int verbose=0) : Thread("CtrlTaskUpdater", .05), verbose(verbose) {
+    threadLoop();
+  }
   ~CtrlTaskUpdater(){ threadClose(); }
 
   virtual void open(){}
@@ -18,7 +20,7 @@ struct CtrlTaskUpdater : Thread {
     acts.readAccess();
     for(Act *a:acts()){
       Act_CtrlTask *c = dynamic_cast<Act_CtrlTask*>(a);
-      if(c && c->task){
+      if(c && c->task && c->task->ref){
         ctrlTasks.readAccess();
         bool conv = c->task->ref->isDone();
         ctrlTasks.deAccess();
@@ -43,16 +45,17 @@ struct Roopi_private {
   mlr::String model;
   mlr::String robot;
   bool useRos;
+  arr q0;
 
   // persistent acts
-  Act_TaskController *_tcm = NULL;
+  Act_TaskController *_taskController = NULL;
   Act_CtrlTask *_holdPositionTask = NULL;
   Act_CtrlTask *_watchTask = NULL;
   Act_CtrlTask *_collTask = NULL;
   Act_Tweets *_tweets = NULL;
   Act *_ComRos=NULL, *_ComPR2=NULL;
-  Act_Thread *ctrlView = NULL;
-  Act_Thread *_updater = NULL;
+  Act_Thread *_ctrlView = NULL;
+  Act_Thread *_taskUpdater = NULL;
 
 
   //-- logging

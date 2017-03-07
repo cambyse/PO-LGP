@@ -12,8 +12,8 @@
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 #include <ar_track_alvar_msgs/AlvarMarkers.h>

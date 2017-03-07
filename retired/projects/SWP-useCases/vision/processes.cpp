@@ -50,8 +50,8 @@ void GrayMaker::step() {
   gray.resize(rgb.d0,rgb.d1);
   
   if (!rgb.N) return;
-  cv::Mat ref=cvMAT(gray);
-  cv::Mat src=cvMAT(rgb);
+  cv::Mat ref=conv_Arr2CvRef(gray);
+  cv::Mat src=conv_Arr2CvRef(rgb);
   cv::cvtColor(src, ref, CV_RGB2GRAY);
   
   grayImage->set_gray(gray,this);
@@ -140,8 +140,8 @@ void CannyFilter::step() {
   grayImage->get_gray(gray,this);
   if (!gray.N) return;
   canny.resizeAs(gray);
-  cv::Mat ref = cvMAT(canny);
-  cv::Canny(cvMAT(gray), ref, cannyThreshold, 4.f*cannyThreshold, 3);
+  cv::Mat ref = conv_Arr2CvRef(canny);
+  cv::Canny(conv_Arr2CvRef(gray), ref, cannyThreshold, 4.f*cannyThreshold, 3);
   cannyImage->set_gray(canny,this);
 }
 
@@ -198,10 +198,10 @@ void SURFer::step() {
   
   std::vector<cv::KeyPoint> keypoints;
   std::vector<float> descriptors;
-  (*s->surf)(cvMAT(gray), cv::Mat(), keypoints, descriptors);
+  (*s->surf)(conv_Arr2CvRef(gray), cv::Mat(), keypoints, descriptors);
   
   display=gray;
-  cv::Mat ref = cvMAT(display);
+  cv::Mat ref = conv_Arr2CvRef(display);
   for (uint i=0; i<keypoints.size(); i++) {
     circle(ref, keypoints[i].pt, 3, cv::Scalar(255));
   }
@@ -227,9 +227,9 @@ void HoughLineFilter::step() {
   if (!gray.N) return;
   
   std::vector<cv::Vec4i> lines;
-  cv::HoughLinesP(cvMAT(gray), lines, 1, CV_PI/180, 50, 30, 10);
+  cv::HoughLinesP(conv_Arr2CvRef(gray), lines, 1, CV_PI/180, 50, 30, 10);
   display = gray;
-  cv::Mat ref=cvMAT(display);
+  cv::Mat ref=conv_Arr2CvRef(display);
   for (uint i=0; i<lines.size(); i++) {
     cv::line(ref, cv::Point(lines[i][0], lines[i][1]),
              cv::Point(lines[i][2], lines[i][3]), cv::Scalar(255), 3);
