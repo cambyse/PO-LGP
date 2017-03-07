@@ -153,11 +153,11 @@ void testHRI() {
   R.getTaskController().verbose(1);
   //R.getTaskController().lockJointGroupControl("torso");
   //R.hold(false);
-  //R.collisions(true);
+  R.collisions(true);
 
-  buildTower(R,"cube1","cube2","cube3","cube4","objTarget");
+  //buildTower(R,"cube1","cube2","cube3","cube4","objTarget");
   //buildLine(R,"cube1","cube2","cube3","cube4","objTarget","objTarget2","objTarget3","objTarget4");
-  //buildBridge(R,"cube1","cube2","rect1","objTarget","objTarget3");
+  buildBridge(R,"cube1","cube2","rect1","objTarget","objTarget3");
   //buildHouse(R,"rect1","cube1","cube2","rect2","objTarget");
   //buildBox(R,"rect1","rect2","rect3","rect4","rect5","rect6","rect7","rect8","cube1","cube2","objTarget","objTarget5","objTarget6");
 
@@ -174,7 +174,7 @@ void testHRI() {
 
   //Script_graspBox(R,"rect1", LR_right);
   //Script_place(R,"rect1","objTarget");
-  //Script_placeDistDir(R,"rect1","objTarget",0.2,0,0);
+  //Script_placeDistDir(R,"rect1","objTarget",0.2,0,1);
   //mlr::wait();
   //Script_graspBox(R,"obj1", LR_right);
   //  auto grasp = R.graspBox("obj1", LR_right);
