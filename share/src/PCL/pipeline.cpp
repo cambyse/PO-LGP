@@ -62,20 +62,30 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
 
   if(!input->size()) return percepts;
 
-  //-- z-filtering
-  Pcl::Ptr z_filtered(new Pcl);
+  //-- xz-filtering
+  Pcl::Ptr filtered(new Pcl);
+  boost::shared_ptr<std::vector<int> > z_filtered(new std::vector<int>);
+  boost::shared_ptr<std::vector<int> > xz_filtered(new std::vector<int>);
   pcl::PassThrough<PointT> pass;
   pass.setInputCloud(input);
   pass.setFilterFieldName ("z");
   pass.setFilterLimits (.5, .7);
-  pass.filter(*z_filtered);
+  pass.filter (*z_filtered);
+  pass.setIndices (z_filtered);
+  pass.setFilterFieldName ("x");
+  pass.setFilterLimits (0, 1.);
+#if 0
+  pass.filter(*xz_filtered);
 
-  //-- voxel grid filter -> smaller resolution
-  Pcl::Ptr filtered(new Pcl);
+  //-- voxel grid filter -> smaller resolution (small objects not recognized anymore!)
   pcl::VoxelGrid<PointT> sor;
-  sor.setInputCloud (z_filtered);
-  sor.setLeafSize (0.01f, 0.01f, 0.01f);
+  sor.setInputCloud (input);
+  sor.setIndices(xz_filtered);
+  sor.setLeafSize (0.005f, 0.005f, 0.005f);
   sor.filter (*filtered);
+#else
+  pass.filter(*filtered);
+#endif
 
   //-- 1st percept: the filtered cloud itself
   mlr::Mesh mesh;

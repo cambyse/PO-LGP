@@ -1,17 +1,16 @@
 #include <Roopi/roopi.h>
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
+#include <RosCom/subscribeRosKinect.h>
+#include <Gui/viewer.h>
+#include <Perception/syncFiltered.h>
+#include <Kin/kinViewer.h>
 
 //===============================================================================
 
 void TEST(Basics) {
   {
     Roopi R(true);
-
-//    R.setKinematics("pr2");
-//    R.startTaskController();
-    //  R.taskController().verbose(1);
-
     {
       auto posL = R.newCtrlTask();
       posL.setMap(new TaskMap_Default(posTMT, R.getK(), "endeffL"));
@@ -21,6 +20,10 @@ void TEST(Basics) {
 
       R.wait({&posL});
     }
+    {
+      auto h = R.home();
+      R.wait({&h});
+    }
   }
   cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
 }
@@ -29,8 +32,7 @@ void TEST(Basics) {
 
 void TEST(Gripper) {
   Roopi R(true);
-  mlr::wait();
-  auto lim = R.newLimitAvoidance();
+//  auto lim = R.newLimitAvoidance();
   Script_setGripper(R, LR_left, .08);
   Script_setGripper(R, LR_left, .0);
 }
@@ -223,13 +225,27 @@ void TEST(PickAndPlace2) {
 void TEST(Perception) {
   Roopi R(true);
 
-  auto L = R.lookAt("obj1");
-  auto view = R.newCameraView(false);
-  auto pcl = R.newPclPipeline(false);
-  auto filter = R.newPerceptionFilter(true);
+  {
+//    auto L = R.lookAt("S3");
+    auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
+#if 0
+    auto view = R.newCameraView(false);
+#else
+    SubscribeRosKinect subKin;
+    ImageViewer v1("kinect_rgb");
+#endif
+    auto pcl = R.newPclPipeline(false);
+    auto filter = R.newPerceptionFilter(true);
 
-  mlr::wait(1.);
-  mlr::wait();
+    SyncFiltered sync("modelWorld");
+    OrsViewer v2("modelWorld");
+
+
+    mlr::wait(1.);
+    mlr::wait();
+  }
+  auto home = R.home();
+  R.wait({&home});
 
   R.reportCycleTimes();
 }

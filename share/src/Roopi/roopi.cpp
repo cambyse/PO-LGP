@@ -20,12 +20,12 @@ Roopi_private::~Roopi_private(){
   threadReportCycleTimes();
 
   //delete persistant acts
+  if(_tweets) delete _tweets; _tweets=NULL; //somehow the tweeter crashes to tweet the other's kill...
   if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
   if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
   if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
   if(_watchTask) delete _watchTask; _watchTask=NULL;
   if(_collTask) delete _collTask; _collTask=NULL;
-  if(_tweets) delete _tweets; _tweets=NULL;
   if(_taskController) delete _taskController; _taskController=NULL;
   if(_taskUpdater) delete _taskUpdater; _taskUpdater=NULL;
 
