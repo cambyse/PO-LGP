@@ -51,7 +51,7 @@ struct sAct_Tweets : GraphEditCallback {
       if(a){
         Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
         if(t && t->task){
-          cout <<"Act_CtrlTask " <<t->get()->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
+          cout <<"Act_CtrlTask " <<t->task->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
         }else{
           cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
         }

@@ -7,4 +7,6 @@ struct Act_ComPR2 : Act {
 
   Act_ComPR2(Roopi *r);
   virtual ~Act_ComPR2();
+
+  void stopSendingMotionToRobot(bool stop);
 };

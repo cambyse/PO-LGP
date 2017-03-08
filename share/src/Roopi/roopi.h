@@ -48,6 +48,7 @@ struct Roopi {
   const mlr::String& getRobot();                     ///< returns "pr2", "baxter", or "none"
   arr get_q0();                                      ///< return the 'homing pose' of the robot
   Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
+  Act_ComPR2& getComPR2();
   void reportCycleTimes();
 
   //-- kinematic editing (to be done more..)
@@ -100,6 +101,7 @@ struct Roopi {
   Act_Script placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
     return Act_Script(this, [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
   }
+
 };
 
 //==============================================================================

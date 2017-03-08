@@ -53,15 +53,13 @@ struct Roopi_private {
   Act_CtrlTask *_watchTask = NULL;
   Act_CtrlTask *_collTask = NULL;
   Act_Tweets *_tweets = NULL;
-  Act *_ComRos=NULL, *_ComPR2=NULL;
+  Act_Thread *_ComRos=NULL;
+  Act_ComPR2 *_ComPR2=NULL;
   Act_Thread *_ctrlView = NULL;
   Act_Thread *_taskUpdater = NULL;
 
-
   //-- logging
   struct LoggingModule *loggingModule = NULL;
-
-
 
   Roopi_private(Roopi *roopi);
 

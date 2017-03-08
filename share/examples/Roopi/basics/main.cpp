@@ -223,7 +223,12 @@ void TEST(PickAndPlace2) {
 //===============================================================================
 
 void TEST(Perception) {
-  Roopi R(true);
+  Roopi R(true, false);
+
+  R.getTaskController().lockJointGroupControl("base");
+
+  mlr::Shape *topMost = NULL;
+  OrsViewer v2("modelWorld");
 
   {
 //    auto L = R.lookAt("S3");
@@ -234,18 +239,42 @@ void TEST(Perception) {
     SubscribeRosKinect subKin;
     ImageViewer v1("kinect_rgb");
 #endif
-    auto pcl = R.newPclPipeline(false);
-    auto filter = R.newPerceptionFilter(true);
 
-    SyncFiltered sync("modelWorld");
-    OrsViewer v2("modelWorld");
+    mlr::wait(2.);
 
+    {
+      auto pcl = R.newPclPipeline(false);
+      auto filter = R.newPerceptionFilter(true);
+      SyncFiltered sync("modelWorld");
 
-    mlr::wait(1.);
-    mlr::wait();
+      mlr::wait(4.);
+    }
+
+    look.stop();
+
+    for(mlr::Shape *s:R.getK()->shapes){
+      if(s->type==mlr::ST_box && s->name.startsWith("perc_")){
+        if(!topMost || topMost->X.pos.z < s->X.pos.z) topMost=s;
+        cout <<"PERCEIVED: " <<*s <<" X=" <<s->X <<endl;
+      }
+    }
+    cout <<"GRASPING " <<topMost->name <<endl;
+
+    {
+      auto L = R.lookAt(topMost->name);
+      mlr::wait();
+    }
+
+    R.getComPR2().stopSendingMotionToRobot(true);
+    {
+      auto home = R.home();
+      R.wait({&home});
+    }
   }
-  auto home = R.home();
-  R.wait({&home});
+//  auto home = R.home();
+//  R.wait({&home});
+  auto g=R.graspBox(topMost->name, LR_left);
+  R.wait({&g});
 
   R.reportCycleTimes();
 }

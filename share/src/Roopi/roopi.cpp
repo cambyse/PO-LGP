@@ -101,6 +101,10 @@ Act_TaskController& Roopi::getTaskController(){
   return *s->_taskController;
 }
 
+Act_ComPR2& Roopi::getComPR2(){
+  return *s->_ComPR2;
+}
+
 void Roopi::reportCycleTimes(){
   threadReportCycleTimes();
 }
@@ -293,7 +297,8 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
 }
 
 void Roopi::resyncView(){
-  s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics();
+  if(s->_ctrlView)
+    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics();
 }
 
 void Roopi::kinematicSwitch(const char* object, const char* attachTo){

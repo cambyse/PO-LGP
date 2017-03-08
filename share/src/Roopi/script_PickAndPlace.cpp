@@ -84,7 +84,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     R.wait({&pos, &gripperR, &gripper2R, &up});
 
     //lowering
-    pos.set()->PD().setTarget( ARR(0,0,above-.05) );
+    pos.set()->PD().setTarget( ARR(0,0,above-.03) );
     pos.resetStatus();
     R.wait({&pos});
 

@@ -158,7 +158,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       copy(X, mesh.V);
       X.delColumns(2);
       cv::RotatedRect rect = cv::minAreaRect( conv_Arr2CvRef(X) );
-      if(rect.size.height>rect.size.width){
+      if(rect.size.height>1.1*rect.size.width){
         rect.angle += 90.;
         double x = rect.size.height;
         rect.size.height = rect.size.width;
