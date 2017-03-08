@@ -19,6 +19,8 @@
 
 #include <list>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <MCTS/solver_PlainMC.h>
 
 #define DEBUG(x) //x
@@ -690,6 +692,9 @@ void AONode::solvePathProblem2( uint microSteps, AONode * start )
   //std::cout << "from:" << start->id_ << " to:" << id_ << std::endl;
 
   // build a kinematic world onto  which to optimize
+//  {
+//    auto kin = buildStartOptiKinematic( start );
+//  }
 
   // solve problem for all ( relevant ) worlds
   for( auto w = 0; w < startKinematics_.d0; ++w )
@@ -928,6 +933,170 @@ std::string AONode::actionStr( uint a ) const
     ss << "no actions";
 
   return ss.str();
+}
+
+mlr::KinematicWorld AONode::buildStartOptiKinematic( AONode * start ) const
+{
+  // get carriage return symbol
+  std::stringstream _ss; _ss << std::endl;
+  const char carr = *_ss.str().c_str();
+
+  struct KinFact
+  {
+    std::string name;
+    std::string fact;
+  };
+
+  std::list< std::set< KinFact > > bodiesList;
+  std::list< std::set< KinFact > > shapesList;
+  std::list< std::set< KinFact > > jointsList;
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      auto kin = start->isRoot() ? *startKinematics_( w ) : parent_->effKinematicsPaths2_( w );
+
+      std::set< KinFact > bodiesFacts;
+      for( auto b: kin.bodies )
+      {
+        std::stringstream name;
+        std::stringstream fact;
+
+        name << b->name;
+
+        fact <<"body " <<b->name <<" { ";
+        b->write(fact);  fact <<" }\n";
+
+        bodiesFacts.insert( { name.str(), fact.str() } );
+      }
+
+      std::set< KinFact > shapesFacts;
+      for( auto s: kin.shapes )
+      {
+        std::stringstream name;
+        std::stringstream fact;
+
+        name << s->name;
+
+        fact <<"shape ";
+        if(s->name.N) fact <<s->name <<' ';
+        fact <<"(" <<(s->body?(char*)s->body->name:"") <<"){ ";
+        s->write(fact);  fact <<" }\n";
+
+        shapesFacts.insert( { name.str(), fact.str() } );
+      }
+
+      std::set< KinFact > jointsFacts;
+      for( auto j: kin.joints )
+      {
+        std::stringstream name;
+        std::stringstream fact;
+
+        name << j->name;
+
+        fact <<"joint ";
+        if (j->name.N) fact <<j->name <<' ';
+        fact <<"(" <<j->from->name <<' ' <<j->to->name <<"){ ";
+        j->write(fact);  fact <<" }\n";
+
+        jointsFacts.insert( { name.str(), fact.str() } );
+      }
+    }
+  }
+  // build the set of facts of each worlds
+  /*std::list< std::set< std::string > > kinFactsList;
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      auto kin = start->isRoot() ? *startKinematics_( w ) : parent_->effKinematicsPaths2_( w );
+
+      std::stringstream ss;
+      kin.write( ss );
+
+      std::set< std::string > kinFacts;
+      std::istringstream f( ss.str() );
+      std::string fact;
+      while ( getline( f, fact, carr ) )
+      {
+        kinFacts.insert( fact );
+      }
+
+      kinFactsList.push_back( kinFacts );
+    }
+  }
+
+  // get the intersection of all the sets ( the observable kinematic )
+  std::set< std::string > intersection = kinFactsList.front();
+  for( auto kinFacts = ++kinFactsList.begin(); kinFacts != kinFactsList.end(); ++kinFacts )
+  {
+    std::set< std::string > inter;
+    std::set_intersection( intersection.begin(), intersection.end(),
+                           kinFacts->begin(), kinFacts->end(),
+                           std::inserter( inter, inter.begin() ) );
+    intersection = inter;
+  }
+
+  // get facts not in the intersection
+  // get the fact not in intersection
+  std::list< std::set< std::string > > differenciatingFactsList;
+  for( auto kinFacts : kinFactsList )
+  {
+    std::set< std::string > differenciatingFacts;
+    std::set_difference( kinFacts.begin(), kinFacts.end(), intersection.begin(), intersection.end(),
+                         std::inserter( differenciatingFacts, differenciatingFacts.begin() ) );
+    differenciatingFactsList.push_back( differenciatingFacts );
+  }
+
+  //
+  std::stringstream ss;
+  std::string obstaclePrefix = "__obstacle";
+  int obstacleId = 0;
+  for( auto fact : intersection )
+  {
+    ss << fact << std::endl;
+  }
+
+  // add differenciatingFacts as obstacles
+  for( auto diffFacts : differenciatingFactsList )
+  {
+    for( auto fact : diffFacts )
+    {
+      // extract name
+      std::istringstream is( fact );
+      std::string type, name;
+      is >> type;
+      is >> name;
+
+      std::string newName = obstaclePrefix + std::to_string( obstacleId );
+      auto newFact = fact;
+      boost::algorithm::replace_all( newFact, name, newName );
+      ss << newFact << std::endl;
+
+      obstacleId++;
+
+      std::cout << newFact << std::endl;
+    }
+  }
+
+  // build the graph of the intersection
+  Graph G;
+  G.read( ss );
+
+  mlr::KinematicWorld kin;
+  kin.init( G );
+  kin.watch();*/
+//  std::set< std::string > intersection = outcomesToWorlds.begin()->first;
+//  for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
+//  {
+//    auto facts  = outcome->first;
+//    std::set< std::string > inter;
+//    std::set_intersection( intersection.begin(), intersection.end(),
+//                           facts.begin(), facts.end(),
+//                           std::inserter( inter, inter.begin() ) );
+//    intersection = inter;
+//  }
+  return mlr::KinematicWorld();
 }
 
 //mlr::KinematicWorld AONode::getStartKinematic() const

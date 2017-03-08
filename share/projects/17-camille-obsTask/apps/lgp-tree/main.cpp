@@ -403,7 +403,7 @@ void plan_AOS()
   C.optimizePaths();      // optimizes paths of the current best solution
 
   /// PATH OPTIMIZATION
-  C.optimizePaths2();      // optimizes paths of the current best solution
+  C.optimizePaths2();     // optimizes paths of the current best solution
 
   // save policy
   std::stringstream ss;

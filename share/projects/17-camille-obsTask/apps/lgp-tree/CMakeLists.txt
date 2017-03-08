@@ -6,6 +6,12 @@ project(${project_name})
 add_definitions(-std=c++11)
 
 #################################
+# Locate dependencies
+#################################
+
+find_package(Boost)
+
+#################################
 # Locate MLR libs
 #################################
 

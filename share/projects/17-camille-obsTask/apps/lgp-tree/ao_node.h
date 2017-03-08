@@ -132,6 +132,7 @@ private:
 
   //mlr::Array< mlr::KinematicWorld > getPossibleKinematicWorlds() const;
 //  mlr::KinematicWorld getStartKinematic() const;
+  mlr::KinematicWorld buildStartOptiKinematic( AONode * start ) const;
 
 private:
   AONode * parent_;
