@@ -54,6 +54,13 @@ void move(){
 }
 
 void move_debug(){
+
+  {
+    mlr::KinematicWorld kin;
+    kin.init( "debug-kin-parsing.kin" );
+    kin.watch();
+    kin.write( std::cout );
+  }
   
   KOMO komo;
   //komo.setConfigFromFile();
@@ -118,7 +125,7 @@ void move_debug(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  move();
+  move_debug();
 
   return 0;
 }

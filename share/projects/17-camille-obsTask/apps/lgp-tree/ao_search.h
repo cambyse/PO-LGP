@@ -13,15 +13,14 @@ public: // public methods
   void prepareFol( const std::string & folDescription );
   void prepareKin( const std::string & kinDescription );
   void prepareTree();
-  void prepareDisplay(){ threadOpenModules( true ); }
+  void prepareDisplay();
 
   void optimizePoses();
   void optimizeSequences();
   void optimizePaths();
   void optimizePaths2();
 
-
-  void updateDisplay( const WorldID & w );
+  void updateDisplay( const WorldID & w, bool poses, bool seqs, bool paths );
 
 private:
   void optimizePoses( AONode * );
@@ -59,10 +58,9 @@ private:
   const KOMOFactory & komoFactory_;
 
   // display
-  OrsPathViewer poseView_;
-  OrsPathViewer seqView_;
-  OrsPathViewer pathView_;
-  OrsPathViewer pathView2_;
+  mlr::Array< std::shared_ptr< OrsPathViewer > > poseViews_;
+  mlr::Array< std::shared_ptr< OrsPathViewer > > seqViews_;
+  mlr::Array< std::shared_ptr< OrsPathViewer > > pathViews_;
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

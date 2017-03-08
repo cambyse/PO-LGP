@@ -109,7 +109,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , komoPoseProblems_( kins.d0 )
   , komoSeqProblems_( kins.d0 )
   , komoPathProblems_( kins.d0 )
-  , komoPathProblems2_( kins.d0 )
+  //, komoPathProblems2_( kins.d0 )
   , path2Configurations_( kins.d0 )
   , id_( 0 )
 {
@@ -126,6 +126,18 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
     effKinematics_( w ) = mlr::KinematicWorld( * startKinematics_( w ) );
     effKinematicsPaths2areSet_( w ) = false;
   }
+
+  std::size_t s = 0;
+
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      s++;
+    }
+  }
+
+  supportSize_ = s;
 }
 
 /// child node creation
@@ -157,7 +169,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , komoPoseProblems_( parent->komoPoseProblems_.d0   )
   , komoSeqProblems_( parent->komoSeqProblems_.d0     )
   , komoPathProblems_( parent->komoPathProblems_.d0   )
-  , komoPathProblems2_( parent->komoPathProblems2_.d0 )
+  //, komoPathProblems2_( parent->komoPathProblems2_.d0 )
   , path2Configurations_( parent->path2Configurations_.d0 )
 {
   // update the states
@@ -206,6 +218,19 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   // update time
   auto ls = getWitnessLogicAndState();
   time_ = parent_->time_ + ls.logic->lastStepDuration;
+
+  // update support size
+  std::size_t s = 0;
+
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      s++;
+    }
+  }
+
+  supportSize_ = s;
 
   // change this
   nodeNumber++;
@@ -479,10 +504,10 @@ void AONode::solvePoseProblem()
   }
 
   // check if all worlds lead to same agent sequence of positions
-  bool sameTrajectories = sameAgentTrajectories( komoPoseProblems_ );
+//  bool sameTrajectories = sameAgentTrajectories( komoPoseProblems_ );
 
-  if( ! sameTrajectories )
-    labelInfeasible();
+//  if( ! sameTrajectories )
+//    labelInfeasible();
 
   // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
   auto komo = getWitnessPoseKomo();
@@ -581,10 +606,10 @@ void AONode::solveSeqProblem()
   }
 
   // check if all worlds lead to same agent sequence of positions
-  bool sameTrajectories = sameAgentTrajectories( komoSeqProblems_ );
+//  bool sameTrajectories = sameAgentTrajectories( komoSeqProblems_ );
 
-  if( ! sameTrajectories )
-    labelInfeasible();
+//  if( ! sameTrajectories )
+//    labelInfeasible();
 
   // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
   auto komo = getWitnessSeqKomo();
@@ -652,10 +677,10 @@ void AONode::solvePathProblem( uint microSteps )
   }
 
   // check if all worlds lead to same agent sequence of positions
-  bool sameTrajectories = sameAgentTrajectories( komoPathProblems_ );
+//  bool sameTrajectories = sameAgentTrajectories( komoPathProblems_ );
 
-  if( ! sameTrajectories )
-    labelInfeasible();
+//  if( ! sameTrajectories )
+//    labelInfeasible();
 
   // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
   auto komo = getWitnessPathKomo();
@@ -672,84 +697,85 @@ void AONode::solvePathProblem( uint microSteps )
   double cost = result.get<double>({"total","sqrCosts"});
   double constraints = result.get<double>({"total","constraints"});
 
-  if( ! path_.N || cost < pathCost_ )
-  {
-    pathCost_ = cost;
-    pathConstraints_ = constraints;
-    pathFeasible_ = (constraints<.5);
-    path_ = komo->x;
-  }
+  if( ! path_.N || cost < pathCost_ )     //
+  {                                       //
+    pathCost_ = cost;                     //
+    pathConstraints_ = constraints;       //
+    pathFeasible_ = (constraints<.5);     //
+    path_ = komo->x;                      //
+  }                                       //
 
   if( ! pathFeasible_ )
     labelInfeasible();
 }
 
-void AONode::solvePathProblem2( uint microSteps, AONode * start )
+/*void AONode::solvePathProblem2( uint microSteps, AONode * start )
 {
   //-- collect 'path nodes'
   AONodeL treepath = getTreePathFrom( start );
 
-  //std::cout << "from:" << start->id_ << " to:" << id_ << std::endl;
+  std::cout << "from:" << start->id_ << " to:" << id_ << std::endl;
 
   // build a kinematic world onto  which to optimize
-//  {
-//    auto kin = buildStartOptiKinematic( start );
-//  }
+  auto kin = buildStartOptiKinematic( start );
 
-  // solve problem for all ( relevant ) worlds
+  // create komo
+  auto komo = komoFactory_.createKomo();
+  komoPathProblems2_ = komo; // we keep a shared pointer on komo, if not, the kin worlds copied from komo become invalid once the komo has been destroyed, BUG ?
+
+  // set-up komo
+  komo->setModel( kin );
+  komo->setTiming( time_ - start->time_, microSteps, 5., 2, false );
+  komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+  komo->setSquaredQAccelerations();
+  komo->setSquaredFixSwitchedObjects(-1., -1., 1e3);
+
+  //std::cout << "---" << std::endl;
+
+  for( auto node:treepath ){
+    double t = (node->parent_?node->parent_->time_ - start->time_:0.);
+    //std::cout << "t:" << t << std::endl;
+    auto ls = node->getWitnessLogicAndState();
+    komo->groundTasks( t, *ls.state );
+  }
+  DEBUG( FILE("z.fol") <<fol; )
+      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      komo->reset();
+  try{
+    komo->run();
+  } catch(const char* msg){
+    cout << "KOMO FAILED: " << msg <<endl;
+  }
+
+  // apply trajectory on all other kin
+  //komo->MP->configurations.last()->watch();
   for( auto w = 0; w < startKinematics_.d0; ++w )
   {
     if( bs_( w ) > eps() )
     {
-      mlr::KinematicWorld kin = start->isRoot() ? *startKinematics_( w ) : start->effKinematicsPaths2_( w );
-      //kin.watch();
+      path2Configurations_( w ).append( start->path2Configurations_( w ) );           // append old configurations
+      //path2Configurations_( w ).append( komo->MP->configurations );
 
-      if( ! start->isRoot() )
-        CHECK( start->effKinematicsPaths2areSet_( w ), "" );
-
-      // create komo
-      auto komo = komoFactory_.createKomo();
-      komoPathProblems2_( w ) = komo;
-
-      // set-up komo
-      komo->setModel( kin );
-      komo->setTiming( time_ - start->time_, microSteps, 5., 2, false );
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQAccelerations();
-      komo->setSquaredFixSwitchedObjects(-1., -1., 1e3);
-
-      //std::cout << "---" << std::endl;
-
-      for( auto node:treepath ){
-        double t = (node->parent_?node->parent_->time_ - start->time_:0.);
-        //std::cout << "t:" << t << std::endl;
-        komo->groundTasks( t, *node->folStates_( w ) );
+      mlr::Array< mlr::KinematicWorld* > configurations( komo->MP->configurations.N );
+      for( auto s = 0; s < komo->MP->configurations.N; ++s )
+      {
+        auto witness = start->isRoot() ? startKinematics_( w ).get() : start->path2Configurations_( w ).last();
+        configurations( s ) = revertToRealKinematic( w, komo->MP->configurations( s ) );
       }
-      DEBUG( FILE("z.fol") <<fol; )
-      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      komo->reset();
-      try{
-        komo->run();
-      } catch(const char* msg){
-        cout << "KOMO FAILED: " << msg <<endl;
-      }
-
-      //komo->MP->configurations.last()->watch();
-
-      path2Configurations_( w ).append( start->path2Configurations_( w ) );           //
-      path2Configurations_( w ).append( komo->MP->configurations.sub( 1, -1 ) );      //
+      path2Configurations_( w ).append( configurations );
     }
   }
 
-  // check if all worlds lead to same agent sequence of positions
-  bool sameTrajectories = sameAgentTrajectories( komoPathProblems2_ );
-
-  if( ! sameTrajectories )
-    labelInfeasible();
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      //path2Configurations_( w ).append( start->path2Configurations_( w ) );           //
+      //path2Configurations_( w ).append( komo->MP->configurations.sub( 1, -1 ) );      //
+    }
+  }
 
   // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-  auto komo = getWitnessPathKomo2();                                //
-
   COUNT_evals += komo->opt->newton.evals;
   COUNT_kin += mlr::KinematicWorld::setJointStateCount;
   COUNT_pathOpt++;
@@ -778,7 +804,7 @@ void AONode::solvePathProblem2( uint microSteps, AONode * start )
   {
     if( bs_( w ) > eps() )
     {
-      effKinematicsPaths2_( w ) = *komoPathProblems2_( w )->MP->configurations.last();
+      effKinematicsPaths2_( w ) = *komo->MP->configurations.last();
       effKinematicsPaths2areSet_( w ) = true;
     }
   }
@@ -788,7 +814,7 @@ void AONode::solvePathProblem2( uint microSteps, AONode * start )
   {
     if( bs_( w ) > eps() )
     {
-      for( mlr::KinematicSwitch *sw: komoPathProblems2_( w )->MP->switches )
+      for( mlr::KinematicSwitch *sw: komo->MP->switches )
       {
         //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
         if( sw->timeOfApplication>=2 ) sw->apply( effKinematicsPaths2_( w ) );
@@ -798,12 +824,11 @@ void AONode::solvePathProblem2( uint microSteps, AONode * start )
         effKinematicsPaths2_( w ).getJointState();
     }
   }
-}
+}*/
 
 void AONode::labelInfeasible()
 {
   // how to backtrack?
-
 }
 
 mlr::Array< AONode * > AONode::getTreePath()
@@ -833,54 +858,6 @@ mlr::Array< AONode * > AONode::getTreePathFrom( AONode * start )
   } while ( ( node != start ) && node );
 
   return subPath;
-}
-
-bool AONode::sameAgentTrajectories( const mlr::Array< ExtensibleKOMO::ptr > & komos )
-{
-  bool sameAgentTrajectories = true;
-  mlr::Array< arr >  agentConfigurations;
-  const double gentleEps = 0.001;
-  for( auto w = 1; w < komos.d0; ++w )
-  {
-    if( bs_( w ) > eps() )
-    {
-      auto configurations = komos( w )->MP->configurations;
-      auto qA = startKinematics_( w )->q_agent;
-      auto nA = startKinematics_( w )->getJointStateDimension( qA );
-
-      // copy first config
-      if( agentConfigurations.d0 == 0 )
-      {
-        agentConfigurations = mlr::Array< arr >( configurations.d0 );
-
-        for( auto s = 0; s < configurations.d0; ++s )
-        {
-          agentConfigurations( s ) = arr( nA );
-
-          for( auto i = 0; i < nA; ++i )
-          {
-            agentConfigurations( s )( i ) = configurations( s )->q( qA + i );
-          }
-        }
-      }
-      // if we allready have a ref, we compare
-      else
-      {
-        for( auto s = 0; s < agentConfigurations.d0; ++s )
-        {
-          for( auto i = 0; i < nA; ++i )
-          {
-            double refVal     = agentConfigurations( s )( i );
-            double checkedVal = configurations( s )->q( qA + i );
-            //std::cout << "refVal:" << refVal << " checkVal:" << checkedVal << std::endl;
-            sameAgentTrajectories = sameAgentTrajectories && ( fabs( refVal - checkedVal ) < gentleEps );
-            //if( !sameAgentConfigurations )
-            //  std::cout << "different conf!!" << std::endl;
-          }
-        }
-      }
-    }
-  }
 }
 
 uint AONode::getPossibleActionsNumber() const
@@ -935,28 +912,77 @@ std::string AONode::actionStr( uint a ) const
   return ss.str();
 }
 
-mlr::KinematicWorld AONode::buildStartOptiKinematic( AONode * start ) const
+struct KinFact
+{
+  std::string name;
+  std::string fact;
+};
+
+bool operator< ( const KinFact & lhs, const KinFact & rhs )
+{
+  auto hlhs = std::hash<std::string>()( lhs.name ) ^ std::hash<std::string>()( lhs.fact );
+  auto hrhs = std::hash<std::string>()( rhs.name ) ^ std::hash<std::string>()( rhs.fact );
+
+  return hlhs < hrhs;
+}
+
+std::set< KinFact > getKinFactIntersection( const std::vector< std::set< KinFact > > & factList )
+{
+  std::set< KinFact > intersection;
+  bool firstInterSet = false;
+  for( auto facts : factList )
+  {
+    if( facts.size() > 0 )
+    {
+      if( ! firstInterSet )
+      {
+        intersection = facts;
+        firstInterSet = true;
+      }
+      else
+      {
+        std::set< KinFact > inter;
+        std::set_intersection( intersection.begin(), intersection.end(),
+                               facts.begin(), facts.end(),
+                               std::inserter( inter, inter.begin() ) );
+        intersection = inter;
+      }
+    }
+  }
+
+  return intersection;
+}
+
+std::set< KinFact > getDifferentiatingFacts( const std::set< KinFact > & intersection, const std::set< KinFact > & facts )
+{
+  std::set< KinFact > differenciatingFacts;
+  std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
+                       std::inserter( differenciatingFacts, differenciatingFacts.begin() ) );
+
+  return differenciatingFacts;
+}
+
+/*mlr::KinematicWorld AONode::buildStartOptiKinematic( AONode * start ) const
 {
   // get carriage return symbol
   std::stringstream _ss; _ss << std::endl;
   const char carr = *_ss.str().c_str();
 
-  struct KinFact
-  {
-    std::string name;
-    std::string fact;
-  };
+  // gathers the list of facts for each world
+  std::vector< std::set< KinFact > > bodiesList( startKinematics_.d0 );
+  std::vector< std::set< KinFact > > shapesList( startKinematics_.d0 );
+  std::vector< std::set< KinFact > > jointsList( startKinematics_.d0 );
+  std::vector< std::map< std::string, KinFact > > bodiesMap( startKinematics_.d0 );
+  std::vector< std::map< std::string, KinFact > > shapesMap( startKinematics_.d0 );
 
-  std::list< std::set< KinFact > > bodiesList;
-  std::list< std::set< KinFact > > shapesList;
-  std::list< std::set< KinFact > > jointsList;
   for( auto w = 0; w < startKinematics_.d0; ++w )
   {
     if( bs_( w ) > eps() )
     {
-      auto kin = start->isRoot() ? *startKinematics_( w ) : parent_->effKinematicsPaths2_( w );
+      auto kin = start->isRoot() ? *startKinematics_( w ) : start->effKinematicsPaths2_( w );
 
       std::set< KinFact > bodiesFacts;
+      std::map< std::string, KinFact > bodiesFactsMap;
       for( auto b: kin.bodies )
       {
         std::stringstream name;
@@ -964,13 +990,18 @@ mlr::KinematicWorld AONode::buildStartOptiKinematic( AONode * start ) const
 
         name << b->name;
 
-        fact <<"body " <<b->name <<" { ";
+        if (b->name.N) fact <<"body " <<b->name <<" { ";
         b->write(fact);  fact <<" }\n";
 
-        bodiesFacts.insert( { name.str(), fact.str() } );
+        KinFact kf( { name.str(), fact.str() } );
+        bodiesFacts.insert( kf );
+        bodiesFactsMap[ kf.name ] = kf;
       }
+      bodiesList[ w ] = bodiesFacts;
+      bodiesMap[ w ]  = bodiesFactsMap;
 
       std::set< KinFact > shapesFacts;
+      std::map< std::string, KinFact > shapesFactsMap;
       for( auto s: kin.shapes )
       {
         std::stringstream name;
@@ -983,8 +1014,12 @@ mlr::KinematicWorld AONode::buildStartOptiKinematic( AONode * start ) const
         fact <<"(" <<(s->body?(char*)s->body->name:"") <<"){ ";
         s->write(fact);  fact <<" }\n";
 
-        shapesFacts.insert( { name.str(), fact.str() } );
+        KinFact kf( { name.str(), fact.str() } );
+        shapesFacts.insert(kf );
+        shapesFactsMap[ kf.name ] = kf;
       }
+      shapesList[ w ] =  shapesFacts;
+      shapesMap[ w ]  = shapesFactsMap;
 
       std::set< KinFact > jointsFacts;
       for( auto j: kin.joints )
@@ -1001,130 +1036,194 @@ mlr::KinematicWorld AONode::buildStartOptiKinematic( AONode * start ) const
 
         jointsFacts.insert( { name.str(), fact.str() } );
       }
+      jointsList[ w ] = jointsFacts;
     }
   }
-  // build the set of facts of each worlds
-  /*std::list< std::set< std::string > > kinFactsList;
-  for( auto w = 0; w < startKinematics_.d0; ++w )
+
+  // compute the fact intersection
+  std::set< KinFact > bodiesFactsIntersection = getKinFactIntersection( bodiesList );
+  std::set< KinFact > shapesFactsIntersection = getKinFactIntersection( shapesList );
+  std::set< KinFact > jointsFactsIntersection = getKinFactIntersection( jointsList );
+
+  // build world with intersection
+  std::stringstream ss;
+  for( auto fact : bodiesFactsIntersection )
+  {
+    ss << fact.fact << std::endl;
+  }
+
+  for( auto fact : shapesFactsIntersection )
+  {
+    ss << fact.fact << std::endl;
+  }
+
+  for( auto fact : jointsFactsIntersection )
+  {
+    ss << fact.fact << std::endl;
+  }
+
+  // add each fact not in the intersection as an obstacle
+  std::string obstaclePrefix = "__obstacle_";
+  int obstacleId = 0;
+
+  for( auto w = 0; w < bodiesList.size(); ++w )
   {
     if( bs_( w ) > eps() )
     {
-      auto kin = start->isRoot() ? *startKinematics_( w ) : parent_->effKinematicsPaths2_( w );
-
-      std::stringstream ss;
-      kin.write( ss );
-
-      std::set< std::string > kinFacts;
-      std::istringstream f( ss.str() );
-      std::string fact;
-      while ( getline( f, fact, carr ) )
+      std::set< KinFact > differentiatingBodiesFacts = getDifferentiatingFacts( bodiesFactsIntersection, bodiesList[ w ] );
+      for( auto bodyFact : differentiatingBodiesFacts  )
       {
-        kinFacts.insert( fact );
+        // get the corresponding shape fact
+        auto shapeFact = shapesMap[ w ][ bodyFact.name ];
+
+        // get the corresponding joints facts
+        std::list < KinFact > jointsFacts;
+        for( auto jointFact : jointsList[ w ] )
+        {
+          if( jointFact.fact.size() > 0 && jointFact.fact.find( bodyFact.name ) != std::string::npos )
+          {
+            jointsFacts.push_back( jointFact );
+          }
+        }
+
+        //---build alternative facts
+        std::string alternativeName = obstaclePrefix + std::to_string( obstacleId ) + "__from__" + bodyFact.name + "__world_" + std::to_string( w );
+
+        // body alternative fact
+        std::string bodyAlternativeFact = bodyFact.fact;
+        boost::algorithm::replace_all( bodyAlternativeFact, bodyFact.name, alternativeName );
+
+        // shape alternative fact
+        std::string shapeAlternativeFact = shapeFact.fact;
+        boost::algorithm::replace_all( shapeAlternativeFact, shapeFact.name, alternativeName );
+
+        // joints alternative facts
+        std::list < std::string > jointsAlternativeFacts;
+        for( auto jointFact : jointsFacts )
+        {
+          std::string jointAlternativeFact = jointFact.fact;
+          boost::algorithm::replace_all( jointAlternativeFact, jointFact.name, alternativeName );
+          jointsAlternativeFacts.push_back( jointAlternativeFact );
+        }
+
+        // insert body laternative fact
+        ss << bodyAlternativeFact;
+        ss << shapeAlternativeFact;
+        for( auto jointFact : jointsAlternativeFacts )
+        {
+          //std::cout << "jointFact:" << jointFact;
+          ss << jointFact;
+        }
+
+        //
+        obstacleId++;
       }
-
-      kinFactsList.push_back( kinFacts );
-    }
-  }
-
-  // get the intersection of all the sets ( the observable kinematic )
-  std::set< std::string > intersection = kinFactsList.front();
-  for( auto kinFacts = ++kinFactsList.begin(); kinFacts != kinFactsList.end(); ++kinFacts )
-  {
-    std::set< std::string > inter;
-    std::set_intersection( intersection.begin(), intersection.end(),
-                           kinFacts->begin(), kinFacts->end(),
-                           std::inserter( inter, inter.begin() ) );
-    intersection = inter;
-  }
-
-  // get facts not in the intersection
-  // get the fact not in intersection
-  std::list< std::set< std::string > > differenciatingFactsList;
-  for( auto kinFacts : kinFactsList )
-  {
-    std::set< std::string > differenciatingFacts;
-    std::set_difference( kinFacts.begin(), kinFacts.end(), intersection.begin(), intersection.end(),
-                         std::inserter( differenciatingFacts, differenciatingFacts.begin() ) );
-    differenciatingFactsList.push_back( differenciatingFacts );
-  }
-
-  //
-  std::stringstream ss;
-  std::string obstaclePrefix = "__obstacle";
-  int obstacleId = 0;
-  for( auto fact : intersection )
-  {
-    ss << fact << std::endl;
-  }
-
-  // add differenciatingFacts as obstacles
-  for( auto diffFacts : differenciatingFactsList )
-  {
-    for( auto fact : diffFacts )
-    {
-      // extract name
-      std::istringstream is( fact );
-      std::string type, name;
-      is >> type;
-      is >> name;
-
-      std::string newName = obstaclePrefix + std::to_string( obstacleId );
-      auto newFact = fact;
-      boost::algorithm::replace_all( newFact, name, newName );
-      ss << newFact << std::endl;
-
-      obstacleId++;
-
-      std::cout << newFact << std::endl;
     }
   }
 
   // build the graph of the intersection
+  //std::cout << "synthetized kin world:" << ss.str() << std::endl;
+
   Graph G;
   G.read( ss );
 
   mlr::KinematicWorld kin;
   kin.init( G );
-  kin.watch();*/
-//  std::set< std::string > intersection = outcomesToWorlds.begin()->first;
-//  for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
-//  {
-//    auto facts  = outcome->first;
-//    std::set< std::string > inter;
-//    std::set_intersection( intersection.begin(), intersection.end(),
-//                           facts.begin(), facts.end(),
-//                           std::inserter( inter, inter.begin() ) );
-//    intersection = inter;
-//  }
-  return mlr::KinematicWorld();
+  //kin.watch();
+
+  return kin;
 }
 
-//mlr::KinematicWorld AONode::getStartKinematic() const
-//{
-//  // temporary : here we should build a kin world containing only the intersection of the facts??
-//  // tmp camille
-//  mlr::KinematicWorld world;
+mlr::KinematicWorld * AONode::revertToRealKinematic( std::size_t w, mlr::KinematicWorld * optimized ) const
+{
+  mlr::KinematicWorld * reverted = new mlr::KinematicWorld();   // allocate here
+  reverted->copy( *optimized );
 
-//  // if the node is root
-//  if( isRoot() )
+  // filter bodies
+//  for( auto b : optimized->bodies )
 //  {
-//    world = *startKinematics_.first();
-//  }
-//  // else
-//  else
-//  {
-//    for( auto w = 0; w < effKinematics_.d0; ++w )
+//    std::stringstream ss;
+//    ss << b->name;
+//    auto name = ss.str();
+
+//    if( name.find( "__obstacle" ) != std::string::npos )
 //    {
-//      if( bs_( w ) > eps() )
-//      {
-//        world = parent_->effKinematics_( w );
-//        break;
-//      }
+//      // delete body
+//      // how??
+//      //reverted->
 //    }
 //  }
+//  std::stringstream ss;
+//  optimized->write( ss );
+//  Graph G;
+//  G.read( ss );
+//  optimized->init( G );
 
-//  return world;
-//}
+  /*auto factModifyer = [] ( const std::string& fact, std::list< std::string > & facts )
+  {
+    facts.push_back( fact );
+    // unobservable fact
+//    if( fact.find( "__obstacle" ) != std::string::npos ) // put as a keyword
+//    {
+//      //if(  )
+//    }
+//    else
+//    {
+//      facts.push_back( fact );
+//    }
+  };
+
+  std::list< std::string > facts;
+  for( auto b : optimized->bodies )
+  {
+    std::stringstream fact;
+    fact <<"body " <<b->name <<" { ";
+    b->write(fact);  fact <<" }\n";
+
+    factModifyer( fact.str(), facts );
+  }
+
+  for( auto s : optimized->shapes )
+  {
+    std::stringstream fact;
+
+    fact <<"shape ";
+    if(s->name.N) fact <<s->name <<' ';
+    fact <<"(" <<(s->body?(char*)s->body->name:"") <<"){ ";
+    s->write(fact);  fact <<" }\n";
+
+    factModifyer( fact.str(), facts );
+  }
+
+  for( auto j : optimized->joints )
+  {
+    std::stringstream fact;
+
+    fact <<"joint ";
+    if (j->name.N) fact <<j->name <<' ';
+    fact <<"(" <<j->from->name <<' ' <<j->to->name <<"){ ";
+    j->write(fact);  fact <<" }\n";
+
+    factModifyer( fact.str(), facts );
+  }
+
+  // build world
+  std::stringstream ss;
+  for( auto fact : facts )
+  {
+    ss << fact << std::endl;
+  }
+
+  //std::cout << ss.str() << std::endl;
+
+  Graph G;
+  G.read( ss );
+  reverted->init( G );
+  reverted->checkConsistency();
+  //reverted->watch();
+
+  return reverted;
+}*/
 
 //===========================================================================
 

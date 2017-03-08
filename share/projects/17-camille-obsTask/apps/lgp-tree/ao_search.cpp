@@ -1,5 +1,7 @@
 #include "ao_search.h"
 
+#include <list>
+
 #include <Core/util.tpp>
 
 #include <Motion/komo.h>
@@ -14,10 +16,10 @@ static double eps() { return std::numeric_limits< double >::epsilon(); }
 //===========================================================================
 AOSearch::AOSearch( const KOMOFactory & komoFactory )
   : komoFactory_( komoFactory )
-  , poseView_( "pose" , 1., -0   )
-  , seqView_ ("sequence", 1., -0 )
-  , pathView_( "path", .1, -1    )
-  , pathView2_( "path2", .1, -1  )
+//  , poseView_( "pose" , 1., -0   )
+//  , seqView_ ("sequence", 1., -0 )
+//  , pathView_( "path", .1, -1    )
+//  , pathView2_( "path2", .1, -1  )
 {
 
 }
@@ -136,6 +138,22 @@ void AOSearch::prepareTree()
   root_ = new AONode( folWorlds_, kinematics_, bs_, komoFactory_ );
 }
 
+void AOSearch::prepareDisplay()
+{
+  for( auto w = 0; w < folWorlds_.d0; ++w )
+  {
+    std::string namePose = std::string( "pose" ) + std::string( "-world-" ) + std::to_string( w );
+    std::string nameSeq =  std::string( "seq" ) + std::string( "-world-" ) + std::to_string( w );
+    std::string namePath = std::string( "path" ) + std::string( "-world-" ) + std::to_string( w );
+
+    poseViews_.append( std::make_shared< OrsPathViewer >( namePose.c_str(),  1, -0   ) );
+    seqViews_.append( std::make_shared< OrsPathViewer >( nameSeq.c_str(),    1, -0   ) );
+    pathViews_.append( std::make_shared< OrsPathViewer >( namePath.c_str(), .1, -1   ) );
+  }
+
+  threadOpenModules( true );
+}
+
 void AOSearch::optimizePoses()
 {
   optimizePoses( root_ );
@@ -161,12 +179,12 @@ void AOSearch::optimizePaths()
   }
 }
 
-void AOSearch::optimizePaths2()
+/*void AOSearch::optimizePaths2()
 {
   optimizePaths2( root_, root_ );
-}
+}*/
 
-void AOSearch::optimizePaths2( AONode * node, AONode * start )
+/*void AOSearch::optimizePaths2( AONode * node, AONode * start )
 {
   if( node->isTerminal() )
   {
@@ -185,7 +203,7 @@ void AOSearch::optimizePaths2( AONode * node, AONode * start )
       optimizePaths2( c, start );
     }
   }
-}
+}*/
 
 void AOSearch::optimizePoses( AONode * node )
 {
@@ -197,24 +215,60 @@ void AOSearch::optimizePoses( AONode * node )
   }
 }
 
-void AOSearch::updateDisplay( const WorldID & w )
+void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool paths )
 {
   // get the terminal node for the world w, in the case of stochaticity
-  AONode * node = getTerminalNode( w );
+//  AONode * node = getTerminalNode( ww );
 
-  if( node->komoPoseProblems()( w.id() ) && node->komoPoseProblems()( w.id() )->MP->configurations.N )
-    poseView_.setConfigurations(node->komoPoseProblems()( w.id() )->MP->configurations );
+//  if( node->komoPoseProblems()( ww.id() ) && node->komoPoseProblems()( ww.id() )->MP->configurations.N )
+//    poseView_.setConfigurations(node->komoPoseProblems()( ww.id() )->MP->configurations );
 
-  if( node->komoSeqProblems()( w.id() ) && node->komoSeqProblems()( w.id() )->MP->configurations.N )
-    seqView_.setConfigurations(node->komoSeqProblems()( w.id() )->MP->configurations );
+//  if( node->komoSeqProblems()( ww.id() ) && node->komoSeqProblems()( ww.id() )->MP->configurations.N )
+//    seqView_.setConfigurations( node->komoSeqProblems()( ww.id() )->MP->configurations );
 
-  if( node->komoPathProblems()( w.id() ) && node->komoPathProblems()( w.id() )->MP->configurations.N )
-    pathView_.setConfigurations( node->komoPathProblems()( w.id() )->MP->configurations );
-  else pathView_.clear();
+  std::list< std::size_t > worldIds;
 
-  if( node->komoPathProblems2()( w.id() ) && node->komoPathProblems2()( w.id() )->MP->configurations.N )
-    pathView2_.setConfigurations( node->path2Configurations()( w.id() ) );
-  else pathView2_.clear();
+  if( ww.id() == -1 )
+  {
+    for ( auto w = 0; w < folWorlds_.d0; ++w )
+    {
+      worldIds.push_back( w );
+    }
+  }
+  else
+  {
+    worldIds.push_back( ww.id() );
+  }
+
+  for( auto w : worldIds )
+  {
+    AONode * node = getTerminalNode( WorldID( w ) );
+
+    if( poses && node->komoPoseProblems()( w ) && node->komoPoseProblems()( w )->MP->configurations.N )
+      poseViews_( w )->setConfigurations( node->komoPoseProblems()( w )->MP->configurations );
+    else poseViews_( w )->clear();
+
+    if( seqs && node->komoSeqProblems()( w ) && node->komoSeqProblems()( w )->MP->configurations.N )
+      seqViews_( w )->setConfigurations( node->komoSeqProblems()( w )->MP->configurations );
+    else seqViews_( w )->clear();
+
+    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
+      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
+    else pathViews_( w )->clear();
+  }
+
+//  if( node->path2Configurations()( w.id() ).N )
+//    pathView2_.setConfigurations( node->path2Configurations()( w.id() ) );
+//  else pathView2_.clear();
+
+//  for( auto ww = 0; ww < folWorlds_.d0; ++ww )
+//  {
+//    //AONode * node = getTerminalNode( WorldID( ww ) );
+//    if( node->komoPathProblems()( ww ) && node->komoPathProblems()( ww )->MP->configurations.N )
+//      pathViews_( ww )->setConfigurations( node->komoPathProblems()( ww )->MP->configurations );
+//    else
+//      pathViews_( ww )->clear();
+//  }
 }
 
 mlr::Array< AONode * > AOSearch::getNodesToExpand() const

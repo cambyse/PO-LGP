@@ -358,9 +358,9 @@ void plan_AOS()
 
   // instanciate search tree
   AOSearch C( komoFactory );
-  C.prepareDisplay();
   C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   C.prepareKin("LGP-obs-kin-3.g");
+  C.prepareDisplay();
 
   //C.prepareFol("LGP-coop-fol.g");
   //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
@@ -403,7 +403,7 @@ void plan_AOS()
   C.optimizePaths();      // optimizes paths of the current best solution
 
   /// PATH OPTIMIZATION
-  C.optimizePaths2();     // optimizes paths of the current best solution
+  //C.optimizePaths2();   // optimizes paths of the current best solution
 
   // save policy
   std::stringstream ss;
@@ -417,7 +417,7 @@ void plan_AOS()
   fs.close();
 
   // display
-  C.updateDisplay( WorldID( 2 ) );
+  C.updateDisplay( WorldID( -1 ), false, false, true );
   mlr::wait( 30 );
 
   // gathers the terminal nodes of the current solution and optimize a pose

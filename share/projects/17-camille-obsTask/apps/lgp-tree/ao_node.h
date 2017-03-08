@@ -95,7 +95,7 @@ public:
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return komoPoseProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return komoSeqProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return komoPathProblems_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems2() const { return komoPathProblems2_; }
+  std::shared_ptr<ExtensibleKOMO> komoPathProblems2() const { return komoPathProblems2_; }
   mlr::Array< WorldL > path2Configurations() const { return path2Configurations_; }
 
   AONodeL getTreePath();
@@ -108,7 +108,6 @@ public:
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
-  bool sameAgentTrajectories( const mlr::Array< ExtensibleKOMO::ptr > & komos );
   uint getPossibleActionsNumber() const;
   LogicAndState getWitnessLogicAndState() const;
   template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
@@ -125,7 +124,7 @@ private:
   ExtensibleKOMO::ptr getWitnessPoseKomo()     const { return getWitnessElem( komoPoseProblems_ ); }
   ExtensibleKOMO::ptr getWitnessSeqKomo()      const { return getWitnessElem( komoSeqProblems_ );  }
   ExtensibleKOMO::ptr getWitnessPathKomo()     const { return getWitnessElem( komoPathProblems_ ); }
-  ExtensibleKOMO::ptr getWitnessPathKomo2()    const { return getWitnessElem( komoPathProblems2_ ); }
+  //ExtensibleKOMO::ptr getWitnessPathKomo2()    const { return getWitnessElem( komoPathProblems2_ ); }
 
   mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
@@ -133,6 +132,7 @@ private:
   //mlr::Array< mlr::KinematicWorld > getPossibleKinematicWorlds() const;
 //  mlr::KinematicWorld getStartKinematic() const;
   mlr::KinematicWorld buildStartOptiKinematic( AONode * start ) const;
+  mlr::KinematicWorld* revertToRealKinematic( std::size_t w, mlr::KinematicWorld * optimized ) const;
 
 private:
   AONode * parent_;
@@ -149,6 +149,7 @@ private:
 
   double pHistory_;
   arr bs_;
+  std::size_t supportSize_;
 
   int a_;                                    ///< action id that leads to this node
   mlr::Array< FOL_World::Handle > decisions_;///< actions leading to this node ( one for each logic )
@@ -198,7 +199,7 @@ private:
   double pathCost2_, pathConstraints2_;
   bool pathFeasible2_;
   arr path2_;
-  mlr::Array< ExtensibleKOMO::ptr > komoPathProblems2_;
+  ExtensibleKOMO::ptr komoPathProblems2_;
   mlr::Array< WorldL > path2Configurations_;
 
   //--
