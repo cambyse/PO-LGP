@@ -88,13 +88,17 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     pos.resetStatus();
     R.wait({&pos});
 
+    pos.stop();//don't control obj position when closing gripper
+    look.stop();
+    ws.stop();
+
     //close gripper
     gripSize = width+.015;
     gripperR.set()->PD().setTarget( {gripSize} );
     gripper2R.set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
     gripperR.resetStatus();
     gripper2R.resetStatus();
-    R.wait({&pos, &gripperR, &gripper2R});
+    R.wait({&gripperR, &gripper2R});
   }
 
   {
@@ -175,6 +179,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName){
     //switch
     pos.stop();//don't control obj position during kinematic switch
     look.stop();
+    ws.stop();
     R.kinematicSwitch(objName, ontoName);
 
     //open gripper
@@ -246,9 +251,9 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1});
     auto al1 = R.newCtrlTask();
     if (deltaTheta==0){
-      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
-    } else {
       al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+    } else {
+      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
     }
     al1.task->PD().setGainsAsNatural(1., .9);
     al1.start();
@@ -257,11 +262,13 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
 
     //lowering
     pos.set()->PD().setTarget( ARR(deltaX,deltaY,above) );
+    pos.resetStatus();
     R.wait({&pos});
 
     //switch
     pos.stop();//don't control obj position during kinematic switch
     look.stop();
+    ws.stop();
     R.kinematicSwitch(objName, ontoName);
 
     //open gripper
