@@ -84,7 +84,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     R.wait({&pos, &gripperR, &gripper2R, &up});
 
     //lowering
-    pos.set()->PD().setTarget( ARR(0,0,above-.03) );
+    pos.set()->PD().setTarget( ARR(0,0,above-.01) );
     pos.resetStatus();
     R.wait({&pos});
 
@@ -93,12 +93,13 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     ws.stop();
 
     //close gripper
-    gripSize = width+.015;
+    gripSize = width-.01;//+.015;
     gripperR.set()->PD().setTarget( {gripSize} );
     gripper2R.set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
     gripperR.resetStatus();
     gripper2R.resetStatus();
     R.wait({&gripperR, &gripper2R});
+    mlr::wait(.5);
   }
 
   {

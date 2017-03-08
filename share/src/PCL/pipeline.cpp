@@ -73,7 +73,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   pass.filter (*z_filtered);
   pass.setIndices (z_filtered);
   pass.setFilterFieldName ("x");
-  pass.setFilterLimits (0, 1.);
+  pass.setFilterLimits (.5, 1.);
 #if 0
   pass.filter(*xz_filtered);
 
@@ -93,6 +93,8 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   conv_PclCloud_ArrCloud(mesh.V, meshRgb, *filtered);
   copy(mesh.C, meshRgb);   mesh.C /= 255.;
   percepts.append(new PercMesh(mesh));
+
+//  return percepts;
 
   //-- detect main plane
   Pcl::Ptr hull(new Pcl);
@@ -124,7 +126,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   double thick=.04;
   T.addRelativeTranslation(rect.center.x, rect.center.y, -.5*thick);
   T.addRelativeRotationDeg(rect.angle, 0.,0.,1.);
-  percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick) ));
+  percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick), meanCol));
 
   if(true){
     //-- cluster the remains
@@ -158,7 +160,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       copy(X, mesh.V);
       X.delColumns(2);
       cv::RotatedRect rect = cv::minAreaRect( conv_Arr2CvRef(X) );
-      if(rect.size.height>1.1*rect.size.width){
+      if(rect.size.height < .85*rect.size.width){
         rect.angle += 90.;
         double x = rect.size.height;
         rect.size.height = rect.size.width;
@@ -169,7 +171,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       double thick=.04;
       T.addRelativeTranslation(rect.center.x, rect.center.y, -.5*thick);
       T.addRelativeRotationDeg(rect.angle, 0.,0.,1.);
-      percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick) ));
+      percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick), meanCol));
 
 //      //generate a Percept
 //      conv_PclCloud_ArrCloud(mesh.V, mesh.C, *hull);

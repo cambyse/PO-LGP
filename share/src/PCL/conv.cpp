@@ -57,6 +57,7 @@ Conv_arr_pcl::Conv_arr_pcl(const char* cloud_name, const char* pts_name, const c
     cloud(this, cloud_name),
     pts(this, pts_name),
     rgb(this, rgb_name, true){
+  kinectColorBGRSwap = mlr::getParameter<bool>("kinectColorBGRSwap", false);
   threadOpen();
 }
 
@@ -67,6 +68,7 @@ Conv_arr_pcl::~Conv_arr_pcl(){
 void Conv_arr_pcl::step(){
   copyPts = pts.get();
   copyRgb = rgb.get();
+  if(kinectColorBGRSwap) swap_RGB_BGR(copyRgb);
   if(!copyPts.N || copyRgb.N!=copyRgb.N) return;
   conv_ArrCloud_PclCloud( cloud.set(), copyPts, copyRgb );
 }

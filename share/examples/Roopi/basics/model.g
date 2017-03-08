@@ -19,7 +19,7 @@ joint (table obj1) { from=<T t(0 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }
 body obj2 { size=[.1 .1 .2 .02] type=9 X=<T t(0 -1.2 .6) t(.3 .3 .02) t(0 0 .1) t(0 0 .01)> }
 joint (table obj2) { from=<T t(.3 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }
 
-shape objTarget(table2) { type=ST_marker rel=<T t(-.3 0 .02)> size=[.3 0 0 0] color=[1 .5 0] }
+shape objTarget(table2) { type=ST_marker rel=<T t(-.5 0 .03)> size=[.3 0 0 0] color=[1 .5 0] }
 
 body ball { X=<T t(-1 -1.2 1.)>, size=[.1 .1 .2 .02] type=9 }
 body ball2 { X=<T t(-1 -1.2 1.5)>, size=[.1 .1 .2 .02] type=9 }

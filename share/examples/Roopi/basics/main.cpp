@@ -2,6 +2,7 @@
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
 #include <RosCom/subscribeRosKinect.h>
+#include <RosCom/subscribeRosKinect2PCL.h>
 #include <Gui/viewer.h>
 #include <Perception/syncFiltered.h>
 #include <Kin/kinViewer.h>
@@ -32,7 +33,7 @@ void TEST(Basics) {
 
 void TEST(Gripper) {
   Roopi R(true);
-//  auto lim = R.newLimitAvoidance();
+  //  auto lim = R.newLimitAvoidance();
   Script_setGripper(R, LR_left, .08);
   Script_setGripper(R, LR_left, .0);
 }
@@ -44,7 +45,7 @@ void TEST(PhysX) {
     Roopi R(true);
 
     auto ph = R.newPhysX();
-//    ph.showInternalOpengl();
+    //    ph.showInternalOpengl();
 
     auto g = R.graspBox("obj2", LR_left);
 
@@ -94,7 +95,7 @@ void Prototyping(){
     }
 
     leftTarget->rel.pos.z -=.3;
-//    leftHand.set()->PD().setTarget( leftHand.y0 );
+    //    leftHand.set()->PD().setTarget( leftHand.y0 );
     rightHand.set()->PD().setTarget( rightHand.y0 );
     R.wait({&leftHand, &rightHand}, 3.); //with timeout
   } //scope check's previous kill
@@ -102,7 +103,7 @@ void Prototyping(){
 
 #if 0
   auto path = R.newJointPath(jointState, 5.0)
-               .start();
+              .start();
 
   R.wait({path}, 4.);
   if(path.getStatus()!=AS_done){
@@ -120,7 +121,7 @@ void Prototyping(){
   newControllerLog();
 
   *every act should ahve its own log (like LOG..)
-#endif
+    #endif
 }
 
 //===============================================================================
@@ -129,13 +130,13 @@ void TEST(PickAndPlace) {
   Roopi R(true);
 
   auto view = R.newCameraView();
-//  auto pcl = R.newKinect2Pcl();
-//  R.taskController().verbose(1);
+  //  auto pcl = R.newKinect2Pcl();
+  //  R.taskController().verbose(1);
 
   R.getTaskController().lockJointGroupControl("torso");
 
-//  auto ph = R.newPhysX();
-//  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
+  //  auto ph = R.newPhysX();
+  //  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
   R.collisions(true);
 
 #if 0
@@ -170,8 +171,8 @@ void focusWorkspace_pr2(Roopi& R, const char* objName){
 void TEST(PickAndPlace2) {
   Roopi R(true);
 
-//  auto view = R.newCameraView();
-//  R.taskController().verbose(1);
+  //  auto view = R.newCameraView();
+  //  R.taskController().verbose(1);
 
   focusWorkspace_pr2(R, "obj1");
   R.getTaskController().lockJointGroupControl("base");
@@ -231,26 +232,24 @@ void TEST(Perception) {
   OrsViewer v2("modelWorld");
 
   {
-//    auto L = R.lookAt("S3");
+    //    auto L = R.lookAt("S3");
     auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
 #if 0
     auto view = R.newCameraView(false);
 #else
     SubscribeRosKinect subKin;
+//    SubscribeRosKinect2PCL subKin;
     ImageViewer v1("kinect_rgb");
+    subKin.kinect_depth.waitForRevisionGreaterThan(10);
 #endif
 
-    mlr::wait(2.);
-
+    auto pcl = R.newPclPipeline(false);
+    auto filter = R.newPerceptionFilter(true);
+//    mlr::wait();
     {
-      auto pcl = R.newPclPipeline(false);
-      auto filter = R.newPerceptionFilter(true);
       SyncFiltered sync("modelWorld");
-
       mlr::wait(4.);
     }
-
-    look.stop();
 
     for(mlr::Shape *s:R.getK()->shapes){
       if(s->type==mlr::ST_box && s->name.startsWith("perc_")){
@@ -260,21 +259,34 @@ void TEST(Perception) {
     }
     cout <<"GRASPING " <<topMost->name <<endl;
 
-    {
-      auto L = R.lookAt(topMost->name);
-      mlr::wait();
-    }
-
-    R.getComPR2().stopSendingMotionToRobot(true);
-    {
-      auto home = R.home();
-      R.wait({&home});
-    }
+    look.stop();
+    auto L = R.lookAt(topMost->name);
+    mlr::wait();
   }
-//  auto home = R.home();
-//  R.wait({&home});
-  auto g=R.graspBox(topMost->name, LR_left);
-  R.wait({&g});
+
+//  R.getComPR2().stopSendingMotionToRobot(true);
+//  return;
+
+
+  {
+    auto g=R.graspBox(topMost->name, LR_left);
+    R.wait({&g});
+  }
+
+//    R.getComPR2().stopSendingMotionToRobot(true);
+
+  {
+    auto g=R.place(topMost->name, "objTarget");
+    R.wait({&g});
+  }
+
+//  Script_setGripper(R, LR_left, .12);
+
+  {
+    auto home = R.home();
+    R.wait({&home});
+  }
+
 
   R.reportCycleTimes();
 }
@@ -283,9 +295,9 @@ void TEST(Perception) {
 void TEST(Gamepad) {
   Roopi R(true);
 
-//  R.taskController().verbose(1);
+  //  R.taskController().verbose(1);
 
-//  R.taskController().lockJointGroupControl("base");
+  //  R.taskController().lockJointGroupControl("base");
 
   auto gamepad = R.newGamepadControl();
 
@@ -298,17 +310,17 @@ void TEST(Gamepad) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-//  testBasics();
-//  testGripper();
-//  testPhysX();
-//  Prototyping();
+  //  testBasics();
+  //  testGripper();
+  //  testPhysX();
+  //  Prototyping();
 
   testPerception();
 
-//  for(;;) testPickAndPlace();
+  //  for(;;) testPickAndPlace();
 
-//  /*for(;;)*/ testPickAndPlace2();
-//  testGamepad();
+  //  /*for(;;)*/ testPickAndPlace2();
+  //  testGamepad();
 
   return 0;
 }

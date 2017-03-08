@@ -21,6 +21,7 @@ struct Conv_arr_pcl : Thread{
   Access_typed<byteA> rgb;
   byteA copyRgb;
   arr copyPts;
+  bool kinectColorBGRSwap;
   Conv_arr_pcl(const char* cloud_name, const char* pts_name, const char* rgb_name);
   ~Conv_arr_pcl();
   void open(){}
