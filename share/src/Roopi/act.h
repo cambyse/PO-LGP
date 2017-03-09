@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/thread.h>
+#include <memory>
 
 enum ActStatus { AS_init=-1, AS_running, AS_done, AS_converged, AS_stalled };
 

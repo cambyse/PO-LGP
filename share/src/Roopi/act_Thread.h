@@ -9,4 +9,6 @@ struct Act_Thread : Act{
   ~Act_Thread(){ listDelete(threads); }
 
   template<class T> T* get(uint i=0){ return dynamic_cast<T*>(threads(0)); }
+
+  typedef std::shared_ptr<Act_Thread> Ptr;
 };

@@ -350,7 +350,7 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     mlr::Shape *ob = K().getShapeByName(objName);
     obj = ob->index;
     if(R.getRobot()=="pr2"){
-      mlr::Shape *sh = K().getShapeByName("pr2R");
+//      mlr::Shape *sh = K().getShapeByName("pr2R");
       workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
@@ -362,5 +362,5 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
     R.wait({&ws});
   }
-
+  return AS_done;
 }

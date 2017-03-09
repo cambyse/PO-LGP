@@ -7,11 +7,7 @@ shape leg2(table) { rel=<T t(-.25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=
 shape leg3(table) { rel=<T t( .25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
 shape leg4(table) { rel=<T t( .25 -.25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
 
-body table2{ type=0, X=<T t(1.2 0 .5)>, size=[1. 1. .04 .02], color=[.8 .5 .3] }
-shape leg1(table2) { rel=<T t(-.25 -.25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
-shape leg2(table2) { rel=<T t(-.25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
-shape leg3(table2) { rel=<T t( .25  .25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
-shape leg4(table2) { rel=<T t( .25 -.25 -.25)>  type=0 size=[.04 .04 .5 0] color=[0.5 0.3 0.15] }
+body table2{ type=0, X=<T t(.6 0 .5)>, size=[.6 .6 .04 .02], color=[.8 .5 .3] }
 
 body obj1 { size=[.1 .1 .2 .02] type=9 }
 joint (table obj1) { from=<T t(0 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }

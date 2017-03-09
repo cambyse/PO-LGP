@@ -28,10 +28,14 @@
 
 void detectPlane(pcl::ModelCoefficients::Ptr& plane_coefficients,
                  pcl::PointIndices::Ptr& inliers,
-                 Pcl::Ptr& hull,
-                 arr& meanPoint,
-                 arr& meanColor,
                  const Pcl::ConstPtr& input);
+void projectOnPlane(
+    Pcl::Ptr& hull,
+    arr& meanPoint,
+    arr& meanColor,
+    const pcl::ModelCoefficients::ConstPtr& plane_coefficients,
+    const pcl::PointIndices::ConstPtr& inliers,
+    const Pcl::ConstPtr& input);
 void filterPointsByIndex(Pcl::Ptr& output, const pcl::PointIndices::ConstPtr& inliers,  const Pcl::ConstPtr& input, bool positive);
 void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::ConstPtr& input);
 
@@ -73,15 +77,15 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   pass.filter (*z_filtered);
   pass.setIndices (z_filtered);
   pass.setFilterFieldName ("x");
-  pass.setFilterLimits (.5, 1.);
-#if 0
+  pass.setFilterLimits (.4, 1.);
+#if 1
   pass.filter(*xz_filtered);
 
   //-- voxel grid filter -> smaller resolution (small objects not recognized anymore!)
   pcl::VoxelGrid<PointT> sor;
   sor.setInputCloud (input);
   sor.setIndices(xz_filtered);
-  sor.setLeafSize (0.005f, 0.005f, 0.005f);
+  sor.setLeafSize (0.01f, 0.01f, 0.01f);
   sor.filter (*filtered);
 #else
   pass.filter(*filtered);
@@ -92,16 +96,17 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   byteA meshRgb;
   conv_PclCloud_ArrCloud(mesh.V, meshRgb, *filtered);
   copy(mesh.C, meshRgb);   mesh.C /= 255.;
-  percepts.append(new PercMesh(mesh));
+//  percepts.append(new PercMesh(mesh));
 
-//  return percepts;
+  if(filtered->size()<100) return percepts;
 
   //-- detect main plane
   Pcl::Ptr hull(new Pcl);
   pcl::ModelCoefficients::Ptr plane_coefficients(new pcl::ModelCoefficients);
   pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
   arr meanPts, meanCol;
-  detectPlane(plane_coefficients, inliers, hull, meanPts, meanCol, filtered);
+  detectPlane(plane_coefficients, inliers, filtered);
+  projectOnPlane(hull, meanPts, meanCol, plane_coefficients, inliers, filtered);
 
   //-- 2nd percept: the main plane
   arr normal = { plane_coefficients->values[0], plane_coefficients->values[1], plane_coefficients->values[2] };
@@ -109,12 +114,10 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   T.pos.set(meanPts);
   T.rot.setDiff(Vector_z, mlr::Vector(normal));
   conv_PclCloud_ArrCloud(mesh.V, NoByteA, *hull);
-//      mesh.makeTriangleFan();
   mesh.makeLineStrip();
   mesh.C = meanCol;
   mesh.transform(-T);
-//  percepts.append(new Plane(normal, meanPts, mesh, ""));
-  percepts.append(new Plane(T, mesh));
+//  percepts.append(new Plane(T, mesh));
 
   //-- project hull in 2D and apply OpenCV rotated box fitting
   floatA X;
@@ -140,10 +143,12 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       //select
       Pcl::Ptr cluster(new Pcl);
       filterPointsByIndex(cluster, boost::make_shared<const pcl::PointIndices>(ci), remains, true);
+      if(cluster->size()<50) continue;
 
       //detect plane
-      detectPlane(plane_coefficients, inliers, hull, meanPts, meanCol, cluster);
-      if(inliers->indices.size()<50) continue;
+//      detectPlane(plane_coefficients, inliers, hull, meanPts, meanCol, cluster);
+//      if(inliers->indices.size()<50) continue;
+      projectOnPlane(hull, meanPts, meanCol, plane_coefficients, boost::make_shared<const pcl::PointIndices>(ci), remains);
 
       //-- 2nd percept: the main plane
       normal = { plane_coefficients->values[0], plane_coefficients->values[1], plane_coefficients->values[2] };
@@ -153,8 +158,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       mesh.makeLineStrip();
       mesh.C = meanCol;
       mesh.transform(-T);
-    //  percepts.append(new Plane(normal, meanPts, mesh, ""));
-      percepts.append(new Plane(T, mesh));
+//      percepts.append(new Plane(T, mesh));
 
       //-- project hull in 2D and apply OpenCV rotated box fitting
       copy(X, mesh.V);
@@ -172,14 +176,6 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       T.addRelativeTranslation(rect.center.x, rect.center.y, -.5*thick);
       T.addRelativeRotationDeg(rect.angle, 0.,0.,1.);
       percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick), meanCol));
-
-//      //generate a Percept
-//      conv_PclCloud_ArrCloud(mesh.V, mesh.C, *hull);
-//      //        mesh.makeTriangleFan();
-//      mesh.makeLineStrip();
-//      mesh.C = meanCol;
-//      arr normal = { plane_coefficients->values[0], plane_coefficients->values[1], plane_coefficients->values[2] };
-//      percepts.append(new Plane(normal, meanPts, mesh, ""));
     }
   }
 
@@ -189,9 +185,6 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
 void detectPlane(
     pcl::ModelCoefficients::Ptr& plane_coefficients,
     pcl::PointIndices::Ptr& inliers,
-    Pcl::Ptr& hull,
-    arr& meanPoint,
-    arr& meanColor,
     const Pcl::ConstPtr& input){
 
   pcl::SACSegmentation<PointT> seg;
@@ -207,6 +200,15 @@ void detectPlane(
   // Obtain the plane inliers and coefficients
   seg.segment (*inliers, *plane_coefficients);
   //cerr << "Plane coefficients: " << *outCoefficients << endl;
+}
+
+void projectOnPlane(
+    Pcl::Ptr& hull,
+    arr& meanPoint,
+    arr& meanColor,
+    const pcl::ModelCoefficients::ConstPtr& plane_coefficients,
+    const pcl::PointIndices::ConstPtr& inliers,
+    const Pcl::ConstPtr& input){
 
   if(hull){
     pcl::ProjectInliers<PointT> proj;

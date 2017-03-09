@@ -45,10 +45,17 @@ struct Roopi {
   //TODO: define the notion of an Event as a set of act and conditions of their status -> wait(Event)
 
   //-- get some information
+  bool useRos();
   const mlr::String& getRobot();                     ///< returns "pr2", "baxter", or "none"
   arr get_q0();                                      ///< return the 'homing pose' of the robot
   Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
   Act_ComPR2& getComPR2();
+
+  //-- direct access to variables and threads
+  RevisionedRWLock* variableStatus(const char* var_name);
+  template<class T> AccessData<T>& variable(const char* var_name){ return registry().get<AccessData<T> >({"AccessData", var_name}); }
+  Thread* threadStatus(const char* thread_name);
+  template<class T> T* thread(const char* thread_name);
   void reportCycleTimes();
 
   //-- kinematic editing (to be done more..)
@@ -78,13 +85,13 @@ struct Roopi {
   Act_ComPR2  newComPR2()            { return Act_ComPR2(this); } ///< subscribers/publishers that communicate with PR2
   Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
 
-  Act_Thread newComROS(); ///< thread for the ROS spinner
-  Act_Thread newPhysX();           ///< run PhysX (nvidia physical simulator)
-  Act_Thread newGamepadControl();  ///< activate gamepad to set controls
-  Act_Thread newCameraView(bool view=true);      ///< compute and display the camera view
+  Act_Thread RosCom(); ///< thread for the ROS spinner
+  Act_Thread PhysX();           ///< run PhysX (nvidia physical simulator)
+  Act_Thread GamepadControl();  ///< activate gamepad to set controls
+  Act_Thread::Ptr CameraView(bool view=true);      ///< compute and display the camera view
 //  Act_Thread newKinect2Pcl(bool view=true);
-  Act_Thread newPclPipeline(bool view=false);
-  Act_Thread newPerceptionFilter(bool view=false);
+  Act_Thread PclPipeline(bool view=false);
+  Act_Thread PerceptionFilter(bool view=false);
 
 
   //==============================================================================

@@ -6,6 +6,7 @@
 #include <Gui/viewer.h>
 #include <Perception/syncFiltered.h>
 #include <Kin/kinViewer.h>
+#include <memory>
 
 //===============================================================================
 
@@ -44,7 +45,7 @@ void TEST(PhysX) {
   {
     Roopi R(true);
 
-    auto ph = R.newPhysX();
+    auto ph = R.PhysX();
     //    ph.showInternalOpengl();
 
     auto g = R.graspBox("obj2", LR_left);
@@ -63,7 +64,7 @@ void TEST(PhysX) {
 void Prototyping(){
   Roopi R(true);
 
-  auto view = R.newCameraView();
+  auto view = R.CameraView();
 
   {
     mlr::Shape *s = R.getK()->getShapeByName("endeffL");
@@ -129,7 +130,7 @@ void Prototyping(){
 void TEST(PickAndPlace) {
   Roopi R(true);
 
-  auto view = R.newCameraView();
+  auto view = R.CameraView();
   //  auto pcl = R.newKinect2Pcl();
   //  R.taskController().verbose(1);
 
@@ -234,20 +235,22 @@ void TEST(Perception) {
   {
     //    auto L = R.lookAt("S3");
     auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
-#if 0
-    auto view = R.newCameraView(false);
-#else
-    SubscribeRosKinect subKin;
-//    SubscribeRosKinect2PCL subKin;
-    ImageViewer v1("kinect_rgb");
-    subKin.kinect_depth.waitForRevisionGreaterThan(10);
-#endif
 
-    auto pcl = R.newPclPipeline(false);
-    auto filter = R.newPerceptionFilter(true);
+    Act_Thread::Ptr view;
+    if(R.useRos()){
+      SubscribeRosKinect subKin; //subscription into depth and rgb images
+  //    SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+      ImageViewer v1("kinect_rgb");
+    }else{
+      view = R.CameraView(true); //generate depth and rgb images from a modelWorld view
+    }
+    R.variable<byteA>("kinect_rgb").waitForStatusGreaterThan(10);
+
+    auto pcl = R.PclPipeline(false);
+    auto filter = R.PerceptionFilter(true);
 //    mlr::wait();
     {
-      SyncFiltered sync("modelWorld");
+//      SyncFiltered sync("modelWorld");
       mlr::wait(4.);
     }
 
@@ -257,25 +260,29 @@ void TEST(Perception) {
         cout <<"PERCEIVED: " <<*s <<" X=" <<s->X <<endl;
       }
     }
-    cout <<"GRASPING " <<topMost->name <<endl;
 
-    look.stop();
-    auto L = R.lookAt(topMost->name);
+    if(topMost){
+      cout <<"GRASPING " <<topMost->name <<endl;
+
+      look.stop();
+      auto L = R.lookAt(topMost->name);
+      mlr::wait();
+    }
     mlr::wait();
   }
 
+
 //  R.getComPR2().stopSendingMotionToRobot(true);
-//  return;
+  return;
 
-
-  {
+  if(topMost) {
     auto g=R.graspBox(topMost->name, LR_left);
     R.wait({&g});
   }
 
 //    R.getComPR2().stopSendingMotionToRobot(true);
 
-  {
+  if(topMost) {
     auto g=R.place(topMost->name, "objTarget");
     R.wait({&g});
   }
@@ -299,7 +306,7 @@ void TEST(Gamepad) {
 
   //  R.taskController().lockJointGroupControl("base");
 
-  auto gamepad = R.newGamepadControl();
+  auto gamepad = R.GamepadControl();
 
   R.wait({&gamepad}, -1.);
 }
@@ -310,17 +317,17 @@ void TEST(Gamepad) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  //  testBasics();
-  //  testGripper();
-  //  testPhysX();
-  //  Prototyping();
+//  testBasics();
+//  testGripper();
+//  testPhysX();
+//  Prototyping();
 
   testPerception();
 
-  //  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
-  //  /*for(;;)*/ testPickAndPlace2();
-  //  testGamepad();
+//  for(;;) testPickAndPlace2();
+//  testGamepad();
 
   return 0;
 }

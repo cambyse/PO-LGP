@@ -128,7 +128,7 @@ Act_CtrlTask Roopi::home(){
 }
 
 Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec){
-  int cam = getK()->getShapeByName("endeffHead")->index;
+  int cam = getK()->getShapeByName("endeffKinect")->index;
   int obj = getK()->getShapeByName(shapeName)->index;
   return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
 }
@@ -251,32 +251,46 @@ Act_Script Roopi::runScript(const std::function<int ()>& script){
   return Act_Script(this, script);
 }
 
+RevisionedRWLock* Roopi::variableStatus(const char* var_name){
+  Node *n = registry().findNode({"AccessData", var_name});
+  if(n){
+    RevisionedRWLock *v = n->getValue<RevisionedRWLock>();
+    if(v) return v;
+  }
+  LOG(-1) <<"Variable '" <<var_name <<"' does not exist!";
+  return NULL;
+}
+
+bool Roopi::useRos(){
+  return s->useRos;
+}
+
 const mlr::String& Roopi::getRobot(){
   return s->robot;
 }
 
-Act_Thread Roopi::newComROS(){
+Act_Thread Roopi::RosCom(){
   return Act_Thread(this, new RosCom_Spinner());
 }
 
-Act_Thread Roopi::newCameraView(bool view){
-  if(!view) return Act_Thread(this, {new ComputeCameraView(.2)});
-  return Act_Thread(this, {new ComputeCameraView(.2), new ImageViewer("kinect_rgb")});
+Act_Thread::Ptr Roopi::CameraView(bool view){
+  if(!view) return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2)}));
+  return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2), new ImageViewer("kinect_rgb")}));
 }
 
-Act_Thread Roopi::newPclPipeline(bool view){
+Act_Thread Roopi::PclPipeline(bool view){
   return Act_Thread(this, ::newPclPipeline(view));
 }
 
-Act_Thread Roopi::newPerceptionFilter(bool view){
+Act_Thread Roopi::PerceptionFilter(bool view){
   return Act_Thread(this, ::newPerceptionFilter(view));
 }
 
-Act_Thread Roopi::newPhysX(){
+Act_Thread Roopi::PhysX(){
   return Act_Thread(this, newPhysXThread());
 }
 
-Act_Thread Roopi::newGamepadControl(){
+Act_Thread Roopi::GamepadControl(){
   return Act_Thread(this, new GamepadControlThread());
 }
 
