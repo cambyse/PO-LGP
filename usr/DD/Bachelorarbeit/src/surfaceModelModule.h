@@ -8,7 +8,7 @@
 
 struct SurfaceModelObject {
   GaussianProcessOptimized gp;
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   arr varianceOnSurface; //same ordering as mesh.V!!!
   arr varianceGradientsOnSurface; //same ordering as mesh.V!!
   arr gradientsOnSurface; //same ordering as mesh.V!!
@@ -21,19 +21,20 @@ struct SurfaceModelObject {
   void calculateGradientsOnSurface();
   void calculateVarianceGradientOnSurface();
   double calculateVarianceMeasure() const;
-  double calculateMeshDistance(const ors::Mesh& otherMesh) const;
+  double calculateMeshDistance(const mlr::Mesh& otherMesh) const;
   void plotVarianceOnSurface();
 
   double calculateGaussianCurvature(const arr& pos);
   void calculateGaussianCurvatureOnSurface();
+  void plotGaussianCurvatureOnSurface();
 
   /// (approximate) shortest paths between two points unsing dijkstra
   arr computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
 
   //non member functions!!! Used for performance issues in multithread environments
-  static arr computeGeodesicPathOnSurface(const arr& startPos, const arr& targetPos, ors::Mesh mesh, std::function<double(const arr&, const arr&, uint, uint)> distanceFunction, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
-  static arr computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, ors::Mesh mesh, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
-  static arr computeGeodesicVariancePathOnSurface(const arr& startPos, const arr& targetPos, ors::Mesh mesh, const arr& varianceSurface, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
+  static arr computeGeodesicPathOnSurface(const arr& startPos, const arr& targetPos, mlr::Mesh mesh, std::function<double(const arr&, const arr&, uint, uint)> distanceFunction, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
+  static arr computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, mlr::Mesh mesh, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
+  static arr computeGeodesicVariancePathOnSurface(const arr& startPos, const arr& targetPos, mlr::Mesh mesh, const arr& varianceSurface, arr& startOnSurface = NoArr, arr& targetOnSurface = NoArr);
 
   arr smoothGeodesicPathWithKOMO(const arr& dijkstraPath);
 };

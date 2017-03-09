@@ -127,7 +127,7 @@ sOpenGL::sOpenGL(OpenGL *_gl, void *_container): gl(_gl), container(GTK_WIDGET(_
 
 void sOpenGL::createGlContainer(){
   gtkCheckInitialized();
-  gl->isUpdating.setValue(2);
+  gl->isUpdating.setStatus(2);
   gtkLock();
   container = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(container), gl->title);
@@ -192,7 +192,7 @@ void sOpenGL::createGlArea(){
     gl->width=allo.width;
     gl->height=allo.height;
   }else{
-    gl->isUpdating.setValue(0);
+    gl->isUpdating.setStatus(0);
   }
 
   gtkUnlock();
@@ -237,7 +237,7 @@ bool sOpenGL::expose(GtkWidget *widget, GdkEventExpose *event) {
     glFlush();
 
   s->endGlContext();
-  s->gl->isUpdating.setValue(0);
+  s->gl->isUpdating.setStatus(0);
 
   return true;
 }

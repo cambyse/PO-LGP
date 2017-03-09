@@ -1,8 +1,8 @@
 #include "surfaceModelModule.h"
 
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Control/RTControllerSimulation.h>
-#include <Ors/orsviewer.h>
+#include <Kin/kinViewer.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Gui/color.h>
@@ -19,7 +19,7 @@ namespace {
     //this is a surface integral of the variance over the surface, normalized by the area, see my bachelor thesis
     double A = 0.0;
     double S = 0.0;
-    ors::Vector a,b,c;
+    mlr::Vector a,b,c;
     for(uint i = 0; i < T.d0; i++){
       a.set(V[T[i](1)]-V[T[i](0)]);
       b.set(V[T[i](2)]-V[T[i](0)]);
@@ -99,8 +99,8 @@ double SurfaceModelObject::calculateVarianceMeasure() const {
   return getMeshUncertaintyMeasure(mesh.V, mesh.T, varianceOnSurface);
 }
 
-double SurfaceModelObject::calculateMeshDistance(const ors::Mesh& otherMesh) const {
-  return ors::Mesh::meshMetric(otherMesh, mesh);
+double SurfaceModelObject::calculateMeshDistance(const mlr::Mesh& otherMesh) const {
+  return mlr::Mesh::meshMetric(otherMesh, mesh);
 }
 
 void SurfaceModelObject::plotVarianceOnSurface() {
@@ -136,11 +136,30 @@ void SurfaceModelObject::calculateGaussianCurvatureOnSurface() {
   }
 }
 
+void SurfaceModelObject::plotGaussianCurvatureOnSurface() {
+  CHECK(gaussianCurvatureOnSurface.d0 == mesh.V.d0 && mesh.V.d0, "Curvature on surface not calculated")
+  double minVar = gaussianCurvatureOnSurface.min();
+  double maxVar = gaussianCurvatureOnSurface.max();
+  //minVar = 0.1; //uncomment these if the color should be scaled the same from beginning to end
+  //maxVar = 0.5;
+  double a = (0.0-240.0)/(maxVar-minVar);
+  double b = 240.0 - a*minVar;
+  arr C = zeros(mesh.V.d0,3);
+  for(uint i = 0; i < mesh.V.d0; i++) {
+    mlr::Color color;
+    color.setHsv(round(a*gaussianCurvatureOnSurface(i)+b)+1, 255, 255);
+    C[i](0) = color.r;
+    C[i](1) = color.g;
+    C[i](2) = color.b;
+  }
+  mesh.C = C;
+}
+
 arr SurfaceModelObject::computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, arr& startOnSurface, arr& targetOnSurface) {
   return computeGeodesicEuklideanPathOnSurface(startPos, targetPos, this->mesh, startOnSurface, targetOnSurface);
 }
 
-arr SurfaceModelObject::computeGeodesicPathOnSurface(const arr& startPos, const arr& targetPos, ors::Mesh mesh, std::function<double(const arr&, const arr&, uint, uint)> distanceFunction, arr& startOnSurface, arr& targetOnSurface) {
+arr SurfaceModelObject::computeGeodesicPathOnSurface(const arr& startPos, const arr& targetPos, mlr::Mesh mesh, std::function<double(const arr&, const arr&, uint, uint)> distanceFunction, arr& startOnSurface, arr& targetOnSurface) {
   //calculate the vertex indices that have the shortest distances to startPos and targetPos, respectively. O(|V|)
   uint startIndex = 0, targetIndex = 0;
   for(uint i = 0; i < mesh.V.d0; i++) {
@@ -195,14 +214,14 @@ arr SurfaceModelObject::computeGeodesicPathOnSurface(const arr& startPos, const 
   return path;
 }
 
-arr SurfaceModelObject::computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, ors::Mesh mesh, arr& startOnSurface, arr& targetOnSurface) {
+arr SurfaceModelObject::computeGeodesicEuklideanPathOnSurface(const arr& startPos, const arr& targetPos, mlr::Mesh mesh, arr& startOnSurface, arr& targetOnSurface) {
   auto eukledianDistance = [](const arr& pos1, const arr& pos2, uint, uint)->double {
     return length(pos1-pos2);
   };
   return computeGeodesicPathOnSurface(startPos, targetPos, mesh, eukledianDistance, startOnSurface, targetOnSurface);
 }
 
-arr SurfaceModelObject::computeGeodesicVariancePathOnSurface(const arr& startPos, const arr& targetPos, ors::Mesh mesh, const arr& varianceSurface, arr& startOnSurface, arr& targetOnSurface) {
+arr SurfaceModelObject::computeGeodesicVariancePathOnSurface(const arr& startPos, const arr& targetPos, mlr::Mesh mesh, const arr& varianceSurface, arr& startOnSurface, arr& targetOnSurface) {
   auto varianceDistance = [&varianceSurface] (const arr& pos1, const arr& pos2, uint pos1Index, uint pos2Index)->double {
     return 1.0/(length(pos1-pos2)*(varianceSurface(pos1Index)+varianceSurface(pos2Index))/2.0);
   };
@@ -210,29 +229,29 @@ arr SurfaceModelObject::computeGeodesicVariancePathOnSurface(const arr& startPos
 }
 
 arr SurfaceModelObject::smoothGeodesicPathWithKOMO(const arr& dijkstraPath) {
-  ors::KinematicWorld world("3DRobot.ors");
+  mlr::KinematicWorld world(mlr::mlrPath("../usr/DD/Bachelorarbeit/src/3DRobot.ors"));
   world.setJointState(dijkstraPath[0]);
   MotionProblem MP(world, false);
   //MP.k_order = 1;
   MP.T = dijkstraPath.d0;
 
   Task *t;
-  t = MP.addTask("geodesicDistance", new TaskMap_Transition(MP.world), sumOfSqrTT);
+  t = MP.addTask("geodesicDistance", new TaskMap_Transition(MP.world), OT_sumOfSqr);
   t->map.order=1;
   t->setCostSpecs(0, MP.T, {0.}, 1.0);
 
-  t = MP.addTask("onSurface", new TaskMap_GPISP(this->gp, MP.world, "endeffR"), sumOfSqrTT);
-  t->setCostSpecs(0, MP.T, {0.0}, 100.0);
+  t = MP.addTask("onSurface", new TaskMap_GPISP(this->gp, MP.world, "endeffR"), OT_sumOfSqr);
+  t->setCostSpecs(0, MP.T, {0.0}, 1000.0);
 
-  t = MP.addTask("start", new TaskMap_Default(posTMT, MP.world, "endeffR"), sumOfSqrTT);
+  t = MP.addTask("start", new TaskMap_Default(posTMT, MP.world, "endeffR"), OT_sumOfSqr);
   t->setCostSpecs(0,0, dijkstraPath[0], 10.0);
 
-  t = MP.addTask("target", new TaskMap_Default(posTMT, MP.world, "endeffR"), sumOfSqrTT);
+  t = MP.addTask("target", new TaskMap_Default(posTMT, MP.world, "endeffR"), OT_sumOfSqr);
   t->setCostSpecs(MP.T-2,MP.T, dijkstraPath[dijkstraPath.d0-1], 10.0);
 
   arr komoPath = dijkstraPath;
 
-  optNewton(komoPath , Convert(MP), OPT(verbose=true));
+  //optNewton(komoPath , Convert(MP), OPT(verbose=true));
   komoPath.reshape(MP.T, komoPath.N/MP.T);
   Graph result = MP.getReport(true);
   return komoPath;

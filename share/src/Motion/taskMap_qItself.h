@@ -19,25 +19,27 @@
 
 //===========================================================================
 
+enum TaskMap_qItself_PickMode{ QIP_byJointNames, QIP_byBodyNames, QIP_byJointGroups };
+
 struct TaskMap_qItself:TaskMap {
-  arr M;            ///< optionally, the task map is M*q or M%q (linear in q)
-  uintA selectedBodies; ///< optionally, select only a subset of joints, indicated by the BODIES! indices
+  uintA selectedBodies; ///< optionally, select only a subset of joints, indicated by the BODIES! indices (reason: body indices are stable across kinematic switches)
   bool moduloTwoPi; ///< if false, consider multiple turns of a joint as different q values (Default: true)
   bool relative_q0; ///< if true, absolute values are given relative to Joint::q0
 
-  TaskMap_qItself(uint singleQ, uint qN); ///< The singleQ parameter generates a matrix M that picks out a single q value
-  TaskMap_qItself(const arr& _M=NoArr, bool relative_q0=false);   ///< Specifying NoArr returns q; specifying a vector M returns M%q; specifying a matrix M returns M*q
-  TaskMap_qItself(const mlr::KinematicWorld& G, mlr::Joint* j);
-  TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName);
-  TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName1, const char* jointName2);
+//  TaskMap_qItself(uint singleQ, uint qN); ///< The singleQ parameter generates a matrix M that picks out a single q value
+  TaskMap_qItself(bool relative_q0=false);   ///< Specifying NoArr returns q; specifying a vector M returns M%q; specifying a matrix M returns M*q
+//  TaskMap_qItself(const mlr::KinematicWorld& G, mlr::Joint* j);
+//  TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName);
+//  TaskMap_qItself(const mlr::KinematicWorld& G, const char* jointName1, const char* jointName2);
 
+  TaskMap_qItself(TaskMap_qItself_PickMode pickMode, const StringA& picks, const mlr::KinematicWorld& G, bool relative_q0=false);
   TaskMap_qItself(uintA _selectedBodies, bool relative_q0=false);
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
   virtual void phi(arr& y, arr& J, const WorldL& G, double tau, int t);
   virtual uint dim_phi(const mlr::KinematicWorld& G);
   virtual uint dim_phi(const WorldL& G, int t);
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("qItself_" <<M.d0); }
+  virtual mlr::String shortTag(const mlr::KinematicWorld& G);
 private:
   uintA dimPhi;
 };

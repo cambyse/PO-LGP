@@ -3,8 +3,8 @@
 #include <Core/module.h>
 #include <Core/array.h>
 #include <Kin/kin.h>
-#include <RosCom/filterObject.h>
-#include <Control/TaskControllerModule.h>
+#include <Perception/percept.h>
+#include <Control/TaskControlThread.h>
 
 #include "../interface/myBaxter.h"
 #include <unordered_map>
@@ -12,8 +12,8 @@
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 #include <std_msgs/UInt8.h>
@@ -46,7 +46,7 @@ struct SubscribeTestJoint{
 struct Lockbox:Module{
   Access_typed<std_msgs::UInt8> test_joint;
   Access_typed<std_msgs::UInt8> get_joint_position;
-  Access_typed<FilterObjects> object_database;
+  Access_typed<PerceptL> percepts_filtered;
 
   SubscribeAlvar alvar_subscriber;
   SubscribeTestJoint test_joint_sub;

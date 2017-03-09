@@ -1966,7 +1966,7 @@ void ChangeRange::findRules(const RuleSetContainer& rulesC_old, const StateTrans
         if (nextPossibleValue == 0) {
           // collect possibleValues 
           possibleValues = (*usedFVs)[clit->s];
-          possibleValues.removeValueSafe(clit->value);
+          possibleValues.removeValue(clit->value, false);
         }
         if (DEBUG>2) {cout<<"Using values: "<<possibleValues<<endl;}
         

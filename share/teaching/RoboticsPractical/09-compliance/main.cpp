@@ -1,6 +1,6 @@
 #include <Core/util.h>
 #include "../interface/myBaxter.h"
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 //#include <Media/audio.h>
 
@@ -29,7 +29,7 @@ int main(int argc, char** argv){
 
     // Send it 0 torques for 1 second
   //  sound().addNote(12, .5, 0.);
-//    TaskControllerModule& TCM = baxter.getTaskControllerModule();
+//    TaskControlThread& TCM = baxter.getTaskControlThread();
 //    TCM.oldfashioned = false;
 //    CtrlMsg refs;
     arr q0, q, qdot, u, qdot_filtered;

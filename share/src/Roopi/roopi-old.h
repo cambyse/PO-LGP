@@ -17,7 +17,7 @@ struct Roopi{
   Roopi();
   ~Roopi();
 
-  struct TaskControllerModule *tcm();
+  struct TaskControlThread *tcm();
   //-- add & modify tasks
 
 

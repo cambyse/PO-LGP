@@ -1,7 +1,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Optim/optimization.h>
 #include <Core/util.h>
 //#include <Perception/videoEncoder.h>

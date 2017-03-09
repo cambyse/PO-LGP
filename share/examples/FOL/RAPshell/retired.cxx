@@ -37,7 +37,7 @@ struct GetSymbols{
   ConditionVariable hasSymbols;
 
   GetSymbols(){
-    hasSymbols.setValue(0);
+    hasSymbols.setStatus(0);
     sub_symbols = nh.subscribe("/RAP/symbols", 1, &GetSymbols::cb_symbols, this);
     for(uint i=0;i<50;i++){ //wait until a publisher is found
       if(sub_symbols.getNumPublishers()>0) break;
@@ -47,14 +47,14 @@ struct GetSymbols{
     if(!sub_symbols.getNumPublishers()){
       cout <<"there is no publisher of symbols -- won't have any effect if subscribe it.." <<endl;
     }
-    if(!hasSymbols.waitForValueEq(1, false, 1.0)){
+    if(!hasSymbols.waitForStatusEq(1, false, 1.0)){
       cout <<"waiting for the topic timed out" <<endl;
     }
   }
 
   void cb_symbols(const std_msgs::String::ConstPtr &msg) {
     symbols = conv_string2string(*msg);
-    hasSymbols.setValue(1);
+    hasSymbols.setStatus(1);
   }
 
 };

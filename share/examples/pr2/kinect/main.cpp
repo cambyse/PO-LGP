@@ -1,4 +1,4 @@
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 //#include <System/engine.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kin.h>
@@ -66,7 +66,7 @@ void TEST(Sensors){
 
   for(uint t=0;;t++){
 //    if(t>10 && stopButtons(gamepadState)) moduleShutdown().incrementValue();
-    if(moduleShutdown().getValue()>0) break;
+    if(moduleShutdown().getStatus()>0) break;
     S.kinect_rgb.data->waitForNextRevision();
 //    tic.waitForTic();
 

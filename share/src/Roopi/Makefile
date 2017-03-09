@@ -2,7 +2,7 @@ BASE   = ../..
 NAME   = $(shell basename `pwd`)
 OUTPUT = lib$(NAME).so
 
-DEPEND = Core Kin RosCom Control Hardware_gamepad
+DEPEND = Core Kin RosCom Control Hardware_gamepad Perception Algo Motion Optim PCL
 
 ROS = 1
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )

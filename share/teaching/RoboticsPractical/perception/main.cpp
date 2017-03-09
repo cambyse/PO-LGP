@@ -1,6 +1,6 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <RosCom/baxter.h>
@@ -8,8 +8,8 @@
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 // =================================================================================================
@@ -22,7 +22,7 @@ int main(int argc, char** argv){
 
     Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-    TaskControllerModule tcm("baxter");
+    TaskControlThread tcm("baxter");
     OrsViewer view;
     OrsPoseViewer ctrlView({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
 
@@ -36,7 +36,7 @@ int main(int argc, char** argv){
 
     Filter myFilter;
 
-    ACCESSname(FilterObjects, object_database)
+    ACCESSname(PerceptL, percepts_filtered)
     PublishDatabase myPublisher;
 
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
@@ -72,12 +72,12 @@ int main(int argc, char** argv){
 
     while (1)
     {
-      object_database.readAccess();
-      FilterObjects filter_objects = object_database.get();
-      FilterObjects clusters;
-      for (FilterObject* fo : filter_objects)
+      percepts_filtered.readAccess();
+      PerceptL filter_objects = percepts_filtered.get();
+      PerceptL clusters;
+      for (Percept* fo : filter_objects)
       {
-          if (fo->type == FilterObject::FilterObjectType::cluster)
+          if (fo->type == Percept::Type::cluster)
           {
             clusters.append(fo);
           }
@@ -86,7 +86,7 @@ int main(int argc, char** argv){
       {
         std::cout << "No clusters found" << std::endl;
         mlr::wait(1.);
-        object_database.deAccess();
+        percepts_filtered.deAccess();
         continue;
       }
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv){
       // Get point of interest
       Cluster* first_cluster = dynamic_cast<Cluster*>(clusters(min_index));
       Cluster copy = *first_cluster;
-      object_database.deAccess();
+      percepts_filtered.deAccess();
 
       mlr::Vector orsPoint = copy.frame * mlr::Vector(copy.mean);
 
@@ -135,7 +135,7 @@ int main(int argc, char** argv){
 
       mlr::wait(10);
     }
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown().waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

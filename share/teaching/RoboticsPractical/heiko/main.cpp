@@ -1,6 +1,6 @@
 #include <Core/util.h>
 #include "../interface/myBaxter.h"
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 #include <ros/ros.h>
 #include <RosCom/roscom.h>

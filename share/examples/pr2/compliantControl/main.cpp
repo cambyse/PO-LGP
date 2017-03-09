@@ -1,7 +1,8 @@
 #include <Core/thread.h>
 #include <Roopi/roopi.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
+#include <Roopi/act_followPath.h>
 
 arr generateEightTrajectory(arr startPos) {
   arr traj0 = startPos;
@@ -88,7 +89,9 @@ void tests() {
 
   mlr::wait(5.0);
 
-  //moduleShutdown().waitForValueGreaterThan(0);
+  FollowPath fp(R, "circle", traj, new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffR"), 15.0);
+fp.threadLoop();
+  //moduleShutdown().waitForStatusGreaterThan(0);
   */
 }
 
@@ -162,7 +165,7 @@ int main(int argc, char** argv){
 #if 0
 // =================================================================================================
 
-void setMoveUpTask(TaskControllerModule& tcm){
+void setMoveUpTask(TaskControlThread& tcm){
   TaskMap_Default *map = new TaskMap_Default(posTMT, tcm.modelWorld.get(), "endeffL");
   arr y;
   map->phi(y, NoArr, tcm.modelWorld.get());
@@ -177,7 +180,7 @@ void setMoveUpTask(TaskControllerModule& tcm){
 
 // =================================================================================================
 
-void setForceLimitTask(TaskControllerModule& tcm){
+void setForceLimitTask(TaskControlThread& tcm){
   TaskMap_Default *map = new TaskMap_Default(posTMT, tcm.modelWorld.get(), "endeffL");
   arr y;
   map->phi(y, NoArr, tcm.modelWorld.get());
@@ -228,7 +231,7 @@ mlr::wait(100.0);
   Access_typed<arr> q_ref(NULL, "q_ref");
   Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
 
   OrsViewer view;
   OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
@@ -286,7 +289,7 @@ mlr::wait(100.0);
      if(orientationLaw->isConverged(.05)) break;
      cout <<"ori err=" <<orientationLaw->error() <<endl;
      mlr::wait(0.1);
-     if(moduleShutdown().getValue()>0) break;
+     if(moduleShutdown().getStatus()>0) break;
    }
    cout << "converged" << endl;
 
@@ -319,10 +322,10 @@ mlr::wait(100.0);
 //  for(;;){
 ////    cout <<R.tcm()->ctrl_obs.get()->fL <<endl;
 
-//    if(moduleShutdown().getValue()>0) break;
+//    if(moduleShutdown().getStatus()>0) break;
 //  }
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 
 #if 0
   threadCloseModules();

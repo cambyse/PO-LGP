@@ -2,7 +2,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Gui/color.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <limits>
 
 #include <boost/config.hpp>
@@ -38,7 +38,7 @@ void SurfaceGeodesicPathModule::setTarget(arr target) {
 }
 
 void SurfaceGeodesicPathModule::step() {
-  ors::Mesh me = surfaceModelObject.get()->mesh;
+  mlr::Mesh me = surfaceModelObject.get()->mesh;
   //arr varianceGradients = surfaceModelObject.get()->varianceGradientsOnSurface;
   arr variance = surfaceModelObject.get()->varianceOnSurface;
   arr start = pathStart.get()();
@@ -48,7 +48,7 @@ void SurfaceGeodesicPathModule::step() {
   arr path = SurfaceModelObject::computeGeodesicEuklideanPathOnSurface(start, target, me, NoArr, realTarget);
   //arr path = SurfaceModelObject::computeGeodesicVariancePathOnSurface(start, target, me, variance, NoArr, realTarget);
 
-  path = surfaceModelObject.set()->smoothGeodesicPathWithKOMO(path);
+  //path = surfaceModelObject.set()->smoothGeodesicPathWithKOMO(path);
 
   realTargetOnSurface.set() = realTarget;
   shortestPath.set() = path;
@@ -160,7 +160,7 @@ SurfaceSimilarityModule::SurfaceSimilarityModule()
   , trueSurfaceMesh(NULL, "trueSurfaceMesh") {}
 
 void SurfaceSimilarityModule::step() {
-  ors::Mesh mesh = trueSurfaceMesh.get()();
+  mlr::Mesh mesh = trueSurfaceMesh.get()();
   SurfaceModelObject o = surfaceModelObject.get()();
   double s = o.calculateMeshDistance(mesh);
   surfaceSimilarityMeasure.set() = s;
@@ -184,7 +184,7 @@ void changeColor2(void*){  orsDrawColors=true; orsDrawAlpha=1.; }
 
 void SurfaceVisualizationModule::open() {
   OrsPoseViewer* viewer = getThread<OrsPoseViewer>("OrsPoseViewer");
-  ors::Shape* trueSurfaceShape = viewer->copies.first()->getShapeByName("trueShape");
+  mlr::Shape* trueSurfaceShape = viewer->copies.first()->getShapeByName("trueShape");
   arr posTrueSurface = conv_vec2arr(trueSurfaceShape->X.pos);
   trueSurfaceMesh.writeAccess();
   trueSurfaceMesh() = trueSurfaceShape->mesh;
@@ -193,7 +193,7 @@ void SurfaceVisualizationModule::open() {
   }
   trueSurfaceMesh.deAccess();
 
-  //me = new ors::Mesh;
+  //me = new mlr::Mesh;
   //world.copy(*viewer->copies.first(), true);
   gl.add(glStandardScene);
   gl.camera.setDefault();
@@ -334,7 +334,7 @@ void PathAndGradientVisualizationModule::step() {
     path = shortestPath.get()();
     //}
 
-    ors::Vector n = ors::Vector(-gradGP/length(gradGP));
+    mlr::Vector n = mlr::Vector(-gradGP/length(gradGP));
     arr V = ~n.generateOrthonormalSystemMatrix();
 
     arr ev1 = zeros(2,3);

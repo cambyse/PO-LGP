@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Hardware/gamepad/gamepad.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 #include <Mocap/mocapdata.h>
 #include <Actions/actions.h>
@@ -16,9 +16,9 @@ struct PDExecutor: Thread{
   ACCESS(CtrlMsg, ctrl_ref);
   ACCESS(CtrlMsg, ctrl_obs);
 
-  // TaskController stuff
+  // TaskControlMethods stuff
   mlr::KinematicWorld world;
-  TaskController fmc;
+  TaskControlMethods fmc;
   arr q, qdot;
 
   bool started, useros;

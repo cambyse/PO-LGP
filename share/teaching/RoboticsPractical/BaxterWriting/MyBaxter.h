@@ -8,11 +8,11 @@
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
@@ -35,9 +35,9 @@ baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const m
 
 class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
-    ACCESSname(FilterObjects, object_database)
+    ACCESSname(PerceptL, percepts_filtered)
 
-    TaskControllerModule tcmBax;
+    TaskControlThread tcmBax;
     RosInit rosInit;    
 
     SubscribeTabletop tabletop_subscriber;
@@ -147,7 +147,7 @@ public:
     double getCollisionScalar();
 
     //-- inner access
-    struct TaskControllerModule& getTaskControllerModule();
+    struct TaskControlThread& getTaskControlThread();
 
     const mlr::KinematicWorld& getModelWorld();
     void sendJoints(const arr &q);

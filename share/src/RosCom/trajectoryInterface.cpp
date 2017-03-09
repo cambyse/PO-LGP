@@ -50,7 +50,7 @@ TrajectoryInterface::TrajectoryInterface(mlr::KinematicWorld &world_plan_,mlr::K
     //-- wait for first q observation!
     cout <<"** Waiting for ROS message on initial configuration.." <<endl;
     for (;;) {
-      S->ctrl_obs.data->waitForNextRevision();
+      S->ctrl_obs.waitForNextRevision();
       cout <<"REMOTE joint dimension=" <<S->ctrl_obs.get()->q.N <<endl;
       cout <<"LOCAL  joint dimension=" <<world_robot->q.N <<endl;
 
@@ -217,7 +217,7 @@ void TrajectoryInterface::gotoPosition(arr x_robot, double T, bool recordData, b
   Task *t;
   t = MP.addTask("tra", new TaskMap_Transition(*world_robot), OT_sumOfSqr);
   ((TaskMap_Transition*)&t->map)->H_rate_diag = world_robot->getHmetric();
-  t->map.order=2;
+  t->map->order=2;
   t->setCostSpecs(0, MP.T, ARR(0.), 1e0);
 
   t =MP.addTask("posT", new TaskMap_qItself(), OT_eq);

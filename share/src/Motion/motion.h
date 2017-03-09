@@ -27,12 +27,13 @@
 //
 
 struct Task {
-  TaskMap& map;
+  TaskMap *map;
   const ObjectiveType type;  ///< element of {sumOfSqr, inequality, equality}
   mlr::String name;
   arr target, prec;     ///< optional linear, time-dependent, rescaling (with semantics of target & precision)
 
-  Task(TaskMap* m, const ObjectiveType& type) : map(*m), type(type){}
+  Task(TaskMap *m, const ObjectiveType& type) : map(m), type(type){}
+  ~Task(){ if(map) delete map; map=NULL; }
 
   void setCostSpecs(int fromTime, int toTime,
                     const arr& _target=ARR(0.),
@@ -144,7 +145,7 @@ struct MotionProblem {
 // basic helpers (TODO: move to a different place)
 //
 
-arr getH_rate_diag(mlr::KinematicWorld& world);
+arr getH_rate_diag(const mlr::KinematicWorld& world);
 void sineProfile(arr& q, const arr& q0, const arr& qT,uint T);
 arr reverseTrajectory(const arr& q);
 void getVel(arr& v, const arr& q, double tau);

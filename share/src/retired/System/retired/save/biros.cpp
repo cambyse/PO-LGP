@@ -269,7 +269,7 @@ void writeInfo(ostream& os, Process& p, bool brief, char nl){
     os <<"tid=" <<p.tid <<nl
        <<"steps=" <<p.module->step_count
        <<"state=";
-    int state=p.state.getValue();
+    int state=p.state.getStatus();
     if (state>0) os <<state; else switch (state) {
       case tsCLOSE:   os <<"close";  break;
       case tsLOOPING: os <<"loop";   break;
@@ -282,9 +282,9 @@ void writeInfo(ostream& os, Process& p, bool brief, char nl){
 
 void writeInfo(ostream& os, Variable& v, bool brief, char nl){
   if(brief){
-    os <<v.revision.getValue();
+    os <<v.revision.getStatus();
   }else{
-    os <<"revision=" <<v.revision.getValue() <<nl
+    os <<"revision=" <<v.revision.getStatus() <<nl
        <<"type=" <<typeid(v).name() <<nl
        <<"lock-state=" <<v.rwlock.state;
   }

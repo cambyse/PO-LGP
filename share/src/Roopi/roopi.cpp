@@ -1,708 +1,317 @@
 #include "roopi.h"
+#include "roopi-private.h"
 
-#include <Algo/spline.h>
-#include <RosCom/roscom.h>
+#include <Gui/viewer.h>
+#include <Kin/PhysXThread.h>
+#include <Control/GamepadControlThread.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
-#include <Hardware/gamepad/gamepad.h>
-#include <Kin/kinViewer.h>
-#include <Motion/motion.h>
-//#include <Actions/RelationalMachineModule.h>
-//#include <Actions/ActivitySpinnerModule.h>
-#include <RosCom/serviceRAP.h>
-#include <RosCom/baxter.h>
-
-#include <RosCom/subscribeAlvarMarkers.h>
-#include <RosCom/subscribeTabletop.h>
-#include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
-#include <RosCom/publishDatabase.h>
-
-#include <Roopi/loggingModule.h>
-
-#include <Optim/lagrangian.h>
-
+#include <Perception/roopi_Perception.h>
+#include <PCL/roopi_PCL.h>
 
 #define baxter 0
 
 //==============================================================================
-/*
 
-(mt) The mid-term concept should be: Roopi allows you to create (and return) little
-handles on 'tasks' or 'things'. These tasks or things can be:
--- control tasks
--- a task following
--- trajectories
--- motion planning problems
--- system level processes (like subscriptions, perceptual processes, etc)
--- interfaces (gamepad, orsviewers, etc)
+Roopi_private::Roopi_private(Roopi* roopi)
+  : modelWorld(NULL, "modelWorld"){
+}
 
-The template for now is
+Roopi_private::~Roopi_private(){
+  threadReportCycleTimes();
 
-auto* handle = Roopi::createX(...)
-handle->setParameters
-handle->run
-handle->quit or Roopi::destroyX(handle)
+  //delete persistant acts
+  if(_tweets) delete _tweets; _tweets=NULL; //somehow the tweeter crashes to tweet the other's kill...
+  if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
+  if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
+  if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
+  if(_watchTask) delete _watchTask; _watchTask=NULL;
+  if(_collTask) delete _collTask; _collTask=NULL;
+  if(_taskController) delete _taskController; _taskController=NULL;
+  if(_taskUpdater) delete _taskUpdater; _taskUpdater=NULL;
 
-Maybe plan:
--- first just control tasks & motion planning
--- make path following a thread
--- make logging just such a thread and 'handle'
--- next the system processes (perception threads)
--- the activities we already have
-
-(danny) Implemented many usefull things now. At the moment, Roopi handles everything, i.e. Roopi::modifyCtrlTaskGains etc.
-Is it better to shift this to the CtrlTasks itself?
-
-*/
-//==============================================================================
-
-struct Roopi_private {
-
-  Access_typed<sensor_msgs::JointState> jointState;
-  Access_typed<CtrlMsg> ctrl_ref;
-  Access_typed<CtrlMsg> ctrl_obs;
-  Access_typed<arr>     pr2_odom;
-
-  //-- perception
-  ACCESSname(FilterObjects, object_database)
-
-  //-- controller process
-  TaskControllerModule tcm;
-
-  //-- logging
-  LoggingModule loggingModule;
-
-  //-- ROS initialization
-  RosInit rosInit;
-
-  //TODO
-  //-- RAP framework
-  #if 0
-  RelationalMachineModule rm;
-  ActivitySpinnerModule aspin;
-  ServiceRAP rapservice;
-  #endif
-
-  //-- sensor processes
-  #if 0
-  SubscribeTabletop tabletop_subscriber;
-  SubscribeAlvar alvar_subscriber;
-  Collector data_collector;
-  Filter myFilter;
-  PublishDatabase myPublisher;
-  #endif
-
-  //-- display and interaction
-  GamepadInterface gamepad;
-
-  mlr::KinematicWorld* cu;
-
-  //OrsViewer view;
-  OrsPoseViewer* ctrlView;
-
-  //-- sync'ing with ROS
-  Subscriber<sensor_msgs::JointState> subJointState;
-
-  #if baxter
-  SendPositionCommandsToBaxter spctb;
-  #endif
-
-
-  //PR2
-  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> subCtrl;
-  PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pubCtrl;
-  SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       subOdom;
-
-  RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
-
-
-
-  Roopi_private(mlr::KinematicWorld& world)
-    : jointState(NULL, "jointState"),
-      ctrl_ref(NULL, "ctrl_ref"),
-      ctrl_obs(NULL, "ctrl_obs"),
-      pr2_odom(NULL, "pr2_odom"),
-      tcm("pr2", world),
-      rosInit("Roopi"),
-      subJointState("/robot/joint_states", jointState),
-      #if baxter
-      spctb(tcm.realWorld),
-      #endif
-      subCtrl("/marc_rt_controller/jointState", ctrl_obs),
-      pubCtrl("/marc_rt_controller/jointReference", ctrl_ref),
-      subOdom("/robot_pose_ekf/odom_combined", pr2_odom)
-  {
-    #if baxter
-    if(mlr::getParameter<bool>("useRos", false)){
-      nh = new ros::NodeHandle;
-      pub = nh->advertise<baxter_core_msgs::JointCommand>("robot/limb/right/joint_command", 1);
-    }
-    #endif
-
-    if(&world) {
-      cu = new mlr::KinematicWorld(world);
-    } else {
-      cu = new mlr::KinematicWorld(tcm.realWorld);
-    }
-
-    if(mlr::getParameter<bool>("oldfashinedTaskControl")) {
-      ctrlView = new OrsPoseViewer({"ctrl_q_real", "ctrl_q_ref"}, *cu);
-    } else {
-      ctrlView = new OrsPoseViewer({"ctrl_q_real"}, *cu);
-    }
-
-    threadOpenModules(true);
-    mlr::wait(1.0);
-    cout << "Go!" << endl;
-  }
-
-  ~Roopi_private(){
-    threadCloseModules();
-    delete ctrlView;
-    delete cu;
-    cout << "bye bye" << endl;
-  }
-};
+  if(_ctrlView) delete _ctrlView; _ctrlView=NULL;
+  threadCloseModules();
+  cout << "bye bye" << endl;
+}
 
 //==============================================================================
 
-Roopi::Roopi(mlr::KinematicWorld& world)
-  : s(new Roopi_private(world)){
-  planWorld = s->tcm.realWorld; // TODO something is wrong with planWorld
-  mlr::timerStart(true); //TODO is that necessary? Is the timer global?
+Roopi::Roopi(bool autoStartup, bool controlView)
+  : s(new Roopi_private(this)), acts(NULL, "acts"){
+  s->model = mlr::getParameter<mlr::String>("model", "model.g");
+  s->robot = mlr::getParameter<mlr::String>("robot", "pr2");
+  s->useRos = mlr::getParameter<bool>("useRos", false);
 
-  holdPositionTask = createCtrlTask("HoldPosition", new TaskMap_qItself);
-  modifyCtrlTaskGains(holdPositionTask, 30.0, 5.0);
-  modifyCtrlC(holdPositionTask, ARR(1000.0));
-  activateCtrlTask(holdPositionTask);
+  if(autoStartup){
+    if(s->useRos){
+      s->_ComRos = new Act_Thread(this, new RosCom_Spinner());
+      s->_ComPR2 = new Act_ComPR2(this);
+    }
+
+    startTweets();
+    setKinematics(s->model, controlView);
+    startTaskController();
+  }
 }
 
 Roopi::~Roopi(){
   delete s;
-  delete holdPositionTask;
+}
+
+void Roopi::setKinematics(const char* filename, bool controlView){
+  mlr::String name(filename);
+  mlr::KinematicWorld K;
+  if(name=="pr2") {
+    K.init(mlr::mlrPath("data/pr2_model/pr2_model.ors").p);
+  } else if(name=="baxter") {
+    K.init(mlr::mlrPath("data/baxter_model/baxter.ors").p);
+  } else {
+    K.init(name);
+  }
+
+  setKinematics(K, controlView);
+}
+
+void Roopi::setKinematics(const mlr::KinematicWorld& K, bool controlView){
+  s->modelWorld.set() = K;
+  s->q0 = K.q;
+
+  if(controlView){
+    if(s->useRos){
+      s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1));
+    } else {
+      s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1));
+    }
+  }
+}
+
+Act_TaskController& Roopi::startTaskController(){
+//  s->_taskUpdater = new Act_Thread(this, new CtrlTaskUpdater);
+  s->_taskController = new Act_TaskController(this);
+  return *s->_taskController;
+}
+
+Act_Tweets& Roopi::startTweets(bool go){
+  if(!s->_tweets && go) s->_tweets = new Act_Tweets(this);
+  if(s->_tweets && !go){ delete s->_tweets; s->_tweets=NULL; }
+  return *s->_tweets;
+}
+
+Act_TaskController& Roopi::getTaskController(){
+  return *s->_taskController;
+}
+
+Act_ComPR2& Roopi::getComPR2(){
+  return *s->_ComPR2;
+}
+
+void Roopi::reportCycleTimes(){
+  threadReportCycleTimes();
+}
+
+arr Roopi::get_q0(){
+  CHECK(s->q0.N, "kinematics needs to be set first");
+  return s->q0;
+}
+
+WToken<mlr::KinematicWorld> Roopi::setK(){
+  return s->modelWorld.set();
+}
+
+RToken<mlr::KinematicWorld> Roopi::getK(){
+  return s->modelWorld.get();
+}
+
+
+Act_CtrlTask Roopi::home(){
+  return Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0());
+}
+
+Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec){
+  int cam = getK()->getShapeByName("endeffHead")->index;
+  int obj = getK()->getShapeByName(shapeName)->index;
+  return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
+}
+
+Act_CtrlTask Roopi::newHoldingTask(){
+  auto hold = Act_CtrlTask(this);
+  hold.setMap(new TaskMap_qItself);
+  hold.task->PD().setTarget( hold.y0 );
+  hold.task->PD().setGains(30., 10.);
+  hold.start();
+  return hold;
+}
+
+Act_CtrlTask Roopi::newCollisionAvoidance(){
+  return Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
+}
+
+Act_CtrlTask Roopi::newLimitAvoidance(){
+  return Act_CtrlTask(this, new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2});
+}
+
+//Act_CtrlTask* Roopi::lookAt(const char* shapeName){
+//  if(!shapeName){
+//    if(s->_watchTask) s->_watchTask->stop();
+//  }else{
+//    if(!s->_watchTask){
+//      int cam = getKinematics()->getShapeByName("endeffKinect")->index;
+//      int obj = getKinematics()->getShapeByName(shapeName)->index;
+//      s->_watchTask = new Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj));
+//    }else{
+//      auto task = s->_watchTask->set();
+//      TaskMap_Default *map = dynamic_cast<TaskMap_Default*>(task->map);
+//      CHECK(map,"");
+//      map->j = getKinematics()->getShapeByName(shapeName)->index;
+//      task->PD().setTarget( zeros(2) );
+//    }
+//    s->_watchTask->start();
+//  }
+//  return s->_watchTask;
+//}
+
+void Roopi::hold(bool still){
+  if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(std::move(newHoldingTask()));
+
+  if(still){
+    s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
+    s->_holdPositionTask->set()->PD().setGains(30., 10.);
+    s->_holdPositionTask->start();
+  }else{
+    s->_holdPositionTask->stop();
+  }
+}
+
+Act_CtrlTask* Roopi::collisions(bool on){
+  if(!s->_collTask) s->_collTask = new Act_CtrlTask(std::move(newCollisionAvoidance()));
+  if(on) s->_collTask->start();
+  else s->_collTask->stop();
+  return s->_collTask;
 }
 
 //==============================================================================
 //
 // basic CtrlTask management
 
-CtrlTask* Roopi::createCtrlTask(const char* name, TaskMap* map, bool active) {
-  CtrlTask* ct = new CtrlTask(name, map);
-  map->phi(ct->y, NoArr, tcm()->modelWorld.get()()); // initialize with the current value. TODO taskControllerModule updates these only if they are active
-  ct->y_ref = ct->y;
-  ct->setGains(0.0,0.0);
-  ct->setC(eye(ct->y_ref.d0)*1000.0); //TODO
-  ct->active = active;
-  tcm()->ctrlTasks.set()->append(ct);
-  return ct;
+Act_CtrlTask Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
+  return Act_CtrlTask(this, map, PD, target, prec);
 }
 
-void Roopi::activateCtrlTask(CtrlTask* t, bool reinitializeReferences){
-  tcm()->ctrlTasks.writeAccess();
-  if(reinitializeReferences) {
-    arr currentValue = getTaskValue(t);
-    t->y = currentValue;
-    t->y_ref = currentValue;
-  }
-  t->active = true;
-  tcm()->ctrlTasks.deAccess();
+Act_CtrlTask Roopi::newCtrlTask(const char* specs){
+  return Act_CtrlTask(this, GRAPH(specs));
 }
 
-void Roopi::deactivateCtrlTask(CtrlTask* t) {
-  tcm()->ctrlTasks.writeAccess();
-  t->active = false;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::destroyCtrlTask(CtrlTask* t) {
-  tcm()->ctrlTasks.set()->removeValue(t);
-  delete &t->map;
-  delete t;
-}
-
-
-void Roopi::modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->setTarget(yRef, yDotRef);
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel, const double maxAcc) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->setGains(Kp, Kd);
-  ct->maxVel = maxVel;
-  ct->maxAcc = maxAcc;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel, const double maxAcc) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->setGains(Kp, Kd);
-  ct->maxVel = maxVel;
-  ct->maxAcc = maxAcc;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyCtrlC(CtrlTask* ct, const arr& C) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->setC(C);
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyForceRef(CtrlTask* ct, const arr& fRef) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->f_ref = fRef;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyForceAlpha(CtrlTask* ct, double fAlpha) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->f_alpha = fAlpha;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyForceGamma(CtrlTask* ct, double fGamma) {
-  tcm()->ctrlTasks.writeAccess();
-  ct->f_gamma = fGamma;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::modifyForce(CtrlTask* ct, const arr& fRef, const double& fAlpha, const double& fGamma) {
-  tcm()->ctrlTasks.writeAccess();
-  if(&fRef) ct->f_ref = fRef;
-  if(&fAlpha) ct->f_alpha = fAlpha;
-  if(&fGamma) ct->f_gamma = fGamma;
-  tcm()->ctrlTasks.deAccess();
-}
-
-void Roopi::holdPosition() {
-  tcm()->ctrlTasks.writeAccess();
-  for(CtrlTask *t:tcm()->ctrlTasks()) t->active=false;
-  tcm()->ctrlTasks.deAccess();
-
-  /*CtrlTask* ct = createCtrlTask("HoldPosition", new TaskMap_qItself);
-  modifyCtrlTaskGains(ct, 30.0, 5.0);
-  modifyCtrlC(ct, ARR(1000.0));
-  activateCtrlTask(ct);*/
-
-  //modifyCtrlTaskReference(holdPositionTask, tcm()->modelWorld.get()->getJointState());
-  activateCtrlTask(holdPositionTask, true);
-}
-
-void Roopi::releasePosition() {
-  deactivateCtrlTask(holdPositionTask);
-}
-
-bool Roopi::converged(CtrlTask* ct, double tolerance) {
-  bool conv = false;
-  tcm()->ctrlTasks.readAccess();
-  if(ct->isConverged(tolerance)) conv = true;
-  tcm()->ctrlTasks.deAccess();
-  return conv;
-}
-
-bool Roopi::waitForConv(CtrlTask* ct, double maxTime, double tolerance) {
-  return waitForConv(CtrlTaskL({ct}), maxTime, tolerance);
-}
-
-bool Roopi::waitForConv(const CtrlTaskL& cts, double maxTime, double tolerance) {
-  double startTime = mlr::timerRead();
-  while(true) {
+bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
+#if 0
+  double startTime = mlr::realTime();
+  for(;;){
     bool allConv = true;
-    tcm()->ctrlTasks.readAccess();
-    for(CtrlTask* t : cts) {
-      if(!t->isConverged(tolerance)) {
-        allConv = false;
-        break;
-      } else {
-        cout << t->name << " has converged" << endl;
+    for(Act *act : acts) if(act->getStatus()<=0){ allConv=false; break; }
+    if(allConv) return true;
+
+    if(timeout>0 && mlr::realTime() - startTime > timeout) {
+      cout << "not converged, timeout reached" << endl;
+      return false;
+    }
+
+    mlr::wait(0.1);
+  }
+  return false;
+#else
+  double startTime = mlr::realTime();
+  ConditionVariable waiter;
+  for(Act *act : acts) waiter.listenTo(act);
+  for(;;){
+    bool allConv = true;
+    for(Act *act : acts) if(act->getStatus()<=0) allConv=false;
+    if(allConv) return true;
+
+    waiter.statusLock();
+    // The typical pattern (also in Thread): CondVar status==0 -> idle; CondVar status>0 -> there is work to do (and 'messengers' lists who set it to 1)
+    if(waiter.status==0){ //no new signals
+      if(timeout>0.){
+        if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
+        if(!waiter.waitForSignal(timeout, true)){
+          cout << "not converged, timeout reached" << endl;
+          waiter.statusUnlock(); return false;
+        }
+      }else{
+        waiter.waitForSignal(true);
       }
     }
-    tcm()->ctrlTasks.deAccess();
-    if(allConv) return true;
-    double actTime = mlr::timerRead() - startTime;
-    if(maxTime > -1.0 && actTime > maxTime) {
-      cout << "not converged, timeout reached" << endl;
-      return false;
-    }
-    mlr::wait(0.1);
-  }
-  return false;
-}
+    waiter.status=0;
+    waiter.statusUnlock();
 
-bool Roopi::waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime, double tolerance) {
-  double startTime = mlr::timerRead();
-  while(true) {
-    bool conv = false;
-    tcm()->ctrlTasks.readAccess();
-    if((ct->y.N && maxDiff(ct->y, desState) < tolerance)) conv = true;
-    cout << ct->error() << endl;
-    tcm()->ctrlTasks.deAccess();
-    if(conv) return true;
-    double actTime = mlr::timerRead() - startTime;
-    if(maxTime > -1.0 && actTime > maxTime) {
-      cout << "not converged, timeout reached" << endl;
-      return false;
-    }
-    mlr::wait(0.1);
-  }
-  return false;
-}
-
-
-//CtrlTask* Roopi::_addQItselfCtrlTask(const arr& qRef, const arr& Kp, const arr& Kd) {
-//  CtrlTask* ct = createCtrlTask("qItself", new TaskMap_qItself);
-//  ct->setTarget(qRef);
-//  ct->setC(ARR(1000.0));
-//  ct->setGains(Kp, Kd);
-//  //(mt): automatically activate the task??
-//  //addCtrlTask(ct);
-//  return ct;
-//}
-
-//CtrlTask* Roopi::_addDefaultCtrlTask(const char* name, const TaskMap_DefaultType type, const char* iShapeName, const mlr::Vector& iVec, const char* jShapeName, const mlr::Vector& jVec) {
-//  CtrlTask* ct = createCtrlTask(name, new TaskMap_Default(type, tcm()->modelWorld.get()(), iShapeName, iVec, jShapeName, jVec), false);
-//  return ct;
-//}
-
-TaskControllerModule* Roopi::tcm() {
-  return &s->tcm;
-}
-
-void Roopi::interpolateToReferenceThread(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
-
-}
-
-TaskReferenceInterpolAct*Roopi::createTaskReferenceInterpolAct(const char* name, CtrlTask* task) {
-  return new TaskReferenceInterpolAct(*this, name, task);
-}
-
-void Roopi::interpolateToReference(TaskReferenceInterpolAct* t, double executionTime, const arr& reference, const arr& start) {
-  t->startExecution(executionTime, reference, start);
-}
-
-bool Roopi::waitForFinishedTaskReferenceInterpolAct(TaskReferenceInterpolAct* t, double maxTime) {
-  double startTime = mlr::timerRead();
-  while(true) {
-    mlr::wait(0.1);
-    if(t->isIdle() || t->isClosed()) break;
-    double actTime = mlr::timerRead() - startTime;
-    if(maxTime > -1.0 && maxTime > actTime) {
-      return false;
-    }
   }
   return true;
-}
-
-void Roopi::interpolateToReference(CtrlTask* task, double executionTime, const arr& reference, const arr& start) {
-  cout << "start interpolating to target" << endl;
-  arr initialRef;
-  if(&start) {
-    initialRef = start;
-  } else {
-    initialRef = getTaskValue(task);
-  }
-  double startTime = mlr::timerRead();
-  double time = 0.0;
-  while(true) {
-    time = mlr::timerRead() - startTime;
-    double s = time/executionTime;
-    if(s > 1.0) {
-      cout << "finished interpolating to target" << endl;
-      break;
-    }
-    arr actRef = initialRef + (reference - initialRef)*0.5*(1.0-cos(MLR_PI*s)); //TODO is this a good motion profile? Robotics lecture says yes :-)
-    modifyCtrlTaskReference(task, actRef);
-  }
-  modifyCtrlTaskReference(task, reference);
-}
-
-//==============================================================================
-
-arr Roopi::getJointState() {
-  if(tcm()->oldfashioned && !tcm()->useRos) {
-    return tcm()->modelWorld.get()->getJointState();
-  }
-  return tcm()->ctrl_obs.get()->q;
-}
-
-arr Roopi::getJointSign() {
-  return tcm()->qSign.get();
-}
-
-arr Roopi::getTorques() {
-  return tcm()->ctrl_obs.get()->u_bias;
-}
-
-arr Roopi::getFTLeft() {
-  return tcm()->ctrl_obs.get()->fL;
-}
-
-arr Roopi::getFTRight() {
-  return tcm()->ctrl_obs.get()->fR;
-}
-
-arr Roopi::getTaskValue(CtrlTask* task) {
-  arr y;
-  task->map.phi(y, NoArr, tcm()->modelWorld.get()()); //TODO or better with realWorld?
-  return y;
-}
-
-//==============================================================================
-
-void Roopi::syncPlanWorld() {
-  arr qPlan;
-  //this syncs with the real world, except for the case where no real world is available. TODO does this make sense?
-  if(tcm()->oldfashioned && !tcm()->useRos) {
-    transferQbetweenTwoWorlds(qPlan, tcm()->modelWorld.get()->getJointState(), planWorld, tcm()->modelWorld.get()());
-  } else {
-    transferQbetweenTwoWorlds(qPlan, tcm()->ctrl_obs.get()->q, planWorld, tcm()->modelWorld.get()());
-  }
-  planWorld.setJointState(qPlan);
-}
-
-mlr::KinematicWorld& Roopi::getPlanWorld() {
-  return planWorld;
-}
-
-double Roopi::getLimitConstraint(double margin) {
-  LimitsConstraint limit(margin);
-  arr y;
-  syncPlanWorld();
-  limit.phi(y, NoArr, planWorld);
-  return y.first();
-}
-
-double Roopi::getCollisionConstraint(double margin) {
-  CollisionConstraint collisions(margin);
-  arr y;
-  syncPlanWorld();
-  collisions.phi(y, NoArr, planWorld);
-  return y.first();
-}
-
-void Roopi::followTaskTrajectory(CtrlTask* task, double executionTime, const arr& trajectory) {
-  followTaskTrajectories(CtrlTaskL({task}), executionTime, {trajectory});
-}
-
-void Roopi::followTaskTrajectories(const CtrlTaskL& tasks, double executionTime, const arrA& trajY, const arrA& trajYDot, const arrA& trajYDDot) {
-  //TODO not reasonable yet
-  mlr::Array<mlr::Spline> ySplines;
-  mlr::Array<mlr::Spline> yDotSplines;
-  mlr::Array<mlr::Spline> yDDotSplines;
-
-  for(uint i = 0; i < tasks.N; i++) { //Not sure if the iterator returns elements in FIFO order, therefore "for" loop
-    if(trajY.N) {
-      ySplines.append(mlr::Spline(trajY(i).d0, trajY(i)));
-    }
-    if(trajYDot.N) {
-      yDotSplines.append(mlr::Spline(trajYDot(i).d0, trajYDot(i)));
-    }
-    if(trajYDDot.N) {
-      yDDotSplines.append(mlr::Spline(trajYDDot(i).d0, trajYDDot(i)));
-    }
-  }
-
-#if 1 //marc's version
-  tcm()->ctrlTasks.writeAccess();
-  for(CtrlTask *t:tcm()->ctrlTasks()) t->active=false;
-  for(CtrlTask *t:tasks) t->active=true; //they were 'added' to the ctrlTasks list on creation!!
-//  tcm()->verbose=1;
-  tcm()->ctrlTasks.deAccess();
-#else //danny's
-  tcm()->ctrlTasks.set()->clear(); // TODO memory leak! The question is if it is a good idea to delete all tasks here, because one could still use them in the main.cpp
-  addCtrlTasks(tasks);
 #endif
+}
 
-  double startTime = mlr::timerRead();
-  double time = 0.0;
-  uint n = 0;
-  cout << "start execution of trajectory" << endl;
-  while(true) { //(mt) oh no! This goes full throttle!!
-    time = mlr::timerRead() - startTime;
-//    cout << time << endl;
-    double s = time/executionTime;
-    if(s > 1.) {
-      cout << "finished execution of trajectory" << endl;
-      break;
-    }
-    for(uint i = 0; i < tasks.N; i++) {
-      modifyCtrlTaskReference(tasks(i), ySplines(i).eval(s));
-    }
-    n++;
+Act_Script Roopi::runScript(const std::function<int ()>& script){
+  return Act_Script(this, script);
+}
+
+const mlr::String& Roopi::getRobot(){
+  return s->robot;
+}
+
+Act_Thread Roopi::newComROS(){
+  return Act_Thread(this, new RosCom_Spinner());
+}
+
+Act_Thread Roopi::newCameraView(bool view){
+  if(!view) return Act_Thread(this, {new ComputeCameraView(.2)});
+  return Act_Thread(this, {new ComputeCameraView(.2), new ImageViewer("kinect_rgb")});
+}
+
+Act_Thread Roopi::newPclPipeline(bool view){
+  return Act_Thread(this, ::newPclPipeline(view));
+}
+
+Act_Thread Roopi::newPerceptionFilter(bool view){
+  return Act_Thread(this, ::newPerceptionFilter(view));
+}
+
+Act_Thread Roopi::newPhysX(){
+  return Act_Thread(this, newPhysXThread());
+}
+
+Act_Thread Roopi::newGamepadControl(){
+  return Act_Thread(this, new GamepadControlThread());
+}
+
+
+mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
+  mlr::Shape *sh;
+  {
+    auto K = setK();
+    sh = new mlr::Shape(K, NoBody);
+    sh->name = name;
+    sh->type = mlr::ST_marker;
+    sh->color[0]=.8; sh->color[1]=sh->color[2]=.0; sh->color[3]=1.;
+    sh->size[0]=.1;
+    sh->X.pos = sh->rel.pos = pos;
   }
-  for(uint i = 0; i < tasks.N; i++) {
-    modifyCtrlTaskReference(tasks(i), ySplines(i).eval(1.0));
+  resyncView();
+  return sh;
+}
+
+void Roopi::resyncView(){
+  if(s->_ctrlView)
+    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics();
+}
+
+void Roopi::kinematicSwitch(const char* object, const char* attachTo){
+  {
+    auto K = setK();
+    mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
+    mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, K, 0);
+    sw1.apply(K);
+    sw2.apply(K);
+    K().getJointState(); //enforces that the q & qdot are recalculated!
+//    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics(K);
   }
-}
-
-void Roopi::followQTrajectory(const Roopi_Path* path) {
-  CtrlTask* ct = createCtrlTask("followQTrajectory", new TaskMap_qItself);
-  ct->setC(ARR(1000.0));
-  ct->setGains(ARR(30.0), ARR(5.0));
-  followTaskTrajectory(ct, path->executionTime, path->path);
-  destroyCtrlTask(ct); //TODO this is a bit unsmooth, because then no task is active anymore! Calling holdPosition directly afterwards works, bit is a bit unsmmooth
-}
-
-Roopi_Path* Roopi::createPathInJointSpace(CtrlTask* task, double executionTime, bool verbose) {
-  return createPathInJointSpace(CtrlTaskL({task}), executionTime, verbose);
-}
-
-Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executionTime, bool verbose) {
-  Roopi_Path *path = new Roopi_Path(*this, executionTime);
-
-  syncPlanWorld();
-  MotionProblem MP(planWorld);
-
-  Task *t;
-  t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);
-  t->map.order=2; //acceleration task
-  t->setCostSpecs(0, MP.T, {0.}, 1.0);
-
-  t = MP.addTask("collisions", new CollisionConstraint(0.11), OT_ineq);
-  t->setCostSpecs(0., MP.T, {0.}, 1.0);
-  t = MP.addTask("qLimits", new LimitsConstraint(0.05), OT_ineq); //TODO!!!!!!!!!!!!!!! margin
-  t->setCostSpecs(5, MP.T, {0.}, 1.0);
-
-  for(CtrlTask* ct : tasks) {
-    t = MP.addTask(ct->name, &ct->map, OT_sumOfSqr);
-    t->setCostSpecs(MP.T-5, MP.T, ct->y_ref, 5.0); //TODO MP.T-how many? TODO ct->get_y_ref refactor!
-  }
-
-  path->path = MP.getInitialization();
-
-  optConstrained(path->path , NoArr, Convert(MP.komo_problem), OPT(verbose=verbose)); //TODO options
-  //if(verbose) MP.reportFull(); //TODO fails
-  Graph result = MP.getReport();
-  path->path.reshape(MP.T, path->path.N/MP.T);
-  path->cost = result.get<double>({"total","sqrCosts"});
-  path->constraints = result.get<double>({"total","constraints"});
-
-  if(path->constraints < .1 && path->cost < 5.) {
-    path->isGood=true;
-  } else {
-    path->isGood=false;
-    cout << "No reasonable trajectory found!" << endl;
-  }
-
-  return path;
-}
-
-bool Roopi::goToPosition(const arr& pos, const char* shape, double executionTime, bool verbose) {
-  CtrlTask* ct = new CtrlTask("pos", new TaskMap_Default(posTMT, tcm()->modelWorld.get()(), shape));
-  ct->setTarget(pos);
-  auto* path = createPathInJointSpace(ct, executionTime, verbose);
-  delete ct;
-  bool goodPath = false;
-  if(path->isGood) {
-    followQTrajectory(path);
-    goodPath = true;
-  }
-  delete path;
-  return goodPath;
-}
-
-bool Roopi::gotToJointConfiguration(const arr &jointConfig, double executionTime, bool verbose) {
-  CtrlTask* ct = new CtrlTask("q", new TaskMap_qItself);
-  ct->setTarget(jointConfig);
-  Roopi_Path* path = createPathInJointSpace(ct, executionTime, verbose); //TODO why was there a auto*
-  delete ct;
-  bool goodPath = false;
-  if(path->isGood) {
-    followQTrajectory(path);
-    goodPath = true;
-  }
-  delete path;
-  return goodPath;
+  resyncView();
 }
 
 
-/*
-void Roopi::waitConv(const CtrlTaskL& tasks){
-  for(;;){
-    mlr::wait(.03);
-    bool allConv=true;
-    for(CtrlTask *t:tasks) if(!t->isConverged()){ allConv=false; break; }
-    if(allConv) return;
-  }
-}
-
-CtrlTask* Roopi::modify(CtrlTask* t, const Graph& specs){
-  s->tcm.ctrlTasks.writeAccess();
-  t->set(specs);
-#ifdef REPORT
-  t->reportState(cout);
-#endif
-  s->tcm.ctrlTasks.deAccess();
-  return t;
-}
-*/
-
-#if 0 //(mt) no such low-level operations -- only createCtrlTask should be used!!
-void Roopi::addCtrlTask(CtrlTask* ct) {
-  tcm()->ctrlTasks.set()->append(ct);
-}
-
-void Roopi::addCtrlTasks(CtrlTaskL cts) {
-  /*for(CtrlTask* t : cts) {
-    addCtrlTask(t);
-  }*/
-  tcm()->ctrlTasks.set()->append(cts);
-}
-#endif
-
-
-
-
-
-
-//==============================================================================
-
-
-TaskReferenceInterpolAct::TaskReferenceInterpolAct(Roopi& roopi, const char* name, CtrlTask* task)
-  : Thread(name, 0.01)
-  , roopi(roopi)
-  , task(task) {
-  this->verbose = false;
-}
-
-TaskReferenceInterpolAct::~TaskReferenceInterpolAct() {
-  threadClose();
-}
-
-void TaskReferenceInterpolAct::startExecution(double executionTime, const arr& reference, const arr& startState) {
-  this->executionTime = executionTime;
-  this->reference = reference;
-  if(&startState) {
-    initialRef = startState;
-  } else {
-    initialRef = roopi.getTaskValue(task);
-  }
-  startTime = mlr::timerRead();
-  this->threadLoop();
-}
-
-void TaskReferenceInterpolAct::stopExecution() {
-  this->threadStop();
-}
-
-void TaskReferenceInterpolAct::open() {}
-
-void TaskReferenceInterpolAct::step() {
-  double time = mlr::timerRead() - startTime;
-  double s = time/executionTime;
-  if(s > 1.0) {
-    //cout << "finished" << endl;
-    roopi.modifyCtrlTaskReference(task, reference);
-    s = 1.0;
-    this->state.setValue(tsCLOSE); //TODO I have no glue if this is save :-)
-  }
-  arr actRef = initialRef + (reference - initialRef)*0.5*(1.0-cos(MLR_PI*s)); //TODO is this a good motion profile? Robotics lecture says yes :-)
-  roopi.modifyCtrlTaskReference(task, actRef);
-}
-
-void TaskReferenceInterpolAct::close() {
-  //delete this;
-}

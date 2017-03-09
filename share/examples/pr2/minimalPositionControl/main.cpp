@@ -1,6 +1,6 @@
 #include <RosCom/roscom.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
     Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
 
-    TaskControllerModule tcm;
+    TaskControlThread tcm;
     GamepadInterface gamepad;
 //    OrsViewer view;
     OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
@@ -55,7 +55,7 @@ int main(int argc, char** argv){
     task.prec = ARR(0., 100., 0.);
 //    task.Kp = ARR(0., 20., 0.);
 
-    moduleShutdown().waitForValueGreaterThan(0);
+    moduleShutdown().waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

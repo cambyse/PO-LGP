@@ -127,11 +127,15 @@ double distance_SSRects(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vect
  * That is different to the 'Shape' convention, where shapes are centered and extend (with half length) to negative and positive coordinates
  * In the code this is transformed back and forth... */
 double distance_(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb){
+  A.size[0]-=2.*A.size[3];  A.size[1]-=2.*A.size[3];  A.size[2]-=2.*A.size[3];
+  B.size[0]-=2.*B.size[3];  B.size[1]-=2.*B.size[3];  B.size[2]-=2.*B.size[3];
   A.X.pos -= 0.5*(A.X.rot*mlr::Vector(A.size[0], A.size[1], A.size[2]));
   B.X.pos -= 0.5*(B.X.rot*mlr::Vector(B.size[0], B.size[1], B.size[2]));
   double d=distance_SSRects(A, B, Pa, Pb);
   A.X.pos += 0.5*(A.X.rot*mlr::Vector(A.size[0], A.size[1], A.size[2]));
   B.X.pos += 0.5*(B.X.rot*mlr::Vector(B.size[0], B.size[1], B.size[2]));
+  A.size[0]+=2.*A.size[3];  A.size[1]+=2.*A.size[3];  A.size[2]+=2.*A.size[3];
+  B.size[0]+=2.*B.size[3];  B.size[1]+=2.*B.size[3];  B.size[2]+=2.*B.size[3];
   return d;
 }
 
@@ -139,8 +143,8 @@ void TEST(Distance){
   mlr::KinematicWorld W;
   mlr::Shape A(W, NoBody), B(W, NoBody);
   A.type = B.type = mlr::ST_ssBox;
-  memmove(A.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
-  memmove(B.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
+  memmove(A.size, ARR(.6, .6, .1, .05).p, 4*sizeof(double));
+  memmove(B.size, ARR(.6, .6, .1, .05).p, 4*sizeof(double));
   for(uint k=0;k<20;k++){
     A.X.setRandom(); A.X.pos(2) += 2.;
     B.X.setRandom(); B.X.pos(2) += 2.;
@@ -151,6 +155,7 @@ void TEST(Distance){
     mlr::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
     W.proxies.append( &p );
     W.gl().timedupdate(.1);
+//    W.gl().watch();
     W.proxies.clear();
   }
 }

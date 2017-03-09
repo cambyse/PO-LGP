@@ -1,31 +1,113 @@
 #pragma once
 
 #include <Core/array.h>
-#include <Core/graph.h>
-#include <Core/thread.h>
-#include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Kin/kin.h>
 
+#include "act.h"
+#include "act_CtrlTask.h"
+#include "act_PathOpt.h"
+#include "act_PathFollow.h"
+#include "act_TaskController.h"
+#include "act_ComPR2.h"
+#include "act_Thread.h"
+#include "act_Tweets.h"
+#include "act_Script.h"
+#include "act_Recorder.h"
+#include "script_PickAndPlace.h"
 
-struct CtrlTask;
-struct Roopi_Path;
-struct TaskReferenceInterpolAct;
-typedef mlr::Array<CtrlTask*> CtrlTaskL;
-//struct RelationalMachineModule;
 
 //==============================================================================
 
 struct Roopi {
   struct Roopi_private* s;
 
-  CtrlTaskL activeTasks;
-  mlr::KinematicWorld planWorld; ///< kinematic world for pose optimization, external degrees of freedom etc.
+  Access_typed<ActL> acts;
 
-  CtrlTask* holdPositionTask;
-
-  Roopi(mlr::KinematicWorld& world = NoWorld);
+  Roopi(bool autoStartup=false, bool controlView=true);
   ~Roopi();
 
+  //-- initialization (start... means persistent activities)
+  void setKinematics(const char* filename, bool controlView=true);          ///< set kinematics by hand (done in 'autoStartup')
+  void setKinematics(const mlr::KinematicWorld& K, bool controlView=true);  ///< set kinematics by hand (done in 'autoStartup')
+  Act_TaskController& startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
+  Act_Tweets& startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
+
+  //-- control flow
+  /** wait until the status of each act in the set if non-zero (zero usually means 'still running')
+      after this, you can query the status and make decisions based on that */
+  bool wait(std::initializer_list<Act*> acts, double timeout=-1.);
+
+  /** this takes an int-valued function (use a lambda expression to capture scope) and
+      run it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
+  Act_Script runScript(const std::function<int()>& script);
+
+  //TODO: runScriptOnEvent(const std::function<int()>& script, Event, bool whenever=false);
+  //TODO: define the notion of an Event as a set of act and conditions of their status -> wait(Event)
+
+  //-- get some information
+  const mlr::String& getRobot();                     ///< returns "pr2", "baxter", or "none"
+  arr get_q0();                                      ///< return the 'homing pose' of the robot
+  Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
+  Act_ComPR2& getComPR2();
+  void reportCycleTimes();
+
+  //-- kinematic editing (to be done more..)
+  mlr::Shape* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
+  void kinematicSwitch(const char* object, const char* attachTo); ///< switches kinematics in the model world
+  WToken<mlr::KinematicWorld> setK();                             ///< get write access to the model world
+  RToken<mlr::KinematicWorld> getK();                             ///< get read access to the model world
+  void resyncView();
+
+  //-- control
+  Act_CtrlTask newCtrlTask(){ return Act_CtrlTask(this); }  ///< set the CtrlTask yourself (see newHoldingTask as example)
+  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
+  Act_CtrlTask newCtrlTask(const char* specs);
+  // predefined
+  Act_CtrlTask home();
+  Act_CtrlTask lookAt(const char* shapeName, double prec=1e-2);
+  Act_CtrlTask newHoldingTask();
+  Act_CtrlTask newCollisionAvoidance();
+  Act_CtrlTask newLimitAvoidance();
+  // persistent
+  void hold(bool still);
+  Act_CtrlTask* collisions(bool on);
+
+
+  //-- some activities
+  Act_Thread  newThread(Thread* th)  { return Act_Thread(this, th); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
+  Act_ComPR2  newComPR2()            { return Act_ComPR2(this); } ///< subscribers/publishers that communicate with PR2
+  Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
+
+  Act_Thread newComROS(); ///< thread for the ROS spinner
+  Act_Thread newPhysX();           ///< run PhysX (nvidia physical simulator)
+  Act_Thread newGamepadControl();  ///< activate gamepad to set controls
+  Act_Thread newCameraView(bool view=true);      ///< compute and display the camera view
+//  Act_Thread newKinect2Pcl(bool view=true);
+  Act_Thread newPclPipeline(bool view=false);
+  Act_Thread newPerceptionFilter(bool view=false);
+
+
+  //==============================================================================
+  //
+  // MACROS, which call scripts
+  //
+
+  Act_Script graspBox(const char* objName, LeftOrRight lr){
+    return runScript( [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
+  }
+  Act_Script place(const char* objName, const char* ontoName){
+    return runScript( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
+  }
+  Act_Script placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
+    return Act_Script(this, [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
+  }
+
+};
+
+//==============================================================================
+
+
+#if 0
   //-- control tasks
 
   /// creates a new CtrlTask; pass a 'newed' map as argument, it will be deleted later; after creation it is inactive
@@ -41,14 +123,6 @@ struct Roopi {
 
   /// modifies CtrlTasks
   void modifyCtrlTaskReference(CtrlTask* ct, const arr& yRef, const arr& yDotRef = NoArr);
-  void modifyCtrlTaskGains(CtrlTask* ct, const arr& Kp, const arr& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
-  void modifyCtrlTaskGains(CtrlTask* ct, const double& Kp, const double& Kd, const double maxVel = 0.0, const double maxAcc = 0.0);
-  void modifyCtrlC(CtrlTask* ct, const arr& C);
-  /// force related
-  void modifyForceRef(CtrlTask* ct, const arr& fRef);
-  void modifyForceAlpha(CtrlTask* ct, double fAlpha);
-  void modifyForceGamma(CtrlTask* ct, double fGamma);
-  void modifyForce(CtrlTask* ct, const arr& fRef, const double& fAlpha, const double& fGamma);
 
   /// holds all joints in position. Desactivates all other tasks
   void holdPosition();
@@ -66,7 +140,7 @@ struct Roopi {
   bool waitForConvTo(CtrlTask* ct, const arr& desState, double maxTime = -1, double tolerance = 1e-2);
 
   // low-level ctr - use is discouraged!!
-  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
+  struct TaskControlThread* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 //  void addCtrlTask(CtrlTask* ct); ///< adds CtrlTask directly to the taskController
 //  void addCtrlTasks(CtrlTaskL cts); ///< adds multiple CtrlTasks directly to the taskController
 
@@ -119,8 +193,9 @@ struct Roopi {
   arr getTaskValue(CtrlTask* task);
 
   /// sync the joint configuration of the model world into the planWorld
-  void syncPlanWorld();
+  void syncWorldWithReal(mlr::KinematicWorld& K);
   mlr::KinematicWorld& getPlanWorld();
+  void copyModelWorld(mlr::KinematicWorld& K);
 
   double getLimitConstraint(double margin = 0.05);
   double getCollisionConstraint(double margin = 0.1);
@@ -132,49 +207,6 @@ struct Roopi {
 //  //-- wait for & stop tasks
   void stop(const CtrlTaskL& tasks);
   void waitConv(const CtrlTaskL& tasks);
+#endif
 
-};
-
-//==============================================================================
-
-struct Roopi_CtrlTask{
-  Roopi &roopi;
-  CtrlTask *task;
-  Roopi_CtrlTask(Roopi& r, CtrlTask *t) : roopi(r), task(t) {}
-};
-
-//==============================================================================
-
-struct Roopi_Path{
-  Roopi &roopi;
-  arr path;
-  double executionTime;
-  double cost;
-  double constraints;
-  bool isGood;
-  Roopi_Path(Roopi& r, double executionTime) : roopi(r), executionTime(executionTime), isGood(false){}
-};
-
-
-
-//==============================================================================
-
-struct TaskReferenceInterpolAct : Thread {
-  Roopi& roopi;
-  CtrlTask* task;
-  double executionTime;
-  arr reference;
-  arr initialRef;
-  double startTime;
-
-  TaskReferenceInterpolAct(Roopi& roopi, const char* name, CtrlTask* task);
-  ~TaskReferenceInterpolAct();
-
-  void startExecution(double executionTime, const arr& reference, const arr& startState = NoArr);
-  void stopExecution();
-
-  void open();
-  void step();
-  void close();
-};
 

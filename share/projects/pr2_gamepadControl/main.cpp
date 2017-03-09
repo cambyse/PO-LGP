@@ -1,5 +1,5 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
 
@@ -44,7 +44,7 @@ void TEST(Gamepad){
   world.gl().addDrawer(&world_pr2);
   world.gl().add(changeColor2);
 
-  TaskController MP(world, true);
+  TaskControlMethods MP(world, true);
   MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = world.getHmetric();
   Gamepad2Tasks j2t(MP);
@@ -210,11 +210,11 @@ void TEST(Gamepad){
       ctrl_ref.set() = refs;
     }
 
-    if(moduleShutdown().getValue()/* || !rosOk()*/) break;
+    if(moduleShutdown().getStatus()/* || !rosOk()*/) break;
   }
 
   threadCloseModules();
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

@@ -18,7 +18,7 @@ int main(int argc, char **argv)
   PublisherConv<std_msgs::Float32MultiArray, floatA, &conv_floatA2Float32Array>  pub_floats("/g4_data", dataAccess);
 
   threadOpenModules(true);
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
   threadCloseModules();
   return 0;
 }

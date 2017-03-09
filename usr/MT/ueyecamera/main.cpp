@@ -48,12 +48,12 @@ void threadedRun() {
   /*//engine().enableAccessLog();
   engine().dumpAccessLog();*/
   threadOpenModules(true);
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 
 
   /*
   for(t=0; ; t++){
-    if(moduleShutdown().getValue()) break;
+    if(moduleShutdown().getStatus()) break;
     S.ueye_rgb.data->waitForNextRevision();
     rgbImg = S.ueye_rgb.get();
     if(rgbImg.N>0) {

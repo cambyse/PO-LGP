@@ -14,11 +14,11 @@ void getCam(){
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown().waitForStatusGreaterThan(0);
 
   threadCloseModules();
 
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

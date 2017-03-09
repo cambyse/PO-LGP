@@ -1,5 +1,5 @@
 #include <Kin/kin.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Motion/taskMaps.h>
 
 void reach(){
@@ -7,7 +7,7 @@ void reach(){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  TaskController MP(world, true);
+  TaskControlMethods MP(world, true);
   MP.addPDTask("endeff1", .3, .8, posTMT, "handR", NoVector, "rightTarget");
 //  CtrlTask *t = MP.addPDTask("endeff1", .1, .8, posTMT, "handL");
 //  t->y_ref={0,-.5,1};

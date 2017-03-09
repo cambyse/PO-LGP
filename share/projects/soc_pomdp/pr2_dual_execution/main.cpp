@@ -1,5 +1,5 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -119,7 +119,7 @@ void POMDPExecution(mlr::KinematicWorld& world, const arr& x, const arr& y, cons
 
     double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-    TaskController MP(world);
+    TaskControlMethods MP(world);
     MP.qitselfPD.active=true;
 
     //position PD task:  decayTime = 0.1, dampingRatio = 0.8
@@ -240,7 +240,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  //TaskController MC(world);
+  //TaskControlMethods MC(world);
   activity.machine->s->MP.qitselfPD.active=true;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
@@ -387,7 +387,7 @@ void PR2_ActionMachine(mlr::KinematicWorld& world, const arr& x, const arr& y, c
 
   //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
-  TaskController MP(world, true); // true means using swift
+  TaskControlMethods MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = world.getHmetric();
 

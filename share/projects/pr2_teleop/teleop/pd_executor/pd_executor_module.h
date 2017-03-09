@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 //#ifdef WITH_ROS
   #include <Actions/actions.h>
@@ -32,14 +32,14 @@ struct PDExecutor: Thread{
   ACCESS(floatA, poses_lh);
 
   ACCESS(bool, initmapper);  
-  // TaskController stuff
+  // TaskControlMethods stuff
   ACCESS(arr, drive);
   ACCESS(bool,calisaysokay);
   ACCESS(bool,taped);
 
   mlr::KinematicWorld world;
   mlr::KinematicWorld worldreal;
-  TaskController fmc;
+  TaskControlMethods fmc;
   arr q, qdot ;
 
   bool inited, useros;

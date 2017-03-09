@@ -63,7 +63,7 @@ for link in links:
     # collision shape
     collision = link.find("collision")
     if collision is not None:
-        print 'shape collision %s_0 (%s) { cont,' % (name, name)
+        print 'shape collision %s_0 (%s) {' % (name, name)
         writeShape(collision)
         print '}\n', # end of shape
 

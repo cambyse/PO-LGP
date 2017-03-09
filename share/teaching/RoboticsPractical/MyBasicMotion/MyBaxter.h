@@ -6,11 +6,11 @@
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/subscribeTabletop.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
@@ -28,9 +28,9 @@
 
 class MyBaxter {
     Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
-    ACCESSname(FilterObjects, object_database)
+    ACCESSname(PerceptL, percepts_filtered)
 
-    TaskControllerModule tcmBax;
+    TaskControlThread tcmBax;
     RosInit rosInit;    
 
     SubscribeTabletop tabletop_subscriber;
@@ -210,7 +210,7 @@ CtrlTask* MyBaxter::goToPosition(const char* frame1, const char* frame2, arr pos
 //position.prec=100; weight
 
 void MyBaxter::changePosition(CtrlTask* position, arr pos){
-    set.removeValueSafe(position);
+    set.removeValue(position, false);
     tcmBax.ctrlTasks.set()=set;
     position->y_ref=pos;
 
@@ -234,28 +234,28 @@ CtrlTask* MyBaxter::align(char *name, char* frame1, mlr::Vector vec1, char* fram
 
 
 uint MyBaxter::reportPerceptionObjects(){
-  object_database.readAccess();
-  FilterObjects clusters;
+  percepts_filtered.readAccess();
+  PerceptL clusters;
   uint n=0;
-  for(FilterObject* fo : object_database()){
+  for(Percept* fo : percepts_filtered()){
     fo->write(cout);
     cout <<endl;
     n++;
   }
-  object_database.deAccess();
+  percepts_filtered.deAccess();
   return n;
 }
 
 
 mlr::Vector MyBaxter::closestCluster(){
-  object_database.readAccess();
+  percepts_filtered.readAccess();
 
   mlr::Vector toReturn(0,0,0);
 
   double max_dist = DBL_MIN;
-  for(FilterObject* fo : object_database())
+  for(Percept* fo : percepts_filtered())
   {
-    if (fo->type == FilterObject::FilterObjectType::cluster)
+    if (fo->type == Percept::Type::cluster)
     {
       mlr::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
       double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
@@ -266,27 +266,27 @@ mlr::Vector MyBaxter::closestCluster(){
       }
     }
   }
-  object_database.deAccess();
+  percepts_filtered.deAccess();
 
   return toReturn;
 }
 
 
 mlr::Vector MyBaxter::arPose(){
-  object_database.readAccess();
+  percepts_filtered.readAccess();
 
   mlr::Vector toReturn(0,0,0);
 
-  for(FilterObject* fo : object_database())
+  for(Percept* fo : percepts_filtered())
   {
-    if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
+    if ((fo->id == 2) && (fo->type == Percept::Type::alvar))
     {
       mlr::Transformation pos = fo->frame * fo->transform;
       toReturn = pos.pos;
       std::cout << toReturn << std::endl;
     }
   }
-  object_database.deAccess();
+  percepts_filtered.deAccess();
 
   return toReturn;
 }

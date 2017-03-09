@@ -1,7 +1,7 @@
 #include <Motion/motion.h>
 #include <Motion/taskMaps.h>
 #include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Optim/optimization.h>
 
 
@@ -51,7 +51,7 @@ void testExecution(const arr& x, const arr& y, const arr& dual, mlr::KinematicWo
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  TaskController MC(world);
+  TaskControlMethods MC(world);
   MC.qitselfPD.active=false;
 
   CtrlTask *pd_y=

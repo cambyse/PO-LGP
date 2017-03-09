@@ -4,7 +4,7 @@
 #include <Core/graph.h>
 #include <Core/module.h>
 #include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 
 //==============================================================================
@@ -62,7 +62,41 @@ struct Roopi {
   Roopi(mlr::KinematicWorld& world = NoWorld);
   ~Roopi();
 
+  
+  void loadKinematics(const char* filename, const char* variableKey="kinematics");
+
+  void startTaskController();
+  void startControllerLog();
+  void startRosCom();
+  void startObjectFilter(bool alvar=true, bool tabletop=true);
+  void startGamepadTasker();
+
+  //-- display and interaction
+  GamepadInterface gamepad;
+
+  mlr::KinematicWorld* cu;
+
+  //OrsViewer view;
+  OrsPoseViewer* ctrlView;
+
+  //-- sync'ing with ROS
+  Subscriber<sensor_msgs::JointState> subJointState;
+
+  #if baxter
+  SendPositionCommandsToBaxter spctb;
+  #endif
+
+
+  //PR2
+  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> subCtrl;
+  PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          pubCtrl;
+  SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>       subOdom;
+
+  RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
+
+
   //-- general control flow activities
+
 
   /// wait for all given CtrlTasks to be converged
   bool waitForConv(Activity& ct, double maxTime = -1, double tolerance = 1e-2);
@@ -148,7 +182,7 @@ struct Roopi {
   double getCollisionConstraint(double margin = 0.1);
 
   // low-level ctr - use is discouraged!!
-  struct TaskControllerModule* tcm(); //low-level access of the tcm - really necessary? Danny: yes
+  struct TaskControlThread* tcm(); //low-level access of the tcm - really necessary? Danny: yes
 
   //-- TODO
 
@@ -166,8 +200,8 @@ struct Roopi_CtrlTask : Roopi_Activity{
   Roopi &roopi;
   CtrlTask *task;
   Roopi_CtrlTask(Roopi& r, CtrlTask *t) : roopi(r), task(t) {
-
   }
+
   ~Roopi_CtrlTask(){
     //destroy control task
   }

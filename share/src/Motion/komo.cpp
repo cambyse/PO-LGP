@@ -83,9 +83,9 @@ void KOMO::init(const Graph& _specs){
   if(glob["makeConvexHulls"])
     makeConvexHulls(world.shapes);
 
-  if(glob["makeSSBoxes"]){
+  if(glob["computeOptimalSSBoxes"]){
     NIY;
-    //for(mlr::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    //for(mlr::Shape *s: world.shapes) s->mesh.computeOptimalSSBox(s->mesh.V);
     world.gl().watch();
   }
 
@@ -109,7 +109,7 @@ void KOMO::setFact(const char* fact){
 }
 
 void KOMO::setModel(const mlr::KinematicWorld& W,
-                    bool meldFixedJoints, bool makeConvexHulls, bool makeSSBoxes, bool activateAllContacts){
+                    bool meldFixedJoints, bool makeConvexHulls, bool computeOptimalSSBoxes, bool activateAllContacts){
 
   world.copy(W);
 
@@ -123,9 +123,9 @@ void KOMO::setModel(const mlr::KinematicWorld& W,
   }
   computeMeshNormals(world.shapes);
 
-  if(makeSSBoxes){
+  if(computeOptimalSSBoxes){
     NIY;
-    //for(mlr::Shape *s: world.shapes) s->mesh.makeSSBox(s->mesh.V);
+    //for(mlr::Shape *s: world.shapes) s->mesh.computeOptimalSSBox(s->mesh.V);
     world.gl().watch();
   }
 
@@ -133,6 +133,24 @@ void KOMO::setModel(const mlr::KinematicWorld& W,
     for(mlr::Shape *s:world.shapes) s->cont=true;
     world.swift().initActivations(world);
   }
+
+  FILE("z.komo.model") <<world;
+}
+
+void KOMO::useOnlyJointGroup(const StringA& groupNames){
+  for(mlr::Joint *j:world.joints){
+    bool lock=true;
+    for(const mlr::String& s:groupNames) if(j->ats.getNode(s)){ lock=false; break; }
+    if(lock) j->type = mlr::JT_rigid;
+  }
+  world.qdim.clear();
+  world.q.clear();
+  world.qdot.clear();
+
+  world.getJointState();
+
+  world.meldFixedJoints();
+  world.removeUselessBodies();
 
   FILE("z.komo.model") <<world;
 }
@@ -270,7 +288,7 @@ void KOMO::setVelocity(double startTime, double endTime, const char* shape, cons
 }
 
 void KOMO::setLastTaskToBeVelocity(){
-  MP->tasks.last()->map.order = 1; //set to be velocity!
+  MP->tasks.last()->map->order = 1; //set to be velocity!
 }
 
 void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose, double weightFromTop){
@@ -512,7 +530,7 @@ void KOMO::setConfigFromFile(){
         W,
         mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
         mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
-        mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
+        mlr::getParameter<bool>("KOMO/computeOptimalSSBoxes", false),
         mlr::getParameter<bool>("KOMO/activateAllContact", false)
         );
   setTiming(
@@ -704,15 +722,15 @@ void setTasks(MotionProblem& MP,
 
   t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);
   if(timeSteps!=0){
-    t->map.order=2; //make this an acceleration task!
+    t->map->order=2; //make this an acceleration task!
   }else{
-    t->map.order=1; //make this a velocity task!
+    t->map->order=1; //make this a velocity task!
   }
   t->setCostSpecs(0, MP.T-1, {0.}, 1e0);
 
   if(timeSteps!=0){
     t = MP.addTask("final_vel", new TaskMap_qItself(), OT_sumOfSqr);
-    t->map.order=1; //make this a velocity task!
+    t->map->order=1; //make this a velocity task!
     t->setCostSpecs(MP.T-4, MP.T-1, {0.}, zeroVelPrec);
   }
 
@@ -740,6 +758,8 @@ void setTasks(MotionProblem& MP,
 }
 
 //===========================================================================
+
+
 
 
 

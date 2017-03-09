@@ -45,7 +45,8 @@ struct KOMO{ //TODO: rename ManipOp
 
   //-- setup the problem
   void setModel(const mlr::KinematicWorld& W,
-                bool meldFixedJoints=false, bool makeConvexHulls=false, bool makeSSBoxes=false, bool activateAllContacts=false);
+                bool meldFixedJoints=false, bool makeConvexHulls=false, bool computeOptimalSSBoxes=false, bool activateAllContacts=false);
+  void useOnlyJointGroup(const StringA& groupNames);
   void setTiming(double _phases=1., uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
 
   //-- higher-level defaults
@@ -62,9 +63,9 @@ struct KOMO{ //TODO: rename ManipOp
     setSquaredFixSwitchedObjects();
     setSquaredQVelocities();
   }
-  void setPathOpt(double _phases){
-    setTiming(_phases, 20, 5., 2, false);
-    setSquaredFixJointVelocities(-1., -1., 1e3);
+  void setPathOpt(double _phases, uint stepsPerPhase=20, double timePerPhase=5.){
+    setTiming(_phases, stepsPerPhase, timePerPhase, 2, false);
+    setSquaredFixJointVelocities();
     setSquaredFixSwitchedObjects();
     setSquaredQAccelerations();
   }

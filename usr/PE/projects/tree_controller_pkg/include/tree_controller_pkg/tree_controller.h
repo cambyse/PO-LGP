@@ -4,7 +4,7 @@
 #include <std_srvs/Empty.h>
 #include <pr2_mechanism_model/tree.h>
 #include <Kin/kin.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Algo/MLcourse.h>
 #include <tree_controller_pkg/SetVecTarget.h>
 #include <tree_controller_pkg/GetVecTarget.h>
@@ -44,7 +44,7 @@ private:
   KDL::JntArray jnt_efforts_;
 
   // Kin related variables
-  TaskController* MP;
+  TaskControlMethods* MP;
   mlr::KinematicWorld* world;
   CtrlTask *taskPos, *taskVec, *taskHome, *taskLimits;
   arr u;

@@ -16,8 +16,6 @@ using namespace std;
 //===========================================================================
 
 
-
-
 void init(KOMO& komo, uint trial, mlr::KinematicWorld& W, mlr::KinematicWorld& Wfin, double phases=4.){
   W.init(STRING("model_"<<trial <<".g"));
   Wfin.init(STRING("model_"<<trial+1 <<".g"));  

@@ -146,7 +146,7 @@ void MinEigModel::computeConvexHull2(){
   if(hull.N<5) return;
   hull.reshape(hull.N/2,2);
   try{
-    getTriangulatedHull(convexHull.T, hull);
+    hull = getHull(hull, convexHull.T);
   }catch(...){ return; }
   convexHull.V.resize(hull.d0,3);
   for(uint i=0;i<hull.d0;i++){

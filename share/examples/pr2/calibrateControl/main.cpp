@@ -1,5 +1,5 @@
 #include <Core/thread.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Roopi/roopi.h>
 #include <Roopi/loggingModule.h>
 
@@ -107,9 +107,9 @@ void testFTCompensation() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
   //sampleData();
-  //learnModel();
+  learnModel();
   //testCollision();
   //testOnRobot();
-  testFTCompensation();
+  //testFTCompensation();
   return 0;
 }

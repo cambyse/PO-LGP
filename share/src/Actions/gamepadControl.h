@@ -2,7 +2,7 @@
 
 #include "activity.h"
 #include <Control/ctrlMsg.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 // ============================================================================
 
@@ -13,7 +13,7 @@ struct GamepadControlActivity : Activity, Thread {
   ACCESS(arr, gamepadState)
   ACCESS(arr, pr2_odom)
 
-  struct TaskControllerModule *taskController;
+  struct TaskControlThread *taskController;
   struct Gamepad2Tasks *g2t;
 
   GamepadControlActivity();
