@@ -25,12 +25,12 @@ void TEST(PR2reach){
   Task *t;
 
   t = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
-  t->map.order=2; //make this an acceleration task!
+  t->map->order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 //  t = MP.addTask("final_vel", new TaskMap_Transition(G));
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff"), OT_sumOfSqr);
-  t->map.order=1; //make this a velocity task!
+  t->map->order=1; //make this a velocity task!
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, MP.world.getShapeByName("target")->X.pos), OT_sumOfSqr);
@@ -78,7 +78,7 @@ void TEST(Basics){
   Task *t;
 
   t = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
-  t->map.order=2; //make this an acceleration task!
+  t->map->order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   //#define CONSTRAINT
@@ -90,7 +90,7 @@ void TEST(Basics){
   t->setCostSpecs(0, MP.T, {0.}, 1.);
 
   t = MP.addTask("final_vel", new TaskMap_Transition(G), OT_sumOfSqr);
-  t->map.order=1; //make this a velocity task!
+  t->map->order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e1);
 
   t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", mlr::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos), OT_sumOfSqr);
