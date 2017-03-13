@@ -59,7 +59,7 @@ void PclPipeline::step(){
   percepts_input.set()->append(percepts);
 }
 
-PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
+PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbosePercepts){
   Pcl::ConstPtr input(newInput);
 
   PerceptL percepts; //all percepts that are generated as output of the pipeline
@@ -96,7 +96,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   byteA meshRgb;
   conv_PclCloud_ArrCloud(mesh.V, meshRgb, *filtered);
   copy(mesh.C, meshRgb);   mesh.C /= 255.;
-//  percepts.append(new PercMesh(mesh));
+  if(verbosePercepts) percepts.append(new PercMesh(mesh));
 
   if(filtered->size()<100) return percepts;
 
@@ -117,7 +117,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
   mesh.makeLineStrip();
   mesh.C = meanCol;
   mesh.transform(-T);
-//  percepts.append(new Plane(T, mesh));
+  if(verbosePercepts) percepts.append(new PercPlane(T, mesh));
 
   //-- project hull in 2D and apply OpenCV rotated box fitting
   floatA X;
@@ -157,7 +157,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
       mesh.makeLineStrip();
       mesh.C = meanCol;
       mesh.transform(-T);
-//      percepts.append(new Plane(T, mesh));
+      if(verbosePercepts) percepts.append(new PercPlane(T, mesh));
 
       //-- project hull in 2D and apply OpenCV rotated box fitting
       copy(X, mesh.V);

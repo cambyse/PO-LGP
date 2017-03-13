@@ -19,4 +19,4 @@ struct PclPipeline : Thread{
 };
 
 
-PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput);
+PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbosePercepts=false);
