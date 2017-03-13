@@ -39,21 +39,21 @@ void TaskMap_AboveBox::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t){
   arr pos,posJ;
   G.kinematicsRelPos(pos, posJ, s1->body, s1->rel.pos, s2->body, s2->rel.pos);
   arr range(3);
-  double d1 = .5*s1->size[0] + s1->size[3];
+  double d1 = .5*s1->size(0) + s1->size(3);
   d1 =.05; //TODO: fixed! support size/radius of object on top
-  double d2 = .5*s2->size[0] + s2->size[3];
+  double d2 = .5*s2->size(0) + s2->size(3);
   range(0) = fabs(d1 - d2);
-  d1 = .5*s1->size[1] + s1->size[3];
+  d1 = .5*s1->size(1) + s1->size(3);
   d1 =.05; //TODO: fixed! support size/radius of object on top
-  d2 = .5*s2->size[1] + s2->size[3];
+  d2 = .5*s2->size(1) + s2->size(3);
   range(1) = fabs(d1 - d2);
   range(2)=0.;
 //  if(verbose>2) cout <<pos <<range
 //                    <<pos-range <<-pos-range
-//                   <<"\n 10=" <<s1->size[0]
-//                  <<" 20=" <<s2->size[0]
-//                 <<" 11=" <<s1->size[1]
-//                <<" 21=" <<s2->size[1]
+//                   <<"\n 10=" <<s1->size(0)
+//                  <<" 20=" <<s2->size(0)
+//                 <<" 11=" <<s1->size(1)
+//                <<" 21=" <<s2->size(1)
 //               <<endl;
   y.resize(4);
   y(0) =  pos(0) - range(0);

@@ -90,9 +90,9 @@ void TaskMap_GJK::phi(arr& v, arr& J, const mlr::KinematicWorld& W, int t){
   }
   //reduce by radii
   double l2=sumOfSqr(v), l=sqrt(l2);
-  double fac = (l-s1->size[3]-s2->size[3])/l;
+  double fac = (l-s1->size(3)-s2->size(3))/l;
   if(&J){
-    arr d_fac = (1.-(l-s1->size[3]-s2->size[3])/l)/l2 *(~v)*J;
+    arr d_fac = (1.-(l-s1->size(3)-s2->size(3))/l)/l2 *(~v)*J;
     J = J*fac + v*d_fac;
   }
   v *= fac;

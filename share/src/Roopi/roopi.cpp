@@ -302,7 +302,7 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
     sh = new mlr::Shape(K, NoBody);
     sh->name = name;
     sh->type = mlr::ST_marker;
-    sh->color[0]=.8; sh->color[1]=sh->color[2]=.0; sh->color[3]=1.;
+    sh->mesh.C = {.8,0,0}; //color[0]=.8; sh->color[1]=sh->color[2]=.0; sh->color[3]=1.;
     sh->size[0]=.1;
     sh->X.pos = sh->rel.pos = pos;
   }

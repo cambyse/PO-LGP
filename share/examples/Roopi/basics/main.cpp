@@ -181,7 +181,7 @@ void TEST(PickAndPlace2) {
   {
     auto path = R.newPathOpt();
     double t1=.75;
-    arr obj1size(R.getK()->getShapeByName("obj1")->size, 4);
+    arr obj1size = R.getK()->getShapeByName("obj1")->size;
     double gripSize = obj1size(1) + 2.*obj1size(3);
     double above = obj1size(2)*.5 + obj1size(3) - .02;
 
@@ -213,7 +213,7 @@ void TEST(PickAndPlace2) {
   }
 
   {
-    arr obj1size(R.getK()->getShapeByName("obj1")->size, 4);
+    arr obj1size = R.getK()->getShapeByName("obj1")->size;
     double gripSize = obj1size(1) + 2.*obj1size(3);
     auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getK()), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getK()), {}, {::asin(gripSize/(2.*.10))});
@@ -228,7 +228,6 @@ void TEST(Perception) {
   Roopi R(true, false);
 
   R.getTaskController().lockJointGroupControl("base");
-
 
   mlr::Shape *topMost = NULL;
   OrsViewer v1("modelWorld");

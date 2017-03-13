@@ -39,7 +39,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     auto K = R.getK();
 
     //get obj size
-    arr objSize(K().getShapeByName(objName)->size, 4, false);
+    arr objSize = K().getShapeByName(objName)->size;
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2);
@@ -131,8 +131,8 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName){
     auto K = R.getK();
 
     //get obj size
-    arr objSize(K().getShapeByName(objName)->size, 4, false);
-    arr ontoSize(K().getShapeByName(ontoName)->size, 4, false);
+    arr objSize = K().getShapeByName(objName)->size;
+    arr ontoSize = K().getShapeByName(ontoName)->size;
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
@@ -215,8 +215,8 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto K = R.getK();
 
     //get obj size
-    arr objSize(K().getShapeByName(objName)->size, 4, false);
-    arr ontoSize(K().getShapeByName(ontoName)->size, 4, false);
+    arr objSize = K().getShapeByName(objName)->size;
+    arr ontoSize = K().getShapeByName(ontoName)->size;
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);

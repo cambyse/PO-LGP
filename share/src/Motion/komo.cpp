@@ -41,7 +41,7 @@ void setTasks(MotionProblem& MP,
 
 double height(mlr::Shape* s){
   CHECK(s,"");
-  return 2.*s->size[2];// + s->size[3];
+  return 2.*s->size(2);// + s->size[3];
 }
 
 KOMO::KOMO() : MP(NULL), opt(NULL), verbose(1){
