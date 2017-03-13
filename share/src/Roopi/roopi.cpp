@@ -273,9 +273,9 @@ Act_Thread Roopi::RosCom(){
   return Act_Thread(this, new RosCom_Spinner());
 }
 
-Act_Thread::Ptr Roopi::CameraView(bool view){
-  if(!view) return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2)}));
-  return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2), new ImageViewer("kinect_rgb")}));
+Act_Thread::Ptr Roopi::CameraView(bool view, const char* modelWorld_name){
+  if(!view) return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2, modelWorld_name)}));
+  return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2, modelWorld_name), new ImageViewer("kinect_rgb")}));
 }
 
 Act_Thread Roopi::PclPipeline(bool view){

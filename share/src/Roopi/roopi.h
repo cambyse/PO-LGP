@@ -88,7 +88,7 @@ struct Roopi {
   Act_Thread RosCom(); ///< thread for the ROS spinner
   Act_Thread PhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread GamepadControl();  ///< activate gamepad to set controls
-  Act_Thread::Ptr CameraView(bool view=true);      ///< compute and display the camera view
+  Act_Thread::Ptr CameraView(bool view=true, const char* modelWorld_name="modelWorld");      ///< compute and display the camera view
 //  Act_Thread newKinect2Pcl(bool view=true);
   Act_Thread PclPipeline(bool view=false);
   Act_Thread PerceptionFilter(bool view=false);

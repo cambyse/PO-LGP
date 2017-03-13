@@ -37,7 +37,7 @@ void projectOnPlane(
     const pcl::PointIndices::ConstPtr& inliers,
     const Pcl::ConstPtr& input);
 void filterPointsByIndex(Pcl::Ptr& output, const pcl::PointIndices::ConstPtr& inliers,  const Pcl::ConstPtr& input, bool positive);
-void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::ConstPtr& input);
+void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::ConstPtr& input, uint minSize);
 
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointCloud<PointT> Pcl;
@@ -136,14 +136,13 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput){
     Pcl::Ptr remains(new Pcl);
     filterPointsByIndex(remains, inliers, filtered, false);
     std::vector<pcl::PointIndices> cluster_indices;
-    getClusters(cluster_indices, remains);
+    getClusters(cluster_indices, remains, 50);
 
     //-- fit each cluster with a plane
     for(pcl::PointIndices& ci: cluster_indices){
       //select
       Pcl::Ptr cluster(new Pcl);
       filterPointsByIndex(cluster, boost::make_shared<const pcl::PointIndices>(ci), remains, true);
-      if(cluster->size()<50) continue;
 
       //detect plane
 //      detectPlane(plane_coefficients, inliers, hull, meanPts, meanCol, cluster);
@@ -257,13 +256,13 @@ void filterPointsByIndex(Pcl::Ptr& output, const pcl::PointIndices::ConstPtr& in
   extract.filter(*output);
 }
 
-void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::ConstPtr& input){
+void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::ConstPtr& input, uint minSize){
   pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
   tree->setInputCloud(input);
 
   pcl::EuclideanClusterExtraction<PointT> ec;
   ec.setClusterTolerance (0.02);
-  ec.setMinClusterSize (100);
+  ec.setMinClusterSize (minSize);
   ec.setMaxClusterSize (25000);
   ec.setSearchMethod (tree);
   ec.setInputCloud (input);

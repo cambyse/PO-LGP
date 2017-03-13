@@ -28,7 +28,8 @@ enum TaskMap_DefaultType {
   quatDiffTMT,///< the difference of 2 quaternions (NOT the relative quaternion)
   vecAlignTMT,///< 1D vector alignment, can have 2nd reference, param (optional) determins alternative reference world vector
   gazeAtTMT,  ///< 2D orthogonality measure of object relative to camera plane
-  pos1DTMT
+  pos1DTMT,
+  poseDiffTMT
 };
 extern const char* TaskMap_DefaultType2String[];
 

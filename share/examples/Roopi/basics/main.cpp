@@ -229,30 +229,35 @@ void TEST(Perception) {
 
   R.getTaskController().lockJointGroupControl("base");
 
+
   mlr::Shape *topMost = NULL;
-  OrsViewer v2("modelWorld");
+  OrsViewer v1("modelWorld");
 
   {
     //    auto L = R.lookAt("S3");
     auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
+    R.wait({&look});
 
-    Act_Thread::Ptr view;
-    if(R.useRos()){
-      SubscribeRosKinect subKin; //subscription into depth and rgb images
-  //    SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
-      ImageViewer v1("kinect_rgb");
-    }else{
-      view = R.CameraView(true); //generate depth and rgb images from a modelWorld view
-    }
-    R.variable<byteA>("kinect_rgb").waitForStatusGreaterThan(10);
+#if 0 //on real robot!
+    SubscribeRosKinect subKin; //subscription into depth and rgb images
+//    SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+    ImageViewer v1("kinect_rgb");
+#else //in simulation: create a separate viewWorld
+    Access_typed<mlr::KinematicWorld> c("viewWorld");
+    c.writeAccess();
+    c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+    c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+    c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+    c.deAccess();
+    OrsViewer v2("viewWorld");
+    auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
+#endif
+    R.variable<byteA>("kinect_rgb").waitForStatusGreaterThan(3);
 
     auto pcl = R.PclPipeline(false);
     auto filter = R.PerceptionFilter(true);
-//    mlr::wait();
-    {
-//      SyncFiltered sync("modelWorld");
-      mlr::wait(4.);
-    }
+
+    mlr::wait(3.);
 
     for(mlr::Shape *s:R.getK()->shapes){
       if(s->type==mlr::ST_box && s->name.startsWith("perc_")){
@@ -268,6 +273,7 @@ void TEST(Perception) {
       auto L = R.lookAt(topMost->name);
       mlr::wait();
     }
+
     mlr::wait();
   }
 

@@ -267,10 +267,10 @@ void TaskMap_Default::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   }
 
   if(type==quatDiffTMT){
-//    mlr::Quaternion q_i; if(i>=0) q_i=G.shapes(i)->rel.rot; else q_i.setZero();
-//    mlr::Quaternion q_j; if(j>=0) q_j=G.shapes(j)->rel.rot; else q_j.setZero();
     G.kinematicsQuat(y, J, body_i);
     if(!body_j){ //relative to world
+       //diff to world, which is Id
+      if(y(0)>0.) y(0) -= 1.; else y(0) += 1.;
     }else{
       arr y2, J2;
       G.kinematicsQuat(y2, J2, body_j);
@@ -282,6 +282,18 @@ void TaskMap_Default::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
         if(&J) J += J2;
       }
     }
+    return;
+  }
+
+  if(type==poseDiffTMT){
+    arr yq, Jq;
+    TaskMap_Default tmp(*this);
+    tmp.type = posDiffTMT;
+    tmp.phi(y, J, G);
+    tmp.type = quatDiffTMT;
+    tmp.phi(yq, (&J?Jq:NoArr), G);
+    y.append(yq);
+    if(&J) J.append(Jq);
     return;
   }
 

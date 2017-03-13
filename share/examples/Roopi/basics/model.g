@@ -20,8 +20,8 @@ shape objTarget(table2) { type=ST_marker rel=<T t(-.5 0 .03)> size=[.3 0 0 0] co
 body ball { X=<T t(-1 -1.2 1.)>, size=[.1 .1 .2 .02] type=9 }
 body ball2 { X=<T t(-1 -1.2 1.5)>, size=[.1 .1 .2 .02] type=9 }
 
-body S1 { size=[.2 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox }
-joint (table2 S1) { from=<T t(0 .3 .02)> to=<T t(0 0 .02)> type=JT_rigid }
+body S1 { size=[.06 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox percept }
+joint (table2 S1) { from=<T t(0 -.15 .02)> to=<T t(0 0 .02)> type=JT_transXYPhi agent=1 }
 
 body S2 { size=[.2 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox }
 joint (table2 S2) { from=<T t(0 .15 .02)> to=<T t(0 0 .02)> type=JT_rigid }
@@ -29,11 +29,11 @@ joint (table2 S2) { from=<T t(0 .15 .02)> to=<T t(0 0 .02)> type=JT_rigid }
 body S3 { size=[.2 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox }
 joint (table2 S3) { from=<T t(0 .0 .02)> to=<T t(0 0 .02)> type=JT_rigid }
 
-body S4 { size=[.2 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox }
-joint (table2 S4) { from=<T t(0 -.15 .02)> to=<T t(0 0 .02)> type=JT_rigid }
+#body S4 { size=[.2 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox }
+#joint (table2 S4) { from=<T t(0 -.15 .02)> to=<T t(0 0 .02)> type=JT_rigid }
 
-body S5 { size=[.4 .025 .04 0] type=0 color=[.2 .8 .2] coloredBox }
-joint (table2 S5) { from=<T t(.2 0 .02)> to=<T d(90 0 0 1) t(0 0 .02)> type=JT_rigid }
+#body S5 { size=[.4 .025 .04 0] type=0 color=[.2 .8 .2] coloredBox }
+#joint (table2 S5) { from=<T t(.2 0 .02)> to=<T d(90 0 0 1) t(0 0 .02)> type=JT_rigid }
 
-body S6 { size=[.4 .025 .04 0] type=0 color=[.2 .8 .2] coloredBox }
-joint (table2 S6) { from=<T t(-.2 0 .02)> to=<T d(90 0 0 1) t(0 0 .02)> type=JT_rigid }
+#body S6 { size=[.4 .025 .04 0] type=0 color=[.2 .8 .2] coloredBox }
+#joint (table2 S6) { from=<T t(-.2 0 .02)> to=<T d(90 0 0 1) t(0 0 .02)> type=JT_rigid }
