@@ -9,10 +9,10 @@ shape leg4(table) { rel=<T t( .25 -.25 -.25)>  type=0 size=[.04 .04 .5 0] color=
 
 body table2{ type=0, X=<T t(.6 0 .5)>, size=[.6 .6 .04 .02], color=[.8 .5 .3] }
 
-body obj1 { size=[.1 .1 .2 .02] type=9 }
+body obj1 { size=[.1 .1 .2 .02] type=9 contact }
 joint (table obj1) { from=<T t(0 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }
 
-body obj2 { size=[.1 .1 .2 .02] type=9 X=<T t(0 -1.2 .6) t(.3 .3 .02) t(0 0 .1) t(0 0 .01)> }
+body obj2 { size=[.1 .1 .2 .02] type=9 X=<T t(0 -1.2 .6) t(.3 .3 .02) t(0 0 .1) t(0 0 .01)> contact }
 joint (table obj2) { from=<T t(.3 .3 .02)> to=<T t(0 0 .1)> type=JT_rigid }
 
 shape objTarget(table2) { type=ST_marker rel=<T t(-.5 0 .03)> size=[.3 0 0 0] color=[1 .5 0] }

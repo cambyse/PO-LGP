@@ -144,8 +144,10 @@ void TEST(PickAndPlace) {
   Script_graspBox(R, "obj1", LR_right);
   Script_place(R, "obj1", "objTarget");
 #else
+  R.deactivateCollisions("coll_hand_l", "obj2");
   auto pick1 = R.graspBox("obj2", LR_left);
   mlr::wait(.5);
+  R.deactivateCollisions("coll_hand_r", "obj1");
   auto pick2 = R.graspBox("obj1", LR_right);
   R.wait({&pick1,&pick2});
 
@@ -327,9 +329,9 @@ int main(int argc, char** argv){
 //  testPhysX();
 //  Prototyping();
 
-  testPerception();
+//  testPerception();
 
-//  for(;;) testPickAndPlace();
+  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
 //  testGamepad();

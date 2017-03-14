@@ -3,6 +3,7 @@
 
 #include <Gui/viewer.h>
 #include <Kin/PhysXThread.h>
+#include <Kin/kin_swift.h>
 #include <Control/GamepadControlThread.h>
 #include <RosCom/spinner.h>
 #include <Perception/roopi_Perception.h>
@@ -187,6 +188,14 @@ Act_CtrlTask* Roopi::collisions(bool on){
   if(on) s->_collTask->start();
   else s->_collTask->stop();
   return s->_collTask;
+}
+
+void Roopi::deactivateCollisions(const char* s1, const char* s2){
+  s->modelWorld.writeAccess();
+  mlr::Shape *sh1 = s->modelWorld().getShapeByName(s1);
+  mlr::Shape *sh2 = s->modelWorld().getShapeByName(s2);
+  if(sh1 && sh2) s->modelWorld().swift().deactivate(sh1, sh2);
+  s->modelWorld.deAccess();
 }
 
 //==============================================================================

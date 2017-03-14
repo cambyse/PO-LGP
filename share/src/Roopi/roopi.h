@@ -78,6 +78,8 @@ struct Roopi {
   // persistent
   void hold(bool still);
   Act_CtrlTask* collisions(bool on);
+  void deactivateCollisions(const char* s1, const char* s2);
+
 
 
   //-- some activities

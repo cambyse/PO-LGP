@@ -121,7 +121,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   return AS_done;
 }
 
-int Script_place(Roopi& R, const char* objName, const char* ontoName){
+int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr::Quaternion& rot){
 
   //query some info from the kinematics first
   double width, above;
@@ -168,12 +168,17 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName){
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
     //mlr::wait(1.);
-    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
+//    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {0.,0.,above+.1});
+#if 0
     auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_x) );
+#else
+    auto quat = R.newCtrlTask(new TaskMap_Default(quatTMT, obj) );
+    quat.set()->PD().setTarget(rot.getArr4d());
+#endif
     //R.wait({&ws, &up, &pos});
-    R.wait({&up, &pos});
+    R.wait({/*&up,*/ &pos});
 
     //lowering
     pos.set()->PD().setTarget( ARR(0,0,above) );
