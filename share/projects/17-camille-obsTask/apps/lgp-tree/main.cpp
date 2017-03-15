@@ -295,8 +295,8 @@ void plan_AOS()
   C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   C.prepareKin("LGP-obs-kin-3.g");
 
-//  C.prepareFol("LGP-coop-fol.g");
-//  C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
+  //C.prepareFol("LGP-coop-fol.g");
+  //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
 
   C.prepareDisplay();
 

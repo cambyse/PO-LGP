@@ -104,6 +104,8 @@ public:
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return komoPathProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return komoJointPathProblems_; }
 
+  void labelInfeasible( uint w ); ///< sets the infeasible label AND removes all children!
+
   AONodeL getTreePath();
   AONodeL getTreePathFrom( AONode * start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
@@ -144,6 +146,7 @@ private:
   uint N_;                                                                    ///< number of possible worlds
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   mlr::Array< std::shared_ptr<Graph> >     folStates_;
+  mlr::Array< Graph* >  folAddToStates_; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
 
   //-- kinematics: the kinematic structure of the world after the decision path
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics
@@ -185,6 +188,7 @@ private:
   //-- pose opt
   mlr::Array< double > poseCosts_;        ///< costs of the poses from root node up to this node
   mlr::Array< double > poseConstraints_;  ///< costs of the constarints from root node up to this node
+  mlr::Array< bool >   poseSolved_;
   mlr::Array< bool >   poseFeasibles_;    ///< indicates wether the optimization is feasible on this node only
   mlr::Array< ExtensibleKOMO::ptr > komoPoseProblems_; ///< komo object used to optimize poses
   bool isPoseTerminal_;
@@ -193,6 +197,7 @@ private:
   //-- sequence opt
   mlr::Array< double > seqCosts_;
   mlr::Array< double > seqConstraints_;
+  mlr::Array< bool >   seqSolved_;
   mlr::Array< bool >   seqFeasibles_;
   mlr::Array< ExtensibleKOMO::ptr > komoSeqProblems_;
   bool isSequenceTerminal_;

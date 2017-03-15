@@ -115,6 +115,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , N_( fols.N )
   , folWorlds_( fols )
   , folStates_( N_ )
+  , folAddToStates_( N_ )
   , startKinematics_( kins )
   , effKinematics_( N_ )
   , pHistory_( 1.0 )
@@ -138,6 +139,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   // poseOpt
   , poseCosts_       ( N_ )
   , poseConstraints_ ( N_ )
+  , poseSolved_      ( N_ )
   , poseFeasibles_   ( N_ )
   , komoPoseProblems_( N_ )
   , isPoseTerminal_     ( false )
@@ -145,6 +147,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   // seqOpt
   , seqCosts_        ( N_ )
   , seqConstraints_  ( N_ )
+  , seqSolved_       ( N_ )
   , seqFeasibles_    ( N_ )
   , komoSeqProblems_ ( N_ )
   , isSequenceTerminal_     ( false )
@@ -170,8 +173,21 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   {
     folWorlds_( w )->reset_state();
     folStates_( w ).reset( folWorlds_( w )->createStateCopy() );
+    folAddToStates_( w ) = nullptr;
     rootMCs_( w ).reset( new PlainMC( *folWorlds_( w ) ) );
     rootMCs_( w )->verbose = 0;
+
+    // pose
+    poseCosts_( w ) = 0;
+    poseConstraints_( w ) = 0;
+    poseSolved_( w ) = false;
+    poseFeasibles_( w ) = true;
+
+    // seq
+    seqCosts_( w ) = 0;
+    seqConstraints_( w ) = 0;
+    seqSolved_( w ) = false;
+    seqFeasibles_( w ) = true;
   }
 
   for( auto w = 0; w < N_; ++w )
@@ -196,6 +212,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , N_( parent_->N_ )
   , folWorlds_( parent->folWorlds_ )
   , folStates_( N_ )
+  , folAddToStates_( N_ )
   , startKinematics_( parent->startKinematics_ )
   , effKinematics_( parent->effKinematics_ )
   , decisions_( N_ )
@@ -219,12 +236,14 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   // poseOpt
   , poseCosts_       ( N_ )
   , poseConstraints_ ( N_ )
+  , poseSolved_      ( N_ )
   , poseFeasibles_   ( N_ )
   , komoPoseProblems_( N_ )
-  , isPoseTerminal_  ( false )
+  , isPoseProblemSolved_( false )
   // seqOpt
   , seqCosts_        ( N_ )
   , seqConstraints_  ( N_ )
+  , seqSolved_       ( N_ )
   , seqFeasibles_    ( N_ )
   , komoSeqProblems_ ( N_ )
   , isSequenceTerminal_  ( false )
@@ -247,6 +266,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   {
     if( bs_( w ) > eps() )
     {
+      // logic
       auto fol = folWorlds_( w );
       //fol->reset_state();
       fol->setState( parent->folStates_( w ).get(), parent_->d_ );
@@ -266,7 +286,21 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
         isInfeasible_ = true;
       //std::cout << *folStates_( w ) << std::endl;
 
+      folAddToStates_( w ) = nullptr;
+
       decisions_( w ) = actions[ a_ ];
+
+      // pose
+      poseCosts_( w ) = 0;
+      poseConstraints_( w ) = 0;
+      poseSolved_( w ) = false;
+      poseFeasibles_( w ) = true;
+
+      // seq
+      seqCosts_( w ) = 0;
+      seqConstraints_( w ) = 0;
+      seqSolved_( w )    = false;
+      seqFeasibles_( w ) = true;
     }
   }
   isSymbolicallyTerminal_ = isTerminal;
@@ -575,10 +609,11 @@ void AONode::solvePoseProblem()
       if( ! isRoot() ) cost += parent_->poseCosts_( w );
 
       // if this pose leads to the smaller cost so far
-      if( ! komoPoseProblems_( w ) || cost < poseCosts_( w ) )
+      if( ! poseSolved_( w ) || cost < poseCosts_( w ) )
       {
         poseCosts_( w ) = cost;
         poseConstraints_( w ) = constraints;
+        poseSolved_( w )    = ( constraints< .5 ); // tmp camille
         poseFeasibles_( w ) = ( constraints< .5 ); // tmp camille
         komoPoseProblems_( w ) = komo;
 
@@ -660,6 +695,7 @@ void AONode::solveSeqProblem()
       {
         seqCosts_( w ) = cost;
         seqConstraints_( w ) = constraints;
+        seqSolved_( w )    = (constraints<.5);
         seqFeasibles_( w ) = (constraints<.5);
         komoSeqProblems_( w ) = komo;
       }
@@ -789,7 +825,7 @@ void AONode::solveJointPathProblem( uint microSteps )
 
         AgentKinEquality * task = new AgentKinEquality( q );  // tmp camille, think to delete it, or komo does it?
 
-        komo->setTask( node->time_, node->time_ + 1.0 / pathMicroSteps, task );
+        komo->setTask( node->time_ - 1.0 / pathMicroSteps, node->time_, task );
       }
 
       DEBUG( FILE("z.fol") <<fol; )
@@ -830,9 +866,48 @@ void AONode::solveJointPathProblem( uint microSteps )
   updateAndBacktrackJointPathState();
 }
 
-void AONode::labelInfeasible()
+void AONode::labelInfeasible( uint w )
 {
-  // how to backtrack?
+  //-- remove children
+//  ActionNodeL tree;
+//  getAllChildren(tree);
+//  for(ActionNode *n:tree) if(n!=this) delete n; //TODO: memory leak!
+  for( auto children : families_ )
+  {
+    DEL_INFEASIBLE( children.clear(); )
+  }
+
+  //-- add INFEASIBLE flag to fol
+  auto folDecision = folStates_( w )->getNode("decision");
+  NodeL symbols = folDecision->parents;
+  symbols.prepend( folWorlds_( w )->KB.getNode({"INFEASIBLE"}));
+
+//  cout <<"\n *** LABELLING INFEASIBLE: "; listWrite(symbols); cout <<endl;
+  //-- find the right parent...
+  AONode* node = this;
+  while( node->parent_ ){
+    bool stop=false;
+    for(Node *fact:node->folStates_( w )->list()){
+      if(fact->keys.N && fact->keys.last()=="block"){
+        if(tuplesAreEqual(fact->parents, symbols)){
+          CHECK(fact->isOfType<bool>() && fact->keys.first()=="block", "");
+          stop=true;
+          break;
+        }
+      }
+    }
+    if(stop) break;
+    node = node->parent_;
+  }
+
+//  if(!node->folAddToState){
+//    node->folAddToState = &fol.KB.newSubgraph({"ADD"}, {node->folState->isNodeOfGraph})->value;
+//  }
+//  node->folAddToState->newNode<bool>({}, symbols, true);
+
+////  ActionNode *root=getRoot();
+//  node->recomputeAllFolStates();
+//  node->recomputeAllMCStats(false);
 }
 
 mlr::Array< AONode * > AONode::getTreePath()
@@ -877,7 +952,12 @@ void AONode::updateAndBacktrackPoseState()
     {
       if( bs_( w ) > eps() )
       {
-        solved = solved && poseFeasibles_( w );
+        solved = solved && poseSolved_( w );
+
+        if( ! poseFeasibles_( w ) )
+        {
+          labelInfeasible( w ); // label this sequence of actions as infeasible for this world
+        }
       }
     }
     isPoseProblemSolved_ = solved;
@@ -896,7 +976,12 @@ void AONode::updateAndBacktrackPoseState()
     {
       if( bs_( w ) > eps() )
       {
-        solved = solved && poseFeasibles_( w );
+        solved = solved && poseSolved_( w );
+
+        if( ! poseFeasibles_( w ) )
+        {
+          labelInfeasible( w ); // label this sequence of actions as infeasible for this world
+        }
       }
     }
 
@@ -928,7 +1013,7 @@ void AONode::updateAndBacktrackSequenceState()
     {
       if( bs_( w ) > eps() )
       {
-        solved = solved && seqFeasibles_( w );
+        solved = solved && seqSolved_( w );
       }
     }
     isSequenceProblemSolved_ = solved;
