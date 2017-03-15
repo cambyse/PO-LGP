@@ -302,30 +302,7 @@ void plan_AOS()
   C.prepareTree();      // create root node
 
   /// SYMBOLIC SEARCH
-  auto s = 0;
-  while( ! C.isSymbolicallySolved() )
-  {
-    s++;
-    auto nodes = C.getNodesToExpand();
-
-    for( auto node : nodes )
-    {
-      // expand
-      node->expand();
-
-      // generate rollouts for each child
-      for( auto f : node->families() )
-      {
-        for( auto c : f )
-        {
-          c->generateMCRollouts( 50, 10 );
-        }
-      }
-
-      // backtrack result
-      node->backTrackBestExpectedPolicy();
-    }
-  }
+  C.solveSymbolically();
 
   /// POSE OPTIMIZATION
   C.optimizePoses();      // optimizes poses of the current best solution

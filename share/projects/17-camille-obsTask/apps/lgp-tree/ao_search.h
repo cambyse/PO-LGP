@@ -15,6 +15,7 @@ public: // public methods
   void prepareTree();
   void prepareDisplay();
 
+  void solveSymbolically();
   void optimizePoses();
   void optimizeSequences();
   void optimizePaths();
