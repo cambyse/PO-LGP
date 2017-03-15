@@ -18,7 +18,7 @@ public: // public methods
   void optimizePoses();
   void optimizeSequences();
   void optimizePaths();
-  void optimizePaths2();
+  void optimizeJointPaths();
 
   void updateDisplay( const WorldID & w, bool poses, bool seqs, bool paths );
 

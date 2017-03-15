@@ -283,7 +283,7 @@ struct KinematicWorld : GLDrawer{
   void kinematicsQuat(arr& y, arr& J, Body *b) const;
   void hessianPos(arr& H, Body *b, mlr::Vector *rel=0) const;
   void axesMatrix(arr& J, Body *b) const;
-  void kineffKinematicsematicsRelPos (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2, const mlr::Vector& vec2) const;
+  void kinematicsRelPos (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2, const mlr::Vector& vec2) const;
   void kinematicsRelVec (arr& y, arr& J, Body *b1, const mlr::Vector& vec1, Body *b2) const;
   void kinematicsRelRot (arr& y, arr& J, Body *b1, Body *b2) const;
 

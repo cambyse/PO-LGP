@@ -76,7 +76,8 @@ public:
   void solvePoseProblem();
   void solveSeqProblem();
   void solvePathProblem( uint microSteps );
-  void solvePathProblem2( uint microSteps, AONode * start );
+  void solveJointPathProblem( uint microSteps );
+  //void solvePathProblem2( uint microSteps, AONode * start );
 
   void labelInfeasible();
 
@@ -95,8 +96,9 @@ public:
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return komoPoseProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return komoSeqProblems_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return komoPathProblems_; }
-  std::shared_ptr<ExtensibleKOMO> komoPathProblems2() const { return komoPathProblems2_; }
-  mlr::Array< WorldL > path2Configurations() const { return path2Configurations_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return komoJointPathProblems_; }
+  //std::shared_ptr<ExtensibleKOMO> komoPathProblems2() const { return komoPathProblems2_; }
+  //mlr::Array< WorldL > path2Configurations() const { return path2Configurations_; }
 
   AONodeL getTreePath();
   AONodeL getTreePathFrom( AONode * start );
@@ -190,17 +192,19 @@ private:
   mlr::Array< ExtensibleKOMO::ptr > komoSeqProblems_;
 
   //-- path opt
-  double pathCost_, pathConstraints_;
-  bool pathFeasible_;
-  arr path_;
+  mlr::Array< double > pathCosts_;
+  mlr::Array< double > pathConstraints_;
+  mlr::Array< bool >   pathFeasibles_;
+  mlr::Array< arr >    paths_;
   mlr::Array< ExtensibleKOMO::ptr > komoPathProblems_;
+  mlr::Array< WorldL > pathConfigurations_;
 
-  //-- path opt2
-  double pathCost2_, pathConstraints2_;
-  bool pathFeasible2_;
-  arr path2_;
-  ExtensibleKOMO::ptr komoPathProblems2_;
-  mlr::Array< WorldL > path2Configurations_;
+  //-- joint path
+  double jointPathCost_, jointPathConstraints_;
+  bool jointPathFeasible_;
+  arr jointPath_;
+  mlr::Array< ExtensibleKOMO::ptr >  komoJointPathProblems_;
+  mlr::Array< WorldL > jointPathConfigurations_;
 
   //--
   int id_;

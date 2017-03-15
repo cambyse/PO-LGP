@@ -402,8 +402,8 @@ void plan_AOS()
   /// PATH OPTIMIZATION
   C.optimizePaths();      // optimizes paths of the current best solution
 
-  /// PATH OPTIMIZATION
-  //C.optimizePaths2();   // optimizes paths of the current best solution
+  /// JOINT PATH OPTIMIZATION
+  C.optimizeJointPaths();   // optimizes paths of the current best solution
 
   // save policy
   std::stringstream ss;

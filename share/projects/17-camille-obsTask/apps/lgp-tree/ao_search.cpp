@@ -179,6 +179,16 @@ void AOSearch::optimizePaths()
   }
 }
 
+void AOSearch::optimizeJointPaths()
+{
+  auto nodes = getTerminalNodes();
+
+  for( auto n : nodes )
+  {
+    n->solveJointPathProblem( 20 );
+  }
+}
+
 /*void AOSearch::optimizePaths2()
 {
   optimizePaths2( root_, root_ );
@@ -252,23 +262,14 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
       seqViews_( w )->setConfigurations( node->komoSeqProblems()( w )->MP->configurations );
     else seqViews_( w )->clear();
 
-    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
-      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
+//    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
+//      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
+//    else pathViews_( w )->clear();
+
+    if( paths && node->komoJointPathProblems()( w ) && node->komoJointPathProblems()( w )->MP->configurations.N )
+      pathViews_( w )->setConfigurations( node->komoJointPathProblems()( w )->MP->configurations );
     else pathViews_( w )->clear();
   }
-
-//  if( node->path2Configurations()( w.id() ).N )
-//    pathView2_.setConfigurations( node->path2Configurations()( w.id() ) );
-//  else pathView2_.clear();
-
-//  for( auto ww = 0; ww < folWorlds_.d0; ++ww )
-//  {
-//    //AONode * node = getTerminalNode( WorldID( ww ) );
-//    if( node->komoPathProblems()( ww ) && node->komoPathProblems()( ww )->MP->configurations.N )
-//      pathViews_( ww )->setConfigurations( node->komoPathProblems()( ww )->MP->configurations );
-//    else
-//      pathViews_( ww )->clear();
-//  }
 }
 
 mlr::Array< AONode * > AOSearch::getNodesToExpand() const

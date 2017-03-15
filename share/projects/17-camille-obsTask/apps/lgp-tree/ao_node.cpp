@@ -75,6 +75,43 @@ static std::set< std::string > getObservableStateStr( Graph * state )
 //  return retString;
 }
 
+struct AgentKinEquality:TaskMap{
+
+  AgentKinEquality( const arr& q/*, const arr& qdot*/ )
+    : q_  ( q )
+    //, qdot_( qdot_ )
+    , dim_( q.N )
+  {
+
+  }
+
+  virtual void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1 )
+  {
+    y = zeros( dim_ );
+    y.setVectorBlock( G.q - q_, 0 );
+    //y.setVectorBlock( G.qdot - qdot_, q_.N - 1 );
+
+    auto tmp_J = eye( dim_, dim_ );
+
+    if(&J) J = tmp_J;
+  }
+
+  virtual uint dim_phi( const mlr::KinematicWorld& G )
+  {
+    return dim_;
+  }
+
+  virtual mlr::String shortTag( const mlr::KinematicWorld& G )
+  {
+    return mlr::String( "AgentKinEquality" );
+  }
+
+private:
+  // parameters
+  const arr q_;
+  //const arr& qdot_;
+  const uint dim_;
+};
 
 //===========================================================================
 
@@ -86,9 +123,9 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , folWorlds_( fols )
   , folStates_( folWorlds_.d0 )
   , startKinematics_( kins )
-  , effKinematics_( kins.d0 )
-  , effKinematicsPaths2_( kins.d0 )
-  , effKinematicsPaths2areSet_( kins.d0 )
+  , effKinematics_( folWorlds_.d0 )
+  , effKinematicsPaths2_( folWorlds_.d0 )
+  , effKinematicsPaths2areSet_( folWorlds_.d0 )
   , pHistory_( 1.0 )
   , bs_( bs )
   , a_( -1 )
@@ -98,22 +135,36 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , isTerminal_( false )
   , isSymbolicallySolved_( false )
   , isInfeasible_( false )
-  , rootMCs_( folWorlds_.d0 )
+  , rootMCs_( bs_.d0 )
   , mcStats_( new MCStatistics )
   , expectedReward_( 0 )
   , expectedBestA_( -1 )
   , komoFactory_( komoFactory )
+  // poseOpt
   , poseCost_( 0.0 )
   , poseConstraints_( 0.0 )
   , poseFeasible_( false )
-  , komoPoseProblems_( kins.d0 )
-  , komoSeqProblems_( kins.d0 )
-  , komoPathProblems_( kins.d0 )
-  //, komoPathProblems2_( kins.d0 )
-  , path2Configurations_( kins.d0 )
+  , komoPoseProblems_( bs_.d0 )
+  // seqOpt
+  , seqCost_( 0.0 )
+  , seqConstraints_( 0.0 )
+  , seqFeasible_( false )
+  , komoSeqProblems_ ( bs_.d0 )
+  // pathOpt
+  , pathCosts_       ( bs_.d0 )
+  , pathConstraints_ ( bs_.d0 )
+  , pathFeasibles_   ( bs_.d0 )
+  , paths_           ( bs_.d0 )
+  , komoPathProblems_( bs_.d0 )
+  // jointPathOpt
+  , jointPathCost_( 0.0 )
+  , jointPathConstraints_( 0.0 )
+  , jointPathFeasible_( false )
+  , komoJointPathProblems_( bs_.d0 )
+  //
   , id_( 0 )
 {
-  for( auto w = 0; w < folWorlds_.d0; ++w )
+  for( auto w = 0; w < bs_.d0; ++w )
   {
     folWorlds_( w )->reset_state();
     folStates_( w ).reset( folWorlds_( w )->createStateCopy() );
@@ -163,14 +214,28 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , expectedReward_( 0 )
   , expectedBestA_( -1 )
   , komoFactory_( parent->komoFactory_ )
+  // poseOpt
   , poseCost_( 0.0 )
   , poseConstraints_( 0.0 )
   , poseFeasible_( false )
-  , komoPoseProblems_( parent->komoPoseProblems_.d0   )
-  , komoSeqProblems_( parent->komoSeqProblems_.d0     )
-  , komoPathProblems_( parent->komoPathProblems_.d0   )
-  //, komoPathProblems2_( parent->komoPathProblems2_.d0 )
-  , path2Configurations_( parent->path2Configurations_.d0 )
+  , komoPoseProblems_( parent->bs_.d0   )
+  // seqOpt
+  , seqCost_( 0.0 )
+  , seqConstraints_( 0.0 )
+  , seqFeasible_( false )
+  , komoSeqProblems_ ( parent->bs_.d0   )
+  // pathOpt
+  , pathCosts_       ( parent->bs_.d0   )
+  , pathConstraints_ ( parent->bs_.d0   )
+  , pathFeasibles_   ( parent->bs_.d0   )
+  , paths_           ( parent->bs_.d0   )
+  , komoPathProblems_( parent->bs_.d0   )
+  // jointPathOpt
+  , jointPathCost_( 0.0 )
+  , jointPathConstraints_( 0.0 )
+  , jointPathFeasible_( false )
+  , komoJointPathProblems_( parent->bs_.d0   )
+  //, path2Configurations_( parent->bs_.d0   )
 {
   // update the states
   bool isTerminal = true;
@@ -661,52 +726,138 @@ void AONode::solvePathProblem( uint microSteps )
       komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
-      for( auto node:treepath ){
-        komo->groundTasks((node->parent_?node->parent_->time_:0.), *node->folStates_( w ) );
+      for( auto node:treepath )
+      {
+        komo->groundTasks( ( node->parent_?node->parent_->time_: 0. ), *node->folStates_( w ) );
       }
 
       DEBUG( FILE("z.fol") <<fol; )
-      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      komo->reset();
+          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+          komo->reset();
       try{
         komo->run();
       } catch(const char* msg){
         cout << "KOMO FAILED: " << msg <<endl;
       }
+
+      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
+      //komo->displayTrajectory();
+      COUNT_evals += komo->opt->newton.evals;
+      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
+      COUNT_pathOpt++;
+
+      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      //komo->checkGradients();
+
+      Graph result = komo->getReport();
+      //DEBUG( FILE("z.problem.cost") << result; )
+      double cost = result.get<double>({"total","sqrCosts"});
+      double constraints = result.get<double>({"total","constraints"});
+
+      if( ! paths_( w ).N || cost < pathCosts_( w ) )     //
+      {                                                   //
+        pathCosts_( w )       = cost;                     //
+        pathConstraints_( w ) = constraints;              //
+        pathFeasibles_( w )   = (constraints<.5);         //
+        paths_( w )           = komo->x;                  //
+
+        // back the best komo for this world
+        for( AONode * node = this ;node; node = node->parent_ )
+        {
+          node->komoPathProblems_( w ) = komo;
+        }
+      }
+
+      if( ! pathFeasibles_( w ) )
+        labelInfeasible();
     }
   }
+}
 
-  // check if all worlds lead to same agent sequence of positions
-//  bool sameTrajectories = sameAgentTrajectories( komoPathProblems_ );
+void AONode::solveJointPathProblem( uint microSteps )
+{  
+  //-- collect 'path nodes'
+  AONodeL treepath = getTreePath();
 
-//  if( ! sameTrajectories )
-//    labelInfeasible();
+  // solve problem for all ( relevant ) worlds
+  for( auto w = 0; w < startKinematics_.d0; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      // create komo
+      auto komo = komoFactory_.createKomo();
+      komoJointPathProblems_( w ) = komo;
 
-  // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-  auto komo = getWitnessPathKomo();
-  //komo->displayTrajectory();
-  COUNT_evals += komo->opt->newton.evals;
-  COUNT_kin += mlr::KinematicWorld::setJointStateCount;
-  COUNT_pathOpt++;
+      // set-up komo
+      komo->setModel( *startKinematics_( w ) );
+      komo->setTiming( time_, microSteps, 5., 2, false );
 
-  DEBUG( komoPathProblem->MP->reportFeatures(true, FILE("z.problem")); )
-  //komo->checkGradients();
+      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      komo->setSquaredQAccelerations();
+      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
+      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
-  Graph result = komo->getReport();
-  DEBUG( FILE("z.problem.cost") << result; )
-  double cost = result.get<double>({"total","sqrCosts"});
-  double constraints = result.get<double>({"total","constraints"});
+      for( auto node:treepath )
+      {
+        // set task
+        auto time = ( node->parent_ ? node->parent_->time_: 0. );
+        komo->groundTasks( ( node->parent_ ? node->parent_->time_: 0. ), *node->folStates_( w ) );
 
-  if( ! path_.N || cost < pathCost_ )     //
-  {                                       //
-    pathCost_ = cost;                     //
-    pathConstraints_ = constraints;       //
-    pathFeasible_ = (constraints<.5);     //
-    path_ = komo->x;                      //
-  }                                       //
+        uint pathMicroSteps = ( komoPathProblems_( w )->MP->configurations.N - 1 ) / time_;
+        uint nodeSlice = pathMicroSteps * node->time_;
+        arr q = zeros( komoPathProblems_( w )->MP->configurations.first()->q.N );
 
-  if( ! pathFeasible_ )
-    labelInfeasible();
+        // set constraints enforcing the path equality among worlds
+        for( auto x = 0; x < bs_.d0; ++x )
+        { 
+          if( node->bs_( x ) > 0 )
+          {
+            CHECK( node->komoPathProblems_( x )->MP->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
+
+            q += node->bs_( x ) * node->komoPathProblems_( x )->MP->configurations( nodeSlice )->q;
+          }
+        }
+
+        AgentKinEquality * task = new AgentKinEquality( q );  // tmp camille, think to delete it, or komo does it?
+
+        komo->setTask( node->time_, node->time_ + 1.0 / pathMicroSteps, task );
+      }
+
+      DEBUG( FILE("z.fol") <<fol; )
+          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+          komo->reset();
+      try{
+        komo->run();
+      } catch(const char* msg){
+        cout << "KOMO FAILED: " << msg <<endl;
+      }
+
+      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
+      //komo->displayTrajectory();
+      COUNT_evals += komo->opt->newton.evals;
+      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
+      //COUNT_jointPathOpt++;
+
+      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      //komo->checkGradients();
+
+      Graph result = komo->getReport();
+      //DEBUG( FILE("z.problem.cost") << result; )
+      double cost = result.get<double>({"total","sqrCosts"});
+      double constraints = result.get<double>({"total","constraints"});
+
+      if( ! jointPath_.N || cost < jointPathCost_ )     //
+      {                                                   //
+        jointPathCost_        = cost;                     //
+        jointPathConstraints_ = constraints;              //
+        jointPathFeasible_    = (constraints<.5);         //
+        jointPath_            = komo->x;                  //
+      }                                                   //
+
+      if( ! jointPathFeasible_ )
+        labelInfeasible();
+    }
+  }
 }
 
 /*void AONode::solvePathProblem2( uint microSteps, AONode * start )
