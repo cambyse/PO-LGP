@@ -294,32 +294,51 @@ void plan_AOS()
   AOSearch C( komoFactory );
   C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   C.prepareKin("LGP-obs-kin-3.g");
+
+//  C.prepareFol("LGP-coop-fol.g");
+//  C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
+
   C.prepareDisplay();
 
-  //C.prepareFol("LGP-coop-fol.g");
-  //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
+
 
   C.prepareTree();      // create root node
 
-  /// SYMBOLIC SEARCH
-  C.solveSymbolically();
+  uint i = 0;
+  while( ! C.isJointPathSolved() && i < 10 )
+  {
+    ++i;
+    /// SYMBOLIC SEARCH
+    C.solveSymbolically();
 
-  /// POSE OPTIMIZATION
-  C.optimizePoses();      // optimizes poses of the current best solution
+    if( C.isSymbolicallySolved() )
+    {
+      /// POSE OPTIMIZATION
+      C.optimizePoses();      // optimizes poses of the current best solution
 
-  /// SEQUENCE OPTIMIZATION
-  C.optimizeSequences();  // optimizes sequences of the current best solution
+      if( C.isPoseSolved() )
+      {
+        /// SEQUENCE OPTIMIZATION
+        C.optimizeSequences();  // optimizes sequences of the current best solution
 
-  /// PATH OPTIMIZATION
-  C.optimizePaths();      // optimizes paths of the current best solution
+        if( C.isSequenceSolved() )
+        {
+          /// PATH OPTIMIZATION
+          C.optimizePaths();      // optimizes paths of the current best solution
 
-  /// JOINT PATH OPTIMIZATION
-  C.optimizeJointPaths();   // optimizes paths of the current best solution
+          if( C.isPathSolved() )
+          {
+            /// JOINT PATH OPTIMIZATION
+            C.optimizeJointPaths();   // optimizes joint paths of the current best solution
+          }
+        }
+      }
+    }
+  }
 
   // save policy
   std::stringstream ss;
   C.printPolicy( ss );
-  //std::cout << ss.str() << std::endl;
 
   // save to file
   std::ofstream fs;

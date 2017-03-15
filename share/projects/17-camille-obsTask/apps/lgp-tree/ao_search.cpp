@@ -297,7 +297,7 @@ mlr::Array< AONode * > AOSearch::getNodesToExpand( AONode * node ) const
 {
   mlr::Array< AONode * >  nodes;
   // starts from root
-  if( ! node->isSolved() )
+  if( ! node->isSymbolicallySolved() )
   {
     if( ! node->isExpanded() )
       nodes.append( node );
@@ -325,7 +325,7 @@ mlr::Array< AONode * > AOSearch::getTerminalNodes( AONode * n ) const
 {
   mlr::Array< AONode * > nodes;
 
-  if( n->isTerminal() )
+  if( n->isSymbolicallyTerminal() )
   {
     nodes.append( n );
   }
@@ -349,7 +349,7 @@ AONode * AOSearch::getTerminalNode( const WorldID & w ) const
 AONode * AOSearch::getTerminalNode( AONode * n, const WorldID & w ) const
 {
   AONode * node = nullptr;
-  if( n->isTerminal() )
+  if( n->isSymbolicallyTerminal() )
   {
     CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
     node = n;

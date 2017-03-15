@@ -26,11 +26,12 @@ public: // public methods
 private:
   void optimizePoses( AONode * );
   void optimizeSequences( AONode * );
-  void optimizePaths2( AONode *, AONode * );
+  //void optimizePaths2( AONode *, AONode * );
 
 public:
 
   // getters
+
   mlr::Array< AONode * > getNodesToExpand() const;
   mlr::Array< AONode * > getNodesToExpand( AONode * ) const;
 
@@ -40,7 +41,11 @@ public:
   AONode * getTerminalNode( const WorldID & w ) const;
   AONode * getTerminalNode( AONode *, const WorldID & w ) const;
 
-  bool isSymbolicallySolved() const { return root_->isSolved(); }
+  bool isSymbolicallySolved() const { return root_->isSymbolicallySolved(); }
+  bool isPoseSolved() const { return root_->isPoseSolved(); }
+  bool isSequenceSolved() const { return root_->isSequenceSolved(); }
+  bool isPathSolved() const { return root_->isPathSolved(); }
+  bool isJointPathSolved() const { return root_->isJointPathSolved(); }
 
   // helpers
   void printPolicy( std::iostream & ) const;
@@ -120,24 +125,24 @@ private:
 
 //============free functions==============================================
 
-double poseHeuristic(PartiallyObservableNode* n);
-double mcHeuristic(PartiallyObservableNode* n);
-double seqHeuristic(PartiallyObservableNode* n);
-double poseCost(PartiallyObservableNode* n);
-double seqCost(PartiallyObservableNode* n);
-double pathHeuristic(PartiallyObservableNode* n);
-double pathCost(PartiallyObservableNode* n);
-PartiallyObservableNode* getBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
-PartiallyObservableNode* popBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
+//double poseHeuristic(PartiallyObservableNode* n);
+//double mcHeuristic(PartiallyObservableNode* n);
+//double seqHeuristic(PartiallyObservableNode* n);
+//double poseCost(PartiallyObservableNode* n);
+//double seqCost(PartiallyObservableNode* n);
+//double pathHeuristic(PartiallyObservableNode* n);
+//double pathCost(PartiallyObservableNode* n);
+//PartiallyObservableNode* getBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
+//PartiallyObservableNode* popBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
 
-typedef ActionNode MNode;
+//typedef ActionNode MNode;
 
-double poseHeuristic(MNode* n);
-double mcHeuristic(MNode* n);
-double seqHeuristic(MNode* n);
-double poseCost(MNode* n);
-double seqCost(MNode* n);
-double pathHeuristic(MNode* n);
-double pathCost(MNode* n);
-MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*));
-MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*));
+//double poseHeuristic(MNode* n);
+//double mcHeuristic(MNode* n);
+//double seqHeuristic(MNode* n);
+//double poseCost(MNode* n);
+//double seqCost(MNode* n);
+//double pathHeuristic(MNode* n);
+//double pathCost(MNode* n);
+//MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*));
+//MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*));

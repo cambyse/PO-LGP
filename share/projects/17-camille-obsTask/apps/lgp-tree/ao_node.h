@@ -86,8 +86,13 @@ public:
   AONode * parent() const { return parent_; }
   bool isExpanded() const { return isExpanded_; }
   AONodeLL families() const { return families_; }
-  bool isTerminal() const { return isTerminal_; }
-  bool isSolved() const { return isSymbolicallySolved_; }
+  bool isSymbolicallyTerminal() const { return isSymbolicallyTerminal_; }
+  bool isSymbolicallySolved() const { return   isSymbolicallySolved_; }
+  bool isPoseSolved() const { return isPoseProblemSolved_; }
+  bool isSequenceSolved() const { return isSequenceProblemSolved_; }
+  bool isPathSolved() const { return isPathProblemSolved_; }
+  bool isJointPathSolved() const { return isJointPathProblemSolved_; }
+
   int id() const { return id_; }
   AONodeL bestFamily() const { return bestFamily_; }
   AONodeL andSiblings() const { return andSiblings_; }
@@ -109,6 +114,12 @@ public:
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
+  void updateAndBacktrackPoseState();
+  void updateAndBacktrackSequenceState();
+  void updateAndBacktrackPathState();
+  void updateAndBacktrackJointPathState();
+
+  // utility
   uint getPossibleActionsNumber() const;
   LogicAndState getWitnessLogicAndState() const;
   template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
@@ -125,9 +136,6 @@ private:
 
   mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
-
-  mlr::KinematicWorld buildStartOptiKinematic( AONode * start ) const;
-  mlr::KinematicWorld* revertToRealKinematic( std::size_t w, mlr::KinematicWorld * optimized ) const;
 
 private:
   AONode * parent_;
@@ -161,24 +169,34 @@ private:
   int expectedBestA_;
   mlr::Array< AONode * > bestFamily_;
 
-  //-- status flags
+  //-- global search
   bool isExpanded_;
-  bool isTerminal_;
-  bool isSymbolicallySolved_;
   bool isInfeasible_;
+  bool isTerminal_;
+  bool isSolved_;
+
+  //-- logic search
+  bool isSymbolicallyTerminal_;
+  bool isSymbolicallySolved_;
 
   //-- komo factory
   const KOMOFactory & komoFactory_;
 
   //-- pose opt
-  double poseCost_, poseConstraints_;
-  bool poseFeasible_;
-  mlr::Array< ExtensibleKOMO::ptr > komoPoseProblems_;
+  mlr::Array< double > poseCosts_;        ///< costs of the poses from root node up to this node
+  mlr::Array< double > poseConstraints_;  ///< costs of the constarints from root node up to this node
+  mlr::Array< bool >   poseFeasibles_;    ///< indicates wether the optimization is feasible on this node only
+  mlr::Array< ExtensibleKOMO::ptr > komoPoseProblems_; ///< komo object used to optimize poses
+  bool isPoseTerminal_;
+  bool isPoseProblemSolved_;              ///< is set to true if all all the paths passing through this node are solved
 
   //-- sequence opt
-  double seqCost_, seqConstraints_;
-  bool seqFeasible_;
+  mlr::Array< double > seqCosts_;
+  mlr::Array< double > seqConstraints_;
+  mlr::Array< bool >   seqFeasibles_;
   mlr::Array< ExtensibleKOMO::ptr > komoSeqProblems_;
+  bool isSequenceTerminal_;
+  bool isSequenceProblemSolved_;
 
   //-- path opt
   mlr::Array< double > pathCosts_;
@@ -186,13 +204,17 @@ private:
   mlr::Array< bool >   pathFeasibles_;
   mlr::Array< ExtensibleKOMO::ptr > komoPathProblems_;
   mlr::Array< WorldL > pathConfigurations_;
+  bool isPathTerminal_;
+  bool isPathProblemSolved_;
 
-  //-- joint path
+  //-- joint path opt
   mlr::Array< double > jointPathCosts_;
-  mlr::Array< double >jointPathConstraints_;
-  mlr::Array< bool >  jointPathFeasibles_;
+  mlr::Array< double > jointPathConstraints_;
+  mlr::Array< bool >   jointPathFeasibles_;
   mlr::Array< ExtensibleKOMO::ptr >  komoJointPathProblems_;
   mlr::Array< WorldL > jointPathConfigurations_;
+  bool isJointPathTerminal_;
+  bool isJointPathProblemSolved_;
 
   //--
   int id_;

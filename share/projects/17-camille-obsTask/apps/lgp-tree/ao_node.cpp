@@ -68,11 +68,6 @@ static std::set< std::string > getObservableStateStr( Graph * state )
   }
 
   return facts;
-//  std::string retString;
-//  for( auto s : facts )
-//    retString += s;
-
-//  return retString;
 }
 
 struct AgentKinEquality:TaskMap{
@@ -127,35 +122,47 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , a_( -1 )
   , d_( 0 )
   , time_( 0.0 )
+  // global search
   , isExpanded_( false )
-  , isTerminal_( false )
-  , isSymbolicallySolved_( false )
   , isInfeasible_( false )
+  , isTerminal_( false )
+  , isSolved_( false )
+  // logic search
+  , isSymbolicallyTerminal_( false )
+  , isSymbolicallySolved_( false )
   , rootMCs_( N_ )
   , mcStats_( new MCStatistics )
   , expectedReward_( 0 )
   , expectedBestA_( -1 )
   , komoFactory_( komoFactory )
   // poseOpt
-  , poseCost_( 0.0 )
-  , poseConstraints_( 0.0 )
-  , poseFeasible_( false )
+  , poseCosts_       ( N_ )
+  , poseConstraints_ ( N_ )
+  , poseFeasibles_   ( N_ )
   , komoPoseProblems_( N_ )
+  , isPoseTerminal_     ( false )
+  , isPoseProblemSolved_( false )
   // seqOpt
-  , seqCost_( 0.0 )
-  , seqConstraints_( 0.0 )
-  , seqFeasible_( false )
+  , seqCosts_        ( N_ )
+  , seqConstraints_  ( N_ )
+  , seqFeasibles_    ( N_ )
   , komoSeqProblems_ ( N_ )
+  , isSequenceTerminal_     ( false )
+  , isSequenceProblemSolved_( false )
   // pathOpt
   , pathCosts_       ( N_ )
   , pathConstraints_ ( N_ )
   , pathFeasibles_   ( N_ )
   , komoPathProblems_( N_ )
+  , isPathTerminal_     ( false )
+  , isPathProblemSolved_( false )
   // jointPathOpt
   , jointPathCosts_      ( N_ )
   , jointPathConstraints_( N_ )
   , jointPathFeasibles_  ( N_ )
   , komoJointPathProblems_( N_ )
+  , isJointPathTerminal_     ( false )
+  , isJointPathProblemSolved_( false )
   //
   , id_( 0 )
 {
@@ -196,35 +203,43 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , bs_( bs )
   , a_( a )
   , d_( parent->d_ + 1 )
+  // global search
   , isExpanded_( false )
-  , isTerminal_( false )
-  , isSymbolicallySolved_( false )
   , isInfeasible_( false )
+  , isTerminal_( false )
+  , isSolved_( false )
+  // logic search
+  , isSymbolicallyTerminal_( false )
+  , isSymbolicallySolved_( false )
   , rootMCs_( parent->rootMCs_ )
   , mcStats_( new MCStatistics )
   , expectedReward_( 0 )
-  , expectedBestA_( -1 )
+  , expectedBestA_ (-1 )
   , komoFactory_( parent->komoFactory_ )
   // poseOpt
-  , poseCost_( 0.0 )
-  , poseConstraints_( 0.0 )
-  , poseFeasible_( false )
+  , poseCosts_       ( N_ )
+  , poseConstraints_ ( N_ )
+  , poseFeasibles_   ( N_ )
   , komoPoseProblems_( N_ )
+  , isPoseTerminal_  ( false )
   // seqOpt
-  , seqCost_( 0.0 )
-  , seqConstraints_( 0.0 )
-  , seqFeasible_( false )
+  , seqCosts_        ( N_ )
+  , seqConstraints_  ( N_ )
+  , seqFeasibles_    ( N_ )
   , komoSeqProblems_ ( N_ )
+  , isSequenceTerminal_  ( false )
   // pathOpt
   , pathCosts_       ( N_ )
   , pathConstraints_ ( N_ )
   , pathFeasibles_   ( N_ )
   , komoPathProblems_( N_ )
+  , isPathTerminal_  ( false )
   // jointPathOpt
   , jointPathCosts_  ( N_ )
   , jointPathConstraints_( N_ )
   , jointPathFeasibles_( N_ )
   , komoJointPathProblems_( N_ )
+  , isJointPathTerminal_( false )
 {
   // update the states
   bool isTerminal = true;
@@ -254,7 +269,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
       decisions_( w ) = actions[ a_ ];
     }
   }
-  isTerminal_ = isTerminal;
+  isSymbolicallyTerminal_ = isTerminal;
 
   if( isTerminal )
     isSymbolicallySolved_ = true;
@@ -289,7 +304,7 @@ void AONode::expand()
   //
 
   CHECK( ! isExpanded_, "" );
-  if( isTerminal_ )
+  if( isSymbolicallyTerminal_ )
     return;
 
   // get possible actions for the worlds having a non null probability
@@ -298,13 +313,12 @@ void AONode::expand()
   //std::cout << "number of possible actions:" << nActions << std::endl;
 
   if( nActions == 0 )
-    isTerminal_ = true;
+    isSymbolicallyTerminal_ = true;
 
   for( auto a = 0; a < nActions; ++a )
   {
     //std::cout << "------------" << std::endl;
     //std::cout << "action:" << a << std::endl;
-    stringSetHash f;
     std::unordered_map< std::set< std::string >, std::list< uint >, stringSetHash > outcomesToWorlds;
 
     for( auto w = 0; w < N_; ++w )
@@ -454,7 +468,7 @@ void AONode::generateMCRollouts( uint num, int stepAbort )
 
 void AONode::backTrackBestExpectedPolicy()
 {
-  if( isTerminal() )
+  if( isSymbolicallyTerminal() )
   {
     expectedReward_ = 0;
     expectedBestA_  = -1;
@@ -558,36 +572,39 @@ void AONode::solvePoseProblem()
       double cost = result.get<double>( { "total","sqrCosts" } );
       double constraints = result.get<double>( { "total","constraints" } );
 
-      if( ! isRoot() ) cost += parent_->poseCost_;
+      if( ! isRoot() ) cost += parent_->poseCosts_( w );
 
       // if this pose leads to the smaller cost so far
-      if( ! komoPoseProblems_( w ) || cost < poseCost_ )
+      if( ! komoPoseProblems_( w ) || cost < poseCosts_( w ) )
       {
-        poseCost_ = cost;
-        poseConstraints_ = constraints;
-        poseFeasible_ = ( constraints< .5 ); // tmp camille
+        poseCosts_( w ) = cost;
+        poseConstraints_( w ) = constraints;
+        poseFeasibles_( w ) = ( constraints< .5 ); // tmp camille
         komoPoseProblems_( w ) = komo;
+
+        // update effective kinematic
+        effKinematics_( w ) = *komoPoseProblems_( w )->MP->configurations.last();
+
+        // update switch
+        for( mlr::KinematicSwitch *sw: komoPoseProblems_( w )->MP->switches )
+        {
+          //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
+          if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_( w ) );
+        }
+        effKinematics_( w ).topSort();
+        DEBUG( effKinematics_( w ).checkConsistency(); )
+            effKinematics_( w ).getJointState();
       }
 
       // inform symbolic level
-      if( ! poseFeasible_ )
-        labelInfeasible();
+//      if( ! poseFeasibles_( w ) )
+//        labelInfeasible();
 
-      // update effective kinematic
-      effKinematics_( w ) = *komoPoseProblems_( w )->MP->configurations.last();
-      //effKinematics_( w ).watch();
-
-      // update switch
-      for( mlr::KinematicSwitch *sw: komoPoseProblems_( w )->MP->switches )
-      {
-        //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
-        if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_( w ) );
-      }
-      effKinematics_( w ).topSort();
-      DEBUG( effKinematics_( w ).checkConsistency(); )
-          effKinematics_( w ).getJointState();
     }
   }
+
+  if( isSymbolicallyTerminal() )
+    updateAndBacktrackPoseState();
 }
 
 void AONode::solveSeqProblem()
@@ -602,7 +619,6 @@ void AONode::solveSeqProblem()
     {
       // create komo
       auto komo = komoFactory_.createKomo();
-      komoSeqProblems_( w ) = komo;
 
       // set-up komo
       komo->setModel( *startKinematics_( w ) );
@@ -640,18 +656,20 @@ void AONode::solveSeqProblem()
       double cost = result.get<double>({"total","sqrCosts"});
       double constraints = result.get<double>({"total","constraints"});
 
-      if( ! komoSeqProblems_( w ) || cost < seqCost_ )
+      if( ! komoSeqProblems_( w ) || cost < seqCosts_( w ) )
       {
-        seqCost_ = cost;
-        seqConstraints_ = constraints;
-        seqFeasible_ = (constraints<.5);
+        seqCosts_( w ) = cost;
+        seqConstraints_( w ) = constraints;
+        seqFeasibles_( w ) = (constraints<.5);
         komoSeqProblems_( w ) = komo;
       }
 
-      if( ! seqFeasible_)
-        labelInfeasible();
+//      if( ! seqFeasibles_( w ) )
+//        labelInfeasible();
     }
   }
+
+  updateAndBacktrackSequenceState();
 }
 
 void AONode::solvePathProblem( uint microSteps )
@@ -718,10 +736,12 @@ void AONode::solvePathProblem( uint microSteps )
         }
       }
 
-      if( ! pathFeasibles_( w ) )
-        labelInfeasible();
+//      if( ! pathFeasibles_( w ) )
+//        labelInfeasible();
     }
   }
+
+  updateAndBacktrackPathState();
 }
 
 void AONode::solveJointPathProblem( uint microSteps )
@@ -802,11 +822,12 @@ void AONode::solveJointPathProblem( uint microSteps )
         jointPathFeasibles_( w )   = (constraints<.5);         //
         komoJointPathProblems_( w )= komo;
       }
-
-      if( ! jointPathFeasibles_( w ) )
-        labelInfeasible();
+//      if( ! jointPathFeasibles_( w ) )
+//        labelInfeasible();
     }
   }
+
+  updateAndBacktrackJointPathState();
 }
 
 void AONode::labelInfeasible()
@@ -841,6 +862,186 @@ mlr::Array< AONode * > AONode::getTreePathFrom( AONode * start )
   } while ( ( node != start ) && node );
 
   return subPath;
+}
+
+void AONode::updateAndBacktrackPoseState()
+{
+  if( isSymbolicallyTerminal_ )
+  {
+    // if the node is logically terminal and if a pose has been found for each world,
+    // then the node is considered as pose-solve and pose-terminal
+
+    bool solved = true;
+    // test if it is solved for all worlds
+    for( auto w = 0; w < N_; ++w )
+    {
+      if( bs_( w ) > eps() )
+      {
+        solved = solved && poseFeasibles_( w );
+      }
+    }
+    isPoseProblemSolved_ = solved;
+
+    if( isPoseProblemSolved_ )
+    {
+      isPoseTerminal_      = true;
+    }
+  }
+  else
+  {
+    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
+    bool solved = true;
+
+    for( auto w = 0; w < N_; ++w )
+    {
+      if( bs_( w ) > eps() )
+      {
+        solved = solved && poseFeasibles_( w );
+      }
+    }
+
+    for( auto s : bestFamily() )
+    {
+      solved = solved && s->isPoseProblemSolved_;
+    }
+
+    isPoseProblemSolved_ = solved;
+  }
+
+  // continue backtracking
+  if( parent_ )
+  {
+    parent_->updateAndBacktrackPoseState();
+  }
+}
+
+void AONode::updateAndBacktrackSequenceState()
+{
+  if( isPoseTerminal_ )
+  {
+    // if the node is logically terminal and if a pose has been found for each world,
+    // then the node is considered as pose-solve and pose-terminal
+
+    bool solved = true;
+    // test if it is solved for all worlds
+    for( auto w = 0; w < N_; ++w )
+    {
+      if( bs_( w ) > eps() )
+      {
+        solved = solved && seqFeasibles_( w );
+      }
+    }
+    isSequenceProblemSolved_ = solved;
+
+    if( isSequenceProblemSolved_ )
+    {
+      isSequenceTerminal_      = true;
+    }
+  }
+  else
+  {
+    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
+    bool solved = true;
+
+    for( auto s : bestFamily() )
+    {
+      solved = solved && s->isSequenceProblemSolved_;
+    }
+
+    isSequenceProblemSolved_ = solved;
+  }
+
+  // continue backtracking
+  if( parent_ )
+  {
+    parent_->updateAndBacktrackSequenceState();
+  }
+}
+
+void AONode::updateAndBacktrackPathState()
+{
+  if( isSequenceTerminal_ )
+  {
+    // if the node is logically terminal and if a pose has been found for each world,
+    // then the node is considered as pose-solve and pose-terminal
+
+    bool solved = true;
+    // test if it is solved for all worlds
+    for( auto w = 0; w < N_; ++w )
+    {
+      if( bs_( w ) > eps() )
+      {
+        solved = solved && pathFeasibles_( w );
+      }
+    }
+    isPathProblemSolved_ = solved;
+
+    if( isPathProblemSolved_ )
+    {
+      isPathTerminal_      = true;
+    }
+  }
+  else
+  {
+    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
+    bool solved = true;
+
+    for( auto s : bestFamily() )
+    {
+      solved = solved && s->isPathProblemSolved_;
+    }
+
+    isPathProblemSolved_ = solved;
+  }
+
+  // continue backtracking
+  if( parent_ )
+  {
+    parent_->updateAndBacktrackPathState();
+  }
+}
+
+void AONode::updateAndBacktrackJointPathState()
+{
+  if( isPathTerminal_ )
+  {
+    // if the node is logically terminal and if a pose has been found for each world,
+    // then the node is considered as pose-solve and pose-terminal
+
+    bool solved = true;
+    // test if it is solved for all worlds
+    for( auto w = 0; w < N_; ++w )
+    {
+      if( bs_( w ) > eps() )
+      {
+        solved = solved && jointPathFeasibles_( w );
+      }
+    }
+    isJointPathProblemSolved_ = solved;
+
+    if( isJointPathProblemSolved_ )
+    {
+      isJointPathTerminal_      = true;
+    }
+  }
+  else
+  {
+    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
+    bool solved = true;
+
+    for( auto s : bestFamily() )
+    {
+      solved = solved && s->isJointPathProblemSolved_;
+    }
+
+    isJointPathProblemSolved_ = solved;
+  }
+
+  // continue backtracking
+  if( parent_ )
+  {
+    parent_->updateAndBacktrackJointPathState();
+  }
 }
 
 uint AONode::getPossibleActionsNumber() const
