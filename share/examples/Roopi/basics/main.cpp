@@ -1,10 +1,10 @@
 #include <Roopi/roopi.h>
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
-//#include <RosCom/subscribeRosKinect.h>
-//#include <RosCom/subscribeRosKinect2PCL.h>
-//#include <Gui/viewer.h>
-//#include <Perception/syncFiltered.h>
+#include <RosCom/subscribeRosKinect.h>
+#include <RosCom/subscribeRosKinect2PCL.h>
+#include <Gui/viewer.h>
+#include <Perception/percept.h>
 #include <Kin/kinViewer.h>
 //#include <memory>
 
@@ -22,6 +22,19 @@ void TEST(Basics) {
 
       R.wait({&posL});
     }
+    {
+      auto h = R.home();
+      R.wait({&h});
+    }
+  }
+  cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
+}
+
+//===============================================================================
+
+void TEST(Homing) {
+  {
+    Roopi R(true);
     {
       auto h = R.home();
       R.wait({&h});
@@ -226,79 +239,74 @@ void TEST(PickAndPlace2) {
 
 //===============================================================================
 
-void TEST(Perception) {
-  Roopi R(true, false);
-
-  R.getTaskController().lockJointGroupControl("base");
-
-  mlr::Shape *topMost = NULL;
-  OrsViewer v1("modelWorld");
-
+void localizeS1(Roopi &R, const char* obj){
   {
     //    auto L = R.lookAt("S3");
     auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
     R.wait({&look});
 
-#if 0 //on real robot!
-    SubscribeRosKinect subKin; //subscription into depth and rgb images
-//    SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
-    ImageViewer v1("kinect_rgb");
+#if 1 //on real robot!
+//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
 #else //in simulation: create a separate viewWorld
-    Access_typed<mlr::KinematicWorld> c("viewWorld");
-    c.writeAccess();
-    c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
-    c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
-    c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
-    c.deAccess();
-    OrsViewer v2("viewWorld");
-    auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
+  Access_typed<mlr::KinematicWorld> c("viewWorld");
+  c.writeAccess();
+  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+  c.deAccess();
+  OrsViewer v2("viewWorld");
+  auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
 #endif
-    R.variable<byteA>("kinect_rgb").waitForStatusGreaterThan(3);
 
-    auto pcl = R.PclPipeline(false);
-    auto filter = R.PerceptionFilter(true);
 
-    mlr::wait(3.);
+  auto pcl = R.PclPipeline(true);
+  auto filter = R.PerceptionFilter(true);
 
-    for(mlr::Shape *s:R.getK()->shapes){
-      if(s->type==mlr::ST_box && s->name.startsWith("perc_")){
-        if(!topMost || topMost->X.pos.z < s->X.pos.z) topMost=s;
-        cout <<"PERCEIVED: " <<*s <<" X=" <<s->X <<endl;
-      }
+  Access_typed<PerceptL> outputs("percepts_filtered");
+  int rev=outputs.getRevision();
+  outputs.waitForRevisionGreaterThan(rev+10);
+
+
+  cout <<"GRASPING " <<obj <<endl;
+  look.stop();
+  auto L = R.lookAt(obj, 1e-1);
+  R.wait({&L});
+
+  mlr::wait(3.);
+//    mlr::wait();
+  }
+}
+
+void TEST(Perception) {
+  Roopi R(true, false);
+
+  R.getTaskController().lockJointGroupControl("base");
+
+  const char* obj="S1";
+  OrsViewer v1("modelWorld");
+
+  SubscribeRosKinect subKin; //subscription into depth and rgb images
+  ImageViewer v2("kinect_rgb");
+
+
+  for(uint k=0;k<4;k++){
+    LeftOrRight lr = LeftOrRight(k%2);
+    localizeS1(R, obj);
+
+    //  R.getComPR2().stopSendingMotionToRobot(true);
+
+    {//pick
+      auto g=R.graspBox(obj, lr);
+      R.wait({&g});
     }
-
-    if(topMost){
-      cout <<"GRASPING " <<topMost->name <<endl;
-
-      look.stop();
-      auto L = R.lookAt(topMost->name);
-      mlr::wait();
+    {//place
+      auto g=R.place(obj, "objTarget");
+      R.wait({&g});
     }
-
-    mlr::wait();
-  }
-
-
-//  R.getComPR2().stopSendingMotionToRobot(true);
-  return;
-
-  if(topMost) {
-    auto g=R.graspBox(topMost->name, LR_left);
-    R.wait({&g});
-  }
-
-//    R.getComPR2().stopSendingMotionToRobot(true);
-
-  if(topMost) {
-    auto g=R.place(topMost->name, "objTarget");
-    R.wait({&g});
-  }
-
-//  Script_setGripper(R, LR_left, .12);
-
-  {
-    auto home = R.home();
-    R.wait({&home});
+    {
+      auto home = R.home();
+      R.wait({&home});
+    }
   }
 
 
@@ -323,6 +331,8 @@ void TEST(Gamepad) {
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
+
+//  testHoming();
 
 //  testBasics();
 //  testGripper();

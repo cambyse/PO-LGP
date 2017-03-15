@@ -24,8 +24,8 @@ struct Act_Th2 : Act{
   T *thread;
   Act_Th2(Roopi *r, T* th): Act(r), thread(th){}
   ~Act_Th2(){
-    Thread *th=dynamic_cast<Thread>(thread);
-    CHECK(ch,"this is not a thread! I can't delete it!");
+    Thread *th=dynamic_cast<Thread*>(thread);
+    CHECK(th,"this is not a thread! I can't delete it!");
     thread=NULL;
     delete th;
   }

@@ -106,7 +106,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   {
     //switch
     const char* effName = R.getK()->shapes(eff)->name;
-    R.kinematicSwitch(objName, effName);
+    R.kinematicSwitch(objName, effName, false);
   }
 
   {
@@ -168,9 +168,9 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
     //mlr::wait(1.);
-//    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {0.,0.,above+.1});
-#if 0
+#if 1
+    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_x) );
 #else
@@ -189,7 +189,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     pos.stop();//don't control obj position during kinematic switch
     look.stop();
     //ws.stop();
-    R.kinematicSwitch(objName, ontoName);
+    R.kinematicSwitch(objName, ontoName, true);
 
     //open gripper
     double gripSize = width + .05;
@@ -280,7 +280,7 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     pos.stop();//don't control obj position during kinematic switch
     look.stop();
     //ws.stop();
-    R.kinematicSwitch(objName, ontoName);
+    R.kinematicSwitch(objName, ontoName, true);
 
     //open gripper
     double gripSize = width + .05;

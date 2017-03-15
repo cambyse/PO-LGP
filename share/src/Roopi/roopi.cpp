@@ -307,8 +307,9 @@ Act_PerceptionFilter Roopi::PerceptionFilter(bool view){
   return Act_PerceptionFilter(this, view);
 }
 
-Act_Th2<PhysXThread> Roopi::PhysX(){
-  return Act_Th2<PhysXThread>(this, newPhysXThread());
+Act_Thread Roopi::PhysX(){
+  return Act_Thread(this, {newPhysXThread()});
+//  return Act_Th2<PhysXThread>(this, newPhysXThread());
 }
 
 Act_Thread Roopi::GamepadControl(){
@@ -336,13 +337,20 @@ void Roopi::resyncView(){
     s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics();
 }
 
-void Roopi::kinematicSwitch(const char* object, const char* attachTo){
+void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placing){
   {
     auto K = setK();
-    mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
-    mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, K, 0);
-    sw1.apply(K);
-    sw2.apply(K);
+    {
+      mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
+      sw1.apply(K);
+    }
+    if(!placing){
+      mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, K, 0);
+      sw2.apply(K);
+    }else{
+      mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_transXYPhi, attachTo, object, K, 0, NoTransformation, NoTransformation, 1);
+      sw2.apply(K);
+    }
     K().getJointState(); //enforces that the q & qdot are recalculated!
 //    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics(K);
   }

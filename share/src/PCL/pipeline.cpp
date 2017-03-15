@@ -129,7 +129,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
   double thick=.04;
   T.addRelativeTranslation(rect.center.x, rect.center.y, -.5*thick);
   T.addRelativeRotationDeg(rect.angle, 0.,0.,1.);
-  percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick), meanCol));
+//  percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick), meanCol));
 
   if(true){
     //-- cluster the remains

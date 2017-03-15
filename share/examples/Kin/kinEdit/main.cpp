@@ -54,7 +54,6 @@ void TEST(OrsEditor) {
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-  orsDrawAlpha = 1.;
   testOrsEditor();
 
   return 0;

@@ -61,7 +61,7 @@ struct Roopi {
 
   //-- kinematic editing (to be done more..)
   mlr::Shape* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
-  void kinematicSwitch(const char* object, const char* attachTo); ///< switches kinematics in the model world
+  void kinematicSwitch(const char* object, const char* attachTo, bool placing); ///< switches kinematics in the model world
   WToken<mlr::KinematicWorld> setK();                             ///< get write access to the model world
   RToken<mlr::KinematicWorld> getK();                             ///< get read access to the model world
   void resyncView();
@@ -89,7 +89,7 @@ struct Roopi {
   Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
 
   Act_Th<struct RosCom_Spinner> RosCom(); ///< thread for the ROS spinner
-  Act_Th2<struct PhysXThread> PhysX();           ///< run PhysX (nvidia physical simulator)
+  Act_Thread PhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread GamepadControl();  ///< activate gamepad to set controls
   Act_Thread::Ptr CameraView(bool view=true, const char* modelWorld_name="modelWorld");      ///< compute and display the camera view
 //  Act_Thread newKinect2Pcl(bool view=true);

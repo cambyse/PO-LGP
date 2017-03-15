@@ -17,5 +17,6 @@ struct Act_PclPipeline : Act{
   ptr<struct Kinect2PointCloud> kin2cloud;
   ptr<struct Conv_arr_pcl> cloud2pcl;
   ptr<struct PclPipeline> pclPipeline;
-  ptr<struct PointCloudViewer> viewer;
+//  ptr<struct PointCloudViewer> viewer;
+  ptr<struct PclViewer> viewer;
 };
