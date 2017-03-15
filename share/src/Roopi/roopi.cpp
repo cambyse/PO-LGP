@@ -6,8 +6,6 @@
 #include <Kin/kin_swift.h>
 #include <Control/GamepadControlThread.h>
 #include <RosCom/spinner.h>
-#include <Perception/roopi_Perception.h>
-#include <PCL/roopi_PCL.h>
 
 #define baxter 0
 
@@ -278,8 +276,8 @@ const mlr::String& Roopi::getRobot(){
   return s->robot;
 }
 
-Act_Thread Roopi::RosCom(){
-  return Act_Thread(this, new RosCom_Spinner());
+Act_Th<struct RosCom_Spinner> Roopi::RosCom(){
+  return Act_Th<RosCom_Spinner>(this, new RosCom_Spinner());
 }
 
 Act_Thread::Ptr Roopi::CameraView(bool view, const char* modelWorld_name){
@@ -287,16 +285,30 @@ Act_Thread::Ptr Roopi::CameraView(bool view, const char* modelWorld_name){
   return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2, modelWorld_name), new ImageViewer("kinect_rgb")}));
 }
 
-Act_Thread Roopi::PclPipeline(bool view){
-  return Act_Thread(this, ::newPclPipeline(view));
+Act_PclPipeline Roopi::PclPipeline(bool view){
+//  return Act_Thread(this, ::newPclPipeline(view));
+  return Act_PclPipeline(this, view);
 }
 
-Act_Thread Roopi::PerceptionFilter(bool view){
-  return Act_Thread(this, ::newPerceptionFilter(view));
+#if 0
+Act_Group Roopi::PclPipeline(bool view){
+  Act_Group G(this);
+  G.append(new Kinect2PointCloud());
+           threads.append(new Conv_arr_pcl("pclRawInput", "kinect_points", "kinect_rgb"));
+           threads.append(new PclPipeline("pclRawInput"));
+           if(view) threads.append(new PointCloudViewer());
+         //  if(view) threads.append(new PclViewer("pclRawInput"));
+
+}
+#endif
+
+Act_PerceptionFilter Roopi::PerceptionFilter(bool view){
+//  return Act_Thread(this, ::newPerceptionFilter(view));
+  return Act_PerceptionFilter(this, view);
 }
 
-Act_Thread Roopi::PhysX(){
-  return Act_Thread(this, newPhysXThread());
+Act_Th2<PhysXThread> Roopi::PhysX(){
+  return Act_Th2<PhysXThread>(this, newPhysXThread());
 }
 
 Act_Thread Roopi::GamepadControl(){

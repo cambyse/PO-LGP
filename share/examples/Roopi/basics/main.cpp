@@ -1,12 +1,12 @@
 #include <Roopi/roopi.h>
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
-#include <RosCom/subscribeRosKinect.h>
-#include <RosCom/subscribeRosKinect2PCL.h>
-#include <Gui/viewer.h>
-#include <Perception/syncFiltered.h>
+//#include <RosCom/subscribeRosKinect.h>
+//#include <RosCom/subscribeRosKinect2PCL.h>
+//#include <Gui/viewer.h>
+//#include <Perception/syncFiltered.h>
 #include <Kin/kinViewer.h>
-#include <memory>
+//#include <memory>
 
 //===============================================================================
 
@@ -329,9 +329,9 @@ int main(int argc, char** argv){
 //  testPhysX();
 //  Prototyping();
 
-//  testPerception();
+  testPerception();
 
-  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
 //  testGamepad();

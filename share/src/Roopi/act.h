@@ -1,7 +1,8 @@
 #pragma once
 
 #include <Core/thread.h>
-#include <memory>
+#include <bits/shared_ptr.h>
+template<class T> using ptr = std::shared_ptr<T>;
 
 enum ActStatus { AS_init=-1, AS_running, AS_done, AS_converged, AS_stalled };
 
