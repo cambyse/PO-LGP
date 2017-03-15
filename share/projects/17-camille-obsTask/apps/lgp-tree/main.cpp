@@ -8,79 +8,13 @@
 back track, take history into account?
 sort nodes before expanding?
 labelInfeasible()
-back track result of pose computation when one of the pose is not possilbe or generally different between worlds!
+back track result of pose computation when one of the pose is not possible or generally different between worlds!
 less rollouts?
 iterations
 build kinematic world for optimization, with all believed objects inserted as inert objects for colision avoidance at least!
 
 dot -Tpng -o policy.png policy.gv
 */
-//===========================================================================
-
-/*static void test(){
-  SearchSpaceTree C;
-
-  C.prepareFol();
-  C.prepareKin();
-  C.prepareTree();
-  C.prepareDisplay();
-
-  C.pathView.writeToFiles=true;
-  //  C.fol.verbose=5;
-
-  C.expandNode();
-  FILE("z.fol") <<C.fol;
-  C.root->checkConsistency();
-  C.root->recomputeAllFolStates();
-  FILE("z2.fol") <<C.fol;
-  C.root->checkConsistency();
-
-  //  C.root->write(cout, true);
-
-  //  C.displayTree();
-
-  StringA cmds={ "p", "0", "p", "3", "p", "1"};//, "p", "4", "p", "s", "q" };
-  //  cmds={ "1", "1", "0", "x", "q" };
-  //  cmds={ "1", "0", "3", "0", "3", "0", "4", "0", "x", "s", "q" }; //screwdriver 'hand over'
-  cmds={ "0", "2", "2", "3", "x", "s", "q" }; //screwdriver 'hand over'
-  //  cmds={ "0", "2", "5", "x", "s", "q" }; //screwdriver 'hand over'
-  //  cmds={ "1", "s", "q" }; //screwdriver 'hand over'
-  //  cmds={ "m", "m","m","m","q" };
-  cmds={ "p", "0", "p", "12", "p", "1", "p", "15", "p", "2", "15", "p", "s", "x" };
-
-  cmds={ "1", "2", "6", "9", "6", "0", "4", "5", "12", "2", "12", "s", "x" };
-
-  bool interactive = mlr::getParameter<bool>("intact", false);
-  bool random = mlr::getParameter<bool>("random", false);
-
-  for(uint s=0;;s++){
-    C.updateDisplay();
-    C.printChoices();
-
-    if(interactive){
-      mlr::String cmd = C.queryForChoice();
-      if(!C.execChoice(cmd)) break;
-    }else if(random){
-      if(!C.execRandomChoice()) break;
-    }else{
-      if(s>=cmds.N) break;
-      if(!C.execChoice(cmds(s))) break;
-    }
-  }
-
-  mlr::wait();
-  threadCloseModules();
-  cout <<"BYE BYE" <<endl;
-}*/
-
-//==================================================================
-//args : time, komo
-//komo.setTask( time, time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
-//                                          ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
-//                                          OT_sumOfSqr, NoArr, 1e2 );
-//
-
-
 //===========================================================================
 
 /*static void iterate( SearchSpaceTree & C, ofstream & fil )
@@ -418,17 +352,7 @@ void plan_AOS()
 
   // display
   C.updateDisplay( WorldID( -1 ), false, false, true );
-  mlr::wait( 30 );
-
-  // gathers the terminal nodes of the current solution and optimize a pose
-  // auto nodes = C.getTeprepareDisplayrminalNodes()
-  // for( auto node : nodes )
-  // {
-  //    node->solvePoseProblem();
-  //    if( node->poseFeasible() )
-  //    {
-  //    }
-  // }
+  mlr::wait( 60 );
 }
 
 //===========================================================================

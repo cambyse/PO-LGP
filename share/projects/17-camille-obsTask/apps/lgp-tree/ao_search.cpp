@@ -227,15 +227,6 @@ void AOSearch::optimizePoses( AONode * node )
 
 void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool paths )
 {
-  // get the terminal node for the world w, in the case of stochaticity
-//  AONode * node = getTerminalNode( ww );
-
-//  if( node->komoPoseProblems()( ww.id() ) && node->komoPoseProblems()( ww.id() )->MP->configurations.N )
-//    poseView_.setConfigurations(node->komoPoseProblems()( ww.id() )->MP->configurations );
-
-//  if( node->komoSeqProblems()( ww.id() ) && node->komoSeqProblems()( ww.id() )->MP->configurations.N )
-//    seqView_.setConfigurations( node->komoSeqProblems()( ww.id() )->MP->configurations );
-
   std::list< std::size_t > worldIds;
 
   if( ww.id() == -1 )
@@ -252,6 +243,7 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
 
   for( auto w : worldIds )
   {
+    // get the terminal node for the world w, in the case of stochaticity
     AONode * node = getTerminalNode( WorldID( w ) );
 
     if( poses && node->komoPoseProblems()( w ) && node->komoPoseProblems()( w )->MP->configurations.N )
