@@ -239,6 +239,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , poseSolved_      ( N_ )
   , poseFeasibles_   ( N_ )
   , komoPoseProblems_( N_ )
+  , isPoseTerminal_  ( false )
   , isPoseProblemSolved_( false )
   // seqOpt
   , seqCosts_        ( N_ )
