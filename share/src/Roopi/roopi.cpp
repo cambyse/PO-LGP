@@ -126,8 +126,9 @@ Act_CtrlTask Roopi::home(){
   return Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0());
 }
 
-Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec){
-  int cam = getK()->getShapeByName("endeffKinect")->index;
+Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec, const char* endeff_name){
+  if(!endeff_name) endeff_name="endeffKinect";
+  int cam = getK()->getShapeByName(endeff_name)->index;
   int obj = getK()->getShapeByName(shapeName)->index;
   return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
 }

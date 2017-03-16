@@ -8,6 +8,7 @@
 #include <Kin/kinViewer.h>
 //#include <memory>
 
+
 //===============================================================================
 
 void TEST(Basics) {
@@ -270,10 +271,12 @@ void localizeS1(Roopi &R, const char* obj){
   cout <<"GRASPING " <<obj <<endl;
   look.stop();
   auto L = R.lookAt(obj, 1e-1);
+  auto laser = R.lookAt(obj, 1e-1, "endeffLaser");
+  R.wait({&L});
   R.wait({&L});
 
   mlr::wait(3.);
-  mlr::wait();
+//  mlr::wait();
   }
 }
 
@@ -287,6 +290,7 @@ void TEST(Perception) {
 
   SubscribeRosKinect subKin; //subscription into depth and rgb images
   ImageViewer v2("kinect_rgb");
+
 
   for(uint k=0;k<4;k++){
     LeftOrRight lr = LeftOrRight(k%2);
