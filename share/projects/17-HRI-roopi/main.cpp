@@ -3,193 +3,237 @@
 
 //===============================================================================
 
+void workspaceAndArms(Roopi& R, const char* objName){
+  auto anR = R.armsNeutral(LR_right);
+  auto anL = R.armsNeutral(LR_left);
+  auto ws = R.workspaceReady(objName);
+  R.wait({&ws,&anR,&anL});
+}
+
 void buildTower(Roopi& R, const char* objName1, const char* objName2, const char* objName3, const char* objName4, const char* ontoName){
   //obj1, obj2, obj3, and obj4 in a tower
+  R.deactivateCollisions("coll_hand_r", objName1);
+  R.deactivateCollisions("coll_hand_l", objName2);
+  R.deactivateCollisions("coll_hand_r", objName3);
+  R.deactivateCollisions("coll_hand_l", objName4);
+  R.deactivateCollisions("coll_hand_l", objName1);
+  R.deactivateCollisions("coll_hand_r", objName2);
+  R.deactivateCollisions("coll_hand_l", objName3);
+  R.deactivateCollisions("coll_hand_r", objName4);
+
+  R.deactivateCollisions("table2", objName1);
+
   {
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,objName1);
+  }
+  {
     auto graspR = R.graspBox(objName1, LR_right);
     R.wait({&graspR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName2);
   }
   {
     auto graspL = R.graspBox(objName2, LR_left);
     R.wait({&graspL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,ontoName);
+    workspaceAndArms(R,ontoName);
   }
   {
-    auto placeR = R.place(objName1,ontoName);
+    auto placeR = R.placeDistDir(objName1,ontoName, 0,0,0);
     R.wait({&placeR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName1);
   }
   {
-    auto placeL = R.place(objName2,objName1);
+    auto placeL = R.placeDistDir(objName2,objName1, 0,0,0);
     R.wait({&placeL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName3);
+    workspaceAndArms(R,objName3);
   }
   {
     auto graspR2 = R.graspBox(objName3, LR_right);
     R.wait({&graspR2});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName4);
   }
   {
     auto graspL2 = R.graspBox(objName4, LR_left);
     R.wait({&graspL2});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName2);
+    workspaceAndArms(R,objName2);
   }
   {
-    auto placeR2 = R.place(objName3,objName2);
+    auto placeR2 = R.placeDistDir(objName3,objName2, 0,0,0);
     R.wait({&placeR2});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName3);
   }
   {
-    auto placeL2 = R.place(objName4,objName3);
+    auto placeL2 = R.placeDistDir(objName4,objName3, 0,0,0);
     R.wait({&placeL2});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName4);
+    workspaceAndArms(R,objName4);
   }
   mlr::wait();
 }
 
 void buildLine(Roopi& R, const char* objName1, const char* objName2, const char* objName3, const char* objName4, const char* ontoName1, const char* ontoName2, const char* ontoName3, const char* ontoName4){
   //obj1, obj2, obj3, and obj4 in a line
+  R.deactivateCollisions("coll_hand_r", objName1);
+  R.deactivateCollisions("coll_hand_l", objName2);
+  R.deactivateCollisions("coll_hand_r", objName3);
+  R.deactivateCollisions("coll_hand_l", objName4);
+  R.deactivateCollisions("coll_hand_l", objName1);
+  R.deactivateCollisions("coll_hand_r", objName2);
+  R.deactivateCollisions("coll_hand_l", objName3);
+  R.deactivateCollisions("coll_hand_r", objName4);
+
+  R.deactivateCollisions("table2", objName1);
+  R.deactivateCollisions("table2", objName2);
+  R.deactivateCollisions("table2", objName3);
+  R.deactivateCollisions("table2", objName4);
+
   {
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,objName1);
+  }
+  {
     auto graspR = R.graspBox(objName1, LR_right);
     R.wait({&graspR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName2);
   }
   {
     auto graspL = R.graspBox(objName2, LR_left);
     R.wait({&graspL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,ontoName1);
+    workspaceAndArms(R,ontoName1);
   }
   {
-    auto placeR = R.place(objName1,ontoName1);
+    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,1);
     R.wait({&placeR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,ontoName2);
   }
   {
-    auto placeL = R.place(objName2,ontoName2);
+    auto placeL = R.placeDistDir(objName2,ontoName2,0,0,1);
     R.wait({&placeL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName3);
+    workspaceAndArms(R,objName3);
   }
   {
     auto graspR2 = R.graspBox(objName3, LR_right);
     R.wait({&graspR2});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName4);
   }
   {
     auto graspL2 = R.graspBox(objName4, LR_left);
     R.wait({&graspL2});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,ontoName3);
+    workspaceAndArms(R,ontoName3);
   }
   {
-    auto placeR2 = R.place(objName3,ontoName3);
+    auto placeR2 = R.placeDistDir(objName3,ontoName3,0,0,1);
     R.wait({&placeR2});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,ontoName4);
   }
   {
-    auto placeL2 = R.place(objName4,ontoName4);
+    auto placeL2 = R.placeDistDir(objName4,ontoName4,0,0,1);
     R.wait({&placeL2});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName4);
+    workspaceAndArms(R,objName4);
   }
   mlr::wait();
 }
 
 void buildBridge(Roopi& R, const char* objName1, const char* objName2, const char* objName3, const char* ontoName1, const char* ontoName2){
   //obj1, obj2, and obj3 in a bridge
+  R.deactivateCollisions("coll_hand_r", objName1);
+  R.deactivateCollisions("coll_hand_l", objName2);
+  R.deactivateCollisions("coll_hand_l", objName3);
+  R.deactivateCollisions("coll_hand_l", objName1);
+  R.deactivateCollisions("coll_hand_r", objName2);
+  R.deactivateCollisions("coll_hand_r", objName3);
+
+  R.deactivateCollisions("table2", objName1);
+  R.deactivateCollisions("table2", objName2);
+
   {
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,objName1);
+  }
+  {
     auto graspR = R.graspBox(objName1, LR_right);
     R.wait({&graspR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName2);
   }
   {
     auto graspL = R.graspBox(objName2, LR_left);
     R.wait({&graspL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,ontoName1);
+    workspaceAndArms(R,ontoName1);
   }
   {
-    auto placeR = R.place(objName1,ontoName1);
+    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,0);
     R.wait({&placeR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,ontoName2);
   }
   {
-    auto placeL = R.place(objName2,ontoName2);
+    auto placeL = R.placeDistDir(objName2,ontoName2,0,0,0);
     R.wait({&placeL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName3);
+    workspaceAndArms(R,objName3);
   }
   {
-    auto graspL3 = R.graspBox(objName3, LR_left);
+    auto graspL3 = R.graspBox(objName3, LR_right);
     R.wait({&graspL3});
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,ontoName1);
   }
   {
-    auto placeL3 = R.placeDistDir(objName3,objName1,0.1,0,0);
+    auto placeL3 = R.placeDistDir(objName3,objName1,0.1,0,1);
     R.wait({&placeL3});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName3);
+    workspaceAndArms(R,objName3);
   }
   mlr::wait();
 }
 
 void buildHouse(Roopi& R, const char* objName1, const char* objName2, const char* objName3, const char* objName4, const char* ontoName1){
   //obj1, obj2, obj3, and obj4 in a house
+  R.deactivateCollisions("coll_hand_r", objName1);
+  R.deactivateCollisions("coll_hand_r", objName2);
+  R.deactivateCollisions("coll_hand_l", objName3);
+  R.deactivateCollisions("coll_hand_l", objName4);
+  R.deactivateCollisions("coll_hand_l", objName1);
+  R.deactivateCollisions("coll_hand_l", objName2);
+  R.deactivateCollisions("coll_hand_r", objName3);
+  R.deactivateCollisions("coll_hand_r", objName4);
+
+  R.deactivateCollisions("table2", objName1);
+
   {
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,objName1);
+  }
+  {
     auto graspR = R.graspBox(objName1, LR_right);
     R.wait({&graspR});
-    Script_armsNeutral(R,LR_right);
-    Script_workspaceReady(R,ontoName1);
+    workspaceAndArms(R,ontoName1);
   }
   {
     auto placeR = R.placeDistDir(objName1,ontoName1,0,0,0);
     R.wait({&placeR});
-    Script_armsNeutral(R,LR_right);
-    Script_workspaceReady(R,objName2);
+    workspaceAndArms(R,objName2);
   }
   {
     auto graspR1 = R.graspBox(objName2, LR_right);
     R.wait({&graspR1});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName3);
   }
   {
     auto graspL1 = R.graspBox(objName3, LR_left);
     R.wait({&graspL1});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,objName1);
   }
   {
     auto placeR1 = R.placeDistDir(objName2,objName1,0.1,0,0);
     R.wait({&placeR1});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName1);
   }
   {
     auto placeL1 = R.placeDistDir(objName3,objName1,-0.1,0,0);
     R.wait({&placeL1});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName4);
+    workspaceAndArms(R,objName4);
   }
   {
     auto graspL3 = R.graspBox(objName4, LR_left);
     R.wait({&graspL3});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName2);
+    workspaceAndArms(R,objName2);
   }
   {
     auto placeL3 = R.placeDistDir(objName4,objName2,-0.1,0,0);
     R.wait({&placeL3});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName4);
+    workspaceAndArms(R,objName4);
   }
   mlr::wait();
 }
@@ -198,119 +242,133 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
               const char* objName5, const char* objName6, const char* objName7, const char* objName8,
               const char* objName9, const char* objName10, const char* ontoName1, const char* ontoName2, const char* ontoName3){
   //obj1 to obj14 in a box (1 to 8 are rectangles, 9 and 10 are cubes
+  R.deactivateCollisions("coll_hand_r", objName1);
+  R.deactivateCollisions("coll_hand_l", objName2);
+  R.deactivateCollisions("coll_hand_r", objName3);
+  R.deactivateCollisions("coll_hand_l", objName4);
+  R.deactivateCollisions("coll_hand_r", objName5);
+  R.deactivateCollisions("coll_hand_l", objName6);
+  R.deactivateCollisions("coll_hand_r", objName7);
+  R.deactivateCollisions("coll_hand_l", objName8);
+  R.deactivateCollisions("coll_hand_r", objName9);
+  R.deactivateCollisions("coll_hand_l", objName10);
+  R.deactivateCollisions("coll_hand_l", objName1);
+  R.deactivateCollisions("coll_hand_r", objName2);
+  R.deactivateCollisions("coll_hand_l", objName3);
+  R.deactivateCollisions("coll_hand_r", objName4);
+  R.deactivateCollisions("coll_hand_l", objName5);
+  R.deactivateCollisions("coll_hand_r", objName6);
+  R.deactivateCollisions("coll_hand_l", objName7);
+  R.deactivateCollisions("coll_hand_r", objName8);
+  R.deactivateCollisions("coll_hand_l", objName9);
+  R.deactivateCollisions("coll_hand_r", objName10);
+
+  R.deactivateCollisions("table2", objName1);
+  R.deactivateCollisions("table2", objName2);
+  R.deactivateCollisions("table2", objName3);
 
   {
-    Script_workspaceReady(R,objName1);
+    workspaceAndArms(R,objName1);
   }
   {
     auto graspR = R.graspBox(objName1, LR_right);
     R.wait({&graspR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName2);
   }
   {
     auto graspL = R.graspBox(objName2, LR_left);
     R.wait({&graspL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,ontoName1);
+    workspaceAndArms(R,ontoName1);
   }
   {
     auto placeR = R.placeDistDir(objName1,ontoName1,0,0,0);
     R.wait({&placeR});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,ontoName3);
   }
   {
     auto placeL = R.placeDistDir(objName2,ontoName3,0,0,0);
     R.wait({&placeL});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName3);
+    workspaceAndArms(R,objName3);
   }
   {
     auto graspR1 = R.graspBox(objName3, LR_right);
     R.wait({&graspR1});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName4);
   }
   {
     auto graspL1 = R.graspBox(objName4, LR_left);
     R.wait({&graspL1});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,ontoName2);
+    workspaceAndArms(R,ontoName2);
   }
   {
     auto placeR1 = R.placeDistDir(objName3,ontoName2,0,0,0);
     R.wait({&placeR1});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName1);
   }
   {
     auto placeL1 = R.placeDistDir(objName4,objName1,0,0,1);
     R.wait({&placeL1});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName9);
+    workspaceAndArms(R,objName9);
   }
   {
     auto graspR2 = R.graspBox(objName9, LR_right);
     R.wait({&graspR2});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName10);
   }
   {
     auto graspL2 = R.graspBox(objName10, LR_left);
     R.wait({&graspL2});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName3);
+    workspaceAndArms(R,objName3);
   }
   {
     auto placeR2 = R.placeDistDir(objName9,objName3,0.1,0,0);
     R.wait({&placeR2});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName3);
   }
   {
     auto placeL2 = R.placeDistDir(objName10,objName3,-0.1,0,0);
     R.wait({&placeL2});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName5);
+    workspaceAndArms(R,objName5);
   }
   {
     auto graspR3 = R.graspBox(objName5, LR_right);
     R.wait({&graspR3});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName6);
   }
   {
     auto graspL3 = R.graspBox(objName6, LR_left);
     R.wait({&graspL3});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName2);
+    workspaceAndArms(R,objName2);
   }
   {
     auto placeR3 = R.placeDistDir(objName5,objName2,0,0,1);
     R.wait({&placeR3});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName6);
   }
   {
     auto placeL3 = R.placeDistDir(objName6,objName4,0,0,1);
     R.wait({&placeL3});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName7);
+    workspaceAndArms(R,objName7);
   }
   {
     auto graspR4 = R.graspBox(objName7, LR_right);
     R.wait({&graspR4});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName8);
   }
   {
     auto graspL4 = R.graspBox(objName8, LR_left);
     R.wait({&graspL4});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName5);
+    workspaceAndArms(R,objName5);
   }
   {
     auto placeR4 = R.placeDistDir(objName7,objName5,0,0,1);
     R.wait({&placeR4});
-    Script_armsNeutral(R,LR_right);
+    workspaceAndArms(R,objName9);
   }
   {
     auto placeL4 = R.placeDistDir(objName8,objName9,-0.1,0,0);
     R.wait({&placeL4});
-    Script_armsNeutral(R,LR_left);
-    Script_workspaceReady(R,objName8);
+    workspaceAndArms(R,objName8);
   }
   mlr::wait();
 }
