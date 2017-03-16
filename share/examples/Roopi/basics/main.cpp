@@ -273,7 +273,7 @@ void localizeS1(Roopi &R, const char* obj){
   R.wait({&L});
 
   mlr::wait(3.);
-//    mlr::wait();
+  mlr::wait();
   }
 }
 
@@ -288,12 +288,11 @@ void TEST(Perception) {
   SubscribeRosKinect subKin; //subscription into depth and rgb images
   ImageViewer v2("kinect_rgb");
 
-
   for(uint k=0;k<4;k++){
     LeftOrRight lr = LeftOrRight(k%2);
     localizeS1(R, obj);
 
-    //  R.getComPR2().stopSendingMotionToRobot(true);
+//      R.getComPR2().stopSendingMotionToRobot(true);
 
     {//pick
       auto g=R.graspBox(obj, lr);
