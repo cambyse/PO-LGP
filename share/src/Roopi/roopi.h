@@ -110,6 +110,12 @@ struct Roopi {
   Act_Script placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
     return Act_Script(this, [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
   }
+  Act_Script workspaceReady(const char* objName){
+    return runScript( [this, objName](){ return Script_workspaceReady(*this, objName); } );
+  }
+  Act_Script armsNeutral(LeftOrRight lr){
+    return runScript( [this, lr](){ return Script_armsNeutral(*this, lr); } );
+  }
 
 };
 
