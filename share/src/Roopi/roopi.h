@@ -84,7 +84,7 @@ struct Roopi {
   Act_CtrlTask::Ptr newCtrlTask(const char* specs);
   // predefined
   Act_CtrlTask::Ptr home();
-  Act_CtrlTask::Ptr lookAt(const char* shapeName, double prec=1e-2);
+  Act_CtrlTask::Ptr lookAt(const char* shapeName, double prec=1e-2, const char* endeff_name=NULL);
   Act_CtrlTask::Ptr newHoldingTask();
   Act_CtrlTask::Ptr newCollisionAvoidance();
   Act_CtrlTask::Ptr newLimitAvoidance();

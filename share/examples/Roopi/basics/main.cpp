@@ -8,6 +8,7 @@
 #include <Kin/kinViewer.h>
 //#include <memory>
 
+
 //===============================================================================
 
 void TEST(Basics) {
@@ -258,10 +259,12 @@ void localizeS1(Roopi &R, const char* obj){
   cout <<"GRASPING " <<obj <<endl;
   look->stop();
   auto L = R.lookAt(obj, 1e-1);
+  auto laser = R.lookAt(obj, 1e-1, "endeffLaser");
   R.wait({-L});
+  R.wait({-laser});
 
   mlr::wait(3.);
-//    mlr::wait();
+//  mlr::wait();
   }
 }
 
@@ -295,7 +298,7 @@ void TEST(Perception) {
     LeftOrRight lr = LeftOrRight(k%2);
     localizeS1(R, obj);
 
-    //  R.getComPR2().stopSendingMotionToRobot(true);
+//      R.getComPR2().stopSendingMotionToRobot(true);
 
     {//pick
       auto g=R.graspBox(obj, lr);
