@@ -1,10 +1,8 @@
 #pragma once
 
 #include <Core/thread.h>
-#include <bits/shared_ptr.h>
-template<class T> using ptr = std::shared_ptr<T>;
 
-enum ActStatus { AS_init=-1, AS_running, AS_done, AS_converged, AS_stalled };
+enum ActStatus { AS_init=-1, AS_running, AS_done, AS_converged, AS_stalled, AS_true, AS_false, AS_kill };
 
 struct Roopi;
 struct Act;

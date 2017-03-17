@@ -239,7 +239,7 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
       if(timeout>0.){
         if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
         if(!waiter.waitForSignal(timeout, true)){
-          cout << "not converged, timeout reached" << endl;
+          LOG(0) <<"timeout reached";
           waiter.statusUnlock(); return false;
         }
       }else{
@@ -256,6 +256,15 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
 
 Act_Script Roopi::runScript(const std::function<int ()>& script){
   return Act_Script(this, script);
+}
+
+Act_AtEvent Roopi::atEvent(const ConditionVariableL& signalers, const EventBoolean& event, const std::function<int ()>& script){
+  ptr<Act_Event> E(new Act_Event(this, signalers, event));
+  return Act_AtEvent(this, E, script);
+}
+
+Act_AtEvent Roopi::atEvent(ptr<Act_Event>& event, const std::function<int ()>& script){
+  return Act_AtEvent(this, event, script);
 }
 
 RevisionedRWLock* Roopi::variableStatus(const char* var_name){

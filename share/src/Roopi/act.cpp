@@ -3,7 +3,7 @@
 #include <Core/util.h>
 
 template<> const char* mlr::Enum<ActStatus>::names []={
-  /*"AS_create", */"AS_running", "AS_done", "AS_stalled", "AS_converged", NULL
+  /*"AS_init", */"AS_running", "AS_done", "AS_converged", "AS_stalled", "AS_true", "AS_false", "AS_kill", NULL
 };
 
 Act::Act(Roopi *r)

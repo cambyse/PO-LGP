@@ -20,7 +20,7 @@ struct sAct_Tweets : GraphEditCallback {
 //    if(c!=this){
 //      stepMutex.lock();
 #if 1
-      c->callbacks.append(Callback<void(ConditionVariable*,int)>(c,
+      c->callbacks.append(new Callback<void(ConditionVariable*,int)>(this,
         [this](ConditionVariable* c,int s){
           this->tweet(c,s);
         } )
@@ -37,7 +37,7 @@ struct sAct_Tweets : GraphEditCallback {
 //      stepMutex.lock();
 #if 1
       c->callbacks.memMove=true;
-      c->callbacks.removeValue(Callback<void(ConditionVariable*,int)>(c));
+      c->callbacks.delRemove(this);
 #else
       if(listensTo.contains(c)) stopListenTo(c);
 #endif

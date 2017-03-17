@@ -1,3 +1,5 @@
+#pragma once
+
 #include "act.h"
 
 typedef std::function<int()> Script;

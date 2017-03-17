@@ -7,7 +7,14 @@ struct sAct_Script : Thread{
     : Thread("Act_Script", -1.), act(a), script(S){
     threadStep();
   }
-  ~sAct_Script(){ threadClose(); }
+  ~sAct_Script(){
+//    bool closed = Thread::waitForStatusEq(tsCLOSE, false, .1);
+//    if(!closed){
+//      LOG(-1) <<"AtScript act is being killed (destroyed from outside without finishing)";
+//      threadCancel();
+//    }
+    threadClose();
+  }
   virtual void open(){}
   virtual void step(){
     int r = script();

@@ -245,18 +245,6 @@ void localizeS1(Roopi &R, const char* obj){
     auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
     R.wait({&look});
 
-#if 1 //on real robot!
-//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
-#else //in simulation: create a separate viewWorld
-  Access_typed<mlr::KinematicWorld> c("viewWorld");
-  c.writeAccess();
-  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
-  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
-  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
-  c.deAccess();
-  OrsViewer v2("viewWorld");
-  auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
-#endif
 
 
   auto pcl = R.PclPipeline(true);
@@ -285,9 +273,23 @@ void TEST(Perception) {
   const char* obj="S1";
   OrsViewer v1("modelWorld");
 
+#if 0 //on real robot!
   SubscribeRosKinect subKin; //subscription into depth and rgb images
+//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+#else //in simulation: create a separate viewWorld
+  Access_typed<mlr::KinematicWorld> c("viewWorld");
+  c.writeAccess();
+  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+  c.deAccess();
+//  OrsViewer v3("viewWorld");
+  auto view = R.CameraView(false, "modelWorld"); //generate depth and rgb images from a modelWorld view
+#endif
+
   ImageViewer v2("kinect_rgb");
 
+  mlr::wait();
 
   for(uint k=0;k<4;k++){
     LeftOrRight lr = LeftOrRight(k%2);
@@ -348,3 +350,4 @@ int main(int argc, char** argv){
 
   return 0;
 }
+

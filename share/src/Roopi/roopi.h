@@ -12,6 +12,8 @@
 #include "act_Thread.h"
 #include "act_Tweets.h"
 #include "act_Script.h"
+#include "act_Event.h"
+#include "act_AtEvent.h"
 #include "act_Recorder.h"
 #include "act_Perception.h"
 #include "script_PickAndPlace.h"
@@ -41,6 +43,10 @@ struct Roopi {
   /** this takes an int-valued function (use a lambda expression to capture scope) and
       run it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
   Act_Script runScript(const std::function<int()>& script);
+
+  Act_AtEvent atEvent(const ConditionVariableL& signalers, const EventBoolean& event, const std::function<int ()>& script);
+  Act_AtEvent atEvent(ptr<Act_Event>& event, const std::function<int ()>& script);
+
 
   //TODO: runScriptOnEvent(const std::function<int()>& script, Event, bool whenever=false);
   //TODO: define the notion of an Event as a set of act and conditions of their status -> wait(Event)
