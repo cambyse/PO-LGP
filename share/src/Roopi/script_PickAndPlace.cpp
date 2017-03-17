@@ -23,7 +23,7 @@ int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize){
   {
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
-    R.wait({&gripperR, &gripper2R});
+    R.wait({-gripperR, -gripper2R});
   }
   return AS_done;
 }
@@ -82,24 +82,24 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     CHECK_EQ(gripSize2, gripSize2, "the object is too think to be grasped??");
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {gripSize2});
-    R.wait({&pos, &gripperR, &gripper2R, &up});
+    R.wait({-pos, -gripperR, -gripper2R, -up});
 
     //lowering
-    pos.set()->PD().setTarget( ARR(0,0,above-.01) );
-    pos.resetStatus();
-    R.wait({&pos});
+    pos->set()->PD().setTarget( ARR(0,0,above-.01) );
+    pos->resetStatus();
+    R.wait({-pos});
 
-    pos.stop();//don't control obj position when closing gripper
-    look.stop();
-    //ws.stop();
+    pos->stop();//don't control obj position when closing gripper
+    look->stop();
+    //ws->stop();
 
     //close gripper
     gripSize = width-.01;//+.015;
-    gripperR.set()->PD().setTarget( {gripSize} );
-    gripper2R.set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
-    gripperR.resetStatus();
-    gripper2R.resetStatus();
-    R.wait({&gripperR, &gripper2R});
+    gripperR->set()->PD().setTarget( {gripSize} );
+    gripper2R->set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
+    gripperR->resetStatus();
+    gripper2R->resetStatus();
+    R.wait({-gripperR, -gripper2R});
     mlr::wait(.5);
   }
 
@@ -112,9 +112,9 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   {
     //lift hand
     auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
-    lift.set()->PD().setTarget(lift.task->y);
-    lift.set()->PD().setGains(0, 10.);
-    lift.set()->PD().v_target = ARR(0,0,.2);
+    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->PD().setGains(0, 10.);
+    lift->set()->PD().v_target = ARR(0,0,.2);
     auto look = R.lookAt(objName);
     mlr::wait(1.);
   }
@@ -175,20 +175,20 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_x) );
 #else
     auto quat = R.newCtrlTask(new TaskMap_Default(quatTMT, obj) );
-    quat.set()->PD().setTarget(rot.getArr4d());
+    quat->set()->PD().setTarget(rot.getArr4d());
 #endif
-    //R.wait({&ws, &up, &pos});
-    R.wait({/*&up,*/ &pos});
+    //R.wait({-ws, -up, -pos});
+    R.wait({/*-up,*/ -pos});
 
     //lowering
-    pos.set()->PD().setTarget( ARR(0,0,above) );
-    pos.resetStatus();
-    R.wait({&pos});
+    pos->set()->PD().setTarget( ARR(0,0,above) );
+    pos->resetStatus();
+    R.wait({-pos});
 
     //switch
-    pos.stop();//don't control obj position during kinematic switch
-    look.stop();
-    //ws.stop();
+    pos->stop();//don't control obj position during kinematic switch
+    look->stop();
+    //ws->stop();
     R.kinematicSwitch(objName, ontoName, true);
 
     //open gripper
@@ -196,15 +196,15 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
     auto look2 = R.lookAt(objName);
-    R.wait({&gripperR, &gripper2R});
+    R.wait({-gripperR, -gripper2R});
   }
 
   {
     //lift hand
     auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
-    lift.set()->PD().setTarget(lift.task->y);
-    lift.set()->PD().setGains(0, 10.);
-    lift.set()->PD().v_target = ARR(0,0,.2);
+    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->PD().setGains(0, 10.);
+    lift->set()->PD().v_target = ARR(0,0,.2);
     mlr::wait(1.);
   }
   return AS_done;
@@ -257,29 +257,29 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
     //mlr::wait(1.);
-    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
-    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1});
+    auto up =  R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
+    auto pos = R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1});
     auto al1 = R.newCtrlTask();
     if (deltaTheta==0){
-      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
     } else {
-      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
     }
-    al1.task->PD().setGainsAsNatural(1., .9);
-    al1.start();
-    //R.wait({&ws, &up, &pos});
-    R.wait({&up, &pos});
+    al1->task->PD().setGainsAsNatural(1., .9);
+    al1->start();
+    //R.wait({-ws, -up, -pos});
+    R.wait({-up, -pos});
 
 
     //lowering
-    pos.set()->PD().setTarget( ARR(deltaX,deltaY,above) );
-    pos.resetStatus();
-    R.wait({&pos});
+    pos->set()->PD().setTarget( ARR(deltaX,deltaY,above) );
+    pos->resetStatus();
+    R.wait({-pos});
 
     //switch
-    pos.stop();//don't control obj position during kinematic switch
-    look.stop();
-    //ws.stop();
+    pos->stop();//don't control obj position during kinematic switch
+    look->stop();
+    //ws->stop();
     R.kinematicSwitch(objName, ontoName, true);
 
     //open gripper
@@ -287,15 +287,15 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
     auto look2 = R.lookAt(objName);
-    R.wait({&gripperR, &gripper2R});
+    R.wait({-gripperR, -gripper2R});
   }
 
   {
     //lift hand
     auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
-    lift.set()->PD().setTarget(lift.task->y);
-    lift.set()->PD().setGains(0, 10.);
-    lift.set()->PD().v_target = ARR(0,0,.2);
+    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->PD().setGains(0, 10.);
+    lift->set()->PD().v_target = ARR(0,0,.2);
     mlr::wait(1.);
   }
   return AS_done;
@@ -332,14 +332,14 @@ int Script_armsNeutral(Roopi& R, LeftOrRight rl){
       auto upperArmRoll =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJoint}, false), {}, {-1});   //-1
       auto elbowFlex =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJoint}, false), {}, {-2});   //-2
       auto forearmRoll =  R.newCtrlTask(new TaskMap_qItself({forearmRollJoint}, false), {}, {-1.5});   //-1.5
-      R.wait({&shoulderPan,&shoulderLift,&upperArmRoll,&elbowFlex,&forearmRoll});
+      R.wait({-shoulderPan,-shoulderLift,-upperArmRoll,-elbowFlex,-forearmRoll});
     } else {
       auto shoulderPan =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJoint}, false), {}, {1});  //1
       auto shoulderLift =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJoint}, false), {}, {-0.5});  //0.5
       auto upperArmRoll =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJoint}, false), {}, {1});   //1
       auto elbowFlex =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJoint}, false), {}, {-2});   //-2
       auto forearmRoll =  R.newCtrlTask(new TaskMap_qItself({forearmRollJoint}, false), {}, {1.5});   //1.5
-      R.wait({&shoulderPan,&shoulderLift,&upperArmRoll,&elbowFlex,&forearmRoll});
+      R.wait({-shoulderPan,-shoulderLift,-upperArmRoll,-elbowFlex,-forearmRoll});
     }
   }
   return AS_done;
@@ -365,7 +365,7 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     //attention & workspace positioning
     auto look = R.lookAt(objName);
     auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    R.wait({&ws});
+    R.wait({-ws});
   }
   return AS_done;
 }

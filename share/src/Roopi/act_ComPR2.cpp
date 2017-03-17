@@ -24,7 +24,7 @@ struct sAct_ComPR2{
 
   ~sAct_ComPR2(){
     if(pubCtrl->listensTo.N)
-      pubCtrl->stopListenTo(ctrl_ref.data); //ensure that the publisher is not stepped and reopened AFTER being already closed
+      pubCtrl->stopListenTo(*ctrl_ref.data); //ensure that the publisher is not stepped and reopened AFTER being already closed
     if(pubCtrl) delete pubCtrl;
     if(subCtrl) delete subCtrl;
     if(subOdom) delete subOdom;
@@ -42,9 +42,9 @@ Act_ComPR2::~Act_ComPR2(){
 }
 
 void Act_ComPR2::stopSendingMotionToRobot(bool stop){
-  if(stop) s->pubCtrl->stopListenTo(s->ctrl_ref.data); //ensure that the publisher is not stepped and reopened AFTER being already closed
+  if(stop) s->pubCtrl->stopListenTo(*s->ctrl_ref.data); //ensure that the publisher is not stepped and reopened AFTER being already closed
   else{
     CHECK(!s->pubCtrl->listensTo.N,"this is already listening to something!");
-    s->pubCtrl->listenTo(s->ctrl_ref.data);
+    s->pubCtrl->listenTo(*s->ctrl_ref.data);
   }
 }

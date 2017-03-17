@@ -1,6 +1,6 @@
 #include "act_AtEvent.h"
 
-Act_AtEvent::Act_AtEvent(Roopi* r, ptr<Act_Event>& E, const Script& S)
+Act_AtEvent::Act_AtEvent(Roopi* r, shared_ptr<Act_Event>& E, const Script& S)
   : Act(r), Thread("Act_AtEvent", -1.), event(E), script(S){
   threadStep();
 }

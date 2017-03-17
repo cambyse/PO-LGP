@@ -8,4 +8,6 @@ struct Act_Script : Act{
   struct sAct_Script *s;
   Act_Script(Roopi *r, const Script& S);
   ~Act_Script();
+
+  typedef std::shared_ptr<Act_Script> Ptr;
 };

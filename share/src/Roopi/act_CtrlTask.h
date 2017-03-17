@@ -25,4 +25,6 @@ struct Act_CtrlTask : Act{
   void setTask(CtrlTask*); ///< use this to configure: set the map
   WToken<CtrlTask> set(); ///< use this to directly access the CtrlTask (in a threadsafe way) and do anything to it
   RToken<CtrlTask> get(); ///< use this to directly access the CtrlTask (in a threadsafe way) and do anything to it
+
+  typedef std::shared_ptr<Act_CtrlTask> Ptr;
 };

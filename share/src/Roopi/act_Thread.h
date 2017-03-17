@@ -15,7 +15,7 @@ struct Act_Thread : Act{
 
 template<class T>
 struct Act_Th : Act{
-  ptr<T> thread;
+  shared_ptr<T> thread;
   Act_Th(Roopi *r, T* th): Act(r), thread(th){}
 };
 
