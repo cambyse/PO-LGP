@@ -113,8 +113,8 @@ struct Roopi {
   Act_Script workspaceReady(const char* objName){
     return runScript( [this, objName](){ return Script_workspaceReady(*this, objName); } );
   }
-  Act_Script armsNeutral(LeftOrRight lr){
-    return runScript( [this, lr](){ return Script_armsNeutral(*this, lr); } );
+  Act_Script armsNeutral(){
+    return runScript( [this](){ return Script_armsNeutral(*this); } );
   }
 
 };

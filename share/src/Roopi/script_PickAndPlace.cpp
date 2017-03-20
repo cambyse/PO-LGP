@@ -257,19 +257,37 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
     //mlr::wait(1.);
-    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
+    //auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1});
     auto al1 = R.newCtrlTask();
+    auto al2 = R.newCtrlTask();
+    auto al3 = R.newCtrlTask();
     if (deltaTheta==0){
-      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
-    } else {
-      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    } else if (deltaTheta==1){
+      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+    } else if (deltaTheta==2){
+      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+      al3.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    } else if (deltaTheta==3){
+      al1.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+      al3.setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
     }
-    al1.task->PD().setGainsAsNatural(1., .9);
+    al1.set()->PD().setGainsAsNatural(1., .9);
     al1.start();
+    al2.set()->PD().setGainsAsNatural(1., .9);
+    al2.start();
+    al3.set()->PD().setGainsAsNatural(1., .9);
+    al3.start();
     //R.wait({&ws, &up, &pos});
-    R.wait({&up, &pos});
-
+    //R.wait({&up, &pos});
+    R.wait({&pos});
 
     //lowering
     pos.set()->PD().setTarget( ARR(deltaX,deltaY,above) );
@@ -301,46 +319,41 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
   return AS_done;
 }
 
-int Script_armsNeutral(Roopi& R, LeftOrRight rl){
+int Script_armsNeutral(Roopi& R){
   //query some info from the kinematics first
-  uint shoulderPanJoint, shoulderLiftJoint, upperArmRollJoint, elbowFlexJoint, forearmRollJoint;
+  uint shoulderPanJointR, shoulderLiftJointR, upperArmRollJointR, elbowFlexJointR, forearmRollJointR;
+  uint shoulderPanJointL, shoulderLiftJointL, upperArmRollJointL, elbowFlexJointL, forearmRollJointL;
   {
     auto K = R.getK();
     if(R.getRobot()=="pr2"){
-      if(rl==LR_right){
-        shoulderPanJoint= K().getJointByName("r_shoulder_pan_joint")->to->index;
-        shoulderLiftJoint= K().getJointByName("r_shoulder_lift_joint")->to->index;
-        upperArmRollJoint= K().getJointByName("r_upper_arm_roll_joint")->to->index;
-        elbowFlexJoint= K().getJointByName("r_elbow_flex_joint")->to->index;
-        forearmRollJoint= K().getJointByName("r_forearm_roll_joint")->to->index;
-      } else {
-        shoulderPanJoint= K().getJointByName("l_shoulder_pan_joint")->to->index;
-        shoulderLiftJoint= K().getJointByName("l_shoulder_lift_joint")->to->index;
-        upperArmRollJoint= K().getJointByName("l_upper_arm_roll_joint")->to->index;
-        elbowFlexJoint= K().getJointByName("l_elbow_flex_joint")->to->index;
-        forearmRollJoint= K().getJointByName("l_forearm_roll_joint")->to->index;
-      }
+        shoulderPanJointR= K().getJointByName("r_shoulder_pan_joint")->to->index;
+        shoulderLiftJointR= K().getJointByName("r_shoulder_lift_joint")->to->index;
+        upperArmRollJointR= K().getJointByName("r_upper_arm_roll_joint")->to->index;
+        elbowFlexJointR= K().getJointByName("r_elbow_flex_joint")->to->index;
+        forearmRollJointR= K().getJointByName("r_forearm_roll_joint")->to->index;
+        shoulderPanJointL= K().getJointByName("l_shoulder_pan_joint")->to->index;
+        shoulderLiftJointL= K().getJointByName("l_shoulder_lift_joint")->to->index;
+        upperArmRollJointL= K().getJointByName("l_upper_arm_roll_joint")->to->index;
+        elbowFlexJointL= K().getJointByName("l_elbow_flex_joint")->to->index;
+        forearmRollJointL= K().getJointByName("l_forearm_roll_joint")->to->index;
     }else{
       NIY;
     }
   }
 
   {
-    if (rl==LR_right){
-      auto shoulderPan =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJoint}, false), {}, {-1});  //-1
-      auto shoulderLift =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJoint}, false), {}, {-0.5});  //0.5
-      auto upperArmRoll =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJoint}, false), {}, {-1});   //-1
-      auto elbowFlex =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJoint}, false), {}, {-2});   //-2
-      auto forearmRoll =  R.newCtrlTask(new TaskMap_qItself({forearmRollJoint}, false), {}, {-1.5});   //-1.5
-      R.wait({&shoulderPan,&shoulderLift,&upperArmRoll,&elbowFlex,&forearmRoll});
-    } else {
-      auto shoulderPan =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJoint}, false), {}, {1});  //1
-      auto shoulderLift =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJoint}, false), {}, {-0.5});  //0.5
-      auto upperArmRoll =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJoint}, false), {}, {1});   //1
-      auto elbowFlex =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJoint}, false), {}, {-2});   //-2
-      auto forearmRoll =  R.newCtrlTask(new TaskMap_qItself({forearmRollJoint}, false), {}, {1.5});   //1.5
-      R.wait({&shoulderPan,&shoulderLift,&upperArmRoll,&elbowFlex,&forearmRoll});
-    }
+      auto shoulderPanR =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJointR}, false), {}, {-1});  //-1
+      auto shoulderLiftR =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJointR}, false), {}, {-0.5});  //0.5
+      auto upperArmRollR =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJointR}, false), {}, {-1});   //-1
+      auto elbowFlexR =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJointR}, false), {}, {-2});   //-2
+      auto forearmRollR =  R.newCtrlTask(new TaskMap_qItself({forearmRollJointR}, false), {}, {-1.5});   //-1.5
+      auto shoulderPanL =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJointL}, false), {}, {1});  //1
+      auto shoulderLiftL =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJointL}, false), {}, {-0.5});  //0.5
+      auto upperArmRollL =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJointL}, false), {}, {1});   //1
+      auto elbowFlexL =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJointL}, false), {}, {-2});   //-2
+      auto forearmRollL =  R.newCtrlTask(new TaskMap_qItself({forearmRollJointL}, false), {}, {1.5});   //1.5
+      R.wait({&shoulderPanR,&shoulderLiftR,&upperArmRollR,&elbowFlexR,&forearmRollR});
+      R.wait({&shoulderPanL,&shoulderLiftL,&upperArmRollL,&elbowFlexL,&forearmRollL});
   }
   return AS_done;
 }

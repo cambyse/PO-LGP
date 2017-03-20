@@ -4,10 +4,9 @@
 //===============================================================================
 
 void workspaceAndArms(Roopi& R, const char* objName){
-  auto anR = R.armsNeutral(LR_right);
-  auto anL = R.armsNeutral(LR_left);
+  auto an = R.armsNeutral();
   auto ws = R.workspaceReady(objName);
-  R.wait({&ws,&anR,&anL});
+  R.wait({&ws,&an});
 }
 
 void buildTower(Roopi& R, const char* objName1, const char* objName2, const char* objName3, const char* objName4, const char* ontoName){
@@ -99,12 +98,12 @@ void buildLine(Roopi& R, const char* objName1, const char* objName2, const char*
     workspaceAndArms(R,ontoName1);
   }
   {
-    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,1);
+    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,0);
     R.wait({&placeR});
     workspaceAndArms(R,ontoName2);
   }
   {
-    auto placeL = R.placeDistDir(objName2,ontoName2,0,0,1);
+    auto placeL = R.placeDistDir(objName2,ontoName2,0,0,0);
     R.wait({&placeL});
     workspaceAndArms(R,objName3);
   }
@@ -119,12 +118,12 @@ void buildLine(Roopi& R, const char* objName1, const char* objName2, const char*
     workspaceAndArms(R,ontoName3);
   }
   {
-    auto placeR2 = R.placeDistDir(objName3,ontoName3,0,0,1);
+    auto placeR2 = R.placeDistDir(objName3,ontoName3,0,0,0);
     R.wait({&placeR2});
     workspaceAndArms(R,ontoName4);
   }
   {
-    auto placeL2 = R.placeDistDir(objName4,ontoName4,0,0,1);
+    auto placeL2 = R.placeDistDir(objName4,ontoName4,0,0,0);
     R.wait({&placeL2});
     workspaceAndArms(R,objName4);
   }
@@ -201,7 +200,7 @@ void buildHouse(Roopi& R, const char* objName1, const char* objName2, const char
     workspaceAndArms(R,ontoName1);
   }
   {
-    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,0);
+    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,1);
     R.wait({&placeR});
     workspaceAndArms(R,objName2);
   }
@@ -281,12 +280,12 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
     workspaceAndArms(R,ontoName1);
   }
   {
-    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,0);
+    auto placeR = R.placeDistDir(objName1,ontoName1,0,0,1);
     R.wait({&placeR});
     workspaceAndArms(R,ontoName3);
   }
   {
-    auto placeL = R.placeDistDir(objName2,ontoName3,0,0,0);
+    auto placeL = R.placeDistDir(objName2,ontoName3,0,0,1);
     R.wait({&placeL});
     workspaceAndArms(R,objName3);
   }
@@ -301,12 +300,12 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
     workspaceAndArms(R,ontoName2);
   }
   {
-    auto placeR1 = R.placeDistDir(objName3,ontoName2,0,0,0);
+    auto placeR1 = R.placeDistDir(objName3,ontoName2,0,0,1);
     R.wait({&placeR1});
     workspaceAndArms(R,objName1);
   }
   {
-    auto placeL1 = R.placeDistDir(objName4,objName1,0,0,1);
+    auto placeL1 = R.placeDistDir(objName4,objName1,0,0,0);
     R.wait({&placeL1});
     workspaceAndArms(R,objName9);
   }
@@ -321,12 +320,12 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
     workspaceAndArms(R,objName3);
   }
   {
-    auto placeR2 = R.placeDistDir(objName9,objName3,0.1,0,0);
+    auto placeR2 = R.placeDistDir(objName9,objName3,0.1,0,1);
     R.wait({&placeR2});
     workspaceAndArms(R,objName3);
   }
   {
-    auto placeL2 = R.placeDistDir(objName10,objName3,-0.1,0,0);
+    auto placeL2 = R.placeDistDir(objName10,objName3,-0.1,0,1);
     R.wait({&placeL2});
     workspaceAndArms(R,objName5);
   }
@@ -341,12 +340,12 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
     workspaceAndArms(R,objName2);
   }
   {
-    auto placeR3 = R.placeDistDir(objName5,objName2,0,0,1);
+    auto placeR3 = R.placeDistDir(objName5,objName2,0,0,0);
     R.wait({&placeR3});
     workspaceAndArms(R,objName6);
   }
   {
-    auto placeL3 = R.placeDistDir(objName6,objName4,0,0,1);
+    auto placeL3 = R.placeDistDir(objName6,objName4,0,0,0);
     R.wait({&placeL3});
     workspaceAndArms(R,objName7);
   }
@@ -361,12 +360,12 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
     workspaceAndArms(R,objName5);
   }
   {
-    auto placeR4 = R.placeDistDir(objName7,objName5,0,0,1);
+    auto placeR4 = R.placeDistDir(objName7,objName5,0,0,0);
     R.wait({&placeR4});
     workspaceAndArms(R,objName9);
   }
   {
-    auto placeL4 = R.placeDistDir(objName8,objName9,-0.1,0,0);
+    auto placeL4 = R.placeDistDir(objName8,objName9,-0.1,0,1);
     R.wait({&placeL4});
     workspaceAndArms(R,objName8);
   }
@@ -388,15 +387,41 @@ void testHRI() {
   //buildHouse(R,"rect1","cube1","cube2","rect2","objTarget");
   buildBox(R,"rect1","rect2","rect3","rect4","rect5","rect6","rect7","rect8","cube1","cube2","objTarget","objTarget5","objTarget6");
 
-  //auto graspR = R.graspBox("rect1", LR_right);
-  //R.wait({&graspR});
-  //auto graspL = R.graspBox("rect2", LR_left);
-  //R.wait({&graspL});
-  //auto placeR = R.place("rect1","objTarget6");
-  //R.wait({&placeR});
-  //auto placeL = R.place("rect2","objTarget7");
-  //R.wait({&placeL});
-  //mlr::wait();
+  /*
+  R.deactivateCollisions("coll_hand_r", "rect1");
+  R.deactivateCollisions("coll_hand_l", "rect2");
+  R.deactivateCollisions("table2", "rect1");
+  R.deactivateCollisions("table2", "rect2");
+  {
+    workspaceAndArms(R,"rect1");
+  }
+  {
+    auto graspR = R.graspBox("rect1", LR_right);
+    R.wait({&graspR});
+  }
+  {
+    workspaceAndArms(R,"rect2");
+  }
+  {
+    auto graspL = R.graspBox("rect2", LR_left);
+    R.wait({&graspL});
+  }
+  {
+    workspaceAndArms(R,"objTarget");
+  }
+  {
+    auto placeR = R.placeDistDir("rect1","objTarget",0,0,3);
+    R.wait({&placeR});
+  }
+  {
+    workspaceAndArms(R,"objTarget7");
+  }
+  {
+    auto placeL = R.placeDistDir("rect2","objTarget7",0,0,3);
+    R.wait({&placeL});
+  }
+  mlr::wait();
+  */
 
   //Script_graspBox(R,"rect1", LR_right);
   //Script_place(R,"rect1","objTarget");
