@@ -19,16 +19,15 @@ Roopi_private::~Roopi_private(){
   threadReportCycleTimes();
 
   //delete persistant acts
-  if(_tweets) delete _tweets; _tweets=NULL; //somehow the tweeter crashes to tweet the other's kill...
-  if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
-  if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
-  if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
-  if(_watchTask) delete _watchTask; _watchTask=NULL;
-  if(_collTask) delete _collTask; _collTask=NULL;
-  if(_taskController) delete _taskController; _taskController=NULL;
-  if(_taskUpdater) delete _taskUpdater; _taskUpdater=NULL;
-
-  if(_ctrlView) delete _ctrlView; _ctrlView=NULL;
+//  if(_tweets) delete _tweets; _tweets=NULL; //somehow the tweeter crashes to tweet the other's kill...
+//  if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
+//  if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
+//  if(_holdPositionTask) delete _holdPositionTask; _holdPositionTask=NULL;
+//  if(_watchTask) delete _watchTask; _watchTask=NULL;
+//  if(_collTask) delete _collTask; _collTask=NULL;
+//  if(_taskController) delete _taskController; _taskController=NULL;
+//  if(_taskUpdater) delete _taskUpdater; _taskUpdater=NULL;
+//  if(_ctrlView) delete _ctrlView; _ctrlView=NULL;
   threadCloseModules();
   cout << "bye bye" << endl;
 }
@@ -43,8 +42,8 @@ Roopi::Roopi(bool autoStartup, bool controlView)
 
   if(autoStartup){
     if(s->useRos){
-      s->_ComRos = new Act_Thread(this, new RosCom_Spinner());
-      s->_ComPR2 = new Act_ComPR2(this);
+      s->_ComRos = ptr<Act_Thread>(new Act_Thread(this, new RosCom_Spinner()));
+      s->_ComPR2 = ptr<Act_ComPR2>(new Act_ComPR2(this));
     }
 
     startTweets();
@@ -77,23 +76,23 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K, bool controlView){
 
   if(controlView){
     if(s->useRos){
-      s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1));
+      s->_ctrlView = ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
     } else {
-      s->_ctrlView = new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1));
+      s->_ctrlView = ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1)));
     }
   }
 }
 
-Act_TaskController& Roopi::startTaskController(){
+ptr<Act_TaskController> Roopi::startTaskController(){
 //  s->_taskUpdater = new Act_Thread(this, new CtrlTaskUpdater);
-  s->_taskController = new Act_TaskController(this);
-  return *s->_taskController;
+  s->_taskController = ptr<Act_TaskController>(new Act_TaskController(this));
+  return s->_taskController;
 }
 
-Act_Tweets& Roopi::startTweets(bool go){
-  if(!s->_tweets && go) s->_tweets = new Act_Tweets(this);
-  if(s->_tweets && !go){ delete s->_tweets; s->_tweets=NULL; }
-  return *s->_tweets;
+ptr<Act_Tweets> Roopi::startTweets(bool go){
+  if(!s->_tweets && go) s->_tweets = ptr<Act_Tweets>(new Act_Tweets(this));
+  if(s->_tweets && !go) s->_tweets.reset();
+  return s->_tweets;
 }
 
 Act_TaskController& Roopi::getTaskController(){
@@ -122,32 +121,32 @@ RToken<mlr::KinematicWorld> Roopi::getK(){
 }
 
 
-Act_CtrlTask Roopi::home(){
-  return Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0());
+Act_CtrlTask::Ptr Roopi::home(){
+  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0()));
 }
 
-Act_CtrlTask Roopi::lookAt(const char* shapeName, double prec, const char* endeff_name){
+Act_CtrlTask::Ptr Roopi::lookAt(const char* shapeName, double prec){
   if(!endeff_name) endeff_name="endeffKinect";
   int cam = getK()->getShapeByName(endeff_name)->index;
   int obj = getK()->getShapeByName(shapeName)->index;
-  return Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
+  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec}));
 }
 
-Act_CtrlTask Roopi::newHoldingTask(){
-  auto hold = Act_CtrlTask(this);
-  hold.setMap(new TaskMap_qItself);
-  hold.task->PD().setTarget( hold.y0 );
-  hold.task->PD().setGains(30., 10.);
-  hold.start();
+Act_CtrlTask::Ptr Roopi::newHoldingTask(){
+  auto hold = Act_CtrlTask::Ptr(new Act_CtrlTask(this));
+  hold->setMap(new TaskMap_qItself);
+  hold->task->PD().setTarget( hold->y0 );
+  hold->task->PD().setGains(30., 10.);
+  hold->start();
   return hold;
 }
 
-Act_CtrlTask Roopi::newCollisionAvoidance(){
-  return Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
+Act_CtrlTask::Ptr Roopi::newCollisionAvoidance(){
+  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2}));
 }
 
-Act_CtrlTask Roopi::newLimitAvoidance(){
-  return Act_CtrlTask(this, new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2});
+Act_CtrlTask::Ptr Roopi::newLimitAvoidance(){
+  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2}));
 }
 
 //Act_CtrlTask* Roopi::lookAt(const char* shapeName){
@@ -171,7 +170,7 @@ Act_CtrlTask Roopi::newLimitAvoidance(){
 //}
 
 void Roopi::hold(bool still){
-  if(!s->_holdPositionTask) s->_holdPositionTask = new Act_CtrlTask(std::move(newHoldingTask()));
+  if(!s->_holdPositionTask) s->_holdPositionTask = newHoldingTask();
 
   if(still){
     s->_holdPositionTask->set()->PD().setTarget(s->_holdPositionTask->task->y);
@@ -182,8 +181,8 @@ void Roopi::hold(bool still){
   }
 }
 
-Act_CtrlTask* Roopi::collisions(bool on){
-  if(!s->_collTask) s->_collTask = new Act_CtrlTask(std::move(newCollisionAvoidance()));
+Act_CtrlTask::Ptr Roopi::collisions(bool on){
+  if(!s->_collTask) s->_collTask = newCollisionAvoidance();
   if(on) s->_collTask->start();
   else s->_collTask->stop();
   return s->_collTask;
@@ -201,12 +200,12 @@ void Roopi::deactivateCollisions(const char* s1, const char* s2){
 //
 // basic CtrlTask management
 
-Act_CtrlTask Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
-  return Act_CtrlTask(this, map, PD, target, prec);
+Act_CtrlTask::Ptr Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
+  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, map, PD, target, prec));
 }
 
-Act_CtrlTask Roopi::newCtrlTask(const char* specs){
-  return Act_CtrlTask(this, GRAPH(specs));
+Act_CtrlTask::Ptr Roopi::newCtrlTask(const char* specs){
+  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, GRAPH(specs)));
 }
 
 bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
@@ -228,10 +227,10 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
 #else
   double startTime = mlr::realTime();
   ConditionVariable waiter;
-  for(Act *act : acts) waiter.listenTo(act);
+  for(Act* act : acts) waiter.listenTo(*act);
   for(;;){
     bool allConv = true;
-    for(Act *act : acts) if(act->getStatus()<=0) allConv=false;
+    for(Act* act : acts) if(act->getStatus()<=0) allConv=false;
     if(allConv) return true;
 
     waiter.statusLock();
@@ -240,7 +239,7 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
       if(timeout>0.){
         if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
         if(!waiter.waitForSignal(timeout, true)){
-          cout << "not converged, timeout reached" << endl;
+          LOG(0) <<"timeout reached";
           waiter.statusUnlock(); return false;
         }
       }else{
@@ -255,8 +254,17 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
 #endif
 }
 
-Act_Script Roopi::runScript(const std::function<int ()>& script){
-  return Act_Script(this, script);
+Act_Script::Ptr Roopi::runScript(const std::function<int ()>& script){
+  return Act_Script::Ptr(new Act_Script(this, script));
+}
+
+Act_AtEvent Roopi::atEvent(const ConditionVariableL& signalers, const EventBoolean& event, const std::function<int ()>& script){
+  shared_ptr<Act_Event> E(new Act_Event(this, signalers, event));
+  return Act_AtEvent(this, E, script);
+}
+
+Act_AtEvent Roopi::atEvent(shared_ptr<Act_Event>& event, const std::function<int ()>& script){
+  return Act_AtEvent(this, event, script);
 }
 
 RevisionedRWLock* Roopi::variableStatus(const char* var_name){
@@ -308,13 +316,13 @@ Act_PerceptionFilter Roopi::PerceptionFilter(bool view){
   return Act_PerceptionFilter(this, view);
 }
 
-Act_Thread Roopi::PhysX(){
-  return Act_Thread(this, {newPhysXThread()});
+Act_Thread::Ptr Roopi::PhysX(){
+  return Act_Thread::Ptr(new Act_Thread(this, {newPhysXThread()}));
 //  return Act_Th2<PhysXThread>(this, newPhysXThread());
 }
 
-Act_Thread Roopi::GamepadControl(){
-  return Act_Thread(this, new GamepadControlThread());
+Act_Thread::Ptr Roopi::GamepadControl(){
+  return Act_Thread::Ptr(new Act_Thread(this, new GamepadControlThread()));
 }
 
 

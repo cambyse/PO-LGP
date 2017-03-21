@@ -16,16 +16,16 @@ void TEST(Basics) {
     Roopi R(true);
     {
       auto posL = R.newCtrlTask();
-      posL.setMap(new TaskMap_Default(posTMT, R.getK(), "endeffL"));
-      posL.task->PD().setTarget( posL.y0 + ARR(0,-.1,-.3) );
-      posL.task->PD().setGainsAsNatural(1., .9);
-      posL.start();
+      posL->setMap(new TaskMap_Default(posTMT, R.getK(), "endeffL"));
+      posL->task->PD().setTarget( posL->y0 + ARR(0,-.1,-.3) );
+      posL->task->PD().setGainsAsNatural(1., .9);
+      posL->start();
 
-      R.wait({&posL});
+      R.wait({-posL});
     }
     {
       auto h = R.home();
-      R.wait({&h});
+      R.wait({-h});
     }
   }
   cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
@@ -38,7 +38,7 @@ void TEST(Homing) {
     Roopi R(true);
     {
       auto h = R.home();
-      R.wait({&h});
+      R.wait({-h});
     }
   }
   cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
@@ -64,11 +64,11 @@ void TEST(PhysX) {
 
     auto g = R.graspBox("obj2", LR_left);
 
-    R.wait({&g});
+    R.wait({-g});
 
     auto p = R.place("obj2", "objTarget");
 
-    R.wait({&p});
+    R.wait({-p});
 
   }
 }
@@ -85,43 +85,43 @@ void Prototyping(){
     auto leftTarget = R.newMarker("targetL", conv_vec2arr(s->X.pos)+ARR(.0,-.2,.3));
 
     auto leftHand = R.newCtrlTask();
-    leftHand.setMap(new TaskMap_Default(posDiffTMT, R.getK(), "endeffL", NoVector, "targetL"));
-    leftHand.task->PD().setGainsAsNatural(1., .8);
-    leftHand.task->PD().setTarget( {.0} );
-    leftHand.start();
+    leftHand->setMap(new TaskMap_Default(posDiffTMT, R.getK(), "endeffL", NoVector, "targetL"));
+    leftHand->task->PD().setGainsAsNatural(1., .8);
+    leftHand->task->PD().setTarget( {.0} );
+    leftHand->start();
 
     auto rightHand = R.newCtrlTask();
-    rightHand.setMap(new TaskMap_Default(posDiffTMT, R.getK(), "endeffR"));
-    rightHand.task->PD().setGainsAsNatural(1., .8);
-    rightHand.task->PD().setTarget( rightHand.y0 + ARR(.0, .2, .6) );
-    rightHand.start();
+    rightHand->setMap(new TaskMap_Default(posDiffTMT, R.getK(), "endeffR"));
+    rightHand->task->PD().setGainsAsNatural(1., .8);
+    rightHand->task->PD().setTarget( rightHand->y0 + ARR(.0, .2, .6) );
+    rightHand->start();
 
     for(;;){
-      R.wait({&leftHand, &rightHand}, 3.); //with timeout
-      if(leftHand.getStatus()==AS_converged && rightHand.getStatus()==AS_converged) break; //good
-      if(leftHand.getStatus()==AS_stalled && leftHand.time()>5.){
+      R.wait({-leftHand, -rightHand}, 3.); //with timeout
+      if(leftHand->getStatus()==AS_converged && rightHand->getStatus()==AS_converged) break; //good
+      if(leftHand->getStatus()==AS_stalled && leftHand->time()>5.){
         cout <<"leftHand failed - taking back" <<endl;
-        leftHand.set()->PD().setTarget( leftHand.y0 );
+        leftHand->set()->PD().setTarget( leftHand->y0 );
       }
-      if(rightHand.getStatus()==AS_stalled && rightHand.time()>5.){
+      if(rightHand->getStatus()==AS_stalled && rightHand->time()>5.){
         cout <<"rightHand failed - taking back" <<endl;
-        rightHand.set()->PD().setTarget( rightHand.y0 );
+        rightHand->set()->PD().setTarget( rightHand->y0 );
       }
     }
 
     leftTarget->rel.pos.z -=.3;
-    //    leftHand.set()->PD().setTarget( leftHand.y0 );
-    rightHand.set()->PD().setTarget( rightHand.y0 );
-    R.wait({&leftHand, &rightHand}, 3.); //with timeout
+    //    leftHand->set()->PD().setTarget( leftHand->y0 );
+    rightHand->set()->PD().setTarget( rightHand->y0 );
+    R.wait({-leftHand, -rightHand}, 3.); //with timeout
   } //scope check's previous kill
 
 
 #if 0
   auto path = R.newJointPath(jointState, 5.0)
-              .start();
+              ->start();
 
   R.wait({path}, 4.);
-  if(path.getStatus()!=AS_done){
+  if(path->getStatus()!=AS_done){
     cout <<"not done yet!" <<endl;
   }
 #endif
@@ -163,16 +163,16 @@ void TEST(PickAndPlace) {
   mlr::wait(.5);
   R.deactivateCollisions("coll_hand_r", "obj1");
   auto pick2 = R.graspBox("obj1", LR_right);
-  R.wait({&pick1,&pick2});
+  R.wait({-pick1,-pick2});
 
   auto place1 = R.place("obj2", "objTarget");
-  R.wait({&place1});
+  R.wait({-place1});
   auto place2 = R.place("obj1", "obj2");
-  R.wait({&place2});
+  R.wait({-place2});
 #endif
 
   auto home = R.home();
-  R.wait({&home});
+  R.wait({-home});
 }
 
 //===============================================================================
@@ -182,7 +182,7 @@ void focusWorkspace_pr2(Roopi& R, const char* objName){
   auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getK(), "endeffKinect", NoVector, objName));
   auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getK(), "endeffWorkspace", NoVector, objName), {}, {}, {1e1});
 
-  R.wait({&ws, &look});
+  R.wait({-ws, -look});
 }
 
 void TEST(PickAndPlace2) {
@@ -234,7 +234,7 @@ void TEST(PickAndPlace2) {
     auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getK()), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getK()), {}, {::asin(gripSize/(2.*.10))});
 
-    R.wait({&gripperR});
+    R.wait({-gripperR});
   }
 }
 
@@ -244,20 +244,8 @@ void localizeS1(Roopi &R, const char* obj){
   {
     //    auto L = R.lookAt("S3");
     auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
-    R.wait({&look});
+    R.wait({-look});
 
-#if 1 //on real robot!
-//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
-#else //in simulation: create a separate viewWorld
-  Access_typed<mlr::KinematicWorld> c("viewWorld");
-  c.writeAccess();
-  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
-  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
-  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
-  c.deAccess();
-  OrsViewer v2("viewWorld");
-  auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
-#endif
 
 
   auto pcl = R.PclPipeline(true);
@@ -269,11 +257,11 @@ void localizeS1(Roopi &R, const char* obj){
 
 
   cout <<"GRASPING " <<obj <<endl;
-  look.stop();
+  look->stop();
   auto L = R.lookAt(obj, 1e-1);
   auto laser = R.lookAt(obj, 1e-1, "endeffLaser");
-  R.wait({&L});
-  R.wait({&L});
+  R.wait({-L});
+  R.wait({-laser});
 
   mlr::wait(3.);
 //  mlr::wait();
@@ -290,9 +278,23 @@ void TEST(Perception) {
   const char* obj="S1";
   OrsViewer v1("modelWorld");
 
+#if 0 //on real robot!
   SubscribeRosKinect subKin; //subscription into depth and rgb images
+//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+#else //in simulation: create a separate viewWorld
+  Access_typed<mlr::KinematicWorld> c("viewWorld");
+  c.writeAccess();
+  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+  c.deAccess();
+//  OrsViewer v3("viewWorld");
+  auto view = R.CameraView(false, "modelWorld"); //generate depth and rgb images from a modelWorld view
+#endif
+
   ImageViewer v2("kinect_rgb");
 
+  mlr::wait();
 
   for(uint k=0;k<4;k++){
     LeftOrRight lr = LeftOrRight(k%2);
@@ -302,15 +304,15 @@ void TEST(Perception) {
 
     {//pick
       auto g=R.graspBox(obj, lr);
-      R.wait({&g});
+      R.wait({-g});
     }
     {//place
       auto g=R.place(obj, "objTarget");
-      R.wait({&g});
+      R.wait({-g});
     }
     {
       auto home = R.home();
-      R.wait({&home});
+      R.wait({-home});
     }
   }
 
@@ -373,7 +375,7 @@ void TEST(Gamepad) {
 
   auto gamepad = R.GamepadControl();
 
-  R.wait({&gamepad}, -1.);
+  R.wait({-gamepad}, -1.);
 }
 
 
@@ -399,3 +401,4 @@ int main(int argc, char** argv){
 
   return 0;
 }
+
