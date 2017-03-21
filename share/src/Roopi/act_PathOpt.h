@@ -11,4 +11,6 @@ struct Act_PathOpt : Act {
 
   void start();
   void stop();
+
+  typedef std::shared_ptr<Act_PathOpt> Ptr;
 };

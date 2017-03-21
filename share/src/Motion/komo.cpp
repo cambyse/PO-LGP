@@ -443,6 +443,27 @@ void KOMO::setSlowAround(double time, double delta, double prec){
   //#    _MinSumOfSqr_qItself_vel(MinSumOfSqr qItself){ order=1 time=[0.98 1] scale=1e1 } #slow down
 }
 
+void KOMO::setFine_grasp(double time, const char* endeff, const char* object, double above, double gripSize, const char* gripper, const char* gripper2){
+  double t1=-.25; //time when gripper is positined above
+  double t2=-.1;  //time when gripper is lowered
+  double t3=-.05; //time when gripper is closed
+
+  //position above
+  setTask(time+t1, 1., new TaskMap_Default(vecTMT, world, endeff, Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e0);
+  setTask(time+t1, t1, new TaskMap_Default(posDiffTMT, world, endeff, NoVector, object, NoVector), OT_sumOfSqr, {0.,0.,above+.1}, 1e3);
+  setTask(time+t1, 1., new TaskMap_Default(vecAlignTMT, world, endeff, Vector_x, object, Vector_y), OT_sumOfSqr, NoArr, 1e1);
+  setTask(time+t1, 1., new TaskMap_Default(vecAlignTMT, world, endeff, Vector_x, object, Vector_z), OT_sumOfSqr, NoArr, 1e1);
+  //open gripper
+  if(gripper)  setTask(time+t1, .85, new TaskMap_qItself(QIP_byJointNames, {gripper}, world), OT_sumOfSqr, {gripSize + .05});
+  if(gripper2) setTask(time+t1, .85, new TaskMap_qItself(QIP_byJointNames, {gripper2}, world), OT_sumOfSqr, {::asin((gripSize + .05)/(2.*.10))});
+  //lower
+  setTask(time+t2, 1., new TaskMap_Default(posDiffTMT, world, endeff, NoVector, object, NoVector), OT_sumOfSqr, {0.,0.,above}, 1e3);
+  //close gripper
+  if(gripper)  setTask(time+t3, 1., new TaskMap_qItself(QIP_byJointNames, {gripper}, world), OT_sumOfSqr, {gripSize});
+  if(gripper2) setTask(time+t3, 1., new TaskMap_qItself(QIP_byJointNames, {gripper2}, world), OT_sumOfSqr, {::asin((gripSize)/(2.*.10))});
+  setSlowAround(time, .05, 1e3);
+}
+
 /// translate a list of facts (typically facts in a FOL state) to LGP tasks
 void KOMO::setAbstractTask(double phase, const Graph& facts, int verbose){
 //  CHECK(phase<=maxPhase,"");
@@ -758,8 +779,4 @@ void setTasks(MotionProblem& MP,
 }
 
 //===========================================================================
-
-
-
-
 

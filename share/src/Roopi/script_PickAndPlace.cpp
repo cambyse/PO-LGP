@@ -1,6 +1,7 @@
 #include "script_PickAndPlace.h"
 #include "roopi.h"
 #include <Control/taskControl.h>
+#include <Motion/komo.h>
 
 int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize){
   //query some info from the kinematics first
@@ -368,4 +369,46 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     R.wait({-ws});
   }
   return AS_done;
+}
+
+
+
+
+int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
+
+  const char *endeff, *gripper, *gripper2, *group1, *group2;
+  if(rl==LR_right){
+    endeff="pr2R";
+    gripper="r_gripper_joint"; gripper2="r_gripper_l_finger_joint";
+    group1="armR"; group2="gripR";
+  }else{
+    endeff="pr2L";
+    gripper="l_gripper_joint"; gripper2="l_gripper_l_finger_joint";
+    group1="armL"; group2="gripL";
+  }
+
+  arr obj1size = R.getK()->getShapeByName(objName)->size;
+  double gripSize = obj1size(1) + 2.*obj1size(3);
+  double above = obj1size(2)*.5 + obj1size(3) - .02;
+
+  auto path = R.newPathOpt();
+  path->komo->useOnlyJointGroup({group1, group2});
+  path->komo->setPathOpt(1, 20, 5.);
+  path->komo->setFine_grasp(1., endeff, objName, above, gripSize, gripper, gripper2);
+  path->start();
+
+  R.wait({-path});
+
+  auto follow = Act_FollowPath(&R, "PathFollower", path->komo->x, new TaskMap_qItself(QIP_byJointGroups, {group1, group2}, R.getK()), 5.);
+  follow.start();
+
+  R.wait({&follow});
+
+  return AS_done;
+}
+
+
+double getGripSize(Roopi& R, const char* objName, CubeSide cs){
+  arr obj1size = R.getK()->getShapeByName(objName)->size;
+  return obj1size(cs) + 2.*obj1size(3);
 }

@@ -23,6 +23,9 @@ template<class T> using ptr = std::shared_ptr<T>;
 #include "script_PickAndPlace.h"
 
 template<class T> Act* operator-(std::shared_ptr<T>& p){ return dynamic_cast<Act*>(p.get()); }
+template<class T> ActL operator+(std::shared_ptr<T>& p){ return ARRAY<Act*>(dynamic_cast<Act*>(p.get())); }
+template<class T> ActL operator+(std::shared_ptr<T>& a, std::shared_ptr<T>& b){ return ARRAY<Act*>(dynamic_cast<Act*>(a.get()), dynamic_cast<Act*>(a.get())); }
+template<class T> ActL& operator+(ActL& A, std::shared_ptr<T>& p){ A.append(dynamic_cast<Act*>(p.get())); return A; }
 
 //==============================================================================
 
@@ -43,7 +46,8 @@ struct Roopi {
   //-- control flow
   /** wait until the status of each act in the set if non-zero (zero usually means 'still running')
       after this, you can query the status and make decisions based on that */
-  bool wait(std::initializer_list<Act*> acts, double timeout=-1.);
+  bool wait(const ActL& acts, double timeout=-1.);
+  bool wait(std::initializer_list<Act*> acts, double timeout=-1.){ return wait(ActL(acts), timeout); }
 
   /** this takes an int-valued function (use a lambda expression to capture scope) and
       run it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
@@ -85,6 +89,8 @@ struct Roopi {
   // predefined
   Act_CtrlTask::Ptr home();
   Act_CtrlTask::Ptr lookAt(const char* shapeName, double prec=1e-2, const char* endeff_name=NULL);
+  Act_CtrlTask::Ptr focusWorkspaceAt(const char* shapeName, double prec=2e-1, const char* endeff_name=NULL);
+  Act_CtrlTask::Ptr moveVel(const char* endeff_name, arr velocity);
   Act_CtrlTask::Ptr newHoldingTask();
   Act_CtrlTask::Ptr newCollisionAvoidance();
   Act_CtrlTask::Ptr newLimitAvoidance();
@@ -97,8 +103,8 @@ struct Roopi {
 
   //-- some activities
   Act_Thread::Ptr  newThread(Thread* th)  { return Act_Thread::Ptr(new Act_Thread(this, th)); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
-  Act_ComPR2  newComPR2()            { return Act_ComPR2(this); } ///< subscribers/publishers that communicate with PR2
-  Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
+  Act_ComPR2::Ptr  newComPR2()            { return Act_ComPR2::Ptr(new Act_ComPR2(this)); } ///< subscribers/publishers that communicate with PR2
+  Act_PathOpt::Ptr newPathOpt()           { return Act_PathOpt::Ptr(new Act_PathOpt(this)); } ///< a path optimization activity, access komo yourself to define the problem
 
   Act_Th<struct RosCom_Spinner> RosCom(); ///< thread for the ROS spinner
   Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)
@@ -122,6 +128,9 @@ struct Roopi {
   }
   Act_Script::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
     return runScript( [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
+  }
+  Act_Script::Ptr setGripper(LeftOrRight lr, double gripSize){
+    return runScript( [this, lr, gripSize](){ return Script_setGripper(*this, lr, gripSize); } );
   }
 
 };

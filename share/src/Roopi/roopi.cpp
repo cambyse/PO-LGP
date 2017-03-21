@@ -43,7 +43,7 @@ Roopi::Roopi(bool autoStartup, bool controlView)
   if(autoStartup){
     if(s->useRos){
       s->_ComRos = ptr<Act_Thread>(new Act_Thread(this, new RosCom_Spinner()));
-      s->_ComPR2 = ptr<Act_ComPR2>(new Act_ComPR2(this));
+      s->_ComPR2 = newComPR2();
     }
 
     startTweets();
@@ -122,15 +122,36 @@ RToken<mlr::KinematicWorld> Roopi::getK(){
 
 
 Act_CtrlTask::Ptr Roopi::home(){
-  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_qItself(), {2., .9, 1.}, get_q0()));
+  return newCtrlTask(new TaskMap_qItself(), {2., .9, 1.}, get_q0());
 }
 
-Act_CtrlTask::Ptr Roopi::lookAt(const char* shapeName, double prec){
+Act_CtrlTask::Ptr Roopi::lookAt(const char* shapeName, double prec, const char* endeff_name){
   if(!endeff_name) endeff_name="endeffKinect";
   int cam = getK()->getShapeByName(endeff_name)->index;
   int obj = getK()->getShapeByName(shapeName)->index;
-  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec}));
+  return newCtrlTask(new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
 }
+
+Act_CtrlTask::Ptr Roopi::focusWorkspaceAt(const char* shapeName, double prec, const char* endeff_name){
+  if(!endeff_name) endeff_name="endeffWorkspace";
+  int ws  = getK()->getShapeByName(endeff_name)->index;
+  int obj = getK()->getShapeByName(shapeName)->index;
+  return newCtrlTask(new TaskMap_Default(posDiffTMT, ws, NoVector, obj), {}, {}, {2e-1});
+}
+
+Act_CtrlTask::Ptr Roopi::moveVel(const char* endeff_name, arr velocity){
+  if(!endeff_name) endeff_name="endeffWorkspace";
+  int eff  = getK()->getShapeByName(endeff_name)->index;
+  //lift hand
+  auto lift = newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
+  lift->set()->PD().setTarget(lift->task->y);
+  lift->set()->PD().setGains(0, 10.);
+  lift->set()->PD().v_target = velocity;
+  return lift;
+//  auto look = lookAt(objName);
+//  mlr::wait(1.);
+}
+
 
 Act_CtrlTask::Ptr Roopi::newHoldingTask(){
   auto hold = Act_CtrlTask::Ptr(new Act_CtrlTask(this));
@@ -208,7 +229,7 @@ Act_CtrlTask::Ptr Roopi::newCtrlTask(const char* specs){
   return Act_CtrlTask::Ptr(new Act_CtrlTask(this, GRAPH(specs)));
 }
 
-bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
+bool Roopi::wait(const ActL& acts, double timeout){
 #if 0
   double startTime = mlr::realTime();
   for(;;){

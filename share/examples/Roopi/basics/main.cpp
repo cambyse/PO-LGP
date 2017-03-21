@@ -23,6 +23,9 @@ void TEST(Basics) {
 
       R.wait({-posL});
     }
+
+    R.kinematicSwitch("obj1", "endeffL", false);
+
     {
       auto h = R.home();
       R.wait({-h});
@@ -177,7 +180,7 @@ void TEST(PickAndPlace) {
 
 //===============================================================================
 
-void focusWorkspace_pr2(Roopi& R, const char* objName){
+void Script_focusWorkspace(Roopi& R, const char* objName){
   //attention
   auto look = R.newCtrlTask(new TaskMap_Default(gazeAtTMT, R.getK(), "endeffKinect", NoVector, objName));
   auto ws = R.newCtrlTask(new TaskMap_Default(posDiffTMT, R.getK(), "endeffWorkspace", NoVector, objName), {}, {}, {1e1});
@@ -191,7 +194,7 @@ void TEST(PickAndPlace2) {
   //  auto view = R.newCameraView();
   //  R.taskController().verbose(1);
 
-  focusWorkspace_pr2(R, "obj1");
+  Script_focusWorkspace(R, "obj1");
   R.getTaskController().lockJointGroupControl("base");
 
   {
@@ -201,28 +204,28 @@ void TEST(PickAndPlace2) {
     double gripSize = obj1size(1) + 2.*obj1size(3);
     double above = obj1size(2)*.5 + obj1size(3) - .02;
 
-    mlr::KinematicWorld& K = path.komo->world;
-    path.komo->useOnlyJointGroup({"armR", "gripR"});
-    path.komo->setPathOpt(1, 20, 5.);
-    path.komo->setTask(t1, 1., new TaskMap_Default(posDiffTMT, K, "endeffWorkspace", NoVector, "obj1"), OT_sumOfSqr, {}, 1e1);
-    path.komo->setTask(t1, 1., new TaskMap_Default(vecTMT, K, "pr2R", Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e0);
-    path.komo->setTask(t1, t1, new TaskMap_Default(posDiffTMT, K, "pr2R", NoVector, "obj1", NoVector), OT_sumOfSqr, {0.,0.,above+.1}, 1e3);
-    path.komo->setTask(t1, 1., new TaskMap_Default(vecAlignTMT, K, "pr2R", Vector_x, "obj1", Vector_y), OT_sumOfSqr, NoArr, 1e1);
-    path.komo->setTask(t1, 1., new TaskMap_Default(vecAlignTMT, K, "pr2R", Vector_x, "obj1", Vector_z), OT_sumOfSqr, NoArr, 1e1);
+    mlr::KinematicWorld& K = path->komo->world;
+    path->komo->useOnlyJointGroup({"armR", "gripR"});
+    path->komo->setPathOpt(1, 20, 5.);
+    path->komo->setTask(t1, 1., new TaskMap_Default(posDiffTMT, K, "endeffWorkspace", NoVector, "obj1"), OT_sumOfSqr, {}, 1e1);
+    path->komo->setTask(t1, 1., new TaskMap_Default(vecTMT, K, "pr2R", Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e0);
+    path->komo->setTask(t1, t1, new TaskMap_Default(posDiffTMT, K, "pr2R", NoVector, "obj1", NoVector), OT_sumOfSqr, {0.,0.,above+.1}, 1e3);
+    path->komo->setTask(t1, 1., new TaskMap_Default(vecAlignTMT, K, "pr2R", Vector_x, "obj1", Vector_y), OT_sumOfSqr, NoArr, 1e1);
+    path->komo->setTask(t1, 1., new TaskMap_Default(vecAlignTMT, K, "pr2R", Vector_x, "obj1", Vector_z), OT_sumOfSqr, NoArr, 1e1);
     //open gripper
-    path.komo->setTask(t1, .85, new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, K), OT_sumOfSqr, {gripSize + .05});
-    path.komo->setTask(t1, .85, new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, K), OT_sumOfSqr, {::asin((gripSize + .05)/(2.*.10))});
+    path->komo->setTask(t1, .85, new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, K), OT_sumOfSqr, {gripSize + .05});
+    path->komo->setTask(t1, .85, new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, K), OT_sumOfSqr, {::asin((gripSize + .05)/(2.*.10))});
     //close gripper
-    path.komo->setTask(.95, 1., new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, K), OT_sumOfSqr, {gripSize});
-    path.komo->setTask(.95, 1., new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, K), OT_sumOfSqr, {::asin((gripSize)/(2.*.10))});
-    path.komo->setTask(.9, 1., new TaskMap_Default(posDiffTMT, K, "pr2R", NoVector, "obj1", NoVector), OT_sumOfSqr, {0.,0.,above}, 1e3);
-    path.komo->setSlowAround(1., .05, 1e3);
-    path.start();
+    path->komo->setTask(.95, 1., new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, K), OT_sumOfSqr, {gripSize});
+    path->komo->setTask(.95, 1., new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, K), OT_sumOfSqr, {::asin((gripSize)/(2.*.10))});
+    path->komo->setTask(.9, 1., new TaskMap_Default(posDiffTMT, K, "pr2R", NoVector, "obj1", NoVector), OT_sumOfSqr, {0.,0.,above}, 1e3);
+    path->komo->setSlowAround(1., .05, 1e3);
+    path->start();
 
 
-    R.wait({&path});
+    R.wait({-path});
 
-    auto follow = Act_FollowPath(&R, "PathFollower", path.komo->x, new TaskMap_qItself(QIP_byJointGroups, {"armR","gripR"}, R.getK()), 5.);
+    auto follow = Act_FollowPath(&R, "PathFollower", path->komo->x, new TaskMap_qItself(QIP_byJointGroups, {"armR","gripR"}, R.getK()), 5.);
     follow.start();
 
     R.wait({&follow});
@@ -337,16 +340,19 @@ void TEST(Gamepad) {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
+  //--very simple one action tests
 //  testHoming();
-
-//  testBasics();
+  testBasics();
 //  testGripper();
 //  testPhysX();
+
+
+
 //  Prototyping();
 
 //  testPerception();
 
-  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
 //  testGamepad();

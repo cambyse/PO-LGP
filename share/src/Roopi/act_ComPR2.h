@@ -9,4 +9,6 @@ struct Act_ComPR2 : Act {
   virtual ~Act_ComPR2();
 
   void stopSendingMotionToRobot(bool stop);
+
+  typedef std::shared_ptr<Act_ComPR2> Ptr;
 };
