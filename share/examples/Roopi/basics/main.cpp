@@ -330,7 +330,6 @@ void TEST(PerceptionOnly) {
 
   R.getTaskController().lockJointGroupControl("base");
 
-  const char* obj="S1";
   OrsViewer v1("modelWorld");
 
   SubscribeRosKinect subKin; //subscription into depth and rgb images
@@ -338,7 +337,7 @@ void TEST(PerceptionOnly) {
 
   //    auto L = R.lookAt("S3");
   auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
-  R.wait({&look});
+  R.wait({-look});
 
 #if 1 //on real robot!
 //  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
@@ -388,12 +387,10 @@ int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
   //--very simple one action tests
-//  testHoming();
-  testBasics();
+//  testHoming(); return 0;
+//  testBasics();
 //  testGripper();
 //  testPhysX();
-
-
 
 //  Prototyping();
 

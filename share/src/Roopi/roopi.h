@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <bits/shared_ptr.h>
-template<class T> using ptr = std::shared_ptr<T>;
 
 #include <Core/array.h>
 #include <Kin/kin.h>
@@ -40,8 +39,8 @@ struct Roopi {
   //-- initialization (start... means persistent activities)
   void setKinematics(const char* filename, bool controlView=true);          ///< set kinematics by hand (done in 'autoStartup')
   void setKinematics(const mlr::KinematicWorld& K, bool controlView=true);  ///< set kinematics by hand (done in 'autoStartup')
-  ptr<Act_TaskController> startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
-  ptr<Act_Tweets> startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
+  shared_ptr<Act_TaskController> startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
+  shared_ptr<Act_Tweets> startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
 
   //-- control flow
   /** wait until the status of each act in the set if non-zero (zero usually means 'still running')

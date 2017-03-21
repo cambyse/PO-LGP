@@ -19,6 +19,9 @@ Roopi_private::~Roopi_private(){
   threadReportCycleTimes();
 
   //delete persistant acts
+  _tweets.reset();
+  _ComRos.reset();//these need to be done by hand, in this order!
+  _ComPR2.reset();
 //  if(_tweets) delete _tweets; _tweets=NULL; //somehow the tweeter crashes to tweet the other's kill...
 //  if(_ComRos) delete _ComRos; _ComRos=NULL; //shut of the spinner BEFORE you close the pubs/subscribers..
 //  if(_ComPR2) delete _ComPR2; _ComPR2=NULL;
@@ -42,7 +45,7 @@ Roopi::Roopi(bool autoStartup, bool controlView)
 
   if(autoStartup){
     if(s->useRos){
-      s->_ComRos = ptr<Act_Thread>(new Act_Thread(this, new RosCom_Spinner()));
+      s->_ComRos = shared_ptr<Act_Thread>(new Act_Thread(this, new RosCom_Spinner()));
       s->_ComPR2 = newComPR2();
     }
 
@@ -76,21 +79,21 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K, bool controlView){
 
   if(controlView){
     if(s->useRos){
-      s->_ctrlView = ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
+      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
     } else {
-      s->_ctrlView = ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1)));
+      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1)));
     }
   }
 }
 
-ptr<Act_TaskController> Roopi::startTaskController(){
+shared_ptr<Act_TaskController> Roopi::startTaskController(){
 //  s->_taskUpdater = new Act_Thread(this, new CtrlTaskUpdater);
-  s->_taskController = ptr<Act_TaskController>(new Act_TaskController(this));
+  s->_taskController = shared_ptr<Act_TaskController>(new Act_TaskController(this));
   return s->_taskController;
 }
 
-ptr<Act_Tweets> Roopi::startTweets(bool go){
-  if(!s->_tweets && go) s->_tweets = ptr<Act_Tweets>(new Act_Tweets(this));
+shared_ptr<Act_Tweets> Roopi::startTweets(bool go){
+  if(!s->_tweets && go) s->_tweets = shared_ptr<Act_Tweets>(new Act_Tweets(this));
   if(s->_tweets && !go) s->_tweets.reset();
   return s->_tweets;
 }

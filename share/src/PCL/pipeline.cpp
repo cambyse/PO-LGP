@@ -34,8 +34,10 @@ void projectOnPlane(
     arr& meanPoint,
     arr& meanColor,
     const pcl::ModelCoefficients::ConstPtr& plane_coefficients,
-    const pcl::PointIndices::ConstPtr& inliers,
-    const Pcl::ConstPtr& input);
+    const Pcl::ConstPtr& input,
+    const pcl::PointIndices::ConstPtr& inputSelect);
+double getMaxZ(const Pcl::ConstPtr& input,
+               const pcl::PointIndices::ConstPtr& inputSelect);
 void filterPointsByIndex(Pcl::Ptr& output, const pcl::PointIndices::ConstPtr& inliers,  const Pcl::ConstPtr& input, bool positive);
 void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::ConstPtr& input, uint minSize);
 
@@ -96,7 +98,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
   byteA meshRgb;
   conv_PclCloud_ArrCloud(mesh.V, meshRgb, *filtered);
   copy(mesh.C, meshRgb);   mesh.C /= 255.;
-  if(verbosePercepts) percepts.append(new PercMesh(mesh));
+//  if(verbosePercepts) percepts.append(new PercMesh(mesh));
 
   if(filtered->size()<100) return percepts;
 
@@ -106,7 +108,8 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
   pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
   arr meanPts, meanCol;
   detectPlane(plane_coefficients, inliers, filtered);
-  projectOnPlane(hull, meanPts, meanCol, plane_coefficients, inliers, filtered);
+  projectOnPlane(hull, meanPts, meanCol, plane_coefficients, filtered, inliers);
+  double planeHeight = meanPts(2);
 
   //-- 2nd percept: the main plane
   arr normal = { plane_coefficients->values[0], plane_coefficients->values[1], plane_coefficients->values[2] };
@@ -139,17 +142,38 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
     getClusters(cluster_indices, remains, 50);
 
     //-- fit each cluster with a plane
-    for(pcl::PointIndices& ci: cluster_indices){
+    for(const pcl::PointIndices& ci: cluster_indices){
+      pcl::PointIndices::ConstPtr clusterIndices = boost::make_shared<const pcl::PointIndices>(ci);
       //select
       Pcl::Ptr cluster(new Pcl);
-      filterPointsByIndex(cluster, boost::make_shared<const pcl::PointIndices>(ci), remains, true);
+      filterPointsByIndex(cluster, clusterIndices, remains, true);
+      cout <<"cluster size =" <<cluster->size() <<endl;
+      double maxZ = getMaxZ(remains, clusterIndices);
+//      cout <<maxZ <<endl;
+//      pass.setInputCloud(remains);
+//      pass.setIndices(clusterIndices);
+//      pass.setFilterFieldName ("z");
+//      pass.setFilterLimits (maxZ-.13, maxZ+.03);
+//      Pcl::Ptr cluster_z(new Pcl);
+//      pass.filter (*cluster_z);
+//      filterPointsByIndex(cluster, boost::make_shared<const pcl::PointIndices>(ci), remains, true);
+//      if(cluster_z->size()<50) continue;
+
+      //-- 1st percept: the cluster points themselves
+      conv_PclCloud_ArrCloud(mesh.V, meshRgb, *cluster);
+      copy(mesh.C, meshRgb);   mesh.C /= 255.;
+      mesh.T.clear();
+      if(verbosePercepts) percepts.append(new PercMesh(mesh));
 
       //detect plane
 //      detectPlane(plane_coefficients, inliers, hull, meanPts, meanCol, cluster);
 //      if(inliers->indices.size()<50) continue;
-      projectOnPlane(hull, meanPts, meanCol, plane_coefficients, boost::make_shared<const pcl::PointIndices>(ci), remains);
+//      projectOnPlane(hull, meanPts, meanCol, plane_coefficients, cluster_z, pcl::PointIndices::ConstPtr());
+//      projectOnPlane(hull, meanPts, meanCol, plane_coefficients, cluster, pcl::PointIndices::ConstPtr());
+      projectOnPlane(hull, meanPts, meanCol, plane_coefficients, remains, clusterIndices);
 
-      //-- 2nd percept: the main plane
+
+      //-- 2nd percept: the hull main plane
       normal = { plane_coefficients->values[0], plane_coefficients->values[1], plane_coefficients->values[2] };
       T.pos.set(meanPts);
       T.rot.setDiff(Vector_z, mlr::Vector(normal));
@@ -157,6 +181,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
       mesh.makeLineStrip();
       mesh.C = meanCol;
       mesh.transform(-T);
+      T.addRelativeTranslation(0,0,maxZ-planeHeight);
       if(verbosePercepts) percepts.append(new PercPlane(T, mesh));
 
       //-- project hull in 2D and apply OpenCV rotated box fitting
@@ -172,7 +197,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
 
       //-- 3rd percept: the plane's box
       double thick=.04;
-      T.addRelativeTranslation(rect.center.x, rect.center.y, -.5*thick);
+      T.addRelativeTranslation(rect.center.x, rect.center.y, -1.5*thick); //WHY???
       T.addRelativeRotationDeg(rect.angle, 0.,0.,1.);
       percepts.append(new PercBox(T, ARR(rect.size.width, rect.size.height, thick), meanCol));
     }
@@ -206,14 +231,14 @@ void projectOnPlane(
     arr& meanPoint,
     arr& meanColor,
     const pcl::ModelCoefficients::ConstPtr& plane_coefficients,
-    const pcl::PointIndices::ConstPtr& inliers,
-    const Pcl::ConstPtr& input){
+    const Pcl::ConstPtr& input,
+    const pcl::PointIndices::ConstPtr& inputSelect ){
 
   if(hull){
     pcl::ProjectInliers<PointT> proj;
     proj.setModelType (pcl::SACMODEL_PLANE);
     proj.setInputCloud (input);
-    proj.setIndices(inliers);
+    if(inputSelect) proj.setIndices(inputSelect);
     proj.setModelCoefficients (plane_coefficients);
     Pcl::Ptr projected(new Pcl);
     proj.filter(*projected);
@@ -224,27 +249,60 @@ void projectOnPlane(
   }
 
   if(&meanPoint){
-    meanPoint.resize(3);
-    for(uint i=0;i<inliers->indices.size();i++){
-      int j=inliers->indices[i];
-      meanPoint.p[0] += input->points[j].x;
-      meanPoint.p[1] += input->points[j].y;
-      meanPoint.p[2] += input->points[j].z;
+    meanPoint = zeros(3);
+    if(inputSelect){
+      for(uint i=0;i<inputSelect->indices.size();i++){
+        int j=inputSelect->indices[i];
+        meanPoint.p[0] += input->points[j].x;
+        meanPoint.p[1] += input->points[j].y;
+        meanPoint.p[2] += input->points[j].z;
+      }
+      meanPoint /= (double)inputSelect->indices.size();
+    }else{
+      for(const PointT& p:input->points){
+        meanPoint.p[0] += p.x;
+        meanPoint.p[1] += p.y;
+        meanPoint.p[2] += p.z;
+      }
+      meanPoint /= (double)input->points.size();
     }
-    meanPoint /= (double)inliers->indices.size();
   }
 
   if(&meanColor){
-    meanColor.resize(3);
-    for(uint i=0;i<inliers->indices.size();i++){
-      int j=inliers->indices[i];
-      meanColor.p[0] += input->points[j].r;
-      meanColor.p[1] += input->points[j].g;
-      meanColor.p[2] += input->points[j].b;
+    meanColor = zeros(3);
+    if(inputSelect){
+      for(uint i=0;i<inputSelect->indices.size();i++){
+        int j=inputSelect->indices[i];
+        meanColor.p[0] += input->points[j].r;
+        meanColor.p[1] += input->points[j].g;
+        meanColor.p[2] += input->points[j].b;
+      }
+      meanColor /= 255.;
+      meanColor /= (double)inputSelect->indices.size();
+    }else{
+      for(const PointT& p:input->points){
+        meanColor.p[0] += p.r;
+        meanColor.p[1] += p.g;
+        meanColor.p[2] += p.b;
+      }
+      meanColor /= 255.;
+      meanColor /= (double)input->points.size();
     }
-    meanColor /= 255.;
-    meanColor /= (double)inliers->indices.size();
   }
+}
+
+double getMaxZ(const Pcl::ConstPtr& input,
+               const pcl::PointIndices::ConstPtr& inputSelect){
+  double z=-1e10;
+  if(inputSelect){
+    for(uint i=0;i<inputSelect->indices.size();i++){
+      const PointT& p = input->points[inputSelect->indices[i]];
+      if(p.z>z) z=p.z;
+    }
+  }else{
+    for(const PointT& p:input->points) if(p.z>z) z=p.z;
+  }
+  return z;
 }
 
 
@@ -268,3 +326,4 @@ void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::Con
   ec.setInputCloud (input);
   ec.extract(cluster_indices);
 }
+
