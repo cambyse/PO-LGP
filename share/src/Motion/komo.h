@@ -99,7 +99,7 @@ struct KOMO{ //TODO: rename ManipOp
   void setKS_slider(double time, bool before, const char* obj, const char* slider, const char* table, bool actuated);
 
 
-  //-- tasks (cost/constraint terms) high-level
+  //-- tasks (cost/constraint terms) high-level (rough, for LGP)
   void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0, double weightFromTop=1e1);
   void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, int verbose=0);
   void setPlaceFixed(double time, const char* endeffRef, const char* object, const char* placeRef, const mlr::Transformation& worldPose, int verbose=0);
@@ -108,6 +108,11 @@ struct KOMO{ //TODO: rename ManipOp
   void setAttach(double time, const char* endeff, const char* object1, const char* object2, mlr::Transformation& rel, int verbose=0);
 
   void setSlowAround(double time, double delta, double prec=10.);
+
+
+  //-- tasks high-level, fine (for real world execution)
+  void setFine_grasp(double time, const char* endeff, const char* object, double above, double gripSize=.05, const char* gripper=NULL, const char* gripper2=NULL);
+
 
   //-- tasks - logic level
   void setAbstractTask(double phase, const Graph& facts, int verbose=0);

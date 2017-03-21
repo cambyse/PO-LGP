@@ -48,15 +48,15 @@ struct Roopi_private {
   arr q0;
 
   // persistent acts
-  Act_TaskController *_taskController = NULL;
-  Act_CtrlTask *_holdPositionTask = NULL;
-  Act_CtrlTask *_watchTask = NULL;
-  Act_CtrlTask *_collTask = NULL;
-  Act_Tweets *_tweets = NULL;
-  Act_Thread *_ComRos=NULL;
-  Act_ComPR2 *_ComPR2=NULL;
-  Act_Thread *_ctrlView = NULL;
-  Act_Thread *_taskUpdater = NULL;
+  shared_ptr<Act_TaskController>_taskController;
+  shared_ptr<Act_CtrlTask> _holdPositionTask;
+  shared_ptr<Act_CtrlTask> _watchTask;
+  shared_ptr<Act_CtrlTask> _collTask;
+  shared_ptr<Act_Tweets> _tweets;
+  shared_ptr<Act_Thread> _ComRos;
+  shared_ptr<Act_ComPR2> _ComPR2;
+  shared_ptr<Act_Thread> _ctrlView;
+  shared_ptr<Act_Thread> _taskUpdater;
 
   //-- logging
   struct LoggingModule *loggingModule = NULL;

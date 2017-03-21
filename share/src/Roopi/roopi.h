@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <bits/shared_ptr.h>
+
 #include <Core/array.h>
 #include <Kin/kin.h>
 
@@ -12,9 +15,16 @@
 #include "act_Thread.h"
 #include "act_Tweets.h"
 #include "act_Script.h"
+#include "act_Event.h"
+#include "act_AtEvent.h"
 #include "act_Recorder.h"
+#include "act_Perception.h"
 #include "script_PickAndPlace.h"
 
+template<class T> Act* operator-(std::shared_ptr<T>& p){ return dynamic_cast<Act*>(p.get()); }
+template<class T> ActL operator+(std::shared_ptr<T>& p){ return ARRAY<Act*>(dynamic_cast<Act*>(p.get())); }
+template<class T> ActL operator+(std::shared_ptr<T>& a, std::shared_ptr<T>& b){ return ARRAY<Act*>(dynamic_cast<Act*>(a.get()), dynamic_cast<Act*>(a.get())); }
+template<class T> ActL& operator+(ActL& A, std::shared_ptr<T>& p){ A.append(dynamic_cast<Act*>(p.get())); return A; }
 
 //==============================================================================
 
@@ -29,17 +39,22 @@ struct Roopi {
   //-- initialization (start... means persistent activities)
   void setKinematics(const char* filename, bool controlView=true);          ///< set kinematics by hand (done in 'autoStartup')
   void setKinematics(const mlr::KinematicWorld& K, bool controlView=true);  ///< set kinematics by hand (done in 'autoStartup')
-  Act_TaskController& startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
-  Act_Tweets& startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
+  shared_ptr<Act_TaskController> startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
+  shared_ptr<Act_Tweets> startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
 
   //-- control flow
   /** wait until the status of each act in the set if non-zero (zero usually means 'still running')
       after this, you can query the status and make decisions based on that */
-  bool wait(std::initializer_list<Act*> acts, double timeout=-1.);
+  bool wait(const ActL& acts, double timeout=-1.);
+  bool wait(std::initializer_list<Act*> acts, double timeout=-1.){ return wait(ActL(acts), timeout); }
 
   /** this takes an int-valued function (use a lambda expression to capture scope) and
       run it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
-  Act_Script runScript(const std::function<int()>& script);
+  Act_Script::Ptr runScript(const std::function<int()>& script);
+
+  Act_AtEvent atEvent(const ConditionVariableL& signalers, const EventBoolean& event, const std::function<int ()>& script);
+  Act_AtEvent atEvent(shared_ptr<Act_Event>& event, const std::function<int ()>& script);
+
 
   //TODO: runScriptOnEvent(const std::function<int()>& script, Event, bool whenever=false);
   //TODO: define the notion of an Event as a set of act and conditions of their status -> wait(Event)
@@ -53,47 +68,50 @@ struct Roopi {
 
   //-- direct access to variables and threads
   RevisionedRWLock* variableStatus(const char* var_name);
-  template<class T> AccessData<T>& variable(const char* var_name){ return registry().get<AccessData<T> >({"AccessData", var_name}); }
+  template<class T> AccessData<T>& variable(const char* var_name){
+    return *registry().get<shared_ptr<AccessData<T>>>({"AccessData", var_name}); }
   Thread* threadStatus(const char* thread_name);
   template<class T> T* thread(const char* thread_name);
   void reportCycleTimes();
 
   //-- kinematic editing (to be done more..)
   mlr::Shape* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
-  void kinematicSwitch(const char* object, const char* attachTo); ///< switches kinematics in the model world
+  void kinematicSwitch(const char* object, const char* attachTo, bool placing); ///< switches kinematics in the model world
   WToken<mlr::KinematicWorld> setK();                             ///< get write access to the model world
   RToken<mlr::KinematicWorld> getK();                             ///< get read access to the model world
   void resyncView();
 
   //-- control
-  Act_CtrlTask newCtrlTask(){ return Act_CtrlTask(this); }  ///< set the CtrlTask yourself (see newHoldingTask as example)
-  Act_CtrlTask newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
-  Act_CtrlTask newCtrlTask(const char* specs);
+  Act_CtrlTask::Ptr newCtrlTask(){ return Act_CtrlTask::Ptr(new Act_CtrlTask(this)); }  ///< set the CtrlTask yourself (see newHoldingTask as example)
+  Act_CtrlTask::Ptr newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
+  Act_CtrlTask::Ptr newCtrlTask(const char* specs);
   // predefined
-  Act_CtrlTask home();
-  Act_CtrlTask lookAt(const char* shapeName, double prec=1e-2);
-  Act_CtrlTask newHoldingTask();
-  Act_CtrlTask newCollisionAvoidance();
-  Act_CtrlTask newLimitAvoidance();
+  Act_CtrlTask::Ptr home();
+  Act_CtrlTask::Ptr lookAt(const char* shapeName, double prec=1e-2, const char* endeff_name=NULL);
+  Act_CtrlTask::Ptr focusWorkspaceAt(const char* shapeName, double prec=2e-1, const char* endeff_name=NULL);
+  Act_CtrlTask::Ptr moveVel(const char* endeff_name, arr velocity);
+  Act_CtrlTask::Ptr newHoldingTask();
+  Act_CtrlTask::Ptr newCollisionAvoidance();
+  Act_CtrlTask::Ptr newLimitAvoidance();
   // persistent
   void hold(bool still);
-  Act_CtrlTask* collisions(bool on);
+  Act_CtrlTask::Ptr collisions(bool on);
   void deactivateCollisions(const char* s1, const char* s2);
 
 
 
   //-- some activities
-  Act_Thread  newThread(Thread* th)  { return Act_Thread(this, th); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
-  Act_ComPR2  newComPR2()            { return Act_ComPR2(this); } ///< subscribers/publishers that communicate with PR2
-  Act_PathOpt newPathOpt()           { return Act_PathOpt(this); } ///< a path optimization activity, access komo yourself to define the problem
+  Act_Thread::Ptr  newThread(Thread* th)  { return Act_Thread::Ptr(new Act_Thread(this, th)); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
+  Act_ComPR2::Ptr  newComPR2()            { return Act_ComPR2::Ptr(new Act_ComPR2(this)); } ///< subscribers/publishers that communicate with PR2
+  Act_PathOpt::Ptr newPathOpt()           { return Act_PathOpt::Ptr(new Act_PathOpt(this)); } ///< a path optimization activity, access komo yourself to define the problem
 
-  Act_Thread RosCom(); ///< thread for the ROS spinner
-  Act_Thread PhysX();           ///< run PhysX (nvidia physical simulator)
-  Act_Thread GamepadControl();  ///< activate gamepad to set controls
+  Act_Th<struct RosCom_Spinner> RosCom(); ///< thread for the ROS spinner
+  Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)
+  Act_Thread::Ptr GamepadControl();  ///< activate gamepad to set controls
   Act_Thread::Ptr CameraView(bool view=true, const char* modelWorld_name="modelWorld");      ///< compute and display the camera view
 //  Act_Thread newKinect2Pcl(bool view=true);
-  Act_Thread PclPipeline(bool view=false);
-  Act_Thread PerceptionFilter(bool view=false);
+  Act_PclPipeline PclPipeline(bool view=false);
+  Act_PerceptionFilter PerceptionFilter(bool view=false);
 
 
   //==============================================================================
@@ -101,19 +119,22 @@ struct Roopi {
   // MACROS, which call scripts
   //
 
-  Act_Script graspBox(const char* objName, LeftOrRight lr){
+  Act_Script::Ptr graspBox(const char* objName, LeftOrRight lr){
     return runScript( [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
   }
-  Act_Script place(const char* objName, const char* ontoName){
+  Act_Script::Ptr place(const char* objName, const char* ontoName){
     return runScript( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
-  Act_Script placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
-    return Act_Script(this, [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
+  Act_Script::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
+    return runScript( [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
   }
-  Act_Script workspaceReady(const char* objName){
+  Act_Script::Ptr setGripper(LeftOrRight lr, double gripSize){
+    return runScript( [this, lr, gripSize](){ return Script_setGripper(*this, lr, gripSize); } );
+  }
+  Act_Script::Ptr workspaceReady(const char* objName){
     return runScript( [this, objName](){ return Script_workspaceReady(*this, objName); } );
   }
-  Act_Script armsNeutral(){
+  Act_Script::Ptr armsNeutral(){
     return runScript( [this](){ return Script_armsNeutral(*this); } );
   }
 
