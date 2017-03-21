@@ -78,7 +78,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     auto al1 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, eff, Vector_x, obj, Vector_x) );
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, eff, Vector_y, obj, Vector_y) );
 #endif
-    double gripSize = width + .05;
+    double gripSize = width + .10;
     double gripSize2 = ::asin(gripSize/(2.*.10));
     CHECK_EQ(gripSize2, gripSize2, "the object is too think to be grasped??");
     auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
@@ -95,7 +95,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     //ws->stop();
 
     //close gripper
-    gripSize = width-.01;//+.015;
+    gripSize = width-.015;//+.015;
     gripperR->set()->PD().setTarget( {gripSize} );
     gripper2R->set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
     gripperR->resetStatus();

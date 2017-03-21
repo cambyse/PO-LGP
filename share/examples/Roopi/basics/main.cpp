@@ -45,6 +45,7 @@ void TEST(Homing) {
     }
   }
   cout <<"LEFT OVER REGISTRY:\n" <<registry() <<endl;
+  mlr::wait();
 }
 
 //===============================================================================
@@ -281,7 +282,7 @@ void TEST(Perception) {
   const char* obj="S1";
   OrsViewer v1("modelWorld");
 
-#if 0 //on real robot!
+#if 1 //on real robot!
   SubscribeRosKinect subKin; //subscription into depth and rgb images
 //  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
 #else //in simulation: create a separate viewWorld
@@ -296,8 +297,6 @@ void TEST(Perception) {
 #endif
 
   ImageViewer v2("kinect_rgb");
-
-  mlr::wait();
 
   for(uint k=0;k<4;k++){
     LeftOrRight lr = LeftOrRight(k%2);
@@ -352,7 +351,7 @@ void TEST(PerceptionOnly) {
   auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
 #endif
 
-  auto pcl = R.PclPipeline(true);
+  auto pcl = R.PclPipeline(false);
   auto filter = R.PerceptionFilter(true);
 
   Access_typed<PerceptL> outputs("percepts_filtered");
