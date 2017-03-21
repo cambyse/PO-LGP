@@ -55,7 +55,7 @@ PclPipeline::~PclPipeline(){
 }
 
 void PclPipeline::step(){
-  PerceptL percepts = PclScript_Z_plane_cluster_planes_boxes(new Pcl(inputPcl.get()));
+  PerceptL percepts = PclScript_Z_plane_cluster_planes_boxes(new Pcl(inputPcl.get()), true);
   percepts_input.set()->append(percepts);
 }
 
@@ -78,7 +78,7 @@ PerceptL PclScript_Z_plane_cluster_planes_boxes(const Pcl* newInput, bool verbos
   pass.setIndices (z_filtered);
   pass.setFilterFieldName ("x");
   pass.setFilterLimits (.4, 1.);
-#if 1
+#if 0
   pass.filter(*xz_filtered);
 
   //-- voxel grid filter -> smaller resolution (small objects not recognized anymore!)

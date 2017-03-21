@@ -10,8 +10,8 @@
 Act_PerceptionFilter::Act_PerceptionFilter(Roopi* r, bool view)
   : Act(r){
   filter = ptr<Act_Filter>(new Act_Filter(r, new Filter));
-//  if(view) viewer = ptr<Act_PercViewer>(new Act_PercViewer(r, new PercViewer("percepts_input")));
-  if(view) viewer = ptr<Act_PercViewer>(new Act_PercViewer(r, new PercViewer("percepts_filtered")));
+  if(view) viewerInput = ptr<Act_PercViewer>(new Act_PercViewer(r, new PercViewer("percepts_input")));
+  if(view) viewerFiltered = ptr<Act_PercViewer>(new Act_PercViewer(r, new PercViewer("percepts_filtered")));
 }
 
 

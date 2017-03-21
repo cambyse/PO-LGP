@@ -280,6 +280,8 @@ void localizeS1(Roopi &R, const char* obj){
   }
 }
 
+//===============================================================================
+
 void TEST(Perception) {
   Roopi R(true, false);
 
@@ -315,6 +317,51 @@ void TEST(Perception) {
 
   R.reportCycleTimes();
 }
+
+//===============================================================================
+
+void TEST(PerceptionOnly) {
+  Roopi R(true, false);
+
+  R.getTaskController().lockJointGroupControl("base");
+
+  const char* obj="S1";
+  OrsViewer v1("modelWorld");
+
+  SubscribeRosKinect subKin; //subscription into depth and rgb images
+  ImageViewer v2("kinect_rgb");
+
+  //    auto L = R.lookAt("S3");
+  auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
+  R.wait({&look});
+
+#if 1 //on real robot!
+//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+#else //in simulation: create a separate viewWorld
+  Access_typed<mlr::KinematicWorld> c("viewWorld");
+  c.writeAccess();
+  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+  c.deAccess();
+  OrsViewer v2("viewWorld");
+  auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
+#endif
+
+  auto pcl = R.PclPipeline(true);
+  auto filter = R.PerceptionFilter(true);
+
+  Access_typed<PerceptL> outputs("percepts_filtered");
+  int rev=outputs.getRevision();
+  outputs.waitForRevisionGreaterThan(rev+10);
+
+
+  mlr::wait();
+
+
+  R.reportCycleTimes();
+}
+
 //===============================================================================
 
 void TEST(Gamepad) {
@@ -342,7 +389,8 @@ int main(int argc, char** argv){
 //  testPhysX();
 //  Prototyping();
 
-  testPerception();
+//  testPerception();
+  testPerceptionOnly();
 
 //  for(;;) testPickAndPlace();
 
