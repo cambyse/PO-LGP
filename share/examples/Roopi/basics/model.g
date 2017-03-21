@@ -23,6 +23,16 @@ body ball2 { X=<T t(-1 -1.2 1.5)>, size=[.1 .1 .2 .02] type=9 }
 body S1 { size=[.06 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox percept }
 joint (table2 S1) { from=<T t(0 -.15 .02)> to=<T t(0 0 .02)> type=JT_transXYPhi agent=1 }
 
+body S2 { size=[.06 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox percept }
+joint (table2 S2) { from=<T t(0 -.05 .02)> to=<T t(0 0 .02)> type=JT_transXYPhi agent=1 }
+
+body S3 { size=[.06 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox percept }
+joint (table2 S3) { from=<T t(0 .05 .02)> to=<T t(0 0 .02)> type=JT_transXYPhi agent=1 }
+
+body S4 { size=[.06 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox percept }
+joint (table2 S4) { from=<T t(0 .15 .02)> to=<T t(0 0 .02)> type=JT_transXYPhi agent=1 }
+
+
 #body S2 { size=[.2 .06 .04 0] type=0 color=[.8 .8 .2] coloredBox }
 #joint (table2 S2) { from=<T t(0 .15 .02)> to=<T t(0 0 .02)> type=JT_rigid }
 
