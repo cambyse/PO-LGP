@@ -3,10 +3,6 @@
 - Infos for students:  README.student.md
 - Infos about the PR2: README.PR2.md
 
-Doxygen documentation: http://sully.informatik.uni-stuttgart.de:8080/job/MLR-share-doxygen/doxygen/
-
-Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
-
 
 ## Install on Ubuntu
 
