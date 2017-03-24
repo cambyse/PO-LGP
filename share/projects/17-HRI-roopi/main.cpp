@@ -1,7 +1,125 @@
 #include <Roopi/roopi.h>
 #include <Control/taskControl.h>
+#include <Motion/komo.h>
+#include <RosCom/subscribeRosKinect.h>
+#include <RosCom/subscribeRosKinect2PCL.h>
+#include <Gui/viewer.h>
+#include <Perception/percept.h>
+#include <Kin/kinViewer.h>
 
 //===============================================================================
+
+
+void TEST(PerceptionOnly) {
+  Roopi R(true, false);
+
+  R.getTaskController().lockJointGroupControl("base");
+
+  OrsViewer v1("modelWorld");
+
+  SubscribeRosKinect subKin; //subscription into depth and rgb images
+  ImageViewer v2("kinect_rgb");
+
+  //    auto L = R.lookAt("S3");
+  auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
+  R.wait({-look});
+
+#if 1 //on real robot!
+//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+#else //in simulation: create a separate viewWorld
+  Access_typed<mlr::KinematicWorld> c("viewWorld");
+  c.writeAccess();
+  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+  c.deAccess();
+  OrsViewer v2("viewWorld");
+  auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
+#endif
+
+  auto pcl = R.PclPipeline(false);
+  auto filter = R.PerceptionFilter(true);
+
+  Access_typed<PerceptL> outputs("percepts_filtered");
+  int rev=outputs.getRevision();
+  outputs.waitForRevisionGreaterThan(rev+10);
+
+
+  mlr::wait();
+
+
+  R.reportCycleTimes();
+}
+
+void TEST(PerceptionAndPlace) {
+  Roopi R(true, false);
+
+  R.getTaskController().lockJointGroupControl("base");
+
+  OrsViewer v1("modelWorld");
+
+  SubscribeRosKinect subKin; //subscription into depth and rgb images
+  ImageViewer v2("kinect_rgb");
+
+  //    auto L = R.lookAt("S3");
+  auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
+  R.wait({-look});
+
+#if 1 //on real robot!
+//  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
+#else //in simulation: create a separate viewWorld
+  Access_typed<mlr::KinematicWorld> c("viewWorld");
+  c.writeAccess();
+  c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
+  c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+  c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+  c.deAccess();
+  OrsViewer v2("viewWorld");
+  auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
+#endif
+
+
+  auto pcl = R.PclPipeline(false);
+  auto filter = R.PerceptionFilter(true);
+
+  {
+  auto graspR = R.graspBox("S2", LR_right);
+  R.wait({-graspR});
+  }
+  {
+  auto placeR = R.placeDistDir("S2","S1", 0,0,0);
+  R.wait({-placeR});
+  }
+  {
+  auto graspR = R.graspBox("S3", LR_right);
+  R.wait({-graspR});
+  }
+  {
+  auto placeR = R.placeDistDir("S3","S2", 0,0,0);
+  R.wait({-placeR});
+  }
+  {
+  auto graspR = R.graspBox("S4", LR_right);
+  R.wait({-graspR});
+  }
+  {
+  auto placeR = R.placeDistDir("S4","S3", 0,0,0);
+  R.wait({-placeR});
+  }
+
+  Access_typed<PerceptL> outputs("percepts_filtered");
+  int rev=outputs.getRevision();
+  outputs.waitForRevisionGreaterThan(rev+10);
+
+
+  mlr::wait();
+
+
+  R.reportCycleTimes();
+
+
+}
+
 
 void workspaceAndArms(Roopi& R, const char* objName){
   auto an = R.armsNeutral();
@@ -369,7 +487,7 @@ void buildBox(Roopi& R, const char* objName1, const char* objName2, const char* 
     R.wait({-placeL4});
     workspaceAndArms(R,objName8);
   }
-  mlr::wait();
+  //mlr::wait();
 }
 
 void testHRI() {
@@ -379,7 +497,7 @@ void testHRI() {
   //R.getTaskController().lockJointGroupControl("torso");
   //R.hold(false);
   R.collisions(true);
-  mlr::wait();
+  //mlr::wait();
 
   //buildTower(R,"cube1","cube2","cube3","cube4","objTarget");
   //buildLine(R,"cube1","cube2","cube3","cube4","objTarget","objTarget5","objTarget6","objTarget7");
@@ -451,7 +569,9 @@ void testHRI() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-  testHRI();
+//  for(;;) testHRI();
+  testPerceptionOnly();
+//  testPerceptionAndPlace();
 
   return 0;
 }
