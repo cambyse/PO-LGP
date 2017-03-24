@@ -1,11 +1,11 @@
 #include <system/engine.h>
 #include <views/views.h>
 
-//-- standard AccessData containing only an integer
-struct Integer:public AccessData {
+//-- standard VariableData containing only an integer
+struct Integer:public VariableData {
   int x;
   
-  Integer():AccessData("IntVar") { x=rnd(100); }
+  Integer():VariableData("IntVar") { x=rnd(100); }
 };
 
 

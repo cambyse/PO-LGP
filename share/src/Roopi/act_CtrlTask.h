@@ -26,5 +26,7 @@ struct Act_CtrlTask : Act{
   WToken<CtrlTask> set(); ///< use this to directly access the CtrlTask (in a threadsafe way) and do anything to it
   RToken<CtrlTask> get(); ///< use this to directly access the CtrlTask (in a threadsafe way) and do anything to it
 
+  void write(ostream& os);
+
   typedef std::shared_ptr<Act_CtrlTask> Ptr;
 };

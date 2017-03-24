@@ -10,9 +10,9 @@
 #include "spinner.h"
 
 struct sTrajectoryInterface{
-  ACCESSname(CtrlMsg, ctrl_ref)
-  ACCESSname(CtrlMsg, ctrl_obs)
-  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
+  Access<CtrlMsg> ctrl_ref;
+  Access<CtrlMsg> ctrl_obs;
+  Access<ar::AlvarMarkers> ar_pose_markers;
   PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState> pub;
   SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub;
   Subscriber<ar::AlvarMarkers> markerSub;
@@ -20,9 +20,12 @@ struct sTrajectoryInterface{
   RosCom_Spinner spinner;
 
   sTrajectoryInterface():
+    ctrl_ref(NULL, "ctrl_ref"),
+    ctrl_obs(NULL, "ctrl_obs"),
+    ar_pose_markers(NULL, "ar_pose_markers"),
     pub("/marc_rt_controller/jointReference", ctrl_ref),
     sub("/marc_rt_controller/jointState", ctrl_obs),
-    markerSub("/ar_pose_marker", (Access_typed<ar::AlvarMarkers>&)ar_pose_markers){
+    markerSub("/ar_pose_marker", (Access<ar::AlvarMarkers>&)ar_pose_markers){
   }
 };
 

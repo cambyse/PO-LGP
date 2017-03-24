@@ -19,7 +19,7 @@ struct MySystem {
     new AlvarSyncer();
 
     // This reads the ros topic and updates the variable
-    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&) ar_pose_markers);
+    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access<AlvarMarkers>&) ar_pose_markers);
   }
 };
 

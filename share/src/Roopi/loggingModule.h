@@ -18,10 +18,10 @@ struct SetOfDataFiles {
 
 struct LoggingModule : Thread {
 
-  ACCESSname(CtrlMsg, ctrl_ref) //< the message send to the RTController
-  ACCESSname(CtrlMsg, ctrl_obs) //< the message received from the RTController
-  ACCESSname(mlr::Array<CtrlTask*>, ctrlTasks)
-  ACCESSname(arr, qSign)
+  ACCESS(CtrlMsg, ctrl_ref) //< the message send to the RTController
+  ACCESS(CtrlMsg, ctrl_obs) //< the message received from the RTController
+  ACCESS(mlr::Array<CtrlTask*>, ctrlTasks)
+  ACCESS(arr, qSign)
 
   SetOfDataFiles logFiles;
 

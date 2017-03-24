@@ -46,7 +46,7 @@ typedef mlr::Array<CtrlTask*> CtrlTaskL;
 //==============================================================================
 
 struct Roopi_Activity{
-  ConditionVariable status;
+  Signaler status;
 };
 
 //==============================================================================

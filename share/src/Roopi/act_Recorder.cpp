@@ -1,7 +1,7 @@
 #include "act_Recorder.h"
 
 struct sAct_Recorder : Thread{
-  Access_typed<arr> access;
+  Access<arr> access;
   arr buffer;
   mlr::String filname;
   ofstream fil;

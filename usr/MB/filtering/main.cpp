@@ -21,11 +21,11 @@ int main(int argc, char** argv){
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
   threadReportCycleTimes();
 
   threadCloseModules();
-  registry().clear();
+  registry()->clear();
   cout <<"bye bye" <<endl;
   return 0;
 }

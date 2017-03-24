@@ -165,7 +165,7 @@ struct Parameter_typed:Parameter {
  * Macro to easily acess a Variable.
  */
 #define VAR(Type) \
-  Type *_##Type;  _##Type = biros().getAccessData<Type>(#Type, NULL);
+  Type *_##Type;  _##Type = biros().getVariableData<Type>(#Type, NULL);
 
 
 
@@ -227,7 +227,7 @@ struct WorkingCopy {
     copy.name <<"_WorkingCopy_" <<(p?p->name:STRING("GLOBAL"));
   }
   void init(const char* var_name, Module_Thread *_p) {
-    T *_v = biros().getAccessData<T>(var_name, _p);
+    T *_v = biros().getVariableData<T>(var_name, _p);
     init(_v, _p);
   }
   bool needsUpdate() {

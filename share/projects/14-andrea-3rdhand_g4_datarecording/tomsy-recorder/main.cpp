@@ -92,7 +92,7 @@ void threadedRun() {
     //engine().enableAccessLog();
     threadOpenModules(true);
 
-    moduleShutdown().waitForStatusGreaterThan(0);
+    moduleShutdown()->waitForStatusGreaterThan(0);
 
     threadCloseModules();
     cout <<"bye bye" <<endl;

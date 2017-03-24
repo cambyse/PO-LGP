@@ -316,7 +316,7 @@ int main(int argc, char** argv){
 //  cout << ti->world_plan->getJointState() << endl;
   PR2Grasp pr2grasp(ti);
   pr2grasp.home();
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 //  pr2grasp.run();
 
   // testPointCloud();

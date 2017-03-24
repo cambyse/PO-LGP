@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 

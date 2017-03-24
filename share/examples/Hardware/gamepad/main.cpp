@@ -13,7 +13,7 @@ void threadedRun() {
   for(;;){
     S.gamepadState.data->waitForNextRevision();
     cout <<"\r" <<S.gamepadState.get()() <<std::flush;
-    if(moduleShutdown().getStatus()) break;
+    if(moduleShutdown()->getStatus()) break;
   }
 
   threadCloseModules();

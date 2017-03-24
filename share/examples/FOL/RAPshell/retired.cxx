@@ -34,7 +34,7 @@ struct GetSymbols{
   ros::NodeHandle nh;
   ros::Subscriber sub_symbols;
   mlr::String symbols;
-  ConditionVariable hasSymbols;
+  Signaler hasSymbols;
 
   GetSymbols(){
     hasSymbols.setStatus(0);

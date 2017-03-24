@@ -100,7 +100,7 @@ void TEST(Gamepad){
     gamepadState.data->waitForNextRevision();
     arr gamepad = gamepadState.get();
     bool gamepad_shutdown = j2t.updateTasks(gamepad);
-//    if(t>10 && gamepad_shutdown) moduleShutdown().incrementValue();
+//    if(t>10 && gamepad_shutdown) moduleShutdown()->incrementValue();
 
 
     //get joint state
@@ -210,7 +210,7 @@ void TEST(Gamepad){
       ctrl_ref.set() = refs;
     }
 
-    if(moduleShutdown().getStatus()/* || !rosOk()*/) break;
+    if(moduleShutdown()->getStatus()/* || !rosOk()*/) break;
   }
 
   threadCloseModules();

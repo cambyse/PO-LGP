@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
   }
 
   cout <<registry() <<endl;
-  registry().clear();
+  registry()->clear();
   cout <<"bye bye" <<endl;
   return 0;
 }

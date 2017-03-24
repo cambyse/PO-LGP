@@ -4,9 +4,9 @@
 #include <RosCom/spinner.h>
 
 struct sAct_ComPR2{
-  Access_typed<CtrlMsg> ctrl_ref;
-  Access_typed<CtrlMsg> ctrl_obs;
-  Access_typed<arr>     pr2_odom;
+  Access<CtrlMsg> ctrl_ref;
+  Access<CtrlMsg> ctrl_obs;
+  Access<arr>     pr2_odom;
 
   SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> *subCtrl = NULL;
   PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>          *pubCtrl = NULL;

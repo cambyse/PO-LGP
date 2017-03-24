@@ -275,7 +275,7 @@ void FlycapPoller::open() {
 }
 
 void FlycapPoller::step() {
-	Access_typed<byteA>::WriteToken token(&image);
+	Access<byteA>::WriteToken token(&image);
 	s->grab(image(), image.tstamp());
 }
 

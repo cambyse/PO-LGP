@@ -2,16 +2,16 @@
 
 #include "act.h"
 
-typedef std::function<bool(const ConditionVariableL&, const intA&, int whoChanged)> EventBoolean;
+typedef std::function<int(const SignalerL&, const intA&, int whoChanged)> EventFunction;
 
 struct Act_Event : Act{
-  const ConditionVariableL signalers;
-  EventBoolean event;
+  const SignalerL signalers;
+  EventFunction event;
   intA statuses;
 
-  Act_Event(Roopi *r, const ConditionVariableL& signalers, const EventBoolean& event);
+  Act_Event(Roopi *r, const SignalerL& signalers, const EventFunction& eventFct);
   ~Act_Event();
 
-  void callback(ConditionVariable *s, int status);
-  void selfCallback(ConditionVariable *s, int status);
+  void callback(Signaler *s, int status);
+  void selfCallback(Signaler *s, int status);
 };

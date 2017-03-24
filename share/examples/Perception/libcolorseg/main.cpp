@@ -10,7 +10,7 @@ void TEST(ModuleVision) {
   GenericDisplayViewer<Patching> v2("patches");
 
   threadOpenModules(true);
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
   threadCloseModules();
 
   cout <<"bye bye" <<endl;

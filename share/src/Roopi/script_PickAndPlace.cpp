@@ -68,7 +68,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     //attention, gripper positioning, alignment, open gripper
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    //mlr::wait(1.);
+    //R.wait(1.);
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
 #if 1
@@ -101,7 +101,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     gripperR->resetStatus();
     gripper2R->resetStatus();
     R.wait({-gripperR, -gripper2R});
-    mlr::wait(.5);
+    R.wait(.5);
   }
 
   {
@@ -117,7 +117,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     lift->set()->PD().setGains(0, 10.);
     lift->set()->PD().v_target = ARR(0,0,.2);
     auto look = R.lookAt(objName);
-    mlr::wait(1.);
+    R.wait(1.);
   }
   return AS_done;
 }
@@ -168,7 +168,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     //attention & gripper positioning
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    //mlr::wait(1.);
+    //R.wait(1.);
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {0.,0.,above+.1});
 #if 1
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
@@ -206,7 +206,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     lift->set()->PD().setTarget(lift->task->y);
     lift->set()->PD().setGains(0, 10.);
     lift->set()->PD().v_target = ARR(0,0,.2);
-    mlr::wait(1.);
+    R.wait(1.);
   }
   return AS_done;
 }
@@ -257,7 +257,7 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     //attention & gripper positioning
     auto look = R.lookAt(objName);
     //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    //mlr::wait(1.);
+    //R.wait(1.);
     //auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1});
     auto al1 = R.newCtrlTask();
@@ -315,7 +315,7 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     lift->set()->PD().setTarget(lift->task->y);
     lift->set()->PD().setGains(0, 10.);
     lift->set()->PD().v_target = ARR(0,0,.2);
-    mlr::wait(1.);
+    R.wait(1.);
   }
   return AS_done;
 }

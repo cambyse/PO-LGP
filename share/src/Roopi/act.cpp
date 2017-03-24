@@ -8,13 +8,13 @@ template<> const char* mlr::Enum<ActStatus>::names []={
 
 Act::Act(Roopi *r)
   : roopi(*r), startTime(mlr::realTime()) {
-  registryNode = registry().newNode<Act*>({"Act", typeid(*this).name()}, {}, this);
+  registryNode = registry()->newNode<Act*>({"Act", typeid(*this).name()}, {}, this);
   roopi.acts.set()->append(this);
   setStatus(AS_init);
 }
 
 //Act::Act(Act&& a)
-//  : roopi(a.roopi), ConditionVariable(a.status){
+//  : roopi(a.roopi), Signaler(a.status){
 //  registryNode = a.registryNode;
 //  registryNode->get<Act*>() = this;
 //  a.registryNode = NULL;
@@ -26,6 +26,9 @@ Act::~Act(){
 }
 
 double Act::time(){ return mlr::realTime()-startTime; }
+
+void Act::write(ostream& os){ os <<'<' <<std::setw(14) <<NAME(typeid(*this)) <<"> @" <<std::setw(12) <<mlr::Enum<ActStatus>((ActStatus)getStatus()) <<std::setw(5) <<std::setprecision(3)<<time() <<"s -- "; }
+
 
 RUN_ON_INIT_BEGIN(roopi_act)
 ActL::memMove=true;

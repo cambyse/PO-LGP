@@ -10,22 +10,22 @@
 
 struct HardwareReference;
 
-struct SkinPressure:public AccessData {
+struct SkinPressure:public VariableData {
   arr y_real;
   
-  SkinPressure():AccessData("SkinPressure") {
+  SkinPressure():VariableData("SkinPressure") {
     reg_y_real();
     y_real.resize(6);
     y_real.setZero();
   }
 };
 
-struct GamepadState: public AccessData {
+struct GamepadState: public VariableData {
   intA state;
   uint n;
   bool exitSignal;
   
-  GamepadState():AccessData("GamepadState"), n(0), exitSignal(false) {
+  GamepadState():VariableData("GamepadState"), n(0), exitSignal(false) {
     reg_state();
     reg_n();
     reg_exitSignal();

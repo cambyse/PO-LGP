@@ -12,7 +12,7 @@ int main(int argc, char** argv){
 
   {
 
-    Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+    Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
     TaskControlThread tcm("baxter");
     GamepadInterface gamepad;
@@ -25,7 +25,7 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
-    Access_typed<arr> ctrl_q_ref(NULL, "ctrl_q_ref");
+    Access<arr> ctrl_q_ref(NULL, "ctrl_q_ref");
     ctrl_q_ref.waitForRevisionGreaterThan(10); //wait a few steps (e.g. to ensure sync with real bot)
 
     //-- create three tasks
@@ -50,7 +50,7 @@ int main(int argc, char** argv){
 
 
     mlr::wait(5.);
-//    moduleShutdown().waitForStatusGreaterThan(0);
+//    moduleShutdown()->waitForStatusGreaterThan(0);
 
     //-- create a homing with
     CtrlTask homing("homing",
@@ -61,7 +61,7 @@ int main(int argc, char** argv){
     tcm.ctrlTasks.set() = { &homing };
 
     mlr::wait(5.);
-//    moduleShutdown().waitForStatusGreaterThan(0);
+//    moduleShutdown()->waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

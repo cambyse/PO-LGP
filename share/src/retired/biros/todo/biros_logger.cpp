@@ -58,9 +58,9 @@ struct VariableHistory {
   pthread_mutex_t revisionAccessMutex;
   
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
-  ConditionVariable readRevisionCondVar;
+  Signaler readRevisionCondVar;
   /* here everyone sleeps who wants to have write access */
-  ConditionVariable writeRevisionCondVar;
+  Signaler writeRevisionCondVar;
   
   VariableHistory() {
     pthread_mutex_init(&revisionAccessMutex, NULL);

@@ -1112,7 +1112,7 @@ void test1DRobot() {
 
   //surfaceVisualisation.threadLoop();
 
-  Access_typed<uint> maxIt(NULL, "maxIt");
+  Access<uint> maxIt(NULL, "maxIt");
   maxIt.set()() = 1000000;
 
   for(uint i = 0; i < maxIt.get()(); i++) {
@@ -1601,7 +1601,7 @@ void surfaceExploration_1() {
 
   //surfaceVisualisation.threadLoop();
 
-  Access_typed<uint> maxIt(NULL, "maxIt");
+  Access<uint> maxIt(NULL, "maxIt");
   maxIt.set()() = 1000000;
 
   TaskMap_Default eOri(vecTMT, R.tcm()->modelWorld.get()(), "endeffR", mlr::Vector(1.0,0.0,0.0));

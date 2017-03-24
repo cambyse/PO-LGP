@@ -122,23 +122,23 @@ void RWLock::unlock(){
 
 //===========================================================================
 //
-// ConditionVariable
+// Signaler
 //
 
-ConditionVariable::ConditionVariable(){
+Signaler::Signaler(){
   state=0;
   int rc;
   rc = pthread_mutex_init(&mutex, NULL);  if(rc) HALT("pthread failed with err " <<rc);
   rc = pthread_cond_init(&cond, NULL);    if(rc) HALT("pthread failed with err " <<rc);
 }
 
-ConditionVariable::~ConditionVariable(){
+Signaler::~Signaler(){
   int rc;
   rc = pthread_cond_destroy(&cond);    if(rc) HALT("pthread failed with err " <<rc);
   rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
 
-int ConditionVariable::getState(){
+int Signaler::getState(){
   int rc, i;
   rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
   i=state;
@@ -146,7 +146,7 @@ int ConditionVariable::getState(){
   return i;
 }
 
-void ConditionVariable::setState(int i){
+void Signaler::setState(int i){
   int rc;
   rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
   state=i;
@@ -154,21 +154,21 @@ void ConditionVariable::setState(int i){
   rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
 }
 
-void ConditionVariable::signal(){
+void Signaler::signal(){
   int rc;
   rc = pthread_mutex_lock(&mutex);     if(rc) HALT("pthread failed with err " <<rc);
   rc = pthread_cond_broadcast(&cond);  if(rc) HALT("pthread failed with err " <<rc);
   rc = pthread_mutex_unlock(&mutex);   if(rc) HALT("pthread failed with err " <<rc);
 }
 
-void ConditionVariable::waitForSignal(){
+void Signaler::waitForSignal(){
   int rc;
   rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
   rc = pthread_cond_wait(&cond, &mutex);  if(rc) HALT("pthread failed with err " <<rc);
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
 
-void ConditionVariable::waitForStateEq(int i){
+void Signaler::waitForStateEq(int i){
   int rc;
   rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
   while(state!=i){
@@ -177,7 +177,7 @@ void ConditionVariable::waitForStateEq(int i){
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
 
-void ConditionVariable::waitForStateNotEq(int i){
+void Signaler::waitForStateNotEq(int i){
   int rc;
   rc = pthread_mutex_lock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
   while(state==i){
@@ -186,7 +186,7 @@ void ConditionVariable::waitForStateNotEq(int i){
   rc = pthread_mutex_unlock(&mutex);  if(rc) HALT("pthread failed with err " <<rc);
 }
   
-void ConditionVariable::waitUntil(double absTime){
+void Signaler::waitUntil(double absTime){
   NIY;
 /*  int rc;
   timespec ts;

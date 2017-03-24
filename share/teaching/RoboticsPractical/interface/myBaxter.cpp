@@ -22,7 +22,7 @@
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const mlr::KinematicWorld& baxterModel, const char* prefix);
 
 struct MyBaxter_private{
-  Access_typed<sensor_msgs::JointState> jointState;
+  Access<sensor_msgs::JointState> jointState;
   ACCESSname(PerceptL, percepts_filtered)
   ACCESSname(mlr::KinematicWorld, modelWorld)
 

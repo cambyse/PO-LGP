@@ -47,7 +47,7 @@ void TEST(Kinect2Surfels){
   for(uint i=0;i<10;i++) Sys.kinect_points.data->waitForNextRevision();
 
   for(uint k=0;;k++){
-    if(moduleShutdown().getStatus()>0) break;
+    if(moduleShutdown()->getStatus()>0) break;
 //    if(k>20) break;
 
     Sys.kinect_points.data->waitForNextRevision();

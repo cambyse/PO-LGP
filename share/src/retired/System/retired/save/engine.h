@@ -83,7 +83,7 @@ struct EventController{
 
   BirosEventL events;
   RWLock eventsLock;
-  ConditionVariable blockMode; //0=all_run, 1=next_runs, 2=none_runs
+  Signaler blockMode; //0=all_run, 1=next_runs, 2=none_runs
   BirosEventL blockedEvents;
 
   ofstream* eventsFile;
@@ -107,7 +107,7 @@ struct EventController{
   void logStepBegin(const Module *p);
   void logStepEnd(const Module *p);
 
-  mlr::Array<ConditionVariable*> breakpointQueue;
+  mlr::Array<Signaler*> breakpointQueue;
   Mutex breakpointMutex;
   void breakpointSleep(); //the caller goes to sleep
   void breakpointNext(); //first in the queue is being woke up

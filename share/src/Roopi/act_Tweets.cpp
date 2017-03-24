@@ -16,12 +16,12 @@ struct sAct_Tweets : GraphEditCallback {
     //      if(n->isOfType<Thread*>()) T->dereg(n->get<Thread*>());
   }
 
-  void reg(ConditionVariable* c){
+  void reg(Signaler* c){
 //    if(c!=this){
 //      stepMutex.lock();
 #if 1
-      c->callbacks.append(new Callback<void(ConditionVariable*,int)>(this,
-        [this](ConditionVariable* c,int s){
+      c->callbacks.append(new Callback<void(Signaler*,int)>(this,
+        [this](Signaler* c,int s){
           this->tweet(c,s);
         } )
       );
@@ -32,7 +32,7 @@ struct sAct_Tweets : GraphEditCallback {
 //    }
   }
 
-  void dereg(ConditionVariable* c){
+  void dereg(Signaler* c){
 //    if(c!=this){
 //      stepMutex.lock();
 #if 1
@@ -45,16 +45,17 @@ struct sAct_Tweets : GraphEditCallback {
 //    }
   }
 
-  void tweet(ConditionVariable* c, int s){
+  void tweet(Signaler* c, int s){
       cout <<"TWEETs #" <<' ' <<std::setprecision(3) <<mlr::realTime() <<' ';
       Act *a = dynamic_cast<Act*>(c);
       if(a){
-        Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
-        if(t && t->task){
-          cout <<"Act_CtrlTask " <<t->task->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
-        }else{
-          cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
-        }
+        a->write(cout);
+//        Act_CtrlTask *t = dynamic_cast<Act_CtrlTask*>(c);
+//        if(t && t->task){
+//          cout <<"Act_CtrlTask " <<t->task->name <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
+//        }else{
+//          cout <<typeid(*a).name() <<" sends " <<mlr::Enum<ActStatus>((ActStatus)s) <<' ';
+//        }
       }else{
         Thread *th = dynamic_cast<Thread*>(c);
         if(th){
@@ -71,11 +72,11 @@ struct sAct_Tweets : GraphEditCallback {
 
 Act_Tweets::Act_Tweets(Roopi *r)
   : Act(r), s(new sAct_Tweets(this)){
-  registry().callbacks.append(s);
+  registry()->callbacks.append(s);
 }
 
 Act_Tweets::~Act_Tweets(){
-  registry().callbacks.removeValue(s);
+  registry()->callbacks.removeValue(s);
   delete s;
 }
 

@@ -40,7 +40,7 @@ typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  registry().newNode<Type*>({"Activity", key}, {}, new Type_typed<T>);
+  registry()->newNode<Type*>({"Activity", key}, {}, new Type_typed<T>);
 }
 
 /// create/launch a new activity based on the fact

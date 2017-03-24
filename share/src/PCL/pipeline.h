@@ -7,9 +7,9 @@ typedef mlr::Array<mlr::Mesh> MeshA;
 typedef mlr::Array<Percept*> PerceptL;
 
 struct PclPipeline : Thread{
-  Access_typed<Pcl> inputPcl;
-  Access_typed<Pcl> processedPcl;
-  Access_typed<PerceptL> percepts_input;
+  Access<Pcl> inputPcl;
+  Access<Pcl> processedPcl;
+  Access<PerceptL> percepts_input;
   struct sPclPipeline *s;
   PclPipeline(const char* input_name);
   ~PclPipeline();

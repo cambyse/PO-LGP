@@ -23,7 +23,7 @@ void TEST(ModuleVision) {
   for(uint i=0;i<30;i++){
     mlr::wait(1.);
     threadReportCycleTimes();
-    if(moduleShutdown().getStatus()>0) break;
+    if(moduleShutdown()->getStatus()>0) break;
   }
   threadCloseModules();
 

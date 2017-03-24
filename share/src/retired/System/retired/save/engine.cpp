@@ -15,7 +15,7 @@ typedef mlr::Array<SystemDescription::VariableEntry*> VariableEntryL;
 
 void SystemDescription::addModule(const char *dclName, const char *name, const NodeL& vars, StepMode mode, double beat){
   //find the dcl in the registry
-  Node *modReg = registry().getNode("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
+  Node *modReg = registry()->getNode("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
   if(!modReg){
     MLR_MSG("could not find Decl_Module" <<dclName);
     return;
@@ -254,9 +254,9 @@ struct LoggerVariableData {
 
   //-- or replay may block access to ensure right revision
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
-  ConditionVariable readCondVar;
+  Signaler readCondVar;
   /* here everyone sleeps who wants to have write access */
-  ConditionVariable writeCondVar;
+  Signaler writeCondVar;
 
   LoggerVariableData(): controllerBlocksRead(false), controllerBlocksWrite(false){}
 };
@@ -278,7 +278,7 @@ EventController::~EventController(){
 }
 
 void EventController::breakpointSleep(){ //the caller goes to sleep
-  ConditionVariable *c = new ConditionVariable;
+  Signaler *c = new Signaler;
   breakpointMutex.lock();
   breakpointQueue.append(c);
   breakpointMutex.unlock();
@@ -287,7 +287,7 @@ void EventController::breakpointSleep(){ //the caller goes to sleep
 
 void EventController::breakpointNext(){ //first in the queue is being woke up
   breakpointMutex.lock();
-  ConditionVariable *c = breakpointQueue.popFirst();
+  Signaler *c = breakpointQueue.popFirst();
   breakpointMutex.unlock();
   if(!c) return;
   c->broadcast();

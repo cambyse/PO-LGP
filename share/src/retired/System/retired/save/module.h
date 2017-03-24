@@ -93,23 +93,23 @@ stdPipes(Access);
 
 
 template<class T>
-struct Access_typed:Access{
+struct Access:Access{
   struct ReadToken{
-    Access_typed<T> *a;
-    ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
+    Access<T> *a;
+    ReadToken(Access<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
     const T& operator()(){ return *a->data; }
   };
   struct WriteToken{
-    Access_typed<T> *a;
-    WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
+    Access<T> *a;
+    WriteToken(Access<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
     T& operator()(){ return *a->data; }
   };
 
   T *data;
 
-  Access_typed(const char* name=NULL):Access(name), data(NULL){}
+  Access(const char* name=NULL):Access(name), data(NULL){}
   const T& get(){ return ReadToken(this)(); }
   T& set(){ return WriteToken(this)(); }
   T& operator()(){ CHECK_EQ(variable->rwlock.state,-1,"");  return *data; } //TODO ensure that it is locked
@@ -132,10 +132,10 @@ Node* registerNode(T *instance, const char *key1, const char* key2, Node *parent
 }
 
 
-template<class T> void* Access_typed<T>::createOwnData(){
+template<class T> void* Access<T>::createOwnData(){
   if(!variable){
     variable=new Variable(name);
-    variable->reg = registerNode<T, Access_typed<T> >(data,
+    variable->reg = registerNode<T, Access<T> >(data,
                                                    "Variable", name,
                                                    reg, NULL);
   }
@@ -143,10 +143,10 @@ template<class T> void* Access_typed<T>::createOwnData(){
   return data;
 }
 
-template<class T> void Access_typed<T>::setData(void* _data){
+template<class T> void Access<T>::setData(void* _data){
   if(!variable){
     variable=new Variable(name);
-    variable->reg = registerNode<T, Access_typed<T> >(data,
+    variable->reg = registerNode<T, Access<T> >(data,
                                                    "Variable", name,
                                                    reg, NULL);
   }
@@ -171,7 +171,7 @@ template<class T, class N, class P> struct Registrator{
       const char *declkey="Decl_Module";
       mlr::String name;
       if(typeid(P)!=typeid(void)){ //dependence registry
-        parent = registry().getNode("Decl_Module", typeid(P).name());
+        parent = registry()->getNode("Decl_Module", typeid(P).name());
         declkey="Decl_Access";
       }
       if(typeid(N)!=typeid(void)){ //extract a name from the type
@@ -215,8 +215,8 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
     } \
 
 #define ACCESS(type, name) \
-  struct __##name##__Access:Access_typed<type>, Registrator<type, __##name##__Access, __MODULE_TYPE__>{ \
-    __##name##__Access():Access_typed<type>(#name){ \
+  struct __##name##__Access:Access<type>, Registrator<type, __##name##__Access, __MODULE_TYPE__>{ \
+    __##name##__Access():Access<type>(#name){ \
       uint offset = OFFSETOF(__MODULE_BASE_TYPE__, name); \
       __MODULE_BASE_TYPE__ *thisModule = (__MODULE_BASE_TYPE__*)((char*)this - (char*)offset); \
       CHECK(&(thisModule->name)==this,"offset didn't work!"); \
@@ -229,8 +229,8 @@ template<class T,class N,class P> typename Registrator<T,N,P>::StaticRegistrator
   inline void  set_##name(const type& _x){ name.set()=_x; }
 
 #define ACCESS2(type, name) \
-  struct __##name##__Access:Access_typed<type>{ \
-    __##name##__Access():Access_typed<type>(#name){ \
+  struct __##name##__Access:Access<type>{ \
+    __##name##__Access():Access<type>(#name){ \
       MDS().registerAccessConstruction(this); \
     } \
   } name;

@@ -91,7 +91,7 @@ void tests() {
 
   FollowPath fp(R, "circle", traj, new TaskMap_Default(posTMT, R.tcm()->modelWorld.get()(), "endeffR"), 15.0);
 fp.threadLoop();
-  //moduleShutdown().waitForStatusGreaterThan(0);
+  //moduleShutdown()->waitForStatusGreaterThan(0);
   */
 }
 
@@ -224,12 +224,12 @@ mlr::wait(100.0);
 
 
 #else
-  Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
-  Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
-  Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
+  Access<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
+  Access<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
+  Access<arr>     pr2_odom(NULL, "pr2_odom");
 
-  Access_typed<arr> q_ref(NULL, "q_ref");
-  Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+  Access<arr> q_ref(NULL, "q_ref");
+  Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
   TaskControlThread tcm;
 
@@ -289,7 +289,7 @@ mlr::wait(100.0);
      if(orientationLaw->isConverged(.05)) break;
      cout <<"ori err=" <<orientationLaw->error() <<endl;
      mlr::wait(0.1);
-     if(moduleShutdown().getStatus()>0) break;
+     if(moduleShutdown()->getStatus()>0) break;
    }
    cout << "converged" << endl;
 
@@ -322,10 +322,10 @@ mlr::wait(100.0);
 //  for(;;){
 ////    cout <<R.tcm()->ctrl_obs.get()->fL <<endl;
 
-//    if(moduleShutdown().getStatus()>0) break;
+//    if(moduleShutdown()->getStatus()>0) break;
 //  }
 
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
 #if 0
   threadCloseModules();

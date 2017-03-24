@@ -11,9 +11,9 @@ int main(int argc, char** argv){
   rosCheckInit("minimalPositionControl");
 
   {
-    Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
-    Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
-    Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
+    Access<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
+    Access<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
+    Access<arr>     pr2_odom(NULL, "pr2_odom");
 
     TaskControlThread tcm;
     GamepadInterface gamepad;
@@ -55,7 +55,7 @@ int main(int argc, char** argv){
     task.prec = ARR(0., 100., 0.);
 //    task.Kp = ARR(0., 20., 0.);
 
-    moduleShutdown().waitForStatusGreaterThan(0);
+    moduleShutdown()->waitForStatusGreaterThan(0);
 
     threadCloseModules();
   }

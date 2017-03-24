@@ -17,7 +17,7 @@ Activity* newActivity(Node *fact){
 
   //-- check if an activity class with this symbol name is registered
   LOG(3) <<"creating new activity of symbol '" <<*activitySymbol <<"' and specs '" <<*activityParams <<"'";
-  Node *activityType = registry().getNode({"Activity", activitySymbol->keys.last()});
+  Node *activityType = registry()->getNode({"Activity", activitySymbol->keys.last()});
   if(!activityType){
     LOG(3) <<"cannot create activity " <<*fact << "(symbol=" <<*activitySymbol <<", specs=" <<*activityParams <<")";
     return NULL;

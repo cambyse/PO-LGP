@@ -43,7 +43,7 @@ struct SurfaceModelObject {
 struct SurfaceModelModule : Thread {
   Roopi& roopi;
 
-  Access_typed<GaussianProcessOptimized> gpSurface;
+  Access<GaussianProcessOptimized> gpSurface;
 
   arr X, Y;
 

@@ -5,7 +5,7 @@
 
 void getCam(){
   rosCheckInit();
-  Access_typed<byteA> rightArmCam(NULL, "rightArmCam");
+  Access<byteA> rightArmCam(NULL, "rightArmCam");
 
   RosInit rosInit;
   ImageViewer viewer("rightArmCam");
@@ -14,7 +14,7 @@ void getCam(){
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 

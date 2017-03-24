@@ -293,7 +293,7 @@ int main(int argc, char** argv){
 //    }
 //  }
 
-   moduleShutdown().waitForStatusGreaterThan(0);
+   moduleShutdown()->waitForStatusGreaterThan(0);
 
   cout <<"bye bye" <<endl;
   return 0;

@@ -15,7 +15,7 @@ int main(int argc, char** argv){
   rosCheckInit("minimalPositionControl");
 
   {
-    Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+    Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
     //-- setup a more complex 'system', mainly composed of the TaskControlMethods and the RelationalMachine
     TaskControlThread tcm("baxter");
@@ -30,13 +30,13 @@ int main(int argc, char** argv){
     RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
 
     //-- ugly...
-    for(Node *n:registry().getNodes("Activity")) rm.newSymbol(n->keys.last().p);
+    for(Node *n:registry()->getNodes("Activity")) rm.newSymbol(n->keys.last().p);
     for(mlr::Shape *sh:tcm.realWorld.shapes) rm.newSymbol(sh->name.p);
 
     //-- run script
     threadOpenModules(true);
     rm.runScript("script.g");
-//    moduleShutdown().waitForStatusGreaterThan(0);
+//    moduleShutdown()->waitForStatusGreaterThan(0);
     threadCloseModules();
   }
 

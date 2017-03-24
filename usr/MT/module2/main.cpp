@@ -8,21 +8,21 @@ void provideReadAccess(Engine&, Access<T>&);
 template<class T>
 struct Access{
   struct ReadToken{
-    Access_typed<T> *a;
-    ReadToken(Access_typed<T> *_a):a(_a){ a->readAccess(); }
+    Access<T> *a;
+    ReadToken(Access<T> *_a):a(_a){ a->readAccess(); }
     ~ReadToken(){ a->deAccess(); }
     const T& operator()(){ return *a->data; }
   };
   struct WriteToken{
-    Access_typed<T> *a;
-    WriteToken(Access_typed<T> *_a):a(_a){ a->writeAccess(); }
+    Access<T> *a;
+    WriteToken(Access<T> *_a):a(_a){ a->writeAccess(); }
     ~WriteToken(){ a->deAccess(); }
     T& operator()(){ return *a->data; }
   };
 
   T *data;
 
-  Access_typed(const char* name=NULL):Access(name), data(NULL){}
+  Access(const char* name=NULL):Access(name), data(NULL){}
   const T& get(){ return ReadToken(this)(); }
   T& set(){ return WriteToken(this)(); }
   T& operator()(){ CHECK_EQ(variable->rwlock.state,-1,"");  return *data; } //TODO ensure that it is locked

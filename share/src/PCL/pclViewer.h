@@ -6,7 +6,7 @@
 
 struct PclViewer : Thread {
   struct sPclViewer *s;
-  Access_typed<Pcl> cloud;
+  Access<Pcl> cloud;
   PclViewer(const char* cloud_name);
   ~PclViewer();
   void open();

@@ -231,7 +231,7 @@ void TaskMapGPGradientThread::phi(arr& y, arr& J, const mlr::KinematicWorld& G, 
   }
 }
 
-TaskMapGPGradientThread::TaskMapGPGradientThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName, mlr::Vector vector)
+TaskMapGPGradientThread::TaskMapGPGradientThread(Access<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName, mlr::Vector vector)
   : gp(gp)
   , taskMap(vecTMT, world, shapeName, vector)
   , positionMap(posTMT, world, shapeName) {}
@@ -289,7 +289,7 @@ void TaskMapGP1DThread::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
   }
 }
 
-TaskMapGP1DThread::TaskMapGP1DThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName)
+TaskMapGP1DThread::TaskMapGP1DThread(Access<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , positionMap(posTMT, world, shapeName) {}
 
@@ -312,7 +312,7 @@ void TaskMapGPVariance1DThread::phi(arr& y, arr& J, const mlr::KinematicWorld& G
 
 }
 
-TaskMapGPVariance1DThread::TaskMapGPVariance1DThread(Access_typed<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName)
+TaskMapGPVariance1DThread::TaskMapGPVariance1DThread(Access<GaussianProcess>& gp, const mlr::KinematicWorld& world, const char* shapeName)
   : gp(gp)
   , positionMap(posTMT, world, shapeName) {}
 

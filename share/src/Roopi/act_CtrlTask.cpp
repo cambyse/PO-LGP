@@ -78,6 +78,8 @@ RToken<CtrlTask> Act_CtrlTask::get(){
   return RToken<CtrlTask>(*roopi.s->ctrlTasks.data, task);
 }
 
+void Act_CtrlTask::write(ostream& os){ Act::write(os); if(task) os <<task->name;  }
+
 void Act_CtrlTask::setMap(TaskMap* m){
   setTask(new CtrlTask(m->shortTag(roopi.getK()), m));
 }

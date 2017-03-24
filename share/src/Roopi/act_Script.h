@@ -4,10 +4,12 @@
 
 typedef std::function<int()> Script;
 
-struct Act_Script : Act{
-  struct sAct_Script *s;
-  Act_Script(Roopi *r, const Script& S);
+struct Act_Script : Act, Thread{
+  Script script;
+  Act_Script(Roopi *r, const Script& S, double beatIntervalSec=-1.);
   ~Act_Script();
 
-  typedef std::shared_ptr<Act_Script> Ptr;
+  virtual void open(){}
+  virtual void step();
+  virtual void close(){}
 };

@@ -117,14 +117,14 @@ struct Poser{
 void recordData() {
   rosCheckInit("gamepadControl");
 
-  Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
-  Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
-  Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
-  Access_typed<bool> fixBase(NULL, "fixBase");
+  Access<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
+  Access<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
+  Access<arr>     pr2_odom(NULL, "pr2_odom");
+  Access<bool> fixBase(NULL, "fixBase");
 
 
-  Access_typed<arr> q_ref(NULL, "q_ref");
-  Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+  Access<arr> q_ref(NULL, "q_ref");
+  Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
   TaskControlThread tcm;
   OrsViewer view;
@@ -192,7 +192,7 @@ void recordData() {
     }
   }
 
-  //  moduleShutdown().waitForStatusGreaterThan(0);
+  //  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
   cout <<"bye bye" <<endl;

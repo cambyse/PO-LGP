@@ -11,14 +11,14 @@ int main(int argc, char **argv)
   mlr::initCmdLine(argc, argv);
   ros::init(argc, argv, "g4_data_publisher", ros::init_options::NoSigintHandler);
 
-  Access_typed<floatA> dataAccess(NULL, "g4_poses");
+  Access<floatA> dataAccess(NULL, "g4_poses");
 
   G4Poller g4poller;
   G4Display g4disp;
   PublisherConv<std_msgs::Float32MultiArray, floatA, &conv_floatA2Float32Array>  pub_floats("/g4_data", dataAccess);
 
   threadOpenModules(true);
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
   threadCloseModules();
   return 0;
 }

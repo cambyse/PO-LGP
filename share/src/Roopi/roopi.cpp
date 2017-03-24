@@ -12,7 +12,8 @@
 //==============================================================================
 
 Roopi_private::Roopi_private(Roopi* roopi)
-  : modelWorld(NULL, "modelWorld"){
+  : modelWorld(NULL, "modelWorld"),
+    ctrlTasks(NULL, "ctrlTasks"){
 }
 
 Roopi_private::~Roopi_private(){
@@ -42,10 +43,11 @@ Roopi::Roopi(bool autoStartup, bool controlView)
   s->model = mlr::getParameter<mlr::String>("model", "model.g");
   s->robot = mlr::getParameter<mlr::String>("robot", "pr2");
   s->useRos = mlr::getParameter<bool>("useRos", false);
+  s->hyperSpeed = mlr::getParameter<double>("hyperSpeed", -1.);
 
   if(autoStartup){
     if(s->useRos){
-      s->_ComRos = shared_ptr<Act_Thread>(new Act_Thread(this, new RosCom_Spinner()));
+      s->_ComRos = make_shared<Act_Thread>(this, new RosCom_Spinner());
       s->_ComPR2 = newComPR2();
     }
 
@@ -58,6 +60,121 @@ Roopi::Roopi(bool autoStartup, bool controlView)
 Roopi::~Roopi(){
   delete s;
 }
+
+void Roopi::report(){
+  cout <<"----ROOPI REPORT------" <<endl;
+  acts.readAccess();
+  for(Act* a:acts()){ a->write(cout); cout <<endl; }
+  acts.deAccess();
+  cout <<"----------------------" <<endl;
+}
+
+//==============================================================================
+//
+// basic flow control
+//
+
+int _allPositive(const SignalerL& signalers, const intA& statuses, int whoChanged){
+  bool allPositive=true;
+  for(const int& s:statuses) if(s<=0) allPositive=false;
+  if(allPositive) return AS_true;
+  return AS_false;
+}
+
+bool Roopi::wait(const SignalerL& acts, double timeout){
+#if 0
+  double startTime = mlr::realTime();
+  for(;;){
+    bool allConv = true;
+    for(Act *act : acts) if(act->getStatus()<=0){ allConv=false; break; }
+    if(allConv) return true;
+
+    if(timeout>0 && mlr::realTime() - startTime > timeout) {
+      cout << "not converged, timeout reached" << endl;
+      return false;
+    }
+
+    mlr::wait(0.1);
+  }
+  return false;
+#elif 0
+  double startTime = mlr::realTime();
+  Signaler waiter;
+  for(Signaler* act : acts) waiter.listenTo(*act);
+  for(;;){
+    bool allConv = true;
+    for(Signaler* act : acts) if(act->getStatus()<=0) allConv=false;
+    if(allConv) return true;
+
+    waiter.statusLock();
+    // The typical pattern (also in Thread): CondVar status==0 -> idle; CondVar status>0 -> there is work to do (and 'messengers' lists who set it to 1)
+    if(waiter.status==0){ //no new signals
+      if(timeout>0.){
+        if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
+        if(!waiter.waitForSignal(timeout, true)){
+          LOG(0) <<"timeout reached";
+          waiter.statusUnlock(); return false;
+        }
+      }else{
+        waiter.waitForSignal(true);
+      }
+    }
+    waiter.status=0;
+    waiter.statusUnlock();
+
+  }
+  return true;
+#else
+  return waitEvent(event(acts, _allPositive), timeout);
+#endif
+}
+
+bool Roopi::wait(){
+  return mlr::wait(true);
+}
+
+void Roopi::wait(double seconds){
+  if(!s->useRos && s->hyperSpeed>0.) mlr::wait(seconds/s->hyperSpeed);
+  else mlr::wait(seconds);
+}
+
+bool Roopi::waitEvent(const Act_Event::Ptr& event, double timeout){
+  return event->waitForStatusEq(AS_true, false, timeout);
+}
+
+Act::Ptr Roopi::event(SignalerL sigs, const EventFunction& eventFct){
+  return make_shared<Act_Event>(this, sigs, eventFct);
+}
+
+Act::Ptr Roopi::at(const Act_Event::Ptr& event, const std::function<int()>& script){
+  return make_shared<Act_AtEvent>(this, event, script);
+}
+
+Act::Ptr Roopi::run(const std::function<int ()>& script){
+  return make_shared<Act_Script>(this, script);
+}
+
+Act::Ptr Roopi::loop(double beatIntervalSec, const std::function<int ()>& script){
+  return make_shared<Act_Script>(this, script, beatIntervalSec);
+
+}
+
+
+VariableBase::Ptr Roopi::variableStatus(const char* var_name){
+  return getVariable(var_name);
+//  Node *n = registry()->findNode({"VariableData", var_name});
+//  if(n){
+//    VariableBase::Ptr v = n->getPtr<VariableBase>();
+//    if(v) return v;
+//  }
+//  LOG(-1) <<"Variable '" <<var_name <<"' does not exist!";
+//  return NULL;
+}
+
+//==============================================================================
+//
+// robotics stuff
+//
 
 void Roopi::setKinematics(const char* filename, bool controlView){
   mlr::String name(filename);
@@ -78,22 +195,21 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K, bool controlView){
   s->q0 = K.q;
 
   if(controlView){
-    if(s->useRos){
-      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
-    } else {
-      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref"}, .1)));
-    }
+//    if(s->useRos){
+//      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
+//    } else {
+    s->_ctrlView = make_shared<Act_Thread>(this, new OrsViewer("modelWorld", .1));
+//    }
   }
 }
 
 shared_ptr<Act_TaskController> Roopi::startTaskController(){
-//  s->_taskUpdater = new Act_Thread(this, new CtrlTaskUpdater);
-  s->_taskController = shared_ptr<Act_TaskController>(new Act_TaskController(this));
+  s->_taskController = make_shared<Act_TaskController>(this);
   return s->_taskController;
 }
 
-shared_ptr<Act_Tweets> Roopi::startTweets(bool go){
-  if(!s->_tweets && go) s->_tweets = shared_ptr<Act_Tweets>(new Act_Tweets(this));
+Act::Ptr Roopi::startTweets(bool go){
+  if(!s->_tweets && go) s->_tweets = make_shared<Act_Tweets>(this);
   if(s->_tweets && !go) s->_tweets.reset();
   return s->_tweets;
 }
@@ -157,7 +273,7 @@ Act_CtrlTask::Ptr Roopi::moveVel(const char* endeff_name, arr velocity){
 
 
 Act_CtrlTask::Ptr Roopi::newHoldingTask(){
-  auto hold = Act_CtrlTask::Ptr(new Act_CtrlTask(this));
+  auto hold = make_shared<Act_CtrlTask>(this);
   hold->setMap(new TaskMap_qItself);
   hold->task->PD().setTarget( hold->y0 );
   hold->task->PD().setGains(30., 10.);
@@ -166,11 +282,11 @@ Act_CtrlTask::Ptr Roopi::newHoldingTask(){
 }
 
 Act_CtrlTask::Ptr Roopi::newCollisionAvoidance(){
-  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2}));
+  return newCtrlTask(new TaskMap_Proxy(allPTMT, {}, .05), {.1, .9}, {}, {1e2});
 }
 
 Act_CtrlTask::Ptr Roopi::newLimitAvoidance(){
-  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2}));
+  return newCtrlTask(new TaskMap_qLimits(getK()->getLimits()), {.1, .9}, {}, {1e2});
 }
 
 //Act_CtrlTask* Roopi::lookAt(const char* shapeName){
@@ -225,81 +341,14 @@ void Roopi::deactivateCollisions(const char* s1, const char* s2){
 // basic CtrlTask management
 
 Act_CtrlTask::Ptr Roopi::newCtrlTask(TaskMap* map, const arr& PD, const arr& target, const arr& prec){
-  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, map, PD, target, prec));
+  return make_shared<Act_CtrlTask>(this, map, PD, target, prec);
 }
 
 Act_CtrlTask::Ptr Roopi::newCtrlTask(const char* specs){
-  return Act_CtrlTask::Ptr(new Act_CtrlTask(this, GRAPH(specs)));
+  return make_shared<Act_CtrlTask>(this, GRAPH(specs));
 }
 
-bool Roopi::wait(const ActL& acts, double timeout){
-#if 0
-  double startTime = mlr::realTime();
-  for(;;){
-    bool allConv = true;
-    for(Act *act : acts) if(act->getStatus()<=0){ allConv=false; break; }
-    if(allConv) return true;
 
-    if(timeout>0 && mlr::realTime() - startTime > timeout) {
-      cout << "not converged, timeout reached" << endl;
-      return false;
-    }
-
-    mlr::wait(0.1);
-  }
-  return false;
-#else
-  double startTime = mlr::realTime();
-  ConditionVariable waiter;
-  for(Act* act : acts) waiter.listenTo(*act);
-  for(;;){
-    bool allConv = true;
-    for(Act* act : acts) if(act->getStatus()<=0) allConv=false;
-    if(allConv) return true;
-
-    waiter.statusLock();
-    // The typical pattern (also in Thread): CondVar status==0 -> idle; CondVar status>0 -> there is work to do (and 'messengers' lists who set it to 1)
-    if(waiter.status==0){ //no new signals
-      if(timeout>0.){
-        if(mlr::realTime()-startTime > timeout){ waiter.mutex.unlock(); return false; }
-        if(!waiter.waitForSignal(timeout, true)){
-          LOG(0) <<"timeout reached";
-          waiter.statusUnlock(); return false;
-        }
-      }else{
-        waiter.waitForSignal(true);
-      }
-    }
-    waiter.status=0;
-    waiter.statusUnlock();
-
-  }
-  return true;
-#endif
-}
-
-Act_Script::Ptr Roopi::runScript(const std::function<int ()>& script){
-  return Act_Script::Ptr(new Act_Script(this, script));
-}
-
-Act_AtEvent Roopi::atEvent(const ConditionVariableL& signalers, const EventBoolean& event, const std::function<int ()>& script){
-  shared_ptr<Act_Event> E(new Act_Event(this, signalers, event));
-  return Act_AtEvent(this, E, script);
-}
-
-Act_AtEvent Roopi::atEvent(shared_ptr<Act_Event>& event, const std::function<int ()>& script){
-  return Act_AtEvent(this, event, script);
-}
-
-RevisionedRWLock* Roopi::variableStatus(const char* var_name){
-  Node *n = registry().findNode({"AccessData", var_name});
-  if(n){
-    RevisionedRWLock *v = n->getValue<RevisionedRWLock>();
-    if(v) return v;
-  }
-  LOG(-1) <<"Variable '" <<var_name <<"' does not exist!";
-  return NULL;
-}
 
 bool Roopi::useRos(){
   return s->useRos;
@@ -313,9 +362,9 @@ Act_Th<struct RosCom_Spinner> Roopi::RosCom(){
   return Act_Th<RosCom_Spinner>(this, new RosCom_Spinner());
 }
 
-Act_Thread::Ptr Roopi::CameraView(bool view, const char* modelWorld_name){
-  if(!view) return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2, modelWorld_name)}));
-  return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2, modelWorld_name), new ImageViewer("kinect_rgb")}));
+Act_Thread::Ptr Roopi::CameraView(const char* modelWorld_name){
+  return make_shared<Act_Thread>(this, new ComputeCameraView(.2, modelWorld_name));
+//  return Act_Thread::Ptr(new Act_Thread(this, {new ComputeCameraView(.2, modelWorld_name), new ImageViewer("kinect_rgb")}));
 }
 
 Act_PclPipeline Roopi::PclPipeline(bool view){
@@ -341,12 +390,12 @@ Act_PerceptionFilter Roopi::PerceptionFilter(bool view){
 }
 
 Act_Thread::Ptr Roopi::PhysX(){
-  return Act_Thread::Ptr(new Act_Thread(this, {newPhysXThread()}));
+  return make_shared<Act_Thread>(this, newPhysXThread());
 //  return Act_Th2<PhysXThread>(this, newPhysXThread());
 }
 
 Act_Thread::Ptr Roopi::GamepadControl(){
-  return Act_Thread::Ptr(new Act_Thread(this, new GamepadControlThread()));
+  return make_shared<Act_Thread>(this, new GamepadControlThread());
 }
 
 
@@ -357,17 +406,11 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
     sh = new mlr::Shape(K, NoBody);
     sh->name = name;
     sh->type = mlr::ST_marker;
-    sh->mesh.C = {.8,0,0}; //color[0]=.8; sh->color[1]=sh->color[2]=.0; sh->color[3]=1.;
+    sh->mesh.C = {.8,0,0};
     sh->size[0]=.1;
     sh->X.pos = sh->rel.pos = pos;
   }
-  resyncView();
   return sh;
-}
-
-void Roopi::resyncView(){
-  if(s->_ctrlView)
-    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics();
 }
 
 void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placing){
@@ -387,7 +430,6 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placi
     K().getJointState(); //enforces that the q & qdot are recalculated!
 //    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics(K);
   }
-  resyncView();
 }
 
 

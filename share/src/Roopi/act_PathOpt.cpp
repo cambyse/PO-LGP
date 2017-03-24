@@ -6,14 +6,14 @@
 #include <Kin/kinViewer.h>
 
 struct sAct_PathOpt : Thread{
-  Access_typed<arr> x;
+  Access<arr> x;
   KOMO *komo;
-  ConditionVariable *status;
+  Signaler *status;
   OrsPathViewer *viewer=NULL;
 
   Conv_KOMO_ConstrainedProblem *CP=NULL;
   OptConstrained *opt = NULL;
-  sAct_PathOpt(KOMO *komo, ConditionVariable *status)
+  sAct_PathOpt(KOMO *komo, Signaler *status)
     : Thread("Act_PathOpt", 0.), x(this, "PathOpt_x"), komo(komo), status(status){}
   ~sAct_PathOpt(){ threadClose(); }
   virtual void open();

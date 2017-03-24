@@ -215,7 +215,7 @@ bool Roopi::wait(std::initializer_list<Act*> acts, double timeout){
   return false;
 #else
   double startTime = mlr::realTime();
-  ConditionVariable waiter;
+  Signaler waiter;
   for(Act *act : acts) act->status.listeners.append(waiter);
   for(bool go=true;go;){
     if(timeout>0){

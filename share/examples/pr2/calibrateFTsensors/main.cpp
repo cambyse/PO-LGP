@@ -31,7 +31,7 @@
 
 //  threadOpenModules(true);
 
-//  moduleShutdown().waitForStatusGreaterThan(0);
+//  moduleShutdown()->waitForStatusGreaterThan(0);
 
 //  threadCloseModules();
 //  cout <<"bye bye" <<endl;
@@ -41,7 +41,7 @@
 // =================================================================================================
 
 struct RecordFTs : Thread {
-  Access_typed<arr> wrenchL;
+  Access<arr> wrenchL;
   ofstream fil;
 
   RecordFTs() : Thread("RecordeFTs"), wrenchL(this, "wrenchL", true){
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 //  mlr::wait(1.);
 
   threadCloseModules();
-  registry().clear();
+  registry()->clear();
 
   cout <<"bye bye" <<endl;
   return 0;

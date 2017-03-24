@@ -222,7 +222,7 @@ void SurfaceVisualizationModule::step() {
       double uncertaintyMeasure = surfaceModelObject.get()->calculateVarianceMeasure();
 
       if(uncertaintyMeasure < 0.05) {
-        Access_typed<uint> maxIt(NULL,"maxIt");
+        Access<uint> maxIt(NULL,"maxIt");
         maxIt.set()() = 0;
         cout << "Uncertainty is smaller than 0.1, yehaa!!" << endl;
       }

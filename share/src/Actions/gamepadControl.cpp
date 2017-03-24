@@ -33,7 +33,7 @@ void GamepadControlActivity::step(){
   ctrlTasks.writeAccess();
   g2t->updateTasks(gamepad, modelWorld.get());
   ctrlTasks.deAccess();
-//  if(step_count>10 && gamepad_shutdown) moduleShutdown().incrementValue();
+//  if(step_count>10 && gamepad_shutdown) moduleShutdown()->incrementValue();
 }
 
 //===========================================================================

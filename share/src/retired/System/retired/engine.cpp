@@ -192,7 +192,7 @@ System& NoSystem = *((System*)NULL);
 
 Module* System::addModule(const char *dclName, const char *name, Module::StepMode mode, double beat){
   //find the dcl in the registry
-  Node *modReg = registry().getNode("Decl_Module", dclName);
+  Node *modReg = registry()->getNode("Decl_Module", dclName);
   if(!modReg){
     MLR_MSG("could not find Decl_Module " <<dclName);
     return NULL;
@@ -221,8 +221,8 @@ Module* System::addModule(const char *dclName, const char *name, const StringA& 
   return m;
 }
 
-RevisionedRWLock* System::connect(Access& acc, const char *variable_name){
-  RevisionedRWLock *v = listFindByName(vars, variable_name);
+VariableBase* System::connect(Access& acc, const char *variable_name){
+  VariableBase *v = listFindByName(vars, variable_name);
   if(v){ //variable exists -> link it
     acc.linkToVariable(v);
   }else{ //variable does not exist yet
@@ -241,7 +241,7 @@ void System::connect(){
 
   for(Access *a: accs){
     Module *m=a->module;
-    RevisionedRWLock *v = NULL;
+    VariableBase *v = NULL;
     if(!a->var) v = connect(*a, a->name); //access is not connected yet
     else v = a->var;
 
@@ -277,8 +277,8 @@ Graph System::graph() const{
   Graph g;
   g.newNode<bool>({"SystemModule", name}, {}, NULL, false);
   g.checkConsistency();
-  std::map<RevisionedRWLock*, Node*> vit;
-  for(RevisionedRWLock *v: vars) vit[v] = g.newNode({"Variable", v->name}, {}, v, false);
+  std::map<VariableBase*, Node*> vit;
+  for(VariableBase *v: vars) vit[v] = g.newNode({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
   for(Module *m: *this){
     Node *mit = g.newNode({"Module", m->name}, {}, &m, false);
@@ -421,9 +421,9 @@ struct LoggerVariableData {
 
   //-- or replay may block access to ensure right revision
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
-  ConditionVariable readCondVar;
+  Signaler readCondVar;
   /* here everyone sleeps who wants to have write access */
-  ConditionVariable writeCondVar;
+  Signaler writeCondVar;
 
   LoggerVariableData(): controllerBlocksRead(false), controllerBlocksWrite(false){}
 };
@@ -445,7 +445,7 @@ EventController::~EventController(){
 }
 
 void EventController::breakpointSleep(){ //the caller goes to sleep
-  ConditionVariable *c = new ConditionVariable;
+  Signaler *c = new Signaler;
   breakpointMutex.lock();
   breakpointQueue.append(c);
   breakpointMutex.unlock();
@@ -454,14 +454,14 @@ void EventController::breakpointSleep(){ //the caller goes to sleep
 
 void EventController::breakpointNext(){ //first in the queue is being woke up
   breakpointMutex.lock();
-  ConditionVariable *c = breakpointQueue.popFirst();
+  Signaler *c = breakpointQueue.popFirst();
   breakpointMutex.unlock();
   if(!c) return;
   c->broadcast();
   delete c;
 }
 
-void EventController::queryReadAccess(RevisionedRWLock *v, const Module *p){
+void EventController::queryReadAccess(VariableBase *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getStatus(), p?p->step_count:0, 0.);
@@ -474,7 +474,7 @@ void EventController::queryReadAccess(RevisionedRWLock *v, const Module *p){
   blockMode.unlock();
 }
 
-void EventController::queryWriteAccess(RevisionedRWLock *v, const Module *p){
+void EventController::queryWriteAccess(VariableBase *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
     EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getStatus(), p?p->step_count:0, 0.);
@@ -487,7 +487,7 @@ void EventController::queryWriteAccess(RevisionedRWLock *v, const Module *p){
   blockMode.unlock();
 }
 
-void EventController::logReadAccess(const RevisionedRWLock *v, const Module *p) {
+void EventController::logReadAccess(const VariableBase *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
@@ -496,7 +496,7 @@ void EventController::logReadAccess(const RevisionedRWLock *v, const Module *p) 
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logWriteAccess(const RevisionedRWLock *v, const Module *p) {
+void EventController::logWriteAccess(const VariableBase *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
   EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
@@ -505,13 +505,13 @@ void EventController::logWriteAccess(const RevisionedRWLock *v, const Module *p)
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logReadDeAccess(const RevisionedRWLock *v, const Module *p) {
+void EventController::logReadDeAccess(const VariableBase *v, const Module *p) {
   //do something if in replay mode
   if(getVariableData(v)->controllerBlocksRead)
     breakpointSleep();
 }
 
-void EventController::logWriteDeAccess(const RevisionedRWLock *v, const Module *p) {
+void EventController::logWriteDeAccess(const VariableBase *v, const Module *p) {
   //do something if in replay mode
   //do something if enableDataLog
   if(getVariableData(v)->controllerBlocksWrite)
@@ -585,7 +585,7 @@ void EventController::dumpEventList(){
   writeEventList(*eventsFile, false, 0, true);
 }
 
-LoggerVariableData* EventController::getVariableData(const RevisionedRWLock* v){
+LoggerVariableData* EventController::getVariableData(const VariableBase* v){
 //  if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
 //  return v->s->loggerData;
   NIY;

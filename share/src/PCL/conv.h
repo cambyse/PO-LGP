@@ -16,9 +16,9 @@ void conv_PclCloud_ArrCloud(arr& pts, byteA& rgb, const Pcl& cloud);
 inline arr PclPoints(const Pcl& cloud){ arr pts; conv_PclCloud_ArrCloud(pts, NoByteA, cloud); return pts; }
 
 struct Conv_arr_pcl : Thread{
-  Access_typed<Pcl> cloud;
-  Access_typed<arr> pts;
-  Access_typed<byteA> rgb;
+  Access<Pcl> cloud;
+  Access<arr> pts;
+  Access<byteA> rgb;
   byteA copyRgb;
   arr copyPts;
   bool kinectColorBGRSwap;

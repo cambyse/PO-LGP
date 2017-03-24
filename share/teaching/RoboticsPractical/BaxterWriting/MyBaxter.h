@@ -34,7 +34,7 @@
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const mlr::KinematicWorld& baxterModel, const char* prefix);
 
 class MyBaxter {
-    Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
+    Access<sensor_msgs::JointState> jointState;//(NULL, "jointState");
     ACCESSname(PerceptL, percepts_filtered)
 
     TaskControlThread tcmBax;
@@ -65,7 +65,7 @@ class MyBaxter {
 
 public:
     float sec = 200.;
-    Access_typed<arr> ctrl_q_ref;
+    Access<arr> ctrl_q_ref;
 
     MyBaxter():
         jointState(NULL, "jointState"),

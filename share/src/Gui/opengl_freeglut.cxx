@@ -38,19 +38,19 @@ void initGlEngine(){}
 //
 
 struct FreeglutInitializer{
-  Mutex lock;
+//  Mutex lock;
   mlr::Array<OpenGL*> glwins;
   FreeglutInitializer(){
-    lock.lock();
+//    lock.lock();
     int argc=1;
     char *argv[1]={(char*)"x"};
     glutInit(&argc, argv);
-    lock.unlock();
+//    lock.unlock();
   }
   ~FreeglutInitializer(){
-    lock.lock();
+//    lock.lock();
     glutExit();
-    lock.unlock();
+//    lock.unlock();
   }
 };
 
@@ -125,24 +125,24 @@ struct sOpenGL {
   
   //-- callbacks
   static void _Void() { }
-  static void _Draw() { accessFreeglut();  OpenGL *gl=singleFreeglut().glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); deaccessFreeglut(); gl->isUpdating.setStatus(0); }
-  static void _Key(unsigned char key, int x, int y) {        accessFreeglut(); singleFreeglut().glwins(glutGetWindow())->Key(key,x,y); deaccessFreeglut(); }
-  static void _Mouse(int button, int updown, int x, int y) { accessFreeglut(); singleFreeglut().glwins(glutGetWindow())->Mouse(button,updown,x,y); deaccessFreeglut(); }
-  static void _Motion(int x, int y) {                        accessFreeglut(); singleFreeglut().glwins(glutGetWindow())->Motion(x,y); deaccessFreeglut(); }
-  static void _PassiveMotion(int x, int y) {                 accessFreeglut(); singleFreeglut().glwins(glutGetWindow())->Motion(x,y); deaccessFreeglut(); }
-  static void _Reshape(int w,int h) {                        accessFreeglut(); singleFreeglut().glwins(glutGetWindow())->Reshape(w,h); deaccessFreeglut(); }
-  static void _MouseWheel(int wheel, int dir, int x, int y){ accessFreeglut(); singleFreeglut().glwins(glutGetWindow())->MouseWheel(wheel,dir,x,y); deaccessFreeglut(); }
+  static void _Draw() { auto fg=singleFreeglut();  OpenGL *gl=fg->glwins(glutGetWindow()); gl->Draw(gl->width,gl->height); glutSwapBuffers(); gl->isUpdating.setStatus(0); }
+  static void _Key(unsigned char key, int x, int y) {        singleFreeglut()->glwins(glutGetWindow())->Key(key,x,y); }
+  static void _Mouse(int button, int updown, int x, int y) { singleFreeglut()->glwins(glutGetWindow())->Mouse(button,updown,x,y); }
+  static void _Motion(int x, int y) {                        singleFreeglut()->glwins(glutGetWindow())->Motion(x,y); }
+  static void _PassiveMotion(int x, int y) {                 singleFreeglut()->glwins(glutGetWindow())->Motion(x,y); }
+  static void _Reshape(int w,int h) {                        singleFreeglut()->glwins(glutGetWindow())->Reshape(w,h); }
+  static void _MouseWheel(int wheel, int dir, int x, int y){ singleFreeglut()->glwins(glutGetWindow())->MouseWheel(wheel,dir,x,y); }
   
-  static void accessFreeglut() {
-    singleGLAccess().lock();
-    singleFreeglut().lock.lock();
-  }
-  static void deaccessFreeglut() {
-    singleFreeglut().lock.unlock();
-    singleGLAccess().unlock();
-  }
+//  static void accessFreeglut() {
+//    singleGLAccess()->lock();
+//    singleFreeglut()->lock.lock();
+//  }
+//  static void deaccessFreeglut() {
+//    singleFreeglut()->lock.unlock();
+//    singleGLAccess()->unlock();
+//  }
   void accessWindow() {  //same as above, but also sets gl cocntext (glXMakeCurrent)
-    accessFreeglut();
+//    accessFreeglut();
     CHECK(windowID>=0,"window is not created");
     glutSetWindow(windowID);
   }
@@ -150,7 +150,7 @@ struct sOpenGL {
 #ifndef MLR_MSVC
     glXMakeCurrent(fgDisplay.Display, None, NULL);
 #endif
-    deaccessFreeglut();
+//    deaccessFreeglut();
   }
 };
 
@@ -162,23 +162,24 @@ struct sOpenGL {
 
 void OpenGL::openWindow(){
   if(s->windowID==-1){
-    singleFreeglut().lock.lock();
-    glutInitWindowSize(width, height);
-//  glutInitWindowPosition(posx,posy);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    {
+      auto mut = singleFreeglut();
+      glutInitWindowSize(width, height);
+      //  glutInitWindowPosition(posx,posy);
+      glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
-    s->windowID = glutCreateWindow(title);
-    if(singleFreeglut().glwins.N<(uint)s->windowID+1) singleFreeglut().glwins.resizeCopy(s->windowID+1);
-    singleFreeglut().glwins(s->windowID) = this;
+      s->windowID = glutCreateWindow(title);
+      if(singleFreeglut()->glwins.N<(uint)s->windowID+1) singleFreeglut()->glwins.resizeCopy(s->windowID+1);
+      singleFreeglut()->glwins(s->windowID) = this;
 
-    glutDisplayFunc(s->_Draw);
-    glutKeyboardFunc(s->_Key);
-    glutMouseFunc(s->_Mouse) ;
-    glutMotionFunc(s->_Motion) ;
-    glutPassiveMotionFunc(s->_PassiveMotion) ;
-    glutReshapeFunc(s->_Reshape);
-    glutMouseWheelFunc(s->_MouseWheel) ;
-    singleFreeglut().lock.unlock();
+      glutDisplayFunc(s->_Draw);
+      glutKeyboardFunc(s->_Key);
+      glutMouseFunc(s->_Mouse) ;
+      glutMotionFunc(s->_Motion) ;
+      glutPassiveMotionFunc(s->_PassiveMotion) ;
+      glutReshapeFunc(s->_Reshape);
+      glutMouseWheelFunc(s->_MouseWheel) ;
+    }
 
     processEvents();
   }
@@ -186,22 +187,25 @@ void OpenGL::openWindow(){
 
 void OpenGL::closeWindow(){
   if(s->windowID!=-1){
-    singleFreeglut().lock.lock();
+    auto fg=singleFreeglut();
     glutDestroyWindow(s->windowID);
-    singleFreeglut().glwins(s->windowID)=NULL;
-    singleFreeglut().lock.unlock();
+    fg->glwins(s->windowID)=NULL;
+//    singleFreeglut()->lock.unlock();
   }
 }
 
-void OpenGL::postRedrawEvent(bool fromWithinCallback) { s->accessWindow(); glutPostRedisplay(); s->deaccessWindow(); }
+void OpenGL::postRedrawEvent(bool fromWithinCallback) { auto fg=singleFreeglut(); s->accessWindow(); glutPostRedisplay(); s->deaccessWindow(); }
 
-void OpenGL::processEvents() { s->accessFreeglut(); glutMainLoopEvent(); s->deaccessFreeglut(); }
+void OpenGL::processEvents() { auto fg=singleFreeglut(); glutMainLoopEvent(); }
 void OpenGL::sleepForEvents() { ::sleepForEvents(); }
 
 void OpenGL::resize(int w,int h) {
   openWindow();
-  s->accessWindow();
-  glutReshapeWindow(w,h);
-  s->deaccessWindow();
+  {
+    auto fg=singleFreeglut();
+    s->accessWindow();
+    glutReshapeWindow(w,h);
+    s->deaccessWindow();
+  }
   processEvents();
 }

@@ -2,8 +2,8 @@
 
 
 struct PairSorter:Thread{
-  Access_typed<int> a;
-  Access_typed<int> b;
+  Access<int> a;
+  Access<int> b;
   PairSorter(const char *a_name, const char* b_name)
     : Thread(STRING("S_"<<a_name<<"_"<<b_name)),
       a(this, a_name),
@@ -28,13 +28,13 @@ void TEST(ModuleSorter){
 
   cout <<registry() <<endl <<"----------------------------" <<endl;
 #if 0
-  for(uint i=0;i<N;i++) S.addAccessData<int>(STRING("int"<<i));
+  for(uint i=0;i<N;i++) S.addVariableData<int>(STRING("int"<<i));
   for(uint i=1;i<N;i++) S.addModule("PairSorter", STRING("S"<<i-1), {i-1, i});
 #else
   for(uint i=1;i<N;i++) new PairSorter( STRING("int"<<i-1), STRING("int"<<i) );
 #endif
   cout <<registry() <<endl <<"----------------------------" <<endl;
-  auto vars = registry().getValuesOfType<AccessData<int> >();
+  auto vars = registry()->getValuesOfType<VariableData<int> >();
 
   threadOpenModules(true);
 
@@ -44,7 +44,7 @@ void TEST(ModuleSorter){
   for(uint i=0;i<N;i++) vars(i)->set() = rnd(100);
 
   for(uint k=0;k<20;k++){
-    if(moduleShutdown().getStatus()) break;
+    if(moduleShutdown()->getStatus()) break;
     for(uint i=0;i<N;i++) cout <<vars(i)->get() <<' ';  cout <<endl;
     stepModules();
     mlr::wait(.1);

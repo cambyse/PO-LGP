@@ -815,7 +815,7 @@ void testDemonstration() {
       write(LIST<arr>(~modelWorld->getJointState()), STRING("demonstrationData/demonstration.dat"));
       break;
     }
-    if(moduleShutdown().getStatus()) break;
+    if(moduleShutdown()->getStatus()) break;
   }
 
   //mlr::wait(20.0);
@@ -1025,7 +1025,7 @@ void controllerExample(mlr::String mode) {
         posLaw->setRef(posLaw->getPhi());
         posLaw->setGains(Kp,Kd);
       }
-      if(moduleShutdown().getStatus()) break;
+      if(moduleShutdown()->getStatus()) break;
     }
   }
 
@@ -1067,7 +1067,7 @@ void controllerExample(mlr::String mode) {
         orientationLaw->setRef(orientationLaw->getPhi());
         orientationLaw->setGains(Kp, Kd);
       }
-      if(moduleShutdown().getStatus()) break;
+      if(moduleShutdown()->getStatus()) break;
     }
   }
 
@@ -1128,7 +1128,7 @@ void controllerExample(mlr::String mode) {
         Kd(2,2) = 5.0;
         posLaw->setGains(Kp,Kd);
       }
-      if(moduleShutdown().getStatus()) break;
+      if(moduleShutdown()->getStatus()) break;
     }
   }
 

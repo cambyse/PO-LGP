@@ -12,12 +12,12 @@
 #include "surfaceModelModule.h"
 
 struct SurfaceGeodesicPathModule : Thread {
-  Access_typed<SurfaceModelObject> surfaceModelObject;
+  Access<SurfaceModelObject> surfaceModelObject;
 
-  Access_typed<arr> pathStart;
-  Access_typed<arr> pathTarget;
-  Access_typed<arr> shortestPath;
-  Access_typed<arr> realTargetOnSurface;
+  Access<arr> pathStart;
+  Access<arr> pathTarget;
+  Access<arr> shortestPath;
+  Access<arr> realTargetOnSurface;
 
   SurfaceGeodesicPathModule();
 
@@ -32,9 +32,9 @@ struct SurfaceGeodesicPathModule : Thread {
 };
 
 struct SurfaceSimilarityModule : Thread {
-  Access_typed<SurfaceModelObject> surfaceModelObject;
-  Access_typed<double> surfaceSimilarityMeasure;
-  Access_typed<mlr::Mesh> trueSurfaceMesh;
+  Access<SurfaceModelObject> surfaceModelObject;
+  Access<double> surfaceSimilarityMeasure;
+  Access<mlr::Mesh> trueSurfaceMesh;
 
   SurfaceSimilarityModule();
 
@@ -45,10 +45,10 @@ struct SurfaceSimilarityModule : Thread {
 
 struct SurfaceVisualizationModule : Thread {
   Roopi& roopi;
-  Access_typed<GaussianProcessOptimized> gpSurface;
-  Access_typed<mlr::Mesh> trueSurfaceMesh;
-  Access_typed<SurfaceModelObject> surfaceModelObject;
-  Access_typed<double> surfaceSimilarityMeasure;
+  Access<GaussianProcessOptimized> gpSurface;
+  Access<mlr::Mesh> trueSurfaceMesh;
+  Access<SurfaceModelObject> surfaceModelObject;
+  Access<double> surfaceSimilarityMeasure;
 
   SurfaceSimilarityModule surfaceSimilarityModule;
 
@@ -68,13 +68,13 @@ struct SurfaceVisualizationModule : Thread {
 struct PathAndGradientVisualizationModule : Thread {
   Roopi& roopi;
 
-  Access_typed<GaussianProcessOptimized> gpSurface;
+  Access<GaussianProcessOptimized> gpSurface;
   GaussianProcessOptimized gpCopy;
 
-  Access_typed<SurfaceModelObject> surfaceModelObject;
-  Access_typed<arr> gradReference;
+  Access<SurfaceModelObject> surfaceModelObject;
+  Access<arr> gradReference;
 
-  Access_typed<arr> shortestPath;
+  Access<arr> shortestPath;
 
   OrsPoseViewer* viewer;
 

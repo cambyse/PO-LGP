@@ -15,12 +15,12 @@ int main(int argc, char** argv){
 
   rosCheckInit("gamepadControl");
 
-  Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
-  Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
-  Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
+  Access<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
+  Access<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
+  Access<arr>     pr2_odom(NULL, "pr2_odom");
 
-  Access_typed<arr> q_ref(NULL, "q_ref");
-  Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+  Access<arr> q_ref(NULL, "q_ref");
+  Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
   TaskControlThread tcm;
   GamepadInterface gamepad;
@@ -44,12 +44,12 @@ int main(int argc, char** argv){
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForStatusGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 #endif
 
-  //NodeL subs = registry().getNodesOfType<SubscriberType*>();
+  //NodeL subs = registry()->getNodesOfType<SubscriberType*>();
   //for(Node *n:subs){ delete n->get<SubscriberType*>(); delete n; }
   cout <<"bye bye" <<endl;
   return 0;

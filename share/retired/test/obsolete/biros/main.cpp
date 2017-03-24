@@ -69,9 +69,9 @@ void TEST(Loop){
 // test listening to variables
 //
 
-struct Int:AccessData{
+struct Int:VariableData{
    int x ;
-  Int():AccessData("Integer"), x(0){ reg_x(); }
+  Int():VariableData("Integer"), x(0){ reg_x(); }
 };
 
 struct Adder:public Process{
@@ -107,8 +107,8 @@ void TEST(Listening){
   Adder a3("adder3", &i2, &i3);
   
   a1.threadLoopWithBeat(.5);
-  a2.listenTo(LIST<AccessData>(i1));
-  a3.listenTo(LIST<AccessData>(i2));
+  a2.listenTo(LIST<VariableData>(i1));
+  a3.listenTo(LIST<VariableData>(i2));
   
   // run for 20 sec and close everything
   mlr::wait(20.);
@@ -127,12 +127,12 @@ void TEST(Listening){
 // test excessive access to Variables
 //
 
-struct ExampleVar:public AccessData{
+struct ExampleVar:public VariableData{
   //BIR_VARIABLE;
   int x;
   //BIR_bool mybool;
   
-  ExampleVar():AccessData("IntVar"){ x=rnd(1000); reg_x(); }
+  ExampleVar():VariableData("IntVar"){ x=rnd(1000); reg_x(); }
 };
 
 //int IntVar::bir_typeId=-1;

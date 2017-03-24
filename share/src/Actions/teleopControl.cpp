@@ -32,7 +32,7 @@ void TeleopControlActivity::step(){
   }
 //  arr Teleop = TeleopState.get();
 //  t2t->updateTasks(calibrated_pose_rh.get(), calibrated_pose_lh.get(), calibrated_gripper_lh.get(), calibrated_gripper_rh.get(), drive.get());
-//  if(step_count>10 && Teleop_shutdown) moduleShutdown().incrementValue();
+//  if(step_count>10 && Teleop_shutdown) moduleShutdown()->incrementValue();
 
   if(!initmapper.get()){
     arr gpstate = gamepadState.get();

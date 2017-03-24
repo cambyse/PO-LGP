@@ -21,57 +21,77 @@
 #include "act_Perception.h"
 #include "script_PickAndPlace.h"
 
-template<class T> Act* operator-(std::shared_ptr<T>& p){ return dynamic_cast<Act*>(p.get()); }
-template<class T> ActL operator+(std::shared_ptr<T>& p){ return ARRAY<Act*>(dynamic_cast<Act*>(p.get())); }
-template<class T> ActL operator+(std::shared_ptr<T>& a, std::shared_ptr<T>& b){ return ARRAY<Act*>(dynamic_cast<Act*>(a.get()), dynamic_cast<Act*>(a.get())); }
-template<class T> ActL& operator+(ActL& A, std::shared_ptr<T>& p){ A.append(dynamic_cast<Act*>(p.get())); return A; }
+template<class T> Signaler* operator-(std::shared_ptr<T>& p){ return dynamic_cast<Signaler*>(p.get()); }
+template<class T> SignalerL operator+(std::shared_ptr<T>& p){ return ARRAY<Signaler*>(dynamic_cast<Signaler*>(p.get())); }
+template<class T, class S> SignalerL operator+(std::shared_ptr<T>& a, std::shared_ptr<S>& b){ return ARRAY<Signaler*>(dynamic_cast<Signaler*>(a.get()), dynamic_cast<Signaler*>(b.get())); }
+template<class T> SignalerL& operator+(SignalerL& A, std::shared_ptr<T>& p){ A.append(dynamic_cast<Signaler*>(p.get())); return A; }
 
 //==============================================================================
 
 struct Roopi {
   struct Roopi_private* s;
 
-  Access_typed<ActL> acts;
+  Access<ActL> acts;
 
   Roopi(bool autoStartup=false, bool controlView=true);
   ~Roopi();
 
-  //-- initialization (start... means persistent activities)
+  //==============================================================================
+
+  //-- CONTROL FLOW: This is robotics independent; generic methods to schedule, trigger scripts, etc
+
+  void report();
+
+  /** wait until the status of each act in the signaler set is non-zero (zero usually means 'still running')
+      after this, you can query the status and make decisions based on that */
+  bool wait(const SignalerL& acts, double timeout=-1.);
+  bool wait(); ///< keyboard/click input
+  void wait(double seconds); ///< given real time (devided by hyperSpeed)
+  bool waitEvent(const Act::Ptr& event, double timeout=-1.); ///< wait for event
+
+  /** An event function takes a list of signalers as input and, depending on their status (or variable value),
+   * returns an int. The Act_Event changes its status to this int */
+  Act::Ptr event(SignalerL sigs, const EventFunction& eventFct);
+
+  /** this takes an int-valued function (use a lambda expression to capture scope) and
+      runs it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
+  Act::Ptr run(const std::function<int()>& script);
+
+  Act::Ptr loop(double beatIntervalSec, const std::function<int()>& script);
+
+  /// run a script once when the event becomes true, that is, the script is 'uploaded' and triggered later
+  Act::Ptr at(const Act_Event::Ptr& event, const std::function<int ()>& script);
+
+  /// run a script whenever the event becomes true. This is like a permanent transition rule in RAP
+  Act::Ptr whenever(const Act_Event::Ptr& event, const std::function<int()>& script);
+
+  //==============================================================================
+
+  //-- INITIALIZATION
+
   void setKinematics(const char* filename, bool controlView=true);          ///< set kinematics by hand (done in 'autoStartup')
   void setKinematics(const mlr::KinematicWorld& K, bool controlView=true);  ///< set kinematics by hand (done in 'autoStartup')
   shared_ptr<Act_TaskController> startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
-  shared_ptr<Act_Tweets> startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
+  Act::Ptr startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
 
-  //-- control flow
-  /** wait until the status of each act in the set if non-zero (zero usually means 'still running')
-      after this, you can query the status and make decisions based on that */
-  bool wait(const ActL& acts, double timeout=-1.);
-  bool wait(std::initializer_list<Act*> acts, double timeout=-1.){ return wait(ActL(acts), timeout); }
+  //==============================================================================
 
-  /** this takes an int-valued function (use a lambda expression to capture scope) and
-      run it in a thread as activity - when done, the activity broadcasts its status equal to the int-return-value */
-  Act_Script::Ptr runScript(const std::function<int()>& script);
+  //-- INFORMATION: access to variables; standard config things
 
-  Act_AtEvent atEvent(const ConditionVariableL& signalers, const EventBoolean& event, const std::function<int ()>& script);
-  Act_AtEvent atEvent(shared_ptr<Act_Event>& event, const std::function<int ()>& script);
-
-
-  //TODO: runScriptOnEvent(const std::function<int()>& script, Event, bool whenever=false);
-  //TODO: define the notion of an Event as a set of act and conditions of their status -> wait(Event)
-
-  //-- get some information
   bool useRos();
   const mlr::String& getRobot();                     ///< returns "pr2", "baxter", or "none"
   arr get_q0();                                      ///< return the 'homing pose' of the robot
   Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
-  Act_ComPR2& getComPR2();
+  Act_ComPR2& getComPR2();                           ///< to call 'stopSendingMotion'
+
 
   //-- direct access to variables and threads
-  RevisionedRWLock* variableStatus(const char* var_name);
-  template<class T> AccessData<T>& variable(const char* var_name){
-    return *registry().get<shared_ptr<AccessData<T>>>({"AccessData", var_name}); }
+  template<class T> Access<T> variable(const char* var_name){    ///< get a handle to a typed variable: you can R/W-access the data or read/wait for the revision
+    return Access<T>(NULL, var_name, false); }
+  VariableBase::Ptr variableStatus(const char* var_name);
   Thread* threadStatus(const char* thread_name);
-  template<class T> T* thread(const char* thread_name);
+//  template<class T> VariableData<T>& variable(const char* var_name){ return getVariable<T>(var_name);}
+  template<class T> T* thread(const char* thread_name){ return getThread<T>(thread_name); }
   void reportCycleTimes();
 
   //-- kinematic editing (to be done more..)
@@ -108,7 +128,7 @@ struct Roopi {
   Act_Th<struct RosCom_Spinner> RosCom(); ///< thread for the ROS spinner
   Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread::Ptr GamepadControl();  ///< activate gamepad to set controls
-  Act_Thread::Ptr CameraView(bool view=true, const char* modelWorld_name="modelWorld");      ///< compute and display the camera view
+  Act_Thread::Ptr CameraView(const char* modelWorld_name="modelWorld");      ///< compute and display the camera view
 //  Act_Thread newKinect2Pcl(bool view=true);
   Act_PclPipeline PclPipeline(bool view=false);
   Act_PerceptionFilter PerceptionFilter(bool view=false);
@@ -119,23 +139,23 @@ struct Roopi {
   // MACROS, which call scripts
   //
 
-  Act_Script::Ptr graspBox(const char* objName, LeftOrRight lr){
-    return runScript( [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
+  Act::Ptr graspBox(const char* objName, LeftOrRight lr){
+    return run( [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
   }
-  Act_Script::Ptr place(const char* objName, const char* ontoName){
-    return runScript( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
+  Act::Ptr place(const char* objName, const char* ontoName){
+    return run( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
-  Act_Script::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
-    return runScript( [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
+  Act::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
+    return run( [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
   }
-  Act_Script::Ptr setGripper(LeftOrRight lr, double gripSize){
-    return runScript( [this, lr, gripSize](){ return Script_setGripper(*this, lr, gripSize); } );
+  Act::Ptr setGripper(LeftOrRight lr, double gripSize){
+    return run( [this, lr, gripSize](){ return Script_setGripper(*this, lr, gripSize); } );
   }
-  Act_Script::Ptr workspaceReady(const char* objName){
-    return runScript( [this, objName](){ return Script_workspaceReady(*this, objName); } );
+  Act::Ptr workspaceReady(const char* objName){
+    return run( [this, objName](){ return Script_workspaceReady(*this, objName); } );
   }
-  Act_Script::Ptr armsNeutral(){
-    return runScript( [this](){ return Script_armsNeutral(*this); } );
+  Act::Ptr armsNeutral(){
+    return run( [this](){ return Script_armsNeutral(*this); } );
   }
 
 };

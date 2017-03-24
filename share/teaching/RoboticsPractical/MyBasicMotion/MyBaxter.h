@@ -27,7 +27,7 @@
 
 
 class MyBaxter {
-    Access_typed<sensor_msgs::JointState> jointState;//(NULL, "jointState");
+    Access<sensor_msgs::JointState> jointState;//(NULL, "jointState");
     ACCESSname(PerceptL, percepts_filtered)
 
     TaskControlThread tcmBax;
@@ -55,7 +55,7 @@ class MyBaxter {
     mlr::KinematicWorld baxterModel;// !!!!
 
 public:
-    Access_typed<arr> ctrl_q_ref;
+    Access<arr> ctrl_q_ref;
 
     MyBaxter():
         jointState(NULL, "jointState"),

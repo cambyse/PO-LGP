@@ -8,7 +8,7 @@ struct Roopi;
 struct Act;
 typedef mlr::Array<Act*> ActL;
 
-struct Act : ConditionVariable{
+struct Act : Signaler{
   Roopi& roopi;
   double startTime;
 
@@ -16,5 +16,8 @@ struct Act : ConditionVariable{
   virtual ~Act();
 
   double time();
+  virtual void write(ostream& os);
+
+  typedef std::shared_ptr<Act> Ptr;
 };
 
