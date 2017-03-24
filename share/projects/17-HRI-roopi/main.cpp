@@ -40,7 +40,7 @@ void TEST(PerceptionOnly) {
   auto pcl = R.PclPipeline(false);
   auto filter = R.PerceptionFilter(true);
 
-  Access_typed<PerceptL> outputs("percepts_filtered");
+  Access<PerceptL> outputs("percepts_filtered");
   int rev=outputs.getRevision();
   outputs.waitForRevisionGreaterThan(rev+10);
 
@@ -107,7 +107,7 @@ void TEST(PerceptionAndPlace) {
   R.wait({-placeR});
   }
 
-  Access_typed<PerceptL> outputs("percepts_filtered");
+  Access<PerceptL> outputs("percepts_filtered");
   int rev=outputs.getRevision();
   outputs.waitForRevisionGreaterThan(rev+10);
 
@@ -569,8 +569,8 @@ void testHRI() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-//  for(;;) testHRI();
-  testPerceptionOnly();
+  for(;;) testHRI();
+//  testPerceptionOnly();
 //  testPerceptionAndPlace();
 
   return 0;
