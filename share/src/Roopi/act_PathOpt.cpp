@@ -58,7 +58,7 @@ void sAct_PathOpt::step(){
 
     cout <<"KOMO PathOpt done:\n" <<komo->getReport() <<endl;
     if(!viewer){
-      viewer = new OrsPathViewer("PathOpt_x");
+      viewer = new OrsPathViewer("PathOpt_configs");
       viewer->threadLoop();
     }
     viewer->stepMutex.lock();

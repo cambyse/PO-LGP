@@ -1847,64 +1847,140 @@ The matrix $C$ controls compliance.
 \section{Roopi -- Abstractions for scripting concurrent processes;
   Robot Operating Interface}
 
-The conceptual and technical background is given in the "`Relational
-Activity Processes"' paper (ICRA'16). Initially I thought that
-behaviors should/could strictly be represented as relational
-machines.\footnote{By ``relational machine'' I mean a knowledge base
-  that controls a relational activity process, mostly by having
+How to program a robot? Possible answers are SMACH, Urbi, or the new
+FlexBE. A core question though is how eventually you want to
+represent behaviors. As (hierarchical) finite state machines? Control
+flow graphs? Or directly as code in some programming language?
+
+My conceptual background in this respect is given in the "`Relational
+Activity Processes"' paper (ICRA'16), which describes a formal
+representation of concurrent activity processes. I still think this is
+a good representation, especially also for learning.
+
+Initially I thought that behaviors should/could strictly be
+represented as relational machines, strictly following the formal
+description; also when describing the control flow via relational
+rules.\footnote{By ``relational machine'' I mean a knowledge base that
+  controls a relational activity process, mostly by having
   (non-decision) rules.} We then had a test phase in our lab where we
 enforced a strict interface to a relational activity process via
-python, allowing online python scripting to control the
-process. However, as always, I now think that simpler is better. The
-following descripes C++ conventions/data structures on scripting a
+python, allowing online python scripting to control the process.
+
+I see it a bit different now. Here is the new view: We want to be able
+to use the full power of a standard programming language (C++, Python,
+Octave) to code behaviors, rather than on some domain-specific language. By 'full power' I mean the logic part
+(if-then-else), the natural hierarchies and refactoring of code, but
+especially also the direct access to all data to do computations and
+make decisions.
+
+The following descripes C++ conventions/data structures on scripting a
 concurrent process. The behavior script is then directly in C++ (or
-python) rather than on some domain-specific language, enabling to
-all the logic these languages provide. This is a much thinner
-infrastructure than routing everything strictly through relational
-activity process or relational machine abstractions. But it still
-provides the abstractions that enable learning RAPs \emph{on top} of
-this representation; and automate scripting (learning scripts).
+python). The result is a much thinner infrastructure between the
+abstractions (concurrent activities and their control flow) and the
+lower levels (control loops, perception pipelines, etc).
+
+However, the resulting behavior actually still adheres to the RAP
+formalism: it still is a concurrent activity process. Therefore, the
+long term vision is that we can start doing imitation learning from
+such coded behaviors: We can learn the typical statistics of when
+which activity (with which parameters) is triggered. That moves from
+the original programming code to a fully statistical description of
+behavior -- potentially opening ways to optimize the behavior, that
+is, let the system explore control flows and activity parameters
+autonomously, essentially learning to script behavior.
 
 
 \subsection{Scripting Concurrent Processes}
 
 \begin{itemize}
-\item We have a set of activities (\textbf{acts})
-\item Each act has an integer (discrete!) \textbf{status}. (While Access data
-  is often continuous (arrays), with update revisions in high
-  frequencies, the status of an act should correspond to a categorial
-  change (change of state/fact in RAP), perhaps triggering a script to
-  respond to this change.)
-\item Example acts are: control tasks (CtrlTask), controller loops
-  (TaskController), sensor triggers (listening to ROS topics or
-  accesses and translating them to status signals), computational
-  threads (kinect processing, path planning), visualization threads
-  (KinViewer, PathViewer), physical simulation threads (Physx),
-  communication threads (ROS).
-\item Each act may create/destroy other acts (Actor
-  Model in Computer Science)
-\item The core way to react on status signals is via the
-  \textbf{wait}: It pauses the execution of a script until the status
-  of some acts changes. After that the script queries the status and
-  branches (if-then-else) based on that.
-\item An act can be a \textbf{policy}, meaning that it is itself a
-  script that creates/destroys other acts depending on status signals
-  and data. That is: Often we just have a single serial main
-  script. However, we can encapsulate such scripts to become policies
-  and run them in parallel reactively. (This is in analogy to Rules in
-  RAPs.)
+\item At the core are @Signaler@s, which are objects that
+  broadcast (via condition variables) to or call callbacks of
+  activities. There are two types of Signalers in Roopi: Variables
+  (see threading section) and activities. Every signaler has an
+  integer \textbf{status}. In the case of variables, it is the
+  variable's revision. In the case of activities it is some symbol,
+  such as 'true', 'false', 'convered', 'running', etc.
+
+\item An activity can serve as an event: whenever its status becomes
+  'true', something is triggered. E.g., using
+
+@Act::Ptr at(const Act::Ptr& event, const std::function<int ()>& script);@
+
+you can state that, when the event becomes true, a certain piece of code
+(e.g., passed as a lambda expression) should be executed. Or
+
+@Act::Ptr whenever(const Act::Ptr& event, const std::function<int()>& script);@
+
+which says that the script should always be triggered (stepped within
+a thread) when the event becomes true.
+
+Further, within a script (or the main) it is natural to wait for
+events, e.g.\ using
+
+@bool wait(const Act::Ptr& event, double timeout=-1.);@
+
+The 'wait', 'at' and 'whenever' are very similar to URBI and provide
+the basic control flow mechanism to script concurrent activities. All
+scripts are run in their own thread; the 'at' and 'whenever' methods
+of Roopi do not pause the caller. The two methods
+
+@Act::Ptr run(const std::function<int()>& script);@
+
+@Act::Ptr loop(double beatIntervalSec, const std::function<int()>& script);@
+
+allow one script to call other scripts in threads without pausing. The
+return values @Act::Ptr@ of the above methods returns the activity
+that is wrapping the running script -- waiting for a status change and
+reponding to it allows one to react to their outcomes.
+
+\item An event activity usually subscribes callbacks with other
+  Signalers, e.g.\ other activities to monitor their status, or
+  variables to monitor their revision. Using
+
+@Act::Ptr event(SignalerL sigs, const EventFunction& eventFct);@
+
+allows the user to define events using his own EventFunction, which
+is called whenever one of the signalers changes status, and depending
+on that (or the data content of variables) can change the event
+status.
+
+\item To give an example: The standard @wait(SignalerL sigs)@ waits
+  for all signalers to have a status greater zero. What happen is: it
+  first creates an event activity which subscribes a callback to all
+  signalers. Whenever one of the signalers changes status, the
+  callback checks if all statuses are greater zero; if yes, the
+  callback sets the event's status to 'true'. This triggers a
+  broadcast which wakes the caller of @wait@.
 \end{itemize}
+That the basic control flow concepts, independent of robotics. Using
+this we can code hierarchical concurrent processes, where typical
+activities are just pieces of code that can read/write to variables,
+set the own status depending on computations, or use the above methods
+to control/create/destropy other activities (Actor Model in Computer
+Science).
 
+Conceptually, the set of activities and their statuses corresponds to
+the relational state in RAP. The policy is not represented as a state
+machine, but rather as the set of activities themselves, which change
+statuses or create/destroy activities in a decentralized manner. This
+is closer to the decentralized rule sets in RAP than finite state
+machine flow in SMACH. In practise, we often start scripting behaviors
+in a single serial main script. Then we gradually refactor and
+encapsulate such scripts to become activities and run them in parallel
+reactively.
 
-...
+Beyond that, Roopi provides many standard activities, especially
+control activities that activate a task within a motion controller.
 
+\begin{table}
 \begin{code}
 \begin{verbatim}
+Roopi R;
 
 act a = R.startTaskController();
 act b = R.startCommunicationWithBaxter();
 
-act liftHand = ControlTask(TaskMap(...), target, naturalGains);
+act liftHand = R.ControlTask(TaskMap(...), target, naturalGains);
 
 //busy wait
 for(;;){
@@ -1914,24 +1990,105 @@ for(;;){
 //idle wait
 for(;;) if(wait(liftHand)==R_done) break;
 //equivalently
-wait(liftHand, R_done);
+R.wait(liftHand, R_done);
 
 //idle wait for multiple activities conjunctive
-waitAnd({liftHand, gazeBall});
+R.waitAnd({liftHand, gazeBall});
 //or
-waitAnd({liftHand, gazeBall}, {R_done, R_done});
+R.waitAnd({liftHand, gazeBall}, {R_done, R_done});
 
 //idle wait for multiple activities disjunctive
-waitOr({liftHand, gazeBall}, {R_done, R_done});
+R.waitOr({liftHand, gazeBall}, {R_done, R_done});
 
-while(wait(
-for(;;){
-  while(liftHand()){ //
+//beep when the grasp is done
+act beep = R.at( {grasp}, R_equals, {R_done}, [](){
+    R.beep();
+    return R_true;
+  });
 
-
-
+//whenever variable q_ref has size larger 10 and its revision is >10, beep
+act beep2 = R.whenever<arr>("q_ref", [](Access<T>& x){ //lambda expression to define an event
+    return x->N>10 && x.getRevision()>10;
+  }, [](){ //lambda expression to define an effect
+    R.beep();
+    return R_true;
+  });
 \end{verbatim}
 \end{code}
+\caption{'Top down wish code' that almost reflects the actually
+implemented Roopi}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Threading}
+
+MLR provides very simple threading and communication/stepping of threads via
+shared variables. Conceptually this originated thinking about factor
+graphs, where factors (threads) do computations by updating (beliefs
+over) variables. They communicate only via variables. The whole think
+is a bi-partite graph. In the code, threads access variables via the
+'Access' class -- the 'VariableData' class itself is actually never
+touched and not really part of the interface.
+
+\textbf{Thread:} You derive from 'Thread' and:
+\begin{itemize}
+\item You need to implement the open (startup something, e.g., open a
+  window, start a driver, socket, whatever), step (do the computation
+  by accessing the variables and reading from and writing into them),
+  close. All three (also open and close) are executed within the
+  thread.
+
+\item The constructor needs to call the constructor of Thread,
+  especially setting the beatIntervalSec. If that is $0$, the thread
+  will loop (=iterate stepping with full speed and no idle
+  time). If beatIntervalSec$>$0, the thread will loop with a certain
+  frequency, autonomously calling 'step' every beatIntervalSec
+  seconds. If beatIntervalSec$<$0, the thread will 'listen' -- that
+  is, it will step whenever one of its variables (that it listens to!)
+  gets a new revision (is been written into by another thread). In the
+  latter case, don't forget to set the 'listensTo' flag in the Access
+  constructor -- otherwise the thread won't listen to anything and not
+  step.
+
+  Further, the constructor of the derived class should call
+  'threadOpen' (for or listening threads) or 'threadLoop' (for looping/beating
+  threads). The destructor should call 'threadClose'.
+
+\item An 'Access' (to access a global shared memory variable) could be
+  created any time -- but standard convention is to have them as
+  members of the thread. Make sure that their constructor is properly
+  called (passing the thread pointer, variable name, and listening
+  flag) within the thread's constructor.
+\end{itemize}
+
+\textbf{Variable:} The 'VariableData' or 'VariableBase' classes are never
+touched directly by a user. Instead, everything is via an Access. If
+you create an Access it will look up a global registry on whether such
+a variable (of given type and name) already exists; if not it'll
+create it, if yes it'll refer to it. Given an Access @A@, you can access
+its contents either with
+%
+@A.readAccess(); A().anyMethodOfData...; A.deAccess();@
+%
+or @A.get()->anyMethodOfData...@. The latter is the the 'Token'
+pattern, which is used throughout the code at some places: The get()
+method returns a little token which holds the mutex while in
+scope. The same for writeAccess and set.
+
+The Variable data is a revisioned RW-locked container. Revisioned
+means that it counts the write accesses. The Access class provides
+methods to wait for a specific or next revision of the variable, or
+access the variable's revision.
+
+Accesses are usually members of a thread and can be viewd as an edge
+between variable and thread. (Logging allows to track exactly which
+thread wrote/read which revision of which variable at which time.) But
+actually you can create an Access anywhere in the code (passing a NULL
+pointer as thread). That is, instead of writing @int x;@ anywhere in
+the code, you can write @Access<int> x(NULL, "x");@ anywhere in the
+code, which makes $x$ a globally registered, revisioned, RW-locked integer.
+
 
 
 \end{document}

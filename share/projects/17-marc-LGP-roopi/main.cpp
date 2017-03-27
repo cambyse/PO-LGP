@@ -42,10 +42,6 @@ void TEST(PickAndPlace) {
 void TEST(PickAndPlace2) {
   Roopi R(true);
 
-  //  auto view = R.newCameraView();
-  //  R.taskController().verbose(1);
-
-  {
   auto look = R.lookAt("obj1");
   {
     auto ws = R.focusWorkspaceAt("obj1");
@@ -56,22 +52,6 @@ void TEST(PickAndPlace2) {
 
   Script_komoGraspBox(R, "obj1", LR_left);
 
-  {
-    double gripSize = getGripSize(R, "obj1");
-    auto closeGrip = R.setGripper(LR_left, gripSize-.05);
-    R.wait(+closeGrip);
-  }
-  
-  //switch
-  look.reset();
-  }
-
-  R.kinematicSwitch("obj1", "pr2L", false);
-
-  {
-    auto lift = R.moveVel("pr2L", {0,0,.2});
-    mlr::wait(1.);
-  }
 
   mlr::wait();
 

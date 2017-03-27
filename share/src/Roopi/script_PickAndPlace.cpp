@@ -401,21 +401,36 @@ int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
   }
 
   arr obj1size = R.getK()->getShapeByName(objName)->size;
-  double gripSize = obj1size(1) + 2.*obj1size(3);
-  double above = obj1size(2)*.5 + obj1size(3) - .02;
+  double gripSize = obj1size(0);
+  double above = .5*obj1size(2) - .05;
 
-  auto path = R.newPathOpt();
-  path->komo->useOnlyJointGroup({group1, group2});
-  path->komo->setPathOpt(1, 20, 5.);
-  path->komo->setFine_grasp(1., endeff, objName, above, gripSize, gripper, gripper2);
-  path->start();
+  {
+    auto path = R.newPathOpt();
+    path->komo->useOnlyJointGroup({group1, group2});
+    path->komo->setPathOpt(1, 20, 5.);
+    path->komo->setFine_grasp(1., endeff, objName, above, gripSize, gripper, gripper2);
+    path->start();
 
-  R.wait({-path});
+    R.wait({-path});
 
-  auto follow = Act_FollowPath(&R, "PathFollower", path->komo->x, new TaskMap_qItself(QIP_byJointGroups, {group1, group2}, R.getK()), 5.);
-  follow.start();
+    auto follow = Act_FollowPath(&R, "PathFollower", path->komo->x, new TaskMap_qItself(QIP_byJointGroups, {group1, group2}, R.getK()), 5.);
+    follow.start();
 
-  R.wait({&follow});
+    R.wait({&follow});
+  }
+
+  {
+    double gripSize = getGripSize(R, "obj1");
+    auto closeGrip = R.setGripper(LR_left, gripSize-.05);
+    R.wait(+closeGrip);
+  }
+
+  R.kinematicSwitch("obj1", "pr2L", false);
+
+  {
+    auto lift = R.moveVel("pr2L", {0,0,.2});
+    R.wait(1.);
+  }
 
   return AS_done;
 }
