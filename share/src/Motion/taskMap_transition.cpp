@@ -56,6 +56,7 @@ uint TaskMap_Transition::dim_phi(const WorldL& G, int t){
 
 void TaskMap_Transition::phi(arr& y, arr& J, const WorldL& G, double tau, int t){
   if(G.last()->q_agent!=0){ //we're referring to a graph set to non-zero agent!
+    HALT("what is this code about? why is the q_agent involved here?");
     uint n=G.last()->getJointStateDimension();
     CHECK(n!=H_rate_diag.N,"just checking...");
     y.resize(n).setZero();

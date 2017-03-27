@@ -51,10 +51,6 @@ void TEST(PickAndPlace2) {
   }
 
   Script_komoGraspBox(R, "obj1", LR_left);
-
-
-  mlr::wait();
-
 }
 
 //============================================================================
