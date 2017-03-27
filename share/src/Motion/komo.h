@@ -96,7 +96,7 @@ struct KOMO{ //TODO: rename ManipOp
 
   //-- kinematic switches mid-level
   void setKS_placeOn(double time, bool before, const char* obj, const char* table, bool actuated=false);
-  void setKS_slider(double time, bool before, const char* obj, const char* slider, const char* table, bool actuated);
+  void setKS_slider(double time, bool before, const char* obj, const char* table, bool actuated);
 
 
   //-- tasks (cost/constraint terms) high-level (rough, for LGP)

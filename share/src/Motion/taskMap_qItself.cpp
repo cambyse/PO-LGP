@@ -312,13 +312,17 @@ mlr::Array<mlr::Joint*> getSwitchedJoints(const mlr::KinematicWorld& G0, const m
   mlr::Array<mlr::Joint*> switchedJoints;
 
   for(mlr::Joint *j1:G1.joints) {
-    if(j1->from->index>=G0.bodies.N || j1->to->index>=G0.bodies.N) continue;
+    if(j1->from->index>=G0.bodies.N || j1->to->index>=G0.bodies.N){
+      switchedJoints.append({NULL,j1});
+      continue;
+    }
     mlr::Joint *j0 = G0.getJointByBodyIndices(j1->from->index, j1->to->index);
     if(!j0 || j0->type!=j1->type){
       if(G0.bodies(j1->to->index)->inLinks.N==1){ //out-body had (in G0) one inlink...
         j0 = G0.bodies(j1->to->index)->inLinks.scalar();
-        switchedJoints.append({j0,j1});
       }
+      switchedJoints.append({j0,j1});
+//      }
     }
   }
   switchedJoints.reshape(switchedJoints.N/2, 2);
@@ -332,4 +336,35 @@ mlr::Array<mlr::Joint*> getSwitchedJoints(const mlr::KinematicWorld& G0, const m
   }
 
   return switchedJoints;
+}
+
+//===========================================================================
+
+mlr::Array<mlr::Body*> getSwitchedBodies(const mlr::KinematicWorld& G0, const mlr::KinematicWorld& G1, int verbose){
+  mlr::Array<mlr::Body*> switchedBodies;
+
+  for(mlr::Body *b1:G1.bodies) {
+    if(b1->index>=G0.bodies.N) continue;
+    mlr::Body *b0 = G0.bodies(b1->index);
+    if(b0->inLinks.N != b1->inLinks.N){ switchedBodies.append({b0,b1}); continue; }
+    if(b0->inLinks.N){
+      CHECK(b0->inLinks.N==1,"not a tree!?");
+      mlr::Joint *j0 = b0->inLinks.scalar();
+      mlr::Joint *j1 = b1->inLinks.scalar();
+      if(j0->type!=j1->type){
+        switchedBodies.append({b0,b1});
+      }
+    }
+  }
+  switchedBodies.reshape(switchedBodies.N/2, 2);
+
+  if(verbose){
+    for(uint i=0;i<switchedBodies.d0;i++){
+      cout <<"Switch: "
+          <<switchedBodies(i,0)->name /*<<'-' <<switchedBodies(i,0)->name*/
+         <<" -> " <<switchedBodies(i,1)->name /*<<'-' <<switchedJoints(i,1)->to->name*/ <<endl;
+    }
+  }
+
+  return switchedBodies;
 }

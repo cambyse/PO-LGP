@@ -41,7 +41,7 @@ void setTasks(MotionProblem& MP,
 
 double height(mlr::Shape* s){
   CHECK(s,"");
-  return 2.*s->size(2);// + s->size[3];
+  return s->size(2);// + s->size[3];
 }
 
 KOMO::KOMO() : MP(NULL), opt(NULL), verbose(1){
@@ -220,22 +220,18 @@ void KOMO::setKS_placeOn(double time, bool before, const char* obj, const char* 
     setKinematicSwitch(time, before, "transXYPhiActuated", table, obj, rel );
 }
 
-void KOMO::setKS_slider(double time, bool before, const char* obj, const char* slider, const char* table, bool actuated){
+void KOMO::setKS_slider(double time, bool before, const char* obj, const char* table, bool actuated){
   //disconnect object from grasp ref
   setKinematicSwitch(time, before, "delete", NULL, obj);
 
-  //connect table to slider and slider to object
-//  setKinematicSwitch(time-1., before, "delete", NULL, slider);
-//  setKinematicSwitch(time-1., before, "transXYPhiZero", table, slider );
-//  setKinematicSwitch(time, before, "delete", NULL, slider);
-//  setKinematicSwitch(time, before, "transXYPhiZero", table, slider );
-
   mlr::Transformation rel = 0;
   rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(obj)) + height(world.getShapeByName(table))));
-  if(!actuated)
-    setKinematicSwitch(time, before, "hingeZZero", slider, obj, rel );
-  else
-    setKinematicSwitch(time, before, "transXActuated", slider, obj, rel );
+  setKinematicSwitch(time, before, "sliderMechanism", table, obj, rel );
+
+//  if(!actuated)
+//    setKinematicSwitch(time, before, "hingeZZero", slider, obj, rel );
+//  else
+//    setKinematicSwitch(time, before, "transXActuated", slider, obj, rel );
 }
 
 void KOMO::setHoming(double startTime, double endTime, double prec){
