@@ -1,3 +1,4 @@
 Include = 'baxter.ors'
+Include = '../lockboxNew.ors'
 
-joint lockbox_world_joint (base lockbox) { type=14 A=<T d(190 0 0 1) t(-1. 0 .4)>}
+joint lockbox_world_joint (base lockbox) { type=14 A=<T d(190 0 0 1) t(-1. 0 .4)> lockbox_position}
