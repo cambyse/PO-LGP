@@ -5,6 +5,7 @@
 
 ## Quick Start on Ubuntu 16.04
 Install git:
+
     $ sudo apt-get install git
 
 Add your ssh key to clone the repository.
