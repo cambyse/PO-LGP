@@ -3,7 +3,22 @@
 - Infos for students:  README.student.md
 - Infos about the PR2: README.PR2.md
 
+## Quick Start on Ubuntu 16.04
+Install git:
+    sudo apt-get install git
 
+Add your ssh key to clone the repository.
+User->Settings->SSH Keys
+
+Once the repo has been cloned:
+    git checkout roopi
+	./share/bin/install/INSTALL_ALL_UBUNTU_PACKAGES.sh
+    ./share/bin/install/INSTALL_ROS_PACKAGES_KINETIC
+    ./share/bin/createMakefileLinks.sh
+    cp /share/build/config.mk.kinetic /share/build/config.mk
+    cd /share/examples/Roopi/basic/
+    make
+    
 ## Install on Ubuntu
 
 Install the mlr system by executing:
