@@ -3,12 +3,31 @@
 - Infos for students:  README.student.md
 - Infos about the PR2: README.PR2.md
 
-Doxygen documentation: http://sully.informatik.uni-stuttgart.de:8080/job/MLR-share-doxygen/doxygen/
+## Quick Start on Ubuntu 16.04
+Install git:
 
-Jenkins status: http://sully.informatik.uni-stuttgart.de:8080/
+    $ sudo apt-get install git
 
+Add your ssh key to clone the repository.
 
-## Install on Ubuntu
+    User->Settings->SSH Keys
+
+Clone the repo:
+    
+    $ git clone git@animal.informatik.uni-stuttgart.de:mlr-staff/mlr.git
+    
+Once the repo has been cloned:
+
+    $ cd mlr
+    $ git checkout roopi
+	$ ./share/bin/install/INSTALL_ALL_UBUNTU_PACKAGES.sh
+    $ ./share/bin/install/INSTALL_ROS_PACKAGES_KINETIC
+    $ ./share/bin/createMakefileLinks.sh
+    $ cp share/build/config.mk.kinetic share/build/config.mk
+    $ cd share/examples/Roopi/basic/
+    $ make
+    
+## Install on Ubuntu 14.04
 
 Install the mlr system by executing:
 
