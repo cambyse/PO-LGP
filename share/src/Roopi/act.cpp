@@ -22,7 +22,7 @@ Act::Act(Roopi *r)
 
 Act::~Act(){
   roopi.acts.set()->removeValue(this);
-  if(registryNode) delete registryNode;
+  if(registryNode) registry()->delNode(registryNode);
 }
 
 double Act::time(){ return mlr::realTime()-startTime; }
