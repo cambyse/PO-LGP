@@ -278,7 +278,7 @@ void localizeS1(Roopi &R, const char* obj){
   R.wait(+laser);
 
   R.wait(3.);
-//  R.wait();
+  R.wait();
   }
 }
 
@@ -400,10 +400,10 @@ int main(int argc, char** argv){
 
 //  Prototyping();
 
-//  testPerception();
+  testPerception();
 //  testPerceptionOnly();
 
-  for(;;) testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
 //  testGamepad();

@@ -1,6 +1,9 @@
 #include <Roopi/roopi.h>
 #include <Control/taskControl.h>
 
+#include <sys/ioctl.h>
+#include <linux/kd.h>
+
 
 //===============================================================================
 
@@ -9,7 +12,9 @@ void homing() {
   {
     auto h = R.home();
     R.wait(+h);
+    mlr::wait();
   }
+  mlr::wait();
 }
 
 //===============================================================================
@@ -19,18 +24,15 @@ void testCompliant() {
     Roopi R(true);
     R.getTaskController().lockJointGroupControl("base");
 
-    R.collisions(true);
-
     {
       auto h = R.home();
       R.wait(+h);
-      R.wait();
     }
 
     {
       auto posL = R.newCtrlTask();
       posL->setMap(new TaskMap_Default(posTMT, R.getK(), "endeffL"));
-      posL->task->complianceDirection = {1., 0., .0};
+      posL->task->complianceDirection = {0., 1., .0};
       posL->task->PD().setTarget( posL->y0 );
       posL->task->PD().setGainsAsNatural(1., .9);
       posL->start();
@@ -52,8 +54,8 @@ void testCompliant() {
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
-//  homing();
-  testCompliant();
+  homing();
+//  testCompliant();
 
   return 0;
 }

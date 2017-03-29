@@ -157,7 +157,7 @@ void TreeControllerClass::update() {
 
     // add integral term
     if(Ki.N==1){
-      int_error += Kp_base % (Ki.scalar() *0.01 * (q_ref - q));
+      int_error += Kp_base % (Ki.scalar() * 0.01 * (q_ref - q));
       for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
         clip(int_error(i), -intLimitRatio*limits(i,4), intLimitRatio*limits(i,4));
       }

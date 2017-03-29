@@ -65,18 +65,18 @@ Edit head_pan_joint {    ctrl_H=.1 gains=[20 2] head }
 Edit head_tilt_joint {   q=.4 ctrl_H=.1 gains=[60 4] head }
 
 ## RIGHT
-Edit r_shoulder_pan_joint { q=-1   gains=[200 20]  armR }
-Edit r_shoulder_lift_joint { q=.5   gains=[160 10] armR }
-Edit r_upper_arm_roll_joint { q=-1   gains=[80 4] armR }
+Edit r_shoulder_pan_joint { q=-1   gains=[220 30]  armR }
+Edit r_shoulder_lift_joint { q=.5   gains=[200 20] armR }
+Edit r_upper_arm_roll_joint { q=-1   gains=[100 8] armR }
 Edit r_elbow_flex_joint {  q=-2  gains=[70 4] armR }
 Edit r_forearm_roll_joint { q=-1.5  gains=[10 1] armR }
 Edit r_wrist_flex_joint { q=-.5 gains=[30 1] armR }
 Edit r_wrist_roll_joint { q=-.5  gains=[15 1] armR }
 
 ## LEFT
-Edit l_shoulder_pan_joint {   q=1   gains=[200 20] armL }
-Edit l_shoulder_lift_joint {  q=.5   gains=[160 10] armL }
-Edit l_upper_arm_roll_joint { q=1  gains=[80 4] armL }
+Edit l_shoulder_pan_joint {   q=1   gains=[220 30] armL }
+Edit l_shoulder_lift_joint {  q=.5   gains=[200 20] armL }
+Edit l_upper_arm_roll_joint { q=1  gains=[100 8] armL }
 Edit l_elbow_flex_joint {     q=-2  gains=[70 4] armL }
 Edit l_forearm_roll_joint {   q=1.5  gains=[10 1] armL }
 Edit l_wrist_flex_joint {     q=-.5  gains=[30 1] armL }
