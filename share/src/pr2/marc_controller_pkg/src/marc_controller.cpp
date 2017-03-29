@@ -156,11 +156,15 @@ void TreeControllerClass::update() {
 	int_error += Kp_base % (Ki.scalar() * 0.01 * (q_ref - q));
       }else if(Ki.d0 == q.N && Ki.d1 == q.N){
 	int_error += Ki * (0.01 * (q_ref - q));
+      }else{
+	int_error = 0.;
       }
       for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
         clip(int_error(i), -intLimitRatio*limits(i,4), intLimitRatio*limits(i,4));
       }
       u += int_error;
+    }else{
+      int_error = 0.;
     }
 
     u += u_bias;
@@ -235,14 +239,13 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   fR_ref = conv_stdvec2arr(msg->fR);
   J_ft_invL = conv_stdvec2arr(msg->J_ft_invL); if (J_ft_invL.N>0) J_ft_invL.reshape(fL_ref.d0,6);
   J_ft_invR = conv_stdvec2arr(msg->J_ft_invR); if (J_ft_invR.N>0) J_ft_invR.reshape(fR_ref.d0,6);
-#define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
+#define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N); //this is needed to read matrices!!!
   CP(Kp);
   CP(Kd);
+  CP(Ki);
+  CP(KiFTR);
+  CP(KiFTL);
 #undef CP
-  Ki = conv_stdvec2arr(msg->Ki);
-
-  KiFTR = conv_stdvec2arr(msg->KiFTR);             if (KiFTR.N>0) KiFTR.reshape(q_ref.N, fR_ref.d0);
-  KiFTL = conv_stdvec2arr(msg->KiFTL);             if (KiFTL.N>0) KiFTL.reshape(q_ref.N, fL_ref.d0);
   fR_offset = conv_stdvec2arr(msg->fR_offset);
   fL_offset = conv_stdvec2arr(msg->fL_offset);
 
