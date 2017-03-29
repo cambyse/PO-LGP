@@ -147,22 +147,27 @@ void TreeControllerClass::update() {
     if(Kp.N==1 && Kd.N==1){
       u += Kp_base % (Kp.scalar() * (q_ref - q));
       u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
-    }else if(Kp.d0==q.N && Kp.d1==q.N && Kd.N==1){
-      u += Kp_base % (Kp * (q_ref - q)); //matrix multiplication!
-      u += Kd_base % (Kd.scalar() * (qdot_ref - qd));
-    } else if(Kp.d0 == q.N && Kp.d1 == q.N && Kd.d0 == q.N && Kd.d1 == q.N) {
+    }else if(Kp.d0 == q.N && Kp.d1 == q.N && Kd.d0 == q.N && Kd.d1 == q.N) {
       u += Kp*(q_ref - q);
       u += Kd*(qdot_ref - qd);
     }
 
     // add integral term
-    if(Ki.N==1){
-      int_error += Kp_base % (Ki.scalar() * 0.01 * (q_ref - q));
+    if(Ki.N){
+      if(Ki.N==1){
+	int_error += Kp_base % (Ki.scalar() * 0.01 * (q_ref - q));
+      }else if(Ki.d0 == q.N && Ki.d1 == q.N){
+	int_error += Ki * (0.01 * (q_ref - q));
+      }else{
+	int_error = 0.;
+      }
       for (uint i=0;i<q.N;i++) if(ROS_joints(i)){
         clip(int_error(i), -intLimitRatio*limits(i,4), intLimitRatio*limits(i,4));
       }
       u += int_error;
-    } //TODO INT ERROR MUST VANISH!!!!!!
+    }else{
+      int_error = 0.;
+    }
 
     u += u_bias;
 
@@ -236,14 +241,13 @@ void TreeControllerClass::jointReference_subscriber_callback(const marc_controll
   fR_ref = conv_stdvec2arr(msg->fR);
   J_ft_invL = conv_stdvec2arr(msg->J_ft_invL); if (J_ft_invL.N>0) J_ft_invL.reshape(fL_ref.d0,6);
   J_ft_invR = conv_stdvec2arr(msg->J_ft_invR); if (J_ft_invR.N>0) J_ft_invR.reshape(fR_ref.d0,6);
-#define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N);
+#define CP(x) x=conv_stdvec2arr(msg->x); if(x.N>q_ref.N) x.reshape(q_ref.N, q_ref.N); //this is needed to read matrices!!!
   CP(Kp);
   CP(Kd);
+  CP(Ki);
+  CP(KiFTR);
+  CP(KiFTL);
 #undef CP
-  Ki = conv_stdvec2arr(msg->Ki);
-
-  KiFTR = conv_stdvec2arr(msg->KiFTR);             if (KiFTR.N>0) KiFTR.reshape(q_ref.N, fR_ref.d0);
-  KiFTL = conv_stdvec2arr(msg->KiFTL);             if (KiFTL.N>0) KiFTL.reshape(q_ref.N, fL_ref.d0);
   fR_offset = conv_stdvec2arr(msg->fR_offset);
   fL_offset = conv_stdvec2arr(msg->fL_offset);
 
