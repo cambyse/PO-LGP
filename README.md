@@ -14,7 +14,7 @@ Add your ssh key to clone the repository.
 
 Clone the repo:
     
-    $ git clone git@animal.informatik.uni-stuttgart.de:mlr-staff/mlr.git mlr
+    $ git clone git@animal.informatik.uni-stuttgart.de:mlr-staff/mlr.git
     
 Once the repo has been cloned:
 
