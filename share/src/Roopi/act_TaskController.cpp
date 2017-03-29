@@ -25,3 +25,25 @@ void Act_TaskController::lockJointGroupControl(const char *groupname, bool lockT
   tcm->taskController->lockJointGroup(groupname, roopi.setK(), lockThem);
   tcm->stepMutex.unlock();
 }
+
+void Act_TaskController::setRealWorldJoint(mlr::Joint* jt, const arr& q)
+{
+  arr real_q = tcm->realWorld.q;
+
+  mlr::Joint* real_joint = tcm->realWorld.getJointByName(jt->name);
+
+  int idx = real_joint->qIndex;
+  for (uint i = 0; i < q.d0; i++)
+  {
+    real_q(idx+i) = q(i);
+  }
+  tcm->stepMutex.lock();
+  tcm->realWorld.setJointState(real_q);
+  tcm->ctrl_q_real.set() = real_q;
+  tcm->stepMutex.unlock();
+}
+
+TaskControlThread* Act_TaskController::getTCM()
+{
+  return tcm;
+}
