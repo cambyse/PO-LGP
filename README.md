@@ -20,8 +20,8 @@ Once the repo has been cloned:
 
     $ cd mlr
     $ git checkout roopi
-	$ ./share/bin/install/INSTALL_ALL_UBUNTU_PACKAGES.sh
-    $ ./share/bin/install/INSTALL_ROS_PACKAGES_KINETIC
+	$ ./install/INSTALL_ALL_UBUNTU_PACKAGES.sh
+    $ ./install/INSTALL_ROS_PACKAGES_KINETIC
     $ ./share/bin/createMakefileLinks.sh
     $ cp share/build/config.mk.kinetic share/build/config.mk
     $ cd share/examples/Roopi/basic/
