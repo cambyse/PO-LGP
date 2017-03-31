@@ -216,7 +216,7 @@ void TEST(PickAndPlace2) {
     double above = obj1size(2)*.5 + obj1size(3) - .02;
 
     mlr::KinematicWorld& K = path->komo->world;
-    path->komo->useOnlyJointGroup({"armR", "gripR"});
+    path->komo->useJointGroups({"armR", "gripR"});
     path->komo->setPathOpt(1, 20, 5.);
     path->komo->setTask(t1, 1., new TaskMap_Default(posDiffTMT, K, "endeffWorkspace", NoVector, "obj1"), OT_sumOfSqr, {}, 1e1);
     path->komo->setTask(t1, 1., new TaskMap_Default(vecTMT, K, "pr2R", Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e0);

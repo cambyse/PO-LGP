@@ -46,7 +46,7 @@ struct KOMO{ //TODO: rename ManipOp
   //-- setup the problem
   void setModel(const mlr::KinematicWorld& W,
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool computeOptimalSSBoxes=false, bool activateAllContacts=false);
-  void useOnlyJointGroup(const StringA& groupNames);
+  void useJointGroups(const StringA& groupNames, bool OnlyTheseOrNotThese=true);
   void setTiming(double _phases=1., uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
 
   //-- higher-level defaults
@@ -96,7 +96,7 @@ struct KOMO{ //TODO: rename ManipOp
 
   //-- kinematic switches mid-level
   void setKS_placeOn(double time, bool before, const char* obj, const char* table, bool actuated=false);
-  void setKS_slider(double time, bool before, const char* obj, const char* table, bool actuated);
+  void setKS_slider(double time, bool before, const char* obj, const char* slider, const char* table);
 
 
   //-- tasks (cost/constraint terms) high-level (rough, for LGP)

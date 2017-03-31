@@ -69,7 +69,6 @@ void testDirectSlide(){
 //      komo.checkGradients();
 
   cout <<komo.getReport(true);
-  komo.MP->costReport(true);
 
   while(komo.displayTrajectory(.1, true));
 }
@@ -81,47 +80,30 @@ void testToolSlide(){
 
   KOMO komo;
   komo.setModel(W);
+  komo.useJointGroups({"armL", "base"}, false);
 
   komo.setTiming(5., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komo.setSquaredFixJointVelocities(-1., -1., 1e2);
+  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
   komo.setSquaredQAccelerations();
-//  komo.setSquaredQVelocities(-1., -1., 1e-1);
 
-  komo.setGrasp(1., "endeffR", "stick_handle", 0, 1e3);
-//  komo.setPosition(.5, 2.5, "obj1", "endeffWorkspace", OT_sumOfSqr, NoArr, 1e-1);
-//  komo.setTouch(1., 3., "endeff", "obj1", OT_sumOfSqr, {.0}, 1e3);
+  komo.setGrasp(1., "pr2R", "stick_handle", 0);
 
-  komo.setKS_placeOn(2., true, "obj1", "table", true);
-//  komo.setKS_slider(2., true, "obj1", "table", true);
+//  komo.setSlowAround(1., .1);
+  komo.setKS_slider(2., true, "obj1", "slider1", "table");
 
-  komo.setPosition(3.8, 5., "obj1", "target", OT_sumOfSqr, {}, 1e1);
+  komo.setPosition(3.8, 5., "obj1", "target", OT_sumOfSqr, {}, 1e2);
 
   komo.setKS_placeOn(4., true, "obj1", "table", false);
 
-  //velocities
-//  komo.setTask(2.-.15, 2., new TaskMap_Default(posDiffTMT, W, "endeff"), OT_sumOfSqr, {.1,0,0}, 1e2, 1);
-//  komo.setTask(4., 4.+.15, new TaskMap_Default(posDiffTMT, W, "endeff"), OT_sumOfSqr, {-.1,0,0}, 1e2, 1);
-
-  //keep distance
-//  komo.setTask(1.5, 4., new TaskMap_LinTrans(new TaskMap_Default(posDiffTMT, W, "endeff", NoVector, "obj1", NoVector),
-//                                            true),          OT_sumOfSqr, {.2}, 1e3);
-//  komo.setTask(2., 4., new TaskMap_GJK(W, "endeff", "obj1", true, true), OT_eq, {-.15}, 1e2, 0);
-//  komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "endeff", NoVector, "obj1", NoVector), OT_sumOfSqr, {-.1,0,0}, 1e2);
-  //push align
-//  komo.setTask(2., 4., new TaskMap_PushConsistent(W, "obj1", "endeff"), OT_sumOfSqr, {0,0,0}, 1e3);
-
-  //no collisions
-//  komo.setTask(0., 1.9, new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
-//  komo.setTask(4.5, -1., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
-
+  komo.setTask(2., 4., new TaskMap_Default(vecAlignTMT, W, "stick_eff", -Vector_y, "slider1b", Vector_x), OT_sumOfSqr, {1.}, 1e2);
+  komo.setTask(2., 4., new TaskMap_Default(vecAlignTMT, W, "stick_eff", Vector_z, NULL, Vector_z), OT_sumOfSqr, {1.}, 1e2);
+  komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "slider1Eff"), OT_sumOfSqr, {.1,0,0}, 1e2);
 
   komo.reset();
   komo.run();
-//      komo.checkGradients();
 
   cout <<komo.getReport(true);
-  komo.MP->costReport(true);
 
   while(komo.displayTrajectory(.1, true));
 }
@@ -139,24 +121,9 @@ void testSlide(){
   komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
   komo.setSquaredQAccelerations();
 
-//  komo.setKS_slider(1., true, "obj1", "slider2", "table", true);
-
-  mlr::Transformation rel = 0;
-  rel.addRelativeTranslation( 0., 0., .12); //object height
-  komo.setKinematicSwitch(1., true, "delete", "table", "obj1");
-#if 0
-  komo.setKinematicSwitch(.5, true, "delete", "table", "slider1");
-  komo.setKinematicSwitch(.5, true, "transXYPhiZero", "table", "slider1");
-  komo.setKinematicSwitch(1., true, "hingeZZero", "slider2", "obj1", rel );
-#else
-  komo.setKinematicSwitch(1., true, "sliderMechanism", "table", "obj1", rel );
-//  komo.setKinematicSwitch(2., true, "delSliderMechanism", "table", "obj1", rel );
-#endif
-
+  komo.setKS_slider(1., true, "obj1", "slider1", "table");
 
   komo.setPosition(1.8, 2., "obj1", "table", OT_sumOfSqr, {.4, -.2, .12}, 1e2);
-
-//  komo.setKS_placeOn(4., true, "obj1", "table", false uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   komo.reset();
   komo.run();

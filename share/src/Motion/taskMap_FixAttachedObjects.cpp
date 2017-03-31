@@ -91,7 +91,7 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
     CHECK(b0->index == b1->index, "");
     CHECK(b0->shapes.first()->index == b1->shapes.first()->index, "");
 
-//    if(j1->to->name.startsWith("slider")) continue;
+    if(b0->name.startsWith("slider")) continue;
 
 #if 1 //absolute velocities
     TaskMap_Default pos(posDiffTMT, b0->shapes.first()->index);
@@ -101,6 +101,8 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
     TaskMap_Default quat(quatDiffTMT, b0->shapes.first()->index);
     quat.order=1;
     quat.TaskMap::phi(y({M*i+3,M*i+6})(), (&J?J({M*i+3,M*i+6})():NoArr), G, tau, t);
+
+    if(sumOfSqr(y)>1e-3) cout <<"body " <<b0->name <<" causes switch costs " <<sumOfSqr(y) <<" at t=" <<t <<" y=" <<y <<endl;
 #else //relative velocities
     TaskMap_Default pos(posDiffTMT, j0->to->shapes.first()->index, NoVector, j0->from->shapes.first()->index);
     pos.order=1;

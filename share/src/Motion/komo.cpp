@@ -137,10 +137,16 @@ void KOMO::setModel(const mlr::KinematicWorld& W,
   FILE("z.komo.model") <<world;
 }
 
-void KOMO::useOnlyJointGroup(const StringA& groupNames){
+void KOMO::useJointGroups(const StringA& groupNames, bool OnlyTheseOrNotThese){
   for(mlr::Joint *j:world.joints){
-    bool lock=true;
-    for(const mlr::String& s:groupNames) if(j->ats.getNode(s)){ lock=false; break; }
+    bool lock;
+    if(OnlyTheseOrNotThese){ //only these
+      lock=true;
+      for(const mlr::String& s:groupNames) if(j->ats.getNode(s)){ lock=false; break; }
+    }else{
+      lock=false;
+      for(const mlr::String& s:groupNames) if(j->ats.getNode(s)){ lock=true; break; }
+    }
     if(lock) j->type = mlr::JT_rigid;
   }
   world.qdim.clear();
@@ -149,8 +155,8 @@ void KOMO::useOnlyJointGroup(const StringA& groupNames){
 
   world.getJointState();
 
-  world.meldFixedJoints();
-  world.removeUselessBodies();
+//  world.meldFixedJoints();
+//  world.removeUselessBodies();
 
   FILE("z.komo.model") <<world;
 }
@@ -220,13 +226,24 @@ void KOMO::setKS_placeOn(double time, bool before, const char* obj, const char* 
     setKinematicSwitch(time, before, "transXYPhiActuated", table, obj, rel );
 }
 
-void KOMO::setKS_slider(double time, bool before, const char* obj, const char* table, bool actuated){
+void KOMO::setKS_slider(double time, bool before, const char* obj, const char* slider, const char* table){
   //disconnect object from grasp ref
   setKinematicSwitch(time, before, "delete", NULL, obj);
 
+  //the two slider objects
+  mlr::String slidera = STRING(slider <<'a');
+  mlr::String sliderb = STRING(slider <<'b');
+
+  //disconnect object from grasp ref
+  setKinematicSwitch(time, before, "delete", NULL, slidera);
+
   mlr::Transformation rel = 0;
   rel.addRelativeTranslation( 0., 0., .5*(height(world.getShapeByName(obj)) + height(world.getShapeByName(table))));
-  setKinematicSwitch(time, before, "sliderMechanism", table, obj, rel );
+
+  setKinematicSwitch(time, true, "transXYPhiZero", table, slidera, rel);
+  setKinematicSwitch(time, true, "hingeZZero", sliderb, obj);
+
+//  setKinematicSwitch(time, before, "sliderMechanism", table, obj, rel );
 
 //  if(!actuated)
 //    setKinematicSwitch(time, before, "hingeZZero", slider, obj, rel );
