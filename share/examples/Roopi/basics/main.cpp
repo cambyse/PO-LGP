@@ -152,15 +152,15 @@ void TEST(PickAndPlace) {
   //  R.taskController().verbose(1);
 
   R.getTaskController().lockJointGroupControl("torso");
-
-  //  auto ph = R.newPhysX();
-  //  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
   R.collisions(true);
 
-  auto reporter = R.loop(1., [&R](){
-    R.report();
-    return 0;
-  });
+  //  auto ph = R.newPhysX();
+//  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
+
+//  auto reporter = R.loop(1., [&R](){
+//    R.report();
+//    return 0;
+//  });
 
 #if 0
   Script_graspBox(R, "obj1", LR_right);

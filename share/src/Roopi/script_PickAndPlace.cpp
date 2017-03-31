@@ -86,7 +86,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     R.wait({-pos, -gripperR, -gripper2R, -up});
 
     //lowering
-    pos->set()->PD().setTarget( ARR(0,0,above-.01) );
+    pos->set()->setTarget( ARR(0,0,above-.01) );
     pos->resetStatus();
     R.wait({-pos});
 
@@ -96,8 +96,8 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
     //close gripper
     gripSize = width-.015;//+.015;
-    gripperR->set()->PD().setTarget( {gripSize} );
-    gripper2R->set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
+    gripperR->set()->setTarget( {gripSize} );
+    gripper2R->set()->setTarget( {::asin(gripSize/(2.*.10))} );
     gripperR->resetStatus();
     gripper2R->resetStatus();
     R.wait({-gripperR, -gripper2R});
@@ -113,7 +113,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   {
     //lift hand
     auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
-    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->setTarget(lift->task->y);
     lift->set()->PD().setGains(0, 10.);
     lift->set()->PD().v_target = ARR(0,0,.2);
     auto look = R.lookAt(objName);
@@ -176,13 +176,13 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto al2 = R.newCtrlTask(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_x) );
 #else
     auto quat = R.newCtrlTask(new TaskMap_Default(quatTMT, obj) );
-    quat->set()->PD().setTarget(rot.getArr4d());
+    quat->set()->setTarget(rot.getArr4d());
 #endif
     //R.wait({-ws, -up, -pos});
     R.wait({/*-up,*/ -pos});
 
     //lowering
-    pos->set()->PD().setTarget( ARR(0,0,above) );
+    pos->set()->setTarget( ARR(0,0,above) );
     pos->resetStatus();
     R.wait({-pos});
 
@@ -203,7 +203,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
   {
     //lift hand
     auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
-    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->setTarget(lift->task->y);
     lift->set()->PD().setGains(0, 10.);
     lift->set()->PD().v_target = ARR(0,0,.2);
     R.wait(1.);
@@ -291,7 +291,7 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     R.wait({-pos});
 
     //lowering
-    pos->set()->PD().setTarget( ARR(deltaX,deltaY,above) );
+    pos->set()->setTarget( ARR(deltaX,deltaY,above) );
     pos->resetStatus();
     R.wait({-pos});
 
@@ -312,7 +312,7 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
   {
     //lift hand
     auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
-    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->setTarget(lift->task->y);
     lift->set()->PD().setGains(0, 10.);
     lift->set()->PD().v_target = ARR(0,0,.2);
     R.wait(1.);

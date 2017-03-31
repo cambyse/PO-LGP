@@ -13,16 +13,17 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, const Graph& specs)
   set()->active = true;
 }
 
-Act_CtrlTask::Act_CtrlTask(Act_CtrlTask&& a)
-  : Act(&a.roopi), task(a.task), y0(a.y0), tolerance(a.tolerance){
-  a.task = NULL;
-}
+//Act_CtrlTask::Act_CtrlTask(Act_CtrlTask&& a)
+//  : Act(&a.roopi), task(a.task), y0(a.y0), tolerance(a.tolerance){
+//  a.task = NULL;
+//}
 
 Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& target, const arr& prec, double tolerance)
   : Act_CtrlTask(r){
   task = new CtrlTask(map->shortTag(roopi.getK()), map);
   if(&prec && prec.N) task->prec = prec;
 
+#if 0 //use PD reference
   //PD reference
   if(&PD && PD.N){
     task->PD().setGainsAsNatural(PD(0), PD(1));
@@ -31,8 +32,17 @@ Act_CtrlTask::Act_CtrlTask(Roopi *r, TaskMap* map, const arr& PD, const arr& tar
   }else{
     task->PD().setGainsAsNatural(1., .9);
   }
-  if(&target && target.N) task->PD().setTarget( target );
+  if(&target && target.N) task->setTarget( target );
   task->PD().tolerance = tolerance;
+#else //use Sine reference
+  if(&PD && PD.N){
+    task->setRef(new MotionProfile_Sine(target, PD(0)));
+  }else{
+    task->setRef(new MotionProfile_Sine(target, 2.));
+  }
+//  if(&target && target.N) task->PD().setTarget( target );
+//  task->PD().tolerance = tolerance;
+#endif
 
   setTask(task);
   set()->active = true;

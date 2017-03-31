@@ -106,7 +106,7 @@ struct Roopi {
   //
   //-- MOTION CONTROL
 
-  Act_CtrlTask::Ptr newCtrlTask(){ return Act_CtrlTask::Ptr(new Act_CtrlTask(this)); }  ///< set the CtrlTask yourself (see newHoldingTask as example)
+  Act_CtrlTask::Ptr newCtrlTask(){ return make_shared<Act_CtrlTask>(this); }  ///< set the CtrlTask yourself (see newHoldingTask as example)
   Act_CtrlTask::Ptr newCtrlTask(TaskMap *map, const arr& PD={1.,.9}, const arr& target={0.}, const arr& prec={1.});
   Act_CtrlTask::Ptr newCtrlTask(const char* specs);
   // predefined
@@ -126,9 +126,10 @@ struct Roopi {
   //
   //-- VARIOUS ACTIVITIES
 
-  Act_Thread::Ptr  newThread(Thread* th)  { return Act_Thread::Ptr(new Act_Thread(this, th)); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
-  Act_ComPR2::Ptr  newComPR2()            { return Act_ComPR2::Ptr(new Act_ComPR2(this)); } ///< subscribers/publishers that communicate with PR2
-  Act_PathOpt::Ptr newPathOpt()           { return Act_PathOpt::Ptr(new Act_PathOpt(this)); } ///< a path optimization activity, access komo yourself to define the problem
+  Act_Thread::Ptr  newThread(Thread* th)  { return make_shared<Act_Thread>(this, th); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
+  Act_Thread::Ptr  newRosSpinner();
+  Act_ComPR2::Ptr  newComPR2()            { return make_shared<Act_ComPR2>(this); } ///< subscribers/publishers that communicate with PR2
+  Act_PathOpt::Ptr newPathOpt()           { return make_shared<Act_PathOpt>(this); } ///< a path optimization activity, access komo yourself to define the problem
   Act::Ptr         rosKinect()            { return make_shared<Act_RosSubKinect>(this); }
 
   Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)

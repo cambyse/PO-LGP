@@ -47,7 +47,7 @@ Roopi::Roopi(bool autoStartup, bool controlView)
 
   if(autoStartup){
     if(s->useRos){
-      s->_ComRos = make_shared<Act_Thread>(this, new RosCom_Spinner());
+      s->_ComRos = newRosSpinner();
       s->_ComPR2 = newComPR2();
     }
 
@@ -358,8 +358,8 @@ const mlr::String& Roopi::getRobot(){
   return s->robot;
 }
 
-Act_Th<struct RosCom_Spinner> Roopi::RosCom(){
-  return Act_Th<RosCom_Spinner>(this, new RosCom_Spinner());
+Act_Thread::Ptr Roopi::newRosSpinner() {
+  return make_shared<Act_Thread>(this, new RosCom_Spinner());
 }
 
 Act_Thread::Ptr Roopi::CameraView(const char* modelWorld_name){
