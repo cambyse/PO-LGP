@@ -1,8 +1,8 @@
 #include <Roopi/roopi.h>
 #include <Motion/komo.h>
 #include <Control/taskControl.h>
-#include <RosCom/subscribeRosKinect.h>
-#include <RosCom/subscribeRosKinect2PCL.h>
+//#include <RosCom/subscribeRosKinect.h>
+//#include <RosCom/subscribeRosKinect2PCL.h>
 #include <Gui/viewer.h>
 #include <Perception/percept.h>
 #include <Kin/kinViewer.h>
@@ -293,7 +293,7 @@ void TEST(Perception) {
   OrsViewer v1("modelWorld");
 
 #if 1 //on real robot!
-  SubscribeRosKinect subKin; //subscription into depth and rgb images
+  auto subKin = R.rosKinect(); //SubscribeRosKinect subKin; //subscription into depth and rgb images
 //  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
 #else //in simulation: create a separate viewWorld
   Access<mlr::KinematicWorld> c("viewWorld");
@@ -341,7 +341,7 @@ void TEST(PerceptionOnly) {
 
   OrsViewer v1("modelWorld");
 
-  SubscribeRosKinect subKin; //subscription into depth and rgb images
+  auto kin = R.rosKinect();  //  SubscribeRosKinect subKin; //subscription into depth and rgb images
   ImageViewer v2("kinect_rgb");
 
   //    auto L = R.lookAt("S3");
@@ -400,10 +400,10 @@ int main(int argc, char** argv){
 
 //  Prototyping();
 
-  testPerception();
+//  testPerception();
 //  testPerceptionOnly();
 
-//  for(;;) testPickAndPlace();
+  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
 //  testGamepad();

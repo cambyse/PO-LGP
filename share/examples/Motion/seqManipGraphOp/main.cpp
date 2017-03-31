@@ -25,7 +25,7 @@ void TEST(UsingSpecs){
 
 //===========================================================================
 
-void testDirectSlide(){
+void testNonSliderSlide(){
   mlr::KinematicWorld W("model.g");
 
   KOMO komo;
@@ -83,9 +83,12 @@ void testToolSlide(){
   komo.useJointGroups({"armL", "base"}, false);
 
   komo.setTiming(5., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e2);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
+  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
+  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
   komo.setSquaredQAccelerations();
+
+  komo.deactivateCollisions("coll_hand_r", "stick");
+  komo.activateCollisions("obj1", "stick");
 
   komo.setGrasp(1., "pr2R", "stick_handle", 0);
 
@@ -96,14 +99,19 @@ void testToolSlide(){
 
   komo.setKS_placeOn(4., true, "obj1", "table", false);
 
+  komo.setTask(1.7, 1.7, new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "obj1"), OT_sumOfSqr, {0,0,.2}, 1e2);
+
   komo.setTask(2., 4., new TaskMap_Default(vecAlignTMT, W, "stick_eff", -Vector_y, "slider1b", Vector_x), OT_sumOfSqr, {1.}, 1e2);
   komo.setTask(2., 4., new TaskMap_Default(vecAlignTMT, W, "stick_eff", Vector_z, NULL, Vector_z), OT_sumOfSqr, {1.}, 1e2);
-  komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "slider1Eff"), OT_sumOfSqr, {.1,0,0}, 1e2);
+  komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "slider1b", {.3, .0, .0}), OT_sumOfSqr, {}, 1e2);
+
+  komo.setTask(0., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e5);
 
   komo.reset();
   komo.run();
 
   cout <<komo.getReport(true);
+//  komo.reportProxies();
 
   while(komo.displayTrajectory(.1, true));
 }

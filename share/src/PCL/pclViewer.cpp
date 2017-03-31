@@ -1,4 +1,5 @@
 #include "pclViewer.h"
+#ifdef MLR_PCL
 #include "conv.h"
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
@@ -47,4 +48,18 @@ void PclViewer::step(){
   copy(s->mesh.C, s->rgb);   s->mesh.C /= 255.;
   s->gl.update();
 }
+#else
+namespace pcl{
+  struct PointXYZRGBP{};
+  template<class T> struct PointCloud{};
+}
 
+PclViewer::PclViewer(const char* cloud_name)
+  : Thread(STRING("PclViewer_"<<cloud_name)),
+    s(NULL), cloud(this, cloud_name){
+}
+PclViewer::~PclViewer(){}
+void PclViewer::open(){}
+void PclViewer::close(){}
+void PclViewer::step(){}
+#endif

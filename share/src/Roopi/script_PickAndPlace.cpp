@@ -406,7 +406,7 @@ int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
   {
     auto path = R.newPathOpt();
-    path->komo->useOnlyJointGroup({group1, group2});
+    path->komo->useJointGroups({group1, group2});
     path->komo->setPathOpt(1, 20, 5.);
     path->komo->setFine_grasp(1., endeff, objName, above, gripSize, gripper, gripper2);
     path->start();

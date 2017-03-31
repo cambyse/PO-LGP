@@ -12,3 +12,9 @@ struct Act_ComPR2 : Act {
 
   typedef std::shared_ptr<Act_ComPR2> Ptr;
 };
+
+struct Act_RosSubKinect : Act {
+  struct SubscribeRosKinect *sub;
+  Act_RosSubKinect(Roopi *r);
+  virtual ~Act_RosSubKinect();
+};

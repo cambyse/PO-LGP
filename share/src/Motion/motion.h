@@ -108,9 +108,10 @@ struct MotionProblem {
   uint dim_x(uint t) { return configurations(t+k_order)->getJointStateDimension(); }
 
   //-- info on the costs
-  Graph getReport(bool gnuplt=true); ///< return summary of costs and constraint violations for all features
+  Graph getReport(bool gnuplt=true, int reportFeatures=0); ///< return summary of costs and constraint violations for all features
   void costReport(bool gnuplt=true){ cout <<getReport(gnuplt) <<endl; } //old convention
   void reportFeatures(bool brief=false, ostream& os=std::cout); ///< list all tasks, switches, feature values, for all times t
+  void reportProxies(ostream& os=std::cout); ///< list all tasks, switches, feature values, for all times t
 
   //-- helpers
   bool displayTrajectory(int steps, const char *tag, double delay=0.);

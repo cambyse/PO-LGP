@@ -1,7 +1,9 @@
 #include "act_ComPR2.h"
 
+#ifdef MLR_ROS
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
+#include <RosCom/subscribeRosKinect.h>
 
 struct sAct_ComPR2{
   Access<CtrlMsg> ctrl_ref;
@@ -48,3 +50,19 @@ void Act_ComPR2::stopSendingMotionToRobot(bool stop){
     s->pubCtrl->listenTo(*s->ctrl_ref.data);
   }
 }
+
+Act_RosSubKinect::Act_RosSubKinect(Roopi* r)
+  : Act(r){
+  sub = new sAct_ComPR2;
+}
+
+Act_RosSubKinect::~Act_RosSubKinect(){
+  delete sub;
+}
+
+#else
+Act_ComPR2::Act_ComPR2(Roopi* r) : Act(r), s(NULL){}
+Act_ComPR2::~Act_ComPR2(){}
+Act_RosSubKinect::Act_RosSubKinect(Roopi* r) : Act(r), sub(NULL){}
+Act_RosSubKinect::~Act_RosSubKinect(){}
+#endif

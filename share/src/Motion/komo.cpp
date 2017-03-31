@@ -147,7 +147,8 @@ void KOMO::useJointGroups(const StringA& groupNames, bool OnlyTheseOrNotThese){
       lock=false;
       for(const mlr::String& s:groupNames) if(j->ats.getNode(s)){ lock=true; break; }
     }
-    if(lock) j->type = mlr::JT_rigid;
+    if(lock) j->makeRigid();
+//        j->type = mlr::JT_rigid;
   }
   world.qdim.clear();
   world.q.clear();
@@ -170,6 +171,17 @@ void KOMO::setTiming(double _phases, uint _stepsPerPhase, double durationPerPhas
   MP->k_order=k_order;
 }
 
+void KOMO::activateCollisions(const char* s1, const char* s2){
+  mlr::Shape *sh1 = world.getShapeByName(s1);
+  mlr::Shape *sh2 = world.getShapeByName(s2);
+  if(sh1 && sh2) world.swift().activate(sh1, sh2);
+}
+
+void KOMO::deactivateCollisions(const char* s1, const char* s2){
+  mlr::Shape *sh1 = world.getShapeByName(s1);
+  mlr::Shape *sh2 = world.getShapeByName(s2);
+  if(sh1 && sh2) world.swift().deactivate(sh1, sh2);
+}
 
 //===========================================================================
 //
@@ -304,7 +316,7 @@ void KOMO::setLastTaskToBeVelocity(){
   MP->tasks.last()->map->order = 1; //set to be velocity!
 }
 
-void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose, double weightFromTop){
+void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int verbose, double weightFromTop, double timeToLift){
   if(verbose>0) cout <<"KOMO_setGrasp t=" <<time <<" endeff=" <<endeffRef <<" obj=" <<object <<endl;
 //  mlr::String& endeffRef = world.getShapeByName(graspRef)->body->inLinks.first()->from->shapes.first()->name;
 
@@ -331,8 +343,8 @@ void KOMO::setGrasp(double time, const char* endeffRef, const char* object, int 
   setKinematicSwitch(time, true, "ballZero", endeffRef, object);
 
   if(stepsPerPhase>2){ //velocities down and up
-    setTask(time-.15, time, new TaskMap_Default(posTMT, world, endeffRef), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down
-    setTask(time, time+.15, new TaskMap_Default(posTMT, world, object), OT_sumOfSqr, {0.,0.,.1}, 1e1, 1); // move up
+    setTask(time-timeToLift, time, new TaskMap_Default(posTMT, world, endeffRef), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down
+    setTask(time, time+timeToLift, new TaskMap_Default(posTMT, world, object), OT_sumOfSqr, {0.,0.,.1}, 1e1, 1); // move up
   }
 }
 
@@ -639,8 +651,12 @@ void KOMO::run(){
   if(verbose>1) cout <<MP->getReport(false);
 }
 
-Graph KOMO::getReport(bool gnuplt){
-  return MP->getReport(gnuplt);
+Graph KOMO::getReport(bool gnuplt, int reportFeatures){
+    return MP->getReport(gnuplt, reportFeatures);
+}
+
+void KOMO::reportProxies(){
+    MP->reportProxies();
 }
 
 void KOMO::checkGradients(){

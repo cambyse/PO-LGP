@@ -48,6 +48,8 @@ struct KOMO{ //TODO: rename ManipOp
                 bool meldFixedJoints=false, bool makeConvexHulls=false, bool computeOptimalSSBoxes=false, bool activateAllContacts=false);
   void useJointGroups(const StringA& groupNames, bool OnlyTheseOrNotThese=true);
   void setTiming(double _phases=1., uint _stepsPerPhase=10, double durationPerPhase=5., uint k_order=2, bool useSwift=true);
+  void activateCollisions(const char* s1, const char* s2);
+  void deactivateCollisions(const char* s1, const char* s2);
 
   //-- higher-level defaults
   void setConfigFromFile();
@@ -100,7 +102,7 @@ struct KOMO{ //TODO: rename ManipOp
 
 
   //-- tasks (cost/constraint terms) high-level (rough, for LGP)
-  void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0, double weightFromTop=1e1);
+  void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0, double weightFromTop=1e1, double timeToLift=.15);
   void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, int verbose=0);
   void setPlaceFixed(double time, const char* endeffRef, const char* object, const char* placeRef, const mlr::Transformation& worldPose, int verbose=0);
   void setGraspSlide(double startTime, double endTime, const char* endeffRef, const char* object, const char* placeRef, int verbose=0, double weightFromTop=1e1);
@@ -131,7 +133,8 @@ struct KOMO{ //TODO: rename ManipOp
   void reset();
   void step();
   void run();
-  Graph getReport(bool gnuplt=false);
+  Graph getReport(bool gnuplt=false, int reportFeatures=0);
+  void reportProxies();
   void checkGradients();
   bool displayTrajectory(double delay=0.01, bool watch=false);
   mlr::Camera& displayCamera();

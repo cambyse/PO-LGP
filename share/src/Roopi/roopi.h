@@ -129,8 +129,8 @@ struct Roopi {
   Act_Thread::Ptr  newThread(Thread* th)  { return Act_Thread::Ptr(new Act_Thread(this, th)); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
   Act_ComPR2::Ptr  newComPR2()            { return Act_ComPR2::Ptr(new Act_ComPR2(this)); } ///< subscribers/publishers that communicate with PR2
   Act_PathOpt::Ptr newPathOpt()           { return Act_PathOpt::Ptr(new Act_PathOpt(this)); } ///< a path optimization activity, access komo yourself to define the problem
+  Act::Ptr         rosKinect()            { return make_shared<Act_RosSubKinect>(this); }
 
-  Act_Th<struct RosCom_Spinner> RosCom(); ///< thread for the ROS spinner
   Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)
   Act_Thread::Ptr GamepadControl();  ///< activate gamepad to set controls
   Act_Thread::Ptr CameraView(const char* modelWorld_name="modelWorld");      ///< compute and display the camera view

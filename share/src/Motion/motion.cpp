@@ -423,12 +423,19 @@ void MotionProblem::reportFeatures(bool brief, ostream& os) {
     }
   }
   if(featureValues.N) CHECK_EQ(M , featureValues.scalar().N, "");
+}
 
-
+void MotionProblem::reportProxies(std::ostream& os){
+    int t=0;
+    for(auto &K:configurations){
+        os <<" **** MotionProblem PROXY REPORT t=" <<t-k_order <<endl;
+        K->reportProxies(os);
+        t++;
+    }
 }
 
 
-Graph MotionProblem::getReport(bool gnuplt) {
+Graph MotionProblem::getReport(bool gnuplt, int reportFeatures) {
   if(featureValues.N>1){ //old optimizer -> remove some time..
     arr tmp;
     for(auto& p:featureValues) tmp.append(p);
@@ -439,10 +446,11 @@ Graph MotionProblem::getReport(bool gnuplt) {
     featureTypes = ARRAY<ObjectiveTypeA>(ttmp);
   }
 
-  arr& phi = featureValues.scalar();
-  ObjectiveTypeA& tt = featureTypes.scalar();
+  const arr& phi = featureValues.scalar();
+  const ObjectiveTypeA& tt = featureTypes.scalar();
 
   //-- collect all task costs and constraints
+  StringA name; name.resize(tasks.N);
   arr err=zeros(T,tasks.N);
   arr taskC=zeros(tasks.N);
   arr taskG=zeros(tasks.N);
@@ -452,7 +460,7 @@ Graph MotionProblem::getReport(bool gnuplt) {
       Task *task = tasks(i);
       if(task->prec.N>t && task->prec(t)){
         uint d=task->map->dim_phi(configurations({t,t+k_order}), t);
-        for(uint i=0;i<d;i++) CHECK(tt(M+i)==task->type,"");
+        for(uint j=0;j<d;j++) CHECK(tt(M+j)==task->type,"");
         if(d){
           if(task->type==OT_sumOfSqr){
             for(uint j=0;j<d;j++) err(t,i) += mlr::sqr(phi(M+j)); //sumOfSqr(phi.sub(M,M+d-1));
@@ -468,10 +476,18 @@ Graph MotionProblem::getReport(bool gnuplt) {
           }
           M += d;
         }
+        if(reportFeatures==1){
+            cout <<std::setw(4) <<t <<' ' <<std::setw(2) <<i <<' ' <<std::setw(2) <<d
+                <<' ' <<std::setw(40) <<task->name
+               <<" k=" <<task->map->order <<" ot=" <<task->type <<" prec=" <<std::setw(4) <<task->prec(t);
+            if(task->target.N<5) cout <<" y*=[" <<task->target <<']'; else cout<<"y*=[..]";
+            cout <<" y^2=" <<err(t,i) <<endl;
+        }
       }
     }
   }
   CHECK_EQ(M , phi.N, "");
+
 
   //-- generate a report graph
   Graph report;

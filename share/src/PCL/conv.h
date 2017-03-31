@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Core/thread.h>
-#include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
 
 namespace pcl{
   struct PointXYZRGB;

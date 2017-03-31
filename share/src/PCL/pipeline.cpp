@@ -1,6 +1,7 @@
 #include "pipeline.h"
 
-#include <boost/make_shared.hpp>
+#ifdef MLR_PCL
+//#include <boost/make_shared.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -350,3 +351,17 @@ void getClusters(std::vector<pcl::PointIndices>& cluster_indices, const Pcl::Con
   ec.extract(cluster_indices);
 }
 
+#else
+#include <Core/thread.h>
+namespace pcl{
+  struct PointXYZRGBP{};
+  template<class T> struct PointCloud{};
+}
+PclPipeline::PclPipeline(const char* input_name)
+    : Thread("PclPipeline"),
+      inputPcl(this, input_name),
+      processedPcl(this, "pcl_processed"),
+      percepts_input(this, "percepts_input"){}
+PclPipeline::~PclPipeline(){}
+void PclPipeline::step(){}
+#endif

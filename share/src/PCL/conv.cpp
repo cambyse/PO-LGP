@@ -1,5 +1,6 @@
 #include "conv.h"
 
+#ifdef MLR_PCL
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -72,5 +73,17 @@ void Conv_arr_pcl::step(){
   if(!copyPts.N || copyRgb.N!=copyRgb.N) return;
   conv_ArrCloud_PclCloud( cloud.set(), copyPts, copyRgb );
 }
+#else
+namespace pcl{
+  struct PointXYZRGBP{};
+  template<class T> struct PointCloud{};
+}
 
-
+Conv_arr_pcl::Conv_arr_pcl(const char* cloud_name, const char* pts_name, const char* rgb_name)
+  : Thread(STRING("Conv_arr_pcl"<<cloud_name <<"_" <<pts_name), -1.),
+    cloud(this, cloud_name),
+    pts(this, pts_name),
+    rgb(this, rgb_name, false){}
+Conv_arr_pcl::~Conv_arr_pcl(){}
+void Conv_arr_pcl::step(){}
+#endif

@@ -1,3 +1,4 @@
+#ifdef MLR_ROS
 #include "trajectoryInterface.h"
 #include <Algo/spline.h>
 
@@ -398,3 +399,4 @@ void TrajectoryInterface::logging(mlr::String folder, mlr::String name, uint id)
 
   if (logU.N>0) write(LIST<arr>(logU),STRING(filename<<"U.dat"));
 }
+#endif
