@@ -92,7 +92,12 @@ Everything else is equal to ubuntu.
 ## QtCreator tips
 
 * Enable Debugging helpers:
+** OLD WAY:
   .gdbinit -> git/mlr/tools/qt_mlr_types.py
+** NEW WAY:
+  in Options -> Debugger -> GDB -> Extra Dumpers add
+  'git/mlr/tools/qt_mlr_types.py'
+  In this file ther must not be a 'python' and 'end' flags!
 
 * Enable std::... pretty printing:
   Options > Debugger > GDB ... UNCHECK the 'Load system GDB pretty printers'

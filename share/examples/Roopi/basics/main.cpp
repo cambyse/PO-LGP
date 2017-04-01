@@ -389,9 +389,16 @@ void TEST(Gamepad) {
 
 //===============================================================================
 
+struct Foo{
+};
+
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);
 
+  arr HUHU = {1.,2.,3};
+  mlr::String str="bla";
+  int y=7;
+  return 0;
   //--very simple one action tests
 //  testHoming(); return 0;
 //  testBasics();
