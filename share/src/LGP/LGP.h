@@ -21,7 +21,7 @@
 
 #include "towerProblem.h"
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Logic/fol_mcts_world.h>
 
 //===========================================================================

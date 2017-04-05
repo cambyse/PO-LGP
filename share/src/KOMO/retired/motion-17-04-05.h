@@ -73,7 +73,7 @@ struct MotionProblem {
   double tau;   ///< duration of single step
   uint k_order; ///< determine the order of the KOMO problem (default 2)
   
-  //-- buffers of all feature values computed on last set_x -- used for reporting only
+  //-- for reporting only: buffers of all feature values computed on last set_x
   arrA featureValues;                  ///< storage of all features in all time slices
   mlr::Array<ObjectiveTypeA> featureTypes;  ///< storage of all feature-types in all time slices
   arr dualSolution;                    ///< the dual solution computed during constrained optimization

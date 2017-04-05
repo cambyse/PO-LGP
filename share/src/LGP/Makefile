@@ -5,7 +5,7 @@ OUTPUT = lib$(NAME).so
 LAPACK = 1
 #OPTIM=fast_debug
 
-DEPEND = Logic Motion
+DEPEND = Logic KOMO
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

@@ -1,11 +1,8 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-
-#include <Motion/komo.h>
+#include <Kin/taskMaps.h>
+#include <KOMO/komo.h>
 
 
 #include <Kin/kin_swift.h>
@@ -18,7 +15,7 @@ void TEST(UsingSpecs){
   komo.reset();
 //  komo.MP->reportFeatures(true);
   komo.run();
-  komo.MP->costReport(true);
+  komo.costReport(true);
   for(;;)
     komo.displayTrajectory();
 }

@@ -6,7 +6,7 @@ OUTPUT = lib$(NAME).so
 ifeq ($(PURE_RELATIONAL),1)
 DEPEND = Core
 else
-DEPEND = Core Kin Gui Motion
+DEPEND = Core Kin Gui KOMO
 endif
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )

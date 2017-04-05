@@ -4,11 +4,9 @@
 #include "sensor_msgs/JointState.h"
 
 #include <Motion/rrt_planner.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <ctime>

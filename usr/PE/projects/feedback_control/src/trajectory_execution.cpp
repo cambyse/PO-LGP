@@ -15,9 +15,8 @@
 // ors includes
 #include <Core/util.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <GL/glu.h>
 #include <Optim/optimization.h>

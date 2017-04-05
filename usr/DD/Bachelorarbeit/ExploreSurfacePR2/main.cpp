@@ -1,7 +1,7 @@
 #include <Core/array.h>
 #include <Ors/ors.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
 #include <Gui/plot.h>

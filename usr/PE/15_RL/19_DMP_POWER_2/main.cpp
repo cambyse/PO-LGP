@@ -2,9 +2,9 @@
 #include <Core/array.h>
 #include <Core/array_t.h>
 #include <Gui/plot.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Motion/dynamicMovementPrimitives.h>
 #include <Optim/optimization.h>
 #include <Kin/kin.h>

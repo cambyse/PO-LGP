@@ -1,5 +1,5 @@
-#include <Motion/taskMaps.h>
-#include <Motion/motion.h>
+#include <Kin/taskMaps.h>
+#include <KOMO/komo.h>
 #include <Motion/phase_optimization.h>
 #include <Optim/lagrangian.h>
 #include <Optim/optimization.h>

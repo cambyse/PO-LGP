@@ -1,5 +1,5 @@
 #include <Roopi/roopi.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <Control/taskControl.h>
 
 //===============================================================================

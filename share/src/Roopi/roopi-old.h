@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 struct CtrlTask;
 typedef mlr::Array<CtrlTask*> CtrlTaskL;

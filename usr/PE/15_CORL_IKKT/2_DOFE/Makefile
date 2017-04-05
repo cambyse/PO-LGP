@@ -4,7 +4,7 @@ BASE = ../../../../share
 OBJS = main.o src/articulation_interface.o ../../src/traj_factory.o ../../src/task_grasp.o ../../src/task_door.o ../../src/task_button.o ../../src/plotUtil.o
 PLIB = 1
 ROS = 1
-DEPEND = Kin Geo Optim Core Hardware_gamepad Motion Gui pr2
+DEPEND = Kin Geo Optim Core Hardware_gamepad KOMO Gui pr2
 
 CPATHS += $(BASE)/../../../rosbuild_ws/sandbox/articulation/articulation_models/include/
 CPATHS += $(BASE)/../../../rosbuild_ws/sandbox/articulation/articulation_structure/src/

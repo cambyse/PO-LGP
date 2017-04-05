@@ -3,7 +3,7 @@ BASE = ../../../../share
 #OBJS = main.o src/mb_strategy.o ../../src/traj_factory.o ../../src/task_grasp.o ../../src/task_door.o ../../src/task_button.o ../../src/plotUtil.o
 
 OBJS = main.o src/conbopt.o ../../src/traj_factory.o ../../src/task_grasp.o ../../src/task_door.o ../../src/task_button.o ../../src/plotUtil.o
-DEPEND = Core Kin Gui Algo Motion Optim pr2 Geo
+DEPEND = Core Kin Gui Algo KOMO Optim pr2 Geo
 PTHREAD = 0
 PHYSX = 0
 

@@ -2,7 +2,7 @@
 #define MBMFL_H
 
 #include <Core/array.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 struct MBMFL
 {

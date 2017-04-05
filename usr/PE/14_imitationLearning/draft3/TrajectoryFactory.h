@@ -2,7 +2,7 @@
 #define TRAJECTORYFACTORY_H
 
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 #include "Demonstration.h"
 

@@ -3,8 +3,8 @@
 
 #include <Core/array.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include "../../src/traj_factory.h"
 #include "task_manager.h"
 

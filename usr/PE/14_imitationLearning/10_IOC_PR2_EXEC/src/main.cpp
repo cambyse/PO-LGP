@@ -1,7 +1,7 @@
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 
 

@@ -2,8 +2,8 @@
 #include <Core/array.h>
 #include <Gui/plot.h>
 #include <Gui/opengl.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/blackbox.h>
 #include <Kin/kin.h>

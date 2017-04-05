@@ -3,7 +3,7 @@
 
 #include <Algo/spline.h>
 #include <Control/TaskControlThread.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Optim/lagrangian.h>
 #include <Gui/viewer.h>
 

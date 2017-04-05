@@ -1,7 +1,7 @@
 #include <Core/array.h>
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <RosCom/roscom.h>
 #include <Core/util.h>
 #include <Gui/plot.h>

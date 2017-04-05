@@ -1,5 +1,5 @@
 BASE = ../../../share
 
-DEPEND =  Logic LGP Motion Core Geo Kin Gui Optim MCTS
+DEPEND =  Logic LGP KOMO Core Geo Kin Gui Optim MCTS
 
 include $(BASE)/build/generic.mk

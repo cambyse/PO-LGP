@@ -1,6 +1,6 @@
 #include "switchOptim.h"
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/convert.h>
 #include <Kin/kin_swift.h>
 

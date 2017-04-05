@@ -2,9 +2,9 @@
 #define IKMO_H
 
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <vector>
 #include "gaussian_costs.h"
 #include "rbf_costs.h"

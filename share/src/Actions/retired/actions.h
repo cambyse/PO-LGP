@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/array.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 /** @file This file contains implementations of Actions.  */
 

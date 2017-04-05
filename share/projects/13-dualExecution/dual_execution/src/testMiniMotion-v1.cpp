@@ -10,9 +10,8 @@
 //#include <boost/thread.hpp>
 #endif
 
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Core/thread.h>

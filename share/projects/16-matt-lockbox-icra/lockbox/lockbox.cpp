@@ -3,7 +3,7 @@
 
 #include "lockbox.h"
 #include <unordered_map>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>

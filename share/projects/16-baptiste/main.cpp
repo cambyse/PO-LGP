@@ -1,4 +1,4 @@
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <string>
 #include <map>
 

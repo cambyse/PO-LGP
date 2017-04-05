@@ -16,7 +16,7 @@
 #pragma once
 
 #include <Optim/optimization.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 //===========================================================================
 

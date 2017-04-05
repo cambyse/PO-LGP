@@ -1,9 +1,7 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-//#include <Motion/motionHeuristics.h>
-
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 #include <Kin/kin_swift.h>
 

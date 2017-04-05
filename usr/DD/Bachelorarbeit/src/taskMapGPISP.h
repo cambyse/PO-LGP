@@ -1,8 +1,8 @@
 #ifndef TASKMAPGPISP_H
 #define TASKMAPGPISP_H
 
-#include <Motion/taskMap.h>
-#include <Motion/taskMap_default.h>
+#include <Kin/taskMap.h>
+#include <Kin/taskMap_default.h>
 #include <Algo/gpOp.h>
 
 

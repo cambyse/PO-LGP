@@ -2,7 +2,7 @@
 #include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 #include <Algo/kalman.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 #include <Hardware/racer/racer.h>
 

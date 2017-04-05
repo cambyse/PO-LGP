@@ -16,7 +16,7 @@
 
 #include <Kin/kin.h>
 #include <Algo/rrt.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 #include <Gui/opengl.h>
 #include <Gui/plot.h>

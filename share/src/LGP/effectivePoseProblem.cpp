@@ -15,7 +15,7 @@
 
 #include "effectivePoseProblem.h"
 #include <Gui/opengl.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Optim/lagrangian.h>
 
 //===========================================================================

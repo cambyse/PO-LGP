@@ -1,8 +1,8 @@
 #include <Optim/optimization.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Gui/plot.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include "../src/plotUtil.h"
 #include "../src/phase_optimization.h"
 

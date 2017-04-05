@@ -1,9 +1,9 @@
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <string>
 #include <map>
 #include <Gui/opengl.h>
 #include <Kin/kin_swift.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 using namespace std;
 

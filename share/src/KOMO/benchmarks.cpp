@@ -14,11 +14,11 @@
 
 
 #include "benchmarks.h"
-#include "motion.h"
+#include "komo.h"
 //#include <Optim/kOrderMarkov.h>
 #include <Optim/convert.h>
 
-void setTasks(MotionProblem& MP,
+void setTasks(KOMO& MP,
               mlr::Shape &endeff,
               mlr::Shape& target,
               byte whichAxesToAlign,
@@ -28,7 +28,7 @@ void setTasks(MotionProblem& MP,
 
 struct sPR2EndPoseProblem{
   mlr::KinematicWorld world;
-  MotionProblem MP;
+  KOMO MP;
   Convert *CP;
   sPR2EndPoseProblem()
     :world ("model.kvg"), MP(world), CP(NULL){}

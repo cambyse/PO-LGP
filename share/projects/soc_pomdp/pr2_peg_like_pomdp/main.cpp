@@ -8,9 +8,8 @@
 #include <RosCom/actions.h>
 #include <RosCom/actionMachine.h>
 
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 
 #include <Optim/optimization.h>
 #include <Core/util.h>

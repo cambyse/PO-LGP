@@ -1,6 +1,5 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Control/taskControl.h>
 #include <Optim/optimization.h>
 
