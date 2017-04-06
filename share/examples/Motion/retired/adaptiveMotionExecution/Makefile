@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Motion Core Geo Kin Gui Optim Algo
+DEPEND = KOMO Core Geo Kin Gui Optim Algo
 GL = 1
 LIBS += -lGL
 include $(BASE)/build/generic.mk

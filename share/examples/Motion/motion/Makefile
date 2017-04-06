@@ -1,5 +1,5 @@
 BASE = ../../..
 
-DEPEND = Motion Core Geo Kin Geo Gui Optim
+DEPEND = KOMO Core Geo Kin Geo Gui Optim
 
 include $(BASE)/build/generic.mk

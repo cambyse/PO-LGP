@@ -2,7 +2,7 @@
 #define MOTION_FACTORY_H
 
 #include <Core/array.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include "ikmo_bretl.h"
 //#include "ikmo_cma.h"
 #include "ikmo.h"

@@ -2,7 +2,7 @@
 #include "interface/myBaxter.h"
 #include "lockbox/lockbox.h"
 #include <Control/taskControl.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 // =================================================================================================
 

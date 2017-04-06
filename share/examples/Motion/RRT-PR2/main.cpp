@@ -1,9 +1,6 @@
 #include <Motion/rrt_planner.h>
-#include <Motion/motion.h>
-
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>

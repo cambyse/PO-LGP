@@ -3,7 +3,7 @@
 #include <Core/array.h>
 #include <Core/graph.h>
 #include <Core/module.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Control/taskControl.h>
 
 

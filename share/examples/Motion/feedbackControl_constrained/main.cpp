@@ -1,6 +1,6 @@
 #include <Kin/kin.h>
 #include <Control/taskControl.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 void reach(){
   mlr::KinematicWorld world("man.ors");

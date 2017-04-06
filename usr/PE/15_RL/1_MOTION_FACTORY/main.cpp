@@ -1,5 +1,5 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 
 #include "../../src/motion_factory.h"

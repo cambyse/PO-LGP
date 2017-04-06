@@ -1,5 +1,5 @@
 #include "taskMapVariance.h"
-#include <Motion/taskMap_default.h>
+#include <Kin/taskMap_default.h>
 
 void TaskMapVariance::phi(arr& y, arr& J, const WorldL& G, double tau, int t) {
   y = zeros(1);

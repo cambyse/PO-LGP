@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Optim/blackbox.h>
 #include <Core/util.h>
 

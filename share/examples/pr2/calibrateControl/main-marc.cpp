@@ -10,8 +10,7 @@
 #include <sensor_msgs/JointState.h>
 //#include <pr2/baxter.h>
 
-#include <Motion/komo.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 struct Poser{
   mlr::KinematicWorld W;

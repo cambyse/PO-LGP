@@ -7,7 +7,7 @@
 // ors includes
 #include <Core/util.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Gui/opengl.h>
 #include <GL/glu.h>
 

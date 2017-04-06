@@ -1,9 +1,8 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
-
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <GL/glu.h>
 
 #include <Kin/kin_swift.h>

@@ -17,7 +17,7 @@
     along with libSOC.  If not, see <http://www.gnu.org/licenses/> */
 
 #include <System/biros.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 #include "schunk.h"
 

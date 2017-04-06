@@ -1,11 +1,9 @@
 #include "motion_factory.h"
 
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin_swift.h>
 #include <Geo/geo.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 
 void MotionFactory::execMotion(IKMO &ikmo,Scene &s, arr param, bool vis, uint verbose) {

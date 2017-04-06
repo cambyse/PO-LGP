@@ -1,11 +1,11 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 #include <Kin/kin_swift.h>
 

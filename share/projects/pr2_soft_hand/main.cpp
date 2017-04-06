@@ -5,8 +5,8 @@
 #include <Gui/opengl.h>
 
 #include <RosCom/roscom.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <std_msgs/String.h>
 #include <RosCom/rosmacro.h>

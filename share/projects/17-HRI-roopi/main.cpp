@@ -1,6 +1,6 @@
 #include <Roopi/roopi.h>
 #include <Control/taskControl.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <RosCom/subscribeRosKinect.h>
 #include <RosCom/subscribeRosKinect2PCL.h>
 #include <Gui/viewer.h>

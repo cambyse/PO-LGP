@@ -1,8 +1,8 @@
 #include <Core/util.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_transition.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
+#include <Kin/taskMap_default.h>
+#include <Kin/taskMap_transition.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>

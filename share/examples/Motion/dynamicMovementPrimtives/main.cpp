@@ -1,8 +1,7 @@
 #include <Core/util.h>
 #include <Gui/opengl.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Motion/dynamicMovementPrimitives.h>

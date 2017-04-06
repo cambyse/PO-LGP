@@ -4,9 +4,8 @@
 #include <Gui/opengl.h>
 
 #include <RosCom/roscom.h>
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Algo/spline.h>
 
 struct MySystem{

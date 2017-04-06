@@ -2,7 +2,7 @@
 #include "roopi.h"
 
 #include <Core/thread.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <Kin/kinViewer.h>
 
 struct sAct_PathOpt : Thread{

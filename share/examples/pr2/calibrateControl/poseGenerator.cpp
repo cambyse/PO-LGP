@@ -2,8 +2,7 @@
 
 #include <Algo/MLcourse.h>
 
-#include <Motion/komo.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 PoseGenerator::PoseGenerator(const mlr::KinematicWorld& W) : W(W) {
   q0 = W.getJointState();

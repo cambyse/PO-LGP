@@ -1,5 +1,5 @@
 #include "taskMapGPISP.h"
-#include <Motion/taskMap_default.h>
+#include <Kin/taskMap_default.h>
 
 void TaskMap_GPISP::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t) {
   arr pos, JPos;

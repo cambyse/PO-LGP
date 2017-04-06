@@ -1,8 +1,8 @@
 #ifndef TASKMAPVARIANCE_H
 #define TASKMAPVARIANCE_H
 
-#include <Motion/taskMap.h>
-#include <Motion/taskMap_default.h>
+#include <Kin/taskMap.h>
+#include <Kin/taskMap_default.h>
 #include <Algo/gaussianProcess.h>
 #include <Core/module.h>
 

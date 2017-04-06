@@ -1,6 +1,6 @@
 #include "TrajectoryFactory.h"
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 
 void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {

@@ -16,7 +16,7 @@
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
-#include <Motion/taskMap_qItself.h>
+#include <Kin/taskMap_qItself.h>
 
 #include <baxter_core_msgs/HeadPanCommand.h>
 #include <baxter_core_msgs/EndEffectorCommand.h>
@@ -25,7 +25,7 @@
 #include <Core/array.h>
 #include <Core/graph.h>
 #include <Core/util.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 //#include <Media/audio.h>
 

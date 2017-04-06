@@ -1,7 +1,7 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include "cost_weight.h"
 
 struct Scene {

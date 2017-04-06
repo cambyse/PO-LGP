@@ -5,7 +5,7 @@ OBJS = main.o
 PLIB = 1
 ROS = 1
 ROS_VERSION=groovy
-DEPEND = Core Motion Kin Gui RosCom Optim Algo
+DEPEND = Core KOMO Kin Gui RosCom Optim Algo
 
 LPATHS += /opt/ros/groovy/lib
 

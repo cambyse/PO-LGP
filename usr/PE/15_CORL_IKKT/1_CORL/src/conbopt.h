@@ -3,8 +3,8 @@
 
 #include <Core/array.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Algo/MLcourse.h>
 
 #include "/usr/local/MATLAB/R2016a/extern/include/engine.h"

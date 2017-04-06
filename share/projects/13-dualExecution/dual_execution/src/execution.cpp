@@ -14,7 +14,7 @@
 #include <sl_barrett_controller_interface/force_torque_sensor_client.h>
 
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Core/thread.h>
 
 #include "execution.h"

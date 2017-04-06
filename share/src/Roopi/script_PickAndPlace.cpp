@@ -1,7 +1,7 @@
 #include "script_PickAndPlace.h"
 #include "roopi.h"
 #include <Control/taskControl.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize){
   //query some info from the kinematics first

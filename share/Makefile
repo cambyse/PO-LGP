@@ -9,7 +9,7 @@ src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern
 
 exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile' -printf "%h ")
 
-pysrc_paths = Core Kin Gui Motion Optim
+pysrc_paths = Core Kin Gui KOMO Optim
 
 test_paths = $(shell find test -maxdepth 3 -name 'Makefile' -printf "%h ")
 

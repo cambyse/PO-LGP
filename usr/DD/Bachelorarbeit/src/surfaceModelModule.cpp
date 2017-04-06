@@ -6,7 +6,7 @@
 #include <Gui/opengl.h>
 #include <Gui/plot.h>
 #include <Gui/color.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include "taskMapGPISP.h"
 
 #include <boost/config.hpp>

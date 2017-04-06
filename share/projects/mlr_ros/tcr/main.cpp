@@ -1,9 +1,7 @@
 #include <Motion/rrt_planner.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Core/array.tpp>
 #include <Core/util.tpp>
 #include <Kin/kin.h>
