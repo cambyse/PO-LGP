@@ -298,8 +298,8 @@ GraspObject_Cylinder1::GraspObject_Cylinder1(const mlr::Shape* s){
   mlr::Vector tmp;
   c = conv_vec2arr(s->X.pos);
   z = conv_vec2arr(s->X.rot.getZ(tmp));
-  r = s->size[3];
-  h = s->size[2];
+  r = s->size(3);
+  h = s->size(2);
   this->s = 1.;
 }
 

@@ -243,7 +243,7 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   sh->name = name;
   sh->type = mlr::ST_marker;
   sh->color[0]=.8; sh->color[1]=sh->color[2]=.0;
-  sh->size[0]=.1;
+  sh->size(0)=.1;
   sh->X.pos = sh->rel.pos = pos;
   s->ctrlView->recopyKinematics(s->modelWorld());
   s->modelWorld.deAccess();

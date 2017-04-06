@@ -206,7 +206,7 @@ void soc::SocSystem_Ors::initStandardBenchmark(uint rand_seed){
     if(!k) b->type=mlr::BT_static;
     s=new mlr::Shape(*ors, b);
     s->type=mlr::ST_capsule;
-    s->size[0]=.0; s->size[1]=.0; s->size[2]=1./K; s->size[3]=.2/K;
+    s->size(0)=.0; s->size(1)=.0; s->size(2)=1./K; s->size(3)=.2/K;
     s->rel.setText(STRING("<t(0 0 " <<.5/K <<")>"));
     if(k&1){ s->color[0]=.5; s->color[1]=.2; s->color[2]=.2; } else   { s->color[0]=.2; s->color[1]=.2; s->color[2]=.2; }
     s->cont=true;

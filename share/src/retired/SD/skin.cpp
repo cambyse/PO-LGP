@@ -44,7 +44,7 @@ tactile_arr_t::update_shapes(){
     sh_n( t==TIP ? (sh_n.d0-1-i) : i ,
         j)->color[1]=(double)(map(i,j))/255.;
     sh_n( t==TIP ? (sh_n.d0-1-i) : i ,
-        j)->size[2]=.02*(double)( map(i,j))/255.;
+        j)->size(2)=.02*(double)( map(i,j))/255.;
   }
 }
 

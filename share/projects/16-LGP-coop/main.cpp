@@ -270,8 +270,8 @@ int main(int argc,char **argv){
 
   rnd.clockSeed();
 
-  orsDrawAlpha = 1.;
-  orsDrawJoints=orsDrawMarkers=false;
+//  orsDrawAlpha = 1.;
+//  orsDrawJoints=orsDrawMarkers=false;
 //  orsDrawCores = true;
   if(mlr::getParameter<bool>("intact")){
     test();

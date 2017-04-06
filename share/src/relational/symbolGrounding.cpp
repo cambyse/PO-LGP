@@ -363,7 +363,7 @@ void relational::getFeatureVector(arr& f, const mlr::KinematicWorld& C, uint obj
     f(3) = 7;
   else
     f(3) = C.bodies(obj)->shapes(0)->type;
-  //f(3) = C.bodies(obj)->shapes(0)->size[0];  // size
+  //f(3) = C.bodies(obj)->shapes(0)->size(0);  // size
 }
 
 

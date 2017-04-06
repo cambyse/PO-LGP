@@ -34,22 +34,22 @@ void TowerProblem::setRandom(){
     //randomize type and size
     if(rnd.uni()<.6){
       s->type = mlr::ST_cylinder;
-      s->size[0]=s->size[1]=0.;
-      s->size[2]=.2;
-      s->size[3]=.05;
+      s->size(0)=s->size(1)=0.;
+      s->size(2)=.2;
+      s->size(3)=.05;
       s->name <<"cyl_" <<i;
     }else{
       s->type = mlr::ST_box;
-      s->size[0]=.1 + .3*rnd.uni();
-      s->size[1]=.1 + .6*rnd.uni();
-      s->size[2]=.02;
-      s->size[3]=0.;
+      s->size(0)=.1 + .3*rnd.uni();
+      s->size(1)=.1 + .6*rnd.uni();
+      s->size(2)=.02;
+      s->size(3)=0.;
       s->name <<"boa_" <<i;
     }
     b->name = s->name;
     //position on grid
-    b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);
-    y += .1 + s->size[1]+s->size[3];
+    b->X.addRelativeTranslation(0, .5*s->size(1), .5*s->size(2));
+    y += .1 + s->size(1)+s->size(3);
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
@@ -124,33 +124,33 @@ void TowerProblem_new::setRandom(){
     //randomize type and size
     if(rnd.uni()<.6){
       s->type = mlr::ST_ssBox;
-      s->size[0]=s->size[1]=0.;
-      s->size[2]=.2;
-      s->size[3]=.05;
+      s->size(0)=s->size(1)=0.;
+      s->size(2)=.2;
+      s->size(3)=.05;
       s->name <<"cyl_" <<i;
     }else{
       s->type = mlr::ST_ssBox;
-      s->size[0]=.1 + .3*rnd.uni();
-      s->size[1]=.1 + .6*rnd.uni();
-      s->size[2]=.02;
-      s->size[3]=.01;
+      s->size(0)=.1 + .3*rnd.uni();
+      s->size(1)=.1 + .6*rnd.uni();
+      s->size(2)=.02;
+      s->size(3)=.01;
       s->name <<"boa_" <<i;
     }
     s->sscCore.setBox();
-    s->sscCore.scale(s->size[0], s->size[1], s->size[2]);
-    s->mesh.setSSCvx(s->sscCore, s->size[3]);
+    s->sscCore.scale(s->size(0), s->size(1), s->size(2));
+    s->mesh.setSSCvx(s->sscCore, s->size(3));
     s->mesh_radius = s->mesh.getRadius();
     b->name = s->name;
     //position on grid
-    b->X.addRelativeTranslation(0, .5*s->size[1], .5*s->size[2]);
-    y += .1 + s->size[1]+s->size[3];
+    b->X.addRelativeTranslation(0, .5*s->size(1), .5*s->size(2));
+    y += .1 + s->size(1)+s->size(3);
     if(y>1.){ x+=.4; y=-1.; }
 
     //add symbols
     Node *o = fol_root.KB.newNode<bool>({s->name}, {}, true);
     //add predicates
     state.newNode<bool>({}, {OBJECT, o}, true);
-    if(!s->size[0]){
+    if(!s->size(0)){
       state.newNode<bool>({}, {CYLIN ,o}, true);
     }else{
       state.newNode<bool>({}, {BOARD, o}, true);

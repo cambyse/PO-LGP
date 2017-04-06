@@ -360,7 +360,7 @@ void setPlaceGoals(MotionProblem& MP, uint T, uint shapeId, int belowToShapeId, 
   arr xtarget;
   if(onto) {
     xtarget = conv_vec2arr(onto->X.pos);
-    xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+    xtarget(2) += .5*(onto->size(2)+obj->size(2))+.005; //above 'place' shape
   }
   else {
     xtarget = locationTo;  

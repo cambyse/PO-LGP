@@ -142,7 +142,7 @@ void setPlaceGoals(OrsSystem& sys, uint T, const char* objShape, const char* bel
   mlr::getParameter(endPrec, "reachPlanEndPrec");
   arr xtarget;
   xtarget = conv_vec2arr(onto->X.pos);
-  xtarget(2) += .5*(onto->size[2]+obj->size[2])+.005; //above 'place' shape
+  xtarget(2) += .5*(onto->size(2)+obj->size(2))+.005; //above 'place' shape
   
   //endeff
   V=listFindByName(sys.vars(), "endeffector");

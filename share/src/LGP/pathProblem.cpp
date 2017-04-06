@@ -55,8 +55,8 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
   {
     Task *t;
     t = MP.addTask("transitions", new TaskMap_Transition(world), OT_sumOfSqr);
-    if(microSteps>3) t->map.order=2;
-    else t->map.order=1;
+    if(microSteps>3) t->map->order=2;
+    else t->map->order=1;
     t->setCostSpecs(0, MP.T, {0.}, 1e-1);
   }
 
@@ -64,7 +64,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
   {
     Task *t;
     t = MP.addTask("pose", new TaskMap_qItself(), OT_sumOfSqr);
-    t->map.order=0;
+    t->map->order=0;
     t->setCostSpecs(0, MP.T, {0.}, 1e-5);
   }
 
@@ -111,7 +111,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     // zero position velocity
     if(microSteps>3){
       t = MP.addTask("psp_zeroPosVel", m=new TaskMap_Default(posTMT, endeff_index), OT_sumOfSqr);
-      t->map.order=1;
+      t->map->order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
         t->prec(tPick(i))=posPrec;
@@ -120,7 +120,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
 
       // zero quaternion velocity
       t = MP.addTask("pap_zeroQuatVel", new TaskMap_Default(quatTMT, endeff_index), OT_sumOfSqr);
-      t->map.order=1;
+      t->map->order=1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
         t->prec(tPick(i))=posPrec;
@@ -129,13 +129,13 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     }
 
     // zero grasp joint motion during holding
-    mlr::Joint *j_grasp = world.getJointByName("graspJoint");
-    arr M(j_grasp->qDim(),world.getJointStateDimension());
-    M.setZero();
-    for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
-    cout <<M <<endl;
-    t = MP.addTask("graspJoint", new TaskMap_qItself(M), OT_sumOfSqr);
-    t->map.order=1;
+//    mlr::Joint *j_grasp = world.getJointByName("graspJoint");
+//    arr M(j_grasp->qDim(),world.getJointStateDimension());
+//    M.setZero();
+//    for(uint i=0;i<j_grasp->qDim();i++) M(i,j_grasp->qIndex+i)=1.;
+//    cout <<M <<endl;
+    t = MP.addTask("graspJoint", new TaskMap_qItself(QIP_byJointNames, {"graspJoint"}, world), OT_sumOfSqr);
+    t->map->order=1;
     t->prec.resize(MP.T+1).setZero();
     for(uint i=0;i<actions.N;i++){
       for(uint time=tPick(i)+1;time<tPlace(i);time++) t->prec(time)=posPrec;
@@ -144,7 +144,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     // up/down velocities after/before pick/place
     if(microSteps>3){
       t = MP.addTask("pap_upDownPosVel", new TaskMap_Default(posTMT, endeff_index), OT_sumOfSqr);
-      t->map.order=1;
+      t->map->order=1;
       t->prec.resize(MP.T+1).setZero();
       t->target.resize(MP.T+1,3).setZero();
       for(uint i=0;i<actions.N;i++){

@@ -546,10 +546,10 @@ double* RobotManipulationSimulator::getPosition(uint id) {
 void RobotManipulationSimulator::getTablePosition(double& x1, double& x2, double& y1, double& y2) {
   double* pos = getPosition(getTableID());
   double* size = getSize(getTableID());
-  x1 = pos[0] - size[0]/2;
-  x2 = pos[0] + size[0]/2;
-  y1 = pos[1] - size[1]/2;
-  y1 = pos[1] + size[1]/2;
+  x1 = pos[0] - size(0)/2;
+  x2 = pos[0] + size(0)/2;
+  y1 = pos[1] - size(1)/2;
+  y1 = pos[1] + size(1)/2;
 }
 
 

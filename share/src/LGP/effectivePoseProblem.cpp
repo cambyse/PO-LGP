@@ -67,8 +67,8 @@ EffectivePoseProblem::EffectivePoseProblem(mlr::KinematicWorld& effKinematics_be
     if(!ref2->body->inLinks.N){ //object does not yet have a support -> add one; otherwise NOT!
       mlr::Joint *j = new mlr::Joint(effKinematics, ref1->body, ref2->body);
       j->type = mlr::JT_transXYPhi;
-      j->A.addRelativeTranslation(0, 0, .5*ref1->size[2]);
-      j->B.addRelativeTranslation(0, 0, .5*ref2->size[2]);
+      j->A.addRelativeTranslation(0, 0, .5*ref1->size(2));
+      j->B.addRelativeTranslation(0, 0, .5*ref2->size(2));
       j->Q.addRelativeTranslation(rnd.uni(-.1,.1), rnd.uni(-.1,.1), 0.);
       j->Q.addRelativeRotationDeg(rnd.uni(-180,180), 0, 0, 1);
     }
@@ -126,19 +126,19 @@ void EffectivePoseProblem::phi(arr& phi, arr& phiJ, arr& H, ObjectiveTypeA& tt, 
     arr y,J;
     effKinematics.kinematicsRelPos(y, J, b1, NoVector, b2, NoVector);
     arr range(3);
-    double d1 = .5*b1->shapes(0)->size[0] + b1->shapes(0)->size[3];
-    double d2 = .5*b2->shapes(0)->size[0] + b2->shapes(0)->size[3];
+    double d1 = .5*b1->shapes(0)->size(0) + b1->shapes(0)->size(3);
+    double d2 = .5*b2->shapes(0)->size(0) + b2->shapes(0)->size(3);
     range(0) = fabs(d1 - d2);
-    d1 = .5*b1->shapes(0)->size[1] + b1->shapes(0)->size[3];
-    d2 = .5*b2->shapes(0)->size[1] + b2->shapes(0)->size[3];
+    d1 = .5*b1->shapes(0)->size(1) + b1->shapes(0)->size(3);
+    d2 = .5*b2->shapes(0)->size(1) + b2->shapes(0)->size(3);
     range(1) = fabs(d1 - d2);
     range(2)=0.;
     if(verbose>2) cout <<y <<range
                       <<y-range <<-y-range
-                     <<"\n 10=" <<b1->shapes(0)->size[0]
-                    <<" 20=" <<b2->shapes(0)->size[0]
-                   <<" 11=" <<b1->shapes(0)->size[1]
-                  <<" 21=" <<b2->shapes(0)->size[1]
+                     <<"\n 10=" <<b1->shapes(0)->size(0)
+                    <<" 20=" <<b2->shapes(0)->size(0)
+                   <<" 11=" <<b1->shapes(0)->size(1)
+                  <<" 21=" <<b2->shapes(0)->size(1)
                  <<endl;
     prec = 1e1;
     phi.append(prec*(  y(0) - range(0) ));
