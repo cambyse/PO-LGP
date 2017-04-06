@@ -185,7 +185,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
 void PR2Grasp::graspObject(mlr::Shape *object) {
   if(object) {
     arr X;
-    MotionProblem MP(*ti->world_plan);
+    KOMO MP(*ti->world_plan);
     ti->getStatePlan(MP.x0);
 
     Task *t;

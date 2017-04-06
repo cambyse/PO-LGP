@@ -15,7 +15,7 @@ struct TrajFactory{
   void compFeatTraj(const arr &x, arr &y, mlr::KinematicWorld &world, TaskMap *tm);
 
   /// transform a trajectory from feature space into joint space
-  void compJointTraj(const arr &xInit, const arr &y, arr &x, MotionProblem &MP, TaskMap *tm);
+  void compJointTraj(const arr &xInit, const arr &y, arr &x, KOMO &MP, TaskMap *tm);
 
 };
 

@@ -18,7 +18,7 @@ void TEST(Matrices) {
   return;
 
   mlr::KinematicWorld G("chain.ors");
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);
@@ -51,7 +51,7 @@ void TEST(Matrices) {
 
 void TEST(GradCheck) {
   mlr::KinematicWorld G("chain.ors");
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);

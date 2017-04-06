@@ -1,6 +1,6 @@
 #include "surfaceVisualizationModule.h"
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Gui/color.h>
 #include <Control/TaskControlThread.h>
 #include <limits>

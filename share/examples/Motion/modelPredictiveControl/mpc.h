@@ -12,13 +12,13 @@
 
 
 struct MPC {
-  MPC(MotionProblem &_P, arr &_x);
+  MPC(KOMO &_P, arr &_x);
   ~MPC();
 
 
   void replan(arr& _goal, arr &_q);
 
-  MotionProblem& P;
+  KOMO& P;
   arr x;
 
   // bookkeeping

@@ -12,7 +12,7 @@ void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
     world.getJointState(q, qdot);
 
     makeConvexHulls(world.shapes);
-    MotionProblem MP(world);
+    KOMO MP(world);
     MP.loadTransitionParameters();
     arr refGoal = ARR(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
@@ -21,7 +21,7 @@ void createToyDemonstrations1(mlr::Array<Demonstration> &demos) {
     c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
     c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
-    MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
+    MP.setInterpolatingCosts(c,KOMO::finalOnly,{0.},1e3);
     c->map.order=1;
     MP.x0 = {0.,0.,0.,0.,0.};
 

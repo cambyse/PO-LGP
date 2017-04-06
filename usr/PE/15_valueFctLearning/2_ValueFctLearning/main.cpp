@@ -34,7 +34,7 @@ struct ValueFctLearning {
   arr A,b,z; // Iterative LSTD
 
   mlr::KinematicWorld *world;
-  MotionProblem *MP;
+  KOMO *MP;
 
   /// initialize W to diagonal matrix and all values to 1
   void initParam() {
@@ -176,7 +176,7 @@ struct ValueFctLearning {
 
   void runVF() {
     world = new mlr::KinematicWorld("scene0");
-    MP = new MotionProblem(*world,false);
+    MP = new KOMO(*world,false);
 
     MP->addTask("pos", new DefaultTaskMap(posTMT, *world, "endeff", NoVector));
 //    MP->addTask("q", new TaskMap_qItself());

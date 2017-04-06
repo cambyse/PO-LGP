@@ -1,6 +1,6 @@
 #include <Algo/spline.h>
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <KOMO/komo.h>
 #include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
@@ -114,7 +114,7 @@ int main(int argc,char **argv){
   cout << sum((P2-P1)%(P2-P1)) << endl;
   cout << sum((Pdemo2-Pdemo1)%(Pdemo2-Pdemo1)) << endl;
 
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = T(1)-1;
   MP.tau = 0.01;
   MP.x0 = X[0];

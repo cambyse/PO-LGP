@@ -28,7 +28,7 @@ void dofExploration() {
 
   arr param0 = ARR(Xbase(Xbase.d0-1,G.getJointByName("b2_b1")->qIndex));
 
-  MotionProblem *MP = new MotionProblem(G,false);
+  KOMO *MP = new KOMO(G,false);
   MP->T = Xbase.d0-1;
   MP->tau = duration/MP->T;
   MP->x0 = Xbase[0];
@@ -111,7 +111,7 @@ void initExploration() {
     }
 
 
-    MotionProblem *MP = new MotionProblem(G,false);
+    KOMO *MP = new KOMO(G,false);
     MP->T = Xbase.d0-1;
     MP->tau = duration/MP->T;
     MP->x0 = q0;
@@ -194,7 +194,7 @@ void initdofExploration() {
       C1trans[t] = C1trans[t] + s*offsetC1;
     }
 
-    MotionProblem *MP = new MotionProblem(G,false);
+    KOMO *MP = new KOMO(G,false);
     MP->T = Xbase.d0-1;
     MP->tau = duration/MP->T;
     MP->x0 = q0;

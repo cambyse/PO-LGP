@@ -10,7 +10,7 @@
 struct MB_strategy
 {
   arr xDemo;
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
   MotionProblemFunction* MPF;
 

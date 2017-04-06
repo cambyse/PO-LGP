@@ -12,7 +12,7 @@ struct MB_strategy
 {
   double duration;
   arr xDemo;
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
   MotionProblemFunction* MPF;
 

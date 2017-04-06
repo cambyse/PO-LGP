@@ -23,7 +23,7 @@ for (uint i=0; i<3;i++){
 
 current = 5-i*2;
 #if 1
-  MotionProblem MP(G);
+  KOMO MP(G);
 //G.watch(true);
 
 
@@ -62,7 +62,7 @@ cout << "DIM = "<<G.getJointStateDimension();
  //G.swift().initActivations();
  //  G.watch(true);
 
-  MotionProblem MP2(G);
+  KOMO MP2(G);
 
     arr  xT2;
 cout <<"DIM =" <<G.getJointStateDimension();
@@ -146,7 +146,7 @@ void testPickAndPlace(const char* target,arr finalpos){
 //    if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
   G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
 
   arr x, xT;
@@ -279,7 +279,7 @@ void AssembleChair(){
 //    if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
 //  G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
 
   arr x, xT;

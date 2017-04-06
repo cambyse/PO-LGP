@@ -4,7 +4,7 @@
 #include <Control/RTControllerSimulation.h>
 #include <Kin/kinViewer.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Gui/color.h>
 #include <KOMO/komo.h>
 #include "taskMapGPISP.h"
@@ -231,7 +231,7 @@ arr SurfaceModelObject::computeGeodesicVariancePathOnSurface(const arr& startPos
 arr SurfaceModelObject::smoothGeodesicPathWithKOMO(const arr& dijkstraPath) {
   mlr::KinematicWorld world(mlr::mlrPath("../usr/DD/Bachelorarbeit/src/3DRobot.ors"));
   world.setJointState(dijkstraPath[0]);
-  MotionProblem MP(world, false);
+  KOMO MP(world, false);
   //MP.k_order = 1;
   MP.T = dijkstraPath.d0;
 

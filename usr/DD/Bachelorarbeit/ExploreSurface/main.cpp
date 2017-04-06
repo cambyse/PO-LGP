@@ -5,7 +5,7 @@
 #include <Algo/gaussianProcess.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Roopi/roopi.h>
 #include <Control/TaskControlThread.h>
 #include <Kin/kinViewer.h>

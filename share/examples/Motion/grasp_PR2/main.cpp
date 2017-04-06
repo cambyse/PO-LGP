@@ -13,7 +13,7 @@ void TEST(GraspHeuristic){
   makeConvexHulls(G.shapes);
   G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   mlr::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
@@ -68,7 +68,7 @@ void TEST(PickAndPlace){
   makeConvexHulls(G.shapes);
 //  G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr x, xT;
 

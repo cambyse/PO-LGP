@@ -27,7 +27,7 @@ void changeColor(void*){  orsDrawAlpha = .7; }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
 void planTrajectory(arr &x,mlr::KinematicWorld &world) {
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
 
   /// load parameter from file
 

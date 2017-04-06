@@ -27,7 +27,7 @@ void gradCheckExample(){
 
 
 struct Dfdw:ConstrainedProblem {
-  //  MotionProblem MPF;
+  //  KOMO MPF;
   ScalarFunction& s;
   VectorFunction& v;
   arr x0;
@@ -152,7 +152,7 @@ void simpleMotion(){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  MotionProblem MP(world);
+  KOMO MP(world);
   MP.useSwift = false;
   MP.loadTransitionParameters();
 

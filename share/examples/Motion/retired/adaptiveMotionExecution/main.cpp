@@ -69,7 +69,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   makeConvexHulls(world.shapes);
   cout << "Loaded scene: " << scene << endl;
 
-  MotionProblem P(world);
+  KOMO P(world);
 
 
   //-- create an optimal trajectory to trainTarget

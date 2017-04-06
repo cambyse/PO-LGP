@@ -15,7 +15,7 @@ int main(int argc,char** argv){
   cout <<"loaded model: n=" <<G.q.N <<endl;
 //  G.gl().watch();
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *c;

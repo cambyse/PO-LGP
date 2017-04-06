@@ -4,7 +4,7 @@
 #include <Mocap/mocapdata.h>
 #include <Core/array.h>
 #include <Core/thread.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Core/util.h>
 
 // ############################################################################

@@ -3,7 +3,7 @@
 
 #include "../../src/plotUtil.h"
 
-void DoorTask::addConstraints(MotionProblem *MP, const arr &X)
+void DoorTask::addConstraints(KOMO *MP, const arr &X)
 {
   TrajFactory tf;
   arr yC1,yC2;
@@ -110,7 +110,7 @@ bool DoorTask::transformTrajectory(arr &Xn, const arr &x, arr &Xdemo){
     C2trans[t] = CP2[t];
   }
 
-  MotionProblem MP(*world,false);
+  KOMO MP(*world,false);
   MP.T = Xdemo.d0-1;
   MP.tau = mlr::getParameter<double>("duration")/MP.T;
   MP.x0 = Xdemo[0];

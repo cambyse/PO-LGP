@@ -578,7 +578,7 @@ Roopi_Path* Roopi::createPathInJointSpace(const CtrlTaskL& tasks, double executi
   Roopi_Path *path = new Roopi_Path(*this, executionTime);
 
   syncWorldWithReal(path->K);
-  MotionProblem MP(path->K);
+  KOMO MP(path->K);
 
   Task *t;
   t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);

@@ -15,7 +15,7 @@ SET_LOG(main, DEBUG);
 
 arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr& start) {
   DEBUG_VAR(main, G.qdot);
-  MotionProblem P(G);
+  KOMO P(G);
 
   P.loadTransitionParameters();
   P.H_rate_diag = mlr::getParameter<arr>("Hratediag");
@@ -29,7 +29,7 @@ arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr
 
   c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), pos_prec);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e1);
 
   keyframeOptimizer(start, P, true, 2);
 
@@ -39,8 +39,8 @@ arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr
 arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
   double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
-  // create MotionProblem
-  MotionProblem P(G);
+  // create KOMO
+  KOMO P(G);
   P.loadTransitionParameters();
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -58,8 +58,8 @@ arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
 }
 
 arr optimize_trajectory(mlr::KinematicWorld& G, const arr& init_trajectory) {
-  // create MotionProblem
-  MotionProblem P(G);
+  // create KOMO
+  KOMO P(G);
   P.loadTransitionParameters();
   P.H_rate_diag = mlr::getParameter<arr>("Hratediag");
   P.T = init_trajectory.d0-1;
@@ -71,7 +71,7 @@ arr optimize_trajectory(mlr::KinematicWorld& G, const arr& init_trajectory) {
 
   c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e2);
 
   MotionProblemFunction MF(P);
   arr x = init_trajectory;

@@ -19,7 +19,7 @@ void TEST(PR2reach){
   G.getShapeByName("target")->cont=false;
   cout <<"loaded model: n=" <<G.q.N <<endl;
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *t;
@@ -72,7 +72,7 @@ void TEST(Basics){
   mlr::KinematicWorld G("test.ors");
   G.getShapeByName("target")->cont=false;
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *t;

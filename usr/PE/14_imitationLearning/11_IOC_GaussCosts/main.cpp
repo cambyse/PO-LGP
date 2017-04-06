@@ -10,7 +10,7 @@
 #include <Optim/optimization.h>
 #include <Kin/kin_swift.h>
 
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include "../src/gaussian_costs.h"
 #include "../src/rbf_costs.h"
 

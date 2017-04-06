@@ -31,7 +31,7 @@ struct IOC_DemoCost {
   arr dPHI_J_Jt_dPHI;
   arr JgJgtI_Jg_J_dPHI;
 
-  IOC_DemoCost(MotionProblem &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
+  IOC_DemoCost(KOMO &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
     // precompute some terms
     MotionProblemFunction MPF(_MP);
     ConstrainedProblem & v = Convert(MPF);
@@ -147,12 +147,12 @@ struct IOC_DemoCost {
 };
 
 struct Demonstration {
-  MotionProblem& MP; // MP containing the world state,
+  KOMO& MP; // MP containing the world state,
   arr x;             // joint trajectory
   arr lambda;        // constraint trajectory
   IOC_DemoCost* cost;// cost function for this demonstrations
 
-  Demonstration (MotionProblem &_MP):MP(_MP) {
+  Demonstration (KOMO &_MP):MP(_MP) {
 
   }
 };
@@ -268,7 +268,7 @@ void simpleMotion(){
   mlr::KinematicWorld world("scene");
   arr q, qdot;
   world.getJointState(q, qdot);
-  MotionProblem MP(world,true);
+  KOMO MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
 
@@ -307,7 +307,7 @@ void simpleMotion(){
   // define toy demonstration 2
   mlr::KinematicWorld world2("scene");
   world2.getJointState(q, qdot);
-  MotionProblem MP2(world2,true);
+  KOMO MP2(world2,true);
   MP2.loadTransitionParameters();
 
   MP2.makeContactsAttractive=false;
@@ -315,9 +315,9 @@ void simpleMotion(){
   arr refGoal2 = conv_vec2arr(MP2.world.getBodyByName("goal")->X.pos);
   TaskCost *c2;
   c2 = MP2.addTask("position_right_hand",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
-  MP2.setInterpolatingCosts(c2, MotionProblem::finalOnly, refGoal2, 1e4);
+  MP2.setInterpolatingCosts(c2, KOMO::finalOnly, refGoal2, 1e4);
   c2 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"endeff","obstacle",0.1));
-  MP2.setInterpolatingCosts(c2, MotionProblem::constant, {0.}, 1.);
+  MP2.setInterpolatingCosts(c2, KOMO::constant, {0.}, 1.);
 
   MP2.x0 = {0.,0.,0.};
   MotionProblemFunction MPF2(MP2);

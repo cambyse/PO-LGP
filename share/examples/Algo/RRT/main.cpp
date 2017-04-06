@@ -1,5 +1,5 @@
 #include <Core/util.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Algo/ann.h>
 
 void TEST(RRT) {

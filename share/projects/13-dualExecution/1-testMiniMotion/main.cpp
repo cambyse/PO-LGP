@@ -4,7 +4,7 @@
 #include <Optim/optimization.h>
 
 arr getSimpleTrajectory(mlr::KinematicWorld& G){
-  MotionProblem P(G, false);
+  KOMO P(G, false);
   P.loadTransitionParameters();
 
   //-- setup the motion problem

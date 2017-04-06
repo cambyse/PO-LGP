@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 
-//#include <Gui/plot.h>
+//#include <Plot/plot.h>
 #include <MT/infer.h>
 #include <MT/mdp_help.h>
 

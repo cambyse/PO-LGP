@@ -7,7 +7,7 @@
 struct Scene {
   /// scene description
   arr x0;
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
 
   /// options

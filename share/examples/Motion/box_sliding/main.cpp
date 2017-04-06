@@ -35,7 +35,7 @@ void box1(arr &y){
 //  cout <<world.gl().camera.X->pos << endl;
 //  cout <<world.gl().camera.X->rot << endl;
 
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.useSwift=false;
   cout <<"joint dimensionality=" <<q.N <<endl;
 

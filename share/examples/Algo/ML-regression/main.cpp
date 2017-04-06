@@ -1,5 +1,5 @@
 #include <Algo/MLcourse.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Optim/GlobalIterativeNewton.h>
 
 bool plotDev=true;

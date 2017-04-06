@@ -4,7 +4,7 @@
 #include <Kin/taskMaps.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Roopi/roopi.h>
 #include <Control/TaskControlThread.h>
 #include <Ors/orsviewer.h>

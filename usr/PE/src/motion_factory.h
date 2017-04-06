@@ -12,7 +12,7 @@
 
 struct MotionFactory {
   void execMotion(Scene &s, arr &x=NoArr, arr &lambda=NoArr, arr &_x0=NoArr, uint vis=0, uint verbose=0,mlr::String name=mlr::String());
-  void loadDemonstration(arr &x,arr &lambda, MotionProblem &MP);
+  void loadDemonstration(arr &x,arr &lambda, KOMO &MP);
   void readDemoFromFile(const char* name,arr &x,arr &lambda);
   void writeDemoToFile(const char* name,arr &x,arr &lambda);
 

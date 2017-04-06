@@ -121,7 +121,7 @@ void executeTrajectoryWholeBody(String scene){
 
   // Plan Trajectory
   makeConvexHulls(world.shapes);
-  MotionProblem P(world);
+  KOMO P(world);
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
@@ -146,15 +146,15 @@ void executeTrajectoryWholeBody(String scene){
 
   //  c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  //  P.setInterpolatingVelCosts(c,KOMO::finalOnly, {0.,0.,0.}, 1e2);
 
   c = P.addTask("qLimits", new TaskMap_qLimits());
-  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e1);
+  P.setInterpolatingCosts(c,KOMO::constant,{0.},1e0);
+  //P.setInterpolatingVelCosts(c,KOMO::constant,{0.},1e1);
 
   c = P.addTask("homing", new TaskMap_qItself());
-  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e0);
+  P.setInterpolatingCosts(c,KOMO::constant,{0.},0);
+  //P.setInterpolatingVelCosts(c,KOMO::constant,{0.},1e0);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)
@@ -361,7 +361,7 @@ void executeTrajectoryRightArm(String scene){
   world.watch(true);
   // Plan Trajectory
   makeConvexHulls(world.shapes);
-  MotionProblem P(world);
+  KOMO P(world);
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(world));
   c->map.order=2; //make this an acceleration task!
@@ -373,20 +373,20 @@ void executeTrajectoryRightArm(String scene){
   //-- create an optimal trajectory to trainTarget
   c = P.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeffR", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, Rgoal, 1e4);
-  //  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  //  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e2);
 
   //  c = P.addTaskMap("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 1.)));
   //  P.setInterpolatingCosts(c, MEotionProblem::finalOnly, {-0.5,0.3,0.8}, 1e3);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  //  P.setInterpolatingVelCosts(c,KOMO::finalOnly, {0.,0.,0.}, 1e2);
 
   c = P.addTask("qLimits", new TaskMap_qLimits());
-  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0,{0.},1e0);
-//  P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e-1);
+  P.setInterpolatingCosts(c,KOMO::constant,{0.},1e0,{0.},1e0);
+//  P.setInterpolatingVelCosts(c,KOMO::constant,{0.},1e-1);
 
   c = P.addTask("homing", new TaskMap_qItself());
-  P.setInterpolatingCosts(c,MotionProblem::constant,{0.},0);
-  //  P.setInterpolatingVelCosts(c,MotionProblem::constant,{0.},1e0);
-  //P.setInterpolatingVelCosts(c,MotionProblem::finalOnly,{0.},1e2);
+  P.setInterpolatingCosts(c,KOMO::constant,{0.},0);
+  //  P.setInterpolatingVelCosts(c,KOMO::constant,{0.},1e0);
+  //P.setInterpolatingVelCosts(c,KOMO::finalOnly,{0.},1e2);
 
 
   //-- create the Optimization problem (of type kOrderMarkov)

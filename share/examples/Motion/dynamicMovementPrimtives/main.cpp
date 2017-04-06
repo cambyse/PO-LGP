@@ -46,7 +46,7 @@ void scenario2() {
   makeConvexHulls(world.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(world);
+  KOMO P(world);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
@@ -129,7 +129,7 @@ void scenario3() {
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(G);
+  KOMO P(G);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
@@ -251,7 +251,7 @@ void scenario4() {
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(G);
+  KOMO P(G);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;

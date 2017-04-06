@@ -86,7 +86,7 @@ public:
 
   void optimize_trajectory()
   {
-    MotionProblem P(&G);
+    KOMO P(&G);
     P.loadTransitionParameters();
 
     Task *c;
@@ -95,7 +95,7 @@ public:
     c->setCostSpecs(P.T, P.T,
                             conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
-    P.setInterpolatingVelCosts(c, MotionProblem::finalOnly,
+    P.setInterpolatingVelCosts(c, KOMO::finalOnly,
                                {0.,0.,0.}, 1e3,
                                {0.,0.,0.}, 0.);
 

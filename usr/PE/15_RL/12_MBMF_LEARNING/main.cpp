@@ -1,6 +1,6 @@
 #include <Algo/spline.h>
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <KOMO/komo.h>
 #include <Kin/taskMaps.h>
 #include <Optim/optimization.h>

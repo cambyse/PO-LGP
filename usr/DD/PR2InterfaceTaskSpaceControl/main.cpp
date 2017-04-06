@@ -4,7 +4,7 @@
 #include <KOMO/komo.h>
 #include <RosCom/roscom.h>
 #include <Core/util.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 #include <Hardware/gamepad/gamepad.h>
 

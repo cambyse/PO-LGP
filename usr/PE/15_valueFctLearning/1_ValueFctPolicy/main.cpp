@@ -10,7 +10,7 @@
 
 void run() {
   mlr::KinematicWorld world("scene0");
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   Task *t;
   Task *t2;
@@ -63,7 +63,7 @@ void run() {
 
 void run2() {
   mlr::KinematicWorld world("scene0");
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   Task *t;
   Task *t2;

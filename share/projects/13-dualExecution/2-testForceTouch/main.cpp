@@ -5,7 +5,7 @@
 
 
 void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world){
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
 
@@ -15,7 +15,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world){
                    new TaskMap_Default(posTMT, world, "endeff", NoVector));
   pos->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(pos, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
+  P.setInterpolatingVelCosts(pos, KOMO::finalOnly, {0.,0.,0.}, 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
   Task *cont = P.addTask("planeConstraint", new PlaneConstraint(world, "endeff", ARR(0,0,-1,.7)));

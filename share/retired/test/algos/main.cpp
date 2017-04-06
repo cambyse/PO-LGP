@@ -3,7 +3,7 @@
 #include <MT/functions.h>
 //#include <MT/dynamics.h>
 #include <MT/optimization.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 using namespace std;
 

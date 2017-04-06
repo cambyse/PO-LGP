@@ -5,7 +5,7 @@
 #include <Algo/gaussianProcess.h>
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Roopi/roopi.h>
 #include <Control/TaskControlThread.h>
 #include <Kin/kinViewer.h>
@@ -68,7 +68,7 @@ void tests() {
 
   cout << world.getJointStateDimension() << endl;
 
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   Task *t;
   t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);
@@ -98,7 +98,7 @@ void tests() {
 void verruecktWennDasKlappt() {
   mlr::KinematicWorld world("model.ors");
 
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   Task *t;
   t = MP.addTask("transitions", new TaskMap_Transition(MP.world), OT_sumOfSqr);

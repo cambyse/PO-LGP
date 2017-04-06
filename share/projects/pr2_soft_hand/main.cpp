@@ -40,7 +40,7 @@ int main(int argc, char** argv){
   world.watch(true);
 
 
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();

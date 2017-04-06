@@ -37,7 +37,7 @@ void circle_BM(){
   mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
-  MotionProblem MP(world);
+  KOMO MP(world);
 //  MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem
@@ -101,7 +101,7 @@ void star_BM(){
   mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
-  MotionProblem MP(world);
+  KOMO MP(world);
 //  MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem
@@ -215,7 +215,7 @@ void eight_BM(){
   mlr::KinematicWorld world("pr2_my_arm.ors");
 
   // Create Motion Problem
-  MotionProblem MP(world);
+  KOMO MP(world);
 //  MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem

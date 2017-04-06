@@ -58,7 +58,7 @@ arr PoseGenerator::getRandomPose(const arr& qInit) {
 
 #if 0
 arr PoseGenerator::getTraj(arr qInit, arr qEnd) {
-  MotionProblem MP(W);
+  KOMO MP(W);
   Task *t;
   MP.world.setJointState(qInit);
 

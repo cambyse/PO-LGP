@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <Kin/roboticsCourse.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 void holdSteady(){
   Simulator S("../02-pegInAHole/pegInAHole.ors");

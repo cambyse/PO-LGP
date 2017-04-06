@@ -27,7 +27,7 @@
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include "socSystem_ors.h"
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 //===========================================================================
 //

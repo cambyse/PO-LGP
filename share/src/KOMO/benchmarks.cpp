@@ -52,7 +52,7 @@ arr PR2EndPoseProblem::getInitialization(){
 }
 
 void PR2EndPoseProblem::report(){
-  s.MP.costReport();
+  cout <<s.MP.getReport();
   s.world.watch(true);
 }
 

@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Algo/spline.h>
 #include <Optim/optimization.h>
 #include <KOMO/komo.h>
@@ -15,7 +15,7 @@ int main(int argc,char **argv){
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MPref(world,false);
+  KOMO MPref(world,false);
   MPref.T = 50;
   MPref.tau = 0.01;
   mlr::Shape *grasp = world.getShapeByName("endeff");
@@ -34,7 +34,7 @@ int main(int argc,char **argv){
   optConstrainedMix(Xref, NoArr, Convert(MPFref), OPT(verbose=0, stopIters=100, maxStep=1., stepInc=2., aulaMuInc=2,stopTolerance = 1e-3));
 
   world.setJointState(q);
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 50;
   MP.tau = 0.01;
   t = MP.addTask("tra", new TransitionTaskMap(world));

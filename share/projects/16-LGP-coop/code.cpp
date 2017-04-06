@@ -86,13 +86,13 @@ void Coop::prepareDisplay(){
 }
 
 void Coop::updateDisplay(){
-  if(node->poseProblem && node->poseProblem->MP->configurations.N)
-    poseView.setConfigurations(node->poseProblem->MP->configurations);
-  if(node->seqProblem && node->seqProblem->MP->configurations.N)
-    seqView.setConfigurations(node->seqProblem->MP->configurations);
+  if(node->poseProblem && node->poseProblem->configurations.N)
+    poseView.setConfigurations(node->poseProblem->configurations);
+  if(node->seqProblem && node->seqProblem->configurations.N)
+    seqView.setConfigurations(node->seqProblem->configurations);
   else seqView.clear();
-  if(node->pathProblem && node->pathProblem->MP->configurations.N)
-    pathView.setConfigurations(node->pathProblem->MP->configurations);
+  if(node->pathProblem && node->pathProblem->configurations.N)
+    pathView.setConfigurations(node->pathProblem->configurations);
   else pathView.clear();
 
 

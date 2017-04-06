@@ -15,10 +15,12 @@
 
 #include "plot.h"
 #include <Core/array.tpp>
+#ifdef MLR_GL
 #include <Geo/geo.h>
 #include <Geo/mesh.h>
-#include "opengl.h"
-#include "color.h"
+#  include <Gui/opengl.h>
+#  include <Gui/color.h>
+#endif
 
 //===========================================================================
 //
@@ -125,19 +127,18 @@ void plot(bool wait, const char* txt) {
 }
 
 void plotClose() {
-  switch(plotModule.mode) {
-    case opengl:
-      plotCloseGL();
-      break;
-    default:{}
-  }
+#ifdef MLR_GL
+  if(plotModule.mode==opengl) plotCloseGL();
+#endif
 }
 
 void plotClear() {
   plotModule.s->array.clear();
   plotModule.s->points.clear();
   plotModule.s->lines.clear();
+#ifdef MLR_GL
   plotModule.s->planes.clear();
+#endif
 }
 
 void plotGnuplot() { plotModule.mode=gnupl; }
@@ -228,11 +229,13 @@ void plotFunctionPrecision(const arr& x, const arr& f, const arr& h, const arr& 
 
 void plotSurface(const arr& X) {
   plotModule.s->array.append(X);
+#ifdef MLR_GL
   plotModule.s->mesh.clear();
   plotModule.s->mesh.V.resize(X.N, 3);
   plotModule.s->mesh.C.resize(X.N, 3);
   plotModule.s->mesh.setGrid(X.d1, X.d0);
   //plotModule.s->mesh.gridToStrips(X.d1, X.d0);
+#endif
 }
 
 void plotPoint(double x, double y, double z) {

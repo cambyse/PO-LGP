@@ -18,7 +18,7 @@ struct TaskManager
   arr PX1f,PX1c,PX2f,PX2c;
   TaskManager() {};
   uint nParam,nDof;
-  virtual void addConstraints(MotionProblem *MP, const arr &X) = 0;
+  virtual void addConstraints(KOMO *MP, const arr &X) = 0;
   virtual void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr) = 0;
   virtual void computeConstraintTime(const arr &F,const arr &X) = 0;
   virtual bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo) = 0;
@@ -35,7 +35,7 @@ struct TaskManager
 
 struct DoorTask:TaskManager {
   DoorTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_); type = DOOR;}
-  void addConstraints(MotionProblem *MP, const arr &X);
+  void addConstraints(KOMO *MP, const arr &X);
   void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo);
@@ -50,7 +50,7 @@ struct DoorTask:TaskManager {
 
 struct GraspTask:TaskManager {
   GraspTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_); type = GRASP;}
-  void addConstraints(MotionProblem *MP, const arr &X);
+  void addConstraints(KOMO *MP, const arr &X);
   void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo);
@@ -69,7 +69,7 @@ struct ButtonTask:TaskManager {
     nParam = 2;
     nDof = 1;
   }
-  void addConstraints(MotionProblem *MP, const arr &X);
+  void addConstraints(KOMO *MP, const arr &X);
   void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &theta, arr& Xdemo);
@@ -79,7 +79,7 @@ struct ButtonTask:TaskManager {
   bool transformTrajectoryDof(arr &Xn, const arr &x_dof, arr& Xdemo);
   double reward(const arr &Z);
   double cost(const arr &Z);
-  void addModelConstraints(MotionProblem *MP, arr& target);
+  void addModelConstraints(KOMO *MP, arr& target);
 };
 
 #endif // TASK_MANAGER_H

@@ -17,6 +17,7 @@
 #include <Kin/taskMaps.h>
 #include <Kin/kin_swift.h>
 #include <Optim/lagrangian.h>
+#include <Kin/taskMap_proxy.h>
 
 //===========================================================================
 
@@ -38,7 +39,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
   uint endeff_index = world.getShapeByName("graspRef")->index;
   uint hand_index = world.getShapeByName("eff")->index;
 
-  //-- set up the MotionProblem
+  //-- set up the KOMO
   MP.T=2*actions.N*microSteps;
   world.swift().initActivations(world);
 //  MP.world.watch(false);
@@ -160,11 +161,11 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
   //-- collisions
   {
     Task *t;
-    ProxyConstraint *m;
+    TaskMap_ProxyConstraint *m;
 
     //of the object itself
     if(microSteps>3){
-      t = MP.addTask("object_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), OT_ineq);
+      t = MP.addTask("object_collisions", m=new TaskMap_ProxyConstraint(allVsListedPTMT, uintA(), margin, true), OT_ineq);
       m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
       t->prec.resize(MP.T+1).setZero();
       for(uint i=0;i<actions.N;i++){
@@ -176,7 +177,7 @@ PathProblem::PathProblem(const mlr::KinematicWorld& world_initial,
     }
 
     //of the hand
-    t = MP.addTask("hand_collisions", m=new ProxyConstraint(allVsListedPTMT, uintA(), margin, true), OT_ineq);
+    t = MP.addTask("hand_collisions", m=new TaskMap_ProxyConstraint(allVsListedPTMT, uintA(), margin, true), OT_ineq);
     m->proxyCosts.shapes.resize(MP.T+1,1) = -1;
     t->prec.resize(MP.T+1).setZero();
     for(uint time=0;time<=MP.T; time++){
@@ -226,7 +227,7 @@ double PathProblem::optimize(arr& x){
   Conv_KOMO_ConstrainedProblem CP(MP.komo_problem);
   OptConstrained opt(x, NoArr, CP, OPT(verbose=2, damping = 1e-1, stopTolerance=1e-2, maxStep=.5));
   opt.run();
-  MP.costReport();
+  cout <<MP.getReport();
 //  for(;;)
     displayTrajectory(x, 1, MP.world, MP.switches, "planned configs", .02);
   return opt.UCP.get_costs();

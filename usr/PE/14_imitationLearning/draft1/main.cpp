@@ -16,7 +16,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     world.getJointState(q, qdot);
 
     makeConvexHulls(world.shapes);
-    MotionProblem MP(world);
+    KOMO MP(world);
     MP.loadTransitionParameters();
     arr refGoal = ARR(MP.world.getBodyByName("goalRef")->X.pos);
     refGoal(2) = refGoal(2) + trajIter*0.05;
@@ -25,7 +25,7 @@ void createToyDemonstrations(std::vector<arr> &demos,arr &q0) {
     c = MP.addTask("position_right_hand", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
     c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
     c = MP.addTask("final_vel", new TaskMap_qItself());
-    MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
+    MP.setInterpolatingCosts(c,KOMO::finalOnly,{0.},1e3);
     c->map.order=1;
     MP.x0 = {0.,0.,0.,0.,0.};
 
@@ -65,7 +65,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
   world.getJointState(q, qdot);
 
 //  makeConvexHulls(world.shapes);
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.loadTransitionParameters();
 
   world.getBodyByName("goalRef")->X.pos = refGoal;
@@ -75,7 +75,7 @@ arr execRun(arr param, arr q0, arr refGoal) {
   c = MP.addTask("vel_right_hand", new TaskMap_Default(vecTMT,world,"endeff", mlr::Vector(0., 1., 0.)));
   c->setCostSpecs(MP.T, MP.T, ARR(0.,1.,0.), param(1));
   c = MP.addTask("final_vel", new TaskMap_qItself());
-  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},param(2));
+  MP.setInterpolatingCosts(c,KOMO::finalOnly,{0.},param(2));
   c->map.order=1;
   MP.x0 = {0.,0.,0.,0.,0.};
 

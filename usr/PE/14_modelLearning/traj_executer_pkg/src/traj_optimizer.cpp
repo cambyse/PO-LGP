@@ -36,14 +36,14 @@ TrajOptimizer::TrajOptimizer(mlr::KinematicWorld &_world)
 
 void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0, arr &x) {
   // Create Motion Problem
-  MotionProblem MP(world);
+  KOMO MP(world);
   MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem
   TaskCost *c;
 
   c = MP.addTask("final_vel", new TaskMap_Default(qItselfTMT,world));
-  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
+  MP.setInterpolatingCosts(c,KOMO::finalOnly,{0.},1e3);
   c->map.order=1;
 
   c = MP.addTask("position_right_hand", new TaskMap_Default(qItselfTMT,world));
@@ -103,7 +103,7 @@ void TrajOptimizer::sampleGoal(arr &_goal,const arr &_q0)
 void TrajOptimizer::optimizeBenchmarkMotion(BM_TYPE type, arr &_q0, arr &x)
 {
   // Create Motion Problem
-  MotionProblem MP(world);
+  KOMO MP(world);
   MP.loadTransitionParameters();
 
   //-- create tasks for optimization problem

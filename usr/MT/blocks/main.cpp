@@ -46,7 +46,7 @@ int main(int argc,char** argv){
   G.setJointState(q0);
 //  G.gl().watch();
 
-  MotionProblem MP(G);
+  KOMO MP(G);
   MP.loadTransitionParameters();
   MP.postfix.resize(2,MP.x0.N);
   MP.postfix[0]=MP.postfix[1]=qT;

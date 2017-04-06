@@ -32,7 +32,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const 
   //world.setJointState(ARR(0, -1, -1, 2, -1, 0, 0));
 
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters(); // can change horizon here
 
 

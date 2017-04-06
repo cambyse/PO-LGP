@@ -3,7 +3,7 @@
 Demonstration execRun(Demonstration demo, InnerCostFunction* icf) {
   bool vis=false;
 
-  MotionProblem MP(demo.world,false);
+  KOMO MP(demo.world,false);
   MP.loadTransitionParameters();
   MP.setState(demo.q0,demo.q0*0.);
 

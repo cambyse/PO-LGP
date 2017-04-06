@@ -78,7 +78,7 @@ void MotionFactory::loadScenarioSimple(Scenario &scenario, uint nScenes, bool us
 
     s.world->getBodyByName("targetE")->X.pos += mlr::Vector(0.,0.,0.2)*iS;
 
-    s.MP = new MotionProblem(*s.world,false);
+    s.MP = new KOMO(*s.world,false);
     s.MP->useSwift=true;
     s.MP->T = 50;
     s.MP->tau = 0.01;
@@ -133,7 +133,7 @@ void MotionFactory::loadScenarioComplex(Scenario& scenario) {
     s.world = new mlr::KinematicWorld("sceneComplex");
     s.world->swift();
 
-    s.MP = new MotionProblem(*s.world,false);
+    s.MP = new KOMO(*s.world,false);
     s.MP->useSwift=true;
     s.MP->T = 50;
     s.MP->tau = 0.01;
@@ -195,7 +195,7 @@ void MotionFactory::loadScenarioTestRbf(Scenario &scenario) {
   s.world = new mlr::KinematicWorld("sceneTest");
   s.world->swift();
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->T = 50;
   s.MP->tau = 0.01;
@@ -256,7 +256,7 @@ void MotionFactory::loadScenarioTestFeatSelect(Scenario &scenario) {
   s.world = new mlr::KinematicWorld("sceneFeatSelect");
   s.world->swift();
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->T = 50;
   s.MP->tau = 0.01;
@@ -314,8 +314,8 @@ void MotionFactory::loadScenarioTestFeatSelect(Scenario &scenario) {
 }
 
 
-void MotionFactory::loadDemonstration(arr &x,arr &lambda, MotionProblem &MP) {
-  MotionProblem b = MP;
+void MotionFactory::loadDemonstration(arr &x,arr &lambda, KOMO &MP) {
+  KOMO b = MP;
   Task *t;
   t = b.addTask("tra", new TransitionTaskMap(b.world));
   t->map.order=2;
@@ -345,7 +345,7 @@ void MotionFactory::loadScenarioTestDemonstrations(Scenario &scenario) {
   s.world = new mlr::KinematicWorld("sceneFeatSelect");
   s.world->swift();
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->T = 50;
   s.MP->tau = 0.1;
@@ -402,7 +402,7 @@ void MotionFactory::loadScenarioBoxSliding(Scenario &scenario) {
     s.world = new mlr::KinematicWorld("sceneBox");
     s.world->swift();
 
-    s.MP = new MotionProblem(*s.world,false);
+    s.MP = new KOMO(*s.world,false);
     s.MP->useSwift=true;
     s.MP->T = 100;
     s.MP->tau = 0.01;
@@ -569,7 +569,7 @@ void MotionFactory::loadScenarioParamEval(Scenario &scenario,uint type) {
   s.world = new mlr::KinematicWorld("sceneTest");
   s.world->swift();
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->T = 50;
   s.MP->tau = 0.01;
@@ -681,7 +681,7 @@ void MotionFactory::loadScenarioButton(Scenario &scenario,mlr::KinematicWorld &w
   cboX << FILE(STRING(folder<<id<<"_Dof_CBO_X.dat"));
 
   s.world = &world;
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
 
   /// load demo from file
   s.xDem = FILE(STRING(folder<<bIdx<<"_Dof_Xplan.dat"));
@@ -814,7 +814,7 @@ void MotionFactory::loadScenarioVelocity(Scenario& scenario) {
 
     s.world->getBodyByName("targetE")->X.pos += mlr::Vector(0.,0.,0.2)*iS;
 
-    s.MP = new MotionProblem(*s.world,false);
+    s.MP = new KOMO(*s.world,false);
     s.MP->useSwift=true;
     s.MP->T = 50;
     s.MP->tau = 0.01;

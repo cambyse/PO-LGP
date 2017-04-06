@@ -1,7 +1,7 @@
 #define MLR_IMPLEMENT_TEMPLATES
 
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Algo/gaussianProcess.h>
 
 bool pltPause=true;

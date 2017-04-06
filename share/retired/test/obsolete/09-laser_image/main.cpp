@@ -3,7 +3,7 @@
 #include <Core/array.h>
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 void displayLaserFile(const char *filename){
   uint t,j;

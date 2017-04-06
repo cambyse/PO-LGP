@@ -2,7 +2,7 @@
 
 #include <Core/util.h>
 #include <MT/gauss.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 static double TAU=.1;
 

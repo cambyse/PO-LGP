@@ -8,7 +8,7 @@
 VideoEncoder_libav_simple *vid;
 
 void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world){
-  MotionProblem MP(world, false);
+  KOMO MP(world, false);
   x = MP.getInitialization();
 
   //-- setup the motion problem

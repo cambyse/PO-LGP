@@ -1,8 +1,11 @@
 BASE   = ../..
 NAME   = $(shell basename `pwd`)
 OUTPUT = lib$(NAME).so
+-include $(BASE)/build/config.mk
 
-DEPEND = Core extern_CMA Algo Plot
+GL = 0
+
+DEPEND = Core
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

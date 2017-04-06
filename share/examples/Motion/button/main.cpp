@@ -19,7 +19,7 @@ void TEST(Button){
   world.getJointState(q);
   cout << q << endl;
 
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
 
   cout << "joint dimensionality=" <<q.N <<endl;
 

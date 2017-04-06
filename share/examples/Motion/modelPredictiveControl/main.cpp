@@ -126,7 +126,7 @@ void scenario1() {
   mlr::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(G);
+  KOMO P(G);
 
 
   cout << "Loaded scene: " << endl;
@@ -179,7 +179,7 @@ void scenario2() {
   mlr::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(G);
+  KOMO P(G);
 
   cout << "Loaded scene: " << endl;
 
@@ -274,7 +274,7 @@ void scenario3() {
   ** Plan Trajectory
   */
 
-  MotionProblem P(world);
+  KOMO P(world);
 
 
 

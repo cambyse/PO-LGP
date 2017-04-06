@@ -139,7 +139,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const 
   //set table height
   world.getBodyByName("hole")->X.pos.z = height;
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
   P.makeContactsAttractive=true;

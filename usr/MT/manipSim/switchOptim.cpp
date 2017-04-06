@@ -12,7 +12,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
   uint microSteps;
   int verbose;
 
-  MotionProblem MP;
+  KOMO MP;
 
   SwitchConfigurationProgram(mlr::KinematicWorld& world_initial, mlr::KinematicWorld& world_final,
                              Graph& symbolicState,
@@ -31,7 +31,7 @@ struct SwitchConfigurationProgram:ConstrainedProblem{
     uint endeff_index = world.getShapeByName("graspRef")->index;
     uint hand_index = world.getShapeByName("eff")->index;
 
-    //-- set up the MotionProblem
+    //-- set up the KOMO
     MP.T=2*actions.N*microSteps;
     world.swift().initActivations(world);
     MP.world.watch(false);

@@ -16,7 +16,7 @@
 
 #include "soc.h"
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 uint countMsg=0, countSetq=0;
 

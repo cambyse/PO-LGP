@@ -209,7 +209,7 @@ void TrajectoryInterface::gotoPositionPlan(arr x_plan, double T, bool recordData
 
 void TrajectoryInterface::gotoPosition(arr x_robot, double T, bool recordData, bool displayTraj) {
   CHECK_EQ(x_robot.N,world_robot->getJointStateDimension(),STRING("wrong joint state dimension"));
-  MotionProblem MP(*world_robot,false);
+  KOMO MP(*world_robot,false);
   MP.T = 100;
   MP.tau = 0.05;
   if (useRos) {

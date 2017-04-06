@@ -1,7 +1,7 @@
 #include "WritheTaskVariable.h"
 #include "WritheMatrix.h"
 #include <sstream>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
                                          mlr::KinematicWorld& _ors,

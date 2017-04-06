@@ -9,7 +9,7 @@ void TEST(GraspHeuristic){
   //setup the problem
   mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
-  MotionProblem P(G);
+  KOMO P(G);
 
 
 //  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");

@@ -28,7 +28,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const 
 
 
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   //P.loadTransitionParameters(); // can change horizon here
   P.T = horizon;
 

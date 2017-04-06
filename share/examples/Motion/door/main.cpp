@@ -92,7 +92,7 @@ void TEST(Door){
     arr q;
     G.getJointState(q);
     G.watch(false);
-    MotionProblem MP(G);
+    KOMO MP(G);
     cout <<"joint dimensionality=" <<q.N <<endl;
 
     //-- setup the motion problem

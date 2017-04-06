@@ -52,7 +52,7 @@ struct Poser{
 //    W.watch(false);
 //    arr qT = komo.x;
 
-    MotionProblem MP(W);
+    KOMO MP(W);
     Task *t;
     MP.world.setJointState(qInit);
 

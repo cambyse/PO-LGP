@@ -171,7 +171,7 @@ void MotionFactory::createSceneTest(Scene &s, mlr::Array<CostWeight> &weights, u
   s.world->swift().setCutoff(10.);
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->T = 50;
   s.MP->tau = 0.01;
@@ -280,7 +280,7 @@ void MotionFactory::createSceneBoxSliding(Scene &s, mlr::Array<CostWeight> &weig
   s.world->swift().setCutoff(10.);
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->T = 100;
   s.MP->tau = 0.01;
@@ -387,7 +387,7 @@ void MotionFactory::createSceneTestRBF(Scene &s, mlr::Array<CostWeight> &weights
 
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->T = 50;
   s.MP->tau = 0.01;
 
@@ -421,7 +421,7 @@ void MotionFactory::createSceneTestRBF(Scene &s, mlr::Array<CostWeight> &weights
 
   // task costs
   t =s.MP->addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(t,MotionProblem::constant,ARR(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(t,KOMO::constant,ARR(tar->X.pos),0.);
   t->prec.subRange(s.MP->T-25,s.MP->T-20) = 1e5;
 
 
@@ -475,7 +475,7 @@ void MotionFactory::createSceneTestGaussian(Scene &s, mlr::Array<CostWeight> &we
 
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->T = 50;
   s.MP->tau = 0.01;
 
@@ -507,7 +507,7 @@ void MotionFactory::createSceneTestGaussian(Scene &s, mlr::Array<CostWeight> &we
 
   // task costs
   t =s.MP->addTask("pos2", new DefaultTaskMap(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(t,MotionProblem::constant,ARR(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(t,KOMO::constant,ARR(tar->X.pos),0.);
   t->prec.subRange(s.MP->T-25,s.MP->T-20) = 1e4;
 
   arr w;
@@ -634,7 +634,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
   }
   cout << tmpDist.minIndex() << endl;
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->T = xDem.d0-1;
   s.MP->tau = 0.05;
   s.MP->x0 = x0;
@@ -813,7 +813,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
 
 //  s.world->watch(true);
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->T = xDem.d0-1;
   s.MP->tau = 0.05;
   s.MP->x0 = x0;
@@ -856,7 +856,7 @@ void MotionFactory::createScenePR2(Scene &s, mlr::Array<CostWeight> &weights, ui
   weights.append(CostWeight(CostWeight::Block,1,ARR(U,F),s.MP->T,1));
   pC++;
 
-//  s.MP->setInterpolatingCosts(t, MotionProblem::constant,ARR(1.),0.);
+//  s.MP->setInterpolatingCosts(t, KOMO::constant,ARR(1.),0.);
 //  weights.append(CostWeight(CostWeight::RBF,20,ARR(20,U,F,4),s.MP->T,1,ARR(1e0,1e2)));
 //  arr w;
 //  weights.last().compWeights(w,NoArr,NoArr,param.subRange(pC,pC+19),true);
@@ -935,7 +935,7 @@ void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint
   s.world->swift().setCutoff(10.);
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->loadTransitionParameters();
   s.MP->makeContactsAttractive=false;
@@ -960,7 +960,7 @@ void MotionFactory::createScene1(Scene &s, mlr::Array<CostWeight> &weights, uint
   // task costs
   TaskCost *c;
   c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::Gaussian,1,ARR(s.MP->T,0.5),s.MP->T,3));
   weights.last().compWeights(w,NoArr,NoArr,ARR(param(pC)),true);
   c->prec = w;
@@ -1018,7 +1018,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
   s.world->swift().setCutoff(10.);
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->loadTransitionParameters();
   s.MP->makeContactsAttractive=false;
@@ -1048,7 +1048,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
   // task costs
 //  TaskCost *c;
 //  c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
-//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(tar->X.pos),0.);
+//  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(tar->X.pos),0.);
 //  weights.append(CostWeight(CostWeight::Gaussian,2,ARR(1.),s.MP->T,3,ARR(1e0,1e3)));
 //  weights.last().compWeights(w,NoArr,NoArr,ARR(param(pC),param(pC+1)),true);
 //  c->prec = w;
@@ -1057,7 +1057,7 @@ void MotionFactory::createScene2(Scene &s, mlr::Array<CostWeight> &weights, uint
 
   TaskCost *c;
   c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(tar->X.pos),0.);
   weights.append(CostWeight(CostWeight::RBF,20,ARR(20,70.,s.MP->T,0.05),s.MP->T,3,ARR(1e0,1e2)));
   weights.last().compWeights(w,NoArr,NoArr,param.subRef(pC,pC+19),true);
   c->prec = w;
@@ -1119,7 +1119,7 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
   s.world->swift().setCutoff(10.);
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->loadTransitionParameters();
   s.MP->makeContactsAttractive=false;
@@ -1144,7 +1144,7 @@ void MotionFactory::createScene3(Scene &s, mlr::Array<CostWeight> &weights, uint
   // task costs
   TaskCost *c;
   c =s.MP->addTask("pos", new TaskMap_Default(posTMT, grasp->index) );
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(tar->X.pos),0.);
+  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(tar->X.pos),0.);
 //  c->setCostSpecs(s.MP->T,s.MP->T,ARR(tar->X.pos),param(pC));
   c->prec.subRef(param(pC+1),param(pC+1)+3)=param(pC);
   weights.append(CostWeight(CostWeight::Gaussian,3,ARR(0),s.MP->T,3));
@@ -1266,7 +1266,7 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   arr vec;
   s.world->kinematicsVec(vec,NoArr,s.world->getBodyByName("drawer1"));
 
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->loadTransitionParameters();
   s.MP->makeContactsAttractive=false;
@@ -1331,12 +1331,12 @@ void MotionFactory::createScene4(Scene &s, mlr::Array<CostWeight> &weights, uint
   c5->setCostSpecs(contactTime,s.MP->T, ARR(0.) ,param(N++));
 
   c = s.MP->addTask("collisionConstraints1", new PairCollisionConstraint(*s.world,"wall1","drawer1",0.03));
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(0.),1e0);
 
 
 
   c = s.MP->addTask("collisionConstraints2", new PairCollisionConstraint(*s.world,"wall2","drawer1",0.03));
-  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(0.),1e0);
 
 
   //  /*arr costGrid = linspace(50.,double(xDem.d0-1),5); costGrid.reshapeFlat();
@@ -1410,7 +1410,7 @@ void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint
   s.world->swift().setCutoff(10.);
 
   s.world->swift();
-  s.MP = new MotionProblem(*s.world,false);
+  s.MP = new KOMO(*s.world,false);
   s.MP->useSwift=true;
   s.MP->loadTransitionParameters();
   s.MP->makeContactsAttractive=false;
@@ -1439,7 +1439,7 @@ void MotionFactory::createScene5(Scene &s, mlr::Array<CostWeight> &weights, uint
   pC++;
 
 //  c =s.MP->addTask("pos2", new TaskMap_Default(posTMT, grasp->index) );
-//  s.MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(tar->X.pos),0.);
+//  s.MP->setInterpolatingCosts(c, KOMO::constant,ARR(tar->X.pos),0.);
   //  c->setCostSpecs(s.MP->T*0.5,s.MP->T*0.5, ARR(tar->X.pos), param(N));
 //  c->prec(s.MP->T*0.5) = param(N);
 

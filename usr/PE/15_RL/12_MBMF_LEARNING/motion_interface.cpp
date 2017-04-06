@@ -85,7 +85,7 @@ void Motion_Interface::executeTrajectory(arr &X, double duration) {
 
 void Motion_Interface::gotoPosition(arr &x)
 {
-  MotionProblem MP(*world,false);
+  KOMO MP(*world,false);
   MP.T = 100;
   MP.tau = 0.05;
   MP.x0 = S.ctrl_obs.get()->q;

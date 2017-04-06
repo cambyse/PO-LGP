@@ -26,7 +26,7 @@ struct PathProblem{
   uint microSteps;
   int verbose;
 
-  MotionProblem MP;
+  KOMO MP;
 
   PathProblem(const mlr::KinematicWorld& world_initial,
               const mlr::KinematicWorld& world_final,

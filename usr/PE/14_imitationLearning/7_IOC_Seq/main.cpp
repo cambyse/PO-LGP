@@ -18,7 +18,7 @@ void testSliding() {
   makeConvexHulls(world.shapes);
   world.swift();
 
-  MotionProblem MP(world,true);
+  KOMO MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
   arr refGoal1 = conv_vec2arr(MP.world.getShapeByName("target")->X.pos);

@@ -38,7 +38,7 @@ struct IOC_DemoCost {
   arr dPHI_J_Jt_dPHI;
   arr JgJgtI_Jg_J_dPHI;
 
-  IOC_DemoCost(MotionProblem &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam) {
+  IOC_DemoCost(KOMO &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam) {
     // precompute some terms
     MotionProblemFunction MPF(_MP);
     ConstrainedProblem & v = Convert(MPF);
@@ -161,7 +161,7 @@ struct Scene {
   arr paramRef;
   arr xInit; // init solution for optimization
   uint contactTime;
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
   IOC_DemoCost* cost;// cost function for this demonstrations
 

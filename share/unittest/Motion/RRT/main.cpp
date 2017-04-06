@@ -28,8 +28,8 @@ RRTPlannerTest::RRTPlannerTest() {
   eps = .001;
   G.init("world_complex.ors");
 
-  // create MotionProblem
-  MotionProblem P(&G);
+  // create KOMO
+  KOMO P(&G);
   P.T = 1;
 
   // add a collision cost with threshold 0 to avoid collisions

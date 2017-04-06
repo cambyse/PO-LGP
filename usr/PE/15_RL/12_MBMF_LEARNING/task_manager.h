@@ -23,7 +23,7 @@ struct TaskManager
   virtual void initTask(mlr::KinematicWorld &world_, arr &Xdemo_) = 0;
   virtual void createSynthethicDemonstration(arr &X,mlr::KinematicWorld &world) = 0;
   virtual void applyModelFreeExploration(arr &X,const arr &X_base,const arr &param) = 0;
-  virtual void addConstraintTaskMaps(MotionProblem &MP, arr param) = 0;
+  virtual void addConstraintTaskMaps(KOMO &MP, arr param) = 0;
   virtual void computeCostGrid(arr &F_grid,const arr &param_grid, arr &X) = 0;
   virtual double rewardFunction(const arr &X) = 0;
   virtual ~TaskManager() {};
@@ -43,7 +43,7 @@ struct DonutTask:TaskManager {
   virtual void initTask(mlr::KinematicWorld &world_, arr &Xdemo_) {};
   virtual void createSynthethicDemonstration(arr &X,mlr::KinematicWorld &world);
   virtual void applyModelFreeExploration(arr &X, const arr &X_base, const arr &param);
-  virtual void addConstraintTaskMaps(MotionProblem &MP, arr param);
+  virtual void addConstraintTaskMaps(KOMO &MP, arr param);
   virtual void computeCostGrid(arr &F_grid,const arr &param_grid, arr &X_base);
   virtual double rewardFunction(const arr &X);
 };
@@ -59,7 +59,7 @@ struct DoorTask:TaskManager {
   virtual void initTask(mlr::KinematicWorld &world_, arr &Xdemo_);
   virtual void createSynthethicDemonstration(arr &X,mlr::KinematicWorld &world);
   virtual void applyModelFreeExploration(arr &X, const arr &X_base, const arr &param);
-  virtual void addConstraintTaskMaps(MotionProblem &MP, arr param);
+  virtual void addConstraintTaskMaps(KOMO &MP, arr param);
   virtual void computeCostGrid(arr &F_grid,const arr &param_grid, arr &X_base);
   virtual double rewardFunction(const arr &X);
 };

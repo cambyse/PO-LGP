@@ -1,6 +1,6 @@
 #include <Algo/spline.h>
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <KOMO/komo.h>
 #include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
@@ -66,7 +66,7 @@ void transformTrajectory(mlr::KinematicWorld &world, const arr &X, arr &XT) {
     XT(t,qIdx) = XT(t,qIdx) + .02;
   }
 /*
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = T(1)-1;
   MP.tau = 0.01;
   MP.x0 = X[0];

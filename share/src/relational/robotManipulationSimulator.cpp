@@ -23,7 +23,7 @@
 
 #include <stdlib.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include "utilTL.h"
 #include <Kin/kin_ode.h>
 #include <Kin/kin_swift.h>

@@ -579,7 +579,7 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
   }
 }
 
-void IKMO::setParam(MotionProblem &MP, const arr &param)
+void IKMO::setParam(KOMO &MP, const arr &param)
 {
   arr paramNorm = costScale*param/length(param);
 

@@ -11,7 +11,7 @@ void TEST(PhaseOptimization){
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 100;
   MP.tau = 0.01;
   mlr::Shape *grasp = world.getShapeByName("endeff");
