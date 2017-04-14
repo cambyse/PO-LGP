@@ -146,7 +146,7 @@ private:
   uint N_;                                                                    ///< number of possible worlds
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   mlr::Array< std::shared_ptr<Graph> >     folStates_;
-  mlr::Array< Graph* >  folAddToStates_; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
+  //mlr::Array< Graph* >  folAddToStates_; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
 
   //-- kinematics: the kinematic structure of the world after the decision path
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics

@@ -300,8 +300,6 @@ void plan_AOS()
 
   C.prepareDisplay();
 
-
-
   C.prepareTree();      // create root node
 
   uint i = 0;

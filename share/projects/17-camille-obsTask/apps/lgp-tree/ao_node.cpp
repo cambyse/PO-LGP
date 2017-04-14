@@ -28,6 +28,7 @@
 
 //=====================free functions======================
 static double eps() { return std::numeric_limits< double >::epsilon(); }
+static double m_inf() { return -std::numeric_limits< double >::max(); }
 
 struct stringSetHash {
 size_t operator()( const std::set< std::string > & facts ) const
@@ -115,7 +116,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , N_( fols.N )
   , folWorlds_( fols )
   , folStates_( N_ )
-  , folAddToStates_( N_ )
+  //, folAddToStates_( N_ )
   , startKinematics_( kins )
   , effKinematics_( N_ )
   , pHistory_( 1.0 )
@@ -133,7 +134,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   , isSymbolicallySolved_( false )
   , rootMCs_( N_ )
   , mcStats_( new MCStatistics )
-  , expectedReward_( 0 )
+  , expectedReward_( m_inf() )
   , expectedBestA_( -1 )
   , komoFactory_( komoFactory )
   // poseOpt
@@ -173,7 +174,7 @@ AONode::AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Arra
   {
     folWorlds_( w )->reset_state();
     folStates_( w ).reset( folWorlds_( w )->createStateCopy() );
-    folAddToStates_( w ) = nullptr;
+    //folAddToStates_( w ) = nullptr;
     rootMCs_( w ).reset( new PlainMC( *folWorlds_( w ) ) );
     rootMCs_( w )->verbose = 0;
 
@@ -212,7 +213,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , N_( parent_->N_ )
   , folWorlds_( parent->folWorlds_ )
   , folStates_( N_ )
-  , folAddToStates_( N_ )
+  //, folAddToStates_( N_ )
   , startKinematics_( parent->startKinematics_ )
   , effKinematics_( parent->effKinematics_ )
   , decisions_( N_ )
@@ -230,7 +231,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
   , isSymbolicallySolved_( false )
   , rootMCs_( parent->rootMCs_ )
   , mcStats_( new MCStatistics )
-  , expectedReward_( 0 )
+  , expectedReward_( m_inf() )
   , expectedBestA_ (-1 )
   , komoFactory_( parent->komoFactory_ )
   // poseOpt
@@ -287,7 +288,7 @@ AONode::AONode(AONode *parent, double pHistory, const arr & bs, uint a )
         isInfeasible_ = true;
       //std::cout << *folStates_( w ) << std::endl;
 
-      folAddToStates_( w ) = nullptr;
+      //folAddToStates_( w ) = nullptr;
 
       decisions_( w ) = actions[ a_ ];
 
@@ -826,7 +827,7 @@ void AONode::solveJointPathProblem( uint microSteps )
 
         AgentKinEquality * task = new AgentKinEquality( q );  // tmp camille, think to delete it, or komo does it?
 
-        komo->setTask( node->time_ - 1.0 / pathMicroSteps, node->time_, task );
+        komo->setTask( node->time_ - 1.0 / pathMicroSteps, node->time_, task, OT_sumOfSqr, NoArr, 1e2  );
       }
 
       DEBUG( FILE("z.fol") <<fol; )
@@ -869,42 +870,57 @@ void AONode::solveJointPathProblem( uint microSteps )
 
 void AONode::labelInfeasible( uint w )
 {
-  //-- remove children
-//  ActionNodeL tree;
-//  getAllChildren(tree);
-//  for(ActionNode *n:tree) if(n!=this) delete n; //TODO: memory leak!
+  // set badest reward
+  expectedReward_ = m_inf();
+
+  // delete children nodes
   for( auto children : families_ )
   {
     DEL_INFEASIBLE( children.clear(); )
   }
+  families_.clear();
 
-  //-- add INFEASIBLE flag to fol
-  auto folDecision = folStates_( w )->getNode("decision");
-  NodeL symbols = folDecision->parents;
-  symbols.prepend( folWorlds_( w )->KB.getNode({"INFEASIBLE"}));
-
-//  cout <<"\n *** LABELLING INFEASIBLE: "; listWrite(symbols); cout <<endl;
-  //-- find the right parent...
-  AONode* node = this;
-  while( node->parent_ ){
-    bool stop=false;
-    for(Node *fact:node->folStates_( w )->list()){
-      if(fact->keys.N && fact->keys.last()=="block"){
-        if(tuplesAreEqual(fact->parents, symbols)){
-          CHECK(fact->isOfType<bool>() && fact->keys.first()=="block", "");
-          stop=true;
-          break;
-        }
-      }
-    }
-    if(stop) break;
-    node = node->parent_;
-  }
-
-//  if(!node->folAddToState){
-//    node->folAddToState = &fol.KB.newSubgraph({"ADD"}, {node->folState->isNodeOfGraph})->value;
+  // backtrack results
+  if( parent_ )
+    parent_->backTrackBestExpectedPolicy();
+  //-- remove children
+//  ActionNodeL tree;
+//  getAllChildren(tree);
+//  for(ActionNode *n:tree) if(n!=this) delete n; //TODO: memory leak!
+//  for( auto children : families_ )
+//  {
+//    DEL_INFEASIBLE( children.clear(); )
 //  }
-//  node->folAddToState->newNode<bool>({}, symbols, true);
+//  families_.clear();
+
+//  //-- add INFEASIBLE flag to fol
+//  auto folDecision = folStates_( w )->getNode("decision");
+//  NodeL symbols = folDecision->parents;
+//  symbols.prepend( folWorlds_( w )->KB.getNode({"INFEASIBLE"}));
+
+////  cout <<"\n *** LABELLING INFEASIBLE: "; listWrite(symbols); cout <<endl;
+//  //-- find the right parent...
+//  AONode* node = this;
+//  while( node->parent_ ){
+//    bool stop=false;
+//    for(Node *fact:node->folStates_( w )->list()){
+//      if(fact->keys.N && fact->keys.last()=="block"){
+//        if(tuplesAreEqual(fact->parents, symbols)){
+//          CHECK(fact->isOfType<bool>() && fact->keys.first()=="block", "");
+//          stop=true;
+//          break;
+//        }
+//      }
+//    }
+//    if(stop) break;
+//    node = node->parent_;
+//  }
+
+//  if( ! node->folAddToStates_( w ) )
+//  {
+//    node->folAddToStates_( w ) = &folWorlds_( w )->KB.newSubgraph({"ADD"}, {node->folStates_( w )->isNodeOfGraph})->value;
+//  }
+//  node->folAddToStates_( w )->newNode<bool>({}, symbols, true);
 
 ////  ActionNode *root=getRoot();
 //  node->recomputeAllFolStates();
