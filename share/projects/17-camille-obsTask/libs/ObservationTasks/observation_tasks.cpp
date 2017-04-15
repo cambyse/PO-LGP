@@ -229,7 +229,6 @@ ActiveGetSight::ActiveGetSight( mlr::String const& headName,
 void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
 {
   // get Object position and pivot position
-  //mlr::Shape * container = G.getShapeByName( containerName_ );
   mlr::Body * container = G.getBodyByName( containerName_ );
   arr aimPosition, aimJPosition;
   G.kinematicsPos( aimPosition, aimJPosition, container );
@@ -290,12 +289,15 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   tmp_y.setVectorBlock( ( u1  - v1 )                       , 0 );    // cost
   tmp_J.setMatrixBlock( ( Ju1 - Jv1 ), 0 , 0 ); // jacobian
 
-//  tmp_y.setVectorBlock( 1.0 * ( headQuat - targetQuat )       , 0 );    // cost
-//  tmp_J.setMatrixBlock( 1.0 * ( JheadQuat             )  , 0 , 0 );     // jacobian
-
   // head alignment
   tmp_y.setVectorBlock( u1 -  w1,   headQuat.d0 - 1 );                    // cost
   tmp_J.setMatrixBlock( Ju1 -  Jw1, JheadQuat.d0 - 1, 0 );                    // jacobian
+
+  ///////
+//  for( auto p : G.proxies )
+//  {
+//    std::cout << G.shapes( p->a )->name << "-" << G.shapes( p->b )->name << std::endl;
+//  }
 
   // commit results
   y = tmp_y;

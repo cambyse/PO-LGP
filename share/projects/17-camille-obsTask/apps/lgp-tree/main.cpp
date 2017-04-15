@@ -12,8 +12,10 @@ back track result of pose computation when one of the pose is not possible or ge
 less rollouts?
 iterations
 build kinematic world for optimization, with all believed objects inserted as inert objects for colision avoidance at least!
-
 dot -Tpng -o policy.png policy.gv
+
+test a logic : mlr/share/example/DomainPlayer
+
 */
 //===========================================================================
 

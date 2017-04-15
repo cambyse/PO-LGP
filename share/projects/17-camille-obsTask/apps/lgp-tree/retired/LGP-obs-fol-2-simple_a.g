@@ -24,18 +24,15 @@ at         # object X is at location Y
 
 now_in_sight # getting sight of location X
 
-# keyword
-NOT_OBSERVABLE
-
 ## constants
-target_location_0
 target_location_1
+target_location_2
 target
 
 ## initial state
-START_STATE { (object target) (location target_location_0) (location target_location_1) }
-BELIEF_START_STATE{ (at target target_location_0)=0.8 (at target target_location_1)=0.2 }
-### RULES 
+START_STATE { (object target) (location target_location_1) (location target_location_2) (at target target_location_2)}
+BELIEF_START_STATE{ (at target target_location_1)=0.8 (at target target_location_2)=0.2 }
+### RULES
 
 #termination rule
 #Rule {
@@ -44,12 +41,12 @@ BELIEF_START_STATE{ (at target target_location_0)=0.8 (at target target_location
 #}
 
 Rule {
-  { (viewed target target_location_0)} # 
+  { (viewed target target_location_1)} # 
   { (QUIT) }
 }
 
 Rule {
-  { (viewed target target_location_1)} # 
+  { (viewed target target_location_2)} # 
   { (QUIT) }
 }
 
@@ -77,11 +74,11 @@ DecisionRule take_view {
 }
 
 ### Rules
-# Object seen = Observation model
+# Object seen
 Rule {
   X, Y
-  { (object X) (location Y) (NOT_OBSERVABLE at X Y) (in_sight Y) (view_taken X Y) }
-  { (viewed X Y)  (at X Y) (NOT_OBSERVABLE at X Y)!}
+  { (object X) (location Y) (at X Y) (in_sight Y) (view_taken X Y) }
+  { (viewed X Y) }
 }
 
 # remove old in sights

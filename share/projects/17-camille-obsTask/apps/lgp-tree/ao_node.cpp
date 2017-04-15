@@ -593,7 +593,6 @@ void AONode::solvePoseProblem()
       }
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //auto komo = getWitnessPoseKomo();
       //komo->displayTrajectory();
       COUNT_evals += komo->opt->newton.evals;
       COUNT_kin += mlr::KinematicWorld::setJointStateCount;

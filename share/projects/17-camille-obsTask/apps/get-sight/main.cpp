@@ -24,6 +24,16 @@ static void setRigid( double time, mlr::String const& object1Name, mlr::String c
   komo.setKinematicSwitch( time, true, "addRigid", object1Name, object2Name, t );
 }
 
+struct _PairCollisionConstraint:PairCollisionConstraint
+{
+  _PairCollisionConstraint(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin=.02)
+    : PairCollisionConstraint( G, iShapeName, jShapeName, _margin )
+  {
+
+  }
+
+  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("_PairCollisionConstraint"); }
+};
 //===========================================================================
 
 void move(){
@@ -55,7 +65,7 @@ void move(){
 
 
   // make container and target rigid
-  setRigid( 0.5, "container_1_bottom", "target_1", komo );
+  setRigid( 0.5, "container_1_bottom", "target", komo );
   //setRigid( 0.5, "container_1_bottom", "table", komo );
 
   //setRigid( 0.5, "container_1", "container_1", komo );
@@ -65,13 +75,13 @@ void move(){
   //komo.setGrasp( 1.0, "handL", "container_1_front" );
   //komo.setGrasp( 2.0, "handL", "target_1" ); // grasp ball
 
-  /////ACTIVE GET SIGHT CONTAINER 2
+  /////ACTIVE GET SIGHT CONTAINER 0
   {
     const double time = 1.0;
 
     komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
                                                               "handL",
-                                                              "container_2",
+                                                              "container_0",
                                                               //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                               ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
                   OT_sumOfSqr, NoArr, 1e2 );
@@ -79,8 +89,8 @@ void move(){
 
   /////GRASP CONTAINER////
   {
-    const double time = 2.0;
-    //arrive from front
+    const double time = 3.0;
+    //arrive sideways
     komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
@@ -93,7 +103,7 @@ void move(){
 
   /////ACTIVE GET SIGHT CONTAINER 1
   {
-    const double time = 3.0;
+    const double time = 4.0;
 
     komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
                                                               "handL",
@@ -118,10 +128,14 @@ void move(){
 
   /////PLACE ON TABLE
   {
-    const double time = 4.0;
+    const double time = 5.0;
 
     komo.setPlace( time, "handL", "container_1_front", "table" );
   }
+
+//  { //doesn't seem to work
+//  komo.setTask( 1.0, 5.0, new _PairCollisionConstraint( komo.world, "manhead", "container_1_front" ), OT_sumOfSqr, NoArr, 1e2 );
+//  }
 
 //  if(komo.stepsPerPhase>2){ //velocities down and up
 //    komo.setTask(time-.15, time, new TaskMap_Default(posTMT, komo.world, "handL"), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down

@@ -26,7 +26,6 @@ public: // public methods
 private:
   void optimizePoses( AONode * );
   void optimizeSequences( AONode * );
-  //void optimizePaths2( AONode *, AONode * );
 
 public:
 
