@@ -8,20 +8,46 @@ using namespace std;
 
 static void setRigid( double time, mlr::String const& object1Name, mlr::String const& object2Name, KOMO& komo )
 {
-  mlr::Shape * object1 = komo.world.getShapeByName( object1Name );
-  mlr::Shape * object2 = komo.world.getShapeByName( object2Name );
+  mlr::Shape * s1 = komo.world.getShapeByName( object1Name );
+  mlr::Shape * s2 = komo.world.getShapeByName( object2Name );
   mlr::Transformation t;
   arr relPos;
   arr relPosJ;
 
-  object1->rel.pos.write( std::cout );
+  s1->rel.pos.write( std::cout );
   std::cout << std::endl;
-  object2->rel.pos.write( std::cout );
+  s2->rel.pos.write( std::cout );
   std::cout << std::endl;
 
-  komo.world.kinematicsRelPos( relPos, relPosJ, object2->body, object2->rel.pos, object1->body, object1->rel.pos );
+  komo.world.kinematicsRelPos( relPos, relPosJ, s2->body, s2->rel.pos, s1->body, s1->rel.pos );
   t.pos = relPos;
-  komo.setKinematicSwitch( time, true, "addRigid", object1Name, object2Name, t );
+  komo.setKinematicSwitch( time, true, "addRigid", s1->name, s2->name, t );
+
+  /*auto * object1 = komo.world.getBodyByName( object1Name );
+  auto * object2 = komo.world.getBodyByName( object2Name );
+
+  for( auto s1 : object1->shapes )
+  {
+    for( auto s2 : object2->shapes )
+    {
+//      mlr::Shape * object1 = komo.world.getShapeByName( s1->name );
+//      mlr::Shape * object2 = komo.world.getShapeByName( s2->name );
+      mlr::Transformation t;
+      arr relPos;
+      arr relPosJ;
+
+      s1->rel.pos.write( std::cout );
+      std::cout << std::endl;
+      s2->rel.pos.write( std::cout );
+      std::cout << std::endl;
+
+      komo.world.kinematicsRelPos( relPos, relPosJ, s2->body, s2->rel.pos, s1->body, s1->rel.pos );
+
+      t.pos = relPos;
+
+      komo.setKinematicSwitch( time, true, "addRigid", s1->name, s2->name, t );
+    }
+  }*/
 }
 
 struct _PairCollisionConstraint:PairCollisionConstraint
@@ -65,22 +91,19 @@ void move(){
 
 
   // make container and target rigid
-  setRigid( 0.5, "container_1_bottom", "target", komo );
+  //setRigid( 0.5, "container_1_bottom", "target", komo );
   //setRigid( 0.5, "container_1_bottom", "table", komo );
-
-  //setRigid( 0.5, "container_1", "container_1", komo );
 
 
   // grasp container
   //komo.setGrasp( 1.0, "handL", "container_1_front" );
   //komo.setGrasp( 2.0, "handL", "target_1" ); // grasp ball
-
+  const double start_time = 1.0;
   /////ACTIVE GET SIGHT CONTAINER 0
   {
-    const double time = 1.0;
+    const double time = start_time + 0.0;
 
     komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
-                                                              "handL",
                                                               "container_0",
                                                               //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                               ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
@@ -89,12 +112,12 @@ void move(){
 
   /////GRASP CONTAINER////
   {
-    const double time = 3.0;
+    const double time = start_time + 2.0;
     //arrive sideways
     komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
-    komo.setKinematicSwitch( time, true, "delete", NULL, "container_1_left" );
+    komo.setKinematicSwitch( time, true, "delete", "table", "container_1_left" );
     //connect graspRef with object
     komo.setKinematicSwitch( time, true, "ballZero", "handL", "container_1_left" );
   }
@@ -103,32 +126,18 @@ void move(){
 
   /////ACTIVE GET SIGHT CONTAINER 1
   {
-    const double time = 4.0;
+    const double time = start_time + 3.0;
 
     komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
-                                                              "handL",
                                                               "container_1",
                                                               //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                               ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
-  /////GRASP BALL INSIDE////
-//  {
-//    const double time = 2.0;
-//    //arrive from front
-//    komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handR", Vector_y ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
-
-//    //disconnect object from table
-//    komo.setKinematicSwitch( time, true, "delete", NULL, "target_1" );
-//    //connect graspRef with object
-//    komo.setKinematicSwitch( time, true, "ballZero", "handR", "target_1" );
-//  }
-  /////
-
   /////PLACE ON TABLE
   {
-    const double time = 5.0;
+    const double time = start_time + 5.0;
 
     komo.setPlace( time, "handL", "container_1_front", "table" );
   }
@@ -141,21 +150,6 @@ void move(){
 //    komo.setTask(time-.15, time, new TaskMap_Default(posTMT, komo.world, "handL"), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down
 //    komo.setTask(time, time+.15, new TaskMap_Default(posTMT, komo.world, "occluding_object_1"), OT_sumOfSqr, {0.,0.,.1}, 1e1, 1); // move up
 //  }
-
-  // right
-//  komo.setTask( 1.0, 2.0, new HeadGetSightQuat    ( ARR(  -0.5, -0.7, 1.2 ),    // object position
-//                                                    ARR(  -0.3, -0.5, 1.5 ) ),  // pivot position
-//                                                    OT_sumOfSqr, NoArr, 1e2 );
-
-  // middle
-//  komo.setTask( 1.0, 2.0, new HeadGetSightQuat  ( ARR(  -0.0, -0.9, 1.2 ),    // object position
-//                                                  ARR(  -0.0, -0.7, 1.5 ) ),  // pivot position
-//                                                  OT_sumOfSqr, NoArr, 1e2 );
-
-  // left
-//  komo.setTask( 1.0, 2.0, new HeadGetSightQuat    ( ARR(   0.5, -0.7, 1.2 ),    // object position
-//                                                    ARR(   0.3, -0.5, 1.5 ) ),  // pivot position
-//                                                    OT_sumOfSqr, NoArr, 1e2 );
 
 //  komo.setTask( 1.0, 2.0, new HeadGetSight( ARR(  1.0, -0.0, 1.9 ),    // object position
 //                                            ARR(  1.0, -0.0, 1.9 ) ),  // pivot position

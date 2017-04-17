@@ -131,7 +131,7 @@ void AOSearch::prepareTree()
 {
   CHECK( folWorlds_.d0 == kinematics_.d0, "There should be as many logic worlds as kinematic worlds!, check the fol and kin description files!" );
 
-  root_ = new AONode( folWorlds_, kinematics_, bs_, komoFactory_ );
+  root_ = new POLGPNode( folWorlds_, kinematics_, bs_, komoFactory_ );
 }
 
 void AOSearch::prepareDisplay()
@@ -218,7 +218,7 @@ void AOSearch::optimizeJointPaths()
   optimizePaths2( root_, root_ );
 }*/
 
-/*void AOSearch::optimizePaths2( AONode * node, AONode * start )
+/*void AOSearch::optimizePaths2( POLGPNode * node, POLGPNode * start )
 {
   if( node->isTerminal() )
   {
@@ -239,8 +239,9 @@ void AOSearch::optimizeJointPaths()
   }
 }*/
 
-void AOSearch::optimizePoses( AONode * node )
+void AOSearch::optimizePoses( POLGPNode * node )
 {
+  //std::cout << "solve pose problem for:" << node->id() << std::endl;
   node->solvePoseProblem();
 
   for( auto c : node->bestFamily() )
@@ -268,7 +269,7 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
   for( auto w : worldIds )
   {
     // get the terminal node for the world w, in the case of stochaticity
-    AONode * node = getTerminalNode( WorldID( w ) );
+    POLGPNode * node = getTerminalNode( WorldID( w ) );
 
     if( poses && node->komoPoseProblems()( w ) && node->komoPoseProblems()( w )->MP->configurations.N )
       poseViews_( w )->setConfigurations( node->komoPoseProblems()( w )->MP->configurations );
@@ -278,24 +279,24 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
       seqViews_( w )->setConfigurations( node->komoSeqProblems()( w )->MP->configurations );
     else seqViews_( w )->clear();
 
-//    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
-//      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
-//    else pathViews_( w )->clear();
-
-    if( paths && node->komoJointPathProblems()( w ) && node->komoJointPathProblems()( w )->MP->configurations.N )
-      pathViews_( w )->setConfigurations( node->komoJointPathProblems()( w )->MP->configurations );
+    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
+      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
     else pathViews_( w )->clear();
+
+//    if( paths && node->komoJointPathProblems()( w ) && node->komoJointPathProblems()( w )->MP->configurations.N )
+//      pathViews_( w )->setConfigurations( node->komoJointPathProblems()( w )->MP->configurations );
+//    else pathViews_( w )->clear();
   }
 }
 
-mlr::Array< AONode * > AOSearch::getNodesToExpand() const
+mlr::Array< POLGPNode * > AOSearch::getNodesToExpand() const
 {
   return getNodesToExpand( root_ );
 }
 
-mlr::Array< AONode * > AOSearch::getNodesToExpand( AONode * node ) const
+mlr::Array< POLGPNode * > AOSearch::getNodesToExpand( POLGPNode * node ) const
 {
-  mlr::Array< AONode * >  nodes;
+  mlr::Array< POLGPNode * >  nodes;
   // starts from root
   if( ! node->isSymbolicallySolved() )
   {
@@ -316,14 +317,14 @@ mlr::Array< AONode * > AOSearch::getNodesToExpand( AONode * node ) const
   return nodes;
 }
 
-mlr::Array< AONode * > AOSearch::getTerminalNodes() const
+mlr::Array< POLGPNode * > AOSearch::getTerminalNodes() const
 {
   return getTerminalNodes( root_ );
 }
 
-mlr::Array< AONode * > AOSearch::getTerminalNodes( AONode * n ) const
+mlr::Array< POLGPNode * > AOSearch::getTerminalNodes( POLGPNode * n ) const
 {
-  mlr::Array< AONode * > nodes;
+  mlr::Array< POLGPNode * > nodes;
 
   if( n->isSymbolicallyTerminal() )
   {
@@ -340,15 +341,15 @@ mlr::Array< AONode * > AOSearch::getTerminalNodes( AONode * n ) const
   return nodes;
 }
 
-AONode * AOSearch::getTerminalNode( const WorldID & w ) const
+POLGPNode * AOSearch::getTerminalNode( const WorldID & w ) const
 {
   // could be more generale and return a list of node in case of stochastic world
   return getTerminalNode( root_, w );
 }
 
-AONode * AOSearch::getTerminalNode( AONode * n, const WorldID & w ) const
+POLGPNode * AOSearch::getTerminalNode( POLGPNode * n, const WorldID & w ) const
 {
-  AONode * node = nullptr;
+  POLGPNode * node = nullptr;
   if( n->isSymbolicallyTerminal() )
   {
     CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
@@ -378,7 +379,7 @@ void AOSearch::printPolicy( std::iostream & ss ) const
   ss << "}" << std::endl;
 }
 
-void AOSearch::printPolicy( AONode * node, std::iostream & ss ) const
+void AOSearch::printPolicy( POLGPNode * node, std::iostream & ss ) const
 {
   for( auto c : node->bestFamily() )
   {

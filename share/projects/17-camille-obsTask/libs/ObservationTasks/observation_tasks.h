@@ -88,10 +88,10 @@ private:
 struct ActiveGetSight:TaskMap{
 
   ActiveGetSight( mlr::String const& sensorName,
-                      mlr::String const& actuatorName,
-                      mlr::String const& containerName,
-                      //arr const& aimPoint,
-                      arr const& pivotPoint );
+                  mlr::String const& containerName,
+                  //arr const& aimPoint,
+                  arr const& pivotPoint,
+                  double preferedDistance = 0.8 );
 
   virtual void phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t=-1 );
 
@@ -106,10 +106,10 @@ struct ActiveGetSight:TaskMap{
   }
 
   // parameters
-  static const uint dim_ = 8;
-  mlr::String headName_;
-  mlr::String actuatorName_;
-  mlr::String containerName_;
+  static const uint dim_ = 7;
+  const mlr::String headName_;
+  const mlr::String containerName_;
   //const arr aimPoint_;      // in container's frame
   const arr pivotPoint_;    // in container's frame
+  double preferedDistance_;
 };

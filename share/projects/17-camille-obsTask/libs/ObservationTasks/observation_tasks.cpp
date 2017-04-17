@@ -212,16 +212,16 @@ void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 //===========================================================================
 
 ActiveGetSight::ActiveGetSight( mlr::String const& headName,
-                                        mlr::String const& actuatorName,
                                         mlr::String const& containerName,
                                         //arr const& aimPoint,
-                                        arr const& pivotPoint )
+                                        arr const& pivotPoint,
+                                        double preferedDistance )
   : TaskMap()
   , headName_     ( headName )
-  , actuatorName_ ( actuatorName )
   , containerName_( containerName )
   //, aimPoint_     ( aimPoint )
   , pivotPoint_   ( pivotPoint )
+  , preferedDistance_( preferedDistance )
 {
 
 }
@@ -290,9 +290,13 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   tmp_J.setMatrixBlock( ( Ju1 - Jv1 ), 0 , 0 ); // jacobian
 
   // head alignment
-  tmp_y.setVectorBlock( u1 -  w1,   headQuat.d0 - 1 );                    // cost
-  tmp_J.setMatrixBlock( Ju1 -  Jw1, JheadQuat.d0 - 1, 0 );                    // jacobian
+  tmp_y.setVectorBlock( u1 -  w1,   u1.d0  );                    // cost
+  tmp_J.setMatrixBlock( Ju1 -  Jw1, Ju1.d0, 0 );                    // jacobian
 
+  // head distance
+  double d = normU - preferedDistance_;
+  tmp_y( 2*u1.d0 ) = d;
+  tmp_J.setMatrixBlock( JnormU * Ju, 2 * Ju1.d0, 0 );                    // jacobian
   ///////
 //  for( auto p : G.proxies )
 //  {

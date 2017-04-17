@@ -2,7 +2,8 @@
 
 #include <Logic/fol_mcts_world.h>
 #include <Kin/kinViewer.h>
-#include "ao_node.h"
+#include "polgp_node.h"
+
 
 class AOSearch
 {
@@ -24,21 +25,21 @@ public: // public methods
   void updateDisplay( const WorldID & w, bool poses, bool seqs, bool paths );
 
 private:
-  void optimizePoses( AONode * );
-  void optimizeSequences( AONode * );
+  void optimizePoses( POLGPNode * );
+  void optimizeSequences( POLGPNode * );
 
 public:
 
   // getters
 
-  mlr::Array< AONode * > getNodesToExpand() const;
-  mlr::Array< AONode * > getNodesToExpand( AONode * ) const;
+  mlr::Array< POLGPNode * > getNodesToExpand() const;
+  mlr::Array< POLGPNode * > getNodesToExpand( POLGPNode * ) const;
 
-  mlr::Array< AONode * > getTerminalNodes() const;
-  mlr::Array< AONode * > getTerminalNodes( AONode * ) const;
+  mlr::Array< POLGPNode * > getTerminalNodes() const;
+  mlr::Array< POLGPNode * > getTerminalNodes( POLGPNode * ) const;
 
-  AONode * getTerminalNode( const WorldID & w ) const;
-  AONode * getTerminalNode( AONode *, const WorldID & w ) const;
+  POLGPNode * getTerminalNode( const WorldID & w ) const;
+  POLGPNode * getTerminalNode( POLGPNode *, const WorldID & w ) const;
 
   bool isSymbolicallySolved() const { return root_->isSymbolicallySolved(); }
   bool isPoseSolved() const { return root_->isPoseSolved(); }
@@ -50,7 +51,7 @@ public:
   void printPolicy( std::iostream & ) const;
 
 private:
-  void printPolicy( AONode * node, std::iostream & ) const;
+  void printPolicy( POLGPNode * node, std::iostream & ) const;
 
 private:
   //FOL_World fol;      // first order logic symbols
@@ -58,7 +59,7 @@ private:
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > kinematics_;
 
   arr bs_;
-  AONode * root_; // root and "current" node
+  POLGPNode * root_; // root and "current" node
 
   const KOMOFactory & komoFactory_;
 

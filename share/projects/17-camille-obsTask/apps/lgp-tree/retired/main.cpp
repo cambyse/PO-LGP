@@ -161,27 +161,7 @@ void groundGrasp( double phase, const Graph& facts, Node *n, KOMO & komo, int ve
 
   double time=n->get<double>();
 
-  //komo.setGrasp( phase+time, *symbols(0), *symbols(1), verbose);
-
-  if( *symbols(1) == "container_0" )
-  {
-  //arrive sideway
-  komo.setTask( phase + time, phase + time, new TaskMap_Default( vecTMT, komo.world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
-  //disconnect object from table
-  komo.setKinematicSwitch( phase + time, true, "delete", NULL, "container_0_left" /**symbols(1)*/ );
-  //connect graspRef with object
-  komo.setKinematicSwitch( phase + time, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
-  }
-  else if( *symbols(1) == "container_1" )
-  {
-  //arrive sideway
-  komo.setTask( phase + time, phase + time, new TaskMap_Default( vecTMT, komo.world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
-  //disconnect object from table
-  komo.setKinematicSwitch( phase + time, true, "delete", NULL, "container_1_left" /**symbols(1)*/ );
-  //connect graspRef with object
-  komo.setKinematicSwitch( phase + time, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
-  }
-
+  komo.setGrasp( phase+time, *symbols(0), *symbols(1), verbose);
 }
 
 void groundPlace( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
@@ -191,41 +171,32 @@ void groundPlace( double phase, const Graph& facts, Node *n, KOMO & komo, int ve
 
   double time=n->get<double>();
 
-  std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
-
-  if( *symbols(1) == "container_0" )
-  {
-    komo.setPlace( phase+time, *symbols(0), "container_0_front", *symbols(2), verbose);
-  }
-  else if( *symbols(1) == "container_1" )
-  {
-    komo.setPlace( phase + time, *symbols(0), "container_1_front", *symbols(2), verbose);
-  }
+  komo.setPlace( phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
 }
 
-//void groundHandover( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
-//{
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
+void groundHandover( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
 
-//  double time=n->get<double>();
+  double time=n->get<double>();
 
-//  komo.setHandover( phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
-//}
+  komo.setHandover( phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
+}
 
-//void groundAttach( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
-//{
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
+void groundAttach( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
 
-//  double time=n->get<double>();
+  double time=n->get<double>();
 
-//  Node *attachableSymbol = facts.getNode("attachable");
-//  CHECK(attachableSymbol!=NULL,"");
-//  Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
-//  mlr::Transformation rel = attachableFact->get<mlr::Transformation>();
-//  komo.setAttach( phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
-//}
+  Node *attachableSymbol = facts.getNode("attachable");
+  CHECK(attachableSymbol!=NULL,"");
+  Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
+  mlr::Transformation rel = attachableFact->get<mlr::Transformation>();
+  komo.setAttach( phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
+}
 
 void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
@@ -236,23 +207,79 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int
 
   mlr::String arg = *symbols(0);
 
-  komo.setTask( phase + time, phase + time + 1.0, new ActiveGetSight      ( "manhead",
-                                                                        arg,
-                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-                                                                        ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
-                OT_sumOfSqr, NoArr, 1e2 );
+  if( arg == "target_location_0" )  // tmp, pivot point and object location has to be deduced from the scene!!
+    komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR(  0.0, -1.0, 1.9 ),    // object position
+                                                      ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
+                                                      OT_sumOfSqr, NoArr, 1e2 );
+  else if( arg == "target_location_1" ) // tmp, pivot point and object location has to be deduced from the scene!!!
+    komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR( -1.0,  0.0, 1.9 ),    // object position
+                                                      ARR( -0.6, -0.2, 1.9 ) ),  // pivot position
+                                                      OT_sumOfSqr, NoArr, 1e2 );
+  else if( arg == "target_location_2" ) // tmp, pivot point and object location has to be deduced from the scene!!!
+    komo.setTask( phase+time, phase+time + 1.0, new HeadGetSight( ARR( 1.0,  0.0, 1.9 ),    // object position
+                                                      ARR( 0.6, -0.2, 1.9 ) ),  // pivot position
+                                                      OT_sumOfSqr, NoArr, 1e2 );
+
 }
 
-void groundTakeView( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundTakeView( double, const Graph& facts, Node *n, KOMO & komo, int verbose )
 {
-  double time=n->get<double>();
-
-  //
-  const double t = phase+time;
-  //
 }
 
 //===========================================================================
+
+/*void plan_BHTS()
+{
+  // register symbols
+  KOMOFactory komoFactory;
+  komoFactory.registerTask( "komoGrasp"       , groundGrasp );
+  komoFactory.registerTask( "komoPlace"       , groundPlace );
+  komoFactory.registerTask( "komoHandover"    , groundHandover );
+  komoFactory.registerTask( "komoAttach"      , groundAttach );
+  komoFactory.registerTask( "komoGetSight"    , groundGetSight );
+  komoFactory.registerTask( "komoTakeView"    , groundTakeView );
+
+  // instanciate search tree
+  SearchSpaceTree C( komoFactory );
+
+  //C.fol.verbose = 5;
+//  C.prepareFol("LGP-obs-fol.g");
+//  C.prepareKin("LGP-obs-kin.g");
+
+  C.prepareFol("LGP-obs-fol-2-simple.g");        // with two candidate positions
+  C.prepareKin("LGP-obs-kin-2.g");
+
+  //C.prepareFol("LGP-coop-fol.g");
+  //C.prepareKin("LGP-coop-kin.g");       // parse initial scene LGP-coop-kin.g
+
+  C.prepareTree();      // create root node
+  C.prepareDisplay();
+
+  //  C.kin.watch(true);
+  //  mlr::wait();
+
+  // algo starts here
+
+  C.mcFringe.append(C.root);
+  C.poseFringe.append(C.root);
+  //  C.seqFringe.append(C.root);
+
+  C.updateDisplay();
+  C.displayTree();
+
+  ofstream fil("z.dat");
+
+  for(uint k=0;k<100;k++)
+  {
+    iterate( C, fil );
+  }
+  fil.close();
+
+  C.pathView.writeToFiles=false; // camille
+  C.updateDisplay();
+  mlr::wait(.1);
+  //mlr::wait();
+}*/
 
 void plan_AOS()
 {
@@ -260,50 +287,32 @@ void plan_AOS()
   KOMOFactory komoFactory;
   komoFactory.registerTask( "komoGrasp"       , groundGrasp );
   komoFactory.registerTask( "komoPlace"       , groundPlace );
-//  komoFactory.registerTask( "komoHandover"    , groundHandover );
-//  komoFactory.registerTask( "komoAttach"      , groundAttach );
+  komoFactory.registerTask( "komoHandover"    , groundHandover );
+  komoFactory.registerTask( "komoAttach"      , groundAttach );
   komoFactory.registerTask( "komoGetSight"    , groundGetSight );
   komoFactory.registerTask( "komoTakeView"    , groundTakeView );
 
   // instanciate search tree
   AOSearch C( komoFactory );
-  //C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
-  //C.prepareKin("LGP-obs-kin-3.g");
+  C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
+  C.prepareKin("LGP-obs-kin-3.g");
 
-  C.prepareFol("LGP-obs-container-fol.g");
-  C.prepareKin("LGP-obs-container-kin.g");         // parse initial scene LGP-coop-kin.g
-
-  // make container and target rigid
-  //setRigid( 0.5, "container_1_bottom", "target", komo );
+  //C.prepareFol("LGP-coop-fol.g");
+  //C.prepareKin("LGP-coop-kin.g");         // parse initial scene LGP-coop-kin.g
 
   C.prepareDisplay();
 
   C.prepareTree();      // create root node
 
   uint i = 0;
-  while( ! C.isJointPathSolved() && i < 50 )
+  while( ! C.isJointPathSolved() && i < 10 )
   {
     ++i;
-
-    std::cout << "----------" << i << "----------" << std::endl;
-
     /// SYMBOLIC SEARCH
     C.solveSymbolically();
 
     if( C.isSymbolicallySolved() )
     {
-      // save policy
-      std::stringstream ss;
-      C.printPolicy( ss );
-
-      // save to file
-      std::ofstream fs;
-      std::stringstream namess;
-      namess << "policy-" << i << ".gv";
-      fs.open( namess.str() );
-      fs << ss.str();
-      fs.close();
-
       /// POSE OPTIMIZATION
       C.optimizePoses();      // optimizes poses of the current best solution
 
@@ -326,6 +335,16 @@ void plan_AOS()
       }
     }
   }
+
+  // save policy
+  std::stringstream ss;
+  C.printPolicy( ss );
+
+  // save to file
+  std::ofstream fs;
+  fs.open( "policy.gv" );
+  fs << ss.str();
+  fs.close();
 
   // display
   C.updateDisplay( WorldID( -1 ), false, false, true );

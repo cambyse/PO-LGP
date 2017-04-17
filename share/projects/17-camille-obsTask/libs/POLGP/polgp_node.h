@@ -23,15 +23,15 @@
 #include <Logic/fol.h>
 #include <Motion/komo.h>
 #include "komo_factory.h"
-#include "action_node.h"
+#include "geometric_level.h"
 
-class AONode;
+class POLGPNode;
 struct ActionNode;
 struct PlainMC;
 struct MCStatistics;
 typedef mlr::Array<ActionNode*> ActionNodeL;
-typedef mlr::Array<AONode*> AONodeL;
-typedef mlr::Array< mlr::Array<AONode*> > AONodeLL;
+typedef mlr::Array<POLGPNode*> POLGPNodeL;
+typedef mlr::Array< mlr::Array<POLGPNode*> > POLGPNodeLL;
 
 extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_seqOpt, COUNT_pathOpt;
 
@@ -60,54 +60,54 @@ struct LogicAndState
 
 //===========================================================================
 
-class AONode
+class POLGPNode
 {
 public:
   /// root node init
-  AONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
+  POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
 
   /// child node creation
-  AONode( AONode *parent, double pHistory, const arr & bs, uint a );
+  POLGPNode( POLGPNode *parent, double pHistory, const arr & bs, uint a );
 
   // modifiers
   void expand();
-  void setAndSiblings( const mlr::Array< AONode * > & siblings );
+  void setAndSiblings( const mlr::Array< POLGPNode * > & siblings );
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy();
 
-  void solvePoseProblem();
+  void solvePoseProblem();                        // strategy design pattern?
   void solveSeqProblem();
   void solvePathProblem( uint microSteps );
   void solveJointPathProblem( uint microSteps );
 
-  void labelInfeasible();
+  //void labelInfeasible();
 
   // getters
-  AONode * parent() const { return parent_; }
+  POLGPNode * parent() const { return parent_; }
   bool isExpanded() const { return isExpanded_; }
-  AONodeLL families() const { return families_; }
+  POLGPNodeLL families() const { return families_; }
   bool isSymbolicallyTerminal() const { return isSymbolicallyTerminal_; }
   bool isSymbolicallySolved() const { return   isSymbolicallySolved_; }
-  bool isPoseSolved() const { return isPoseProblemSolved_; }
-  bool isSequenceSolved() const { return isSequenceProblemSolved_; }
-  bool isPathSolved() const { return isPathProblemSolved_; }
-  bool isJointPathSolved() const { return isJointPathProblemSolved_; }
+  bool isPoseSolved() const { return poseProblem_.isSolved_; }
+  bool isSequenceSolved() const { return seqProblem_.isSolved_; }
+  bool isPathSolved() const { return pathProblem_.isSolved_; }
+  bool isJointPathSolved() const { return jointProblem_.isSolved_; }
 
   int id() const { return id_; }
-  AONodeL bestFamily() const { return bestFamily_; }
-  AONodeL andSiblings() const { return andSiblings_; }
+  POLGPNodeL bestFamily() const { return bestFamily_; }
+  POLGPNodeL andSiblings() const { return andSiblings_; }
   double pHistory() const { return pHistory_; }
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return komoPoseProblems_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return komoSeqProblems_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return komoPathProblems_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return komoJointPathProblems_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_.komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return seqProblem_.komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_.komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_.komos_; }
 
-  void labelInfeasible( uint w ); ///< sets the infeasible label AND removes all children!
+  void labelInfeasible(); ///< sets the infeasible label AND removes all children!
 
-  AONodeL getTreePath();
-  AONodeL getTreePathFrom( AONode * start );
+  POLGPNodeL getTreePath();
+  POLGPNodeL getTreePathFrom( POLGPNode * start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
 
   // utility
@@ -140,12 +140,12 @@ private:
   std::string actionStr( uint ) const;
 
 private:
-  AONode * parent_;
+  POLGPNode * parent_;
 
   // members for symbolic search
   uint N_;                                                                    ///< number of possible worlds
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
-  mlr::Array< std::shared_ptr<Graph> >     folStates_;
+  mlr::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
   //mlr::Array< Graph* >  folAddToStates_; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
 
   //-- kinematics: the kinematic structure of the world after the decision path
@@ -161,8 +161,8 @@ private:
   uint d_;                                        ///< decision depth/step of this node
   double time_;                                   ///< real time
 
-  mlr::Array< AONode * > andSiblings_;            /// at the same depth!
-  mlr::Array< mlr::Array< AONode * > > families_;
+  mlr::Array< POLGPNode * > andSiblings_;            /// at the same depth!
+  mlr::Array< mlr::Array< POLGPNode * > > families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
   mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
@@ -170,57 +170,28 @@ private:
   double expectedReward_;
 
   int expectedBestA_;
-  mlr::Array< AONode * > bestFamily_;
+  mlr::Array< POLGPNode * > bestFamily_;
 
   //-- global search
   bool isExpanded_;
   bool isInfeasible_;
-  bool isTerminal_;
-  bool isSolved_;
 
   //-- logic search
-  bool isSymbolicallyTerminal_;
-  bool isSymbolicallySolved_;
+  bool isSymbolicallyTerminal_;           /// all the fol of this node are terminated
+  bool isSymbolicallySolved_;             /// the children of this node are all solved
 
   //-- komo factory
   const KOMOFactory & komoFactory_;
 
-  //-- pose opt
-  mlr::Array< double > poseCosts_;        ///< costs of the poses from root node up to this node
-  mlr::Array< double > poseConstraints_;  ///< costs of the constarints from root node up to this node
-  mlr::Array< bool >   poseSolved_;
-  mlr::Array< bool >   poseFeasibles_;    ///< indicates wether the optimization is feasible on this node only
-  mlr::Array< ExtensibleKOMO::ptr > komoPoseProblems_; ///< komo object used to optimize poses
-  bool isPoseTerminal_;
-  bool isPoseProblemSolved_;              ///< is set to true if all all the paths passing through this node are solved
-
-  //-- sequence opt
-  mlr::Array< double > seqCosts_;
-  mlr::Array< double > seqConstraints_;
-  mlr::Array< bool >   seqSolved_;
-  mlr::Array< bool >   seqFeasibles_;
-  mlr::Array< ExtensibleKOMO::ptr > komoSeqProblems_;
-  bool isSequenceTerminal_;
-  bool isSequenceProblemSolved_;
-
-  //-- path opt
-  mlr::Array< double > pathCosts_;
-  mlr::Array< double > pathConstraints_;
-  mlr::Array< bool >   pathFeasibles_;
-  mlr::Array< ExtensibleKOMO::ptr > komoPathProblems_;
-  mlr::Array< WorldL > pathConfigurations_;
-  bool isPathTerminal_;
-  bool isPathProblemSolved_;
-
-  //-- joint path opt
-  mlr::Array< double > jointPathCosts_;
-  mlr::Array< double > jointPathConstraints_;
-  mlr::Array< bool >   jointPathFeasibles_;
-  mlr::Array< ExtensibleKOMO::ptr >  komoJointPathProblems_;
-  mlr::Array< WorldL > jointPathConfigurations_;
-  bool isJointPathTerminal_;
-  bool isJointPathProblemSolved_;
+  GeometricLevelType poseProblem_;
+  GeometricLevelType seqProblem_;
+  GeometricLevelType pathProblem_;
+  GeometricLevelType jointProblem_;
 
   //--
   int id_;
+
+  // parameters
+  double maxConstraints_ = 0.5;
+  double maxCost_        = 7.5;
 };
