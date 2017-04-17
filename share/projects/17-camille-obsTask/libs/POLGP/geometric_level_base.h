@@ -17,11 +17,15 @@
 #include <sys/types.h>
 #include "komo_factory.h"
 
-struct GeometricLevelType
-{
-  GeometricLevelType( const GeometricLevelType& that ) = delete;
+class POLGPNode;
 
-  GeometricLevelType( std::string const& name, uint N );
+struct GeometricLevelBase
+{
+  typedef std::shared_ptr< GeometricLevelBase > ptr;
+
+  GeometricLevelBase( const GeometricLevelBase& that ) = delete;  // no copy
+
+  GeometricLevelBase( POLGPNode * node, std::string const& name, const KOMOFactory & komoFactory );
 
   std::string name_;
 
@@ -34,12 +38,16 @@ struct GeometricLevelType
   bool isTerminal_;                     // terminal node and solved
   bool isSolved_;                       // is solved ( each possible world is solved )
 
+  POLGPNode * node_;
+
+  //-- komo factory
+  const KOMOFactory & komoFactory_;
+
   virtual void solve() = 0;
+  virtual void backtrack() = 0;
+
+  // parameters
+  double maxConstraints_ = 0.5;
+  double maxCost_        = 7.5;
 };
 
-struct PoseLevelType : public GeometricLevelType
-{
-  PoseLevelType( uint N );
-
-  void solve();
-};

@@ -25,6 +25,8 @@
 
 #include <kin_equality_task.h>
 
+#include "geometric_levels.h"
+
 #define DEBUG(x) //x
 #define DEL_INFEASIBLE(x) x
 
@@ -109,15 +111,15 @@ POLGPNode::POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr
   , mcStats_( new MCStatistics )
   , expectedReward_( m_inf() )
   , expectedBestA_( -1 )
-  , komoFactory_( komoFactory )
+  //, komoFactory_( komoFactory )
   // poseOpt
-  , poseProblem_( N_ )
+  , poseProblem_( new PoseLevelType( this, komoFactory ) )
   // seqOpt
-  , seqProblem_( N_ )
+  , seqProblem_( new SeqLevelType( this, komoFactory ) )
   // pathOpt
-  , pathProblem_( N_ )
+  , pathProblem_( new PathLevelType( this, komoFactory ) )
   // jointPathOpt
-  , jointProblem_( N_ )
+  , jointProblem_( new JointPathLevelType( this, komoFactory ) )
   //
   , id_( 0 )
 {
@@ -172,15 +174,15 @@ POLGPNode::POLGPNode(POLGPNode *parent, double pHistory, const arr & bs, uint a 
   , mcStats_( new MCStatistics )
   , expectedReward_( m_inf() )
   , expectedBestA_ (-1 )
-  , komoFactory_( parent->komoFactory_ )
-  // pose problem
-  , poseProblem_( N_ )
+  //, komoFactory_( parent->komoFactory_ )
+  // poseOpt
+  , poseProblem_( new PoseLevelType( this, parent_->poseProblem_->komoFactory_ ) )
   // seqOpt
-  , seqProblem_( N_ )
+  , seqProblem_( new SeqLevelType( this, parent_->seqProblem_->komoFactory_ ) )
   // pathOpt
-  , pathProblem_( N_ )
+  , pathProblem_( new PathLevelType( this, parent_->pathProblem_->komoFactory_ ) )
   // jointPathOpt
-  , jointProblem_( N_ )
+  , jointProblem_( new JointPathLevelType( this, parent_->jointProblem_->komoFactory_ ) )
 {
   // update the states
   bool isTerminal = true;
@@ -345,7 +347,9 @@ void POLGPNode::expand()
 
     // indicate and relation
     for( auto n : familiy )
+    {
       n->setAndSiblings( familiy );
+    }
   }
 
   isExpanded_ = true;
@@ -455,6 +459,23 @@ void POLGPNode::backTrackBestExpectedPolicy()
     expectedBestA_ = bestA;
     isSymbolicallySolved_ = familyStatus( bestFamilyId ).solved;
 
+
+//    if( id_ == 7 )
+//    {
+//      std::cout << "number of families:" << families_.d0 << std::endl;
+//      for( auto i = 0; i < families_.d0; ++i )
+//      {
+//        for( auto w = 0; w < N_; ++w )
+//        {
+//          if( bs_( w ) > eps() )
+//          {
+//            auto node = families_( i ).first();
+//            std::cout << *node->decision( w ) <<" ->" << node->id() << " : " << families_( i ).first()->expectedReward_ << std::endl;
+//          }
+//        }
+//      }
+//    }
+
     // check
     //std::cout << familyRewards << std::endl;
     //std::cout << actionStr( bestA ) << std::endl;
@@ -468,343 +489,22 @@ void POLGPNode::backTrackBestExpectedPolicy()
 
 void POLGPNode::solvePoseProblem()
 {
-  //-- collect 'path nodes'
-  POLGPNodeL treepath = getTreePath();
-
-  // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < N_; ++w )
-  {
-    if( bs_( w ) > eps() )
-    {
-      mlr::KinematicWorld kin = isRoot() ? *startKinematics_( w ) : parent_->effKinematics_( w );
-
-      // create komo
-      auto komo = komoFactory_.createKomo();
-
-      // set-up komo
-      komo->setModel( kin );
-      komo->setTiming( 1., 2, 5., 1, false );
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQVelocities();
-      komo->setSquaredFixSwitchedObjects(-1., -1., 1e3);
-
-      //std::cout << *folStates_( w ) << std::endl;
-
-      komo->groundTasks( 0., *folStates_( w ) );
-
-      DEBUG( FILE("z.fol") <<fol; )
-      DEBUG( komo->MP->reportFeatures( true, FILE( "z.problem" ) ); )
-      komo->reset();
-      try{
-        komo->run();
-      } catch( const char* msg ){
-        cout << "KOMO FAILED: " << msg <<endl;
-      }
-
-      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //komo->displayTrajectory();
-      COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
-      COUNT_poseOpt++;
-      //poseCount++;
-
-      // save results
-      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-
-      Graph result = komo->getReport();
-      DEBUG( FILE( "z.problem.cost" ) << result; )
-      double cost = result.get<double>( { "total","sqrCosts" } );
-      double constraints = result.get<double>( { "total","constraints" } );
-
-      if( ! isRoot() )
-      {
-        cost += parent_->poseProblem_.costs_( w );
-      }
-
-      // if this pose leads to the smaller cost so far
-      if( ! poseProblem_.solved_( w ) || cost < poseProblem_.costs_( w ) )
-      {
-        bool solved =  constraints< maxConstraints_ && cost < maxCost_;
-
-//        if( ! solved )
-//        {
-//          std::cout << "!!!can't be solved for:" << id_ << " cost:" << cost << std::endl;
-//        }
-//        else
-//        {
-//          std::cout << "ok for:" << id_ << " cost:" << cost << std::endl;
-//        }
-
-        poseProblem_.costs_( w ) = cost;
-        poseProblem_.constraints_( w ) = constraints;
-        poseProblem_.solved_( w )    = solved;
-        poseProblem_.feasibles_( w ) = solved;
-        poseProblem_.komos_( w ) = komo;
-
-        // update effective kinematic
-        effKinematics_( w ) = *poseProblem_.komos_( w )->MP->configurations.last();
-
-        // update switch
-        for( mlr::KinematicSwitch *sw: poseProblem_.komos_( w )->MP->switches )
-        {
-          //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
-          if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_( w ) );
-        }
-        effKinematics_( w ).topSort();
-        DEBUG( effKinematics_( w ).checkConsistency(); )
-            effKinematics_( w ).getJointState();
-      }
-
-      // inform symbolic level
-//      if( ! poseFeasibles_( w ) )
-//        labelInfeasible();
-
-    }
-  }
-
-  updateAndBacktrackPoseState();
+  poseProblem_->solve();
 }
 
 void POLGPNode::solveSeqProblem()
 {
-  //-- collect 'path nodes'
-  POLGPNodeL treepath = getTreePath();
-
-  // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < N_; ++w )
-  {
-    if( bs_( w ) > eps() )
-    {
-      // create komo
-      auto komo = komoFactory_.createKomo();
-
-      // set-up komo
-      komo->setModel( *startKinematics_( w ) );
-      komo->setTiming( time_, 2, 5., 1, false );
-
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQVelocities();
-      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
-
-      for( auto node:treepath ){
-        auto time = ( node->parent_ ? node->parent_->time_: 0. ); // get parent time
-        komo->groundTasks( time, *node->folStates_( w ) );        // ground parent action (included in the initial state)
-      }
-
-      DEBUG( FILE("z.fol") << folWorlds_( w ); )
-          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-          komo->reset();
-      try{
-        komo->run();
-      } catch(const char* msg){
-        cout <<"KOMO FAILED: " <<msg <<endl;
-      }
-
-      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //komo->displayTrajectory();
-      COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
-      COUNT_seqOpt++;
-
-      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-          //  komo.checkGradients();
-
-      Graph result = komo->getReport();
-      DEBUG( FILE("z.problem.cost") << result; )
-      double cost = result.get<double>({"total","sqrCosts"});
-      double constraints = result.get<double>({"total","constraints"});
-
-      if( ! seqProblem_.komos_( w ) || cost < seqProblem_.costs_( w ) )
-      {
-        bool solved =  constraints< maxConstraints_;
-
-        seqProblem_.costs_( w )       = cost;
-        seqProblem_.constraints_( w ) = constraints;
-        seqProblem_.solved_( w )      = solved;
-        seqProblem_.feasibles_( w )   = solved;
-        seqProblem_.komos_( w )       = komo;
-      }
-
-//      if( ! seqFeasibles_( w ) )
-//        labelInfeasible();
-    }
-  }
-
-  updateAndBacktrackSequenceState();
+  seqProblem_->solve();
 }
 
-void POLGPNode::solvePathProblem( uint microSteps )
+void POLGPNode::solvePathProblem()
 {
-  //-- collect 'path nodes'
-  POLGPNodeL treepath = getTreePath();
-
-  // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < N_; ++w )
-  {
-    if( bs_( w ) > eps() )
-    {
-      // create komo
-      auto komo = komoFactory_.createKomo();
-
-      // set-up komo
-      komo->setModel( *startKinematics_( w ) );
-      komo->setTiming( time_, microSteps, 5., 2, false );
-
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQAccelerations();
-      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
-
-      for( auto node:treepath )
-      {
-        auto time = ( node->parent_ ? node->parent_->time_: 0. );   // get parent time
-        komo->groundTasks( time, *node->folStates_( w ) );          // ground parent action (included in the initial state)
-      }
-
-      DEBUG( FILE("z.fol") <<fol; )
-          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-          komo->reset();
-      try{
-        komo->run();
-      } catch(const char* msg){
-        cout << "KOMO FAILED: " << msg <<endl;
-      }
-
-      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //komo->displayTrajectory();
-      COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
-      COUNT_pathOpt++;
-
-      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      //komo->checkGradients();
-
-      Graph result = komo->getReport();
-      //DEBUG( FILE("z.problem.cost") << result; )
-      double cost = result.get<double>({"total","sqrCosts"});
-      double constraints = result.get<double>({"total","constraints"});
-
-      if( ! pathProblem_.costs_( w ) || cost < pathProblem_.costs_( w ) )     //
-      {
-        bool solved =  constraints< maxConstraints_;
-
-        pathProblem_.costs_( w )       = cost;                     //
-        pathProblem_.constraints_( w ) = constraints;              //
-        pathProblem_.solved_( w )      = solved;
-        pathProblem_.feasibles_( w )   = solved;                   //
-        pathProblem_.komos_( w )       = komo;                     //
-
-        // back the best komo for this world
-        for( POLGPNode * node = this; node; node = node->parent_ )
-        {
-          node->pathProblem_.komos_( w ) = komo;
-        }
-      }
-
-//      if( ! pathFeasibles_( w ) )
-//        labelInfeasible();
-    }
-  }
-
-  updateAndBacktrackPathState();
+  pathProblem_->solve();
 }
 
-void POLGPNode::solveJointPathProblem( uint microSteps )
+void POLGPNode::solveJointPathProblem()
 {
-  //-- collect 'path nodes'
-  POLGPNodeL treepath = getTreePath();
-
-  // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < N_; ++w )
-  {
-    if( bs_( w ) > eps() )
-    {
-      // create komo
-      auto komo = komoFactory_.createKomo();
-
-      // set-up komo
-      komo->setModel( *startKinematics_( w ) );
-      komo->setTiming( time_, microSteps, 5., 2, false );
-
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQAccelerations();
-      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
-
-      for( auto node:treepath )
-      {
-        // set task
-        auto time = ( node->parent_ ? node->parent_->time_: 0. );   // get parent time
-        komo->groundTasks( time, *node->folStates_( w ) );          // ground parent action (included in the initial state)
-
-        if( node->time_ > 0 )
-        {
-          uint pathMicroSteps = ( pathProblem_.komos_( w )->MP->configurations.N - 1 ) / time_;
-          uint nodeSlice = pathMicroSteps * node->time_ - 1;
-          arr q = zeros( pathProblem_.komos_( w )->MP->configurations( nodeSlice )->q.N );
-
-          // set constraints enforcing the path equality among worlds
-          for( auto x = 0; x < N_; ++x )
-          {
-            if( node->bs_( x ) > 0 )
-            {
-              auto komo = node->pathProblem_.komos_( x );
-
-              CHECK( node->pathProblem_.komos_( x )->MP->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
-
-              q += node->bs_( x ) * node->pathProblem_.komos_( x )->MP->configurations( nodeSlice )->q;
-            }
-          }
-
-          AgentKinEquality * task = new AgentKinEquality( node->id_, q );  // tmp camille, think to delete it, or komo does it?
-
-          //std::cout << "t:" << node->time_ << " q.N " << q.N  << std::endl;
-
-          komo->setTask( node->time_ - 1.0 / pathMicroSteps, node->time_ - 1.0 / pathMicroSteps, task, OT_sumOfSqr, NoArr, 1e2  );
-
-        }
-      }
-
-      DEBUG( FILE("z.fol") <<fol; )
-          DEBUG( komo->MP->reportFeatures( true, FILE("z.problem") ); )
-          komo->reset();
-      try{
-        komo->run();
-      } catch(const char* msg){
-        cout << "KOMO FAILED: " << msg <<endl;
-      }
-
-      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //komo->displayTrajectory();
-      COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
-      //COUNT_jointPathOpt++;
-
-      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      //komo->checkGradients();
-
-      Graph result = komo->getReport();
-      //DEBUG( FILE("z.problem.cost") << result; )
-      double cost = result.get<double>({"total","sqrCosts"});
-      double constraints = result.get<double>({"total","constraints"});
-
-      if( ! jointProblem_.costs_( w ) || cost < jointProblem_.costs_( w ) )       //
-      {
-        bool solved =  constraints< maxConstraints_;
-
-        jointProblem_.costs_( w )       = cost;                     //
-        jointProblem_.constraints_( w ) = constraints;              //
-        jointProblem_.solved_( w )      = solved;         //
-        jointProblem_.feasibles_( w )   = solved;         //
-        jointProblem_.komos_( w )       = komo;
-      }
-//      if( ! jointPathFeasibles_( w ) )
-//        labelInfeasible();
-    }
-  }
-
-  updateAndBacktrackJointPathState();
+  jointProblem_->solve();
 }
 
 void POLGPNode::labelInfeasible()
@@ -896,197 +596,6 @@ mlr::Array< POLGPNode * > POLGPNode::getTreePathFrom( POLGPNode * start )
   } while ( ( node != start ) && node );
 
   return subPath;
-}
-
-void POLGPNode::updateAndBacktrackPoseState()
-{
-  if( isSymbolicallyTerminal_ )
-  {
-    // if the node is logically terminal and if a pose has been found for each world,
-    // then the node is considered as pose-solve and pose-terminal
-
-    bool solved = true;
-    // test if it is solved for all worlds
-    for( auto w = 0; w < N_; ++w )
-    {
-      if( bs_( w ) > eps() )
-      {
-        solved = solved && poseProblem_.solved_( w );
-
-        if( ! poseProblem_.feasibles_( w ) )
-        {
-          labelInfeasible(); // label this sequence of actions as infeasible
-        }
-      }
-    }
-
-    poseProblem_.isSolved_ = solved;
-
-    if( poseProblem_.isSolved_ )
-    {
-      poseProblem_.isTerminal_      = true;
-    }
-  }
-  else
-  {
-    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
-    bool solved = true;
-
-    for( auto w = 0; w < N_; ++w )
-    {
-      if( bs_( w ) > eps() )
-      {
-        solved = solved && poseProblem_.solved_( w );
-
-        if( ! poseProblem_.feasibles_( w ) )
-        {
-          labelInfeasible(); // label this sequence of actions as infeasible
-        }
-      }
-    }
-
-    for( auto s : bestFamily() )
-    {
-      solved = solved && s->poseProblem_.isSolved_;
-    }
-
-    poseProblem_.isSolved_ = solved;
-  }
-
-  // continue backtracking
-  if( parent_ )
-  {
-    parent_->updateAndBacktrackPoseState();
-  }
-}
-
-void POLGPNode::updateAndBacktrackSequenceState()
-{
-  if( poseProblem_.isTerminal_ )
-  {
-    // if the node is logically terminal and if a pose has been found for each world,
-    // then the node is considered as pose-solve and pose-terminal
-
-    bool solved = true;
-    // test if it is solved for all worlds
-    for( auto w = 0; w < N_; ++w )
-    {
-      if( bs_( w ) > eps() )
-      {
-        solved = solved && seqProblem_.solved_( w );
-      }
-    }
-    seqProblem_.isSolved_ = solved;
-
-    if( seqProblem_.isSolved_ )
-    {
-      seqProblem_.isTerminal_      = true;
-    }
-  }
-  else
-  {
-    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
-    bool solved = true;
-
-    for( auto s : bestFamily() )
-    {
-      solved = solved && s->seqProblem_.isSolved_;
-    }
-
-    seqProblem_.isSolved_ = solved;
-  }
-
-  // continue backtracking
-  if( parent_ )
-  {
-    parent_->updateAndBacktrackSequenceState();
-  }
-}
-
-void POLGPNode::updateAndBacktrackPathState()
-{
-  if( seqProblem_.isTerminal_ )
-  {
-    // if the node is logically terminal and if a pose has been found for each world,
-    // then the node is considered as pose-solve and pose-terminal
-
-    bool solved = true;
-    // test if it is solved for all worlds
-    for( auto w = 0; w < N_; ++w )
-    {
-      if( bs_( w ) > eps() )
-      {
-        solved = solved && pathProblem_.solved_( w );
-      }
-    }
-    pathProblem_.isSolved_ = solved;
-
-    if( pathProblem_.isSolved_ )
-    {
-      pathProblem_.isTerminal_      = true;
-    }
-  }
-  else
-  {
-    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
-    bool solved = true;
-
-    for( auto s : bestFamily() )
-    {
-      solved = solved && s->pathProblem_.isSolved_;
-    }
-
-    pathProblem_.isSolved_ = solved;
-  }
-
-  // continue backtracking
-  if( parent_ )
-  {
-    parent_->updateAndBacktrackPathState();
-  }
-}
-
-void POLGPNode::updateAndBacktrackJointPathState()
-{
-  if( pathProblem_.isTerminal_ )
-  {
-    // if the node is logically terminal and if a pose has been found for each world,
-    // then the node is considered as pose-solve and pose-terminal
-
-    bool solved = true;
-    // test if it is solved for all worlds
-    for( auto w = 0; w < N_; ++w )
-    {
-      if( bs_( w ) > eps() )
-      {
-        solved = solved && jointProblem_.solved_( w );
-      }
-    }
-    jointProblem_.isSolved_ = solved;
-
-    if( jointProblem_.isSolved_ )
-    {
-      jointProblem_.isTerminal_      = true;
-    }
-  }
-  else
-  {
-    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
-    bool solved = true;
-
-    for( auto s : bestFamily() )
-    {
-      solved = solved && s->jointProblem_.isSolved_;
-    }
-
-    jointProblem_.isSolved_ = solved;
-  }
-
-  // continue backtracking
-  if( parent_ )
-  {
-    parent_->updateAndBacktrackJointPathState();
-  }
 }
 
 uint POLGPNode::getPossibleActionsNumber() const

@@ -12,15 +12,18 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "geometric_level.h"
+#include "polgp_node.h"
 
-GeometricLevelType::GeometricLevelType( uint N )
-  : N_( N )
-  , costs_( N )
-  , constraints_( N )
-  , solved_( N )
-  , feasibles_( N )
-  , komos_( N )
+GeometricLevelBase::GeometricLevelBase( POLGPNode * node, std::string const& name, const KOMOFactory & komoFactory )
+  : node_( node )
+  , name_( name )
+  , N_( node->N() )
+  , komoFactory_( komoFactory )
+  , costs_( N_ )
+  , constraints_( N_ )
+  , solved_( N_ )
+  , feasibles_( N_ )
+  , komos_( N_ )
   , isTerminal_( false )
   , isSolved_( false )
 {
@@ -31,15 +34,4 @@ GeometricLevelType::GeometricLevelType( uint N )
     solved_( w ) = false;
     feasibles_( w ) = true;
   }
-}
-
-PoseLevelType::PoseLevelType( uint N )
-  : GeometricLevelType( "pose level", N )
-{
-
-}
-
-void PoseLevelType::solve()
-{
-
 }

@@ -23,7 +23,7 @@
 #include <Logic/fol.h>
 #include <Motion/komo.h>
 #include "komo_factory.h"
-#include "geometric_level.h"
+#include "geometric_level_base.h"
 
 class POLGPNode;
 struct ActionNode;
@@ -77,8 +77,9 @@ public:
 
   void solvePoseProblem();                        // strategy design pattern?
   void solveSeqProblem();
-  void solvePathProblem( uint microSteps );
-  void solveJointPathProblem( uint microSteps );
+  void solvePathProblem();
+  void solveJointPathProblem();
+  void labelInfeasible(); ///< sets the infeasible label AND removes all children!
 
   //void labelInfeasible();
 
@@ -88,27 +89,37 @@ public:
   POLGPNodeLL families() const { return families_; }
   bool isSymbolicallyTerminal() const { return isSymbolicallyTerminal_; }
   bool isSymbolicallySolved() const { return   isSymbolicallySolved_; }
-  bool isPoseSolved() const { return poseProblem_.isSolved_; }
-  bool isSequenceSolved() const { return seqProblem_.isSolved_; }
-  bool isPathSolved() const { return pathProblem_.isSolved_; }
-  bool isJointPathSolved() const { return jointProblem_.isSolved_; }
+  bool isPoseSolved() const { return poseProblem_->isSolved_; }
+  bool isSequenceSolved() const { return seqProblem_->isSolved_; }
+  bool isPathSolved() const { return pathProblem_->isSolved_; }
+  bool isJointPathSolved() const { return jointProblem_->isSolved_; }
 
+  uint N() const { return N_; }
   int id() const { return id_; }
   POLGPNodeL bestFamily() const { return bestFamily_; }
   POLGPNodeL andSiblings() const { return andSiblings_; }
   double pHistory() const { return pHistory_; }
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_.komos_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return seqProblem_.komos_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_.komos_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_.komos_; }
-
-  void labelInfeasible(); ///< sets the infeasible label AND removes all children!
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_->komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return seqProblem_->komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_->komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_->komos_; }
 
   POLGPNodeL getTreePath();
   POLGPNodeL getTreePathFrom( POLGPNode * start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
+
+  // for geometric levels
+  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics() const { return startKinematics_; }
+  mlr::Array< mlr::KinematicWorld > & effKinematics() { return effKinematics_; }
+  mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
+  GeometricLevelBase::ptr poseGeometricLevel() const { return poseProblem_; }
+  GeometricLevelBase::ptr seqGeometricLevel() const { return seqProblem_; }
+  GeometricLevelBase::ptr pathGeometricLevel() const { return pathProblem_; }
+  GeometricLevelBase::ptr jointPathGeometricLevel() const { return jointProblem_; }
+
+  double time() const { return time_; }
 
   // utility
   std::string bestActionStr() const { return actionStr( expectedBestA_ ); }
@@ -116,11 +127,6 @@ public:
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
-  void updateAndBacktrackPoseState();
-  void updateAndBacktrackSequenceState();
-  void updateAndBacktrackPathState();
-  void updateAndBacktrackJointPathState();
-
   // utility
   uint getPossibleActionsNumber() const;
   LogicAndState getWitnessLogicAndState() const;
@@ -180,18 +186,11 @@ private:
   bool isSymbolicallyTerminal_;           /// all the fol of this node are terminated
   bool isSymbolicallySolved_;             /// the children of this node are all solved
 
-  //-- komo factory
-  const KOMOFactory & komoFactory_;
-
-  GeometricLevelType poseProblem_;
-  GeometricLevelType seqProblem_;
-  GeometricLevelType pathProblem_;
-  GeometricLevelType jointProblem_;
+  GeometricLevelBase::ptr poseProblem_;
+  GeometricLevelBase::ptr seqProblem_;
+  GeometricLevelBase::ptr pathProblem_;
+  GeometricLevelBase::ptr jointProblem_;
 
   //--
   int id_;
-
-  // parameters
-  double maxConstraints_ = 0.5;
-  double maxCost_        = 7.5;
 };

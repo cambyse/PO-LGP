@@ -199,7 +199,7 @@ void AOSearch::optimizePaths()
 
   for( auto n : nodes )
   {
-    n->solvePathProblem( 20 );
+    n->solvePathProblem();
   }
 }
 
@@ -209,35 +209,9 @@ void AOSearch::optimizeJointPaths()
 
   for( auto n : nodes )
   {
-    n->solveJointPathProblem( 20 );
+    n->solveJointPathProblem();
   }
 }
-
-/*void AOSearch::optimizePaths2()
-{
-  optimizePaths2( root_, root_ );
-}*/
-
-/*void AOSearch::optimizePaths2( POLGPNode * node, POLGPNode * start )
-{
-  if( node->isTerminal() )
-  {
-    node->solvePathProblem2( 20, start );
-  }
-  else
-  {
-    if( node->andSiblings().d0 >= 1 )
-    {
-      node->solvePathProblem2( 20, start );
-      start = node;
-    }
-
-    for( auto c : node->bestFamily() )
-    {
-      optimizePaths2( c, start );
-    }
-  }
-}*/
 
 void AOSearch::optimizePoses( POLGPNode * node )
 {

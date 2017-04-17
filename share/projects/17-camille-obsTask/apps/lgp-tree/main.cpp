@@ -281,7 +281,7 @@ void plan_AOS()
   C.prepareTree();      // create root node
 
   uint i = 0;
-  while( ! C.isJointPathSolved() && i < 50 )
+  while( ! C.isJointPathSolved() && i < 100 )
   {
     ++i;
 
