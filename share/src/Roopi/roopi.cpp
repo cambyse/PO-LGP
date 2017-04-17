@@ -222,6 +222,20 @@ Act_ComPR2& Roopi::getComPR2(){
   return *s->_ComPR2;
 }
 
+Act::Ptr Roopi::rosPublish(const VariableBase::Ptr& v, double beatIntervalSec){
+  return make_shared<Act_RosPublish>(this, *v, beatIntervalSec);
+}
+
+Act::Ptr Roopi::rosPublish(const char* var_name, double beatIntervalSec){
+  VariableBase::Ptr v = getVariable(var_name);
+  return make_shared<Act_RosPublish>(this, *v, beatIntervalSec);
+}
+
+void Roopi::rosPublishAllVariables(){
+  VariableBaseL vars = getVariables();
+  for(VariableBase::Ptr* v:vars) permanentActs.append(rosPublish(*v));
+}
+
 void Roopi::reportCycleTimes(){
   threadReportCycleTimes();
 }

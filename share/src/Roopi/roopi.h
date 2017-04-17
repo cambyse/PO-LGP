@@ -12,6 +12,7 @@
 #include "act_PathFollow.h"
 #include "act_TaskController.h"
 #include "act_ComPR2.h"
+#include "act_RosPublish.h"
 #include "act_Thread.h"
 #include "act_Tweets.h"
 #include "act_Script.h"
@@ -32,6 +33,7 @@ struct Roopi {
   struct Roopi_private* s;
 
   Access<ActL> acts;
+  mlr::Array<Act::Ptr> permanentActs; ///< a set of permanent acts (they're permanent, because this list holds a shared_ptr)
 
   Roopi(bool autoStartup=false, bool controlView=true);
   ~Roopi();
@@ -83,6 +85,10 @@ struct Roopi {
   arr get_q0();                                      ///< return the 'homing pose' of the robot
   Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
   Act_ComPR2& getComPR2();                           ///< to call 'stopSendingMotion'
+
+  Act::Ptr rosPublish(const VariableBase::Ptr& var, double beatIntervalSec=-1.);
+  Act::Ptr rosPublish(const char* var_name, double beatIntervalSec=-1.);
+  void rosPublishAllVariables();
 
   //-- direct access to variables and threads
   template<class T> Access<T> variable(const char* var_name){    ///< get a handle to a typed variable: you can R/W-access the data or read/wait for the revision

@@ -7,6 +7,7 @@
 #include <Perception/percept.h>
 #include <Kin/kinViewer.h>
 //#include <memory>
+#include <RosCom/roscom.h>
 
 
 //===============================================================================
@@ -147,7 +148,7 @@ void Prototyping(){
 void TEST(PickAndPlace) {
   Roopi R(true);
 
-//  auto view = R.CameraView();
+  //  auto view = R.CameraView();
   //  auto pcl = R.newKinect2Pcl();
   //  R.taskController().verbose(1);
 
@@ -155,12 +156,9 @@ void TEST(PickAndPlace) {
   R.collisions(true);
 
   //  auto ph = R.newPhysX();
-//  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
+  //  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
 
-//  auto reporter = R.loop(1., [&R](){
-//    R.report();
-//    return 0;
-//  });
+  auto pub = R.rosPublish("modelWorld", .1);
 
 #if 0
   Script_graspBox(R, "obj1", LR_right);

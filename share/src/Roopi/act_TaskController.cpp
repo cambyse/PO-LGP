@@ -19,7 +19,7 @@ void Act_TaskController::verbose(int verbose){
 }
 
 void Act_TaskController::lockJointGroupControl(const char *groupname, bool lockThem){
-  tcm->waitForStatusSmallerThan(tsOPENING);
+  tcm->waitForStatusSmallerThan(tsToOpen);
   while(tcm->step_count<2) mlr::wait(.01);
   tcm->stepMutex.lock();
   tcm->taskController->lockJointGroup(groupname, roopi.setK(), lockThem);

@@ -45,7 +45,7 @@ void sAct_PathOpt::open(){
   if(CP) delete CP;
   if(opt) delete opt;
 
-  CP = new Conv_KOMO_ConstrainedProblem(komo->MP->komo_problem);
+  CP = new Conv_KOMO_ConstrainedProblem(komo->komo_problem);
   opt = new OptConstrained(komo->x, komo->dual, *CP);
   opt->earlyPhase = true;
 }
@@ -62,7 +62,7 @@ void sAct_PathOpt::step(){
       viewer->threadLoop();
     }
     viewer->stepMutex.lock();
-    viewer->setConfigurations(komo->MP->configurations);
+    viewer->setConfigurations(komo->configurations);
     viewer->stepMutex.unlock();
 
     threadStop();

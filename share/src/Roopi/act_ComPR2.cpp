@@ -53,7 +53,8 @@ void Act_ComPR2::stopSendingMotionToRobot(bool stop){
 
 Act_RosSubKinect::Act_RosSubKinect(Roopi* r)
   : Act(r){
-  sub = new sAct_ComPR2;
+//  sub = new sAct_ComPR2;
+  NIY;
 }
 
 Act_RosSubKinect::~Act_RosSubKinect(){

@@ -13,9 +13,10 @@
     --------------------------------------------------------------  */
 
 
-//#include <Gui/opengl.h>
-//#include <GL/gl.h>
-//#include <Geo/qhull.h>
+#include <Gui/opengl.h>
+#include <GL/gl.h>
+#include <Geo/geo.h>
+#include <Geo/qhull.h>
 #include "minEigModel.h"
 
 

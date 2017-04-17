@@ -18,7 +18,7 @@
 #include <Core/array.h>
 #include <Algo/eigenValues.h>
 #include <Geo/mesh.h>
-#include "dataNeighbored.h"
+#include <Algo/dataNeighbored.h>
 
 struct MinEigModel : GLDrawer{
   DataNeighbored& data;
