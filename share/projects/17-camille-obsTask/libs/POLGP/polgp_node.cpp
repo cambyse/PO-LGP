@@ -145,7 +145,7 @@ POLGPNode::POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr
     {
       s++;
     }
-  }
+  } 
 }
 
 /// child node creation
@@ -484,7 +484,14 @@ void POLGPNode::backTrackBestExpectedPolicy()
   }
 
   if( parent_ )
+  {
     parent_->backTrackBestExpectedPolicy();
+  }
+}
+
+void POLGPNode::registerGeometricLevel( GeometricLevelBase::ptr const& level )
+{
+  geometricLevels_[ level->name_ ] = level;
 }
 
 void POLGPNode::solvePoseProblem()

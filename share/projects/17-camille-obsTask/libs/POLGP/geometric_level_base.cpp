@@ -14,7 +14,7 @@
 
 #include "polgp_node.h"
 
-GeometricLevelBase::GeometricLevelBase( POLGPNode * node, std::string const& name, const KOMOFactory & komoFactory )
+GeometricLevelBase::GeometricLevelBase( POLGPNode * node, mlr::String const& name, const KOMOFactory & komoFactory )
   : node_( node )
   , name_( name )
   , N_( node->N() )

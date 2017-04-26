@@ -25,9 +25,9 @@ struct GeometricLevelBase
 
   GeometricLevelBase( const GeometricLevelBase& that ) = delete;  // no copy
 
-  GeometricLevelBase( POLGPNode * node, std::string const& name, const KOMOFactory & komoFactory );
+  GeometricLevelBase( POLGPNode * node, mlr::String const& name, const KOMOFactory & komoFactory );
 
-  std::string name_;
+  mlr::String name_;
 
   uint N_;
   mlr::Array< double > costs_;          // optimization result costs ( one per world )
@@ -47,7 +47,38 @@ struct GeometricLevelBase
   virtual void backtrack() = 0;
 
   // parameters
-  double maxConstraints_ = 0.5;
-  double maxCost_        = 7.5;
+  double maxConstraints_ = 0.8;
+  double maxCost_        = 5;
 };
+
+class GeometricLevelFactoryBase
+{
+public:
+  typedef std::shared_ptr< GeometricLevelFactoryBase > ptr;
+
+  GeometricLevelFactoryBase( const KOMOFactory & komoFactory )
+    : komoFactory_( komoFactory )
+  {
+
+  }
+
+  virtual GeometricLevelBase::ptr create( POLGPNode * node ) const = 0;
+
+protected:
+  const KOMOFactory & komoFactory_;
+};
+
+template < typename T >
+class GenericGeometricLevelFactory : public GeometricLevelFactoryBase
+{
+public:
+  GenericGeometricLevelFactory( const KOMOFactory & komoFactory )
+    : GeometricLevelFactoryBase( komoFactory )
+  {
+
+  }
+
+  GeometricLevelBase::ptr create( POLGPNode * node ) const { return GeometricLevelBase::ptr( new T( node, komoFactory_ ) );  }
+};
+
 

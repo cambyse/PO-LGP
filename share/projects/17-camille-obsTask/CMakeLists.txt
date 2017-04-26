@@ -7,5 +7,6 @@ project(${project_name})
 add_definitions(-std=c++11)
 
 add_subdirectory("libs/ObservationTasks")
+add_subdirectory("libs/CollisionAvoidance")
 add_subdirectory("libs/POLGP")
 add_subdirectory("apps")

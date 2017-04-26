@@ -1,13 +1,16 @@
+#include <functional>
+
 #include <MCTS/solver_PlainMC.h>
 
 #include "ao_search.h"
 
 #include <observation_tasks.h>
+#include <object_pair_collision_avoidance.h>
+#include <geometric_levels.h>
 
 /*
 back track, take history into account?
 sort nodes before expanding?
-labelInfeasible()
 back track result of pose computation when one of the pose is not possible or generally different between worlds!
 less rollouts?
 iterations
@@ -16,6 +19,14 @@ dot -Tpng -o policy.png policy.gv
 
 test a logic : mlr/share/example/DomainPlayer
 
+QUESTIONS  :
+- why no proxy?
+- how to solve collision avoidance if objects penetrate
+
+TODO :
+- decision if optimization succeded, how? reactivate for seq and paths!!
+- refactoring geometric levels
+- symbolic search, use costs from other levels?
 */
 //===========================================================================
 
@@ -154,96 +165,87 @@ test a logic : mlr/share/example/DomainPlayer
 
 //===========================================================================
 
-void groundGrasp( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundGrasp( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
-  double time=n->get<double>();
+  double duration=n->get<double>();
+
+  //
+  const double t = phase+duration;
+  //
 
   //komo.setGrasp( phase+time, *symbols(0), *symbols(1), verbose);
 
   if( *symbols(1) == "container_0" )
   {
   //arrive sideway
-  komo.setTask( phase + time, phase + time, new TaskMap_Default( vecTMT, komo.world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+  komo->setTask( t, t, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
   //disconnect object from table
-  komo.setKinematicSwitch( phase + time, true, "delete", NULL, "container_0_left" /**symbols(1)*/ );
+  komo->setKinematicSwitch( t, true, "delete", "tableC", "container_0_bottom" );
   //connect graspRef with object
-  komo.setKinematicSwitch( phase + time, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
+  //komo.setKinematicSwitch( t, true, "addRigid", *symbols(0), "container_0_left" /**symbols(1)*/ );
+
+  komo->setKinematicSwitch( t, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
   }
   else if( *symbols(1) == "container_1" )
   {
   //arrive sideway
-  komo.setTask( phase + time, phase + time, new TaskMap_Default( vecTMT, komo.world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+  komo->setTask( t, t, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
   //disconnect object from table
-  komo.setKinematicSwitch( phase + time, true, "delete", NULL, "container_1_left" /**symbols(1)*/ );
+  komo->setKinematicSwitch( t, true, "delete", "tableC", "container_1_bottom" );
   //connect graspRef with object
-  komo.setKinematicSwitch( phase + time, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
+  //komo.setKinematicSwitch( t, true, "addRigid", *symbols(0), "container_1_left" /**symbols(1)*/ );
+
+  komo->setKinematicSwitch( t, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
   }
 
 }
 
-void groundPlace( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundPlace( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
-  double time=n->get<double>();
+  double duration=n->get<double>();
 
-  std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
+  //
+  const double t = phase+duration;
+  //
+  //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
 
   if( *symbols(1) == "container_0" )
   {
-    komo.setPlace( phase+time, *symbols(0), "container_0_front", *symbols(2), verbose);
+    komo->setPlace( t, *symbols(0), "container_0_front", *symbols(2), verbose );
   }
   else if( *symbols(1) == "container_1" )
   {
-    komo.setPlace( phase + time, *symbols(0), "container_1_front", *symbols(2), verbose);
+    komo->setPlace( t, *symbols(0), "container_1_front", *symbols(2), verbose );
   }
 }
 
-//void groundHandover( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
-//{
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-//  double time=n->get<double>();
-
-//  komo.setHandover( phase+time, *symbols(0), *symbols(1), *symbols(2), verbose);
-//}
-
-//void groundAttach( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
-//{
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-//  double time=n->get<double>();
-
-//  Node *attachableSymbol = facts.getNode("attachable");
-//  CHECK(attachableSymbol!=NULL,"");
-//  Node *attachableFact = facts.getEdge({attachableSymbol, n->parents(1), n->parents(2)});
-//  mlr::Transformation rel = attachableFact->get<mlr::Transformation>();
-//  komo.setAttach( phase+time, *symbols(0), *symbols(1), *symbols(2), rel, verbose);
-//}
-
-void groundGetSight( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
-  double time=n->get<double>();
+  double duration=n->get<double>();
+
+  //
+  const double t = phase+duration;
+  //
 
   mlr::String arg = *symbols(0);
 
-  komo.setTask( phase + time, phase + time + 1.0, new ActiveGetSight      ( "manhead",
+  komo->setTask( t, t + 1.0, new ActiveGetSight      ( "manhead",
                                                                         arg,
                                                                         //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-                                                                        ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
+                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
                 OT_sumOfSqr, NoArr, 1e2 );
 }
 
-void groundTakeView( double phase, const Graph& facts, Node *n, KOMO & komo, int verbose )
+void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
   double time=n->get<double>();
 
@@ -252,21 +254,119 @@ void groundTakeView( double phase, const Graph& facts, Node *n, KOMO & komo, int
   //
 }
 
+class OverPlaneConstraintManager
+{
+public:
+
+void groundActivateOverPlane( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double duration=n->get<double>();
+
+  //
+  const double t_start = phase+duration;
+  const double t_end =  komo->maxPhase+duration;
+  //
+
+  if( *symbols(0) == "container_0" )
+  {
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 0, 0, 1.0 ) ), OT_eq, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+
+    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_0", *symbols(1), 0.05 ), OT_ineq, NoArr, 1e2 );
+
+    activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
+  }
+  else if( *symbols(0) == "container_1" )
+  {
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 0, 0, 1.0 ) ), OT_eq, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+
+    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_1", *symbols(1), 0.05 ), OT_ineq, NoArr, 1e2 );
+
+    activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
+  }
+}
+
+void groundDeactivateOverPlane( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  for( auto req : activeTasks_ )
+  {
+    if( req.komo == komo && req.symbols == symbols )
+    {
+      //req.task->
+    }
+  }
+//  double duration=n->get<double>();
+
+//  //
+//  const double t = phase+duration;
+//  //
+}
+private:
+
+struct ActiveTask
+{
+  KOMO * komo;
+  StringL symbols;
+  Task * task;
+};
+
+std::list< ActiveTask > activeTasks_;
+
+};
+
+
+void groundObjectPairCollisionAvoidance( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+{
+  //std::cout << facts << std::endl;
+
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double duration=n->get<double>();
+
+  //
+  const double t_start = phase + duration;
+  const double t_end =  komo->maxPhase + duration;
+  //
+
+  for( auto s1 : komo->world.getBodyByName( *symbols(0) )->shapes )
+  {
+    for( auto s2 : komo->world.getBodyByName( *symbols(1) )->shapes )
+    {
+      //komo->setTask( t_start, t_end, new ShapePairCollisionConstraint( komo->world, s1->name, s2->name, 0.1 ), OT_ineq, NoArr, 1e2 );
+    }
+  }
+}
 //===========================================================================
 
 void plan_AOS()
 {
+  using namespace std::placeholders;
+
+  OverPlaneConstraintManager overPlane;
+
+  auto groundActivateOverPlane = std::bind( &OverPlaneConstraintManager::groundActivateOverPlane, &overPlane, _1, _2, _3, _4, _5 );
+  auto groundDeactivateOverPlane = std::bind( &OverPlaneConstraintManager::groundDeactivateOverPlane, &overPlane, _1, _2, _3, _4, _5 );
+
   // register symbols
   KOMOFactory komoFactory;
   komoFactory.registerTask( "komoGrasp"       , groundGrasp );
   komoFactory.registerTask( "komoPlace"       , groundPlace );
-//  komoFactory.registerTask( "komoHandover"    , groundHandover );
-//  komoFactory.registerTask( "komoAttach"      , groundAttach );
   komoFactory.registerTask( "komoGetSight"    , groundGetSight );
   komoFactory.registerTask( "komoTakeView"    , groundTakeView );
-
+  komoFactory.registerTask( "komoActivateOverPlane"   , groundActivateOverPlane );
+  komoFactory.registerTask( "komoDeactivateOverPlane" , groundDeactivateOverPlane );
+  komoFactory.registerTask( "komoCollisionAvoidance", groundObjectPairCollisionAvoidance );
   // instanciate search tree
   AOSearch C( komoFactory );
+  //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
   //C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   //C.prepareKin("LGP-obs-kin-3.g");
 
@@ -329,7 +429,7 @@ void plan_AOS()
 
   // display
   C.updateDisplay( WorldID( -1 ), false, false, true );
-  mlr::wait( 60 );
+  mlr::wait( 3000 );
 }
 
 //===========================================================================

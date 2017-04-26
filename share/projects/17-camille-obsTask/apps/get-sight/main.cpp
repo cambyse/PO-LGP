@@ -1,6 +1,7 @@
 #include <Motion/komo.h>
 
 #include <observation_tasks.h>
+#include <object_pair_collision_avoidance.h>
 
 using namespace std;
 
@@ -50,33 +51,123 @@ static void setRigid( double time, mlr::String const& object1Name, mlr::String c
   }*/
 }
 
-struct _PairCollisionConstraint:PairCollisionConstraint
+static double norm2( const arr & x )
 {
-  _PairCollisionConstraint(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double _margin=.02)
-    : PairCollisionConstraint( G, iShapeName, jShapeName, _margin )
-  {
+  return sqrt( ( ( ~ x ) * x )( 0 ) );
+}
 
+static arr Jnorm( const arr & x )
+{
+  arr J( 1, x.N );
+
+  // compute sqrNorm
+  double norm = norm2( x );
+
+  // compute each jacobian element
+  if( norm > 0.000001 )
+  {
+    for( auto i = 0; i < x.N; ++i )
+      J( 0, i ) = x( i ) / norm ;
+  }
+  else
+  {
+    J.setZero();
   }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("_PairCollisionConstraint"); }
-};
+  return J;
+}
+
+/*struct AllObjectsCollisionAvoidance:TaskMap
+{
+  AllObjectsCollisionAvoidance( double margin=.02 )
+    : margin_( margin )
+  {
+  }
+
+  virtual void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
+  {
+    //::PairCollisionConstraint::phi( y, J, G, t );
+//    arr tmp_y = zeros( 1 );
+
+//    for( auto )
+    uint dim = dim_phi( G );
+
+    arr tmp_y = zeros( dim );
+    arr tmp_J = zeros( dim, G.q.N );
+
+    for( auto k = 0; k < G.proxies.N; ++k )
+    {
+      auto p = G.proxies( k );
+
+      tmp_y( k ) = margin_ - p->d;
+
+      mlr::Shape *a = G.shapes(p->a);
+      mlr::Shape *b = G.shapes(p->b);
+
+      auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
+      auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
+
+      arr posA;
+      arr posB;
+      arr JposA;
+      arr JposB;
+      G.kinematicsPos(posA, JposA, a->body, arel);
+      G.kinematicsPos(posB, JposB, b->body, brel);
+
+      double d1 = ( p->posA - p->posB ).length();
+      double d2 = norm2( posA - posB );
+
+      arr JnormD = Jnorm( posA - posB ) * ( JposA - JposB );
+
+      tmp_J.setMatrixBlock( -JnormD, k, 0 );
+      //tmp_J =
+
+      //std::cout << p->d << " " << d1 << " " << d2 << std::endl;
+    }
+
+    // commit results
+    y = tmp_y;
+    if(&J) J = tmp_J;
+  }
+
+  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("AllObjectsCOllisionAvoidance"); }
+
+  uint dim_phi(const mlr::KinematicWorld& G)
+  {
+    return ( G.shapes.N ) * ( G.shapes.N );
+  }
+
+private:
+  double margin_;
+};*/
+
 //===========================================================================
 
 void move(){
 
   KOMO komo;
   komo.setConfigFromFile();
-  //komo.setTiming( 5, 10, 5, 2 );
 
-
-  // mlr::Body *b = komo.world.getBodyByName("/human/base");
-  // b->X.addRelativeTranslation(.3,0,0);
-
-  //  komo.setHoming(-1., -1., 1e-1);
-  //  komo.setSquaredQVelocities();
   komo.setSquaredFixJointVelocities();
   komo.setSquaredFixSwitchedObjects();
   komo.setSquaredQAccelerations();
+
+  komo.world.watch();
+
+//  KOMO komo;
+//  //komo.setConfigFromFile();
+//  mlr::KinematicWorld kin;
+//  kin.init( "model.g" );
+//  kin.watch();
+
+//  komo.setModel( kin );
+//  komo.setTiming(7, 10, 5., 2, true);
+
+//  komo.setHoming(-1., -1., 1e-2); //gradient bug??
+//  komo.setSquaredQAccelerations();
+//  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
+//  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+
 
   //komo.setPosition(1., 1.1, "humanL", "target", OT_sumOfSqr, NoArr, 1e2);
   //komo.setPosition(1., 1.1, "handR", "target", OT_sumOfSqr, NoArr, 1e2);
@@ -92,35 +183,47 @@ void move(){
 
   // make container and target rigid
   //setRigid( 0.5, "container_1_bottom", "target", komo );
-  //setRigid( 0.5, "container_1_bottom", "table", komo );
+  //setRigid( 0.5, "container_1_bottom", "tableC", komo );
 
 
   // grasp container
   //komo.setGrasp( 1.0, "handL", "container_1_front" );
   //komo.setGrasp( 2.0, "handL", "target_1" ); // grasp ball
   const double start_time = 1.0;
+
+  //komo.setAlign( 1.0, 7, "container_1_front" );
+  komo.setTask( 1.0, 7.0, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+
   /////ACTIVE GET SIGHT CONTAINER 0
   {
     const double time = start_time + 0.0;
 
     komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
                                                               "container_0",
-                                                              //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                               ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
+  komo.setTask( 1.0, start_time + 5.0, new OverPlaneConstraint ( komo.world,
+                                                                 "container_1",
+                                                                 "tableC",
+                                                                 0.01
+                                                                 ),  // pivot position  in container frame
+                OT_ineq, NoArr, 1e2 );
+
   /////GRASP CONTAINER////
-  {
+//  {
     const double time = start_time + 2.0;
     //arrive sideways
     komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
-    komo.setKinematicSwitch( time, true, "delete", "table", "container_1_left" );
+    komo.setKinematicSwitch( time, true, "delete", "tableC", "container_1_bottom" );
     //connect graspRef with object
     komo.setKinematicSwitch( time, true, "ballZero", "handL", "container_1_left" );
-  }
+    //komo.setKinematicSwitch( time, true, "addRigid", "handL", "container_1_handle", NoTransformation, NoTransformation );
+//  }
+
   /////
 
 
@@ -139,12 +242,18 @@ void move(){
   {
     const double time = start_time + 5.0;
 
-    komo.setPlace( time, "handL", "container_1_front", "table" );
+    komo.setPlace( time, "handL", "container_1_front", "tableC" );
   }
 
-//  { //doesn't seem to work
-//  komo.setTask( 1.0, 5.0, new _PairCollisionConstraint( komo.world, "manhead", "container_1_front" ), OT_sumOfSqr, NoArr, 1e2 );
-//  }
+  /////COLLISION AVOIDANCE
+  {
+    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
+    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "container_0_front", 0.05 ), OT_ineq, NoArr, 1e2 );
+    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_bottom", 0.05 ), OT_ineq, NoArr, 1e2 );
+    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
+
+//    komo.setTask( start_time + 2.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "tableCC" ), OT_ineq, NoArr, 1e2 );
+  }
 
 //  if(komo.stepsPerPhase>2){ //velocities down and up
 //    komo.setTask(time-.15, time, new TaskMap_Default(posTMT, komo.world, "handL"), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down

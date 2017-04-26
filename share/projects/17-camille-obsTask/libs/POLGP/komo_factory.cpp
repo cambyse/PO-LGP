@@ -51,13 +51,13 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
   for(Node *n:facts)
   {
     if(!n->parents.N) continue; // skip not relevant node
-    StringL symbols;
-    for(Node *p:n->parents) symbols.append(&p->keys.last());// gather symbols
+
+    //std::cout << "node:" <<  *n << std::endl;
 
     if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
     {
       mlr::String type = n->keys.last();
-      tasks_[ type ]( phase, facts, n, *this, verbose ); // ground the symbol
+      tasks_[ type ]( phase, facts, n, this, verbose ); // ground the symbol
     }
     else if(n->keys.N && n->keys.last().startsWith("komo"))
     {

@@ -15,13 +15,15 @@
 
 #pragma once
 
+#include <memory>
+
 #include <Motion/komo.h>
 
 //=====ExtensibleKOMO==============================================
 
 class ExtensibleKOMO : public KOMO
 {
-  typedef std::function<void( double, const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
+  typedef std::function<void( double, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
 
 public:
   typedef std::shared_ptr< ExtensibleKOMO > ptr;
@@ -39,7 +41,7 @@ private:
 
 class KOMOFactory
 {
-  typedef std::function<void( double, const Graph& facts, Node *n, KOMO &, int verbose )> SymbolGrounder;
+  typedef std::function<void( double, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
 
 public:
   void registerTask( const mlr::String & type, const SymbolGrounder & grounder );

@@ -15,6 +15,7 @@
 #include "geometric_levels.h"
 #include "polgp_node.h"
 #include "kin_equality_task.h"
+#include "Kin/kin_swift.h"
 
 static double eps() { return std::numeric_limits< double >::epsilon(); }
 static double m_inf() { return -std::numeric_limits< double >::max(); }
@@ -43,19 +44,46 @@ void PoseLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( kin );
-      komo->setTiming( 1., 2, 5., 1, false );
+      komo->setModel( kin, false, true, false, false );
+
+//      setModel(
+//            W,
+//            mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
+//            mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
+//            mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
+//            mlr::getParameter<bool>("KOMO/activateAllContact", false)
+//            );
+
+      komo->setTiming( 1., 2, 5., 1, true );
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQVelocities();
       komo->setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
-      if( node_->id() == 110 )
-      {
-        std::cout << *node_->folStates()( w ) << std::endl;
-      }
-
       komo->groundTasks( 0., *node_->folStates()( w ) );
 
+//      for( auto s : komo->world.shapes )
+//      {
+//        if(s->cont)
+//        {
+//          cout <<s->name << std::endl;
+//        }
+//      }
+
+//      komo->world.swift().initActivations( komo->world );
+
+//      for( auto s : komo->world.shapes )
+//      {
+//        if(s->cont)
+//        {
+//          cout <<s->name << std::endl;
+//        }
+//      }
+//      for( auto s : komo->world.shapes )
+//      {
+//        std::cout << s->name << ":" << s->cont << std::endl;
+//        std::cout << komo->world.proxies.N << std::endl;
+//      }
+//      ::makeConvexHulls( komo->world.shapes );
 //      DEBUG( FILE("z.fol") << fol; )
 //      DEBUG( komo->MP->reportFeatures( true, FILE( "z.problem" ) ); )
       komo->reset();
@@ -80,6 +108,10 @@ void PoseLevelType::solve()
       double cost = result.get<double>( { "total","sqrCosts" } );
       double constraints = result.get<double>( { "total","constraints" } );
 
+      //
+      std::cout << "Pose problem " << node_->id() << " solved with :" << cost << " " << constraints << std::endl;
+      //
+
       if( ! node_->isRoot() )
       {
         cost += node_->parent()->poseGeometricLevel()->costs_( w );
@@ -88,7 +120,7 @@ void PoseLevelType::solve()
       // if this pose leads to the smaller cost so far
       if( ! solved_( w ) || cost < costs_( w ) )
       {
-        bool solved =  constraints< maxConstraints_ && cost < maxCost_;
+        bool solved =  constraints < maxConstraints_ && cost < maxCost_;
 
 //        if( ! solved )
 //        {
@@ -118,11 +150,6 @@ void PoseLevelType::solve()
         //DEBUG( node->effKinematics()( w ).checkConsistency(); )
         node_->effKinematics()( w ).getJointState();
       }
-
-      // inform symbolic level
-//      if( ! poseFeasibles_( w ) )
-//        labelInfeasible();
-
     }
   }
 
@@ -223,8 +250,8 @@ void SeqLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( *node_->startKinematics()( w ) );
-      komo->setTiming( node_->time(), 2, 5., 1, false );
+      komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
+      komo->setTiming( node_->time(), 2, 5., 1, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQVelocities();
@@ -263,7 +290,7 @@ void SeqLevelType::solve()
 
       if( ! komos_( w ) || cost < costs_( w ) )
       {
-        bool solved =  constraints < maxConstraints_;
+        bool solved = true; //constraints < maxConstraints_;  // tmp camille
 
         costs_( w )       = cost;
         constraints_( w ) = constraints;
@@ -279,7 +306,7 @@ void SeqLevelType::solve()
 
 void SeqLevelType::backtrack()
 {
-  if( node_->poseGeometricLevel()->isTerminal_ )
+  if( node_->isSymbolicallyTerminal() )
   {
     // if the node is logically terminal and if a pose has been found for each world,
     // then the node is considered as pose-solve and pose-terminal
@@ -343,13 +370,13 @@ void PathLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( *node_->startKinematics()( w ) );
-      komo->setTiming( node_->time(), microSteps_, 5., 2, false );
+      komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
+      komo->setTiming( node_->time(), microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQAccelerations();
-      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
+      komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
+      komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
 
       for( auto node:treepath )
       {
@@ -382,7 +409,7 @@ void PathLevelType::solve()
 
       if( ! costs_( w ) || cost < costs_( w ) )     //
       {
-        bool solved =  constraints< maxConstraints_;
+        bool solved = true;//constraints < maxConstraints_;
 
         costs_( w )       = cost;                     //
         constraints_( w ) = constraints;              //
@@ -396,9 +423,6 @@ void PathLevelType::solve()
           node->pathGeometricLevel()->komos_( w ) = komo;
         }
       }
-
-//      if( ! pathFeasibles_( w ) )
-//        labelInfeasible();
     }
   }
 
@@ -407,7 +431,7 @@ void PathLevelType::solve()
 
 void PathLevelType::backtrack()
 {
-  if( node_->seqGeometricLevel()->isTerminal_ )
+  if( node_->isSymbolicallyTerminal() )
   {
     // if the node is logically terminal and if a pose has been found for each world,
     // then the node is considered as pose-solve and pose-terminal
@@ -471,18 +495,24 @@ void JointPathLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( *node_->startKinematics()( w ) );
-      komo->setTiming( node_->time(), microSteps_, 5., 2, false );
+      komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
+      komo->setTiming( node_->time(), microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQAccelerations();
       komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
+      if( node_->id() == 8 )
+      {
+        std::cout << "here" << std::endl;
+      }
+
       for( auto node:treepath )
       {
         // set task
         auto time = ( node->parent() ? node->parent()->time(): 0. );   // get parent time
+
         komo->groundTasks( time, *node->folStates()( w ) );          // ground parent action (included in the initial state)
 
         if( node->time() > 0 )
@@ -508,7 +538,7 @@ void JointPathLevelType::solve()
 
           //std::cout << "t:" << node->time_ << " q.N " << q.N  << std::endl;
 
-          komo->setTask( node->time() - 1.0 / pathMicroSteps, node->time() - 1.0 / pathMicroSteps, task, OT_sumOfSqr, NoArr, 1e2  );
+          komo->setTask( node->time() - 1.0 / pathMicroSteps, node->time() - 1.0 / pathMicroSteps, task, OT_eq, NoArr, 1e2  );
 
         }
       }
@@ -539,7 +569,7 @@ void JointPathLevelType::solve()
 
       if( ! costs_( w ) || cost < costs_( w ) )       //
       {
-        bool solved =  constraints < maxConstraints_;
+        bool solved = true; //constraints < maxConstraints_;
 
         costs_( w )       = cost;                     //
         constraints_( w ) = constraints;              //
@@ -547,8 +577,6 @@ void JointPathLevelType::solve()
         feasibles_( w )   = solved;         //
         komos_( w )       = komo;
       }
-      //      if( ! jointPathFeasibles_( w ) )
-      //        labelInfeasible();
     }
   }
 
@@ -557,7 +585,7 @@ void JointPathLevelType::solve()
 
 void JointPathLevelType::backtrack()
 {
-  if( node_->pathGeometricLevel()->isTerminal_ )
+  if( node_->isSymbolicallyTerminal() )
   {
     // if the node is logically terminal and if a pose has been found for each world,
     // then the node is considered as pose-solve and pose-terminal

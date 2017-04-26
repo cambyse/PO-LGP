@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <Logic/fol_mcts_world.h>
 #include <Kin/kinViewer.h>
 #include "polgp_node.h"
@@ -15,6 +17,8 @@ public: // public methods
   void prepareKin( const std::string & kinDescription );
   void prepareTree();
   void prepareDisplay();
+
+  //void registerGeometricLevel( GeometricLevelFactoryBase::ptr const& factory );
 
   void solveSymbolically();
   void optimizePoses();
@@ -61,7 +65,9 @@ private:
   arr bs_;
   POLGPNode * root_; // root and "current" node
 
+  // geometric levels
   const KOMOFactory & komoFactory_;
+  mlr::Array< GeometricLevelFactoryBase::ptr > geometricLevelFactories_;
 
   // display
   mlr::Array< std::shared_ptr< OrsPathViewer > > poseViews_;

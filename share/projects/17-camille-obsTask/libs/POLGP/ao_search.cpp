@@ -57,6 +57,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
       std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
       fol->init(FILE(folDescription.c_str()));
       auto n = bsGraph->elem(w);
+      std::cout << *fol << std::endl;
 
       StringA fact;
       // add fact
@@ -143,12 +144,17 @@ void AOSearch::prepareDisplay()
     std::string namePath = std::string( "path" ) + std::string( "-world-" ) + std::to_string( w );
 
     poseViews_.append( std::make_shared< OrsPathViewer >( namePose.c_str(),  1, -0   ) );
-    seqViews_.append( std::make_shared< OrsPathViewer >( nameSeq.c_str(),    1, -0   ) );
+    seqViews_.append(  std::make_shared< OrsPathViewer >( nameSeq.c_str(),    1, -0   ) );
     pathViews_.append( std::make_shared< OrsPathViewer >( namePath.c_str(), .1, -1   ) );
   }
 
   threadOpenModules( true );
 }
+
+//void AOSearch::registerGeometricLevel( GeometricLevelFactoryBase::ptr const& factory )
+//{
+//  geometricLevelFactories_.append( factory );
+//}
 
 void AOSearch::solveSymbolically()
 {

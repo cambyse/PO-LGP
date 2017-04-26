@@ -75,6 +75,8 @@ public:
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy();
 
+  void registerGeometricLevel( GeometricLevelBase::ptr const& );
+
   void solvePoseProblem();                        // strategy design pattern?
   void solveSeqProblem();
   void solvePathProblem();
@@ -190,6 +192,8 @@ private:
   GeometricLevelBase::ptr seqProblem_;
   GeometricLevelBase::ptr pathProblem_;
   GeometricLevelBase::ptr jointProblem_;
+
+  std::map< mlr::String, GeometricLevelBase::ptr > geometricLevels_;
 
   //--
   int id_;

@@ -44,4 +44,5 @@ target_link_libraries(
  MCTS
  ObservationTasks
  POLGP
+ CollisionAvoidance
  )
