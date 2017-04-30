@@ -1,6 +1,7 @@
 #include <Logic/fol.h>
 #include <MCTS/solver_marc.h>
 #include <MCTS/solver_PlainMC.h>
+#include <MCTS/solver_AStar.h>
 #include <Logic/fol_mcts_world.h>
 
 
@@ -175,12 +176,31 @@ void TEST(Determinism){
 
 //===========================================================================
 
+void testAStar(){
+  mlr::String file=mlr::getParameter<mlr::String>("file","");
+  if(file=="") file="boxes_new.g";
+  FOL_World fol(FILE(file));
+
+  AStar A(fol);
+
+  for(uint k=0;k<10;k++){
+    A.step();
+    Graph g = A.root->getGraph();
+    g.displayDot();
+    mlr::wait(.5);
+  }
+
+}
+
+//===========================================================================
+
 int main(int argn, char** argv){
   //  rnd.clockSeed();
   //srand(rnd());
 
 //  testMCTS();
-  testMC();
+//  testMC();
 //  testFOL_World();
 //  testDeterminism();
+  testAStar();
 }

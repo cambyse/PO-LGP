@@ -15,7 +15,7 @@ void TEST(UsingSpecs){
   komo.reset();
 //  komo.MP->reportFeatures(true);
   komo.run();
-  komo.costReport(true);
+  cout <<komo.getReport(true) <<endl;
   for(;;)
     komo.displayTrajectory();
 }
