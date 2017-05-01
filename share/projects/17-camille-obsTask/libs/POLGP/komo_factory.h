@@ -23,7 +23,7 @@
 
 class ExtensibleKOMO : public KOMO
 {
-  typedef std::function<void( double, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
+  typedef std::function<void( double time, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
 
 public:
   typedef std::shared_ptr< ExtensibleKOMO > ptr;

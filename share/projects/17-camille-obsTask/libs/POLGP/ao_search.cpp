@@ -59,7 +59,6 @@ void AOSearch::prepareFol( const std::string & folDescription )
       std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
       fol->init(FILE(folDescription.c_str()));
       auto n = bsGraph->elem(w);
-      std::cout << *fol << std::endl;
 
       StringA fact;
       // add fact

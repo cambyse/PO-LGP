@@ -23,8 +23,6 @@
 
 #include <MCTS/solver_PlainMC.h>
 
-#include <kin_equality_task.h>
-
 #include "geometric_levels.h"
 
 #define DEBUG(x) //x

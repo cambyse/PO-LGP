@@ -48,18 +48,16 @@ void ExtensibleKOMO::registerTask( const mlr::String & type, const SymbolGrounde
 
 void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose )
 {
-  for(Node *n:facts)
+  for( Node *n:facts )
   {
-    if(!n->parents.N) continue; // skip not relevant node
-
-    //std::cout << "node:" <<  *n << std::endl;
+    if( ! n->parents.N ) continue; // skip not relevant node
 
     if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
     {
       mlr::String type = n->keys.last();
       tasks_[ type ]( phase, facts, n, this, verbose ); // ground the symbol
     }
-    else if(n->keys.N && n->keys.last().startsWith("komo"))
+    else if( n->keys.N && n->keys.last().startsWith("komo") )
     {
       HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
     }

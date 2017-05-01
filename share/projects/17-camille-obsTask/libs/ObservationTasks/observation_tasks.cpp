@@ -18,7 +18,9 @@ static arr Jnorm( const arr & x )
   if( norm > 0.000001 )
   {
     for( auto i = 0; i < x.N; ++i )
+    {
       J( 0, i ) = x( i ) / norm ;
+    }
   }
   else
   {

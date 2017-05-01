@@ -168,7 +168,7 @@ private:
   mlr::Array< FOL_World::Handle > decisions_;     ///< actions leading to this node ( one for each logic )
 
   uint d_;                                        ///< decision depth/step of this node
-  double time_;                                   ///< real time
+  double time_;                                   ///< real time, root = 0, represents the end of the parent action
 
   mlr::Array< POLGPNode * > andSiblings_;            /// at the same depth!
   mlr::Array< mlr::Array< POLGPNode * > > families_;

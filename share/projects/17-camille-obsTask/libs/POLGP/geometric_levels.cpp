@@ -252,8 +252,8 @@ void PathLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
-      komo->setTiming( node_->time(), microSteps_, 5., 2, true );
+      komo->setModel( *node_->startKinematics()( w ), false, true, false, false );
+      komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQAccelerations();
@@ -263,7 +263,7 @@ void PathLevelType::solve()
       for( auto node:treepath )
       {
         auto time = ( node->parent() ? node->parent()->time(): 0. );   // get parent time
-        komo->groundTasks( time, *node->folStates()( w ) );          // ground parent action (included in the initial state)
+        komo->groundTasks( start_offset_ + time, *node->folStates()( w ) );          // ground parent action (included in the initial state)
       }
 
 //      DEBUG( FILE("z.fol") <<fol; )
@@ -378,7 +378,7 @@ void JointPathLevelType::solve()
 
       // set-up komo
       komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
-      komo->setTiming( node_->time(), microSteps_, 5., 2, true );
+      komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQAccelerations();
@@ -390,15 +390,16 @@ void JointPathLevelType::solve()
         // set task
         auto time = ( node->parent() ? node->parent()->time(): 0. );   // get parent time
 
-        komo->groundTasks( time, *node->folStates()( w ) );          // ground parent action (included in the initial state)
+        komo->groundTasks( start_offset_ +  time, *node->folStates()( w ), 1 );          // ground parent action (included in the initial state)
 
         if( node->time() > 0 )
         {
-          uint pathMicroSteps = ( node_->pathGeometricLevel()->komos_( w )->MP->configurations.N - 1 ) / node_->time();
-          uint nodeSlice = pathMicroSteps * node->time() - 1;
+          uint stepsPerPhase = node_->pathGeometricLevel()->komos_( w )->stepsPerPhase; // get number of steps per phases
+          uint nodeSlice = stepsPerPhase * ( start_offset_ + node->time() ) - 1;
           arr q = zeros( node_->pathGeometricLevel()->komos_( w )->MP->configurations( nodeSlice )->q.N );
 
           // set constraints enforcing the path equality among worlds
+          int nSupport = 0;
           for( auto x = 0; x < N_; ++x )
           {
             if( node->bs()( x ) > 0 )
@@ -408,15 +409,21 @@ void JointPathLevelType::solve()
               CHECK( node->pathGeometricLevel()->komos_( x )->MP->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
 
               q += node->bs()( x ) * node->pathGeometricLevel()->komos_( x )->MP->configurations( nodeSlice )->q;
+
+              nSupport++;
             }
           }
 
-          AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
+          if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
+          {
+            AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
+            double slice_t = start_offset_ + node->time() - 1.0 / stepsPerPhase;
+            komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, 1e2  );
 
-          //std::cout << "t:" << node->time_ << " q.N " << q.N  << std::endl;
-
-          komo->setTask( node->time() - 1.0 / pathMicroSteps, node->time() - 1.0 / pathMicroSteps, task, OT_eq, NoArr, 1e2  );
-
+            //
+            std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
+            //
+          }
         }
       }
 
@@ -437,7 +444,7 @@ void JointPathLevelType::solve()
       //COUNT_jointPathOpt++;
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      //komo->checkGradients();
+//      komo->checkGradients();
 
       Graph result = komo->getReport();
       //DEBUG( FILE("z.problem.cost") << result; )

@@ -22,3 +22,10 @@ class PrintRewardsVisitor : public NodeVisitorBase
 public:
   void visit( POLGPNode * );
 };
+
+class PrintGroundingsOverTimeVisitor : public NodeVisitorBase
+{
+public:
+  void visit( POLGPNode * );
+};
+

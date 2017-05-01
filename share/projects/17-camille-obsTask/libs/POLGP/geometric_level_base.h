@@ -49,6 +49,9 @@ struct GeometricLevelBase
   // parameters
   double maxConstraints_ = 0.8;
   double maxCost_        = 5;
+
+  double start_offset_ = 1.0; // the first task should be grounded starting from this time
+  double end_offset_ = 1.0;
 };
 
 class GeometricLevelFactoryBase

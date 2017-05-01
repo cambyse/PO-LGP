@@ -113,3 +113,4 @@ struct ActiveGetSight:TaskMap{
   const arr pivotPoint_;    // in container's frame
   double preferedDistance_;
 };
+

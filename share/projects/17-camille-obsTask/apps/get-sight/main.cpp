@@ -152,8 +152,6 @@ void move(){
   komo.setSquaredFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 
-  komo.world.watch();
-
 //  KOMO komo;
 //  //komo.setConfigFromFile();
 //  mlr::KinematicWorld kin;
@@ -204,6 +202,20 @@ void move(){
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
+  {
+    const double time = start_time + 1.0;
+
+//    komo.setTask( time, time + 1.0, new TakeView      ( ),
+//                  OT_eq, NoArr, 1e2, 1 );
+
+    auto *map = new TaskMap_Transition(komo.MP->world);
+    map->posCoeff = 0.;
+    map->velCoeff = 1.;
+    map->accCoeff = 0.;
+    komo.setTask( time, time + 1.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+  }
+
+
   komo.setTask( 1.0, start_time + 5.0, new OverPlaneConstraint ( komo.world,
                                                                  "container_1",
                                                                  "tableC",
@@ -213,9 +225,9 @@ void move(){
 
   /////GRASP CONTAINER////
 //  {
-    const double time = start_time + 2.0;
+    const double time = start_time + 2.0 + 1.0;
     //arrive sideways
-    komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+    //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
     komo.setKinematicSwitch( time, true, "delete", "tableC", "container_1_bottom" );

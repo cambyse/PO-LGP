@@ -181,34 +181,37 @@ void groundGrasp( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
   double duration=n->get<double>();
 
   //
-  const double t = phase+duration;
+  const double t_start = phase;
+  const double t_end =   phase + duration;
   //
-
-  //komo.setGrasp( phase+time, *symbols(0), *symbols(1), verbose);
 
   if( *symbols(1) == "container_0" )
   {
-  //arrive sideway
-  komo->setTask( t, t, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+  //arrive sideways (not necessary and not working here)
+  //komo->setTask( t_start, t_end, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
   //disconnect object from table
-  komo->setKinematicSwitch( t, true, "delete", "tableC", "container_0_bottom" );
+  komo->setKinematicSwitch( t_end, true, "delete", "tableC", "container_0_bottom" );
   //connect graspRef with object
   //komo.setKinematicSwitch( t, true, "addRigid", *symbols(0), "container_0_left" /**symbols(1)*/ );
 
-  komo->setKinematicSwitch( t, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
+  komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
   }
   else if( *symbols(1) == "container_1" )
   {
-  //arrive sideway
-  komo->setTask( t, t, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+  //arrive sideways (not necessary and not working here)
+  //komo->setTask( t_start, t_end, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
   //disconnect object from table
-  komo->setKinematicSwitch( t, true, "delete", "tableC", "container_1_bottom" );
+  komo->setKinematicSwitch( t_end, true, "delete", "tableC", "container_1_bottom" );
   //connect graspRef with object
   //komo.setKinematicSwitch( t, true, "addRigid", *symbols(0), "container_1_left" /**symbols(1)*/ );
 
-  komo->setKinematicSwitch( t, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
+  komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
   }
 
+  if( verbose > 0 )
+  {
+    std::cout << t_start << "->" << t_end << ": grasping " << *symbols(1) << " with " << *symbols(0) << std::endl;
+  }
 }
 
 void groundPlace( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
@@ -241,25 +244,43 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int
   double duration=n->get<double>();
 
   //
-  const double t = phase+duration;
+  const double t_start = phase;
+  const double t_end =   phase + duration;
   //
 
   mlr::String arg = *symbols(0);
 
-  komo->setTask( t, t + 1.0, new ActiveGetSight      ( "manhead",
+  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
                                                                         arg,
                                                                         //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                                         ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
                 OT_sumOfSqr, NoArr, 1e2 );
+
+  if( verbose > 0 )
+  {
+    std::cout << t_start << "->" << t_end << ": getting sight of " << *symbols(0) << std::endl;
+  }
 }
 
 void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
-  double time=n->get<double>();
+  double duration=n->get<double>();
 
   //
-  const double t = phase+time;
+  const double t_start = phase;
+  const double t_end =   phase + duration;
   //
+
+  auto *map = new TaskMap_Transition( komo->MP->world );
+  map->posCoeff = 0.;
+  map->velCoeff = 1.;
+  map->accCoeff = 0.;
+  komo->setTask( t_start, t_end, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+
+  if( verbose > 0 )
+  {
+    std::cout << t_start << "->" << t_end << ": taking view " << std::endl;
+  }
 }
 
 class OverPlaneConstraintManager
@@ -273,9 +294,10 @@ void groundActivateOverPlane( double phase, const Graph& facts, Node *n, KOMO * 
 
   double duration=n->get<double>();
 
+  //komo->world.watch();
   //
-  const double t_start = phase+duration;
-  const double t_end =  komo->maxPhase+duration;
+  const double t_start = phase + 1.0;       // hack: the grasp task lasts 1 step, so we begin one step after
+  const double t_end =   komo->maxPhase;
   //
 
   if( *symbols(0) == "container_0" )
@@ -295,6 +317,11 @@ void groundActivateOverPlane( double phase, const Graph& facts, Node *n, KOMO * 
     auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_1", *symbols(1), 0.05 ), OT_ineq, NoArr, 1e2 );
 
     activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
+  }
+
+  if( verbose > 0 )
+  {
+    std::cout << t_start << "->" << t_end << ": over plane of " << *symbols(0) << " activated" << std::endl;
   }
 }
 
@@ -340,8 +367,8 @@ void groundObjectPairCollisionAvoidance( double phase, const Graph& facts, Node 
   double duration=n->get<double>();
 
   //
-  const double t_start = phase + duration;
-  const double t_end =  komo->maxPhase + duration;
+  const double t_start = phase;
+  const double t_end =  komo->maxPhase;
   //
 
   for( auto s1 : komo->world.getBodyByName( *symbols(0) )->shapes )
@@ -397,7 +424,7 @@ void plan_AOS()
 
     /// SYMBOLIC SEARCH
     C.solveSymbolically();
-    C.addMcRollouts();  // potentially changes the policy not necessary to call it
+    //C.addMcRollouts();  // potentially changes the policy not necessary to call it
 
     if( C.isSymbolicallySolved() )
     {
