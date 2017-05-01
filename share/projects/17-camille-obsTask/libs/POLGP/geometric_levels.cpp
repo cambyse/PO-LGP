@@ -109,7 +109,7 @@ void PoseLevelType::solve()
       double constraints = result.get<double>( { "total","constraints" } );
 
       //
-      std::cout << "Pose problem " << node_->id() << " solved with :" << cost << " " << constraints << std::endl;
+      //std::cout << "Pose problem " << node_->id() << " solved with :" << cost << " " << constraints << std::endl;
       //
 
       if( ! node_->isRoot() )
@@ -180,10 +180,10 @@ void PoseLevelType::backtrack()
 
     isSolved_ = solved;
 
-    if( isSolved_ )
-    {
-      std::cout << "Terminal node: " << node_->id() << " set solved" << std::endl;
-    }
+//    if( isSolved_ )
+//    {
+//      std::cout << "Terminal node: " << node_->id() << " set solved" << std::endl;
+//    }
 
     if( isSolved_ )
     {
@@ -215,10 +215,10 @@ void PoseLevelType::backtrack()
 
     isSolved_ = solved;
 
-    if( isSolved_ )
-    {
-      std::cout << node_->id() << " set solved" << std::endl;
-    }
+//    if( isSolved_ )
+//    {
+//      std::cout << node_->id() << " set solved" << std::endl;
+//    }
   }
 
   // continue backtracking
@@ -228,124 +228,6 @@ void PoseLevelType::backtrack()
   }
 }
 
-// seq
-
-SeqLevelType::SeqLevelType( POLGPNode * node, const KOMOFactory & komoFactory )
-  : GeometricLevelBase( node, "seq", komoFactory )
-{
-
-}
-
-void SeqLevelType::solve()
-{
-  //-- collect 'path nodes'
-  POLGPNodeL treepath = node_->getTreePath();
-
-  // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < N_; ++w )
-  {
-    if( node_->bs()( w ) > eps() )
-    {
-      // create komo
-      auto komo = komoFactory_.createKomo();
-
-      // set-up komo
-      komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
-      komo->setTiming( node_->time(), 2, 5., 1, true );
-
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQVelocities();
-      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
-
-      for( auto node:treepath )
-      {
-        auto time = ( node->parent() ? node->parent()->time(): 0. ); // get parent time
-        komo->groundTasks( time, *node->folStates()( w ) );        // ground parent action (included in the initial state)
-      }
-
-//      DEBUG( FILE("z.fol") << folWorlds_( w ); )
-//      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      komo->reset();
-
-      try{
-        komo->run();
-      } catch(const char* msg){
-        cout <<"KOMO FAILED: " <<msg <<endl;
-      }
-
-      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //komo->displayTrajectory();
-      COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
-      COUNT_seqOpt++;
-
-//      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-          //  komo.checkGradients();
-
-      Graph result = komo->getReport();
-//      DEBUG( FILE("z.problem.cost") << result; )
-      double cost = result.get<double>({"total","sqrCosts"});
-      double constraints = result.get<double>({"total","constraints"});
-
-      if( ! komos_( w ) || cost < costs_( w ) )
-      {
-        bool solved = true; //constraints < maxConstraints_;  // tmp camille
-
-        costs_( w )       = cost;
-        constraints_( w ) = constraints;
-        solved_( w )      = solved;
-        feasibles_( w )   = solved;
-        komos_( w )       = komo;
-      }
-    }
-  }
-
-  backtrack();
-}
-
-void SeqLevelType::backtrack()
-{
-  if( node_->isSymbolicallyTerminal() )
-  {
-    // if the node is logically terminal and if a pose has been found for each world,
-    // then the node is considered as pose-solve and pose-terminal
-
-    bool solved = true;
-    // test if it is solved for all worlds
-    for( auto w = 0; w < N_; ++w )
-    {
-      if( node_->bs()( w ) > eps() )
-      {
-        solved = solved && solved_( w );
-      }
-    }
-    isSolved_ = solved;
-
-    if( isSolved_ )
-    {
-      isTerminal_      = true;
-    }
-  }
-  else
-  {
-    // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
-    bool solved = true;
-
-    for( auto s : node_->bestFamily() )
-    {
-      solved = solved && s->seqGeometricLevel()->isSolved_;
-    }
-
-    isSolved_ = solved;
-  }
-
-  // continue backtracking
-  if( node_->parent() )
-  {
-    node_->parent()->seqGeometricLevel()->backtrack();
-  }
-}
 
 // path
 
@@ -502,11 +384,6 @@ void JointPathLevelType::solve()
       komo->setSquaredQAccelerations();
       komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
-
-      if( node_->id() == 8 )
-      {
-        std::cout << "here" << std::endl;
-      }
 
       for( auto node:treepath )
       {

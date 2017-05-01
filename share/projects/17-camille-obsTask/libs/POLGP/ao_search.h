@@ -21,22 +21,23 @@ public: // public methods
   //void registerGeometricLevel( GeometricLevelFactoryBase::ptr const& factory );
 
   void solveSymbolically();
+  void addMcRollouts(); // reset solved flag and relaunch solving, it adds rollouts
+
   void optimizePoses();
-  void optimizeSequences();
   void optimizePaths();
   void optimizeJointPaths();
 
   void updateDisplay( const WorldID & w, bool poses, bool seqs, bool paths );
 
 private:
-  void optimizePoses( POLGPNode * );
-  void optimizeSequences( POLGPNode * );
+  void optimizePosesFrom( POLGPNode * );
+  void resetSolvedStatusFrom( POLGPNode * );
+  void addMcRolloutsFrom( POLGPNode * );
 
 public:
 
   // getters
-
-  mlr::Array< POLGPNode * > getNodesToExpand() const;
+  mlr::Array< POLGPNode * > getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
   mlr::Array< POLGPNode * > getNodesToExpand( POLGPNode * ) const;
 
   mlr::Array< POLGPNode * > getTerminalNodes() const;
@@ -47,7 +48,6 @@ public:
 
   bool isSymbolicallySolved() const { return root_->isSymbolicallySolved(); }
   bool isPoseSolved() const { return root_->isPoseSolved(); }
-  bool isSequenceSolved() const { return root_->isSequenceSolved(); }
   bool isPathSolved() const { return root_->isPathSolved(); }
   bool isJointPathSolved() const { return root_->isJointPathSolved(); }
 
@@ -71,7 +71,6 @@ private:
 
   // display
   mlr::Array< std::shared_ptr< OrsPathViewer > > poseViews_;
-  mlr::Array< std::shared_ptr< OrsPathViewer > > seqViews_;
   mlr::Array< std::shared_ptr< OrsPathViewer > > pathViews_;
 
   // params

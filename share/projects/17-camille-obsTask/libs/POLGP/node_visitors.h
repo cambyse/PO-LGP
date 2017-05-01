@@ -14,37 +14,11 @@
 
 #pragma once
 
-#include "geometric_level_base.h"
+#include "node_visitor.h"
+#include "polgp_node.h"
 
-struct PoseLevelType : public GeometricLevelBase
+class PrintRewardsVisitor : public NodeVisitorBase
 {
-  PoseLevelType( POLGPNode * node, const KOMOFactory & komoFactory );
-
-  void solve();
-
-  void backtrack();
-};
-
-struct PathLevelType : public GeometricLevelBase
-{
-  PathLevelType( POLGPNode * node, const KOMOFactory & komoFactory, uint microSteps = 20 );
-
-  void solve();
-
-  void backtrack();
-
-private:
-  uint microSteps_;
-};
-
-struct JointPathLevelType : public GeometricLevelBase
-{
-  JointPathLevelType( POLGPNode * node, const KOMOFactory & komoFactory, uint microSteps = 20 );
-
-  void solve();
-
-  void backtrack();
-
-private:
-  uint microSteps_;
+public:
+  void visit( POLGPNode * );
 };

@@ -25,8 +25,16 @@ QUESTIONS  :
 
 TODO :
 - decision if optimization succeded, how? reactivate for seq and paths!!
-- refactoring geometric levels
-- symbolic search, use costs from other levels?
+- refactoring geometric levels, backtrack can be common?
+- symbolic search, use costs from other levels? -> How to inform?
+- how to know if a was is successfull -> Call back every task?
+- kinematic switches ( commented part of the code )
+- collision avoidance, rule for proxy ?, get out of a collision
+- activation / deactivation of tasks
+- mechanism to improve as the number of rollouts increases
+- understanding of the time + phases
+- correct memory management
+- refactor to consider an arbitrary number of geometric levels
 */
 //===========================================================================
 
@@ -389,6 +397,7 @@ void plan_AOS()
 
     /// SYMBOLIC SEARCH
     C.solveSymbolically();
+    C.addMcRollouts();  // potentially changes the policy not necessary to call it
 
     if( C.isSymbolicallySolved() )
     {
@@ -409,19 +418,13 @@ void plan_AOS()
 
       if( C.isPoseSolved() )
       {
-        /// SEQUENCE OPTIMIZATION
-        C.optimizeSequences();  // optimizes sequences of the current best solution
+        /// PATH OPTIMIZATION
+        C.optimizePaths();      // optimizes paths of the current best solution
 
-        if( C.isSequenceSolved() )
+        if( C.isPathSolved() )
         {
-          /// PATH OPTIMIZATION
-          C.optimizePaths();      // optimizes paths of the current best solution
-
-          if( C.isPathSolved() )
-          {
-            /// JOINT PATH OPTIMIZATION
-            C.optimizeJointPaths();   // optimizes joint paths of the current best solution
-          }
+          /// JOINT PATH OPTIMIZATION
+          C.optimizeJointPaths();   // optimizes joint paths of the current best solution
         }
       }
     }

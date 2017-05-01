@@ -109,13 +109,13 @@ POLGPNode::POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr
   , isSymbolicallySolved_( false )
   , rootMCs_( N_ )
   , mcStats_( new MCStatistics )
+  , lastActionReward_( 0 )
+  , prefixReward_( 0 )
   , expectedReward_( m_inf() )
   , expectedBestA_( -1 )
   //, komoFactory_( komoFactory )
   // poseOpt
   , poseProblem_( new PoseLevelType( this, komoFactory ) )
-  // seqOpt
-  , seqProblem_( new SeqLevelType( this, komoFactory ) )
   // pathOpt
   , pathProblem_( new PathLevelType( this, komoFactory ) )
   // jointPathOpt
@@ -172,13 +172,13 @@ POLGPNode::POLGPNode(POLGPNode *parent, double pHistory, const arr & bs, uint a 
   , isSymbolicallySolved_( false )
   , rootMCs_( parent->rootMCs_ )
   , mcStats_( new MCStatistics )
+  , lastActionReward_( 0 )
+  , prefixReward_( 0 )
   , expectedReward_( m_inf() )
   , expectedBestA_ (-1 )
   //, komoFactory_( parent->komoFactory_ )
   // poseOpt
   , poseProblem_( new PoseLevelType( this, parent_->poseProblem_->komoFactory_ ) )
-  // seqOpt
-  , seqProblem_( new SeqLevelType( this, parent_->seqProblem_->komoFactory_ ) )
   // pathOpt
   , pathProblem_( new PathLevelType( this, parent_->pathProblem_->komoFactory_ ) )
   // jointPathOpt
@@ -207,7 +207,9 @@ POLGPNode::POLGPNode(POLGPNode *parent, double pHistory, const arr & bs, uint a 
 //        std::cout << "found terminal " << std::endl;
 
       if( fol->deadEnd )
+      {
         isInfeasible_ = true;
+      }
       //std::cout << *folStates_( w ) << std::endl;
 
       //folAddToStates_( w ) = nullptr;
@@ -218,11 +220,15 @@ POLGPNode::POLGPNode(POLGPNode *parent, double pHistory, const arr & bs, uint a 
   isSymbolicallyTerminal_ = isTerminal;
 
   if( isTerminal )
+  {
     isSymbolicallySolved_ = true;
+  }
 
   // update time
   auto ls = getWitnessLogicAndState();
   time_ = parent_->time_ + ls.logic->lastStepDuration;
+  lastActionReward_ = ls.logic->lastStepReward;
+  prefixReward_ = parent_->prefixReward_ + lastActionReward_;
 
   // update support size
   std::size_t s = 0;
@@ -380,36 +386,38 @@ void POLGPNode::generateMCRollouts( uint num, int stepAbort )
     // retrieve history
     if( bs_( w ) > eps() )
     {
-      //std::cout << "world=" << w << std::endl;
-
       mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
 
-      for(uint i=1;i<treepath.N;i++)
+      for( uint i=1 ; i < treepath.N; i++ )
+      {
         prefixDecisions(i-1) = treepath(i)->decision( w );
+      }
 
-      for( uint k=0; k<num; ++k )
+      for( uint k=0; k < num; ++k )
       {
         fol->reset_state();
-        rootMC->initRollout( prefixDecisions );
+        double prefixReward = rootMC->initRollout( prefixDecisions );      
         fol->setState( state.get() );
         double r = rootMC->finishRollout( stepAbort );
         R.append( bs_( w ) * r );
+
+        CHECK( prefixReward_ == prefixReward, "" );
       }
     }
   }
 
   // save result
-  double averageReward = 0;
+  double averageReward = 0; // averaged over the worlds
   for( auto r: R )
   {
     averageReward += r;
-    mcStats_->add( r );
   }
 
-  averageReward /= num;
+  averageReward /= num;     // normalize by the number of rollouts
+  mcStats_->add( averageReward );
 
   // commit result
-  expectedReward_ = averageReward;
+  expectedReward_ = mcStats_->X.first();
 
   //std::cout << "average reward:" << expectedReward_ << std::endl;
 }
@@ -418,7 +426,7 @@ void POLGPNode::backTrackBestExpectedPolicy()
 {
   if( isSymbolicallyTerminal() )
   {
-    expectedReward_ = 0;
+    expectedReward_ = prefixReward_;  // it means that the future rewards is = 0 ( already terminal )
     expectedBestA_  = -1;
   }
   else
@@ -433,6 +441,7 @@ void POLGPNode::backTrackBestExpectedPolicy()
       bool familySolved = true;
       for( auto c : families_( i ) )
       {
+        //CHECK( c->lastActionReward_ == c->getWitnessLogicAndState().logic->lastStepReward, "" );
         familyReward += c->pHistory_ / pHistory_ * c->expectedReward_;
         familySolved = familySolved && c->isSymbolicallySolved_;
       }
@@ -441,7 +450,7 @@ void POLGPNode::backTrackBestExpectedPolicy()
     }
 
     // restrieve best family
-    double bestReward= m_inf();
+    double bestReward = m_inf();
     int bestFamilyId = -1;
     for( auto i = 0; i < families_.d0; ++i )
     {
@@ -455,26 +464,10 @@ void POLGPNode::backTrackBestExpectedPolicy()
     // retrieve best decision id
     bestFamily_ = families_( bestFamilyId );
     uint bestA = bestFamily_.first()->a_;
-    expectedReward_ = bestReward; // this one is more informed!
+    mcStats_->add( bestReward ); // this one is more informed!
+    expectedReward_ = mcStats_->X.first();
     expectedBestA_ = bestA;
     isSymbolicallySolved_ = familyStatus( bestFamilyId ).solved;
-
-
-//    if( id_ == 7 )
-//    {
-//      std::cout << "number of families:" << families_.d0 << std::endl;
-//      for( auto i = 0; i < families_.d0; ++i )
-//      {
-//        for( auto w = 0; w < N_; ++w )
-//        {
-//          if( bs_( w ) > eps() )
-//          {
-//            auto node = families_( i ).first();
-//            std::cout << *node->decision( w ) <<" ->" << node->id() << " : " << families_( i ).first()->expectedReward_ << std::endl;
-//          }
-//        }
-//      }
-//    }
 
     // check
     //std::cout << familyRewards << std::endl;
@@ -494,22 +487,17 @@ void POLGPNode::registerGeometricLevel( GeometricLevelBase::ptr const& level )
   geometricLevels_[ level->name_ ] = level;
 }
 
-void POLGPNode::solvePoseProblem()
+void POLGPNode::solvePoseProblem()  // solve all poses from root to this node
 {
   poseProblem_->solve();
 }
 
-void POLGPNode::solveSeqProblem()
-{
-  seqProblem_->solve();
-}
-
-void POLGPNode::solvePathProblem()
+void POLGPNode::solvePathProblem()  // solve all poses from root to this node
 {
   pathProblem_->solve();
 }
 
-void POLGPNode::solveJointPathProblem()
+void POLGPNode::solveJointPathProblem()  // solve all poses from root to this node
 {
   jointProblem_->solve();
 }
@@ -517,8 +505,15 @@ void POLGPNode::solveJointPathProblem()
 void POLGPNode::labelInfeasible()
 {
   // set flag and badest reward
+  mcStats_->clear();
   isInfeasible_ = true;
   expectedReward_ = m_inf();
+
+  // we reset the rollouts, all the parents rollouts are potentially wrong ( too optimistic ).
+  for( auto parent = parent_; parent; parent = parent->parent() )
+  {
+    parent->mcStats_->clear();
+  }
 
   // delete children nodes
 //  for( auto children : families_ )

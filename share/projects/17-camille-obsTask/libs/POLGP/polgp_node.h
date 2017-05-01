@@ -24,6 +24,7 @@
 #include <Motion/komo.h>
 #include "komo_factory.h"
 #include "geometric_level_base.h"
+#include "node_visitor.h"
 
 class POLGPNode;
 struct ActionNode;
@@ -33,7 +34,7 @@ typedef mlr::Array<ActionNode*> ActionNodeL;
 typedef mlr::Array<POLGPNode*> POLGPNodeL;
 typedef mlr::Array< mlr::Array<POLGPNode*> > POLGPNodeLL;
 
-extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_seqOpt, COUNT_pathOpt;
+extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_pathOpt;
 
 //===========================================================================
 
@@ -78,11 +79,12 @@ public:
   void registerGeometricLevel( GeometricLevelBase::ptr const& );
 
   void solvePoseProblem();                        // strategy design pattern?
-  void solveSeqProblem();
   void solvePathProblem();
   void solveJointPathProblem();
   void labelInfeasible(); ///< sets the infeasible label AND removes all children!
+  void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
 
+  void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( this ); }
   //void labelInfeasible();
 
   // getters
@@ -92,7 +94,6 @@ public:
   bool isSymbolicallyTerminal() const { return isSymbolicallyTerminal_; }
   bool isSymbolicallySolved() const { return   isSymbolicallySolved_; }
   bool isPoseSolved() const { return poseProblem_->isSolved_; }
-  bool isSequenceSolved() const { return seqProblem_->isSolved_; }
   bool isPathSolved() const { return pathProblem_->isSolved_; }
   bool isJointPathSolved() const { return jointProblem_->isSolved_; }
 
@@ -104,7 +105,6 @@ public:
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_->komos_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoSeqProblems() const  { return seqProblem_->komos_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_->komos_; }
   mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_->komos_; }
 
@@ -117,11 +117,12 @@ public:
   mlr::Array< mlr::KinematicWorld > & effKinematics() { return effKinematics_; }
   mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
   GeometricLevelBase::ptr poseGeometricLevel() const { return poseProblem_; }
-  GeometricLevelBase::ptr seqGeometricLevel() const { return seqProblem_; }
   GeometricLevelBase::ptr pathGeometricLevel() const { return pathProblem_; }
   GeometricLevelBase::ptr jointPathGeometricLevel() const { return jointProblem_; }
 
   double time() const { return time_; }
+  double prefixReward() const { return prefixReward_; }
+  double expecteFutureReward() const { return expectedReward_ ; }
 
   // utility
   std::string bestActionStr() const { return actionStr( expectedBestA_ ); }
@@ -175,7 +176,9 @@ private:
 
   mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
   MCStatistics * mcStats_;
-  double expectedReward_;
+  double lastActionReward_;                       ///  reward of the action leading to this node
+  double prefixReward_;                           ///  this is the (certain) rewards of the prefix decisions
+  double expectedReward_;                         ///  the total expected reward ?
 
   int expectedBestA_;
   mlr::Array< POLGPNode * > bestFamily_;
@@ -189,7 +192,6 @@ private:
   bool isSymbolicallySolved_;             /// the children of this node are all solved
 
   GeometricLevelBase::ptr poseProblem_;
-  GeometricLevelBase::ptr seqProblem_;
   GeometricLevelBase::ptr pathProblem_;
   GeometricLevelBase::ptr jointProblem_;
 

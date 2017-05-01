@@ -12,39 +12,15 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#pragma once
+#include "node_visitors.h"
 
-#include "geometric_level_base.h"
-
-struct PoseLevelType : public GeometricLevelBase
+void PrintRewardsVisitor::visit( POLGPNode * node )
 {
-  PoseLevelType( POLGPNode * node, const KOMOFactory & komoFactory );
+  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected total reward:" << node->expecteFutureReward() << std::endl;
 
-  void solve();
+  for( auto c : node->bestFamily() )
+  {
+    visit( c );
+  }
+}
 
-  void backtrack();
-};
-
-struct PathLevelType : public GeometricLevelBase
-{
-  PathLevelType( POLGPNode * node, const KOMOFactory & komoFactory, uint microSteps = 20 );
-
-  void solve();
-
-  void backtrack();
-
-private:
-  uint microSteps_;
-};
-
-struct JointPathLevelType : public GeometricLevelBase
-{
-  JointPathLevelType( POLGPNode * node, const KOMOFactory & komoFactory, uint microSteps = 20 );
-
-  void solve();
-
-  void backtrack();
-
-private:
-  uint microSteps_;
-};

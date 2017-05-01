@@ -10,6 +10,8 @@
 
 #include <LGP/LGP.h>
 
+#include "node_visitors.h"
+
 //=====================free functions======================
 static double eps() { return std::numeric_limits< double >::epsilon(); }
 
@@ -144,7 +146,6 @@ void AOSearch::prepareDisplay()
     std::string namePath = std::string( "path" ) + std::string( "-world-" ) + std::to_string( w );
 
     poseViews_.append( std::make_shared< OrsPathViewer >( namePose.c_str(),  1, -0   ) );
-    seqViews_.append(  std::make_shared< OrsPathViewer >( nameSeq.c_str(),    1, -0   ) );
     pathViews_.append( std::make_shared< OrsPathViewer >( namePath.c_str(), .1, -1   ) );
   }
 
@@ -158,6 +159,8 @@ void AOSearch::prepareDisplay()
 
 void AOSearch::solveSymbolically()
 {
+  std::cout << "AOSearch::solveSymbolically" << std::endl;
+
   auto s = 0;
   while( ! isSymbolicallySolved() )
   {
@@ -182,21 +185,49 @@ void AOSearch::solveSymbolically()
       node->backTrackBestExpectedPolicy();
     }
   }
+
+  PrintRewardsVisitor printer;
+  root_->acceptVisitor( printer );
+}
+
+void AOSearch::addMcRollouts()
+{
+  std::cout << "AOSearch::addMcRollouts" << std::endl;
+
+  resetSolvedStatusFrom( root_ );
+
+  addMcRolloutsFrom( root_ );
+
+  PrintRewardsVisitor printer;
+  root_->acceptVisitor( printer );
+
+  if( ! isSymbolicallySolved() )
+  {
+    solveSymbolically();
+  }
+}
+
+void AOSearch::addMcRolloutsFrom( POLGPNode * node )
+{
+  for( auto f : node->families() )
+  {
+    for( auto c : node->bestFamily() )
+    {
+      c->generateMCRollouts( 50, 10 );
+    }
+  }
+
+  node->backTrackBestExpectedPolicy();
+
+  for( auto c : node->bestFamily() )
+  {
+    addMcRolloutsFrom( c );
+  }
 }
 
 void AOSearch::optimizePoses()
 {
-  optimizePoses( root_ );
-}
-
-void AOSearch::optimizeSequences()
-{
-  auto nodes = getTerminalNodes();
-
-  for( auto n : nodes )
-  {
-    n->solveSeqProblem();
-  }
+  optimizePosesFrom( root_ );
 }
 
 void AOSearch::optimizePaths()
@@ -219,14 +250,27 @@ void AOSearch::optimizeJointPaths()
   }
 }
 
-void AOSearch::optimizePoses( POLGPNode * node )
+void AOSearch::optimizePosesFrom( POLGPNode * node )
 {
   //std::cout << "solve pose problem for:" << node->id() << std::endl;
   node->solvePoseProblem();
 
   for( auto c : node->bestFamily() )
   {
-    optimizePoses( c );
+    optimizePosesFrom( c );
+  }
+}
+
+void AOSearch::resetSolvedStatusFrom( POLGPNode * node )
+{
+  if( ! node->isSymbolicallyTerminal() && node->isSymbolicallySolved() )
+  {
+    node->resetSymbolicallySolved();
+
+    for( auto c : node->bestFamily() )
+    {
+      resetSolvedStatusFrom( c );
+    }
   }
 }
 
@@ -255,10 +299,6 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
       poseViews_( w )->setConfigurations( node->komoPoseProblems()( w )->MP->configurations );
     else poseViews_( w )->clear();
 
-    if( seqs && node->komoSeqProblems()( w ) && node->komoSeqProblems()( w )->MP->configurations.N )
-      seqViews_( w )->setConfigurations( node->komoSeqProblems()( w )->MP->configurations );
-    else seqViews_( w )->clear();
-
     if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
       pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
     else pathViews_( w )->clear();
@@ -277,19 +317,26 @@ mlr::Array< POLGPNode * > AOSearch::getNodesToExpand() const
 mlr::Array< POLGPNode * > AOSearch::getNodesToExpand( POLGPNode * node ) const
 {
   mlr::Array< POLGPNode * >  nodes;
+
   // starts from root
   if( ! node->isSymbolicallySolved() )
   {
     if( ! node->isExpanded() )
+    {
       nodes.append( node );
+    }
     else
     {
       for( auto c : node->bestFamily() )
       {
-        if( ! c->isExpanded() )
-          nodes.append( c );
-        else
+//        if( ! c->isExpanded() ) // this part of code can be safely commented because it does n'tbring anything ( the recursiondoes it anyway )
+//        {
+//          nodes.append( c );
+//        }
+//        else
+//        {
           nodes.append( getNodesToExpand( c ) );
+//        }
       }
     }
   }
