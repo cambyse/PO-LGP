@@ -86,7 +86,7 @@ void TEST(MC){
     if(fol.is_terminal_state()) break;
     fol.make_current_state_default();
 
-    break;
+//    break;
   }
 
   FILE("z.fol") <<fol;
@@ -132,7 +132,7 @@ void TEST(FOL_World){
 
 void TEST(Determinism){
   for(uint k=0;k<100;k++){
-    FOL_World world(FILE("boxes_new.kvg"));
+    FOL_World world(FILE("boxes_new.g"));
 
     //-- generate a random rollout
     world.reset_state();
@@ -180,15 +180,34 @@ void testAStar(){
   mlr::String file=mlr::getParameter<mlr::String>("file","");
   if(file=="") file="boxes_new.g";
   FOL_World fol(FILE(file));
+  fol.verbose = 1;
+
+  bool disp=false;
 
   AStar A(fol);
 
-  for(uint k=0;k<10;k++){
-    A.step();
-    Graph g = A.root->getGraph();
-    g.displayDot();
-    mlr::wait(.5);
+  for(uint k=0;k<200;k++){
+    bool succ = A.step();
+    if(disp){
+      A.reportQueue();
+      Graph g = A.root->getGraph();
+      g.displayDot();
+      mlr::wait();
+    }
+    cout <<"tree size = " <<A.size <<" tree depth=" <<A.depth <<endl;
+    if(succ){
+      cout <<"success:" <<endl;
+//      break;
+    }
   }
+
+  cout <<"SOLUTIONS found:" <<endl;
+  for(AStar_Node* n:A.solutions){
+    AStar_NodeL path = n->getTreePath();
+    listWrite(path);
+  }
+
+  FILE("z.fol.final") <<fol <<endl;
 
 }
 

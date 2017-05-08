@@ -91,14 +91,12 @@ def qdump__Node_typed(d, value):
     s = ""
     for i in xrange(0, keys_N):
         string = keys_p.dereference()
-        string_N = string["N"]
+        string_N = int(string["N"])
         string_p = string["p"]
         for j in xrange(0, string_N):
             s += "%c" % int(string_p.dereference())
             string_p += 1
-            j += 1
         keys_p += 1
-        i += 1
         if(i<keys_N):
             s += " "
     s += "("
@@ -107,14 +105,12 @@ def qdump__Node_typed(d, value):
         parkeys_N = par["keys"]["N"]
         parkeys_p = par["keys"]["p"]
         string = (parkeys_p+parkeys_N-1).dereference()
-        string_N = string["N"]
+        string_N = int(string["N"])
         string_p = string["p"]
         for j in xrange(0, string_N):
             s += "%c" % int(string_p.dereference())
             string_p += 1
-            j += 1
         pars_p += 1
-        i += 1
         if(i<pars_N):
             s += " "
     s += ")"
@@ -130,12 +126,12 @@ def qdump__Node_typed(d, value):
             d.putSubItem("keys", value["keys"])
 
 def qdump__NodeL(d, value):
-    qdump__LIST(d,value)
+    qdump__LIST(d, value)
 
 def qdump__Graph(d, value):
     p = value["p"]
     N = int(value["N"])
-    s = "<%i>" %N
+    s = "<%i>" % N
     d.putValue(s)
     m=N
     if m>10:
@@ -143,12 +139,11 @@ def qdump__Graph(d, value):
     d.putNumChild(m+1)
     if d.isExpanded():
         with Children(d):
-            for i in xrange(0, i<m):
+            for i in xrange(0, m):
                 s = "(%i)" %i
                 d.putSubItem(s, p.dereference().dereference())
                 p += 1
-                i += 1
-            d.putSubItem("isNodeOfParentGraph", value["isNodeOfParentGraph"])
+            d.putSubItem("isNodeOfGraph", value["isNodeOfGraph"])
 #            d.putSubItem("p", value["p"])
 
 def qdump__BodyL(d, value):

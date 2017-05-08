@@ -1,3 +1,7 @@
+FOL_World{
+  maxHorizon=20
+}
+
 ## Syntactic keywords
 QUIT
 WAIT
@@ -115,9 +119,12 @@ Rule {
 ### Reward
 
 REWARD {
-  tree{
+  tree1{
     leaf{ X, Y, { (fixed Handle X) (fixed Handle Y) }, r=100. }
-    leaf{ X, Y, Z, { (activate_fixing X Y Z) }, r=10. }
+    weight=1.
+  }
+  tree2{
+    leaf{ X, Y, Z, { decision(activate_fixing X Y Z) }, r=10. }
     weight=1.
   }
 }
