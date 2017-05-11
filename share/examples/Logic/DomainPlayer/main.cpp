@@ -16,7 +16,7 @@ void TEST(FOL_World){
 
   world.get_actions();
 
-  world.make_current_state_default();
+  world.make_current_state_new_start();
 
   world.reset_state();
   world.get_actions();
@@ -57,7 +57,7 @@ void TEST(PlayFOL_World){
     }else switch(cmd){
       case 'q': go=false; break;
       case 'r': world.reset_state(); break;
-      case 'm': world.make_current_state_default(); break;
+      case 'm': world.make_current_state_new_start(); break;
       default: LOG(-1) <<"command '" <<c <<"' not known";
     }
   }

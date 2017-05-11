@@ -6,6 +6,7 @@
 
 #include <Kin/kin_swift.h>
 #include <LGP/manipulationTree.h>
+#include <MCTS/solver_AStar.h>
 
 #include <Kin/kin.h>
 #include <Kin/kinViewer.h>
@@ -27,7 +28,7 @@ struct Coop{
 
   FOL_World fol;
 
-  ManipulationTree_Node *root,*node;
+  ManipulationTree_Node *root, *node;
 
   OrsPathViewer poseView;
   OrsPathViewer seqView;
@@ -42,11 +43,14 @@ struct Coop{
   mlr::Array<ManipulationTree_Node*> pathFringe;
   mlr::Array<ManipulationTree_Node*> done;
 
+  AStar *astar=NULL;
+
   Coop();
 
   void prepareKin();
   void prepareFol(bool smaller=false);
   void prepareTree();
+  void prepareAStar();
   void prepareDisplay();
 
   void updateDisplay();

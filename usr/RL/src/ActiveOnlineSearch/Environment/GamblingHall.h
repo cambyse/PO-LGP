@@ -36,7 +36,7 @@ public:
     virtual ~GamblingHall() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override;
     virtual action_container_t get_actions() override;
-    virtual void make_current_state_default() override;
+    virtual void make_current_state_new_start() override;
     virtual void reset_state() override;
     virtual bool has_terminal_state() const override;
     virtual bool is_terminal_state() const override;

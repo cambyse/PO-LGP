@@ -84,7 +84,7 @@ void TEST(MC){
     fol.reset_state();
     fol.transition(a);
     if(fol.is_terminal_state()) break;
-    fol.make_current_state_default();
+    fol.make_current_state_new_start();
 
 //    break;
   }
@@ -123,7 +123,7 @@ void TEST(FOL_World){
   cout <<"\nAFTER set_state:" <<endl;  world.write_state(cout);
 
 
-//  world.make_current_state_default();
+//  world.make_current_state_new_start();
 //  world.reset_state();
 //  world.get_actions();
 }
@@ -158,7 +158,7 @@ void TEST(Determinism){
     world.reset_state();
     uint t=0;
     for(;;t++){
-      world.make_current_state_default();
+      world.make_current_state_new_start();
       FOL_World::TransitionReturn res;
       for(;;){ //repeat stochastic transition until you get the same observation
         res = world.transition(actions(t));

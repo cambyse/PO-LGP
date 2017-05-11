@@ -147,7 +147,7 @@ GamblingHall::action_container_t GamblingHall::get_actions() {
                 action_handle_t(new GamblingHallAction(1))});
 }
 
-void GamblingHall::make_current_state_default() {
+void GamblingHall::make_current_state_new_start() {
     default_state = state;
 }
 

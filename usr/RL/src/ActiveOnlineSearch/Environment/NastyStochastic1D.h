@@ -123,7 +123,7 @@ public:
         }
         return actions;
     }
-    virtual void make_current_state_default() override {default_state = state;}
+    virtual void make_current_state_new_start() override {default_state = state;}
     virtual void reset_state() override final {state = default_state;}
     virtual bool has_terminal_state() const override {return true;}
     virtual bool is_terminal_state() const override {return abs(state.time)==depth;}

@@ -876,7 +876,7 @@ TEST(SearchTree, NodeFinder) {
         AbstractEnvironment::observation_handle_t observation;
         AbstractEnvironment::reward_t reward;
         t(observation,reward) = environment->transition(action);
-        environment->make_current_state_default();
+        environment->make_current_state_new_start();
 
         // prune tree
         search_tree->update(action, observation);

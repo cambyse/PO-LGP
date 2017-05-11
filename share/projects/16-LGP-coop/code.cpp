@@ -81,6 +81,10 @@ void Coop::prepareTree(){
   node = root;
 }
 
+void Coop::prepareAStar(){
+  astar = new AStar(fol);
+}
+
 void Coop::prepareDisplay(){
   threadOpenModules(true);
 }
@@ -95,7 +99,6 @@ void Coop::updateDisplay(){
     pathView.setConfigurations(node->pathProblem->configurations);
   else pathView.clear();
 
-
   ManipulationTree_NodeL all = root->getAll();
   for(auto& n:all) n->inFringe1=n->inFringe2=false;
   for(auto& n:poseFringe) n->inFringe1=true;
@@ -106,6 +109,11 @@ void Coop::updateDisplay(){
   dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
   int r = system("dot -Tpdf z.dot > z.pdf");
   if(r) LOG(-1) <<"could not startup dot";
+
+  if(astar){
+    Graph dot = astar->root->getGraph();
+    dot.displayDot();
+  }
 }
 
 void Coop::printChoices(){

@@ -199,7 +199,7 @@ int main(int argn, char ** args) {
             assert(!environment->is_terminal_state());
             action = environment->get_actions()[best_action_idx];
             tuple<observation_t&,reward_t&>(observation,reward) = environment->transition(action);
-            environment->make_current_state_default();
+            environment->make_current_state_new_start();
             if(watch_progress_arg.getValue()>=2) {
                 cout << "Step # " << step+1 <<
                     ": (action --> observation, reward) = (" <<
@@ -257,7 +257,7 @@ int main(int argn, char ** args) {
                     assert(!environment->is_terminal_state());
                     action = environment->get_actions()[best_action_idx];
                     tuple<observation_t&,reward_t&>(observation,reward) = environment->transition(action);
-                    environment->make_current_state_default();
+                    environment->make_current_state_new_start();
                     reward_sum += reward;
 #ifdef USE_OMP
 #pragma omp critical (MCTS)
