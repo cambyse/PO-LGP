@@ -17,7 +17,7 @@ ros-kinetic-ar-track-alvar-msgs \
 ros-kinetic-pcl-ros \
 libopencv-dev \
 python-opencv \
-
+python-wstool \
 
 echo "Downloading and installing baxter messages."
 source /opt/ros/kinetic/setup.bash
@@ -38,8 +38,11 @@ fi
 
 mkdir -p ${HOME}/git/catkin_ws/src
 cd ${HOME}/git/catkin_ws/src
-git clone https://github.com/RethinkRobotics/baxter_common.git
+wstool init .
+wstool merge https://raw.githubusercontent.com/RethinkRobotics/baxter/master/baxter_sdk.rosinstall
+wstool update
+source /opt/ros/kinetic/setup.bash
 cd ..
-echo $ROS_PACKAGE_PATH
+catkin_make
 catkin_make install
 
