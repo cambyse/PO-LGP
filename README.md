@@ -1,3 +1,5 @@
+NOTE: if installing on Ubuntu 16.04, please see README.1604.md
+
 # MLR Repository
 
 - Infos for students:  README.student.md
