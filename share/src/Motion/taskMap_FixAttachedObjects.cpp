@@ -48,6 +48,8 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
     pos.TaskMap::phi(y.refRange(M*i,M*i+2)(), (&J?J.refRange(M*i,M*i+2)():NoArr), G, tau, t);
 
     TaskMap_Default quat(quatDiffTMT, j0->to->shapes.first()->index);
+    // flipp the quaternion sign if necessary
+    quat.flipTargetSignOnNegScalarProduct = true;
     quat.order=1;
     quat.TaskMap::phi(y.refRange(M*i+3,M*i+6)(), (&J?J.refRange(M*i+3,M*i+6)():NoArr), G, tau, t);
 #else //relative velocities
