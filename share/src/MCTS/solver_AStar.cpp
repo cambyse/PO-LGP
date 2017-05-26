@@ -42,9 +42,9 @@ AStar_Node::AStar_Node(AStar_Node* parent, const MCTS_Environment::Handle& a)
 void AStar_Node::expand(){
   CHECK(!isExpanded && !children.N,"");
   if(isTerminal) return;
-  FILE("z.1") <<world <<endl;
+//  FILE("z.1") <<world <<endl;
   world.set_state(state);
-  FILE("z.2") <<world <<endl;
+//  FILE("z.2") <<world <<endl;
   auto actions = world.get_actions();
   for(const MCTS_Environment::Handle& a:actions){
     new AStar_Node(this, a);

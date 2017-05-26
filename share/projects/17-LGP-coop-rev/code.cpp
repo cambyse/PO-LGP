@@ -77,12 +77,8 @@ void Coop::prepareFol(bool smaller){
 }
 
 void Coop::prepareTree(){
-  root = new ManipulationTree_Node(kin, fol);
+  root = new ManipulationTree_Node(kin, fol, 4);
   node = root;
-}
-
-void Coop::prepareAStar(){
-  astar = new AStar(fol);
 }
 
 void Coop::prepareDisplay(){
@@ -100,20 +96,20 @@ void Coop::updateDisplay(){
   else pathView.clear();
 
   ManipulationTree_NodeL all = root->getAll();
-  for(auto& n:all) n->inFringe1=n->inFringe2=false;
-  for(auto& n:poseFringe) n->inFringe1=true;
-  //  for(auto& n:seqFringe) n->inFringe1=true;
-  for(auto& n:mcFringe) n->inFringe2=true;
+  for(auto& n:all) n->note.clear();
+
+  for(auto& n:all) if(n->isInfeasible) n->note <<"INFEASIBLE ";
+  for(auto& n:astar)      n->note <<"ASTAR ";
+  for(auto& n:poseFringe)  n->note <<"POSE ";
+  for(auto& n:pose2Fringe) n->note <<"POSE2 ";
+  for(auto& n:seqFringe)  n->note <<"SEQ ";
+  for(auto& n:pathFringe)  n->note <<"PATH ";
+  for(auto& n:all) if(n->isTerminal) n->note <<"TERMINAL";
 
   Graph dot=root->getGraph();
   dot.writeDot(FILE("z.dot"));
   int r = system("dot -Tpdf z.dot > z.pdf");
   if(r) LOG(-1) <<"could not startup dot";
-
-  if(astar){
-    Graph dot = astar->root->getGraph();
-    dot.displayDot();
-  }
 }
 
 void Coop::printChoices(){
@@ -166,7 +162,7 @@ bool Coop::execChoice(mlr::String cmd){
   else if(cmd=="p") node->solvePoseProblem();
   else if(cmd=="s") node->solveSeqProblem();
   else if(cmd=="x") node->solvePathProblem(20);
-  else if(cmd=="m") node->addMCRollouts(100,10);
+//  else if(cmd=="m") node->addMCRollouts(100,10);
   else{
     int choice;
     cmd >>choice;

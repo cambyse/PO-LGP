@@ -69,8 +69,8 @@ double seqHeuristic(MNode* n){
 
 double seqCost(MNode* n){
   if(!n->seq.N) return 100.;
-  if(!n->seqFeasible) return 100.;
-  return .1*n->symCost+n->seqCost;
+  if(!n->feasible(2)) return 100.;
+  return .1*n->symCost+n->cost(2);
 }
 
 double pathHeuristic(MNode* n){
@@ -79,8 +79,8 @@ double pathHeuristic(MNode* n){
 
 double pathCost(MNode* n){
   if(!n->path.N) return 100.;
-  if(!n->pathFeasible) return 100.;
-  return .1*n->symCost + n->seqCost + n->pathCost;
+  if(!n->feasible(3)) return 100.;
+  return .1*n->symCost + n->cost(2) + n->cost(3);
 }
 
 MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
@@ -161,9 +161,9 @@ void plan_BHTS(){
         //      cout <<"### SEQ TESTING node " <<*n <<endl;
         //      mlr::wait();
         n->solveSeqProblem();
-        setAllChildCostSoFar(n, n->seqCost);
+        setAllChildCostSoFar(n, n->cost(2));
 //        if(n->seqFeasible) for(MNode* c:n->children) C.seqFringe.append(c);
-        if(n->seqFeasible && n->isTerminal) C.pathFringe.append(n);
+        if(n->feasible(2) && n->isTerminal) C.pathFringe.append(n);
         C.node = n;
       }
     }
@@ -174,8 +174,8 @@ void plan_BHTS(){
         //      cout <<"### PATH TESTING node " <<*n <<endl;
         //      mlr::wait();
         n->solvePathProblem(10);
-        setAllChildCostSoFar(n, n->pathCost);
-        if(n->pathFeasible) C.done.append(n);
+        setAllChildCostSoFar(n, n->cost(3));
+        if(n->feasible(3)) C.done.append(n);
         C.node = n;
       }
     }
