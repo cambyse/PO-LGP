@@ -86,25 +86,26 @@ void Coop::prepareDisplay(){
 }
 
 void Coop::updateDisplay(){
-  if(node->poseProblem && node->poseProblem->configurations.N)
-    poseView.setConfigurations(node->poseProblem->configurations);
-  if(node->seqProblem && node->seqProblem->configurations.N)
-    seqView.setConfigurations(node->seqProblem->configurations);
+  if(node->komoProblem(1) && node->komoProblem(1)->configurations.N)
+    poseView.setConfigurations(node->komoProblem(1)->configurations);
+  if(node->komoProblem(2) && node->komoProblem(2)->configurations.N)
+    seqView.setConfigurations(node->komoProblem(2)->configurations);
   else seqView.clear();
-  if(node->pathProblem && node->pathProblem->configurations.N)
-    pathView.setConfigurations(node->pathProblem->configurations);
+  if(node->komoProblem(3) && node->komoProblem(3)->configurations.N)
+    pathView.setConfigurations(node->komoProblem(3)->configurations);
   else pathView.clear();
 
   ManipulationTree_NodeL all = root->getAll();
   for(auto& n:all) n->note.clear();
 
   for(auto& n:all) if(n->isInfeasible) n->note <<"INFEASIBLE ";
-  for(auto& n:astar)      n->note <<"ASTAR ";
+  for(auto& n:expandFringe)      n->note <<"EXPAND ";
   for(auto& n:poseFringe)  n->note <<"POSE ";
   for(auto& n:pose2Fringe) n->note <<"POSE2 ";
   for(auto& n:seqFringe)  n->note <<"SEQ ";
   for(auto& n:pathFringe)  n->note <<"PATH ";
-  for(auto& n:all) if(n->isTerminal) n->note <<"TERMINAL";
+  for(auto& n:terminals) n->note <<"TERMINAL ";
+  for(auto& n:done) n->note <<"DONE";
 
   Graph dot=root->getGraph();
   dot.writeDot(FILE("z.dot"));
@@ -159,9 +160,9 @@ bool Coop::execChoice(mlr::String cmd){
 
   if(cmd=="q") return false;
   else if(cmd=="u"){ if(node->parent) node = node->parent; }
-  else if(cmd=="p") node->solvePoseProblem();
-  else if(cmd=="s") node->solveSeqProblem();
-  else if(cmd=="x") node->solvePathProblem(20);
+  else if(cmd=="p") node->optLevel(1);
+  else if(cmd=="s") node->optLevel(2);
+  else if(cmd=="x") node->optLevel(3);
 //  else if(cmd=="m") node->addMCRollouts(100,10);
   else{
     int choice;
@@ -174,7 +175,7 @@ bool Coop::execChoice(mlr::String cmd){
       if(!node->isExpanded){
         node->expand();
         if(autoCompute){
-          node->solvePoseProblem();
+          node->optLevel(1);
           //          node->solveSeqProblem();
           //          node->solvePathProblem(20);
         }

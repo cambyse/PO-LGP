@@ -42,7 +42,7 @@ START_STATE {}
 
 #termination rule
 Rule {
-  { (grasped handL screwdriverHandle) (grasped handR screwbox) }
+  { (grasped handL screwdriverHandle) (placed screwbox tableC) } #(grasped handR screwbox) } (grasped handR screwbox) }
   { (QUIT) }
 }
 

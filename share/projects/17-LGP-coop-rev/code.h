@@ -41,7 +41,7 @@ struct Coop{
   //-- these are lists or queues; I don't maintain them sorted because their evaluation (e.g. f(n)=g(n)+h(n)) changes continuously
   // while new bounds are computed. Therefore, whenever I pop from these lists, I find the minimum w.r.t. a heuristic. The
   // heuristics are defined in main.cpp currently
-  mlr::Array<ManipulationTree_Node*> astar;       //list of nodes to be expanded next
+  mlr::Array<ManipulationTree_Node*> expandFringe;       //list of nodes to be expanded next
   mlr::Array<ManipulationTree_Node*> terminals;   //list of found terminals
   mlr::Array<ManipulationTree_Node*> poseFringe;  //list of nodes that can be pose tested (parent has been tested)
   mlr::Array<ManipulationTree_Node*> pose2Fringe; //list of nodes towards a terminal -> scheduled for pose testing
