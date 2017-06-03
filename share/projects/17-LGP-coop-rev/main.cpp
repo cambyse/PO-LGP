@@ -1,163 +1,108 @@
-
-
-#include "code.h"
-#include <MCTS/solver_PlainMC.h>
+#include <LGP/optLGP.h>
 
 //===========================================================================
 
-typedef ManipulationTree_Node MNode;
-typedef ManipulationTree_NodeL MNodeL;
+struct CooperationDemo{
+  mlr::KinematicWorld kin;
+  FOL_World fol;
+  BodyL box;
+  mlr::Body *tableC;
+  mlr::Body *tableL;
+  mlr::Body *tableR;
+  mlr::Array<mlr::Transformation> targetAbs, targetRel;
 
-MNode* getBest(mlr::Array<MNode*>& fringe, uint level){
-  if(!fringe.N) return NULL;
-  MNode* best=NULL;
-  for(MNode* n:fringe){
-    if(n->isInfeasible || !n->count(level)) continue;
-    if(!best || (n->feasible(level) && n->cost(level)<best->cost(level))) best=n;
+  CooperationDemo(){
+    prepareFol(true);
+    prepareKin();
   }
-  return best;
-}
 
-MNode* popBest(mlr::Array<MNode*>& fringe, uint level){
-  if(!fringe.N) return NULL;
-  MNode* best=getBest(fringe, level);
-  fringe.removeValue(best);
-  return best;
-}
+  void prepareKin();
+  void prepareFol(bool smaller=false);
+};
 
-//===========================================================================
+void CooperationDemo::prepareKin(){
+  kin.init("LGP-coop-kin.g");
+  computeMeshNormals(kin.shapes);
 
-void plan_BHTS(){
-  Coop C;
+  tableC = kin.getBodyByName("tableC");
+  tableL = kin.getBodyByName("tableL");
+  tableR = kin.getBodyByName("tableR");
 
-  C.prepareFol(true);
-  C.prepareKin();
-  C.prepareTree();
-  C.prepareDisplay();
+  {
+    //rearrange the assembled box: moving pieces systematically being deassembled
+    //grab desired final relative configuration & create initial configuration, placing objects far on the table
 
-  C.expandFringe.append(C.root);
+    for(mlr::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
 
-  C.poseFringe.append(C.root);
-
-  C.updateDisplay();
-  C.displayTree();
-
-  ofstream fil("z.dat");
-
-  for(uint k=0;k<1000;k++){
-
-
-    { //expand
-
-      MNode *n =  popBest(C.expandFringe, 0);
-      CHECK(n,"");
-      n->expand();
-      for(MNode* ch:n->children){
-        if(ch->isTerminal){
-          C.terminals.append(ch);
-          MNodeL path = ch->getTreePath();
-          for(MNode *n:path) if(!n->count(1)) C.pose2Fringe.append(n); //pose2 is a FIFO
-        }else{
-          C.expandFringe.append(ch);
-        }
-        if(n->count(1)) C.poseFringe.append(ch);
+    //memorize their relative positionings
+    targetAbs.resize(box.N);
+    targetRel.resize(box.N, box.N);
+    for(uint i=0;i<box.N;i++){
+      targetAbs(i) = box(i)->X;
+      for(uint j=i+1;j<box.N;j++){
+        mlr::Transformation rel;
+        rel.setDifference(box(i)->X, box(j)->X);
+        targetRel(i,j) = rel;
+        if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_front") fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+        if(box(i)->name=="/toolbox/handle" && box(j)->name=="/toolbox/side_back")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+        if(box(i)->name=="/toolbox/side_front" && box(j)->name=="/toolbox/side_left")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
+        if(box(i)->name=="/toolbox/side_front" && box(j)->name=="/toolbox/side_right")  fol.addValuedFact({"attachable",box(i)->name, box(j)->name}, rel);
       }
     }
 
-    if(rnd.uni()<.5){ //optimize a pose
-      MNode* n = popBest(C.poseFringe, 0);
-      if(n && !n->count(1)){
-        n->optLevel(1);
-        if(n->feasible(1)){
-          for(MNode* c:n->children) C.poseFringe.append(c); //test all children
-          if(n->isTerminal) C.seqFringe.append(n); //test seq or path
-        }
-        C.node = n;
-      }
+    //position them on the left table
+    double xpos = -.6;
+    for(mlr::Body *b:box){
+      mlr::Joint *j = b->inLinks.scalar();
+      tableC->outLinks.removeValue(j);
+      j->from = tableL;
+      tableL->outLinks.append(j);
+      kin.checkConsistency();
+
+      j->B.setZero();
+      j->B.addRelativeTranslation(xpos, 0,0);
+      j->B.addRelativeRotationDeg(90,0,0,1);
+      xpos += .15;
     }
-
-    if(C.pose2Fringe.N){
-      MNode *n =  C.pose2Fringe.popFirst();
-      if(n && !n->count(1)){
-        n->optLevel(1);
-        if(n->feasible(1)){
-          if(n->isTerminal) C.seqFringe.append(n); //test seq or path
-        }
-        C.node = n;
-      }
-    }
-
-    { //optimize a seq
-      MNode* n = popBest(C.seqFringe, 1);
-      if(n && !n->count(2)){
-        n->optLevel(2);
-        if(n->feasible(2)){
-          if(n->isTerminal) C.pathFringe.append(n);
-        }
-        C.node = n;
-      }
-    }
-
-    { //optimize a path
-      MNode* n = popBest(C.pathFringe, 2);
-      if(n && !n->count(3)){
-        n->optLevel(3);
-        if(n->feasible(3)) C.done.append(n);
-        C.node = n;
-      }
-    }
-
-    for(auto *n:C.terminals) CHECK(n->isTerminal,"");
-
-    //-- update queues (if something got infeasible)
-    for(uint i=C.expandFringe.N;i--;) if(C.expandFringe.elem(i)->isInfeasible) C.expandFringe.remove(i);
-    for(uint i=C.poseFringe.N;i--;) if(C.poseFringe.elem(i)->isInfeasible) C.poseFringe.remove(i);
-    for(uint i=C.pose2Fringe.N;i--;) if(C.pose2Fringe.elem(i)->isInfeasible) C.pose2Fringe.remove(i);
-    for(uint i=C.seqFringe.N;i--;) if(C.seqFringe.elem(i)->isInfeasible) C.seqFringe.remove(i);
-    for(uint i=C.pathFringe.N;i--;) if(C.pathFringe.elem(i)->isInfeasible) C.pathFringe.remove(i);
-    for(uint i=C.terminals.N;i--;) if(C.terminals.elem(i)->isInfeasible) C.terminals.remove(i);
-
-
-    FILE("z.fol") <<C.fol;
-
-    MNode *bpose = getBest(C.terminals, 1);
-    MNode *bseq  = getBest(C.terminals, 2);
-    MNode *bpath = getBest(C.done, 3);
-    mlr::String out;
-    out <<"TIME= " <<mlr::cpuTime() <<" KIN= " <<COUNT_kin <<" EVALS= " <<COUNT_evals
-       <<" POSE= " <<COUNT_opt(1) <<" SEQ= " <<COUNT_opt(2) <<" PATH= " <<COUNT_opt(3)
-      <<" bestPose= " <<(bpose?bpose->f(1):100.)
-      <<" bestSeq = " <<(bseq ?bseq ->f(2):100.)
-      <<" pathPath= " <<(bpath?bpath->f(3):100.)
-      <<" #solutions= " <<C.done.N;
-
-    fil <<out <<endl;
-    cout <<out <<endl;
-
-    if(bseq) C.node=bseq;
-    if(bpath) C.node=bpath;
-    if(!(k%10)) C.updateDisplay();
-//    mlr::wait();
-
+    kin.calc_fwdPropagateFrames();
   }
-  fil.close();
+}
 
-  C.pathView.writeToFiles=true;
-  C.updateDisplay();
-  mlr::wait(.1);
-  //mlr::wait();
+void CooperationDemo::prepareFol(bool smaller){
+//  fol.verbose = 5;
+  fol.init(FILE("LGP-coop-fol.g"));
+  //-- prepare logic world
+//  for(mlr::Body *b:box) fol.addObject(b->name);
+  if(!smaller) fol.addObject("/toolbox/handle");
+  if(!smaller) fol.addObject("/toolbox/side_front");
+  if(!smaller) fol.addObject("/toolbox/side_back");
+  fol.addObject("screwdriverHandle");
+  fol.addObject("screwbox");
+  fol.addFact({"table","tableC"});
+  fol.addFact({"table","tableL"});
+  fol.addFact({"table","tableR"});
+  if(!smaller) fol.addAgent("baxterL");
+  fol.addAgent("baxterR");
+  fol.addAgent("handL");
+  fol.addAgent("handR");
 
+  fol.reset_state();
+  FILE("z.start.fol") <<fol;
 }
 
 //===========================================================================
-
 
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
 //  rnd.clockSeed();
 
-  plan_BHTS();
+  CooperationDemo demo;
+
+  OptLGP opt(demo.kin, demo.fol);
+
+  opt.run(1, true);
+  mlr::wait(.1);
 
   return 0;
 }

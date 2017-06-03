@@ -7,7 +7,7 @@
 //===========================================================================
 
 void test(){
-  Coop C;
+  OptLGP C;
 
   C.prepareFol();
   C.prepareKin();
@@ -115,7 +115,7 @@ MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*)){
 }
 
 void plan_BHTS(){
-  Coop C;
+  OptLGP C;
 
   C.prepareFol(true);
   C.prepareKin();
@@ -266,7 +266,7 @@ void plan_BHTS(){
 //===========================================================================
 
 void plan_MBTS(){
-  Coop C;
+  OptLGP C;
 
   C.prepareFol(true);
   C.prepareKin();

@@ -18,7 +18,7 @@
 #include <LGP/LGP.h>
 #include <LGP/manipulationTree.h>
 
-struct Coop{
+struct OptLGP{
   mlr::KinematicWorld kin;
   BodyL box;
   mlr::Body *tableC;
@@ -45,7 +45,7 @@ struct Coop{
 
   AStar *astar=NULL;
 
-  Coop();
+  OptLGP();
 
   void prepareKin();
   void prepareFol(bool smaller=false);

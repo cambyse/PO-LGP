@@ -1,9 +1,9 @@
 
 #include "code.h"
 
-Coop::Coop() : poseView("pose", 1., -0), seqView("sequence", 1., -0), pathView("path", .1, -1){}
+OptLGP::OptLGP() : poseView("pose", 1., -0), seqView("sequence", 1., -0), pathView("path", .1, -1){}
 
-void Coop::prepareKin(){
+void OptLGP::prepareKin(){
   kin.init("LGP-coop-kin.g");
   //  kin.watch();
   computeMeshNormals(kin.shapes);
@@ -51,7 +51,7 @@ void Coop::prepareKin(){
 //  kin.watch(/*true*/);
 }
 
-void Coop::prepareFol(bool smaller){
+void OptLGP::prepareFol(bool smaller){
 //  fol.verbose = 5;
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
@@ -76,20 +76,20 @@ void Coop::prepareFol(bool smaller){
 
 }
 
-void Coop::prepareTree(){
+void OptLGP::prepareTree(){
   root = new ManipulationTree_Node(kin, fol);
   node = root;
 }
 
-void Coop::prepareAStar(){
+void OptLGP::prepareAStar(){
   astar = new AStar(fol);
 }
 
-void Coop::prepareDisplay(){
+void OptLGP::prepareDisplay(){
   threadOpenModules(true);
 }
 
-void Coop::updateDisplay(){
+void OptLGP::updateDisplay(){
   if(node->poseProblem && node->poseProblem->configurations.N)
     poseView.setConfigurations(node->poseProblem->configurations);
   if(node->seqProblem && node->seqProblem->configurations.N)
@@ -116,7 +116,7 @@ void Coop::updateDisplay(){
   }
 }
 
-void Coop::printChoices(){
+void OptLGP::printChoices(){
   //-- query UI
   cout <<"********************" <<endl;
   cout <<"NODE:\n" <<*node <<endl;
@@ -134,7 +134,7 @@ void Coop::printChoices(){
   }
 }
 
-mlr::String Coop::queryForChoice(){
+mlr::String OptLGP::queryForChoice(){
   mlr::String cmd;
   std::string tmp;
   getline(std::cin, tmp);
@@ -142,7 +142,7 @@ mlr::String Coop::queryForChoice(){
   return cmd;
 }
 
-bool Coop::execRandomChoice(){
+bool OptLGP::execRandomChoice(){
   mlr::String cmd;
   if(rnd.uni()<.5){
     switch(rnd.num(5)){
@@ -158,7 +158,7 @@ bool Coop::execRandomChoice(){
   return execChoice(cmd);
 }
 
-bool Coop::execChoice(mlr::String cmd){
+bool OptLGP::execChoice(mlr::String cmd){
   cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
   if(cmd=="q") return false;

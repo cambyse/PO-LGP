@@ -7,7 +7,7 @@
 //===========================================================================
 
 void test(){
-  Coop C;
+  OptLGP C;
 
   C.prepareKin();
   C.prepareFol();
@@ -105,7 +105,7 @@ void setAllChildCostSoFar(MNode* n, double x){
 }
 
 void plan_BHTS(){
-  Coop C;
+  OptLGP C;
 
   C.prepareKin();
   C.prepareFol();
