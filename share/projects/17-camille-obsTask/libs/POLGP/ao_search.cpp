@@ -15,6 +15,22 @@
 //=====================free functions======================
 static double eps() { return std::numeric_limits< double >::epsilon(); }
 
+static void generatePngImage( const std::string & name )
+{
+  std::string nameCopy( name );
+  const std::string ext( ".gv" );
+  std::string newName = nameCopy.replace( nameCopy.find( ext ), ext.length(), ".png" );
+
+  std::stringstream ss;
+  ss << "dot"   << " ";
+  ss << "-Tpng" << " ";
+  ss << "-o"    << " ";
+  ss << newName << " ";
+  ss << name;
+
+  system( ss.str().c_str() );
+}
+
 //===========================================================================
 AOSearch::AOSearch( const KOMOFactory & komoFactory )
   : komoFactory_( komoFactory )
@@ -178,6 +194,13 @@ void AOSearch::solveSymbolically()
         {
           c->generateMCRollouts( 50, 10 );
         }
+      }
+
+      {
+      // save the current state of the search
+      std::stringstream namess;
+      namess << "exploration-" << s << ".gv";
+      printSearchTree( namess.str() );
       }
 
       // backtrack result
@@ -396,6 +419,38 @@ POLGPNode * AOSearch::getTerminalNode( POLGPNode * n, const WorldID & w ) const
   return node;
 }
 
+void AOSearch::printPolicy( const std::string & name, bool generatePng ) const
+{
+  std::stringstream ss;
+  printPolicy( ss );
+
+  std::ofstream fs;
+  fs.open( name );
+  fs << ss.str();
+  fs.close();
+
+  if( generatePng )
+  {
+    generatePngImage( name );
+  }
+}
+
+void AOSearch::printSearchTree( const std::string & name, bool generatePng ) const
+{
+  std::stringstream ss;
+  printSearchTree( ss );
+
+  std::ofstream fs;
+  fs.open( name );
+  fs << ss.str();
+  fs.close();
+
+  if( generatePng )
+  {
+    generatePngImage( name );
+  }
+}
+
 void AOSearch::printPolicy( std::iostream & ss ) const
 {
   ss << "digraph g{" << std::endl;
@@ -456,11 +511,13 @@ void AOSearch::printSearchTree( POLGPNode * node, std::iostream & ss ) const
       for( auto fact : c->differentiatingFacts() )
         ss1 << std::endl << fact;
 
-      if( node->bestFamily().N > 1 )
-      {
-        ss1 << std::endl << "p=" << c->pHistory();
-        ss1 << std::endl << "q=" << c->pHistory() / node->pHistory();
-      }
+      //if( node->bestFamily().N > 0 )
+      //{
+      ss1 << std::endl << "p=" << c->pHistory();
+      ss1 << std::endl << "q=" << c->pHistory() / node->pHistory();
+      ss1 << std::endl << "g=" << c->prefixReward();
+      ss1 << std::endl << "h=" << c->expecteFutureReward();
+      //}
 
       auto label = ss1.str();
 

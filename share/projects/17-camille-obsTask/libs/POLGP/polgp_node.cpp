@@ -176,11 +176,11 @@ POLGPNode::POLGPNode(POLGPNode *parent, double pHistory, const arr & bs, uint a 
   , expectedBestA_ (-1 )
   //, komoFactory_( parent->komoFactory_ )
   // poseOpt
-  , poseProblem_( new PoseLevelType( this, parent_->poseProblem_->komoFactory_ ) )
+  , poseProblem_( new PoseLevelType( this, parent_->poseProblem_->komoFactory() ) )
   // pathOpt
-  , pathProblem_( new PathLevelType( this, parent_->pathProblem_->komoFactory_ ) )
+  , pathProblem_( new PathLevelType( this, parent_->pathProblem_->komoFactory() ) )
   // jointPathOpt
-  , jointProblem_( new JointPathLevelType( this, parent_->jointProblem_->komoFactory_ ) )
+  , jointProblem_( new JointPathLevelType( this, parent_->jointProblem_->komoFactory() ) )
 {
   // update the states
   bool isTerminal = true;
@@ -482,7 +482,7 @@ void POLGPNode::backTrackBestExpectedPolicy()
 
 void POLGPNode::registerGeometricLevel( GeometricLevelBase::ptr const& level )
 {
-  geometricLevels_[ level->name_ ] = level;
+  geometricLevels_[ level->name() ] = level;
 }
 
 void POLGPNode::solvePoseProblem()  // solve all poses from root to this node

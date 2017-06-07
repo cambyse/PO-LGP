@@ -52,6 +52,8 @@ public:
   bool isJointPathSolved() const { return root_->isJointPathSolved(); }
 
   // helpers
+  void printPolicy( const std::string & name, bool generatePng = true ) const;
+  void printSearchTree( const std::string & name, bool generatePng = true ) const;
   void printPolicy( std::iostream & ) const;
   void printSearchTree( std::iostream & ) const;
 

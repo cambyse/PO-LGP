@@ -24,34 +24,52 @@ struct GeometricLevelBase
   typedef std::shared_ptr< GeometricLevelBase > ptr;
 
   GeometricLevelBase( const GeometricLevelBase& that ) = delete;  // no copy
-
   GeometricLevelBase( POLGPNode * node, mlr::String const& name, const KOMOFactory & komoFactory );
 
-  mlr::String name_;
+  bool isSolved() const    { return isSolved_; }
+  bool isTerminal() const  { return isTerminal_; }
+  bool isInfeasible() const{ return isInfeasible_; }
 
-  uint N_;
-  mlr::Array< double > costs_;          // optimization result costs ( one per world )
-  mlr::Array< double > constraints_;    // optimization result costs ( one per world )
-  mlr::Array< bool >   solved_;         // whether the optimization succedded or not ( one per world )
-  mlr::Array< bool >   feasibles_;      // whether the optimization succedded or not ( one per world )
-  mlr::Array< ExtensibleKOMO::ptr > komos_; // opti state after optimization ( one per world )
-  bool isTerminal_;                     // terminal node and solved
-  bool isSolved_;                       // is solved ( each possible world is solved )
+  mlr::String name() const { return name_; }
 
-  POLGPNode * node_;
+  const KOMOFactory & komoFactory() const { return komoFactory_; }
 
-  //-- komo factory
-  const KOMOFactory & komoFactory_;
+  ExtensibleKOMO::ptr   komo( uint w ) const { return komos_( w ); }
+  ExtensibleKOMO::ptr & komo( uint w )       { return komos_( w ); }
+
+  mlr::Array< ExtensibleKOMO::ptr >   komos() const { return komos_; }
+  mlr::Array< ExtensibleKOMO::ptr > & komos()       { return komos_; }
+
+  double cost( uint w ) const { return costs_( w ); }
 
   virtual void solve() = 0;
   virtual void backtrack() = 0;
 
+protected:
   // parameters
+  mlr::String name_;
+  uint N_;
   double maxConstraints_ = 0.8;
   double maxCost_        = 5;
 
   double start_offset_ = 1.0; // the first task should be grounded starting from this time
   double end_offset_ = 1.0;
+
+  // komo factory
+  const KOMOFactory & komoFactory_;
+
+  // state
+  POLGPNode * node_;
+  mlr::Array< double > costs_;          // optimization result costs ( one per world )
+  mlr::Array< double > constraints_;    // optimization result costs ( one per world )
+  mlr::Array< bool >   solved_;         // whether the optimization has been solved ( one per world )
+  mlr::Array< bool >   infeasibles_;    // whether the optimization succedded or not ( one per world )
+  mlr::Array< ExtensibleKOMO::ptr > komos_; // opti state after optimization ( one per world )
+  double cost_;                         // weighed by believe state
+  double constraint_;                  // weighed by believe state
+  bool isTerminal_;                     // terminal node and solved
+  bool isSolved_;                       // is solved ( each possible world is solved )
+  bool isInfeasible_;
 };
 
 class GeometricLevelFactoryBase

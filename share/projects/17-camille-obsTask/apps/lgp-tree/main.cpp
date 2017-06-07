@@ -392,6 +392,7 @@ void groundObjectPairCollisionAvoidance( double phase, const Graph& facts, Node 
     }
   }
 }
+
 //===========================================================================
 
 void plan_AOS()
@@ -444,31 +445,17 @@ void plan_AOS()
     if( C.isSymbolicallySolved() )
     {
       {
-      // save policy
-      std::stringstream ss;
-      C.printSearchTree( ss );
-
-      // save to file
-      std::ofstream fs;
+      // save search tree
       std::stringstream namess;
       namess << "search-" << i << ".gv";
-      fs.open( namess.str() );
-      fs << ss.str();
-      fs.close();
+      C.printSearchTree( namess.str() );
       }
 
       {
       // save policy
-      std::stringstream ss;
-      C.printPolicy( ss );
-
-      // save to file
-      std::ofstream fs;
       std::stringstream namess;
       namess << "policy-" << i << ".gv";
-      fs.open( namess.str() );
-      fs << ss.str();
-      fs.close();
+      C.printPolicy( namess.str() );
       }
 
       /// POSE OPTIMIZATION

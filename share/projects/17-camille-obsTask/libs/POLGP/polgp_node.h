@@ -93,9 +93,9 @@ public:
   POLGPNodeLL families() const { return families_; }
   bool isSymbolicallyTerminal() const { return isSymbolicallyTerminal_; }
   bool isSymbolicallySolved() const { return   isSymbolicallySolved_; }
-  bool isPoseSolved() const { return poseProblem_->isSolved_; }
-  bool isPathSolved() const { return pathProblem_->isSolved_; }
-  bool isJointPathSolved() const { return jointProblem_->isSolved_; }
+  bool isPoseSolved() const { return poseProblem_->isSolved(); }
+  bool isPathSolved() const { return pathProblem_->isSolved(); }
+  bool isJointPathSolved() const { return jointProblem_->isSolved(); }
 
   uint N() const { return N_; }
   int id() const { return id_; }
@@ -104,9 +104,9 @@ public:
   double pHistory() const { return pHistory_; }
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_->komos_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_->komos_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_->komos_; }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_->komos(); }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_->komos(); }
+  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_->komos(); }
 
   POLGPNodeL getTreePath();
   POLGPNodeL getTreePathFrom( POLGPNode * start );
@@ -122,7 +122,8 @@ public:
 
   double time() const { return time_; }
   double prefixReward() const { return prefixReward_; }
-  double expecteFutureReward() const { return expectedReward_ ; }
+  double expecteTotalReward() const { return expectedReward_ ; }
+  double expecteFutureReward() const { return expectedReward_ - prefixReward_; }
 
   // utility
   std::string bestActionStr() const { return actionStr( expectedBestA_ ); }

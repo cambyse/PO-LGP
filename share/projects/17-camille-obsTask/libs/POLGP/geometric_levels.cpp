@@ -114,7 +114,7 @@ void PoseLevelType::solve()
 
       if( ! node_->isRoot() )
       {
-        cost += node_->parent()->poseGeometricLevel()->costs_( w );
+        cost += node_->parent()->poseGeometricLevel()->cost( w );
       }
 
       // if this pose leads to the smaller cost so far
@@ -134,7 +134,7 @@ void PoseLevelType::solve()
         costs_( w ) = cost;
         constraints_( w ) = constraints;
         solved_( w )    = solved;
-        feasibles_( w ) = solved;
+        infeasibles_( w ) = ! solved;
         komos_( w ) = komo;
 
         // update effective kinematic
@@ -164,56 +164,74 @@ void PoseLevelType::backtrack()
     // then the node is considered as pose-solve and pose-terminal
 
     bool solved = true;
+    bool infeasible = false;
     // test if it is solved for all worlds
     for( auto w = 0; w < N_; ++w )
     {
       if( node_->bs()( w ) > eps() )
       {
         solved = solved && solved_( w );
-
-        if( ! feasibles_( w ) )
-        {
-          node_->labelInfeasible(); // label this sequence of actions as infeasible
-        }
+        infeasible = infeasible || infeasibles_( w );
       }
     }
 
-    isSolved_ = solved;
+    // commit results
+    isSolved_     = solved;
+    isInfeasible_ = infeasible;
 
+    // if it is solved, we compute the expected cost
+    if( isSolved_ )
+    {
+      double expectedCost = 0;
+      for( auto w = 0; w < N_; ++w )
+      {
+        if( node_->bs()( w ) > eps() )
+        {
+          expectedCost += node_->bs()( w ) * costs_( w );
+        }
+      }
+
+      isTerminal_      = true;
+    }
+
+    if( isInfeasible_ )
+    {
+      node_->labelInfeasible(); // label this sequence of actions as infeasible
+    }
 //    if( isSolved_ )
 //    {
 //      std::cout << "Terminal node: " << node_->id() << " set solved" << std::endl;
 //    }
-
-    if( isSolved_ )
-    {
-      isTerminal_      = true;
-    }
   }
   else
   {
     // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
     bool solved = true;
+    bool infeasible = false;
 
     for( auto w = 0; w < N_; ++w )
     {
       if( node_->bs()( w ) > eps() )
       {
         solved = solved && solved_( w );
-
-        if( ! feasibles_( w ) )
-        {
-          node_->labelInfeasible(); // label this sequence of actions as infeasible
-        }
+        infeasible = infeasible || infeasibles_( w );
       }
     }
 
     for( auto s : node_->bestFamily() )
     {
-      solved = solved && s->poseGeometricLevel()->isSolved_;
+      solved = solved && s->poseGeometricLevel()->isSolved();
+      infeasible = infeasible || s->poseGeometricLevel()->isInfeasible();
     }
 
+    // commit result
     isSolved_ = solved;
+    isInfeasible_ = infeasible;
+
+    if( isInfeasible_ )
+    {
+      node_->labelInfeasible();
+    }
 
 //    if( isSolved_ )
 //    {
@@ -297,13 +315,13 @@ void PathLevelType::solve()
         costs_( w )       = cost;                     //
         constraints_( w ) = constraints;              //
         solved_( w )      = solved;
-        feasibles_( w )   = solved;                   //
+        infeasibles_( w ) = ! solved;                   //
         komos_( w )       = komo;                     //
 
         // back the best komo for this world
         for( POLGPNode * node = node_; node; node = node->parent() )
         {
-          node->pathGeometricLevel()->komos_( w ) = komo;
+          node->pathGeometricLevel()->komo( w ) = komo;
         }
       }
     }
@@ -320,32 +338,52 @@ void PathLevelType::backtrack()
     // then the node is considered as pose-solve and pose-terminal
 
     bool solved = true;
+    bool infeasible = false;
     // test if it is solved for all worlds
     for( auto w = 0; w < N_; ++w )
     {
       if( node_->bs()( w ) > eps() )
       {
         solved = solved && solved_( w );
+        infeasible = infeasible || infeasibles_( w );
       }
     }
-    isSolved_ = solved;
 
+    // commit results
+    isSolved_ = solved;
+    isInfeasible_ = infeasible;
+
+    //
     if( isSolved_ )
     {
       isTerminal_      = true;
+    }
+
+    if( infeasible )
+    {
+      node_->labelInfeasible();
     }
   }
   else
   {
     // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
     bool solved = true;
+    bool infeasible = false;
 
     for( auto s : node_->bestFamily() )
     {
-      solved = solved && s->pathGeometricLevel()->isSolved_;
+      solved = solved && s->pathGeometricLevel()->isSolved();
+      infeasible = infeasible || s->pathGeometricLevel()->isInfeasible();
     }
 
+    // commit results
     isSolved_ = solved;
+    isInfeasible_ = infeasible;
+
+    if( isInfeasible_ )
+    {
+      node_->labelInfeasible();
+    }
   }
 
   // continue backtracking
@@ -395,9 +433,9 @@ void JointPathLevelType::solve()
 
         if( node->time() > 0 )
         {
-          uint stepsPerPhase = node_->pathGeometricLevel()->komos_( w )->stepsPerPhase; // get number of steps per phases
+          uint stepsPerPhase = node_->pathGeometricLevel()->komo( w )->stepsPerPhase; // get number of steps per phases
           uint nodeSlice = stepsPerPhase * ( start_offset_ + node->time() ) - 1;
-          arr q = zeros( node_->pathGeometricLevel()->komos_( w )->MP->configurations( nodeSlice )->q.N );
+          arr q = zeros( node_->pathGeometricLevel()->komo( w )->MP->configurations( nodeSlice )->q.N );
 
           // set constraints enforcing the path equality among worlds
           int nSupport = 0;
@@ -405,11 +443,11 @@ void JointPathLevelType::solve()
           {
             if( node->bs()( x ) > 0 )
             {
-              auto komo = node->pathGeometricLevel()->komos_( x );
+              auto komo = node->pathGeometricLevel()->komo( x );
 
-              CHECK( node->pathGeometricLevel()->komos_( x )->MP->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
+              CHECK( node->pathGeometricLevel()->komo( x )->MP->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
 
-              q += node->bs()( x ) * node->pathGeometricLevel()->komos_( x )->MP->configurations( nodeSlice )->q;
+              q += node->bs()( x ) * node->pathGeometricLevel()->komo( x )->MP->configurations( nodeSlice )->q;
 
               nSupport++;
             }
@@ -459,7 +497,7 @@ void JointPathLevelType::solve()
         costs_( w )       = cost;                     //
         constraints_( w ) = constraints;              //
         solved_( w )      = solved;         //
-        feasibles_( w )   = solved;         //
+        infeasibles_( w ) = ! solved;         //
         komos_( w )       = komo;
       }
     }
@@ -476,15 +514,19 @@ void JointPathLevelType::backtrack()
     // then the node is considered as pose-solve and pose-terminal
 
     bool solved = true;
+    bool infeasible = false;
     // test if it is solved for all worlds
     for( auto w = 0; w < N_; ++w )
     {
       if( node_->bs()( w ) > eps() )
       {
         solved = solved && solved_( w );
+        infeasible = infeasible || infeasibles_( w );
       }
     }
+
     isSolved_ = solved;
+    isInfeasible_ = infeasible;
 
     if( isSolved_ )
     {
@@ -495,13 +537,16 @@ void JointPathLevelType::backtrack()
   {
     // if the node is not terminal, we set it as solve, if the pose optimization was successful and the children of its best family are solved
     bool solved = true;
+    bool infeasible = false;
 
     for( auto s : node_->bestFamily() )
     {
-      solved = solved && s->jointPathGeometricLevel()->isSolved_;
+      solved = solved && s->jointPathGeometricLevel()->isSolved();
+      infeasible = infeasible || s->jointPathGeometricLevel()->isInfeasible();
     }
 
     isSolved_ = solved;
+    isInfeasible_ = infeasible;
   }
 
   // continue backtracking

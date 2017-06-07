@@ -15,23 +15,24 @@
 #include "polgp_node.h"
 
 GeometricLevelBase::GeometricLevelBase( POLGPNode * node, mlr::String const& name, const KOMOFactory & komoFactory )
-  : node_( node )
-  , name_( name )
+  : name_( name )
   , N_( node->N() )
+  , node_( node )
   , komoFactory_( komoFactory )
   , costs_( N_ )
   , constraints_( N_ )
   , solved_( N_ )
-  , feasibles_( N_ )
+  , infeasibles_( N_ )
   , komos_( N_ )
   , isTerminal_( false )
   , isSolved_( false )
+  , isInfeasible_( false )
 {
   for( auto w = 0; w < N_; ++w )
   {
     costs_( w ) = 0;
     constraints_( w ) = 0;
     solved_( w ) = false;
-    feasibles_( w ) = true;
+    infeasibles_( w ) = false;
   }
 }
