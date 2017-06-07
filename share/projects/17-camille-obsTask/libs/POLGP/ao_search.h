@@ -53,9 +53,11 @@ public:
 
   // helpers
   void printPolicy( std::iostream & ) const;
+  void printSearchTree( std::iostream & ) const;
 
 private:
   void printPolicy( POLGPNode * node, std::iostream & ) const;
+  void printSearchTree( POLGPNode * node, std::iostream & ss ) const;
 
 private:
   //FOL_World fol;      // first order logic symbols

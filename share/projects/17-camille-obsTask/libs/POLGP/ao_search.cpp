@@ -405,6 +405,16 @@ void AOSearch::printPolicy( std::iostream & ss ) const
   ss << "}" << std::endl;
 }
 
+void AOSearch::printSearchTree( std::iostream & ss ) const
+{
+  ss << "digraph g{" << std::endl;
+
+  printSearchTree( root_, ss );
+
+  ss << "}" << std::endl;
+}
+
+
 void AOSearch::printPolicy( POLGPNode * node, std::iostream & ss ) const
 {
   for( auto c : node->bestFamily() )
@@ -430,4 +440,35 @@ void AOSearch::printPolicy( POLGPNode * node, std::iostream & ss ) const
     printPolicy( c, ss );
   }
 }
+
+void AOSearch::printSearchTree( POLGPNode * node, std::iostream & ss ) const
+{
+  for( auto f : node->families() )
+  {
+    for( auto c : f )
+    {
+      std::stringstream ss1;
+      //ss1 << node->bestActionStr();
+      ss1 << c->leadingActionStr();
+
+      auto diffFacts = c->differentiatingFacts();
+
+      for( auto fact : c->differentiatingFacts() )
+        ss1 << std::endl << fact;
+
+      if( node->bestFamily().N > 1 )
+      {
+        ss1 << std::endl << "p=" << c->pHistory();
+        ss1 << std::endl << "q=" << c->pHistory() / node->pHistory();
+      }
+
+      auto label = ss1.str();
+
+      ss << node->id() << "->" << c->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
+
+      printSearchTree( c, ss );
+    }
+  }
+}
+
 //===========================================================================

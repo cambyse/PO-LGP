@@ -143,7 +143,101 @@ private:
 
 //===========================================================================
 
-void move(){
+void move_0(){
+
+  KOMO komo;
+  komo.setConfigFromFile();
+
+  komo.setSquaredFixJointVelocities();
+  komo.setSquaredFixSwitchedObjects();
+  komo.setSquaredQAccelerations();
+
+  const double start_time = 1.0;
+
+  //komo.setAlign( 1.0, 7, "container_1_front" );
+
+  /////ACTIVE GET SIGHT CONTAINER 0
+  {
+    const double time = start_time + 0.0;
+
+    komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
+                                                              "container_0",
+                                                              ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
+                  OT_sumOfSqr, NoArr, 1e2 );
+  }
+
+  {
+    const double time = start_time + 1.0;
+
+//    komo.setTask( time, time + 1.0, new TakeView      ( ),
+//                  OT_eq, NoArr, 1e2, 1 );
+
+  }
+
+  komo.setTask( 1.0, start_time + 8.0, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+  komo.setTask( 1.0, start_time + 8.0, new OverPlaneConstraint ( komo.world,
+                                                                 "container_0",
+                                                                 "tableC",
+                                                                 0.01
+                                                                 ),  // pivot position  in container frame
+                OT_ineq, NoArr, 1e2 );
+
+  /////GRASP CONTAINER 0 ////
+//  {
+    const double time = start_time + 2.0 + 1.0;
+    //arrive sideways
+    //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+
+    //disconnect object from table
+    komo.setKinematicSwitch( time, true, "delete", "tableC", "container_0_bottom" );
+    //connect graspRef with object
+    komo.setKinematicSwitch( time, true, "ballZero", "handL", "container_0_left" );
+    //komo.setKinematicSwitch( time, true, "addRigid", "handL", "container_1_handle", NoTransformation, NoTransformation );
+//  }
+
+  /////
+
+
+//  /////ACTIVE GET SIGHT CONTAINER 1
+//  {
+//    const double time = start_time + 3.0;
+
+//    komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
+//                                                              "container_1",
+//                                                              //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
+//                                                              ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
+//                  OT_sumOfSqr, NoArr, 1e2 );
+//  }
+
+  /////PLACE ON TABLE FOR CONTAINER 0
+  {
+  //  const double time = start_time + 4.5;
+
+  //  komo.setPlace( time, "handL", "container_0_front", "tableL" );
+  }
+
+    {
+       const double time = start_time + 5.0;
+
+      komo.setHoming(time, time+1, 1e-2); //gradient bug??
+    }
+
+//  komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
+//  komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "container_0_front", 0.05 ), OT_ineq, NoArr, 1e2 );
+//  komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_bottom", 0.05 ), OT_ineq, NoArr, 1e2 );
+//  komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
+
+
+  komo.reset();
+  komo.run();
+  komo.checkGradients();
+
+  Graph result = komo.getReport(true);
+
+  for(;;) komo.displayTrajectory(.1, true);
+}
+
+void move_1(){
 
   KOMO komo;
   komo.setConfigFromFile();
@@ -190,7 +284,6 @@ void move(){
   const double start_time = 1.0;
 
   //komo.setAlign( 1.0, 7, "container_1_front" );
-  komo.setTask( 1.0, 7.0, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
 
   /////ACTIVE GET SIGHT CONTAINER 0
   {
@@ -215,8 +308,8 @@ void move(){
     komo.setTask( time, time + 1.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
   }
 
-
-  komo.setTask( 1.0, start_time + 5.0, new OverPlaneConstraint ( komo.world,
+  komo.setTask( 1.0, start_time + 8.0, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+  komo.setTask( 1.0, start_time + 8.0, new OverPlaneConstraint ( komo.world,
                                                                  "container_1",
                                                                  "tableC",
                                                                  0.01
@@ -250,22 +343,46 @@ void move(){
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
-  /////PLACE ON TABLE
+  /////PLACE ON TABLE FOR CONTAINER 1
   {
-    const double time = start_time + 5.0;
+    //const double time = start_time + 5.0;
 
-    komo.setPlace( time, "handL", "container_1_front", "tableC" );
+    //komo.setPlace( time, "handL", "container_1_front", "tableL" );
   }
+  {
+     const double time = start_time + 5.0;
+
+    komo.setHoming(time, time+1, 1e-2); //gradient bug??
+  }
+
+  //// GRASP BALL
+    {
+      const double time = start_time + 4.0;
+      //arrive sideways
+      //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+
+      //disconnect object from table
+      //komo.setKinematicSwitch( time + 1.0, true, "delete", NULL, "target" );
+      //connect graspRef with object
+      //komo.setKinematicSwitch( time + 1.0, true, "ballZero", "handR", "target" );
+      //komo.setKinematicSwitch( time, true, "addRigid", "handR", "target", NoTransformation, NoTransformation );
+
+      //komo.setPosition(time, time + 1.0, "handR", "target", OT_sumOfSqr, NoArr, 1e2);
+      //komo.setGrasp(time + 1.0, "handR", "target", 0, 1e1);
+    }
+
+    /////
+
 
   /////COLLISION AVOIDANCE
-  {
-    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
-    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "container_0_front", 0.05 ), OT_ineq, NoArr, 1e2 );
-    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_bottom", 0.05 ), OT_ineq, NoArr, 1e2 );
-    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
+//  {
+//    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
+//    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "container_0_front", 0.05 ), OT_ineq, NoArr, 1e2 );
+//    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "container_0_bottom", 0.05 ), OT_ineq, NoArr, 1e2 );
+//    komo.setTask( 1.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "container_0_left", 0.05 ), OT_ineq, NoArr, 1e2 );
 
-//    komo.setTask( start_time + 2.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "tableCC" ), OT_ineq, NoArr, 1e2 );
-  }
+////    komo.setTask( start_time + 2.0, 6.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "tableCC" ), OT_ineq, NoArr, 1e2 );
+//  }
 
 //  if(komo.stepsPerPhase>2){ //velocities down and up
 //    komo.setTask(time-.15, time, new TaskMap_Default(posTMT, komo.world, "handL"), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down
@@ -367,7 +484,7 @@ void move_debug(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  move();
+  move_0();
 
   return 0;
 }

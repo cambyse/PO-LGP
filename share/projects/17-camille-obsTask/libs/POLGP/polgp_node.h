@@ -126,6 +126,7 @@ public:
 
   // utility
   std::string bestActionStr() const { return actionStr( expectedBestA_ ); }
+  std::string leadingActionStr() const { return parent_->actionStr( a_ ); }
   void indicateDifferentiatingFacts( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 

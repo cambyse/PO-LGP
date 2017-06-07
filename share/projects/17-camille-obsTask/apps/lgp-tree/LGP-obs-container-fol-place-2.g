@@ -36,6 +36,7 @@ now_in_sight # getting sight of location X
 collision_avoidance_activated # 
 
 # keyword
+PRE_QUIT
 NOT_OBSERVABLE
 
 ## constants
@@ -59,12 +60,12 @@ BELIEF_START_STATE{ (at target container_0)=0.8 (at target container_1)=0.2 }
 #}
 
 Rule {
-  { (viewed target container_0) } # (on_table container_0) (on_table container_1)
+  { (viewed target container_0) (on_table container_0) (on_table container_1) }
   { (QUIT) }
 }
 
 Rule {
-  { (viewed target container_1) } # (on_table container_0) (on_table container_1)
+  { (viewed target container_1) (on_table container_0) (on_table container_1) }
   { (QUIT) }
 }
 
@@ -80,27 +81,32 @@ REWARD {
 # Get sight
 DecisionRule get_sight {
   X
-  { (INFEASIBLE get_sight X)! (location X) }
+  { (INFEASIBLE get_sight X)! (location X) (in_sight X)! } #(in_sight X)! is a trick
   { (now_in_sight X) komoGetSight(X)=1. }
 }
 
 # Take a view
 DecisionRule take_view {
   X, Y
-  { (object X) (in_sight Y) }
+  { (object X) (in_sight Y) (view_taken X Y)! } #(view_taken X Y)! is a trick
   { (view_taken X Y) komoTakeView(X Y)=1.0 }
 }
 
 DecisionRule grasp {
   X, Y
   { (grasped X Y)! (INFEASIBLE grasp X Y)! (agent X) (container Y) (held Y)! (busy X)! }
-  { (grasped X Y) (busy X) (held Y) (on_table Y)! komoGrasp(X Y)=1. }
+  { (grasped X Y)=2.0 (busy X) (held Y) (on_table Y)! komoGrasp(X Y)=1. }
 }
 
-#DecisionRule place {
-#  X, Y, Z,
-#  { (placed X Y Z)! (grasped X Y) (table Z) }
-#  { (placed X Y Z)  (on_table Y)  (busy X)! (held Y)! komoPlace(X Y Z)=1. }
+DecisionRule place {
+  X, Y, Z,
+  { (placed X Y Z)! (grasped X Y) (table Z) }
+  { (placed X Y Z)  (on_table Y)  (busy X)! (held Y)! komoPlace(X Y Z)=1. }
+}
+
+#DecisionRule home {
+#  { (PRE_QUIT) }
+#  { (QUIT) }
 #}
 
 

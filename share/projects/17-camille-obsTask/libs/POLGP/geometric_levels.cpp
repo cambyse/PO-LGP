@@ -292,6 +292,7 @@ void PathLevelType::solve()
       if( ! costs_( w ) || cost < costs_( w ) )     //
       {
         bool solved = true;//constraints < maxConstraints_;
+        //bool solved = constraints < maxConstraints_;
 
         costs_( w )       = cost;                     //
         constraints_( w ) = constraints;              //
@@ -421,7 +422,7 @@ void JointPathLevelType::solve()
             komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, 1e2  );
 
             //
-            std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
+            //std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
             //
           }
         }

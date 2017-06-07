@@ -18,7 +18,6 @@ place
 agent
 location
 object
-mutex_objects	# objects that should never collide
 container
 table
 
@@ -33,7 +32,7 @@ busy       # agent X ist involved in an ongoing (durative) activity
 on_table   # object X is on the table
 
 now_in_sight # getting sight of location X
-collision_avoidance_activated # 
+all_times  # valid for all times
 
 # keyword
 NOT_OBSERVABLE
@@ -45,10 +44,9 @@ target
 handL
 handR
 tableC
-#tableC
 
 ## initial state
-START_STATE { (agent handL) (mutex_objects handR) (mutex_objects handL) (mutex_objects tableC) (container container_1) (container container_0) (container container_1) (object target) (table tableC) (on_table container_0) (on_table container_1) (location container_0) (location container_1) } #(agent handR)
+START_STATE { (agent handL) (container container_0) (container container_1) (object target) (table tableC) (on_table container_0) (on_table container_1) (location container_0) (location container_1) (komoOverTable(container_1) } #(agent handR)
 BELIEF_START_STATE{ (at target container_0)=0.8 (at target container_1)=0.2 }
 ### RULES 
 
@@ -59,12 +57,12 @@ BELIEF_START_STATE{ (at target container_0)=0.8 (at target container_1)=0.2 }
 #}
 
 Rule {
-  { (viewed target container_0) } # (on_table container_0) (on_table container_1)
+  { (viewed target container_0) (on_table container_0) (on_table container_1) } 
   { (QUIT) }
 }
 
 Rule {
-  { (viewed target container_1) } # (on_table container_0) (on_table container_1)
+  { (viewed target container_1) (on_table container_0) (on_table container_1) } # 
   { (QUIT) }
 }
 
@@ -81,7 +79,7 @@ REWARD {
 DecisionRule get_sight {
   X
   { (INFEASIBLE get_sight X)! (location X) }
-  { (now_in_sight X) komoGetSight(X)=1. }
+  { (now_in_sight X)  komoGetSight(X)=1. }
 }
 
 # Take a view
@@ -97,11 +95,11 @@ DecisionRule grasp {
   { (grasped X Y) (busy X) (held Y) (on_table Y)! komoGrasp(X Y)=1. }
 }
 
-#DecisionRule place {
-#  X, Y, Z,
-#  { (placed X Y Z)! (grasped X Y) (table Z) }
-#  { (placed X Y Z)  (on_table Y)  (busy X)! (held Y)! komoPlace(X Y Z)=1. }
-#}
+DecisionRule place {
+  X, Y, Z,
+  { (placed X Y Z)! (grasped X Y) (table Z) }
+  { (placed X Y Z)  (on_table Y)  (busy X)! (held Y)! komoPlace(X Y Z)=1. }
+}
 
 
 ### Rules
@@ -125,26 +123,4 @@ Rule {
   { (now_in_sight X) }
   { (now_in_sight X)! (in_sight X) }
 }
-
-# over plane activation
-Rule {
-  X, Y
-  { (container X) (table Y) (on_table X)! (collision_avoidance_activated X Y)! }
-  { (collision_avoidance_activated X Y) komoActivateOverPlane(X Y)=1. }
-}
-
-# over plane deactivation
-Rule {
-  X, Y
-  { (container X) (table Y) (on_table X) (collision_avoidance_activated X Y) }
-  { (collision_avoidance_activated X Y)! komoDeactivateOverPlane(X Y)=1. }
-}
-
-# mutex collision avoidance
-Rule {
-  X, Y
-  { (mutex_objects X) (mutex_objects Y) (collision_avoidance_activated X Y)! }
-  { (collision_avoidance_activated X Y) komoCollisionAvoidance(X Y)=1. }
-}
-
 

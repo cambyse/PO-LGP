@@ -13,8 +13,6 @@ back track, take history into account?
 sort nodes before expanding?
 back track result of pose computation when one of the pose is not possible or generally different between worlds!
 less rollouts?
-iterations
-build kinematic world for optimization, with all believed objects inserted as inert objects for colision avoidance at least!
 dot -Tpng -o policy.png policy.gv
 
 test a logic : mlr/share/example/DomainPlayer
@@ -22,19 +20,19 @@ test a logic : mlr/share/example/DomainPlayer
 QUESTIONS  :
 - why no proxy?
 - how to solve collision avoidance if objects penetrate
+- kinematic switches ( commented part of the code ) in solvePath, solvePose, etc..
+
 
 TODO :
-- decision if optimization succeded, how? reactivate for seq and paths!!
-- refactoring geometric levels, backtrack can be common?
-- symbolic search, use costs from other levels? -> How to inform?
-- how to know if a was is successfull -> Call back every task?
-- kinematic switches ( commented part of the code )
-- collision avoidance, rule for proxy ?, get out of a collision
-- activation / deactivation of tasks
-- mechanism to improve as the number of rollouts increases
-- understanding of the time + phases
-- correct memory management
-- refactor to consider an arbitrary number of geometric levels
+1/ decision if optimization succeded, how? reactivate for seq and paths!!    | 1
+=> constraints are difficult to evaluate with collision avoidance, mybe need a refactoring as in 3/
+2/ symbolic search, use costs from other levels? -> How to inform?           | 1
+3/ refactoring geometric levels, backtrack can be common?                    | 2
+4/ how to know if a was is successfull -> Call back every task?              | 2
+5/ collision avoidance, rule for proxy ?, get out of a collision             | 2
+6/ activation / deactivation of tasks                                        | 2
+7/ correct memory management                                                 | 2
+8/ refactor to consider an arbitrary number of geometric levels              | 2
 */
 //===========================================================================
 
@@ -222,19 +220,34 @@ void groundPlace( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
   double duration=n->get<double>();
 
   //
-  const double t = phase+duration;
+  const double t_start = phase;
+  const double t_end =   phase + duration;
   //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
 
   if( *symbols(1) == "container_0" )
   {
-    komo->setPlace( t, *symbols(0), "container_0_front", *symbols(2), verbose );
+    komo->setPlace( t_end, *symbols(0), "container_0_front", *symbols(2), verbose );
   }
   else if( *symbols(1) == "container_1" )
   {
-    komo->setPlace( t, *symbols(0), "container_1_front", *symbols(2), verbose );
+    komo->setPlace( t_end, *symbols(0), "container_1_front", *symbols(2), verbose );
+  }
+
+  if( verbose > 0 )
+  {
+    std::cout << t_start << "->" << t_end << ": " <<*symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
   }
 }
+
+//void groundHome( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+//{
+//  double duration=n->get<double>();
+
+//  const double t = phase+duration;
+
+//  //komo->setHoming( t, t + 1.0, 1e-2 ); //gradient bug??
+//}
 
 void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
@@ -399,13 +412,15 @@ void plan_AOS()
   komoFactory.registerTask( "komoActivateOverPlane"   , groundActivateOverPlane );
   komoFactory.registerTask( "komoDeactivateOverPlane" , groundDeactivateOverPlane );
   komoFactory.registerTask( "komoCollisionAvoidance", groundObjectPairCollisionAvoidance );
+  //komoFactory.registerTask( "komoHome", groundHome );
+
   // instanciate search tree
   AOSearch C( komoFactory );
   //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
   //C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
   //C.prepareKin("LGP-obs-kin-3.g");
 
-  C.prepareFol("LGP-obs-container-fol.g");
+  C.prepareFol("LGP-obs-container-fol-place-2.g");
   C.prepareKin("LGP-obs-container-kin.g");         // parse initial scene LGP-coop-kin.g
 
   // make container and target rigid
@@ -428,6 +443,21 @@ void plan_AOS()
 
     if( C.isSymbolicallySolved() )
     {
+      {
+      // save policy
+      std::stringstream ss;
+      C.printSearchTree( ss );
+
+      // save to file
+      std::ofstream fs;
+      std::stringstream namess;
+      namess << "search-" << i << ".gv";
+      fs.open( namess.str() );
+      fs << ss.str();
+      fs.close();
+      }
+
+      {
       // save policy
       std::stringstream ss;
       C.printPolicy( ss );
@@ -439,6 +469,7 @@ void plan_AOS()
       fs.open( namess.str() );
       fs << ss.str();
       fs.close();
+      }
 
       /// POSE OPTIMIZATION
       C.optimizePoses();      // optimizes poses of the current best solution
