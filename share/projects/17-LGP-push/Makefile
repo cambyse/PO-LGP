@@ -1,5 +1,5 @@
 BASE = ../..
 
-DEPEND = KOMO Core Geo Kin Gui Optim LGP Logic MCTS
+DEPEND = KOMO Core Geo Kin Gui Optim LGP Logic MCTS Roopi
 
 include $(BASE)/build/generic.mk

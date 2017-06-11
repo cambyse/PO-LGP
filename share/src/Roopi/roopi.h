@@ -10,6 +10,7 @@
 #include "act_CtrlTask.h"
 #include "act_PathOpt.h"
 #include "act_PathFollow.h"
+#include "act_LGP.h"
 #include "act_TaskController.h"
 #include "act_ComPR2.h"
 #include "act_RosPublish.h"
@@ -136,6 +137,7 @@ struct Roopi {
   Act_Thread::Ptr  newRosSpinner();
   Act_ComPR2::Ptr  newComPR2()            { return make_shared<Act_ComPR2>(this); } ///< subscribers/publishers that communicate with PR2
   Act_PathOpt::Ptr newPathOpt()           { return make_shared<Act_PathOpt>(this); } ///< a path optimization activity, access komo yourself to define the problem
+  Act_LGP::Ptr     newLGP()               { return make_shared<Act_LGP>(this); } ///< a path optimization activity, access komo yourself to define the problem
   Act::Ptr         rosKinect()            { return make_shared<Act_RosSubKinect>(this); }
 
   Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)

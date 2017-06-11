@@ -38,6 +38,8 @@ START_STATE {}
 
 ### RULES
 
+#####################################################################
+
 #termination rule
 Rule {
   { (pushing obj1) } #(grasped handR screwbox) } (grasped handR screwbox) }
@@ -133,30 +135,7 @@ DecisionRule activate_attaching {
   { (attached Y Z) (grasped X Z)! (free X) (held Z)! komoAttach(X Y Z)=1. }
 }
 
-
-#DecisionRule activate_graspingScrew {
-#  X
-#  { (graspingScrew X)! (agent X) (free X) (busy X)! }
-#  { (graspingScrew X)=1.0 (busy X) }
-#}
-
-#Rule {
-#  X
-#  { (Terminate graspingScrew X) }
-#  { (Terminate graspingScrew X)! (graspingScrew X)! (free X)! (hasScrew X) (busy X)! }
-#}
-
-#that's never a good action -> for simplicity remove
-#DecisionRule activate_placingScrew {
-#  X
-#  { (never) (placingScrew X)! (agent X) (hasScrew X) (busy X)! }
-#  { (placingScrew X)=1.0 (busy X) }
-#}
-#
-#Term (Terminate placingScrew) {
-#  X
-#  { (placingScrew X)! (hasScrew X)! (free X) (busy X)! }
-#}
+#####################################################################
 
 DecisionRule activate_attaching {
   X, Y, Z

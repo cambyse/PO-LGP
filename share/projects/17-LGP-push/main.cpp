@@ -7,6 +7,9 @@
 #include <Kin/kin_swift.h>
 
 #include <LGP/optLGP.h>
+#include <Logic/fol_mcts_world.h> //TODO: rename to folWorld.h
+
+#include <Roopi/roopi.h>
 
 //===========================================================================
 
@@ -88,12 +91,48 @@ void testLGP_player(){
 
 //===========================================================================
 
+void roopiInterface(){
+  Roopi R;
+
+  {
+  auto lgp = R.newLGP();
+
+  lgp->setKinematics("kin.g");
+  lgp->setLogic("fol.g");
+
+  //-- prepare logic world
+  lgp->fol().addObject("obj1");
+  lgp->fol().addObject("stick");
+  lgp->fol().addFact({"table","table1"});
+    //    fol.addAgent("pr2L");
+  lgp->fol().addAgent("baxterL");
+  lgp->fol().addAgent("baxterR");
+    //    fol.addAgent("handL");
+    //    fol.addAgent("handR");
+
+  lgp->fol().addTerminalRule({{"pushing", "obj1"}});
+
+  lgp->fixLogicSequence("(activate_grasping baxterR stick) (activate_pushing stick obj1 table1) (activate_grasping baxterL obj1) (activate_placing baxterL obj1 table1) ");
+
+  lgp->start();
+
+  R.wait(+lgp);
+
+  cout <<"DONE!" <<endl;
+  R.wait();
+}
+  cout <<"HERE" <<endl;
+}
+
+//===========================================================================
+
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
 //  testToolSlide();
 
-  testLGP_player();
+//  testLGP_player();
 
+  roopiInterface();
   return 0;
 }
