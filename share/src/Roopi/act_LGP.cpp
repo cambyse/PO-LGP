@@ -79,6 +79,7 @@ void sAct_LGP::open(){
 void sAct_LGP::step(){
     if(fixedSequence.N){
         lgp->optFixedSequence(fixedSequence);
+        lgp->renderToFile(3,"z.path.");
 
         status->setStatus(AS_converged);
         threadStop();
