@@ -13,7 +13,7 @@
     --------------------------------------------------------------  */
 
 
-#include "taskMap_FixAttachedObjects.h"
+#include "taskMap_FixSwitchedObjects.h"
 #include "taskMap_qItself.h"
 #include "taskMap_default.h"
 
@@ -93,6 +93,9 @@ void TaskMap_FixSwichedObjects::phi(arr& y, arr& J, const WorldL& G, double tau,
 
     if(b0->name.startsWith("slider")) continue;
 
+    if(t==39){
+        cout <<"t=" <<t <<" switched bodies:" <<b0->name <<' ' <<b1->name <<endl;
+    }
 #if 1 //absolute velocities
     TaskMap_Default pos(posDiffTMT, b0->shapes.first()->index);
     pos.order=1;

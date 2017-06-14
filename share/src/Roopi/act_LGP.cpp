@@ -56,6 +56,10 @@ FOL_World &Act_LGP::fol(){
     return s->fol;
 }
 
+OptLGP &Act_LGP::opt(){
+    return *s->lgp;
+}
+
 void Act_LGP::start(){ s->threadLoop(); }
 
 void Act_LGP::stop(){ s->threadStop(); }
@@ -65,27 +69,18 @@ void sAct_LGP::open(){
     CHECK(kin.q.N, "kinematics is not initialized!");
     CHECK(fol.KB.N, "logic is not initialized");
     lgp = new OptLGP(kin, fol);
-
-//  s->lgp->reset();
-
-//  if(CP) delete CP;
-//  if(opt) delete opt;
-
-//  CP = new Conv_KOMO_ConstrainedProblem(lgp->komo_problem);
-//  opt = new OptConstrained(lgp->x, lgp->dual, *CP);
-//  opt->earlyPhase = true;
 }
 
 void sAct_LGP::step(){
     if(fixedSequence.N){
         lgp->optFixedSequence(fixedSequence);
-        lgp->renderToFile(3,"z.path.");
+//        lgp->renderToFile(3,"z.path.");
 
         status->setStatus(AS_converged);
         threadStop();
     }else{
-        lgp->player({"p","3","p","2","p","0","p","1","x"});
-    }
+        NIY
+   }
 
 //  bool stop = opt->step();
 //  x.set() = lgp->x;
@@ -107,7 +102,5 @@ void sAct_LGP::step(){
 
 void sAct_LGP::close(){
     if(lgp) delete lgp; lgp=NULL;
-//  if(CP) delete CP;   CP=NULL;
-//  if(opt) delete opt;  opt=NULL;
 }
 

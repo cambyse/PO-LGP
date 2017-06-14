@@ -5,8 +5,6 @@
 namespace mlr{
   struct KinematicWorld;
 }
-struct FOL_World;
-struct OptLGP;
 
 struct Act_LGP : Act {
   struct sAct_LGP *s;
@@ -19,7 +17,8 @@ struct Act_LGP : Act {
   void fixLogicSequence(const mlr::String& seq);
 
   mlr::KinematicWorld& kin();
-  FOL_World& fol();
+  struct FOL_World& fol();
+  struct OptLGP& opt();
 
   void start();
   void stop();

@@ -1,0 +1,10 @@
+TODO:
+
+* approach push from top (avoid collisions)
+* push with tip; grasp at handle
+* have handle position as action parameter? -> put other constraints on the grasp: inequalities on z-offset
+* pull a cylinder close
+* object to pull/push is also a hook (cylinder hook?)
+
+
+

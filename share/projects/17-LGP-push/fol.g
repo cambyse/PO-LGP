@@ -1,5 +1,5 @@
 Include = '../../data/keywords.g'
-Include = 'kin.g'
+Include = 'kin-stickHandover.g'
 
 FOL_World{
   hasWait=false
@@ -56,67 +56,26 @@ REWARD {
 
 #####################################################################
 
-DecisionRule activate_grasping {
+DecisionRule grasp {
   X, Y
-  { (grasping X Y)! (INFEASIBLE activate_grasping X Y)! (agent X) (object Y) (free X) (held Y)! (busy X)! (busy Y)! }
-  { (grasping X Y)=1.0 (busy X) (busy Y) komoGrasp(X Y)=1. }
-}
-
-## that directly terminates!!
-Rule {
-  X, Y
-  { (grasping X Y) }
-  { (Terminate grasping X Y) }
-}
-
-Rule {
-  X, Y
-  { (Terminate grasping X Y) }
-  { (Terminate grasping X Y)! (grasping X Y)! (grasped X Y) (free X)! (held Y) (busy X)! (busy Y)! }
-#  { (Terminate grasping X Y)! (grasping X Y)! (busy X)! (busy Y)! } # failure
-#  p=[.9 0.1]
+  { (INFEASIBLE grasp X Y)! (agent X) (object Y) (free X) }
+  { (grasped X Y) (held Y) (free X)! komoGrasp(X Y)=1. }
 }
 
 #####################################################################
 
-DecisionRule activate_handing {
+DecisionRule handover {
   X, Y, Z
-  { (handing X Y Z)! (INFEASIBLE) (INFEASIBLE activate_handing X Y Z)! (grasped X Y) (busy X)! (agent X) (agent Z) (object Y) (free Z) (busy Z)! }
-  { (handing X Y Z)=1.0 (busy Y) (busy Z) komoHandover(X Y Z)=1. }
-}
-
-## that directly terminates!!
-Rule {
-  X, Y, Z
-  { (handing X Y Z) }
-  { (Terminate handing X Y Z) }
-}
-
-Rule {
-  X, Y, Z
-  { (Terminate handing X Y Z) }
-  { (Terminate handing X Y Z)! (handing X Y Z)! (grasped X Y)! (free Z)! (free X) (grasped Z Y) (held Y) (busy X)! (busy Y)! (busy Z)!}
+  { (INFEASIBLE handover X Y Z)! (grasped X Y) (agent X) (agent Z) (object Y) (free Z) }
+  { (grasped X Y)! (grasped Z Y) (held Y) (free X)! (free Z)! komoHandover(X Y Z)=1. }
 }
 
 #####################################################################
 
-DecisionRule activate_placing {
+DecisionRule place {
   X, Y, Z,
-  { (placing X Y Z)! (grasped X Y) (busy X)! (busy Y)! (table Z) }
-  { (placing X Y Z)=1.0 (busy X) (busy Y) komoPlace(X Y Z)=1. (INFEASIBLE activate_grasping ANY Y)! block(INFEASIBLE activate_grasping ANY Y)}
-}
-
-## that directly terminates!!
-Rule {
-  X, Y, Z,
-  { (placing X Y Z) }
-  { (Terminate placing X Y Z) }
-}
-
-Rule {
-  X, Y, Z,
-  { (Terminate placing X Y Z) }
-  { (Terminate placing X Y Z)! (placing X Y Z)! (placed Y Z) (grasped X Y)! (free X) (held Y)! (busy X)! (busy Y)! }
+  { (grasped X Y) (table Z) }
+  { (placed Y Z) (grasped X Y)! (free X) (held Y)! komoPlace(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
 }
 
 #####################################################################
@@ -124,7 +83,7 @@ Rule {
 DecisionRule activate_pushing {
   X, Y, Z,
   { (held X) (object Y) (table Z) }
-  { komoPush(X Y Z)=1. (INFEASIBLE activate_grasping ANY Y)! block(INFEASIBLE activate_grasping ANY Y)}
+  { komoPush(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
 }
 
 #####################################################################
@@ -135,16 +94,3 @@ DecisionRule activate_attaching {
   { (attached Y Z) (grasped X Z)! (free X) (held Z)! komoAttach(X Y Z)=1. }
 }
 
-#####################################################################
-
-DecisionRule activate_attaching {
-  X, Y, Z
-  { (attaching X Y Z)! (object X) (object Y) (agent Z) (fixed X Y)! (held X) (held Y) (hasScrew Z) (busy X)! (busy Y)! (busy Z)! }
-  { (attaching X Y Z)=3.0 (busy X) (busy Y) (busy Z) }
-}
-
-Rule {
-  X, Y, Z
-  { (Terminate attaching X Y Z) }
-  { (Terminate attaching X Y Z)! (attaching X Y Z)! (fixed X Y) (fixed Y X) (hasScrew Z)! (free Z) (busy X)! (busy Y)! (busy Z)! } #NOTE: fixed needs to be symmetric: both predicates are added!
-}
