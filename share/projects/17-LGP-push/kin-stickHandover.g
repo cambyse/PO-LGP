@@ -14,7 +14,7 @@ joint (slider1a slider1b){ type=JT_transX }
 shape slider1Eff (slider1b){ rel=<T t(.1 0 0)> type=5 size=[.1 .1 .1] color=[0 1 0] }
 
 body obj1 { size=[.1 .1 .2 .02] color=[0 1 0] type=9 contact }
-joint (table1 obj1) { from=<T t(0 0 .02)> to=<T t(0 1. .1)> type=JT_rigid }
+joint (table1 obj1) { from=<T t(0 0 .02)> to=<T t(.20 0. .1)> type=JT_rigid }
 
 shape target(table1){ type=5 rel=<T t(0 .3 .12)> size=[.3 0 0 0] color=[1 1 0]}
 

@@ -104,32 +104,36 @@ void roopiInterface(){
   lgp->fol().addObject("obj1");
   lgp->fol().addObject("stick");
   lgp->fol().addFact({"table","table1"});
+  lgp->fol().addFact({"table","obj1"});
     //    fol.addAgent("pr2L");
   lgp->fol().addAgent("baxterL");
   lgp->fol().addAgent("baxterR");
   FILE("z.fol") <<lgp->fol().KB <<endl;
-//  lgp->fol().addAgent("stickTip");
-  lgp->fol().addAgent("obj1");
+  lgp->fol().addAgent("stickTip");
+//  lgp->fol().addAgent("obj1");
     //    fol.addAgent("handL");
     //    fol.addAgent("handR");
 
   lgp->fol().addTerminalRule({{"pushing", "obj1"}});
 
+#if 1
+  OptLGP opt(lgp->kin(), lgp->fol());
+  opt.optFixedSequence("(grasp baxterR stick) (grasp stickTip obj1)");
+#else
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
-  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
-//   \
+  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
+//  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
+//
 // (place stickTip obj1 table1) (grasp baxterR obj1) (place baxterR obj1 table1)");
 
 //  lgp->fixLogicSequence("(grasp baxterR stick) (activate_pushing stick obj1 table1) (grasp baxterL obj1) (place baxterL obj1 table1) ");
 
-//  OptLGP opt(lgp->kin(), lgp->fol());
-//  opt.player();
-//  return;
 
   lgp->start();
 
   R.wait(+lgp);
 
+#endif
   R.wait();
 }
 

@@ -8,3 +8,8 @@ TODO:
 
 
 
+PRINCIPLE CHANGES TO KinWorld:
+
+* ensure q is always! consistent -> calc_q_from_Q after each top change
+* check this in checkConsistency
+* allow for only one outLink
