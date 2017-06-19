@@ -18,7 +18,7 @@ struct Act_LGP : Act {
 
   mlr::KinematicWorld& kin();
   struct FOL_World& fol();
-  struct OptLGP& opt();
+//  struct OptLGP& opt();
 
   void start();
   void stop();

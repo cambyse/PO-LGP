@@ -67,7 +67,7 @@ DecisionRule grasp {
 DecisionRule handover {
   X, Y, Z
   { (INFEASIBLE handover X Y Z)! (grasped X Y) (agent X) (agent Z) (object Y) (free Z) }
-  { (grasped X Y)! (grasped Z Y) (held Y) (free X)! (free Z)! komoHandover(X Y Z)=1. }
+  { (grasped X Y)! (grasped Z Y) (held Y) (free X) (free Z)! komoHandover(X Y Z)=1. }
 }
 
 #####################################################################
@@ -80,7 +80,7 @@ DecisionRule place {
 
 #####################################################################
 
-DecisionRule activate_pushing {
+DecisionRule push {
   X, Y, Z,
   { (held X) (object Y) (table Z) }
   { komoPush(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }

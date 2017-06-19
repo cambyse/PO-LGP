@@ -56,9 +56,9 @@ FOL_World &Act_LGP::fol(){
     return s->fol;
 }
 
-OptLGP &Act_LGP::opt(){
-    return *s->lgp;
-}
+//OptLGP &Act_LGP::opt(){
+//    return *s->lgp;
+//}
 
 void Act_LGP::start(){ s->threadLoop(); }
 

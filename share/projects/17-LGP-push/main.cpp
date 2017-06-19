@@ -98,17 +98,16 @@ void roopiInterface(){
 
   lgp->setKinematics("kin-stickHandover.g");
   lgp->setLogic("fol.g");
-  FILE("z.fol") <<lgp->fol().KB <<endl;
 
   //-- prepare logic world
   lgp->fol().addObject("obj1");
   lgp->fol().addObject("stick");
   lgp->fol().addFact({"table","table1"});
-  lgp->fol().addFact({"table","obj1"});
+  lgp->fol().addFact({"table","tableR"});
+  lgp->fol().addFact({"table","tableL"});
     //    fol.addAgent("pr2L");
   lgp->fol().addAgent("baxterL");
   lgp->fol().addAgent("baxterR");
-  FILE("z.fol") <<lgp->fol().KB <<endl;
   lgp->fol().addAgent("stickTip");
 //  lgp->fol().addAgent("obj1");
     //    fol.addAgent("handL");
@@ -116,18 +115,25 @@ void roopiInterface(){
 
   lgp->fol().addTerminalRule({{"pushing", "obj1"}});
 
-#if 1
+#if 0
   OptLGP opt(lgp->kin(), lgp->fol());
   opt.optFixedSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 #else
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
-  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
+//  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
 //
 // (place stickTip obj1 table1) (grasp baxterR obj1) (place baxterR obj1 table1)");
 
-//  lgp->fixLogicSequence("(grasp baxterR stick) (activate_pushing stick obj1 table1) (grasp baxterL obj1) (place baxterL obj1 table1) ");
+//  lgp->fixLogicSequence("(grasp baxterR stick) (push stick obj1 table1) (grasp baxterL obj1) (place baxterL obj1 table1) ");
 
+  lgp->fixLogicSequence("(grasp baxterR stick) \
+(handover baxterR stick baxterL) \
+(push stick obj1 table1) \
+(grasp baxterR obj1) \
+(place baxterR obj1 tableR) \
+(place baxterL stick tableL)");
+//                            "); mlr::String tmp("\
 
   lgp->start();
 
