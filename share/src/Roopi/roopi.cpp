@@ -441,6 +441,7 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placi
       mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_transXYPhi, attachTo, object, K, 0, NoTransformation, NoTransformation, 1);
       sw2.apply(K);
     }
+    K().checkConsistency();
     K().getJointState(); //enforces that the q & qdot are recalculated!
 //    s->_ctrlView->get<OrsPoseViewer>()->recopyKinematics(K);
   }

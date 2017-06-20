@@ -158,7 +158,7 @@ void TEST(PickAndPlace) {
   //  auto ph = R.newPhysX();
   //  auto rec = Act_Recorder(&R, "ctrl_q_ref", 10);
 
-  auto pub = R.rosPublish("modelWorld", .1);
+//  auto pub = R.rosPublish("modelWorld", .1);
 
 #if 0
   Script_graspBox(R, "obj1", LR_right);
@@ -386,9 +386,6 @@ void TEST(Gamepad) {
 
 
 //===============================================================================
-
-struct Foo{
-};
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);

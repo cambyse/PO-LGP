@@ -85,20 +85,20 @@ void atDemo(){
 
 //===============================================================================
 
-int todo(){
-  R.at(+grasp, comp_EQ, {AS_conv}, [](){
-    //do something
-    return 1;
-  });
-  R.at(+access, comp_GE, revision_number, [](){
-  });
-  R.at<arr>("q_ref", [](Access<T>& x){
-    return x->N>10;
-  }, [](){
-    //do something
-    return 0;
-  });
-}
+//int todo(){
+//  R.at(+grasp, comp_EQ, {AS_conv}, [](){
+//    //do something
+//    return 1;
+//  });
+//  R.at(+access, comp_GE, revision_number, [](){
+//  });
+//  R.at<arr>("q_ref", [](Access<T>& x){
+//    return x->N>10;
+//  }, [](){
+//    //do something
+//    return 0;
+//  });
+//}
 
 int main(int argc, char** argv){
   mlr::initCmdLine(argc, argv);

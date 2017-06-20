@@ -29,22 +29,23 @@ void TEST(LimitsCollisions) {
     for(uint k=0;k<100;k++){
       double box=.5;
 #if 0
-      posL.set()->PD().setTarget(box*randn(3));
-      posR.set()->PD().setTarget(box*randn(3));
+      posL->set()->setTarget(box*randn(3));
+      posR->set()->setTarget(box*randn(3));
 #else
-      posL.stop();
-      posR.stop();
+      posL->stop();
+      posR->stop();
       L->rel.pos = tL + box*randn(3);
       Re->rel.pos = tL + box*randn(3);
-      R.resyncView();
-      posL.set()->PD().setTarget({}); //box*randn(3));
-      posR.set()->PD().setTarget({}); //box*randn(3));
-      posL.start();
-      posR.start();
+      posL->set()->setTarget({}); //box*randn(3));
+      posR->set()->setTarget({}); //box*randn(3));
+      posL->resetStatus();
+      posR->resetStatus();
+      posL->start();
+      posR->start();
 #endif
 
 //      R.hold(false);
-      R.wait({&posL, &posR});
+      R.wait(posL+posR);
 //      R.hold(true);
     }
   }
