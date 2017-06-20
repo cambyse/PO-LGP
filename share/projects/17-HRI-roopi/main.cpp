@@ -16,13 +16,18 @@ void TEST(PerceptionOnly) {
   R.getTaskController().lockJointGroupControl("base");
 
   OrsViewer v1("modelWorld");
+  {
+    auto an = R.armsNeutral();
+    R.wait({-an});
+  }
 
   SubscribeRosKinect subKin; //subscription into depth and rgb images
   ImageViewer v2("kinect_rgb");
 
   //    auto L = R.lookAt("S3");
   auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
-  R.wait({-look});
+  auto look1 = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_pan_joint"}, R.getK()), {}, {0});
+  R.wait({-look,-look1});
 
 #if 1 //on real robot!
 //  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
@@ -46,6 +51,24 @@ void TEST(PerceptionOnly) {
 
 
   mlr::wait();
+  auto K = R.getK();
+  mlr::Body *body0 = K().getBodyByName("table2");
+  cout << "Table 2 body:" << endl;
+  cout <<*body0 <<"--" <<body0->ats <<endl;
+  mlr::Body *body1 = K().getBodyByName("S1");
+  cout << "S1 body:" << endl;
+  cout <<*body1 <<"--" <<body1->ats <<endl;
+  mlr::Body *body2 = K().getBodyByName("S2");
+  cout << "S2 body:" << endl;
+  cout <<*body2 <<"--" <<body2->ats <<endl;
+  mlr::Body *body3 = K().getBodyByName("S3");
+  cout << "S3 body:" << endl;
+  cout <<*body3 <<"--" <<body3->ats <<endl;
+  mlr::Body *body4 = K().getBodyByName("S4");
+  cout << "S4 body:" << endl;
+  cout <<*body4 <<"--" <<body4->ats <<endl;
+
+  mlr::wait();
 
 
   R.reportCycleTimes();
@@ -55,6 +78,10 @@ void TEST(PerceptionAndPlace) {
   Roopi R(true, false);
 
   R.getTaskController().lockJointGroupControl("base");
+  {
+    auto an = R.armsNeutral();
+    R.wait({-an});
+  }
 
   OrsViewer v1("modelWorld");
 
@@ -63,7 +90,8 @@ void TEST(PerceptionAndPlace) {
 
   //    auto L = R.lookAt("S3");
   auto look = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_tilt_joint"}, R.getK()), {}, {55.*MLR_PI/180.});
-  R.wait({-look});
+  auto look1 = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"head_pan_joint"}, R.getK()), {}, {0});
+  R.wait({-look,-look1});
 
 #if 1 //on real robot!
 //  SubscribeRosKinect2PCL subKin; //direct subscription into pcl cloud
@@ -78,10 +106,28 @@ void TEST(PerceptionAndPlace) {
   auto view = R.CameraView(true, "viewWorld"); //generate depth and rgb images from a modelWorld view
 #endif
 
-
+  {
   auto pcl = R.PclPipeline(false);
   auto filter = R.PerceptionFilter(true);
-
+  Access<PerceptL> outputs("percepts_filtered");
+  int rev=outputs.getRevision();
+  outputs.waitForRevisionGreaterThan(rev+10);
+  mlr::wait();
+  auto K = R.getK();
+  mlr::Body *body1 = K().getBodyByName("S1");
+  cout << "S1 body:" << endl;
+  cout <<*body1 <<"--" <<body1->ats <<endl;
+  mlr::Body *body2 = K().getBodyByName("S2");
+  cout << "S2 body:" << endl;
+  cout <<*body2 <<"--" <<body2->ats <<endl;
+  mlr::Body *body3 = K().getBodyByName("S3");
+  cout << "S3 body:" << endl;
+  cout <<*body3 <<"--" <<body3->ats <<endl;
+  mlr::Body *body4 = K().getBodyByName("S4");
+  cout << "S4 body:" << endl;
+  cout <<*body4 <<"--" <<body4->ats <<endl;
+  mlr::wait();
+  }
   {
   auto graspR = R.graspBox("S2", LR_right);
   R.wait({-graspR});
@@ -107,9 +153,32 @@ void TEST(PerceptionAndPlace) {
   R.wait({-placeR});
   }
 
-  Access<PerceptL> outputs("percepts_filtered");
-  int rev=outputs.getRevision();
-  outputs.waitForRevisionGreaterThan(rev+10);
+  {
+    auto an = R.armsNeutral();
+    R.wait({-an});
+  }
+  {
+    auto pcl = R.PclPipeline(false);
+    auto filter = R.PerceptionFilter(true);
+    Access<PerceptL> outputs("percepts_filtered");
+    int rev=outputs.getRevision();
+    outputs.waitForRevisionGreaterThan(rev+10);
+    mlr::wait();
+    auto K = R.getK();
+    mlr::Body *body1 = K().getBodyByName("S1");
+    cout << "S1 body:" << endl;
+    cout <<*body1 <<"--" <<body1->ats <<endl;
+    mlr::Body *body2 = K().getBodyByName("S2");
+    cout << "S2 body:" << endl;
+    cout <<*body2 <<"--" <<body2->ats <<endl;
+    mlr::Body *body3 = K().getBodyByName("S3");
+    cout << "S3 body:" << endl;
+    cout <<*body3 <<"--" <<body3->ats <<endl;
+    mlr::Body *body4 = K().getBodyByName("S4");
+    cout << "S4 body:" << endl;
+    cout <<*body4 <<"--" <<body4->ats <<endl;
+  }
+
 
 
   mlr::wait();

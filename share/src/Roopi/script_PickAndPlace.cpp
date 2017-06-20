@@ -86,7 +86,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     R.wait({-pos, -gripperR, -gripper2R, -up});
 
     //lowering
-    pos->set()->setTarget( ARR(0,0,above-.01) );
+    pos->set()->setTarget( ARR(0,0,above) );
     pos->resetStatus();
     R.wait({-pos});
 
@@ -343,12 +343,12 @@ int Script_armsNeutral(Roopi& R){
   }
 
   {
-      auto shoulderPanR =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJointR}, false), {}, {-1});  //-1
+      auto shoulderPanR =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJointR}, false), {}, {-1.5});  //-1
       auto shoulderLiftR =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJointR}, false), {}, {-0.5});  //0.5
       auto upperArmRollR =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJointR}, false), {}, {-1});   //-1
       auto elbowFlexR =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJointR}, false), {}, {-2});   //-2
       auto forearmRollR =  R.newCtrlTask(new TaskMap_qItself({forearmRollJointR}, false), {}, {-1.5});   //-1.5
-      auto shoulderPanL =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJointL}, false), {}, {1});  //1
+      auto shoulderPanL =  R.newCtrlTask(new TaskMap_qItself({shoulderPanJointL}, false), {}, {1.5});  //1
       auto shoulderLiftL =  R.newCtrlTask(new TaskMap_qItself({shoulderLiftJointL}, false), {}, {-0.5});  //0.5
       auto upperArmRollL =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJointL}, false), {}, {1});   //1
       auto elbowFlexL =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJointL}, false), {}, {-2});   //-2
