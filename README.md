@@ -13,18 +13,19 @@ Add your ssh key to clone the repository.
     User->Settings->SSH Keys
 
 Clone the repo:
-    
+
+    $ cd ~; mkdir git; cd git
     $ git clone git@animal.informatik.uni-stuttgart.de:mlr-staff/mlr.git
     
 Once the repo has been cloned:
 
     $ cd mlr
     $ git checkout roopi
-	$ ./share/bin/install/INSTALL_ALL_UBUNTU_PACKAGES.sh
-    $ ./share/bin/install/INSTALL_ROS_PACKAGES_KINETIC
+	$ ./install/INSTALL_ALL_UBUNTU_PACKAGES.sh
+    $ ./install/INSTALL_ROS_PACKAGES_KINETIC
     $ ./share/bin/createMakefileLinks.sh
     $ cp share/build/config.mk.kinetic share/build/config.mk
-    $ cd share/examples/Roopi/basic/
+    $ cd share/examples/Roopi/basics/
     $ make
     
 ## Install on Ubuntu 14.04
