@@ -1,7 +1,7 @@
 # The RoboticsCourse slice of the MLR code base
 
 This code is a slice of the full MLR code base, containing
-code for the robotics course exercises. This is also the reason
+code for the robotics course exercises. This is the reason
 for the unusual directory layout.
 
 
@@ -11,9 +11,8 @@ Generically, the following should work:
 
 cd share
 make
-cd examples/Ors/ors
-make
-./x.exe
+make runTests
+cd teaching/...
 
 On problems, maybe you have to install some more Ubuntu
 packages or adapt to other OS. Please refer to the files
