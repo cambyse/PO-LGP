@@ -157,7 +157,7 @@ void AOSearch::prepareDisplay()
   for( auto w = 0; w < folWorlds_.d0; ++w )
   {
     std::string namePose = std::string( "pose" ) + std::string( "-world-" ) + std::to_string( w );
-    std::string nameSeq =  std::string( "seq" ) + std::string( "-world-" ) + std::to_string( w );
+    std::string nameSeq =  std::string( "seq" ) + std::string( "-world-" )  + std::to_string( w );
     std::string namePath = std::string( "path" ) + std::string( "-world-" ) + std::to_string( w );
 
     poseViews_.append( std::make_shared< OrsPathViewer >( namePose.c_str(),  1, -0   ) );
@@ -187,12 +187,23 @@ void AOSearch::solveSymbolically()
       // expand
       node->expand();
 
+      // new candidate policies
+      openFringe_.erase( node );
+      //
+
       // generate rollouts for each child
       for( auto f : node->families() )
       {
         for( auto c : f )
         {
           c->generateMCRollouts( 50, 10 );
+
+          if( ! c->isSymbolicallyTerminal() )
+          {
+            // new candidate policies
+            openFringe_.insert( c );
+            //
+          }
         }
       }
 
@@ -212,7 +223,73 @@ void AOSearch::solveSymbolically()
   root_->acceptVisitor( printer );
 }
 
-void AOSearch::addMcRollouts()
+void AOSearch::continueSymbolicSolving()
+{
+  std::cout << "AOSearch::continueSymbolicSolving" << std::endl;
+
+  if( alternativeNodes_.size() == 0 )
+  {
+    alternativeNodes_ = openFringe_;
+  }
+
+  for( auto alternativeNode : alternativeNodes_ )
+  {
+    std::cout << "alternative node to expand:" << alternativeNode->id() << ":" << alternativeNode->expecteTotalReward() << std::endl;
+  }
+
+  auto alternativeNode = * (alternativeNodes_.begin() );
+
+  auto s = 0;
+
+  while( ! alternativeNode->isSymbolicallySolved() )
+  {
+    s++;
+
+    auto nodes = getNodesToExpand( alternativeNode );
+
+    for( auto node : nodes )
+    {
+      // expand
+      node->expand();
+
+      // new candidate policies
+      openFringe_.erase( node );
+      //
+
+      // generate rollouts for each child
+      for( auto f : node->families() )
+      {
+        for( auto c : f )
+        {
+          c->generateMCRollouts( 50, 10 );
+
+          if( ! c->isSymbolicallyTerminal() )
+          {
+            // new candidate policies
+            //openedFringe_.insert( c );
+            //
+          }
+        }
+      }
+
+      {
+        // save the current state of the search
+        std::stringstream namess;
+        namess << "exploration-alternative-" << alternativeNumber_ << "-" << s << ".gv";
+        printSearchTree( namess.str() );
+      }
+
+      // backtrack result
+      node->backTrackBestExpectedPolicy( alternativeNode );
+    }
+  }
+
+  alternativeNodes_.erase( alternativeNode );
+
+  alternativeNumber_ ++;
+}
+
+/*void AOSearch::addMcRollouts()
 {
   std::cout << "AOSearch::addMcRollouts" << std::endl;
 
@@ -227,9 +304,9 @@ void AOSearch::addMcRollouts()
   {
     solveSymbolically();
   }
-}
+}*/
 
-void AOSearch::addMcRolloutsFrom( POLGPNode * node )
+/*void AOSearch::addMcRolloutsFrom( POLGPNode * node )
 {
   for( auto f : node->families() )
   {
@@ -245,7 +322,7 @@ void AOSearch::addMcRolloutsFrom( POLGPNode * node )
   {
     addMcRolloutsFrom( c );
   }
-}
+}*/
 
 void AOSearch::optimizePoses()
 {
@@ -283,7 +360,13 @@ void AOSearch::optimizePosesFrom( POLGPNode * node )
   }
 }
 
-void AOSearch::resetSolvedStatusFrom( POLGPNode * node )
+Policy::ptr AOSearch::getPolicy() const
+{
+  PolicyBuilder builder( root_ );
+  return builder.getPolicy();
+}
+
+/*void AOSearch::resetSolvedStatusFrom( POLGPNode * node )
 {
   if( ! node->isSymbolicallyTerminal() && node->isSymbolicallySolved() )
   {
@@ -294,7 +377,7 @@ void AOSearch::resetSolvedStatusFrom( POLGPNode * node )
       resetSolvedStatusFrom( c );
     }
   }
-}
+}*/
 
 void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool paths )
 {
@@ -366,58 +449,6 @@ mlr::Array< POLGPNode * > AOSearch::getNodesToExpand( POLGPNode * node ) const
   return nodes;
 }
 
-mlr::Array< POLGPNode * > AOSearch::getTerminalNodes() const
-{
-  return getTerminalNodes( root_ );
-}
-
-mlr::Array< POLGPNode * > AOSearch::getTerminalNodes( POLGPNode * n ) const
-{
-  mlr::Array< POLGPNode * > nodes;
-
-  if( n->isSymbolicallyTerminal() )
-  {
-    nodes.append( n );
-  }
-  else
-  {
-    for( auto c : n->bestFamily() )
-    {
-      nodes.append( getTerminalNodes( c ) );
-    }
-  }
-
-  return nodes;
-}
-
-POLGPNode * AOSearch::getTerminalNode( const WorldID & w ) const
-{
-  // could be more generale and return a list of node in case of stochastic world
-  return getTerminalNode( root_, w );
-}
-
-POLGPNode * AOSearch::getTerminalNode( POLGPNode * n, const WorldID & w ) const
-{
-  POLGPNode * node = nullptr;
-  if( n->isSymbolicallyTerminal() )
-  {
-    CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
-    node = n;
-  }
-  else
-  {
-    for( auto c : n->bestFamily() )
-    {
-      if( c->bs()( w.id() ) > eps() )
-      {
-        node = getTerminalNode( c, w );
-        break;
-      }
-    }
-  }
-
-  return node;
-}
 
 void AOSearch::printPolicy( const std::string & name, bool generatePng ) const
 {
@@ -469,6 +500,37 @@ void AOSearch::printSearchTree( std::iostream & ss ) const
   ss << "}" << std::endl;
 }
 
+//--------private----------------//
+
+mlr::Array< POLGPNode * > AOSearch::getTerminalNodes() const
+{
+  return getTerminalNodes( root_ );
+}
+
+mlr::Array< POLGPNode * > AOSearch::getTerminalNodes( POLGPNode * n ) const
+{
+  mlr::Array< POLGPNode * > nodes;
+
+  if( n->isSymbolicallyTerminal() )
+  {
+    nodes.append( n );
+  }
+  else
+  {
+    for( auto c : n->bestFamily() )
+    {
+      nodes.append( getTerminalNodes( c ) );
+    }
+  }
+
+  return nodes;
+}
+
+POLGPNode * AOSearch::getTerminalNode( const WorldID & w ) const
+{
+  // could be more generale and return a list of node in case of stochastic world
+  return utility::getTerminalNode( root_, w );
+}
 
 void AOSearch::printPolicy( POLGPNode * node, std::iostream & ss ) const
 {
@@ -527,5 +589,6 @@ void AOSearch::printSearchTree( POLGPNode * node, std::iostream & ss ) const
     }
   }
 }
+
 
 //===========================================================================

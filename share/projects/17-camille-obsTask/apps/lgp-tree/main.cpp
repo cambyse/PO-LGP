@@ -7,6 +7,7 @@
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
 #include <geometric_levels.h>
+#include <node_visitors.h>
 
 /*
 back track, take history into account?
@@ -415,6 +416,9 @@ void plan_AOS()
   komoFactory.registerTask( "komoCollisionAvoidance", groundObjectPairCollisionAvoidance );
   //komoFactory.registerTask( "komoHome", groundHome );
 
+  // set of policies
+  std::set< Policy::ptr, PolicyCompare > policies;
+
   // instanciate search tree
   AOSearch C( komoFactory );
   //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
@@ -428,7 +432,6 @@ void plan_AOS()
   //setRigid( 0.5, "container_1_bottom", "target", komo );
 
   C.prepareDisplay();
-
   C.prepareTree();      // create root node
 
   uint i = 0;
@@ -475,8 +478,27 @@ void plan_AOS()
     }
   }
 
+  // store policy and display it
+  auto policy = C.getPolicy();
+  PolicyVisualizer viz( policy );
+
+  policies.insert( policy );
+  //
+
+  for( auto alternatives = 0; alternatives < 1; alternatives++ )
+  {
+    C.continueSymbolicSolving();
+
+    {
+      // save search tree
+      std::stringstream namess;
+      namess << "search-alternative-" << C.alternativeNumber() << ".gv";
+      C.printSearchTree( namess.str() );
+    }
+  }
+
   // display
-  C.updateDisplay( WorldID( -1 ), false, false, true );
+  //C.updateDisplay( WorldID( -1 ), false, false, true );
   mlr::wait( 3000 );
 }
 

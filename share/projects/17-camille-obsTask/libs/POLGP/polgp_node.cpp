@@ -420,7 +420,7 @@ void POLGPNode::generateMCRollouts( uint num, int stepAbort )
   //std::cout << "average reward:" << expectedReward_ << std::endl;
 }
 
-void POLGPNode::backTrackBestExpectedPolicy()
+void POLGPNode::backTrackBestExpectedPolicy( POLGPNode * node )
 {
   if( isSymbolicallyTerminal() )
   {
@@ -474,7 +474,7 @@ void POLGPNode::backTrackBestExpectedPolicy()
     //
   }
 
-  if( parent_ )
+  if( parent_ && this != node )
   {
     parent_->backTrackBestExpectedPolicy();
   }
@@ -648,6 +648,33 @@ std::string POLGPNode::actionStr( uint a ) const
     ss << "no actions";
 
   return ss.str();
+}
+
+namespace utility
+{
+//====free functions============//
+POLGPNode * getTerminalNode( POLGPNode * n, const WorldID & w )
+{
+  POLGPNode * node = nullptr;
+  if( n->isSymbolicallyTerminal() )
+  {
+    CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
+    node = n;
+  }
+  else
+  {
+    for( auto c : n->bestFamily() )
+    {
+      if( c->bs()( w.id() ) > eps() )
+      {
+        node = getTerminalNode( c, w );
+        break;
+      }
+    }
+  }
+
+  return node;
+}
 }
 
 //===========================================================================

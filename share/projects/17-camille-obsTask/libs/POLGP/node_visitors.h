@@ -16,6 +16,7 @@
 
 #include "node_visitor.h"
 #include "polgp_node.h"
+#include "policy.hpp"
 
 class PrintRewardsVisitor : public NodeVisitorBase
 {
@@ -23,9 +24,11 @@ public:
   void visit( POLGPNode * );
 };
 
-class PrintGroundingsOverTimeVisitor : public NodeVisitorBase
+/*class PrintGroundingsOverTimeVisitor : public NodeVisitorBase
 {
 public:
   void visit( POLGPNode * );
-};
+};*/
+
+
 

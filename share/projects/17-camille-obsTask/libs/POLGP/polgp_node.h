@@ -12,7 +12,6 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-
 #pragma once
 
 #include <set>
@@ -63,6 +62,8 @@ struct LogicAndState
 
 class POLGPNode
 {
+  friend class NodeVisitorBase;
+
 public:
   /// root node init
   POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
@@ -74,7 +75,7 @@ public:
   void expand();
   void setAndSiblings( const mlr::Array< POLGPNode * > & siblings );
   void generateMCRollouts( uint num, int stepAbort );
-  void backTrackBestExpectedPolicy();
+  void backTrackBestExpectedPolicy( POLGPNode * node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
   void registerGeometricLevel( GeometricLevelBase::ptr const& );
 
@@ -82,9 +83,9 @@ public:
   void solvePathProblem();
   void solveJointPathProblem();
   void labelInfeasible(); ///< sets the infeasible label AND removes all children!
-  void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
+  //void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
 
-  void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( this ); }
+  void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( this ); } // overkill here, visitor design pattern usefull if we have a hierarchy of class!
   //void labelInfeasible();
 
   // getters
@@ -182,7 +183,7 @@ private:
   double prefixReward_;                           ///  this is the (certain) rewards of the prefix decisions
   double expectedReward_;                         ///  the total expected reward ?
 
-  int expectedBestA_;
+  int expectedBestA_;                             ///  expected next best action
   mlr::Array< POLGPNode * > bestFamily_;
 
   //-- global search
@@ -202,3 +203,9 @@ private:
   //--
   int id_;
 };
+
+namespace utility
+{
+  // free functions
+  POLGPNode * getTerminalNode( POLGPNode *, const WorldID & w );
+}

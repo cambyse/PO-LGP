@@ -23,4 +23,3 @@ void PrintRewardsVisitor::visit( POLGPNode * node )
     visit( c );
   }
 }
-

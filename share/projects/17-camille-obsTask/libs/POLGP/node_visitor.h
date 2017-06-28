@@ -20,4 +20,7 @@ class NodeVisitorBase
 {
 public:
   virtual void visit( POLGPNode * ) = 0;
+
+  // friendship no inherited in c++
+
 };

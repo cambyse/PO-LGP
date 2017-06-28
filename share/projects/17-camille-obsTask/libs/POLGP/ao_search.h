@@ -1,11 +1,21 @@
 #pragma once
 
 #include <list>
+#include <set>
 
 #include <Logic/fol_mcts_world.h>
 #include <Kin/kinViewer.h>
 #include "polgp_node.h"
+#include "policy.hpp"
 
+// sort nodes so that the ones with the biggest rewards are first
+struct POLGPNodeCompare : public std::binary_function<POLGPNode*, POLGPNode*, bool>
+{
+    bool operator()( POLGPNode* lhs, POLGPNode* rhs) const
+    {
+        return ! ( lhs->expecteTotalReward() == rhs->expecteTotalReward() ) && ( lhs->expecteTotalReward() > rhs->expecteTotalReward() );
+    }
+};
 
 class AOSearch
 {
@@ -21,6 +31,8 @@ public: // public methods
   //void registerGeometricLevel( GeometricLevelFactoryBase::ptr const& factory );
 
   void solveSymbolically();
+  void continueSymbolicSolving();
+
   void addMcRollouts(); // reset solved flag and relaunch solving, it adds rollouts
 
   void optimizePoses();
@@ -31,12 +43,28 @@ public: // public methods
 
 private:
   void optimizePosesFrom( POLGPNode * );
-  void resetSolvedStatusFrom( POLGPNode * );
-  void addMcRolloutsFrom( POLGPNode * );
+  //void resetSolvedStatusFrom( POLGPNode * );
+  //void addMcRolloutsFrom( POLGPNode * );
 
 public:
 
   // getters
+  bool isSymbolicallySolved() const { return root_->isSymbolicallySolved(); }
+  bool isPoseSolved() const { return root_->isPoseSolved(); }
+  bool isPathSolved() const { return root_->isPathSolved(); }
+  bool isJointPathSolved() const { return root_->isJointPathSolved(); }
+
+  uint alternativeNumber() const { return alternativeNumber_; }
+
+  // helpers
+  Policy::ptr getPolicy() const;
+
+  void printPolicy( const std::string & name, bool generatePng = true ) const;
+  void printSearchTree( const std::string & name, bool generatePng = true ) const;
+  void printPolicy( std::iostream & ) const;
+  void printSearchTree( std::iostream & ) const;
+
+private:
   mlr::Array< POLGPNode * > getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
   mlr::Array< POLGPNode * > getNodesToExpand( POLGPNode * ) const;
 
@@ -44,20 +72,7 @@ public:
   mlr::Array< POLGPNode * > getTerminalNodes( POLGPNode * ) const;
 
   POLGPNode * getTerminalNode( const WorldID & w ) const;
-  POLGPNode * getTerminalNode( POLGPNode *, const WorldID & w ) const;
 
-  bool isSymbolicallySolved() const { return root_->isSymbolicallySolved(); }
-  bool isPoseSolved() const { return root_->isPoseSolved(); }
-  bool isPathSolved() const { return root_->isPathSolved(); }
-  bool isJointPathSolved() const { return root_->isJointPathSolved(); }
-
-  // helpers
-  void printPolicy( const std::string & name, bool generatePng = true ) const;
-  void printSearchTree( const std::string & name, bool generatePng = true ) const;
-  void printPolicy( std::iostream & ) const;
-  void printSearchTree( std::iostream & ) const;
-
-private:
   void printPolicy( POLGPNode * node, std::iostream & ) const;
   void printSearchTree( POLGPNode * node, std::iostream & ss ) const;
 
@@ -68,6 +83,12 @@ private:
 
   arr bs_;
   POLGPNode * root_; // root and "current" node
+
+  //
+  std::set< POLGPNode *, POLGPNodeCompare > openFringe_;        // fringe of the current search tree
+  std::set< POLGPNode *, POLGPNodeCompare > alternativeNodes_;  // when looking for alternatives, use the node in this set, when it becomes empty, backupthe current open fringe
+  uint alternativeNumber_;
+  //
 
   // geometric levels
   const KOMOFactory & komoFactory_;
