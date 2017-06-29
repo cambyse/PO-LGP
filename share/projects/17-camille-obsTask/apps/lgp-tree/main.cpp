@@ -434,6 +434,8 @@ void plan_AOS()
   C.prepareDisplay();
   C.prepareTree();      // create root node
 
+  /////// 1 - Find Initial Policy ////////
+
   uint i = 0;
   while( ! C.isJointPathSolved() && i < 100 )
   {
@@ -480,14 +482,16 @@ void plan_AOS()
 
   // store policy and display it
   auto policy = C.getPolicy();
-  PolicyVisualizer viz( policy );
+  PolicyVisualizer viz( policy, "nominal" );
 
   policies.insert( policy );
   //
 
+  /////// 2 - Find Initial Policy Optimization ////////
+
   for( auto alternatives = 0; alternatives < 1; alternatives++ )
   {
-    C.continueSymbolicSolving();
+    C.optimizeSymbolicPolicy();
 
     {
       // save search tree
@@ -495,7 +499,30 @@ void plan_AOS()
       namess << "search-alternative-" << C.alternativeNumber() << ".gv";
       C.printSearchTree( namess.str() );
     }
+
+    /// POSE OPTIMIZATION
+    C.optimizePoses();      // optimizes poses of the current best solution
+
+    if( C.isPoseSolved() )
+    {
+      /// PATH OPTIMIZATION
+      C.optimizePaths();      // optimizes paths of the current best solution
+
+      if( C.isPathSolved() )
+      {
+        /// JOINT PATH OPTIMIZATION
+        C.optimizeJointPaths();   // optimizes joint paths of the current best solution
+      }
+    }
+
   }
+
+  // store policy and display it
+  auto altPolicy = C.getPolicy();
+  PolicyVisualizer altViz( altPolicy, "alternative" );
+
+  policies.insert( altPolicy );
+  //
 
   // display
   //C.updateDisplay( WorldID( -1 ), false, false, true );

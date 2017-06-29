@@ -71,7 +71,7 @@ struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, boo
 class PolicyVisualizer
 {
 public:
-  PolicyVisualizer( const Policy::ptr & policy );
+  PolicyVisualizer( const Policy::ptr & policy, const std::string & name );
 
 private:
   std::vector< std::shared_ptr< OrsPathViewer > > views_;

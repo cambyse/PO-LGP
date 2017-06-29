@@ -432,7 +432,8 @@ void POLGPNode::backTrackBestExpectedPolicy( POLGPNode * node )
     struct familyStatusType { double reward; bool solved; };
     mlr::Array< familyStatusType > familyStatus( families_.d0 );
 
-    // compute family costs
+    // find best family
+    // compute cost of each family
     for( auto i = 0; i < families_.d0; ++i )
     {
       double familyReward = 0;
@@ -447,7 +448,7 @@ void POLGPNode::backTrackBestExpectedPolicy( POLGPNode * node )
       familyStatus( i ) = { familyReward, familySolved };
     }
 
-    // restrieve best family
+    // sort
     double bestReward = m_inf();
     int bestFamilyId = -1;
     for( auto i = 0; i < families_.d0; ++i )
@@ -674,6 +675,24 @@ POLGPNode * getTerminalNode( POLGPNode * n, const WorldID & w )
   }
 
   return node;
+}
+
+void gatherPolicyFringe( POLGPNode * node, std::set< mlr::Array< POLGPNode * > > & fringe )
+{
+  for( auto f : node->families() )
+  {
+    if( f != node->bestFamily() )
+    {
+      fringe.insert( f );
+    }
+    else
+    {
+      for( auto c : f )
+      {
+        gatherPolicyFringe( c, fringe );
+      }
+    }
+  }
 }
 }
 

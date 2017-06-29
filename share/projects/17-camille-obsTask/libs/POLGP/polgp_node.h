@@ -74,6 +74,9 @@ public:
   // modifiers
   void expand();
   void setAndSiblings( const mlr::Array< POLGPNode * > & siblings );
+  void backUpPreviousBestFamily() { backupFamily_ = bestFamily_; }
+  void setBestFamily( const POLGPNodeL & f ) { backUpPreviousBestFamily(); bestFamily_ = f; }
+  void revertBestFamily() { bestFamily_ = backupFamily_; }
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy( POLGPNode * node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
@@ -184,7 +187,8 @@ private:
   double expectedReward_;                         ///  the total expected reward ?
 
   int expectedBestA_;                             ///  expected next best action
-  mlr::Array< POLGPNode * > bestFamily_;
+  POLGPNodeL bestFamily_;
+  POLGPNodeL backupFamily_;
 
   //-- global search
   bool isExpanded_;
@@ -208,4 +212,5 @@ namespace utility
 {
   // free functions
   POLGPNode * getTerminalNode( POLGPNode *, const WorldID & w );
+  void        gatherPolicyFringe( POLGPNode *, std::set< mlr::Array< POLGPNode * > > & );
 }

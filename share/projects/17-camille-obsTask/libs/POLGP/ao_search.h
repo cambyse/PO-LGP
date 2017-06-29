@@ -9,13 +9,13 @@
 #include "policy.hpp"
 
 // sort nodes so that the ones with the biggest rewards are first
-struct POLGPNodeCompare : public std::binary_function<POLGPNode*, POLGPNode*, bool>
-{
-    bool operator()( POLGPNode* lhs, POLGPNode* rhs) const
-    {
-        return ! ( lhs->expecteTotalReward() == rhs->expecteTotalReward() ) && ( lhs->expecteTotalReward() > rhs->expecteTotalReward() );
-    }
-};
+//struct POLGPNodeCompare : public std::binary_function<POLGPNode*, POLGPNode*, bool>
+//{
+//    bool operator()( POLGPNode* lhs, POLGPNode* rhs) const
+//    {
+//        return ! ( lhs->expecteTotalReward() == rhs->expecteTotalReward() ) && ( lhs->expecteTotalReward() > rhs->expecteTotalReward() );
+//    }
+//};
 
 class AOSearch
 {
@@ -31,7 +31,7 @@ public: // public methods
   //void registerGeometricLevel( GeometricLevelFactoryBase::ptr const& factory );
 
   void solveSymbolically();
-  void continueSymbolicSolving();
+  void optimizeSymbolicPolicy();
 
   void addMcRollouts(); // reset solved flag and relaunch solving, it adds rollouts
 
@@ -85,8 +85,9 @@ private:
   POLGPNode * root_; // root and "current" node
 
   //
-  std::set< POLGPNode *, POLGPNodeCompare > openFringe_;        // fringe of the current search tree
-  std::set< POLGPNode *, POLGPNodeCompare > alternativeNodes_;  // when looking for alternatives, use the node in this set, when it becomes empty, backupthe current open fringe
+  //std::set< POLGPNode *, POLGPNodeCompare > openFringe_;        // fringe of the current search tree
+  //std::set< POLGPNode *, POLGPNodeCompare > alternativeNodes_;  // when looking for alternatives, use the node in this set, when it becomes empty, backupthe current open fringe
+  std::set< mlr::Array< POLGPNode * > > currentPolicyFringe_;
   uint alternativeNumber_;
   //
 

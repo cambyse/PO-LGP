@@ -34,6 +34,7 @@ static void generatePngImage( const std::string & name )
 //===========================================================================
 AOSearch::AOSearch( const KOMOFactory & komoFactory )
   : komoFactory_( komoFactory )
+  , alternativeNumber_( 0 )
 {
 
 }
@@ -188,7 +189,7 @@ void AOSearch::solveSymbolically()
       node->expand();
 
       // new candidate policies
-      openFringe_.erase( node );
+      //openFringe_.erase( node );
       //
 
       // generate rollouts for each child
@@ -201,7 +202,7 @@ void AOSearch::solveSymbolically()
           if( ! c->isSymbolicallyTerminal() )
           {
             // new candidate policies
-            openFringe_.insert( c );
+            //openFringe_.insert( c );
             //
           }
         }
@@ -223,68 +224,75 @@ void AOSearch::solveSymbolically()
   root_->acceptVisitor( printer );
 }
 
-void AOSearch::continueSymbolicSolving()
+void AOSearch::optimizeSymbolicPolicy()
 {
   std::cout << "AOSearch::continueSymbolicSolving" << std::endl;
 
-  if( alternativeNodes_.size() == 0 )
+  // gather the current policy fringe
+  if( currentPolicyFringe_.size() == 0 )
   {
-    alternativeNodes_ = openFringe_;
+    utility::gatherPolicyFringe( root_, currentPolicyFringe_ );
   }
 
-  for( auto alternativeNode : alternativeNodes_ )
+  for( auto f : currentPolicyFringe_ )
   {
-    std::cout << "alternative node to expand:" << alternativeNode->id() << ":" << alternativeNode->expecteTotalReward() << std::endl;
-  }
+    std::cout << "alternative family:" << std::endl;
 
-  auto alternativeNode = * (alternativeNodes_.begin() );
-
-  auto s = 0;
-
-  while( ! alternativeNode->isSymbolicallySolved() )
-  {
-    s++;
-
-    auto nodes = getNodesToExpand( alternativeNode );
-
-    for( auto node : nodes )
+    for( auto c : f )
     {
-      // expand
-      node->expand();
+      std::cout << "alternative node to expand:" << c->id() << ":" << c->expecteTotalReward() << std::endl;
+    }
+    //std::cout << "alternative node to expand:" << alternativeNode->id() << ":" << alternativeNode->expecteTotalReward() << std::endl;
+  }
 
-      // new candidate policies
-      openFringe_.erase( node );
-      //
+  //////here define a strategy to choose the action to change
+  // for the moment just take the last one
+  auto alternativeFamily = *std::prev( currentPolicyFringe_.end() );
+  //auto alternativeFamilyParent = alternativeFamily.
 
-      // generate rollouts for each child
-      for( auto f : node->families() )
+  //////
+
+  // solve alternative family
+  uint s = 0;
+  for( auto alternativeNode : alternativeFamily )
+  {
+    while( ! alternativeNode->isSymbolicallySolved() )
+    {
+      s++;
+
+      auto nodes = getNodesToExpand( alternativeNode );
+
+      for( auto node : nodes )
       {
-        for( auto c : f )
-        {
-          c->generateMCRollouts( 50, 10 );
+        // expand
+        node->expand();
 
-          if( ! c->isSymbolicallyTerminal() )
+        // generate rollouts for each child
+        for( auto f : node->families() )
+        {
+          for( auto c : f )
           {
-            // new candidate policies
-            //openedFringe_.insert( c );
-            //
+            c->generateMCRollouts( 50, 10 );
           }
         }
-      }
 
-      {
-        // save the current state of the search
-        std::stringstream namess;
-        namess << "exploration-alternative-" << alternativeNumber_ << "-" << s << ".gv";
-        printSearchTree( namess.str() );
-      }
+        {
+          // save the current state of the search
+          std::stringstream namess;
+          namess << "exploration-alternative-" << alternativeNumber_ << "-" << s << ".gv";
+          printSearchTree( namess.str() );
+        }
 
-      // backtrack result
-      node->backTrackBestExpectedPolicy( alternativeNode );
+        // backtrack result
+        node->backTrackBestExpectedPolicy( alternativeNode );
+      }
     }
   }
 
-  alternativeNodes_.erase( alternativeNode );
+  //
+  currentPolicyFringe_.erase( alternativeFamily );
+  alternativeFamily( 0 )->parent()->setBestFamily( alternativeFamily );
+  //
 
   alternativeNumber_ ++;
 }
