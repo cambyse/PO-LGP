@@ -78,7 +78,6 @@ void TEST(EasyAlign2){
   komo.setMoveTo(G, *G.getShapeByName("endeff"), *s, 7);
   komo.setSpline(10);
   komo.run();
-//  komo.run();
   for(uint i=0;i<2;i++) komo.displayTrajectory();
 }
 
@@ -89,8 +88,8 @@ int main(int argc,char** argv){
 
 //  testEasy();
 //  testEasyAlign();
-//  testEasyAlign2();
-  testEasyPR2();
+  testEasyAlign2();
+//  testEasyPR2();
 //  testFinalPosePR2();
   return 0;
 }
