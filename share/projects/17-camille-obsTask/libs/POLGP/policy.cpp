@@ -46,6 +46,7 @@ PolicyVisualizer::PolicyVisualizer( const Policy::ptr & policy, const std::strin
     views_[ w ]->setConfigurations( policy->getTrajectory( w ) );
   }
 
+
   threadOpenModules( true );
 }
 

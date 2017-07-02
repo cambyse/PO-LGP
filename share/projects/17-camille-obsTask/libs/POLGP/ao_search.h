@@ -31,9 +31,11 @@ public: // public methods
   //void registerGeometricLevel( GeometricLevelFactoryBase::ptr const& factory );
 
   void solveSymbolically();
-  void optimizeSymbolicPolicy();
+  bool isPolicyFringeEmpty() const { return currentPolicyFringeInitialized_ && ( currentPolicyFringe_.size() == 0 ); }
+  void generateAlternativeSymbolicPolicy();
+  void revertToPreviousPolicy();
 
-  void addMcRollouts(); // reset solved flag and relaunch solving, it adds rollouts
+  void solveGeometrically();
 
   void optimizePoses();
   void optimizePaths();
@@ -43,11 +45,8 @@ public: // public methods
 
 private:
   void optimizePosesFrom( POLGPNode * );
-  //void resetSolvedStatusFrom( POLGPNode * );
-  //void addMcRolloutsFrom( POLGPNode * );
 
 public:
-
   // getters
   bool isSymbolicallySolved() const { return root_->isSymbolicallySolved(); }
   bool isPoseSolved() const { return root_->isPoseSolved(); }
@@ -87,8 +86,12 @@ private:
   //
   //std::set< POLGPNode *, POLGPNodeCompare > openFringe_;        // fringe of the current search tree
   //std::set< POLGPNode *, POLGPNodeCompare > alternativeNodes_;  // when looking for alternatives, use the node in this set, when it becomes empty, backupthe current open fringe
-  std::set< mlr::Array< POLGPNode * > > currentPolicyFringe_;
+  std::set< POLGPNodeL > currentPolicyFringe_;
+  bool currentPolicyFringeInitialized_;
   uint alternativeNumber_;
+  POLGPNode * alternativeStartNode_;
+  POLGPNodeL nextFamilyBackup_;
+  std::set< POLGPNodeL > currentPolicyFringeBackup_;  
   //
 
   // geometric levels

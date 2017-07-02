@@ -416,9 +416,6 @@ void plan_AOS()
   komoFactory.registerTask( "komoCollisionAvoidance", groundObjectPairCollisionAvoidance );
   //komoFactory.registerTask( "komoHome", groundHome );
 
-  // set of policies
-  std::set< Policy::ptr, PolicyCompare > policies;
-
   // instanciate search tree
   AOSearch C( komoFactory );
   //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
@@ -433,6 +430,8 @@ void plan_AOS()
 
   C.prepareDisplay();
   C.prepareTree();      // create root node
+
+  std::set< Policy::ptr, PolicyCompare > policies;
 
   /////// 1 - Find Initial Policy ////////
 
@@ -463,68 +462,54 @@ void plan_AOS()
       C.printPolicy( namess.str() );
       }
 
-      /// POSE OPTIMIZATION
-      C.optimizePoses();      // optimizes poses of the current best solution
-
-      if( C.isPoseSolved() )
-      {
-        /// PATH OPTIMIZATION
-        C.optimizePaths();      // optimizes paths of the current best solution
-
-        if( C.isPathSolved() )
-        {
-          /// JOINT PATH OPTIMIZATION
-          C.optimizeJointPaths();   // optimizes joint paths of the current best solution
-        }
-      }
+      /// GEOMETRIC OPTIMIZATION
+      C.solveGeometrically();
     }
   }
 
   // store policy and display it
-  auto policy = C.getPolicy();
-  PolicyVisualizer viz( policy, "nominal" );
-
-  policies.insert( policy );
+  auto currentBestPolicy = C.getPolicy();
+  policies.insert( currentBestPolicy );
   //
 
-  /////// 2 - Find Initial Policy Optimization ////////
-
-  for( auto alternatives = 0; alternatives < 1; alternatives++ )
+  /////// 2 - Policy Optimization ////////
+  uint maxAlternatives = 3;
+  for( auto alternatives = 0; ! C.isPolicyFringeEmpty() && alternatives < maxAlternatives; alternatives++ )
   {
-    C.optimizeSymbolicPolicy();
+   C.generateAlternativeSymbolicPolicy();
+
+//    {
+//      // save search tree
+//      std::stringstream namess;
+//      namess << "search-alternative-" << C.alternativeNumber() << ".gv";
+//      C.printSearchTree( namess.str() );
+//    }
+    C.solveGeometrically();
 
     {
-      // save search tree
-      std::stringstream namess;
-      namess << "search-alternative-" << C.alternativeNumber() << ".gv";
-      C.printSearchTree( namess.str() );
+    // save policy
+    std::stringstream namess;
+    namess << "policy-alternative-" << alternatives << ".gv";
+    C.printPolicy( namess.str() );
     }
 
-    /// POSE OPTIMIZATION
-    C.optimizePoses();      // optimizes poses of the current best solution
+    // store policy and display it
+    auto altPolicy = C.getPolicy();
+    policies.insert( altPolicy );
 
-    if( C.isPoseSolved() )
+    if( altPolicy->cost() > currentBestPolicy->cost() )
     {
-      /// PATH OPTIMIZATION
-      C.optimizePaths();      // optimizes paths of the current best solution
-
-      if( C.isPathSolved() )
-      {
-        /// JOINT PATH OPTIMIZATION
-        C.optimizeJointPaths();   // optimizes joint paths of the current best solution
-      }
+      C.revertToPreviousPolicy();
     }
-
+    else
+    {
+      currentBestPolicy = altPolicy;
+    }
   }
 
-  // store policy and display it
-  auto altPolicy = C.getPolicy();
-  PolicyVisualizer altViz( altPolicy, "alternative" );
+  /////// 3 - Display ////////
+  PolicyVisualizer viz( *policies.begin(), "nominal" );
 
-  policies.insert( altPolicy );
-  //
-
-  // display
   //C.updateDisplay( WorldID( -1 ), false, false, true );
   mlr::wait( 3000 );
 }

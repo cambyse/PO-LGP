@@ -67,7 +67,6 @@ struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, boo
   }
 };
 
-
 class PolicyVisualizer
 {
 public:

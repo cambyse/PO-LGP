@@ -74,9 +74,7 @@ public:
   // modifiers
   void expand();
   void setAndSiblings( const mlr::Array< POLGPNode * > & siblings );
-  void backUpPreviousBestFamily() { backupFamily_ = bestFamily_; }
-  void setBestFamily( const POLGPNodeL & f ) { backUpPreviousBestFamily(); bestFamily_ = f; }
-  void revertBestFamily() { bestFamily_ = backupFamily_; }
+  void setBestFamily( const POLGPNodeL & f ) { bestFamily_ = f; expectedBestA_ = f( 0 )->a_; }
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy( POLGPNode * node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
@@ -188,7 +186,6 @@ private:
 
   int expectedBestA_;                             ///  expected next best action
   POLGPNodeL bestFamily_;
-  POLGPNodeL backupFamily_;
 
   //-- global search
   bool isExpanded_;
