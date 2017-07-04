@@ -392,7 +392,7 @@ int main(int argc, char** argv){
 
   //--very simple one action tests
 //  testHoming(); return 0;
-//  testBasics();
+  testBasics();
 //  testGripper();
 //  testPhysX();
 
@@ -401,8 +401,6 @@ int main(int argc, char** argv){
 //  testPerception();
 //  testPerceptionOnly();
 
-  testPickAndPlace();
-  testPickAndPlace();
 //  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
