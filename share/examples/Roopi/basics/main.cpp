@@ -7,7 +7,7 @@
 #include <Perception/percept.h>
 #include <Kin/kinViewer.h>
 //#include <memory>
-#include <RosCom/roscom.h>
+//#include <RosCom/roscom.h>
 
 
 //===============================================================================
@@ -401,7 +401,9 @@ int main(int argc, char** argv){
 //  testPerception();
 //  testPerceptionOnly();
 
-  for(;;) testPickAndPlace();
+  testPickAndPlace();
+  testPickAndPlace();
+//  for(;;) testPickAndPlace();
 
 //  for(;;) testPickAndPlace2();
 //  testGamepad();

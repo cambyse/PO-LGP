@@ -32,7 +32,7 @@ Roopi_private::~Roopi_private(){
 //  if(_taskController) delete _taskController; _taskController=NULL;
 //  if(_taskUpdater) delete _taskUpdater; _taskUpdater=NULL;
 //  if(_ctrlView) delete _ctrlView; _ctrlView=NULL;
-  threadCloseModules();
+  //threadCloseModules();
   cout << "bye bye" << endl;
 }
 
