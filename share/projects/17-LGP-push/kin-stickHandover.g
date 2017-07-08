@@ -24,6 +24,6 @@ shape baxterL (left_wrist) { rel=<T d(-90 0 1 0) d(-90 0 0 1) t(0 0 -.26)> type=
 
 
 body stick {}
-joint (table1 stick) { from=<T t(0 0 .02)> to=<T t(0 -.7 .02) d(-90 0 0 1)> type=JT_rigid}
+joint (table1 stick) { from=<T t(0 0 .02)> to=<T t(0 -.7 .02) d(50 0 0 1)> type=JT_rigid}
 shape stick(stick) { type=9 size=[.4 .025 .04 .01] color=[1 0 0] contact }
 shape stickTip (stick) { rel=<T t(.2 0 0)> type=1 size=[.08 .026 .04 0.05] color=[1 1 0] }

@@ -29,8 +29,8 @@ void testNonSliderSlide(){
   komo.setModel(W);
 
   komo.setTiming(5., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komo.setFixEffectiveJoints(-1., -1., 1e3);
+  komo.setFixSwitchedObjects(-1., -1., 1e3);
   komo.setSquaredQAccelerations();
 //  komo.setSquaredQVelocities(-1., -1., 1e-1);
 
@@ -80,8 +80,8 @@ void testToolSlide(){
   komo.useJointGroups({"armL", "base"}, false);
 
   komo.setTiming(5., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komo.setFixEffectiveJoints(-1., -1., 1e3);
+  komo.setFixSwitchedObjects(-1., -1., 1e3);
   komo.setSquaredQAccelerations();
 
   komo.deactivateCollisions("coll_hand_r", "stick");
@@ -122,8 +122,8 @@ void testSlide(){
   komo.setModel(W);
 
   komo.setTiming(2., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e2);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
+  komo.setFixEffectiveJoints(-1., -1., 1e2);
+  komo.setFixSwitchedObjects(-1., -1., 1e2);
   komo.setSquaredQAccelerations();
 
   komo.setKS_slider(1., true, "obj1", "slider1", "table");

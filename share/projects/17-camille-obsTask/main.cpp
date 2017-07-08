@@ -36,8 +36,8 @@ void move(){
 
   //  komo.setHoming(-1., -1., 1e-1);
   //  komo.setSquaredQVelocities();
-  komo.setSquaredFixJointVelocities();
-  komo.setSquaredFixSwitchedObjects();
+  komo.setFixEffectiveJoints();
+  komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 #if 0
   komo.setPosition(1., 1., "humanL", "target", OT_sumOfSqr, NoArr, 1e2);

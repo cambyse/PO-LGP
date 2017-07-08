@@ -21,8 +21,8 @@ void testToolSlide(){
   komo.useJointGroups({"armL", "base"}, false);
 
   komo.setTiming(5., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komo.setFixEffectiveJoints(-1., -1., 1e3);
+  komo.setFixSwitchedObjects(-1., -1., 1e3);
   komo.setSquaredQAccelerations();
 
   komo.deactivateCollisions("coll_hand_r", "stick");
@@ -115,31 +115,24 @@ void roopiInterface(){
 
   lgp->fol().addTerminalRule({{"pushing", "obj1"}});
 
-#if 0
-  OptLGP opt(lgp->kin(), lgp->fol());
-  opt.optFixedSequence("(grasp baxterR stick) (grasp stickTip obj1)");
-#else
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
-//
-// (place stickTip obj1 table1) (grasp baxterR obj1) (place baxterR obj1 table1)");
-
 //  lgp->fixLogicSequence("(grasp baxterR stick) (push stick obj1 table1) (grasp baxterL obj1) (place baxterL obj1 table1) ");
 
   lgp->fixLogicSequence("(grasp baxterR stick) \
-(handover baxterR stick baxterL) \
-(push stick obj1 table1) \
-(grasp baxterR obj1) \
-(place baxterR obj1 tableR) \
-(place baxterL stick tableL)");
-//                            "); mlr::String tmp("\
+                        (handover baxterR stick baxterL) \
+                        (push stick obj1 table1) \
+                        (grasp baxterR obj1) \
+                        (place baxterR obj1 tableR) \
+                        (place baxterL stick tableL) \
+"); mlr::String tmp("\
+");
 
   lgp->start();
 
   R.wait(+lgp);
 
-#endif
   R.wait();
 }
 

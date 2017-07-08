@@ -16,8 +16,8 @@ void TEST(UsingKomo){
   komo.setModel(W);
 
   komo.setTiming(3., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e2);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
+  komo.setFixEffectiveJoints(-1., -1., 1e2);
+  komo.setFixSwitchedObjects(-1., -1., 1e2);
 //  komo.setSquaredQAccelerations();
   komo.setSquaredQVelocities();
 
