@@ -79,25 +79,18 @@ void sAct_LGP::step(){
         status->setStatus(AS_converged);
         threadStop();
     }else{
-        NIY
-   }
+        if(!lgp->fringe_expand.N) lgp->init();
+        lgp->step();
+        uint n = lgp->numFoundSolutions();
+        if(n>3){
+            //  x.set() = lgp->x;  //TODO: store the solution
+            status->setStatus(AS_converged);
 
-//  bool stop = opt->step();
-//  x.set() = lgp->x;
-//  if(stop){
-//    status->setStatus(AS_converged);
+            cout <<"OptLGP PathOpt done:\n" <<lgp->report() <<endl;
 
-//    cout <<"OptLGP PathOpt done:\n" <<lgp->getReport() <<endl;
-//    if(!viewer){
-//      viewer = new OrsPathViewer("PathOpt_configs");
-//      viewer->threadLoop();
-//    }
-//    viewer->stepMutex.lock();
-//    viewer->setConfigurations(lgp->configurations);
-//    viewer->stepMutex.unlock();
-
-//    threadStop();
-//  }
+            threadStop();
+        }
+    }
 }
 
 void sAct_LGP::close(){

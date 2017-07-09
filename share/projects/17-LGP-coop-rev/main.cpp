@@ -101,7 +101,7 @@ int main(int argc,char **argv){
 
   OptLGP opt(demo.kin, demo.fol);
 
-  opt.run(1, true);
+  opt.run();
   mlr::wait(.1);
 
   return 0;
