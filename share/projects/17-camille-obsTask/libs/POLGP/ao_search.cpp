@@ -200,9 +200,9 @@ void AOSearch::solveSymbolically()
 
       {
       // save the current state of the search
-      std::stringstream namess;
-      namess << "exploration-" << s << ".gv";
-      printSearchTree( namess.str() );
+      //std::stringstream namess;
+      //namess << "exploration-" << s << ".gv";
+      //printSearchTree( namess.str() );
       }
 
       // backtrack result
