@@ -14,8 +14,8 @@ void TEST(Specs){
     komo.checkGradients();
     for(uint i=0;i<2;i++){
       komo.displayTrajectory();
-      arr y;
-      komo.MP->tasks.last()->map.phi(y, NoArr, komo.world, komo.MP->tau);
+      // arr y;
+      // komo.MP->tasks.last()->map.phi(y, NoArr, komo.world, komo.MP->tau);
       komo.world.reportProxies();
       komo.world.gl().watch();
     }
