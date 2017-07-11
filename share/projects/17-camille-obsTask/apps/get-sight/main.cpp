@@ -243,6 +243,7 @@ void move_1(){
   komo.setConfigFromFile();
 
   //komo.setSquaredFixJointVelocities();
+  komo.setFixEffectiveJoints();
   komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 

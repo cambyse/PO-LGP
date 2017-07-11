@@ -274,6 +274,8 @@ void PathLevelType::solve()
       komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+
+      komo->setFixEffectiveJoints();
       komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
       //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
@@ -421,6 +423,8 @@ void JointPathLevelType::solve()
       komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+
+      komo->setFixEffectiveJoints();
       komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
