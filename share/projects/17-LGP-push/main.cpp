@@ -17,10 +17,10 @@ void testToolSlide(){
   mlr::KinematicWorld W("kin.g");
 
   KOMO komo;
-  komo.setModel(W);
+  komo.setModel(W, true);
   komo.useJointGroups({"armL", "base"}, false);
 
-  komo.setTiming(5., 20, 5., 2, true);
+  komo.setTiming(5., 20, 5., 2);
   komo.setFixEffectiveJoints(-1., -1., 1e2);
   komo.setFixSwitchedObjects(-1., -1., 1e2);
   komo.setSquaredQuaternionNorms();
@@ -116,7 +116,7 @@ void roopiInterface(){
 
   lgp->fol().addTerminalRule({{"pushing", "obj1"}});
 
-#if 0 //test a fixed sequence
+#if 1 //test a fixed sequence
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");

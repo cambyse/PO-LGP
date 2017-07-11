@@ -2,3 +2,7 @@ LEWINER = 0
 PLY = 0
 PHYSX = 0
 GRAPHVIZ = 0
+GTK = 0
+ODE = 0
+
+OPTIM=fast_debug

@@ -9,11 +9,11 @@ directory layout.
 
 Generically, the following should work:
 
-cd share
-make
-cd examples/KOMO/easy
-make
-./x.exe
+make runTests
+
+then have a look at
+test/KOMO/tutorial
+test/KOMO/komo
 
 On problems, maybe you have to install some more Ubuntu
 packages or adapt to other OS. Please refer to the files

@@ -9,8 +9,8 @@
 
 using namespace std;
 
-#define collisionsOff(x) komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName(x))
-#define collisionsOn(x) komo.MP->world.swift().activate(komo.MP->world.getShapeByName(x))
+#define collisionsOff(x) komo.world.swift().deactivate(komo.world.getShapeByName(x))
+#define collisionsOn(x) komo.world.swift().activate(komo.world.getShapeByName(x))
 
 
 //===========================================================================
@@ -22,7 +22,7 @@ void init(KOMO& komo, uint trial, mlr::KinematicWorld& W, mlr::KinematicWorld& W
 
   komo.setModel(W);
 
-  komo.setTiming(phases, 20, 5., 2, true);
+  komo.setTiming(phases, 20, 5., 2);
   komo.setFixEffectiveJoints(-1., -1., 1e3);
   komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
@@ -32,7 +32,7 @@ void init(KOMO& komo, uint trial, mlr::KinematicWorld& W, mlr::KinematicWorld& W
   komo.displayCamera().upright();
 
   // explicitly active certain collision computations (by SWIFT)
-  komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName("table"));
+  komo.world.swift().deactivate(komo.world.getShapeByName("table"));
  }
 
 
@@ -295,14 +295,14 @@ void trial27(){
   collisionsOn("yellow");
   collisionsOn("blue");
 
-  //komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName("red"), komo.MP->world.getShapeByName("blue"));
-  //komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName("red"), komo.MP->world.getShapeByName("yellow"));
+  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("blue"));
+  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("yellow"));
  
 
 
  // better use low-level GJK instead of SWIFT
-//  komo.MP->world.swift().activate(komo.MP->world.getShapeByName("yellow"));
-//  komo.MP->world.swift().activate(komo.MP->world.getShapeByName("red"));
+//  komo.world.swift().activate(komo.world.getShapeByName("yellow"));
+//  komo.world.swift().activate(komo.world.getShapeByName("red"));
 
   //-- fix last configuration
   komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
@@ -334,14 +334,14 @@ void trial33(){
   collisionsOn("yellow");
   collisionsOn("blue");
 
-  //komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName("red"), komo.MP->world.getShapeByName("blue"));
-  //komo.MP->world.swift().deactivate(komo.MP->world.getShapeByName("red"), komo.MP->world.getShapeByName("yellow"));
+  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("blue"));
+  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("yellow"));
  
 
 
  // better use low-level GJK instead of SWIFT
-//  komo.MP->world.swift().activate(komo.MP->world.getShapeByName("yellow"));
-//  komo.MP->world.swift().activate(komo.MP->world.getShapeByName("red"));
+//  komo.world.swift().activate(komo.world.getShapeByName("yellow"));
+//  komo.world.swift().activate(komo.world.getShapeByName("red"));
 
   //-- fix last configuration
   komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
@@ -400,7 +400,7 @@ void testPhysX(){
 
   cout <<komo.getReport(false);
 
-  mlr::KinematicWorld& K = *komo.MP->configurations.last();
+  mlr::KinematicWorld& K = *komo.configurations.last();
 #else
   mlr::KinematicWorld K("model_physx.g");
 #endif
@@ -413,8 +413,6 @@ void testPhysX(){
 
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
-
-  orsDrawAlpha=1.;
 
   testPhysX();
   return 0;
