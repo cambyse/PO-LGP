@@ -23,7 +23,7 @@ struct InverseMotionProblem:ConstrainedProblem {
 
   /// set the cost parameter of the motion problem
   arr initParam(PARAM_INIT mode, const arr &param = NoArr);
-  void setParam(MotionProblem &MP,const arr &param);
+  void setParam(KOMO &MP,const arr &param);
   void compWeights(arr &w, arr &dw, arr &Hw, const arr &param);
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
   void costReport(arr param, arr param0);

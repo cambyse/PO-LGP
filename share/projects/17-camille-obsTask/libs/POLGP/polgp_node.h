@@ -18,9 +18,9 @@
 
 #include <Kin/kin.h>
 #include <Logic/fol_mcts_world.h>
-#include <LGP/LGP.h>
+//#include <LGP/LGP.h>
 #include <Logic/fol.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include "komo_factory.h"
 #include "geometric_level_base.h"
 #include "node_visitor.h"

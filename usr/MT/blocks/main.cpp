@@ -1,8 +1,6 @@
 #include <Core/util.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -17,7 +15,7 @@ void createWorld(mlr::KinematicWorld &G){
     mlr::Body *b = new mlr::Body(G);
     b->X.pos.set(.3*x, .3*y, 1.15);
     mlr::Shape *s = new mlr::Shape(G, *b);
-    s->type=mlr::sphereST;
+    s->type=mlr::ST_sphere;
     s->size[0]=s->size[1]=.1; s->size[2]=.2; s->size[3]=.08;
     s->color[0]=.9; s->color[1]=s->color[2]=.2;
     s->parseAts();
@@ -48,7 +46,7 @@ int main(int argc,char** argv){
   G.setJointState(q0);
 //  G.gl().watch();
 
-  MotionProblem MP(G);
+  KOMO MP(G);
   MP.loadTransitionParameters();
   MP.postfix.resize(2,MP.x0.N);
   MP.postfix[0]=MP.postfix[1]=qT;

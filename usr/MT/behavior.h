@@ -17,8 +17,8 @@ struct ControlState{
 
 struct Robot{
   //-- access
-  Access_typed<ControlRefs> controlRefs = Access_typed<ControlRefs>("controlRefs");
-  Access_typed<ControlState> controlState = Access_typed<ControlState>("controlState");
+  Access<ControlRefs> controlRefs = Access<ControlRefs>("controlRefs");
+  Access<ControlState> controlState = Access<ControlState>("controlState");
 
   //-- dynamic info
   void getState(arr& q, arr& qd, arr& u, arr& f);

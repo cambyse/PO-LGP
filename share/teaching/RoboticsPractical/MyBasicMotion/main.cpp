@@ -83,13 +83,13 @@ int main(int argc, char** argv){
 
 
 
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown()->waitForStatusGreaterThan(0);
 
     bax.homing();
 
 
 
-//    moduleShutdown().waitForValueGreaterThan(0);
+//    moduleShutdown()->waitForStatusGreaterThan(0);
 
     //threadCloseModules();
   }

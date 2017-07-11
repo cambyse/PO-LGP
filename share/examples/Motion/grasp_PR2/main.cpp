@@ -1,9 +1,7 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-//#include <Motion/motionHeuristics.h>
-
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 #include <Kin/kin_swift.h>
 
@@ -15,7 +13,7 @@ void TEST(GraspHeuristic){
   makeConvexHulls(G.shapes);
   G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   mlr::Shape *s = G.getShapeByName("target1");
   for(uint k=0;k<10;k++){
@@ -70,7 +68,7 @@ void TEST(PickAndPlace){
   makeConvexHulls(G.shapes);
 //  G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr x, xT;
 

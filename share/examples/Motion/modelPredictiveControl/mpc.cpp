@@ -2,12 +2,12 @@
 
 #define VISUALIZE 1
 
-MPC::MPC(MotionProblem &_P, arr &_x):
+MPC::MPC(KOMO &_P, arr &_x):
   P(_P),
 x(_x)
 {
 //  P = &_P;
-//  MotionProblem c = _P;
+//  KOMO c = _P;
 //  x = _x;
   arr kinPos;
 

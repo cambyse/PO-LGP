@@ -26,9 +26,8 @@ add_executable(${project_name} main.cpp)
 target_link_libraries(
  ${project_name}
  Core
- Motion
+ #Motion
  Geo
- Kin
  Gui
  Optim
  ObservationTasks

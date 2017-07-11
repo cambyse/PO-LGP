@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Algo Core Gui Kin Motion Optim Perception
+DEPEND = Algo Core Gui Kin KOMO Optim Perception
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

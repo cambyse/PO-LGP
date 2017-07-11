@@ -18,7 +18,7 @@
 #include "mdp.h"
 
 #  include <Gui/opengl.h>
-#  include <Gui/plot.h>
+#  include <Plot/plot.h>
 
 //#ifdef MLR_GL
 

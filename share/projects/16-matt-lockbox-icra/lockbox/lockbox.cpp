@@ -3,7 +3,7 @@
 
 #include "lockbox.h"
 #include <unordered_map>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
@@ -11,7 +11,7 @@
 Lockbox::Lockbox(MyBaxter* baxter) : Module("lockbox", -1),
     test_joint(this, "test_joint", true),
     get_joint_position(this, "get_joint_position", true),
-    object_database(this, "object_database", true),
+    percepts_filtered(this, "percepts_filtered", true),
     data_collector(!mlr::getParameter<bool>("useRos", false))
 {
   usingRos = mlr::getParameter<bool>("useRos", false);

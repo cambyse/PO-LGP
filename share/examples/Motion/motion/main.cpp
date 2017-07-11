@@ -1,8 +1,8 @@
 #include <Core/util.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_transition.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
+#include <Kin/taskMap_default.h>
+#include <Kin/taskMap_transition.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -19,18 +19,18 @@ void TEST(PR2reach){
   G.getShapeByName("target")->cont=false;
   cout <<"loaded model: n=" <<G.q.N <<endl;
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *t;
 
   t = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
-  t->map.order=2; //make this an acceleration task!
+  t->map->order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
 //  t = MP.addTask("final_vel", new TaskMap_Transition(G));
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff"), OT_sumOfSqr);
-  t->map.order=1; //make this a velocity task!
+  t->map->order=1; //make this a velocity task!
   t->setCostSpecs(MP.T, MP.T, {0.}, 1e1);
 
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, G, "endeff", NoVector, NULL, MP.world.getShapeByName("target")->X.pos), OT_sumOfSqr);
@@ -72,13 +72,13 @@ void TEST(Basics){
   mlr::KinematicWorld G("test.ors");
   G.getShapeByName("target")->cont=false;
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *t;
 
   t = MP.addTask("transitions", new TaskMap_Transition(G), OT_sumOfSqr);
-  t->map.order=2; //make this an acceleration task!
+  t->map->order=2; //make this an acceleration task!
   t->setCostSpecs(0, MP.T, {0.}, 1e0);
 
   //#define CONSTRAINT
@@ -90,7 +90,7 @@ void TEST(Basics){
   t->setCostSpecs(0, MP.T, {0.}, 1.);
 
   t = MP.addTask("final_vel", new TaskMap_Transition(G), OT_sumOfSqr);
-  t->map.order=1; //make this a velocity task!
+  t->map->order=1; //make this a velocity task!
   t->setCostSpecs(MP.T-4, MP.T, {0.}, 1e1);
 
   t = MP.addTask("position", new TaskMap_Default(posTMT, G, "endeff", mlr::Vector(0, 0, 0), NULL, MP.world.getShapeByName("target")->X.pos), OT_sumOfSqr);

@@ -1,8 +1,7 @@
 #include <Kin/roboticsCourse.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
+#include <Control/taskControl.h>
 #include <Optim/optimization.h>
 //#include <Perception/videoEncoder.h>
 #include <Gui/opengl.h>
@@ -140,7 +139,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const 
   //set table height
   world.getBodyByName("hole")->X.pos.z = height;
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters();
   x = P.getInitialization();
   P.makeContactsAttractive=true;
@@ -203,7 +202,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, mlr::K
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  TaskController MC(world,false);
+  TaskControlMethods MC(world,false);
   //MC.nullSpacePD.active=false;
   MC.qitselfPD.active=true;
 

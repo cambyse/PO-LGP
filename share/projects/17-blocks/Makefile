@@ -1,7 +1,7 @@
 BASE = ../..
 
-OBJS = main.o
+OBJS = main.o physx.o
 
-DEPEND = Motion Core Geo Kin Gui Optim
+DEPEND = KOMO Core Geo Kin Gui Optim
 
 include $(BASE)/build/generic.mk

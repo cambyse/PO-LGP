@@ -34,7 +34,7 @@ void TEST(KinectModules) {
   threadOpenModules(true);
 
   for(;;){
-    if(moduleShutdown().getValue()>0) break;
+    if(moduleShutdown()->getStatus()>0) break;
     S.kinect_points.data->waitForNextRevision();
 
     cloud = S.pcl_cloud.get();

@@ -1,8 +1,8 @@
 #ifndef GP_CONTROL_h
 #define GP_CONTROL_h
 
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 
 #include <Core/array.h>
 

@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <Motion/taskMap.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMap.h>
+#include <Kin/taskMaps.h>
 
 using namespace std;
 

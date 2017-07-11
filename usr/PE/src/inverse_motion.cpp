@@ -1,7 +1,7 @@
 #include "inverse_motion.h"
 #include <Core/util.h>
 
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <iomanip>
 #include <iostream>
 
@@ -187,7 +187,7 @@ arr InverseMotionProblem::initParam(PARAM_INIT mode, const arr &param) {
   return param0;
 }
 
-void InverseMotionProblem::setParam(MotionProblem &MP, const arr &param)
+void InverseMotionProblem::setParam(KOMO &MP, const arr &param)
 {
   arr paramNorm = scenario.costScale*param/sum(param);
 

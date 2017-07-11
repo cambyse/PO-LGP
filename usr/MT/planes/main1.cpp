@@ -1,6 +1,6 @@
 #include <Core/array.h>
 #include <Core/util.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 double lambda = .5;
 uint width=100;

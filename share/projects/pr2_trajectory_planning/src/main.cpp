@@ -4,11 +4,9 @@
 #include "sensor_msgs/JointState.h"
 
 #include <Motion/rrt_planner.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <ctime>
@@ -86,7 +84,7 @@ public:
 
 
 arr create_endpose(mlr::KinematicWorld& G) {
-  MotionProblem P(&G);
+  KOMO P(&G);
 
   P.loadTransitionParameters();
   P.H_rate_diag = .getHmetric();
@@ -98,7 +96,7 @@ arr create_endpose(mlr::KinematicWorld& G) {
 
   c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e1);
 
   arr x = P.x0;
   keyframeOptimizer(x, P, false, 2);
@@ -109,8 +107,8 @@ arr create_endpose(mlr::KinematicWorld& G) {
 arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
   double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
-  // create MotionProblem
-  MotionProblem P(&G);
+  // create KOMO
+  KOMO P(&G);
   P.loadTransitionParameters();
 
   // add a collision cost with threshold 0 to avoid collisions
@@ -129,8 +127,8 @@ arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
 }
 
 arr optimize_trajectory(mlr::KinematicWorld& G, arr& init_trajectory) {
-  // create MotionProblem
-  MotionProblem P(&G);
+  // create KOMO
+  KOMO P(&G);
   P.loadTransitionParameters();
   P.H_rate_diag = .getHmetric();
   P.T = init_trajectory.d0-1;
@@ -142,7 +140,7 @@ arr optimize_trajectory(mlr::KinematicWorld& G, arr& init_trajectory) {
 
   c = P.addTask("position", new TaskMap_Default(posTMT, G, "tip1", mlr::Vector(0, 0, .0)));
   c->setCostSpecs(P.T, P.T, conv_vec2arr(P.world.getBodyByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e2);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e2);
 
   MotionProblemFunction MF(P);
   arr x = init_trajectory;

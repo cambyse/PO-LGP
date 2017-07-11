@@ -59,7 +59,11 @@ struct Vector {
   double radius() const;
   double phi() const;
   double theta() const;
-  arr getArr() const{ return arr(&x,3); }
+  arr getArr() const{ return arr(&x, 3, false); }
+
+  Vector getNormalVectorNormalToThis() const;
+  void generateOrthonormalSystem(Vector& u, Vector& v) const;
+  arr generateOrthonormalSystemMatrix() const;
   
   void write(std::ostream&) const;
   void read(std::istream&);
@@ -104,7 +108,8 @@ struct Quaternion {
   Quaternion(const arr& q) { CHECK_EQ(q.N,4, "");  set(q.p); }
   Quaternion(const Quaternion& q) { set(q.w, q.x, q.y, q.z); }
   double *p() { return &w; }
-  
+
+  double& operator()(uint i){ CHECK(i<4,"out of range"); return (&w)[i]; }
   void set(double w, double x, double y, double z);
   void set(const arr& q);
   void set(double* p);
@@ -129,12 +134,15 @@ struct Quaternion {
   void multiply(double f);
   void alignWith(const Vector& v);
 
-  void addX(double angle);
-  void addY(double angle);
-  void addZ(double angle);
+  void addX(double radians);
+  void addY(double radians);
+  void addZ(double radians);
   void append(const Quaternion& q);
 
   double diffZero() const;
+  double sqrDiffZero() const;
+  double sqrDiff(const Quaternion& q2) const;
+  double normalization() const;
   bool isNormalized() const;
   double getDeg() const;
   double getRad() const;
@@ -146,6 +154,7 @@ struct Quaternion {
   Vector getZ() const;
   Matrix getMatrix() const;
   arr    getArr() const;
+  arr    getArr4d() const{ return arr(&w, 4, false); }
   double* getMatrix(double* m) const;
   double* getMatrixOde(double* m) const; //in Ode foramt: 3x4 memory storae
   double* getMatrixGL(double* m) const;  //in OpenGL format: transposed 4x4 memory storage
@@ -193,8 +202,9 @@ struct Transformation {
   double* getInverseAffineMatrix(double *m) const;  // 4x4 matrix with 3x3=R^{-1}   and bottom-row=R^{-1}*translation
   double* getAffineMatrixGL(double *m) const;       // in OpenGL format (transposed memory storage!!)
   double* getInverseAffineMatrixGL(double *m) const;// in OpenGL format (transposed memory storage!!)
+  arr getArr7d();
   
-  void applyOnPointArray(arr& pts);
+  void applyOnPointArray(arr& pts) const;
 
   void write(std::ostream& os) const;
   void read(std::istream& is);
@@ -263,8 +273,8 @@ struct Camera {
   void watchDirection(const Vector& d);
   void upright(const Vector& up=Vector(0,0,1));
   void glSetProjectionMatrix();
-  void glConvertToTrueDepth(double &d);
-  void glConvertToLinearDepth(double &d);
+  double glConvertToTrueDepth(double d);
+  double glConvertToLinearDepth(double d);
   void setKinect();
   void setDefault();
 };
@@ -343,17 +353,17 @@ std::ostream& operator<<(std::ostream&, const Transformation&);
 /// of a 'cross-product-matrix'
 void quatDiff(arr& y, arr& J1, arr& J2, const Quaternion& q1, const Quaternion& q2);
 
-} //END of namespace
 
+} //END of namespace
 
 //===========================================================================
 //
 // conversions to arr
 //
 
-inline arr conv_vec2arr(const mlr::Vector& v) {      return arr(&v.x, 3); }
-inline arr conv_quat2arr(const mlr::Quaternion& q) { return arr(&q.w, 4); }
-inline arr conv_mat2arr(const mlr::Matrix& m) {      return arr(&m.m00, 9); }
+inline arr conv_vec2arr(const mlr::Vector& v) {      return arr(&v.x, 3, false); }
+inline arr conv_quat2arr(const mlr::Quaternion& q) { return arr(&q.w, 4, false); }
+inline arr conv_mat2arr(const mlr::Matrix& m) {      return arr(&m.m00, 9, false); }
 
 
 //===========================================================================
@@ -366,6 +376,9 @@ extern const mlr::Vector Vector_y;
 extern const mlr::Vector Vector_z;
 extern const mlr::Transformation Transformation_Id;
 extern const mlr::Quaternion Quaternion_Id;
+extern const mlr::Quaternion Quaternion_x;
+extern const mlr::Quaternion Quaternion_y;
+extern const mlr::Quaternion Quaternion_z;
 extern mlr::Vector& NoVector;
 extern mlr::Transformation& NoTransformation;
 

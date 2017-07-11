@@ -2,6 +2,9 @@
 
 #include "roscom.h"
 
+#include <pcl/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 bool rosOk(){
   return ros::ok();
 }
@@ -14,7 +17,8 @@ void rosCheckInit(const char* node_name){
   if(mlr::getParameter<bool>("useRos", false)){
     mutex.lock();
     if(!inited) {
-      ros::init(mlr::argc, mlr::argv, node_name, ros::init_options::NoSigintHandler);
+      mlr::String nodeName = mlr::getParameter<mlr::String>("rosNodeName", STRING(node_name));
+      ros::init(mlr::argc, mlr::argv, nodeName.p, ros::init_options::NoSigintHandler);
       inited = true;
     }
     mutex.unlock();
@@ -158,7 +162,7 @@ bool ros_getTransform(const std::string& from, const std::string& to, tf::Transf
 }
 
 
-mlr::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener){
+mlr::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener, tf::Transform* returnRosTransform){
   mlr::Transformation X;
   X.setZero();
   try{
@@ -166,6 +170,7 @@ mlr::Transformation ros_getTransform(const std::string& from, const std_msgs::He
     listener.waitForTransform(from, to.frame_id, to.stamp, ros::Duration(0.05));
     listener.lookupTransform(from, to.frame_id, to.stamp, transform);
     X = conv_transform2transformation(transform);
+    if(returnRosTransform) *returnRosTransform=transform;
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("%s",ex.what());
@@ -216,14 +221,35 @@ arr conv_wrench2arr(const geometry_msgs::WrenchStamped& msg){
 
 byteA conv_image2byteA(const sensor_msgs::Image& msg){
   uint channels = msg.data.size()/(msg.height*msg.width);
-  if(channels==4) return conv_stdvec2arr<byte>(msg.data).reshape(msg.height, msg.width, 4);
-  return conv_stdvec2arr<byte>(msg.data).reshape(msg.height, msg.width, 3);
+  byteA img;
+  if(channels==4){
+    img=conv_stdvec2arr<byte>(msg.data).reshape(msg.height, msg.width, 4);
+  }else{
+    img=conv_stdvec2arr<byte>(msg.data).reshape(msg.height, msg.width, 3);
+    swap_RGB_BGR(img);
+  }
+  return img;
 }
 
 uint16A conv_image2uint16A(const sensor_msgs::Image& msg){
   byteA data = conv_stdvec2arr<byte>(msg.data);
   uint16A ref((const uint16_t*)data.p, data.N/2);
   return ref.reshape(msg.height, msg.width);
+}
+
+floatA conv_laserScan2arr(const sensor_msgs::LaserScan& msg){
+  floatA data = conv_stdvec2arr<float>(msg.ranges);
+  return data;
+}
+
+Pcl conv_pointcloud22pcl(const sensor_msgs::PointCloud2& msg){
+  pcl::PCLPointCloud2 pcl_pc2;
+  pcl_conversions::toPCL(msg, pcl_pc2);
+  LOG(0) <<"size=" <<pcl_pc2.data.size();
+  Pcl cloud;
+  pcl::fromPCLPointCloud2(pcl_pc2, cloud);
+  LOG(0) <<"size=" <<cloud.size();
+  return cloud;
 }
 
 CtrlMsg conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg){
@@ -279,11 +305,11 @@ mlr::KinematicWorld conv_MarkerArray2KinematicWorld(const visualization_msgs::Ma
         s->mesh.C = conv_colors2arr(marker.colors);
       }else NIY;
     }
-    s->size[0] = marker.scale.x;
-    s->size[1] = marker.scale.y;
-    s->size[2] = marker.scale.z;
-    s->size[3] = .25*(marker.scale.x+marker.scale.y);
-    s->X = s->rel = ros_getTransform("base_link", marker.header, listener) * conv_pose2transformation(marker.pose);
+    s->size(0) = marker.scale.x;
+    s->size(1) = marker.scale.y;
+    s->size(2) = marker.scale.z;
+    s->size(3) = .25*(marker.scale.x+marker.scale.y);
+    s->X = s->rel = ros_getTransform("/base_link", marker.header, listener) * conv_pose2transformation(marker.pose);
   }
   return world;
 }
@@ -300,6 +326,58 @@ floatA conv_Float32Array2FloatA(const std_msgs::Float32MultiArray &msg){
   x = conv_stdvec2arr<float>(msg.data);
   return x;
 
+}
+
+//===========================================================================
+
+visualization_msgs::Marker conv_Shape2Marker(const mlr::Shape& sh){
+  visualization_msgs::Marker new_marker;
+  new_marker.header.stamp = ros::Time::now();
+  new_marker.header.frame_id = "map";
+  new_marker.ns = "roopi";
+  new_marker.id = sh.index;
+  new_marker.action = visualization_msgs::Marker::ADD;
+  new_marker.lifetime = ros::Duration();
+  new_marker.pose = conv_transformation2pose(sh.X);
+  new_marker.color.r = 0.0f;
+  new_marker.color.g = 1.0f;
+  new_marker.color.b = 0.0f;
+  new_marker.color.a = 1.0f;
+
+#if 0
+  switch(sh.type){
+    case mlr::ST_box:{
+      new_marker.type = visualization_msgs::Marker::CUBE;
+      new_marker.scale.x = .001 * sh.size(0);
+      new_marker.scale.y = .001 * sh.size(1);
+      new_marker.scale.z = .001 * sh.size(2);
+    } break;
+    case mlr::ST_mesh:{
+      new_marker.type = visualization_msgs::Marker::POINTS;
+      new_marker.points = conv_arr2points(sh.mesh.V);
+      new_marker.scale.x = .001;
+      new_marker.scale.y = .001;
+      new_marker.scale.z = .001;
+    } break;
+//      ST_box=0, ST_sphere, ST_capsule, ST_mesh, ST_cylinder, ST_marker, ST_retired_SSBox, ST_pointCloud, ST_ssCvx, ST_ssBox };
+    default: break;
+  }
+#else
+  new_marker.type = visualization_msgs::Marker::SPHERE;
+  new_marker.scale.x = .1;
+  new_marker.scale.y = .1;
+  new_marker.scale.z = .1;
+
+#endif
+
+  return new_marker;
+}
+
+visualization_msgs::MarkerArray conv_Kin2Markers(const mlr::KinematicWorld& K){
+  visualization_msgs::MarkerArray M;
+  for(mlr::Shape *s:K.shapes) M.markers.push_back( conv_Shape2Marker(*s) );
+//  M.header.frame_id = "1";
+  return M;
 }
 
 //===========================================================================
@@ -320,8 +398,8 @@ void PerceptionObjects2Ors::step(){
       s = new mlr::Shape(modelWorld(), NoBody);
       if(marker.type==marker.CYLINDER){
         s->type = mlr::ST_cylinder;
-        s->size[3] = .5*(marker.scale.x+marker.scale.y);
-        s->size[2] = marker.scale.z;
+        s->size(3) = .5*(marker.scale.x+marker.scale.y);
+        s->size(2) = marker.scale.z;
       }else if(marker.type==marker.POINTS){
         s->type = mlr::ST_mesh;
         s->mesh.V = conv_points2arr(marker.points);
@@ -409,7 +487,7 @@ void PerceptionObjects2Ors::step(){
 //===========================================================================
 // Helper function so sync ors with the real PR2
 void initialSyncJointStateWithROS(mlr::KinematicWorld& world,
-    Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
+    Access<CtrlMsg>& ctrl_obs, bool useRos) {
 
   if (not useRos) { return; }
 
@@ -418,7 +496,7 @@ void initialSyncJointStateWithROS(mlr::KinematicWorld& world,
        << "   If nothing is happening: is the controller running?" << endl;
 
   for (uint trials = 0; trials < 20; trials++) {
-    ctrl_obs.data->waitForNextRevision();
+    ctrl_obs.waitForNextRevision();
     cout << "REMOTE joint dimension=" << ctrl_obs.get()->q.N << endl;
     cout << "LOCAL  joint dimension=" << world.q.N << endl;
 
@@ -434,12 +512,12 @@ void initialSyncJointStateWithROS(mlr::KinematicWorld& world,
 }
 
 void syncJointStateWitROS(mlr::KinematicWorld& world,
-    Access_typed<CtrlMsg>& ctrl_obs, bool useRos) {
+    Access<CtrlMsg>& ctrl_obs, bool useRos) {
 
   if (not useRos) { return; }
 
   for (uint trials = 0; trials < 2; trials++) {
-    ctrl_obs.data->waitForNextRevision();
+    ctrl_obs.waitForNextRevision();
 
     if (ctrl_obs.get()->q.N == world.q.N and ctrl_obs.get()->qdot.N == world.q.N) {
       // set current state
@@ -605,8 +683,6 @@ void syncJointStateWitROS(mlr::KinematicWorld& world,
 //REGISTER_MODULE(RosCom_KinectSync)
 //REGISTER_MODULE(RosCom_HeadCamsSync)
 //REGISTER_MODULE(RosCom_ArmCamsSync)
-
-
 
 
 

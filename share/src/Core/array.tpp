@@ -88,19 +88,19 @@ template<class T> mlr::Array<T>::Array(uint i, uint j):Array() { resize(i, j); }
 template<class T> mlr::Array<T>::Array(uint i, uint j, uint k):Array() { resize(i, j, k); }
 
 /// this becomes a reference on the C-array \c p
-template<class T> mlr::Array<T>::Array(const T* p, uint size):Array() { referTo(p, size); }
+template<class T> mlr::Array<T>::Array(const T* p, uint size, bool byReference):Array() { if(byReference) referTo(p, size); else setCarray(p, size); }
 
 /// initialization via {1., 2., 3., ...} lists..
 template<class T> mlr::Array<T>::Array(std::initializer_list<T> values):Array() { operator=(values); }
 
 /// initialization via {1., 2., 3., ...} lists, with certain dimensionality
-template<class T> mlr::Array<T>::Array(uint D0, std::initializer_list<T> values){ operator=(values); reshape(D0); }
+template<class T> mlr::Array<T>::Array(uint D0, std::initializer_list<T> values):Array() { operator=(values); reshape(D0); }
 
 /// initialization via {1., 2., 3., ...} lists, with certain dimensionality
-template<class T> mlr::Array<T>::Array(uint D0, uint D1, std::initializer_list<T> values){ operator=(values); reshape(D0, D1); }
+template<class T> mlr::Array<T>::Array(uint D0, uint D1, std::initializer_list<T> values):Array() { operator=(values); reshape(D0, D1); }
 
 /// initialization via {1., 2., 3., ...} lists, with certain dimensionality
-template<class T> mlr::Array<T>::Array(uint D0, uint D1, uint D2, std::initializer_list<T> values){ operator=(values); reshape(D0, D1, D2); }
+template<class T> mlr::Array<T>::Array(uint D0, uint D1, uint D2, std::initializer_list<T> values):Array() { operator=(values); reshape(D0, D1, D2); }
 
 template<class T> mlr::Array<T>::Array(mlr::FileToken& f):Array() {
   read(f.getIs());
@@ -328,6 +328,7 @@ template<class T> mlr::SparseMatrix::SparseMatrix(mlr::Array<T>& X){
 #  pragma clang diagnostic ignored "-Wdynamic-class-memaccess"
 #endif
 
+#if 0
 /// allocate memory (maybe using \ref flexiMem)
 template<class T> void mlr::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
   if(n==N && Mforce<0) return; //no change
@@ -391,20 +392,6 @@ template<class T> void mlr::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
   N=n;
 }
 
-///this was a reference; becomes a copy
-template<class T> mlr::Array<T>& mlr::Array<T>::dereference(){
-  CHECK(reference,"can only dereference a reference!");
-  uint n=N;
-  T* pold=p;
-  reference=false;
-  N=M=0;
-  p=NULL;
-  resizeMEM(n, false);
-  CHECK_EQ(memMove,1,"only with memmove");
-  memmove(p, pold, sizeT*N);
-  return *this;
-}
-
 /// free all memory and reset all pointers and sizes
 template<class T> void mlr::Array<T>::freeMEM() {
 #ifdef MLR_GLOBALMEM
@@ -419,6 +406,47 @@ template<class T> void mlr::Array<T>::freeMEM() {
   d=&d0;
   //special=NULL;
   reference=false;
+}
+
+#else
+/// allocate memory (maybe using \ref flexiMem)
+template<class T> void mlr::Array<T>::resizeMEM(uint n, bool copy, int Mforce) {
+    if(n==N) return;
+    CHECK(!reference, "resize of a reference (e.g. subarray) is not allowed! (only a resize without changing memory size)");
+    vec_type::resize(n);
+    p = vec_type::data();
+    N = n;
+}
+
+/// free all memory and reset all pointers and sizes
+template<class T> void mlr::Array<T>::freeMEM() {
+    if(!reference){
+        vec_type::clear();
+    }else{
+        vec_type::_M_impl._M_start = NULL;
+        vec_type::_M_impl._M_finish = NULL;
+        vec_type::_M_impl._M_end_of_storage = NULL;
+    }
+    if(d && d!=&d0){ delete[] d; d=NULL; }
+    p=NULL;
+    M=N=nd=d0=d1=d2=0;
+    d=&d0;
+    reference=false;
+}
+#endif
+
+///this was a reference; becomes a copy
+template<class T> mlr::Array<T>& mlr::Array<T>::dereference(){
+  CHECK(reference,"can only dereference a reference!");
+  uint n=N;
+  T* pold=p;
+  reference=false;
+  N=M=0;
+  p=NULL;
+  resizeMEM(n, false);
+  CHECK_EQ(memMove,1,"only with memmove");
+  memmove(p, pold, sizeT*N);
+  return *this;
 }
 
 /// reset the dimensionality pointer d to point to &d0
@@ -495,10 +523,7 @@ template<class T> void mlr::Array<T>::setAppend(const T& x) {
 
 /// append elements of another array to the array which are not included yet -- the array might become 1D! [TL]
 template<class T> void mlr::Array<T>::setAppend(const mlr::Array<T>& x) {
-  uint i;
-  FOR1D(x, i) {
-    setAppend(x(i));
-  }
+  for(const T& i:x) setAppend(i);
 }
 
 /// remove and return the first element of the array (must have size>1)
@@ -590,12 +615,17 @@ template<class T> void mlr::Array<T>::removePerm(uint i) {
 }
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!] (throws error if value does not exist)
-template<class T> void mlr::Array<T>::removeValue(const T& x) {
+template<class T> bool mlr::Array<T>::removeValue(const T& x, bool errorIfMissing) {
   CHECK(memMove, "only with memMove");
   uint i;
   for(i=0; i<N; i++) if(p[i]==x) break;
-  CHECK(i<N, "value to remove not found");
+  if(errorIfMissing){
+    CHECK(i<N, "value to remove not found");
+  }else{
+    if(i==N) return false;
+  }
   remove(i, 1);
+  return true;
 }
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
@@ -603,21 +633,6 @@ template<class T> void mlr::Array<T>::removeAllValues(const T& x) {
   CHECK(memMove, "only with memMove");
   uint i;
   for(i=0; i<N; i++) if(p[i]==x) { remove(i, 1); i--; }
-}
-
-/** @brief remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
- Returns true if value was found and deleted.
- Returns false if value was not found.*/
-template<class T> bool mlr::Array<T>::removeValueSafe(const T& x) {
-  CHECK(memMove, "only with memMove");
-  uint i;
-  for(i=0; i<N; i++) if(p[i]==x) break;
-  if(i >= N)
-    return false;
-  else {
-    remove(i, 1);
-    return true;
-  }
 }
 
 /// replace n elements at pos i by the sequence x -- the array becomes 1D!  [only with memMove!]
@@ -958,17 +973,12 @@ template<class T> void mlr::Array<T>::findValues(mlr::Array<uint>& indices, cons
     if(p[i]==x) indices.append(i);
 }
 
-// TL 17.07.08
-/** @brief whether at least one object is contained more than once
-   */
+/** @brief whether at least one object is contained more than once  */
 template<class T> bool mlr::Array<T>::containsDoubles() const {
-  if(N < 2)
-    return false;
-  uint i, j;
-  for(i=0; i<N-1; i++) {
-    for(j=i+1; j<N; j++) {
-      if(p[i]==p[j])
-        return true;
+  if(N<2) return false;
+  for(uint i=0; i<N; i++) {
+    for(uint j=0; j<i; j++) {
+      if(p[i]==p[j]) return true;
     }
   }
   return false;
@@ -1132,6 +1142,9 @@ template<class T> void mlr::Array<T>::referTo(const T *buffer, uint n) {
   reference=true;
   nd=1; d0=n; d1=d2=0; N=n;
   p=(T*)buffer;
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /** @brief returns an ordinary 2-dimensional C-pointer to the Array content.
@@ -1237,8 +1250,7 @@ template<class T> void mlr::Array<T>::setDiag(const T& x, int d) {
   if(d!=-1) resize(d, d);
   if(d==-1) d=(int)mlr::MIN(d0, d1);
   setZero();
-  uint i;
-  for(i=0; i<(uint)d; i++) operator()(i, i)=x;
+  for(uint i=0; i<(uint)d; i++) p[i*d+i]=x; //operator()(i, i)=x;
   //mtype=diagMT;
 }
 
@@ -1391,6 +1403,9 @@ template<class T> void mlr::Array<T>::referTo(const mlr::Array<T>& a) {
   reference=true; memMove=a.memMove;
   N=a.N; nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
   p=a.p;
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /// make this array a subarray reference to \c a
@@ -1415,6 +1430,9 @@ template<class T> void mlr::Array<T>::referToRange(const mlr::Array<T>& a, int i
     nd=3;  d0=I+1-i; d1=a.d1; d2=a.d2;  N=d0*d1*d2;
     p=a.p+i*d1*d2;
   }
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /// make this array a subarray reference to \c a
@@ -1436,6 +1454,9 @@ template<class T> void mlr::Array<T>::referToRange(const Array<T>& a, uint i, in
     nd=2;  d0=J+1-j; d1=a.d2; d2=0;  N=d0*d1;
     p = &a(i,j,0);
   }
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /// make this array a subarray reference to \c a
@@ -1456,6 +1477,9 @@ template<class T> void mlr::Array<T>::referToDim(const mlr::Array<T>& a, uint i)
     if(nd>3) { d=new uint[nd];  memmove(d, a.d+1, nd*sizeof(uint)); }
   }
   p=a.p+i*N;
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /// make this array a subarray reference to \c a
@@ -1470,6 +1494,9 @@ template<class T> void mlr::Array<T>::referToDim(const mlr::Array<T>& a, uint i,
   } else {
     NIY // TODO
   }
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /// make this array a subarray reference to \c a
@@ -1490,6 +1517,9 @@ template<class T> void mlr::Array<T>::referToDim(const mlr::Array<T>& a, uint i,
     if(nd>3) { d=new uint[nd];  memmove(d, a.d+3, nd*sizeof(uint)); }
   }
   p=a.p+(i*a.N+(j*a.N+(k*a.N/a.d2))/a.d1)/a.d0;
+  vec_type::_M_impl._M_start = p;
+  vec_type::_M_impl._M_finish = p+N;
+  vec_type::_M_impl._M_end_of_storage = p+N;
 }
 
 /** @brief takes over the memory buffer from a; afterwards, this is a
@@ -1503,6 +1533,7 @@ template<class T> void mlr::Array<T>::takeOver(mlr::Array<T>& a) {
   M=a.M;
   a.reference=true;
   a.M=0;
+  HALT("vec not done yet");
 }
 
 template<class T> void mlr::Array<T>::swap(Array<T>& a) {
@@ -1512,6 +1543,7 @@ template<class T> void mlr::Array<T>::swap(Array<T>& a) {
   T* p_tmp = p;
   p=a.p;
   a.p=p_tmp;
+  HALT("vec not done yet");
 }
 
 /** @brief return a `dim'-dimensional grid with `steps' intervals
@@ -1568,15 +1600,25 @@ template<class T> bool mlr::Array<T>::isSorted(ElemCompare comp) const {
 
 
 /// fast find method in a sorted array, returns index where x would fit into array
-template<class T> uint mlr::Array<T>::rankInSorted(const T& x, ElemCompare comp) const {
+template<class T> uint mlr::Array<T>::rankInSorted(const T& x, ElemCompare comp, bool rankAfterIfEqual) const {
   if(!N) return 0;
   T *lo=p, *hi=p+N-1, *mi;
-  if(comp(x, *lo)) return 0;
-  if(comp(*hi, x)) return N;
+  if(!rankAfterIfEqual){
+    if(comp(x, *lo)) return 0;
+    if(!comp(x, *hi)) return N;
+  }else{
+    if(comp(*hi, x)) return N;
+    if(!comp(*lo, x)) return 0;
+  }
   for(;;){
     if(lo+1>=hi) return hi-p;
     mi=lo+(hi-lo)/2; //works (the minus operator on pointers gives #objects)
-    if(comp(*mi, x)) lo=mi; else hi=mi;
+    if(comp(*mi, x)){
+      if(!rankAfterIfEqual && comp(x, *mi)) hi=mi; //x and mi are equal -> we crop from hi
+      else lo=mi;
+    }else{
+      hi=mi;
+    }
   }
   HALT("you shouldn't be here");
   return 0;
@@ -1591,9 +1633,12 @@ template<class T> int mlr::Array<T>::findValueInSorted(const T& x, ElemCompare c
 }
 
 /// fast insert method in a sorted array, the array remains sorted
-template<class T> uint mlr::Array<T>::insertInSorted(const T& x, ElemCompare comp) {
-  uint cand_pos = rankInSorted(x, comp);
+template<class T> uint mlr::Array<T>::insertInSorted(const T& x, ElemCompare comp, bool insertAfterIfEqual) {
+  uint cand_pos = rankInSorted(x, comp, insertAfterIfEqual);
   insert(cand_pos, x);
+//  if(true){
+//      for(uint i=0;i<N-1;i++) CHECK(comp(elem(i),elem(i+1)), "this is not sorted!");
+//  }
   return cand_pos;
 }
 
@@ -1774,7 +1819,7 @@ template<class T> void mlr::Array<T>::read(std::istream& is) {
     uint i=0;
     d=0;
     for(;;) {
-      mlr::skip(is, " \r\t");
+      mlr::skip(is, " \r\t", NULL, true);
       is.get(c);
       if(c==']' || !is.good()) { is.clear(); break; }
       if(c==';' || c=='\n') {  //set an array width
@@ -1850,16 +1895,6 @@ template<class T> void mlr::Array<T>::readRaw(std::istream& is) {
 template<class T> void mlr::Array<T>::writeRaw(std::ostream& os) const {
   write(os, " ", "\n", "  ");
 }
-
-/// TL 15.07.08
-template<class T> void mlr::Array<T>::writeWithIndex(std::ostream& os) const {
-  uint i;
-  FOR1D((*this), i) {
-    os<<i <<" " <<elem(i) <<endl;
-  }
-}
-
-//***** generic data files of double arrays
 
 /// write data with a name tag (convenient to write multiple data arrays into one file)
 template<class T> void mlr::Array<T>::writeTagged(std::ostream& os, const char* tag, bool binary) const {
@@ -2346,6 +2381,26 @@ template<class T> T sumOfSqr(const mlr::Array<T>& v) {
 template<class T> T length(const mlr::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
 
 template<class T> T var(const mlr::Array<T>& v) { T m=sum(v)/v.N; return sumOfSqr(v)/v.N-m*m; }
+
+template<class T> mlr::Array<T> mean(const mlr::Array<T>& v) {
+  return sum(v, 0)/T(v.d0);
+}
+
+template<class T> mlr::Array<T> stdDev(const mlr::Array<T>& v) {
+  CHECK(v.d0 > 1, "empirical standard deviation makes sense only for N>1")
+  mlr::Array<T> m = sum(v,0);
+  mlr::Array<T> vX;
+  vX.referTo(v);
+  vX.reshape(vX.d0, vX.N/vX.d0);
+  mlr::Array<T> x = zeros(vX.d1);
+  for(uint i = 0; i < v.d0; i++) {
+    for(uint j = 0; j < vX.d1; j++) {
+      x(j) += mlr::sqr(vX(i,j)-m(j)/vX.d0)/(vX.d0-1);
+    }
+  }
+  x = sqrt(x);
+  return x;
+}
 
 /// \f$\sum_i x_{ii}\f$
 template<class T> T trace(const mlr::Array<T>& v) {
@@ -3484,6 +3539,8 @@ template<class T> void negative(mlr::Array<T>& x, const mlr::Array<T>& y) {
 
 inline double sigm(double x) {  return 1./(1.+::exp(-x)); }
 
+inline double sign(double x) {  return (x > 0) - (x < 0); }
+
 
 #define UnaryFunction( func )         \
   template<class T>           \
@@ -3525,6 +3582,9 @@ UnaryFunction(ceil);
 UnaryFunction(fabs);
 UnaryFunction(floor);
 UnaryFunction(sigm);
+
+UnaryFunction(sign);
+
 #undef UnaryFunction
 
 
@@ -3604,25 +3664,22 @@ template struct mlr::Array<bool>;
 //
 
 template<class T> char listWrite(const mlr::Array<std::shared_ptr<T> >& L, std::ostream& os, const char *ELEMSEP, const char *delim) {
-  uint i;
   if(delim) os <<delim[0];
-  for(i=0; i<L.N; i++) { if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
+  for(uint i=0; i<L.N; i++) { if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
   return '#';
 }
 
 template<class T> char listWrite(const mlr::Array<T*>& L, std::ostream& os, const char *ELEMSEP, const char *delim) {
-  uint i;
   if(delim) os <<delim[0];
-  for(i=0; i<L.N; i++) { if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
+  for(uint i=0; i<L.N; i++) { if(i) os <<ELEMSEP;  if(L.elem(i)) os <<*L.elem(i); else os <<"<NULL>"; }
   if(delim) os <<delim[1] <<std::flush;
   return '#';
 }
 
 template<class T> void listWriteNames(const mlr::Array<T*>& L, std::ostream& os) {
-  uint i;
   os <<'(';
-  for(i=0; i<L.N; i++) { if(i) os <<' ';  if(L.elem(i)) os <<L.elem(i)->name; else os <<"<NULL>"; }
+  for(uint i=0; i<L.N; i++) { if(i) os <<' ';  if(L.elem(i)) os <<L.elem(i)->name; else os <<"<NULL>"; }
   os <<')' <<std::flush;
 }
 
@@ -3643,15 +3700,13 @@ template<class T> void listRead(mlr::Array<T*>& L, std::istream& is, const char 
 template<class T> void listClone(mlr::Array<T*>& L, const mlr::Array<T*>& M) {
   listDelete(L);
   L.resizeAs(M);
-  uint i;
-  for(i=0; i<L.N; i++) L.elem(i)=M.elem(i)->newClone();
+  for(uint i=0; i<L.N; i++) L.elem(i)=M.elem(i)->newClone();
 }
 
 template<class T> void listResize(mlr::Array<T*>& L, uint N) {
   listDelete(L);
   L.resize(N);
-  uint i;
-  for(i=0; i<N; i++) L.elem(i)=new T();
+  for(uint i=0; i<N; i++) L.elem(i)=new T();
 }
 
 template<class T> void listResizeCopy(mlr::Array<T*>& L, uint N) {
@@ -3980,10 +4035,6 @@ template<class vert, class edge> bool graphTopsort(mlr::Array<vert*>& V, mlr::Ar
   //success!
   V.permuteInv(newIndex);
   for_list(vert,  vv,  V) vv->index = vv_COUNT;
-//  for(edge *e: E) {
-//    e->ifrom=e->from->index;
-//    e->ito  =e->to->index;
-//  }
 
   //-- reindex edges as well:
   newIndex.resize(E.N);
@@ -3992,10 +4043,35 @@ template<class vert, class edge> bool graphTopsort(mlr::Array<vert*>& V, mlr::Ar
   E.permuteInv(newIndex);
   for_list(edge, e, E) e->index=e_COUNT;
 
-  //permute vertex array:
-  //graphMakeLists(V, E);
-  
   return true;
+}
+
+template<class vert, class edge> mlr::Array<vert*> graphGetTopsortOrder(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
+  mlr::Array<vert*> noInputs;
+  mlr::Array<vert*>::memMove=true;
+  intA inputs(V.N);
+  mlr::Array<vert*> order;
+
+  for_list(vert,  v,  V) v->index = v_COUNT;
+
+  for(vert *v:V) {
+    inputs(v->index)=v->inLinks.N;
+    if(!inputs(v->index)) noInputs.append(v);
+  }
+
+  while(noInputs.N) {
+    v=noInputs.popFirst();
+    order.append(v);
+
+    for_list(edge,  e,  v->outLinks) {
+      inputs(e->to->index)--;
+      if(!inputs(e->to->index)) noInputs.append(e->to);
+    }
+  }
+
+  CHECK_EQ(order.N, V.N, "can't top sort");
+
+  return order;
 }
 
 template<class vert, class edge>

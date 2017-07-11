@@ -1,6 +1,6 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <RosCom/baxter.h>
@@ -9,8 +9,8 @@
 #include <RosCom/subscribeTableArray.h>
 #include <RosCom/subscribeAlvarMarkers.h>
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 // =================================================================================================
@@ -29,8 +29,8 @@ int main(int argc, char** argv){
 
     Filter myFilter;
 
-    ACCESSname(FilterObjects, object_database)
-    ACCESSname(FilterObjects, perceptual_inputs)
+    ACCESSname(PerceptL, percepts_filtered)
+    ACCESSname(PerceptL, percepts_input)
 
     PublishDatabase myPublisher;
 
@@ -38,27 +38,27 @@ int main(int argc, char** argv){
 
     threadOpenModules(true);
 
-    for(;!moduleShutdown().getValue();){
-      perceptual_inputs.waitForNextRevision();
+    for(;!moduleShutdown()->getStatus();){
+      percepts_input.waitForNextRevision();
 
       uint i=0;
       cout <<"==================" <<endl;
-      perceptual_inputs.readAccess();
-      for(FilterObject* fo : perceptual_inputs()){
+      percepts_input.readAccess();
+      for(Percept* fo : percepts_input()){
         cout <<"Object " <<i++ <<' ';
         fo->write(cout);
         cout <<endl;
       }
-      perceptual_inputs.deAccess();
+      percepts_input.deAccess();
 
       cout <<"-------------------" <<endl;
-      object_database.readAccess();
-      for(FilterObject* fo : object_database()){
+      percepts_filtered.readAccess();
+      for(Percept* fo : percepts_filtered()){
         cout <<"Object " <<i++ <<' ';
         fo->write(cout);
         cout <<endl;
       }
-      object_database.deAccess();
+      percepts_filtered.deAccess();
     }
 
     threadCloseModules();

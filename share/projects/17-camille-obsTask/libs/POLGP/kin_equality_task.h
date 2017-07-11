@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <Motion/taskMap.h>
+#include <Kin/taskMap.h>
 
 struct AgentKinEquality:TaskMap{
 

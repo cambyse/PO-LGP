@@ -1,9 +1,7 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-//#include <Motion/motionHeuristics.h>
-
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin_swift.h>
 
 void pickandplace(arr finalpos){
@@ -25,7 +23,7 @@ for (uint i=0; i<3;i++){
 
 current = 5-i*2;
 #if 1
-  MotionProblem MP(G);
+  KOMO MP(G);
 //G.watch(true);
 
 
@@ -64,7 +62,7 @@ cout << "DIM = "<<G.getJointStateDimension();
  //G.swift().initActivations();
  //  G.watch(true);
 
-  MotionProblem MP2(G);
+  KOMO MP2(G);
 
     arr  xT2;
 cout <<"DIM =" <<G.getJointStateDimension();
@@ -122,7 +120,7 @@ for(uint t=0;t<=T;t++) x[t]() = MP2.x0;
  //! remove the joint
   G.getBodyByName(actuator)->outLinks.removeValue(G.getJointByName("test"));
   G.getBodyByName(targets(current))->inLinks.removeValue(G.getJointByName("test"));
-  G.joints.removeValueSafe(G.getJointByName("test"));
+  G.joints.removeValue(G.getJointByName("test", false));
   G.calc_fwdPropagateFrames();	
  //G.swift().initActivations();
 
@@ -148,7 +146,7 @@ void testPickAndPlace(const char* target,arr finalpos){
 //    if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
   G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
 
   arr x, xT;
@@ -281,7 +279,7 @@ void AssembleChair(){
 //    if (s->body->inLinks.N>0 ) s->mesh.makeConvexHull();
 //  G.watch(true);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
 
   arr x, xT;

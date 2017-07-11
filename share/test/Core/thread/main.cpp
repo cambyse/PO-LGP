@@ -7,9 +7,11 @@ Mutex m;
 
 // Normal Thread struct
 struct MyThread: Thread{
-  AccessData<double>& x;
+  VariableData<double>& x;
   uint n;
-  MyThread(AccessData<double>& x, uint n, double beat):Thread(STRING("MyThread_"<<n), beat), x(x), n(n){}
+  MyThread(VariableData<double>& x, uint n, double beat):Thread(STRING("MyThread_"<<n), beat), x(x), n(n){
+    threadOpen();
+  }
   void open(){}
   void close(){}
   void step(){
@@ -19,9 +21,9 @@ struct MyThread: Thread{
 };
 
 void TEST(Thread){
-  AccessData<double> x;
+  VariableData<double> x;
   x.value = 0.;
-  MyThread t1(x, 1, .5), t2(x, 2, .5);
+  MyThread t1(x, 1, .5), t2(x, 2, -1);
 
   t1.threadLoop();
   t2.listenTo(x); //whenever t1 modifies x, t2 is stepped
@@ -79,8 +81,8 @@ void TEST(Way0){
 void TEST(Way1){
   Thread *m = new ComputeSum;
 
-  Access_typed<arr> x(NULL, "x");
-  Access_typed<double> s(NULL, "s");
+  Access<arr> x(NULL, "x");
+  Access<double> s(NULL, "s");
 
   x.set() = {1., 2., 3.};
 
@@ -105,8 +107,8 @@ void TEST(Way1){
 //
 
 struct MySystem{
-  ACCESSname(arr, x)
-  ACCESSname(double, s)
+  Access<arr> x = Access<arr>(NULL, "x");
+  Access<double> s = Access<double>(NULL, "s");
   ComputeSum cs;
 };
 
@@ -138,7 +140,7 @@ void TEST(SystemConnect) {
 
   cout <<registry() <<endl;
 
-  registry().displayDot();
+  registry()->displayDot();
 
 //  GraphView gv(registry());
 //  gv.watch();
@@ -150,8 +152,8 @@ void TEST(SystemConnect) {
 //
 
 struct PairSorter:Thread{
-  Access_typed<int> a;
-  Access_typed<int> b;
+  Access<int> a;
+  Access<int> b;
   PairSorter(const char *a_name, const char* b_name)
     : Thread(STRING("S_"<<a_name<<"_"<<b_name)),
       a(this, a_name),
@@ -172,7 +174,7 @@ void TEST(ModuleSorter1){
   for(uint i=0;i<N-1;i++)
     ps.append( new PairSorter(STRING("int"<<i), STRING("int"<<i+1)) );
   cout <<registry() <<endl <<"----------------------------" <<endl;
-  auto vars = registry().getValuesOfType<AccessData<int> >();
+  auto vars = getVariablesOfType<int>();
   CHECK_EQ(vars.N, N, "");
 
   threadOpenModules(true);
@@ -180,7 +182,7 @@ void TEST(ModuleSorter1){
   for(uint i=0;i<N;i++) vars(i)->set() = rnd(100);
 
   for(uint k=0;k<20;k++){
-    if(moduleShutdown().getValue()) break;
+    if(moduleShutdown()->getStatus()) break;
     for(uint i=0;i<N;i++) cout <<vars(i)->get() <<' ';  cout <<endl;
     stepModules();
     mlr::wait(.1);

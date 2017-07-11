@@ -1,5 +1,5 @@
 #include <Kin/kin.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -26,7 +26,7 @@ void TEST(Simulator){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  TaskController MP(world, false);
+  TaskControlMethods MP(world, false);
   MP.qitselfPD.y_ref = q;
   MP.qitselfPD.active=false;
   MP.H_rate_diag = world.getHmetric();
@@ -41,7 +41,7 @@ void TEST(Simulator){
     MP.setState(S.q_obs.get(), S.qdot_obs.get());
     MP.world.gl().update("operational space sim");
     bool shutdw = j2t.updateTasks(gamepad);
-    if(shutdw) moduleShutdown().incrementValue();
+    if(shutdw) moduleShutdown()->incrementValue();
 
     for(uint tt=0;tt<10;tt++){
       arr a = MP.operationalSpaceControl();
@@ -50,7 +50,7 @@ void TEST(Simulator){
     }
     S.q_ref.set() = q;
     S.qdot_ref.set() = qdot;
-    if(moduleShutdown().getValue()) break; //waitForSignal();
+    if(moduleShutdown()->getStatus()) break; //waitForSignal();
   }
 
   threadCloseModules();

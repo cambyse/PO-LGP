@@ -10,7 +10,7 @@ struct dbg_obj_t{ // for visual debugging of points and frames
   mlr::Shape s;
   mlr::Frame f;
 
-  void siz(double a,double b,double c,double d){s.size[0]=a;s.size[1]=b;s.size[2]=c;s.size[3]=d;};
+  void siz(double a,double b,double c,double d){s.size(0)=a;s.size(1)=b;s.size(2)=c;s.size(3)=d;};
   void col(double r,double g,double b){s.color[0]=r;s.color[1]=g;s.color[2]=b;};
   void pos(double *p){f.p.set(p);};
   void ori(double *z){ mlr::Vector z1(0,0,1), z2; z2.set(z); f.r.setDiff(z1,z2);};

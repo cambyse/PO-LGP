@@ -1,5 +1,5 @@
 #include "execution.h"
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin_swift.h>
 #include <Geo/geo.h>
 #include <vector>
@@ -19,7 +19,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0
   /////////////////////////////////////////////////////
   ////////////////////////////////////////////////////
 
-  MotionProblem P(world, true); //true for using swift
+  KOMO P(world, true); //true for using swift
   P.loadTransitionParameters(); // can change horizon hereP
 
   P.T = horizon;
@@ -40,7 +40,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0
   //see taskmap_default.cpp;
   Task *vec = P.addTask("orientation", new TaskMap_Default(vecTMT, world, "peg",{0.,0.,1.}));
   //vec->setCostSpecs(P.T, P.T, {0.,0.,-1.}, 1e3, {0.,0.,0.}, 1e-3);
-  P.setInterpolatingCosts(vec, MotionProblem::early_restConst, {0.,0.,-1.}, 1e3, NoArr, -1., 0.1);
+  P.setInterpolatingCosts(vec, KOMO::early_restConst, {0.,0.,-1.}, 1e3, NoArr, -1., 0.1);
 
 
   Task *cons = P.addTask("planeConstraint", new PlaneConstraint(world, "peg", ARR(0,0,-1, 0.5)));//0.3 is peg's end_eff 0.2 is table width  //0.05 above table surface to avoid slippery
@@ -124,7 +124,7 @@ void POMDPExecution(const arr& x, const arr& y, const arr& dual, mlr::KinematicW
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  TaskController MC(world);
+  TaskControlMethods MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

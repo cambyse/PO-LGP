@@ -1,7 +1,6 @@
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Motion/komo.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 
 //===========================================================================

@@ -1,8 +1,7 @@
 #include <Core/util.h>
 #include <Gui/opengl.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include <Motion/dynamicMovementPrimitives.h>
@@ -47,7 +46,7 @@ void scenario2() {
   makeConvexHulls(world.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(world);
+  KOMO P(world);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
@@ -130,7 +129,7 @@ void scenario3() {
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(G);
+  KOMO P(G);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;
@@ -252,7 +251,7 @@ void scenario4() {
   makeConvexHulls(G.shapes);
   cout << "Loaded scene: " << endl;
 
-  MotionProblem P(G);
+  KOMO P(G);
 
   //-- create an optimal trajectory to trainTarget
   Task *c;

@@ -67,7 +67,7 @@ void LGPplayer(){
     }else switch(cmd){
       case 'q': go=false; break;
 //      case 'r': world.reset_state(); break;
-//      case 'm': world.make_current_state_default(); break;
+//      case 'm': world.make_current_state_new_start(); break;
       default: LOG(-1) <<"command '" <<c <<"' not known";
     }
   }

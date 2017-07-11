@@ -1,14 +1,12 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-
-#include <Motion/komo.h>
+#include <Kin/taskMaps.h>
+#include <KOMO/komo.h>
 
 #include <Kin/kin_swift.h>
 #include <LGP/manipulationTree.h>
+#include <MCTS/solver_AStar.h>
 
 #include <Kin/kin.h>
 #include <Kin/kinViewer.h>
@@ -20,7 +18,7 @@
 #include <LGP/LGP.h>
 #include <LGP/manipulationTree.h>
 
-struct Coop{
+struct OptLGP{
   mlr::KinematicWorld kin;
   BodyL box;
   mlr::Body *tableC;
@@ -30,7 +28,7 @@ struct Coop{
 
   FOL_World fol;
 
-  ManipulationTree_Node *root,*node;
+  ManipulationTree_Node *root, *node;
 
   OrsPathViewer poseView;
   OrsPathViewer seqView;
@@ -45,11 +43,14 @@ struct Coop{
   mlr::Array<ManipulationTree_Node*> pathFringe;
   mlr::Array<ManipulationTree_Node*> done;
 
-  Coop();
+  AStar *astar=NULL;
+
+  OptLGP();
 
   void prepareKin();
   void prepareFol(bool smaller=false);
   void prepareTree();
+  void prepareAStar();
   void prepareDisplay();
 
   void updateDisplay();

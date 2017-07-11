@@ -8,7 +8,7 @@ void TEST(PickAndPlace){
   G.q += .3;
   G.setJointState(G.q);
 
-  MotionProblem MP(G);
+  KOMO MP(G);
   arr x = MP.getInitialization();
   rndGauss(x,.01,true); //don't initialize at a singular config
 

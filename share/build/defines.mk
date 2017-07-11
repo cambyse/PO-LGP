@@ -246,14 +246,17 @@ LIBS += -lDynamicSimulation -lCollisionDetection -lMath -lLibBulletCollision -lL
 endif
 
 ifeq ($(PCL),1)
-QHULL = 1
+EIGEN = 1
+#QHULL = 1
 CXXFLAGS  +=  -DMLR_PCL -DEIGEN_USE_NEW_STDVECTOR -DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
 LIBS += -lpcl_keypoints -lpcl_visualization -lpcl_registration -lpcl_segmentation -lpcl_features -lpcl_surface -lpcl_tracking -lpcl_filters -lpcl_sample_consensus -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_common
-#-lvtkCommon -lvtkFiltering -lvtkRendering
-CPATH := $(CPATH):/opt/ros/$(ROS_VERSION)/include/pcl_ros:/usr/include/eigen3:/usr/include/pcl-1.7:
-#/usr/include/ni::/usr/include/vtk-5.8:
-LPATH += /opt/ros/$(ROS_VERSION)/lib
-FREENECT = 1
+CPATH := $(CPATH):/usr/include/pcl-1.7:
+
+#CPATH := $(CPATH):/opt/ros/$(ROS_VERSION)/include/pcl_ros:/usr/include/eigen3:/usr/include/pcl-1.7:
+#CPATH := $(CPATH):/usr/include/eigen3:/home/lib/include/pcl-1.7:
+#LPATH += /opt/ros/$(ROS_VERSION)/lib
+#LPATH += /home/lib/lib/
+#FREENECT = 1
 endif
 
 ifeq ($(EIGEN),1)
@@ -330,24 +333,24 @@ endif
 
 ifeq ($(PHYSX),1)
 CXXFLAGS += -DMLR_PHYSX -D_DEBUG -DPX_DISABLE_FLUIDS -DCORELIB -DPX32 -DLINUX
-CPATH := $(CPATH):$(MLR_LIBPATH)/include/physx
+CPATH := $(CPATH):$(HOME)/opt/include:$(HOME)/opt/include/physx
 #PhysX/Include:$(MLR_LIBPATH)/PhysX/Include/extensions:$(MLR_LIBPATH)/PhysX/Include/foundation:$(MLR_LIBPATH)/PhysX/Include/deprecated
-#LPATH := $(MLR_LIBPATH)/PhysX/Lib/linux64/:$(LPATH)
+LPATH := $(HOME)/opt/lib/physx:$(LPATH)
 LIBS += -Wl,--start-group -lpthread -lrt\
--lLowLevelCHECKED \
--lLowLevelClothCHECKED \
--lPhysX3CharacterKinematicCHECKED \
--lPhysX3CHECKED \
--lPhysX3CommonCHECKED \
--lPhysX3CookingCHECKED \
--lPhysX3ExtensionsCHECKED \
--lPhysX3VehicleCHECKED \
--lPhysXProfileSDKCHECKED \
--lPhysXVisualDebuggerSDKCHECKED \
--lPvdRuntimeCHECKED \
--lPxTaskCHECKED \
--lSceneQueryCHECKED \
--lSimulationControllerCHECKED 
+-lLowLevel \
+-lLowLevelCloth \
+-lPhysX3CharacterKinematic \
+-lPhysX3 \
+-lPhysX3Common \
+-lPhysX3Cooking \
+-lPhysX3Extensions \
+-lPhysX3Vehicle \
+-lPhysXProfileSDK \
+-lPhysXVisualDebuggerSDK \
+-lPvdRuntime \
+-lPxTask \
+-lSceneQuery \
+-lSimulationController 
 endif
 
 ifeq ($(PORTAUDIO),1)
@@ -391,7 +394,14 @@ LIBS += -rdynamic -lpr2_mechanism_model -lkdl_parser -lurdf -lurdfdom_model -lur
 endif
 ifeq ($(ROS_VERSION),indigo)
 CXXFLAGS  += -DMLR_ROS_INDIGO
-LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lmessage_filters -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl -ltf -lboost_system
+LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lmessage_filters -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl -ltf -lboost_system -lpcl_ros_tf
 endif
+ifeq ($(ROS_VERSION),kinetic)
+CXXFLAGS  += -DMLR_ROS_KINETIC
+LIBS += -rdynamic -lkdl_parser -lurdf -lurdfdom_model -lurdfdom_model_state -lurdfdom_sensor -lurdfdom_world -lcollada_parser -lrosconsole_bridge -lroscpp -lxmlrpcpp -ltinyxml -lclass_loader -lPocoFoundation -ldl -lrosconsole -llog4cxx -lroslib -lmessage_filters -lconsole_bridge -lroscpp_serialization -lrostime -lpthread -lcpp_common -lorocos-kdl -ltf -lboost_system -lpcl_ros_tf
+CPATHS += $(HOME)/git/catkin_ws/install/include
+LPATHS += $(HOME)/git/catkin_ws/install/lib
+endif
+
 
 endif

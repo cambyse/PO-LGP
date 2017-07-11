@@ -585,7 +585,7 @@ void IKMO::compParamConstraints(arr &g, arr &Jg, const arr &param) {
   }
 }
 
-void IKMO::setParam(MotionProblem &MP, const arr &param)
+void IKMO::setParam(KOMO &MP, const arr &param)
 {
   for (uint c=0;c<MP.taskCosts.N;c++) {
     if (MP.taskCosts(c)->map.type == OT_sumOfSqr) {

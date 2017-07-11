@@ -1,4 +1,4 @@
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <string>
 #include <map>
 
@@ -102,8 +102,8 @@ void moveReba(){
 
   //  komo.setHoming(-1., -1., 1e-1);
   //  komo.setSquaredQVelocities();
-  komo.setSquaredFixJointVelocities();
-  komo.setSquaredFixSwitchedObjects();
+  komo.setFixEffectiveJoints();
+  komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 #if 0
   komo.setPosition(1., 1., "endeffL", "target", OT_sumOfSqr, NoArr, 1e2);

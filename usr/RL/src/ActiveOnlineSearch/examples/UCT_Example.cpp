@@ -144,7 +144,7 @@ int main(int argn, char ** args) {
         assert(action!=nullptr);
         // perform transition
         observation_and_reward = env->transition(action);
-        env->make_current_state_default();
+        env->make_current_state_new_start();
         // go into branch (this also deletes all other branches)
         root_node = root_node->nodes[action][observation];
         // print transition

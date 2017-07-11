@@ -1,9 +1,8 @@
 #include <Core/util.h>
 #include <Kin/kin.h>
 
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -127,7 +126,7 @@ void scenario1() {
   mlr::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(G);
+  KOMO P(G);
 
 
   cout << "Loaded scene: " << endl;
@@ -180,7 +179,7 @@ void scenario2() {
   mlr::KinematicWorld G("scenes/scene1");
   makeConvexHulls(G.shapes);
 
-  MotionProblem P(G);
+  KOMO P(G);
 
   cout << "Loaded scene: " << endl;
 
@@ -275,7 +274,7 @@ void scenario3() {
   ** Plan Trajectory
   */
 
-  MotionProblem P(world);
+  KOMO P(world);
 
 
 

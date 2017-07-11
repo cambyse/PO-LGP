@@ -9,7 +9,7 @@
 
 struct sActionSwigInterface{
   ActionSystem activity;
-  Access_typed<Graph>& KB;
+  Access<Graph>& KB;
   sActionSwigInterface():activity(), KB(activity.machine->KB){}
 };
 

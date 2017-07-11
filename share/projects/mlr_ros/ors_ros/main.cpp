@@ -5,7 +5,7 @@
 #include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <GL/gl.h>
 #include <Core/thread.h>
 //#include <System/engine.h>
@@ -100,7 +100,7 @@ void run() {
 
   // run it
   threadOpenModules(true);
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   cout << "bye bye" << endl;
   threadCloseModules();

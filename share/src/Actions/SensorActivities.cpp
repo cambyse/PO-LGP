@@ -1,5 +1,5 @@
 #include "SensorActivities.h"
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 // ============================================================================
 

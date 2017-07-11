@@ -88,7 +88,7 @@ public:
     /**
      * Make the current state default. reste_state() will then reset to this
      * state. */
-    virtual void make_current_state_default() = 0;
+    virtual void make_current_state_new_start() = 0;
     /**
      * Resets the environment to the default state. */
     virtual void reset_state() = 0;

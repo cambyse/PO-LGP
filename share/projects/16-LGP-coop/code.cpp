@@ -1,9 +1,9 @@
 
 #include "code.h"
 
-Coop::Coop() : poseView("pose", 1., -0), seqView("sequence", 1., -0), pathView("path", .1, -1){}
+OptLGP::OptLGP() : poseView("pose", 1., -0), seqView("sequence", 1., -0), pathView("path", .1, -1){}
 
-void Coop::prepareKin(){
+void OptLGP::prepareKin(){
   kin.init("LGP-coop-kin.g");
   //  kin.watch();
   computeMeshNormals(kin.shapes);
@@ -51,7 +51,7 @@ void Coop::prepareKin(){
 //  kin.watch(/*true*/);
 }
 
-void Coop::prepareFol(bool smaller){
+void OptLGP::prepareFol(bool smaller){
 //  fol.verbose = 5;
   fol.init(FILE("LGP-coop-fol.g"));
   //-- prepare logic world
@@ -76,25 +76,28 @@ void Coop::prepareFol(bool smaller){
 
 }
 
-void Coop::prepareTree(){
+void OptLGP::prepareTree(){
   root = new ManipulationTree_Node(kin, fol);
   node = root;
 }
 
-void Coop::prepareDisplay(){
+void OptLGP::prepareAStar(){
+  astar = new AStar(fol);
+}
+
+void OptLGP::prepareDisplay(){
   threadOpenModules(true);
 }
 
-void Coop::updateDisplay(){
-  if(node->poseProblem && node->poseProblem->MP->configurations.N)
-    poseView.setConfigurations(node->poseProblem->MP->configurations);
-  if(node->seqProblem && node->seqProblem->MP->configurations.N)
-    seqView.setConfigurations(node->seqProblem->MP->configurations);
+void OptLGP::updateDisplay(){
+  if(node->poseProblem && node->poseProblem->configurations.N)
+    poseView.setConfigurations(node->poseProblem->configurations);
+  if(node->seqProblem && node->seqProblem->configurations.N)
+    seqView.setConfigurations(node->seqProblem->configurations);
   else seqView.clear();
-  if(node->pathProblem && node->pathProblem->MP->configurations.N)
-    pathView.setConfigurations(node->pathProblem->MP->configurations);
+  if(node->pathProblem && node->pathProblem->configurations.N)
+    pathView.setConfigurations(node->pathProblem->configurations);
   else pathView.clear();
-
 
   ManipulationTree_NodeL all = root->getAll();
   for(auto& n:all) n->inFringe1=n->inFringe2=false;
@@ -103,12 +106,17 @@ void Coop::updateDisplay(){
   for(auto& n:mcFringe) n->inFringe2=true;
 
   Graph dot=root->getGraph();
-  dot.writeDot(FILE("z.dot"), false, false, 0, node->graphIndex);
+  dot.writeDot(FILE("z.dot"));
   int r = system("dot -Tpdf z.dot > z.pdf");
   if(r) LOG(-1) <<"could not startup dot";
+
+  if(astar){
+    Graph dot = astar->root->getGraph();
+    dot.displayDot();
+  }
 }
 
-void Coop::printChoices(){
+void OptLGP::printChoices(){
   //-- query UI
   cout <<"********************" <<endl;
   cout <<"NODE:\n" <<*node <<endl;
@@ -126,7 +134,7 @@ void Coop::printChoices(){
   }
 }
 
-mlr::String Coop::queryForChoice(){
+mlr::String OptLGP::queryForChoice(){
   mlr::String cmd;
   std::string tmp;
   getline(std::cin, tmp);
@@ -134,7 +142,7 @@ mlr::String Coop::queryForChoice(){
   return cmd;
 }
 
-bool Coop::execRandomChoice(){
+bool OptLGP::execRandomChoice(){
   mlr::String cmd;
   if(rnd.uni()<.5){
     switch(rnd.num(5)){
@@ -150,7 +158,7 @@ bool Coop::execRandomChoice(){
   return execChoice(cmd);
 }
 
-bool Coop::execChoice(mlr::String cmd){
+bool OptLGP::execChoice(mlr::String cmd){
   cout <<"COMMAND: '" <<cmd <<"'" <<endl;
 
   if(cmd=="q") return false;

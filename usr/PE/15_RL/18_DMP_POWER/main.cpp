@@ -1,10 +1,10 @@
 #include <Algo/spline.h>
 #include <Core/array.h>
 #include <Core/array_t.h>
-#include <Gui/plot.h>
-#include <Motion/motion.h>
+#include <Plot/plot.h>
+#include <KOMO/komo.h>
 
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Motion/dynamicMovementPrimitives.h>
 #include <Optim/optimization.h>
 #include <Kin/kin.h>
@@ -80,7 +80,7 @@ struct Power_DMP {
     arr yC2 = dmp->y_bk.cols(3,6);
     yC1.append(y_refC.cols(0,3));
     yC2.append(y_refC.cols(3,6));
-    MotionProblem *MP = new MotionProblem(*world,false);
+    KOMO *MP = new KOMO(*world,false);
     MP->T = xDemo.d0-1;
     MP->tau =duration/MP->T;
     MP->x0 = xDemo[0];
@@ -212,7 +212,7 @@ void evaluate(arr &Xn){
   cout << "y_refC + repmat(~goal_diff,y_refC.d0,1): " <<y_refC[0] + goal_diff << endl;
   yC1.append(y_refC.cols(0,3) +repmat(~goal_diff.sub(0,2),y_refC.d0,1));
   yC2.append(y_refC.cols(3,6) +repmat(~goal_diff.sub(3,5),y_refC.d0,1));
-  MotionProblem *MP = new MotionProblem(*world,false);
+  KOMO *MP = new KOMO(*world,false);
   MP->T = xDemo.d0-1;
   MP->tau =duration/MP->T;
   MP->x0 = xDemo[0];

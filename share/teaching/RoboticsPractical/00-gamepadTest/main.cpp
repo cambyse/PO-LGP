@@ -2,7 +2,7 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 #include <RosCom/baxter.h>
@@ -13,9 +13,9 @@ int main(int argc, char** argv){
 
   rosCheckInit("gamepadControl");
 
-  Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+  Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm("baxter");
+  TaskControlThread tcm("baxter");
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
 
@@ -30,11 +30,11 @@ int main(int argc, char** argv){
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 
-  //NodeL subs = registry().getNodesOfType<SubscriberType*>();
+  //NodeL subs = registry()->getNodesOfType<SubscriberType*>();
   //for(Node *n:subs){ delete n->get<SubscriberType*>(); delete n; }
   cout <<"bye bye" <<endl;
   return 0;

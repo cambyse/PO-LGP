@@ -24,7 +24,7 @@ int main(int argc, char** argv){
 //    mlr::wait(.03);
 //  }
   //mlr::wait(30.);
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
   cout <<"bye bye" <<endl;

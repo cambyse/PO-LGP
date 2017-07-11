@@ -18,6 +18,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdexcept>
+#include <stdarg.h>
 #if defined MLR_Linux || defined MLR_Cygwin || defined MLR_Darwin
 #  include <limits.h>
 #  include <sys/time.h>
@@ -26,6 +27,8 @@
 #  include <sys/inotify.h>
 #  include <sys/stat.h>
 #  include <poll.h>
+#  include <X11/Xlib.h>
+#  include <X11/Xutil.h>
 #endif
 #ifdef __CYGWIN__
 #include "cygwin_compat.h"
@@ -193,7 +196,7 @@ bool skipUntil(std::istream& is, const char *tag) {
 bool parse(std::istream& is, const char *str, bool silent) {
   if(!is.good()) { if(!silent) MLR_MSG("bad stream tag when scanning for `" <<str <<"'"); return false; }  //is.clear(); }
   uint i, n=strlen(str);
-  char *buf=new char [n+1]; buf[n]=0;
+  char buf[n+1]; buf[n]=0;
   mlr::skip(is, " \n\r\t");
   is.read(buf, n);
   if(!is.good() || strcmp(str, buf)) {
@@ -203,7 +206,6 @@ bool parse(std::istream& is, const char *str, bool silent) {
                           <<"' failed! (read instead: `" <<buf <<"')");
     return false;
   }
-  delete[] buf;
   return true;
 }
 
@@ -529,19 +531,69 @@ void wait(double sec, bool msg_on_fail) {
 }
 
 /// wait for an ENTER at the console
-bool wait() {
+bool wait(bool useX11) {
   if(!mlr::getInteractivity()){
-    mlr::wait(.5);
+    mlr::wait(.05);
     return true;
   }
-  char c[10];
-  std::cout <<" -- hit a key to continue..." <<std::flush;
-  //cbreak(); getch();
-  std::cin.getline(c, 10);
-  std::cout <<"\r" <<std::flush;
-  if(c[0]==' ') return true;
-  else return false;
-  return true;
+  if(!useX11){
+    char c[10];
+    std::cout <<" -- hit a key to continue..." <<std::flush;
+    //cbreak(); getch();
+    std::cin.getline(c, 10);
+    std::cout <<"\r" <<std::flush;
+    if(c[0]==' ') return true;
+    else return false;
+    return true;
+  }else{
+    char c = x11_getKey();
+    if(c==' ') return true;
+    return false;
+  }
+}
+
+int x11_getKey(){
+  mlr::String txt="PRESS KEY";
+  int key=0;
+
+  Display *disp = XOpenDisplay(NULL);
+  CHECK(disp, "Cannot open display");
+
+  Window win = XCreateSimpleWindow(disp, DefaultRootWindow(disp),
+                                   10, 10, 80, 50, //24
+                                   2, 0x000000, 0x20a0f0);
+  XSelectInput (disp, win, KeyPressMask | ExposureMask | ButtonPressMask );
+  XMapWindow(disp, win);
+
+  GC gc = XCreateGC(disp, win, 0, NULL);
+  XSetFont(disp, gc,  XLoadFont(disp,"fixed")); //-adobe-courier-bold-r-*-*-*-220-*-*-*-*-*-*"));
+  XSetForeground(disp, gc, 0x000000);
+
+  bool quit=false;
+  for(;!quit;){
+    XEvent ev;
+    XNextEvent(disp, &ev);
+    switch(ev.type){
+      case Expose:
+        if (ev.xexpose.count == 0) {
+          XDrawString(disp, win, gc, 12, 30, txt.p, txt.N);
+          XFlush(disp);
+        }
+        break;
+      case KeyPress:
+        char string[4];
+        XLookupString(&ev.xkey, string, 4, NULL, NULL);
+        key = string[0];
+        quit=true;
+        break;
+      case ButtonPress:
+        quit=true;
+        break;
+    }
+  }
+
+  XCloseDisplay(disp);
+  return key;
 }
 
 /// the integral shared memory size -- not implemented for Windows!
@@ -645,8 +697,6 @@ namespace mlr {
   }
 
 struct LogServer {
-  Mutex mutex;
-
   LogServer() {
     signal(SIGUSR2, mlr::handleSIGUSR2);
     timerStartTime=mlr::cpuTime();
@@ -687,7 +737,7 @@ mlr::LogToken mlr::LogObject::getToken(int log_level, const char* code_file, con
 }
 
 mlr::LogToken::~LogToken(){
-  mlr::logServer().mutex.lock();
+  auto mut = mlr::logServer(); //keep the mutex
   if(log.logFileLevel>=log_level){
     if(!log.fil.is_open()) mlr::open(log.fil, STRING("z.log."<<log.key));
     log.fil <<code_func <<':' <<code_file <<':' <<code_line <<'(' <<log_level <<") " <<msg <<endl;
@@ -701,11 +751,11 @@ mlr::LogToken::~LogToken(){
 #endif
       if(log_level==-1){ mlr::errString <<" -- WARNING";    cout <<mlr::errString <<endl; }
       if(log_level==-2){ mlr::errString <<" -- ERROR  ";    cerr <<mlr::errString <<endl; /*throw does not WORK!!! Because this is a destructor. The THROW macro does it inline*/ }
-      if(log_level==-3){ mlr::errString <<" -- HARD EXIT!"; cerr <<mlr::errString <<endl; mlr::logServer().mutex.unlock(); exit(1); }
+      if(log_level==-3){ mlr::errString <<" -- HARD EXIT!"; cerr <<mlr::errString <<endl; /*mlr::logServer().mutex.unlock();*/ exit(1); }
       if(log_level<=-2) raise(SIGUSR2);
     }
   }
-  mlr::logServer().mutex.unlock();
+//  mlr::logServer().mutex.unlock();
 }
 
 void setLogLevels(int fileLogLevel, int consoleLogLevel){
@@ -793,7 +843,6 @@ mlr::String::String(const String& s) : std::iostream(&buffer) { init(); this->op
 /// copy constructor for an ordinary C-string (needs to be 0-terminated)
 mlr::String::String(const char *s) : std::iostream(&buffer) { init(); this->operator=(s); }
 
-
 mlr::String::String(const std::string& s) : std::iostream(&buffer) { init(); this->operator=(s.c_str()); }
 
 mlr::String::String(std::istream& is) : std::iostream(&buffer) { init(); read(is, "", "", 0); }
@@ -867,6 +916,15 @@ void mlr::String::operator=(const char *s) {
 }
 
 void mlr::String::set(const char *s, uint n) { resize(n, false); memmove(p, s, n); }
+
+void mlr::String::printf(const char *format, ...){
+  resize(100, false);
+  va_list valist;
+  va_start(valist, format);
+  int len = vsnprintf(p, 100, format, valist);
+  va_end(valist);
+  resize(len, true);
+}
 
 /// shorthand for the !strcmp command
 bool mlr::String::operator==(const char *s) const { return p && !strcmp(p, s); }
@@ -944,7 +1002,7 @@ mlr::String mlr::getNowString() {
 
   mlr::String str;
   str.resize(19, false); //-- just enough
-  sprintf(str.p, "%02d-%02d-%02d--%02d-%02d-%02d",
+  sprintf(str.p, "%02d-%02d-%02d-%02d:%02d:%02d",
     now->tm_year-100,
     now->tm_mon+1,
     now->tm_mday,
@@ -1220,13 +1278,22 @@ Mutex::Mutex() {
 }
 
 Mutex::~Mutex() {
+  if(state==-1){ //forced destroy
+    int rc = pthread_mutex_destroy(&mutex);
+    LOG(-1) <<"pthread forced destroy returned " <<rc <<" '" <<strerror(rc) <<"'";
+    return;
+  }
   CHECK(!state, "Mutex destroyed without unlocking first");
   int rc = pthread_mutex_destroy(&mutex);  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
 
 void Mutex::lock() {
   int rc = pthread_mutex_lock(&mutex);
-  if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+  if(rc){
+    //don't use HALT here, because log uses mutexing as well -> can lead to recursive HALT...
+    cerr <<STRING("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
+    exit(1);
+  }
   recursive++;
   state=syscall(SYS_gettid);
   MUTEX_DUMP(cout <<"Mutex-lock: " <<state <<" (rec: " <<recursive << ")" <<endl);
@@ -1238,6 +1305,7 @@ void Mutex::unlock() {
   int rc = pthread_mutex_unlock(&mutex);
   if(rc) HALT("pthread failed with err " <<rc <<" '" <<strerror(rc) <<"'");
 }
+
 #else//MLR_MSVC
 Mutex::Mutex() {}
 Mutex::~Mutex() {}
@@ -1270,7 +1338,7 @@ struct GnuplotServer{
     }
     FILE("z.plotcmd") <<cmd; //for debugging..
     fputs(cmd, gp);
-    fflush(gp) ;
+    fflush(gp);
   #else
     NIY;
   #endif
@@ -1304,10 +1372,10 @@ void gnuplot(const char *command, bool pauseMouse, bool persist, const char *PDF
   }
   
   if(pauseMouse) cmd <<"\n pause mouse" <<std::endl;
-  gnuplotServer().send(cmd.p, persist);
+  gnuplotServer()->send(cmd.p, persist);
 
   if(!mlr::getInteractivity()){
-    mlr::wait(.5);
+    mlr::wait(.05);
   }
 }
 
@@ -1361,6 +1429,12 @@ std::string getcwd_string() {
    return std::string(buff);
 }
 
+const char* NAME(const std::type_info& type){
+  const char* name = type.name();
+  while(*name>='0' && *name<='9') name++;
+  return name;
+}
+
 //===========================================================================
 //
 // explicit instantiations
@@ -1392,4 +1466,6 @@ template mlr::String mlr::getParameter<mlr::String>(const char*, const mlr::Stri
 
 template bool mlr::checkParameter<uint>(const char*);
 template bool mlr::checkParameter<bool>(const char*);
+
+
 

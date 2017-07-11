@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <Kin/roboticsCourse.h>
 #include <Algo/ann.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 struct RRT{
 private:

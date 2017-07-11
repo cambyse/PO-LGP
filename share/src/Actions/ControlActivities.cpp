@@ -1,10 +1,10 @@
-#include <Control/taskController.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/taskControl.h>
+#include <Control/TaskControlThread.h>
 #include "SensorActivities.h"
 #include "ControlActivities.h"
 
 void ControlActivity::configure() {
-  taskController = getThread<TaskControllerModule>("TaskControllerModule");
+  taskController = getThread<TaskControlThread>("TaskControlThread");
   CHECK(taskController,"that didn't work");
   configureControl(singleString(symbols), params, taskController->modelWorld.set());
   taskController->ctrlTasks.set()->append(task);
@@ -68,7 +68,7 @@ void FollowReferenceActivity::configureControl(const char *name, Graph& specs, m
   }else{
     HALT("need a type (the map type) in the specs");
   }
-  task = new CtrlTask(name, *map, specs);
+  task = new CtrlTask(name, map, specs);
   if((it=specs["tol"])) stopTolerance=it->get<double>(); else stopTolerance=1e-2;
 }
 
@@ -89,8 +89,8 @@ bool FollowReferenceActivity::isConv(){
 
   return ((task->y_ref.nd == 1
            && task->y.N == task->y_ref.N
-           && maxDiff(task->y, task->get_y_ref(NoArr)) < stopTolerance
-           && maxDiff(task->v, task->get_ydot_ref(NoArr)) < stopTolerance)
+           && maxDiff(task->y, task->y_ref) < stopTolerance
+           && maxDiff(task->v, task->v_ref) < stopTolerance)
           or (task->y_ref.nd==2 && activityTime>=trajectoryDuration)
           or (stuck and stuck_count > 6000));
 }

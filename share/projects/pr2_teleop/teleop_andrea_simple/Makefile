@@ -3,7 +3,7 @@ BASE = ../../..
 PLIB = 1
 
 OBJS = main.o pd_executor_module.o
-DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 Motion Kin Perception
+DEPEND = Core Mocap System Hardware_gamepad Hardware_G4 KOMO Kin Perception
 
 # comment/uncomment to disable/enable ROS
 ROS = 1

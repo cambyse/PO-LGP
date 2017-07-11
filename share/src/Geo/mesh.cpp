@@ -14,7 +14,6 @@
 
 #include "mesh.h"
 #include "qhull.h"
-#include <Optim/lagrangian.h>
 
 #include <limits>
 
@@ -39,9 +38,10 @@ bool orsDrawWires=false;
 // Mesh code
 //
 
-mlr::Mesh::Mesh() :
-    parsing_pos_start(0),
-    parsing_pos_end(std::numeric_limits<long>::max()){}
+mlr::Mesh::Mesh()
+  : glX(0)
+    /*parsing_pos_start(0),
+    parsing_pos_end(std::numeric_limits<long>::max())*/{}
 
 void mlr::Mesh::clear() {
   V.clear(); Vn.clear(); T.clear(); Tn.clear(); C.clear(); //strips.clear();
@@ -59,11 +59,11 @@ void mlr::Mesh::setBox() {
     -.5, +.5, +.5
   };
   uint   tris [36] = {
-    0, 3, 2, 2, 1, 0,
-    4, 5, 6, 6, 7, 4,
+    0, 3, 2, 2, 1, 0, //bottom
+    4, 5, 6, 6, 7, 4, //top
     1, 5, 4, 4, 0, 1,
-    2, 6, 5, 5, 1, 2,
     3, 7, 6, 6, 2, 3,
+    2, 6, 5, 5, 1, 2,
     0, 4, 7, 7, 3, 0
   };
   V.setCarray(verts, 24);
@@ -197,13 +197,14 @@ void mlr::Mesh::setCylinder(double r, double l, uint fineness) {
   }
 }
 
-void mlr::Mesh::setSSBox(double x, double y, double z, double r, uint fineness){
+void mlr::Mesh::setSSBox(double x_width, double y_width, double z_height, double r, uint fineness){
+  CHECK(r>=0. && x_width>=2.*r && y_width>=2.*r && z_height>=2.*r, "width/height includes radius!");
   setSphere(fineness);
   scale(r);
   for(uint i=0;i<V.d0;i++){
-    V(i,0) += .5*mlr::sign(V(i,0))*x;
-    V(i,1) += .5*mlr::sign(V(i,1))*y;
-    V(i,2) += .5*mlr::sign(V(i,2))*z;
+    V(i,0) += mlr::sign(V(i,0))*(.5*x_width-r);
+    V(i,1) += mlr::sign(V(i,1))*(.5*y_width-r);
+    V(i,2) += mlr::sign(V(i,2))*(.5*z_height-r);
   }
 }
 
@@ -269,9 +270,17 @@ void mlr::Mesh::translate(double dx, double dy, double dz) {
   for(i=0; i<V.d0; i++) {  V(i, 0)+=dx;  V(i, 1)+=dy;  V(i, 2)+=dz;  }
 }
 
+void mlr::Mesh::translate(const arr& d){
+  CHECK_EQ(d.N,3,"");
+  translate(d.elem(0), d.elem(1), d.elem(2));
+}
+
+void mlr::Mesh::transform(const mlr::Transformation& t){
+  t.applyOnPointArray(V);
+}
+
 mlr::Vector mlr::Mesh::center() {
-  arr Vmean = sum(V,0);
-  Vmean /= (double)V.d0;
+  arr Vmean = mean(V);
   for(uint i=0; i<V.d0; i++) V[i]() -= Vmean;
   return Vector(Vmean);
 }
@@ -305,148 +314,48 @@ void mlr::Mesh::addMesh(const Mesh& mesh2) {
 
 void mlr::Mesh::makeConvexHull() {
   if(!V.N) return;
-#ifndef  MLR_ORS_ONLY_BASICS
-  getTriangulatedHull(T, V);
+#if 1
+  V = getHull(V, T);
+  if(C.nd==2) C = mean(C);
 #else
-  NICO
-    #endif
+  uintA H = getHullIndices(V, T);
+  intA Hinv = consts<int>(-1, V.d0);
+  for(uint i=0;i<H.N;i++) Hinv(H(i)) = i;
+
+//  if(C.N==V.N){
+//    arr Cnew(H.N, 3);
+//    for(uint i=0;i<H.N;i++) Cnew[i] = C[H.elem(i)];
+//    C=Cnew;
+//  }
+
+  arr Vnew(H.N, 3);
+  for(uint i=0;i<H.N;i++) Vnew[i] = V[H.elem(i)];
+  V=Vnew;
+
+  for(uint i=0;i<T.d0;i++){
+    T(i,0) = Hinv(T(i,0));
+    T(i,1) = Hinv(T(i,1));
+    T(i,2) = Hinv(T(i,2));
+  }
+
+#endif
 }
 
 void mlr::Mesh::makeTriangleFan(){
   T.clear();
   for(uint i=1;i+1<V.d0;i++){
     T.append(TUP(0,i,i+1));
+    T.append(TUP(0,i+1,i));
   }
   T.reshape(T.N/3,3);
 }
 
-void fitSSBox(arr& x, double& f, double& g, const arr& X, int verbose){
-  struct fitSSBoxProblem : ConstrainedProblem{
-    const arr& X;
-    fitSSBoxProblem(const arr& X):X(X){}
-    void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x){
-      phi.resize(5+X.d0);
-      if(&tt){ tt.resize(5+X.d0); tt=OT_ineq; }
-      if(&J) {  J.resize(5+X.d0,11); J.setZero(); }
-      if(&H) {  H.resize(11,11); H.setZero(); }
-
-      //-- the scalar objective
-      double a=x(0), b=x(1), c=x(2), r=x(3);
-      phi(0) = a*b*c + 2.*r*(a*b + a*c +b*c) + 4./3.*r*r*r;
-      if(&tt) tt(0) = OT_f;
-      if(&J){
-        J(0,0) = b*c + 2.*r*(b+c);
-        J(0,1) = a*c + 2.*r*(a+c);
-        J(0,2) = a*b + 2.*r*(a+b);
-        J(0,3) = 2.*(a*b + a*c +b*c) + 4.*r*r;
-      }
-      if(&H){
-        H(0,1) = H(1,0) = c + 2.*r;
-        H(0,2) = H(2,0) = b + 2.*r;
-        H(0,3) = H(3,0) = 2.*(b+c);
-
-        H(1,2) = H(2,1) = a + 2.*r;
-        H(1,3) = H(3,1) = 2.*(a+c);
-
-        H(2,3) = H(3,2) = 2.*(a+b);
-
-        H(3,3) = 8.*r;
-      }
-
-      //-- positive
-      double w=100.;
-      phi(1) = -w*(a-.01);
-      phi(2) = -w*(b-.01);
-      phi(3) = -w*(c-.01);
-      phi(4) = -w*(r-.01);
-      if(&J){
-        J(1,0) = -w;
-        J(2,1) = -w;
-        J(3,2) = -w;
-        J(4,3) = -w;
-      }
-
-      //-- all constraints
-      for(uint i=0;i<X.d0;i++){
-        arr y, Jy;
-        y = X[i];
-        y.append(x);
-        phi(i+5) = DistanceFunction_SSBox(Jy, NoArr, y);
-        //      Jy({3,5})() *= -1.;
-        if(&J) J[i+5] = Jy({3,-1});
-      }
-    }
-  } F(X);
-
-  //initialization
-  x.resize(11);
-  mlr::Quaternion rot;
-  rot.setRandom();
-  arr tX = X * rot.getArr(); //rotate points (with rot^{-1})
-  arr ma = max(tX,0), mi = min(tX,0);  //get coordinate-wise min and max
-  x({0,2})() = (ma-mi)/2.;   //sizes
-  x(3) = 1.; //sum(ma-mi)/6.;  //radius
-  x({4,6})() = rot.getArr() * (mi+.5*(ma-mi)); //center (rotated back)
-  x({7,10})() = conv_quat2arr(rot);
-  rndGauss(x({7,10})(), .1, true);
-  x({7,10})() /= length(x({7,10})());
-
-  if(verbose>1){
-    checkJacobianCP(F, x, 1e-4);
-    checkHessianCP(F, x, 1e-4);
+void mlr::Mesh::makeLineStrip(){
+  T.resize(V.d0, 2);
+  T[0] = {V.d0-1, 0};
+  for(uint i=1;i<V.d0;i++){
+    T[i] = {i-1, i};
   }
-
-  OptConstrained opt(x, NoArr, F, OPT(
-                   stopTolerance = 1e-4,
-                   stopFTolerance = 1e-3,
-                   damping=1,
-                   maxStep=-1,
-                   constrainedMethod = augmentedLag,
-                   aulaMuInc = 1.1
-                   ));
-  opt.run();
-
-  if(verbose>1){
-    checkJacobianCP(F, x, 1e-4);
-    checkHessianCP(F, x, 1e-4);
-  }
-
-  f = opt.UCP.get_costs();
-  g = opt.UCP.get_sumOfGviolations();
-}
-
-void mlr::Mesh::makeSSBox(arr& x_ret, Transformation& t_ret, const arr& X, uint trials, int verbose){
-  if(!X.N){ clear(); return; }
-
-  arr x,x_best;
-  double f,g, f_best, g_best;
-  fitSSBox(x_best, f_best, g_best, X, verbose);
-  for(uint k=1;k<trials;k++){
-    fitSSBox(x, f, g, X, verbose);
-    if(g<g_best-1e-4 ||
-       (g<1e-4 && f<f_best)){ x_best=x; f_best=f; g_best=g; }
-  }
-
-  x = x_best;
-
-  if(x_ret!=NoArr)
-    x_ret=x;
-
-  if(verbose>2){
-    cout <<"x=" <<x;
-    cout <<"\nf = " <<f_best <<"\ng-violations = " <<g_best <<endl;
-  }
-
-  Transformation t;
-  t.setZero();
-  t.pos.set( x({4,6}) );
-  t.rot.set( x({7,-1}) );
-  t.rot.normalize();
-  setSSBox(2.*x(0), 2.*x(1), 2.*x(2), x(3));
-  t.applyOnPointArray(V);
-
-  if(t_ret!=NoTransformation)
-    t_ret = t;
 }
 
 void mlr::Mesh::setSSCvx(const mlr::Mesh& m, double r, uint fineness){
@@ -477,15 +386,16 @@ void mlr::Mesh::computeNormals() {
   Vn.setZero();
   //triangle normals and contributions
   for(i=0; i<T.d0; i++) {
-    a.set(&V(T(i, 0), 0));
-    b.set(&V(T(i, 1), 0));
-    c.set(&V(T(i, 2), 0));
+    uint *t=T.p+3*i;
+    a.set(V.p+3*t[0]);
+    b.set(V.p+3*t[1]);
+    c.set(V.p+3*t[2]);
 
     b-=a; c-=a; a=b^c; if(!a.isZero) a.normalize();
     Tn(i, 0)=a.x;  Tn(i, 1)=a.y;  Tn(i, 2)=a.z;
-    Vn(T(i, 0), 0)+=a.x;  Vn(T(i, 0), 1)+=a.y;  Vn(T(i, 0), 2)+=a.z;
-    Vn(T(i, 1), 0)+=a.x;  Vn(T(i, 1), 1)+=a.y;  Vn(T(i, 1), 2)+=a.z;
-    Vn(T(i, 2), 0)+=a.x;  Vn(T(i, 2), 1)+=a.y;  Vn(T(i, 2), 2)+=a.z;
+    Vn(t[0], 0)+=a.x;  Vn(t[0], 1)+=a.y;  Vn(t[0], 2)+=a.z;
+    Vn(t[1], 0)+=a.x;  Vn(t[1], 1)+=a.y;  Vn(t[1], 2)+=a.z;
+    Vn(t[2], 0)+=a.x;  Vn(t[2], 1)+=a.y;  Vn(t[2], 2)+=a.z;
   }
   Vector d;
   for(i=0; i<Vn.d0; i++) { d.set(&Vn(i, 0)); Vn[i]()/=d.length(); }
@@ -948,10 +858,8 @@ void mlr::Mesh::skin(uint start) {
   cout <<T <<endl;
 }
 
-mlr::Vector mlr::Mesh::getMeanVertex() const {
-  arr Vmean = sum(V,0);
-  Vmean /= (double)V.d0;
-  return Vector(Vmean);
+arr mlr::Mesh::getMean() const {
+  return mean(V);
 }
 
 void mlr::Mesh::getBox(double& dx, double& dy, double& dz) const {
@@ -988,7 +896,8 @@ double mlr::Mesh::getArea() const{
 
 double mlr::Mesh::getVolume() const{
   CHECK(T.d1==3,"");
-  mlr::Vector z = getMeanVertex(), a,b,c;
+  mlr::Vector z = getMean();
+  mlr::Vector a,b,c;
   double vol=0.;
   for(uint i=0;i<T.d0;i++){
     a.set(V.p+3*T.p[3*i+0]);
@@ -997,6 +906,28 @@ double mlr::Mesh::getVolume() const{
     vol += (a-z) * ((b-a)^(c-a));
   }
   return vol/6.;
+}
+
+double mlr::Mesh::meshMetric(const mlr::Mesh& trueMesh, const mlr::Mesh& estimatedMesh) {
+  //basically a Haussdorf metric, stupidly realized by brute force algorithm
+  auto haussdorfDistanceOneSide = [](const arr& V1, const arr& V2)->double {
+    double distance = 0.0;
+    for(uint i = 0; i < V1.d0; i++) {
+      double shortestDistance = std::numeric_limits<double>::infinity();
+      for(uint j = 0; j < V2.d0; j++) {
+        double d = length(V2[j]-V1[i]);
+        if(d < shortestDistance) {
+          shortestDistance = d;
+        }
+      }
+      if(shortestDistance > distance) {
+        distance = shortestDistance;
+      }
+    }
+    return distance;
+  };
+
+  return mlr::MAX(haussdorfDistanceOneSide(trueMesh.V, estimatedMesh.V), haussdorfDistanceOneSide(estimatedMesh.V, trueMesh.V));
 }
 
 double mlr::Mesh::getCircum() const{
@@ -1021,8 +952,8 @@ void mlr::Mesh::read(std::istream& is, const char* fileExtension, const char* fi
   if(!strcmp(fileExtension, "off")) { readOffFile(is); loaded=true; }
   if(!strcmp(fileExtension, "ply")) { readPLY(filename); loaded=true; }
   if(!strcmp(fileExtension, "tri")) { readTriFile(is); loaded=true; }
-  if(!strcmp(fileExtension, "stl") || !strcmp(fileExtension, "STL")) { readStlFile(is); loaded=true; }
-  if(!loaded) HALT("can't read fileExtension '" <<fileExtension <<"'");
+  if(!strcmp(fileExtension, "stl") || !strcmp(fileExtension, "STL")) { loaded = readStlFile(is); }
+  if(!loaded) HALT("can't read fileExtension '" <<fileExtension <<"' file '" <<filename <<"'");
 }
 
 void mlr::Mesh::writeTriFile(const char* filename) {
@@ -1254,7 +1185,7 @@ void mlr::Mesh::writePLY(const char *fn, bool bin) { NICO }
 void mlr::Mesh::readPLY(const char *fn) { NICO }
 #endif
 
-void mlr::Mesh::readStlFile(std::istream& is) {
+bool mlr::Mesh::readStlFile(std::istream& is) {
   //first check if binary
   if(mlr::parse(is, "solid", true)) { //is ascii
     mlr::String name;
@@ -1313,6 +1244,7 @@ void mlr::Mesh::readStlFile(std::istream& is) {
     }
     copy(V,Vfloat);
   }
+  return true;
 }
 
 /*void mlr::Mesh::getOBJ(char* filename){
@@ -1350,15 +1282,15 @@ void mlr::Mesh::readObjFile(std::istream& is) {
   nV = nN = nTex = nT = 0;
   int v, n, t;
 
-  // we only want to parse the relevant subpart/submesh of the mesh therefore
-  // jump to the right position and stop parsing at the right positon.
-  if (parsing_pos_start > -1)
-    is.seekg(parsing_pos_start); //  fseek(file, parsing_pos_start, SEEK_SET);
+//  // we only want to parse the relevant subpart/submesh of the mesh therefore
+//  // jump to the right position and stop parsing at the right positon.
+//  if (parsing_pos_start > -1)
+//    is.seekg(parsing_pos_start); //  fseek(file, parsing_pos_start, SEEK_SET);
 
 //  while ((sscanf(strn(is), "%s", str.p) != EOF) && (ftell(file) < parsing_pos_end)) {
   strn(is);
   for(bool ex=false;!ex;){
-    if(parsing_pos_start>-1 && is.tellg()>=parsing_pos_end) break;
+//    if(parsing_pos_start>-1 && is.tellg()>=parsing_pos_end) break;
     switch(str.p[0]) {
       case '\0':
         is.clear();
@@ -1424,8 +1356,8 @@ void mlr::Mesh::readObjFile(std::istream& is) {
   // rewind to beginning of file and read in the data this pass
   is.seekg(0);
   is.clear();
-  if (parsing_pos_start > -1)
-    is.seekg(parsing_pos_start); //  fseek(file, parsing_pos_start, SEEK_SET);
+//  if (parsing_pos_start > -1)
+//    is.seekg(parsing_pos_start); //  fseek(file, parsing_pos_start, SEEK_SET);
   
   /* on the second pass through the file, read all the data into the
      allocated arrays */
@@ -1435,7 +1367,7 @@ void mlr::Mesh::readObjFile(std::istream& is) {
 //  while ((sscanf(strn(is), "%s", str.p) != EOF) && (ftell(file) < parsing_pos_end)) {
   strn(is);
   for(bool ex=false;!ex;){
-    if(parsing_pos_start>-1 && is.tellg()>=parsing_pos_end) break;
+//    if(parsing_pos_start>-1 && is.tellg()>=parsing_pos_end) break;
     switch(str.p[0]) {
       case '\0':
         is.clear();
@@ -1604,42 +1536,41 @@ uintA getSubMeshPositions(const char* filename) {
 
 #ifdef MLR_GL
 
+extern void glColor(float r, float g, float b, float alpha);
+
 /// GL routine to draw a mlr::Mesh
 void mlr::Mesh::glDraw(struct OpenGL&) {
+  if(C.nd==1){
+    CHECK(C.N==3 || C.N==4, "need a basic color");
+    GLboolean light=true;
+    glGetBooleanv(GL_LIGHTING, &light); //this doesn't work!!?? even when disabled, returns true; never changes 'light'
+    GLfloat col[4] = { (float)C(0), (float)C(1), (float)C(2), (C.N==3?1.f:(float)C(3)) };
+    glColor4fv(col);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, col);
+  }
+
   if(!T.N){  //-- draw point cloud
     if(!V.N) return;
     CHECK(V.nd==2 && V.d1==3, "wrong dimension");
     glPointSize(3.);
     glDisable(GL_LIGHTING);
-  #if 1
+
     glEnableClientState(GL_VERTEX_ARRAY);
+    if(C.N==V.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+
     glVertexPointer(3, GL_DOUBLE, V.d1-3, V.p);
-    if(C.N==V.N){
-      glEnableClientState(GL_COLOR_ARRAY);
-      glColorPointer(3, GL_DOUBLE, C.d1-3, C.p );
-    }else glDisableClientState(GL_COLOR_ARRAY);
+    if(C.N==V.N) glColorPointer(3, GL_DOUBLE, C.d1-3, C.p );
+
     glDrawArrays(GL_POINTS, 0, V.d0);
     glDisableClientState(GL_VERTEX_ARRAY);
-  #else
-    glBegin(GL_POINTS);
-    if(C.N!=V.N){
-      const double *p=V.begin(), *pstop=V.end();
-      for(; p!=pstop; p+=V.d1)
-        glVertex3dv(p);
-    }else{
-      const double *p=V.begin(), *pstop=V.end(), *c=C.begin();
-      for(; p!=pstop; p+=V.d1, c+=C.d1){
-        glVertex3dv(p);
-        glColor3dv(c);
-      }
-    }
-    glEnd();
-  #endif
+
     glEnable(GL_LIGHTING);
     glPointSize(1.);
     return;
   }
-  if(T.d1==2){
+
+  if(T.d1==2){ //-- draw lines
+    glLineWidth(3.f);
     glBegin(GL_LINES);
     for(uint t=0; t<T.d0; t++) {
       glVertex3dv(&V(T(t, 0), 0));
@@ -1648,45 +1579,52 @@ void mlr::Mesh::glDraw(struct OpenGL&) {
     glEnd();
     return;
   }
-  if(V.d0!=Vn.d0 || T.d0!=Tn.d0) {
-    computeNormals();
-  }
-  if(orsDrawWires) {
-#if 0
-    uint t;
-    for(t=0; t<T.d0; t++) {
-      glBegin(GL_LINE_LOOP);
-      glVertex3dv(&V(T(t, 0), 0));
-      glVertex3dv(&V(T(t, 1), 0));
-      glVertex3dv(&V(T(t, 2), 0));
-      glEnd();
-    }
-#else
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_DOUBLE, 0, V.p);
-    if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
-    glDrawElements(GL_LINE_STRIP, T.N, GL_UNSIGNED_INT, T.p);
-    //glDrawArrays(GL_LINE_STRIP, 0, V.d0);
-#endif
-  }
+
+  //-- draw a mesh
+  if(V.d0!=Vn.d0 || T.d0!=Tn.d0) computeNormals();
+
 #if 1
-  GLboolean turnOnLight=false;
-  if(C.N) { glGetBooleanv(GL_LIGHTING, &turnOnLight); glDisable(GL_LIGHTING); }
+  if(!C.N || C.nd==1 || C.d0==V.d0){ //we have colors for each vertex -> use index arrays
 
-  glShadeModel(GL_FLAT);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_NORMAL_ARRAY);
-  if(C.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+    //  glShadeModel(GL_FLAT);
+    glShadeModel(GL_SMOOTH);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    if(C.N==V.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+    if(C.N==V.N) glDisable(GL_LIGHTING); //because lighting requires ambiance colors to be set..., not just color..
 
-  glVertexPointer(3, GL_DOUBLE, 0, V.p);
-  glNormalPointer(GL_DOUBLE, 0, Vn.p);
-  if(C.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
+    glVertexPointer(3, GL_DOUBLE, 0, V.p);
+    glNormalPointer(GL_DOUBLE, 0, Vn.p);
+    if(C.N==V.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
 
-  glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
+    glDrawElements(GL_TRIANGLES, T.N, GL_UNSIGNED_INT, T.p);
 
-  if(turnOnLight) { glEnable(GL_LIGHTING); }
+    if(C.N) glEnable(GL_LIGHTING);
+
+  }else{ //we have colors for each tri -> render tris directly and with tri-normals
+
+    CHECK_EQ(C.d0, T.d0, "");
+    CHECK_EQ(Tn.d0, T.d0, "");
+    glShadeModel(GL_FLAT);
+    glBegin(GL_TRIANGLES);
+    GLboolean light=true;
+    glGetBooleanv(GL_LIGHTING, &light); //this doesn't work!!?? even when disabled, returns true; never changes 'light'
+    for(uint t=0; t<T.d0; t++) {
+      uint   *tri  = T.p  + 3*t; //&T(t, 0);
+      double *col  = C.p  + 3*t; //&C(t, 0);
+      double *norm = Tn.p + 3*t; //&Tn(t, 0);
+
+      GLfloat ambient[4] = { (float)col[0], (float)col[1], (float)col[2], 1.f };
+      if(!light) glColor4fv(ambient);
+      else       glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, ambient);
+
+      glNormal3dv(norm);
+      glVertex3dv(V.p + 3*tri[0]); //&V(tri[0],0);
+      glVertex3dv(V.p + 3*tri[1]);
+      glVertex3dv(V.p + 3*tri[2]);
+    }
+    glEnd();
+  }
 #elif 1 //simple with vertex normals
   uint i, v;
   glShadeModel(GL_SMOOTH);
@@ -1699,17 +1637,6 @@ void mlr::Mesh::glDraw(struct OpenGL&) {
   }
   glEnd();
 #else //simple with triangle normals
-  uint t, v;
-  computeNormals();
-  glBegin(GL_TRIANGLES);
-  for(t=0; t<T.d0; t++) {
-    glNormal3dv(&Tn(t, 0));
-    if(C.d0==T.d0)  glColor(C(t, 0), C(t, 1), C(t, 2),1.);
-    v=T(t, 0);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(t, 1);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-    v=T(t, 2);  if(C.d0==V.d0) glColor3dv(&C(v, 0));  glVertex3dv(&V(v, 0));
-  }
-  glEnd();
 #if 0 //draw normals
   glColor(.5, 1., .0);
   Vector a, b, c, x;
@@ -1725,12 +1652,52 @@ void mlr::Mesh::glDraw(struct OpenGL&) {
   }
 #endif
 #endif
+
+  if(orsDrawWires) { //on top of mesh
+#if 0
+    uint t;
+    for(t=0; t<T.d0; t++) {
+      glBegin(GL_LINE_LOOP);
+      glVertex3dv(&V(T(t, 0), 0));
+      glVertex3dv(&V(T(t, 1), 0));
+      glVertex3dv(&V(T(t, 2), 0));
+      glEnd();
+    }
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    if(C.N==V.N) glEnableClientState(GL_COLOR_ARRAY); else glDisableClientState(GL_COLOR_ARRAY);
+
+    glVertexPointer(3, GL_DOUBLE, 0, V.p);
+    if(C.N==V.N) glColorPointer(3, GL_DOUBLE, 0, C.p);
+    glDrawElements(GL_LINE_STRIP, T.N, GL_UNSIGNED_INT, T.p);
+#endif
+  }
+
 }
+
 #else //MLR_GL
+
 void mlr::Mesh::glDraw(struct OpenGL&) { NICO }
 void glDrawMesh(void*) { NICO }
 void glTransform(const mlr::Transformation&) { NICO }
 #endif
+
+//==============================================================================
+
+extern OpenGL& NoOpenGL;
+
+void glDrawMeshes(void *P){
+  MeshA& meshes = *((MeshA*)P);
+  double GLmatrix[16];
+  for(mlr::Mesh& mesh:meshes){
+    glPushMatrix();
+    mesh.glX.getAffineMatrixGL(GLmatrix);
+    glLoadMatrixd(GLmatrix);
+    mesh.glDraw(NoOpenGL);
+    glPopMatrix();
+  }
+}
 
 //==============================================================================
 
@@ -1891,7 +1858,7 @@ double GJK_distance(mlr::Mesh& mesh1, mlr::Mesh& mesh2,
 void mlr::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint res) {
   MarchingCubes mc(res, res, res);
   mc.init_all() ;
-
+  double startTime = mlr::timerRead();
   //compute data
   uint k=0, j=0, i=0;
   float x=lo, y=lo, z=lo;
@@ -1905,7 +1872,7 @@ void mlr::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint 
       }
     }
   }
-
+  cout << "calculation of data took: " << mlr::timerRead() - startTime << " seconds" << endl;
   mc.run();
   mc.clean_temps();
 
@@ -1917,6 +1884,44 @@ void mlr::Mesh::setImplicitSurface(ScalarFunction f, double lo, double hi, uint 
     V(i, 0)=lo+mc.vert(i)->x*(hi-lo)/res;
     V(i, 1)=lo+mc.vert(i)->y*(hi-lo)/res;
     V(i, 2)=lo+mc.vert(i)->z*(hi-lo)/res;
+  }
+  for(i=0; i<T.d0; i++) {
+    T(i, 0)=mc.trig(i)->v1;
+    T(i, 1)=mc.trig(i)->v2;
+    T(i, 2)=mc.trig(i)->v3;
+  }
+}
+
+
+void mlr::Mesh::setImplicitSurface(ScalarFunction f, double xLo, double xHi, double yLo, double yHi, double zLo, double zHi, uint res) {
+  MarchingCubes mc(res, res, res);
+  mc.init_all() ;
+
+  //compute data
+  uint k=0, j=0, i=0;
+  float x, y, z;
+  for(k=0; k<res; k++) {
+    z = zLo+k*(zHi-zLo)/res;
+    for(j=0; j<res; j++) {
+      y = yLo+j*(yHi-yLo)/res;
+      for(i=0; i<res; i++) {
+        x = xLo+i*(xHi-xLo)/res;
+        mc.set_data(f(NoArr, NoArr, ARR((double)x, (double)y, (double)z)), i, j, k) ;
+      }
+    }
+  }
+
+  mc.run();
+  mc.clean_temps();
+
+  //convert to Mesh
+  clear();
+  V.resize(mc.nverts(), 3);
+  T.resize(mc.ntrigs(), 3);
+  for(i=0; i<V.d0; i++) {
+    V(i, 0)=xLo+mc.vert(i)->x*(xHi-xLo)/res;
+    V(i, 1)=yLo+mc.vert(i)->y*(yHi-yLo)/res;
+    V(i, 2)=zLo+mc.vert(i)->z*(zHi-zLo)/res;
   }
   for(i=0; i<T.d0; i++) {
     T(i, 0)=mc.trig(i)->v1;
@@ -2017,6 +2022,7 @@ double DistanceFunction_Cylinder::f(arr& g, arr& H, const arr& x){
 
 //===========================================================================
 
+/// dx, dy, dz are box-wall-coordinates: width=2*dx...; t is box transform; x is query point in world
 void closestPointOnBox(arr& closest, arr& signs, const mlr::Transformation& t, double dx, double dy, double dz, const arr& x){
   arr rot = t.rot.getArr();
   arr a_rel = (~rot)*(x-conv_vec2arr(t.pos)); //point in box coordinates
@@ -2088,7 +2094,8 @@ double DistanceFunction_Box::f(arr& g, arr& H, const arr& x){
 }
 
 ScalarFunction DistanceFunction_SSBox = [](arr& g, arr& H, const arr& x) -> double{
-  CHECK_EQ(x.N, 14, "pt + abcr + pose");
+  // x{0,2} are box-wall-coordinates, not width!
+  CHECK_EQ(x.N, 14, "query-pt + abcr + pose");
   mlr::Transformation t;
   t.pos.set( x({7,9}) );
   t.rot.set( x({10,13}) );
@@ -2111,6 +2118,8 @@ ScalarFunction DistanceFunction_SSBox = [](arr& g, arr& H, const arr& x) -> doub
   }
   return d;
 };
+
+
 
 
 

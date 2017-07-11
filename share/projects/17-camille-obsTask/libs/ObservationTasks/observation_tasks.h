@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Motion/taskMap.h>
+#include <Kin/taskMap.h>
 
 // reach a given head pose
 struct HeadPoseMap:TaskMap{

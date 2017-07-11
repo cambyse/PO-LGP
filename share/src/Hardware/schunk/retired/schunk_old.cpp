@@ -17,7 +17,7 @@
     along with libSOC.  If not, see <http://www.gnu.org/licenses/> */
 
 #include <System/biros.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 
 #include "schunk.h"
 
@@ -409,7 +409,7 @@ void sSchunkArm::step() {
     var->writeAccess(this);
     for (m=0; m<7; m++) var->q_real(motorIndex(m)) = (float)q_real(m);
     var->deAccess(this);
-  } else MLR_MSG("AccessData pointer not set");
+  } else MLR_MSG("VariableData pointer not set");
 #endif
 }
 

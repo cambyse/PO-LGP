@@ -1,7 +1,7 @@
 #include <Core/util.h>
 #include "../../share/teaching/RoboticsPractical/interface/myBaxter.h"
 #include "RosCom/subscribeOptitrack.h"
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 // =================================================================================================
 
@@ -293,7 +293,7 @@ int main(int argc, char** argv){
 //    }
 //  }
 
-   moduleShutdown().waitForValueGreaterThan(0);
+   moduleShutdown()->waitForStatusGreaterThan(0);
 
   cout <<"bye bye" <<endl;
   return 0;

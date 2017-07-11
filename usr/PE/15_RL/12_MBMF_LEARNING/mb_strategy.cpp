@@ -5,7 +5,7 @@ MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,TaskManager &tm
   xDemo(xDemo_)
 {
   world = new mlr::KinematicWorld(world_);
-  MP = new MotionProblem(*world,false);
+  MP = new KOMO(*world,false);
 
   MP->T = xDemo.d0-1;
   MP->tau = 0.02;

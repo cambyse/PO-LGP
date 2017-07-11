@@ -1,12 +1,11 @@
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 
 #include <RosCom/roscom.h>
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Algo/spline.h>
 
 struct MySystem{
@@ -28,7 +27,7 @@ void changeColor(void*){  orsDrawAlpha = .7; }
 void changeColor2(void*){  orsDrawAlpha = 1.; }
 
 void planTrajectory(arr &x,mlr::KinematicWorld &world) {
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
 
   /// load parameter from file
 

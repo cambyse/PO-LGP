@@ -1,8 +1,8 @@
 #include <Optim/optimization.h>
-#include <Motion/taskMaps.h>
-#include <Gui/plot.h>
+#include <Kin/taskMaps.h>
+#include <Plot/plot.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include "../src/plotUtil.h"
 #include "../src/phase_optimization.h"
 
@@ -15,7 +15,7 @@ int main(int argc,char **argv){
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 100;
   MP.tau = 0.01;
   mlr::Shape *grasp = world.getShapeByName("endeff");

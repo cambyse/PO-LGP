@@ -2,7 +2,7 @@
 
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Kin/kinViewer.h>
 //#include <Actions/RelationalMachineModule.h>
 //#include <Actions/ActivitySpinnerModule.h>
@@ -13,8 +13,8 @@
 #include <RosCom/subscribeTabletop.h>
 #include "RosCom/subscribeOptitrack.h"
 #include <RosCom/perceptionCollection.h>
-#include <RosCom/perceptionFilter.h>
-#include <RosCom/filterObject.h>
+#include <Perception/filter.h>
+#include <Perception/percept.h>
 #include <RosCom/publishDatabase.h>
 
 #include <baxter_core_msgs/JointCommand.h>
@@ -22,11 +22,11 @@
 baxter_core_msgs::JointCommand conv_qRef2baxterMessage(const arr& q_ref, const mlr::KinematicWorld& baxterModel, const char* prefix);
 
 struct MyBaxter_private{
-  Access_typed<sensor_msgs::JointState> jointState;
-  ACCESSname(FilterObjects, object_database)
+  Access<sensor_msgs::JointState> jointState;
+  ACCESSname(PerceptL, percepts_filtered)
   ACCESSname(mlr::KinematicWorld, modelWorld)
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
 
   RosInit rosInit;
 //  SubscribeTabletop tabletop_subscriber;
@@ -168,7 +168,7 @@ CtrlTask* MyBaxter::modifyTarget(CtrlTask* t, const arr& target){
 }
 
 void MyBaxter::stop(const CtrlTaskL& tasks){
-  for(CtrlTask *t:tasks) { activeTasks.removeValueSafe(t); t->active = false;}
+  for(CtrlTask *t:tasks) { activeTasks.removeValue(t, false); t->active = false;}
   s->tcm.ctrlTasks.set() = activeTasks;
   for(CtrlTask *t:tasks){
     delete &t->map;
@@ -184,7 +184,7 @@ void MyBaxter::stopAll(){
   {
     CtrlTask* t = activeTasks.first();
     cout << "removing: " << i << " of " << count << ' ' << t->name << endl;
-    activeTasks.removeValueSafe(t);
+    activeTasks.removeValue(t, false);
     t->active = false;
     s->tcm.ctrlTasks.set() = activeTasks;
     delete &t->map;
@@ -296,15 +296,15 @@ bool MyBaxter::testRealConv(const CtrlTaskL& tasks, const double waitSecs){
 }
 
 uint MyBaxter::reportPerceptionObjects(){
-  s->object_database.readAccess();
-  FilterObjects clusters;
+  s->percepts_filtered.readAccess();
+  PerceptL clusters;
   uint n=0;
-  for(FilterObject* fo : s->object_database()){
+  for(Percept* fo : s->percepts_filtered()){
     fo->write(cout);
     cout <<endl;
     n++;
   }
-  s->object_database.deAccess();
+  s->percepts_filtered.deAccess();
   return n;
 }
 
@@ -425,14 +425,14 @@ arr MyBaxter::getJointState(){
 }
 
 mlr::Vector MyBaxter::closestCluster(){
-  s->object_database.readAccess();
+  s->percepts_filtered.readAccess();
 
   mlr::Vector toReturn(0,0,0);
 
   double max_dist = DBL_MIN;
-  for(FilterObject* fo : s->object_database())
+  for(Percept* fo : s->percepts_filtered())
   {
-    if (fo->type == FilterObject::FilterObjectType::cluster)
+    if (fo->type == Percept::Type::cluster)
     {
       mlr::Vector mean = dynamic_cast<Cluster*>(fo)->transform.pos;
       double dist = dynamic_cast<Cluster*>(fo)->transform.pos.z;
@@ -443,7 +443,7 @@ mlr::Vector MyBaxter::closestCluster(){
       }
     }
   }
-  s->object_database.deAccess();
+  s->percepts_filtered.deAccess();
 
   return toReturn;
 }
@@ -453,20 +453,20 @@ arr MyBaxter::q0(){
 }
 
 mlr::Vector MyBaxter::arPose(){
-  s->object_database.readAccess();
+  s->percepts_filtered.readAccess();
 
   mlr::Vector toReturn(0,0,0);
 
-  for(FilterObject* fo : s->object_database())
+  for(Percept* fo : s->percepts_filtered())
   {
-    if ((fo->id == 2) && (fo->type == FilterObject::FilterObjectType::alvar))
+    if ((fo->id == 2) && (fo->type == Percept::Type::alvar))
     {
       mlr::Transformation pos = fo->frame * fo->transform;
       toReturn = pos.pos;
       std::cout << toReturn << std::endl;
     }
   }
-  s->object_database.deAccess();
+  s->percepts_filtered.deAccess();
 
   return toReturn;
 }
@@ -532,7 +532,7 @@ double MyBaxter::getCollisionScalar(){
   return y.scalar();
 }
 
-TaskControllerModule& MyBaxter::getTaskControllerModule(){
+TaskControlThread& MyBaxter::getTaskControlThread(){
   return s->tcm;
 }
 

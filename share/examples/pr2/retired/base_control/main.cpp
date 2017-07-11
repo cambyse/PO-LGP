@@ -1,5 +1,5 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -95,7 +95,7 @@ int main(int argc, char** argv){
   arr target = q0 + ARR(-0.2*cos(q(trans->qIndex+2)),-0.2*sin(q(trans->qIndex+2)),-0.8);
 
 
-  MotionProblem MP(world);
+  KOMO MP(world);
   Task *task;
   task = MP.addTask("transitions", new TaskMap_Transition(world));
   task->map.order=2;

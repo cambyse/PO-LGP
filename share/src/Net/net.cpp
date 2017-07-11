@@ -93,6 +93,14 @@ const arr& Net::getValue(Variable* n){
   return n->value;
 }
 
+void Net::clearAllPartialDerivatives(){
+  for(Node *n:G){
+    Variable& var = n->get<Variable>();
+    var.del.clear();
+    var.J.clear();
+  }
+}
+
 void Net::zeroAllPartialDerivatives(uint d){
   for(Node *n:G){
     Variable& var = n->get<Variable>();
@@ -235,10 +243,14 @@ void Net::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x){
 }
 
 void Net::write(ostream& os) const{
+#if 1
+  G.write(os);
+#else
   for(Node *n:G){
     Variable& var = n->get<Variable>();
     os <<var <<endl;
   }
+#endif
 }
 
 

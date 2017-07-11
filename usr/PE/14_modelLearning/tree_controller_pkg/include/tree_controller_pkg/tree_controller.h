@@ -5,7 +5,7 @@
 #include <pr2_mechanism_model/tree.h>
 #include <pr2_mechanism_model/chain.h>
 #include <Kin/kin.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Algo/MLcourse.h>
 #include <tree_controller_pkg/GetJointGains.h>
 #include <tree_controller_pkg/SetJointGains.h>

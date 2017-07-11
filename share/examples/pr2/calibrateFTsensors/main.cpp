@@ -1,7 +1,7 @@
 #include <Core/thread.h>
 #include <RosCom/roscom.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Actions/swig.h>
 
@@ -19,7 +19,7 @@
 //  ACCESSname(arr, pr2_odom)
 
 //  RosCom_Spinner spinner;
-//  TaskControllerModule tcm;
+//  TaskControlThread tcm;
 //  GamepadInterface gamepad;
 //  GamepadControlActivity gpc;
 //  SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg> sub_ctrl_obs("/marc_rt_controller/jointState", ctrl_obs);
@@ -31,7 +31,7 @@
 
 //  threadOpenModules(true);
 
-//  moduleShutdown().waitForValueGreaterThan(0);
+//  moduleShutdown()->waitForStatusGreaterThan(0);
 
 //  threadCloseModules();
 //  cout <<"bye bye" <<endl;
@@ -41,7 +41,7 @@
 // =================================================================================================
 
 struct RecordFTs : Thread {
-  Access_typed<arr> wrenchL;
+  Access<arr> wrenchL;
   ofstream fil;
 
   RecordFTs() : Thread("RecordeFTs"), wrenchL(this, "wrenchL", true){
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 //  mlr::wait(1.);
 
   threadCloseModules();
-  registry().clear();
+  registry()->clear();
 
   cout <<"bye bye" <<endl;
   return 0;

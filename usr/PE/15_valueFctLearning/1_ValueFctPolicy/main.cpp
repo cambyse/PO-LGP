@@ -1,16 +1,16 @@
 #include <Core/util_t.h>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Kin/kin_swift.h>
 
 
 void run() {
   mlr::KinematicWorld world("scene0");
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   Task *t;
   Task *t2;
@@ -63,7 +63,7 @@ void run() {
 
 void run2() {
   mlr::KinematicWorld world("scene0");
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   Task *t;
   Task *t2;

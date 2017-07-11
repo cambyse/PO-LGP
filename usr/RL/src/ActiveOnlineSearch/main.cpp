@@ -384,7 +384,7 @@ int main(int argn, char ** args) {
             auto action = search_tree->recommend_action();
             RETURN_TUPLE(observation_handle_t, observation,
                          reward_t, reward) = environment->transition(action);
-            environment->make_current_state_default();
+            environment->make_current_state_new_start();
             // write
             if(write_log) {
                 log_file << 0 << "	" <<
@@ -479,7 +479,7 @@ int main(int argn, char ** args) {
                     auto action = search_tree->recommend_action();
                     RETURN_TUPLE(observation_handle_t, observation,
                                  reward_t, reward) = environment->transition(action);
-                    environment->make_current_state_default();
+                    environment->make_current_state_new_start();
                     reward_sum += reward;
                     // write log
 #ifdef USE_OMP

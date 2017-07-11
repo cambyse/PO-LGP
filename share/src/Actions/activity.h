@@ -6,7 +6,7 @@
 //===========================================================================
 
 /** Activites are the glue between facts in the relational state (RelationalMachineModule),
- *  and real things, like creating a control task (in the TaskControllerModule),
+ *  and real things, like creating a control task (in the TaskControlThread),
  *  listening to a sensor, starting a thread, or maybe even launching a node.
  */
 struct Activity {
@@ -40,7 +40,7 @@ typedef mlr::Array<Activity*> ActivityL;
 
 /// register an activity class/type
 template<class T> void registerActivity(const char* key){
-  registry().newNode<Type*>({"Activity", key}, {}, new Type_typed<T>);
+  registry()->newNode<Type*>({"Activity", key}, {}, new Type_typed<T>);
 }
 
 /// create/launch a new activity based on the fact

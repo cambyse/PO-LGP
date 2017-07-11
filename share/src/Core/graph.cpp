@@ -48,7 +48,7 @@ stdOutPipe(ParseInfo)
 
 //-- query existing types
 inline Node *reg_findType(const char* key) {
-  NodeL types = registry().getNodesOfType<std::shared_ptr<Type> >();
+  NodeL types = registry()->getNodesOfType<std::shared_ptr<Type> >();
   for(Node *ti: types) {
     if(mlr::String(ti->get<std::shared_ptr<Type> >()->typeId().name())==key) return ti;
     if(ti->matches(key)) return ti;
@@ -157,9 +157,9 @@ void Node::write(std::ostream& os) const {
       writeValue(os);
       os <<'>';
     } else {
-      os <<" = < ";
+      os <<" = \" ";
       writeValue(os);
-      os <<'>';
+      os <<'"';
     }
   }
 }
@@ -374,6 +374,8 @@ Node* Graph::edit(Node *ed){
 
 void Graph::copy(const Graph& G, bool appendInsteadOfClear, bool enforceCopySubgraphToNonsubgraph){
   DEBUG(G.checkConsistency());
+
+  CHECK(this!=&G, "Graph self copy -- never do this");
 
   if(!enforceCopySubgraphToNonsubgraph){
     if(G.isNodeOfGraph && !this->isNodeOfGraph){
@@ -621,7 +623,7 @@ Node* Graph::readNode(std::istream& is, bool verbose, bool parseInfo, mlr::Strin
           is.clear();
           mlr::String substr;
           substr.read(is,"",">",false);
-          PARSERR("could not parse value of type '" <<str <<"' -- no such type has been registered; converting this to string: '"<<substr<<"'", pinfo);
+//          PARSERR("could not parse value of type '" <<str <<"' -- no such type has been registered; converting this to string: '"<<substr<<"'", pinfo);
           str = STRING('<' <<str <<' ' <<substr <<'>');
           node = newNode<mlr::String>(keys, parents, str);
         } else {
@@ -703,8 +705,13 @@ void Graph::writeParseInfo(std::ostream& os) {
     os <<"NODE '" <<*n <<"' " <<getParseInfo(n) <<endl;
 }
 
-void Graph::displayDot(){
-  writeDot(FILE("z.dot"), false, false, 0);
+void Graph::displayDot(Node *highlight){
+  if(highlight){
+    CHECK(&highlight->container==this,"");
+    writeDot(FILE("z.dot"), false, false, 0, highlight->index);
+  }else{
+    writeDot(FILE("z.dot"), false, false, 0);
+  }
   int r;
   r = system("dot -Tpdf z.dot > z.pdf");  if(r) LOG(-1) <<"could not startup dot";
   r = system("evince z.pdf &");  if(r) LOG(-1) <<"could not startup evince";
@@ -738,7 +745,7 @@ void Graph::writeDot(std::ostream& os, bool withoutHeader, bool defaultEdges, in
   if(!withoutHeader){
     os <<"digraph G{" <<endl;
     os <<"graph [ rankdir=\"LR\", ranksep=0.05";
-    if(hasRenderingInfo(NULL)) os <<getRenderingInfo(NULL).dotstyle;
+    if(hasRenderingInfo(NULL)) os <<' ' <<getRenderingInfo(NULL).dotstyle;
     os << " ];" <<endl;
     os <<"node [ fontsize=9, width=.3, height=.3 ];" <<endl;
     os <<"edge [ arrowtail=dot, arrowsize=.5, fontsize=6 ];" <<endl;
@@ -765,7 +772,7 @@ void Graph::writeDot(std::ostream& os, bool withoutHeader, bool defaultEdges, in
     mlr::String shape;
     if(n->keys.contains("box")) shape <<", shape=box"; else shape <<", shape=ellipse";
     if(focusIndex==(int)n->index) shape <<", color=red";
-    if(hasRenderingInfo(n)) shape <<getRenderingInfo(n).dotstyle;
+    if(hasRenderingInfo(n)) shape <<' ' <<getRenderingInfo(n).dotstyle;
 
 
     if(defaultEdges && n->parents.N==2){ //an edge
@@ -950,10 +957,10 @@ struct RegistryInitializer{
         if(n+1<mlr::argc && mlr::argv[n+1][0]!='-'){
           mlr::String value;
           value <<'=' <<mlr::argv[n+1];
-          registry().readNode(value, false, false, key);
+          registry()->readNode(value, false, false, key);
           n++;
         }else{
-          registry().newNode<bool>({key}, {}, true);
+          registry()->newNode<bool>({key}, {}, true);
         }
       }else{
         MLR_MSG("non-parsed cmd line argument:" <<mlr::argv[n]);
@@ -961,7 +968,7 @@ struct RegistryInitializer{
     }
 
     mlr::String cfgFileName="MT.cfg";
-    if(registry()["cfg"]) cfgFileName = registry().get<mlr::String>("cfg");
+    if(registry()()["cfg"]) cfgFileName = registry()->get<mlr::String>("cfg");
     LOG(3) <<"opening config file '" <<cfgFileName <<"'";
     ifstream fil;
     fil.open(cfgFileName);
@@ -979,13 +986,13 @@ struct RegistryInitializer{
 Singleton<RegistryInitializer> registryInitializer;
 
 bool getParameterFromGraph(const std::type_info& type, void* data, const char* key){
-  registryInitializer();
-  Node *n = registry().findNodeOfType(type, {key});
+  registryInitializer()();
+  Node *n = registry()->findNodeOfType(type, {key});
   if(n){
     n->copyValueInto(data);
     return true;
   }else{
-    n = registry().findNode({key});
+    n = registry()->findNode({key});
     if(n && n->isOfType<double>()){
       if(type==typeid(int)){ *((int*)data) = (int)n->get<double>(); return true; }
       if(type==typeid(uint)){ *((uint*)data) = (uint)n->get<double>(); return true; }

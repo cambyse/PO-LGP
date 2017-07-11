@@ -57,7 +57,7 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
   INDEXshape2swift.resize(world.shapes.N);  INDEXshape2swift=-1;
   
   //cout <<" -- SwiftInterface init";
-  for_list(mlr::Shape, s,  world.shapes) {
+  for_list(mlr::Shape, s,  world.shapes) if(s->cont){
     //cout <<'.' <<flush;
     add=true;
     switch(s->type) {
@@ -93,22 +93,22 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
         switch(s->type) {
           case mlr::ST_box:
             s->mesh.setBox();
-            s->mesh.scale(s->size[0], s->size[1], s->size[2]);
+            s->mesh.scale(s->size(0), s->size(1), s->size(2));
             break;
           case mlr::ST_sphere:
             s->mesh.setSphere();
-            s->mesh.scale(s->size[3], s->size[3], s->size[3]);
+            s->mesh.scale(s->size(3), s->size(3), s->size(3));
             break;
           case mlr::ST_cylinder:
-            CHECK(s->size[3]>1e-10,"");
-            s->mesh.setCylinder(s->size[3], s->size[2]);
+            CHECK(s->size(3)>1e-10,"");
+            s->mesh.setCylinder(s->size(3), s->size(2));
             break;
           case mlr::ST_capsule:
-            CHECK(s->size[3]>1e-10,"");
-            s->mesh.setCappedCylinder(s->size[3], s->size[2]);
+            CHECK(s->size(3)>1e-10,"");
+            s->mesh.setCappedCylinder(s->size(3), s->size(2));
             break;
           case mlr::ST_retired_SSBox:
-            s->mesh.setSSBox(s->size[0], s->size[1], s->size[2], s->size[3]);
+            s->mesh.setSSBox(s->size(0), s->size(1), s->size(2), s->size(3));
             break;
           default:
             break;
@@ -127,7 +127,7 @@ SwiftInterface::SwiftInterface(const mlr::KinematicWorld& world, double _cutoff)
     }
   }
   
-  initActivations(world);
+  initActivations(world, 4);
   
   pushToSwift(world);
   //cout <<"...done" <<endl;
@@ -214,6 +214,12 @@ void SwiftInterface::deactivate(mlr::Shape *s1, mlr::Shape *s2) {
   if(INDEXshape2swift(s1->index)==-1 || INDEXshape2swift(s2->index)==-1) return;
   //cout <<"deactivating shape pair " <<s1->name <<'-' <<s2->name <<endl;
   scene->Deactivate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
+}
+
+void SwiftInterface::activate(mlr::Shape *s1, mlr::Shape *s2) {
+  if(INDEXshape2swift(s1->index)==-1 || INDEXshape2swift(s2->index)==-1) return;
+  //cout <<"deactivating shape pair " <<s1->name <<'-' <<s2->name <<endl;
+  scene->Activate(INDEXshape2swift(s1->index), INDEXshape2swift(s2->index));
 }
 
 void SwiftInterface::activate(mlr::Shape *s) {
@@ -314,8 +320,10 @@ void SwiftInterface::pullFromSwift(mlr::KinematicWorld& world, bool dumpReport) 
       proxy->a=a;
       proxy->b=b;
       proxy->d = -.0;
-      if(world.shapes(a)->type==mlr::ST_mesh) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
-      if(world.shapes(b)->type==mlr::ST_mesh) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
+//      if(world.shapes(a)->type==mlr::ST_mesh) proxy->cenA = world.shapes(a)->X * world.shapes(a)->mesh.getMeanVertex(); else proxy->cenA = world.shapes(a)->X.pos;
+//      if(world.shapes(b)->type==mlr::ST_mesh) proxy->cenB = world.shapes(b)->X * world.shapes(b)->mesh.getMeanVertex(); else proxy->cenB = world.shapes(b)->X.pos;
+      proxy->cenA = world.shapes(a)->X.pos;
+      proxy->cenB = world.shapes(b)->X.pos;
       proxy->cenN = proxy->cenA - proxy->cenB; //normal always points from b to a
       proxy->cenD = proxy->cenN.length();
       proxy->cenN /= proxy->cenD;
@@ -332,7 +340,7 @@ void SwiftInterface::pullFromSwift(mlr::KinematicWorld& world, bool dumpReport) 
 
     double ab_radius = mlr::MAX(proxy->d,0.) + 1.1*(world.shapes(a)->mesh_radius + world.shapes(b)->mesh_radius);
     if(proxy->cenD>ab_radius){
-      MLR_MSG("shit");
+      //MLR_MSG("shit");
     }
   }
   CHECK_EQ(k , (int)world.proxies.N, "");

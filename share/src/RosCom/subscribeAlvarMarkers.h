@@ -5,13 +5,17 @@
 
 #ifdef MLR_ROS
 #  include "roscom.h"
+#  ifdef MLR_ROS_KINETIC
+#    include <ar_track_alvar_msgs/AlvarMarkers.h>
+     namespace ar = ar_track_alvar_msgs;
+#  endif
 #  ifdef MLR_ROS_INDIGO
 #    include <ar_track_alvar_msgs/AlvarMarkers.h>
-  namespace ar = ar_track_alvar_msgs;
+     namespace ar = ar_track_alvar_msgs;
 #  endif
 #  if MLR_ROS_GROOVY
 #    include <ar_track_alvar/AlvarMarkers.h>
-  namespace ar = ar_track_alvar_msgs;
+     namespace ar = ar_track_alvar_msgs;
 #  endif
 #else
   struct AlvarMarker{ AlvarMarker(){NICO} };
@@ -49,8 +53,8 @@ void setBody(mlr::Body& body, const ar::AlvarMarker& marker);
 void syncMarkers(mlr::KinematicWorld& world, const ar::AlvarMarkers& markers);
 
 struct AlvarSyncer : Thread {
-  Access_typed<mlr::KinematicWorld> modelWorld;
-  Access_typed<ar::AlvarMarkers> ar_pose_markers;
+  Access<mlr::KinematicWorld> modelWorld;
+  Access<ar::AlvarMarkers> ar_pose_markers;
   AlvarSyncer()
    : Thread("AlvarSyncer"),
     modelWorld(this, "modelWorld", true),
@@ -63,11 +67,12 @@ struct AlvarSyncer : Thread {
 };
 
 struct SubscribeAlvar{
-  ACCESSname(ar::AlvarMarkers, ar_pose_markers)
+  Access<ar::AlvarMarkers> ar_pose_markers;
   Subscriber<ar::AlvarMarkers> sub;
 
   SubscribeAlvar()
-    : sub("/ar_pose_marker", ar_pose_markers) {
+    : ar_pose_markers(NULL, "ar_pose_markers"),
+      sub("/ar_pose_marker", ar_pose_markers) {
   }
   ~SubscribeAlvar(){
   }

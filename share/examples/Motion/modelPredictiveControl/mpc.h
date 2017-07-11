@@ -6,20 +6,19 @@
 #include <Kin/kin.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Algo/spline.h>
 
 
 struct MPC {
-  MPC(MotionProblem &_P, arr &_x);
+  MPC(KOMO &_P, arr &_x);
   ~MPC();
 
 
   void replan(arr& _goal, arr &_q);
 
-  MotionProblem& P;
+  KOMO& P;
   arr x;
 
   // bookkeeping

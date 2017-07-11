@@ -3,8 +3,8 @@
 
 #include <Core/array.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include "../../src/traj_factory.h"
 #include "task_manager.h"
 
@@ -12,7 +12,7 @@ struct MB_strategy
 {
   double duration;
   arr xDemo;
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
   MotionProblemFunction* MPF;
 

@@ -20,13 +20,15 @@
 #include <Core/graph.h>
 
 struct FOL_World:MCTS_Environment{
+
   struct Decision:SAO{
     bool waitDecision;
     Node *rule;
     NodeL substitution;
     int id;
-    Decision(bool waitDecision, Node *rule, const NodeL& substitution, int id):waitDecision(waitDecision),rule(rule), substitution(substitution), id(id) {}
-    bool operator==(const SAO & other) const {
+    Decision(bool waitDecision, Node *rule, const NodeL& substitution, int id)
+      : waitDecision(waitDecision), rule(rule), substitution(substitution), id(id) {}
+    virtual bool operator==(const SAO & other) const {
       auto decision = dynamic_cast<const Decision *>(&other);
       if(decision==nullptr) return false;
       if(decision->waitDecision!=waitDecision) return false;
@@ -40,10 +42,12 @@ struct FOL_World:MCTS_Environment{
       return std::hash<int>()(id);
     }
   };
+
   struct Observation:SAO{
     int id;
-    Observation(int id): id(id) {}
-    bool operator==(const SAO & other) const {
+    Observation(int id)
+      : id(id) {}
+    virtual bool operator==(const SAO & other) const {
       auto ob = dynamic_cast<const Observation *>(&other);
       return ob!=nullptr && ob->id==id;
     }
@@ -52,7 +56,21 @@ struct FOL_World:MCTS_Environment{
       return std::hash<int>()(id);
     }
   };
-  struct State:SAO {};
+
+  struct State:SAO {
+    Graph *state;
+    uint T_step;
+    double T_real;
+    double R_total;
+
+    State(Graph* state, FOL_World& fol_state)
+      : state(state), T_step(fol_state.T_step), T_real(fol_state.T_real), R_total(fol_state.R_total) {}
+    virtual bool operator==(const SAO & other) const {
+      auto ob = dynamic_cast<const State*>(&other);
+      return ob!=nullptr && ob->state==state;
+    }
+    void write(ostream& os) const { os <<*state; }
+  };
 
   uint T_step, start_T_step; ///< discrete "time": decision steps so far
   double T_real, start_T_real;///< real time so far;
@@ -61,6 +79,7 @@ struct FOL_World:MCTS_Environment{
   //-- parameters
   bool hasWait;
   double gamma, stepCost, timeCost, deadEndCost;
+  uint maxHorizon;
 
   bool deadEnd, successEnd;
   Graph KB;     ///< current knowledge base
@@ -85,13 +104,16 @@ struct FOL_World:MCTS_Environment{
   FOL_World(istream& fil);
   virtual ~FOL_World();
   void init(istream& fil);
+  void init(const char* filename){ init(mlr::FileToken(filename)); }
 
   virtual TransitionReturn transition(const Handle& action); //returns (observation, reward)
   virtual const std::vector<Handle> get_actions();
   virtual bool is_feasible_action(const Handle& action);
-  virtual const Handle get_state();
+  virtual const Handle get_stateCopy();
+  virtual void set_state(const Handle& _state);
+
   virtual bool is_terminal_state() const;
-  virtual void make_current_state_default();
+  virtual void make_current_state_new_start();
   virtual void reset_state();
 
   virtual bool get_info(InfoTag tag) const;
@@ -108,6 +130,7 @@ struct FOL_World:MCTS_Environment{
     for(const mlr::String& s:symbols) parents.append(KB[s]);
     start_state->newNode<T>({}, parents, x);
   }
+  void addTerminalRule(const StringAA& literals);
 
   //-- internal access
   Graph* getState();

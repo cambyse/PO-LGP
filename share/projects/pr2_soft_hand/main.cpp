@@ -1,12 +1,12 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
 
 #include <RosCom/roscom.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <std_msgs/String.h>
 #include <RosCom/rosmacro.h>
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
   world.watch(true);
 
 
-  MotionProblem MP(world);
+  KOMO MP(world);
 
   MotionProblemFunction MF(MP);
   arr x = MP.getInitialization();

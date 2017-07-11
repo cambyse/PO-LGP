@@ -285,7 +285,7 @@ void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int
   const double t_end =   phase + duration;
   //
 
-  auto *map = new TaskMap_Transition( komo->MP->world );
+  auto *map = new TaskMap_Transition( komo->world );
   map->posCoeff = 0.;
   map->velCoeff = 1.;
   map->accCoeff = 0.;
@@ -423,8 +423,8 @@ void plan_AOS()
   //C.prepareKin("LGP-obs-kin-3.g");
 
   C.prepareFol("LGP-obs-container-fol-place-2.g");
-  //C.prepareKin("LGP-obs-container-kin.g");         // parse initial scene LGP-coop-kin.g
-  C.prepareKin("LGP-obs-container-kin-pr2.g");         // parse initial scene LGP-coop-kin.g
+  C.prepareKin("LGP-obs-container-kin.g");         // parse initial scene LGP-coop-kin.g
+  //C.prepareKin("LGP-obs-container-kin-pr2.g");         // parse initial scene LGP-coop-kin.g
 
 
   // make container and target rigid
@@ -475,7 +475,7 @@ void plan_AOS()
   //
 
   /////// 2 - Policy Optimization ////////
-  uint maxAlternatives = 3;
+  uint maxAlternatives = 0;
   for( auto alternatives = 0; ! C.isPolicyFringeEmpty() && alternatives < maxAlternatives; alternatives++ )
   {
    C.generateAlternativeSymbolicPolicy();
@@ -513,7 +513,7 @@ void plan_AOS()
   PolicyVisualizer viz( *policies.begin(), "nominal" );
 
   //C.updateDisplay( WorldID( -1 ), false, false, true );
-  mlr::wait( 3000 );
+  mlr::wait( 3000, true );
 }
 
 //===========================================================================
@@ -523,8 +523,8 @@ int main(int argc,char **argv){
 
   rnd.clockSeed();
 
-  orsDrawAlpha = 1.;
-  orsDrawJoints=orsDrawMarkers=false;
+  //orsDrawAlpha = 1.;
+  //orsDrawJoints=orsDrawMarkers=false;
   //  orsDrawCores = true;
   //if(mlr::getParameter<bool>("intact")){
   //  test();

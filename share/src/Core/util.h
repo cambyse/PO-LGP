@@ -88,6 +88,9 @@ extern int interactivity;
 void open(std::ofstream& fs, const char *name, const char *errmsg="");
 void open(std::ifstream& fs, const char *name, const char *errmsg="");
 
+//----- basic ui
+int x11_getKey();
+
 //----- strings and streams
 bool contains(const char *s, char c);
 char skip(std::istream& is, const char *skipSymbols=" \n\r\t", const char *stopSymbols=NULL, bool skipCommentLines=true);
@@ -147,7 +150,7 @@ double toTime(const tm& t);
 char *date();
 char *date(double sec);
 void wait(double sec, bool msg_on_fail=true);
-bool wait();
+bool wait(bool useX11=true);
 
 //----- memory
 long mem();
@@ -240,6 +243,7 @@ public:
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
+  void printf(const char *format, ...);
   void resize(uint n, bool copy); //low-level resizing the string buffer - with additinal final 0
   void append(char x);
   String& setRandom();
@@ -434,7 +438,7 @@ struct FileToken{
   operator std::ostream&(){ return getOs(); }
 };
 template<class T> FileToken& operator>>(FileToken& fil, T& x){ fil.getIs() >>x;  return fil; }
-template<class T> FileToken& operator<<(FileToken& fil, const T& x){ fil.getOs() <<x;  return fil; }
+template<class T> std::ostream& operator<<(FileToken& fil, const T& x){ fil.getOs() <<x;  return fil.getOs(); }
 inline std::ostream& operator<<(std::ostream& os, const FileToken& fil){ return os <<fil.name; }
 template<class T> FileToken& operator<<(T& x, FileToken& fil){ fil.getIs() >>x; return fil; }
 template<class T> void operator>>(const T& x, FileToken& fil){ fil.getOs() <<x; }
@@ -471,8 +475,8 @@ namespace mlr {
       CHECK(!strcmp(names[x], str.p), "");
     }
     void write(std::ostream& os) const{
-      if(x<0) os <<"none";
-      os <<names[x];
+      if(x<0) os <<"init";
+      else os <<names[x];
     }
   };
   template<class T> std::istream& operator>>(std::istream& is, Enum<T>& x){ x.read(is); return is; }
@@ -601,14 +605,14 @@ struct Mutex {
 
 template<class T>
 struct Singleton {
+  static Mutex mutex;
   static T *singleton;
 
   T *getSingleton() const {
     if(!singleton) {
-      static Mutex m;
-      m.lock();
+      mutex.lock();
       if(!singleton) singleton = new T;
-      m.unlock();
+      mutex.unlock();
     }
     return singleton;
   }
@@ -624,9 +628,20 @@ struct Singleton {
     }
   }
 
-  T& operator()() const{ return *getSingleton(); }
+  struct Token{
+    const Singleton<T>& base;
+    Token(Singleton<T>& _base) : base(_base){ base.getSingleton(); base.mutex.lock(); }
+    ~Token(){ base.mutex.unlock(); }
+    T* operator->(){ return base.getSingleton(); }
+    operator T&(){ return *base.getSingleton(); }
+    T& operator()(){ return *base.getSingleton(); }
+  };
+
+  Token operator()(){ return Token(*this); }
 };
+
 template<class T> T *Singleton<T>::singleton=NULL;
+template<class T> Mutex Singleton<T>::mutex;
 
 
 //===========================================================================
@@ -704,6 +719,7 @@ template <typename T> T clip(T& x, const T& lower, const T& upper) {
 }
 
 std::string getcwd_string();
+const char* NAME(const std::type_info& type);
 
 //===========================================================================
 //

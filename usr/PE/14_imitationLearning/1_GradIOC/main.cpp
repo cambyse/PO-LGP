@@ -1,11 +1,11 @@
 #include <Kin/kin.h>
 #include <Optim/benchmarks.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Control/taskController.h>
+#include <Kin/taskMap_default.h>
+#include <Kin/taskMap_proxy.h>
+#include <Kin/taskMap_constrained.h>
+#include <Control/taskControl.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>
@@ -27,7 +27,7 @@ void gradCheckExample(){
 
 
 struct Dfdw:ConstrainedProblem {
-  //  MotionProblem MPF;
+  //  KOMO MPF;
   ScalarFunction& s;
   VectorFunction& v;
   arr x0;
@@ -152,7 +152,7 @@ void simpleMotion(){
   arr q, qdot;
   world.getJointState(q, qdot);
 
-  MotionProblem MP(world);
+  KOMO MP(world);
   MP.useSwift = false;
   MP.loadTransitionParameters();
 

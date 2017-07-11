@@ -38,12 +38,12 @@ mlr::Body* createRobot(mlr::KinematicWorld& graph) {
   robot->X.pos.y -= .5;
   robot->X.pos.z += 1.;
   robot->name << "robot";
-  robot->type = mlr::kinematicBT;
+  robot->type = mlr::BT_kinematic;
   /* cout << "robot: " << robot->X << endl; */
   /* cout << "robot.pos.pos: " << robot->X.pos << endl; */
 
   mlr::Shape* robotShape = new mlr::Shape(graph, robot);
-  robotShape->type = mlr::sphereST;
+  robotShape->type = mlr::ST_sphere;
   robotShape->size[0] = .05;
   robotShape->size[1] = .05;
   robotShape->size[2] = .05;

@@ -28,7 +28,7 @@ void TEST(KinectModules) {
   FILE("z.kinect_depth") <<kin.kinect_depth.get()();
   FILE("z.kinect_rgb") <<kin.kinect_rgb.get()();
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
   cout <<"bye bye" <<endl;
@@ -46,7 +46,7 @@ void TEST(KinectRaw) {
     kin.step();
     gl.watchImage(kin.kinect_rgb.get(), false, 1.);
   }
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
   cout <<"closing..." <<endl;
   kin.close();
   cout <<"bye bye" <<endl;

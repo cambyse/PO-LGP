@@ -23,11 +23,11 @@ int main(int argc, char** argv){
     // run actor-critic
 
     environment env(Ros);
-    Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+    Access<sensor_msgs::JointState> jointState(NULL, "jointState");
     RosCom_Spinner spinner;
     threadOpenModules(true);
 
-    Access_typed<arr> ctrl_q_ref(NULL, "ctrl_q_ref");
+    Access<arr> ctrl_q_ref(NULL, "ctrl_q_ref");
     ctrl_q_ref.waitForRevisionGreaterThan(10);
 
     agent ag;

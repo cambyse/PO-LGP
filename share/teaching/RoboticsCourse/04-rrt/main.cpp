@@ -1,32 +1,31 @@
 #include <stdlib.h>
 #include <Kin/roboticsCourse.h>
 #include <Algo/ann.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Optim/optimization.h>
 
-//#include <MT/kOrderMarkovProblem.h>
-//#include <MT/functions.h>
+#include <Optim/kOrderMarkov.h>
 
-struct TrajectoryOptimizationProblem:KOrderMarkovFunction {
-  Simulator *S;
-  uint T;
-  arr x0, xT;
-  void phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar);
+//struct TrajectoryOptimizationProblem : KOrderMarkovFunction {
+//  Simulator *S;
+//  uint T;
+//  arr x0, xT;
+//  virtual void set_x(const arr& x);
+//  virtual void phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t);
 
-
-  uint get_T(){ return T; }
-  uint get_k(){ return 2; }
-  uint dim_x(){ return S->getJointDimension(); }
-  uint dim_phi(uint t){
-    if(t==0 || t==get_T()-get_k()) return 2*dim_x();
-    return dim_x()+1;
-  }
-  arr get_prefix(){
-    arr x(get_k(), dim_x());
-    for(uint k=0;k<x.d0;k++) x[k]()=x0;
-    return x;
-  }
-};
+//  uint get_T(){ return T; }
+//  uint get_k(){ return 2; }
+//  uint dim_x(uint t){ return S->getJointDimension(); }
+//  uint dim_phi(uint t){
+//    if(t==0 || t==get_T()-get_k()) return 2*dim_x(t);
+//    return dim_x(t)+1;
+//  }
+//  arr get_prefix(){
+//    arr x(get_k(), dim_x(0));
+//    for(uint k=0;k<x.d0;k++) x[k]()=x0;
+//    return x;
+//  }
+//};
 
 struct RRT{
 private:
@@ -201,52 +200,53 @@ void RTTplan(){
 
 
 void optim(){
-  Simulator S("../02-pegInAHole/pegInAHole.ors");
-  S.setContactMargin(.02); //this is 2 cm (all units are in meter)
+//  Simulator S("../02-pegInAHole/pegInAHole.ors");
+//  S.setContactMargin(.02); //this is 2 cm (all units are in meter)
 
-  arr x;
-  x <<FILE("q.rrt");
-  uint T=x.d0-1;
-  //S.watch();
-  if(false){
-    for(uint t=0;t<=T;t++){
-      double a = (double)t/T;
-      x[t]() = (1.-a)*x[0] + a*x[T];
-    }
-  }
-  plotClear();
-  plotEffTraj(S, x);
-  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
+//  arr x;
+//  x <<FILE("q.rrt");
+//  uint T=x.d0-1;
+//  //S.watch();
+//  if(false){
+//    for(uint t=0;t<=T;t++){
+//      double a = (double)t/T;
+//      x[t]() = (1.-a)*x[0] + a*x[T];
+//    }
+//  }
+//  plotClear();
+//  plotEffTraj(S, x);
+//  for(uint t=0;t<=T;t++) S.setJointAngles(x[t], true);
 
-  TrajectoryOptimizationProblem P;
-  P.S=&S;
-  P.T=x.d0-1;
-  P.x0 = x[0];
-  P.xT = x[x.d0-1];
+//  TrajectoryOptimizationProblem P;
+//  P.S=&S;
+//  P.T=x.d0-1;
+//  P.x0 = x[0];
+//  P.xT = x[x.d0-1];
 
-  cout <<"Problem parameters:"
-       <<"\n T=" <<P.get_T()
-       <<"\n k=" <<P.get_k()
-       <<"\n n=" <<P.dim_x()
-       <<endl;
+//  cout <<"Problem parameters:"
+//       <<"\n T=" <<P.get_T()
+//       <<"\n k=" <<P.get_k()
+//       <<"\n n=" <<P.dim_x(0)
+//       <<endl;
 
-#if 0 //only if you want to see some steps...
-  for(uint k=0;k<20;k++){
-    optNewton(x, Convert(P), OPT(stopIters=1, verbose=2, maxStep=.1, stopTolerance=1e-2));
-    plotEffTraj(S, x);
-    S.watch();
-  }
-#endif
+//#if 0 //only if you want to see some steps...
+//  for(uint k=0;k<20;k++){
+//    optNewton(x, Convert(P), OPT(stopIters=1, verbose=2, maxStep=.1, stopTolerance=1e-2));
+//    plotEffTraj(S, x);
+//    S.watch();
+//  }
+//#endif
 
-  optNewton(x, Convert(P), OPT(stopIters=1000, verbose=2, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
-  x >>FILE("q.optim");
+//  VectorFunction P_vec = conv_KOrderMarkovFunction2VectorFunction(P);
+//  optNewton(x, Convert(P_vec), OPT(stopIters=1000, verbose=2, damping=1e-0, maxStep=.1, stopTolerance=1e-4));
+//  x >>FILE("q.optim");
 
-  //display
-  plotEffTraj(S, x);
-  for(;;){
-    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  mlr::wait(.02); }
-    S.watch();
-  }
+//  //display
+//  plotEffTraj(S, x);
+//  for(;;){
+//    for(uint t=0;t<=P.get_T();t++){ S.setJointAngles(x[t], true);  mlr::wait(.02); }
+//    S.watch();
+//  }
 }
 
 
@@ -255,7 +255,7 @@ void optim(){
 int main(int argc,char **argv){
   mlr::initCmdLine(argc,argv);
 
-  switch(mlr::getParameter<int>("mode", 1)){
+  switch(mlr::getParameter<int>("mode", 0)){
   case 0: RTTplan();break;
   case 1: optim(); break;
   }
@@ -263,10 +263,13 @@ int main(int argc,char **argv){
   return 0;
 }
 
-void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t, const arr& x_bar){//phi_t(arr& phi, arr& J, uint t, const arr& x_bar, const arr& z, const arr& J_z){
+#if 0
+void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, uint t){
   uint T=get_T(), n=dim_x(), k=get_k(), m=dim_phi(t);
 
   double col_prec=1e-1;
+
+  arr x_bar = x({t+k})
 
   //assert some dimensions
   CHECK_EQ(x_bar.d0,k+1,"");
@@ -320,3 +323,4 @@ void TrajectoryOptimizationProblem::phi_t(arr& phi, arr& J, ObjectiveTypeA& tt, 
   }
 }
 
+#endif

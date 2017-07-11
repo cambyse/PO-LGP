@@ -1,8 +1,8 @@
 #include <Core/util.h>
 #include "interface/myBaxter.h"
 #include "lockbox/lockbox.h"
-#include <Control/taskController.h>
-#include <Motion/komo.h>
+#include <Control/taskControl.h>
+#include <KOMO/komo.h>
 
 // =================================================================================================
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv){
 
   lockbox.readyToTest = true;
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
 
 

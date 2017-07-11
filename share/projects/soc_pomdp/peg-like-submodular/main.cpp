@@ -1,7 +1,6 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
-#include <Control/taskController.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
+#include <Control/taskControl.h>
 #include <Optim/optimization.h>
 #include <Core/util.h>
 //#include <Perception/videoEncoder.h>
@@ -29,7 +28,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const 
 
 
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   //P.loadTransitionParameters(); // can change horizon here
   P.T = horizon;
 
@@ -157,7 +156,7 @@ void OnlineSubmodularity(const double tableW, const double tableL, mlr::Kinemati
   ofstream data(STRING("data-"<<num<<".dat"));
 
 
-  TaskController MC(world);
+  TaskControlMethods MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

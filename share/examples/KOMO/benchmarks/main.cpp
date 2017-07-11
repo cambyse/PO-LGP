@@ -1,4 +1,4 @@
-#include <Motion/benchmarks.h>
+#include <KOMO/benchmarks.h>
 #include <Optim/optimization.h>
 
 //===========================================================================

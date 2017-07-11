@@ -1,6 +1,5 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <iomanip>
@@ -93,7 +92,7 @@ void TEST(Door){
     arr q;
     G.getJointState(q);
     G.watch(false);
-    MotionProblem MP(G);
+    KOMO MP(G);
     cout <<"joint dimensionality=" <<q.N <<endl;
 
     //-- setup the motion problem

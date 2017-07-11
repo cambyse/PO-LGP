@@ -57,7 +57,7 @@ void PoseLevelType::solve()
       komo->setTiming( 1., 2, 5., 1, true );
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQVelocities();
-      komo->setSquaredFixSwitchedObjects(-1., -1., 1e3);
+      komo->setFixSwitchedObjects(-1., -1., 1e3);
 
       komo->groundTasks( 0., *node_->folStates()( w ) );
 
@@ -138,10 +138,10 @@ void PoseLevelType::solve()
         komos_( w ) = komo;
 
         // update effective kinematic
-        node_->effKinematics()( w ) = *komos_( w )->MP->configurations.last();
+        node_->effKinematics()( w ) = *komos_( w )->configurations.last();
 
         // update switch
-        for( mlr::KinematicSwitch *sw: komos_( w )->MP->switches )
+        for( mlr::KinematicSwitch *sw: komos_( w )->switches )
         {
           //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
           if( sw->timeOfApplication>=2 ) sw->apply( node_->effKinematics()( w ) );
@@ -274,9 +274,10 @@ void PathLevelType::solve()
       komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
-      komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
+      //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
+      //komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
 
       for( auto node:treepath )
       {
@@ -286,7 +287,7 @@ void PathLevelType::solve()
 
 //      DEBUG( FILE("z.fol") <<fol; )
 //          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-          komo->reset();
+      komo->reset();
       try{
         komo->run();
       } catch(const char* msg){
@@ -420,9 +421,10 @@ void JointPathLevelType::solve()
       komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
-      komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
+      //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
+      //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
       for( auto node:treepath )
       {
@@ -435,7 +437,7 @@ void JointPathLevelType::solve()
         {
           uint stepsPerPhase = node_->pathGeometricLevel()->komo( w )->stepsPerPhase; // get number of steps per phases
           uint nodeSlice = stepsPerPhase * ( start_offset_ + node->time() ) - 1;
-          arr q = zeros( node_->pathGeometricLevel()->komo( w )->MP->configurations( nodeSlice )->q.N );
+          arr q = zeros( node_->pathGeometricLevel()->komo( w )->configurations( nodeSlice )->q.N );
 
           // set constraints enforcing the path equality among worlds
           int nSupport = 0;
@@ -445,9 +447,9 @@ void JointPathLevelType::solve()
             {
               auto komo = node->pathGeometricLevel()->komo( x );
 
-              CHECK( node->pathGeometricLevel()->komo( x )->MP->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
+              CHECK( node->pathGeometricLevel()->komo( x )->configurations.N > 0, "one node along the solution path doesn't have a path solution already!" );
 
-              q += node->bs()( x ) * node->pathGeometricLevel()->komo( x )->MP->configurations( nodeSlice )->q;
+              q += node->bs()( x ) * node->pathGeometricLevel()->komo( x )->configurations( nodeSlice )->q;
 
               nSupport++;
             }

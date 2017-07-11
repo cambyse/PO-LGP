@@ -104,8 +104,6 @@ struct Body {
 
 //===========================================================================
 
-struct JointLocker;
-
 /// a joint
 struct Joint {
   KinematicWorld& world;
@@ -115,8 +113,6 @@ struct Joint {
   Joint *mimic;         ///< if non-NULL, this joint's state is identical to another's
   uint agent;           ///< associate this Joint to a specific agent (0=default robot)
   bool constrainToZeroVel; ///< HACK yet: when creating new 'virtual' joints, constrain them to zero vel in paths
-
-  JointLocker *locker;  ///< object toi abstract the dynamic locking of joints
 
   mlr::String name;      ///< name
   Enum<JointType> type;       ///< joint type
@@ -137,15 +133,15 @@ struct Joint {
     qIndex=j.qIndex; mimic=reinterpret_cast<Joint*>(j.mimic?1l:0l); agent=j.agent; constrainToZeroVel=j.constrainToZeroVel;
     name=j.name; type=j.type; A=j.A; Q=j.Q; B=j.B; X=j.X; axis=j.axis; limits=j.limits; q0=j.q0; H=j.H;
     ats=j.ats;
-    locker=j.locker;
   }
   void reset();
   void parseAts();
   uint qDim();
   void applyTransformation(mlr::Transformation& f, const arr& q);
+  void makeRigid();
   void write(std::ostream& os) const;
   void read(std::istream& is);
-  Joint &data() { return *this; }
+  mlr::String tag(){ return STRING(name <<':' <<type <<':' <<from->name <<'-' <<to->name); }
 };
 
 //===========================================================================
@@ -156,16 +152,15 @@ struct Shape : GLDrawer{
   uint index;
   Body *body;
   
-  mlr::String name;     ///< name
+  mlr::String name;    ///< name
   Transformation X;
   Transformation rel;  ///< relative translation/rotation of the bodies geometry
   Enum<ShapeType> type;
-  double size[4];  //TODO: obsolete: directly translate to mesh?
-  double color[3]; //TODO: obsolete: directly translate to mesh?
+  arr size;
   Mesh mesh, sscCore;
   double mesh_radius;
   bool cont;           ///< are contacts registered (or filtered in the callback)
-  Graph ats;   ///< list of any-type attributes
+  Graph ats;           ///< list of any-type attributes
   
   Shape(KinematicWorld& _world, Body& b, const Shape *copyShape=NULL, bool referenceMeshOnCopy=false); //new Shape, being added to graph and body's shape lists
   virtual ~Shape();
@@ -181,7 +176,7 @@ struct Shape : GLDrawer{
 
 /// a data structure to store proximity information (when two shapes become close) --
 /// as return value from external collision libs
-struct Proxy {
+struct Proxy : GLDrawer {
   //TODO: have a ProxyL& L as above...
   int a;              ///< index of shape A (-1==world) //TODO: would it be easier if this were mlr::Shape* ? YES -> Do it!
   int b;              ///< index of shape B
@@ -191,6 +186,7 @@ struct Proxy {
   double d, cenD;           ///< distance (positive) or penetration (negative) between A and B
   uint colorCode;
   Proxy();
+  void glDraw(OpenGL&);
 };
 
 //===========================================================================
@@ -210,6 +206,13 @@ struct KinematicWorld : GLDrawer{
 
   bool isLinkTree;
   static uint setJointStateCount;
+
+  //global options
+  bool orsDrawJoints=true, orsDrawShapes=true, orsDrawBodies=true, orsDrawProxies=true, orsDrawMarkers=true, orsDrawColors=true, orsDrawIndexColors=false;
+  bool orsDrawMeshes=true, orsDrawCores=false, orsDrawZlines=false;
+  bool orsDrawBodyNames=false;
+  double orsDrawAlpha=1.;
+  uint orsDrawLimit=0;
   
   /// @name constructors
   KinematicWorld();
@@ -248,6 +251,7 @@ struct KinematicWorld : GLDrawer{
   void zeroGaugeJoints();         ///< A <- A*Q, Q <- Id
   void makeLinkTree();            ///< modify transformations so that B's become identity
   void topSort(){ graphTopsort(bodies, joints); qdim.clear(); q.clear(); qdot.clear(); analyzeJointStateDimensions(); }
+  void jointSort();
   void glueBodies(Body *a, Body *b);
   void meldFixedJoints(int verbose=0);         ///< prune fixed joints; shapes of fixed bodies are reassociated to non-fixed boides
   void removeUselessBodies(int verbose=0);     ///< prune non-articulated bodies; they become shapes of other bodies
@@ -343,7 +347,7 @@ struct KinematicWorld : GLDrawer{
   void read(std::istream& is);
   void glDraw(struct OpenGL&);
 
-  void reportProxies(std::ostream *os=&std::cout, double belowMargin=-1.);
+  void reportProxies(std::ostream& os=std::cout, double belowMargin=-1., bool brief=true) const;
   void writePlyFile(const char* filename) const; //TODO: move outside
 };
 
@@ -356,7 +360,13 @@ struct KinematicSwitch{ //TODO: move to src/Motion
   uint timeOfApplication;
   uint fromId, toId;
   mlr::Transformation jA,jB;
+  uint agent;
   KinematicSwitch();
+  KinematicSwitch(OperatorSymbol op, JointType type,
+                  const char* ref1, const char* ref2,
+                  const mlr::KinematicWorld& K, uint _timeOfApplication,
+                  const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation,
+                  uint agent=0);
   void setTimeOfApplication(double time, bool before, int stepsPerPhase, uint T);
 //  KinematicSwitch(const Node *specs, const KinematicWorld& world, uint T);
   void apply(KinematicWorld& G);
@@ -404,7 +414,9 @@ stdPipes(KinematicWorld);
 //
 
 namespace mlr {
-void glDrawGraph(void *classP);
+void glDrawGraph(void*);
+void glDrawProxies(void*);
+
 }
 
 #ifndef MLR_ORS_ONLY_BASICS
@@ -418,8 +430,8 @@ uintA shapesToShapeIndices(const mlr::Array<mlr::Shape*>& shapes);
 //
 
 void lib_ors();
-void makeConvexHulls(ShapeL& shapes);
-void makeSSBoxApproximations(ShapeL& shapes);
+void makeConvexHulls(ShapeL& shapes, bool onlyContactShapes=true);
+void computeOptimalSSBoxes(ShapeL& shapes);
 void computeMeshNormals(ShapeL& shapes);
 double forceClosureFromProxies(mlr::KinematicWorld& C, uint bodyIndex,
                                double distanceThreshold=0.01,
@@ -444,18 +456,13 @@ void transferKI_ft_BetweenTwoWorlds(arr& KI_ft_To, const arr& KI_ft_From, const 
 // OPENGL interface
 struct OpenGL;
 
-//-- global draw options
-extern bool orsDrawJoints, orsDrawBodies, orsDrawGeoms, orsDrawProxies, orsDrawMeshes, orsDrawCores, orsDrawZlines, orsDrawBodyNames, orsDrawMarkers, orsDrawColors, orsDrawIndexColors;
-extern double orsDrawAlpha;
-extern uint orsDrawLimit;
-
 void displayState(const arr& x, mlr::KinematicWorld& G, const char *tag);
 void displayTrajectory(const arr& x, int steps, mlr::KinematicWorld& G, const KinematicSwitchL& switches, const char *tag, double delay=0., uint dim_z=0, bool copyG=false);
 inline void displayTrajectory(const arr& x, int steps, mlr::KinematicWorld& G, const char *tag, double delay=0., uint dim_z=0, bool copyG=false){
   displayTrajectory(x, steps, G, {}, tag, delay, dim_z, copyG);
 }
 void editConfiguration(const char* orsfile, mlr::KinematicWorld& G);
-void animateConfiguration(mlr::KinematicWorld& G, struct Inotify *ino=NULL);
+int animateConfiguration(mlr::KinematicWorld& G, struct Inotify *ino=NULL);
 //void init(mlr::KinematicWorld& G, OpenGL& gl, const char* orsFile);
 void bindOrsToOpenGL(mlr::KinematicWorld& graph, OpenGL& gl); //TODO: should be outdated!
 /// @} // END of group ors_interface_opengl

@@ -56,7 +56,7 @@ public:
         return action_container_t({action_handle_t(new TestAction(0)),
                     action_handle_t(new TestAction(1))});
     }
-    virtual void make_current_state_default() override {default_state = state;}
+    virtual void make_current_state_new_start() override {default_state = state;}
     virtual void reset_state() override {state = default_state;}
     virtual bool has_terminal_state() const override {return false;}
     virtual bool is_terminal_state() const override {return false;}

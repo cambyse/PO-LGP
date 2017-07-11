@@ -1,6 +1,5 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
@@ -25,7 +24,7 @@ void TEST(Stickiness){
 
   bool hardConstraint=true;
 
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *t;
@@ -70,7 +69,7 @@ void TEST(Stickiness){
 
 void TEST(EqualityConstraints){
   mlr::KinematicWorld G("chain.ors");
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   //-- setup the motion problem
   Task *t;
@@ -107,7 +106,7 @@ void TEST(EqualityConstraints){
 
 void TEST(ClosedKinematicChain){
   mlr::KinematicWorld G("closed_chain.ors");
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr q;
   G.getJointState(q);
@@ -154,7 +153,7 @@ void TEST(ContactConstraint){
 //  G.watch(true);
 
 
-  MotionProblem MP(G,false);
+  KOMO MP(G,false);
   MP.useSwift = true;
 
   arr q;
@@ -206,7 +205,7 @@ void TEST(VelConstraint){
   G.setJointState(q+0.1);
   cout << "q: " << q << endl;
   G.watch(true);
-  MotionProblem MP(G);
+  KOMO MP(G);
 
 
   //-- setup the motion problem
@@ -251,7 +250,7 @@ void TEST(qItselfConstraint){
   q.setZero();
   G.setJointState(q+0.1);
   G.watch(true);
-  MotionProblem MP(G);
+  KOMO MP(G);
 
 
   //-- setup the motion problem

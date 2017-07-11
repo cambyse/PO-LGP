@@ -1,4 +1,4 @@
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 //#include <Actions/taskCtrlActivities.h>
 #include <Actions/RelationalMachineModule.h>
 #include <Actions/sys.h>
@@ -15,10 +15,10 @@ struct MySystem {
   ACCESSname(mlr::String, state)
   ACCESSname(mlr::KinematicWorld, modelWorld)
 
-  TaskControllerModule *tcm;
+  TaskControlThread *tcm;
 
   MySystem(){
-    tcm = addModule<TaskControllerModule>(NULL, .01);
+    tcm = addModule<TaskControlThread>(NULL, .01);
     addModule<ActivitySpinnerModule>(NULL, .01);
     addModule<RelationalMachineModule>(NULL );
 

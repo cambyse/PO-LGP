@@ -1,8 +1,8 @@
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Actions/ControlActivities.h>
 #include <Actions/swig.h>
 #include <Actions/RelationalMachineModule.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 // ============================================================================
 
@@ -64,7 +64,7 @@ void forceControl(ActionSwigInterface& S){
   S.waitForCondition("(conv Control pos endeffL)");
 
   //-- direct access to the task controller -- a bit awkward, but generic
-  TaskControllerModule *taskController = getThread<TaskControllerModule>("TaskControllerModule");
+  TaskControlThread *taskController = getThread<TaskControlThread>("TaskControlThread");
   taskController->verbose = true;
 
 #if 0
@@ -104,16 +104,16 @@ int main(int argc, char** argv) {
     ActionSwigInterface S;
 //    S.setVerbose(true);
 
-    script1(S);
-//    script3(S);
+//    script1(S);
+    script3(S);
 //  forceControl(S);
 
     threadCloseModules();
-    modulesReportCycleTimes();
+    threadReportCycleTimes();
   }
 
   cout <<registry() <<endl;
-  registry().clear();
+  registry()->clear();
   cout <<"bye bye" <<endl;
   return 0;
 }

@@ -31,8 +31,8 @@ void way1(){
   Thread *m = new ComputeSum;
   //S.connect(); //this will create the respective variables!
 
-  Access_typed<arr> x(NULL, "x");
-  Access_typed<double> s(NULL, "s");
+  Access<arr> x(NULL, "x");
+  Access<double> s(NULL, "s");
 
 #if 0
   ComputeSum C;
@@ -100,7 +100,7 @@ void TEST(SystemConnect) {
 
   cout <<registry() <<endl;
 
-  registry().displayDot();
+  registry()->displayDot();
 
 //  GraphView gv(registry());
 //  gv.watch();

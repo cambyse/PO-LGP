@@ -16,7 +16,7 @@
 
 #include <memory>
 #include <Kin/kinViewer.h>
-#include <Motion/motion.h>
+//#include <Motion/motion.h>
 #include "polgp_node.h"
 
 class PolicyNode

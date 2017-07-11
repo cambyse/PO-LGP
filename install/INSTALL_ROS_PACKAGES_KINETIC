@@ -1,0 +1,48 @@
+#!/bin/bash
+
+read -p "This will install ros packages, opencv, and pcl. Press enter to continue." yn
+
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net --recv-key 0xB01FA116
+sudo apt-get update
+
+sudo apt-get install \
+ros-kinetic-desktop \
+ros-kinetic-object-recognition-core \
+ros-kinetic-object-recognition-msgs \
+ros-kinetic-object-recognition-ros \
+ros-kinetic-object-recognition-ros-visualization \
+ros-kinetic-pr2-msgs \
+ros-kinetic-ar-track-alvar-msgs \
+ros-kinetic-pcl-ros \
+libopencv-dev \
+python-opencv \
+python-wstool \
+
+echo "Downloading and installing baxter messages."
+source /opt/ros/kinetic/setup.bash
+
+export BAXTER_DIR=${HOME}/git/catkin_ws/src
+read -p "Install at $BAXTER_DIR (recommended)? (y/n)" yn
+
+if echo $yn | grep -iq "^n"; then
+	echo -e "\x1B[0;31mPlease execute the commands starting at mkdir for the desired directory"
+	echo -e "\x1B[0;31mAlso, please edit the mlr/share/build/defines.mk CPATH += and LPATH += within the ifeq (\$(ROS_VERSION),kinetic)"
+	tail INSTALL_ROS_PACKAGES_KINETIC
+	exit
+fi
+
+
+
+
+
+mkdir -p ${HOME}/git/catkin_ws/src
+cd ${HOME}/git/catkin_ws/src
+wstool init .
+wstool merge https://raw.githubusercontent.com/RethinkRobotics/baxter/master/baxter_sdk.rosinstall
+wstool update
+source /opt/ros/kinetic/setup.bash
+cd ..
+catkin_make
+catkin_make install
+

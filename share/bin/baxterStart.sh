@@ -11,4 +11,7 @@ rostopic pub -1 /robot/end_effector/right_gripper/command baxter_core_msgs/EndEf
 echo "Turning off sonar"
 rostopic pub -1 /robot/sonar/head_sonar/set_sonars_enabled std_msgs/UInt16 0
 
+echo "Enabling left hand camera"
+rosrun baxter_tools camera_control.py -o left_hand_camera -r 1280x800
+
 echo "Done."

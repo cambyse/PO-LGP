@@ -2,7 +2,7 @@
 
 #include <Logic/fol.h>
 #include <Kin/kin.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include "ActivitySpinnerModule.h"
 #include <Actions/RelationalMachineModule.h>
 #include <Hardware/gamepad/gamepad.h>
@@ -54,7 +54,7 @@ struct SwigSystem {
 
   ACCESSname(arr, gamepadState)
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   RelationalMachineModule rmm;
   OrsViewer orsviewer;
   OrsPoseViewer controlview;
@@ -88,7 +88,7 @@ struct SwigSystem {
 #ifdef MLR_ROS
       new SubscriberConvNoHeader<marc_controller_pkg::JointState, CtrlMsg, &conv_JointState2CtrlMsg>("/marc_rt_controller/jointState", ctrl_obs);
       new PublisherConv<marc_controller_pkg::JointState, CtrlMsg, &conv_CtrlMsg2JointState>("/marc_rt_controller/jointReference", ctrl_ref);
-      new Subscriber<ar::AlvarMarkers>("/ar_pose_marker", (Access_typed<ar::AlvarMarkers>&)ar_pose_markers);
+      new Subscriber<ar::AlvarMarkers>("/ar_pose_marker", (Access<ar::AlvarMarkers>&)ar_pose_markers);
       new SubscriberConv<geometry_msgs::PoseWithCovarianceStamped, arr, &conv_pose2transXYPhi>("/robot_pose_ekf/odom_combined", pr2_odom);
       new Subscriber<visualization_msgs::MarkerArray>("/tabletop/clusters", perceptionObjects);
 
@@ -158,7 +158,7 @@ ActionSwigInterface::ActionSwigInterface(bool setSignalHandler): S(new SwigSyste
   createNewSymbol("go");
 
   S->LOG(1) <<"Activity Symbols:";
-  NodeL acts = registry().getNodes("Activity");
+  NodeL acts = registry()->getNodes("Activity");
   for(Node *n:acts){
     S->LOG(1) <<"  adding symbol for " <<n->keys(0);
     createNewSymbol(n->keys.last().p);
@@ -502,7 +502,7 @@ int ActionSwigInterface::getQIndex(std::string jointName) {
   return S->tcm.modelWorld.get()->getJointByName(mlr::String(jointName))->qIndex;
 }
 
-Access_typed<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
+Access<RelationalMachine>& ActionSwigInterface::getRM(){ return S->RM; }
 
 void ActionSwigInterface::execScript(const char* filename){
   FILE(filename) >>S->RM.set()->KB;

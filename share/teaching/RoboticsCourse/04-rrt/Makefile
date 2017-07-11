@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Geo Kin Core Algo Gui extern_SWIFT Optim
+DEPEND = Geo Kin Core Algo Gui Optim Plot
 
 include $(BASE)/build/generic.mk
 

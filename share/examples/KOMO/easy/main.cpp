@@ -1,6 +1,6 @@
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 //===========================================================================
 
@@ -78,7 +78,6 @@ void TEST(EasyAlign2){
   komo.setMoveTo(G, *G.getShapeByName("endeff"), *s, 7);
   komo.setSpline(10);
   komo.run();
-//  komo.run();
   for(uint i=0;i<2;i++) komo.displayTrajectory();
 }
 

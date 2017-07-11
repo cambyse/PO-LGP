@@ -164,7 +164,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0
   ////////////////////////////////////////////////////
 
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters(); // can change horizon here
 
 
@@ -247,7 +247,7 @@ void POMDPExecution(const arr& allx, const arr& ally, const arr& alldual, mlr::K
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  TaskController MC(world);
+  TaskControlMethods MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

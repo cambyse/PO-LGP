@@ -4,7 +4,7 @@
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
 #include <Kin/kin.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 mlr::Vector p1, p2;
 mlr::Vector e1, e2;
@@ -43,7 +43,7 @@ void TEST(GJK_Jacobians) {
   j2.A.addRelativeTranslation(-1,-1,1);
   J1.type = J2.type = mlr::JT_quatBall;
   s1.type = s2.type = mlr::ST_ssCvx;
-  s1.size[3] = .5;  s2.size[3] = .5;
+  s1.size(3) = .5;  s2.size(3) = .5;
   s1.sscCore.setRandom();
   s2.sscCore.setRandom();
   s1.name="s1";
@@ -105,18 +105,18 @@ void TEST(GJK_Jacobians) {
     }
     //reduce by radii
     double l2=sumOfSqr(v), l=sqrt(l2);
-    p1 -= s1.size[3]/l*mlr::Vector(v);
-    p2 += s2.size[3]/l*mlr::Vector(v);
-    double fac = (l-s1.size[3]-s2.size[3])/l;
+    p1 -= s1.size(3)/l*mlr::Vector(v);
+    p2 += s2.size(3)/l*mlr::Vector(v);
+    double fac = (l-s1.size(3)-s2.size(3))/l;
     if(&J){
-      arr d_fac = (1.-(l-s1.size[3]-s2.size[3])/l)/l2 *(~v)*J;
+      arr d_fac = (1.-(l-s1.size(3)-s2.size(3))/l)/l2 *(~v)*J;
       J = J*fac + v*d_fac;
     }
     v *= fac;
     CHECK_ZERO(l2-d2, 1e-6,"");
   };
 
-  TaskMap_GJK gjk(W, Graph(STRING("type=GJK_vec ref1=s1 ref2=s2")), true);
+  TaskMap_GJK gjk(W, "s1", "s2", true);
 
   for(uint k=0;k<30;k++){
     rndGauss(q, .3);

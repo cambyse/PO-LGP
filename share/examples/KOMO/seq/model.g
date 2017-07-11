@@ -17,13 +17,13 @@ shape humanL (handL){ type=5 size=[.1 0 0 0] color=[1 1 0] rel=<T t(0 0 -.05) d(
 shape baxterR (right_wrist){ rel=<T d(-90 0 1 0) d(-90 0 0 1) t(0 0 -.26)> type=5 size=[.1 0 0 0] color=[1 1 0] }
 shape baxterL (left_wrist) { rel=<T d(-90 0 1 0) d(-90 0 0 1) t(0 0 -.26)> type=5 size=[.1 0 0 0] color=[1 1 0] }
 
-body Handle { type=9 size=[.03 .3 .15 .02] contact }
+body Handle { type=9 size=[.05 .3 .15 .02] contact }
 joint (tableC Handle) { from=<T t(-.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 
-body Long1 { type=9 size=[.03 .3 .1 .02] contact }
+body Long1 { type=9 size=[.05 .3 .1 .02] contact }
 joint (tableC Long1) { from=<T t(.2 .2 0)> to=<T t(0 0 .1)> type=10 }
 
-body Long2 { type=9 size=[.03 .3 .1 .02] contact }
+body Long2 { type=9 size=[.05 .3 .1 .02] contact }
 joint (tableC Long2) { from=<T t(.2 -.2 0)> to=<T t(0 0 .1)> type=10 }
 
 Include = '../../../data/toolbox/toolbox.ors'

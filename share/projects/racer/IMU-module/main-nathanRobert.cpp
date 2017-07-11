@@ -25,7 +25,7 @@ void testIMU(){
     if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    moduleShutdown().waitForValueGreaterThan(0);
+  //    moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 
@@ -73,7 +73,7 @@ void findBalancePoint(){
     //if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    moduleShutdown().waitForValueGreaterThan(0);
+  //    moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 
@@ -187,7 +187,7 @@ void testBalance(){
     //if(S.imuData.get()->(0)>10.) break;
   }
 
-  //    moduleShutdown().waitForValueGreaterThan(0);
+  //    moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 

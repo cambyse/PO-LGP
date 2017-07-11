@@ -1,9 +1,6 @@
 #include <Motion/rrt_planner.h>
-#include <Motion/motion.h>
-
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>
@@ -13,7 +10,7 @@
 SET_LOG(main, DEBUG);
 
 arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr& start) {
-  MotionProblem P(G);
+  KOMO P(G);
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
@@ -40,8 +37,8 @@ arr create_endpose(mlr::KinematicWorld& G, double col_prec, double pos_prec, arr
 arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
   double stepsize = mlr::getParameter<double>("rrt_stepsize", .005);
 
-  // create MotionProblem
-  MotionProblem P(G);
+  // create KOMO
+  KOMO P(G);
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(G));
   c->map.order=2; //make this an acceleration task!
@@ -62,8 +59,8 @@ arr create_rrt_trajectory(mlr::KinematicWorld& G, arr& target) {
 }
 
 arr optimize_trajectory(mlr::KinematicWorld& G, const arr& init_trajectory) {
-  // create MotionProblem
-  MotionProblem P(G);
+  // create KOMO
+  KOMO P(G);
   P.T = init_trajectory.d0-1;
   Task *c;
   c = P.addTask("transition", new TaskMap_Transition(G));

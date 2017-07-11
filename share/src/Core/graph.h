@@ -23,6 +23,8 @@
 
 #include "array.h"
 #include <map>
+#include <bits/shared_ptr.h>
+#include <memory>
 
 struct Node;
 template<class T> struct Node_typed;
@@ -55,8 +57,9 @@ struct Node {
   template<class T> bool isOfType() const{ return type==typeid(T); }
   template<class T> T *getValue();    ///< query whether node type is equal to (or derived from) T, return the value if so
   template<class T> const T *getValue() const; ///< as above
-  template<class T> T& get(){ T *x=getValue<T>(); CHECK(x, "this node is not of type '" <<typeid(T).name() <<"'"); return *x; }
-  template<class T> const T& get() const{ const T *x=getValue<T>(); CHECK(x, "this node is not of type '" <<typeid(T).name() <<"'"); return *x; }
+  template<class T> std::shared_ptr<T> getPtr() const;  ///< query whether node type is equal to (or derived from) shared_ptr<T>, return the shared_ptr if so
+  template<class T> T& get(){ T *x=getValue<T>(); CHECK(x, "this node is not of type '" <<typeid(T).name() <<"' but type '" <<type.name() <<"'"); return *x; }
+  template<class T> const T& get() const{ const T *x=getValue<T>(); CHECK(x, "this node is not of type '" <<typeid(T).name() <<"' but type '" <<type.name() <<"'"); return *x; }
   Graph& graph() { return get<Graph>(); }
   const Graph& graph() const { return get<Graph>(); }
   bool isBoolAndTrue() const{ if(type!=typeid(bool)) return false; return *((bool*)value_ptr) == true; }
@@ -114,6 +117,9 @@ struct Graph : NodeL {
   Node_typed<Graph>* newSubgraph(const StringA& keys, const NodeL& parents, const Graph& x=NoGraph);
   void appendDict(const std::map<std::string, std::string>& dict);
 
+  //-- deleting nodes
+  void delNode(Node *n) { delete n; }
+
   //-- basic node retrieval -- users usually use the higher-level wrappers below
   Node* findNode (const StringA& keys=StringA(), bool recurseUp=false, bool recurseDown=false) const;  ///< returns NULL if not found
   NodeL findNodes(const StringA& keys=StringA(), bool recurseUp=false, bool recurseDown=false) const;
@@ -170,7 +176,7 @@ struct Graph : NodeL {
   void writeHtml(std::ostream& os, std::istream& is);
   void writeParseInfo(std::ostream& os);
 
-  void displayDot();
+  void displayDot(Node *highlight=NULL);
 
   //private:
   friend struct Node;
@@ -388,6 +394,15 @@ template<class T> const T* Node::getValue() const {
   return &typed->value;
 }
 
+template<class T> std::shared_ptr<T> Node::getPtr() const {
+  NIY
+//  std::shared_ptr<T> typed = std::dynamic_pointer_cast<T>(std::shared_ptr<T>(value_ptr));
+  return std::shared_ptr<T>();
+//  const Node_typed<std::shared_ptr<T>>* typed = dynamic_cast<const Node_typed<std::shared_ptr<T>>*>(this);
+//  if(!typed) return NULL;
+//  return typed->value;
+}
+
 template<class T> Nod::Nod(const char* key, const T& x){
   n = G.newNode<T>(x);
   n->keys.append(STRING(key));
@@ -407,7 +422,7 @@ template<class T> T& Graph::get(const char *key) const {
 
 template<class T> T& Graph::get(const StringA& keys) const {
   Node *n = findNodeOfType(typeid(T), keys);
-  if(!n) HALT("no node of type '" <<typeid(T).name() <<"' with keys '"<< keys<< "' found");
+  if(!n) HALT("no node of type '" <<typeid(T).name() <<"' with keys '"<< keys<< "' found. Here is the full Graph:" <<*this);
   return n->get<T>();
 }
 
@@ -443,7 +458,7 @@ template<class T> Node_typed<T> *Graph::newNode(const T& x){
 // macro for declaring types (in *.cpp files)
 #define REGISTER_TYPE(Key, T) \
   RUN_ON_INIT_BEGIN(Decl_Type##_##Key) \
-  registry().newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T> >()); \
+  registry()->newNode<std::shared_ptr<Type> >({mlr::String("Decl_Type"), mlr::String(#Key)}, NodeL(), std::make_shared<Type_typed_readable<T> >()); \
   RUN_ON_INIT_END(Decl_Type##_##Key)
 
 #endif

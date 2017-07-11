@@ -4,7 +4,7 @@
 #include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <GL/gl.h>
 #include <Optim/optimization.h>
 
@@ -30,9 +30,31 @@ void TEST(LoadSave){
 // Jacobian test
 //
 
+void testJacobianInFile(const char* filename, const char* shape){
+  mlr::KinematicWorld K(filename);
+
+  mlr::Shape *sh=K.getShapeByName(shape);
+
+  VectorFunction f = ( [&sh, &K](arr& y, arr& J, const arr& x) -> void
+  {
+    K.setJointState(x);
+    K.kinematicsPos(y, J, sh->body, NoVector);
+    if(&J) cout <<"J=" <<J <<endl;
+  } );
+
+  checkJacobian(f, K.q, 1e-4);
+
+//  mlr::wait();
+}
+
+//===========================================================================
+//
+// Jacobian test
+//
+
 void TEST(Kinematics){
 
-  struct MyFct:VectorFunction{
+  struct MyFct : VectorFunction{
     enum Mode {Pos, Vec, Quat, RelPos, RelVec, RelRot} mode;
     mlr::KinematicWorld& W;
     mlr::Body *b, *b2;
@@ -50,6 +72,7 @@ void TEST(Kinematics){
           case RelVec: W.kinematicsRelVec(y,J,b,vec,b2); break;
           case RelRot: W.kinematicsRelRot(y,J,b,b2); break;
         }
+        //if(&J) cout <<"\nJ=" <<J <<endl;
       } );
     }
     VectorFunction& operator()(){ return *this; }
@@ -57,7 +80,9 @@ void TEST(Kinematics){
 
 //  mlr::KinematicWorld G("arm7.g");
   mlr::KinematicWorld G("kinematicTests.g");
-  //mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+//  mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+//  mlr::KinematicWorld G("../../../projects/17-LGP-push/quatJacTest.g");
+//  G.watch(true);
 
   for(uint k=0;k<10;k++){
     mlr::Body *b = G.bodies.rndElem();
@@ -67,7 +92,6 @@ void TEST(Kinematics){
     vec2.setRandom();
     arr x(G.getJointStateDimension());
     rndUniform(x,-.5,.5,false);
-//    x/=sqrt(sumOfSqr(x({0,3})));
 
     cout <<"kinematicsPos:   "; checkJacobian(MyFct(MyFct::Pos   , G, b, vec, b2, vec2)(), x, 1e-5);
     cout <<"kinematicsRelPos:"; checkJacobian(MyFct(MyFct::RelPos, G, b, vec, b2, vec2)(), x, 1e-5);
@@ -87,7 +111,7 @@ void TEST(Kinematics){
 
 void TEST(QuaternionKinematics){
   mlr::KinematicWorld G("kinematicTestQuat.g");
-  orsDrawJoints=false;
+  G.orsDrawJoints=false;
 
   for(uint k=0;k<3;k++){
     mlr::Quaternion target;
@@ -106,8 +130,6 @@ void TEST(QuaternionKinematics){
       G.watch(false, STRING("test quaternion task spaces -- time " <<t));
     }
   }
-
-  orsDrawJoints=true;
 }
 
 //===========================================================================
@@ -142,7 +164,8 @@ void TEST(Copy){
 void TEST(KinematicSpeed){
 #define NUM 10000
 #if 1
-  mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
+  mlr::KinematicWorld G("kinematicTests.g");
+  //  mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
   G.makeLinkTree();
   uint n=G.getJointStateDimension();
   arr x(n);
@@ -150,6 +173,8 @@ void TEST(KinematicSpeed){
   for(uint k=0;k<NUM;k++){
     rndUniform(x,-.5,.5,false);
     G.setJointState(x);
+//    G.watch();
+//    mlr::wait(.1);
   }
   cout <<"kinematics timing: "<< mlr::timerRead() <<"sec" <<endl;
 #endif
@@ -241,6 +266,24 @@ void TEST(Limits){
 }
 
 //===========================================================================
+
+void TEST(JointGroups){
+  mlr::KinematicWorld G("testGroups.g");
+
+  for(uint k=0;k<2;k++){
+    cout <<"Agent 0" <<endl;
+    G.setAgent(0);
+    int key=animateConfiguration(G);
+    if(key==27 || key=='q') break;
+    cout <<"Agent 1" <<endl;
+    G.setAgent(1);
+    key=animateConfiguration(G);
+    if(key==27 || key=='q') break;
+  }
+
+}
+
+//===========================================================================
 //
 // set state test
 //
@@ -325,7 +368,8 @@ void TEST(FollowRedundantSequence){
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  G.kinematicsPos(y, NoArr, G.bodies.last(), rel);
+  mlr::Body *endeff = G.getBodyByName("arm7");
+  G.kinematicsPos(y, NoArr, endeff, rel);
   for(t=0;t<T;t++) Z[t]() += y; //adjust coordinates to be inside the arm range
   plotLine(Z);
   G.gl().add(glDrawPlot,&plotModule);
@@ -334,7 +378,7 @@ void TEST(FollowRedundantSequence){
   for(t=0;t<T;t++){
     //Z[t] is the desired endeffector trajectory
     //x is the full joint state, z the endeffector position, J the Jacobian
-    G.kinematicsPos(y, J, G.bodies.last(), rel);  //get the new endeffector position
+    G.kinematicsPos(y, J, endeff, rel);  //get the new endeffector position
     invJ = ~J*inverse_SymPosDef(J*~J);
     x += invJ * (Z[t]-y);                  //simulate a time step (only kinematically)
     G.setJointState(x);
@@ -572,6 +616,7 @@ int MAIN(int argc,char **argv){
   testDynamics();
   testContacts();
   testLimits();
+  testJointGroups();
 #ifdef MLR_ODE
 //  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

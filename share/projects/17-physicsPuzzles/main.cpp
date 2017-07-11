@@ -1,11 +1,8 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
-
-#include <Motion/komo.h>
+#include <Kin/taskMaps.h>
+#include <KOMO/komo.h>
 
 
 #include <Kin/kin_swift.h>
@@ -19,8 +16,8 @@ void TEST(UsingKomo){
   komo.setModel(W);
 
   komo.setTiming(3., 20, 5., 2, true);
-  komo.setSquaredFixJointVelocities(-1., -1., 1e2);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e2);
+  komo.setFixEffectiveJoints(-1., -1., 1e2);
+  komo.setFixSwitchedObjects(-1., -1., 1e2);
 //  komo.setSquaredQAccelerations();
   komo.setSquaredQVelocities();
 

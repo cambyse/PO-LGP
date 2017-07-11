@@ -78,7 +78,7 @@ SymbolicState* RobotManipulationInterface::calculateSymbolicState(RobotManipulat
   // filter for logic
   FOR1D_DOWN(all_objs, i) {
     if (reason::getConstants().findValue(all_objs(i)) < 0) {
-      all_objs.removeValueSafe(all_objs(i));
+      all_objs.removeValue(all_objs(i, false));
     }
   }
   
@@ -438,7 +438,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
     }
   }
   if (id_hand != TL::UINT_NIL) {
-    clearGuys.removeValueSafe(id_hand);
+    clearGuys.removeValue(id_hand, false);
     nonClearGuys.setAppend(id_hand);
   }
      PRINT(clearGuys)
@@ -509,7 +509,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased(const SymbolicSta
   // puton / place
   else {
     sensibleGuys.append(id_table); // table is always clear
-    nonSensibleGuys.removeValueSafe(id_table);
+    nonSensibleGuys.removeValue(id_table, false);
     sa.resize(1);
     randNum = rnd.uni();
     double fraction_sensible = (1.0 * sensibleGuys.N) / (sensibleGuys.N + nonSensibleGuys.N);
@@ -629,7 +629,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
     }
   }
   if (id_hand != TL::UINT_NIL) {
-    clearGuys.removeValueSafe(id_hand);
+    clearGuys.removeValue(id_hand, false);
     nonClearGuys.setAppend(id_hand);
   }
   // PRINT(clearGuys)
@@ -796,7 +796,7 @@ Literal* RobotManipulationInterface::generateAction_wellBiased_2Dactions(const S
       // calc sensible 2nd args
       uintA sensibleSecondArgs = clearGuys;
       setMinus(sensibleSecondArgs, outGuys);
-      sensibleSecondArgs.removeValueSafe(id_hand);
+      sensibleSecondArgs.removeValue(id_hand, false);
       sensibleSecondArgs.append(id_table);
       // calc non-sensible 2nd args
       uintA nonSensibleSecondArgs = nonClearGuys;

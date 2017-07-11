@@ -21,5 +21,5 @@ void PlayFunnySoundActivity::step(){
 // ============================================================================
 
 RUN_ON_INIT_BEGIN(PlayFunnySound)
-registerActivity<PlayFunnySoundActivity>("PlayFunnySound");
+//registerActivity<PlayFunnySoundActivity>("PlayFunnySound");
 RUN_ON_INIT_END(PlayFunnySound)

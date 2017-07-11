@@ -1,3 +1,4 @@
+#ifdef MLR_ROS
 #include <RosCom/roscom.h>
 #include "perceptionCollection.h"
 
@@ -17,7 +18,7 @@ Collector::Collector(const bool simulate)
 
 void Collector::step()
 {
-  FilterObjects percepts;
+  PerceptL percepts;
   percepts.clear();
 
   if (!simulate)
@@ -67,7 +68,7 @@ void Collector::step()
 #endif
 
         for(auto & marker : msg.markers){
-          Cluster* new_cluster = new Cluster(conv_ROSMarker2Cluster( marker ));
+          PercCluster* new_cluster = new PercCluster(conv_ROSMarker2Cluster( marker ));
           new_cluster->frame = tabletop_srcFrame.get();
           percepts.append( new_cluster );
         }
@@ -95,7 +96,7 @@ void Collector::step()
         }
 
         for(auto & table : msg.tables){
-          Plane* new_plane = new Plane(conv_ROSTable2Plane( table ));
+          PercPlane* new_plane = new PercPlane(conv_ROSTable2Plane( table ));
           new_plane->frame = tabletop_srcFrame.get(); //tf
           percepts.append( new_plane );
         }
@@ -144,7 +145,7 @@ void Collector::step()
         }
 #endif
 
-        Alvar* new_alvar = new Alvar( conv_ROSAlvar2Alvar(marker) );
+        PercAlvar* new_alvar = new PercAlvar( conv_ROSAlvar2Alvar(marker) );
         new_alvar->frame = alvar_srcFrame.get();
         percepts.append( new_alvar );
       }
@@ -239,15 +240,15 @@ void Collector::step()
     rndUniform(box.V, -0.05, 0.05, true);
     box.scale(0.1);
 
-    Cluster* fake_cluster = new Cluster( ARR(0.6, 0., 0.05),  // mean
-                                         box.V,               // points
-                                         "/base_footprint");  // frame
+    PercCluster* fake_cluster = new PercCluster( ARR(0.6, 0., 0.05),  // mean
+                                                 box.V,               // points
+                                                 "/base_footprint");  // frame
     fake_cluster->frame.setZero();
     fake_cluster->frame.addRelativeTranslation(0.6, 0., 1.05);
     mlr::Quaternion rot;
 
-//    int tick = perceptual_inputs.readAccess();
-//    perceptual_inputs.deAccess();
+//    int tick = percepts_input.readAccess();
+//    percepts_input.deAccess();
 //    cout << "tick: " << tick << endl;
 //    rot.setDeg(0.01 * tick, mlr::Vector(0.1, 0.25, 1));
 
@@ -255,7 +256,7 @@ void Collector::step()
     fake_cluster->frame.addRelativeRotation(rot);
     percepts.append( fake_cluster );
 
-    Alvar* fake_alvar = new Alvar("/base_footprint");
+    PercAlvar* fake_alvar = new PercAlvar(10, "/base_footprint");
     fake_alvar->frame.setZero();
 
     arr pos = { 0.9, 0.3, 1.5 };
@@ -266,40 +267,38 @@ void Collector::step()
     rndUniform(alv_rot, -0.01, 0.01, true);
     rot.setRpy(alv_rot(0), alv_rot(1), alv_rot(2));
     fake_alvar->frame.addRelativeRotation(rot);
-    fake_alvar->id = 10;
+    fake_alvar->alvarId = 10;
     percepts.append( fake_alvar );
     mlr::wait(0.01);
   }
 
   if (percepts.N > 0){
-    perceptual_inputs.set() = percepts;
+    percepts_input.set() = percepts;
   }
 }
 
 
-Cluster conv_ROSMarker2Cluster(const visualization_msgs::Marker& marker)
+PercCluster conv_ROSMarker2Cluster(const visualization_msgs::Marker& marker)
 {
   arr points = conv_points2arr(marker.points);
   arr mean = sum(points,0)/(double)points.d0;
-  return Cluster(mean, points, marker.header.frame_id);
+  return PercCluster(mean, points, marker.header.frame_id);
 }
 
-Plane conv_ROSTable2Plane(const object_recognition_msgs::Table& table){
+PercPlane conv_ROSTable2Plane(const object_recognition_msgs::Table& table){
   mlr::Transformation t = conv_pose2transformation(table.pose);
-  arr hull = conv_points2arr(table.convex_hull);
-  arr center = ARR(t.pos.x, t.pos.y, t.pos.z);
-  mlr::Vector norm = t.rot*mlr::Vector(0,0,1);
-
-  arr normal = ARR(norm.x, norm.y, norm.z);
-  Plane toReturn = Plane(normal, center, hull, table.header.frame_id);
-  toReturn.transform = t;
+  mlr::Mesh hull;
+  hull.V = conv_points2arr(table.convex_hull);
+  hull.makeLineStrip();
+  PercPlane toReturn = PercPlane(t, hull);
+  toReturn.frame_id = table.header.frame_id;
+//  toReturn.transform = t;
   return toReturn;
 }
 
-Alvar conv_ROSAlvar2Alvar(const ar::AlvarMarker& marker)
+PercAlvar conv_ROSAlvar2Alvar(const ar::AlvarMarker& marker)
 {
-  Alvar new_alvar(marker.header.frame_id);
-  new_alvar.id = marker.id;
+  PercAlvar new_alvar(marker.id, marker.header.frame_id);
   new_alvar.transform = conv_pose2transformation(marker.pose.pose);
   return new_alvar;
 }
@@ -319,5 +318,4 @@ OptitrackBody conv_tf2OptitrackBody(const geometry_msgs::TransformStamped& msg)
   new_optitrackbody.transform = conv_transform2transformation(msg.transform);
   return new_optitrackbody;
 }
-
-
+#endif

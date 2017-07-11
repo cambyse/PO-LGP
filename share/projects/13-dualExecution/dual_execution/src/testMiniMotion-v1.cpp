@@ -10,16 +10,15 @@
 //#include <boost/thread.hpp>
 #endif
 
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Core/thread.h>
 #include "execution.h"
 
 arr getSimpleTrajectory(mlr::KinematicWorld& G){
-  MotionProblem P(G, false);
+  KOMO P(G, false);
   P.loadTransitionParameters();
 
   //-- setup the motion problem
@@ -28,7 +27,7 @@ arr getSimpleTrajectory(mlr::KinematicWorld& G){
                    new TaskMap_Default(posTMT, G, "endeff", NoVector));
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("miniTarget")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e1);
 
   MotionProblemFunction MF(P);
   arr x = P.getInitialization();
@@ -39,7 +38,7 @@ arr getSimpleTrajectory(mlr::KinematicWorld& G){
 }
 
 arr getKindOfSimpleTrajectory(mlr::KinematicWorld& G){
-  MotionProblem P(G, false);
+  KOMO P(G, false);
   P.loadTransitionParameters();
   arr x = P.getInitialization();
 
@@ -49,7 +48,7 @@ arr getKindOfSimpleTrajectory(mlr::KinematicWorld& G){
                    new TaskMap_Default(posTMT, G, "endeff", NoVector));
   c->setCostSpecs(P.T, P.T,
                           conv_vec2arr(P.world.getShapeByName("target")->X.pos), 1e2);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e1);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e1);
 
   //c = P.addTask("collisionConstraints", new CollisionConstraint());
   c = P.addTask("planeConstraint", new PlaneConstraint(G, "endeff", ARR(0,0,-1,.7)));

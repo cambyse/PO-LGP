@@ -8,7 +8,7 @@ TrajOptimizer::TrajOptimizer(mlr::KinematicWorld &_world)
 
 void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   // Create Motion Problem
-  MotionProblem MP(world);
+  KOMO MP(world);
   MP.loadTransitionParameters();
 
   // reference goal of right endeffector
@@ -23,10 +23,10 @@ void TrajOptimizer::optimizeTrajectory(arr &_goal, arr &_q0) {
   c->setCostSpecs(MP.T, MP.T, refGoal, 1e5);
 
 //  c = MP.addTask("qLimits", new TaskMap_qLimits());
-//  MP.setInterpolatingCosts(c,MotionProblem::constant,{0.},1e0,{0.},1e0);
+//  MP.setInterpolatingCosts(c,KOMO::constant,{0.},1e0,{0.},1e0);
 
   c = MP.addTask("final_vel", new TaskMap_qItself());
-  MP.setInterpolatingCosts(c,MotionProblem::finalOnly,{0.},1e3);
+  MP.setInterpolatingCosts(c,KOMO::finalOnly,{0.},1e3);
   c->map.order=1;
 
   //-- create the Optimization problem (of type kOrderMarkov)

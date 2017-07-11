@@ -1,7 +1,7 @@
 #include <RosCom/roscom.h>
 #include <ros/ros.h>
 #include <Actions/teleopControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <RosCom/roscom.h>
 #include <Core/thread.h>
 #include <Perception/perception.h>
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   GamepadInterface gpi;
   G4HutoRoMap hutoro;
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   TeleopControlActivity teleop;
   OrsViewer orsviewer;
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
 

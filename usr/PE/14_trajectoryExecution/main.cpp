@@ -1,7 +1,7 @@
 #include <Kin/kin.h>
-#include <Control/taskController.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <Control/taskControl.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
 #include "../splines/spline.h"
@@ -105,7 +105,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   // Plan Trajectory
   makeConvexHulls(world.shapes);
-  MotionProblem P(world);
+  KOMO P(world);
   P.loadTransitionParameters();
 
   arr goal = ARR(P.world.getBodyByName("goalRef")->X.pos);
@@ -114,11 +114,11 @@ void executeTrajectory(String scene, ControlType cType){
   Task *c;
   c = P.addTask("position", new TaskMap_Default(posTMT,world,"endeff", mlr::Vector(0., 0., 0.)));
   c->setCostSpecs(P.T, P.T, goal, 1e4);
-  P.setInterpolatingVelCosts(c, MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  P.setInterpolatingVelCosts(c, KOMO::finalOnly, {0.,0.,0.}, 1e3);
 
   c = P.addTask("orientation", new TaskMap_Default(vecTMT,world,"endeff",mlr::Vector(0., 0., 1.)));
   c->setCostSpecs(P.T, P.T, {1.,0.,0.}, 1e4);
-  P.setInterpolatingVelCosts(c,MotionProblem::finalOnly, {0.,0.,0.}, 1e3);
+  P.setInterpolatingVelCosts(c,KOMO::finalOnly, {0.,0.,0.}, 1e3);
 
 //  c = P.addTask("contact", new TaskMap_Default(collTMT,-1,NoVector,-1,NoVector,ARR(0.1)));
 //  c->setCostSpecs(0, P.T, {0.}, 1e0);
@@ -184,7 +184,7 @@ void executeTrajectory(String scene, ControlType cType){
 
   MObject goalMO(&world, mlr::String("goal"), MObject::GOAL , 0.0005, dir);
 
-  TaskController MP(world, false);
+  TaskControlMethods MP(world, false);
   CtrlTask *taskPos, *taskVec, *taskHome, *taskCol, *jointPos;
   double regularization = 1e-3;
 

@@ -1,4 +1,4 @@
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 #include <string>
 #include <map>
 
@@ -13,8 +13,8 @@ void TEST(KomoSequence){
 
   //  komo.setHoming(-1., -1., 1e-1);
   //  komo.setSquaredQVelocities();
-  komo.setSquaredFixJointVelocities();
-  komo.setSquaredFixSwitchedObjects();
+  komo.setFixEffectiveJoints();
+  komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 
   komo.setGrasp(1., "humanR", "Long1");

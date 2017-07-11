@@ -2,7 +2,7 @@
 #include <RosCom/roscom.h>
 #include <RosCom/spinner.h>
 #include <Actions/gamepadControl.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Kin/kinViewer.h>
 
@@ -15,18 +15,19 @@ int main(int argc, char** argv){
 
   rosCheckInit("gamepadControl");
 
-  Access_typed<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
-  Access_typed<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
-  Access_typed<arr>     pr2_odom(NULL, "pr2_odom");
+  Access<CtrlMsg> ctrl_ref(NULL, "ctrl_ref");
+  Access<CtrlMsg> ctrl_obs(NULL, "ctrl_obs");
+  Access<arr>     pr2_odom(NULL, "pr2_odom");
 
-  Access_typed<arr> q_ref(NULL, "q_ref");
-  Access_typed<sensor_msgs::JointState> jointState(NULL, "jointState");
+  Access<arr> q_ref(NULL, "q_ref");
+  Access<sensor_msgs::JointState> jointState(NULL, "jointState");
 
-  TaskControllerModule tcm;
+  TaskControlThread tcm;
   GamepadInterface gamepad;
   GamepadControlActivity gpc;
 //  OrsViewer view;
   OrsPoseViewer controlview({"ctrl_q_real", "ctrl_q_ref"}, tcm.realWorld);
+#if 1
   RosCom_Spinner spinner; //the spinner MUST come last: otherwise, during closing of all, it is closed before others that need messages
   if(mlr::getParameter<bool>("useRos")){
     mlr::String robot = mlr::getParameter<mlr::String>("robot", "pr2");
@@ -43,11 +44,12 @@ int main(int argc, char** argv){
 
   threadOpenModules(true);
 
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 
   threadCloseModules();
+#endif
 
-  //NodeL subs = registry().getNodesOfType<SubscriberType*>();
+  //NodeL subs = registry()->getNodesOfType<SubscriberType*>();
   //for(Node *n:subs){ delete n->get<SubscriberType*>(); delete n; }
   cout <<"bye bye" <<endl;
   return 0;

@@ -3,11 +3,12 @@ NAME   = $(shell basename `pwd`)
 OUTPUT = lib$(NAME).so
 
 ROS = 1
-DEPEND = Core Hardware Hardware_gamepad Motion Kin Gui Logic
+PCL = 1
+DEPEND = Core Hardware Hardware_gamepad KOMO Kin Gui Logic
 
 #CXXFLAGS += -DROS_PACKAGE_NAME='"pr2_module"'
 
-CPATHS += $(BASE)/projects/marc_controller_pkg/msg_gen/cpp/include
+#CPATHS += $(BASE)/projects/marc_controller_pkg/msg_gen/cpp/include
 
 SRCS = $(shell find . -maxdepth 1 -name '*.cpp' )
 OBJS = $(SRCS:%.cpp=%.o)

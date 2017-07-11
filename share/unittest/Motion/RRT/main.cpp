@@ -1,6 +1,6 @@
 #include <Motion/rrt_planner.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin.h>
 #include <gtest/gtest.h>
 #include <Gui/opengl.h>
@@ -28,8 +28,8 @@ RRTPlannerTest::RRTPlannerTest() {
   eps = .001;
   G.init("world_complex.ors");
 
-  // create MotionProblem
-  MotionProblem P(&G);
+  // create KOMO
+  KOMO P(&G);
   P.T = 1;
 
   // add a collision cost with threshold 0 to avoid collisions

@@ -34,9 +34,8 @@ add_executable(${project_name} ${PROJECT_SRC})
 target_link_libraries(
  ${project_name}
  Core
- Motion
+ #Motion
  Geo
- Kin
  Gui
  Optim
  Logic

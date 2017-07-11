@@ -144,7 +144,7 @@ void problem1(){
   b->X.pos(2) += 2.5;
   b->name <<"main";
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::meshST;
+  s->type=mlr::ST_mesh;
   const char * filename = "input1.obj";
   const char * outfilename = "output1.ply";  //! PLY works with colors, but ORS can not currently read it properly
   int scale = 0.1;
@@ -172,7 +172,7 @@ void problem2(){
   b->X.pos(2) += 2.5;
   b->name <<"main";
   mlr::Shape *s = new mlr::Shape(ors, b);
-  s->type=mlr::meshST;
+  s->type=mlr::ST_mesh;
   const char * filename = "input1.obj";
  // const char * filename = "body_clean.obj";
   const char * outfilename = "output1.ply";  //! PLY works with colors, but ORS can not currently read it properly

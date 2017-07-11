@@ -252,7 +252,7 @@ mlr::Body* np::get_chessboard(floatA& world_coords, uint nx, uint ny, double l)
       chessboard->shapes.append(s);
       s->body=chessboard;
       s->type = mlr::ST_box;
-      s->size[0]=l; s->size[1]=l; s->size[2]=.01; s->size[3]=.1;
+      s->size(0)=l; s->size(1)=l; s->size(2)=.01; s->size(3)=.1;
       if ((y+x)%2 == 0) {s->color[0]=0.; s->color[1]=0.; s->color[2]=0.;}
       else {s->color[0]=1.; s->color[1]=1.; s->color[2]=1.;}
 
@@ -303,7 +303,7 @@ void np::get_chessboard(mlr::Body*& chessboard, floatA& world_coords, uint nx, u
       chessboard->shapes.append(s);
       s->body=chessboard;
       s->type = mlr::ST_box;
-      s->size[0]=l; s->size[1]=l; s->size[2]=.01; s->size[3]=.1;
+      s->size(0)=l; s->size(1)=l; s->size(2)=.01; s->size(3)=.1;
       if ((y+x)%2 == 0) {s->color[0]=0.; s->color[1]=0.; s->color[2]=0.;}
       else {s->color[0]=1.; s->color[1]=1.; s->color[2]=1.;}
       s->rel.p(0)=offsetx; s->rel.p(1)=offsety; s->rel.p(2)=.0;
@@ -320,9 +320,9 @@ void np::get_chessboard(mlr::Body*& chessboard, floatA& world_coords, uint nx, u
         c->name=oss.str().c_str();
         c->type = mlr::ST_sphere;
 #ifndef NP_DEBUG_CHESSBOARD
-        c->size[0]=.001; c->size[1]=.001; c->size[2]=.001; c->size[3]=.001;
+        c->size(0)=.001; c->size(1)=.001; c->size(2)=.001; c->size(3)=.001;
 #else
-        c->size[0]=.05; c->size[1]=.05; c->size[2]=.05; c->size[3]=.05;
+        c->size(0)=.05; c->size(1)=.05; c->size(2)=.05; c->size(3)=.05;
 #endif
         c->color[0]=1.; c->color[1]=.0; c->color[2]=.0;
         c->rel.p(0)=offsetx+(l/2); c->rel.p(1)=offsety+(l/2); c->rel.p(2)=.0;

@@ -27,7 +27,7 @@ struct PoseLevelType : public GeometricLevelBase
 
 struct PathLevelType : public GeometricLevelBase
 {
-  PathLevelType( POLGPNode * node, const KOMOFactory & komoFactory, uint microSteps = 20 );
+  PathLevelType( POLGPNode * node, const KOMOFactory & komoFactory, uint microSteps = 10 );
 
   void solve();
 

@@ -12,8 +12,8 @@ void glDrawAxes(void*);
 //===========================================================================
 
 struct PointCloud2DataNeighbored : Thread {
-  Access_typed<arr> kinect_points;
-  Access_typed<DataNeighbored> data;
+  Access<arr> kinect_points;
+  Access<DataNeighbored> data;
 
   PointCloud2DataNeighbored()
     : Thread("PointCloud2DataNeighbored"),
@@ -42,10 +42,10 @@ struct PointCloud2DataNeighbored : Thread {
 //===========================================================================
 
 struct PlaneFitter : Thread {
-  Access_typed<DataNeighbored> data;
-  Access_typed<arr> kinect_points;
-  Access_typed<arr> kinect_pointColors;
-  Access_typed<PlaneA> planes_now;
+  Access<DataNeighbored> data;
+  Access<arr> kinect_points;
+  Access<arr> kinect_pointColors;
+  Access<PlaneA> planes_now;
   ModelEnsemble M;
 
   PlaneFitter()
@@ -111,16 +111,16 @@ void TEST(Kinect2Planes){
 
 #if 0
   for(uint t=0;t<100;t++){
-    if(moduleShutdown().getValue()>0) break;
+    if(moduleShutdown()->getStatus()>0) break;
     pts2data.data.waitForNextRevision();
     cout <<'.' <<endl;
   }
 #else
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 #endif
 
   threadCloseModules();
-  modulesReportCycleTimes();
+  threadReportCycleTimes();
   cout <<"bye bye" <<endl;
 }
 

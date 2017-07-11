@@ -42,11 +42,11 @@ void DiscWorld::initBodies() {
     b = new mlr::Body(*ors);
     if(i == 0) {
       b->name << "A";
-      b->type = mlr::kinematicBT;
+      b->type = mlr::BT_kinematic;
     }
     else {
       b->name << i;
-      b->type = mlr::dynamicBT;
+      b->type = mlr::BT_dynamic;
     }
     b->X.pos.setZero();
     b->X.rot.setZero();
@@ -55,7 +55,7 @@ void DiscWorld::initBodies() {
     names.append(new mlr::String(b->name));
 
     s = new mlr::Shape(*ors, b);
-    s->type = mlr::cylinderST;
+    s->type = mlr::ST_cylinder;
     s->size[2] = HEIGHT;
     s->size[3] = RADIUS;
     if(i == 0) {
@@ -69,12 +69,12 @@ void DiscWorld::initBodies() {
   // goal body
   b = new mlr::Body(*ors);
   b->name << "G";
-  b->type = mlr::kinematicBT;
+  b->type = mlr::BT_kinematic;
   b->X.pos.setZero();
   b->X.pos.z = GOAL_HEIGHT;
   b->X.rot.setZero();
   s = new mlr::Shape(*ors, b);
-  s->type = mlr::sphereST;
+  s->type = mlr::ST_sphere;
   s->size[2] = 2*HEIGHT;
   s->size[3] = .1;
   s->color[0] = 0;
@@ -134,12 +134,12 @@ void DiscWorld::resetBodies() {
   for(int i = 0; i < N; i++) {
     b = new mlr::Body(*ors);
     b->name << *names(i);
-    b->type = mlr::kinematicBT;
+    b->type = mlr::BT_kinematic;
     b->X.rot.setZero();
     names.append(new mlr::String(b->name));
 
     s = new mlr::Shape(*ors, b);
-    s->type = mlr::cylinderST;
+    s->type = mlr::ST_cylinder;
     s->size[2] = HEIGHT;
     s->size[3] = RADIUS;
     if(i == 0) {

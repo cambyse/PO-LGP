@@ -1,9 +1,9 @@
 #include <Core/util_t.h>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Kin/kin_swift.h>
 #include "../src/motion_factory.h"

@@ -1,5 +1,5 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 #include <Gui/opengl.h>
 
@@ -185,7 +185,7 @@ void PR2Grasp::eyespy_grasp_callback(const obj_id_pkg::MarkerArrayConstPtr &msg_
 void PR2Grasp::graspObject(mlr::Shape *object) {
   if(object) {
     arr X;
-    MotionProblem MP(*ti->world_plan);
+    KOMO MP(*ti->world_plan);
     ti->getStatePlan(MP.x0);
 
     Task *t;
@@ -316,7 +316,7 @@ int main(int argc, char** argv){
 //  cout << ti->world_plan->getJointState() << endl;
   PR2Grasp pr2grasp(ti);
   pr2grasp.home();
-  moduleShutdown().waitForValueGreaterThan(0);
+  moduleShutdown()->waitForStatusGreaterThan(0);
 //  pr2grasp.run();
 
   // testPointCloud();

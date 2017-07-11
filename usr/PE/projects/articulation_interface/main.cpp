@@ -33,7 +33,7 @@ void detectDOFdoor() {
   G.gl().resize(800,800);
   arr q;
   G.getJointState(q);
-  MotionProblem MP(G);
+  KOMO MP(G);
   cout <<"joint dimensionality=" <<q.N <<endl;
 
   Task *t;

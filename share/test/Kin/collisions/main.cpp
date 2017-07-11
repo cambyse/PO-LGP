@@ -29,28 +29,28 @@ inline void clip(double& x, double r){
 
 double distance_SSPoints(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
   CHECK(A.type==mlr::ST_retired_SSBox && B.type==mlr::ST_retired_SSBox,"");
-  CHECK(!A.size[0] && !B.size[0] && !A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SSpoints");
+  CHECK(!A.size(0) && !B.size(0) && !A.size(1) && !B.size(1) && !A.size(2) && !B.size(2), "can only handle SSpoints");
   Pa = A.X.pos;
   Pb = B.X.pos;
   mlr::Vector c = Pa-Pb;
   double d = c.length();
   //account for radii
-  Pa -= A.size[3]*c/d;
-  Pb += B.size[3]*c/d;
-  return d-A.size[3]-B.size[3];
+  Pa -= A.size(3)*c/d;
+  Pb += B.size(3)*c/d;
+  return d-A.size(3)-B.size(3);
 }
 
 double distance_SSLinePoint(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
   CHECK(A.type==mlr::ST_retired_SSBox && B.type==mlr::ST_retired_SSBox,"");
-  CHECK(!B.size[0] && !A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SSLinePoint");
-  if(!A.size[0]){ //SSLinePoint
+  CHECK(!B.size(0) && !A.size(1) && !B.size(1) && !A.size(2) && !B.size(2), "can only handle SSLinePoint");
+  if(!A.size(0)){ //SSLinePoint
     return distance_SSPoints(A, B, Pa, Pb);
   }
   mlr::Vector a=A.X.rot.getX();
   mlr::Vector c=B.X.pos - A.X.pos;
   //get the 'coordinate' along the line segment
   double t = c*a;
-  clip(t, A.size[0]);
+  clip(t, A.size(0));
   //compute closest points
   Pa = A.X.pos + t*a;
   Pb = B.X.pos;
@@ -58,15 +58,15 @@ double distance_SSLinePoint(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::V
   c = Pa-Pb;
   double d = c.length();
   //account for radii
-  Pa -= A.size[3]*c/d;
-  Pb += B.size[3]*c/d;
-  return d-A.size[3]-B.size[3];
+  Pa -= A.size(3)*c/d;
+  Pb += B.size(3)*c/d;
+  return d-A.size(3)-B.size(3);
 }
 
 double distance_SSLines(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vector& Pb){
   CHECK(A.type==mlr::ST_retired_SSBox && B.type==mlr::ST_retired_SSBox,"");
-  CHECK(!A.size[1] && !B.size[1] && !A.size[2] && !B.size[2], "can only handle SS line segments (cylinders)");
-  if(!B.size[0]){ //SSLinePoint
+  CHECK(!A.size(1) && !B.size(1) && !A.size(2) && !B.size(2), "can only handle SS line segments (cylinders)");
+  if(!B.size(0)){ //SSLinePoint
     return distance_SSLinePoint(A, B, Pa, Pb);
   }
   mlr::Vector a=A.X.rot.getX();
@@ -79,11 +79,11 @@ double distance_SSLines(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vecto
   double denom = 1. - A_dot_B*A_dot_B;
   double t, u;
   if(denom==0.) t=0.; else t = (A_dot_C - B_dot_C*A_dot_B)/denom;
-  clip(t, A.size[0]);
+  clip(t, A.size(0));
   u = t*A_dot_B - B_dot_C;
-  clip(u, B.size[0]);
+  clip(u, B.size(0));
   t = u*A_dot_B + A_dot_C;
-  clip(t, A.size[0]);
+  clip(t, A.size(0));
   //compute closest points
   Pa = A.X.pos + t*a;
   Pb = B.X.pos + u*b;
@@ -91,22 +91,22 @@ double distance_SSLines(mlr::Shape& A, mlr::Shape& B,mlr::Vector& Pa, mlr::Vecto
   c = Pa-Pb;
   double d = c.length();
   //account for radii
-  Pa -= A.size[3]*c/d;
-  Pb += B.size[3]*c/d;
-  return d-A.size[3]-B.size[3];
+  Pa -= A.size(3)*c/d;
+  Pb += B.size(3)*c/d;
+  return d-A.size(3)-B.size(3);
 }
 
 double distance_SSRects(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb){
   CHECK(A.type==mlr::ST_ssBox && B.type==mlr::ST_ssBox,"");
-  CHECK(!A.size[2] && !B.size[2], "can only handle spheres, cylinders & rectangles yet - no boxes");
-  if(!A.size[1] && !B.size[1]){ //SSLines
+  CHECK(!A.size(2) && !B.size(2), "can only handle spheres, cylinders & rectangles yet - no boxes");
+  if(!A.size(1) && !B.size(1)){ //SSLines
     return distance_SSLines(A, B, Pa, Pb);
   }
   mlr::Transformation f;
   f.setDifference(A.X, B.X);
   mlr::Matrix R = ((f.rot)).getMatrix();
-  mlr::Vector Asize={A.size[0], A.size[1], 0.};
-  mlr::Vector Bsize={B.size[0], B.size[1], 0.};
+  mlr::Vector Asize={A.size(0), A.size(1), 0.};
+  mlr::Vector Bsize={B.size(0), B.size(1), 0.};
   mlr::Vector trans = f.pos; //Asize + f.pos - R*Bsize;
   double dist = pqp_RectDist(R.p(), trans.p(), (Asize).p(), (Bsize).p(), Pa.p(), Pb.p());
   Pa = A.X * Pa;
@@ -117,9 +117,9 @@ double distance_SSRects(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vect
   if(dist>0.) CHECK_ZERO(dist-d, 1e-4, "NOT EQUAL!");
   if(dist==0.) d *= -1.; //if the rects penetrate already, measure the penetration as negative!
   //account for radii
-  Pa -= A.size[3]*c/d;
-  Pb += B.size[3]*c/d;
-  return d-A.size[3]-B.size[3];
+  Pa -= A.size(3)*c/d;
+  Pb += B.size(3)*c/d;
+  return d-A.size(3)-B.size(3);
 }
 
 
@@ -127,11 +127,15 @@ double distance_SSRects(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vect
  * That is different to the 'Shape' convention, where shapes are centered and extend (with half length) to negative and positive coordinates
  * In the code this is transformed back and forth... */
 double distance_(mlr::Shape& A, mlr::Shape& B, mlr::Vector& Pa, mlr::Vector& Pb){
-  A.X.pos -= 0.5*(A.X.rot*mlr::Vector(A.size[0], A.size[1], A.size[2]));
-  B.X.pos -= 0.5*(B.X.rot*mlr::Vector(B.size[0], B.size[1], B.size[2]));
+  A.size(0)-=2.*A.size(3);  A.size(1)-=2.*A.size(3);  A.size(2)-=2.*A.size(3);
+  B.size(0)-=2.*B.size(3);  B.size(1)-=2.*B.size(3);  B.size(2)-=2.*B.size(3);
+  A.X.pos -= 0.5*(A.X.rot*mlr::Vector(A.size(0), A.size(1), A.size(2)));
+  B.X.pos -= 0.5*(B.X.rot*mlr::Vector(B.size(0), B.size(1), B.size(2)));
   double d=distance_SSRects(A, B, Pa, Pb);
-  A.X.pos += 0.5*(A.X.rot*mlr::Vector(A.size[0], A.size[1], A.size[2]));
-  B.X.pos += 0.5*(B.X.rot*mlr::Vector(B.size[0], B.size[1], B.size[2]));
+  A.X.pos += 0.5*(A.X.rot*mlr::Vector(A.size(0), A.size(1), A.size(2)));
+  B.X.pos += 0.5*(B.X.rot*mlr::Vector(B.size(0), B.size(1), B.size(2)));
+  A.size(0)+=2.*A.size(3);  A.size(1)+=2.*A.size(3);  A.size(2)+=2.*A.size(3);
+  B.size(0)+=2.*B.size(3);  B.size(1)+=2.*B.size(3);  B.size(2)+=2.*B.size(3);
   return d;
 }
 
@@ -139,8 +143,8 @@ void TEST(Distance){
   mlr::KinematicWorld W;
   mlr::Shape A(W, NoBody), B(W, NoBody);
   A.type = B.type = mlr::ST_ssBox;
-  memmove(A.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
-  memmove(B.size, ARR(.5, .5, .0, .05).p, 4*sizeof(double));
+  A.size = ARR(.6, .6, .1, .05);
+  B.size = ARR(.6, .6, .1, .05);
   for(uint k=0;k<20;k++){
     A.X.setRandom(); A.X.pos(2) += 2.;
     B.X.setRandom(); B.X.pos(2) += 2.;
@@ -151,6 +155,7 @@ void TEST(Distance){
     mlr::Proxy p; p.posA=Pa; p.posB=Pb; p.colorCode=1;
     W.proxies.append( &p );
     W.gl().timedupdate(.1);
+//    W.gl().watch();
     W.proxies.clear();
   }
 }

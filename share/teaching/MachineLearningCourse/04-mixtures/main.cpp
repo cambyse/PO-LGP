@@ -1,7 +1,7 @@
 #include <Core/array.h>
 #include <Core/util.h>
 #include <Algo/ann.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Algo/MLcourse.h>
 
 using namespace std;

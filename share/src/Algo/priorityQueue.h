@@ -24,26 +24,31 @@ template<class T> struct PriorityQueueEntry{
   void write(std::ostream& os) const{ os <<'[' <<p <<": " <<*x <<']' <<endl; }
   static bool cmp(const PriorityQueueEntry<T>& a, const PriorityQueueEntry<T>& b);
 };
+
 template<class T> stdOutPipe(PriorityQueueEntry<T>)
 
 template<class T>
 bool PriorityQueueEntry<T>::cmp(const PriorityQueueEntry<T>& a, const PriorityQueueEntry<T>& b){
   return a.p <= b.p;
-};
+}
+
+template<class T> bool operator<=(const PriorityQueueEntry<T>& a, const PriorityQueueEntry<T>& b){
+  return a.p <= b.p;
+}
 
 template<class T> struct PriorityQueue : mlr::Array<PriorityQueueEntry<T> > {
   PriorityQueue(){
     mlr::Array<PriorityQueueEntry<T> >::memMove = true;
   }
 
-  void add(double p, const T& x){
+  void add(double p, const T& x, bool fromBackIfEqual=false){
     PriorityQueueEntry<T> e = {p, x};
-    mlr::Array<PriorityQueueEntry<T> >::insertInSorted(e, PriorityQueueEntry<T>::cmp);
+    mlr::Array<PriorityQueueEntry<T> >::insertInSorted(e, PriorityQueueEntry<T>::cmp, fromBackIfEqual); //'fromBack' makes it a FIFO (breadth first search); otherwise LIFO (depth first search)
   }
 
   T pop(){
     T x=mlr::Array<PriorityQueueEntry<T> >::first().x;
-    remove(0);
+    mlr::Array<PriorityQueueEntry<T> >::remove(0);
     return x;
   }
 

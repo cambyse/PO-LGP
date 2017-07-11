@@ -75,7 +75,7 @@ System& NoSystem = *((System*)NULL);
 //  engine().acc->queryReadAccess(this, p);
 //  rwlock.readLock();
 //  engine().acc->logReadAccess(this, p);
-//  return revision.getValue();
+//  return revision.getStatus();
 //}
 
 //int Variable_SharedMemory::writeAccess(Module *m) {
@@ -98,7 +98,7 @@ System& NoSystem = *((System*)NULL);
 //  } else {
 //    engine().acc->logReadDeAccess(this,p);
 //  }
-//  int rev=revision.getValue();
+//  int rev=revision.getStatus();
 //  rwlock.unlock();
 //  return rev;
 //}
@@ -108,7 +108,7 @@ System& NoSystem = *((System*)NULL);
 //}
 
 //int Variable_SharedMemory::revisionNumber(){
-//  return revision.getValue();
+//  return revision.getStatus();
 //}
 
 //int Variable_SharedMemory::waitForNextRevision(){
@@ -121,7 +121,7 @@ System& NoSystem = *((System*)NULL);
 
 //int Variable_SharedMemory::waitForRevisionGreaterThan(int rev) {
 //  revision.lock();
-//  revision.waitForValueGreaterThan(rev, true);
+//  revision.waitForStatusGreaterThan(rev, true);
 //  rev = revision.value;
 //  revision.unlock();
 //  return rev;
@@ -192,7 +192,7 @@ System& NoSystem = *((System*)NULL);
 
 Module* System::addModule(const char *dclName, const char *name, Module::StepMode mode, double beat){
   //find the dcl in the registry
-  Node *modReg = registry().getNode("Decl_Module", dclName);
+  Node *modReg = registry()->getNode("Decl_Module", dclName);
   if(!modReg){
     MLR_MSG("could not find Decl_Module " <<dclName);
     return NULL;
@@ -221,8 +221,8 @@ Module* System::addModule(const char *dclName, const char *name, const StringA& 
   return m;
 }
 
-RevisionedAccessGatedClass* System::connect(Access& acc, const char *variable_name){
-  RevisionedAccessGatedClass *v = listFindByName(vars, variable_name);
+VariableBase* System::connect(Access& acc, const char *variable_name){
+  VariableBase *v = listFindByName(vars, variable_name);
   if(v){ //variable exists -> link it
     acc.linkToVariable(v);
   }else{ //variable does not exist yet
@@ -241,7 +241,7 @@ void System::connect(){
 
   for(Access *a: accs){
     Module *m=a->module;
-    RevisionedAccessGatedClass *v = NULL;
+    VariableBase *v = NULL;
     if(!a->var) v = connect(*a, a->name); //access is not connected yet
     else v = a->var;
 
@@ -277,8 +277,8 @@ Graph System::graph() const{
   Graph g;
   g.newNode<bool>({"SystemModule", name}, {}, NULL, false);
   g.checkConsistency();
-  std::map<RevisionedAccessGatedClass*, Node*> vit;
-  for(RevisionedAccessGatedClass *v: vars) vit[v] = g.newNode({"Variable", v->name}, {}, v, false);
+  std::map<VariableBase*, Node*> vit;
+  for(VariableBase *v: vars) vit[v] = g.newNode({"Variable", v->name}, {}, v, false);
   g.checkConsistency();
   for(Module *m: *this){
     Node *mit = g.newNode({"Module", m->name}, {}, &m, false);
@@ -393,19 +393,19 @@ void Engine::dumpAccessLog(){
 }
 
 void Engine::blockAllAccesses(){
-  acc->blockMode.setValue(2);
+  acc->blockMode.setStatus(2);
 }
 
 void Engine::unblockAllAccesses(){
-  acc->blockMode.setValue(0);
+  acc->blockMode.setStatus(0);
 }
 
 void Engine::stepToNextAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 void Engine::stepToNextWriteAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 
@@ -421,9 +421,9 @@ struct LoggerVariableData {
 
   //-- or replay may block access to ensure right revision
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
-  ConditionVariable readCondVar;
+  Signaler readCondVar;
   /* here everyone sleeps who wants to have write access */
-  ConditionVariable writeCondVar;
+  Signaler writeCondVar;
 
   LoggerVariableData(): controllerBlocksRead(false), controllerBlocksWrite(false){}
 };
@@ -445,7 +445,7 @@ EventController::~EventController(){
 }
 
 void EventController::breakpointSleep(){ //the caller goes to sleep
-  ConditionVariable *c = new ConditionVariable;
+  Signaler *c = new Signaler;
   breakpointMutex.lock();
   breakpointQueue.append(c);
   breakpointMutex.unlock();
@@ -454,19 +454,19 @@ void EventController::breakpointSleep(){ //the caller goes to sleep
 
 void EventController::breakpointNext(){ //first in the queue is being woke up
   breakpointMutex.lock();
-  ConditionVariable *c = breakpointQueue.popFirst();
+  Signaler *c = breakpointQueue.popFirst();
   breakpointMutex.unlock();
   if(!c) return;
   c->broadcast();
   delete c;
 }
 
-void EventController::queryReadAccess(RevisionedAccessGatedClass *v, const Module *p){
+void EventController::queryReadAccess(VariableBase *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, 0.);
+    EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2; //1: only ONE reader
     blockedEvents.removeValue(e);
     delete e;
@@ -474,12 +474,12 @@ void EventController::queryReadAccess(RevisionedAccessGatedClass *v, const Modul
   blockMode.unlock();
 }
 
-void EventController::queryWriteAccess(RevisionedAccessGatedClass *v, const Module *p){
+void EventController::queryWriteAccess(VariableBase *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, 0.);
+    EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2;
     blockedEvents.removeValue(e);
     delete e;
@@ -487,31 +487,31 @@ void EventController::queryWriteAccess(RevisionedAccessGatedClass *v, const Modu
   blockMode.unlock();
 }
 
-void EventController::logReadAccess(const RevisionedAccessGatedClass *v, const Module *p) {
+void EventController::logReadAccess(const VariableBase *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::read, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logWriteAccess(const RevisionedAccessGatedClass *v, const Module *p) {
+void EventController::logWriteAccess(const VariableBase *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  EventRecord *e = new EventRecord(v, p, EventRecord::write, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
   if(events.N>100) dumpEventList();
 }
 
-void EventController::logReadDeAccess(const RevisionedAccessGatedClass *v, const Module *p) {
+void EventController::logReadDeAccess(const VariableBase *v, const Module *p) {
   //do something if in replay mode
   if(getVariableData(v)->controllerBlocksRead)
     breakpointSleep();
 }
 
-void EventController::logWriteDeAccess(const RevisionedAccessGatedClass *v, const Module *p) {
+void EventController::logWriteDeAccess(const VariableBase *v, const Module *p) {
   //do something if in replay mode
   //do something if enableDataLog
   if(getVariableData(v)->controllerBlocksWrite)
@@ -585,7 +585,7 @@ void EventController::dumpEventList(){
   writeEventList(*eventsFile, false, 0, true);
 }
 
-LoggerVariableData* EventController::getVariableData(const RevisionedAccessGatedClass* v){
+LoggerVariableData* EventController::getVariableData(const VariableBase* v){
 //  if(!v->s->loggerData) v->s->loggerData = new LoggerVariableData();
 //  return v->s->loggerData;
   NIY;

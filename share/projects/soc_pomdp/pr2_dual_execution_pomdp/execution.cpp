@@ -22,7 +22,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, arr x0
 
 
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters(); // can change horizon hereP
   P.T = horizon;
   x = P.getInitialization();
@@ -100,7 +100,7 @@ void POMDPExecution(FSC fsc, mlr::KinematicWorld& world, int num, double est){
   est_target->X.pos.z  = est;
 
 
-  TaskController MC(world);
+  TaskControlMethods MC(world);
   MC.qitselfPD.active=false;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8

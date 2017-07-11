@@ -34,7 +34,7 @@ struct GeometricLevelBase
 
   const KOMOFactory & komoFactory() const { return komoFactory_; }
 
-  ExtensibleKOMO::ptr   komo( uint w ) const { return komos_( w ); }
+//  ExtensibsetSquaredQVelocitiesleKOMO::ptr   komo( uint w ) const { return komos_( w ); }
   ExtensibleKOMO::ptr & komo( uint w )       { return komos_( w ); }
 
   mlr::Array< ExtensibleKOMO::ptr >   komos() const { return komos_; }
@@ -53,7 +53,7 @@ protected:
   double maxCost_        = 5;
 
   double start_offset_ = 1.0; // the first task should be grounded starting from this time
-  double end_offset_ = 1.0;
+  double end_offset_   = 1.0;
 
   // komo factory
   const KOMOFactory & komoFactory_;
@@ -62,8 +62,8 @@ protected:
   POLGPNode * node_;
   mlr::Array< double > costs_;          // optimization result costs ( one per world )
   mlr::Array< double > constraints_;    // optimization result costs ( one per world )
-  mlr::Array< bool >   solved_;         // whether the optimization has been solved ( one per world )
-  mlr::Array< bool >   infeasibles_;    // whether the optimization succedded or not ( one per world )
+  mlr::Array< int >   solved_;         // whether the optimization has been solved ( one per world )
+  mlr::Array< int >   infeasibles_;    // whether the optimization succedded or not ( one per world )
   mlr::Array< ExtensibleKOMO::ptr > komos_; // opti state after optimization ( one per world )
   double cost_;                         // weighed by believe state
   double constraint_;                  // weighed by believe state

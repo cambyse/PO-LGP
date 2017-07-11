@@ -4,7 +4,7 @@
 #include <Algo/spline.h>
 #include <Algo/algos.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <GL/gl.h>
 #include <Optim/optimization.h>
 #include <Hardware/kinect/kinect.h>
@@ -25,12 +25,12 @@ void TEST(CapturePointcloud) {
   gl.camera.focus(0.,0.,0.);
 
   /// add simple box to scene
-  ors::Body *boxBody = new ors::Body(world);
+  mlr::Body *boxBody = new mlr::Body(world);
   boxBody->name = STRING("box");
-  boxBody->type = ors::BodyType::dynamicBT;
-  boxBody->X.pos = ors::Vector(0.,0.,.05);
-  ors::Shape *boxShape = new ors::Shape(world, *boxBody);
-  boxShape->type = ors::boxST;
+  boxBody->type = mlr::BodyType::BT_dynamic;
+  boxBody->X.pos = mlr::Vector(0.,0.,.05);
+  mlr::Shape *boxShape = new mlr::Shape(world, *boxBody);
+  boxShape->type = mlr::ST_box;
   boxShape->name = STRING("box");
   arr size = ARRAY(0.2,0.2,0.1, 0.0);
   memmove(boxShape->size, size.p, 4*sizeof(double));
@@ -93,7 +93,7 @@ void TEST(GenerateDataset) {
   /// initialize world
   double w = 640;
   double h = 480;
-  ors::KinematicWorld world("toy.ors");
+  mlr::KinematicWorld world("toy.ors");
   OpenGL gl("background", w,h);
 
   gl.add(glStandardScene, 0);
@@ -109,18 +109,18 @@ void TEST(GenerateDataset) {
   arr limits = ARR(1.,2.);
   uint N = 20;
 
-  ors::Mesh mesh;
+  mlr::Mesh mesh;
   gl.add(mesh);
   for (uint n=0;n<N;n++) {
     theta(0) = limits(0)+n/(double)(N-1)*(limits(1)-limits(0));
 
     /// add simple box to scene
-    ors::Body *boxBody = new ors::Body(world);
+    mlr::Body *boxBody = new mlr::Body(world);
     boxBody->name = STRING("box");
-    boxBody->type = ors::BodyType::dynamicBT;
-    boxBody->X.pos = ors::Vector(0.,0.,.05);
-    ors::Shape *boxShape = new ors::Shape(world, *boxBody);
-    boxShape->type = ors::boxST;
+    boxBody->type = mlr::BodyType::BT_dynamic;
+    boxBody->X.pos = mlr::Vector(0.,0.,.05);
+    mlr::Shape *boxShape = new mlr::Shape(world, *boxBody);
+    boxShape->type = mlr::ST_box;
     boxShape->name = STRING("box");
     arr size = ARRAY(theta(0)*0.2,theta(0)*0.2,0.1, 0.0);
     memmove(boxShape->size, size.p, 4*sizeof(double));
@@ -157,7 +157,7 @@ void TEST(GenerateDataset) {
 
     /// transform depth image into world frame
     for(uint i=0;i<pts.d0;i++) pts(i,2) *= -1.; // switch z dimension of points
-    ors::Transformation T = gl.camera.X;
+    mlr::Transformation T = gl.camera.X;
     T.applyOnPointArray(pts);
 
     /// visualize pointcloud

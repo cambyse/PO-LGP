@@ -59,7 +59,7 @@ public:
     virtual ~BottleneckEnvironment() = default;
     virtual observation_reward_pair_t transition(const action_handle_t & action_handle) override;
     virtual action_container_t get_actions() override;
-    virtual void make_current_state_default() override {default_state = state;}
+    virtual void make_current_state_new_start() override {default_state = state;}
     virtual void reset_state() override {state = default_state;}
     virtual bool has_terminal_state() const override {return true;}
     virtual bool is_terminal_state() const override {return state.step==branch_length;}

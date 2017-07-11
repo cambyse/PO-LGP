@@ -1,5 +1,5 @@
 #include "mf_strategy.h"
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 
 MF_strategy::MF_strategy(double paramDim,TaskManager &tm)

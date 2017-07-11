@@ -1,8 +1,8 @@
 #include <Algo/spline.h>
 #include <Core/array.h>
-#include <Gui/plot.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <Plot/plot.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
 #include <Kin/kin.h>
 #include "../src/plotUtil.h"
@@ -13,7 +13,7 @@ arr createDoorDemonstration(mlr::KinematicWorld &world, arr &tp) {
   arr q; world.getJointState(q);
   world.setJointState(q,q*0.);
 
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 150;
   MP.tau = 0.02;
   MP.x0 = q;
@@ -86,7 +86,7 @@ int main(int argc,char **argv){
 
 
   /// step-wise model based improvement
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 150;
   MP.tau = 0.02;
   MP.x0 = xDem[0];
@@ -180,7 +180,7 @@ int main(int argc,char **argv){
 
 
 
-  MotionProblem MP2(world,false);
+  KOMO MP2(world,false);
   MP2.T = 150;
   MP2.tau = 0.02;
   MP2.x0 = xDem[0];

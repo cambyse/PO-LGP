@@ -21,7 +21,7 @@
  */
 
 #include "soc_exampleProblems.h"
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 ControlledSystem_PointMass::ControlledSystem_PointMass(){
   T = mlr::getParameter<uint>("T",10);

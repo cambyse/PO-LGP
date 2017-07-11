@@ -3,8 +3,8 @@
 
 #include <Core/array.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 
 struct DoorTask {
   arr constraintTime;
@@ -12,7 +12,7 @@ struct DoorTask {
   mlr::KinematicWorld *world;
   arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
   DoorTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_);}
-  void addConstraints(MotionProblem *MP, const arr &X);
+  void addConstraints(KOMO *MP, const arr &X);
   void updateVisualization(mlr::KinematicWorld &world, arr &X);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);

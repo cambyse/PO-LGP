@@ -1,0 +1,3 @@
+ODE = 0
+PHYSX = 0
+GTK = 0

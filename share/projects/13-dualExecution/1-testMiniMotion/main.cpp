@@ -1,10 +1,10 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 
 arr getSimpleTrajectory(mlr::KinematicWorld& G){
-  MotionProblem P(G, false);
+  KOMO P(G, false);
   P.loadTransitionParameters();
 
   //-- setup the motion problem

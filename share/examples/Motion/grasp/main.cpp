@@ -1,8 +1,6 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
-#include <Motion/taskMaps.h>
-
-//#include <Motion/motionHeuristics.h>
+#include <Kin/taskMaps.h>
 
 void TEST(GraspHeuristic){
   cout <<"\n= 1-step grasp optimization=\n" <<endl;
@@ -11,7 +9,7 @@ void TEST(GraspHeuristic){
   //setup the problem
   mlr::KinematicWorld G(mlr::getParameter<mlr::String>("orsFile"));
 
-  MotionProblem P(G);
+  KOMO P(G);
 
 
 //  uint T=mlr::getParameter<uint>("reachPlanTrajectoryLength");

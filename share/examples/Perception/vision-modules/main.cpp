@@ -22,8 +22,8 @@ void TEST(ModuleVision) {
   threadOpenModules(true);
   for(uint i=0;i<30;i++){
     mlr::wait(1.);
-    modulesReportCycleTimes();
-    if(moduleShutdown().getValue()>0) break;
+    threadReportCycleTimes();
+    if(moduleShutdown()->getStatus()>0) break;
   }
   threadCloseModules();
 

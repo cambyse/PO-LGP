@@ -10,9 +10,9 @@
 #include <Geo/mesh.h>
 #include <Actions/swig.h>
 #include <tf/transform_listener.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <Actions/taskCtrlActivities.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 
 
 struct GazeTask : ControlActivity {

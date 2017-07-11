@@ -1,5 +1,5 @@
-#include <Motion/taskMaps.h>
-#include <Motion/motion.h>
+#include <Kin/taskMaps.h>
+#include <KOMO/komo.h>
 #include <Motion/phase_optimization.h>
 #include <Optim/lagrangian.h>
 #include <Optim/optimization.h>
@@ -11,7 +11,7 @@ void TEST(PhaseOptimization){
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 100;
   MP.tau = 0.01;
   mlr::Shape *grasp = world.getShapeByName("endeff");

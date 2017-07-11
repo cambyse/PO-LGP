@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <Kin/roboticsCourse.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 void TestPD(double xi, double waveLength){
   double mass = 1.0;

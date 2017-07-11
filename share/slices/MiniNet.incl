@@ -1,0 +1,10 @@
+
+share/src/Core
+share/src/Optim
+share/src/Plot
+share/src/Algo
+share/src/Gui
+share/src/Geo
+share/src/Net
+
+share/examples/Net/net

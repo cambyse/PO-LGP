@@ -1,7 +1,7 @@
 #ifndef INNERCOSTFUNCTION_H
 #define INNERCOSTFUNCTION_H
 #include <Kin/kin.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 
 struct InnerCostFunction{

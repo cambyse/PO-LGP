@@ -2,7 +2,7 @@
 
 #include <Core/array.h>
 #include <Core/graph.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 struct CtrlTask;
 typedef mlr::Array<CtrlTask*> CtrlTaskL;
@@ -82,7 +82,7 @@ struct MyBaxter{
 
   CtrlTask* gripTask;
   //-- inner access
-  struct TaskControllerModule& getTaskControllerModule();
+  struct TaskControlThread& getTaskControlThread();
 
   //-- info
   arr q0();

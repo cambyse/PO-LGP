@@ -21,7 +21,7 @@ struct RelationalMachineModule : Thread {
   void close();
 
   //'scripting' interfaces
-  ConditionVariable stopWaiting;
+  Signaler stopWaiting;
   void newSymbol(const char* symbol);
   void setFact(const char* fact);
   void waitForCondition(const char* query);

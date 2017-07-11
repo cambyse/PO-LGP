@@ -658,7 +658,7 @@ void UEyePoller::open() {
 }
 
 void UEyePoller::step() {
-	Access_typed<byteA>::WriteToken token(&ueye_rgb);
+	Access<byteA>::WriteToken token(&ueye_rgb);
 	s->camGrab(ueye_rgb(), ueye_rgb.tstamp());
 }
 

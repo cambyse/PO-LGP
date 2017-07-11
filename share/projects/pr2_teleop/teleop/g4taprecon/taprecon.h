@@ -1,6 +1,6 @@
 #pragma once
 #include <Core/thread.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Kin/kin.h>
 // #include <RosCom/actionMachine.h>
 // #include <RosCom/actions.h>

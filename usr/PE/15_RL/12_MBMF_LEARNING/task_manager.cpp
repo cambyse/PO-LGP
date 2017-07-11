@@ -6,7 +6,7 @@
 
 void DonutTask::createSynthethicDemonstration(arr &X, mlr::KinematicWorld &world_){
   world = new mlr::KinematicWorld(world_);
-  MotionProblem MP(world_,false);
+  KOMO MP(world_,false);
   MP.T = T;
   MP.tau = tau;
   MP.x0 = zeros(world_.getJointStateDimension());
@@ -47,7 +47,7 @@ void DonutTask::applyModelFreeExploration(arr &X, const arr &X_base, const arr &
     Y[t] = Y[t] + (1.-(t-constraintTime(1))/(T-constraintTime(1)))*ARR(0.,0.,param(0));
   }
 
-  MotionProblem MP(*world,false);
+  KOMO MP(*world,false);
   MP.T = T;
   MP.tau = tau;
   MP.x0 = zeros(world->getJointStateDimension());
@@ -70,7 +70,7 @@ void DonutTask::applyModelFreeExploration(arr &X, const arr &X_base, const arr &
 
 
 
-void DonutTask::addConstraintTaskMaps(MotionProblem &MP, arr param)
+void DonutTask::addConstraintTaskMaps(KOMO &MP, arr param)
 {
   Task *t;
   t =MP.addTask("posC", new DefaultTaskMap(posTMT,MP.world,"endeff"));
@@ -155,7 +155,7 @@ void DoorTask::applyModelFreeExploration(arr &X, const arr &X_base, const arr &p
   //    Y[t] = Y[t] + (1.-(t-constraintTime(1))/(T-constraintTime(1)))*ARR(0.,0.,param(0));
   //  }
 
-  MotionProblem MP(*world,false);
+  KOMO MP(*world,false);
   MP.T = T;
   MP.tau = tau;
   MP.x0 = X_base[0];
@@ -180,7 +180,7 @@ void DoorTask::applyModelFreeExploration(arr &X, const arr &X_base, const arr &p
   optConstrainedMix(X, NoArr, Convert(MPF), o);
 }
 
-void DoorTask::addConstraintTaskMaps(MotionProblem &MP, arr param)
+void DoorTask::addConstraintTaskMaps(KOMO &MP, arr param)
 {
   /// compute feature trajectory
   TrajFactory tf;

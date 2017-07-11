@@ -30,13 +30,13 @@ struct RWLock{
 };
 
 /// a basic condition variable
-struct ConditionVariable{
+struct Signaler{
   int state;
   pthread_mutex_t mutex;
   pthread_cond_t  cond;
 
-  ConditionVariable();
-  ~ConditionVariable();
+  Signaler();
+  ~Signaler();
 
   int  getState();
   void setState(int i);
@@ -86,7 +86,7 @@ struct CycleTimer{
 struct StepThread{
   pthread_t thread;                    ///< pthread pointer
   pid_t tid;                           ///< system thread id
-  ConditionVariable threadCondition;   ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
+  Signaler threadCondition;   ///< the condition variable indicates the state of the thread: positive=steps-to-go, otherwise it is a ThreadState
   CycleTimer timer;                    ///< measures cycle and busy times
   Metronome *metronome;
   uint skips;                          ///< how often a step was requested but (because busy) skipped
@@ -94,7 +94,7 @@ struct StepThread{
   const char* threadName;              ///< name of the thread
   //RWLock lock;                           ///< default mutex lock - to coordinate access
   bool broadCastDone;
-  ConditionVariable *syncCondition;
+  Signaler *syncCondition;
 
   enum ThreadState { tsOPEN=-1, tsCLOSE=-2, tsLOOPING=-3, tsBEATING=-4, tsSYNCLOOPING=-5, tsIDLE=0 }; //positive states indicate 2*steps-to-go
 

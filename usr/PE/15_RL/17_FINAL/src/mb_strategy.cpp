@@ -8,7 +8,7 @@ MB_strategy::MB_strategy(arr &xDemo_,mlr::KinematicWorld &world_,double duration
   world = new mlr::KinematicWorld(world_);
 
   duration = duration_;
-  MP = new MotionProblem(*world,false);
+  MP = new KOMO(*world,false);
 
   MP->T = xDemo.d0-1;
   MP->tau =duration/MP->T;

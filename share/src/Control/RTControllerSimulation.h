@@ -7,9 +7,9 @@
 #include <Control/ctrlMsg.h>
 
 struct RTControllerSimulation : Thread {
-  Access_typed<CtrlMsg> ctrl_ref;
-  Access_typed<CtrlMsg> ctrl_obs;
-  Access_typed<mlr::KinematicWorld> modelWorld;
+  Access<CtrlMsg> ctrl_ref;
+  Access<CtrlMsg> ctrl_obs;
+  //Access<mlr::KinematicWorld> modelWorld;
 
   mlr::KinematicWorld* world;
   mlr::Joint *j_baseTranslationRotation;
@@ -24,7 +24,7 @@ struct RTControllerSimulation : Thread {
   arr Kp_base, Kd_base, limits;
   arr I_term;
 
-  RTControllerSimulation(double tau=0.01, bool gravity=false, double _systematicErrorSdv=0.);
+  RTControllerSimulation(mlr::KinematicWorld realWorld, double tau=0.01, bool gravity=false, double _systematicErrorSdv=0.);
   virtual ~RTControllerSimulation() {}
 
   void open();

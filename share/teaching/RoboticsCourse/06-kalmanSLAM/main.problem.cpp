@@ -2,7 +2,7 @@
 #include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
 //#include <MT/gauss.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 
 void getControlJacobian(arr& B, CarSimulator & S, const arr & u,const arr & x){

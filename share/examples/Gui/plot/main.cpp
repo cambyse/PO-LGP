@@ -1,5 +1,5 @@
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 void TEST(Plot) {
   //plotGnuplot();

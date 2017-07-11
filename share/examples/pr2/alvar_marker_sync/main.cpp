@@ -2,7 +2,7 @@
 #include <Kin/kin.h>
 #include <Gui/opengl.h>
 #include <RosCom/subscribeAlvarMarkers.h>
-#include <Control/TaskControllerModule.h>
+#include <Control/TaskControlThread.h>
 
 // =================================================================================================
 struct MySystem {
@@ -13,13 +13,13 @@ struct MySystem {
     new RosCom_Spinner();
 
     // This is here to get the PR2 model
-    new TaskControllerModule(); 
+    new TaskControlThread(); 
 
     // This syncs the ors graph
     new AlvarSyncer();
 
     // This reads the ros topic and updates the variable
-    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access_typed<AlvarMarkers>&) ar_pose_markers);
+    new Subscriber<AlvarMarkers>("/ar_pose_marker", (Access<AlvarMarkers>&) ar_pose_markers);
   }
 };
 

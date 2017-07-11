@@ -1,6 +1,5 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <iomanip>
@@ -19,7 +18,7 @@ void TEST(Matrices) {
   return;
 
   mlr::KinematicWorld G("chain.ors");
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);
@@ -52,7 +51,7 @@ void TEST(Matrices) {
 
 void TEST(GradCheck) {
   mlr::KinematicWorld G("chain.ors");
-  MotionProblem MP(G);
+  KOMO MP(G);
 
   arr y_fL, J_fL;
   MP.world.kinematicsPos(y_fL, J_fL, MP.world.getShapeByName("endeff")->body);

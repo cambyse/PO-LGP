@@ -25,12 +25,7 @@
 #include <string.h>
 #include <functional>
 #include <memory>
-
-//-- TODO: old, remove
-#define FOR1D(x, i)   for(i=0;i<x.N;i++)
-#define FOR1D_DOWN(x, i)   for(i=x.N;i--;)
-#define FOR2D(x, i, j) for(i=0;i<x.d0;i++) for(j=0;j<x.d1;j++)
-#define FOR3D(x, i, j, k) for(i=0;i<x.d0;i++) for(j=0;j<x.d1;j++) for(k=0;k<x.d2;k++)
+#include <vector>
 
 //-- don't require previously defined iterators
 #define for_list(Type, it, X)     Type *it=NULL; for(uint it##_COUNT=0;   it##_COUNT<X.N && ((it=X(it##_COUNT)) || true); it##_COUNT++)
@@ -69,6 +64,8 @@ namespace mlr {
 /// @addtogroup group_array
 /// @{
 
+template<class T> struct ArrayIterationEnumerated;
+
 /** Simple array container to store arbitrary-dimensional arrays (tensors).
   Can buffer more memory than necessary for faster
   resize; enables non-const reference of subarrays; enables fast
@@ -77,7 +74,7 @@ namespace mlr {
   Please see also the reference for the \ref array.h
   header, which contains lots of functions that can be applied on
   Arrays. */
-template<class T> struct Array {
+template<class T> struct Array : std::vector<T> {
   T *p;     ///< the pointer on the linear memory allocated
   uint N;   ///< number of elements
   uint nd;  ///< number of dimensions
@@ -92,6 +89,7 @@ template<class T> struct Array {
   //-- special: arrays can be sparse/packed/etc and augmented with aux data to support this
   SpecialArray *special; ///< arbitrary auxiliary data, depends on special
 
+  typedef std::vector<T> vec_type;
   typedef bool (*ElemCompare)(const T& a, const T& b);
 
   /// @name constructors
@@ -100,7 +98,7 @@ template<class T> struct Array {
   explicit Array(uint D0);
   explicit Array(uint D0, uint D1);
   explicit Array(uint D0, uint D1, uint D2);
-  explicit Array(const T* p, uint size);    //reference!
+  explicit Array(const T* p, uint size, bool byReference=true);    //reference!
   Array(std::initializer_list<T> values);
   Array(uint D0, std::initializer_list<T> values);
   Array(uint D0, uint D1, std::initializer_list<T> values);
@@ -113,12 +111,13 @@ template<class T> struct Array {
   Array<T>& operator=(const Array<T>& a);
 
   /// @name iterators
-  typedef T* iterator;
-  typedef const T* const_iterator;
-  iterator begin() { return p; }
-  iterator end() { return p+N; }
-  const_iterator begin() const { return p; }
-  const_iterator end() const { return p+N; }
+  ArrayIterationEnumerated<T> enumerated(){ return ArrayIterationEnumerated<T>(*this); }
+//  typedef T* iterator;
+//  typedef const T* const_iterator;
+//  iterator begin() { return p; }
+//  iterator end() { return p+N; }
+//  const_iterator begin() const { return p; }
+//  const_iterator end() const { return p+N; }
 
   /// @name resizing
   Array<T>& resize(uint D0);
@@ -182,7 +181,6 @@ template<class T> struct Array {
   T& operator()(uint i, uint j, uint k) const;
   Array<T> operator()(std::pair<int, int> I) const;
   Array<T> operator()(uint i, std::pair<int, int> J) const;
-//  Array<T> operator()(uint i, std::initializer_list<int> J ) const;
   Array<T> operator()(uint i, uint j, std::initializer_list<int> K) const;
   Array<T> operator[](uint i) const;     // calls referToDim(*this, i)
   Array<T> operator[](std::initializer_list<uint> list) const; //-> remove
@@ -238,8 +236,7 @@ template<class T> struct Array {
   void replace(uint i, uint n, const Array<T>& x);
   void remove(uint i, uint n=1);
   void removePerm(uint i);          //more efficient for sets, works also for non-memMove arrays
-  void removeValue(const T& x);
-  bool removeValueSafe(const T& x); //? same as if((i=findValue(x))!=-1) remove[Perm](i);
+  bool removeValue(const T& x, bool errorIfMissing=true);
   void removeAllValues(const T& x);
   void delRows(uint i, uint k=1);
   void delColumns(uint i, uint k=1);
@@ -254,9 +251,9 @@ template<class T> struct Array {
   /// @name sorting and permuting this array
   void sort(ElemCompare comp=lowerEqual);
   bool isSorted(ElemCompare comp=lowerEqual) const;
-  uint rankInSorted(const T& x, ElemCompare comp=lowerEqual) const;
+  uint rankInSorted(const T& x, ElemCompare comp=lowerEqual, bool rankAfterIfEqual=false) const;
   int findValueInSorted(const T& x, ElemCompare comp=lowerEqual) const;
-  uint insertInSorted(const T& x, ElemCompare comp=lowerEqual);
+  uint insertInSorted(const T& x, ElemCompare comp=lowerEqual, bool insertAfterIfEqual=false);
   uint setAppendInSorted(const T& x, ElemCompare comp=lowerEqual);
   void removeValueInSorted(const T& x, ElemCompare comp=lowerEqual);
   void reverse();
@@ -297,7 +294,33 @@ template<class T> struct Array {
 //  void init();
 };
 
+
 //===========================================================================
+///
+/// @name alternative iterators
+/// @{
+
+template<class T> struct ArrayItEnumerated{
+    T* p;
+    uint i;
+    T& operator()(){ return *p; } //access to value by user
+    void operator++(){ p++; i++; }
+    ArrayItEnumerated<T>& operator*(){ return *this; } //in for(auto& it:array.enumerated())  it is assigned to *iterator
+};
+
+template<class T> struct ArrayIterationEnumerated{
+    Array<T>& x;
+    ArrayIterationEnumerated(Array<T>& x):x(x){}
+    ArrayItEnumerated<T> begin() { return {x.p, 0}; }
+    ArrayItEnumerated<T> end() { return {x.p+x.N, x.N}; }
+    //  const_iterator begin() const { return p; }
+    //  const_iterator end() const { return p+N; }
+};
+
+template<class T> bool operator!=(const ArrayItEnumerated<T>& i, const ArrayItEnumerated<T>& j){ return i.p!=j.p; }
+
+//===========================================================================
+/// @}
 /// @name basic Array operators
 /// @{
 
@@ -384,6 +407,7 @@ UnaryFunction(ceil);
 UnaryFunction(fabs);
 UnaryFunction(floor);
 UnaryFunction(sigm);
+UnaryFunction(sign);
 #undef UnaryFunction
 
 #define BinaryFunction( func )            \
@@ -410,7 +434,7 @@ typedef mlr::Array<uint>   uintA;
 typedef mlr::Array<int>    intA;
 typedef mlr::Array<char>   charA;
 typedef mlr::Array<byte>   byteA;
-typedef mlr::Array<bool>   boolA;
+typedef mlr::Array<byte>   boolA;
 typedef mlr::Array<uint16_t>   uint16A;
 typedef mlr::Array<uint32_t>   uint32A;
 typedef mlr::Array<const char*>  CstrList;
@@ -420,6 +444,7 @@ typedef mlr::Array<uintA>    uintAA;
 
 namespace mlr { struct String; }
 typedef mlr::Array<mlr::String> StringA;
+typedef mlr::Array<StringA> StringAA;
 typedef mlr::Array<mlr::String*> StringL;
 
 //===========================================================================
@@ -430,6 +455,8 @@ typedef mlr::Array<mlr::String*> StringL;
 extern arr& NoArr; //this is a pointer to NULL!!!! I use it for optional arguments
 extern arrA& NoArrA; //this is a pointer to NULL!!!! I use it for optional arguments
 extern uintA& NoUintA; //this is a pointer to NULL!!!! I use it for optional arguments
+extern byteA& NoByteA; //this is a pointer to NULL!!!! I use it for optional arguments
+extern uintAA& NoUintAA; //this is a pointer to NULL!!!! I use it for optional arguments
 
 //===========================================================================
 /// @}
@@ -571,6 +598,8 @@ uint svd(arr& U, arr& d, arr& V, const arr& A, bool sort=true);
 void svd(arr& U, arr& V, const arr& A);
 void pca(arr &Y, arr &v, arr &W, const arr &X, uint npc = 0);
 
+arr  oneover(const arr& A); //element-wise reciprocal (devision, 1./A)
+
 void mldivide(arr& X, const arr& A, const arr& b);
 
 uint inverse(arr& Ainv, const arr& A);
@@ -601,7 +630,10 @@ void read_ppm(byteA &img, const char *file_name, bool swap_rows=true);
 void add_alpha_channel(byteA &img, byte alpha);
 void make_grey(byteA &img);
 void make_RGB(byteA &img);
+void make_RGB2BGRA(byteA &img);
+void swap_RGB_BGR(byteA &img);
 void flip_image(byteA &img);
+void flip_image(floatA &img);
 
 void scanArrFile(const char* name);
 
@@ -648,7 +680,7 @@ template<class T> void inverse2d(mlr::Array<T>& Ainv, const mlr::Array<T>& A);
 template<class T> mlr::Array<T> replicate(const mlr::Array<T>& A, uint d0);
 template<class T> mlr::Array<T> integral(const mlr::Array<T>& x);
 
-template<class T> uintA size(const mlr::Array<T>& x) { return x.dim(); }
+template<class T> uintA size(const mlr::Array<T>& x) { return x.dim(); } //TODO: remove
 template<class T> void checkNan(const mlr::Array<T>& x);
 template<class T> void sort(mlr::Array<T>& x);
 
@@ -682,6 +714,8 @@ template<class T> mlr::Array<T> max(const mlr::Array<T>& v, uint d);
 
 template<class T> T trace(const mlr::Array<T>& v);
 template<class T> T var(const mlr::Array<T>& v);
+template<class T> mlr::Array<T> mean(const mlr::Array<T>& v);
+template<class T> mlr::Array<T> stdDev(const mlr::Array<T>& v);
 template<class T> T minDiag(const mlr::Array<T>& v);
 template<class T> T absMax(const mlr::Array<T>& x);
 template<class T> T absMin(const mlr::Array<T>& x);
@@ -807,6 +841,7 @@ void blas_MM(arr& X, const arr& A, const arr& B);
 void blas_MsymMsym(arr& X, const arr& A, const arr& B);
 void blas_A_At(arr& X, const arr& A);
 void blas_At_A(arr& X, const arr& A);
+
 void lapack_cholesky(arr& C, const arr& A);
 uint lapack_SVD(arr& U, arr& d, arr& Vt, const arr& A);
 void lapack_mldivide(arr& X, const arr& A, const arr& B);
@@ -821,6 +856,8 @@ double lapack_determinantSymPosDef(const arr& A);
 inline arr lapack_inverseSymPosDef(const arr& A){ arr Ainv; lapack_inverseSymPosDef(Ainv, A); return Ainv; }
 arr lapack_Ainv_b_sym(const arr& A, const arr& b);
 void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
+arr lapack_Ainv_b_symPosDef_givenCholesky(const arr& U, const arr&b);
+arr lapack_Ainv_b_triangular(const arr& L, const arr& b);
 
 
 //===========================================================================
@@ -829,11 +866,11 @@ void lapack_min_Ax_b(arr& x,const arr& A, const arr& b);
 /// @{
 
 arr unpack(const arr& X);
-arr comp_At_A(arr& A);
-arr comp_A_At(arr& A);
-arr comp_At_x(arr& A, const arr& x);
-arr comp_At(arr& A);
-arr comp_A_x(arr& A, const arr& x);
+arr comp_At_A(const arr& A);
+arr comp_A_At(const arr& A);
+arr comp_At_x(const arr& A, const arr& x);
+arr comp_At(const arr& A);
+arr comp_A_x(const arr& A, const arr& x);
 
 struct SpecialArray{
   enum Type { ST_none, hasCarrayST, sparseVectorST, sparseMatrixST, diagST, RowShiftedST, CpointerST };

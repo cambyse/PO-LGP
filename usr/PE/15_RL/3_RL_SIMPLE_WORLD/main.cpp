@@ -1,7 +1,7 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Optim/optimization.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Algo/spline.h>
 #include <GL/glu.h>
 #include <Gui/opengl.h>
@@ -19,7 +19,7 @@ void testPathIMP() {
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
   mlr::Shape *grasp = world.getShapeByName("endeff");
@@ -127,7 +127,7 @@ void testPathBBO() {
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
   mlr::Shape *grasp = world.getShapeByName("endeff");
@@ -207,7 +207,7 @@ void testSplineExploration() {
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
   mlr::Shape *grasp = world.getShapeByName("endeff");
@@ -292,7 +292,7 @@ void TEST(SimpleWorld) {
   arr q, qdot;
   world.getJointState(q, qdot);
   world.swift();
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.T = 50;
   MP.tau = 0.05;
   mlr::Shape *grasp = world.getShapeByName("endeff");

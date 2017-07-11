@@ -1,13 +1,13 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include "cost_weight.h"
 
 struct Scene {
   /// scene description
   arr x0;
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
 
   /// options

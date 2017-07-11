@@ -9,7 +9,7 @@ src_paths =  $(shell find src -mindepth 1 -maxdepth 1 -type d -not -name 'extern
 
 exa_paths = $(shell find examples -maxdepth 3 -name 'Makefile' -printf "%h ")
 
-pysrc_paths = Core Kin Gui Motion Optim
+pysrc_paths = Core Kin Gui KOMO Optim
 
 test_paths = $(shell find test -maxdepth 3 -name 'Makefile' -printf "%h ")
 
@@ -66,22 +66,7 @@ reformatSources:
 	cd src; find MT/ \( -name "*.h" -or -name "*.cpp" -or -name "*.cxx" \) -exec ./style.sed.sh {} \;
 
 %.tgz: force
-	-mv -f build/config.mk build/config.mk.mine
-	cp -f slices/$*.config.mk ./build/config.mk
-	cp -f slices/$*.README.md README.md
-	cp -f ../README.md README.mlr.md
-	cp -f ../COPYING .
-	cp -f ../install/INSTALL_ALL_UBUNTU_PACKAGES.sh .
-	rm -f $*.tgz;
-	cd ..; \
-	tar cvzfh $*.tgz --transform "s/^share/$*/" --exclude-vcs \
-	--files-from $(PWD)/slices/default.incl \
-	--files-from $(PWD)/slices/$*.incl \
-	--exclude-from $(PWD)/slices/default.excl \
-	--exclude-from $(PWD)/slices/$*.excl
-	cp -f build/config.mk.mine build/config.mk
-	rm -f README.md README.mlr.md COPYING INSTALL_ALL_UBUNTU_PACKAGES.sh
-	rm -Rf z.$*; mkdir z.$*; cd z.$*; tar xzf ~/git/mlr/$*.tgz
+	bin/makeZip.sh $*
 
 force:
 

@@ -1,7 +1,7 @@
 BASE = ../../..
 
 OBJS = main.o 
-DEPEND = Geo Kin Core Gui Algo Motion Hardware_racer Optim
+DEPEND = Geo Kin Core Gui Algo KOMO Hardware_racer Optim
 
 GL = 1
 

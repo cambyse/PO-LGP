@@ -1,5 +1,5 @@
 #include <Control/gamepad2tasks.h>
-#include <Control/taskController.h>
+#include <Control/taskControl.h>
 #include <Hardware/gamepad/gamepad.h>
 //#include <System/engine.h>
 #include <Gui/opengl.h>
@@ -8,9 +8,8 @@
 #include <RosCom/actions.h>
 #include <RosCom/actionMachine.h>
 
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 
 #include <Optim/optimization.h>
 #include <Core/util.h>
@@ -33,7 +32,7 @@ void getTrajectory(arr& x, arr& y, arr& dual, mlr::KinematicWorld& world, const 
   //world.setJointState(ARR(0, -1, -1, 2, -1, 0, 0));
 
 
-  MotionProblem P(world, false);
+  KOMO P(world, false);
   P.loadTransitionParameters(); // can change horizon here
 
 
@@ -119,7 +118,7 @@ void POMDPExecution(mlr::KinematicWorld& world, const arr& x, const arr& y, cons
 
     double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-    TaskController MP(world);
+    TaskControlMethods MP(world);
     MP.qitselfPD.active=true;
 
     //position PD task:  decayTime = 0.1, dampingRatio = 0.8
@@ -240,7 +239,7 @@ void PR2_POMDPExecution(ActionSystem& activity, const arr& x, const arr& y, cons
 
   double sin_jitter = mlr::getParameter<double>("sin_jitter", 0.);
 
-  //TaskController MC(world);
+  //TaskControlMethods MC(world);
   activity.machine->s->MP.qitselfPD.active=true;
 
   //position PD task:  decayTime = 0.1, dampingRatio = 0.8
@@ -387,7 +386,7 @@ void PR2_ActionMachine(mlr::KinematicWorld& world, const arr& x, const arr& y, c
 
   //world.gl().add(mlr::glDrawGraph, &worldCopy);
 
-  TaskController MP(world, true); // true means using swift
+  TaskControlMethods MP(world, true); // true means using swift
   //MP.qitselfPD.y_ref = q;
   MP.H_rate_diag = world.getHmetric();
 

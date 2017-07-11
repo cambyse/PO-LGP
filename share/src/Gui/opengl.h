@@ -70,7 +70,8 @@ void glStandardLight(void*);
 void glStandardScene(void*);
 void glColor(float r, float g, float b, float a=1.f);
 void glColor(int col);
-void glDrawText(const char* txt, float x, float y, float z);
+void glColor(const arr& col);
+void glDrawText(const char* txt, float x, float y, float z, bool largeFont=false);
 //void glShadowTransform();
 void glTransform(const mlr::Transformation& t);
 void glTransform(const double pos[3], const double R[12]);
@@ -82,7 +83,7 @@ void glDrawRect(float x1, float y1, float z1, float x2, float y2, float z2,
                 float x3, float y3, float z3, float x4, float y4, float z4);
 void glDrawRect(float x, float y, float z, float rad);
 void glDrawFloor(float x, float r, float g, float b);
-void glDrawBox(float x, float y, float z);
+void glDrawBox(float x, float y, float z, bool linesOnly=false);
 void glDrawDiamond(float dx, float dy, float dz);
 void glDrawDiamond(float x, float y, float z, float dx, float dy, float dz);
 void glDrawSphere(float radius);
@@ -99,7 +100,7 @@ void glMakeStdSimplex(int num);
 void glMakeTorus(int num);
 void glDrawRobotArm(float a, float b, float c, float d, float e, float f);
 uint glImageTexture(const byteA &img);
-void glDrawTexQuad(uint texture,
+void glDrawTexQuad(const byteA &img,
                    float x1, float y1, float z1, float x2, float y2, float z2,
                    float x3, float y3, float z3, float x4, float y4, float z4,
                    float mulX=1., float mulY=1.);
@@ -157,13 +158,13 @@ struct OpenGL {
   floatA captureDepth;
   double backgroundZoom;
   arr P; //camera projection matrix
-  RWLock lock; //locked during draw callbacks (anything that uses the calls)
+  RWLock dataLock; //'data' means anything: member fields (camera, variables), drawers, data the drawers access
 //  uint fbo, render_buf;
   uint fboId;
   uint rboColor;
   uint rboDepth;
-  ConditionVariable isUpdating;
-  ConditionVariable watching;
+  Signaler isUpdating;
+  Signaler watching;
 
   /// @name constructors & destructors
   OpenGL(const char* title="mlr::OpenGL", int w=400, int h=400, int posx=-1, int posy=-1);
@@ -176,8 +177,9 @@ struct OpenGL {
   /// @name adding drawing routines and callbacks
   void clear();
   void add(void (*call)(void*), void* classP=NULL);
-  void add(GLDrawer& c){ drawers.append(&c); }
-  void addDrawer(GLDrawer *c){ drawers.append(c); }
+  void addInit(void (*call)(void*), void* classP=NULL);
+  void add(GLDrawer& c){ dataLock.writeLock(); drawers.append(&c); dataLock.unlock(); }
+  void addDrawer(GLDrawer *c){ dataLock.writeLock(); drawers.append(c); dataLock.unlock(); }
   void remove(void (*call)(void*), const void* classP=0);
   //template<class T> void add(const T& x) { add(x.staticDraw, &x); } ///< add a class or struct with a staticDraw routine
   void addHoverCall(GLHoverCall *c){ hoverCalls.append(c); }
@@ -187,8 +189,8 @@ struct OpenGL {
   void setViewPort(uint view, double l, double r, double b, double t);
   
   /// @name the core draw routines (actually only for internal use)
-  void Draw(int w, int h, mlr::Camera *cam=NULL, bool ignoreLock=false);
-  void Select(bool ignoreLock=false);
+  void Draw(int w, int h, mlr::Camera *cam=NULL, bool callerHasAlreadyLocked=false);
+  void Select(bool callerHasAlreadyLocked=false);
   void renderInBack(bool captureImg=true, bool captureDepth=false, int w=-1, int h=-1);
 
   /// @name showing, updating, and watching
@@ -214,8 +216,6 @@ public: //driver dependent methods
   void openWindow();
   void closeWindow();
   void postRedrawEvent(bool fromWithinCallback);
-  void processEvents();
-  void sleepForEvents();
 #if !defined MLR_MSVC && !defined MLR_QTGL
   Display* xdisplay();
   Drawable xdraw();
@@ -242,6 +242,17 @@ protected:
 
 
 //===========================================================================
+
+struct SingleGLAccess{
+//  Mutex openglMutex;
+//  void lock(){ openglMutex.lock(); }
+//  void unlock(){ openglMutex.unlock(); }
+};
+
+extern Singleton<SingleGLAccess> singleGLAccess;
+
+//===========================================================================
+
 //
 // simplest UI
 //

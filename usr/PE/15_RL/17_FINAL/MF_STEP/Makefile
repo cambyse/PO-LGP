@@ -1,7 +1,7 @@
 BASE = ../../../../../share
 
 OBJS = main.o ../src/mf_strategy.o ../../src/traj_factory.o  ../src/task_grasp.o ../src/task_door.o ../../src/plotUtil.o ../../src/phase_optimization.o
-DEPEND = Core Kin Gui Algo Motion Optim pr2 Hardware_gamepad Actions Geo
+DEPEND = Core Kin Gui Algo KOMO Optim pr2 Hardware_gamepad Actions Geo
 PTHREAD = 0
 PHYSX = 0
 

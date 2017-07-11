@@ -1,15 +1,15 @@
 #include <Core/util.tpp>
 #include <Gui/opengl.h>
 
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include <Motion/motionHeuristics.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Motion/taskMap_transition.h>
+#include <Kin/taskMap_default.h>
+#include <Kin/taskMap_proxy.h>
+#include <Kin/taskMap_constrained.h>
+#include <Kin/taskMap_transition.h>
 
 #include <Kin/kin_swift.h>
-#include <Motion/taskMap_proxy.h>
+#include <Kin/taskMap_proxy.h>
 
 void testSliding() {
   mlr::KinematicWorld world("scene");
@@ -18,7 +18,7 @@ void testSliding() {
   makeConvexHulls(world.shapes);
   world.swift();
 
-  MotionProblem MP(world,true);
+  KOMO MP(world,true);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
   arr refGoal1 = conv_vec2arr(MP.world.getShapeByName("target")->X.pos);

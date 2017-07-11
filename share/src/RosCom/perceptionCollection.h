@@ -1,7 +1,12 @@
 #pragma once
 #include <Core/thread.h>
-#include <RosCom/filterObject.h>
+#include <Perception/percept.h>
 #include <RosCom/roscom.h>
+
+#ifdef MLR_ROS_KINETIC
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  namespace ar = ar_track_alvar_msgs;
+#endif
 
 #ifdef MLR_ROS_INDIGO
   #include <ar_track_alvar_msgs/AlvarMarkers.h>
@@ -13,24 +18,26 @@
 #endif
 #include <object_recognition_msgs/TableArray.h>
 
-Cluster conv_ROSMarker2Cluster(const visualization_msgs::Marker& marker);
-Plane conv_ROSTable2Plane(const object_recognition_msgs::Table& table);
-Alvar conv_ROSAlvar2Alvar(const ar::AlvarMarker& marker);
+PercCluster conv_ROSMarker2Cluster(const visualization_msgs::Marker& marker);
+PercPlane conv_ROSTable2Plane(const object_recognition_msgs::Table& table);
+PercAlvar conv_ROSAlvar2Alvar(const ar::AlvarMarker& marker);
 OptitrackMarker conv_tf2OptitrackMarker(const geometry_msgs::TransformStamped& msg);
 OptitrackBody conv_tf2OptitrackBody(const geometry_msgs::TransformStamped& msg);
 
+/** listens to ros topics, such as Alvar and OptiTrack and TableTop, and pipes them into the percepts_input
+ */
 struct Collector : Thread{
-  Access_typed<visualization_msgs::MarkerArray> tabletop_clusters;
-  Access_typed<ar::AlvarMarkers> ar_pose_markers;
-  Access_typed<std::vector<geometry_msgs::TransformStamped>> opti_markers;
-  Access_typed<std::vector<geometry_msgs::TransformStamped>> opti_bodies;
-  Access_typed<object_recognition_msgs::TableArray> tabletop_tableArray;
+  Access<visualization_msgs::MarkerArray> tabletop_clusters;
+  Access<ar::AlvarMarkers> ar_pose_markers;
+  Access<std::vector<geometry_msgs::TransformStamped>> opti_markers;
+  Access<std::vector<geometry_msgs::TransformStamped>> opti_bodies;
+  Access<object_recognition_msgs::TableArray> tabletop_tableArray;
 
-  ACCESSname(mlr::Transformation, tabletop_srcFrame)
-  ACCESSname(mlr::Transformation, alvar_srcFrame)
-  ACCESSname(mlr::Transformation, optitrack_srcFrame)
+  ACCESS(mlr::Transformation, tabletop_srcFrame)
+  ACCESS(mlr::Transformation, alvar_srcFrame)
+  ACCESS(mlr::Transformation, optitrack_srcFrame)
 
-  ACCESSname(FilterObjects, perceptual_inputs)
+  ACCESS(PerceptL, percepts_input)
 
   Collector(const bool simulate = false);
 

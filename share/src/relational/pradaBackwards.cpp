@@ -477,7 +477,7 @@ void sampleGoalState_clearance(NID_DBN& net, uintA& usedComponents, const TL::St
         
         uintA alien_objects_below = objects_below;
         setMinus(alien_objects_below, gangs(i));
-        alien_objects_below.removeValueSafe(id_table);
+        alien_objects_below.removeValue(id_table, false);
         // If above non-gang-member object which is not table, then the whole pile needs to be moved.
         if (alien_objects_below.N > 0)
           local_num_missing_homies = gangs(i).N - 1;

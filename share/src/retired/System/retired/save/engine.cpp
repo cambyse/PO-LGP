@@ -15,7 +15,7 @@ typedef mlr::Array<SystemDescription::VariableEntry*> VariableEntryL;
 
 void SystemDescription::addModule(const char *dclName, const char *name, const NodeL& vars, StepMode mode, double beat){
   //find the dcl in the registry
-  Node *modReg = registry().getNode("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
+  Node *modReg = registry()->getNode("Decl_Module", STRING(strlen(dclName)<<dclName)); //OpencvCamera::staticRegistrator.reg;
   if(!modReg){
     MLR_MSG("could not find Decl_Module" <<dclName);
     return;
@@ -226,19 +226,19 @@ void Engine::dumpAccessLog(){
 }
 
 void Engine::blockAllAccesses(){
-  acc->blockMode.setValue(2);
+  acc->blockMode.setStatus(2);
 }
 
 void Engine::unblockAllAccesses(){
-  acc->blockMode.setValue(0);
+  acc->blockMode.setStatus(0);
 }
 
 void Engine::stepToNextAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 void Engine::stepToNextWriteAccess(){
-  acc->blockMode.setValue(1, true);
+  acc->blockMode.setStatus(1, true);
 }
 
 
@@ -254,9 +254,9 @@ struct LoggerVariableData {
 
   //-- or replay may block access to ensure right revision
   /* here every process sleeps when they want to access a variable not having the correct revision yet */
-  ConditionVariable readCondVar;
+  Signaler readCondVar;
   /* here everyone sleeps who wants to have write access */
-  ConditionVariable writeCondVar;
+  Signaler writeCondVar;
 
   LoggerVariableData(): controllerBlocksRead(false), controllerBlocksWrite(false){}
 };
@@ -278,7 +278,7 @@ EventController::~EventController(){
 }
 
 void EventController::breakpointSleep(){ //the caller goes to sleep
-  ConditionVariable *c = new ConditionVariable;
+  Signaler *c = new Signaler;
   breakpointMutex.lock();
   breakpointQueue.append(c);
   breakpointMutex.unlock();
@@ -287,7 +287,7 @@ void EventController::breakpointSleep(){ //the caller goes to sleep
 
 void EventController::breakpointNext(){ //first in the queue is being woke up
   breakpointMutex.lock();
-  ConditionVariable *c = breakpointQueue.popFirst();
+  Signaler *c = breakpointQueue.popFirst();
   breakpointMutex.unlock();
   if(!c) return;
   c->broadcast();
@@ -297,9 +297,9 @@ void EventController::breakpointNext(){ //first in the queue is being woke up
 void EventController::queryReadAccess(Variable *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, 0.);
+    Event *e = new Event(v, p, Event::read, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2; //1: only ONE reader
     blockedEvents.removeValue(e);
     delete e;
@@ -310,9 +310,9 @@ void EventController::queryReadAccess(Variable *v, const Module *p){
 void EventController::queryWriteAccess(Variable *v, const Module *p){
   blockMode.lock();
   if(blockMode.value>=1){
-    Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, 0.);
+    Event *e = new Event(v, p, Event::write, v->revision.getStatus(), p?p->step_count:0, 0.);
     blockedEvents.append(e);
-    blockMode.waitForValueSmallerThan(2, true);
+    blockMode.waitForStatusSmallerThan(2, true);
     if(blockMode.value==1) blockMode.value=2;
     blockedEvents.removeValue(e);
     delete e;
@@ -322,7 +322,7 @@ void EventController::queryWriteAccess(Variable *v, const Module *p){
 
 void EventController::logReadAccess(const Variable *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::read, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  Event *e = new Event(v, p, Event::read, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();
@@ -331,7 +331,7 @@ void EventController::logReadAccess(const Variable *v, const Module *p) {
 
 void EventController::logWriteAccess(const Variable *v, const Module *p) {
   if(!enableEventLog || enableReplay) return;
-  Event *e = new Event(v, p, Event::write, v->revision.getValue(), p?p->step_count:0, mlr::realTime());
+  Event *e = new Event(v, p, Event::write, v->revision.getStatus(), p?p->step_count:0, mlr::realTime());
   eventsLock.writeLock();
   events.append(e);
   eventsLock.unlock();

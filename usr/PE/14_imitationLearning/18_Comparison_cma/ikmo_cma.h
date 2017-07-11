@@ -2,13 +2,13 @@
 #define IKMO_H
 
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 #include <vector>
 #include "gaussian_costs.h"
 #include "rbf_costs.h"
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 
 struct CostWeight {
@@ -36,7 +36,7 @@ struct Scene {
   bool constraintsActive;
 
   /// scene description
-  MotionProblem* MP;
+  KOMO* MP;
   mlr::KinematicWorld* world;
 
   /// reference solutions
@@ -93,7 +93,7 @@ struct IKMO:ConstrainedProblem {
   IKMO(mlr::Array<Scene> &_scenes, mlr::Array<CostWeight> &_weights,uint _nP,double _costScale);
 
   /// set the cost parameter of the motion problem
-  void setParam(MotionProblem &MP,const arr &param);
+  void setParam(KOMO &MP,const arr &param);
   void compWeights(arr &w, arr &dw, arr &Hw, const arr &param);
   void compParamConstraints(arr &g, arr &Jg, const arr &param);
   void costReport(arr param, arr param0);

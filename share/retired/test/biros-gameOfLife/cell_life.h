@@ -6,8 +6,8 @@
 #include "cell.h"
 
 struct CellLife : Thread {
-  Access_typed<Cell> own;
-  mlr::Array<Access_typed<Cell> > neighbours;
+  Access<Cell> own;
+  mlr::Array<Access<Cell> > neighbours;
 
  CellLife() : Thread("Cell Life Process"){ neighbors.resize(4); }
   

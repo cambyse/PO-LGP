@@ -34,7 +34,7 @@ struct EndStateProgram:ConstrainedProblem{
     for(Node *constraint:support->parentOf) if(&constraint->container==&state){
       mlr::Body *b1=world.getBodyByName(constraint->parents(1)->keys(1));
       mlr::Body *b2=world.getBodyByName(constraint->parents(2)->keys(1));
-      if(b2->shapes(0)->type==mlr::cylinderST){
+      if(b2->shapes(0)->type==mlr::ST_cylinder){
         mlr::Body *z=b1;
         b1=b2; b2=z;
       }//b2 should be the board
@@ -121,7 +121,7 @@ struct EndStateProgram:ConstrainedProblem{
         arr y1,J1,y2,J2;
         mlr::Body *b1=world.getBodyByName(obj->keys(1));
         mlr::Body *b2=world.getBodyByName(supporters(0)->keys(1));
-        if(b1->shapes(0)->type==mlr::boxST){
+        if(b1->shapes(0)->type==mlr::ST_box){
           if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
           world.kinematicsPos(y1, J1, b1);
           world.kinematicsPos(y2, J2, b2);
@@ -184,7 +184,7 @@ struct EndStateProgram:ConstrainedProblem{
         arr y1,J1,y2,J2;
         mlr::Body *b1=world.getBodyByName(obj->keys(1));
         mlr::Body *b2=world.getBodyByName(supporters(0)->keys(1));
-        if(b1->shapes(0)->type==mlr::boxST){
+        if(b1->shapes(0)->type==mlr::ST_box){
           if(verbose>1){ cout <<"Adding cost term Object" <<*obj <<" below "; listWrite(supporters, cout); cout <<endl; }
           world.kinematicsPos(y1, J1, b1);
           world.kinematicsPos(y2, J2, b2);

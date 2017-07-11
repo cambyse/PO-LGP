@@ -7,7 +7,7 @@
 // ors includes
 #include <Core/util.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Gui/opengl.h>
 #include <GL/glu.h>
 
@@ -62,32 +62,32 @@ public:
 
   void optimize_trajectory()
   {
-    MotionProblem P(&G);
+    KOMO P(&G);
     P.loadTransitionParameters();
 
     Task *c;
     c = P.addTaskMap_Default_Bodies("position", posTMT,"endeff",mlr::Transformation().setText("<t(0 0 0)>"));
-    P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
+    P.setInterpolatingCosts(c, KOMO::constFinalMid,
                             conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
-    P.setInterpolatingVelCosts(c, MotionProblem::constFinalMid,
+    P.setInterpolatingVelCosts(c, KOMO::constFinalMid,
                                {0.,0.,0.}, 1e3,
                                {0.,0.,0.}, 0.);
 
-    P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
+    P.setInterpolatingCosts(c, KOMO::constFinalMid,
                             conv_vec2arr(P.world.getBodyByName("goalRef")->X.pos), 1e4,
                             {0.,0.,0.}, 1e-3);
 
     if (useOrientation) {
       c = P.addTaskMap_Default_Bodies("orientation", zoriTMT,"endeff",mlr::Transformation().setText("<t(0 0 0)>"));
-      P.setInterpolatingCosts(c, MotionProblem::constFinalMid,
+      P.setInterpolatingCosts(c, KOMO::constFinalMid,
                               {0.,0.,-1.}, 1e4,
                               {0.,0.,0.}, 1e-3);
     }
 
     if (useCollAvoid) {
       c = P.addTaskMap_Default("collision", collTMT, 0, Transformation_Id, 0, Transformation_Id, ARR(.1));
-      P.setInterpolatingCosts(c, MotionProblem::constFinalMid, {0.}, 1e0);
+      P.setInterpolatingCosts(c, KOMO::constFinalMid, {0.}, 1e0);
     }
 
     MotionProblemFunction F(P);

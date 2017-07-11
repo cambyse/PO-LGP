@@ -4,11 +4,11 @@
 
 #include <Core/util.tpp>
 
-#include <Motion/komo.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+//#include <Motion/motion.h>
+#include <Kin/taskMaps.h>
 
-#include <LGP/LGP.h>
+//#include <LGP/LGP.h>
 
 #include "node_visitors.h"
 
@@ -440,12 +440,12 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
     // get the terminal node for the world w, in the case of stochaticity
     POLGPNode * node = getTerminalNode( WorldID( w ) );
 
-    if( poses && node->komoPoseProblems()( w ) && node->komoPoseProblems()( w )->MP->configurations.N )
-      poseViews_( w )->setConfigurations( node->komoPoseProblems()( w )->MP->configurations );
+    if( poses && node->komoPoseProblems()( w ) && node->komoPoseProblems()( w )->configurations.N )
+      poseViews_( w )->setConfigurations( node->komoPoseProblems()( w )->configurations );
     else poseViews_( w )->clear();
 
-    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->MP->configurations.N )
-      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->MP->configurations );
+    if( paths && node->komoPathProblems()( w ) && node->komoPathProblems()( w )->configurations.N )
+      pathViews_( w )->setConfigurations( node->komoPathProblems()( w )->configurations );
     else pathViews_( w )->clear();
 
 //    if( paths && node->komoJointPathProblems()( w ) && node->komoJointPathProblems()( w )->MP->configurations.N )

@@ -3,7 +3,7 @@
 
 #include <Kin/kin_physx.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 #include <Perception/keyframer.h>
 

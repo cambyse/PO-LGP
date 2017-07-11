@@ -12,7 +12,7 @@ void ManipulationTree_Node::solvePoseProblem(){
     forwardChaining_FOL(*poseProblemSpecs, komoRules/*, NULL, NoGraph, 5*/);
     cout <<"POSE PROBLEM:" <<*poseProblemSpecs <<endl;
 
-    poseProblem = new MotionProblem(effKinematics, true);
+    poseProblem = new KOMO(effKinematics, true);
     poseProblem->setTiming(0, 1.);
     poseProblem->k_order=0;
     poseProblem->parseTasks(*poseProblemSpecs);
@@ -80,7 +80,7 @@ void ManipulationTree_Node::solveSeqProblem(int verbose){
 
 #if 0
   //-- add decisions to the seq pose problem description
-  seqProblem = new MotionProblem(startKinematics, true);
+  seqProblem = new KOMO(startKinematics, true);
   seqProblem->setTiming(s-1, 5.*s); //T=0 means one pose is optimized!!
   seqProblem->k_order=1;
   NodeL komoRules = fol.KB.getNodes("SeqProblemRule");
@@ -145,8 +145,8 @@ void ManipulationTree_Node::solveSeqProblem(int verbose){
 
   komo.setHoming(-1., -1., 1e-1); //gradient bug??
   komo.setSquaredQVelocities();
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+  komo.setFixEffectiveJoints(-1., -1., 1e3);
+  komo.setFixSwitchedObjects(-1., -1., 1e3);
 
   for(ManipulationTree_Node *node:treepath){
     komo.setAbstractTask(node->time, *node->folState);
@@ -176,7 +176,7 @@ void ManipulationTree_Node::solvePathProblem(uint microSteps, int verbose){
 
 #if 0
   //-- add decisions to the path problem description
-  pathProblem = new MotionProblem(startKinematics, true);
+  pathProblem = new KOMO(startKinematics, true);
   pathProblem->setTiming(s*microSteps, 5.*s);
   pathProblem->k_order=2;
   NodeL komoRules = fol.KB.getNodes("PathProblemRule");
@@ -217,7 +217,7 @@ void ManipulationTree_Node::solvePathProblem(uint microSteps, int verbose){
   komo.setTiming(time, microSteps, 5., 2);
 
   komo.setSquaredQAccelerations();
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
+  komo.setFixEffectiveJoints(-1., -1., 1e3);
 
   for(ManipulationTree_Node *node:treepath) /*if(node->folDecision)*/{
     komo.setAbstractTask(node->time, *node->folState);

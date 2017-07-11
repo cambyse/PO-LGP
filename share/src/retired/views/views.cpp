@@ -93,7 +93,7 @@ void View::gtkNewText(GtkWidget *container){ NICO }
 
 #if 1
 NodeL getViews(const char* appliesOn_sysType){
-  NodeL types = registry().getDerivedItems<Type>();
+  NodeL types = registry()->getDerivedItems<Type>();
   NodeL ret;
   for(Node *ti: types){
     if(ti->keys(0)!="View") continue;
@@ -103,7 +103,7 @@ NodeL getViews(const char* appliesOn_sysType){
 }
 
 Node* getViewByName(const char *name){
-  NodeL types = registry().getDerivedItems<Type>();
+  NodeL types = registry()->getDerivedItems<Type>();
   for(Node *ti: types){
     if(ti->keys(0)!="View") continue;
     if(ti->keys(1)==name || ti->value<Type>()->typeId().name()==name) return ti;

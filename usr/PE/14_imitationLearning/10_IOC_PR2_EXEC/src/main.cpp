@@ -1,7 +1,7 @@
 #include <Kin/kin.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 //#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <Kin/taskMaps.h>
 
 
 
@@ -174,7 +174,7 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   world->calc_fwdPropagateShapeFrames();
   world->watch();
 
-  MotionProblem* MP = new MotionProblem(*world,false);
+  KOMO* MP = new KOMO(*world,false);
   MP->useSwift=true;
   MP->loadTransitionParameters();
   MP->makeContactsAttractive=false;
@@ -227,9 +227,9 @@ void createTrajectory(arr &x, arr &options, const arr &q0, const arr &markerPos,
   c5->map.constraint = false;
   c5->setCostSpecs(contactTime,MP->T, ARR(0.) ,param(N++));
   c = MP->addTask("collisionConstraints1", new PairCollisionConstraint(*world,"wall1","drawer1",0.03));
-  MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+  MP->setInterpolatingCosts(c, KOMO::constant,ARR(0.),1e0);
   c = MP->addTask("collisionConstraints2", new PairCollisionConstraint(*world,"wall2","drawer1",0.03));
-  MP->setInterpolatingCosts(c, MotionProblem::constant,ARR(0.),1e0);
+  MP->setInterpolatingCosts(c, KOMO::constant,ARR(0.),1e0);
 
 
   /// optimize motion

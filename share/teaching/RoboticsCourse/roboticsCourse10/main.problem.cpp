@@ -1,6 +1,6 @@
 #include <iostream>
 #include <Core/array.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Core/util.h>
 
 using namespace std;

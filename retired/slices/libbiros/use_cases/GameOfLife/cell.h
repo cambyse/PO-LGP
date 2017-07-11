@@ -3,9 +3,9 @@
 
 #include <biros/biros.h>
 
-class Cell : public AccessData {
+class Cell : public VariableData {
 	public:
-		Cell() : AccessData("Cell") {}
+		Cell() : VariableData("Cell") {}
 		bool alive;
 };
 

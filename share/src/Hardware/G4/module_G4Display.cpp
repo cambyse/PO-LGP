@@ -70,7 +70,7 @@ void G4Display::open(){
   b->name = STRING("world");
   mlr::Shape *sh = new mlr::Shape(s->ors, *b);
   sh->type = mlr::ST_marker;
-  sh->size[0] = .5;
+  sh->size(0) = .5;
 }
 
 void G4Display::close(){}

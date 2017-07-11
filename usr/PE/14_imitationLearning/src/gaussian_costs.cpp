@@ -1,8 +1,7 @@
 #include "gaussian_costs.h"
 
-#include <Motion/motion.h>
-//#include <Motion/motionHeuristics.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Kin/kin_swift.h>
 #include <Geo/geo.h>
 

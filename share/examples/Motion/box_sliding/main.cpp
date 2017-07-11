@@ -1,6 +1,5 @@
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Perception/videoEncoder.h>
@@ -36,7 +35,7 @@ void box1(arr &y){
 //  cout <<world.gl().camera.X->pos << endl;
 //  cout <<world.gl().camera.X->rot << endl;
 
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.useSwift=false;
   cout <<"joint dimensionality=" <<q.N <<endl;
 

@@ -1,7 +1,7 @@
 #include "WritheTaskVariable.h"
 #include "WritheMatrix.h"
 #include <sstream>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 
 WritheTaskVariable::WritheTaskVariable(const char* _name,
                                          mlr::KinematicWorld& _ors,
@@ -45,7 +45,7 @@ void GetRopes(arr& r1,arr& r2,const mlr::KinematicWorld& _ors,int rope_points1,i
    
   for (int i=0;i<rope_points2;i++) {// start with second body part
   rope2(i,0)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.x; 
-  rope2(i,1)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.y - _ors.getBodyByName(obj_name)->shapes(0)->size[2]* (i/(rope_points2-1.0) -0.5) ; 
+  rope2(i,1)= _ors.getBodyByName(obj_name)->shapes(0)->X.pos.y - _ors.getBodyByName(obj_name)->shapes(0)->size(2)* (i/(rope_points2-1.0) -0.5) ; 
   rope2(i,2)=_ors.getBodyByName(obj_name)->shapes(0)->X.pos.z; 
   }
   r1=rope1;

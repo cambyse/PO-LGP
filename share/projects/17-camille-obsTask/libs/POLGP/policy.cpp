@@ -65,7 +65,8 @@ PolicyBuilder::PolicyBuilder( POLGPNode * root )
     WorldID wid( w );
     auto node = utility::getTerminalNode( root, wid );
 
-    WorldL kinematicConfigurations = node->jointPathGeometricLevel()->komos()( w )->MP->configurations;
+    WorldL kinematicConfigurations = node->jointPathGeometricLevel()->komos()( w )->configurations;
+    //WorldL kinematicConfigurations = node->jointPathGeometricLevel()->komos()( w )->configurations;
     WorldL clonedKinematicConfigurations( kinematicConfigurations.d0 );
 
     // clone the kinematic configurations

@@ -38,7 +38,7 @@ public:
 public:
     IntegerEnvironment() = default;
     virtual ~IntegerEnvironment() = default;
-    virtual void make_current_state_default() override final {default_state = state;}
+    virtual void make_current_state_new_start() override final {default_state = state;}
     virtual void reset_state() override final {state = default_state;}
     virtual bool is_markov() const override {return true;}
     virtual void write(std::ostream & out) const override = 0;

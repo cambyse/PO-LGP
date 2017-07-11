@@ -10,7 +10,13 @@ void draw1(void*){
 
 struct Proc:public Thread{
   OpenGL *gl;
-  Proc(const char* name):Thread(name, 0.01){}
+  Proc(const char* name):Thread(name, 0.05){
+    threadOpen();
+  }
+  ~Proc(){
+    threadClose();
+  }
+
   void open(){
     gl = new OpenGL(name);
     gl->add(draw1);
@@ -20,7 +26,6 @@ struct Proc:public Thread{
     delete gl;
   }
   void step(){
-    gl->processEvents();
   }
 };
 
@@ -42,7 +47,7 @@ void TEST(ThreadedOpenGL) {
     procs.append(gli);
   }
   mlr::wait(5.);
-  close(procs);
+  for(Thread* th : procs) th->threadClose();
 }
 
 int MAIN(int argc, char **argv){

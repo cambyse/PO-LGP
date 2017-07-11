@@ -22,7 +22,7 @@ void TrajFactory::compFeatTraj(const arr &x, arr &y, mlr::KinematicWorld &world,
 }
 
 /// transform a trajectory from feature space into joint space
-void TrajFactory::compJointTraj(const arr &xInit, const arr &y, arr &x, MotionProblem &MP, TaskMap *tm) {
+void TrajFactory::compJointTraj(const arr &xInit, const arr &y, arr &x, KOMO &MP, TaskMap *tm) {
   MP.tasks.clear();
   MP.setState(xInit[0]);
   Task *t;

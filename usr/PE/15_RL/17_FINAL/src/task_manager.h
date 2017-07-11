@@ -3,8 +3,8 @@
 
 #include <Core/array.h>
 #include <Kin/kin.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 
 struct TaskManager
 {
@@ -16,7 +16,7 @@ struct TaskManager
   arr Pdemo1f,Pdemo1c,Pdemo2f,Pdemo2c;
   arr PX1f,PX1c,PX2f,PX2c;
   TaskManager() {};
-  virtual void addConstraints(MotionProblem *MP, const arr &X) = 0;
+  virtual void addConstraints(KOMO *MP, const arr &X) = 0;
   virtual void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr) = 0;
   virtual void computeConstraintTime(const arr &F,const arr &X) = 0;
   virtual bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo) = 0;
@@ -27,7 +27,7 @@ struct TaskManager
 
 struct DoorTask:TaskManager {
   DoorTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_); type = DOOR;}
-  void addConstraints(MotionProblem *MP, const arr &X);
+  void addConstraints(KOMO *MP, const arr &X);
   void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);
@@ -37,7 +37,7 @@ struct DoorTask:TaskManager {
 
 struct GraspTask:TaskManager {
   GraspTask(mlr::KinematicWorld &world_) {world = new mlr::KinematicWorld(world_); type = GRASP;}
-  void addConstraints(MotionProblem *MP, const arr &X);
+  void addConstraints(KOMO *MP, const arr &X);
   void updateVisualization(mlr::KinematicWorld &world, arr &X, arr &Y=NoArr);
   void computeConstraintTime(const arr &F,const arr &X);
   bool transformTrajectory(arr &Xn, const arr &x, arr& Xdemo);

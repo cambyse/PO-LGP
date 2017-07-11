@@ -1,6 +1,5 @@
-#include "subscribeAlvarMarkers.h"
-
 #ifdef MLR_ROS
+#include "subscribeAlvarMarkers.h"
 
 #ifdef MLR_ROS_INDIGO
   #include <ar_track_alvar_msgs/AlvarMarkers.h>
@@ -10,7 +9,10 @@
   #include <ar_track_alvar/AlvarMarkers.h>
   namespace ar = ar_track_alvar;
 #endif
-
+#ifdef MLR_ROS_KINETIC
+  #include <ar_track_alvar_msgs/AlvarMarkers.h>
+  namespace ar = ar_track_alvar_msgs;
+#endif
 // ============================================================================
 // void ROSMODULE_markers::step() {
 //   modelWorld.writeAccess();
@@ -45,7 +47,7 @@ void syncMarkers(mlr::KinematicWorld& world, const ar::AlvarMarkers& markers) {
       mlr::Shape *shape = new mlr::Shape(world, *body);
       shape->name = marker_name;
       shape->type = mlr::ST_marker;
-      shape->size[0] = .3; shape->size[1] = .0; shape->size[2] = .0; shape->size[3] = .0;
+      shape->size(0) = .3; shape->size(1) = .0; shape->size(2) = .0; shape->size(3) = .0;
     }
     mlr::Vector Y_old;
     mlr::Vector Z_old;
@@ -83,6 +85,6 @@ void syncMarkers(mlr::KinematicWorld& world, const ar::AlvarMarkers& markers) {
   }
 }
 #else
-void setBody(mlr::Body& body, const AlvarMarker& marker) {}
-void syncMarkers(mlr::KinematicWorld& world, AlvarMarkers& markers) {}
+//void setBody(mlr::Body& body, const AlvarMarker& marker) {}
+//void syncMarkers(mlr::KinematicWorld& world, AlvarMarkers& markers) {}
 #endif

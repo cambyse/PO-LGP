@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <Kin/roboticsCourse.h>
 #include <Gui/opengl.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Algo/kalman.h>
 
 

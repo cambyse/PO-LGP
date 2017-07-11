@@ -1,7 +1,6 @@
 #include <Core/util.h>
-#include <Motion/motion.h>
-#include <Motion/taskMaps.h>
-#include <Motion/taskMaps.h>
+#include <KOMO/komo.h>
+#include <Kin/taskMaps.h>
 #include <Gui/opengl.h>
 #include <Optim/optimization.h>
 #include <Optim/benchmarks.h>
@@ -70,7 +69,7 @@ void runAMEX(String scene, bool useOrientation, bool useCollAvoid, bool moveGoal
   makeConvexHulls(world.shapes);
   cout << "Loaded scene: " << scene << endl;
 
-  MotionProblem P(world);
+  KOMO P(world);
 
 
   //-- create an optimal trajectory to trainTarget

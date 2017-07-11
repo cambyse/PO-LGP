@@ -1,11 +1,11 @@
 #include <Kin/kin.h>
 #include <Optim/benchmarks.h>
-#include <Motion/motion.h>
+#include <KOMO/komo.h>
 #include <Optim/optimization.h>
-#include <Motion/taskMap_default.h>
-#include <Motion/taskMap_proxy.h>
-#include <Motion/taskMap_constrained.h>
-#include <Control/taskController.h>
+#include <Kin/taskMap_default.h>
+#include <Kin/taskMap_proxy.h>
+#include <Kin/taskMap_constrained.h>
+#include <Control/taskControl.h>
 #include <vector>
 #include <future>
 #include <GL/glu.h>
@@ -31,7 +31,7 @@ struct IOC_DemoCost {
   arr dPHI_J_Jt_dPHI;
   arr JgJgtI_Jg_J_dPHI;
 
-  IOC_DemoCost(MotionProblem &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
+  IOC_DemoCost(KOMO &_MP,arr &_x0,arr &_lambda0, arr &_Dwdx,uint _numParam,bool _useDetH, bool _useHNorm):x0(_x0),lambda0(_lambda0),Dwdx(_Dwdx),numParam(_numParam),useDetH(_useDetH),useHNorm(_useHNorm) {
     // precompute some terms
     MotionProblemFunction MPF(_MP);
     ConstrainedProblem & v = Convert(MPF);
@@ -164,12 +164,12 @@ struct IOC_DemoCost {
 };
 
 struct Demonstration {
-  MotionProblem& MP; // MP containing the world state,
+  KOMO& MP; // MP containing the world state,
   arr x;             // joint trajectory
   arr lambda;        // constraint trajectory
   IOC_DemoCost* cost;// cost function for this demonstrations
 
-  Demonstration (MotionProblem &_MP):MP(_MP) {
+  Demonstration (KOMO &_MP):MP(_MP) {
 
   }
 };
@@ -308,7 +308,7 @@ void simpleMotion(){
   arr q, qdot;
   world.physx();
   world.getJointState(q, qdot);
-  MotionProblem MP(world,false);
+  KOMO MP(world,false);
   MP.loadTransitionParameters();
   MP.makeContactsAttractive=false;
   arr refGoal1 = conv_vec2arr(MP.world.getBodyByName("box")->X.pos)+{0.,0.3,0.};
@@ -373,7 +373,7 @@ void simpleMotion(){
 
   world2.physx();
   world2.getJointState(q, qdot);
-  MotionProblem MP2(world2,true);
+  KOMO MP2(world2,true);
   MP2.loadTransitionParameters();
   MP2.makeContactsAttractive=false;
   TaskCost *c1 = MP2.addTask("position_right_hand_1",new TaskMap_Default(posTMT,world2,"endeff", mlr::Vector(0., 0., 0.)));
@@ -397,7 +397,7 @@ void simpleMotion(){
 //  c4->target = lambdaTraj*0.;
 
   TaskCost *c5 = MP2.addTask("collisionConstraints", new PairCollisionConstraint(MP2.world,"box","endeff",0.0));
-  MP2.setInterpolatingCosts(c5, MotionProblem::constant, {0.}, 1.);
+  MP2.setInterpolatingCosts(c5, KOMO::constant, {0.}, 1.);
 
 
   MP2.x0 = {0.,0.,0.,0.,0.};

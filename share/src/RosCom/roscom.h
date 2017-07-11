@@ -11,6 +11,8 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/LaserScan.h>
 #include <std_msgs/String.h>
 #include <sensor_msgs/JointState.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -23,7 +25,7 @@
 #include <Kin/kin.h>
 #include <Control/ctrlMsg.h>
 #include <ros_msg/JointState.h>
-
+#include <PCL/conv.h>
 
 //===========================================================================
 //
@@ -52,6 +54,8 @@ timespec            conv_time2timespec(const ros::Time&);
 arr                 conv_wrench2arr(const geometry_msgs::WrenchStamped& msg);
 byteA               conv_image2byteA(const sensor_msgs::Image& msg);
 uint16A             conv_image2uint16A(const sensor_msgs::Image& msg);
+floatA              conv_laserScan2arr(const sensor_msgs::LaserScan& msg);
+Pcl                 conv_pointcloud22pcl(const sensor_msgs::PointCloud2& msg);
 arr                 conv_points2arr(const std::vector<geometry_msgs::Point>& pts);
 arr                 conv_colors2arr(const std::vector<std_msgs::ColorRGBA>& pts);
 CtrlMsg             conv_JointState2CtrlMsg(const marc_controller_pkg::JointState& msg);
@@ -65,10 +69,12 @@ geometry_msgs::Transform conv_transformation2transform(const mlr::Transformation
 std::vector<geometry_msgs::Point> conv_arr2points(const arr& pts);
 marc_controller_pkg::JointState   conv_CtrlMsg2JointState(const CtrlMsg& ctrl);
 floatA conv_Float32Array2FloatA(const std_msgs::Float32MultiArray&);
+visualization_msgs::Marker conv_Shape2Marker(const mlr::Shape& sh);
+visualization_msgs::MarkerArray conv_Kin2Markers(const mlr::KinematicWorld& K);
 
 //-- get transformations
 mlr::Transformation ros_getTransform(const std::string& from, const std::string& to, tf::TransformListener& listener);
-mlr::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener);
+mlr::Transformation ros_getTransform(const std::string& from, const std_msgs::Header& to, tf::TransformListener& listener, tf::Transform* returnRosTransform=NULL);
 bool ros_getTransform(const std::string& from, const std::string& to, tf::TransformListener& listener, mlr::Transformation& result);
 
 
@@ -81,21 +87,20 @@ struct SubscriberType { virtual ~SubscriberType() {} }; ///< if types derive fro
 
 template<class msg_type>
 struct Subscriber : SubscriberType {
-  Access_typed<msg_type>& access;
+  Access<msg_type>& access;
   ros::NodeHandle *nh;
   ros::Subscriber sub;
-  Subscriber(const char* topic_name, Access_typed<msg_type>& _access)
-    : access(_access) {
+  Subscriber(const char* topic_name, Access<msg_type>& _access)
+    : access(_access), nh(NULL) {
     if(mlr::getParameter<bool>("useRos", false)){
       nh = new ros::NodeHandle;
-      registry().newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
-      cout <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(msg_type).name() <<"> ..." <<std::flush;
+      registry()->newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      LOG(0) <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(msg_type).name() <<"> into access '" <<access.name <<'\'';
       sub  = nh->subscribe( topic_name, 100, &Subscriber::callback, this);
-      cout <<"done" <<endl;
     }
   }
   ~Subscriber(){
-    delete nh;
+    if(nh) delete nh;
   }
   void callback(const typename msg_type::ConstPtr& msg) { access.set() = *msg; }
 };
@@ -108,42 +113,40 @@ struct Subscriber : SubscriberType {
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConv : SubscriberType {
-  Access_typed<var_type> access;
-  Access_typed<mlr::Transformation> *frame;
+  Access<var_type> access;
+  Access<mlr::Transformation> *frame;
   ros::NodeHandle *nh;
   ros::Subscriber sub;
   tf::TransformListener *listener;
-  SubscriberConv(const char* topic_name, Access_typed<var_type>& _access, Access_typed<mlr::Transformation> *_frame=NULL)
-    : access(NULL, _access), frame(_frame) {
+  SubscriberConv(const char* topic_name, Access<var_type>& _access, Access<mlr::Transformation> *_frame=NULL)
+    : access(NULL, _access), frame(_frame), nh(NULL), listener(NULL) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
-      listener = new tf::TransformListener;
-      registry().newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
-      cout <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      if(frame) listener = new tf::TransformListener;
+      registry()->newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      LOG(0) <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> into access '" <<access.name <<'\'';
       sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
-      cout <<"done" <<endl;
     }
   }
-  SubscriberConv(const char* topic_name, const char* var_name, Access_typed<mlr::Transformation> *_frame=NULL)
-    : access(NULL, var_name), frame(_frame) {
+  SubscriberConv(const char* topic_name, const char* var_name, Access<mlr::Transformation> *_frame=NULL)
+    : access(NULL, var_name), frame(_frame), nh(NULL), listener(NULL) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
-      listener = new tf::TransformListener;
-      registry().newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
-      cout <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      if(frame) listener = new tf::TransformListener;
+      registry()->newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      LOG(0) <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> into access '" <<access.name <<'\'';
       sub = nh->subscribe(topic_name, 1, &SubscriberConv::callback, this);
-      cout <<"done" <<endl;
     }
   }
   ~SubscriberConv(){
-    delete listener;
-    delete nh;
+    if(listener) delete listener;
+    if(nh) delete nh;
   }
   void callback(const typename msg_type::ConstPtr& msg) {
     double time=conv_time2double(msg->header.stamp);
     access.set( time ) = conv(*msg);
-    if(frame){
-      frame->set( time ) = ros_getTransform("/base_link", msg->header.frame_id, *listener);
+    if(frame && listener){
+      frame->set( time ) = ros_getTransform("/base_link", msg->header, *listener);
     }
   }
 };
@@ -156,32 +159,30 @@ struct SubscriberConv : SubscriberType {
 
 template<class msg_type, class var_type, var_type conv(const msg_type&)>
 struct SubscriberConvNoHeader : SubscriberType{
-  Access_typed<var_type> access;
+  Access<var_type> access;
   ros::NodeHandle *nh;
   ros::Subscriber sub;
-  SubscriberConvNoHeader(const char* topic_name, Access_typed<var_type>& _access)
-    : access(NULL, _access) {
+  SubscriberConvNoHeader(const char* topic_name, Access<var_type>& _access)
+    : access(NULL, _access), nh(NULL) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
-      registry().newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
-      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      registry()->newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      LOG(0) <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> into access '" <<access.name <<'\'';
       sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
-      cout <<"done" <<endl;
     }
   }
   SubscriberConvNoHeader(const char* topic_name, const char* var_name)
-    : access(NULL, var_name) {
+    : access(NULL, var_name), nh(NULL) {
     if(mlr::getParameter<bool>("useRos")){
       nh = new ros::NodeHandle;
-      registry().newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
-      cout <<"subscibing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> ..." <<std::flush;
+      registry()->newNode<SubscriberType*>({"Subscriber", topic_name}, {access.registryNode}, this);
+      LOG(0) <<"subscribing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> into access '" <<access.name <<'\'';
       sub = nh->subscribe( topic_name, 1, &SubscriberConvNoHeader::callback, this);
-      cout <<"done" <<endl;
     }
   }
 
   ~SubscriberConvNoHeader(){
-    delete nh;
+    if(nh) delete nh;
   }
   void callback(const typename msg_type::ConstPtr& msg) {
     access.set() = conv(*msg);
@@ -196,36 +197,45 @@ struct SubscriberConvNoHeader : SubscriberType{
 
 template<class msg_type, class var_type, msg_type conv(const var_type&)>
 struct PublisherConv : Thread {
-  Access_typed<var_type> access;
+  Access<var_type> access;
   ros::NodeHandle *nh;
   ros::Publisher pub;
-  const char* topic_name;
+  mlr::String topic_name;
 
-  PublisherConv(const char* _topic_name, Access_typed<var_type>& _access)
-      : Thread(STRING("Publisher_"<<_access.name <<"->" <<_topic_name), -1),
-        access(this, _access, true),
+  PublisherConv(const char* _topic_name, const Access<var_type>& _access, double beatIntervalSec=-1.)
+      : Thread(STRING("Publisher_"<<_access.name <<"->" <<_topic_name), beatIntervalSec),
+        access(this, _access, beatIntervalSec<0.),
         nh(NULL),
         topic_name(_topic_name){
-    if(mlr::getParameter<bool>("useRos"))
+    if(mlr::getParameter<bool>("useRos")){
+      LOG(0) <<"publishing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> from access '" <<access.name <<'\'';
       nh = new ros::NodeHandle;
+      threadOpen();
+    }
   }
-  PublisherConv(const char* _topic_name, const char* var_name)
-      : Thread(STRING("Publisher_"<<var_name <<"->" <<_topic_name), -1),
-        access(this, var_name, true),
+  PublisherConv(const char* _topic_name, const char* var_name, double beatIntervalSec=-1.)
+      : Thread(STRING("Publisher_"<<var_name <<"->" <<_topic_name), beatIntervalSec),
+        access(this, var_name, beatIntervalSec<0.),
         nh(NULL),
         topic_name(_topic_name){
-    if(mlr::getParameter<bool>("useRos"))
+    if(mlr::getParameter<bool>("useRos")){
+      LOG(0) <<"publishing to topic '" <<topic_name <<"' <" <<typeid(var_type).name() <<"> from access '" <<access.name <<'\'';
       nh = new ros::NodeHandle;
+      threadOpen();
+    }
+  }
+  ~PublisherConv(){
+    threadClose();
+    pub.shutdown();
+    if(nh) delete nh;
   }
   void open(){
-    if(nh) pub = nh->advertise<msg_type>(topic_name, 1);
+    if(nh) pub = nh->advertise<msg_type>(topic_name.p, 1);
   }
   void step(){
     if(nh) pub.publish(conv(access.get()));
   }
   void close(){
-//    delete pub;
-//    delete nh;
   }
 };
 
@@ -264,20 +274,20 @@ struct SoftHandMsg{
  *
  * If useRos==false then nothing happens.
  */
-void initialSyncJointStateWithROS(mlr::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
+void initialSyncJointStateWithROS(mlr::KinematicWorld& world, Access<CtrlMsg>& ctrl_obs, bool useRos);
 
 /**
  * Sync the world with ctrl_obs from the robot.
  *
  * If useRos==false then nothing happens.
  */
-void syncJointStateWitROS(mlr::KinematicWorld& world, Access_typed<CtrlMsg>& ctrl_obs, bool useRos);
+void syncJointStateWitROS(mlr::KinematicWorld& world, Access<CtrlMsg>& ctrl_obs, bool useRos);
 
 //===========================================================================
 
 struct PerceptionObjects2Ors : Thread {
-  Access_typed<visualization_msgs::MarkerArray> perceptionObjects;
-  Access_typed<mlr::KinematicWorld> modelWorld;
+  Access<visualization_msgs::MarkerArray> perceptionObjects;
+  Access<mlr::KinematicWorld> modelWorld;
   PerceptionObjects2Ors()
     : Thread("PerceptionObjects2Ors"),
     perceptionObjects(this, "perceptionObjects", true),

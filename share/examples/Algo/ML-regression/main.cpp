@@ -1,5 +1,5 @@
 #include <Algo/MLcourse.h>
-#include <Gui/plot.h>
+#include <Plot/plot.h>
 #include <Optim/GlobalIterativeNewton.h>
 
 bool plotDev=true;
@@ -181,9 +181,9 @@ void testKernelReg(const char *datafile=NULL) {
     arr x = 2.*randn(X.d1);
     arr bounds_lo = consts<double>(-2., x.N);
     arr bounds_hi = consts<double>(+2., x.N);
-    GlobalIterativeNewton o(x, f.getF(-1.), bounds_lo, bounds_hi, OPT(verbose=1, stopTolerance=1e-3));
-    o.run(10);
-    o.report();
+    GlobalIterativeNewton opt(x, f.getF(-1.), bounds_lo, bounds_hi, OPT(verbose=1, stopTolerance=1e-3));
+    opt.run(10);
+    opt.report();
     cout <<"optimum at x=" <<x <<' ' <<f.getF(-1.)(NoArr, NoArr, x) <<endl;
     arr fx,sig;
     fx = f.evaluate(x.reshape(1,x.N), sig);

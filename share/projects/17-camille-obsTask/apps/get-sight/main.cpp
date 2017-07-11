@@ -1,4 +1,4 @@
-#include <Motion/komo.h>
+#include <KOMO/komo.h>
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
@@ -148,8 +148,8 @@ void move_0(){
   KOMO komo;
   komo.setConfigFromFile();
 
-  komo.setSquaredFixJointVelocities();
-  komo.setSquaredFixSwitchedObjects();
+  //komo.setSquaredFixJointVelocities();
+  komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 
   const double start_time = 1.0;
@@ -242,8 +242,8 @@ void move_1(){
   KOMO komo;
   komo.setConfigFromFile();
 
-  komo.setSquaredFixJointVelocities();
-  komo.setSquaredFixSwitchedObjects();
+  //komo.setSquaredFixJointVelocities();
+  komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
 
 //  KOMO komo;
@@ -285,75 +285,77 @@ void move_1(){
 
   //komo.setAlign( 1.0, 7, "container_1_front" );
 
-  /////ACTIVE GET SIGHT CONTAINER 0
+  /////ACTIVE GET SIGHT CONTAINER 0  // 1->2
   {
-    const double time = start_time + 0.0;
-
-    komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
+    komo.setTask( 1.0, 2.0, new ActiveGetSight      ( "manhead",
                                                               "container_0",
                                                               ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
+  //////TAKE VIEW // 2->3
   {
-    const double time = start_time + 1.0;
-
 //    komo.setTask( time, time + 1.0, new TakeView      ( ),
 //                  OT_eq, NoArr, 1e2, 1 );
 
-    auto *map = new TaskMap_Transition(komo.MP->world);
+    auto *map = new TaskMap_Transition(komo.world);
     map->posCoeff = 0.;
     map->velCoeff = 1.;
     map->accCoeff = 0.;
-    komo.setTask( time, time + 1.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+    komo.setTask( 2.0, 3.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
   }
 
-  komo.setTask( 1.0, start_time + 8.0, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
-  komo.setTask( 1.0, start_time + 8.0, new OverPlaneConstraint ( komo.world,
+  //////OVER PLANE + AXIS ALIGNMENT
+  //komo.setTask( 1.0, start_time + 8.0, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+  /*komo.setTask( 1.0, start_time + 8.0, new OverPlaneConstraint ( komo.world,
                                                                  "container_1",
                                                                  "tableC",
                                                                  0.01
                                                                  ),  // pivot position  in container frame
-                OT_ineq, NoArr, 1e2 );
+                OT_ineq, NoArr, 1e2 );*/
 
-  /////GRASP CONTAINER////
+  /////GRASP CONTAINER//// 3->4
 //  {
-    const double time = start_time + 2.0 + 1.0;
     //arrive sideways
     //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
-    komo.setKinematicSwitch( time, true, "delete", "tableC", "container_1_bottom" );
+    komo.setKinematicSwitch( 4.0, true, "delete", "tableC", "container_1_bottom" );
     //connect graspRef with object
-    komo.setKinematicSwitch( time, true, "ballZero", "handL", "container_1_left" );
+    komo.setKinematicSwitch( 4.0, true, "ballZero", "handL", "container_1_left" );
     //komo.setKinematicSwitch( time, true, "addRigid", "handL", "container_1_handle", NoTransformation, NoTransformation );
 //  }
 
   /////
 
 
-  /////ACTIVE GET SIGHT CONTAINER 1
+  /////ACTIVE GET SIGHT CONTAINER 1 // 4->5
   {
-    const double time = start_time + 3.0;
-
-    komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
+    komo.setTask( 4.0, 5.0, new ActiveGetSight      ( "manhead",
                                                               "container_1",
                                                               //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-                                                              ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
+                                                              ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
+  /////TAKE VIEW CONTAINER 1 6->7
+    {
+      auto *map = new TaskMap_Transition(komo.world);
+      map->posCoeff = 0.;
+      map->velCoeff = 1.;
+      map->accCoeff = 0.;
+      komo.setTask( 5.0, 6.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+    }
+
   /////PLACE ON TABLE FOR CONTAINER 1
   {
-    //const double time = start_time + 5.0;
-
-    //komo.setPlace( time, "handL", "container_1_front", "tableL" );
+    komo.setPlace( 7.0, "handL", "container_1_front", "tableC" );
   }
-  {
-     const double time = start_time + 5.0;
+//  {
+//     const double time = start_time + 5.0;
 
-    komo.setHoming(time, time+1, 1e-2); //gradient bug??
-  }
+//    komo.setHoming(time, time+1, 1e-2); //gradient bug??
+//  }
 
   //// GRASP BALL
     {
@@ -441,8 +443,8 @@ void move_debug(){
 
   komo.setHoming(-1., -1., 1e-2); //gradient bug??
   komo.setSquaredQAccelerations();
-  komo.setSquaredFixJointVelocities(-1., -1., 1e3);
-  komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
+ // komo.setSquaredFixJointVelocities(-1., -1., 1e3);
+ // komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
   //komo.setPosition(1., 1.1, "humanL", "target", OT_sumOfSqr, NoArr, 1e2);
 
@@ -484,7 +486,7 @@ void move_debug(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  move_0();
+  move_1();
 
   return 0;
 }

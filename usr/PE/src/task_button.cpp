@@ -4,7 +4,7 @@
 #include "plotUtil.h"
 #include <Motion/phase_optimization.h>
 
-void ButtonTask::addConstraints(MotionProblem *MP, const arr &X)
+void ButtonTask::addConstraints(KOMO *MP, const arr &X)
 {
   TrajFactory tf;
   arr yC1;
@@ -17,7 +17,7 @@ void ButtonTask::addConstraints(MotionProblem *MP, const arr &X)
   t->prec = prec;
 }
 
-void ButtonTask::addModelConstraints(MotionProblem *MP,arr &target) {
+void ButtonTask::addModelConstraints(KOMO *MP,arr &target) {
   arr prec = constraintTime;
   Task *t;
   /// add contact constraint
@@ -71,7 +71,7 @@ bool ButtonTask::transformTrajectory(arr &Xn, const arr &theta, arr &Xdemo){
   arr offsetC1 = ARR(theta(0),theta(1),0.);
   C1trans = C1trans + repmat(~offsetC1,C1trans.d0,1);
 
-  MotionProblem MP(*world,false);
+  KOMO MP(*world,false);
   MP.T = Xdemo.d0-1;
   MP.tau = mlr::getParameter<double>("duration")/MP.T;
   MP.x0 = Xdemo[0];
@@ -117,7 +117,7 @@ void ButtonTask::getDofLimit(arr& dofLimit) {
 
 
 bool ButtonTask::transformTrajectoryDof(arr& Xn, const arr& x_dof, arr& Xdemo){
-  MotionProblem MP(*world,false);
+  KOMO MP(*world,false);
   MP.T = Xdemo.d0-1;
   MP.tau = mlr::getParameter<double>("duration")/MP.T;
   MP.x0 = Xdemo[0];
