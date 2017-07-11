@@ -303,14 +303,7 @@ void KOMO::setHoldStill(double startTime, double endTime, const char* shape, dou
 }
 
 void KOMO::setPosition(double startTime, double endTime, const char* shape, const char* shapeRel, ObjectiveType type, const arr& target, double prec){
-#if 0
-  mlr::String map;
-  map <<"map=pos ref1="<<shape;
-  if(shapeRel) map <<" ref2=" <<shapeRel;
-  setTask(startTime, endTime, map, type, target, prec);
-#else
   setTask(startTime, endTime, new TaskMap_Default(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
-#endif
 }
 
 void KOMO::setVelocity(double startTime, double endTime, const char* shape, const char* shapeRel, ObjectiveType type, const arr& target, double prec){
@@ -447,16 +440,16 @@ void KOMO::setHandover(double time, const char* oldHolder, const char* object, c
   //disconnect object from table
   setKinematicSwitch(time, true, "delete", oldHolder, object);
   //connect graspRef with object
-#if 0
-  setKinematicSwitch(time, true, "ballZero", newHolder, object); //why does this not work??
+#if 1
+  setKinematicSwitch(time, true, "ballZero", newHolder, object); //why does this sometimes lead to worse motions?
 #else
   setKinematicSwitch(time, true, "freeZero", newHolder, object);
   setTask(time, time, new TaskMap_Default(posDiffTMT, world, newHolder, NoVector, object, NoVector), OT_eq, NoArr, 1e3);
 #endif
 
-//  if(stepsPerPhase>2){ //velocities: no motion
-//    setTask(time-.15, time+.15, new TaskMap_Default(posTMT, world, object), OT_sumOfSqr, {0.,0.,0.}, 1e1, 1); // no motion
-//  }
+  if(stepsPerPhase>2){ //velocities: no motion
+    setTask(time-.15, time+.15, new TaskMap_Default(posTMT, world, object), OT_sumOfSqr, {0.,0.,0.}, 1e1, 1); // no motion
+  }
 
 }
 

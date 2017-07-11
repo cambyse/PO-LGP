@@ -38,8 +38,6 @@ void TEST(KomoSequence){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  orsDrawAlpha=1.;
-
   testKomoSequence();
 
   return 0;
