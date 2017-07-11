@@ -103,6 +103,8 @@ void roopiInterface(){
   //-- prepare logic world
   lgp->fol().addObject("obj1");
   lgp->fol().addObject("stick");
+  lgp->fol().addFact({"pusher", "stickTip"});
+  lgp->fol().addFact({"partOf", "stickTip", "stick"});
   lgp->fol().addFact({"table","table1"});
   lgp->fol().addFact({"table","tableR"});
   lgp->fol().addFact({"table","tableL"});
@@ -114,9 +116,7 @@ void roopiInterface(){
     //    fol.addAgent("handL");
     //    fol.addAgent("handR");
 
-  lgp->fol().addTerminalRule({{"pushing", "obj1"}});
-
-#if 1 //test a fixed sequence
+#if 0 //test a fixed sequence
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
@@ -124,12 +124,15 @@ void roopiInterface(){
 
   lgp->fixLogicSequence("(grasp baxterR stick) \
                         (handover baxterR stick baxterL) \
-                        (push stick obj1 table1) \
+                        (push stick stickTip obj1 table1) \
                         (grasp baxterR obj1) \
                         (place baxterR obj1 tableR) \
                         (place baxterL stick tableL) \
 "); mlr::String tmp("\
 ");
+#else
+//  lgp->fol().addTerminalRule({{"grasped", "baxterR", "obj1"}});
+  lgp->fol().addTerminalRule({{"placed", "obj1", "tableR"}});
 #endif
 
   lgp->start();

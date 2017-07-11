@@ -20,6 +20,8 @@ agent
 object
 table
 attachable
+pusher
+partOf
 
 busy     # involved in an ongoing (durative) activity
 free     # agent hand is free
@@ -41,10 +43,10 @@ START_STATE {}
 #####################################################################
 
 #termination rule
-Rule {
-  { (pushing obj1) } #(grasped handR screwbox) } (grasped handR screwbox) }
-  { (QUIT) }
-}
+#Rule {
+#  { (grasped baxterR obj1) }
+#  { (QUIT) }
+#}
 
 ### Reward
 REWARD {
@@ -58,7 +60,7 @@ REWARD {
 
 DecisionRule grasp {
   X, Y
-  { (INFEASIBLE grasp X Y)! (agent X) (object Y) (free X) }
+  { (INFEASIBLE grasp X Y)! (agent X) (object Y) (free X) (held Y)! }
   { (grasped X Y) (held Y) (free X)! komoGrasp(X Y)=1. }
 }
 
@@ -67,7 +69,7 @@ DecisionRule grasp {
 DecisionRule handover {
   X, Y, Z
   { (INFEASIBLE handover X Y Z)! (grasped X Y) (agent X) (agent Z) (object Y) (free Z) }
-  { (grasped X Y)! (grasped Z Y) (held Y) (free X) (free Z)! komoHandover(X Y Z)=1. }
+  { (grasped X Y)! (grasped Z Y) (free X) (free Z)! komoHandover(X Y Z)=1. }
 }
 
 #####################################################################
@@ -81,8 +83,8 @@ DecisionRule place {
 #####################################################################
 
 DecisionRule push {
-  X, Y, Z,
-  { (held X) (object Y) (table Z) }
+  W, X, Y, Z,
+  { (held W) (pusher X) (partOf X W) (object Y) (table Z) }
   { komoPush(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
 }
 
