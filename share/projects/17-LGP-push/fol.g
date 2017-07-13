@@ -84,7 +84,7 @@ DecisionRule place {
 
 DecisionRule push {
   W, X, Y, Z,
-  { (held W) (pusher X) (partOf X W) (object Y) (table Z) }
+  { (held W) (pusher X) (partOf X W) (object Y) (table Z) (held Y)! }
   { komoPush(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
 }
 

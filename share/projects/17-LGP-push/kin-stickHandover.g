@@ -7,8 +7,8 @@ body table1{ type=0, X=<T t(.7 0 .7)>, size=[1. 3. .04 .0], color=[.8 .5 .3] fix
 body tableL{ type=9, X=<T t(.0 .7 .8)>, size=[.6 .6 .04 .02], color=[.3 .5 .3] fixed, contact }
 body tableR{ type=9, X=<T t(.0 -.7 .8)>, size=[.6 .6 .04 .02], color=[.3 .5 .3] fixed, contact }
 
-body slider1a { type=ST_box size=[.2 .1 .05 0] color=[0 0 0] }
-body slider1b { type=ST_box size=[.2 .1 .05 0] color=[1 0 0] }
+body slider1a { type=ST_box size=[.2 .02 .02 0] color=[.5 .5 .5] }
+body slider1b { type=ST_box size=[.2 .02 .02 0] color=[.8 .3 .3] }
 joint (slider1a slider1b){ type=JT_transX }
 shape slider1Eff (slider1b){ rel=<T t(.1 0 0)> type=5 size=[.1 .1 .1] color=[0 1 0] }
 
