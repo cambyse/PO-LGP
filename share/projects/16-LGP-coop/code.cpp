@@ -14,7 +14,7 @@ void OptLGP::prepareKin(){
 
   { //grab desired final configuration & create initial configuration, placing objects far on the table
 
-    for(mlr::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
+    for(mlr::Frame *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
 
     //memorize their relative positionings
     targetAbs.resize(box.N);
@@ -34,7 +34,7 @@ void OptLGP::prepareKin(){
 
     //position them on the left table
     double xpos = -.6;
-    for(mlr::Body *b:box){
+    for(mlr::Frame *b:box){
       mlr::Joint *j = b->inLinks.scalar();
       tableC->outLinks.removeValue(j);
       j->from = tableL;

@@ -21,9 +21,9 @@
 struct OptLGP{
   mlr::KinematicWorld kin;
   BodyL box;
-  mlr::Body *tableC;
-  mlr::Body *tableL;
-  mlr::Body *tableR;
+  mlr::Frame *tableC;
+  mlr::Frame *tableL;
+  mlr::Frame *tableR;
   mlr::Array<mlr::Transformation> targetAbs, targetRel;
 
   FOL_World fol;
