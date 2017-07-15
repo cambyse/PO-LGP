@@ -111,7 +111,7 @@ void trial3b(){
   komo.setGrasp(7., "humanR", "blue", 0, .8);
   komo.setPlaceFixed(8., "humanR", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
 
-  komo.setTask(3., 5., new TaskMap_Proxy(pairsPTMT, {W.getShapeByName("red")->index, W.getShapeByName("blue")->index}, .03), OT_sumOfSqr, NoArr, 1e2);
+  komo.setTask(3., 5., new TaskMap_Proxy(pairsPTMT, {W.getShapeByName("red")->ID, W.getShapeByName("blue")->ID}, .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
