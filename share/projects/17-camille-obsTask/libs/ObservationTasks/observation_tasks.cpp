@@ -232,6 +232,9 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
 {
   // get Object position and pivot position
   mlr::Body * container = G.getBodyByName( containerName_ );
+
+  CHECK( container != nullptr, "body not found!" );
+
   arr aimPosition, aimJPosition;
   G.kinematicsPos( aimPosition, aimJPosition, container );
 
