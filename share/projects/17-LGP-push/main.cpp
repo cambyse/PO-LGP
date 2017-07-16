@@ -17,12 +17,13 @@ void testToolSlide(){
   mlr::KinematicWorld W("kin.g");
 
   KOMO komo;
-  komo.setModel(W);
+  komo.setModel(W, true);
   komo.useJointGroups({"armL", "base"}, false);
 
-  komo.setTiming(5., 20, 5., 2, true);
-  komo.setFixEffectiveJoints(-1., -1., 1e3);
-  komo.setFixSwitchedObjects(-1., -1., 1e3);
+  komo.setTiming(5., 20, 5., 2);
+  komo.setFixEffectiveJoints(-1., -1., 1e2);
+  komo.setFixSwitchedObjects(-1., -1., 1e2);
+  komo.setSquaredQuaternionNorms();
   komo.setSquaredQAccelerations();
 
   komo.deactivateCollisions("coll_hand_r", "stick");
@@ -31,11 +32,11 @@ void testToolSlide(){
   komo.setGrasp(1., "pr2R", "stick_handle", 0);
 
 //  komo.setSlowAround(1., .1);
-  komo.setKS_slider(2., true, "obj1", "slider1", "table");
+  komo.setKS_slider(2., true, "obj1", "slider1", "table1");
 
   komo.setPosition(3.8, 5., "obj1", "target", OT_sumOfSqr, {}, 1e2);
 
-  komo.setKS_placeOn(4., true, "obj1", "table", false);
+  komo.setKS_placeOn(4., true, "obj1", "table1", false);
 
   komo.setTask(1.7, 1.7, new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "obj1"), OT_sumOfSqr, {0,0,.2}, 1e2);
 
@@ -43,7 +44,7 @@ void testToolSlide(){
   komo.setTask(2., 4., new TaskMap_Default(vecAlignTMT, W, "stick_eff", Vector_z, NULL, Vector_z), OT_sumOfSqr, {1.}, 1e2);
   komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "slider1b", {.12, .0, .0}), OT_sumOfSqr, {}, 1e2);
 
-  komo.setTask(0., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e5);
+//  komo.setTask(0., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e5);
 
   komo.reset();
   komo.run();
@@ -102,19 +103,20 @@ void roopiInterface(){
   //-- prepare logic world
   lgp->fol().addObject("obj1");
   lgp->fol().addObject("stick");
+  lgp->fol().addFact({"pusher", "stickTip"});
+  lgp->fol().addFact({"partOf", "stickTip", "stick"});
   lgp->fol().addFact({"table","table1"});
   lgp->fol().addFact({"table","tableR"});
   lgp->fol().addFact({"table","tableL"});
     //    fol.addAgent("pr2L");
   lgp->fol().addAgent("baxterL");
   lgp->fol().addAgent("baxterR");
-  lgp->fol().addAgent("stickTip");
+//  lgp->fol().addAgent("stickTip");
 //  lgp->fol().addAgent("obj1");
     //    fol.addAgent("handL");
     //    fol.addAgent("handR");
 
-  lgp->fol().addTerminalRule({{"pushing", "obj1"}});
-
+#if 0 //test a fixed sequence
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
@@ -122,12 +124,16 @@ void roopiInterface(){
 
   lgp->fixLogicSequence("(grasp baxterR stick) \
                         (handover baxterR stick baxterL) \
-                        (push stick obj1 table1) \
+                        (push stick stickTip obj1 table1) \
                         (grasp baxterR obj1) \
                         (place baxterR obj1 tableR) \
                         (place baxterL stick tableL) \
 "); mlr::String tmp("\
 ");
+#else
+//  lgp->fol().addTerminalRule({{"grasped", "baxterR", "obj1"}});
+  lgp->fol().addTerminalRule({{"placed", "obj1", "tableR"}});
+#endif
 
   lgp->start();
 

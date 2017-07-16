@@ -6,6 +6,11 @@ struct OrsPathViewer;
 
 
 struct OptLGP{
+  int verbose;
+  uint numSteps;
+  ofstream fil;
+
+
   MNode *root, *displayFocus;
 
   mlr::Array<std::shared_ptr<OrsPathViewer>> views; //displays for the 3 different levels
@@ -34,10 +39,13 @@ private:
   void optFirstOnLevel(int level, MNodeL& fringe, MNodeL* addIfTerminal);
   void clearFromInfeasibles(MNodeL& fringe);
 public:
-  void run(int verbose, bool display);
+  void run(uint steps=10000);
+  void init();
+  void step();
 
   // output
-  mlr::String report();
+  uint numFoundSolutions();
+  mlr::String report(bool detailed=false);
   void initDisplay();
   void updateDisplay();
   void renderToFile(uint i=3, const char* filePrefix="vid/z.path.");
