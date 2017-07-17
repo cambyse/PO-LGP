@@ -44,17 +44,26 @@ void PoseLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( kin, false, true, false, false );
+      // debug
+      auto cont_0 = kin.getBodyByName( "container_0" );
+      auto cont_1 = kin.getBodyByName( "container_1" );
+
+      CHECK( cont_0 != nullptr, "container_0" );
+      CHECK( cont_1 != nullptr, "container_1" );
+
+      //
+      komo->setModel( kin, true, false, true, false, false );
 
 //      setModel(
 //            W,
+//            useSwift
 //            mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
 //            mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
 //            mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
 //            mlr::getParameter<bool>("KOMO/activateAllContact", false)
 //            );
 
-      komo->setTiming( 1., 2, 5., 1, true );
+      komo->setTiming( 1., 2, 5., 1/*, true*/ );
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects(-1., -1., 1e3);
@@ -270,8 +279,8 @@ void PathLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( *node_->startKinematics()( w ), false, true, false, false );
-      komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
+      komo->setModel( *node_->startKinematics()( w ), true, false, true, false, false );
+      komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2/*, true*/ );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
@@ -419,8 +428,8 @@ void JointPathLevelType::solve()
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( *node_->startKinematics()( w ) , false, true, false, false );
-      komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2, true );
+      komo->setModel( *node_->startKinematics()( w ), true, false, true, false, false );
+      komo->setTiming( start_offset_ + node_->time() + end_offset_, microSteps_, 5., 2/*, true*/ );
 
       komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 

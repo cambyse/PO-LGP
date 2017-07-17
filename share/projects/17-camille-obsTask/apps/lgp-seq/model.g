@@ -2,8 +2,8 @@
 #Delete shape visual
 
 #Include = '../../data/reba-human/human.ors'
-#Include = 'data/man_model.ors'
-Include = 'data/pr2_model/pr2_model.ors'
+Include = 'data/man_model.ors'
+#Include = 'data/pr2_model/pr2_model.ors'
 
 ### objs
 
@@ -22,8 +22,10 @@ shape container_1_right(container_1)  { type=9 rel=<T t(-.15 0.0  0.2)> size=[0.
 shape container_1_bottom(container_1) { type=9 rel=<T t(0  0.0 0)> size=[0.3 0.3 0.01 0.005]     color=[1 0 0] contact}
 #shape container_1_handle(container_1) { type=9 rel=<T t(0.15  0.0 0.2) d(180 0 0 1)> size=[0.3 0.3 0.01 0.01]     color=[1 0 0] contact}
 
-#body target { X=<T t(.0 -1.0 1.22)> }
-shape target(container_1) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
+body target { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
+#body target_body { X=<T t(.2 -1.05 0.93)> contact }
+#shape target(target_body) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
+#shape target(container_1) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
 
 #Edit /human/base { X=<T t(1.5 0. 1.1) d(-180 0 0 1)> }
 
@@ -43,6 +45,7 @@ shape humanL (handL){ type=5 size=[.1 0 0 0] color=[1 1 0] rel=<T t(0 0 -.05) d(
 ## Joints
 joint (tableC container_0) { from=<T t(-0.45 0.1 0.02) d(-40 0 0 1)> type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T >
 joint (tableC container_1)  { from=<T t(0.2 -0.35 0.02)> type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T >
-#joint (target container_1) { type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T > #
+joint (container_1 target) { type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T > #
+#joint (target container_1) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T > #
 #joint (table container_1) { from=<T t(0 -0.2 0.02) t(0 0 0)> to=<T > type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T >
 #joint (target_1 occluding_object_1) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 }

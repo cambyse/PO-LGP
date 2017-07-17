@@ -424,8 +424,6 @@ void plan_AOS()
 
   C.prepareFol("LGP-obs-container-fol-place-2.g");
   C.prepareKin("LGP-obs-container-kin.g");         // parse initial scene LGP-coop-kin.g
-  //C.prepareKin("LGP-obs-container-kin-pr2.g");         // parse initial scene LGP-coop-kin.g
-
 
   // make container and target rigid
   //setRigid( 0.5, "container_1_bottom", "target", komo );

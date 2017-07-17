@@ -350,7 +350,7 @@ void move_1(){
 
   /////PLACE ON TABLE FOR CONTAINER 1
   {
-    komo.setPlace( 7.0, "handL", "container_1_front", "tableC" );
+    komo.setPlace( 7.0, "handL", "container_1_bottom", "tableC" );
   }
 //  {
 //     const double time = start_time + 5.0;
@@ -360,14 +360,13 @@ void move_1(){
 
   //// GRASP BALL
     {
-      const double time = start_time + 4.0;
       //arrive sideways
       //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
 
       //disconnect object from table
-      //komo.setKinematicSwitch( time + 1.0, true, "delete", NULL, "target" );
+      komo.setKinematicSwitch( 8.0, true, "delete", NULL, "target" );
       //connect graspRef with object
-      //komo.setKinematicSwitch( time + 1.0, true, "ballZero", "handR", "target" );
+      komo.setKinematicSwitch( 8.0, true, "ballZero", "handR", "target" );
       //komo.setKinematicSwitch( time, true, "addRigid", "handR", "target", NoTransformation, NoTransformation );
 
       //komo.setPosition(time, time + 1.0, "handR", "target", OT_sumOfSqr, NoArr, 1e2);
@@ -450,7 +449,7 @@ void move_debug(){
   komo.setSquaredQAccelerations();
   */
 
-  komo.setTiming(2, 20, 5., 2, false);
+  komo.setTiming(2, 20, 5., 2/*, false*/);
 
   komo.setHoming(-1., -1., 1e-2); //gradient bug??
   komo.setSquaredQAccelerations();
