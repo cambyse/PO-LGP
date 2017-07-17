@@ -7,7 +7,7 @@ void runPhysX(mlr::KinematicWorld& K, double seconds){
   K.gl().camera.upright();
 
   BodyL mybodies;
-  for(mlr::Body *b:K.bodies){
+  for(mlr::Body *b:K.frames){
     b->type = mlr::BT_kinematic;
     if(b->name=="red" || b->name=="yellow" || b->name=="blue"){
       b->type = mlr::BT_dynamic;
