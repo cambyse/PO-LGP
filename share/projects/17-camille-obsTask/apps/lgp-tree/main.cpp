@@ -186,26 +186,41 @@ void groundGrasp( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
 
   if( *symbols(1) == "container_0" )
   {
-  //arrive sideways (not necessary and not working here)
-  //komo->setTask( t_start, t_end, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
-  //disconnect object from table
-  komo->setKinematicSwitch( t_end, true, "delete", "tableC", "container_0_bottom" );
-  //connect graspRef with object
-  //komo.setKinematicSwitch( t, true, "addRigid", *symbols(0), "container_0_left" /**symbols(1)*/ );
-
-  komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
+    //disconnect object from table
+    komo->setKinematicSwitch( t_end, true, "delete", "tableC", "container_0_bottom" );
+    //connect graspRef with object
+    komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), "container_0_left" /**symbols(1)*/ );
   }
   else if( *symbols(1) == "container_1" )
   {
-  //arrive sideways (not necessary and not working here)
-  //komo->setTask( t_start, t_end, new TaskMap_Default( vecTMT, komo->world, *symbols(0), Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
-  //disconnect object from table
-  komo->setKinematicSwitch( t_end, true, "delete", "tableC", "container_1_bottom" );
-  //connect graspRef with object
-  //komo.setKinematicSwitch( t, true, "addRigid", *symbols(0), "container_1_left" /**symbols(1)*/ );
-
-  komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
+    //disconnect object from table
+    komo->setKinematicSwitch( t_end, true, "delete", "tableC", "container_1_bottom" );
+    //connect graspRef with object
+    komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), "container_1_left" /**symbols(1)*/ );
   }
+
+  if( verbose > 0 )
+  {
+    std::cout << t_start << "->" << t_end << ": grasping " << *symbols(1) << " with " << *symbols(0) << std::endl;
+  }
+}
+
+void groundGraspObject( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+{
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
+  double duration=n->get<double>();
+
+  //
+  const double t_start = phase;
+  const double t_end =   phase + duration;
+  //
+
+  //disconnect object from table
+  komo->setKinematicSwitch( t_end, true, "delete", NULL, *symbols(1) );
+  //connect graspRef with object
+  komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), *symbols(1) );
 
   if( verbose > 0 )
   {
@@ -308,7 +323,6 @@ void groundActivateOverPlane( double phase, const Graph& facts, Node *n, KOMO * 
 
   double duration=n->get<double>();
 
-  //komo->world.watch();
   //
   const double t_start = phase + 1.0;       // hack: the grasp task lasts 1 step, so we begin one step after
   const double t_end =   komo->maxPhase;
@@ -351,11 +365,6 @@ void groundDeactivateOverPlane( double phase, const Graph& facts, Node *n, KOMO 
       //req.task->
     }
   }
-//  double duration=n->get<double>();
-
-//  //
-//  const double t = phase+duration;
-//  //
 }
 private:
 
@@ -408,6 +417,7 @@ void plan_AOS()
   // register symbols
   KOMOFactory komoFactory;
   komoFactory.registerTask( "komoGrasp"       , groundGrasp );
+  komoFactory.registerTask( "komoGraspObject"       , groundGraspObject );
   komoFactory.registerTask( "komoPlace"       , groundPlace );
   komoFactory.registerTask( "komoGetSight"    , groundGetSight );
   komoFactory.registerTask( "komoTakeView"    , groundTakeView );
@@ -419,14 +429,10 @@ void plan_AOS()
   // instanciate search tree
   AOSearch C( komoFactory );
   //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
-  //C.prepareFol("LGP-obs-fol-3-simple.g");        // with two candidate positions
-  //C.prepareKin("LGP-obs-kin-3.g");
 
-  C.prepareFol("LGP-obs-container-fol-place-2.g");
+  //C.prepareFol("LGP-obs-container-fol-place-2.g");
+  C.prepareFol("LGP-obs-container-fol-place-pick-2.g");
   C.prepareKin("LGP-obs-container-kin.g");         // parse initial scene LGP-coop-kin.g
-
-  // make container and target rigid
-  //setRigid( 0.5, "container_1_bottom", "target", komo );
 
   C.prepareDisplay();
   C.prepareTree();      // create root node

@@ -34,14 +34,5 @@ add_executable(${project_name} ${PROJECT_SRC})
 target_link_libraries(
  ${project_name}
  Core
- #Motion
- Geo
- Gui
- Optim
  Logic
- MCTS
- KOMO
- ObservationTasks
- POLGP
- CollisionAvoidance
  )

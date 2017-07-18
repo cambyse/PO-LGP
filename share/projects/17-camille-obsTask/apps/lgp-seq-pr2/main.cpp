@@ -466,7 +466,7 @@ void move_debug(){
   komo.setSquaredQAccelerations();
   */
 
-  komo.setTiming(2, 20, 5., 2, false);
+  komo.setTiming(2, 20, 5., 2/*, false*/);
 
   komo.setHoming(-1., -1., 1e-2); //gradient bug??
   komo.setSquaredQAccelerations();

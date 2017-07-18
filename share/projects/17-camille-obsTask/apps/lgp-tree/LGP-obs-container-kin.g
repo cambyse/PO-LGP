@@ -5,6 +5,8 @@
 Include = 'data/man_model.ors'
 
 ### objs
+#target
+body target { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
 
 #right
 body container_0 { X=<T t(-.45 -0.6 0.93) d(-40 0 0 1)> contact }
@@ -43,12 +45,10 @@ joint (tableC container_1)  { from=<T t(0.2 -0.35 0.02)> type=10 } #from=<T t(0 
 
 BELIEF_START_STATE{ 
 	{ 
-	  #body target { X=<T t(.0 -1.0 1.22)> }
-          shape target(container_0) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
+          joint (container_0 target) { type=10 }
 	}
 	{ 
-	  #body target { X=<T t(-.4 -0.6 1.22)> }
-          shape target(container_1) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
+	  joint (container_1 target) { type=10 }
         }
  }
 }

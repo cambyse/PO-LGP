@@ -296,12 +296,12 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
 
   // head alignment
   tmp_y.setVectorBlock( u1 -  w1,   u1.d0  );                    // cost
-  tmp_J.setMatrixBlock( Ju1 -  Jw1, Ju1.d0, 0 );                    // jacobian
+  tmp_J.setMatrixBlock( Ju1 -  Jw1, Ju1.d0, 0 );                 // jacobian
 
   // head distance
   double d = normU - preferedDistance_;
   tmp_y( 2*u1.d0 ) = d;
-  tmp_J.setMatrixBlock( JnormU * Ju, 2 * Ju1.d0, 0 );                    // jacobian
+  tmp_J.setMatrixBlock( JnormU * Ju, 2 * Ju1.d0, 0 );            // jacobian
   ///////
 //  for( auto p : G.proxies )
 //  {
