@@ -214,13 +214,22 @@ void groundGraspObject( double phase, const Graph& facts, Node *n, KOMO * komo, 
 
   //
   const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_approach=phase + 0.25 * duration;
+  const double t_switch =phase  + 0.5 * duration;
+  const double t_end =   phase  + duration;
   //
 
+  //komo->setTask( t_approach,    t_approach, new TaskMap_Default(posTMT, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
+  komo->setTask( t_approach, t_switch, new TaskMap_Default(posTMT,   komo->world, *symbols(0) ), OT_sumOfSqr, {0.,0.,-.2}, 1e1, 1);
+
+  //komo->setTask( t_switch, t_end, new TaskMap_Default(posTMT, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.1}), OT_sumOfSqr, NoArr, 1e2);
+  komo->setTask( t_switch, t_end, new TaskMap_Default(posTMT, komo->world, *symbols(0) ), OT_sumOfSqr, {0.,0.,.2}, 1e1, 1);
+
+
   //disconnect object from table
-  komo->setKinematicSwitch( t_end, true, "delete", NULL, *symbols(1) );
+  komo->setKinematicSwitch( t_switch, true, "delete", NULL, *symbols(1) );
   //connect graspRef with object
-  komo->setKinematicSwitch( t_end, true, "ballZero", *symbols(0), *symbols(1) );
+  komo->setKinematicSwitch( t_switch, true, "ballZero", *symbols(0), *symbols(1) );
 
   if( verbose > 0 )
   {

@@ -270,12 +270,12 @@ void AOSearch::generateAlternativeSymbolicPolicy()
             }
           }
 
-          {
-            // save the current state of the search
-            std::stringstream namess;
-            namess << "exploration-alternative-" << alternativeNumber_ << "-" << s << ".gv";
-            printSearchTree( namess.str() );
-          }
+//          {
+//            // save the current state of the search
+//            std::stringstream namess;
+//            namess << "exploration-alternative-" << alternativeNumber_ << "-" << s << ".gv";
+//            printSearchTree( namess.str() );
+//          }
 
           // backtrack result
           node->backTrackBestExpectedPolicy( alternativeNode );

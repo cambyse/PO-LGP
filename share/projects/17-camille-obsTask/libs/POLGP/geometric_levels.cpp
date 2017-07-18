@@ -70,31 +70,6 @@ void PoseLevelType::solve()
 
       komo->groundTasks( 0., *node_->folStates()( w ) );
 
-//      for( auto s : komo->world.shapes )
-//      {
-//        if(s->cont)
-//        {
-//          cout <<s->name << std::endl;
-//        }
-//      }
-
-//      komo->world.swift().initActivations( komo->world );
-
-//      for( auto s : komo->world.shapes )
-//      {
-//        if(s->cont)
-//        {
-//          cout <<s->name << std::endl;
-//        }
-//      }
-//      for( auto s : komo->world.shapes )
-//      {
-//        std::cout << s->name << ":" << s->cont << std::endl;
-//        std::cout << komo->world.proxies.N << std::endl;
-//      }
-//      ::makeConvexHulls( komo->world.shapes );
-//      DEBUG( FILE("z.fol") << fol; )
-//      DEBUG( komo->MP->reportFeatures( true, FILE( "z.problem" ) ); )
       komo->reset();
       try{
         komo->run();
@@ -129,12 +104,12 @@ void PoseLevelType::solve()
       // if this pose leads to the smaller cost so far
       if( ! solved_( w ) || cost < costs_( w ) )
       {
-        bool solved =  constraints < maxConstraints_ && cost < maxCost_;
+        bool solved = constraints < maxConstraints_ && cost < maxCost_;
 
-//        if( ! solved )
-//        {
-//          std::cout << "!!!can't be solved for:" << node_->id() << " cost:" << cost << std::endl;
-//        }
+        if( ! solved )
+        {
+          std::cout << "!!!can't be solved for:" << node_->id() << " cost:" << cost << std::endl;
+        }
 //        else
 //        {
 //          std::cout << "ok for:" << node_->id() << " cost:" << cost << std::endl;

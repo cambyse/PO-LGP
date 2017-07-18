@@ -107,9 +107,9 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
 
   for( mlr::Proxy *p: G.proxies )
   {
-//    if( G.shapes( p->a )->name == "container_1_bottom" && G.shapes( p->b )->name == "tableC"
+//    if( G.shapes( p->a )->name == "handR" && G.shapes( p->b )->name == "tableC"
 //        ||
-//        G.shapes( p->b )->name == "container_1_bottom" && G.shapes( p->a )->name == "tableC"
+//        G.shapes( p->b )->name == "handR" && G.shapes( p->a )->name == "tableC"
 //      )
 //    {
 //      std::cout << "ici" << std::endl;
@@ -136,8 +136,14 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
 
       if( p->d > 0 )
       {
-      tmp_y( 0 ) = margin - d;
-      tmp_J = - JnormD * ( JposA - JposB );
+        const double w = 1;
+        tmp_y( 0 ) = w * ( margin - d );
+        tmp_J = w * ( - JnormD * ( JposA - JposB ) );
+      }
+      else
+      {
+        // collision already!
+        //int a = 0; a++;
       }
 
       //std::cout << p->d << " " << d1 << " " << d2 << std::endl;
