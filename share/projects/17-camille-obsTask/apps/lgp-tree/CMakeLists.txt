@@ -44,4 +44,5 @@ target_link_libraries(
  ObservationTasks
  POLGP
  CollisionAvoidance
+ TaskPlanning
  )

@@ -1,8 +1,7 @@
 #include <functional>
+#include <list>
 
-#include <MCTS/solver_PlainMC.h>
-
-#include "ao_search.h"
+#include <task_planner.hpp>
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
@@ -435,8 +434,11 @@ void plan_AOS()
   komoFactory.registerTask( "komoCollisionAvoidance", groundObjectPairCollisionAvoidance );
   //komoFactory.registerTask( "komoHome", groundHome );
 
+  tp::TaskPlanner tp;
+  tp.setFol( "LGP-obs-container-fol-place-2.g" );
+  tp.solve();
   // instanciate search tree
-  AOSearch C( komoFactory );
+  /*AOSearch C( komoFactory );
   //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
 
   //C.prepareFol("LGP-obs-container-fol-place-2.g");
@@ -526,7 +528,7 @@ void plan_AOS()
   PolicyVisualizer viz( *policies.begin(), "nominal" );
 
   //C.updateDisplay( WorldID( -1 ), false, false, true );
-  mlr::wait( 3000, true );
+  mlr::wait( 3000, true );*/
 }
 
 //===========================================================================
