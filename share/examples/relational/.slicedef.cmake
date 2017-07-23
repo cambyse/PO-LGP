@@ -1,8 +1,0 @@
-set(CURRENT_SLICE 
- relational_armani_basic
-relational_armani_symbolic
-relational_basic
-relational_learn
-relational_nonBinarySymbols
-relational_plan
- )
