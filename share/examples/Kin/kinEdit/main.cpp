@@ -28,7 +28,8 @@ void TEST(OrsEditor) {
   G >>FILE("z.ors");
   //some optional manipulations
   G.checkConsistency();
-  G.meldFixedJoints();
+//  G.meldFixedJoints();
+  G.optimizeTree();
   G.checkConsistency();
   G >>FILE("z.ors");
   G.removeUselessBodies();
