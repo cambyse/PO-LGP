@@ -21,18 +21,13 @@ void TEST(OrsEditor) {
 
   mlr::KinematicWorld G(file);
 
-  G.watch(true);
+//  G.watch(true);
   //G.setAgent(99);
 
   G.checkConsistency();
   G >>FILE("z.ors");
   //some optional manipulations
-  G.checkConsistency();
-//  G.meldFixedJoints();
   G.optimizeTree();
-  G.checkConsistency();
-  G >>FILE("z.ors");
-  G.removeUselessBodies();
   G.checkConsistency();
   G >>FILE("z.ors");
 //  makeConvexHulls(G.shapes);
@@ -40,10 +35,6 @@ void TEST(OrsEditor) {
 //  G >>FILE("z.ors");
 //    G.watch(true);
 //    return;
-  G.checkConsistency();
-  G.calc_q_from_Q();
-  G.calc_fwdPropagateFrames();
-  G >>FILE("z.ors");
 
   if(mlr::checkParameter<bool>("cleanOnly")) return;
 
