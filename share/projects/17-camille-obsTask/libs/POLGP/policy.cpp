@@ -14,6 +14,8 @@
 
 #include "policy.hpp"
 
+namespace tmp
+{
 Policy::~Policy()
 {
   for( auto trajectory : trajectories_ )
@@ -117,5 +119,6 @@ void PolicyBuilder::process( POLGPNode * node )
 Policy::ptr PolicyBuilder::getPolicy() const
 {
   return policy_;
+}
 }
 

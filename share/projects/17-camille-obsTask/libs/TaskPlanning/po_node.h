@@ -86,6 +86,7 @@ public:
   PONodeLL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
   bool isSolved() const { return   isSolved_; }
+  mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
 
   uint N() const { return N_; }
   int id() const { return id_; }

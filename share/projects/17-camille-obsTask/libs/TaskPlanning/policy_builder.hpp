@@ -14,23 +14,45 @@
 
 #pragma once
 
-#include "node_visitor.h"
+#include <memory>
+#include <list>
+
+#include <policy.h>
+
 #include "po_node.h"
 
 namespace tp
 {
+// sort nodes so that the ones with the biggest rewards are first
+//struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
+//{
+//  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
+//  {
+//    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
+//  }
+//};
 
-class PrintRewardsVisitor : public NodeVisitorBase
+//class PolicyVisualizer
+//{
+//public:
+//  PolicyVisualizer( const Policy::ptr & policy, const std::string & name );
+
+//private:
+//  std::vector< std::shared_ptr< OrsPathViewer > > views_;
+//};
+
+class PolicyBuilder
 {
 public:
-  void visit( PONode * );
+  PolicyBuilder( PONode * root );
+  Policy::ptr getPolicy() const;
+
+private:
+  void process( PONode * node );
+
+private:
+  Policy::ptr policy_;
+  std::map< PONode *, PolicyNode::ptr > PO2Policy_;
 };
 
-/*class PrintGroundingsOverTimeVisitor : public NodeVisitorBase
-{
-public:
-  void visit( POLGPNode * );
-};*/
-
 }
-

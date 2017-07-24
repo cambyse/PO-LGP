@@ -1,4 +1,5 @@
 #include <task_planner.hpp>
+#include <policy_builder.hpp>
 
 namespace tp
 {
@@ -104,6 +105,12 @@ void TaskPlanner::solve()
 
   PrintRewardsVisitor printer;
   root_->acceptVisitor( printer );
+}
+
+Policy::ptr TaskPlanner::getPolicy() const
+{
+  PolicyBuilder builder( root_ );
+  return builder.getPolicy();
 }
 
 PONodeL TaskPlanner::getNodesToExpand() const

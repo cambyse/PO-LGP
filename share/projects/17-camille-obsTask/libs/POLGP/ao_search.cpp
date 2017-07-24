@@ -400,9 +400,9 @@ void AOSearch::optimizePosesFrom( POLGPNode * node )
   }
 }
 
-Policy::ptr AOSearch::getPolicy() const
+tmp::Policy::ptr AOSearch::getPolicy() const
 {
-  PolicyBuilder builder( root_ );
+  tmp::PolicyBuilder builder( root_ );
   return builder.getPolicy();
 }
 

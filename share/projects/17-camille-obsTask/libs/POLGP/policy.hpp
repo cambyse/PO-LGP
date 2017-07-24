@@ -19,6 +19,8 @@
 //#include <Motion/motion.h>
 #include "polgp_node.h"
 
+namespace tmp
+{
 class PolicyNode
 {
 public:
@@ -90,4 +92,5 @@ private:
 
   std::map< POLGPNode *, PolicyNode::ptr > POLGP2Policy_;
 };
+}
 

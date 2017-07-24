@@ -56,7 +56,7 @@ public:
   uint alternativeNumber() const { return alternativeNumber_; }
 
   // helpers
-  Policy::ptr getPolicy() const;
+  tmp::Policy::ptr getPolicy() const;
 
   void printPolicy( const std::string & name, bool generatePng = true ) const;
   void printSearchTree( const std::string & name, bool generatePng = true ) const;

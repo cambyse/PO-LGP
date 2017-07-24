@@ -4,6 +4,8 @@
 #include <Logic/fol.h>
 #include <Logic/fol_mcts_world.h>
 
+#include <policy.h>
+
 #include <po_node.h>
 #include <node_visitors.h>
 
@@ -19,6 +21,7 @@ public:
 
   // getters
   bool solved() const { return root_->isSolved(); }
+  Policy::ptr getPolicy() const;
 
 private:
   PONodeL getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path

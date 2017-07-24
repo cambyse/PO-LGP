@@ -5,8 +5,9 @@
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
-#include <geometric_levels.h>
 #include <node_visitors.h>
+#include <policy.hpp>
+#include <policy_builder.hpp>
 
 /*
 back track, take history into account?
@@ -437,6 +438,19 @@ void plan_AOS()
   tp::TaskPlanner tp;
   tp.setFol( "LGP-obs-container-fol-place-2.g" );
   tp.solve();
+  auto policy = tp.getPolicy();
+
+  {
+    //std::stringstream namess;
+    PolicyPrinter printer( std::cout );
+    printer.print( policy );
+    //printer.print( policy );
+  // save policy
+  /*std::stringstream namess;
+  namess << "policy-" << i << ".gv";
+  policy.print( namess.str() );*/
+  }
+
   // instanciate search tree
   /*AOSearch C( komoFactory );
   //C.registerGeometricLevel( GeometricLevelFactoryBase::ptr( new GenericGeometricLevelFactory< PoseLevelType >( komoFactory ) ) );
