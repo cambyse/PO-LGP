@@ -26,8 +26,9 @@ public:
   typedef std::shared_ptr< PolicyNode > ptr;
 
 public:
+  // modifiers
   void setParent( const PolicyNode::ptr & parent ) { parent_ = parent; }
-  void addChild( const PolicyNode::ptr & child ) { children_.push_back( child ); }
+  void addChild( const PolicyNode::ptr & child ) { children_.append( child ); }
   void setState( const mlr::Array< std::shared_ptr<Graph> > & states, const arr & bs ) { states_ = states; bs_ = bs; }
   void setNextAction( const std::string & action ) { nextAction_ = action; }
   void setTime( double t ) { time_ = t; }
@@ -39,6 +40,16 @@ public:
 
   // utility
   void setDifferentiatingFact( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
+
+  // getters
+  PolicyNode::ptr parent() const { return parent_; }
+  mlr::Array< PolicyNode::ptr > children() const { return children_; }
+  std::string nextAction() const { return nextAction_; }
+  int id() const { return id_; }
+  double p() const { return p_; }
+
+  // utility
+  std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
   PolicyNode::ptr parent_;
@@ -73,6 +84,7 @@ public:
 
   // getter
   uint N() const { return N_; }
+  PolicyNode::ptr root() const { return root_; }
 
 private:
   uint N_;
@@ -90,6 +102,9 @@ public:
   }
 
   void print( const Policy::ptr & );
+
+private:
+  void printFromNode( const PolicyNode::ptr & node );
 
 private:
   std::ostream & ss_;

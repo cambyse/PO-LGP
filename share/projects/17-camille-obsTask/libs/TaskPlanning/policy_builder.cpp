@@ -62,6 +62,7 @@ void PolicyBuilder::process( PONode * node )
   // set node data
   policyNode->setState( node->folStates(), node->bs() );
   policyNode->setNextAction( node->bestActionStr() );
+  policyNode->setId( node->id() );
   policyNode->setDifferentiatingFact( node->differentiatingFacts() );
 
   // set node data
