@@ -3,6 +3,8 @@
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
 
+#include <kin_equality_task.h>
+
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
@@ -316,14 +318,52 @@ void MotionPlanner::setKin( const std::string & kinDescription )
 
 void MotionPlanner::inform( Policy::ptr & policy )
 {
+  clearLastPolicyOptimization();
+
   // solve on pose level
+  //for( auto i = 0; i < 100; ++i )
   optimizePoses( policy );
 
   // solve on path level
+  optimizePath( policy );
 
   // solve on joint path level
+  optimizeJointPath( policy );
 
+  // update policy status
+  double cost = 0;
+  double constraints = 0;
+  for( auto l : policy->leafs() )
+  {
+    for( auto w = 0; w < l->N(); ++w )
+    {
+      if( l->bs()( w ) > eps() )
+      {
+        cost        += jointPathCosts_      [ l ]( w ) * l->bs()( w );
+        constraints += jointPathConstraints_[ l ]( w ) * l->bs()( w );
+      }
+    }
+  }
+  policy->setCost( cost );
   policy->setStatus( Policy::INFORMED );
+}
+
+void MotionPlanner::clearLastPolicyOptimization()
+{
+  // poses
+  effKinematics_.clear();
+
+  // path
+  // clear the optimized configurations since the komo allocates it but doesn't free it
+  for( auto pair : pathKinFrames_ )
+  {
+    pair.second.clear();
+  }
+  pathKinFrames_.clear(); // maps each leaf to its path // memory leak?
+
+  // joint path
+  jointPathCosts_.clear();
+  jointPathConstraints_.clear();
 }
 
 void MotionPlanner::optimizePoses( Policy::ptr & policy )
@@ -341,6 +381,22 @@ void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
     {
       mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent() )->second( w ) );
 
+//      ExtensibleKOMO::ptr _komo;
+
+//      for( auto i = 0; i < 100; ++i )
+//      {
+//        _komo = komoFactory_.createKomo();
+//        _komo->setModel( kin, true, false, true, false, false );
+//        _komo->setTiming( 1., 2, 5., 1/*, true*/ );
+//        _komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+//        _komo->setSquaredQVelocities();
+//        _komo->setFixSwitchedObjects(-1., -1., 1e3);
+
+//        _komo->groundTasks( 0., *node->states()( w ) );
+
+//        _komo->reset(); //huge
+
+//      }
       // create komo
       auto komo = komoFactory_.createKomo();
 
@@ -354,15 +410,15 @@ void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 
       komo->groundTasks( 0., *node->states()( w ) );
 
-      komo->reset();
+      komo->reset(); //huge
+
       try{
         komo->run();
       } catch( const char* msg ){
         cout << "KOMO FAILED: " << msg <<endl;
       }
 
-      komo->displayTrajectory();
-
+      //komo->displayTrajectory();
 
       // save results
 //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
@@ -375,6 +431,7 @@ void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       // what to do with the cost and constraints here??
 
       // update effective kinematic
+      //for( auto i = 0; i < 100; ++i )
       effKinematics_[ node ]( w ) = *komo->configurations.last();
 
       // update switch
@@ -386,6 +443,9 @@ void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       effKinematics_[ node ]( w ).topSort();
       //DEBUG( node->effKinematics()( w ).checkConsistency(); )
       effKinematics_[ node ]( w ).getJointState();
+
+      // free
+      freeKomoKin( komo );
     }
   }
 
@@ -396,5 +456,188 @@ void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
   }
 }
 
+void MotionPlanner::optimizePath( Policy::ptr & policy )
+{
+  for( auto l : policy->leafs() )
+  {
+    optimizePathTo( l );
+  }
+}
+
+void MotionPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
+{
+  pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( leaf->N() );
+
+  //-- collect 'path nodes'
+  PolicyNode::L treepath = getPathTo( leaf );
+
+  // solve problem for all ( relevant ) worlds
+  for( auto w = 0; w < leaf->N(); ++w )
+  {
+    if( leaf->bs()( w ) > eps() )
+    {
+      // create komo
+      auto komo = komoFactory_.createKomo();
+
+      // set-up komo
+      komo->setModel( *startKinematics_( w ), true, false, true, false, false );
+      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, 5., 2/*, true*/ );
+
+      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+
+      komo->setFixEffectiveJoints();
+      komo->setFixSwitchedObjects();
+      komo->setSquaredQAccelerations();
+      //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
+      //komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
+
+      for( auto node:treepath )
+      {
+        auto time = ( node->parent() ? node->parent()->time(): 0. );     // get parent time
+        komo->groundTasks( start_offset_ + time, *node->states()( w ) ); // ground parent action (included in the initial state)
+      }
+
+//      DEBUG( FILE("z.fol") <<fol; )
+//          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      komo->reset();
+      try{
+        komo->run();
+      } catch(const char* msg){
+        cout << "KOMO FAILED: " << msg <<endl;
+      }
+
+      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
+      //komo->displayTrajectory();
+
+//      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      //komo->checkGradients();
+
+      Graph result = komo->getReport();
+      //DEBUG( FILE("z.problem.cost") << result; )
+      double cost = result.get<double>({"total","sqrCosts"});
+      double constraints = result.get<double>({"total","constraints"});
+
+      for( auto s = 0; s < komo->configurations.N; ++s )
+      {
+        //pathKinFrames_[ leaf ]( w )( s ).copy( *komo->configurations( s ) );
+        mlr::KinematicWorld kin( *komo->configurations( s ) );
+        pathKinFrames_[ leaf ]( w ).append( kin );
+      }
+
+      // free
+      freeKomoKin( komo );
+    }
+  }
+}
+
+void MotionPlanner::optimizeJointPath( Policy::ptr & policy )
+{
+  for( auto l : policy->leafs() )
+  {
+    optimizeJointPathTo( l );
+  }
+}
+
+void MotionPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
+{
+  jointPathCosts_      [ leaf ] = arr( leaf->N() );
+  jointPathConstraints_[ leaf ] = arr( leaf->N() );
+
+  //-- collect 'path nodes'
+  PolicyNode::L treepath = getPathTo( leaf );
+
+  // solve problem for all ( relevant ) worlds
+  for( auto w = 0; w < leaf->N(); ++w )
+  {
+    if( leaf->bs()( w ) > eps() )
+    {
+      // create komo
+      auto komo = komoFactory_.createKomo();
+
+      // set-up komo
+      komo->setModel( *startKinematics_( w ), true, false, true, false, false );
+      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, 5., 2/*, true*/ );
+
+      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+
+      komo->setFixEffectiveJoints();
+      komo->setFixSwitchedObjects();
+      komo->setSquaredQAccelerations();
+      //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
+      //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
+
+      for( auto node:treepath )
+      {
+        // set task
+        auto time = ( node->parent() ? node->parent()->time(): 0. );   // get parent time
+
+        komo->groundTasks( start_offset_ +  time, *node->states()( w ), 1 );          // ground parent action (included in the initial state)
+
+        if( node->time() > 0 )
+        {
+          uint stepsPerPhase = komo->stepsPerPhase; // get number of steps per phases
+          uint nodeSlice = stepsPerPhase * ( start_offset_ + node->time() ) - 1;
+          arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
+
+          // set constraints enforcing the path equality among worlds
+          int nSupport = 0;
+          for( auto x = 0; x < leaf->N(); ++x )
+          {
+            if( leaf->bs()( x ) > 0 )
+            {
+              CHECK( pathKinFrames_[ leaf ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
+
+              q += node->bs()( x ) * pathKinFrames_[ leaf ]( x )( nodeSlice ).q;
+
+              nSupport++;
+            }
+          }
+
+          if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
+          {
+            AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
+            double slice_t = start_offset_ + node->time() - 1.0 / stepsPerPhase;
+            komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, 1e2  );
+
+            //
+            //std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
+            //
+          }
+        }
+      }
+
+      komo->reset();
+      try{
+        komo->run();
+      } catch(const char* msg){
+        cout << "KOMO FAILED: " << msg <<endl;
+      }
+
+      // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
+      //komo->displayTrajectory();
+
+//      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+//      komo->checkGradients();
+
+      Graph result = komo->getReport();
+      //DEBUG( FILE("z.problem.cost") << result; )
+      double cost = result.get<double>({"total","sqrCosts"});
+      double constraints = result.get<double>({"total","constraints"});
+
+      jointPathCosts_      [ leaf ]( w ) = cost;
+      jointPathConstraints_[ leaf ]( w ) = constraints;
+
+      // free
+      freeKomoKin( komo );
+    }
+  }
+}
+
+void freeKomoKin( ExtensibleKOMO::ptr komo )
+{
+  listDelete( komo->configurations );
+  listDelete( komo->tasks );
+  listDelete( komo->switches );
+}
 
 }

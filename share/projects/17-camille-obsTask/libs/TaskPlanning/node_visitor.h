@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <memory>
+
 namespace tp
 {
 
@@ -22,7 +24,7 @@ class PONode;
 class NodeVisitorBase
 {
 public:
-  virtual void visit( PONode * ) = 0;
+  virtual void visit( std::shared_ptr< PONode > ) = 0;
 
   // friendship no inherited in c++
 

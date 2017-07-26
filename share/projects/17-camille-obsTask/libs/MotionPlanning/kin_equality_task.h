@@ -1,5 +1,5 @@
 /*  ------------------------------------------------------------------
-    Copyright 2016 Camille Phiquepal
+    Copyright 2017 Camille Phiquepal
     email: camille.phiquepal@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -12,25 +12,49 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
+
 #pragma once
 
-#include "node_visitor.h"
-#include "po_node.h"
+#include <Kin/taskMap.h>
 
-namespace tp
+namespace mp
 {
 
-class PrintRewardsVisitor : public NodeVisitorBase
-{
-public:
-  void visit( PONode::ptr );
+struct AgentKinEquality:TaskMap{
+
+  AgentKinEquality( uint id, const arr& q/*, const arr& qdot*/ )
+    : id_( id )
+    , q_  ( q )
+    , dim_( q.N )
+  {
+
+  }
+
+  virtual void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1 )
+  {
+    y = zeros( dim_ );
+    y.setVectorBlock( G.q - q_, 0 );
+
+    auto tmp_J = eye( dim_, dim_ );
+
+    if(&J) J = tmp_J;
+  }
+
+  virtual uint dim_phi( const mlr::KinematicWorld& G )
+  {
+    return dim_;
+  }
+
+  virtual mlr::String shortTag( const mlr::KinematicWorld& G )
+  {
+    return mlr::String( "AgentKinEquality" );
+  }
+
+private:
+  // parameters
+  const uint id_;
+  const arr q_;
+  const uint dim_;
 };
 
-/*class PrintGroundingsOverTimeVisitor : public NodeVisitorBase
-{
-public:
-  void visit( POLGPNode * );
-};*/
-
 }
-

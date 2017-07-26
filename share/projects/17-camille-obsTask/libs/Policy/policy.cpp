@@ -65,6 +65,27 @@ void PolicyPrinter::printFromNode( const PolicyNode::ptr & node )
   }
 }
 
+//-----utility free functions-----------//
+PolicyNode::L getPathTo( const PolicyNode::ptr & node )
+{
+  PolicyNode::L path;
+
+  auto n = node;
+
+  path.append( n );
+
+  while( n->parent() )
+  {
+    path.append( n->parent() );
+    n = n->parent();
+  }
+
+  path.reverse();
+
+  return path;
+}
+
+
 //---PolicyVisualizer--------//
 //PolicyVisualizer::PolicyVisualizer( const Policy::ptr & policy, const std::string & name )
 //{

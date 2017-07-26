@@ -70,7 +70,7 @@ void TaskPlanner::solve()
 {
   std::cout << "TaskPlanner::solveSymbolically" << std::endl;
 
-  root_ = new PONode( folWorlds_, bs_ );
+  root_ = std::make_shared< PONode >( folWorlds_, bs_ );
 
   auto s = 0;
   while( ! solved() )
@@ -113,14 +113,14 @@ Policy::ptr TaskPlanner::getPolicy() const
   return builder.getPolicy();
 }
 
-PONodeL TaskPlanner::getNodesToExpand() const
+PONode::L TaskPlanner::getNodesToExpand() const
 {
   return getNodesToExpand( root_ );
 }
 
-PONodeL TaskPlanner::getNodesToExpand( PONode * node ) const
+PONode::L TaskPlanner::getNodesToExpand( PONode::ptr node ) const
 {
-  PONodeL nodes;
+  PONode::L nodes;
 
   // starts from root
   if( ! node->isSolved() )

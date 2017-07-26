@@ -129,7 +129,7 @@ PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
 }
 
 /// child node creation
-PONode::PONode( PONode *parent, double pHistory, const arr & bs, uint a )
+PONode::PONode( PONode::ptr parent, double pHistory, const arr & bs, uint a )
   : parent_( parent )
   , N_( parent_->N_ )
   , folWorlds_( parent->folWorlds_ )
@@ -280,7 +280,7 @@ void PONode::expand()
     }
 
     // create as many children as outcomes
-    PONodeL familiy;
+    PONode::L familiy;
     for( auto outcome : outcomesToWorlds )
     {
       auto facts  = outcome.first;
@@ -301,7 +301,7 @@ void PONode::expand()
 
       // create a node for each possible outcome
 
-      auto n = new PONode( this, pWorld * pHistory_, bs, a );
+      auto n = std::make_shared< PONode >( shared_from_this(), pWorld * pHistory_, bs, a );
       familiy.append( n );
 
       // get the fact not in intersection
@@ -332,11 +332,11 @@ void PONode::expand()
   isExpanded_ = true;
 }
 
-void PONode::setAndSiblings( const PONodeL & siblings )
+void PONode::setAndSiblings( const PONode::L & siblings )
 {
   for( auto s : siblings )
   {
-    if( s != this )
+    if( s != shared_from_this() )
     andSiblings_.append( s );
   }
 }
@@ -523,22 +523,25 @@ void PONode::labelInfeasible()
 //  node->recomputeAllMCStats(false);
 }
 
-PONodeL PONode::getTreePath()
+PONode::L PONode::getTreePath()
 {
-  PONodeL path;
-  PONode * node = this;
+  PONode::L path;
+  PONode::ptr node = shared_from_this();
   for(;node;){
-    path.prepend(node);
+    path.append(node);
     node = node->parent_;
   }
+
+  path.reverse();
+
   return path;
 }
 
-PONodeL PONode::getTreePathFrom( PONode * start )
+PONode::L PONode::getTreePathFrom( PONode::ptr start )
 {
-  PONodeL subPath;
+  PONode::L subPath;
 
-  PONode * node = this;
+  PONode::ptr node = shared_from_this();
   do
   {
     subPath.prepend( node );
@@ -607,9 +610,9 @@ std::string PONode::actionStr( uint a ) const
 namespace utility
 {
 //====free functions============//
-PONode * getTerminalNode( PONode * n, const WorldID & w )
+PONode::ptr getTerminalNode( PONode::ptr n, const WorldID & w )
 {
-  PONode * node = nullptr;
+  PONode::ptr node;
   if( n->isTerminal() )
   {
     CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
@@ -630,7 +633,7 @@ PONode * getTerminalNode( PONode * n, const WorldID & w )
   return node;
 }
 
-void gatherPolicyFringe( PONode * node, std::set< mlr::Array< PONode * > > & fringe )
+void gatherPolicyFringe( PONode::ptr node, std::set< mlr::Array< PONode::ptr > > & fringe )
 {
   for( auto f : node->families() )
   {
@@ -650,9 +653,5 @@ void gatherPolicyFringe( PONode * node, std::set< mlr::Array< PONode * > > & fri
 }
 
 //===========================================================================
-
-RUN_ON_INIT_BEGIN(manipulationTree)
-PONodeL::memMove = true;
-RUN_ON_INIT_END(manipulationTree)
 
 }

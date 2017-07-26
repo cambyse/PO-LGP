@@ -21,9 +21,19 @@ public:
   void inform( Policy::ptr & );
 
 private:
+  void clearLastPolicyOptimization();
+
   // poses
   void optimizePoses( Policy::ptr & );
   void optimizePosesFrom( const PolicyNode::ptr & );
+
+  // path
+  void optimizePath( Policy::ptr & );
+  void optimizePathTo( const PolicyNode::ptr & );
+
+  // joint path
+  void optimizeJointPath( Policy::ptr & );
+  void optimizeJointPathTo( const PolicyNode::ptr & );
 
 private:
   // state
@@ -32,12 +42,23 @@ private:
   KOMOFactory komoFactory_;
 
   // pose
-  //std::map< PolicyNode::ptr, mlr::Array< mlr::KinematicWorld > > startKinematics_;
   std::map< PolicyNode::ptr, mlr::Array< mlr::KinematicWorld > > effKinematics_;
 
+  // path
+  std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // maps each leaf to its path // memory leak?
+
+  // joint path
+  std::map< PolicyNode::ptr, arr > jointPathCosts_;
+  std::map< PolicyNode::ptr, arr > jointPathConstraints_;
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+
+  double start_offset_ = 1.0; // the first task should be grounded starting from this time
+  double end_offset_   = 1.0;
+  uint microSteps_     = 10;
 };
+
+void freeKomoKin( ExtensibleKOMO::ptr komo );
 
 }

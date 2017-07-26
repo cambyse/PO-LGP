@@ -17,7 +17,7 @@
 namespace tp
 {
 
-void PrintRewardsVisitor::visit( PONode * node )
+void PrintRewardsVisitor::visit( PONode::ptr node )
 {
   std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected total reward:" << node->expecteFutureReward() << std::endl;
 

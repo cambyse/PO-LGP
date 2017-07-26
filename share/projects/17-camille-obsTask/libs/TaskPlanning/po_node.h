@@ -27,10 +27,6 @@ struct MCStatistics;
 namespace tp
 {
 
-class PONode;
-typedef mlr::Array<PONode*> PONodeL;
-typedef mlr::Array< mlr::Array<PONode*> > PONodeLL;
-
 //===========================================================================
 
 class WorldID
@@ -56,48 +52,52 @@ struct LogicAndState
 
 //===========================================================================
 
-class PONode
+class PONode : public std::enable_shared_from_this< PONode > // note: public inheritance
 {
   friend class NodeVisitorBase;
+public:
+  typedef std::shared_ptr< PONode > ptr;
+  typedef mlr::Array< PONode::ptr > L;
+  typedef mlr::Array< mlr::Array<PONode::ptr > > LL;
 
 public:
   /// root node init
   PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
 
   /// child node creation
-  PONode( PONode *parent, double pHistory, const arr & bs, uint a );
+  PONode( PONode::ptr parent, double pHistory, const arr & bs, uint a );
 
   // modifiers
   void expand();
-  void setAndSiblings( const PONodeL & siblings );
-  void setBestFamily( const PONodeL & f ) { bestFamily_ = f; expectedBestA_ = f( 0 )->a_; }
+  void setAndSiblings( const PONode::L & siblings );
+  void setBestFamily( const PONode::L & f ) { bestFamily_ = f; expectedBestA_ = f( 0 )->a_; }
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy( PONode * node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
   void labelInfeasible(); ///< sets the infeasible label AND removes all children!
   //void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
 
-  void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( this ); } // overkill here, visitor design pattern usefull if we have a hierarchy of class!
+  void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( shared_from_this() ); } // overkill here, visitor design pattern usefull if we have a hierarchy of class!
   //void labelInfeasible();
 
   // getters
-  PONode * parent() const { return parent_; }
+  PONode::ptr parent() const { return parent_; }
   bool isExpanded() const { return isExpanded_; }
-  PONodeLL families() const { return families_; }
+  PONode::LL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
   bool isSolved() const { return   isSolved_; }
   mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
 
   uint N() const { return N_; }
   int id() const { return id_; }
-  PONodeL bestFamily() const { return bestFamily_; }
-  PONodeL andSiblings() const { return andSiblings_; }
+  PONode::L bestFamily() const { return bestFamily_; }
+  PONode::L andSiblings() const { return andSiblings_; }
   double pHistory() const { return pHistory_; }
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
 
-  PONodeL getTreePath();
-  PONodeL getTreePathFrom( PONode * start );
+  PONode::L getTreePath();
+  PONode::L getTreePathFrom( PONode::ptr start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
 
   double time() const { return time_; }
@@ -131,7 +131,7 @@ private:
   std::string actionStr( uint ) const;
 
 private:
-  PONode * parent_;
+  PONode::ptr parent_;
 
   // members for symbolic search
   uint N_;                                                                    ///< number of possible worlds
@@ -147,8 +147,8 @@ private:
   uint d_;                                        ///< decision depth/step of this node
   double time_;                                   ///< real time, root = 0, represents the end of the parent action
 
-  PONodeL andSiblings_;            /// at the same depth!
-  PONodeLL families_;
+  PONode::L andSiblings_;            /// at the same depth!
+  PONode::LL families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
   mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
@@ -158,7 +158,7 @@ private:
   double expectedReward_;                         ///  the total expected reward ?
 
   int expectedBestA_;                             ///  expected next best action
-  PONodeL bestFamily_;
+  PONode::L bestFamily_;
 
   //-- global search
   bool isExpanded_;
@@ -175,8 +175,8 @@ private:
 namespace utility
 {
   // free functions
-  PONode * getTerminalNode(  PONode *, const WorldID & w );
-  void   gatherPolicyFringe( PONode *, std::set< mlr::Array< Node * > > & );
+  PONode::ptr getTerminalNode( PONode::ptr, const WorldID & w );
+  void   gatherPolicyFringe( PONode::ptr, std::set< mlr::Array< PONode::ptr> > & );
 }
 
 }

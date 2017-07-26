@@ -44,15 +44,17 @@ namespace tp
 class PolicyBuilder
 {
 public:
-  PolicyBuilder( PONode * root );
+  PolicyBuilder( PONode::ptr root );
+  //virtual ~PolicyBuilder();
+
   Policy::ptr getPolicy() const;
 
 private:
-  void process( PONode * node );
+  void process( PONode::ptr node );
 
 private:
   Policy::ptr policy_;
-  std::map< PONode *, PolicyNode::ptr > PO2Policy_;
+  std::map< PONode::ptr, PolicyNode::ptr > PO2Policy_;
 };
 
 }

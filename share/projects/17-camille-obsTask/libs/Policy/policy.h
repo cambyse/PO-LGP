@@ -24,6 +24,7 @@ class PolicyNode
 {
 public:
   typedef std::shared_ptr< PolicyNode > ptr;
+  typedef mlr::Array< PolicyNode::ptr > L;
 
 public:
   // modifiers
@@ -49,6 +50,7 @@ public:
   arr bs() const { return bs_; }
   std::string nextAction() const { return nextAction_; }
   uint N()  const  { return bs_.N; }
+  double time() const { return time_; }
   uint id() const  { return id_; }
   double p() const { return p_; }
 
@@ -93,18 +95,23 @@ public:
   // modifier
   void init( uint N );
   void setRoot( const PolicyNode::ptr & root )    { root_ = root; }
+  void addLeaf( const PolicyNode::ptr & leaf )    { leafs_.append( leaf ); }
+  void setCost( double cost )                     { cost_ = cost; }
   void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
   uint N() const { return N_; }
   PolicyNode::ptr root() const { return root_; }
-  std::list< PolicyNode::ptr > leafs() const { return leafs_; }
+  PolicyNode::L leafs()  const { return leafs_; }
+  double cost()          const { return cost_; }
 
 private:
   uint N_;
   PolicyNode::ptr root_;
-  std::list< PolicyNode::ptr > leafs_;
+  PolicyNode::L leafs_;
 
+  // cost
+  double cost_;
   enum StatusType status_;
 };
 
@@ -125,6 +132,9 @@ private:
 private:
   std::ostream & ss_;
 };
+
+// utility free functions
+PolicyNode::L getPathTo( const PolicyNode::ptr & node );
 
 // sort nodes so that the ones with the biggest rewards are first
 //struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>

@@ -34,7 +34,7 @@ namespace tp
 
 //---PolicyBuilder-----------//
 
-PolicyBuilder::PolicyBuilder( PONode * root )
+PolicyBuilder::PolicyBuilder( PONode::ptr root )
   : policy_( std::make_shared< Policy >() )
 {
   policy_->init( root->N() );
@@ -42,7 +42,15 @@ PolicyBuilder::PolicyBuilder( PONode * root )
   process( root );
 }
 
-void PolicyBuilder::process( PONode * node )
+//PolicyBuilder::~PolicyBuilder()
+//{
+//  for( auto pair : PO2Policy_ )
+//  {
+//    delete pair.first;
+//  }
+//}
+
+void PolicyBuilder::process( PONode::ptr node )
 {
   PolicyNode::ptr policyNode = std::make_shared< PolicyNode >();
 
@@ -58,6 +66,11 @@ void PolicyBuilder::process( PONode * node )
 
     // add child to parent
     parent->addChild( policyNode );
+
+    if( node->isTerminal() )
+    {
+      policy_->addLeaf( policyNode );
+    }
   }
   // set node data
   policyNode->setState( node->folStates(), node->bs() );
