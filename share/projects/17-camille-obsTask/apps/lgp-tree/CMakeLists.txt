@@ -45,4 +45,5 @@ target_link_libraries(
  POLGP
  CollisionAvoidance
  TaskPlanning
+ MotionPlanning
  )

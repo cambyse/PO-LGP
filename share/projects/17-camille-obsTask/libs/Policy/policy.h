@@ -43,9 +43,13 @@ public:
 
   // getters
   PolicyNode::ptr parent() const { return parent_; }
+  bool isRoot() const { return parent_ == nullptr; }
   mlr::Array< PolicyNode::ptr > children() const { return children_; }
+  mlr::Array< std::shared_ptr<Graph> > states() const { return states_; }
+  arr bs() const { return bs_; }
   std::string nextAction() const { return nextAction_; }
-  int id() const { return id_; }
+  uint N()  const  { return bs_.N; }
+  uint id() const  { return id_; }
   double p() const { return p_; }
 
   // utility
@@ -77,19 +81,31 @@ class Policy
 public:
   typedef std::shared_ptr< Policy > ptr;
 
+  enum StatusType
+  {
+    SKELETON = 0,
+    INFORMED
+  };
+
 public:
+  Policy();
+
   // modifier
   void init( uint N );
-  void setRoot( const PolicyNode::ptr & root ) { root_ = root; }
+  void setRoot( const PolicyNode::ptr & root )    { root_ = root; }
+  void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
   uint N() const { return N_; }
   PolicyNode::ptr root() const { return root_; }
+  std::list< PolicyNode::ptr > leafs() const { return leafs_; }
 
 private:
   uint N_;
   PolicyNode::ptr root_;
   std::list< PolicyNode::ptr > leafs_;
+
+  enum StatusType status_;
 };
 
 class PolicyPrinter

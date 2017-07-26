@@ -31,7 +31,7 @@ PoseLevelType::PoseLevelType( POLGPNode * node, const KOMOFactory & komoFactory 
 void PoseLevelType::solve()
 {
   //-- collect 'path nodes'
-  POLGPNodeL treepath = node_->getTreePath();
+  //POLGPNodeL treepath = node_->getTreePath();
 
   // solve problem for all ( relevant ) worlds
   for( auto w = 0; w < N_; ++w )

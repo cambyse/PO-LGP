@@ -14,6 +14,13 @@
 
 #include "policy.h"
 
+//----Policy-------------------------//
+Policy::Policy()
+  : status_( SKELETON )
+{
+
+}
+
 void Policy::init( uint N )
 {
   N_ = N;
