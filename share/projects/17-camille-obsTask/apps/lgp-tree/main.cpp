@@ -3,10 +3,10 @@
 
 #include <policy.hpp>
 
-#include <task_planner.hpp>
 #include <policy_builder.hpp>
 
-#include <motion_planner.hpp>
+#include <mcts_planner.hpp>
+#include <komo_planner.hpp>
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
@@ -27,17 +27,14 @@ QUESTIONS  :
 - how to solve collision avoidance if objects penetrate
 - kinematic switches ( commented part of the code ) in solvePath, solvePose, etc..
 
-
 TODO :
 1/ decision if optimization succeded, how? reactivate for seq and paths!!    | 1
 => constraints are difficult to evaluate with collision avoidance, mybe need a refactoring as in 3/
 2/ symbolic search, use costs from other levels? -> How to inform?           | 1
 3/ refactoring geometric levels, backtrack can be common?                    | 2
-4/ how to know if a was is successfull -> Call back every task?              | 2
 5/ collision avoidance, rule for proxy ?, get out of a collision             | 2
 6/ activation / deactivation of tasks                                        | 2
 7/ correct memory management                                                 | 2
-8/ refactor to consider an arbitrary number of geometric levels              | 2
 */
 //===========================================================================
 
@@ -60,15 +57,30 @@ static void generatePngImage( const std::string & name )
 
 //===========================================================================
 
-void plan_AOS()
+void plan()
 {
-  // TASK PLANNING
-  tp::TaskPlanner tp;
-  tp.setFol( "LGP-obs-container-fol-place-pick-2.g" );
-  tp.solve();
-  auto policy = tp.getPolicy();
+  // instanciate planners
+  TaskPlanner::ptr   tp = std::make_shared< tp::MCTSPlanner >();
+  MotionPlanner::ptr mp = std::make_shared< mp::KOMOPlanner >();
+
+  // set start configurations
+  tp->setFol( "LGP-obs-container-fol-place-pick-2.g" );
+  mp->setKin( "LGP-obs-container-kin.g" );
 
   uint i = 0;
+
+  // TASK PLANNING
+  tp->solve();
+  auto policy = tp->getPolicy();
+
+  // MOTION PLANNING
+  mp->inform( policy );
+
+  tp->integrate( policy );
+
+  // print resulting cost
+  std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+
   // save policy
   {
     std::stringstream namess;
@@ -82,19 +94,6 @@ void plan_AOS()
     file.close();
 
     generatePngImage( name );
-  }
-
-  // MOTION PLANNING
-  mp::MotionPlanner mp;
-  mp.setKin( "LGP-obs-container-kin.g" );
-  mp.inform( policy );
-
-  // print resulting cost
-  std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
-
-  for( auto l = 0; l < 10; ++l )
-  {
-    mp.inform( policy );
   }
   /*
   // store policy and display it
@@ -158,7 +157,7 @@ int main(int argc,char **argv){
   //  test();
   //}else{
     //    test();
-    plan_AOS();
+    plan();
   //}
 
   return 0;

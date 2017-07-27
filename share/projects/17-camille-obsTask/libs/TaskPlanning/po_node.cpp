@@ -129,7 +129,7 @@ PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
 }
 
 /// child node creation
-PONode::PONode( PONode::ptr parent, double pHistory, const arr & bs, uint a )
+PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uint a )
   : parent_( parent )
   , N_( parent_->N_ )
   , folWorlds_( parent->folWorlds_ )
@@ -537,7 +537,7 @@ PONode::L PONode::getTreePath()
   return path;
 }
 
-PONode::L PONode::getTreePathFrom( PONode::ptr start )
+PONode::L PONode::getTreePathFrom( const PONode::ptr & start )
 {
   PONode::L subPath;
 
@@ -607,10 +607,11 @@ std::string PONode::actionStr( uint a ) const
   return ss.str();
 }
 
+//====free functions============//
+
 namespace utility
 {
-//====free functions============//
-PONode::ptr getTerminalNode( PONode::ptr n, const WorldID & w )
+PONode::ptr getTerminalNode( const PONode::ptr & n, const WorldID & w )
 {
   PONode::ptr node;
   if( n->isTerminal() )
@@ -633,7 +634,7 @@ PONode::ptr getTerminalNode( PONode::ptr n, const WorldID & w )
   return node;
 }
 
-void gatherPolicyFringe( PONode::ptr node, std::set< mlr::Array< PONode::ptr > > & fringe )
+void gatherPolicyFringe( const PONode::ptr & node, std::set< mlr::Array< PONode::ptr > > & fringe )
 {
   for( auto f : node->families() )
   {

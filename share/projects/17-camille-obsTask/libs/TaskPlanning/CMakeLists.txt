@@ -31,5 +31,5 @@ target_link_libraries(
  Core
  Logic
  MCTS
- Policy
+ POMTP_interfaces
  )

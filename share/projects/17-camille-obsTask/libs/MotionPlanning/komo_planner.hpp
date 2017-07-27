@@ -3,22 +3,23 @@
 #include <string>
 
 #include <policy.h>
+#include <motion_planner.hpp>
 
 #include <komo_factory.h>
 
 namespace mp
 {
 
-class MotionPlanner
+class KOMOPlanner : public MotionPlanner
 {
 public:
-  MotionPlanner();
+  KOMOPlanner();
 
   // modifiers
-  void setKin( const std::string & kinDescription );
+  void setKin( const std::string & kinDescription ) override;
 
   // informers
-  void inform( Policy::ptr & );
+  void inform( Policy::ptr & ) override;
 
 private:
   void clearLastPolicyOptimization();

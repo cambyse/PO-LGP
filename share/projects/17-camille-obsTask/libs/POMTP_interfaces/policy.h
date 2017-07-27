@@ -29,7 +29,7 @@ public:
 public:
   // modifiers
   void setParent( const PolicyNode::ptr & parent ) { parent_ = parent; }
-  void addChild( const PolicyNode::ptr & child ) { children_.append( child ); }
+  void addChild( const PolicyNode::ptr & child )   { children_.append( child ); }
   void setState( const mlr::Array< std::shared_ptr<Graph> > & states, const arr & bs ) { states_ = states; bs_ = bs; }
   void setNextAction( const std::string & action ) { nextAction_ = action; }
   void setTime( double t ) { time_ = t; }
@@ -143,13 +143,4 @@ PolicyNode::L getPathTo( const PolicyNode::ptr & node );
 //  {
 //    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
 //  }
-//};
-
-//class PolicyVisualizer
-//{
-//public:
-//  PolicyVisualizer( const Policy::ptr & policy, const std::string & name );
-
-//private:
-//  std::vector< std::shared_ptr< OrsPathViewer > > views_;
 //};

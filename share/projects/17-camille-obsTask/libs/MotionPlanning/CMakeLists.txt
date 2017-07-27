@@ -37,7 +37,7 @@ target_link_libraries(
  Logic
  MCTS
  KOMO
- Policy
+ POMTP_interfaces
  ObservationTasks
  CollisionAvoidance
 )

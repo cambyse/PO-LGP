@@ -1,4 +1,4 @@
-#include <motion_planner.hpp>
+#include <komo_planner.hpp>
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
@@ -252,7 +252,7 @@ void groundObjectPairCollisionAvoidance( double phase, const Graph& facts, Node 
 
 //--------Motion Planner--------------//
 
-MotionPlanner::MotionPlanner()
+KOMOPlanner::KOMOPlanner()
 {
   using namespace std::placeholders;
 
@@ -272,7 +272,7 @@ MotionPlanner::MotionPlanner()
   komoFactory_.registerTask( "komoCollisionAvoidance", groundObjectPairCollisionAvoidance );
 }
 
-void MotionPlanner::setKin( const std::string & kinDescription )
+void KOMOPlanner::setKin( const std::string & kinDescription )
 {
   Graph G( kinDescription.c_str() );
 
@@ -316,7 +316,7 @@ void MotionPlanner::setKin( const std::string & kinDescription )
   }
 }
 
-void MotionPlanner::inform( Policy::ptr & policy )
+void KOMOPlanner::inform( Policy::ptr & policy )
 {
   clearLastPolicyOptimization();
 
@@ -348,7 +348,7 @@ void MotionPlanner::inform( Policy::ptr & policy )
   policy->setStatus( Policy::INFORMED );
 }
 
-void MotionPlanner::clearLastPolicyOptimization()
+void KOMOPlanner::clearLastPolicyOptimization()
 {
   // poses
   effKinematics_.clear();
@@ -366,12 +366,12 @@ void MotionPlanner::clearLastPolicyOptimization()
   jointPathConstraints_.clear();
 }
 
-void MotionPlanner::optimizePoses( Policy::ptr & policy )
+void KOMOPlanner::optimizePoses( Policy::ptr & policy )
 {
   optimizePosesFrom( policy->root() );
 }
 
-void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
+void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 {
   effKinematics_[ node ] = mlr::Array< mlr::KinematicWorld >( node->N() );
   //
@@ -456,7 +456,7 @@ void MotionPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
   }
 }
 
-void MotionPlanner::optimizePath( Policy::ptr & policy )
+void KOMOPlanner::optimizePath( Policy::ptr & policy )
 {
   for( auto l : policy->leafs() )
   {
@@ -464,7 +464,7 @@ void MotionPlanner::optimizePath( Policy::ptr & policy )
   }
 }
 
-void MotionPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
+void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 {
   pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( leaf->N() );
 
@@ -530,7 +530,7 @@ void MotionPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
   }
 }
 
-void MotionPlanner::optimizeJointPath( Policy::ptr & policy )
+void KOMOPlanner::optimizeJointPath( Policy::ptr & policy )
 {
   for( auto l : policy->leafs() )
   {
@@ -538,7 +538,7 @@ void MotionPlanner::optimizeJointPath( Policy::ptr & policy )
   }
 }
 
-void MotionPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
+void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 {
   jointPathCosts_      [ leaf ] = arr( leaf->N() );
   jointPathConstraints_[ leaf ] = arr( leaf->N() );

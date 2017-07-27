@@ -65,7 +65,7 @@ public:
   PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
 
   /// child node creation
-  PONode( PONode::ptr parent, double pHistory, const arr & bs, uint a );
+  PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uint a );
 
   // modifiers
   void expand();
@@ -97,7 +97,7 @@ public:
   arr bs() const { return bs_; }
 
   PONode::L getTreePath();
-  PONode::L getTreePathFrom( PONode::ptr start );
+  PONode::L getTreePathFrom( const PONode::ptr & start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
 
   double time() const { return time_; }
@@ -152,7 +152,8 @@ private:
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
   mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
-  MCStatistics * mcStats_;
+  std::shared_ptr< MCStatistics > mcStats_;
+
   double lastActionReward_;                       ///  reward of the action leading to this node
   double prefixReward_;                           ///  this is the (certain) rewards of the prefix decisions
   double expectedReward_;                         ///  the total expected reward ?
@@ -175,8 +176,8 @@ private:
 namespace utility
 {
   // free functions
-  PONode::ptr getTerminalNode( PONode::ptr, const WorldID & w );
-  void   gatherPolicyFringe( PONode::ptr, std::set< mlr::Array< PONode::ptr> > & );
+  PONode::ptr getTerminalNode( const PONode::ptr &, const WorldID & w );
+  void   gatherPolicyFringe( const PONode::ptr &s, std::set< mlr::Array< PONode::ptr> > & );
 }
 
 }

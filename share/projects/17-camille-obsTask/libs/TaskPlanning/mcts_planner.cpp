@@ -1,10 +1,10 @@
-#include <task_planner.hpp>
+#include <mcts_planner.hpp>
 #include <policy_builder.hpp>
 
 namespace tp
 {
 
-void TaskPlanner::setFol( const std::string & folDescription )
+void MCTSPlanner::setFol( const std::string & folDescription )
 {
   const mlr::String notObservableTag = "NOT_OBSERVABLE";
 
@@ -66,7 +66,7 @@ void TaskPlanner::setFol( const std::string & folDescription )
   }
 }
 
-void TaskPlanner::solve()
+void MCTSPlanner::solve()
 {
   std::cout << "TaskPlanner::solveSymbolically" << std::endl;
 
@@ -107,18 +107,23 @@ void TaskPlanner::solve()
   root_->acceptVisitor( printer );
 }
 
-Policy::ptr TaskPlanner::getPolicy() const
+void MCTSPlanner::integrate( const Policy::ptr & policy )
+{
+
+}
+
+Policy::ptr MCTSPlanner::getPolicy() const
 {
   PolicyBuilder builder( root_ );
   return builder.getPolicy();
 }
 
-PONode::L TaskPlanner::getNodesToExpand() const
+PONode::L MCTSPlanner::getNodesToExpand() const
 {
   return getNodesToExpand( root_ );
 }
 
-PONode::L TaskPlanner::getNodesToExpand( PONode::ptr node ) const
+PONode::L MCTSPlanner::getNodesToExpand( const PONode::ptr & node ) const
 {
   PONode::L nodes;
 
