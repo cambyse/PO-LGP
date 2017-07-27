@@ -12,7 +12,7 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "policy_builder.hpp"
+#include <policy_builder.h>
 
 namespace tp
 {

@@ -71,8 +71,8 @@ private:
 
   double p_;  // probability of reaching this node
   double q_;  // probability of reaching this node given that fact that its parent is reached
-  double g_;  // reward so far
-  double h_;  // future rewards
+  double g_;  // cost so far
+  double h_;  // future costs
 
   // utility
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
@@ -137,10 +137,10 @@ private:
 PolicyNode::L getPathTo( const PolicyNode::ptr & node );
 
 // sort nodes so that the ones with the biggest rewards are first
-//struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
-//{
-//  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
-//  {
-//    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
-//  }
-//};
+struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
+{
+  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
+  {
+    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
+  }
+};

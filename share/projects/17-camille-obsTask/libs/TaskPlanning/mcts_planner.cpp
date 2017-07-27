@@ -1,5 +1,19 @@
-#include <mcts_planner.hpp>
-#include <policy_builder.hpp>
+/*  ------------------------------------------------------------------
+    Copyright 2016 Camille Phiquepal
+    email: camille.phiquepal@gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version. This program is distributed without
+    any warranty. See the GNU General Public License for more details.
+    You should have received a COPYING file of the full GNU General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>
+    --------------------------------------------------------------  */
+
+#include <mcts_planner.h>
+#include <policy_builder.h>
 
 namespace tp
 {
@@ -64,14 +78,51 @@ void MCTSPlanner::setFol( const std::string & folDescription )
 
     CHECK( total == 1.00, "wrong belief state definition, the total of the probabilities doesn't sum to 1" );
   }
+
+  root_ = std::make_shared< PONode >( folWorlds_, bs_ );
 }
 
 void MCTSPlanner::solve()
 {
-  std::cout << "TaskPlanner::solveSymbolically" << std::endl;
+  std::cout << "MCTSPlanner::solveSymbolically" << std::endl;
 
-  root_ = std::make_shared< PONode >( folWorlds_, bs_ );
+  if( solutions_.empty() )
+  {
+    solveFirstTime();
+  }
+  else
+  {
+    generateAlternative();
+  }
 
+  // build policy
+  PolicyBuilder builder( root_ );
+  solutions_.insert( builder.getPolicy() );
+
+  // print
+  PrintRewardsVisitor printer;
+  root_->acceptVisitor( printer );
+}
+
+void MCTSPlanner::integrate( const Policy::ptr & policy )
+{
+
+}
+
+Policy::ptr MCTSPlanner::getPolicy() const
+{
+  Policy::ptr policy;
+
+  if( solutions_.size() > 0 )
+  {
+    policy = *solutions_.begin();
+  }
+
+  return policy;
+}
+
+void MCTSPlanner::solveFirstTime()
+{
   auto s = 0;
   while( ! solved() )
   {
@@ -102,20 +153,11 @@ void MCTSPlanner::solve()
       node->backTrackBestExpectedPolicy();
     }
   }
-
-  PrintRewardsVisitor printer;
-  root_->acceptVisitor( printer );
 }
 
-void MCTSPlanner::integrate( const Policy::ptr & policy )
+void MCTSPlanner::generateAlternative()
 {
 
-}
-
-Policy::ptr MCTSPlanner::getPolicy() const
-{
-  PolicyBuilder builder( root_ );
-  return builder.getPolicy();
 }
 
 PONode::L MCTSPlanner::getNodesToExpand() const

@@ -14,14 +14,18 @@
 
 #pragma once
 
-#include <policy.h>
+#include <Kin/kinViewer.h>
 
-class MotionPlanner
+namespace mp
 {
-public:
-    typedef std::shared_ptr< MotionPlanner > ptr;
+// the visualizer can work as long as the kinmeatic frames it has to display exist!
+class PolicyVisualizer
+{
+public:           // for each terminal node, for each possible world, each frame
+  PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name );
 
-public:
-    virtual void setKin( const std::string & kinDescription ) = 0; // specify start kinematics
-    virtual void inform( Policy::ptr & ) = 0;
+private:
+  std::vector< std::shared_ptr< OrsPathViewer > > views_;
 };
+
+}

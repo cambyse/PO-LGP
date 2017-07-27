@@ -3,7 +3,7 @@
 #include <string>
 
 #include <policy.h>
-#include <motion_planner.hpp>
+#include <motion_planner.h>
 
 #include <komo_factory.h>
 
@@ -19,7 +19,10 @@ public:
   void setKin( const std::string & kinDescription ) override;
 
   // informers
-  void inform( Policy::ptr & ) override;
+  void solveAndInform( Policy::ptr & ) override;
+
+  // display
+  void display( const Policy::ptr &, double ) override;
 
 private:
   void clearLastPolicyOptimization();
@@ -51,6 +54,7 @@ private:
   // joint path
   std::map< PolicyNode::ptr, arr > jointPathCosts_;
   std::map< PolicyNode::ptr, arr > jointPathConstraints_;
+  std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
@@ -60,6 +64,6 @@ private:
   uint microSteps_     = 10;
 };
 
-void freeKomoKin( ExtensibleKOMO::ptr komo );
+void freeKomo( ExtensibleKOMO::ptr komo );
 
 }

@@ -5,7 +5,7 @@
 #include <Logic/fol_mcts_world.h>
 
 #include <policy.h>
-#include <task_planner.hpp>
+#include <task_planner.h>
 
 #include <po_node.h>
 #include <node_visitors.h>
@@ -25,9 +25,15 @@ public:
 
   // getters
   Policy::ptr getPolicy() const override;
+  bool terminated () const override { return false; } //
+
+private:
   bool solved() const { return root_->isSolved(); }
 
 private:
+  void solveFirstTime();
+  void generateAlternative();
+
   PONode::L getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
   PONode::L getNodesToExpand( const PONode::ptr & ) const;
 
@@ -37,6 +43,8 @@ private:
   arr bs_;
 
   PONode::ptr root_; // root and "current" node
+
+  std::set< Policy::ptr, PolicyCompare > solutions_;
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

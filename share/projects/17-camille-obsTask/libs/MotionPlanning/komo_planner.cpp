@@ -1,9 +1,12 @@
-#include <komo_planner.hpp>
+#include <komo_planner.h>
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
 
 #include <kin_equality_task.h>
+
+#include <policy_visualizer.h>
+
 
 namespace mp
 {
@@ -316,7 +319,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
   }
 }
 
-void KOMOPlanner::inform( Policy::ptr & policy )
+void KOMOPlanner::solveAndInform( Policy::ptr & policy )
 {
   clearLastPolicyOptimization();
 
@@ -354,16 +357,22 @@ void KOMOPlanner::clearLastPolicyOptimization()
   effKinematics_.clear();
 
   // path
-  // clear the optimized configurations since the komo allocates it but doesn't free it
   for( auto pair : pathKinFrames_ )
   {
     pair.second.clear();
   }
-  pathKinFrames_.clear(); // maps each leaf to its path // memory leak?
+  pathKinFrames_.clear(); // maps each leaf to its path
 
   // joint path
   jointPathCosts_.clear();
   jointPathConstraints_.clear();
+
+  // path
+  for( auto pair : jointPathKinFrames_ )
+  {
+    pair.second.clear();
+  }
+  jointPathKinFrames_.clear(); // maps each leaf to its path
 }
 
 void KOMOPlanner::optimizePoses( Policy::ptr & policy )
@@ -445,7 +454,7 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       effKinematics_[ node ]( w ).getJointState();
 
       // free
-      freeKomoKin( komo );
+      freeKomo( komo );
     }
   }
 
@@ -454,6 +463,25 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
   {
     optimizePosesFrom( c );
   }
+}
+
+void KOMOPlanner::display( const Policy::ptr & policy, double sec )
+{
+  Policy::ptr tmp( policy );
+  // resolve since this planner doesn't store paths
+  solveAndInform( tmp );
+
+  // retrieve trajectories
+  mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
+
+  for( auto leafWorldKinFramesPair : jointPathKinFrames_ )
+  {
+    frames.append( leafWorldKinFramesPair.second );
+  }
+
+  PolicyVisualizer viz( frames, "policy" );
+
+  mlr::wait( sec, true );
 }
 
 void KOMOPlanner::optimizePath( Policy::ptr & policy )
@@ -514,18 +542,17 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 
       Graph result = komo->getReport();
       //DEBUG( FILE("z.problem.cost") << result; )
-      double cost = result.get<double>({"total","sqrCosts"});
-      double constraints = result.get<double>({"total","constraints"});
+      double cost        = result.get<double>( {"total","sqrCosts"} );
+      double constraints = result.get<double>( {"total","constraints"} );
 
       for( auto s = 0; s < komo->configurations.N; ++s )
       {
-        //pathKinFrames_[ leaf ]( w )( s ).copy( *komo->configurations( s ) );
         mlr::KinematicWorld kin( *komo->configurations( s ) );
         pathKinFrames_[ leaf ]( w ).append( kin );
       }
 
       // free
-      freeKomoKin( komo );
+      freeKomo( komo );
     }
   }
 }
@@ -540,6 +567,7 @@ void KOMOPlanner::optimizeJointPath( Policy::ptr & policy )
 
 void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 {
+  jointPathKinFrames_  [ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( leaf->N() );
   jointPathCosts_      [ leaf ] = arr( leaf->N() );
   jointPathConstraints_[ leaf ] = arr( leaf->N() );
 
@@ -627,13 +655,20 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       jointPathCosts_      [ leaf ]( w ) = cost;
       jointPathConstraints_[ leaf ]( w ) = constraints;
 
+      // store result
+      for( auto s = 0; s < komo->configurations.N; ++s )
+      {
+        mlr::KinematicWorld kin( *komo->configurations( s ) );
+        jointPathKinFrames_[ leaf ]( w ).append( kin );
+      }
+
       // free
-      freeKomoKin( komo );
+      freeKomo( komo );
     }
   }
 }
 
-void freeKomoKin( ExtensibleKOMO::ptr komo )
+void freeKomo( ExtensibleKOMO::ptr komo )
 {
   listDelete( komo->configurations );
   listDelete( komo->tasks );

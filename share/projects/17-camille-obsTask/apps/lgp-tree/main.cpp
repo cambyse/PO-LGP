@@ -3,10 +3,10 @@
 
 #include <policy.hpp>
 
-#include <policy_builder.hpp>
+#include <policy_builder.h>
 
-#include <mcts_planner.hpp>
-#include <komo_planner.hpp>
+#include <mcts_planner.h>
+#include <komo_planner.h>
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
@@ -67,34 +67,38 @@ void plan()
   tp->setFol( "LGP-obs-container-fol-place-pick-2.g" );
   mp->setKin( "LGP-obs-container-kin.g" );
 
-  uint i = 0;
-
-  // TASK PLANNING
-  tp->solve();
-  auto policy = tp->getPolicy();
-
-  // MOTION PLANNING
-  mp->inform( policy );
-
-  tp->integrate( policy );
-
-  // print resulting cost
-  std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
-
-  // save policy
+  for( uint i = 0; i < 2 && ! tp->terminated(); ++i )
   {
-    std::stringstream namess;
-    namess << "policy-" << i << ".gv";
-    auto name = namess.str();
+    // TASK PLANNING
+    tp->solve();
+    auto policy = tp->getPolicy();
 
-    std::ofstream file;
-    file.open( name );
-    PolicyPrinter printer( file );
-    printer.print( policy );
-    file.close();
+    // MOTION PLANNING
+    mp->solveAndInform( policy );
 
-    generatePngImage( name );
+    tp->integrate( policy );
+
+    // print resulting cost
+    std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+
+    // save policy
+    {
+      std::stringstream namess;
+      namess << "policy-" << i << ".gv";
+      auto name = namess.str();
+
+      std::ofstream file;
+      file.open( name );
+      PolicyPrinter printer( file );
+      printer.print( policy );
+      file.close();
+
+      generatePngImage( name );
+    }
   }
+
+  mp->display( tp->getPolicy(), 30 );
+
   /*
   // store policy and display it
   auto currentBestPolicy = C.getPolicy();
