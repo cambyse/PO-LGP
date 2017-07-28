@@ -393,7 +393,7 @@ void PONode::generateMCRollouts( uint num, int stepAbort )
   //std::cout << "average reward:" << expectedReward_ << std::endl;
 }
 
-void PONode::backTrackBestExpectedPolicy( PONode * node )
+void PONode::backTrackBestExpectedPolicy( PONode::ptr node )
 {
   if( isTerminal() )
   {
@@ -448,7 +448,7 @@ void PONode::backTrackBestExpectedPolicy( PONode * node )
     //
   }
 
-  if( parent_ && this != node )
+  if( parent_ && this != node.get() )
   {
     parent_->backTrackBestExpectedPolicy();
   }

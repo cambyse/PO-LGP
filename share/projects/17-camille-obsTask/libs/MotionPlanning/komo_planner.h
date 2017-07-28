@@ -47,6 +47,8 @@ private:
 
   // pose
   std::map< PolicyNode::ptr, mlr::Array< mlr::KinematicWorld > > effKinematics_;
+  std::map< PolicyNode::ptr, arr > poseCosts_;
+  std::map< PolicyNode::ptr, arr > poseConstraints_;
 
   // path
   std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // maps each leaf to its path // memory leak?

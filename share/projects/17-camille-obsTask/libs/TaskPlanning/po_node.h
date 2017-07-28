@@ -72,9 +72,9 @@ public:
   void setAndSiblings( const PONode::L & siblings );
   void setBestFamily( const PONode::L & f ) { bestFamily_ = f; expectedBestA_ = f( 0 )->a_; }
   void generateMCRollouts( uint num, int stepAbort );
-  void backTrackBestExpectedPolicy( PONode * node = nullptr ); // backtrack up to the node node, per default, backup up to root
+  void backTrackBestExpectedPolicy( PONode::ptr node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
-  void labelInfeasible(); ///< sets the infeasible label AND removes all children!
+  void labelInfeasible(); ///< sets the infeasible label, should remove all children?
   //void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
 
   void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( shared_from_this() ); } // overkill here, visitor design pattern usefull if we have a hierarchy of class!

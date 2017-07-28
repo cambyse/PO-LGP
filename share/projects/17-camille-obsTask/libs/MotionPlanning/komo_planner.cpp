@@ -143,6 +143,9 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int
 
 void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
 {
+  StringL symbols;
+  for(Node *p:n->parents) symbols.append(&p->keys.last());
+
   double duration=n->get<double>();
 
   //
@@ -150,11 +153,20 @@ void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int
   const double t_end =   phase + duration;
   //
 
+  // no movement
   auto *map = new TaskMap_Transition( komo->world );
   map->posCoeff = 0.;
   map->velCoeff = 1.;
   map->accCoeff = 0.;
   komo->setTask( t_start, t_end, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+
+  // in sight expressed as a constraint
+  mlr::String arg = *symbols(0);
+  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
+                                                                        arg,
+                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
+                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
+                OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
   {
@@ -180,19 +192,19 @@ void groundActivateOverPlane( double phase, const Graph& facts, Node *n, KOMO * 
 
   if( *symbols(0) == "container_0" )
   {
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 0, 0, 1.0 ) ), OT_eq, NoArr, 1e2 );
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 0, 0, 1.0 ) ), OT_sumOfSqr, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_sumOfSqr, NoArr, 1e2 );
 
-    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_0", *symbols(1), 0.05 ), OT_ineq, NoArr, 1e2 );
+    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_0", *symbols(1), 0.05 ), OT_sumOfSqr, NoArr, 1e2 );
 
     //activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
   }
   else if( *symbols(0) == "container_1" )
   {
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 0, 0, 1.0 ) ), OT_eq, NoArr, 1e2 );
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 0, 0, 1.0 ) ), OT_sumOfSqr, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_sumOfSqr, NoArr, 1e2 );
 
-    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_1", *symbols(1), 0.05 ), OT_ineq, NoArr, 1e2 );
+    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_1", *symbols(1), 0.05 ), OT_sumOfSqr, NoArr, 1e2 );
 
     //activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
   }
@@ -327,28 +339,73 @@ void KOMOPlanner::solveAndInform( Policy::ptr & policy )
   //for( auto i = 0; i < 100; ++i )
   optimizePoses( policy );
 
-  // solve on path level
-  optimizePath( policy );
-
-  // solve on joint path level
-  optimizeJointPath( policy );
-
-  // update policy status
-  double cost = 0;
-  double constraints = 0;
-  for( auto l : policy->leafs() )
+  bool optimizationFailed = false;
+  // if a node has a constraint which is not satisfied, we set the value g of the node to ineasible i.e. infinite cost!
+  for( auto nodeConstraintsPair : poseConstraints_ )
   {
-    for( auto w = 0; w < l->N(); ++w )
+    auto node = nodeConstraintsPair.first;
+
+    double maxConstraint = 0;
+    for( auto constraint : nodeConstraintsPair.second )
     {
-      if( l->bs()( w ) > eps() )
-      {
-        cost        += jointPathCosts_      [ l ]( w ) * l->bs()( w );
-        constraints += jointPathConstraints_[ l ]( w ) * l->bs()( w );
-      }
+      maxConstraint = std::max( constraint, maxConstraint );
+    }
+
+    if( maxConstraint > 0.5 )
+    {
+      node->setG( std::numeric_limits< double >::infinity() );
+      optimizationFailed = true;
     }
   }
-  policy->setCost( cost );
+
+  if( optimizationFailed )
+  {
+    policy->setCost( std::numeric_limits< double >::infinity() );
+  }
+  else
+  {
+    // solve on path level
+    optimizePath( policy );
+
+    // solve on joint path level
+    optimizeJointPath( policy );
+
+    // update policy cost
+    double cost = 0;
+    double constraints = 0;
+    for( auto l : policy->leafs() )
+    {
+      for( auto w = 0; w < l->N(); ++w )
+      {
+        if( l->bs()( w ) > eps() )
+        {
+          cost        += jointPathCosts_      [ l ]( w ) * l->bs()( w );
+          constraints += jointPathConstraints_[ l ]( w ) * l->bs()( w );
+        }
+      }
+    }
+    policy->setCost( cost );
+  }
   policy->setStatus( Policy::INFORMED );
+}
+
+void KOMOPlanner::display( const Policy::ptr & policy, double sec )
+{
+  Policy::ptr tmp( policy );
+  // resolve since this planner doesn't store paths
+  solveAndInform( tmp );
+
+  // retrieve trajectories
+  mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
+
+  for( auto leafWorldKinFramesPair : jointPathKinFrames_ )
+  {
+    frames.append( leafWorldKinFramesPair.second );
+  }
+
+  PolicyVisualizer viz( frames, "policy" );
+
+  mlr::wait( sec, true );
 }
 
 void KOMOPlanner::clearLastPolicyOptimization()
@@ -383,6 +440,8 @@ void KOMOPlanner::optimizePoses( Policy::ptr & policy )
 void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 {
   effKinematics_[ node ] = mlr::Array< mlr::KinematicWorld >( node->N() );
+  poseCosts_      [ node ] = arr( node->N() );
+  poseConstraints_[ node ] = arr( node->N() );
   //
   for( auto w = 0; w < node->N(); ++w )
   {
@@ -437,10 +496,12 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       double cost = result.get<double>( { "total","sqrCosts" } );
       double constraints = result.get<double>( { "total","constraints" } );
 
+      poseCosts_[ node ]( w )       = cost;
+      poseConstraints_[ node ]( w ) = constraints;
+
       // what to do with the cost and constraints here??
 
       // update effective kinematic
-      //for( auto i = 0; i < 100; ++i )
       effKinematics_[ node ]( w ) = *komo->configurations.last();
 
       // update switch
@@ -450,7 +511,6 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
         if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node ]( w ) );
       }
       effKinematics_[ node ]( w ).topSort();
-      //DEBUG( node->effKinematics()( w ).checkConsistency(); )
       effKinematics_[ node ]( w ).getJointState();
 
       // free
@@ -463,25 +523,6 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
   {
     optimizePosesFrom( c );
   }
-}
-
-void KOMOPlanner::display( const Policy::ptr & policy, double sec )
-{
-  Policy::ptr tmp( policy );
-  // resolve since this planner doesn't store paths
-  solveAndInform( tmp );
-
-  // retrieve trajectories
-  mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
-
-  for( auto leafWorldKinFramesPair : jointPathKinFrames_ )
-  {
-    frames.append( leafWorldKinFramesPair.second );
-  }
-
-  PolicyVisualizer viz( frames, "policy" );
-
-  mlr::wait( sec, true );
 }
 
 void KOMOPlanner::optimizePath( Policy::ptr & policy )

@@ -53,6 +53,9 @@ public:
   double time() const { return time_; }
   uint id() const  { return id_; }
   double p() const { return p_; }
+  double q() const { return q_; }
+  double g() const { return g_; }
+  double h() const { return h_; }
 
   // utility
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
@@ -137,10 +140,13 @@ private:
 PolicyNode::L getPathTo( const PolicyNode::ptr & node );
 
 // sort nodes so that the ones with the biggest rewards are first
-struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
-{
-  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
-  {
-    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
-  }
-};
+//struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
+//{
+//  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
+//  {
+//    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
+//  }
+//};
+bool policyCompare( Policy::ptr lhs, Policy::ptr rhs );
+
+

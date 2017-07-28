@@ -67,7 +67,7 @@ void plan()
   tp->setFol( "LGP-obs-container-fol-place-pick-2.g" );
   mp->setKin( "LGP-obs-container-kin.g" );
 
-  for( uint i = 0; i < 2 && ! tp->terminated(); ++i )
+  for( uint i = 0; i < 4 && ! tp->terminated(); ++i )
   {
     // TASK PLANNING
     tp->solve();

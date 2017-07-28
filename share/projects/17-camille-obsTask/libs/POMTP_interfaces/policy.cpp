@@ -85,4 +85,9 @@ PolicyNode::L getPathTo( const PolicyNode::ptr & node )
   return path;
 }
 
+bool policyCompare( Policy::ptr lhs, Policy::ptr rhs )
+{
+  return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
+}
+
 

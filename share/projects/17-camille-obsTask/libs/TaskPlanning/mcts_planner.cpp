@@ -18,6 +18,12 @@
 namespace tp
 {
 
+MCTSPlanner::MCTSPlanner()
+  : currentPolicyFringeInitialized_( false )
+{
+
+}
+
 void MCTSPlanner::setFol( const std::string & folDescription )
 {
   const mlr::String notObservableTag = "NOT_OBSERVABLE";
@@ -87,7 +93,13 @@ void MCTSPlanner::solve()
   std::cout << "MCTSPlanner::solveSymbolically" << std::endl;
 
   if( solutions_.empty() )
-  {
+  { // no existing skeleton
+    solveFirstTime();
+  }
+  else if( ! solved() )
+  { // all existing skeletons are infeasible
+    CHECK( (*solutions_.begin())->cost() == std::numeric_limits< double >::infinity(), "incoherent state of the solutions" );
+
     solveFirstTime();
   }
   else
@@ -97,7 +109,8 @@ void MCTSPlanner::solve()
 
   // build policy
   PolicyBuilder builder( root_ );
-  solutions_.insert( builder.getPolicy() );
+  solutions_.push_back( builder.getPolicy() );
+  solutions_.sort( policyCompare );
 
   // print
   PrintRewardsVisitor printer;
@@ -105,8 +118,28 @@ void MCTSPlanner::solve()
 }
 
 void MCTSPlanner::integrate( const Policy::ptr & policy )
-{
+{ 
+  // go through the policy and update the nodes of the tree search
+  integrateFromNode( root_, policy->root() );
 
+  // if this is the best policy, noting to do
+  solutions_.sort( policyCompare );
+
+  if( policy == *solutions_.begin() )
+  {
+
+  }
+  // otherwise, switch back to the last best policy
+  else
+  {
+    CHECK( alternativeStartNode_ !=  nullptr, "the backed up policy is invalid" );
+    CHECK( nextFamilyBackup_.d0 > 0, "the backed up policy is invalid" );
+    CHECK( nextFamilyBackup_( 0 )->parent() ==  alternativeStartNode_, "the backed up policy is invalid" );
+
+    currentPolicyFringe_ = currentPolicyFringeBackup_;
+    currentPolicyFringeInitialized_ = true;
+    alternativeStartNode_->setBestFamily( nextFamilyBackup_ );
+  }
 }
 
 Policy::ptr MCTSPlanner::getPolicy() const
@@ -119,6 +152,29 @@ Policy::ptr MCTSPlanner::getPolicy() const
   }
 
   return policy;
+}
+
+void MCTSPlanner::integrateFromNode( const PONode::ptr & searchTreeNode, const PolicyNode::ptr &  policyNode )
+{
+  auto searchFamily = searchTreeNode->bestFamily();
+  auto policyFamily = policyNode->children();
+
+  CHECK( searchFamily.N == policyFamily.N, "error when reapplying the informed policy into the search tree" );
+
+  for( auto i = 0; i < searchFamily.N; ++i )
+  {
+    auto searchNode = searchFamily( i );
+    auto policyNode = policyFamily( i );
+
+    CHECK( searchNode->id() == policyNode->id(), "error when reapplying the informed policy into the search tree, the node ids are invalid" )
+
+    if( policyNode->g() == std::numeric_limits< double >::infinity() )
+    {
+      searchNode->labelInfeasible();
+    }
+
+    integrateFromNode( searchNode, policyNode );
+  }
 }
 
 void MCTSPlanner::solveFirstTime()
@@ -157,7 +213,84 @@ void MCTSPlanner::solveFirstTime()
 
 void MCTSPlanner::generateAlternative()
 {
+  std::cout << "MCTSPlanner::generateAlternative" << std::endl;
 
+  // gather the current policy fringe if it has not been gathered
+  if( ! currentPolicyFringeInitialized_ )
+  {
+    CHECK( currentPolicyFringe_.size() == 0, "currentPolicyFringe_ corrupted!" );
+
+    utility::gatherPolicyFringe( root_, currentPolicyFringe_ );
+    currentPolicyFringeInitialized_ = true;
+  }
+
+  // get one node of the fringe, set it as better choice and solve from it
+  if( currentPolicyFringe_.size() > 0 )
+  {
+    // debug log
+    for( auto f : currentPolicyFringe_ )
+    {
+      std::cout << "alternative family:" << std::endl;
+
+      for( auto c : f )
+      {
+        std::cout << "alternative node to expand:" << c->id() << ":" << c->expecteTotalReward() << std::endl;
+      }
+      //std::cout << "alternative node to expand:" << alternativeNode->id() << ":" << alternativeNode->expecteTotalReward() << std::endl;
+    }
+
+    //////here define a strategy to choose the action to change
+    // for the moment just take the last one
+    auto alternativeFamily = *std::prev( currentPolicyFringe_.end() );
+    //////
+
+    // solve alternative family
+    uint s = 0;
+    for( auto alternativeNode : alternativeFamily )
+    {
+      while( ! alternativeNode->isSolved() )
+      {
+        s++;
+
+        auto nodes = getNodesToExpand( alternativeNode );
+
+        for( auto node : nodes )
+        {
+          // expand
+          node->expand();
+
+          // generate rollouts for each child
+          for( auto f : node->families() )
+          {
+            for( auto c : f )
+            {
+              c->generateMCRollouts( 50, 10 );
+            }
+          }
+
+//          {
+//            // save the current state of the search
+//            std::stringstream namess;
+//            namess << "exploration-alternative-" << alternativeNumber_ << "-" << s << ".gv";
+//            printSearchTree( namess.str() );
+//          }
+
+          // backtrack result
+          node->backTrackBestExpectedPolicy( alternativeNode );
+        }
+      }
+    }
+
+    // backup old policy
+    currentPolicyFringe_.erase( alternativeFamily );
+    alternativeStartNode_ = alternativeFamily( 0 )->parent();
+    nextFamilyBackup_     = alternativeStartNode_->bestFamily();
+    currentPolicyFringeBackup_ = currentPolicyFringe_;
+    alternativeStartNode_->setBestFamily( alternativeFamily );
+    currentPolicyFringe_.clear();
+    currentPolicyFringeInitialized_ = false;
+    //
+  }
 }
 
 PONode::L MCTSPlanner::getNodesToExpand() const

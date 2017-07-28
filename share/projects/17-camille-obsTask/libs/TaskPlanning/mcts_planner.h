@@ -16,6 +16,7 @@ namespace tp
 class MCTSPlanner : public TaskPlanner
 {
 public:
+  MCTSPlanner();
   //virtual ~TaskPlanner();
 
   // modifiers
@@ -29,6 +30,7 @@ public:
 
 private:
   bool solved() const { return root_->isSolved(); }
+  void integrateFromNode( const PONode::ptr &, const PolicyNode::ptr & );
 
 private:
   void solveFirstTime();
@@ -44,7 +46,15 @@ private:
 
   PONode::ptr root_; // root and "current" node
 
-  std::set< Policy::ptr, PolicyCompare > solutions_;
+  std::list< Policy::ptr > solutions_;
+
+  // alternative generation
+  bool currentPolicyFringeInitialized_;
+  std::set< PONode::L > currentPolicyFringe_;
+  PONode::ptr alternativeStartNode_;
+  PONode::L nextFamilyBackup_;
+  std::set< PONode::L > currentPolicyFringeBackup_;
+  //
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
