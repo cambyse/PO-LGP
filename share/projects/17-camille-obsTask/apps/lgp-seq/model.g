@@ -31,7 +31,7 @@ body target { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
 
 #body tableC{ type=9, X=<T t(.7 0 .8)>, size=[1. .8 .04 .02], color=[.3 .3 .5] fixed, contact }
 #body tableL{ type=9, X=<T t(.2 .7 .8)>, size=[2. .6 .04 .02], color=[.3 .5 .3] fixed, contact }
-body tableC{ type=9, X=<T t(0 -.7 0.9)>, size=[2. .8 .04 .01], color=[.3 .5 .3] }
+body tableC{ type=9, X=<T t(0 -.7 0.9)>, size=[2. .8 .04 .01], color=[.3 .5 .3] contact }
 
 ## GRASP references
 

@@ -135,6 +135,12 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int
                                                                         ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
                 OT_sumOfSqr, NoArr, 1e2 );
 
+  komo->setTask( t_end-0.2, t_end, new ActiveGetSight      ( "manhead",
+                                                                        arg,
+                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
+                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
+                OT_ineq, NoArr, 1e2 );
+
   if( verbose > 0 )
   {
     std::cout << t_start << "->" << t_end << ": getting sight of " << *symbols(0) << std::endl;
@@ -161,12 +167,12 @@ void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int
   komo->setTask( t_start, t_end, map, OT_sumOfSqr, NoArr, 1e2, 1 );
 
   // in sight expressed as a constraint
-  mlr::String arg = *symbols(0);
-  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
-                                                                        arg,
-                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-                OT_eq, NoArr, 1e2 );
+//  mlr::String arg = *symbols(0);
+//  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
+//                                                                        arg,
+//                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
+//                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
+//                OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
   {
@@ -353,6 +359,8 @@ void KOMOPlanner::solveAndInform( Policy::ptr & policy )
 
     if( maxConstraint > 0.5 )
     {
+      std::cout << "Optimization failed on node " << node->id() << std::endl;
+
       node->setG( std::numeric_limits< double >::infinity() );
       optimizationFailed = true;
     }
@@ -412,6 +420,7 @@ void KOMOPlanner::clearLastPolicyOptimization()
 {
   // poses
   effKinematics_.clear();
+  poseConstraints_.clear();
 
   // path
   for( auto pair : pathKinFrames_ )
@@ -640,7 +649,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
         // set task
         auto time = ( node->parent() ? node->parent()->time(): 0. );   // get parent time
 
-        komo->groundTasks( start_offset_ +  time, *node->states()( w ), 1 );          // ground parent action (included in the initial state)
+        komo->groundTasks( start_offset_ +  time, *node->states()( w ) );          // ground parent action (included in the initial state)
 
         if( node->time() > 0 )
         {

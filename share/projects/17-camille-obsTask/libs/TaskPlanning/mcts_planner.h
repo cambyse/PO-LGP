@@ -26,18 +26,24 @@ public:
 
   // getters
   Policy::ptr getPolicy() const override;
-  bool terminated () const override { return false; } //
+  bool      terminated () const override { return terminated_; } //
 
 private:
   bool solved() const { return root_->isSolved(); }
-  void integrateFromNode( const PONode::ptr &, const PolicyNode::ptr & );
+  void labelIfInfeasible( const PONode::ptr &, const PolicyNode::ptr & );
 
 private:
   void solveFirstTime();
   void generateAlternative();
 
+  void initFringes();
+  void switchBackToBackup();
+
   PONode::L getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
   PONode::L getNodesToExpand( const PONode::ptr & ) const;
+
+private:
+  void checkIntegrity();
 
 private:
   // state
@@ -49,12 +55,10 @@ private:
   std::list< Policy::ptr > solutions_;
 
   // alternative generation
-  bool currentPolicyFringeInitialized_;
-  std::set< PONode::L > currentPolicyFringe_;
-  PONode::ptr alternativeStartNode_;
-  PONode::L nextFamilyBackup_;
-  std::set< PONode::L > currentPolicyFringeBackup_;
-  //
+  std::set< PONode::L > currentBestPolicyFringe;
+  PONode::L             nextFamilyBackup_;
+
+  bool terminated_; // not possible to generate alternatives, fringe is empty!
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

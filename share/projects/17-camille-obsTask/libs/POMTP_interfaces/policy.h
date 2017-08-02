@@ -107,6 +107,7 @@ public:
   PolicyNode::ptr root() const { return root_; }
   PolicyNode::L leafs()  const { return leafs_; }
   double cost()          const { return cost_; }
+  bool feasible()        const { return cost_ < std::numeric_limits< double >::infinity(); }
 
 private:
   uint N_;

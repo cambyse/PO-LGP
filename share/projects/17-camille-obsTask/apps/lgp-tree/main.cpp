@@ -67,19 +67,13 @@ void plan()
   tp->setFol( "LGP-obs-container-fol-place-pick-2.g" );
   mp->setKin( "LGP-obs-container-kin.g" );
 
-  for( uint i = 0; i < 4 && ! tp->terminated(); ++i )
+  for( uint i = 0; i < 50 && ! tp->terminated(); ++i )
   {
     // TASK PLANNING
     tp->solve();
     auto policy = tp->getPolicy();
 
-    // MOTION PLANNING
-    mp->solveAndInform( policy );
-
-    tp->integrate( policy );
-
-    // print resulting cost
-    std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+    std::cout << "Optimizing motions for policy " << i << std::endl;
 
     // save policy
     {
@@ -95,6 +89,14 @@ void plan()
 
       generatePngImage( name );
     }
+
+    // MOTION PLANNING
+    mp->solveAndInform( policy );
+
+    // print resulting cost
+    std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+
+    tp->integrate( policy );
   }
 
   mp->display( tp->getPolicy(), 30 );

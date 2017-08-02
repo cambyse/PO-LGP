@@ -671,7 +671,7 @@ void mlr::Joint::applyTransformation(mlr::Transformation& f, const arr& q){
       rot.set(q.p+qIndex);
       {
           double n=rot.normalization();
-          if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
+//          if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
       }
       rot.normalize();
       rot.isZero=false;
@@ -684,7 +684,7 @@ void mlr::Joint::applyTransformation(mlr::Transformation& f, const arr& q){
       t.rot.set(q.p+qIndex+3);
       {
           double n=t.rot.normalization();
-          if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
+//          if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
       }
       t.rot.normalize();
       t.rot.isZero=false;
@@ -1339,7 +1339,7 @@ void mlr::KinematicWorld::calc_Q_from_q(int agent){
           j->Q.rot.set(q.p+n);
           {
               double n=j->Q.rot.normalization();
-              if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
+ //             if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
           }
           j->Q.rot.normalize();
           j->Q.rot.isZero=false; //WHY? (gradient check fails without!)
@@ -1351,7 +1351,7 @@ void mlr::KinematicWorld::calc_Q_from_q(int agent){
           j->Q.rot.set(q.p+n+3);
           {
               double n=j->Q.rot.normalization();
-              if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
+//              if(n<.5 || n>2.) LOG(-1) <<"quat normalization is extreme: " <<n <<endl;
           }
           j->Q.rot.normalize();
           j->Q.rot.isZero=false;

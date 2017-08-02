@@ -450,7 +450,7 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr node )
 
   if( parent_ && this != node.get() )
   {
-    parent_->backTrackBestExpectedPolicy();
+    parent_->backTrackBestExpectedPolicy( node );
   }
 }
 

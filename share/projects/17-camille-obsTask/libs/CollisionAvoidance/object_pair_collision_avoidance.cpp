@@ -124,6 +124,14 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
       auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
       auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
 
+      auto arel_2=a->X.rot/(p->posA-a->X.pos);
+      auto brel_2=b->X.rot/(p->posB-b->X.pos);
+
+      if( arel != arel_2 || brel != brel_2 )
+      {
+        int a = 0;
+      }
+
       arr posA;
       arr posB;
       arr JposA;
