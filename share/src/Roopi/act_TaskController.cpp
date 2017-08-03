@@ -30,7 +30,7 @@ void Act_TaskController::setRealWorldJoint(mlr::Joint* jt, const arr& q)
 {
   arr real_q = tcm->realWorld.q;
 
-  mlr::Joint* real_joint = tcm->realWorld.getJointByName(jt->name);
+  mlr::Joint* real_joint = tcm->realWorld.getFrameByName(jt->to()->name)->joint();
 
   int idx = real_joint->qIndex;
   for (uint i = 0; i < q.d0; i++)

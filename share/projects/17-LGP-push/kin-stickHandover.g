@@ -2,8 +2,7 @@
 #Include = '../../data/pr2_model/pr2_model.ors'
 Include = '../../data/baxter_model/baxter.ors'
 
-body table1{ type=0, X=<T t(.7 0 .7)>, size=[1. 3. .04 .0], color=[.8 .5 .3] fixed,  }
-
+body table1{ type=9, X=<T t(.7 0 .7)>, size=[1. 3. .04 .02], color=[.8 .5 .3] fixed, contact }
 body tableL{ type=9, X=<T t(.0 .7 .8)>, size=[.6 .6 .04 .02], color=[.3 .5 .3] fixed, contact }
 body tableR{ type=9, X=<T t(.0 -.7 .8)>, size=[.6 .6 .04 .02], color=[.3 .5 .3] fixed, contact }
 

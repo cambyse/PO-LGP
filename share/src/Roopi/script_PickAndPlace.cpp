@@ -10,11 +10,11 @@ int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize){
     auto K = R.getK();
     if(R.getRobot()=="pr2"){
       if(lr==LR_right){
-        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
-        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+        grasp1 = K().getFrameByName("r_gripper_joint")->ID;
+        grasp2 = K().getFrameByName("r_gripper_l_finger_joint")->ID;
       }else{
-        grasp1 = K().getJointByName("l_gripper_joint")->to->index;
-        grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        grasp1 = K().getFrameByName("l_gripper_joint")->ID;
+        grasp2 = K().getFrameByName("l_gripper_l_finger_joint")->ID;
       }
     }else{
       NIY;
@@ -40,22 +40,22 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     auto K = R.getK();
 
     //get obj size
-    arr objSize = K().getShapeByName(objName)->size;
+    arr objSize = K().getFrameByName(objName)->shape->size;
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2);
 
     //relevant shapes
-    obj = K().getShapeByName(objName)->index;
+    obj = K().getFrameByName(objName)->ID;
     if(R.getRobot()=="pr2"){
       if(rl==LR_right){
-        eff = K().getShapeByName("pr2R")->index;
-        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
-        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+        eff = K().getFrameByName("pr2R")->ID;
+        grasp1 = K().getFrameByName("r_gripper_joint")->ID;
+        grasp2 = K().getFrameByName("r_gripper_l_finger_joint")->ID;
       }else{
-        eff = K().getShapeByName("pr2L")->index;
-        grasp1 = K().getJointByName("l_gripper_joint")->to->index;
-        grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        eff = K().getFrameByName("pr2L")->ID;
+        grasp1 = K().getFrameByName("l_gripper_joint")->ID;
+        grasp2 = K().getFrameByName("l_gripper_l_finger_joint")->ID;
       }
       //cam = K().getShapeByName("endeffKinect")->index;
       //workspace = K().getShapeByName("endeffWorkspace")->index;
@@ -106,7 +106,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
   {
     //switch
-    const char* effName = R.getK()->shapes(eff)->name;
+    const char* effName = R.getK()->frames(eff)->name;
     R.kinematicSwitch(objName, effName, false);
   }
 
@@ -132,28 +132,28 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto K = R.getK();
 
     //get obj size
-    arr objSize = K().getShapeByName(objName)->size;
-    arr ontoSize = K().getShapeByName(ontoName)->size;
+    arr objSize = K().getFrameByName(objName)->shape->size;
+    arr ontoSize = K().getFrameByName(ontoName)->shape->size;
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
 
     //relevant shapes
-    mlr::Shape *ob = K().getShapeByName(objName);
-    obj = ob->index;
-    onto = K().getShapeByName(ontoName)->index;
+    mlr::Frame *ob = K().getFrameByName(objName);
+    obj = ob->ID;
+    onto = K().getFrameByName(ontoName)->ID;
     if(R.getRobot()=="pr2"){
-      mlr::Shape *sh = K().getShapeByName("pr2R");
-      if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the right hand..
-        eff = sh->index;
-        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
-        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+      mlr::Frame *sh = K().getFrameByName("pr2R");
+      if(sh->ID == ob->link->from->ID){ //this is the right hand..
+        eff = sh->ID;
+        grasp1 = K().getFrameByName("r_gripper_joint")->ID;
+        grasp2 = K().getFrameByName("r_gripper_l_finger_joint")->ID;
       }else{
-        sh = K().getShapeByName("pr2L");
-        if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the left hand..
-          eff = sh->index;
-          grasp1 = K().getJointByName("l_gripper_joint")->to->index;
-          grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        sh = K().getFrameByName("pr2L");
+        if(sh->ID == ob->link->from->ID){ //this is the left hand..
+          eff = sh->ID;
+          grasp1 = K().getFrameByName("l_gripper_joint")->ID;
+          grasp2 = K().getFrameByName("l_gripper_l_finger_joint")->ID;
         }else{
           HALT("which hand is this? Something's wrong");
         }
@@ -221,28 +221,28 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto K = R.getK();
 
     //get obj size
-    arr objSize = K().getShapeByName(objName)->size;
-    arr ontoSize = K().getShapeByName(ontoName)->size;
+    arr objSize = K().getFrameByName(objName)->shape->size;
+    arr ontoSize = K().getFrameByName(ontoName)->shape->size;
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
 
     //relevant shapes
-    mlr::Shape *ob = K().getShapeByName(objName);
-    obj = ob->index;
-    onto = K().getShapeByName(ontoName)->index;
+    mlr::Frame *ob = K().getFrameByName(objName);
+    obj = ob->ID;
+    onto = K().getFrameByName(ontoName)->ID;
     if(R.getRobot()=="pr2"){
-      mlr::Shape *sh = K().getShapeByName("pr2R");
-      if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the right hand..
-        eff = sh->index;
-        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
-        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+      mlr::Frame *sh = K().getFrameByName("pr2R");
+      if(sh->ID == ob->link->from->ID){ //this is the right hand..
+        eff = sh->ID;
+        grasp1 = K().getFrameByName("r_gripper_joint")->ID;
+        grasp2 = K().getFrameByName("r_gripper_l_finger_joint")->ID;
       }else{
-        sh = K().getShapeByName("pr2L");
-        if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the left hand..
-          eff = sh->index;
-          grasp1 = K().getJointByName("l_gripper_joint")->to->index;
-          grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        sh = K().getFrameByName("pr2L");
+        if(sh->ID == ob->link->from->ID){ //this is the left hand..
+          eff = sh->ID;
+          grasp1 = K().getFrameByName("l_gripper_joint")->ID;
+          grasp2 = K().getFrameByName("l_gripper_l_finger_joint")->ID;
         }else{
           HALT("which hand is this? Something's wrong");
         }
@@ -327,16 +327,16 @@ int Script_armsNeutral(Roopi& R){
   {
     auto K = R.getK();
     if(R.getRobot()=="pr2"){
-        shoulderPanJointR= K().getJointByName("r_shoulder_pan_joint")->to->index;
-        shoulderLiftJointR= K().getJointByName("r_shoulder_lift_joint")->to->index;
-        upperArmRollJointR= K().getJointByName("r_upper_arm_roll_joint")->to->index;
-        elbowFlexJointR= K().getJointByName("r_elbow_flex_joint")->to->index;
-        forearmRollJointR= K().getJointByName("r_forearm_roll_joint")->to->index;
-        shoulderPanJointL= K().getJointByName("l_shoulder_pan_joint")->to->index;
-        shoulderLiftJointL= K().getJointByName("l_shoulder_lift_joint")->to->index;
-        upperArmRollJointL= K().getJointByName("l_upper_arm_roll_joint")->to->index;
-        elbowFlexJointL= K().getJointByName("l_elbow_flex_joint")->to->index;
-        forearmRollJointL= K().getJointByName("l_forearm_roll_joint")->to->index;
+        shoulderPanJointR= K().getFrameByName("r_shoulder_pan_joint")->ID;
+        shoulderLiftJointR= K().getFrameByName("r_shoulder_lift_joint")->ID;
+        upperArmRollJointR= K().getFrameByName("r_upper_arm_roll_joint")->ID;
+        elbowFlexJointR= K().getFrameByName("r_elbow_flex_joint")->ID;
+        forearmRollJointR= K().getFrameByName("r_forearm_roll_joint")->ID;
+        shoulderPanJointL= K().getFrameByName("l_shoulder_pan_joint")->ID;
+        shoulderLiftJointL= K().getFrameByName("l_shoulder_lift_joint")->ID;
+        upperArmRollJointL= K().getFrameByName("l_upper_arm_roll_joint")->ID;
+        elbowFlexJointL= K().getFrameByName("l_elbow_flex_joint")->ID;
+        forearmRollJointL= K().getFrameByName("l_forearm_roll_joint")->ID;
     }else{
       NIY;
     }
@@ -366,11 +366,11 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     auto K = R.getK();
 
     //relevant shapes
-    mlr::Shape *ob = K().getShapeByName(objName);
-    obj = ob->index;
+    mlr::Frame *ob = K().getFrameByName(objName);
+    obj = ob->ID;
     if(R.getRobot()=="pr2"){
 //      mlr::Shape *sh = K().getShapeByName("pr2R");
-      workspace = K().getShapeByName("endeffWorkspace")->index;
+      workspace = K().getFrameByName("endeffWorkspace")->ID;
     }else{
       NIY;
     }
@@ -400,7 +400,7 @@ int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
     group1="armL"; group2="gripL";
   }
 
-  arr obj1size = R.getK()->getShapeByName(objName)->size;
+  arr obj1size = R.getK()->getFrameByName(objName)->shape->size;
   double gripSize = obj1size(0);
   double above = .5*obj1size(2) - .05;
 
@@ -437,6 +437,6 @@ int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
 
 double getGripSize(Roopi& R, const char* objName, CubeSide cs){
-  arr obj1size = R.getK()->getShapeByName(objName)->size;
+  arr obj1size = R.getK()->getFrameByName(objName)->shape->size;
   return obj1size(cs) + 2.*obj1size(3);
 }

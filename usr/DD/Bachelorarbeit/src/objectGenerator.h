@@ -7,7 +7,7 @@
 struct Object {
 
   mlr::KinematicWorld& world;
-  mlr::Body* b;
+  mlr::Frame* b;
   mlr::Shape* s;
 
   Object(mlr::KinematicWorld& world);
