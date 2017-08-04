@@ -2,6 +2,7 @@
 #include "roopi.h"
 #include <Control/taskControl.h>
 #include <KOMO/komo.h>
+#include <Kin/frame.h>
 
 int Script_setGripper(Roopi& R, LeftOrRight lr, double gripSize){
   //query some info from the kinematics first

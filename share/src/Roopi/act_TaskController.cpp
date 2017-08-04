@@ -2,6 +2,7 @@
 #include "roopi.h"
 
 #include <Control/TaskControlThread.h>
+#include <Kin/frame.h>
 
 Act_TaskController::Act_TaskController(Roopi* r)
   : Act(r){

@@ -4,6 +4,8 @@
 #include <Gui/viewer.h>
 #include <Kin/PhysXThread.h>
 #include <Kin/kin_swift.h>
+#include <Kin/frame.h>
+#include <Kin/switch.h>
 #include <Control/GamepadControlThread.h>
 #include <RosCom/spinner.h>
 
