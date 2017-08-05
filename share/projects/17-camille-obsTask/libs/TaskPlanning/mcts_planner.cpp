@@ -19,7 +19,7 @@ namespace tp
 {
 
 MCTSPlanner::MCTSPlanner()
-  : terminated_( false )
+  : searchState_( POLICY_INITIALIZATION )
 {
 
 }
@@ -122,12 +122,30 @@ void MCTSPlanner::integrate( const Policy::ptr & policy )
   // keep the list sorted
   solutions_.sort( policyCompare );
 
-  if( ! ( *solutions_.begin() )->feasible() )
+  if( searchState_ == POLICY_INITIALIZATION )
   {
-    // the policy in infeasible, the backtracking
-    labelIfInfeasible( root_, policy->root() );
+    if( ! policy->feasible() )
+    {
+      std::cout << "**********************" << std::endl;
+      std::cout << "policy infeasible, continue searching.." << std::endl;
+      std::cout << "**********************" << std::endl;
+
+      // the policy in infeasible, the backtracking
+      labelIfInfeasible( root_, policy->root() );
+    }
+    else
+    {
+      std::cout << "**********************" << std::endl;
+      std::cout << "first feasible policy found!" << std::endl;
+      std::cout << "**********************" << std::endl;
+
+      searchState_ = POLICY_OPTIMIZATION;
+
+      // initialize fringe to prepare policy opt
+      reinitPolicyFringe();
+    }
   }
-  else
+  else if( searchState_ == POLICY_OPTIMIZATION )
   {
     // is the policy the best?
     if( policy == ( *solutions_.begin() ) )
@@ -136,54 +154,27 @@ void MCTSPlanner::integrate( const Policy::ptr & policy )
       std::cout << "improved policy found!" << std::endl;
       std::cout << "**********************" << std::endl;
 
-      // initialize fringes
-      initFringes();
+      // initialize fringe
+      reinitPolicyFringe();
     }
     else
     {
       std::cout << "**********************" << std::endl;
-      std::cout << "policy doesn't improve, switch back to backup!" << std::endl;
+      std::cout << "policy doesn't improve, switch back to previous one!" << std::endl;
       std::cout << "**********************" << std::endl;
 
-      switchBackToBackup();
+      switchBackToPreviousPolicy(); // the previous policy is the best so far
+
+      if( referencePolicyFringe_.size() == 0 )
+      {
+        searchState_ = POLICY_OPTIMIZATION;
+      }
     }
   }
-
-  /*if( policy->feasible() )
-  {
-
   else
   {
-    // the policy in infeasible, the backtracking, generates the mutation!
-    integrateFromNode( root_, policy->root() );
-
-    policyMutated_ = true;
+    CHECK( false, "invalid policy search state" );
   }
-
-
-  // if this is the best policy, noting to do
-  /*solutions_.sort( policyCompare );
-
-  if( policy->cost() == (*solutions_.begin())->cost() ) // the last policy is the best
-  {
-    std::cout << "improved policy found!" << std::endl;
-  }
-  // otherwise, switch back to the last best policy
-  else
-  {
-    CHECK( alternativeStartNode_ !=  nullptr, "the backed up policy is invalid" );
-    CHECK( nextFamilyBackup_.d0 > 0, "the backed up policy is invalid" );
-    CHECK( nextFamilyBackup_( 0 )->parent() ==  alternativeStartNode_, "the backed up policy is invalid" );
-
-    if( policy->cost() < std::numeric_limits< double >::infinity() )
-    {
-      CHECK( nextFamilyBackup_ != alternativeStartNode_->bestFamily(), "the tested action is the same than the back up one!" )
-
-      currentPolicyFringe_ = currentPolicyFringeBackup_;
-      currentPolicyFringeInitialized_ = true;
-      alternativeStartNode_->setBestFamily( nextFamilyBackup_ );
-    }
-  }*/
 }
 
 Policy::ptr MCTSPlanner::getPolicy() const
@@ -196,6 +187,17 @@ Policy::ptr MCTSPlanner::getPolicy() const
   }
 
   return policy;
+}
+
+MotionPlanningOrder MCTSPlanner::getPlanningOrder() const
+{
+  MotionPlanningOrder po( getPolicy()->id() );
+
+  //
+  po.setParam( "type", "jointPath" );
+  //
+
+  return po;
 }
 
 void MCTSPlanner::labelIfInfeasible( const PONode::ptr & searchTreeNode, const PolicyNode::ptr &  policyNode )
@@ -259,18 +261,18 @@ void MCTSPlanner::solveFirstTime()
 
 void MCTSPlanner::generateAlternative()
 {
-  std::cout << "MCTSPlanner::generateAlternative " << "policy fringe size:" << currentBestPolicyFringe.size() << std::endl;
+  std::cout << "MCTSPlanner::generateAlternative " << "reference policy fringe size:" << referencePolicyFringe_.size() << std::endl;
 
   // get one node of the fringe, set it as better choice and solve from it
-  if( currentBestPolicyFringe.size() > 0 )
+  if( referencePolicyFringe_.size() > 0 )
   {
     //////here define a strategy to choose the action to change
     // for the moment just take the last one
     //auto alternativeFamily = *std::prev( currentBestPolicyFringe.end() );
 
     // take a random one
-    auto j = ( currentBestPolicyFringe.size() * (double) rand() / (RAND_MAX));
-    auto alternativeFamily = *std::next( currentBestPolicyFringe.begin(), j );
+    auto j = ( referencePolicyFringe_.size() * (double) rand() / (RAND_MAX));
+    auto alternativeFamily = *std::next( referencePolicyFringe_.begin(), j );
 
     auto branchingNode = alternativeFamily( 0 )->parent();
 
@@ -317,26 +319,24 @@ void MCTSPlanner::generateAlternative()
     }
 
     // backup old policy
-    currentBestPolicyFringe.erase( alternativeFamily );
+    referencePolicyFringe_.erase( alternativeFamily );
     nextFamilyBackup_     = branchingNode->bestFamily();
     branchingNode->setBestFamily( alternativeFamily );
     //
     CHECK( nextFamilyBackup_ != branchingNode->bestFamily(), "the tested family is he same than the back-up one!" );
     CHECK( nextFamilyBackup_ != alternativeFamily, "the tested family is he same than the back-up one!" );
     //
-
-    terminated_ = currentBestPolicyFringe.size() == 0;
   }
 }
 
-void MCTSPlanner::initFringes()
+void MCTSPlanner::reinitPolicyFringe()
 {
-  utility::gatherPolicyFringe( root_, currentBestPolicyFringe );
+  utility::gatherPolicyFringe( root_, referencePolicyFringe_ );
 }
 
-void MCTSPlanner::switchBackToBackup()
+void MCTSPlanner::switchBackToPreviousPolicy()
 {
-  std::cout << "size of back up fringe:" << currentBestPolicyFringe.size() << std::endl;
+  std::cout << "size of the fringe of the ref policy:" << referencePolicyFringe_.size() << std::endl;
 
   auto branchingNode = nextFamilyBackup_( 0 )->parent();
   branchingNode->setBestFamily( nextFamilyBackup_ );
@@ -362,14 +362,7 @@ PONode::L MCTSPlanner::getNodesToExpand( const PONode::ptr & node ) const
     {
       for( auto c : node->bestFamily() )
       {
-//        if( ! c->isExpanded() ) // this part of code can be safely commented because it does n'tbring anything ( the recursiondoes it anyway )
-//        {
-//          nodes.append( c );
-//        }
-//        else
-//        {
-          nodes.append( getNodesToExpand( c ) );
-//        }
+        nodes.append( getNodesToExpand( c ) );
       }
     }
   }

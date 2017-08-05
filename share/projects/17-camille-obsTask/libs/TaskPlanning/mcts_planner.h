@@ -15,9 +15,15 @@ namespace tp
 
 class MCTSPlanner : public TaskPlanner
 {
+  enum PolicySearchStateType
+  {
+    POLICY_INITIALIZATION = 0,
+    POLICY_OPTIMIZATION,     // a sucessfull solution as been integrated ( not infinite cost )
+    TERMINATED
+  };
+
 public:
   MCTSPlanner();
-  //virtual ~TaskPlanner();
 
   // modifiers
   void setFol( const std::string & folDescription ) override;
@@ -26,7 +32,8 @@ public:
 
   // getters
   Policy::ptr getPolicy() const override;
-  bool      terminated () const override { return terminated_; } //
+  MotionPlanningOrder getPlanningOrder() const override;
+  bool      terminated () const override { return searchState_ == TERMINATED; }
 
 private:
   bool solved() const { return root_->isSolved(); }
@@ -36,8 +43,8 @@ private:
   void solveFirstTime();
   void generateAlternative();
 
-  void initFringes();
-  void switchBackToBackup();
+  void reinitPolicyFringe();
+  void switchBackToPreviousPolicy();
 
   PONode::L getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
   PONode::L getNodesToExpand( const PONode::ptr & ) const;
@@ -50,15 +57,15 @@ private:
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   arr bs_;
 
-  PONode::ptr root_; // root and "current" node
+  PONode::ptr root_;
 
   std::list< Policy::ptr > solutions_;
 
   // alternative generation
-  std::set< PONode::L > currentBestPolicyFringe;
+  std::set< PONode::L > referencePolicyFringe_; // fringe of the last fully instanciated policy (geometric and symbolic)
   PONode::L             nextFamilyBackup_;
 
-  bool terminated_; // not possible to generate alternatives, fringe is empty!
+  PolicySearchStateType searchState_; // terminated is set to true if it is not possible to generate alternatives, fringe is empty!
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

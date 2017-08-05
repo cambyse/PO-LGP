@@ -23,29 +23,11 @@
 
 namespace tp
 {
-// sort nodes so that the ones with the biggest rewards are first
-//struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
-//{
-//  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
-//  {
-//    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
-//  }
-//};
-
-//class PolicyVisualizer
-//{
-//public:
-//  PolicyVisualizer( const Policy::ptr & policy, const std::string & name );
-
-//private:
-//  std::vector< std::shared_ptr< OrsPathViewer > > views_;
-//};
 
 class PolicyBuilder
 {
 public:
   PolicyBuilder( PONode::ptr root );
-  //virtual ~PolicyBuilder();
 
   Policy::ptr getPolicy() const;
 

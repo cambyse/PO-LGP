@@ -26,5 +26,6 @@ public:
     virtual void solve() = 0;
     virtual void integrate( const Policy::ptr & policy ) = 0;
     virtual Policy::ptr getPolicy() const = 0;
+    virtual MotionPlanningOrder getPlanningOrder() const = 0;
     virtual bool terminated() const = 0;
 };

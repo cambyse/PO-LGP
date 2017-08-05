@@ -19,7 +19,7 @@ public:
   void setKin( const std::string & kinDescription ) override;
 
   // informers
-  void solveAndInform( Policy::ptr & ) override;
+  void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) override;
 
   // display
   void display( const Policy::ptr &, double ) override;

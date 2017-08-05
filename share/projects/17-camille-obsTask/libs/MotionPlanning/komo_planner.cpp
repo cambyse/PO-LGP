@@ -337,8 +337,17 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
   }
 }
 
-void KOMOPlanner::solveAndInform( Policy::ptr & policy )
+void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & policy )
 {
+  CHECK( po.policyId() == policy->id(), "id of the policy and the planning orders are not consistent" );
+
+  po.getParam( "type" );
+
+  if( po.getParam( "type" ) != "jointPath" )
+  {
+    CHECK( false, "not implemented yet!" );
+  }
+
   clearLastPolicyOptimization();
 
   // solve on pose level
@@ -400,8 +409,9 @@ void KOMOPlanner::solveAndInform( Policy::ptr & policy )
 void KOMOPlanner::display( const Policy::ptr & policy, double sec )
 {
   Policy::ptr tmp( policy );
+  MotionPlanningOrder po( policy->id() );
   // resolve since this planner doesn't store paths
-  solveAndInform( tmp );
+  solveAndInform( po, tmp );
 
   // retrieve trajectories
   mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;

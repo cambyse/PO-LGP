@@ -14,16 +14,22 @@
 
 #pragma once
 
-#include <map>
 #include <policy.h>
 
-class MotionPlanner
+class PolicyPrinter
 {
 public:
-    typedef std::shared_ptr< MotionPlanner > ptr;
+  PolicyPrinter( std::ostream & ss )
+    : ss_( ss )
+  {
 
-public:
-    virtual void setKin( const std::string & kinDescription ) = 0; // specify start kinematics
-    virtual void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) = 0;
-    virtual void display( const Policy::ptr &, double sec = 30 ) = 0;
+  }
+
+  void print( const Policy::ptr & );
+
+private:
+  void printFromNode( const PolicyNode::ptr & node );
+
+private:
+  std::ostream & ss_;
 };

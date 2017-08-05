@@ -42,14 +42,6 @@ PolicyBuilder::PolicyBuilder( PONode::ptr root )
   process( root );
 }
 
-//PolicyBuilder::~PolicyBuilder()
-//{
-//  for( auto pair : PO2Policy_ )
-//  {
-//    delete pair.first;
-//  }
-//}
-
 void PolicyBuilder::process( PONode::ptr node )
 {
   PolicyNode::ptr policyNode = std::make_shared< PolicyNode >();

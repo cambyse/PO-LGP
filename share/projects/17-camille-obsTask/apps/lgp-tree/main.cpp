@@ -2,6 +2,7 @@
 #include <list>
 
 #include <policy.hpp>
+#include <policy_printer.h>
 
 #include <policy_builder.h>
 
@@ -14,10 +15,7 @@
 
 
 /*
-back track, take history into account?
 sort nodes before expanding?
-back track result of pose computation when one of the pose is not possible or generally different between worlds!
-less rollouts?
 dot -Tpng -o policy.png policy.gv
 
 test a logic : mlr/share/example/DomainPlayer
@@ -28,13 +26,9 @@ QUESTIONS  :
 - kinematic switches ( commented part of the code ) in solvePath, solvePose, etc..
 
 TODO :
-1/ decision if optimization succeded, how? reactivate for seq and paths!!    | 1
 => constraints are difficult to evaluate with collision avoidance, mybe need a refactoring as in 3/
 2/ symbolic search, use costs from other levels? -> How to inform?           | 1
-3/ refactoring geometric levels, backtrack can be common?                    | 2
 5/ collision avoidance, rule for proxy ?, get out of a collision             | 2
-6/ activation / deactivation of tasks                                        | 2
-7/ correct memory management                                                 | 2
 */
 //===========================================================================
 
@@ -72,8 +66,7 @@ void plan()
     // TASK PLANNING
     tp->solve();
     auto policy = tp->getPolicy();
-
-    std::cout << "Optimizing motions for policy " << i << std::endl;
+    auto po     = tp->getPlanningOrder();
 
     // save policy
     {
@@ -90,8 +83,10 @@ void plan()
       generatePngImage( name );
     }
 
+    std::cout << "Optimizing motions for policy " << i << std::endl;
+
     // MOTION PLANNING
-    mp->solveAndInform( policy );
+    mp->solveAndInform( po, policy );
 
     // print resulting cost
     std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
@@ -100,53 +95,6 @@ void plan()
   }
 
   mp->display( tp->getPolicy(), 30 );
-
-  /*
-  // store policy and display it
-  auto currentBestPolicy = C.getPolicy();
-  policies.insert( currentBestPolicy );
-  //
-
-  /////// 2 - Policy Optimization ////////
-  uint maxAlternatives = 0;
-  for( auto alternatives = 0; ! C.isPolicyFringeEmpty() && alternatives < maxAlternatives; alternatives++ )
-  {
-   C.generateAlternativeSymbolicPolicy();
-
-//    {
-//      // save search tree
-//      std::stringstream namess;
-//      namess << "search-alternative-" << C.alternativeNumber() << ".gv";
-//      C.printSearchTree( namess.str() );
-//    }
-    C.solveGeometrically();
-
-    {
-    // save policy
-    std::stringstream namess;
-    namess << "policy-alternative-" << alternatives << ".gv";
-    C.printPolicy( namess.str() );
-    }
-
-    // store policy and display it
-    auto altPolicy = C.getPolicy();
-    policies.insert( altPolicy );
-
-    if( altPolicy->cost() > currentBestPolicy->cost() )
-    {
-      C.revertToPreviousPolicy();
-    }
-    else
-    {
-      currentBestPolicy = altPolicy;
-    }
-  }
-
-  /////// 3 - Display ////////
-  PolicyVisualizer viz( *policies.begin(), "nominal" );
-
-  //C.updateDisplay( WorldID( -1 ), false, false, true );
-  mlr::wait( 3000, true );*/
 }
 
 //===========================================================================

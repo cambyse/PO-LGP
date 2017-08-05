@@ -17,8 +17,27 @@
 #include <memory>
 #include <list>
 #include <set>
+#include <map>
 
 #include <Core/array.h>
+
+class MotionPlanningOrder
+{
+public:
+  MotionPlanningOrder( uint policyId )
+    : policyId_( policyId )
+  {
+
+  }
+
+  uint policyId() const { return policyId_; }
+  std::string getParam( const std::string & paramName ) const { CHECK( params_.find( paramName ) != params_.end(), "parameter doesn't exist!" ); return params_.find( paramName )->second; }
+  void setParam( const std::string & paramName, const std::string & value ) { params_[ paramName ] = value; }
+
+private:
+  std::map< std::string, std::string > params_;  // used to store arbitrary info usefull for the motion palnning of a given policy
+  uint policyId_;
+};
 
 class PolicyNode
 {
@@ -103,6 +122,7 @@ public:
   void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
+  uint id() const { return id_; }
   uint N() const { return N_; }
   PolicyNode::ptr root() const { return root_; }
   PolicyNode::L leafs()  const { return leafs_; }
@@ -110,44 +130,20 @@ public:
   bool feasible()        const { return cost_ < std::numeric_limits< double >::infinity(); }
 
 private:
-  uint N_;
-  PolicyNode::ptr root_;
-  PolicyNode::L leafs_;
+  uint id_;                 // identifier of the policy, meant to be unique
+  uint N_;                  // size of the belief state
+  PolicyNode::ptr root_;    // start belief state
+  PolicyNode::L leafs_;     // terminal belief states
 
   // cost
   double cost_;
   enum StatusType status_;
 };
 
-class PolicyPrinter
-{
-public:
-  PolicyPrinter( std::ostream & ss )
-    : ss_( ss )
-  {
-
-  }
-
-  void print( const Policy::ptr & );
-
-private:
-  void printFromNode( const PolicyNode::ptr & node );
-
-private:
-  std::ostream & ss_;
-};
-
 // utility free functions
 PolicyNode::L getPathTo( const PolicyNode::ptr & node );
 
 // sort nodes so that the ones with the biggest rewards are first
-//struct PolicyCompare : public std::binary_function<Policy::ptr, Policy::ptr, bool>
-//{
-//  bool operator()( Policy::ptr lhs, Policy::ptr rhs) const
-//  {
-//    return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
-//  }
-//};
 bool policyCompare( Policy::ptr lhs, Policy::ptr rhs );
 
 
