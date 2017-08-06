@@ -118,6 +118,8 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
 
     if((p->a==i_ && p->b==j_) || (p->a==j_ && p->b==i_))
     {
+      //std::cout << "active proxy:" << G.shapes( p->a )->name << "-" << G.shapes( p->b )->name << std::endl;
+
       mlr::Shape *a = G.shapes(p->a);
       mlr::Shape *b = G.shapes(p->b);
 
@@ -151,7 +153,7 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
       else
       {
         // collision already!
-        //int a = 0; a++;
+        int a = 0; a++;
       }
 
       //std::cout << p->d << " " << d1 << " " << d2 << std::endl;

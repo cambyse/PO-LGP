@@ -410,6 +410,7 @@ void KOMOPlanner::display( const Policy::ptr & policy, double sec )
 {
   Policy::ptr tmp( policy );
   MotionPlanningOrder po( policy->id() );
+  po.setParam( "type", "jointPath" );
   // resolve since this planner doesn't store paths
   solveAndInform( po, tmp );
 
