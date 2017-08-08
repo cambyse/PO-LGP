@@ -87,7 +87,7 @@ void testToolSlide(){
   komo.deactivateCollisions("coll_hand_r", "stick");
   komo.activateCollisions("obj1", "stick");
 
-  komo.setGrasp(1., "pr2R", "stick", 0);
+  komo.setGrasp(1., "pr2R", "stick_handle", 0);
 
 //  komo.setSlowAround(1., .1);
   komo.setKS_slider(2., true, "obj1", "slider1", "table");
@@ -102,7 +102,7 @@ void testToolSlide(){
   komo.setTask(2., 4., new TaskMap_Default(vecAlignTMT, W, "stick_eff", Vector_z, NULL, Vector_z), OT_sumOfSqr, {1.}, 1e2);
   komo.setTask(2., 4., new TaskMap_Default(posDiffTMT, W, "stick_eff", NoVector, "slider1b", {.12, .0, .0}), OT_sumOfSqr, {}, 1e2);
 
-//  komo.setTask(0., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e5);
+  //  komo.setTask(0., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e5);
 
   komo.reset();
   komo.run();
