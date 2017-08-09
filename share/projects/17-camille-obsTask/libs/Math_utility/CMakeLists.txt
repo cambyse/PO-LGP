@@ -29,11 +29,4 @@ target_include_directories(${project_name} PUBLIC ".")
 target_link_libraries(
  ${project_name}
  Core
- #Motion
- Geo
- Kin
- Gui
- Optim
- KOMO
- Math_utility
  )

@@ -30,6 +30,7 @@ target_link_libraries(
  Geo
  Gui
  Optim
+ POMTP_interfaces
  ObservationTasks
  CollisionAvoidance
  )

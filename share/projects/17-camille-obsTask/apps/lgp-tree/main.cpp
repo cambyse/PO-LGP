@@ -1,7 +1,7 @@
 #include <functional>
 #include <list>
 
-#include <policy.hpp>
+#include <policy.h>
 #include <policy_printer.h>
 
 #include <policy_builder.h>
@@ -49,6 +49,21 @@ static void generatePngImage( const std::string & name )
   system( ss.str().c_str() );
 }
 
+static void savePolicyToFile( const Policy::ptr & policy )
+{
+  std::stringstream namess;
+  namess << "policy-" << policy->id() << ".gv";
+  auto name = namess.str();
+
+  std::ofstream file;
+  file.open( name );
+  PolicyPrinter printer( file );
+  printer.print( policy );
+  file.close();
+
+  generatePngImage( name );
+}
+
 //===========================================================================
 
 void plan()
@@ -61,29 +76,21 @@ void plan()
   tp->setFol( "LGP-obs-container-fol-place-pick-2.g" );
   mp->setKin( "LGP-obs-container-kin.g" );
 
-  for( uint i = 0; i < 50 && ! tp->terminated(); ++i )
+  for( uint i = 0; ! tp->terminated() && i < 30 ; ++i )
   {
+    std::cout << "Task planning to generate " << i << "th policy" << std::endl;
+
     // TASK PLANNING
     tp->solve();
     auto policy = tp->getPolicy();
     auto po     = tp->getPlanningOrder();
 
     // save policy
-    {
-      std::stringstream namess;
-      namess << "policy-" << i << ".gv";
-      auto name = namess.str();
+    savePolicyToFile( policy );
 
-      std::ofstream file;
-      file.open( name );
-      PolicyPrinter printer( file );
-      printer.print( policy );
-      file.close();
 
-      generatePngImage( name );
-    }
 
-    std::cout << "Optimizing motions for policy " << i << std::endl;
+    std::cout << "Motion Planning for policy " << i << std::endl;
 
     // MOTION PLANNING
     mp->solveAndInform( po, policy );
@@ -94,7 +101,7 @@ void plan()
     tp->integrate( policy );
   }
 
-  mp->display( tp->getPolicy(), 30 );
+  mp->display( tp->getPolicy(), 3000 );
 }
 
 //===========================================================================

@@ -1,34 +1,6 @@
 #include <observation_tasks.h>
 
-//===========================================================================
-
-static double norm2( const arr & x )
-{
-  return sqrt( ( ( ~ x ) * x )( 0 ) );
-}
-
-static arr Jnorm( const arr & x )
-{
-  arr J( 1, x.N );
-
-  // compute sqrNorm
-  double norm = norm2( x );
-
-  // compute each jacobian element
-  if( norm > 0.000001 )
-  {
-    for( auto i = 0; i < x.N; ++i )
-    {
-      J( 0, i ) = x( i ) / norm ;
-    }
-  }
-  else
-  {
-    J.setZero();
-  }
-
-  return J;
-}
+#include <math_utility.h>
 
 //===========================================================================
 
@@ -100,11 +72,15 @@ void HeadGetSight::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 
   // build u : vector between head and object point
   arr u = objectPosition_ - headPosition;
-  double normU = norm2( u );
   arr Ju = - headJPosition;
+
+  /*double normU = norm2( u );
   arr JnormU = Jnorm( u );  // get Jacobian of the norm operator
   arr u1 = u / normU;
   arr Ju1 = ( Ju * normU - u * JnormU * Ju ) / ( normU * normU ); // jacobian of u normalized
+  */
+  arr u1, Ju1;
+  u1 = normalizedX( u, Ju, Ju1 );
 
   // build v : orientation vector of the head
   arr v1 = headViewingDirection;

@@ -34,15 +34,14 @@ add_executable(${project_name} ${PROJECT_SRC})
 target_link_libraries(
  ${project_name}
  Core
- #Motion
  Geo
  Gui
  Optim
  Logic
  MCTS
  KOMO
+ POMTP_interfaces
  ObservationTasks
- POLGP
  CollisionAvoidance
  TaskPlanning
  MotionPlanning

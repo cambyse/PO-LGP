@@ -14,19 +14,16 @@
 
 #pragma once
 
-#include <policy.h>
+#include <Core/array.h>
 
-class TaskPlanner
-{
-public:
-    typedef std::shared_ptr< TaskPlanner > ptr;
+using namespace std;
 
-public:
-    virtual void setFol( const std::string & folDescription ) = 0;
-    virtual void solve() = 0;
-    virtual void integrate( const Policy::ptr & policy ) = 0;
+double norm2( const arr & x );
 
-    virtual bool terminated() const = 0;
-    virtual Policy::ptr getPolicy() const = 0;
-    virtual MotionPlanningOrder getPlanningOrder() const = 0;
-};
+arr Jnorm( const arr & x );
+
+double dot( const arr & a, const arr & b );
+
+arr normalizedX( const arr & x, const arr & Jx,  arr & Jx1 );
+
+

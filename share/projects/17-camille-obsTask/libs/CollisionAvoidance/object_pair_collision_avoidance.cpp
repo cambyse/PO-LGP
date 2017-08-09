@@ -14,51 +14,69 @@
 
 #include <object_pair_collision_avoidance.h>
 
-static double norm2( const arr & x )
+//-----VelocityDirection----------------//
+
+void VelocityDirection::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
 {
-  return sqrt( ( ( ~ x ) * x )( 0 ) );
+
 }
 
-static arr Jnorm( const arr & x )
+void VelocityDirection::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
 {
-  arr J( 1, x.N );
+  auto G0 = G.elem(0);
+  auto G1 = G.elem(1);
 
-  // compute sqrNorm
-  double norm = norm2( x );
+//  static bool Watch = false;
+//  if( ! Watch )
+//  {
+//    G0->watch();
+//    G1->watch();
+//    Watch = true;
+//  }
 
-  // compute each jacobian element
-  if( norm > 0.000001 )
-  {
-    for( auto i = 0; i < x.N; ++i )
-      J( 0, i ) = x( i ) / norm ;
-  }
-  else
-  {
-    J.setZero();
-  }
+  arr tmp_y = zeros( 1 );
+  arr tmp_J = zeros( 1, G0->q.N );
 
-  return J;
+  auto body0 = G0->getBodyByName( bobyName_ );
+
+  arr p0, jP0;
+  G0->kinematicsPos( p0, jP0, body0, mlr::Vector( 0, 0, 0 ) );
+
+  auto body1 = G1->getBodyByName( bobyName_ );
+
+  arr p1, jP1;
+  G1->kinematicsPos( p1, jP1, body1, mlr::Vector( 0, 0, 0 ) );
+
+  arr v =  ( p1 - p0 ) / tau;
+  arr Jv = ( jP1 - jP0 ) / tau;
+
+  //std::cout << "v:" << v << std::endl;
+
+  //std::cout << "dir_:" << dir_ << std::endl;
+
+  arr v1, Jv1;
+  v1 = normalizedX( v, Jv, Jv1 );
+
+//  static int n = 0;
+//  n++;
+//  if( n % 10 == 0 )
+//  {
+//    std::cout << "t:" << t << std::endl;
+//    std::cout << "bodyV:" << v << std::endl;
+//    std::cout << "bodyV1:" << bodyV1 << std::endl;
+//  }
+
+  double dot_product = dot( v1, dir_ );
+
+  double cost = ( 1 - dot_product );
+
+  tmp_y( 0 ) = cost;
+  tmp_J.setMatrixBlock( - ( ~ dir_ ) * Jv1, 0, 0 );
+
+  // commit results
+  y = tmp_y;
+  if(&J) J = tmp_J;
 }
-
-static double dot( const arr & a, const arr & b )
-{
-  CHECK( a.d0 == b.d0 && a.d1 == 0 && b.d1 == 0, "wrong dimensions, scalar product is implemented here for vectors only" );
-
-  double scalar_product = 0;
-  for( auto i = 0; i < a.N; ++i )
-  {
-    scalar_product += a( i ) * b( i );
-  }
-
-  return scalar_product;
-}
-
-//static arr Jdot( const arr & x )
-//{
-//  // Jacobian of the scalar with x
-//  arr J( 1, x.N );
-
-//}
 
 //-----AxisAlignment----------------//
 

@@ -14,10 +14,34 @@
 
 #pragma once
 
+#include <math_utility.h>
+
 #include <Kin/taskMap.h>
 #include <Kin/taskMaps.h>
 
 using namespace std;
+
+struct VelocityDirection:TaskMap
+{
+  VelocityDirection( const char* bobyName, const arr & dir )
+    : bobyName_     ( bobyName )
+    , dir_( dir )
+  {
+
+  }
+
+  void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t );
+  void phi(arr& y, arr& J, const WorldL& G, double tau, int t);
+
+  uint dim_phi( const mlr::KinematicWorld& G ) { return 0; }
+  uint dim_phi(const WorldL& Ks, int t){ return 1; }
+
+  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("MovementDirection"); }
+
+  private:
+    const mlr::String bobyName_;
+    const arr dir_;
+};
 
 struct AxisAlignment:TaskMap
 {

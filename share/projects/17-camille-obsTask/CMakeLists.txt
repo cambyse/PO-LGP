@@ -8,7 +8,7 @@ add_definitions(-std=c++11)
 
 add_subdirectory("libs/ObservationTasks")
 add_subdirectory("libs/CollisionAvoidance")
-add_subdirectory("libs/POLGP")
+add_subdirectory("libs/Math_utility")
 add_subdirectory("libs/TaskPlanning")
 add_subdirectory("libs/MotionPlanning")
 add_subdirectory("libs/POMTP_interfaces")
