@@ -25,4 +25,4 @@ shape baxterL (left_wrist) { rel=<T d(-90 0 1 0) d(-90 0 0 1) t(0 0 -.26)> type=
 body nostick {}
 joint (table1 nostick) { from=<T t(0 0 .02)> to=<T t(0 -.7 .02) d(90 0 0 1)> type=JT_rigid}
 shape stick(nostick) { type=9 size=[.8 .025 .04 .01] color=[1 0 0] contact }
-shape stickTip (nostick) { rel=<T t(-.4 0 0) d(-90 0 0 1)> type=9 size=[.2 .026 .04 0.01] color=[1 1 0] }
+shape stickTip (nostick) { rel=<T t(-.4 .1 0) d(-90 0 0 1)> type=9 size=[.2 .026 .04 0.01] color=[1 1 0] }
