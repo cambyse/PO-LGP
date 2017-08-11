@@ -1,0 +1,14 @@
+Include = '../../data/baxter_model/baxter.ors'
+Include = 'slider.g'
+
+### ball
+
+body redBall { size=[.06 .06 .06 .02] color=[1 0 0] type=ST_ssBox contact }
+joint (table1 redBall) { from=<T t(0 0 .02)> to=<T t(.5 1. .03)> type=JT_rigid }
+
+### tools
+
+body nostick {}
+joint (table1 nostick) { from=<T t(0 0 .02)> to=<T t(-.2 -.7 .02)> type=JT_rigid}
+shape stick(nostick) { type=9 size=[.8 .025 .04 .01] color=[.6 .3 0] contact }
+shape stickTip (nostick) { rel=<T t(.4 .1 0) d(90 0 0 1)> type=9 size=[.2 .026 .04 0.01] color=[.6 .3 0] }
