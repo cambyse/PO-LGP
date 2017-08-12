@@ -21,9 +21,9 @@
 
 using namespace std;
 
-struct VelocityDirection:TaskMap
+struct VerticalVelocity:TaskMap
 {
-  VelocityDirection( const char* bobyName, const arr & dir )
+  VerticalVelocity( const char* bobyName, const arr & dir )
     : bobyName_     ( bobyName )
     , dir_( dir )
   {
@@ -31,10 +31,8 @@ struct VelocityDirection:TaskMap
   }
 
   void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t );
-  void phi(arr& y, arr& J, const WorldL& G, double tau, int t);
 
-  uint dim_phi( const mlr::KinematicWorld& G ) { return 0; }
-  uint dim_phi(const WorldL& Ks, int t){ return 1; }
+  uint dim_phi( const mlr::KinematicWorld& G ) { return 2; }
 
   mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("MovementDirection"); }
 
@@ -147,6 +145,11 @@ struct ShapePairCollisionConstraint:PairCollisionConstraint
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);
+
+  void phiNoCollision( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
+
+  void phiCollision( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
+
 
   mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("_PairCollisionConstraint"); }
 

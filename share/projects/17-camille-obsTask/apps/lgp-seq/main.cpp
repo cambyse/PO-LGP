@@ -339,11 +339,27 @@ void move_1(){
       /*komo.setTask( 2.0, 2.4, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,-.15}, 1e1, 1);
       komo.setTask( 2.6, 3.0, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,.15},  1e1, 1);*/
 
-    komo.setTask(2.0, 2.5, new TaskMap_Default(posTMT, komo.world, "handL"), OT_eq, {0.,0.,-.1}, 1e1, 1); //move down
-    komo.setTask(2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL"), OT_eq, {0.,0.,.1}, 1e1, 1); // move up
+//    komo.setTask(2.0, 2.5, new TaskMap_Default(posTMT, komo.world, "handL"), OT_eq, {0.,0.,-.1}, 1e1, 1); //move down
+//    komo.setTask(2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL"), OT_eq, {0.,0.,.1}, 1e1, 1); // move up
 
-     // komo.setTask( 2.0, 2.5, new VelocityDirection("handL", { 0.0,0.0, -1.0 } ), OT_eq, NoArr, 1e1 );
-    //komo.setTask( 2.7, 3.0, new VelocityDirection("handL", { 0.0,0.0,  1.0 } ), OT_eq, NoArr, 1e1, 0);
+      // approach
+      komo.setTask( 2.0, 2.25, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "target", {0.,0.,0.4}), OT_sumOfSqr, NoArr, 1e2);
+      komo.setTask( 2.25, 5.0, new VerticalVelocity("handL", { 0.0,0.0 } ), OT_eq, NoArr, 1e1, 1 );
+
+      //disconnect object from container
+      komo.setKinematicSwitch( 2.5/*8.0*/, true, "delete", NULL, "target" );
+      //connect graspRef with object
+      komo.setKinematicSwitch( 2.5/*8.0*/, true, "ballZero", "handL", "target" );
+      // null velocity
+      //komo.setTask( 2.5, 2.7, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_eq, {0.,0.,0.},  1e1, 1);
+
+
+      // escape
+      //komo.setTask( 2.7, 3.0, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "target", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
+
+
+
+      //komo.setTask( 2.7, 3.0, new VelocityDirection("handL", { 0.0,0.0,  1.0 } ), OT_eq, NoArr, 1e1, 0);
 
       //komo.setTask( 2.0, 2.25, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
       //komo.setTask( 2.6, 3.0, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
@@ -353,10 +369,7 @@ void move_1(){
       komo.setTask( 2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "target", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
       komo.setTask( 2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,.1}, 1e1, 1);
       */
-      //disconnect object from table
-      komo.setKinematicSwitch( 2.5/*8.0*/, true, "delete", NULL, "target" );
-      //connect graspRef with object
-      komo.setKinematicSwitch( 2.5/*8.0*/, true, "ballZero", "handL", "target" );
+
       //komo.setKinematicSwitch( time, true, "addRigid", "handR", "target", NoTransformation, NoTransformation );
 
 
@@ -368,12 +381,12 @@ void move_1(){
 //       komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "upWristL", 0.05 ), OT_ineq, NoArr, 1e2 );
 //      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom", "upWristL",0.05 ), OT_ineq /*OT_ineq*/, NoArr, 1e2 );
 
-      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "handL", 0.02 ), OT_ineq, NoArr, 1e2 );
-      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_left",  "handL",  0.02  ),OT_ineq /*OT_ineq*/, NoArr, 1e2 );
-      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "handL", 0.02 ), OT_ineq, NoArr, 1e2 );
-     // komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom","handL",0.02 ), OT_ineq /*OT_ineq*/, NoArr, 1e2 );
+//      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "handL", 0.02 ), OT_ineq, NoArr, 1e2 );
+//      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_left",  "handL",  0.02  ),OT_ineq, NoArr, 1e2 );
+//      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "handL", 0.02 ), OT_ineq, NoArr, 1e2 );
+//      //komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_bottom","handL",0.02 ), OT_ineq, NoArr, 1e2 );*/
 
-     // komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "tableC","handL",0.02 ), OT_ineq /*OT_ineq*/, NoArr, 1e2 );
+      //komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "tableC","handL",0.02 ), OT_ineq /*OT_ineq*/, NoArr, 1e2 );
   }
 
     /////

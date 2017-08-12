@@ -76,7 +76,7 @@ void plan()
   tp->setFol( "LGP-obs-container-fol-place-pick-2.g" );
   mp->setKin( "LGP-obs-container-kin.g" );
 
-  for( uint i = 0; ! tp->terminated() && i < 30 ; ++i )
+  for( uint i = 0; ! tp->terminated() && i < 50 ; ++i )
   {
     std::cout << "Task planning to generate " << i << "th policy" << std::endl;
 
@@ -87,8 +87,6 @@ void plan()
 
     // save policy
     savePolicyToFile( policy );
-
-
 
     std::cout << "Motion Planning for policy " << i << std::endl;
 

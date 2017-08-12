@@ -14,66 +14,30 @@
 
 #include <object_pair_collision_avoidance.h>
 
-//-----VelocityDirection----------------//
+//-----VerticalVelocity----------------//
 
-void VelocityDirection::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
+void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
 {
+  arr tmp_y = zeros( 2 );
+  arr tmp_J = zeros( 2, G.q.N );
 
-}
+  auto body = G.getBodyByName( bobyName_ );
+  arr p, Jp;
+  G.kinematicsPos( p, Jp, body, mlr::Vector( 0, 0, 0 ) );
 
-void VelocityDirection::phi(arr& y, arr& J, const WorldL& G, double tau, int t)
-{
-  auto G0 = G.elem(0);
-  auto G1 = G.elem(1);
-
-//  static bool Watch = false;
-//  if( ! Watch )
-//  {
-//    G0->watch();
-//    G1->watch();
-//    Watch = true;
-//  }
-
-  arr tmp_y = zeros( 1 );
-  arr tmp_J = zeros( 1, G0->q.N );
-
-  auto body0 = G0->getBodyByName( bobyName_ );
-
-  arr p0, jP0;
-  G0->kinematicsPos( p0, jP0, body0, mlr::Vector( 0, 0, 0 ) );
-
-  auto body1 = G1->getBodyByName( bobyName_ );
-
-  arr p1, jP1;
-  G1->kinematicsPos( p1, jP1, body1, mlr::Vector( 0, 0, 0 ) );
-
-  arr v =  ( p1 - p0 ) / tau;
-  arr Jv = ( jP1 - jP0 ) / tau;
-
-  //std::cout << "v:" << v << std::endl;
-
-  //std::cout << "dir_:" << dir_ << std::endl;
-
-  arr v1, Jv1;
-  v1 = normalizedX( v, Jv, Jv1 );
-
-//  static int n = 0;
-//  n++;
-//  if( n % 10 == 0 )
-//  {
-//    std::cout << "t:" << t << std::endl;
-//    std::cout << "bodyV:" << v << std::endl;
-//    std::cout << "bodyV1:" << bodyV1 << std::endl;
-//  }
-
-  double dot_product = dot( v1, dir_ );
-
-  double cost = ( 1 - dot_product );
-
-  tmp_y( 0 ) = cost;
-  tmp_J.setMatrixBlock( - ( ~ dir_ ) * Jv1, 0, 0 );
 
   // commit results
+  const double w = 10;
+  tmp_y( 0 ) = w * p( 0 );
+  tmp_y( 1 ) = w * p( 1 );
+
+  tmp_J.setMatrixBlock( w * Jp.row( 0 ), 0, 0 );
+  tmp_J.setMatrixBlock( w * Jp.row( 1 ), 1, 0 );
+
+
+  //tmp_J.setMatrixBlock( Jp, 0, 0 );
+
+  //  // commit results
   y = tmp_y;
   if(&J) J = tmp_J;
 }
@@ -137,45 +101,15 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
     if((p->a==i_ && p->b==j_) || (p->a==j_ && p->b==i_))
     {
       //std::cout << "active proxy:" << G.shapes( p->a )->name << "-" << G.shapes( p->b )->name << std::endl;
-
-      mlr::Shape *a = G.shapes(p->a);
-      mlr::Shape *b = G.shapes(p->b);
-
-      auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
-      auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
-
-      auto arel_2=a->X.rot/(p->posA-a->X.pos);
-      auto brel_2=b->X.rot/(p->posB-b->X.pos);
-
-      if( arel != arel_2 || brel != brel_2 )
-      {
-        int a = 0;
-      }
-
-      arr posA;
-      arr posB;
-      arr JposA;
-      arr JposB;
-      G.kinematicsPos(posA, JposA, a->body, arel);
-      G.kinematicsPos(posB, JposB, b->body, brel);
-
-      double d = norm2( posA - posB );
-      arr JnormD = Jnorm( posA - posB );
-
       if( p->d > 0 )
       {
-        const double w = 1;
-        tmp_y( 0 ) = w * ( margin - d );
-        tmp_J = w * ( - JnormD * ( JposA - JposB ) );
+        phiNoCollision( tmp_y, tmp_J, G, p );
       }
       else
       {
         // collision already!
-        int a = 0; a++;
+        phiCollision( tmp_y, tmp_J, G, p );
       }
-
-      //std::cout << p->d << " " << d1 << " " << d2 << std::endl;
-
       break;
     }
   }
@@ -183,5 +117,51 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
   // commit results
   y = tmp_y;
   if(&J) J = tmp_J;
+}
+
+void ShapePairCollisionConstraint::phiNoCollision( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
+{
+  mlr::Shape *a = G.shapes(p->a);
+  mlr::Shape *b = G.shapes(p->b);
+
+  auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
+  auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
+
+  arr posA;
+  arr posB;
+  arr JposA;
+  arr JposB;
+  G.kinematicsPos(posA, JposA, a->body, arel);
+  G.kinematicsPos(posB, JposB, b->body, brel);
+
+  double d = norm2( posA - posB );
+  arr JnormD = Jnorm( posA - posB );
+
+  const double w = 10;
+  y( 0 ) = w * ( margin - d );
+  J = w * ( - JnormD * ( JposA - JposB ) );
+}
+
+void ShapePairCollisionConstraint::phiCollision( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
+{
+//  mlr::Shape *a = G.shapes(p->a);
+//  mlr::Shape *b = G.shapes(p->b);
+
+//  auto arel=a->body->X.rot/(a->X.pos-a->body->X.pos);
+//  auto brel=b->body->X.rot/(b->X.pos-b->body->X.pos);
+
+//  arr posA;
+//  arr posB;
+//  arr JposA;
+//  arr JposB;
+//  G.kinematicsPos(posA, JposA, a->body, arel);
+//  G.kinematicsPos(posB, JposB, b->body, brel);
+
+//  double d = norm2( posA - posB );
+//  arr JnormD = Jnorm( posA - posB );
+
+//  const double w = 10;
+//  y( 0 ) = w * ( margin /*- d*/ );
+//  J = w * ( - JnormD * ( JposA - JposB ) );
 }
 
