@@ -9,7 +9,10 @@ xmlData = etree.parse(inFile)
 def writeShape(link):
     elem = link.find("origin")
     if elem is not None:
-        print 'rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'], elem.attrib['rpy']),
+        if elem.find("rby") is not None:
+           print 'rel=<T t(%s) E(%s)>' % (elem.attrib['xyz'], elem.attrib['rpy']),
+        else:
+           print 'rel=<T t(%s)>' % elem.attrib['xyz'],
 
     elem = link.find("geometry/box")
     if elem is not None:
@@ -56,14 +59,14 @@ for link in links:
     # visual shape
     visual = link.find("visual")
     if visual is not None:
-        print 'shape visual %s_1 (%s) {' % (name, name)
+        print 'shape visual %s_1 (%s) {\n  ' % (name, name),
         writeShape(visual)
         print '}\n', # end of shape
 
     # collision shape
     collision = link.find("collision")
     if collision is not None:
-        print 'shape collision %s_0 (%s) {' % (name, name)
+        print 'shape collision %s_0 (%s) {\n  ' % (name, name),
         writeShape(collision)
         print '}\n', # end of shape
 
@@ -72,41 +75,41 @@ joints = xmlData.findall("/joint")
 for joint in joints:
     name = joint.attrib['name']
     if joint.find("child") is not None:
-        print 'joint %s (%s %s) {' % (name,
+        print 'joint %s (%s %s) {\n  ' % (name,
                                       joint.find("parent").attrib['link'],
                                       joint.find("child").attrib['link']),
 
         # figure out joint type
         att = joint.attrib.get('type')
         if att in ["revolute", "continuous"]:
-            print ' type=JT_hingeX',
+            print 'type=JT_hingeX',
         if att == "prismatic":
-            print ' type=JT_transX',
+            print 'type=JT_transX',
         if att == "fixed":
-            print ' type=JT_rigid',
+            print 'type=JT_rigid',
 
         elem = joint.find("mimic")
         if elem is not None:
-            print ' mimic=%s' % elem.attrib['joint'],
+            print 'mimic=%s' % elem.attrib['joint'],
 
         elem = joint.find("axis")
         if elem is not None:
-            print ' axis=[%s]' % elem.attrib['xyz'],
+            print 'axis=[%s]' % elem.attrib['xyz'],
 
         elem = joint.find("origin")
         if elem is not None:
             att = elem.attrib.get('rpy')
             if att is not None:
-                print ' A=<T t(%s) E(%s)>' % (elem.attrib['xyz'], att),
+                print 'A=<T t(%s) E(%s)>' % (elem.attrib['xyz'], att),
             else:
-                print ' A=<T t(%s)>' % (elem.attrib['xyz']),
+                print 'A=<T t(%s)>' % (elem.attrib['xyz']),
 
         elem = joint.find("safety_controller")
         if elem is not None:
             lo = elem.attrib.get('soft_lower_limit')
             up = elem.attrib.get('soft_upper_limit')
             if lo is not None:
-                print ' limits=[%s %s]' % (lo, up),
+                print 'limits=[%s %s]' % (lo, up),
 
         elem = joint.find("limit")
         if elem is not None:
@@ -115,9 +118,9 @@ for joint in joints:
             eff = elem.attrib.get('effort')
             vel = elem.attrib.get('velocity')
             if lo is not None:
-                print ' limits=[%s %s]' % (lo, up),
+                print 'limits=[%s %s]' % (lo, up),
             if vel is not None:
-                print ' ctrl_limits=[%s %s 1]' % (vel, eff), #the 3rd value is an acceleration limit
+                print 'ctrl_limits=[%s %s 1]' % (vel, eff), #the 3rd value is an acceleration limit
 
         print '}\n',
 
