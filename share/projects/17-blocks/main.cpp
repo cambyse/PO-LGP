@@ -111,10 +111,17 @@ void trial3(){
   komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
 
   komo.setGrasp(1., "humanR", "red", 0, .8);
-  komo.setGrasp(1.5, "humanL", "blue", 0, .8);
+//  komo.setGrasp(1.5, "humanL", "blue", 0, .8);
 
-  komo.setPlaceFixed(2.5, "humanR", "red", "table", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X);
-  komo.setPlaceFixed(3., "humanL", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
+  mlr::Transformation pose = Wfin.getShapeByName("red")->X;
+  komo.setTask(2., 3., new TaskMap_Default(posTMT, W, "red", NoVector), OT_sumOfSqr, pose.pos.getArr());
+  komo.setTask(2., 3., new TaskMap_Default(quatTMT, W, "red", NoVector), OT_sumOfSqr, pose.rot.getArr4d());
+
+  komo.setKinematicSwitch(3., true, "delete", "humanR", "red");
+  komo.setKinematicSwitch(3., true, "rigidZero", "table", "red",  Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X );
+
+//  komo.setPlaceFixed(3., "humanR", "red", "table", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X);
+//  komo.setPlaceFixed(3., "humanL", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
 //  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
@@ -414,14 +421,14 @@ void testPhysX(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  testPhysX();
-  return 0;
+//  testPhysX();
+//  return 0;
 
-// trial1(); 
+// trial1();
 //  trial2();
-  trial4();
+//  trial4();
 //  trial5();
-//  trial3();
+  trial3();
 //  trial3b();
 //  trial3c();
 //  trial10();
