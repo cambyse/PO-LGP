@@ -5,12 +5,13 @@
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-  OpenGL gl;
+  OpenGL gl("Red Ball Scenes", 1200, 800);
 
-  uint N=5;
+  uint N=6;
   mlr::Array<mlr::KinematicWorld> K(N);
   for(uint i=0;i<N;i++){
     K(i).init(STRING("problem-0"<<i+1<<".g"));
+    K(i).orsDrawMarkers=false;
     gl.addView(i, glStandardScene, NULL);
     gl.addSubView(i, K(i));
     gl.views(i).camera.setDefault();
