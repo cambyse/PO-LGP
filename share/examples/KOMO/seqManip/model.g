@@ -26,8 +26,8 @@ shape target(table){ type=5 rel=<T t(0 .3 .12)> size=[.3 0 0 0] color=[1 1 0]}
 #shape hook_handle(hook) { rel=<T t(-.3 0 0)> type=0 size=[.08 .026 .04 0] color=[1 1 0] }
 #joint (table hook) { from=<T t(0 0 .02)> to=<T t(0 0 .02)> type=JT_rigid}
 
-body stick { X=<T t(.2 0 .64)> }
-shape stick_coll(stick) { rel=<T t(-.2 0 0)> type=0 size=[.4 .025 .04 0] color=[1 0 0] contact }
-shape stick_eff(stick) { rel=<T t(-.1 0 0)> type=0 size=[.08 .026 .04 0] color=[1 1 0] }
-shape stick_handle(stick) { rel=<T t(-.3 0 0)> type=0 size=[.08 .026 .04 0] color=[1 1 0] }
-joint (table stick) { from=<T t(0 .2 .02)> to=<T t(0 0 .02)> type=JT_rigid}
+body stick {}
+shape stick_coll(stick) { rel=<T t(0 0 0)> type=0 size=[.4 .025 .04 0] color=[1 0 0] contact }
+shape stick_eff(stick) { rel=<T t(+.1 0 0)> type=0 size=[.08 .026 .04 0] color=[1 1 0] }
+shape stick_handle(stick) { rel=<T t(-.1 0 0)> type=0 size=[.08 .026 .04 0] color=[1 1 0] }
+joint (table stick) { from=<T t(-.2 .2 .02)> to=<T t(0 0 .02)> type=JT_rigid}
