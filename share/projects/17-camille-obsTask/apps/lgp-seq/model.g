@@ -8,44 +8,31 @@ Include = 'data/man_model.ors'
 ### objs
 
 #right
-body container_0 { X=<T t(-.45 -0.6 0.93) d(-40 0 0 1)> contact }
-shape container_0_front(container_0)  { type=9 rel=<T t(0  0.15 0.15)> size=[0.3 0.01 0.3 0.005]   color=[1 0 0] contact}
-shape container_0_left(container_0)   { type=9 rel=<T t(.15  0.0  0.15)> size=[0.01 0.3 0.3 0.005] color=[1 0 0] contact}
-shape container_0_right(container_0)  { type=9 rel=<T t(-.15 0.0  0.15)> size=[0.01 0.3 0.3 0.005] color=[1 0 0] contact}
-shape container_0_bottom(container_0) { type=9 rel=<T t(0  0.0 0)> size=[0.3 0.3 0.01 0.005]     color=[1 0 0] contact}
+body  shelf { X=<T t(-.75 -0.7 0.93) d(-90 0 0 1)> contact }
+shape shelf_back(shelf)   { type=9 rel=<T t(0  -0.15 0.6)>   size=[0.7 0.03 1.2 0.005] color=[1 0 0] }
+shape shelf_left(shelf)   { type=9 rel=<T t( .35  0.0  0.6)> size=[0.03 0.3 1.2 0.005] color=[1 0 0] }
+shape shelf_center(shelf) { type=9 rel=<T t(0 0.0  0.6)>     size=[0.03 0.3 1.2 0.005] color=[1 0 0] }
+shape shelf_right(shelf)  { type=9 rel=<T t(-.35 0.0  0.6)> size=[0.03 0.3 1.2 0.005]  color=[1 0 0]  }
 
-#middle
-body container_1 { X=<T t(.2 -1.05 0.93)> contact }
-shape container_1_front(container_1)  { type=9 rel=<T t(0  0.15 0.2)> size=[0.3 0.01 0.4 0.005]   color=[1 0 0] contact}
-shape container_1_left(container_1)   { type=9 rel=<T t(.15  0.0  0.2)> size=[0.01 0.3 0.4 0.005] color=[1 0 0] contact}
-shape container_1_right(container_1)  { type=9 rel=<T t(-.15 0.0  0.2)> size=[0.01 0.3 0.4 0.005] color=[1 0 0] contact}
-shape container_1_bottom(container_1) { type=9 rel=<T t(0  0.0 0)> size=[0.3 0.3 0.01 0.005]     color=[1 0 0] contact}
-#shape container_1_handle(container_1) { type=9 rel=<T t(0.15  0.0 0.2) d(180 0 0 1)> size=[0.3 0.3 0.01 0.01]     color=[1 0 0] contact}
+shape shelf_bottom_v(shelf) { type=9 rel=<T t(0  0.0 0.0)> size=[0.7 0.3 0.01 0.005]   color=[1 0 0] }
+shape shelf_center_v(shelf) { type=9 rel=<T t(0  0.0 0.6)> size=[0.7 0.3 0.01 0.005]   color=[1 0 0] }
+shape shelf_top_v(shelf)    { type=9 rel=<T t(0  0.0 1.2)> size=[0.7 0.3 0.01 0.005]   color=[1 0 0] }
 
-body target { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
-#body target_body { X=<T t(.2 -1.05 0.93)> contact }
-#shape target(target_body) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
-#shape target(container_1) { type=1 rel=<T t(0 0.0 0.05)> size=[0 0 0 .05] color=[0 1 0] }
+#blocks
+body block_o { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .02] color=[0 1 1] contact }	#on the shelf
+body block_r { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .02] color=[1 0 0] contact }	
+body block_b { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .02] color=[0 0 1] contact }	
+body block_g { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .02] color=[0 1 0] contact }	
 
-#Edit /human/base { X=<T t(1.5 0. 1.1) d(-180 0 0 1)> }
-
-#body tableC{ type=9, X=<T t(.7 0 .8)>, size=[1. .8 .04 .02], color=[.3 .3 .5] fixed, contact }
-#body tableL{ type=9, X=<T t(.2 .7 .8)>, size=[2. .6 .04 .02], color=[.3 .5 .3] fixed, contact }
-body tableC{ type=9, X=<T t(0 -.7 0.9)>, size=[2. .8 .04 .01], color=[.3 .5 .3] contact }
+#table
+body tableC{ type=9, X=<T t(-0.3 -.7 0.9)>, size=[2. .8 .04 .01], color=[.3 .5 .3] contact }
 
 ## GRASP references
-
-#body humanGraspRefR { type=5 size=[.1 0 0 0] color=[1 0 0] }
-#body humanGraspRefL { type=5 size=[.1 0 0 0] color=[1 0 0] }
-#joint humanGraspJointR(handR humanGraspRefR){ A=<T t(0 0 -.1)> type=11 ctrl_H=1e-4 }
-#joint humanGraspJointL(handL humanGraspRefL){ A=<T t(0 0 -.1)> type=11 ctrl_H=1e-4 }
 shape humanR (handR){ type=5 size=[.1 0 0 0] color=[1 1 0] rel=<T t(0 0 -.05) d(90 0 0 1)> }
 shape humanL (handL){ type=5 size=[.1 0 0 0] color=[1 1 0] rel=<T t(0 0 -.05) d(90 0 0 1)> }
 
 ## Joints
-joint (tableC container_0) { from=<T t(-0.45 0.1 0.02) d(-40 0 0 1)> type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T >
-joint (tableC container_1)  { from=<T t(0.2 -0.35 0.02)> type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T >
-joint (container_1 target) { type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T > #
-#joint (target container_1) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T > #
-#joint (table container_1) { from=<T t(0 -0.2 0.02) t(0 0 0)> to=<T > type=10 } #from=<T t(0 0 0) t(0 0 0)> to=<T >
-#joint (target_1 occluding_object_1) { from=<T t(0 0 .04) t(0 0 .12)> to=<T > type=10 }
+joint (shelf block_o)           { from=<T t(-0.225 0 .6  ) t(0 0 0)> to=<T > type=10 } 
+joint (tableC block_b)          { from=<T t( 0.3   0 .02 ) t(0 0 0)> to=<T > type=10 }
+joint (tableC block_g)          { from=<T t( 0.15  0 .02 ) t(0 0 0)> to=<T > type=10 } 
+joint (block_g block_r)         { from=<T t( 0.0   0 .1  ) t(0 0 0)> to=<T > type=10 } 
