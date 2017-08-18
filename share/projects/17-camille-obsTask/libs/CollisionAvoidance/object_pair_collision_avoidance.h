@@ -150,6 +150,10 @@ struct ShapePairCollisionConstraint:PairCollisionConstraint
 
   void phiCollision( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
 
+  uint dim_phi(const mlr::KinematicWorld& G)
+  {
+    return 1;// + constantVectors_.N;
+  }
 
   mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("_PairCollisionConstraint"); }
 
