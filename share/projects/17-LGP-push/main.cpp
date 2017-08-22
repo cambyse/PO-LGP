@@ -116,7 +116,7 @@ void roopiInterface(){
     //    fol.addAgent("handL");
     //    fol.addAgent("handR");
 
-#if 1 //test a fixed sequence
+#if 0 //test a fixed sequence
 //  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
 //  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
