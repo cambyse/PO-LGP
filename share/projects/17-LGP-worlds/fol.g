@@ -22,6 +22,7 @@ table
 attachable
 pusher
 partOf
+world
 
 busy     # involved in an ongoing (durative) activity
 free     # agent hand is free
@@ -86,6 +87,14 @@ DecisionRule push {
   W, X, Y, Z,
   { (held W) (pusher X) (partOf X W) (object Y) (table Z) (held Y)! }
   { komoPush(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
+}
+
+#####################################################################
+
+DecisionRule drop {
+  OBJ, FROM, TO,
+  { (held OBJ)! (object OBJ) (table FROM) (table TO) }
+  { (grasped world OBJ) komoDrop(OBJ FROM TO)=1. (INFEASIBLE grasp ANY OBJ)! block(INFEASIBLE grasp ANY OBJ) }
 }
 
 #####################################################################

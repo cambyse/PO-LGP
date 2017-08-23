@@ -48,6 +48,10 @@ void Act_LGP::fixLogicSequence(const mlr::String& seq){
     s->fixedSequence = seq;
 }
 
+void Act_LGP::renderToVideo(){
+    s->lgp->renderToVideo();
+}
+
 mlr::KinematicWorld &Act_LGP::kin(){
     return s->kin;
 }
@@ -55,6 +59,7 @@ mlr::KinematicWorld &Act_LGP::kin(){
 FOL_World &Act_LGP::fol(){
     return s->fol;
 }
+
 
 //OptLGP &Act_LGP::opt(){
 //    return *s->lgp;
@@ -74,7 +79,6 @@ void sAct_LGP::open(){
 void sAct_LGP::step(){
     if(fixedSequence.N){
         lgp->optFixedSequence(fixedSequence);
-//        lgp->renderToFile(3,"z.path.");
 
         status->setStatus(AS_converged);
         threadStop();

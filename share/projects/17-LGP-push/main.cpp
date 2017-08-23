@@ -116,20 +116,14 @@ void roopiInterface(){
     //    fol.addAgent("handL");
     //    fol.addAgent("handR");
 
-#if 0 //test a fixed sequence
-//  lgp->fixLogicSequence("(grasp baxterR stick) (handover baxterR stick baxterL) (grasp stickTip obj1)");
-//  lgp->fixLogicSequence("(grasp baxterR stick) (grasp stickTip obj1)");
-//  lgp->fixLogicSequence("(grasp baxterR stick) (place baxterR stick table1) (grasp baxterL obj1) (grasp obj1 stick) ");
-//  lgp->fixLogicSequence("(grasp baxterR stick) (push stick obj1 table1) (grasp baxterL obj1) (place baxterL obj1 table1) ");
-
+#if 1 //test a fixed sequence
   lgp->fixLogicSequence("(grasp baxterR stick) \
                         (handover baxterR stick baxterL) \
                         (push stick stickTip obj1 table1) \
                         (grasp baxterR obj1) \
                         (place baxterR obj1 tableR) \
                         (place baxterL stick tableL) \
-"); mlr::String tmp("\
-");
+                        ");
 #else
 //  lgp->fol().addTerminalRule({{"grasped", "baxterR", "obj1"}});
   lgp->fol().addTerminalRule({{"placed", "obj1", "tableR"}});
@@ -138,6 +132,8 @@ void roopiInterface(){
   lgp->start();
 
   R.wait(+lgp);
+
+  lgp->renderToVideo();
 
   R.wait();
 }
