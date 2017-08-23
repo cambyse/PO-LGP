@@ -1,6 +1,7 @@
 #include <Kin/kin.h>
 #include <KOMO/komo.h>
 #include <Kin/taskMaps.h>
+#include <Core/graph.h>
 
 void forsyth(double& f, double& df_dx, double x, double a){
   double x2=x*x;
@@ -54,11 +55,6 @@ void MyTaskMap::phi(arr &y, arr &J, const WorldL &Ks, double tau, int t){
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-<<<<<<< HEAD
-
-  return 0;
-}
-=======
   mlr::KinematicWorld K("gravity.g");
   KOMO komo;
   komo.setModel(K, true);
@@ -88,5 +84,3 @@ int MAIN(int argc,char **argv){
 
   return 0;
 }
-
->>>>>>> marc

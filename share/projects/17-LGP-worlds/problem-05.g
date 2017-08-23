@@ -1,5 +1,5 @@
 Include = '../../data/baxter_model/baxter.ors'
-Include = 'slider.g'
+Include = 'problem-shared.g'
 
 ### ball
 
