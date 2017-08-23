@@ -2,6 +2,9 @@
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
+#include <vertical_velocity.h>
+#include <axis_alignment.h>
+#include <over_plane.h>
 
 #include <kin_equality_task.h>
 

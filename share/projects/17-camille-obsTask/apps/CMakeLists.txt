@@ -4,5 +4,6 @@ add_subdirectory("lgp-seq")
 add_subdirectory("lgp-boxes")
 add_subdirectory("lgp-tree")
 add_subdirectory("lgp-collision-avoidance")
+add_subdirectory("lgp-gjk")
 add_subdirectory("DomainPlayer")
 

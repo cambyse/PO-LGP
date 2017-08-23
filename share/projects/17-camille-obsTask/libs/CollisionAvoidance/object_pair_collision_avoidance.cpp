@@ -15,90 +15,24 @@
 #include <object_pair_collision_avoidance.h>
 #include <Geo/mesh.h>
 
-//-----VerticalVelocity----------------//
+#include <fcl/traversal/traversal_node_bvhs.h>
+#include <fcl/collision_node.h>
+#include <fcl/collision.h>
+#include <fcl/distance.h>
 
-void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
-{
-  arr tmp_y = zeros( 2 );
-  arr tmp_J = zeros( 2, G.q.N );
+using namespace fcl;
 
-  auto body = G.getBodyByName( bobyName_ );
-  arr p, Jp;
-  G.kinematicsPos( p, Jp, body, mlr::Vector( 0, 0, 0 ) );
-
-
-  // commit results
-  const double w = 10;
-  tmp_y( 0 ) = w * p( 0 );
-  tmp_y( 1 ) = w * p( 1 );
-
-  tmp_J.setMatrixBlock( w * Jp.row( 0 ), 0, 0 );
-  tmp_J.setMatrixBlock( w * Jp.row( 1 ), 1, 0 );
-
-
-  //tmp_J.setMatrixBlock( Jp, 0, 0 );
-
-  //  // commit results
-  y = tmp_y;
-  if(&J) J = tmp_J;
-}
-
-//-----AxisAlignment----------------//
-
-void AxisAlignment::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
-{
-  arr tmp_y = zeros( 1 );
-  arr tmp_J = zeros( 1, G.q.N );
-
-  auto body = G.getBodyByName( bobyName_ );
-
-  arr bodyAxisDirection, bodyJAxisDirection;
-  G.kinematicsVec( bodyAxisDirection, bodyJAxisDirection, body, axis_ );
-
-  double dot_product = dot( bodyAxisDirection, axis_ );
-
-  double cost = 1 - dot_product;
-
-  tmp_y( 0 ) = cost;
-  tmp_J.setMatrixBlock( - ( ~ axis_ ) * bodyJAxisDirection, 0, 0 );
-
-  // commit results
-  y = tmp_y;
-  if(&J) J = tmp_J;
-}
+static CollisionObject * createObjectModel( mlr::Shape * s );
 
 //-------ShapePairCollisionConstraint----------------//
 
-void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
+void ShapePairCollisionConstraint::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
 {
   arr tmp_y = zeros( 1 );
   arr tmp_J = zeros( 1, G.q.N );
 
-  //std::cout << G.shapes( i_ )->name << "-" << G.shapes( j_ )->name << std::endl;
-
-//  for( auto j : G.joints )
-//  {
-//    if( G.shapes( i_ )->name == j->from->name && G.shapes( j_ )->name == j->to->name
-//        ||
-//        G.shapes( i_ )->name == j->to->name && G.shapes( j_ )->name == j->from->name
-//      )
-//    {
-//      std::cout << "pb!!" << std::endl;
-//    }
-//    //std::cout << "joint:" << j->from->name << " " << j->to->name << std::endl;
-//  }
-
   for( mlr::Proxy *p: G.proxies )
   {
-//    if( G.shapes( p->a )->name == "handR" && G.shapes( p->b )->name == "tableC"
-//        ||
-//        G.shapes( p->b )->name == "handR" && G.shapes( p->a )->name == "tableC"
-//      )
-//    {
-//      std::cout << "ici" << std::endl;
-//    }
-    //std::cout << "proxy:" << G.shapes( p->a )->name << "-" << G.shapes( p->b )->name << std::endl;
-
     if((p->a==i_ && p->b==j_) || (p->a==j_ && p->b==i_))
     {
       //std::cout << "active proxy:" << G.shapes( p->a )->name << "-" << G.shapes( p->b )->name << std::endl;
@@ -109,7 +43,7 @@ void ShapePairCollisionConstraint::phi(arr& y, arr& J, const mlr::KinematicWorld
       else
       {
         // collision already!
-        phiCollision( tmp_y, tmp_J, G, p );
+        phiCollision( tmp_y, tmp_J, G );
       }
       break;
     }
@@ -139,97 +73,188 @@ void ShapePairCollisionConstraint::phiNoCollision( arr& y, arr& J, const mlr::Ki
   arr JnormD = Jnorm( posA - posB );
 
   const double w = 10;
-  y( 0 ) = w * ( margin - d );
+  y( 0 ) = w * ( margin_ - d );
   J = w * ( - JnormD * ( JposA - JposB ) );
 }
 
-void ShapePairCollisionConstraint::phiCollision( arr& v, arr& J, const mlr::KinematicWorld& W, mlr::Proxy * p )
+void ShapePairCollisionConstraint::phiCollision( arr& y, arr& J, const mlr::KinematicWorld& G )
 {
-  bool exact = true;
-  bool negScalar = true;
-
-  mlr::Shape *s1 = i<0?NULL: W.shapes(i);
-  mlr::Shape *s2 = j<0?NULL: W.shapes(j);
+  mlr::Shape *s1 = i_<0?NULL: G.shapes(i_);
+  mlr::Shape *s2 = j_<0?NULL: G.shapes(j_);
   CHECK(s1 && s2,"");
-  CHECK(s1->sscCore.V.N,"");
-  CHECK(s2->sscCore.V.N,"");
-  mlr::Vector p1, p2, e1, e2;
-  GJK_point_type pt1, pt2;
+  CHECK(s1->mesh.V.N,"");
+  CHECK(s2->mesh.V.N,"");
 
-  GJK_sqrDistance(s1->sscCore, s2->sscCore, s1->X, s2->X, p1, p2, e1, e2, pt1, pt2);
-  //  if(d2<1e-10) LOG(-1) <<"zero distance";
-  arr y1, J1, y2, J2;
+  auto m1 = createObjectModel( s1 );
+  auto m2 = createObjectModel( s2 );
 
-  W.kinematicsPos(y1, (&J?J1:NoArr), s1->body, s1->body->X.rot/(p1-s1->body->X.pos));
-  W.kinematicsPos(y2, (&J?J2:NoArr), s2->body, s2->body->X.rot/(p2-s2->body->X.pos));
+  // set the distance request structure, here we just use the default setting
+  DistanceRequest request;
+  request.enable_nearest_points = true;
+  // result will be returned via the collision result structure
+  DistanceResult result;
+  // perform distance test
+  distance(m1, m2, request, result);
 
-  //std::cout << "J1:" << J1 << std::endl;
-  //std::cout << "J2:" << J2 << std::endl;
+  auto p1 = result.nearest_points[ 0 ];
+  auto p2 = result.nearest_points[ 1 ];
 
-  v = y1 - y2;
-  if(&J){
-    J = J1 - J2;
-    //std::cout << "J:" << J << std::endl;
+  mlr::Vector pposA( p1[ 0 ], p1[ 2 ], p1[ 2 ] );
+  mlr::Vector pposB( p2[ 0 ], p2[ 2 ], p2[ 2 ] );
 
-    if(exact){
-      if((pt1==GJK_vertex && pt2==GJK_face) || (pt1==GJK_face && pt2==GJK_vertex)){
-        arr vec, Jv, n = v/length(v);
-        J = n*(~n*J);
-        if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
-        if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));
-        J += Jv;
-      }
-      if(pt1==GJK_edge && pt2==GJK_edge){
-        arr vec, Jv, n, a, b;
-        n = v/length(v);
-        J = n*(~n*J);
+  /////////
+  auto a = s1;
+  auto b = s2;
+  auto arel=a->body->X.rot/(pposA-a->body->X.pos);
+  auto brel=b->body->X.rot/(pposB-b->body->X.pos);
 
-        W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/e1);
-        a=conv_vec2arr(e1);
-        b=conv_vec2arr(e2);
-        double ab=scalarProduct(a,b);
-        J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+  arr posA;
+  arr posB;
+  arr JposA;
+  arr JposB;
+  G.kinematicsPos(posA, JposA, a->body, arel);
+  G.kinematicsPos(posB, JposB, b->body, brel);
 
-        W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/e2);
-        a=conv_vec2arr(e2);
-        b=conv_vec2arr(e1);
-        J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
-      }
-      if((pt1==GJK_vertex && pt2==GJK_edge) || (pt1==GJK_edge && pt2==GJK_vertex)){
-        arr vec, Jv, n;
-        if(pt1==GJK_vertex) n=conv_vec2arr(e2); else n=conv_vec2arr(e1);
-        J = J - n*(~n*J);
-        if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
-        if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));
-        J += n*(~n*Jv);
-      }
-    }
-  }
-  //std::cout << "J pre fac:" << J << std::endl;
+  double d = norm2( posA - posB );
+  arr JnormD = Jnorm( posA - posB );
 
-/*  //reduce by radii
-  double l2=sumOfSqr(v), l=sqrt(l2);
-//  double fac = (l-s1->size(3)-s2->size(3))/l;
-//  if(&J){
-//    arr d_fac = (1.-(l-s1->size(3)-s2->size(3))/l)/l2 *(~v)*J;
-//    J = J*fac + v*d_fac;
-//    std::cout << "J fac:" << J << std::endl;
-
-//  }
-//  v *= fac;
-
-  if(negScalar){
-    if(&J) J = ~(v/(-l))*J;
-    v = ARR(-l);
-  }*/
-
-  auto l = norm2( v );
-  auto j = Jnorm( v );
-
-  v = ARR(-l);
-  J = -j;
-
-
-  //std::cout << "J final:" << J << std::endl;
+  const double w = 10;
+  y( 0 ) = w * ( margin_ + d );
+  J = w * ( JnormD * ( JposA - JposB ) );
 }
+
+static CollisionObject * createObjectModel( mlr::Shape * s )
+{
+  CHECK( s, "" );
+  CHECK( s->mesh.V.N, "" );
+
+  /// 1 - set mesh triangles and vertice indices
+  std::vector<Vec3f> vertices;
+  std::vector<Triangle> triangles;
+
+  // code to set the vertices and triangles
+  for( uint i = 0; i < s->mesh.V.d0; i++ )
+  {
+    vertices.push_back( Vec3f( s->mesh.V( i, 0 ), s->mesh.V( i, 1 ), s->mesh.V( i, 2 ) ) );
+  }
+
+  for( uint i = 0; i < s->mesh.T.d0; i++ )
+  {
+    triangles.push_back( Triangle( s->mesh.T( i, 0 ), s->mesh.T( i, 1 ), s->mesh.T( i, 2 ) ) );
+  }
+
+  auto model = std::make_shared< BVHModel<OBBRSS> >();
+  // add the mesh data into the BVHModel structure
+  model->beginModel();
+  model->addSubModel(vertices, triangles);
+  model->endModel();
+
+  /// 2 - Set transforms
+  Matrix3f R;
+  Vec3f T;
+  // code for setting R and T
+  T = Vec3f( s->X.pos.x,  s->X.pos.y,  s->X.pos.z );
+
+  auto m = s->X.rot.getMatrix();
+  R = Matrix3f( m.m00, m.m01, m.m02,
+                m.m10, m.m11, m.m12,
+                m.m20, m.m21, m.m22 );
+
+  // transform is configured according to R and T
+  Transform3f pose( R, T );
+
+  /// 3 - Combine them together
+  CollisionObject * obj = new CollisionObject( model, pose );
+
+  return obj;
+}
+
+//void ShapePairCollisionConstraint::phiCollision( arr& v, arr& J, const mlr::KinematicWorld& W, mlr::Proxy * p )
+//{
+//  bool exact = false;
+//  bool negScalar = true;
+
+//  mlr::Shape *s1 = i<0?NULL: W.shapes(i);
+//  mlr::Shape *s2 = j<0?NULL: W.shapes(j);
+//  CHECK(s1 && s2,"");
+//  CHECK(s1->sscCore.V.N,"");
+//  CHECK(s2->sscCore.V.N,"");
+//  mlr::Vector p1, p2, e1, e2;
+//  GJK_point_type pt1, pt2;
+
+//  GJK_sqrDistance(s1->sscCore, s2->sscCore, s1->X, s2->X, p1, p2, e1, e2, pt1, pt2);
+//  //  if(d2<1e-10) LOG(-1) <<"zero distance";
+//  arr y1, J1, y2, J2;
+
+//  W.kinematicsPos(y1, (&J?J1:NoArr), s1->body, s1->body->X.rot/(p1-s1->body->X.pos));
+//  W.kinematicsPos(y2, (&J?J2:NoArr), s2->body, s2->body->X.rot/(p2-s2->body->X.pos));
+
+//  //std::cout << "J1:" << J1 << std::endl;
+//  //std::cout << "J2:" << J2 << std::endl;
+
+//  v = y1 - y2;
+//  if(&J){
+//    J = J1 - J2;
+//    //std::cout << "J:" << J << std::endl;
+
+//    if(exact){
+//      if((pt1==GJK_vertex && pt2==GJK_face) || (pt1==GJK_face && pt2==GJK_vertex)){
+//        arr vec, Jv, n = v/length(v);
+//        J = n*(~n*J);
+//        if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
+//        if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));
+//        J += Jv;
+//      }
+//      if(pt1==GJK_edge && pt2==GJK_edge){
+//        arr vec, Jv, n, a, b;
+//        n = v/length(v);
+//        J = n*(~n*J);
+
+//        W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/e1);
+//        a=conv_vec2arr(e1);
+//        b=conv_vec2arr(e2);
+//        double ab=scalarProduct(a,b);
+//        J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+
+//        W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/e2);
+//        a=conv_vec2arr(e2);
+//        b=conv_vec2arr(e1);
+//        J += (a-b*ab) * (1./(1.-ab*ab)) * (~v*(b*~b -eye(3,3))) * Jv;
+//      }
+//      if((pt1==GJK_vertex && pt2==GJK_edge) || (pt1==GJK_edge && pt2==GJK_vertex)){
+//        arr vec, Jv, n;
+//        if(pt1==GJK_vertex) n=conv_vec2arr(e2); else n=conv_vec2arr(e1);
+//        J = J - n*(~n*J);
+//        if(pt1==GJK_vertex) W.kinematicsVec(vec, Jv, s2->body, s2->body->X.rot/(p1-p2));
+//        if(pt2==GJK_vertex) W.kinematicsVec(vec, Jv, s1->body, s1->body->X.rot/(p1-p2));
+//        J += n*(~n*Jv);
+//      }
+//    }
+//  }
+//  //std::cout << "J pre fac:" << J << std::endl;
+
+///*  //reduce by radii
+//  double l2=sumOfSqr(v), l=sqrt(l2);
+////  double fac = (l-s1->size(3)-s2->size(3))/l;
+////  if(&J){
+////    arr d_fac = (1.-(l-s1->size(3)-s2->size(3))/l)/l2 *(~v)*J;
+////    J = J*fac + v*d_fac;
+////    std::cout << "J fac:" << J << std::endl;
+
+////  }
+////  v *= fac;
+
+//  if(negScalar){
+//    if(&J) J = ~(v/(-l))*J;
+//    v = ARR(-l);
+//  }*/
+
+//  auto l = norm2( v ) + margin;
+//  auto j = Jnorm( v );
+
+//  v = ARR(l);
+//  J = j;
+
+//  //std::cout << "J final:" << J << std::endl;
+//}
 

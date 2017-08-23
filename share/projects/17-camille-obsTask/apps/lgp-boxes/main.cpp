@@ -2,6 +2,8 @@
 
 #include <observation_tasks.h>
 #include <object_pair_collision_avoidance.h>
+#include <over_plane.h>
+#include <axis_alignment.h>
 
 using namespace std;
 
