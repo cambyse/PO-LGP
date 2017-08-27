@@ -1,7 +1,7 @@
 #include <KOMO/komo.h>
 
 #include <observation_tasks.h>
-#include <object_pair_collision_avoidance.h>
+#include <approx_point_to_shape.h>
 #include <shape_pair_fcl.h>
 #include <Kin/taskMap_GJK.h>
 
@@ -23,13 +23,13 @@ void move()
   //komo.setCollisions( true, 0.05 );
   //komo.setTask( 0.0, 5.0, new TaskMap_GJK( komo.world, "handL", "obstacle", false, true ), OT_ineq, NoArr, 1e1 );
 
-  komo.setTask( 0.0, 5.0, new ShapePairFCL( komo.world, "handL", "obstacle" ), OT_ineq, NoArr, 1e1 );
+  komo.setTask( 0.0, 5.0, new ApproxPointToShape( komo.world, "humanL", "obstacle", 0.05 ), OT_ineq, NoArr, 1e1 );
 
-  //komo.setTask( 0.0, 5.0, new ShapePairFCL( komo.world, "handL", "obstacle1" ), OT_ineq, NoArr, 1e1 );
-  //komo.setTask( 0.0, 5.0, new ShapePairFCL( komo.world, "handL", "obstacle2" ), OT_ineq, NoArr, 1e1 );
+  //komo.setTask( 0.0, 5.0, new ApproxPointToShape( komo.world, "humanL", "obstacle1", 0.05 ), OT_ineq, NoArr, 1e1 );
+  //komo.setTask( 0.0, 5.0, new ApproxPointToShape( komo.world, "humanL", "obstacle2", 0.05 ), OT_ineq, NoArr, 1e1 );
 
-  komo.setTask( 0.0, 5.0, new ShapePairFCL( komo.world, "handL", "tableC" ), OT_ineq, NoArr, 1e1 );
-
+  ///////
+  komo.setTask( 0.0, 5.0, new ApproxPointToShape( komo.world, "humanL", "tableC" ), OT_ineq, NoArr, 1e1 );
 
   //disconnect object from container
   komo.setKinematicSwitch( 2.5/*8.0*/, true, "delete", NULL, "block" );

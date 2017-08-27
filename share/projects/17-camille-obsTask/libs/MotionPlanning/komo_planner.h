@@ -12,6 +12,8 @@ namespace mp
 
 class KOMOPlanner : public MotionPlanner
 {
+  typedef std::function<void( double time, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
+
 public:
   KOMOPlanner();
 
@@ -23,6 +25,9 @@ public:
 
   // display
   void display( const Policy::ptr &, double ) override;
+
+  // ground symbols
+  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
 
 private:
   void clearLastPolicyOptimization();

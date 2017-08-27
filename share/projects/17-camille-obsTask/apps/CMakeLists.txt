@@ -1,9 +1,12 @@
 cmake_minimum_required (VERSION 2.8)
 
-add_subdirectory("lgp-seq")
-add_subdirectory("lgp-boxes")
-add_subdirectory("lgp-tree")
 add_subdirectory("lgp-collision-avoidance")
 add_subdirectory("lgp-gjk")
 add_subdirectory("DomainPlayer")
+
+add_subdirectory("lgp-seq-boxes")
+add_subdirectory("lgp-tree-boxes")
+
+add_subdirectory("lgp-seq-blocks")
+add_subdirectory("lgp-tree-blocks")
 

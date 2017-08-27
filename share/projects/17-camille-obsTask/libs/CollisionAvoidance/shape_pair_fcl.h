@@ -30,10 +30,10 @@ struct ShapePairFCL:TaskMap
 {
   ShapePairFCL(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName )
   {
+    CHECK( false, "do not use, fcl gives results that are not very usefull, to instable when colliding" );
+
     i_ = G.getShapeByName( iShapeName )->index;
     j_ = G.getShapeByName( jShapeName )->index;
-
-    //std::cout << iShapeName << "--" << jShapeName << std::endl;
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);
