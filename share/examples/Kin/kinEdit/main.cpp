@@ -24,7 +24,6 @@ int MAIN(int argc,char **argv){
 
     mlr::KinematicWorld G(file);
 
-  //  G.watch(true);
 
     G.checkConsistency();
     G >>FILE("z.ors");

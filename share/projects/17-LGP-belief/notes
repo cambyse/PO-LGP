@@ -1,0 +1,14 @@
+DONE Every joint has an interval attached.
+
+Each interval is a DOF, adds to qdim
+
+add activeUncertainties; #=U
+
+DONE display: generate 2U extreme qs, fwdPropagate, display; just overlay all of them, or maybe just sample 10 and display them
+
+the intervals translate to a global covariance matrix
+
+the covariance matrix translated to shifted inequalities (no other impact!) -- implement this within TaskMap? (Because that has access to the config, including uncertainties)
+
+Missing: the derivative w.r.t. the interval parameters of the inequality...
+
