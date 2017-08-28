@@ -4,18 +4,20 @@
 
 #include <Kin/taskMaps.h>
 #include <Kin/frame.h>
+#include <Kin/taskMap_BeliefTransition.h>
 
 #include <KOMO/komo.h>
+
+
 
 void solve(){
   mlr::KinematicWorld K("kin.g");
 
-  K.watch(true);
-  return;
-
   arr q_target = K.getFrameByName("target")->joint()->q0;
 
+  K.report();
   K.setActiveJointsByName({"worldTranslationRotation"});
+  K.report();
 
   KOMO komo;
   komo.setModel(K);
@@ -26,18 +28,23 @@ void solve(){
 
   komo.setTask(3., 4., new TaskMap_qItself(QIP_byJointNames, {"worldTranslationRotation"}, K), OT_sumOfSqr, q_target);
 
+  komo.setTask(-1., -1., new TaskMap_BeliefTransition());
+
   komo.reset();
   komo.reportProblem();
   komo.run();
   cout <<komo.getReport(true) <<endl;
   komo.checkGradients();
 
+  //-----------------------------
+  // add collision and belief dynamics
+
   t->prec.clear();
   komo.setCollisions(true, .05, 1e1);
+
   komo.run();
   cout <<komo.getReport(true) <<endl;
   komo.checkGradients();
-
 
   while(komo.displayTrajectory(.1, true));
 }
@@ -49,3 +56,4 @@ int MAIN(int argc,char **argv){
 
   return 0;
 }
+
