@@ -8,8 +8,6 @@
 
 #include <KOMO/komo.h>
 
-
-
 void solve(){
   mlr::KinematicWorld K("kin.g");
 
