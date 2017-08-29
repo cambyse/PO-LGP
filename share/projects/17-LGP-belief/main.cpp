@@ -5,6 +5,7 @@
 #include <Kin/taskMaps.h>
 #include <Kin/frame.h>
 #include <Kin/taskMap_BeliefTransition.h>
+#include <Kin/taskMap_qUncertainties.h>
 
 #include <KOMO/komo.h>
 
@@ -22,21 +23,24 @@ void solve(){
   KOMO komo;
   komo.setModel(K);
   komo.world.report();
-  komo.setPathOpt(4., 10, 10.);
+  komo.setPathOpt(6., 10, 10.);
 
   Task *t = komo.setTask(1.5, 1.5, new TaskMap_Default(posTMT, K, "base_footprint"), OT_sumOfSqr, {1., -2., 0.}, 1e1);
 
-  komo.setTask(1., 3., new TaskMap_Default(gazeAtTMT, K, "endeffEyes", NoVector, "landmark"), OT_sumOfSqr, {}, 1e1);
+//  komo.setTask(1., -1., new TaskMap_Default(gazeAtTMT, K, "endeffEyes", NoVector, "landmark"), OT_sumOfSqr, {}, 1e1);
 
-  komo.setTask(3., 4., new TaskMap_qItself(QIP_byJointNames, {"worldTranslationRotation"}, K), OT_sumOfSqr, q_target);
+  komo.setTask(3., -1., new TaskMap_qItself(QIP_byJointNames, {"worldTranslationRotation"}, K), OT_sumOfSqr, q_target);
 
-  komo.setTask(-1., -1., new TaskMap_BeliefTransition(new TaskMap_Default(gazeAtTMT, K, "endeffEyes", NoVector, "landmark")));
+  komo.setTask(-1., -1., new TaskMap_BeliefTransition(new TaskMap_Default(gazeAtTMT, K, "endeffEyes", NoVector, "landmark")), OT_sumOfSqr, {}, 1e5);
+//  komo.setTask(-1., -1., new TaskMap_BeliefTransition(), OT_sumOfSqr, {}, 1e5);
+
+  komo.setTask(4., -1., new TaskMap_qUncertainties(), OT_sumOfSqr);
 
   komo.reset();
   komo.reportProblem();
   komo.run();
   cout <<komo.getReport(true) <<endl;
-  komo.checkGradients();
+//  komo.checkGradients();
 
   //-----------------------------
   // add collision and belief dynamics

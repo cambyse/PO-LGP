@@ -14,6 +14,6 @@ Missing: the derivative w.r.t. the interval parameters of the inequality...
 
 DONE design an objective function that mimics the blief dynamics (i.e. puts growth on the belief)
 
-NOW: modulate that dynamics with sensor
+DONE: modulate that dynamics with sensor
 
 
