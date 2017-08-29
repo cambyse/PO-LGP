@@ -8,13 +8,15 @@
 
 #include <KOMO/komo.h>
 
+#include <Kin/taskMap_default.h>
+
 void solve(){
   mlr::KinematicWorld K("kin.g");
 
   arr q_target = K.getFrameByName("target")->joint()->q0;
 
   K.report();
-  K.setActiveJointsByName({"worldTranslationRotation"});
+  K.setActiveJointsByName({"worldTranslationRotation", "head_pan_joint", "head_tilt_joint"});
   K.report();
 
   KOMO komo;
@@ -24,9 +26,11 @@ void solve(){
 
   Task *t = komo.setTask(1.5, 1.5, new TaskMap_Default(posTMT, K, "base_footprint"), OT_sumOfSqr, {1., -2., 0.}, 1e1);
 
+  komo.setTask(1., 3., new TaskMap_Default(gazeAtTMT, K, "endeffEyes", NoVector, "landmark"), OT_sumOfSqr, {}, 1e1);
+
   komo.setTask(3., 4., new TaskMap_qItself(QIP_byJointNames, {"worldTranslationRotation"}, K), OT_sumOfSqr, q_target);
 
-  komo.setTask(-1., -1., new TaskMap_BeliefTransition());
+  komo.setTask(-1., -1., new TaskMap_BeliefTransition(new TaskMap_Default(gazeAtTMT, K, "endeffEyes", NoVector, "landmark")));
 
   komo.reset();
   komo.reportProblem();
@@ -37,13 +41,15 @@ void solve(){
   //-----------------------------
   // add collision and belief dynamics
 
+#if 0
   t->prec.clear();
   komo.setCollisions(true, .05, 1e1);
-
   komo.run();
   cout <<komo.getReport(true) <<endl;
   komo.checkGradients();
+#endif
 
+  komo.plotTrajectory();
   while(komo.displayTrajectory(.1, true));
 }
 
