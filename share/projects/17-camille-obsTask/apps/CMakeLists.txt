@@ -11,4 +11,5 @@ add_subdirectory("lgp-seq-blocks")
 add_subdirectory("lgp-tree-blocks")
 
 add_subdirectory("lgp-seq-po-blocks")
+add_subdirectory("lgp-tree-po-blocks")
 

@@ -29,6 +29,8 @@ public:
   // ground symbols
   void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
 
+  void setNSteps( uint n ) { microSteps_ = n; }
+
 private:
   void clearLastPolicyOptimization();
 
@@ -62,7 +64,7 @@ private:
   std::map< PolicyNode::ptr, arr > jointPathCosts_;
   std::map< PolicyNode::ptr, arr > jointPathConstraints_;
   std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
-
+  mlr::Array< PolicyNode::ptr > bsToLeafs_; //indicates the leaf terminating for a given state
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 

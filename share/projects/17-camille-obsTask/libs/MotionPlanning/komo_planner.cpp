@@ -282,6 +282,8 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 
 void KOMOPlanner::optimizePath( Policy::ptr & policy )
 {
+  bsToLeafs_             = mlr::Array< PolicyNode::ptr > ( policy->N() );
+
   for( auto l : policy->leafs() )
   {
     optimizePathTo( l );
@@ -300,6 +302,9 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
   {
     if( leaf->bs()( w ) > eps() )
     {
+      // indicate this leaf as terminal for this node, this is used during the joint optimization..
+      bsToLeafs_( w ) = leaf;
+
       // create komo
       auto komo = komoFactory_.createKomo();
 
@@ -407,11 +412,17 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
           int nSupport = 0;
           for( auto x = 0; x < leaf->N(); ++x )
           {
-            if( leaf->bs()( x ) > 0 )
+            if( node->parent()->bs()( x ) > 0 )
             {
-              CHECK( pathKinFrames_[ leaf ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
+              CHECK( bsToLeafs_( x ) != nullptr, "no leaf for this state!!?" );
 
-              q += node->bs()( x ) * pathKinFrames_[ leaf ]( x )( nodeSlice ).q;
+              auto terminalLeafx = bsToLeafs_( x );
+
+              CHECK( pathKinFrames_[ terminalLeafx ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
+
+              auto pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
+
+              q += node->parent()->bs()( x ) * pathLeafx( nodeSlice ).q;
 
               nSupport++;
             }

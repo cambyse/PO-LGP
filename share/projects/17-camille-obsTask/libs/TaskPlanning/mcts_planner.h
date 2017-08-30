@@ -30,6 +30,8 @@ public:
   void solve() override;
   void integrate( const Policy::ptr & policy ) override;
 
+  void setMCParams( uint nRollouts, uint stepAbort ) { nRollOuts_ = nRollouts; stepAbort_ = stepAbort; }
+
   // getters
   Policy::ptr getPolicy() const override;
   MotionPlanningOrder getPlanningOrder() const override;
@@ -68,6 +70,8 @@ private:
   PolicySearchStateType searchState_; // terminated is set to true if it is not possible to generate alternatives, fringe is empty!
 
   // params
+  uint nRollOuts_  = 50;
+  uint stepAbort_  = 10;   // max depth for rollouts
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 

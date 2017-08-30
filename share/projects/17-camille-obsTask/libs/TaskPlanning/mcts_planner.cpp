@@ -61,21 +61,43 @@ void MCTSPlanner::setFol( const std::string & folDescription )
       fol->init(FILE(folDescription.c_str()));
       auto n = bsGraph->elem(w);
 
-      StringA fact;
-      // add fact
-      for( auto s : n->parents ) fact.append( s->keys.last() );
-      //fol->addFact(fact);
+      std::cout << "n:" << *n << std::endl;
 
-      // tag this fact as not observable
-      StringA notObservableFact; notObservableFact.append( notObservableTag );
-      for( auto s : fact ) notObservableFact.append( s );
+      // add facts
+      double probability = -1;
 
-      fol->addFact(notObservableFact);
+      for( auto nn : n->graph() )
+      {
+        StringA fact;
+
+        for( auto f : nn->parents )
+        {
+          fact.append( f->keys.last() );
+        }
+
+        if( ! fact.empty() )
+        {
+          // tag this fact as not observable
+          StringA notObservableFact; notObservableFact.append( notObservableTag );
+          for( auto s : fact ) notObservableFact.append( s );
+
+          fol->addFact(notObservableFact);
+
+          //std::cout << "fact:" << fact << std::endl;
+          //std::cout << "notObservableFact:" << notObservableFact << std::endl;
+        }
+        else
+        {
+          probability = nn->get<double>();
+          //std::cout << probability << std::endl;
+        }
+      }
+
       fol->reset_state();
 
       //std::cout << *fol << std::endl; // tmp
       folWorlds_(w) = fol;
-      bs_(w) = n->get<double>();
+      bs_(w) = probability;
     }
 
     // check that the belief state sums to 1
@@ -242,7 +264,7 @@ void MCTSPlanner::solveFirstTime()
       {
         for( auto c : f )
         {
-          c->generateMCRollouts( 50, 10 );
+          c->generateMCRollouts( 50, stepAbort_ );
         }
       }
 
@@ -301,7 +323,7 @@ void MCTSPlanner::generateAlternative()
           {
             for( auto c : f )
             {
-              c->generateMCRollouts( 50, 10 );
+              c->generateMCRollouts( 50, stepAbort_ );
             }
           }
 
