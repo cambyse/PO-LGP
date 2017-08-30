@@ -128,22 +128,24 @@ void groundPutDown( double phase, const Graph& facts, Node *n, KOMO * komo, int 
   //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
 
-  if( *symbols(1) == "tableC_center" )
-  {
-    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
-  }
-  else if( *symbols(1) == "tableC_left" )
-  {
-    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
-  }
-  else if( *symbols(1) == "tableC_right" )
-  {
-    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
-  }
-  else
-  {
-    CHECK( 0 , "" );
-  }
+  komo->setPlace( t_end, "handL", *symbols(0), *symbols(1), verbose );
+
+//  if( *symbols(1) == "tableC_center" )
+//  {
+//    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
+//  }
+//  else if( *symbols(1) == "tableC_left" )
+//  {
+//    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
+//  }
+//  else if( *symbols(1) == "tableC_right" )
+//  {
+//    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
+//  }
+//  else
+//  {
+//    CHECK( 0 , "" );
+//  }
 
   if( verbose > 0 )
   {
@@ -290,7 +292,7 @@ void plan()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  tp->setMCParams( 100, -1 );
+  tp->setMCParams( 100, -1, 100 );
   mp->setNSteps( 10 );
 
   // register symbols

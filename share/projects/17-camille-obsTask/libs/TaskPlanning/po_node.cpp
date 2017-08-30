@@ -341,57 +341,127 @@ void PONode::setAndSiblings( const PONode::L & siblings )
   }
 }
 
-void PONode::generateMCRollouts( uint num, int stepAbort )
+void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
 {
   //std::cout << "POLGPNode::generateMCRollouts.." << std::endl;
   // do rollouts for each possible worlds
   auto treepath = getTreePath();
 
-  arr R;  // rewards of all the rollouts
-
-  for( auto w = 0; w < N_; ++w )
+  for( uint k=0; k < num; ++k )
   {
-    auto fol = folWorlds_( w );
-    auto state = folStates_( w );
-    auto rootMC = rootMCs_( w );
-    // retrieve history
-    if( bs_( w ) > eps() )
+    double RR = 0;
+
+    for( auto w = 0; w < N_; ++w )
     {
-      mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
+      auto fol = folWorlds_( w );
+      auto state = folStates_( w );
+      auto rootMC = rootMCs_( w );
 
-      for( uint i=1 ; i < treepath.N; i++ )
+      // retrieve history
+      if( bs_( w ) > eps() )
       {
-        prefixDecisions(i-1) = treepath(i)->decision( w );
-      }
+        mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
 
-      for( uint k=0; k < num; ++k )
-      {
+        for( uint i=1 ; i < treepath.N; i++ )
+        {
+          prefixDecisions(i-1) = treepath(i)->decision( w );
+        }
+
         fol->reset_state();
-        double prefixReward = rootMC->initRollout( prefixDecisions );      
+        fol->maxHorizon = maxHorizon;
+        double prefixReward = rootMC->initRollout( prefixDecisions );
         fol->setState( state.get() );
+        //rootMC->verbose = 2;
         double r = rootMC->finishRollout( stepAbort );
-        R.append( bs_( w ) * r );
+        //R.append( bs_( w ) * r );
+        RR += bs_( w ) * r;
+        //std::cout << *rootMC->world.get_stateCopy() << std::endl;
+        //auto state = *rootMC->world.get_stateCopy();
+        //std::cout << "fol:" << *fol << std::endl;
+
+        //auto actions = rootMC->world.get_actions();
+
+        //for( auto a : actions ) std::cout << * a << std::endl;
+
+        CHECK( rootMC->world.is_terminal_state(), "error in rollout" );
 
         CHECK( prefixReward_ == prefixReward, "" );
       }
     }
-  }
+    CHECK( RR != 0, "" );
 
-  // save result
-  double averageReward = 0; // averaged over the worlds
-  for( auto r: R )
-  {
-    averageReward += r;
+    mcStats_->add( RR );
   }
-
-  averageReward /= num;     // normalize by the number of rollouts
-  mcStats_->add( averageReward );
 
   // commit result
   expectedReward_ = mcStats_->X.first();
 
   //std::cout << "average reward:" << expectedReward_ << std::endl;
 }
+
+//void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
+//{
+//  //std::cout << "POLGPNode::generateMCRollouts.." << std::endl;
+//  // do rollouts for each possible worlds
+//  auto treepath = getTreePath();
+
+//  arr R;  // rewards of all the rollouts
+
+//  for( auto w = 0; w < N_; ++w )
+//  {
+//    auto fol = folWorlds_( w );
+//    auto state = folStates_( w );
+//    auto rootMC = rootMCs_( w );
+//    // retrieve history
+//    if( bs_( w ) > eps() )
+//    {
+//      mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
+
+//      for( uint i=1 ; i < treepath.N; i++ )
+//      {
+//        prefixDecisions(i-1) = treepath(i)->decision( w );
+//      }
+
+//      for( uint k=0; k < num; ++k )
+//      {
+//        fol->reset_state();
+//        fol->maxHorizon = maxHorizon;
+//        double prefixReward = rootMC->initRollout( prefixDecisions );
+//        fol->setState( state.get() );
+//        //rootMC->verbose = 2;
+//        double r = rootMC->finishRollout( stepAbort );
+//        R.append( bs_( w ) * r );
+
+//        //std::cout << *rootMC->world.get_stateCopy() << std::endl;
+//        //auto state = *rootMC->world.get_stateCopy();
+//        //std::cout << "fol:" << *fol << std::endl;
+
+//        //auto actions = rootMC->world.get_actions();
+
+//        //for( auto a : actions ) std::cout << * a << std::endl;
+
+//        CHECK( rootMC->world.is_terminal_state(), "error in rollout" );
+
+//        CHECK( prefixReward_ == prefixReward, "" );
+//      }
+//    }
+//  }
+
+//  // save result
+//  double averageReward = 0; // averaged over the worlds
+//  for( auto r: R )
+//  {
+//    averageReward += r;
+//  }
+
+//  averageReward /= num;     // normalize by the number of rollouts
+//  mcStats_->add( averageReward );
+
+//  // commit result
+//  expectedReward_ = mcStats_->X.first();
+
+//  //std::cout << "average reward:" << expectedReward_ << std::endl;
+//}
 
 void PONode::backTrackBestExpectedPolicy( PONode::ptr node )
 {

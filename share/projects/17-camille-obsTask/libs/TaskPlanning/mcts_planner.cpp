@@ -264,7 +264,7 @@ void MCTSPlanner::solveFirstTime()
       {
         for( auto c : f )
         {
-          c->generateMCRollouts( 50, stepAbort_ );
+          c->generateMCRollouts( nRollOuts_, stepAbort_, maxHorizon_ );
         }
       }
 
@@ -323,7 +323,7 @@ void MCTSPlanner::generateAlternative()
           {
             for( auto c : f )
             {
-              c->generateMCRollouts( 50, stepAbort_ );
+              c->generateMCRollouts( nRollOuts_, stepAbort_, maxHorizon_ );
             }
           }
 

@@ -58,7 +58,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       computeMeshNormals( kin->shapes );
       kin->calc_fwdPropagateFrames();
       //
-      //kin->watch(/*true*/);
+      //kin->watch( true );
       //
       startKinematics_.append( kin );
     }

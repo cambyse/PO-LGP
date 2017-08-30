@@ -71,7 +71,7 @@ public:
   void expand();
   void setAndSiblings( const PONode::L & siblings );
   void setBestFamily( const PONode::L & f ) { bestFamily_ = f; expectedBestA_ = f( 0 )->a_; }
-  void generateMCRollouts( uint num, int stepAbort );
+  void generateMCRollouts( uint num, int stepAbort, uint maxHorizon = 100 );
   void backTrackBestExpectedPolicy( PONode::ptr node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
   void labelInfeasible(); ///< sets the infeasible label, should remove all children?

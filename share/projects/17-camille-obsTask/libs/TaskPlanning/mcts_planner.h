@@ -30,7 +30,7 @@ public:
   void solve() override;
   void integrate( const Policy::ptr & policy ) override;
 
-  void setMCParams( uint nRollouts, uint stepAbort ) { nRollOuts_ = nRollouts; stepAbort_ = stepAbort; }
+  void setMCParams( uint nRollouts, int stepAbort, uint maxHorizon ) { nRollOuts_ = nRollouts; stepAbort_ = stepAbort; maxHorizon_ = maxHorizon; }
 
   // getters
   Policy::ptr getPolicy() const override;
@@ -70,8 +70,10 @@ private:
   PolicySearchStateType searchState_; // terminated is set to true if it is not possible to generate alternatives, fringe is empty!
 
   // params
-  uint nRollOuts_  = 50;
-  uint stepAbort_  = 10;   // max depth for rollouts
+  uint nRollOuts_   = 50;
+  uint stepAbort_   = 10;   // max depth for rollouts
+  uint maxHorizon_  = 100;   // max depth for rollouts
+
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
