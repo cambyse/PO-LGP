@@ -68,7 +68,7 @@ for link in links:
     if collision is not None:
         print 'shape collision %s_0 (%s) {\n  ' % (name, name),
         writeShape(collision)
-        print '}\n', # end of shape
+        print ' contact }\n', # end of shape
 
 
 joints = xmlData.findall("/joint")

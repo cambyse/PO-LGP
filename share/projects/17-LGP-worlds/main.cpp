@@ -3,6 +3,8 @@
 #include <Core/graph.h>
 
 #include <LGP/optLGP.h>
+#include <KOMO/komo.h>
+
 
 void illustrate(){
 
@@ -24,6 +26,120 @@ void illustrate(){
   gl.watch();
 }
 
+
+void solve1(){
+  mlr::KinematicWorld K("problem-01.g");
+  FOL_World L(FILE("fol.g"));
+
+  //-- prepare logic world
+  L.addObject("redBall");
+  L.addObject("stick");
+  L.addAgent("baxterL");
+  L.addAgent("baxterR");
+  L.addFact({"table","table1"});
+  L.addFact({"pusher", "stickTip"});
+  L.addFact({"partOf", "stickTip", "stick"});
+
+  OptLGP lgp(K, L);
+
+  lgp.optFixedSequence("(grasp baxterR stick) \
+                       (push stick stickTip redBall table1) \
+                       (grasp baxterL redBall) \
+                       ", true);
+
+  mlr::wait();
+
+  lgp.renderToVideo();
+}
+
+void solve3(){
+  mlr::KinematicWorld K("problem-03.g");
+  FOL_World L(FILE("fol.g"));
+
+  //-- prepare logic world
+  L.addObject("redBall");
+  L.addObject("stick1");
+  L.addObject("wall");
+  L.addAgent("baxterL");
+  L.addAgent("baxterR");
+  L.addFact({"table","table1"});
+  L.addFact({"table","wall"});
+  L.addFact({"pusher", "stick1"});
+
+  OptLGP lgp(K, L);
+
+  lgp.optFixedSequence("(grasp baxterR stick1) \
+                       (push2 stick1 redBall table1) \
+                       (place stick1 redBall wall) \
+                       ", true);
+//                       (grasp baxterL redBall) \
+
+  mlr::wait();
+
+  lgp.renderToVideo();
+}
+
+void solve4(){
+  mlr::KinematicWorld K("problem-04.g");
+//  makeConvexHulls(K.frames);
+  FOL_World L(FILE("fol.g"));
+
+  //-- prepare logic world
+  L.addObject("redBall");
+  L.addObject("block");
+  L.addAgent("baxterL");
+  L.addAgent("baxterR");
+
+  OptLGP lgp(K, L);
+
+  lgp.optFixedSequence("(grasp baxterR block) \
+                       (grasp baxterL redBall) \
+                       ", true, true);
+
+  mlr::wait();
+
+  lgp.renderToVideo();
+}
+
+void solve5(){
+  mlr::KinematicWorld K("problem-05.g");
+  FOL_World L(FILE("fol.g"));
+
+  //-- prepare logic world
+  L.addObject("redBall");
+  L.addObject("stick");
+  L.addObject("paperHandle");
+  L.addFact({"pusher", "stick"});
+  L.addObject({"paper"});
+
+//  L.addFact({"partOf", "stickTip", "stick"});
+  L.addFact({"table","table1"});
+  L.addFact({"table","paper"});
+  L.addAgent("baxterL");
+  L.addAgent("baxterR");
+
+  OptLGP lgp(K, L);
+
+  lgp.optFixedSequence("(grasp baxterR stick) \
+                       (push2 stick redBall table1) \
+                       (place stick redBall paper) \
+                       (place baxterR stick table1) \
+                       (grasp baxterL paperHandle) \
+                       (place baxterL paperHandle table1) \
+                       (grasp baxterR redBall) \
+                       ", true);
+
+  mlr::wait();
+
+  lgp.renderToVideo();
+
+//  mlr::KinematicWorld& Klast = *lgp.displayFocus->komoProblem(3)->configurations.last();
+//  for(;;){
+//    animateConfiguration(Klast);
+//    Klast.watch(true);
+//  }
+}
+
 void solve6(){
   mlr::KinematicWorld K("problem-06.g");
   FOL_World L(FILE("fol.g"));
@@ -38,13 +154,8 @@ void solve6(){
   L.addFact({"table","tableR"});
   L.addFact({"table","tableL"});
   L.addFact({"table","box"});
-    //    fol.addAgent("pr2L");
   L.addAgent("baxterL");
   L.addAgent("baxterR");
-//  L.addAgent("stickTip");
-//  L.addAgent("obj1");
-    //    fol.addAgent("handL");
-    //    fol.addAgent("handR");
 
   OptLGP lgp(K, L);
 
@@ -55,15 +166,6 @@ void solve6(){
                        (grasp baxterL redBall) \
                        ", true);
 
-/*
-                                            (handover baxterR stick baxterL) \
-                       (push stick stickTip obj1 table1) \
-                       (grasp baxterR obj1) \
-                       (place baxterR obj1 tableR) \
-                       (place baxterL stick tableL) \
-*/
-
-
   mlr::wait();
 
   lgp.renderToVideo();
@@ -73,7 +175,11 @@ int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
 //  illustrate();
-  solve6();
+//  solve1();
+  solve3();
+//  solve4();
+//  solve5();
+//  solve6();
 
   return 0;
 }

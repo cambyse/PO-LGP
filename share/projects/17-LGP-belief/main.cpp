@@ -7,6 +7,8 @@
 #include <Kin/taskMap_BeliefTransition.h>
 #include <Kin/taskMap_qUncertainties.h>
 
+#include <Kin/kinViewer.h>
+
 #include <KOMO/komo.h>
 
 #include <Kin/taskMap_default.h>
@@ -60,6 +62,7 @@ void solve(){
 
   komo.plotTrajectory();
   while(komo.displayTrajectory(.1, true));
+  renderConfigurations(komo.configurations, "vid/z.path.", -2, 600, 600, &komo.displayCamera());
 }
 
 int MAIN(int argc,char **argv){

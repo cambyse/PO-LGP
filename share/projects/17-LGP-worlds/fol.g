@@ -91,6 +91,14 @@ DecisionRule push {
 
 #####################################################################
 
+DecisionRule push2 {
+  X, Y, Z,
+  { (held X) (pusher X) (object Y) (table Z) (held Y)! }
+  { komoPush(X Y Z)=1. (grasped X Y) (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
+}
+
+#####################################################################
+
 DecisionRule drop {
   OBJ, FROM, TO,
   { (held OBJ)! (object OBJ) (table FROM) (table TO) }

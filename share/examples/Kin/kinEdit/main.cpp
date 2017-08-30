@@ -31,10 +31,10 @@ int MAIN(int argc,char **argv){
     G.optimizeTree();
     G.checkConsistency();
     G >>FILE("z.ors");
-  //  makeConvexHulls(G.shapes);
+//    makeConvexHulls(G.frames);
   //  computeOptimalSSBoxes(G.shapes);
   //  G >>FILE("z.ors");
-  //  G.watch(true);
+//    G.watch(true);
   //  return;
 
     if(mlr::checkParameter<bool>("cleanOnly")) return 0;
