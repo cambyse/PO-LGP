@@ -196,14 +196,14 @@ void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int
   komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
                                                                         arg,
                                                                         //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
+                                                                        ARR( -0.0, 0.1, 0.4 ), ARR( 0, -1, 0 ) ),  // pivot position  in container frame
                 OT_sumOfSqr, NoArr, 1e2 );
 
   komo->setTask( t_end-0.2, t_end, new ActiveGetSight      ( "manhead",
                                                                         arg,
                                                                         //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-                OT_ineq, NoArr, 1e2 );
+                                                                        ARR( -0.0, 0.1, 0.4 ), ARR( 0, -1, 0 ) ),  // pivot position  in container frame
+                OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
   {

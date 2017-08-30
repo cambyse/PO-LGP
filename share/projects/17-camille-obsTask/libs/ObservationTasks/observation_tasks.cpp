@@ -191,14 +191,14 @@ void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 
 ActiveGetSight::ActiveGetSight( mlr::String const& headName,
                                         mlr::String const& containerName,
-                                        //arr const& aimPoint,
                                         arr const& pivotPoint,
+                                        arr const& aimingDir,
                                         double preferedDistance )
   : TaskMap()
   , headName_     ( headName )
   , containerName_( containerName )
-  //, aimPoint_     ( aimPoint )
   , pivotPoint_   ( pivotPoint )
+  , aimingDir_    ( aimingDir )
   , preferedDistance_( preferedDistance )
 {
 
@@ -215,7 +215,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   G.kinematicsPos( aimPosition, aimJPosition, container );
 
   arr pivotPosition, pivotJPosition;
-  G.kinematicsPos( pivotPosition, pivotJPosition, container, mlr::Vector( pivotPoint_ ) );
+  G.kinematicsPos( pivotPosition, pivotJPosition, container, pivotPoint_ );
 
   //std::cout << "world aimPosition:" << aimPosition << std::endl;
   //std::cout << "world pivotPosition:" << pivotPosition << std::endl;
@@ -245,7 +245,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   //_targetQuat.setDiff( mlr::Vector( 0, -1.0, 0 ), w1 );
   //arr targetQuat = conv_quat2arr( _targetQuat );
 
-  // build u : vector between head and aiming point
+  // build u : vector between aiming point and head
   arr u = aimPosition - headPosition;
   double normU = norm2( u );
   arr Ju = aimJPosition - headJPosition;
@@ -254,9 +254,12 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   arr Ju1 = ( Ju * normU - u * JnormU * Ju ) / ( normU * normU ); // jacobian of u normalized
   //std::cout << "u1:" << u1 << std::endl;
 
-  // build v :
+  // build v : aiming direction of the sensor
   arr v, Jv;
-  G.kinematicsVec( v, Jv, head->body, mlr::Vector( 0, -1.0, 0 ) ); // get function to minimize and its jacobian in state G
+
+  auto aimingDirBody = head->rel.rot * ( aimingDir_ );
+
+  G.kinematicsVec( v, Jv, head->body, aimingDirBody ); // get function to minimize and its jacobian in state G
   double normV = norm2( v );
   arr JnormV = Jnorm( v );  // get Jacobian of the norm operator
   arr v1 = v / normV;
@@ -267,7 +270,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   arr tmp_J = zeros( dim_, headJPosition.dim(1) );
 
   // head orientation
-  tmp_y.setVectorBlock( ( u1  - v1 )                       , 0 );    // cost
+  tmp_y.setVectorBlock( ( u1  - v1 )     , 0 );    // cost
   tmp_J.setMatrixBlock( ( Ju1 - Jv1 ), 0 , 0 ); // jacobian
 
   // head alignment

@@ -139,7 +139,8 @@ void move_0(){
 
     komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
                                                               "container_0",
-                                                              ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
+                                                              ARR( -0.0, 0.2, 0.4 ),// pivot position  in container frame
+                                                              ARR(  0.0, -1.0,0 )), // aiming dir
                   OT_sumOfSqr, NoArr, 1e2 );
   }
 
