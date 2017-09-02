@@ -67,6 +67,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 
 void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & policy )
 {
+  CHECK( startKinematics_.d0 == policy->N(), "consitency problem, the belief state size of the policy differs from the belief state size of the kinematics" );
   CHECK( po.policyId() == policy->id(), "id of the policy and the planning orders are not consistent" );
 
   po.getParam( "type" );

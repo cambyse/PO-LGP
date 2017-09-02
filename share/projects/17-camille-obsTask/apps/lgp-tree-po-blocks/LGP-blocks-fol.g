@@ -58,21 +58,46 @@ START_STATE { (table tableC)
 (clear block_3) (clear block_2) (clear tableC_right)
 (on_table block_1 tableC_center) (on_table block_2 tableC_left) (on block_3 block_1)
 (hand_empty) 
-
-(is block_2 block_b)
-(identified block_2)
 }
 
 BELIEF_START_STATE{ 
 {
 (is block_3 block_c)
+(is block_1 block_b)
+(is block_2 block_a)
+()=0.166666667
+}
+{
+(is block_2 block_c)
+(is block_1 block_b)
+(is block_3 block_a)
+()=0.166666667
+}
+
+{
+(is block_3 block_c)
+(is block_2 block_b)
 (is block_1 block_a)
-()=0.6
+()=0.166666667
 }
 {
 (is block_1 block_c)
+(is block_2 block_b)
 (is block_3 block_a)
-()=0.4
+()=0.166666665
+}
+
+{
+(is block_2 block_c)
+(is block_3 block_b)
+(is block_1 block_a)
+()=0.166666667
+}
+{
+(is block_1 block_c)
+(is block_3 block_b)
+(is block_2 block_a)
+()=0.166666667
 }
 }
 
