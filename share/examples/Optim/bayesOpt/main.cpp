@@ -1,5 +1,7 @@
 #include <Optim/BayesOpt.h>
 #include <Optim/benchmarks.h>
+#include <Plot/plot.h>
+#include <Algo/MLcourse.h>
 
 void TEST(BayesOpt){
   ScalarFunction f=ChoiceFunction();
@@ -7,12 +9,10 @@ void TEST(BayesOpt){
   uint d=1;
   arr bounds_lo = consts<double>(-2., d);
   arr bounds_hi = consts<double>(+2., d);
-  BayesOpt opt(f, bounds_lo, bounds_hi);
+  BayesOpt opt(f, bounds_lo, bounds_hi, .1, 10.);
   for(uint i=0;i<50;i++){
     opt.step();
-//    cout <<opt.data_X <<opt.data_y <<endl;
-    opt.report();
-    mlr::wait(.1);
+    opt.report(true, f);
     mlr::wait();
   }
 }

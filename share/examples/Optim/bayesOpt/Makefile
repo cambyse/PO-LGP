@@ -1,6 +1,6 @@
 BASE = ../../..
 
-DEPEND = Core Gui Optim Algo Geo
+DEPEND = Core Gui Optim Algo Geo Plot
 
 GL = 1
 

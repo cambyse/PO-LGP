@@ -178,15 +178,14 @@ void testKernelReg(const char *datafile=NULL) {
       checkHessian(f.getF(1.), x, 1e-4);
     }
 
-    arr x = 2.*randn(X.d1);
-    arr bounds_lo = consts<double>(-2., x.N);
-    arr bounds_hi = consts<double>(+2., x.N);
-    GlobalIterativeNewton opt(x, f.getF(-1.), bounds_lo, bounds_hi, OPT(verbose=1, stopTolerance=1e-3));
+    arr bounds_lo = consts<double>(-2., X.d1);
+    arr bounds_hi = consts<double>(+2., X.d1);
+    GlobalIterativeNewton opt(f.getF(-1.), bounds_lo, bounds_hi, OPT(verbose=1, stopTolerance=1e-3));
     opt.run(10);
     opt.report();
-    cout <<"optimum at x=" <<x <<' ' <<f.getF(-1.)(NoArr, NoArr, x) <<endl;
+    cout <<"optimum at x=" <<opt.x <<' ' <<f.getF(-1.)(NoArr, NoArr, opt.x) <<endl;
     arr fx,sig;
-    fx = f.evaluate(x.reshape(1,x.N), sig);
+    fx = f.evaluate(opt.x.reshape(1,opt.x.N), sig);
     cout <<fx << ' ' <<fx - sqrt(sig) <<endl;
 
 
