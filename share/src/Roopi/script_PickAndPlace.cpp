@@ -145,13 +145,13 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     onto = K().getFrameByName(ontoName)->ID;
     if(R.getRobot()=="pr2"){
       mlr::Frame *sh = K().getFrameByName("pr2R");
-      if(sh->ID == ob->link->from->ID){ //this is the right hand..
+      if(sh->ID == ob->parent->ID){ //this is the right hand..
         eff = sh->ID;
         grasp1 = K().getFrameByName("r_gripper_joint")->ID;
         grasp2 = K().getFrameByName("r_gripper_l_finger_joint")->ID;
       }else{
         sh = K().getFrameByName("pr2L");
-        if(sh->ID == ob->link->from->ID){ //this is the left hand..
+        if(sh->ID == ob->parent->ID){ //this is the left hand..
           eff = sh->ID;
           grasp1 = K().getFrameByName("l_gripper_joint")->ID;
           grasp2 = K().getFrameByName("l_gripper_l_finger_joint")->ID;
@@ -234,13 +234,13 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     onto = K().getFrameByName(ontoName)->ID;
     if(R.getRobot()=="pr2"){
       mlr::Frame *sh = K().getFrameByName("pr2R");
-      if(sh->ID == ob->link->from->ID){ //this is the right hand..
+      if(sh->ID == ob->parent->ID){ //this is the right hand..
         eff = sh->ID;
         grasp1 = K().getFrameByName("r_gripper_joint")->ID;
         grasp2 = K().getFrameByName("r_gripper_l_finger_joint")->ID;
       }else{
         sh = K().getFrameByName("pr2L");
-        if(sh->ID == ob->link->from->ID){ //this is the left hand..
+        if(sh->ID == ob->parent->ID){ //this is the left hand..
           eff = sh->ID;
           grasp1 = K().getFrameByName("l_gripper_joint")->ID;
           grasp2 = K().getFrameByName("l_gripper_l_finger_joint")->ID;

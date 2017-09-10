@@ -43,8 +43,8 @@ void solve1(){
   OptLGP lgp(K, L);
 
   lgp.optFixedSequence("(grasp baxterR stick) \
-                       (push stick stickTip redBall table1) \
-                       (grasp baxterL redBall) \
+                        (push stick stickTip redBall table1) \
+                        (grasp baxterL redBall) \
                        ", true);
 
   mlr::wait();
@@ -174,12 +174,12 @@ void solve6(){
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-  illustrate();
-  //  solve1();
+//  illustrate();
+//  solve1();
 //  solve3();
 //  solve4();
 //  solve5();
-//  solve6();
+  solve6();
 
   return 0;
 }
