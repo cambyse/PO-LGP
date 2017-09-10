@@ -174,9 +174,9 @@ void solve6(){
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-//  illustrate();
-//  solve1();
-  solve3();
+  illustrate();
+  //  solve1();
+//  solve3();
 //  solve4();
 //  solve5();
 //  solve6();
