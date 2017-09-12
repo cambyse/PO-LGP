@@ -8,9 +8,9 @@
 
 void illustrate(){
 
-  OpenGL gl("Red Ball Scenes", 1200, 800);
+  OpenGL gl("Red Ball Scenes", 1600, 800);
 
-  uint N=6;
+  uint N=7;
   mlr::Array<mlr::KinematicWorld> K(N);
   for(uint i=0;i<N;i++){
     K(i).init(STRING("problem-0"<<i+1<<".g"));
@@ -21,7 +21,7 @@ void illustrate(){
     gl.views(i).camera.focus(1., 0., .7);
 
   }
-  gl.setSubViewTiles(3,2);
+  gl.setSubViewTiles(4,2);
 
   gl.watch();
 }
@@ -171,6 +171,47 @@ void solve6(){
   lgp.renderToVideo();
 }
 
+void solve7(){
+  mlr::KinematicWorld K("problem-07.g");
+  FOL_World L(FILE("fol.g"));
+
+  //-- prepare logic world
+  L.addObject("redBall");
+  L.addObject("stick");
+  L.addObject("paperHandle");
+  L.addFact({"pusher", "stick"});
+  L.addObject({"paper"});
+
+  L.addFact({"table","table1"});
+  L.addFact({"table","paper"});
+  L.addAgent("baxterL");
+  L.addAgent("baxterR");
+
+  OptLGP lgp(K, L);
+
+  lgp.optFixedSequence("(slide baxterL paper table1) \
+                       (place2 redBall paper) \
+                       (place baxterL paper table1) \
+                       (grasp baxterL paper) \
+                       (grasp baxterR redBall) \
+                       ", true);
+
+                       /*
+                                            (place baxterR stick table1) \
+                                            (grasp baxterL paperHandle) \
+                                            (place baxterL paperHandle table1) \
+                        */
+  mlr::wait();
+
+  lgp.renderToVideo();
+
+//  mlr::KinematicWorld& Klast = *lgp.displayFocus->komoProblem(3)->configurations.last();
+//  for(;;){
+//    animateConfiguration(Klast);
+//    Klast.watch(true);
+//  }
+}
+
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
@@ -179,7 +220,8 @@ int MAIN(int argc,char **argv){
 //  solve3();
 //  solve4();
 //  solve5();
-  solve6();
+//  solve6();
+  solve7();
 
   return 0;
 }

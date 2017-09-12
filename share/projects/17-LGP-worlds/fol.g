@@ -77,8 +77,16 @@ DecisionRule handover {
 
 DecisionRule place {
   X, Y, Z,
-  { (grasped X Y) (table Z) }
-  { (placed Y Z) (grasped X Y)! (free X) (held Y)! komoPlace(Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
+  { (agent X) (object Y) (grasped X Y) (table Z) }
+  { (placed Y Z) (grasped X Y)! (free X) (held Y)! komoPlace(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
+}
+
+#####################################################################
+
+DecisionRule place2 {
+  Y, Z,
+  { (held Z) (object Y) (table Z) }
+  { (placed Y Z) komoPlace(Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
 }
 
 #####################################################################
@@ -87,6 +95,14 @@ DecisionRule push {
   W, X, Y, Z,
   { (held W) (pusher X) (partOf X W) (object Y) (table Z) (held Y)! }
   { komoPush(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
+}
+
+#####################################################################
+
+DecisionRule slide {
+  X, Y, Z,
+  { (agent X) (object Y) (table Z) (held Y)! }
+  { komoSlide(X Y Z)=1. (free X)! (held Y) (grasped X Y) (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
 }
 
 #####################################################################
@@ -103,13 +119,5 @@ DecisionRule drop {
   OBJ, FROM, TO,
   { (held OBJ)! (object OBJ) (table FROM) (table TO) }
   { (grasped world OBJ) komoDrop(OBJ FROM TO)=1. (INFEASIBLE grasp ANY OBJ)! block(INFEASIBLE grasp ANY OBJ) }
-}
-
-#####################################################################
-
-DecisionRule activate_attaching {
-  X, Y, Z,
-  { (grasped X Z) (object Y) (object Z) (attachable Y Z) }
-  { (attached Y Z) (grasped X Z)! (free X) (held Z)! komoAttach(X Y Z)=1. }
 }
 
