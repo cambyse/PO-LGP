@@ -19,6 +19,7 @@ pushing
 agent
 object
 table
+wall
 attachable
 pusher
 partOf
@@ -77,7 +78,7 @@ DecisionRule handover {
 
 DecisionRule place {
   X, Y, Z,
-  { (agent X) (object Y) (grasped X Y) (table Z) }
+  { (grasped X Y) (table Z) }
   { (placed Y Z) (grasped X Y)! (free X) (held Y)! komoPlace(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
 }
 
@@ -103,6 +104,14 @@ DecisionRule slide {
   X, Y, Z,
   { (agent X) (object Y) (table Z) (held Y)! }
   { komoSlide(X Y Z)=1. (free X)! (held Y) (grasped X Y) (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y) }
+}
+
+#####################################################################
+
+DecisionRule slideAlong {
+  A, X, Y,
+  { (held A) (object X) (wall Y) }
+  { komoSlideAlong(A X Y)=1. }
 }
 
 #####################################################################

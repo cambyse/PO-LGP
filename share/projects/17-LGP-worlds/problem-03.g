@@ -13,7 +13,7 @@ joint (table1 stick1) { from=<T t(0 0 .02) t(-.2 -.7 .02)> type=JT_rigid}
 
 ### wall
 
-body wall { type=9 size=[2. .4 .05 .01] color=[.6 .3 0] contact }
-joint (table1 wall) { from=<T t(0 0 .02) t(0 .9 .2) d(90 1 0 0)> type=JT_rigid}
-shape (wall) { type=9 size=[2. .2 .05 .01] color=[.6 .3 0] contact rel=<T d(-90 1 0 0) t(0 .1 -.175)> }
+body wall1 { type=9 size=[2. .4 .05 .01] color=[.6 .3 0] contact }
+joint (table1 wall1) { from=<T t(0 0 .02) t(0 .9 .2) d(90 1 0 0)> type=JT_rigid}
+shape (wall1) { type=9 size=[2. .2 .05 .01] color=[.6 .3 0] contact rel=<T d(-90 1 0 0) t(0 .1 -.175)> }
 

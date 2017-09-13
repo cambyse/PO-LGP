@@ -19,7 +19,7 @@ void illustrate(){
     gl.addSubView(i, K(i));
     gl.views(i).camera.setDefault();
     gl.views(i).camera.focus(1., 0., .7);
-
+    gl.views(i).text <<"problem " <<i+1;
   }
   gl.setSubViewTiles(4,2);
 
@@ -59,20 +59,22 @@ void solve3(){
   //-- prepare logic world
   L.addObject("redBall");
   L.addObject("stick1");
-  L.addObject("wall");
+  L.addObject("wall1");
   L.addAgent("baxterL");
   L.addAgent("baxterR");
   L.addFact({"table","table1"});
-  L.addFact({"table","wall"});
+  L.addFact({"table","wall1"});
+  L.addFact({"wall","wall1"});
   L.addFact({"pusher", "stick1"});
 
   OptLGP lgp(K, L);
 
   lgp.optFixedSequence("(grasp baxterR stick1) \
                        (push2 stick1 redBall table1) \
-                       (place stick1 redBall wall) \
+                       (slideAlong stick1 redBall wall1) \
+                       (grasp baxterL redBall) \
                        ", true);
-//                       (grasp baxterL redBall) \
+//                       (place stick1 redBall wall1) \
 
   mlr::wait();
 
@@ -123,11 +125,11 @@ void solve5(){
   lgp.optFixedSequence("(grasp baxterR stick) \
                        (push2 stick redBall table1) \
                        (place stick redBall paper) \
-                       (place baxterR stick table1) \
                        (grasp baxterL paperHandle) \
-                       (place baxterL paperHandle table1) \
+                       (place baxterR stick table1) \
                        (grasp baxterR redBall) \
                        ", true);
+//                       (place baxterL paperHandle table1) \
 
   mlr::wait();
 
@@ -163,6 +165,7 @@ void solve6(){
                        (push stick stickTip redBall box) \
                        (drop redBall box table1) \
                        (place world redBall table1) \
+                       (push stick stickTip redBall table1) \
                        (grasp baxterL redBall) \
                        ", true);
 
@@ -217,11 +220,11 @@ int MAIN(int argc,char **argv){
 
 //  illustrate();
 //  solve1();
-//  solve3();
+  solve3();
 //  solve4();
 //  solve5();
 //  solve6();
-  solve7();
+//  solve7();
 
   return 0;
 }

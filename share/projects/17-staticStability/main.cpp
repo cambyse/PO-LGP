@@ -17,17 +17,22 @@ int main(int argc,char** argv){
   mlr::KinematicWorld K("kin.g");
 
   KOMO komo;
-  komo.setModel(K);
+  komo.setModel(K, false);
   komo.world.report();
   komo.setPathOpt(4., 20, 10.);
 
   komo.setGrasp(1., "baxterL", "red");
-  komo.setPlace(2., "baxterL", "red", "yellow");
+  komo.setPlace(2., "baxterL", "red", "plate");
 
-  komo.setGrasp(2., "baxterR", "yellow");
-  komo.setPlace(3., "baxterR", "yellow", "blue");
+//  komo.setGrasp(1., "baxterR", "green");
+//  komo.setPlace(2., "baxterR", "green", "red");
 
-  komo.setTask(3.5, -1., new TM_StaticStability(komo.world, "blue"));
+  komo.setGrasp(2.1, "baxterR", "yellow");
+  komo.setPlace(3.1, "baxterR", "yellow", "blue");
+
+//  komo.setTask(3.5, -1., new TM_StaticStability(komo.world, "blue", .01), OT_ineq);
+//  komo.setTask(3.5, -1., new TM_StaticStability(komo.world, "plate", .01), OT_ineq);
+//  komo.setTask(3.5, -1., new TM_StaticStability(komo.world, "yellow", NULL, .01), OT_ineq);
 
   komo.reset();
   komo.reportProblem();
