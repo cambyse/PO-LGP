@@ -195,17 +195,32 @@ void Roopi::setKinematics(const mlr::KinematicWorld& K, bool controlView){
   s->q0 = K.q;
 
   if(controlView){
-//    if(s->useRos){
-//      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
-//    } else {
-    s->_ctrlView = make_shared<Act_Thread>(this, new OrsViewer("modelWorld", .1));
-//    }
+    if(s->useRos){
+      s->_ctrlView = shared_ptr<Act_Thread>(new Act_Thread(this, new OrsPoseViewer("modelWorld", {"ctrl_q_ref", "ctrl_q_real"}, .1)));
+    } else {
+      s->_ctrlView = make_shared<Act_Thread>(this, new OrsViewer("modelWorld", .1));
+    }
   }
 }
 
 shared_ptr<Act_TaskController> Roopi::startTaskController(){
   s->_taskController = make_shared<Act_TaskController>(this);
   return s->_taskController;
+}
+
+shared_ptr<Act_ComPR2> Roopi::startPR2(){
+  s->_ComPR2 = newComPR2();
+  return s->_ComPR2;
+}
+
+shared_ptr<Act_Thread> Roopi::startRos(){
+  s->_ComRos = make_shared<Act_Thread>(this, new RosCom_Spinner());
+  return s->_ComRos;
+}
+
+shared_ptr<Act_ComBaxter> Roopi::startBaxter(){
+  s->_ComBaxter = newComBaxter();
+  return s->_ComBaxter;
 }
 
 Act::Ptr Roopi::startTweets(bool go){
@@ -220,6 +235,10 @@ Act_TaskController& Roopi::getTaskController(){
 
 Act_ComPR2& Roopi::getComPR2(){
   return *s->_ComPR2;
+}
+
+Act_ComBaxter& Roopi::getComBaxter(){
+  return *s->_ComBaxter;
 }
 
 void Roopi::reportCycleTimes(){
@@ -403,11 +422,11 @@ mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
   mlr::Shape *sh;
   {
     auto K = setK();
-    sh = new mlr::Shape(K, NoBody);
+    sh = new mlr::Shape(K, *new mlr::Body(K));
     sh->name = name;
     sh->type = mlr::ST_marker;
     sh->mesh.C = {.8,0,0};
-    sh->size[0]=.1;
+    sh->size=ARR(.3,0.,0.,0.);
     sh->X.pos = sh->rel.pos = pos;
   }
   return sh;
@@ -424,7 +443,7 @@ void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placi
       mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, K, 0);
       sw2.apply(K);
     }else{
-      mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_transXYPhi, attachTo, object, K, 0, NoTransformation, NoTransformation, 1);
+      mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_free, attachTo, object, K, 0, NoTransformation, NoTransformation, 1);
       sw2.apply(K);
     }
     K().getJointState(); //enforces that the q & qdot are recalculated!

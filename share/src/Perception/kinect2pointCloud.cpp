@@ -46,32 +46,31 @@ void depthData2pointCloud(arr& pts, const uint16A& depth, int depthShift_dx, int
   uint H=depth.d0, W=depth.d1;
   CHECK_EQ(H, 480, "");
   CHECK_EQ(W, 640, "");
-
+  
   pts.resize(H*W, 3);
-
-  //  float constant = 1.0f / 580; //focal length of kinect in pixels
-  double focal_x = 527;
-  double focal_y = 505;
+  
+  double focal_x = mlr::getParameter<int>("focal_x", 530); // focal length x direction in pixels
+  double focal_y = mlr::getParameter<int>("focal_y", 510);; // focal length y direction in pixels
   int centerX = (W >> 1);
   int centerY = (H >> 1);
-
+  
   uint i=0;
   for(int y=-centerY+1; y<=centerY; y++) for(int x=-centerX+1; x<=centerX; x++, i++) {
-    int j = i+depthShift_dx+depthShift_dy*depth.d1;
-    if(j<0) j=0;
-    if(j>=(int)depth.N) j=depth.N-1;
-    uint16_t d = depth.elem(j);
-    if (d!= 0 && d!=2047) { //2^11-1
-      double z=(double) d * 0.001;
-      pts(i, 0) = z*(1.0/focal_x)*x;
-      pts(i, 1) = z*(1.0/focal_y)*y;
-      pts(i, 2) = z;
-    }else{
-      pts(i, 0) = 0.;
-      pts(i, 1) = 0.;
-      pts(i, 2) = -1.;
+      int j = i+depthShift_dx+depthShift_dy*depth.d1;
+      if(j<0) j=0;
+      if(j>=(int)depth.N) j=depth.N-1;
+      uint16_t d = depth.elem(j);
+      if (d!= 0 && d!=2047) { //2^11-1
+	double z=(double) d * 0.001;
+	pts(i, 0) = z*(1.0/focal_x)*x;
+	pts(i, 1) = z*(1.0/focal_y)*y;
+	pts(i, 2) = z;
+      }else{
+	pts(i, 0) = 0.;
+	pts(i, 1) = 0.;
+	pts(i, 2) = -1.;
+      }
     }
-  }
 
   pts.reshape(H, W, 3);
 }

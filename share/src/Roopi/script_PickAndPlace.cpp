@@ -34,14 +34,12 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
   //query some info from the kinematics first
   double width, above;
-  //uint obj, eff, grasp1, grasp2, workspace;
   uint obj, eff, grasp1, grasp2;
   {
     auto K = R.getK();
 
     //get obj size
     arr objSize = K().getShapeByName(objName)->size;
-    //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2);
 
@@ -57,8 +55,6 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
         grasp1 = K().getJointByName("l_gripper_joint")->to->index;
         grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
       }
-      //cam = K().getShapeByName("endeffKinect")->index;
-      //workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
     }
@@ -67,8 +63,6 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   {
     //attention, gripper positioning, alignment, open gripper
     auto look = R.lookAt(objName);
-    //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    //R.wait(1.);
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
 #if 1
@@ -86,13 +80,12 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     R.wait({-pos, -gripperR, -gripper2R, -up});
 
     //lowering
-    pos->set()->PD().setTarget( ARR(0,0,above) );
+    pos->set()->PD().setTarget( ARR(0,0,above-.01) );
     pos->resetStatus();
     R.wait({-pos});
 
     pos->stop();//don't control obj position when closing gripper
     look->stop();
-    //ws->stop();
 
     //close gripper
     gripSize = width-.015;//+.015;
@@ -122,11 +115,41 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   return AS_done;
 }
 
+int Script_pointBox(Roopi& R, const char* objName, LeftOrRight rl){
+  //query some info from the kinematics first
+  double above;
+  uint obj, eff;
+  {
+    auto K = R.getK();
+    //get obj size
+    arr objSize = K().getShapeByName(objName)->size;
+    above = .5*objSize(2);
+    //relevant shapes
+    obj = K().getShapeByName(objName)->index;
+    if(R.getRobot()=="pr2"){
+      if(rl==LR_right){
+        eff = K().getShapeByName("pr2R")->index;
+      }else{
+        eff = K().getShapeByName("pr2L")->index;
+      }
+    }else{
+      NIY;
+    }
+  }
+  {
+    //attention, positioning
+    auto look = R.lookAt(objName);
+    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
+    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
+    R.wait({-pos, -up});
+  }
+  return AS_done;
+}
+
 int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr::Quaternion& rot){
 
   //query some info from the kinematics first
   double width, above;
-  //uint obj, onto, eff, grasp1, grasp2, workspace;
   uint obj, onto, eff, grasp1, grasp2;
   {
     auto K = R.getK();
@@ -134,7 +157,6 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     //get obj size
     arr objSize = K().getShapeByName(objName)->size;
     arr ontoSize = K().getShapeByName(ontoName)->size;
-    //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
 
@@ -158,7 +180,6 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
           HALT("which hand is this? Something's wrong");
         }
       }
-      //workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
     }
@@ -167,8 +188,6 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
   {
     //attention & gripper positioning
     auto look = R.lookAt(objName);
-    //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    //R.wait(1.);
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {0.,0.,above+.1});
 #if 1
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
@@ -178,8 +197,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto quat = R.newCtrlTask(new TaskMap_Default(quatTMT, obj) );
     quat->set()->PD().setTarget(rot.getArr4d());
 #endif
-    //R.wait({-ws, -up, -pos});
-    R.wait({/*-up,*/ -pos});
+    R.wait({-pos});
 
     //lowering
     pos->set()->PD().setTarget( ARR(0,0,above) );
@@ -211,11 +229,10 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
   return AS_done;
 }
 
-int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
+int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, double deltaX, double deltaY, double deltaZ, int deltaTheta){
 
   //query some info from the kinematics first
   double width, above;
-  //uint obj, onto, eff, grasp1, grasp2, workspace;
   uint obj, onto, eff, grasp1, grasp2;
   {
     auto K = R.getK();
@@ -223,7 +240,6 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     //get obj size
     arr objSize = K().getShapeByName(objName)->size;
     arr ontoSize = K().getShapeByName(ontoName)->size;
-    //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
 
@@ -247,7 +263,6 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
           HALT("which hand is this? Something's wrong");
         }
       }
-      //workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
     }
@@ -256,10 +271,7 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
   {
     //attention & gripper positioning
     auto look = R.lookAt(objName);
-    //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
-    //R.wait(1.);
-    //auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
-    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1});
+    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1+deltaZ});
     auto al1 = R.newCtrlTask();
     auto al2 = R.newCtrlTask();
     auto al3 = R.newCtrlTask();
@@ -286,19 +298,16 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     al2->start();
     al3->set()->PD().setGainsAsNatural(1., .9);
     al3->start();
-    //R.wait({&ws, &up, &pos});
-    //R.wait({&up, &pos});
     R.wait({-pos});
 
     //lowering
-    pos->set()->PD().setTarget( ARR(deltaX,deltaY,above) );
+    pos->set()->PD().setTarget( ARR(deltaX,deltaY,above+deltaZ) );
     pos->resetStatus();
     R.wait({-pos});
 
     //switch
     pos->stop();//don't control obj position during kinematic switch
     look->stop();
-    //ws->stop();
     R.kinematicSwitch(objName, ontoName, true);
 
     //open gripper
@@ -320,6 +329,40 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
   return AS_done;
 }
 
+int Script_pointPosition(Roopi& R, const char* objName, const char* ontoName, LeftOrRight rl, double deltaX, double deltaY, double deltaZ){
+  //assume objName in hand, place at a position relative to ontoName and keep in gripper
+  //query some info from the kinematics first
+  double above;
+  uint obj, onto;
+  {
+    auto K = R.getK();
+    //get obj size
+    above = 0.06;
+    //relevant shapes
+    obj = K().getShapeByName(objName)->index;
+    onto = K().getShapeByName(ontoName)->index;
+  }
+  {
+    //attention, positioning
+    auto look = R.lookAt(ontoName);
+    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+deltaZ});
+    auto al1 = R.newCtrlTask();
+    auto al2 = R.newCtrlTask();
+    auto al3 = R.newCtrlTask();
+    al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+    al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+    al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    al1->set()->PD().setGainsAsNatural(1., .9);
+    al1->start();
+    al2->set()->PD().setGainsAsNatural(1., .9);
+    al2->start();
+    al3->set()->PD().setGainsAsNatural(1., .9);
+    al3->start();
+    R.wait(+pos);
+  }
+  return AS_done;
+}
+
 int Script_armsNeutral(Roopi& R){
   //query some info from the kinematics first
   uint shoulderPanJointR, shoulderLiftJointR, upperArmRollJointR, elbowFlexJointR, forearmRollJointR;
@@ -337,6 +380,7 @@ int Script_armsNeutral(Roopi& R){
         upperArmRollJointL= K().getJointByName("l_upper_arm_roll_joint")->to->index;
         elbowFlexJointL= K().getJointByName("l_elbow_flex_joint")->to->index;
         forearmRollJointL= K().getJointByName("l_forearm_roll_joint")->to->index;
+//        torsoLiftJoint= K().getJointByName("torso_lift_joint")->to->index;
     }else{
       NIY;
     }
@@ -353,12 +397,30 @@ int Script_armsNeutral(Roopi& R){
       auto upperArmRollL =  R.newCtrlTask(new TaskMap_qItself({upperArmRollJointL}, false), {}, {1});   //1
       auto elbowFlexL =  R.newCtrlTask(new TaskMap_qItself({elbowFlexJointL}, false), {}, {-2});   //-2
       auto forearmRollL =  R.newCtrlTask(new TaskMap_qItself({forearmRollJointL}, false), {}, {1.5});   //1.5
+//      auto torsoLift = R.newCtrlTask(new TaskMap_qItself({torsoLiftJoint}, false), {}, {0.3});
       R.wait({-shoulderPanR,-shoulderLiftR,-upperArmRollR,-elbowFlexR,-forearmRollR});
       R.wait({-shoulderPanL,-shoulderLiftL,-upperArmRollL,-elbowFlexL,-forearmRollL});
+//      R.wait({-torsoLift});
   }
   return AS_done;
 }
 
+int Script_setTorso(Roopi& R, int up_down){
+  uint torsoLiftJoint;
+  {
+    auto K = R.getK();
+    if(R.getRobot()=="pr2"){
+      torsoLiftJoint= K().getJointByName("torso_lift_joint")->to->index;
+    }else{
+      NIY;
+    }
+  }
+  {
+    auto torsoLift = R.newCtrlTask(new TaskMap_qItself({torsoLiftJoint}, false), {}, {0.3*up_down});
+    R.wait({-torsoLift});
+  }
+  return AS_done;
+}
 
 int Script_workspaceReady(Roopi& R, const char* objName){
   uint obj, workspace;
@@ -369,7 +431,6 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     mlr::Shape *ob = K().getShapeByName(objName);
     obj = ob->index;
     if(R.getRobot()=="pr2"){
-//      mlr::Shape *sh = K().getShapeByName("pr2R");
       workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;

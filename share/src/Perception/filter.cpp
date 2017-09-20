@@ -190,6 +190,15 @@ void Filter::step(){
   for(Percept *p:percepts_filtered()){
     if(p->bodyId>=0){
       mlr::Body *b = modelWorld->bodies(p->bodyId);
+      if (p->type==Percept::PT_box) {
+	mlr::Shape *s=b->shapes.first();
+	s->size = (static_cast<PercBox*> (p))->size;
+	s->mesh.setSSBox(s->size(0), s->size(1), s->size(2), 0.0001);
+	s->mesh.C = (static_cast<PercBox*> (p))->color;
+	if (s->mesh.C.d0 > 3)
+	  s->mesh.C=ARR(0.,0.,0.);
+      }
+
       CtrlTask *t;
 
       t = new CtrlTask(STRING("syncPos_" <<b->name), new TaskMap_Default(posTMT, b->shapes.first()->index));

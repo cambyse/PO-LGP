@@ -56,6 +56,7 @@ struct Roopi_private {
   shared_ptr<Act_Tweets> _tweets;
   shared_ptr<Act_Thread> _ComRos;
   shared_ptr<Act_ComPR2> _ComPR2;
+  shared_ptr<Act_ComBaxter> _ComBaxter;
   shared_ptr<Act_Thread> _ctrlView;
   shared_ptr<Act_Thread> _taskUpdater;
 

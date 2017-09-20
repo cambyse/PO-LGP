@@ -12,6 +12,7 @@
 #include "act_PathFollow.h"
 #include "act_TaskController.h"
 #include "act_ComPR2.h"
+#include "act_ComBaxter.h"
 #include "act_Thread.h"
 #include "act_Tweets.h"
 #include "act_Script.h"
@@ -73,6 +74,9 @@ struct Roopi {
   void setKinematics(const mlr::KinematicWorld& K, bool controlView=true);  ///< set kinematics by hand (done in 'autoStartup')
   shared_ptr<Act_TaskController> startTaskController();         ///< start the task controller by hand (done in 'autoStartup')
   Act::Ptr startTweets(bool go=true);             ///< start the status tweeter by hand (done in 'autoStartup')
+  shared_ptr<Act_Thread> startRos();         ///< start ROS by hand (done in 'autoStartup')
+  shared_ptr<Act_ComPR2> startPR2();         ///< start PR2 coms by hand (done in 'autoStartup')
+  shared_ptr<Act_ComBaxter> startBaxter();         ///< start Baxter coms by hand
 
   //==============================================================================
 
@@ -83,6 +87,7 @@ struct Roopi {
   arr get_q0();                                      ///< return the 'homing pose' of the robot
   Act_TaskController& getTaskController();           ///< get taskController (to call verbose, or lock..)
   Act_ComPR2& getComPR2();                           ///< to call 'stopSendingMotion'
+  Act_ComBaxter& getComBaxter();
 
   //-- direct access to variables and threads
   template<class T> Access<T> variable(const char* var_name){    ///< get a handle to a typed variable: you can R/W-access the data or read/wait for the revision
@@ -129,6 +134,7 @@ struct Roopi {
   Act_Thread::Ptr  newThread(Thread* th)  { return Act_Thread::Ptr(new Act_Thread(this, th)); } ///< a trivial wrapper to make a thread (create it with new YourThreadClass) an activity
   Act_ComPR2::Ptr  newComPR2()            { return Act_ComPR2::Ptr(new Act_ComPR2(this)); } ///< subscribers/publishers that communicate with PR2
   Act_PathOpt::Ptr newPathOpt()           { return Act_PathOpt::Ptr(new Act_PathOpt(this)); } ///< a path optimization activity, access komo yourself to define the problem
+  Act_ComBaxter::Ptr newComBaxter()       { return Act_ComBaxter::Ptr(new Act_ComBaxter(this));}
 
   Act_Th<struct RosCom_Spinner> RosCom(); ///< thread for the ROS spinner
   Act_Thread::Ptr PhysX();           ///< run PhysX (nvidia physical simulator)
@@ -144,11 +150,17 @@ struct Roopi {
   Act::Ptr graspBox(const char* objName, LeftOrRight lr){
     return run( [this, objName, lr](){ return Script_graspBox(*this, objName, lr); } );
   }
+  Act::Ptr pointBox(const char* objName, LeftOrRight lr){
+    return run( [this, objName, lr](){ return Script_pointBox(*this, objName, lr); } );
+  }
   Act::Ptr place(const char* objName, const char* ontoName){
     return run( [this, objName, ontoName](){ return Script_place(*this, objName, ontoName); } );
   }
-  Act::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX, double deltaY, int deltaTheta){
-    return run( [this, objName, ontoName, deltaX, deltaY, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaTheta); } );
+  Act::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX=0., double deltaY=0., double deltaZ=0., int deltaTheta=0){
+    return run( [this, objName, ontoName, deltaX, deltaY, deltaZ, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaZ, deltaTheta); } );
+  }
+  Act::Ptr pointPosition(const char* objName, const char* ontoName, LeftOrRight lr, double deltaX=0., double deltaY=0., double deltaZ=0.){
+    return run( [this, objName, ontoName, lr, deltaX, deltaY, deltaZ](){ return Script_pointPosition(*this, objName, ontoName, lr, deltaX, deltaY, deltaZ); } );
   }
   Act::Ptr setGripper(LeftOrRight lr, double gripSize){
     return run( [this, lr, gripSize](){ return Script_setGripper(*this, lr, gripSize); } );
@@ -158,6 +170,9 @@ struct Roopi {
   }
   Act::Ptr armsNeutral(){
     return run( [this](){ return Script_armsNeutral(*this); } );
+  }
+  Act::Ptr setTorso(int up_down){
+    return run( [this, up_down](){ return Script_setTorso(*this,up_down); } );
   }
 
 };
