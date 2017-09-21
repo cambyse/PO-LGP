@@ -72,6 +72,7 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
       equal = false;
     }
   }
+
   return equal;
 }
 

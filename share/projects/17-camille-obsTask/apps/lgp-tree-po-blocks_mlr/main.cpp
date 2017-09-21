@@ -1,21 +1,21 @@
 #include <functional>
 #include <list>
 
-#include <policy.h>
-#include <policy_printer.h>
+#include <POMTP_interfaces/policy.h>
+#include <POMTP_interfaces/policy_printer.h>
 
-#include <policy_builder.h>
+#include <TaskPlanning/policy_builder.h>
 
-#include <mcts_planner.h>
-#include <komo_planner.h>
+#include <TaskPlanning/mcts_planner.h>
+#include <MotionPlanning/komo_planner.h>
 
-#include <observation_tasks.h>
-#include <approx_point_to_shape.h>
-#include <vertical_velocity.h>
-#include <axis_alignment.h>
-#include <over_plane.h>
+#include <ObservationTasks/observation_tasks.h>
+#include <CollisionAvoidance/approx_point_to_shape.h>
+#include <CollisionAvoidance/vertical_velocity.h>
+#include <CollisionAvoidance/axis_alignment.h>
+#include <CollisionAvoidance/over_plane.h>
 
-#include <node_visitors.h>
+#include <TaskPlanning/node_visitors.h>
 
 
 /*
@@ -292,7 +292,7 @@ void plan()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  tp->setMCParams( /*10*/100, -1, /*50*/100 );
+  tp->setMCParams( 100, -1, 100 );
   mp->setNSteps( 10 );
 
   // register symbols

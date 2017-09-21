@@ -12,22 +12,18 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
+#include <map>
+#include <POMTP_interfaces/policy.h>
 
-
-namespace tp
+class MotionPlanner
 {
+public:
+    typedef std::shared_ptr< MotionPlanner > ptr;
 
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
-
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
-
-}
+public:
+    virtual void setKin( const std::string & kinDescription ) = 0; // specify start kinematics
+    virtual void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) = 0;
+    virtual void display( const Policy::ptr &, double sec = 30 ) = 0;
+};

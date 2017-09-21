@@ -12,22 +12,21 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
+#include <POMTP_interfaces/policy.h>
 
-
-namespace tp
+class TaskPlanner
 {
+public:
+    typedef std::shared_ptr< TaskPlanner > ptr;
 
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+public:
+    virtual void setFol( const std::string & folDescription ) = 0;
+    virtual void solve() = 0;
+    virtual void integrate( const Policy::ptr & policy ) = 0;
 
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
-
-}
+    virtual bool terminated() const = 0;
+    virtual Policy::ptr getPolicy() const = 0;
+    virtual MotionPlanningOrder getPlanningOrder() const = 0;
+};

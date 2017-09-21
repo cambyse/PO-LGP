@@ -1,0 +1,79 @@
+digraph g{
+0->1 [ label="(pick-up block_2 tableC_left)" ];
+1->5 [ label="(check block_2)
+(is block_2 block_b),
+p=0.333333
+q=0.333333" ];
+5->9 [ label="(put-down block_2 tableC_left)" ];
+9->19 [ label="(unstack block_3 block_1)" ];
+19->25 [ label="(check block_3)
+(is block_1 block_c),
+(is block_3 block_a),
+p=0.166667
+q=0.5" ];
+25->37 [ label="(put-down block_3 tableC_right)" ];
+37->52 [ label="(pick-up block_2 tableC_left)" ];
+52->68 [ label="(stack block_2 block_1)" ];
+68->85 [ label="(pick-up block_3 tableC_right)" ];
+85->98 [ label="(stack block_3 block_2)" ];
+19->26 [ label="(check block_3)
+(is block_1 block_a),
+(is block_3 block_c),
+p=0.166667
+q=0.5" ];
+26->40 [ label="(put-down block_3 tableC_right)" ];
+40->55 [ label="(pick-up block_2 tableC_left)" ];
+55->72 [ label="(stack block_2 block_3)" ];
+72->87 [ label="(pick-up block_1 tableC_center)" ];
+87->101 [ label="(stack block_1 block_2)" ];
+1->6 [ label="(check block_2)
+(is block_2 block_c),
+p=0.333333
+q=0.333333" ];
+6->13 [ label="(put-down block_2 tableC_right)" ];
+13->20 [ label="(pick-up block_2 tableC_right)" ];
+20->29 [ label="(put-down block_2 tableC_left)" ];
+29->44 [ label="(unstack block_3 block_1)" ];
+44->58 [ label="(check block_3)
+(is block_1 block_a),
+(is block_3 block_b),
+p=0.166667
+q=0.5" ];
+58->75 [ label="(stack block_3 block_2)" ];
+75->89 [ label="(pick-up block_1 tableC_center)" ];
+89->104 [ label="(stack block_1 block_3)" ];
+44->59 [ label="(check block_3)
+(is block_1 block_b),
+(is block_3 block_a),
+p=0.166667
+q=0.5" ];
+59->76 [ label="(put-down block_3 tableC_right)" ];
+76->91 [ label="(pick-up block_1 tableC_center)" ];
+91->106 [ label="(stack block_1 block_2)" ];
+106->111 [ label="(pick-up block_3 tableC_right)" ];
+111->115 [ label="(stack block_3 block_1)" ];
+1->7 [ label="(check block_2)
+(is block_2 block_a),
+p=0.333333
+q=0.333333" ];
+7->15 [ label="(put-down block_2 tableC_left)" ];
+15->23 [ label="(unstack block_3 block_1)" ];
+23->33 [ label="(check block_3)
+(is block_1 block_c),
+(is block_3 block_b),
+p=0.166667
+q=0.5" ];
+33->46 [ label="(stack block_3 block_1)" ];
+46->62 [ label="(pick-up block_2 tableC_left)" ];
+62->81 [ label="(stack block_2 block_3)" ];
+23->34 [ label="(check block_3)
+(is block_1 block_b),
+(is block_3 block_c),
+p=0.166667
+q=0.5" ];
+34->48 [ label="(put-down block_3 tableC_right)" ];
+48->64 [ label="(pick-up block_1 tableC_center)" ];
+64->84 [ label="(stack block_1 block_3)" ];
+84->94 [ label="(pick-up block_2 tableC_left)" ];
+94->110 [ label="(stack block_2 block_1)" ];
+}

@@ -12,22 +12,25 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
-
+#include "node_visitor.h"
+#include "po_node.h"
 
 namespace tp
 {
 
-void PrintRewardsVisitor::visit( PONode::ptr node )
+class PrintRewardsVisitor : public NodeVisitorBase
 {
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+public:
+  void visit( PONode::ptr );
+};
 
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
+/*class PrintGroundingsOverTimeVisitor : public NodeVisitorBase
+{
+public:
+  void visit( POLGPNode * );
+};*/
+
 }
 
-}

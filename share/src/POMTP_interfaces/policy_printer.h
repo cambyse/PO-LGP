@@ -12,22 +12,24 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
+#include <POMTP_interfaces/policy.h>
 
-
-namespace tp
+class PolicyPrinter
 {
-
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
-
-  for( auto c : node->bestFamily() )
+public:
+  PolicyPrinter( std::ostream & ss )
+    : ss_( ss )
   {
-    visit( c );
-  }
-}
 
-}
+  }
+
+  void print( const Policy::ptr & );
+
+private:
+  void printFromNode( const PolicyNode::ptr & node );
+
+private:
+  std::ostream & ss_;
+};

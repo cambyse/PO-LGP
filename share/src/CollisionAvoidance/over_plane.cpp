@@ -12,22 +12,4 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
-
-#include <MCTS/solver_PlainMC.h>
-
-
-namespace tp
-{
-
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
-
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
-
-}
+#include <CollisionAvoidance/over_plane.h>

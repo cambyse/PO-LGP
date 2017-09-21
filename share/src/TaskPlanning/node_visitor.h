@@ -12,22 +12,22 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
-
+#include <memory>
 
 namespace tp
 {
 
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+class PONode;
 
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
+class NodeVisitorBase
+{
+public:
+  virtual void visit( std::shared_ptr< PONode > ) = 0;
+
+  // friendship no inherited in c++
+
+};
 
 }

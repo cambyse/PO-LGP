@@ -4,11 +4,11 @@
 #include <Logic/fol.h>
 #include <Logic/fol_mcts_world.h>
 
-#include <policy.h>
-#include <task_planner.h>
+#include <POMTP_interfaces/policy.h>
+#include <POMTP_interfaces/task_planner.h>
 
-#include <po_node.h>
-#include <node_visitors.h>
+#include <TaskPlanning/po_node.h>
+#include <TaskPlanning/node_visitors.h>
 
 namespace tp
 {

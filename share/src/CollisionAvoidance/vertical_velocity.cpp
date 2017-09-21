@@ -12,22 +12,32 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
-
-#include <MCTS/solver_PlainMC.h>
+#include <CollisionAvoidance/vertical_velocity.h>
 
 
-namespace tp
+//-----VerticalVelocity----------------//
+
+void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
 {
+  arr tmp_y = zeros( 2 );
+  arr tmp_J = zeros( 2, G.q.N );
 
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+  auto body = G.getBodyByName( bobyName_ );
+  arr p, Jp;
+  G.kinematicsPos( p, Jp, body, mlr::Vector( 0, 0, 0 ) );
 
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
 
+  // commit results
+  const double w = 10;
+  tmp_y( 0 ) = w * p( 0 );
+  tmp_y( 1 ) = w * p( 1 );
+
+  tmp_J.setMatrixBlock( w * Jp.row( 0 ), 0, 0 );
+  tmp_J.setMatrixBlock( w * Jp.row( 1 ), 1, 0 );
+
+  //tmp_J.setMatrixBlock( Jp, 0, 0 );
+
+  //  // commit results
+  y = tmp_y;
+  if(&J) J = tmp_J;
 }

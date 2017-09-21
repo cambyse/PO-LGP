@@ -12,22 +12,31 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
+#include <Math_utility/math_utility.h>
 
+#include <Kin/taskMap.h>
+#include <Kin/taskMaps.h>
 
-namespace tp
+using namespace std;
+
+struct VerticalVelocity:TaskMap
 {
-
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
-
-  for( auto c : node->bestFamily() )
+  VerticalVelocity( const char* bobyName, const arr & dir )
+    : bobyName_     ( bobyName )
+    , dir_( dir )
   {
-    visit( c );
-  }
-}
 
-}
+  }
+
+  void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t );
+
+  uint dim_phi( const mlr::KinematicWorld& G ) { return 1; }
+
+  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("MovementDirection"); }
+
+  private:
+    const mlr::String bobyName_;
+    const arr dir_;
+};

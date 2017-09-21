@@ -292,7 +292,7 @@ void MCTSPlanner::solveFirstTime()
   }
 
   // optional
-  //addRollouts();
+  addRollouts();
 }
 
 void MCTSPlanner::generateAlternative()

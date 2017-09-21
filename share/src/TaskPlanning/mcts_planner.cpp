@@ -12,7 +12,7 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include <mcts_planner.h>
+#include <TaskPlanning/mcts_planner.h>
 #include <policy_builder.h>
 
 namespace tp
@@ -308,7 +308,7 @@ void MCTSPlanner::generateAlternative()
 }
 
 //void MCTSPlanner::addRollouts()
-//{ // doesn't work yet!
+//{
 ////  PolicyBuilder builder( root_ );
 
 ////  Policy::ptr currentPolicy = builder.getPolicy();

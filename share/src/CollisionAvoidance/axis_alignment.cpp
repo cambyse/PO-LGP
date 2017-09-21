@@ -12,22 +12,28 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#include <CollisionAvoidance/axis_alignment.h>
 
-#include <MCTS/solver_PlainMC.h>
+//-----AxisAlignment----------------//
 
-
-namespace tp
+void AxisAlignment::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
 {
+  arr tmp_y = zeros( 1 );
+  arr tmp_J = zeros( 1, G.q.N );
 
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+  auto body = G.getBodyByName( bobyName_ );
 
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
+  arr bodyAxisDirection, bodyJAxisDirection;
+  G.kinematicsVec( bodyAxisDirection, bodyJAxisDirection, body, axis_ );
 
+  double dot_product = dot( bodyAxisDirection, axis_ );
+
+  double cost = 1 - dot_product;
+
+  tmp_y( 0 ) = cost;
+  tmp_J.setMatrixBlock( - ( ~ axis_ ) * bodyJAxisDirection, 0, 0 );
+
+  // commit results
+  y = tmp_y;
+  if(&J) J = tmp_J;
 }

@@ -12,22 +12,20 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
+#include <Kin/kinViewer.h>
 
-
-namespace tp
+namespace mp
 {
-
-void PrintRewardsVisitor::visit( PONode::ptr node )
+// the visualizer can work as long as the kinmeatic frames it has to display exist!
+class PolicyVisualizer
 {
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+public:           // for each terminal node, for each possible world, each frame
+  PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name );
 
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
+private:
+  std::vector< std::shared_ptr< OrsPathViewer > > views_;
+};
 
 }

@@ -12,22 +12,18 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "node_visitors.h"
+#pragma once
 
-#include <MCTS/solver_PlainMC.h>
+#include <Core/array.h>
+
+using namespace std;
+
+double norm2( const arr & x );
+
+arr Jnorm( const arr & x );
+
+double dot( const arr & a, const arr & b );
+
+arr normalizedX( const arr & x, const arr & Jx,  arr & Jx1 );
 
 
-namespace tp
-{
-
-void PrintRewardsVisitor::visit( PONode::ptr node )
-{
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
-
-  for( auto c : node->bestFamily() )
-  {
-    visit( c );
-  }
-}
-
-}
