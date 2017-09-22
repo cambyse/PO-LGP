@@ -4,13 +4,14 @@
 #include <Gui/opengl.h>
 #include <Kin/kin_swift.h>
 #include <Kin/taskMaps.h>
+#include <Kin/frame.h>
 
 #include "physx.h"
 
 using namespace std;
 
-#define collisionsOff(x) komo.world.swift().deactivate(komo.world.getShapeByName(x))
-#define collisionsOn(x) komo.world.swift().activate(komo.world.getShapeByName(x))
+#define collisionsOff(x) komo.world.swift().deactivate(komo.world.getFrameByName(x))
+#define collisionsOn(x) komo.world.swift().activate(komo.world.getFrameByName(x))
 
 
 //===========================================================================
@@ -23,16 +24,17 @@ void init(KOMO& komo, uint trial, mlr::KinematicWorld& W, mlr::KinematicWorld& W
   komo.setModel(W);
 
   komo.setTiming(phases, 20, 5., 2);
-  komo.setFixEffectiveJoints(-1., -1., 1e3);
+  komo.setFixEffectiveJoints();
   komo.setFixSwitchedObjects();
   komo.setSquaredQAccelerations();
+  komo.setSquaredQuaternionNorms();
 
   komo.displayCamera().setPosition(-5.,-1.,2.);
   komo.displayCamera().focus(0,0,1.);
   komo.displayCamera().upright();
 
   // explicitly active certain collision computations (by SWIFT)
-  komo.world.swift().deactivate(komo.world.getShapeByName("table"));
+  komo.world.swift().deactivate(komo.world.getFrameByName("table"));
  }
 
 
@@ -54,24 +56,15 @@ void optimize(KOMO& komo){
 void trial1(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin; //intital config W, final config Wfin
- 
   init(komo, 1, W, Wfin);
-  
   collisionsOn("red");
   collisionsOn("blue");
   collisionsOn("yellow");
 
-  //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
-
-
   komo.setGrasp(1., "humanR", "red", 0, .8);
   komo.setGrasp(1.5, "humanL", "yellow", 0, .8);
-  komo.setPlace(2.5, "humanR", "red", "table");
-  komo.setPlace(3., "humanL", "yellow", "table");
-
-  //komo.setPlaceFixed(2.5, "humanR", "red", "table", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X);
-  //komo.setPlaceFixed(3., "humanL", "yellow", "table", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("table")->X);
+  komo.setPlaceFixed(2.5, "humanR", "red", "table", Wfin.getFrameByName("red")->X/Wfin.getFrameByName("table")->X );
+  komo.setPlaceFixed(3., "humanL", "yellow", "table", Wfin.getFrameByName("yellow")->X/Wfin.getFrameByName("table")->X );
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
 //  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
@@ -82,7 +75,6 @@ void trial1(){
 
 //===========================================================================
 
-
 void trial2(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
@@ -90,41 +82,37 @@ void trial2(){
   collisionsOn("red");
   collisionsOn("blue");
   collisionsOn("yellow");
-  
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
  
   komo.setGrasp(1., "humanR", "red", 0, 0.8); //weight?
-  komo.setPlaceFixed(2.0, "humanR", "red", "blue", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("blue")->X );
-  
+  komo.setPlaceFixed(2.0, "humanR", "red", "blue", Wfin.getFrameByName("red")->X/Wfin.getFrameByName("blue")->X );
+
   komo.setTask(1., 3., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
 
+//===========================================================================
+
 void trial3(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
-
   init(komo, 3, W, Wfin);
-
-  //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
+  collisionsOn("red");
+  collisionsOn("blue");
 
   komo.setGrasp(1., "humanR", "red", 0, .8);
-//  komo.setGrasp(1.5, "humanL", "blue", 0, .8);
+  komo.setGrasp(1.5, "humanL", "blue", 0, .8);
 
-  mlr::Transformation pose = Wfin.getShapeByName("red")->X;
-  komo.setTask(2., 3., new TaskMap_Default(posTMT, W, "red", NoVector), OT_sumOfSqr, pose.pos.getArr());
-  komo.setTask(2., 3., new TaskMap_Default(quatTMT, W, "red", NoVector), OT_sumOfSqr, pose.rot.getArr4d());
+//  mlr::Transformation pose = Wfin.getFrameByName("red")->X;
+//  komo.setTask(2., 3., new TaskMap_Default(posTMT, W, "red", NoVector), OT_sumOfSqr, pose.pos.getArr());
+//  komo.setTask(2., 3., new TaskMap_Default(quatTMT, W, "red", NoVector), OT_sumOfSqr, pose.rot.getArr4d());
 
-  komo.setKinematicSwitch(3., true, "delete", "humanR", "red");
-  komo.setKinematicSwitch(3., true, "rigidZero", "table", "red",  Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X );
+//  komo.setKinematicSwitch(3., true, "delete", "humanR", "red");
+//  komo.setKinematicSwitch(3., true, "rigidZero", "table", "red",  Wfin.getFrameByName("red")->X/Wfin.getFrameByName("table")->X );
 
-//  komo.setPlaceFixed(3., "humanR", "red", "table", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X);
-//  komo.setPlaceFixed(3., "humanL", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
+  komo.setPlaceFixed(2., "humanR", "red", "table", Wfin.getFrameByName("red")->X/Wfin.getFrameByName("table")->X);
+  komo.setPlaceFixed(2.5, "humanL", "blue", "red", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("red")->X);
 
-  //low-level implementation of distance, using GJK and inequality (>5cm)
-//  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
   komo.setTask(1.5, 2.5, new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
@@ -137,20 +125,19 @@ void trial3b(){
   mlr::KinematicWorld W, Wfin;
 
   init(komo, 3, W, Wfin, 10.);
-
-  //-- fix last configuration
-  komo.setTask(9.9, 10., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
+  collisionsOn("red");
+  collisionsOn("blue");
 
   komo.setGrasp(1., "humanR", "red", 0, .8);
   komo.setPlace(2., "humanR", "red", "table");
   komo.setGrasp(3., "humanR", "blue", 0, .0);
   komo.setPlace(4., "humanR", "blue", "table");
   komo.setGrasp(5., "humanR", "red", 0, .8);
-  komo.setPlaceFixed(6., "humanR", "red", "table", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X);
+  komo.setPlaceFixed(6., "humanR", "red", "table", Wfin.getFrameByName("red")->X/Wfin.getFrameByName("table")->X);
   komo.setGrasp(7., "humanR", "blue", 0, .8);
-  komo.setPlaceFixed(8., "humanR", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
+  komo.setPlaceFixed(8., "humanR", "blue", "red", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("red")->X);
 
-  komo.setTask(3., 5., new TaskMap_Proxy(pairsPTMT, {W.getShapeByName("red")->ID, W.getShapeByName("blue")->ID}, .03), OT_sumOfSqr, NoArr, 1e2);
+  komo.setTask(3., 5., new TaskMap_Proxy(pairsPTMT, {W.getFrameByName("red")->ID, W.getFrameByName("blue")->ID}, .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
@@ -163,9 +150,6 @@ void trial3c(){
 
   init(komo, 3, W, Wfin, 7.);
 
-  //-- fix last configuration
-  komo.setTask(6.9, 7., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
-
 #if 0
   komo.setGrasp(1., "humanR", "blue", 0, .0);
   komo.setPlace(2., "humanR", "blue", "table");
@@ -173,87 +157,75 @@ void trial3c(){
   komo.setGraspSlide(1., 2., "humanR", "blue", "table", 0, .0);
 #endif
   komo.setGrasp(3., "humanR", "red", 0, .8);
-  komo.setPlaceFixed(4., "humanR", "red", "table", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("table")->X);
+  komo.setPlaceFixed(4., "humanR", "red", "table", Wfin.getFrameByName("red")->X/Wfin.getFrameByName("table")->X);
   komo.setGrasp(5., "humanR", "blue", 0, .8);
-  komo.setPlaceFixed(6., "humanR", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
+  komo.setPlaceFixed(6., "humanR", "blue", "red", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("red")->X);
 
-//  komo.setTask(3., 5., new TaskMap_Proxy(pairsPTMT, {W.getShapeByName("red")->index, W.getShapeByName("blue")->index}, .03), OT_sumOfSqr, NoArr, 1e2);
+//  komo.setTask(3., 5., new TaskMap_Proxy(pairsPTMT, {W.getFrameByName("red")->index, W.getFrameByName("blue")->index}, .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
 
 //===========================================================================
 
-
 void trial4(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
-  
   init(komo, 4, W, Wfin, 6.);
-  
   collisionsOff("blue");
   collisionsOff("yellow");
   collisionsOff("red");
-  
-  komo.setTask(5.9,6., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
   
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   //komo.setplace(2.5, "humanr", "blue", "table");
   //komo.setgrasp(3.5, "humanl", "blue", 0, 0.8);
 
-  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
-  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
+  //velocities!
+//  komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, {}, 1e2, 1);
+//  komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, {}, 1e2, 1);
 
-  komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
+  mlr::Transformation rel = Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("table")->X;
+//  rel.rot.flipSign();
+  komo.setPlaceFixed(3., "humanL", "blue", "table", rel);
 
   komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 } 
 
+//===========================================================================
 
 void trial5(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin; //intital config W, final config Wfin
- 
   init(komo, 5, W, Wfin);
-  
   collisionsOn("red");
   collisionsOn("blue");
   collisionsOn("yellow");
 
-  //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
-
-
   komo.setGrasp(1., "humanL", "blue", 0, .8);
-  komo.setPlaceFixed(2., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
+  komo.setPlaceFixed(2., "humanL", "blue", "table", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("table")->X);
  
   komo.setTask(1., 2.5, new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
 
   optimize(komo);
 }
 
-
+//===========================================================================
 
 void trial10(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
+  init(komo, 10, W, Wfin);
   //collisionsOn("red");
   //collisionsOn("blue");
   //collisionsOn("yellow");
 
-
-  init(komo, 10, W, Wfin);
-
-  //-- fix last configuration
-  komo.setTask(3.9, 4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
-
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   komo.setGrasp(1.5, "humanR", "yellow", 0, .8);
 
-  komo.setPlaceFixed(2.5, "humanL", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
-  komo.setPlaceFixed(3., "humanR", "yellow", "blue", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("blue")->X);
+  komo.setPlaceFixed(2.5, "humanL", "blue", "red", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("red")->X);
+  komo.setPlaceFixed(3., "humanR", "yellow", "blue", Wfin.getFrameByName("yellow")->X/Wfin.getFrameByName("blue")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
 //  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
@@ -262,27 +234,21 @@ void trial10(){
   optimize(komo);
 }
 
-
-
+//===========================================================================
 
 void trial11(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
+  init(komo, 11, W, Wfin);
   //collisionsOn("red");
   //collisionsOn("blue");
   //collisionsOn("yellow");
 
-
-  init(komo, 11, W, Wfin);
-
-  //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
-
   komo.setGrasp(1., "humanL", "yellow", 0, .8);
   komo.setGrasp(1.5, "humanR", "blue", 0, .8);
 
-  komo.setPlaceFixed(2.5, "humanR", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
-  komo.setPlaceFixed(3., "humanL", "yellow", "blue", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("blue")->X);
+  komo.setPlaceFixed(2.5, "humanR", "blue", "red", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("red")->X);
+  komo.setPlaceFixed(3., "humanL", "yellow", "blue", Wfin.getFrameByName("yellow")->X/Wfin.getFrameByName("blue")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
 //  komo.setTask(1.5,3., new TaskMap_GJK(komo.world, "yellow", "red", true, true), OT_ineq, ARR(-.02), 1e2, 0);
@@ -291,36 +257,29 @@ void trial11(){
   optimize(komo);
 }
 
-
+//===========================================================================
 
 void trial27(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
-
   init(komo, 27, W, Wfin);
-
   collisionsOn("yellow");
   collisionsOn("blue");
 
-  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("blue"));
-  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("yellow"));
- 
-
+  //komo.world.swift().deactivate(komo.world.getFrameByName("red"), komo.world.getFrameByName("blue"));
+  //komo.world.swift().deactivate(komo.world.getFrameByName("red"), komo.world.getFrameByName("yellow"));
 
  // better use low-level GJK instead of SWIFT
-//  komo.world.swift().activate(komo.world.getShapeByName("yellow"));
-//  komo.world.swift().activate(komo.world.getShapeByName("red"));
-
-  //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
+//  komo.world.swift().activate(komo.world.getFrameByName("yellow"));
+//  komo.world.swift().activate(komo.world.getFrameByName("red"));
 
   komo.setGrasp(1., "humanR", "blue", 0, .1);
 //  komo.setPlace(1.8, "humanR", "blue", "tableC");
-  komo.setPlaceFixed(2.5, "humanR", "blue", "red", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("red")->X);
+  komo.setPlaceFixed(2.5, "humanR", "blue", "red", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("red")->X);
 
   komo.setGrasp(1.5, "humanL", "yellow", 0, .1);
 //  komo.setPlace(2.1, "humanL", "yellow", "tableC");
-  komo.setPlaceFixed(3., "humanL", "yellow", "blue", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("blue")->X);
+  komo.setPlaceFixed(3., "humanL", "yellow", "blue", Wfin.getFrameByName("yellow")->X/Wfin.getFrameByName("blue")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
 //  komo.setTask(1.5, 2.5, new TaskMap_GJK(komo.world, "yellow", "blue", true, true), OT_ineq, ARR(-.05), 1e2, 0);
@@ -329,40 +288,32 @@ void trial27(){
   optimize(komo);
 }
 
-
-
+//===========================================================================
 
 void trial33(){
   KOMO komo;
   mlr::KinematicWorld W, Wfin;
-
   init(komo, 33, W, Wfin);
-
   collisionsOn("yellow");
   collisionsOn("blue");
 
-  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("blue"));
-  //komo.world.swift().deactivate(komo.world.getShapeByName("red"), komo.world.getShapeByName("yellow"));
- 
-
+  //komo.world.swift().deactivate(komo.world.getFrameByName("red"), komo.world.getFrameByName("blue"));
+  //komo.world.swift().deactivate(komo.world.getFrameByName("red"), komo.world.getFrameByName("yellow"));
 
  // better use low-level GJK instead of SWIFT
-//  komo.world.swift().activate(komo.world.getShapeByName("yellow"));
-//  komo.world.swift().activate(komo.world.getShapeByName("red"));
-
-  //-- fix last configuration
-  komo.setTask(3.9,4., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
+//  komo.world.swift().activate(komo.world.getFrameByName("yellow"));
+//  komo.world.swift().activate(komo.world.getFrameByName("red"));
 
   //komo.setGrasp(1., "humanR", "red", 0, .1);
 //  komo.setPlace(1.8, "humanR", "blue", "tableC");
 // 
   komo.setGrasp(1, "humanL",  "yellow", 0, .1 );
   //komo.setPlace()
-  komo.setPlaceFixed(2.5, "humanL", "yellow", "blue", Wfin.getShapeByName("yellow")->X/Wfin.getShapeByName("blue")->X);
+  komo.setPlaceFixed(2.5, "humanL", "yellow", "blue", Wfin.getFrameByName("yellow")->X/Wfin.getFrameByName("blue")->X);
 
 //  komo.setGrasp(1.5, "humanL", "yellow", 0, .1);
 //  komo.setPlace(2.1, "humanL", "yellow", "tableC");
-  //komo.setPlaceFixed(3., "humanR", "red", "yellow", Wfin.getShapeByName("red")->X/Wfin.getShapeByName("yellow")->X);
+  //komo.setPlaceFixed(3., "humanR", "red", "yellow", Wfin.getFrameByName("red")->X/Wfin.getFrameByName("yellow")->X);
 
   //low-level implementation of distance, using GJK and inequality (>5cm)
 //  komo.setTask(1.5, 2.5, new TaskMap_GJK(komo.world, "yellow", "blue", true, true), OT_ineq, ARR(-.05), 1e2, 0);
@@ -387,8 +338,6 @@ void testPhysX(){
   collisionsOff("yellow");
   collisionsOff("red");
 
-  komo.setTask(5.9,6., new TaskMap_qItself(), OT_sumOfSqr, Wfin.getJointState(), 1e3, 0);
-
   komo.setGrasp(1., "humanL", "blue", 0, .8);
   //komo.setplace(2.5, "humanr", "blue", "table");
   //komo.setgrasp(3.5, "humanl", "blue", 0, 0.8);
@@ -396,11 +345,10 @@ void testPhysX(){
   komo.setTask(2., 3., new TaskMap_Default(posDiffTMT , W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
   komo.setTask(2., 3., new TaskMap_Default(quatDiffTMT, W, "blue", NoVector, "table", NoVector), OT_sumOfSqr, NoArr, 1e2, 1);
 
-  komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getShapeByName("blue")->X/Wfin.getShapeByName("table")->X);
+  komo.setPlaceFixed(3., "humanL", "blue", "table", Wfin.getFrameByName("blue")->X/Wfin.getFrameByName("table")->X);
 
   komo.setTask(1., 5., new TaskMap_Proxy(allPTMT, uintA(), .03), OT_sumOfSqr, NoArr, 1e2);
   //============= CUT end
-
 
   komo.reset();
   komo.run();
@@ -421,20 +369,20 @@ void testPhysX(){
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-//  testPhysX();
+  testPhysX();
 //  return 0;
 
-// trial1();
+//  trial1();
 //  trial2();
-//  trial4();
-//  trial5();
-  trial3();
+//  trial3();
 //  trial3b();
 //  trial3c();
+//  trial4();
+//  trial5();
 //  trial10();
 //  trial11();
 //  trial27();
-//  trial33();
+  trial33();
 
   return 0;
 }

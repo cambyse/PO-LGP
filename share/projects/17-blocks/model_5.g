@@ -16,7 +16,7 @@ body blue   { type=9 size=[.05 .05 .10 .005] color=[0 0 .8] contact }
 
 
 
-joint (table yellow) { from=<T t(0   0 0.02)> to=<T t(0 0 .05)> type=JT_rigid }
-joint (table red)    { from=<T t(0 .1 0.02)> to=<T t(0 0 .05)> type=JT_rigid }
-joint (table blue)   { from=<T t(0 -.12 .04)  d(-45 1 0 0) > to=<T t(0 0 .05) > type=JT_rigid }
+joint (table yellow) { from=<T t(0   0 0.02) t(0 0 .05)> type=JT_rigid }
+joint (table red)    { from=<T t(0 .1 0.02) t(0 0 .05)> type=JT_rigid }
+joint (table blue)   { from=<T t(0 -.12 .04)  d(-45 1 0 0) t(0 0 .05) > type=JT_rigid }
 #joint (table yellow) { from=<T t(0 -0.078 0.02)> to=<T t(0 0 .05) d(-45 45 0 1)> type=JT_rigid }
