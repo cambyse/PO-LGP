@@ -1,0 +1,2 @@
+set style data lines
+plot 'z.sim' us 0:7
