@@ -9,14 +9,14 @@ using namespace std;
 
 void move_blocks()
 {
-//  {
-//    mlr::KinematicWorld kin;
-//    kin.init( "model_shelf.g" );
-//    kin.watch();
-//    kin.write( std::cout );
+  {
+    mlr::KinematicWorld kin;
+    kin.init( "model.g" );
+    kin.watch();
+    kin.write( std::cout );
 
-//    mlr::wait( 30, true );
-//  }
+    mlr::wait( 30, true );
+  }
 
   KOMO komo;
   komo.setConfigFromFile();
