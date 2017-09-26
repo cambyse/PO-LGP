@@ -22,26 +22,26 @@ int MAIN(int argc,char **argv){
     if(mlr::argc==2 && mlr::argv[1][0]!='-') file=mlr::argv[1];
     cout <<"opening file `" <<file <<"'" <<endl;
 
-    mlr::KinematicWorld G(file);
-
-    G.watch(true);
+    mlr::KinematicWorld K(file);
 
 
-    G.checkConsistency();
-    G >>FILE("z.g");
+
+    K.checkConsistency();
+    K >>FILE("z.g");
     //some optional manipulations
-    G.optimizeTree();
-    G.checkConsistency();
-    G >>FILE("z.g");
+    K.optimizeTree(false);
+    K.calc_q();
+    K.checkConsistency();
+    K >>FILE("z.g");
 //    makeConvexHulls(G.frames);
   //  computeOptimalSSBoxes(G.shapes);
   //  G >>FILE("z.ors");
-//    G.watch(true);
+    K.watch(true);
   //  return;
 
     if(mlr::checkParameter<bool>("cleanOnly")) return 0;
 
-    editConfiguration(file, G);
+    editConfiguration(file, K);
 
   return 0;
 }

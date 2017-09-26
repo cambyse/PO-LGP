@@ -29,6 +29,8 @@ def writeShape(link):
     elem = link.find("geometry/mesh")
     if elem is not None:
         print 'type=ST_mesh mesh=\'%s\'' % elem.attrib['filename'],
+        if elem.attrib['scale'] is not None:
+            print 'meshscale=[%s]' % elem.attrib['scale'],
 
     elem = link.find("material/color")
     if elem is not None:
@@ -37,7 +39,7 @@ def writeShape(link):
     elem = link.find("material")
     if elem is not None:
         if elem.attrib['name'] is not None:
-            print 'color=%s' % elem.attrib['name'],
+            print 'colorName=%s' % elem.attrib['name'],
 
 
 links = xmlData.findall("/link")
