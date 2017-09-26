@@ -1,10 +1,9 @@
-
 #include <stdlib.h>
 
 #include <Geo/mesh.h>
 #include <Gui/opengl.h>
 
-#include "swift_decomposer.inc"
+//#include "swift_decomposer.inc"
 #include <Gui/color.h>
 
 const char *USAGE=
@@ -92,16 +91,17 @@ void TEST(MeshTools) {
     if(system(cmd)) MLR_MSG("system call failed");
   }
   if(mlr::checkCmdLineTag("decomp")){
-    cout <<"decomposing..." <<endl;
-    intA triangleAssignments;
-    mlr::Array<mlr::Array<uint> > shapes;
-    decompose(mesh, STRING(file<<"_x.dcp"), triangleAssignments, shapes);
-    mesh.C.resize(mesh.T.d0,3);
-    for(uint t=0;t<mesh.T.d0;t++){
-      mlr::Color col;
-      col.setIndex(triangleAssignments(t));
-      mesh.C(t,0) = col.r;  mesh.C(t,1) = col.g;  mesh.C(t,2) = col.b;
-    }
+    NIY;
+    // cout <<"decomposing..." <<endl;
+    // intA triangleAssignments;
+    // mlr::Array<mlr::Array<uint> > shapes;
+    // decompose(mesh, STRING(file<<"_x.dcp"), triangleAssignments, shapes);
+    // mesh.C.resize(mesh.T.d0,3);
+    // for(uint t=0;t<mesh.T.d0;t++){
+    //   mlr::Color col;
+    //   col.setIndex(triangleAssignments(t));
+    //   mesh.C(t,0) = col.r;  mesh.C(t,1) = col.g;  mesh.C(t,2) = col.b;
+    // }
   }
   if(mlr::checkCmdLineTag("view")){
     cout <<"viewing..." <<endl;

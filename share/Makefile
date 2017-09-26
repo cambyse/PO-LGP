@@ -17,7 +17,7 @@ test_paths = $(shell find test -maxdepth 3 -name 'Makefile' -printf "%h ")
 
 tests: $(test_paths:%=makePath/%)
 
-bin: makePath/examples/Kin/kinEdit
+bin: makePath/examples/Kin/kinEdit makePath/examples/Geo/meshTools
 
 srcExa: $(src_paths:%=makeDepend/%) $(exa_paths:%=makePath/%)
 

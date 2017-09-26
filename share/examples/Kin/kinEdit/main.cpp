@@ -24,13 +24,15 @@ int MAIN(int argc,char **argv){
 
     mlr::KinematicWorld G(file);
 
+    G.watch(true);
+
 
     G.checkConsistency();
-    G >>FILE("z.ors");
+    G >>FILE("z.g");
     //some optional manipulations
     G.optimizeTree();
     G.checkConsistency();
-    G >>FILE("z.ors");
+    G >>FILE("z.g");
 //    makeConvexHulls(G.frames);
   //  computeOptimalSSBoxes(G.shapes);
   //  G >>FILE("z.ors");
