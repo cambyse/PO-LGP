@@ -1,6 +1,11 @@
 #include "drake.h"
 
 #include <Algo/spline.h>
+#include <Geo/geoms.h>
+
+template<> const char* mlr::Enum<mlr::ShapeType>::names []={
+  "ST_box", "ST_sphere", "ST_capsule", "ST_mesh", "ST_cylinder", "ST_marker", "ST_SSBox", "ST_pointCloud", "ST_ssCvx", "ST_ssBox", NULL
+};
 
 arr rndSpline(uint T, uint n){
   rnd.seed(0);
@@ -23,8 +28,8 @@ int main(int argc, char* argv[]) {
   my.addController();
 
   arr X = rndSpline(30, 7);
-  FILE("z.dat") <<X;
-  gnuplot("plot 'z.dat' us 0:1, '' us 0:2 , '' us 0:3");
+  FILE("z.ref") <<X;
+  gnuplot("plot 'z.ref' us 0:1, '' us 0:2 , '' us 0:3");
 
   my.addReferenceTrajectory(X);
   my.addLogger();
@@ -34,8 +39,9 @@ int main(int argc, char* argv[]) {
   my.simulate();
 
   FILE("z.sim") <<my.getLog();
+  gnuplot("plot 'z.sim' us ($0/400-.5):1, 'z.ref' us 1");
 
-  FILE("z.eig") <<my.logger->data().transpose();
+  mlr::wait();
 
   return 0;
 }

@@ -1,10 +1,10 @@
-#include <extern/SWIFT/SWIFT.h>
-#include <extern/SWIFT/SWIFT_mesh.h>
-#include <extern/SWIFT/SWIFT_mesh_utils.h>
-#include <extern/SWIFT_decomposer/convex.h>
-#include <extern/SWIFT_decomposer/io.h>
+#include <Kin/SWIFT/SWIFT.h>
+#include <Kin/SWIFT/SWIFT_mesh.h>
+#include <Kin/SWIFT/SWIFT_mesh_utils.h>
+#include <Kin/SWIFT_decomposer/convex.h>
+#include <Kin/SWIFT_decomposer/io.h>
 
-uint decompose(ors::Mesh& mesh, const char* filename, intA& triangleAssignments, mlr::Array<mlr::Array<uint> >& shapes){
+uint decompose(mlr::Mesh& mesh, const char* filename, intA& triangleAssignments, mlr::Array<mlr::Array<uint> >& shapes){
   SWIFT_Scene swift;
   SWIFT_Tri_Mesh smesh;
   smesh.Create(mesh.V.p, (int*)mesh.T.p,

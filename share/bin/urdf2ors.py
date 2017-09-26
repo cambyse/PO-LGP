@@ -34,6 +34,11 @@ def writeShape(link):
     if elem is not None:
         print 'color=[%s]' % elem.attrib['rgba'],
 
+    elem = link.find("material")
+    if elem is not None:
+        if elem.attrib['name'] is not None:
+            print 'color=%s' % elem.attrib['name'],
+
 
 links = xmlData.findall("/link")
 for link in links:
