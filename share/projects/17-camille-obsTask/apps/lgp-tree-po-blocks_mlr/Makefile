@@ -1,6 +1,6 @@
 BASE = ../../../..
 
-DEPEND = KOMO Core Geo Kin Gui Optim POMTP_interfaces TaskPlanning MotionPlanning ObservationTasks CollisionAvoidance
+DEPEND = KOMO Core Geo Kin Gui Optim POMTP_interfaces TaskPlanning MotionPlanning ObservationTasks
 
 include $(BASE)/build/generic.mk
 

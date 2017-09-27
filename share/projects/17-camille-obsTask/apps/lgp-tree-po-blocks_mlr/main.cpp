@@ -303,8 +303,8 @@ void plan()
   mp->registerTask( "komoUnStack"      , groundUnStack );
 
   // set start configurations
-  tp->setFol( "LGP-blocks-fol.g" );
-  mp->setKin( "LGP-blocks-kin.g" );
+  tp->setFol( "LGP-blocks-fol-2w.g" );
+  mp->setKin( "LGP-blocks-kin-2w.g" );
 
   for( uint i = 0; ! tp->terminated() && i < 1 ; ++i )
   {
