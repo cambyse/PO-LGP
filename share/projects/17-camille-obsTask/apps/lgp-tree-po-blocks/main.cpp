@@ -17,7 +17,6 @@
 
 #include <node_visitors.h>
 
-
 /*
 sort nodes before expanding?
 dot -Tpng -o policy.png policy.gv
@@ -55,17 +54,29 @@ static void generatePngImage( const std::string & name )
 
 static void savePolicyToFile( const Policy::ptr & policy )
 {
-  std::stringstream namess;
+  std::stringstream namess, skenamess;
   namess << "policy-" << policy->id() << ".gv";
+  skenamess << "policy-" << policy->id() << ".ske";
+  auto skename = skenamess.str();
   auto name = namess.str();
 
-  std::ofstream file;
-  file.open( name );
-  PolicyPrinter printer( file );
-  printer.print( policy );
-  file.close();
+  // save full policy
+  {
+    std::ofstream file;
+    file.open( skename );
+    policy->save( file );
+    file.close();
+  }
+  // generate nice graph
+  {
+    std::ofstream file;
+    file.open( name );
+    PolicyPrinter printer( file );
+    printer.print( policy );
+    file.close();
 
-  generatePngImage( name );
+    generatePngImage( name );
+  }
 }
 
 //==========Application specific grounders===================================

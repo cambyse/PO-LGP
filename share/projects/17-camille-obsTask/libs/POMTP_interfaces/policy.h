@@ -76,6 +76,10 @@ public:
   double g() const { return g_; }
   double h() const { return h_; }
 
+  // io
+  void save( std::ostream& os );
+  void load( std::istream& is );
+
   // utility
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
@@ -129,6 +133,13 @@ public:
   PolicyNode::L leafs()  const { return leafs_; }
   double cost()          const { return cost_; }
   bool feasible()        const { return cost_ < std::numeric_limits< double >::infinity(); }
+
+  // io
+  void save( std::ostream& os );
+  void load( std::istream& is );
+
+private:
+  void saveFrom( const PolicyNode::ptr & node, std::ostream& os );
 
 private:
   uint id_;                 // identifier of the policy, meant to be unique

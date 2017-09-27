@@ -4,6 +4,7 @@
 
 #include <policy_visualizer.h>
 
+#include <time.h>
 
 namespace mp
 {
@@ -95,7 +96,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       maxConstraint = std::max( constraint, maxConstraint );
     }
 
-    if( maxConstraint > 0.5 )
+    if( 1 * maxConstraint > 0.5 ) // tmp camille!!!
     {
       std::cout << "Optimization failed on node " << node->id() << std::endl;
 

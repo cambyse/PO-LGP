@@ -13,8 +13,77 @@
     --------------------------------------------------------------  */
 
 #include "policy.h"
+#include <Core/graph.h>
 
 static int policyNumber = 0;
+
+//----PolicyNode---------------------//
+
+void PolicyNode::save( std::ostream& os )
+{
+  // id
+  os << "id" << std::endl;
+  os << id_  << std::endl;
+
+  // belief state size
+  os << "size" << std::endl;
+  os << bs_.size() << std::endl;
+
+  // states
+  os << "states:" << std::endl;
+  for( auto w = 0; w < bs_.size(); w++ )
+  {
+    os << "w:" << w << std::endl;
+    if( bs_( w ) > 0 )
+    {
+      states()( w )->write( os );
+    }
+  }
+
+  os << "belief_state" << std::endl;
+  for( auto b : bs_ )
+  {
+    os << b << std::endl;
+  }
+
+  os << "next_action" << std::endl;
+  os << nextAction_ << std::endl;
+
+  os << "time" << std::endl;
+  os << time_  << std::endl;
+
+  os << "p" << std::endl;
+  os << p_  << std::endl;
+
+  os << "q" << std::endl;
+  os << q_  << std::endl;
+
+  os << "g" << std::endl;
+  os << g_  << std::endl;
+
+  os << "h" << std::endl;
+  os << h_  << std::endl;
+
+
+  /*
+        mlr::Array< std::shared_ptr<Graph> > states_;
+        arr bs_;
+        // action
+        std::string nextAction_; // action to take at this node
+        //
+        double time_;
+        uint id_;
+
+        double p_;  // probability of reaching this node
+        double q_;  // probability of reaching this node given that fact that its parent is reached
+        double g_;  // cost so far
+        double h_;  // future costs*/
+}
+
+void PolicyNode::load( std::istream& is )
+{
+
+}
 
 //----Policy-------------------------//
 Policy::Policy()
@@ -27,6 +96,26 @@ Policy::Policy()
 void Policy::init( uint N )
 {
   N_ = N;
+}
+
+void Policy::save( std::ostream& os )
+{
+  saveFrom( root_, os );
+}
+
+void Policy::load( std::istream& is )
+{
+
+}
+
+void Policy::saveFrom( const PolicyNode::ptr & node, std::ostream& os )
+{
+  node->save( os );
+
+  for( auto n : node->children() )
+  {
+    saveFrom( n, os );
+  }
 }
 
 //-----utility free functions-----------//
