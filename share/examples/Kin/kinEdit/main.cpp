@@ -34,10 +34,10 @@ int MAIN(int argc,char **argv){
     K.checkConsistency();
     K >>FILE("z.g");
 //    makeConvexHulls(G.frames);
-  //  computeOptimalSSBoxes(G.shapes);
-  //  G >>FILE("z.ors");
-    K.watch(true);
-  //  return;
+//    computeOptimalSSBoxes(G.shapes);
+//    G >>FILE("z.ors");
+//    K.watch(true);
+//    return;
 
     if(mlr::checkParameter<bool>("cleanOnly")) return 0;
 
