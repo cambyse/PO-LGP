@@ -67,7 +67,7 @@ OptNewton::StopCriterion OptNewton::step(){
     if(isRowShifted(R)) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
     else for(uint i=0; i<R.d0; i++) R(i,i) += beta;
   }
-  if(additionalRegularizer) { //obsolete -> retire
+  if(additionalRegularizer) { HALT("obsolete -> retire");
     if(isRowShifted(R)) R = unpack(R);
     Delta = lapack_Ainv_b_sym(R + (*additionalRegularizer), -(gx+(*additionalRegularizer)*vectorShaped(x)));
   } else {
