@@ -59,6 +59,7 @@ private:
 
   // path
   std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // maps each leaf to its path // memory leak?
+  std::map< PolicyNode::ptr, mlr::Array< arr > > pathXSolution_;
 
   // joint path
   std::map< PolicyNode::ptr, arr > jointPathCosts_;

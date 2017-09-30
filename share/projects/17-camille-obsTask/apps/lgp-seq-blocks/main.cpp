@@ -7,25 +7,8 @@ using namespace std;
 
 //===========================================================================
 
-void move_blocks()
+static void appyTm( KOMO & komo )
 {
-  {
-    mlr::KinematicWorld kin;
-    kin.init( "model.g" );
-    kin.watch();
-    kin.write( std::cout );
-
-    mlr::wait( 30, true );
-  }
-
-  KOMO komo;
-  komo.setConfigFromFile();
-
-  //komo.setSquaredFixJointVelocities();
-  komo.setFixEffectiveJoints();
-  komo.setFixSwitchedObjects();
-  komo.setSquaredQAccelerations();
-
   ///ALL TIME TASK MAPS
   /*
   komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
@@ -36,8 +19,6 @@ void move_blocks()
 
   komo.setTask( 0.0, 10.0, new ApproxPointToShape(komo.world, "humanL", "tableC" ), OT_ineq, NoArr, 1e2);
   //komo.setTask( 0.0, 10.0, new ApproxPointToShape(komo.world, "humanL", "tableC" ), OT_ineq, NoArr, 1e2);
-
-
 
   ///GRASP C, PUT IT on TABLE
   //grasp C
@@ -78,6 +59,28 @@ void move_blocks()
 
   //put on C
   komo.setPlace( 8.0, "handL", "block_a", "block_b" );
+}
+
+void move_blocks()
+{
+//  {
+//    mlr::KinematicWorld kin;
+//    kin.init( "model.g" );
+//    kin.watch();
+//    kin.write( std::cout );
+
+//    mlr::wait( 30, true );
+//  }
+
+  KOMO komo;
+  komo.setConfigFromFile();
+
+  //komo.setSquaredFixJointVelocities();
+  komo.setFixEffectiveJoints();
+  komo.setFixSwitchedObjects();
+  komo.setSquaredQAccelerations();
+
+  appyTm( komo );
 
   // launch komo
   komo.reset();
@@ -85,6 +88,28 @@ void move_blocks()
   komo.checkGradients();
 
   Graph result = komo.getReport(true);
+
+  //
+  {
+    KOMO komo2;
+    komo2.setConfigFromFile();
+
+    //komo.setSquaredFixJointVelocities();
+    komo2.setFixEffectiveJoints();
+    komo2.setFixSwitchedObjects();
+    komo2.setSquaredQAccelerations();
+
+    appyTm( komo2 );
+
+
+    // launch komo
+    komo2.set_x( komo.x );
+
+    komo2.reset();
+    komo2.run();
+    komo2.checkGradients();
+  }
+  //
 
   for(;;) komo.displayTrajectory(.1, true);
 }

@@ -96,9 +96,9 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       maxConstraint = std::max( constraint, maxConstraint );
     }
 
-    if( 1 * maxConstraint > 0.5 ) // tmp camille!!!
+    if( maxConstraint > 0.5 /*false*/ ) // here deactivate
     {
-      std::cout << "Optimization failed on node " << node->id() << std::endl;
+      std::cout << "Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
 
       node->setG( std::numeric_limits< double >::infinity() );
       optimizationFailed = true;
@@ -184,6 +184,7 @@ void KOMOPlanner::clearLastPolicyOptimization()
   {
     pair.second.clear();
   }
+
   jointPathKinFrames_.clear(); // maps each leaf to its path
 }
 
@@ -295,6 +296,7 @@ void KOMOPlanner::optimizePath( Policy::ptr & policy )
 void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 {
   pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( leaf->N() );
+  pathXSolution_[ leaf ] = mlr::Array< arr                               >( leaf->N() );
 
   //-- collect 'path nodes'
   PolicyNode::L treepath = getPathTo( leaf );
@@ -354,6 +356,8 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
         pathKinFrames_[ leaf ]( w ).append( kin );
       }
 
+      pathXSolution_[ leaf ]( w ) = komo->x;
+
       // free
       freeKomo( komo );
     }
@@ -394,6 +398,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       komo->setFixEffectiveJoints();
       komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
+
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
@@ -443,7 +448,9 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
         }
       }
 
+      komo->set_x( pathXSolution_[ leaf ]( w ) );
       komo->reset();
+
       try{
         komo->run();
       } catch(const char* msg){
