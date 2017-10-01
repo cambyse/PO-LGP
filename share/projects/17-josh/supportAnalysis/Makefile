@@ -1,4 +1,4 @@
-BASE = ../..
+BASE = ../../..
 
 DEPEND = KOMO Core Geo Kin Gui Optim
 
