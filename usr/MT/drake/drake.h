@@ -2,11 +2,16 @@
 
 #include <Core/array.h>
 
-struct MyIIWA{
-  struct sMyIIWA *s;
+namespace drake{
+struct sMyDrake;
 
-  MyIIWA(int argc, char* argv[]);
-  ~MyIIWA();
+struct MyDrake{
+  sMyDrake *s;
+
+  MyDrake(int argc, char* argv[]);
+  ~MyDrake();
+
+  int DoMain();
 
   void addKukaPlant();
   void addController();
@@ -16,6 +21,17 @@ struct MyIIWA{
   void build();
 
   void simulate();
+  void simulate2();
 
   arr getLog();
+
+  //refactored from the mono demo
+  void mono_setupGeometry();
+  void addMonoPlant();
+  void addWsgController();
+  void addPlanInterpolator();
+  void addStateMachine();
+  void addRAIMachine();
+
 };
+}

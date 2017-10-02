@@ -21,8 +21,8 @@ arr rndSpline(uint T, uint n){
   return mlr::Spline(T,P).eval();
 }
 
-int mymain(int argc, char* argv[]) {
-  drake::MyDrake my(argc, argv);
+int main(int argc, char* argv[]) {
+  MyIIWA my(argc, argv);
 
   my.addKukaPlant();
   my.addController();
@@ -44,11 +44,4 @@ int mymain(int argc, char* argv[]) {
   mlr::wait();
 
   return 0;
-}
-
-
-
-int main(int argc, char* argv[]) {
-  drake::MyDrake D(argc, argv);
-  D.DoMain();
 }
