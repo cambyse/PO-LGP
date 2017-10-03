@@ -519,6 +519,14 @@ void MyDrake::addRAIMachine(){
                      s->iiwa_trajectory_generator->get_plan_input_port());
 }
 
+void MyDrake::setPath(const arr &X){
+//  s->rai_machine->internal_state.path = X;
+}
+
+void MyDrake::setGrip(double x){
+//  s->rai_machine->internal_state.grip = x;
+}
+
 void MyDrake::simulate2(){
   Simulator<double> simulator(*s->system);
   simulator.Initialize();

@@ -194,8 +194,8 @@ int main(int argc,char **argv){
 
 //  illustrate();
 //  analyzeSupport();
-//  trial3();
-  trial8();
+  trial3();
+//  trial8();
 
   return 0;
 }

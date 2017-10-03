@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <Core/array.h>
 
 #include "bot_core/robot_state_t.hpp"
 
@@ -12,6 +13,8 @@
 #include "drake/multibody/rigid_body_tree.h"
 #include "drake/systems/framework/leaf_system.h"
 #include "drake/systems/framework/system_symbolic_inspector.h"
+#include "drake/lcmtypes/drake/lcmt_schunk_wsg_status.hpp"
+#include "lcmtypes/bot_core/robot_state_t.hpp"
 
 namespace drake {
 
@@ -23,7 +26,10 @@ namespace drake {
  * `SchunkWsgStatusSender` and `OracularStateEstimator` systems.
  */
 class RAI_Machine : public systems::LeafSystem<double> {
- public:
+public:
+
+
+
   /**
    * Constructor for the RAI_Machine
    * @param iiwa_base, The pose of the base of the IIWA robot system.

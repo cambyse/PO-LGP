@@ -33,5 +33,9 @@ struct MyDrake{
   void addStateMachine();
   void addRAIMachine();
 
+
+  //high-level
+  void setPath(const arr& X);
+  void setGrip(double x);
 };
 }
