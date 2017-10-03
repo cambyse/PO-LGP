@@ -15,6 +15,8 @@
 #include <drake/systems/primitives/trajectory_source.h>
 #include <drake/systems/primitives/signal_logger.h>
 
+#include <Algo/spline.h>
+
 #include <random>
 
 #include "drake.h"
@@ -499,10 +501,7 @@ void MyDrake::addRAIMachine(){
     s->place_locations.swap(new_place_locations);
   }
 
-  s->rai_machine =
-      s->builder.template AddSystem<drake::RAI_Machine>(
-        FindResourceOrThrow(kIiwaUrdf), kIiwaEndEffectorName,
-        iiwa_base, s->place_locations);
+  s->rai_machine = s->builder.template AddSystem<drake::RAI_Machine>();
 
   //input to state machine: box_state, wsg_status, and iiwa_state
   s->builder.Connect(s->plant->get_output_port_box_robot_state_msg(),
@@ -520,11 +519,11 @@ void MyDrake::addRAIMachine(){
 }
 
 void MyDrake::setPath(const arr &X){
-//  s->rai_machine->internal_state.path = X;
+  s->rai_machine->path = X;
 }
 
 void MyDrake::setGrip(double x){
-//  s->rai_machine->internal_state.grip = x;
+  s->rai_machine->grip = x;
 }
 
 void MyDrake::simulate2(){
@@ -547,10 +546,7 @@ void MyDrake::simulate2(){
   // to see if the state machine thinks we're done, and if so that the
   // object is near the target.
   const double simulation_step = 0.1;
-  while (s->rai_machine->state(
-           s->system->GetSubsystemContext(*s->rai_machine,
-                                          simulator.get_context()))
-         != drake::examples::kuka_iiwa_arm::pick_and_place::kDone) {
+  while (true){
     simulator.StepTo(simulator.get_context().get_time() + simulation_step);
     if (FLAGS_quick) {
       // We've run a single step, just get out now since we won't have
@@ -558,6 +554,20 @@ void MyDrake::simulate2(){
       return;
     }
   }
+}
+
+arr rndSpline(uint T, uint n){
+  rnd.seed(0);
+  arr P(10,n);
+
+  //a random spline
+  //a set of random via points with zero start and end:
+  rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.;
+
+  P *= 2.;
+
+  //convert into a smooth spline (1/0.03 points per via point):
+  return mlr::Spline(T,P).eval();
 }
 
 int MyDrake::DoMain() {
@@ -573,6 +583,9 @@ int MyDrake::DoMain() {
   addRAIMachine();
 
   build();
+
+  setPath( rndSpline(30, 7) );
+  setGrip( 100. );
 
   simulate2();
 

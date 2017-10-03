@@ -5,16 +5,18 @@
 #include <vector>
 #include <Core/array.h>
 
-#include "bot_core/robot_state_t.hpp"
+//#include "bot_core/robot_state_t.hpp"
 
-#include "pick_and_place_state_machine.h"
-#include "world_state.h"
-#include "drake/manipulation/planner/constraint_relaxing_ik.h"
-#include "drake/multibody/rigid_body_tree.h"
+//#include "pick_and_place_state_machine.h"
+//#include "world_state.h"
+//#include "drake/manipulation/planner/constraint_relaxing_ik.h"
+//#include "drake/multibody/rigid_body_tree.h"
 #include "drake/systems/framework/leaf_system.h"
-#include "drake/systems/framework/system_symbolic_inspector.h"
-#include "drake/lcmtypes/drake/lcmt_schunk_wsg_status.hpp"
-#include "lcmtypes/bot_core/robot_state_t.hpp"
+//#include "drake/systems/framework/system_symbolic_inspector.h"
+//#include "drake/lcmtypes/drake/lcmt_schunk_wsg_status.hpp"
+//#include "lcmtypes/bot_core/robot_state_t.hpp"
+#include "lcmtypes/robotlocomotion/robot_plan_t.hpp"
+#include "drake/lcmtypes/drake/lcmt_schunk_wsg_command.hpp"
 
 namespace drake {
 
@@ -28,6 +30,9 @@ namespace drake {
 class RAI_Machine : public systems::LeafSystem<double> {
 public:
 
+    //outputs:
+    arr path;
+    double grip;
 
 
   /**
@@ -36,35 +41,29 @@ public:
    * @param period_sec : The update interval of the unrestricted update of
    * this system. This should be bigger than that of the PlanSource components.
    */
-  RAI_Machine(
-      const std::string& iiwa_model_path,
-      const std::string& end_effector_name,
-      const Isometry3<double>& iiwa_base,
-      const std::vector<Isometry3<double>>& place_locations,
-      const double period_sec = 0.01);
+  RAI_Machine(const double period_sec = 0.01);
 
-  std::unique_ptr<systems::AbstractValues> AllocateAbstractState()
-      const override;
+  std::unique_ptr<systems::AbstractValues> AllocateAbstractState() const override;
 
   // This kind of a system is not a direct feedthrough.
-  optional<bool> DoHasDirectFeedthrough(int, int) const final {
-    return false;
-  }
+  optional<bool> DoHasDirectFeedthrough(int, int) const final { return false;  }
+
+  void setPath(const arr& X);
+  void setGrip(double x);
 
   void SetDefaultState(const systems::Context<double>& context,
                        systems::State<double>* state) const override;
 
   void DoCalcUnrestrictedUpdate(const systems::Context<double>& context,
-            const std::vector<const systems::UnrestrictedUpdateEvent<double>*>&,
-            systems::State<double>* state) const override;
+                                const std::vector<const systems::UnrestrictedUpdateEvent<double>*>&,
+                                systems::State<double>* state) const override;
 
   /**
    * Getter for the input port corresponding to the abstract input with iiwa
    * state message (LCM `robot_state_t` message).
    * @return The corresponding `sytems::InputPortDescriptor`.
    */
-  const systems::InputPortDescriptor<double>& get_input_port_iiwa_state()
-      const {
+  const systems::InputPortDescriptor<double>& get_input_port_iiwa_state() const {
     return this->get_input_port(input_port_iiwa_state_);
   }
 
@@ -82,42 +81,24 @@ public:
    * status message (LCM `lcmt_schunk_wsg_status` message).
    * @return The corresponding `sytems::InputPortDescriptor`.
    */
-  const systems::InputPortDescriptor<double>& get_input_port_wsg_status()
-      const {
+  const systems::InputPortDescriptor<double>& get_input_port_wsg_status() const {
     return this->get_input_port(input_port_wsg_status_);
   }
 
-  const systems::OutputPort<double>& get_output_port_iiwa_plan()
-      const {
+  const systems::OutputPort<double>& get_output_port_iiwa_plan() const {
     return this->get_output_port(output_port_iiwa_plan_);
   }
 
-  const systems::OutputPort<double>& get_output_port_wsg_command()
-      const {
+  const systems::OutputPort<double>& get_output_port_wsg_command() const {
     return this->get_output_port(output_port_wsg_command_);
   }
 
-  /// Return the state of the pick and place state machine.
-  examples::kuka_iiwa_arm::pick_and_place::PickAndPlaceState state(
-      const systems::Context<double>&) const;
-
-  /// Return the state of the pick and place world.  Note that this
-  /// reference is into data contained inside the passed in context.
-  const examples::kuka_iiwa_arm::pick_and_place::WorldState& world_state(
-      const systems::Context<double>&) const;
-
  private:
-  void CalcIiwaPlan(
-      const systems::Context<double>& context,
-      robotlocomotion::robot_plan_t* iiwa_plan) const;
-
-  void CalcWsgCommand(
-      const systems::Context<double>& context,
-      lcmt_schunk_wsg_command* wsg_command) const;
+  void CalcIiwaPlan(const systems::Context<double>& context, robotlocomotion::robot_plan_t* iiwa_plan) const;
+  void CalcWsgCommand(const systems::Context<double>& context, lcmt_schunk_wsg_command* wsg_command) const;
 
   struct InternalState;
 
-  RigidBodyTree<double> iiwa_tree_{};
   // Input ports.
   int input_port_iiwa_state_{-1};
   int input_port_box_state_{-1};
@@ -125,15 +106,6 @@ public:
   // Output ports.
   int output_port_iiwa_plan_{-1};
   int output_port_wsg_command_{-1};
-
-  std::string iiwa_model_path_;
-  std::string end_effector_name_;
-  const Isometry3<double> iiwa_base_;
-
-  const std::unique_ptr<
-    manipulation::planner::ConstraintRelaxingIk> planner_{nullptr};
-
-  std::vector<Isometry3<double>> place_locations_;
 };
 
 }  // namespace drake
