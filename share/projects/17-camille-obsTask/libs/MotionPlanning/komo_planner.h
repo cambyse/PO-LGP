@@ -69,6 +69,10 @@ private:
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 
+  double kinEqualityWeight_  = 1e0;
+  double fixEffJointsWeight_ = 1e3;
+  double secPerPhase_        = 10.;
+
   double start_offset_ = 1.0; // the first task should be grounded starting from this time
   double end_offset_   = 1.0;
   uint microSteps_     = 10;

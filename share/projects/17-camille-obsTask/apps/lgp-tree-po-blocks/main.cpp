@@ -7,6 +7,8 @@
 #include <policy_builder.h>
 
 #include <mcts_planner.h>
+#include <iterative_deepening.h>
+
 #include <komo_planner.h>
 
 #include <observation_tasks.h>
@@ -205,105 +207,17 @@ void groundStack( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
   }
 }
 
-
-//void groundGetSight( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
-//{
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-//  double duration=n->get<double>();
-
-//  //
-//  const double t_start = phase;
-//  const double t_end =   phase + duration;
-//  //
-
-//  mlr::String arg = *symbols(0);
-
-//  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
-//                                                                        arg,
-//                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-//                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-//                OT_sumOfSqr, NoArr, 1e2 );
-
-//  komo->setTask( t_end-0.2, t_end, new ActiveGetSight      ( "manhead",
-//                                                                        arg,
-//                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-//                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-//                OT_ineq, NoArr, 1e2 );
-
-//  if( verbose > 0 )
-//  {
-//    std::cout << t_start << "->" << t_end << ": getting sight of " << *symbols(0) << std::endl;
-//  }
-//}
-
-//void groundTakeView( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
-//{
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-//  double duration=n->get<double>();
-
-//  //
-//  const double t_start = phase;
-//  const double t_end =   phase + duration;
-//  //
-
-//  // no movement
-//  auto *map = new TaskMap_Transition( komo->world );
-//  map->posCoeff = 0.;
-//  map->velCoeff = 1.;
-//  map->accCoeff = 0.;
-//  komo->setTask( t_start, t_end, map, OT_sumOfSqr, NoArr, 1e2, 1 );
-
-//  // in sight expressed as a constraint
-////  mlr::String arg = *symbols(0);
-////  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
-////                                                                        arg,
-////                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
-////                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-////                OT_eq, NoArr, 1e2 );
-
-//  if( verbose > 0 )
-//  {
-//    std::cout << t_start << "->" << t_end << ": taking view " << std::endl;
-//  }
-//}
-
-//void groundObjectPairCollisionAvoidance( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
-//{
-//  //std::cout << facts << std::endl;
-
-//  StringL symbols;
-//  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-//  double duration=n->get<double>();
-
-//  //
-//  const double t_start = phase;
-//  const double t_end =  komo->maxPhase;
-//  //
-
-//  for( auto s1 : komo->world.getBodyByName( *symbols(0) )->shapes )
-//  {
-//    for( auto s2 : komo->world.getBodyByName( *symbols(1) )->shapes )
-//    {
-//      //komo->setTask( t_start, t_end, new ShapePairCollisionConstraint( komo->world, s1->name, s2->name, 0.1 ), OT_ineq, NoArr, 1e2 );
-//    }
-//  }
-//}
-
 //===========================================================================
 
-void plan()
+void plan_mcts()
 {
   // instanciate planners
   auto tp = std::make_shared< tp::MCTSPlanner >();
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  tp->setMCParams( /*10*/100, -1, /*50*/100 );
+  //tp->setMCParams( /*10*/100, -1, /*50*/100 );
+  tp->setMCParams( 50, -1, 50 );
   mp->setNSteps( 10 );
 
   // register symbols
@@ -314,8 +228,12 @@ void plan()
   mp->registerTask( "komoUnStack"      , groundUnStack );
 
   // set start configurations
-  tp->setFol( "LGP-blocks-fol.g" );
-  mp->setKin( "LGP-blocks-kin.g" );
+  //tp->setFol( "LGP-blocks-fol.g" );
+  //mp->setKin( "LGP-blocks-kin.g" );
+
+  tp->setFol( "LGP-blocks-fol-2w.g" );
+  mp->setKin( "LGP-blocks-kin-2w.g" );
+
 
   for( uint i = 0; ! tp->terminated() && i < 1 ; ++i )
   {
@@ -357,13 +275,31 @@ void plan()
 
 //===========================================================================
 
+void plan_iterative_deepening()
+{
+  // instanciate planners
+  auto tp = std::make_shared< tp::IterativeDeepeningPlanner >();
+
+  tp->setDmax( 12 );
+
+  //tp->setFol( "LGP-blocks-fol-2w.g" );
+  tp->setFol( "LGP-blocks-fol.g" );
+
+
+  tp->solve();
+
+  mlr::wait( 30, true );
+}
+
+//===========================================================================
+
 int main(int argc,char **argv)
 {
   mlr::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 
-  plan();
+  plan_iterative_deepening();
 
   return 0;
 }

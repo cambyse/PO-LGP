@@ -74,6 +74,8 @@ public:
   void generateMCRollouts( uint num, int stepAbort, uint maxHorizon = 100 );
   void backTrackBestExpectedPolicy( PONode::ptr until_node = nullptr ); // backtrack up to the node node, per default, backup up to root
 
+  void backTrackSolveStatus(); // backtrack up to the node node, per default, backup up to root
+
   void labelInfeasible(); ///< sets the infeasible label, should remove all children?
   //void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
 
@@ -101,6 +103,7 @@ public:
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
 
   double time() const { return time_; }
+  uint   depth() const{ return d_; }
   double prefixReward() const { return prefixReward_; }
   double expecteTotalReward() const { return expectedTotalReward_; }
   double expecteFutureReward() const { return expectedTotalReward_ - prefixReward_; }

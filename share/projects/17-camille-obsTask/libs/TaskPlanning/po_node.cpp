@@ -19,6 +19,8 @@
 
 #include <list>
 
+#include <chrono>
+
 #include <boost/algorithm/string/replace.hpp>
 
 #include <MCTS/solver_PlainMC.h>
@@ -219,13 +221,6 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
 
 void PONode::expand()
 {
-  // debug
-  //std::cout << std::endl;
-  //std::cout << "POLGPNode::expand().." << std::endl;
-  //auto ls = getWitnessLogicAndState();
-  //std::cout << "observable state:" << getObservableStateStr( ls.state.get() ) << std::endl;
-  //
-
   CHECK( ! isExpanded_, "" );
   if( isTerminal_ )
     return;
@@ -256,8 +251,16 @@ void PONode::expand()
         auto actions = logic->get_actions();
         auto action = actions[ a ];
 
+        {
+        auto start = std::chrono::high_resolution_clock::now();
+
         logic->transition( action );
 
+        auto elapsed = std::chrono::high_resolution_clock::now() - start;
+        long long mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+
+        //std::cout << "transition time (ucs):" << mcs << std::endl;
+        }
         auto result = logic->getState();
         auto observableStateStr = getObservableStateStr( result );
 
@@ -525,6 +528,26 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
   if( parent_ && this != until_node.get() )
   {
     parent_->backTrackBestExpectedPolicy( until_node );
+  }
+}
+
+void PONode::backTrackSolveStatus()
+{
+  for( auto i = 0; i < families_.d0; ++i )
+  {
+    bool   familySolved = true;
+
+    for( auto c : families_( i ) )
+    {
+      familySolved  = familySolved && c->isSolved_;
+    }
+
+    isSolved_ = isSolved_ || familySolved; // solved if at least of of the family os solved!
+  }
+
+  if( parent_ )
+  {
+    parent_->backTrackSolveStatus();
   }
 }
 

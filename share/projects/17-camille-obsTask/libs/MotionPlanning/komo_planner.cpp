@@ -4,8 +4,6 @@
 
 #include <policy_visualizer.h>
 
-#include <time.h>
-
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
@@ -96,7 +94,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       maxConstraint = std::max( constraint, maxConstraint );
     }
 
-    if( maxConstraint > 0.5 /*false*/ ) // here deactivate
+    if( maxConstraint > 0.5 )
     {
       std::cout << "Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
 
@@ -213,7 +211,7 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 //      {
 //        _komo = komoFactory_.createKomo();
 //        _komo->setModel( kin, true, false, true, false, false );
-//        _komo->setTiming( 1., 2, 5., 1/*, true*/ );
+//        _komo->setTiming( 1., 2, secPerPhase, 1/*, true*/ );
 //        _komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 //        _komo->setSquaredQVelocities();
 //        _komo->setFixSwitchedObjects(-1., -1., 1e3);
@@ -230,7 +228,7 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       komo->setModel( kin, true, false, true, false, false );
 
       komo->setTiming( 1., 2, 5., 1/*, true*/ );
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+//      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects(-1., -1., 1e3);
 
@@ -314,11 +312,11 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 
       // set-up komo
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, 5., 2/*, true*/ );
+      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2/*, true*/ );
 
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+//      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
-      komo->setFixEffectiveJoints();
+      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
       //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
@@ -391,11 +389,11 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
       // set-up komo
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, 5., 2/*, true*/ );
+      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2/*, true*/ );
 
-      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+//      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
-      komo->setFixEffectiveJoints();
+      komo->setFixEffectiveJoints( -1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
 
@@ -439,7 +437,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
           {
             AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
             double slice_t = start_offset_ + node->time() - 1.0 / stepsPerPhase;
-            komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, 1e2  );
+            komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
             //
             //std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;

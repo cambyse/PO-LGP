@@ -4,10 +4,6 @@
 
 #include <policy_visualizer.h>
 
-double kinEqualityWeight = 1e0;
-double fixEffJointsWeight = 1e3;
-double secPerPhase = 10.;
-
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
