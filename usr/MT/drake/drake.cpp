@@ -29,12 +29,12 @@
 #include <vector>
 
 #include <gflags/gflags.h>
-#include "bot_core/robot_state_t.hpp"
+#include "lcmtypes/bot_core/robot_state_t.hpp"
 #include "lcmtypes/robotlocomotion/robot_plan_t.hpp"
 
 #include "drake/common/find_resource.h"
 #include "drake/common/text_logging_gflags.h"
-#include "state_machine_system.h"
+//#include "state_machine_system.h"
 #include "iiwa_common.h"
 #include "iiwa_wsg_diagram_factory.h"
 #include "drake/lcm/drake_lcm.h"
@@ -334,10 +334,10 @@ void MyDrake::mono_setupGeometry() {
   // Locations for the posts from physical pick and place tests with
   // the iiwa+WSG.
   // TODO(sam.creasey) this should be 1.10 in the Y direction.
-  s->post_locations.push_back(Eigen::Vector3d(0.00, 1.00, 0));  // position A
-  s->post_locations.push_back(Eigen::Vector3d(0.80, 0.36, 0));  // position B
-  s->post_locations.push_back(Eigen::Vector3d(0.30, -0.9, 0));  // position D
-  s->post_locations.push_back(Eigen::Vector3d(-0.1, -1.0, 0));  // position E
+  s->post_locations.push_back(Eigen::Vector3d(0.8, 0.8, 0));  // position A
+  s->post_locations.push_back(Eigen::Vector3d(0.8, -0.8, 0));  // position B
+  s->post_locations.push_back(Eigen::Vector3d(-0.8, -0.8, 0));  // position D
+  s->post_locations.push_back(Eigen::Vector3d(-0.8, 0.8, 0));  // position E
   s->post_locations.push_back(Eigen::Vector3d(-0.47, -0.8, 0));  // position F
 
   // Position of the pick and place location on the table, relative to
@@ -454,6 +454,7 @@ void MyDrake::addPlanInterpolator(){
 }
 
 void MyDrake::addStateMachine(){
+#if 0
   const Eigen::Vector3d robot_base(0, 0, kTableTopZInWorld);
   Isometry3<double> iiwa_base = Isometry3<double>::Identity();
   iiwa_base.translation() = robot_base;
@@ -485,6 +486,7 @@ void MyDrake::addStateMachine(){
                      s->wsg_controller->get_command_input_port());
   s->builder.Connect(s->state_machine->get_output_port_iiwa_plan(),
                      s->iiwa_trajectory_generator->get_plan_input_port());
+#endif
 }
 
 void MyDrake::addRAIMachine(){
@@ -529,7 +531,7 @@ void MyDrake::setGrip(double x){
 void MyDrake::simulate2(){
   Simulator<double> simulator(*s->system);
   simulator.Initialize();
-  simulator.set_target_realtime_rate(FLAGS_realtime_rate);
+  simulator.set_target_realtime_rate(5.); //FLAGS_realtime_rate);
   simulator.reset_integrator<RungeKutta2Integrator<double>>(*s->system,
       FLAGS_dt, simulator.get_mutable_context());
   simulator.get_mutable_integrator()->set_maximum_step_size(FLAGS_dt);
@@ -556,21 +558,7 @@ void MyDrake::simulate2(){
   }
 }
 
-arr rndSpline(uint T, uint n){
-  rnd.seed(0);
-  arr P(10,n);
-
-  //a random spline
-  //a set of random via points with zero start and end:
-  rndUniform(P,-1.,1.,false); P[0]=0.; P[P.d0-1]=0.;
-
-  P *= 2.;
-
-  //convert into a smooth spline (1/0.03 points per via point):
-  return mlr::Spline(T,P).eval();
-}
-
-int MyDrake::DoMain() {
+int MyDrake::DoMain(const arr& X) {
   mono_setupGeometry();
 
   addMonoPlant();
@@ -584,7 +572,7 @@ int MyDrake::DoMain() {
 
   build();
 
-  setPath( rndSpline(30, 7) );
+  setPath( X );
   setGrip( 100. );
 
   simulate2();

@@ -2,10 +2,8 @@
 
 #include <Algo/spline.h>
 #include <Geo/geoms.h>
-
-template<> const char* mlr::Enum<mlr::ShapeType>::names []={
-  "ST_box", "ST_sphere", "ST_capsule", "ST_mesh", "ST_cylinder", "ST_marker", "ST_SSBox", "ST_pointCloud", "ST_ssCvx", "ST_ssBox", NULL
-};
+#include <KOMO/komo.h>
+#include <Core/graph.h>
 
 arr rndSpline(uint T, uint n){
   rnd.seed(0);
@@ -21,34 +19,42 @@ arr rndSpline(uint T, uint n){
   return mlr::Spline(T,P).eval();
 }
 
-int mymain(int argc, char* argv[]) {
-  drake::MyDrake my(argc, argv);
+arr komo(){
+  mlr::KinematicWorld K("model.g");
 
-  my.addKukaPlant();
-  my.addController();
+  KOMO komo;
 
-  arr X = rndSpline(30, 7);
-  FILE("z.ref") <<X;
-  gnuplot("plot 'z.ref' us 0:1, '' us 0:2 , '' us 0:3");
+  komo.setModel(K, false);
 
-  my.addReferenceTrajectory(X);
-  my.addLogger();
 
-  my.build();
+  komo.setPathOpt(5., 20, 10.);
 
-  my.simulate();
+  komo.setHoming(-1., -1., 1e-2);
+  komo.setLimits(true);
 
-  FILE("z.sim") <<my.getLog();
-  gnuplot("plot 'z.sim' us ($0/400-.5):1, 'z.ref' us 1");
+  komo.setGrasp(1., "endeff", "obj1");
+  komo.setPlace(2., "endeff", "obj1", "table1");
 
-  mlr::wait();
+  komo.setGrasp(3., "endeff", "obj2");
+  komo.setPlace(4., "endeff", "obj2", "table2");
 
-  return 0;
+
+  //-- call the optimizer
+  komo.reset();
+  komo.run();
+  //  komo.checkGradients(); //this checks all gradients of the problem by finite difference
+  komo.getReport(true); //true -> plot the cost curves
+  for(uint i=0;i<2;i++) komo.displayTrajectory(.1, true); //play the trajectory
+
+  arr X(komo.T,7);
+  for(uint t=0;t<komo.T;t++) X[t] = komo.configurations(t+komo.k_order)->q({0,6});
+  return X;
 }
 
 
-
 int main(int argc, char* argv[]) {
+  arr X = komo();
   drake::MyDrake D(argc, argv);
-  D.DoMain();
+  D.DoMain(X);
+  return 0;
 }

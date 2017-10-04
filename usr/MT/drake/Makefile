@@ -5,7 +5,7 @@ OBJS = $(SRCS:%.cc=%.o)
 
 OBJS += main.o drake.o
 
-DEPEND = Core Algo
+DEPEND = Core Algo Kin KOMO
 
 MLR_NO_CXX11 = 1
 CXXFLAGS += -DBT_USE_DOUBLE_PRECISION -DHAVE_SPDLOG -DSPDLOG_FMT_EXTERNAL -std=gnu++14

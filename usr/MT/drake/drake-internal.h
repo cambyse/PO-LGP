@@ -12,7 +12,7 @@
 #include "drake/systems/lcm/lcm_publisher_system.h"
 #include "schunk_wsg_controller.h"
 #include "drake/manipulation/schunk_wsg/schunk_wsg_lcm.h"
-#include "state_machine_system.h"
+//#include "state_machine_system.h"
 #include "RAI_machine.h"
 #include "robot_plan_interpolator.h"
 
@@ -47,7 +47,7 @@ struct sMyDrake{
     manipulation::schunk_wsg::SchunkWsgController* wsg_controller=NULL;
     manipulation::schunk_wsg::SchunkWsgStatusSender* wsg_status_sender=NULL;
 
-    drake::examples::kuka_iiwa_arm::monolithic_pick_and_place::PickAndPlaceStateMachineSystem* state_machine=NULL;
+//    drake::examples::kuka_iiwa_arm::monolithic_pick_and_place::PickAndPlaceStateMachineSystem* state_machine=NULL;
     drake::RAI_Machine* rai_machine=NULL;
 
     manipulation::planner::RobotPlanInterpolator* iiwa_trajectory_generator=NULL;

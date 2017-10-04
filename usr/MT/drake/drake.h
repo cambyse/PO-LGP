@@ -11,7 +11,7 @@ struct MyDrake{
   MyDrake(int argc, char* argv[]);
   ~MyDrake();
 
-  int DoMain();
+  int DoMain(const arr& X);
 
   void addKukaPlant();
   void addController();
