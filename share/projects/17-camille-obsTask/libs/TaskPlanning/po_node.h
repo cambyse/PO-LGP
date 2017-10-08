@@ -118,6 +118,7 @@ public:
 private:
   // utility
   uint getPossibleActionsNumber() const;
+  std::vector< std::vector<FOL_World::Handle> > getPossibleActions( uint & nActions ) const;
   LogicAndState getWitnessLogicAndState() const;
   template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
   {

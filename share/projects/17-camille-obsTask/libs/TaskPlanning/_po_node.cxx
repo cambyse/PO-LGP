@@ -78,6 +78,39 @@ static std::set< std::string > getObservableStateStr( Graph * state )
   return facts;
 }
 
+mlr::Array< FOL_World::Handle > _get_actions( const std::vector< std::vector<FOL_World::Handle> > & world_to_actions, uint a )
+{
+  mlr::Array< FOL_World::Handle > actions( world_to_actions.size() );
+
+  for( auto w = 0; w < world_to_actions.size(); ++w )
+  {
+    actions( w ) = world_to_actions[ w ][ a ];
+  }
+
+  return actions;
+}
+
+mlr::Array< std::shared_ptr<Graph> > _get_result_states( const std::vector< std::vector< Graph* > > & world_to_result_states,
+                                                         const mlr::Array< std::shared_ptr<FOL_World> > & fols, uint a )
+{
+  mlr::Array< std::shared_ptr<Graph> > result_states( world_to_result_states.size() );
+
+  for( auto w = 0; w < world_to_result_states.size(); ++w )
+  {
+    auto state = world_to_result_states[ w ][ a ];
+
+    if( state )
+    {
+      auto fol = fols( w );
+      fol->reset_state();
+      //fol->setState( state );
+      result_states( w ).reset( fol->createStateCopy() );
+    }
+  }
+
+  return result_states;
+}
+
 //===========================================================================
 
 static int nodeNumber = 0;
@@ -131,13 +164,14 @@ PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
 }
 
 /// child node creation
-PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uint a )
+PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, const mlr::Array< FOL_World::Handle > & decisions
+                                                                           , const mlr::Array< std::shared_ptr<Graph> > & states
+                                                                           , uint a )
   : parent_( parent )
   , N_( parent_->N_ )
   , folWorlds_( parent->folWorlds_ )
-  , folStates_( N_ )
-  //, folAddToStates_( N_ )
-  , decisions_( N_ )
+  , folStates_( states )
+  , decisions_( decisions )
   , pHistory_( pHistory )
   , bs_( bs )
   , a_( a )
@@ -145,9 +179,9 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
   // global search
   , isExpanded_( false )
   , isInfeasible_( false )
+  // logic search
   , isTerminal_( false )
   , isSolved_( false )
-  // mc specific
   , rootMCs_( parent->rootMCs_ )
   , mcStats_( new MCStatistics )
   , lastActionReward_( 0 )
@@ -162,14 +196,18 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
     if( bs_( w ) > eps() )
     {
       // logic
-      auto fol = folWorlds_( w );
+      /*auto fol = folWorlds_( w );
       //fol->reset_state();
       fol->setState( parent->folStates_( w ).get(), parent_->d_ );
       auto actions = fol->get_actions();
 
+      CHECK( a_ < actions.size(), "wrong action id!!" );
+
       fol->transition( actions[ a_ ] );
 
-      folStates_( w ).reset( fol->createStateCopy() );
+      folStates_( w ).reset( fol->createStateCopy() );*/
+
+      auto fol = folWorlds_( w );
 
       bool isSubNodeTerminal = fol->successEnd;
       isTerminal = isTerminal && isSubNodeTerminal;
@@ -185,7 +223,7 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
 
       //folAddToStates_( w ) = nullptr;
 
-      decisions_( w ) = actions[ a_ ];
+      //decisions_( w ) = actions[ a_ ];
     }
   }
   isTerminal_ = isTerminal;
@@ -224,17 +262,35 @@ void PONode::expand()
     return;
 
   // get possible actions for the worlds having a non null probability
+  //auto nActions = getPossibleActionsNumber();
+
+  //std::cout << "number of possible actions:" << nActions << std::endl;
+
   // retrieve actions for each world
+  std::vector< std::vector<FOL_World::Handle> > world_to_actions( N_ );
+
   uint nActions = 0;
-  std::vector< std::vector<FOL_World::Handle> > world_to_actions = getPossibleActions( nActions );
+  for( auto w = 0; w < N_; ++w )
+  {
+    if( bs_( w ) > eps() )
+    {
+      auto logic = folWorlds_( w );
+      auto state = folStates_( w );
+
+      logic->setState( state.get() );
+
+      auto actions = folWorlds_( w )->get_actions();
+
+      world_to_actions[ w ] = actions;
+      nActions = actions.size();
+    }
+  }
 
   if( nActions == 0 ) isTerminal_ = true;
   //
 
-  //std::cout << "number of possible actions:" << nActions << std::endl;
-
-  if( nActions == 0 )
-    isTerminal_ = true;
+  std::vector< std::vector< Graph* > > world_to_result_states( N_ );
+  for( auto w = 0; w < N_; ++w ) world_to_result_states[ w ] = std::vector< Graph* >( nActions, nullptr );
 
   for( auto a = 0; a < nActions; ++a )
   {
@@ -246,26 +302,31 @@ void PONode::expand()
     {
       if( bs_( w ) > eps() )
       {
+        auto start = std::chrono::high_resolution_clock::now();
+        //logic->verbose = 5;
+
+        // get convenience variables
         auto logic = folWorlds_( w );
         auto state = folStates_( w );
         auto action = world_to_actions[ w ][ a ];
-//        logic->setState( state.get() );
 
-//        auto actions = logic->get_actions();
-//        auto action = actions[ a ];
+        // reset to original state
+        logic->setState( state.get(), d_ );
 
-        {
-        auto start = std::chrono::high_resolution_clock::now();
-
+        // apply action to logic to get the resulting logic state
         logic->transition( action );
 
+        {
         auto elapsed = std::chrono::high_resolution_clock::now() - start;
         long long mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 
+        //if( n % 10 )
         //std::cout << "transition time (ucs):" << mcs << std::endl;
         }
+
         auto result = logic->getState();
         auto observableStateStr = getObservableStateStr( result );
+        world_to_result_states[ w ][ a ] = result;
 
         outcomesToWorlds[ observableStateStr ].push_back( w );
       }
@@ -306,14 +367,15 @@ void PONode::expand()
       CHECK( pWorld > 0, "wrong node expansion" );
 
       // create a node for each possible outcome
-
-      auto n = std::make_shared< PONode >( shared_from_this(), pWorld * pHistory_, bs, a );
+      auto actions       = _get_actions      ( world_to_actions, a );
+      auto result_states = _get_result_states( world_to_result_states, folWorlds_, a );
+      auto n = std::make_shared< PONode >( shared_from_this(), pWorld * pHistory_, bs, actions, result_states, a );
       familiy.append( n );
 
       // get the fact not in intersection
       std::set< std::string > differenciatingFacts;
       std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
-                           std::inserter(differenciatingFacts, differenciatingFacts.begin() ) );
+                           std::inserter( differenciatingFacts, differenciatingFacts.begin() ) );
 
       n->indicateDifferentiatingFacts( differenciatingFacts );
       //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
@@ -370,7 +432,7 @@ void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
 
         for( uint i=1 ; i < treepath.N; i++ )
         {
-          prefixDecisions( i-1 ) = treepath( i )->decision( w );
+          prefixDecisions( i-1 ) = treepath( i )->decisions_( w );
         }
 
         fol->reset_state();
@@ -664,29 +726,6 @@ uint PONode::getPossibleActionsNumber() const
   auto actions = logicAndState.logic->get_actions();
 
   return actions.size();
-}
-
-std::vector< std::vector<FOL_World::Handle> > PONode::getPossibleActions( uint & nActions ) const
-{
-  std::vector< std::vector<FOL_World::Handle> > world_to_actions( N_ );
-
-  for( auto w = 0; w < N_; ++w )
-  {
-    if( bs_( w ) > eps() )
-    {
-      auto logic = folWorlds_( w );
-      auto state = folStates_( w );
-
-      logic->setState( state.get() );
-
-      auto actions = folWorlds_( w )->get_actions();
-
-      world_to_actions[ w ] = actions;
-      nActions = actions.size();
-    }
-  }
-
-  return world_to_actions;
 }
 
 LogicAndState PONode::getWitnessLogicAndState() const

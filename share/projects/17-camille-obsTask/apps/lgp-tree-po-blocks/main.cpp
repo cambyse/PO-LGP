@@ -216,8 +216,8 @@ void plan_mcts()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  //tp->setMCParams( /*10*/100, -1, /*50*/100 );
-  tp->setMCParams( 50, -1, 50 );
+  tp->setMCParams( /*10*/100, -1, /*50*/100 );
+  //tp->setMCParams( 50, -1, 50 );
   mp->setNSteps( 10 );
 
   // register symbols
@@ -299,7 +299,8 @@ int main(int argc,char **argv)
 
   rnd.clockSeed();
 
-  plan_iterative_deepening();
+  //plan_iterative_deepening();
+  plan_mcts();
 
   return 0;
 }
