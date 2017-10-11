@@ -20,35 +20,13 @@
 #include <Logic/fol_mcts_world.h>
 #include <Logic/fol.h>
 #include "node_visitor.h"
+#include "utility.h"
 
 struct PlainMC;
 struct MCStatistics;
 
 namespace tp
 {
-
-//===========================================================================
-
-class WorldID
-{
-public:
-  explicit WorldID( std::size_t id )
-    : id_( id )
-  {
-
-  }
-
-  std::size_t id() const { return id_; }
-
-private:
-  std::size_t id_;
-};
-
-struct LogicAndState
-{
-  std::shared_ptr< FOL_World > logic;
-  std::shared_ptr< Graph >     state;
-};
 
 //===========================================================================
 

@@ -13,7 +13,7 @@
     --------------------------------------------------------------  */
 
 
-#include "po_node.h"
+#include "po_graph_node.h"
 
 #include <unordered_map>
 
@@ -22,8 +22,6 @@
 #include <chrono>
 
 #include <boost/algorithm/string/replace.hpp>
-
-#include <MCTS/solver_PlainMC.h>
 
 
 #define DEBUG(x) //x
@@ -53,6 +51,33 @@ static std::string toStdString( Node * node )
   std::stringstream ss;
   ss << * node;
   return ss.str();
+}
+
+static SymbolicState getStateStr( Graph * state )
+{
+  SymbolicState s;
+
+  std::stringstream ss;
+  state->write( ss," ","{}" );
+
+  s.state = ss.str();
+
+  for( auto node : * state )
+  {
+    //std::cout << * node << std::endl;
+
+    std::stringstream ss;
+    ss << * node;
+    auto fact = ss.str();
+
+    if( fact.find( "decision" ) == std::string::npos
+        &&
+        fact.find( "komo" ) == std::string::npos
+        )
+      s.facts.insert( fact );
+  }
+
+  return s;
 }
 
 static std::set< std::string > getObservableStateStr( Graph * state )
@@ -88,32 +113,25 @@ static uint _get_actions_time_us;
 static uint _n_transitions;
 static uint _transition_time_us;
 
-
 /// root node init
-PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
-  : parent_( nullptr )
+POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
+  : root_( nullptr )
   , N_( fols.N )
   , folWorlds_( fols )
   , folStates_( N_ )
   //, folAddToStates_( N_ )
   , pHistory_( 1.0 )
   , bs_( bs )
-  , a_( -1 )
-  , d_( 0 )
-  , time_( 0.0 )
+  //, a_( -1 )
   // global search
   , isExpanded_( false )
   , isInfeasible_( false )
-  //, isTerminal_( false )
-  //, isSolved_( false )
   // logic search
   , isTerminal_( false )
   , isSolved_( false )
-  , rootMCs_( N_ )
-  , mcStats_( new MCStatistics )
-  , lastActionReward_( 0 )
-  , prefixReward_( 0 )
-  , expectedTotalReward_( m_inf() )
+  //, lastActionReward_( 0 )
+  //, prefixReward_( 0 )
+  //, expectedTotalReward_( m_inf() )
   , expectedBestA_( -1 )
   , id_( 0 )
 {
@@ -121,9 +139,6 @@ PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
   {
     folWorlds_( w )->reset_state();
     folStates_( w ).reset( folWorlds_( w )->createStateCopy() );
-    //folAddToStates_( w ) = nullptr;
-    rootMCs_( w ).reset( new PlainMC( *folWorlds_( w ) ) );
-    rootMCs_( w )->verbose = 0;
   }
 
   std::size_t s = 0;
@@ -137,29 +152,29 @@ PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
   } 
 }
 
+std::list< POGraphNode::ptr > POGraphNode::graph_;
+
 /// child node creation
-PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uint a )
-  : parent_( parent )
-  , N_( parent_->N_ )
-  , folWorlds_( parent->folWorlds_ )
+POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const arr & bs,  const std::vector< SymbolicState > & resultStates, uint a )
+  : root_( root )
+  , N_( root->N_ )
+  , folWorlds_( root->folWorlds_ )
   , folStates_( N_ )
+  , resultStates_( resultStates )
   //, folAddToStates_( N_ )
-  , decisions_( N_ )
+  //, decisions_( N_ )
   , pHistory_( pHistory )
   , bs_( bs )
-  , a_( a )
-  , d_( parent->d_ + 1 )
+  //, a_( a )
   // global search
   , isExpanded_( false )
   , isInfeasible_( false )
   , isTerminal_( false )
   , isSolved_( false )
   // mc specific
-  , rootMCs_( parent->rootMCs_ )
-  , mcStats_( new MCStatistics )
-  , lastActionReward_( 0 )
-  , prefixReward_( 0 )
-  , expectedTotalReward_( m_inf() )
+  //, lastActionReward_( 0 )
+  //, prefixReward_( 0 )
+  //, expectedTotalReward_( m_inf() )
   , expectedBestA_ (-1 )
 {
   // update the states
@@ -168,46 +183,21 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
   {
     if( bs_( w ) > eps() )
     {
+      mlr::String mlrState( resultStates_[ w ].state );
       // logic
       auto fol = folWorlds_( w );
       //fol->reset_state();
-      fol->setState( parent->folStates_( w ).get(), parent_->d_ );
-
-auto start_1 = std::chrono::high_resolution_clock::now();
-
-      auto actions = fol->get_actions(); _n_get_actions++;
-
-auto elapsed_1  = std::chrono::high_resolution_clock::now() - start_1;
-long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
-_get_actions_time_us += mcs_1;
-
-auto start_2 = std::chrono::high_resolution_clock::now();
-
-      fol->transition( actions[ a_ ] ); _n_transitions++;
-
-      ////
-
-      /*std::stringstream ss;
-      fol->write_state( ss );
-      auto s = ss.str();
-
-      mlr::String mlr_s( s );
-
-      fol->set_state( mlr_s );
-      std::cout << "state:" << s << std::endl;*/
-      ////
-
-auto elapsed_2  = std::chrono::high_resolution_clock::now() - start_2;
-long long mcs_2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_2).count();
-_transition_time_us += mcs_2;
+      fol->set_state( mlrState );
 
       folStates_( w ).reset( fol->createStateCopy() );
 
       bool isSubNodeTerminal = fol->successEnd;
       isTerminal = isTerminal && isSubNodeTerminal;
 
-//      if( isTerminal )
-//        std::cout << "found terminal " << std::endl;
+      if( isTerminal )
+      {
+        std::cout << "found terminal " << std::endl;
+      }
 
       if( fol->deadEnd )
       {
@@ -217,7 +207,7 @@ _transition_time_us += mcs_2;
 
       //folAddToStates_( w ) = nullptr;
 
-      decisions_( w ) = actions[ a_ ];
+      //decisions_( w ) = actions[ a_ ];
     }
   }
   isTerminal_ = isTerminal;
@@ -228,10 +218,9 @@ _transition_time_us += mcs_2;
   }
 
   // update time
-  auto ls = getWitnessLogicAndState();
-  time_ = parent_->time_ + ls.logic->lastStepDuration;
-  lastActionReward_ = ls.logic->lastStepReward;
-  prefixReward_ = parent_->prefixReward_ + lastActionReward_;
+  //auto ls = getWitnessLogicAndState();
+  //lastActionReward_ = ls.logic->lastStepReward;
+  //prefixReward_ = parent_->prefixReward_ + lastActionReward_;
 
   // update support size
   std::size_t s = 0;
@@ -249,14 +238,19 @@ _transition_time_us += mcs_2;
   id_ = nodeNumber;
 }
 
-void PONode::expand()
+POGraphNode::L POGraphNode::expand()
 {
+  POGraphNode::L newNodes;
+
+  //
   auto start = std::chrono::high_resolution_clock::now();
   //
 
   CHECK( ! isExpanded_, "" );
   if( isTerminal_ )
-    return;
+  {
+    return newNodes;
+  }
 
   // get possible actions for the worlds having a non null probability
   // retrieve actions for each world
@@ -272,6 +266,7 @@ void PONode::expand()
     //std::cout << "------------" << std::endl;
     //std::cout << "action:" << a << std::endl;
     std::unordered_map< std::set< std::string >, std::list< uint >, stringSetHash > outcomesToWorlds;
+    std::vector< SymbolicState > resultStates( N_ );
 
     for( auto w = 0; w < N_; ++w )
     {
@@ -279,31 +274,25 @@ void PONode::expand()
       {
         auto logic = folWorlds_( w );
         auto state = folStates_( w );
-        //auto action = getWitnessLogicAndState().logic->get_actions()[ a ];
         auto action = world_to_actions[ w ][ a ];
 
-        {
-static int n; n++;
-auto start = std::chrono::high_resolution_clock::now();
-
+        //logic->reset_state();
+        logic->setState( state.get() );
         logic->transition( action ); _n_transitions++;
 
-auto elapsed = std::chrono::high_resolution_clock::now() - start;
-long long mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-_transition_time_us += mcs;
+        auto result             = logic->getState();
 
-if( n % 100 ==  0 )
-std::cout << "transition time (ucs):" << mcs << std::endl;
-        }
-        auto result = logic->getState();
+        //std::cout << "result:" << *logic << std::endl;
+
+        auto stateStr           = getStateStr( result );
         auto observableStateStr = getObservableStateStr( result );
 
+        resultStates[ w ] = stateStr;
         outcomesToWorlds[ observableStateStr ].push_back( w );
       }
     }
 
-    //std::cout << outcomesToWorlds.size() << " possible outcomes" << std::endl;
-
+    //std::cout << outcomesToWorlds.size() << " possible outcomes" << std::endl;    
     // compute the observable facts intersection
     std::set< std::string > intersection = outcomesToWorlds.begin()->first;
     for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
@@ -317,7 +306,7 @@ std::cout << "transition time (ucs):" << mcs << std::endl;
     }
 
     // create as many children as outcomes
-    PONode::L familiy;
+    POGraphNode::L familiy;
     for( auto outcome : outcomesToWorlds )
     {
       auto facts  = outcome.first;
@@ -336,18 +325,63 @@ std::cout << "transition time (ucs):" << mcs << std::endl;
 
       CHECK( pWorld > 0, "wrong node expansion" );
 
-      // create a node for each possible outcome
+      // find or create a node for each possible outcome
+      POGraphNode::ptr child;
+      bool found = false;
 
-      auto n = std::make_shared< PONode >( shared_from_this(), pWorld * pHistory_, bs, a );
-      familiy.append( n );
+      for( auto m = graph_.begin(); m != graph_.end(); ++m )
+      {
+        for( auto n = graph_.begin(); n != graph_.end(); ++n )
+        {
+          if( n != m )
+          {
+            bool eq = (*n)->bs() == (*m)->bs();
+            eq = eq && SymbolicState::equivalent( (*n)->resultStates(), (*m)->resultStates() );
+            CHECK( ! eq, "pb!!" );
+          }
+        }
+      }
 
-      // get the fact not in intersection
-      std::set< std::string > differenciatingFacts;
-      std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
-                           std::inserter(differenciatingFacts, differenciatingFacts.begin() ) );
 
-      n->indicateDifferentiatingFacts( differenciatingFacts );
-      //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
+      for( auto m = POGraphNode::graph_.begin(); m != POGraphNode::graph_.end(); ++m )
+      {
+        //std::cout << bs << "|" << (*m)->bs() << "|" << ((*m)->bs() == bs) << std::endl;
+
+//        for( auto w = 0; w < bs.size(); ++w )
+//        {
+//          std::cout << (*m)->resultStates()[ w ].state << std::endl;
+//          std::cout << resultStates[ w ].state         << std::endl;
+//        }
+        auto a = (*m)->resultStates();
+        auto b = resultStates;
+
+        if( (*m)->bs() == bs )
+        if( SymbolicState::equivalent( a, b )  )
+        {
+          SymbolicState::equivalent( a, b );
+
+          child = *m;
+          found = true;
+          break;
+        }
+      }
+
+      if( ! found )
+      {
+        CHECK( child == nullptr, "a child was found but the pointer is still null!!" );
+
+        child = std::make_shared< POGraphNode >( shared_from_this(), pWorld * pHistory_, bs, resultStates, a );
+        POGraphNode::graph_.push_back( child );
+        newNodes.push_back( child );
+        // get the fact not in intersection
+        std::set< std::string > differenciatingFacts;
+        std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
+                             std::inserter(differenciatingFacts, differenciatingFacts.begin() ) );
+
+        child->indicateDifferentiatingFacts( differenciatingFacts );
+        //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
+      }
+      familiy.append( child );
     }
 
     // check integrity
@@ -380,9 +414,11 @@ std::cout << "transition time (ucs):" << mcs << std::endl;
 
   _n_get_actions = 0;
   _get_actions_time_us = 0;
+
+  return newNodes;
 }
 
-void PONode::setAndSiblings( const PONode::L & siblings )
+void POGraphNode::setAndSiblings( const POGraphNode::L & siblings )
 {
   for( auto s : siblings )
   {
@@ -391,66 +427,7 @@ void PONode::setAndSiblings( const PONode::L & siblings )
   }
 }
 
-void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
-{
-  //std::cout << "POLGPNode::generateMCRollouts.." << std::endl;
-  // do rollouts for each possible worlds
-  auto treepath = getTreePath();
-
-  for( uint k=0; k < num; ++k )
-  {
-    double RR = 0;
-
-    for( auto w = 0; w < N_; ++w )
-    {
-      auto fol = folWorlds_( w );
-      auto state = folStates_( w );
-      auto rootMC = rootMCs_( w );
-
-      // retrieve history
-      if( bs_( w ) > eps() )
-      {
-        mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
-
-        for( uint i=1 ; i < treepath.N; i++ )
-        {
-          prefixDecisions( i-1 ) = treepath( i )->decision( w );
-        }
-
-        fol->reset_state();
-        fol->maxHorizon = maxHorizon;
-        double prefixReward = rootMC->initRollout( prefixDecisions );
-        fol->setState( state.get() );
-        //rootMC->verbose = 2;
-        double totalReward = rootMC->finishRollout( stepAbort );
-
-        //R.append( bs_( w ) * r );
-        RR += bs_( w ) * totalReward;
-        //std::cout << *rootMC->world.get_stateCopy() << std::endl;
-        //auto state = *rootMC->world.get_stateCopy();
-        //std::cout << "fol:" << *fol << std::endl;
-
-        //auto actions = rootMC->world.get_actions();
-
-        //for( auto a : actions ) std::cout << * a << std::endl;
-
-        CHECK( rootMC->world.is_terminal_state(), "error in rollout" );
-
-        CHECK( prefixReward_ == prefixReward, "" );
-      }
-    }
-    CHECK( RR != 0, "" );
-
-    mcStats_->add( RR );
-  }
-
-  // commit result
-  expectedTotalReward_ = mcStats_->X.first();
-
-  //std::cout << "average reward:" << expectedReward_ << std::endl;
-}
-
-void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
+/*void POGraphNode::backTrackBestExpectedPolicy( POGraphNode::ptr until_node )
 {
 //  if( isTerminal() )
 //  {
@@ -496,8 +473,6 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
     // retrieve best decision id
     bestFamily_ = families_( bestFamilyId );
     uint bestA = bestFamily_.first()->a_;
-    mcStats_->add( bestTotalReward ); // this one is more informed!
-    expectedTotalReward_  = mcStats_->X.first();
     expectedBestA_        = bestA;
     isSolved_             = familyStatus( bestFamilyId ).solved;
 
@@ -512,9 +487,9 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
   {
     parent_->backTrackBestExpectedPolicy( until_node );
   }
-}
+}*/
 
-void PONode::backTrackSolveStatus()
+/*void POGraphNode::backTrackSolveStatus()
 {
   for( auto i = 0; i < families_.d0; ++i )
   {
@@ -532,20 +507,13 @@ void PONode::backTrackSolveStatus()
   {
     parent_->backTrackSolveStatus();
   }
-}
+}*/
 
-void PONode::labelInfeasible()
+void POGraphNode::labelInfeasible()
 {
   // set flag and badest reward
-  mcStats_->clear();
   isInfeasible_ = true;
-  expectedTotalReward_ = m_inf();
-
-  // we reset the rollouts, all the parents rollouts are potentially wrong ( too optimistic ).
-  for( auto parent = parent_; parent; parent = parent->parent() )
-  {
-    parent->mcStats_->clear();
-  }
+  //expectedTotalReward_ = m_inf();
 
   // delete children nodes
 //  for( auto children : families_ )
@@ -555,58 +523,16 @@ void PONode::labelInfeasible()
 //  families_.clear();
 
   // backtrack results
-  if( parent_ )
+  /*if( parent_ )
   {
     parent_->backTrackBestExpectedPolicy();
-  }
-  //-- remove children
-//  ActionNodeL tree;
-//  getAllChildren(tree);
-//  for(ActionNode *n:tree) if(n!=this) delete n; //TODO: memory leak!
-//  for( auto children : families_ )
-//  {
-//    DEL_INFEASIBLE( children.clear(); )
-//  }
-//  families_.clear();
-
-//  //-- add INFEASIBLE flag to fol
-//  auto folDecision = folStates_( w )->getNode("decision");
-//  NodeL symbols = folDecision->parents;
-//  symbols.prepend( folWorlds_( w )->KB.getNode({"INFEASIBLE"}));
-
-////  cout <<"\n *** LABELLING INFEASIBLE: "; listWrite(symbols); cout <<endl;
-//  //-- find the right parent...
-//  POLGPNode* node = this;
-//  while( node->parent_ ){
-//    bool stop=false;
-//    for(Node *fact:node->folStates_( w )->list()){
-//      if(fact->keys.N && fact->keys.last()=="block"){
-//        if(tuplesAreEqual(fact->parents, symbols)){
-//          CHECK(fact->isOfType<bool>() && fact->keys.first()=="block", "");
-//          stop=true;
-//          break;
-//        }
-//      }
-//    }
-//    if(stop) break;
-//    node = node->parent_;
-//  }
-
-//  if( ! node->folAddToStates_( w ) )
-//  {
-//    node->folAddToStates_( w ) = &folWorlds_( w )->KB.newSubgraph({"ADD"}, {node->folStates_( w )->isNodeOfGraph})->value;
-//  }
-//  node->folAddToStates_( w )->newNode<bool>({}, symbols, true);
-
-////  ActionNode *root=getRoot();
-//  node->recomputeAllFolStates();
-//  node->recomputeAllMCStats(false);
+  }*/
 }
 
-PONode::L PONode::getTreePath()
+/*POGraphNode::L POGraphNode::getTreePath()
 {
-  PONode::L path;
-  PONode::ptr node = shared_from_this();
+  POGraphNode::L path;
+  POGraphNode::ptr node = shared_from_this();
   for(;node;){
     path.append(node);
     node = node->parent_;
@@ -617,11 +543,11 @@ PONode::L PONode::getTreePath()
   return path;
 }
 
-PONode::L PONode::getTreePathFrom( const PONode::ptr & start )
+POGraphNode::L POGraphNode::getTreePathFrom( const POGraphNode::ptr & start )
 {
-  PONode::L subPath;
+  POGraphNode::L subPath;
 
-  PONode::ptr node = shared_from_this();
+  POGraphNode::ptr node = shared_from_this();
   do
   {
     subPath.prepend( node );
@@ -633,7 +559,7 @@ PONode::L PONode::getTreePathFrom( const PONode::ptr & start )
   } while ( ( node != start ) && node );
 
   return subPath;
-}
+}*/
 
 //uint PONode::getPossibleActionsNumber() const
 //{
@@ -646,9 +572,11 @@ PONode::L PONode::getTreePathFrom( const PONode::ptr & start )
 //  return actions.size();
 //}
 
-std::vector< std::vector<FOL_World::Handle> > PONode::getPossibleActions( uint & nActions ) const
+std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( uint & nActions ) const
 {
   std::vector< std::vector<FOL_World::Handle> > world_to_actions( N_ );
+
+  std::cout << "------------------------" << std::endl;
 
   for( auto w = 0; w < N_; ++w )
   {
@@ -669,13 +597,16 @@ _get_actions_time_us += mcs_1;
 
       world_to_actions[ w ] = actions;
       nActions = actions.size();
+
+      for( auto a : actions )
+      std::cout << *a << std::endl;
     }
   }
 
   return world_to_actions;
 }
 
-LogicAndState PONode::getWitnessLogicAndState() const
+LogicAndState POGraphNode::getWitnessLogicAndState() const
 {
   auto worlds = getPossibleLogicAndStates();
 
@@ -684,7 +615,7 @@ LogicAndState PONode::getWitnessLogicAndState() const
   return worlds.first();
 }
 
-mlr::Array< LogicAndState > PONode::getPossibleLogicAndStates() const
+mlr::Array< LogicAndState > POGraphNode::getPossibleLogicAndStates() const
 {
   mlr::Array< LogicAndState > worlds;
 
@@ -699,7 +630,7 @@ mlr::Array< LogicAndState > PONode::getPossibleLogicAndStates() const
   return worlds;
 }
 
-std::string PONode::actionStr( uint a ) const
+std::string POGraphNode::actionStr( uint a ) const
 {
   auto ls = getWitnessLogicAndState();
   ls.logic->reset_state();
@@ -727,9 +658,9 @@ std::string PONode::actionStr( uint a ) const
 
 namespace utility
 {
-PONode::ptr getTerminalNode( const PONode::ptr & n, const WorldID & w )
+POGraphNode::ptr getTerminalNode( const POGraphNode::ptr & n, const WorldID & w )
 {
-  PONode::ptr node;
+  POGraphNode::ptr node;
   if( n->isTerminal() )
   {
     CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
@@ -750,7 +681,7 @@ PONode::ptr getTerminalNode( const PONode::ptr & n, const WorldID & w )
   return node;
 }
 
-void gatherPolicyFringe( const PONode::ptr & node, std::set< mlr::Array< PONode::ptr > > & fringe )
+void gatherPolicyFringe( const POGraphNode::ptr & node, std::set< mlr::Array< POGraphNode::ptr > > & fringe )
 {
   for( auto f : node->families() )
   {

@@ -8,6 +8,7 @@
 
 #include <mcts_planner.h>
 #include <iterative_deepening.h>
+#include <graph_search.h>
 
 #include <komo_planner.h>
 
@@ -293,13 +294,27 @@ void plan_iterative_deepening()
 
 //===========================================================================
 
+void plan_graph_search()
+{
+  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+
+  tp->setFol( "LGP-blocks-fol-easy.g" );
+
+  tp->solve();
+
+  mlr::wait( 30, true );
+}
+
+//===========================================================================
+
 int main(int argc,char **argv)
 {
   mlr::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 
-  plan_iterative_deepening();
+  plan_graph_search();
+  //plan_iterative_deepening();
   //plan_mcts();
 
   return 0;
