@@ -186,8 +186,8 @@ PONode::ptr IterativeDeepeningPlanner::iterativeDepthFirstExpand( const PONode::
       auto elapsed = std::chrono::high_resolution_clock::now() - start;
       long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 
-      if( n_exp_ % 100 == 0 )
-      std::cout << "expansion time (ms):" << ms << std::endl;
+//      if( n_exp_ % 100 == 0 )
+//        std::cout << "expansion time (ms):" << ms << " n families:" << node->families().size() << std::endl;
     }
 
     for( auto f : node->families() )
@@ -263,7 +263,7 @@ void IterativeDeepeningPlanner::breadthFirstExpand( uint d )
         auto elapsed = std::chrono::high_resolution_clock::now() - start;
         long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 
-        std::cout << "expansion time (ms):" << ms << std::endl;
+        std::cout << "expansion time (ms):" << ms << " n families:" << current->families().size() << std::endl;
       }
 
       for( auto f : current->families() )

@@ -299,8 +299,8 @@ int main(int argc,char **argv)
 
   rnd.clockSeed();
 
-  //plan_iterative_deepening();
-  plan_mcts();
+  plan_iterative_deepening();
+  //plan_mcts();
 
   return 0;
 }

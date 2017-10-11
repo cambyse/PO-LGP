@@ -82,6 +82,13 @@ static std::set< std::string > getObservableStateStr( Graph * state )
 
 static int nodeNumber = 0;
 
+static uint _n_get_actions;
+static uint _get_actions_time_us;
+
+static uint _n_transitions;
+static uint _transition_time_us;
+
+
 /// root node init
 PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
   : parent_( nullptr )
@@ -165,9 +172,22 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
       auto fol = folWorlds_( w );
       //fol->reset_state();
       fol->setState( parent->folStates_( w ).get(), parent_->d_ );
-      auto actions = fol->get_actions();
 
-      fol->transition( actions[ a_ ] );
+auto start_1 = std::chrono::high_resolution_clock::now();
+
+      auto actions = fol->get_actions(); _n_get_actions++;
+
+auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+_get_actions_time_us += mcs_1;
+
+auto start_2 = std::chrono::high_resolution_clock::now();
+
+      fol->transition( actions[ a_ ] ); _n_transitions++;
+
+auto elapsed_2 = std::chrono::high_resolution_clock::now() - start_2;
+long long mcs_2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_2).count();
+_transition_time_us += mcs_2;
 
       folStates_( w ).reset( fol->createStateCopy() );
 
@@ -219,6 +239,9 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
 
 void PONode::expand()
 {
+  auto start = std::chrono::high_resolution_clock::now();
+  //
+
   CHECK( ! isExpanded_, "" );
   if( isTerminal_ )
     return;
@@ -229,12 +252,8 @@ void PONode::expand()
   std::vector< std::vector<FOL_World::Handle> > world_to_actions = getPossibleActions( nActions );
 
   if( nActions == 0 ) isTerminal_ = true;
-  //
 
   //std::cout << "number of possible actions:" << nActions << std::endl;
-
-  if( nActions == 0 )
-    isTerminal_ = true;
 
   for( auto a = 0; a < nActions; ++a )
   {
@@ -249,20 +268,19 @@ void PONode::expand()
         auto logic = folWorlds_( w );
         auto state = folStates_( w );
         auto action = world_to_actions[ w ][ a ];
-//        logic->setState( state.get() );
-
-//        auto actions = logic->get_actions();
-//        auto action = actions[ a ];
 
         {
+        static int n; n++;
         auto start = std::chrono::high_resolution_clock::now();
 
-        logic->transition( action );
+        logic->transition( action ); _n_transitions++;
 
         auto elapsed = std::chrono::high_resolution_clock::now() - start;
         long long mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        _transition_time_us += mcs;
 
-        //std::cout << "transition time (ucs):" << mcs << std::endl;
+        if( n % 100 ==  0 )
+        std::cout << "transition time (ucs):" << mcs << std::endl;
         }
         auto result = logic->getState();
         auto observableStateStr = getObservableStateStr( result );
@@ -336,6 +354,19 @@ void PONode::expand()
   }
 
   isExpanded_ = true;
+
+  //
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+
+  static int n; n++;
+  if( n % 100 == 0 ) std::cout << "expansion time:" << ms << " |" << " get actions:" << _n_get_actions << " get actions time(ms):" << _get_actions_time_us / 1000 << " |" << " n transitions:" << _n_transitions << " transition time(ms):" << _transition_time_us / 1000 << " families:"<< families_.size() << std::endl;
+
+  _n_transitions = 0;
+  _transition_time_us = 0;
+
+  _n_get_actions = 0;
+  _get_actions_time_us = 0;
 }
 
 void PONode::setAndSiblings( const PONode::L & siblings )
@@ -405,70 +436,6 @@ void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
 
   //std::cout << "average reward:" << expectedReward_ << std::endl;
 }
-
-//void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
-//{
-//  //std::cout << "POLGPNode::generateMCRollouts.." << std::endl;
-//  // do rollouts for each possible worlds
-//  auto treepath = getTreePath();
-
-//  arr R;  // rewards of all the rollouts
-
-//  for( auto w = 0; w < N_; ++w )
-//  {
-//    auto fol = folWorlds_( w );
-//    auto state = folStates_( w );
-//    auto rootMC = rootMCs_( w );
-//    // retrieve history
-//    if( bs_( w ) > eps() )
-//    {
-//      mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
-
-//      for( uint i=1 ; i < treepath.N; i++ )
-//      {
-//        prefixDecisions(i-1) = treepath(i)->decision( w );
-//      }
-
-//      for( uint k=0; k < num; ++k )
-//      {
-//        fol->reset_state();
-//        fol->maxHorizon = maxHorizon;
-//        double prefixReward = rootMC->initRollout( prefixDecisions );
-//        fol->setState( state.get() );
-//        //rootMC->verbose = 2;
-//        double r = rootMC->finishRollout( stepAbort );
-//        R.append( bs_( w ) * r );
-
-//        //std::cout << *rootMC->world.get_stateCopy() << std::endl;
-//        //auto state = *rootMC->world.get_stateCopy();
-//        //std::cout << "fol:" << *fol << std::endl;
-
-//        //auto actions = rootMC->world.get_actions();
-
-//        //for( auto a : actions ) std::cout << * a << std::endl;
-
-//        CHECK( rootMC->world.is_terminal_state(), "error in rollout" );
-
-//        CHECK( prefixReward_ == prefixReward, "" );
-//      }
-//    }
-//  }
-
-//  // save result
-//  double averageReward = 0; // averaged over the worlds
-//  for( auto r: R )
-//  {
-//    averageReward += r;
-//  }
-
-//  averageReward /= num;     // normalize by the number of rollouts
-//  mcStats_->add( averageReward );
-
-//  // commit result
-//  expectedReward_ = mcStats_->X.first();
-
-//  //std::cout << "average reward:" << expectedReward_ << std::endl;
-//}
 
 void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
 {
@@ -655,16 +622,16 @@ PONode::L PONode::getTreePathFrom( const PONode::ptr & start )
   return subPath;
 }
 
-uint PONode::getPossibleActionsNumber() const
-{
-  auto logicAndState = getWitnessLogicAndState();
+//uint PONode::getPossibleActionsNumber() const
+//{
+//  auto logicAndState = getWitnessLogicAndState();
 
-  logicAndState.logic->setState( logicAndState.state.get(), d_ );
+//  logicAndState.logic->setState( logicAndState.state.get(), d_ );
 
-  auto actions = logicAndState.logic->get_actions();
+//  auto actions = logicAndState.logic->get_actions(); _n_get_actions++;
 
-  return actions.size();
-}
+//  return actions.size();
+//}
 
 std::vector< std::vector<FOL_World::Handle> > PONode::getPossibleActions( uint & nActions ) const
 {
@@ -679,7 +646,13 @@ std::vector< std::vector<FOL_World::Handle> > PONode::getPossibleActions( uint &
 
       logic->setState( state.get() );
 
-      auto actions = folWorlds_( w )->get_actions();
+auto start_1 = std::chrono::high_resolution_clock::now();
+
+      auto actions = folWorlds_( w )->get_actions(); _n_get_actions++;
+
+auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+_get_actions_time_us += mcs_1;
 
       world_to_actions[ w ] = actions;
       nActions = actions.size();
@@ -718,7 +691,14 @@ std::string PONode::actionStr( uint a ) const
   auto ls = getWitnessLogicAndState();
   ls.logic->reset_state();
   ls.logic->setState( ls.state.get() );
-  auto actions = ls.logic->get_actions();
+
+  auto start_1 = std::chrono::high_resolution_clock::now();
+
+      auto actions = ls.logic->get_actions(); _n_get_actions++;
+
+  auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+  long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+  _get_actions_time_us += mcs_1;
 
   std::stringstream ss;
 
