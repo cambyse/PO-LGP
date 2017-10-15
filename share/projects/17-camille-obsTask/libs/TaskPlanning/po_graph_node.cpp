@@ -194,11 +194,6 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const 
       bool isSubNodeTerminal = fol->successEnd;
       isTerminal = isTerminal && isSubNodeTerminal;
 
-      if( isTerminal )
-      {
-        std::cout << "found terminal " << std::endl;
-      }
-
       if( fol->deadEnd )
       {
         isInfeasible_ = true;
@@ -275,17 +270,32 @@ POGraphNode::L POGraphNode::expand()
         auto logic = folWorlds_( w );
         auto state = folStates_( w );
         auto action = world_to_actions[ w ][ a ];
-
+        //logic->addTerminalRule();
         //logic->reset_state();
         logic->setState( state.get() );
         logic->transition( action ); _n_transitions++;
 
         auto result             = logic->getState();
 
-        //std::cout << "result:" << *logic << std::endl;
-
         auto stateStr           = getStateStr( result );
         auto observableStateStr = getObservableStateStr( result );
+
+        //////////////////
+        /*std::stringstream ss;
+        ss << *action;
+        auto action_label = ss.str();
+        std::cout << "action_label:" << action_label << std::endl;
+        if( action_label == "check" )
+        {
+
+        }
+
+        if( logic->successEnd )
+        {
+          std::cout << "terminal logic found" << std::endl;
+        }
+        //std::cout << "result:" << *logic << std::endl;*/
+        //////////////////
 
         resultStates[ w ] = stateStr;
         outcomesToWorlds[ observableStateStr ].push_back( w );
@@ -329,18 +339,18 @@ POGraphNode::L POGraphNode::expand()
       POGraphNode::ptr child;
       bool found = false;
 
-      for( auto m = graph_.begin(); m != graph_.end(); ++m )
-      {
-        for( auto n = graph_.begin(); n != graph_.end(); ++n )
-        {
-          if( n != m )
-          {
-            bool eq = (*n)->bs() == (*m)->bs();
-            eq = eq && SymbolicState::equivalent( (*n)->resultStates(), (*m)->resultStates() );
-            CHECK( ! eq, "pb!!" );
-          }
-        }
-      }
+//      for( auto m = graph_.begin(); m != graph_.end(); ++m )
+//      {
+//        for( auto n = graph_.begin(); n != graph_.end(); ++n )
+//        {
+//          if( n != m )
+//          {
+//            bool eq = (*n)->bs() == (*m)->bs();
+//            eq = eq && SymbolicState::equivalent( (*n)->resultStates(), (*m)->resultStates() );
+//            CHECK( ! eq, "pb!!" );
+//          }
+//        }
+//      }
 
 
       for( auto m = POGraphNode::graph_.begin(); m != POGraphNode::graph_.end(); ++m )
@@ -358,8 +368,6 @@ POGraphNode::L POGraphNode::expand()
         if( (*m)->bs() == bs )
         if( SymbolicState::equivalent( a, b )  )
         {
-          SymbolicState::equivalent( a, b );
-
           child = *m;
           found = true;
           break;
@@ -373,6 +381,7 @@ POGraphNode::L POGraphNode::expand()
         child = std::make_shared< POGraphNode >( shared_from_this(), pWorld * pHistory_, bs, resultStates, a );
         POGraphNode::graph_.push_back( child );
         newNodes.push_back( child );
+
         // get the fact not in intersection
         std::set< std::string > differenciatingFacts;
         std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
@@ -576,7 +585,7 @@ std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( u
 {
   std::vector< std::vector<FOL_World::Handle> > world_to_actions( N_ );
 
-  std::cout << "------------------------" << std::endl;
+  //std::cout << "------------------------" << std::endl;
 
   for( auto w = 0; w < N_; ++w )
   {
@@ -598,8 +607,8 @@ _get_actions_time_us += mcs_1;
       world_to_actions[ w ] = actions;
       nActions = actions.size();
 
-      for( auto a : actions )
-      std::cout << *a << std::endl;
+//      for( auto a : actions )
+//      std::cout << *a << std::endl;
     }
   }
 

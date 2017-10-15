@@ -298,7 +298,8 @@ void plan_graph_search()
 {
   auto tp = std::make_shared< tp::GraphSearchPlanner >();
 
-  tp->setFol( "LGP-blocks-fol-easy.g" );
+  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
+  tp->setFol( "LGP-blocks-fol.g" );
 
   tp->solve();
 
