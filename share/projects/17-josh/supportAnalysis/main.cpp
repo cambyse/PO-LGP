@@ -13,6 +13,8 @@
 #include <Kin/taskMaps.h>
 #include <Kin/kinViewer.h>
 
+#include <GL/gl.h>
+
 void illustrate(){
 
   OpenGL gl("Red Ball Scenes", 1600, 800);
@@ -86,6 +88,237 @@ void analyzeSupport(){
       gl.clear();
 
     }
+
+//    K.watch(true);
+  }
+}
+
+//===========================================================================
+
+StringA contactName = {"vertex", "edge", "plane"};
+
+struct SupportGraph : GLDrawer{
+  mlr::KinematicWorld &K;
+
+  struct Contact : GLDrawer{
+    mlr::Frame *f1, *f2;
+    mlr::Transformation X=0;
+    arr normal;
+    arr m1, m2;
+    arr eig1, eig2;
+    arr axis;
+    arr wrench;
+    arr ZMP;
+
+    Contact(mlr::Frame *f1, mlr::Frame *f2, const PairCollision& coll)
+      : f1(f1), f2(f2), normal(coll.normal), m1(coll.m1), m2(coll.m2), eig1(coll.eig1), eig2(coll.eig2){
+
+      X.pos = mlr::Vector(.5*(m1+m2));
+      if(eig1.d0==1){
+        X.pos = m1;
+        axis=eig1[0];
+      }
+      if(eig2.d0==1){
+        X.pos = m2;
+        axis=eig2[0];
+      }
+      if(eig1.d0==2 && eig2.d0==2){
+        X.pos = .5*(m1+m2);
+        axis.clear();
+      }
+
+
+    }
+
+    void write(ostream& os){
+      cout <<"Contact " <<f1->name <<"--" <<f2->name <<" : " <<contactName(eig1.d0) <<'-' <<contactName(eig2.d0) <<" w=" <<wrench <<" ZMP=" <<ZMP;
+    }
+
+    void glDraw(struct OpenGL&){
+      if(axis.N){
+        glTransform(X);
+        glScalef(.2, .2, .2);
+        glColor(1., 1., 0., 1.);
+        glDrawAxis();
+      }
+
+      glLoadIdentity();
+      glTranslated(ZMP(0), ZMP(1), ZMP(2));
+      glColor(1., 0., 0., 1.);
+      glDrawDiamond(.02, .02, .02);
+    }
+  };
+
+  mlr::Array<Contact*> contacts;
+
+  SupportGraph(mlr::KinematicWorld &K) : K(K){}
+
+  void addContact(mlr::Frame *f1, mlr::Frame *f2, const PairCollision& coll){
+    contacts.append(new Contact(f1, f2, coll));
+  }
+
+  void computeLinearEquation(double gc=-9.81){
+    uint N=K.frames.N;
+    uint n=contacts.N;
+    arr g(N,6); g.setZero();
+    arr A;
+    A.resize({N,6,n,6}); A.setZero();
+
+    for(mlr::Frame *a:K.frames){
+      if(a->inertia){
+        arr grav = {0., 0., a->inertia->mass * gc};
+        g[a->ID] = cat( crossProduct( a->X.pos.getArr(), grav), grav );  //wrench in world! frame
+      }
+    }
+
+    //give all gravity inversely to the root
+    arr g_total = sum(g,0);
+    g[0] = -g_total;
+
+
+    for(uint i=0;i<contacts.N;i++){
+      Contact *c=contacts.elem(i);
+      arr T = ~c->X.getWrenchTransform();
+      for(uint j=0;j<6;j++) for(uint k=0;k<6;k++){
+        A.elem({c->f1->ID, j, i, k}) = +T(j,k);
+        A.elem({c->f2->ID, j, i, k}) = -T(j,k);
+      }
+    }
+
+    //    cout <<g <<endl <<A <<endl;
+
+    A.reshape(N*6, n*6);
+    g.reshape(N*6);
+
+    //add constraints for line contacts (as hinge joints)
+#if 1
+    for(uint i=0;i<contacts.N;i++){
+      Contact *c=contacts.elem(i);
+      arr axis = c->axis;
+      if(axis.N==3){
+        axis = (c->X.rot/Vector_x).getArr(); //HACK: We know that all axes are (1,0,0) in our domains
+        axis /= length(axis);
+        arr h = cat(axis, zeros(3));
+        arr Arow = zeros(n*6);
+        Arow({i*6,i*6+5}) = h;
+        A.append(Arow);
+        g.append(0.);
+      }
+    }
+#endif
+
+    arr f;
+//    lapack_min_Ax_b(f, A, -g);
+    f = -pseudoInverse(A)*g;
+    cout <<"error=" <<sumOfSqr(g+A*f) <<endl;
+    f.reshape(n,6);
+    for(uint i=0;i<contacts.N;i++) contacts.elem(i)->wrench = f[i];
+  }
+
+  void computeZMPs(){
+    for(Contact *c:contacts){
+      //the wrench is in contact frame (relative to the origin of c->X, which also is on the plane)
+      //we only have to compute the ZMP offset on the plane
+      c->ZMP = crossProduct(c->normal, c->wrench({0,2})) / scalarProduct(c->normal, c->wrench({3,5}));
+      c->ZMP = (c->X*mlr::Vector(c->ZMP)).getArr();
+    }
+  }
+
+  void write(ostream& os) const{
+    for(Contact *c:contacts){ c->write(os); os <<endl; }
+  }
+
+  void glDraw(struct OpenGL& gl){
+    for(Contact *c:contacts) c->glDraw(gl);
+  }
+
+};
+stdOutPipe(SupportGraph)
+
+void computeSupportGraph(){
+  uint N=11;
+  OpenGL gl;
+
+  ofstream fil("z.supportAna");
+
+
+  for(uint i=0;i<N;i++){
+    mlr::String str = STRINGF("p%02i.g", i+1);
+    mlr::KinematicWorld K(str);
+    fil <<"\n### PROBLEM " <<i <<"  " <<str <<endl;
+
+    //delete all links!
+    for(mlr::Frame *f:K.frames) if(f->parent) f->unLink();
+    K.optimizeTree(false);
+
+    for(mlr::Frame *f:K.frames) if(f->shape){
+      f->shape->cont=true;
+      f->shape->mesh().C.append(.3);
+    }
+    K.swift().setCutoff(.05);
+    K.swift().initActivations(K, 0);
+
+    K.stepSwift();
+//    K.reportProxies();
+
+    SupportGraph C(K);
+    for(mlr::Proxy* p:K.proxies){
+      mlr::Frame *a = K.frames(p->a);
+      mlr::Frame *b = K.frames(p->b);
+      if(a->shape->type()!=mlr::ST_ssBox || b->shape->type()!=mlr::ST_ssBox) continue;
+      PairCollision coll(a->shape->sscCore(),
+                         b->shape->sscCore(),
+                         a->X,
+                         b->X);
+
+      coll.marginAnalysis(.001);
+
+      if(coll.distance<a->shape->size(3)+b->shape->size(3)+.001){
+        C.addContact(a, b, coll);
+
+        cout <<"PROXY " <<a->name <<"--" <<b->name <<" : " <<contactName(coll.eig1.d0) <<'-' <<contactName(coll.eig2.d0) <<endl;
+        fil <<"  " <<a->name <<'-' <<b->name <<" : " <<contactName(coll.eig1.d0) <<'-' <<contactName(coll.eig2.d0) <<endl;
+
+        if(!b->parent){
+          b->linkFrom(a, true);
+        }else if(!a->parent){
+          a->linkFrom(b, true);
+        }else{
+          cout <<"LOOP!" <<endl;
+        }
+      }
+
+      gl.add(glStandardLight);
+      gl.add(coll);
+      gl.add(K);
+//      gl.watch();
+      gl.update();
+      gl.clear();
+    }
+
+
+    for(mlr::Frame *f:K.frames) if(f->parent){
+      mlr::Inertia *m = new mlr::Inertia(*f);
+      m->defaultInertiaByShape();
+    }
+
+    K.gravityToForces(-10.);
+
+//    K.NewtonEuler_backward();
+
+    C.computeLinearEquation(-10.);
+    C.computeZMPs();
+
+    cout <<C <<endl;
+
+    K.proxies.clear(); //don't display proxies
+    gl.clear();
+    gl.text = str;
+    gl.add(glStandardLight);
+    gl.add(C);
+    gl.add(K);
+    gl.watch();
+    gl.clear();
 
 //    K.watch(true);
   }
@@ -194,7 +427,8 @@ int main(int argc,char **argv){
 
 //  illustrate();
 //  analyzeSupport();
-  trial3();
+  computeSupportGraph();
+//  trial3();
 //  trial8();
 
   return 0;
