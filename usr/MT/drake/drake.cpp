@@ -61,7 +61,7 @@ DEFINE_int32(target, 0, "ID of the target to pick.");
 DEFINE_double(orientation, 2 * M_PI, "Yaw angle of the box.");
 DEFINE_int32(start_position, 1, "Position index to start from");
 DEFINE_int32(end_position, 2, "Position index to end at");
-DEFINE_double(dt, 1e-3, "Integration step size");
+DEFINE_double(dt, 5e-3, "Integration step size");
 DEFINE_double(realtime_rate, 0.0, "Rate at which to run the simulation, "
     "relative to realtime");
 DEFINE_bool(quick, false, "Run only a brief simulation and return success "
@@ -326,8 +326,12 @@ std::unique_ptr<drake::systems::RigidBodyPlant<double>> BuildCombinedPlant(
       drake::multibody::joints::kFixed);
   *wsg_instance = tree_builder->get_model_info_for_instance(wsg_id);
 
-  return std::make_unique<drake::systems::RigidBodyPlant<double>>(
-      tree_builder->Build());
+  std::unique_ptr<RigidBodyTree<double>> tree = tree_builder->Build();
+
+  //remove all collision groups
+  tree->removeCollisionGroupsIf([](const std::string& str)->bool{ return true; });
+
+  return std::make_unique<drake::systems::RigidBodyPlant<double>>( std::move(tree) );
 }
 
 void MyDrake::mono_setupGeometry() {
@@ -531,7 +535,7 @@ void MyDrake::setGrip(double x){
 void MyDrake::simulate2(){
   Simulator<double> simulator(*s->system);
   simulator.Initialize();
-  simulator.set_target_realtime_rate(5.); //FLAGS_realtime_rate);
+  simulator.set_target_realtime_rate(0.); //FLAGS_realtime_rate);
   simulator.reset_integrator<RungeKutta2Integrator<double>>(*s->system,
       FLAGS_dt, simulator.get_mutable_context());
   simulator.get_mutable_integrator()->set_maximum_step_size(FLAGS_dt);

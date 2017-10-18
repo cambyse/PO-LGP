@@ -22,6 +22,11 @@ arr rndSpline(uint T, uint n){
 arr komo(){
   mlr::KinematicWorld K("model.g");
 
+  cout <<"LIMITS = " << K.getLimits() <<endl;
+  StringA joints = K.getJointNames();
+  cout <<"JOINTS = " <<joints <<endl;
+  joints.remove(-1);
+
   KOMO komo;
 
   komo.setModel(K, false);
@@ -29,8 +34,8 @@ arr komo(){
 
   komo.setPathOpt(5., 20, 10.);
 
-  komo.setHoming(-1., -1., 1e-2);
-  komo.setLimits(true);
+  komo.setHoming(-1., -1., 1e-3);
+  komo.setLimits(true, .1, 1e0);
 
   komo.setGrasp(1., "endeff", "obj1");
   komo.setPlace(2., "endeff", "obj1", "table1");
@@ -38,16 +43,22 @@ arr komo(){
   komo.setGrasp(3., "endeff", "obj2");
   komo.setPlace(4., "endeff", "obj2", "table2");
 
-
   //-- call the optimizer
   komo.reset();
   komo.run();
   //  komo.checkGradients(); //this checks all gradients of the problem by finite difference
   komo.getReport(true); //true -> plot the cost curves
-  for(uint i=0;i<2;i++) komo.displayTrajectory(.1, true); //play the trajectory
 
   arr X(komo.T,7);
-  for(uint t=0;t<komo.T;t++) X[t] = komo.configurations(t+komo.k_order)->q({0,6});
+  for(uint t=0;t<komo.T;t++) X[t] = komo.configurations(t+komo.k_order)->getJointState(joints);
+
+//  FILE("z.path") <<X;
+//  mlr::String cmd = "plot 'z.path' us 0:1";
+//  for(uint i=1;i<X.d1;i++) cmd <<", '' us 0:" <<i+1;
+//  gnuplot(cmd);
+
+  for(uint i=0;i<2;i++) komo.displayTrajectory(.01, true); //play the trajectory
+
   return X;
 }
 

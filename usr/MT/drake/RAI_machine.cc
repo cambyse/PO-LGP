@@ -37,7 +37,7 @@ struct RAI_Machine::InternalState {
 
 RAI_Machine::RAI_Machine(const double period_sec) {
 
-    grip = 100.;
+  grip = 100.;
 
   input_port_iiwa_state_ = this->DeclareAbstractInputPort().get_index();
   input_port_box_state_ = this->DeclareAbstractInputPort().get_index();
@@ -87,7 +87,7 @@ void RAI_Machine::CalcIiwaPlan(const systems::Context<double>& context, robotloc
   if(state.num_joints>0 && path.d0>0){
       plan.num_states = path.d0;
       for(uint i=0;i<path.d0;i++){
-          state.utime = i*10000;
+          state.utime = i*100000;
           floatA x;
           copy(x,path[i]);
           state.joint_position = conv_arr2stdvec(x);
