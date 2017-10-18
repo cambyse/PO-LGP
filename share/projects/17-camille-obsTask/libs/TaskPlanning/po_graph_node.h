@@ -85,24 +85,15 @@ public:
   POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
 
   /// child node creation
-  POGraphNode( const POGraphNode::ptr & root, double pHistory, const arr & bs, const std::vector< SymbolicState > &,uint a );
+  POGraphNode( const POGraphNode::ptr & root, double p, double pHistory, const arr & bs, const std::vector< SymbolicState > &,uint a );
 
   // modifiers
   POGraphNode::L expand();
   void setAndSiblings( const POGraphNode::L & siblings );
-  void setBestFamily ( const POGraphNode::L & f ) { bestFamily_ = f; /*expectedBestA_ = f( 0 )->a_;*/ }
-  //void backTrackBestExpectedPolicy( POGraphNode::ptr until_node = nullptr ); // backtrack up to the node node, per default, backup up to root
-
-  //void backTrackSolveStatus(); // backtrack up to the node node, per default, backup up to root
-
-  void labelInfeasible(); ///< sets the infeasible label, should remove all children?
-  //void resetSymbolicallySolved() { isSymbolicallySolved_ = false; }
-
-  //void acceptVisitor( NodeVisitorBase & visitor ) { visitor.visit( shared_from_this() ); } // overkill here, visitor design pattern usefull if we have a hierarchy of class!
-  //void labelInfeasible();
+  void addParent( const POGraphNode::ptr & parent );
+  POGraphNode::ptr root() { return root_ ? root_ : shared_from_this(); } // root_ is nullptr when the node itself is root
 
   // getters
-  //POGraphNode::ptr parent() const { return parent_; }
   bool isExpanded() const { return isExpanded_; }
   POGraphNode::LL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
@@ -110,13 +101,14 @@ public:
   mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
   std::list< POGraphNode::ptr > graph() const { return graph_; }
 
+  bool isRoot() const { return root_ == nullptr; }
   uint N() const { return N_; }
-  int id() const { return id_; }
-  POGraphNode::L bestFamily() const { return bestFamily_; }
+  uint id() const { return id_; }
+  POGraphNode::L parents()     const { return parents_; }
   POGraphNode::L andSiblings() const { return andSiblings_; }
   double pHistory() const { return pHistory_; }
-  bool isRoot() const { return this == root_.get(); }
-  arr bs() const { return bs_; }
+  double p() const { return p_; }
+  arr bs()   const { return bs_; }
   std::vector< SymbolicState > resultStates() const { return resultStates_; }
 
   /*POGraphNode::L getTreePath();
@@ -128,14 +120,11 @@ public:
   //double expecteFutureReward() const { return expectedTotalReward_ - prefixReward_; }
 
   // utility
-  std::string bestActionStr() const { return actionStr( expectedBestA_ ); }
-  //std::string leadingActionStr() const { return parent_->actionStr( a_ ); }
   void indicateDifferentiatingFacts( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
   // utility
-  uint getPossibleActionsNumber() const;
   std::vector< std::vector<FOL_World::Handle> > getPossibleActions( uint & nActions ) const;
   LogicAndState getWitnessLogicAndState() const;
   template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
@@ -163,24 +152,14 @@ private:
   std::vector< SymbolicState >             resultStates_;
   static std::list< POGraphNode::ptr >     graph_;
 
-
   double pHistory_;
+  double p_;                              /// probability to jump to this node when there is an observation branching
   arr    bs_;
 
-  //int a_;                                         ///< action id that leads to this node
-  //mlr::Array< FOL_World::Handle > decisions_;     ///< actions leading to this node ( one for each logic )
-
-  POGraphNode::L  andSiblings_;            /// at the same depth!
+  POGraphNode::L  parents_;
+  POGraphNode::L  andSiblings_;           /// at the same depth!
   POGraphNode::LL families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
-
-  //double lastActionReward_;                       ///  reward of the action leading to this node
-  //double prefixReward_;                           ///  this is the (certain) rewards of the prefix decisions
-  //double expectedTotalReward_;                   ///  the expected future reward ?
-  //double expectedFutureReward_;                   ///  the expected future reward ?
-
-  int expectedBestA_;                             ///  expected next best action
-  POGraphNode::L bestFamily_;
 
   //-- global search
   bool isExpanded_;
@@ -191,7 +170,7 @@ private:
   bool isSolved_;             /// the children of this node are all solved
 
   //--
-  int id_;
+  uint id_;
 };
 
 namespace utility

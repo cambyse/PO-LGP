@@ -16,15 +16,11 @@
 #include <policy_builder.h>
 
 #include <chrono>
+#include <functional>
+#include <queue>
 
 namespace tp
 {
-
-GraphSearchPlanner::GraphSearchPlanner()
-  : dmax_( 15 )
-{
-
-}
 
 void GraphSearchPlanner::setFol( const std::string & folDescription )
 {
@@ -117,6 +113,10 @@ void GraphSearchPlanner::solve()
   std::cout << "GraphSearchPlanner::solveSymbolically" << std::endl;
 
   buildGraph();
+
+  dijkstra();
+
+  extractSolutions();
   //solveIterativeDepthFirst();
   //solveBreadthFirst();
 }
@@ -184,40 +184,111 @@ void GraphSearchPlanner::buildGraph()
     }
   }
 
-  std::cout << "Graph build " << root_->graph().size() << std::endl;
+  std::cout << "Graph build:" << root_->graph().size() << " number of terminal nodes:" << terminals_.size() << std::endl;
 }
 
-void GraphSearchPlanner::solveIterativeDepthFirst()
+void GraphSearchPlanner::dijkstra()
 {
+  std::cout << "GraphSearchPlanner::dijkstra.." << std::endl;
 
-}
+  expectedReward_ = std::vector< double >( root_->graph().size(), -1000 ); // distance from root to vertex[i]
 
-POGraphNode::ptr GraphSearchPlanner::iterativeDepthFirstExpand( const POGraphNode::ptr & node, uint e )
-{
+  auto comp = [ & ]( const POGraphNode::ptr & a, const POGraphNode::ptr & b ) -> bool
+  {
+    return expectedReward_[ a->id() ] > expectedReward_[ b->id() ];
+  };
 
-}
+  std::priority_queue< POGraphNode::ptr, std::vector< POGraphNode::ptr >, decltype( comp ) > Q( comp );
 
-void GraphSearchPlanner::solveBreadthFirst()
-{
+  // expected reward up to terminal nodes
+  // add terminal nodes to Q
+  //for( uint i = 0; i < 30; ++i )
+  {
 
-}
+  for( auto v : terminals_ )
+  {
+    expectedReward_[ v->id() ] = 0; // all rewards negative
+    Q.push( v );
+  }
 
-void GraphSearchPlanner::breadthFirstExpand( uint d )
-{
+  // algorithm
+  while( ! Q.empty() )
+  {
+    auto u = Q.top();
+    Q.pop();
 
+    for( auto parent : u->parents() )
+    {
+      double one = 0;
+
+      one += u->p();
+      auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] - 1 );
+
+      for( auto v : u->andSiblings() )
+      {
+        one += v->p();
+        alternativeReward += v->p() * ( expectedReward_[ v->id() ] - 1 );
+      }
+
+      CHECK( fabs( 1.0 - one ) < 0.00001, "corruption in probability computation!!" );
+
+      if( alternativeReward > expectedReward_[ parent->id() ] )
+      {
+        expectedReward_[ parent->id() ] = alternativeReward;
+
+        Q.push( parent );
+      }
+    }
+  }
+
+  }
+
+  std::cout << "GraphSearchPlanner::dijkstra.. end" << std::endl;
 }
 
 void GraphSearchPlanner::extractSolutions()
 {
-  if( ! root_->isSolved() )
+  std::cout << "expected policy reward:" << expectedReward_[ root_->id() ] << std::endl;
+
+  for( auto f : root_->families() )
   {
-    return;
-  }
-  else
-  {
-    std::cout << "solution found!" << std::endl;
+    double familyReward = 0;
+
+    for( auto c : f )
+    {
+      familyReward += c->p() * expectedReward_[ c->id() ];
+    }
+
+//    if( familyReward >=  )
+//    {
+
+//    }
   }
 }
+
+/*void GraphSearchPlanner::backUpFromLeafs()
+{
+  for( auto l : terminals_ )
+  {
+    backUpFrom( l );
+  }
+
+  std::cout << "backed up from leafs" << std::endl;
+}
+
+void GraphSearchPlanner::backUpFrom( const POGraphNode::ptr & node )
+{
+  for( auto p : node->parents() )
+  {
+    if( ! p->isRoot() )
+    {
+      std::cout << "visiting:" << p->id() << std::endl;
+
+      backUpFrom( p );
+    }
+  }
+}*/
+
 
 void GraphSearchPlanner::checkIntegrity()
 {

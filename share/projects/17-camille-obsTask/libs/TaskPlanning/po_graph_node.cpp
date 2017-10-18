@@ -113,13 +113,17 @@ static uint _get_actions_time_us;
 static uint _n_transitions;
 static uint _transition_time_us;
 
+std::list< POGraphNode::ptr > POGraphNode::graph_;
+
 /// root node init
 POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
   : root_( nullptr )
   , N_( fols.N )
   , folWorlds_( fols )
   , folStates_( N_ )
+  , resultStates_( N_ )
   //, folAddToStates_( N_ )
+  , p_( 1.0 )
   , pHistory_( 1.0 )
   , bs_( bs )
   //, a_( -1 )
@@ -129,10 +133,6 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
   // logic search
   , isTerminal_( false )
   , isSolved_( false )
-  //, lastActionReward_( 0 )
-  //, prefixReward_( 0 )
-  //, expectedTotalReward_( m_inf() )
-  , expectedBestA_( -1 )
   , id_( 0 )
 {
   for( auto w = 0; w < N_; ++w )
@@ -141,21 +141,27 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
     folStates_( w ).reset( folWorlds_( w )->createStateCopy() );
   }
 
-  std::size_t s = 0;
-
   for( auto w = 0; w < N_; ++w )
   {
     if( bs_( w ) > eps() )
     {
-      s++;
+      auto result = folWorlds_( w )->getState();
+
+      auto stateStr = getStateStr( result );
+
+      resultStates_[ w ] = stateStr;
     }
-  } 
+  }
+
+  auto wptr = std::shared_ptr<POGraphNode>( this, [](POGraphNode*){} );// TRICK for shared_from_this!!!!!
+
+  POGraphNode::graph_.push_back( shared_from_this() );
+
+  nodeNumber++;
 }
 
-std::list< POGraphNode::ptr > POGraphNode::graph_;
-
 /// child node creation
-POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const arr & bs,  const std::vector< SymbolicState > & resultStates, uint a )
+POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHistory, const arr & bs,  const std::vector< SymbolicState > & resultStates, uint a )
   : root_( root )
   , N_( root->N_ )
   , folWorlds_( root->folWorlds_ )
@@ -163,6 +169,7 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const 
   , resultStates_( resultStates )
   //, folAddToStates_( N_ )
   //, decisions_( N_ )
+  , p_( p )
   , pHistory_( pHistory )
   , bs_( bs )
   //, a_( a )
@@ -171,12 +178,9 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const 
   , isInfeasible_( false )
   , isTerminal_( false )
   , isSolved_( false )
-  // mc specific
-  //, lastActionReward_( 0 )
-  //, prefixReward_( 0 )
-  //, expectedTotalReward_( m_inf() )
-  , expectedBestA_ (-1 )
 {
+  //std::cout << "-------------------" << std::endl;
+
   // update the states
   bool isTerminal = true;
   for( auto w = 0; w < N_; ++w )
@@ -198,11 +202,6 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const 
       {
         isInfeasible_ = true;
       }
-      //std::cout << *folStates_( w ) << std::endl;
-
-      //folAddToStates_( w ) = nullptr;
-
-      //decisions_( w ) = actions[ a_ ];
     }
   }
   isTerminal_ = isTerminal;
@@ -229,8 +228,8 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double pHistory, const 
   }
 
   // change this
-  nodeNumber++;
   id_ = nodeNumber;
+  nodeNumber++;
 }
 
 POGraphNode::L POGraphNode::expand()
@@ -280,29 +279,11 @@ POGraphNode::L POGraphNode::expand()
         auto stateStr           = getStateStr( result );
         auto observableStateStr = getObservableStateStr( result );
 
-        //////////////////
-        /*std::stringstream ss;
-        ss << *action;
-        auto action_label = ss.str();
-        std::cout << "action_label:" << action_label << std::endl;
-        if( action_label == "check" )
-        {
-
-        }
-
-        if( logic->successEnd )
-        {
-          std::cout << "terminal logic found" << std::endl;
-        }
-        //std::cout << "result:" << *logic << std::endl;*/
-        //////////////////
-
         resultStates[ w ] = stateStr;
         outcomesToWorlds[ observableStateStr ].push_back( w );
       }
     }
 
-    //std::cout << outcomesToWorlds.size() << " possible outcomes" << std::endl;    
     // compute the observable facts intersection
     std::set< std::string > intersection = outcomesToWorlds.begin()->first;
     for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
@@ -339,29 +320,9 @@ POGraphNode::L POGraphNode::expand()
       POGraphNode::ptr child;
       bool found = false;
 
-//      for( auto m = graph_.begin(); m != graph_.end(); ++m )
-//      {
-//        for( auto n = graph_.begin(); n != graph_.end(); ++n )
-//        {
-//          if( n != m )
-//          {
-//            bool eq = (*n)->bs() == (*m)->bs();
-//            eq = eq && SymbolicState::equivalent( (*n)->resultStates(), (*m)->resultStates() );
-//            CHECK( ! eq, "pb!!" );
-//          }
-//        }
-//      }
-
-
+      // check for exsting node in graph
       for( auto m = POGraphNode::graph_.begin(); m != POGraphNode::graph_.end(); ++m )
       {
-        //std::cout << bs << "|" << (*m)->bs() << "|" << ((*m)->bs() == bs) << std::endl;
-
-//        for( auto w = 0; w < bs.size(); ++w )
-//        {
-//          std::cout << (*m)->resultStates()[ w ].state << std::endl;
-//          std::cout << resultStates[ w ].state         << std::endl;
-//        }
         auto a = (*m)->resultStates();
         auto b = resultStates;
 
@@ -374,13 +335,16 @@ POGraphNode::L POGraphNode::expand()
         }
       }
 
+      // create new node
       if( ! found )
       {
         CHECK( child == nullptr, "a child was found but the pointer is still null!!" );
 
-        child = std::make_shared< POGraphNode >( shared_from_this(), pWorld * pHistory_, bs, resultStates, a );
+        child = std::make_shared< POGraphNode >( root(), pWorld, pWorld * pHistory_, bs, resultStates, a );
         POGraphNode::graph_.push_back( child );
         newNodes.push_back( child );
+
+        CHECK( nodeNumber == POGraphNode::graph_.size(), "" );
 
         // get the fact not in intersection
         std::set< std::string > differenciatingFacts;
@@ -390,7 +354,10 @@ POGraphNode::L POGraphNode::expand()
         child->indicateDifferentiatingFacts( differenciatingFacts );
         //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
       }
+
+      // add child to created family
       familiy.append( child );
+      child->addParent( shared_from_this() );
     }
 
     // check integrity
@@ -429,157 +396,18 @@ POGraphNode::L POGraphNode::expand()
 
 void POGraphNode::setAndSiblings( const POGraphNode::L & siblings )
 {
+  andSiblings_.clear();
+
   for( auto s : siblings )
   {
-    if( s != shared_from_this() )
-    andSiblings_.append( s );
+    if( s != shared_from_this() ) andSiblings_.append( s );
   }
 }
 
-/*void POGraphNode::backTrackBestExpectedPolicy( POGraphNode::ptr until_node )
+void POGraphNode::addParent( const POGraphNode::ptr & parent )
 {
-//  if( isTerminal() )
-//  {
-//    expectedReward_ = prefixReward_;  // it means that the future rewards is = 0 ( already terminal )
-//    expectedBestA_  = -1;
-//  }
-//  else
-//  {
-    CHECK( ! isTerminal(), "nodes that are already terminal should not be listed as nodes to expand" );
-
-    struct familyStatusType { double reward; bool solved; };
-    mlr::Array< familyStatusType > familyStatus( families_.d0 );
-
-    // find best family
-    // compute cost of each family
-    for( auto i = 0; i < families_.d0; ++i )
-    {
-      double familyReward = 0;
-      bool   familySolved = true;
-
-      for( auto c : families_( i ) )
-      {
-        //CHECK( c->lastActionReward_ == c->getWitnessLogicAndState().logic->lastStepReward, "" );
-        familyReward += c->pHistory_ / pHistory_ * c->expectedTotalReward_;
-        familySolved  = familySolved && c->isSolved_;
-      }
-
-      familyStatus( i ) = { familyReward, familySolved };
-    }
-
-    // sort
-    double bestTotalReward = m_inf();
-    int bestFamilyId = -1;
-    for( auto i = 0; i < families_.d0; ++i )
-    {
-      if( familyStatus( i ).reward >= bestTotalReward )
-      {
-        bestTotalReward = familyStatus( i ).reward;
-        bestFamilyId = i;
-      }
-    }
-
-    // retrieve best decision id
-    bestFamily_ = families_( bestFamilyId );
-    uint bestA = bestFamily_.first()->a_;
-    expectedBestA_        = bestA;
-    isSolved_             = familyStatus( bestFamilyId ).solved;
-
-    // check
-    //std::cout << familyRewards << std::endl;
-    //std::cout << actionStr( bestA ) << std::endl;
-    //std::cout << "best family size:" << bestFamily_.d0 << " solved?" << familyStatus( bestFamilyId ).solved << std::endl;
-    //
-//  }
-
-  if( parent_ && this != until_node.get() )
-  {
-    parent_->backTrackBestExpectedPolicy( until_node );
-  }
-}*/
-
-/*void POGraphNode::backTrackSolveStatus()
-{
-  for( auto i = 0; i < families_.d0; ++i )
-  {
-    bool   familySolved = true;
-
-    for( auto c : families_( i ) )
-    {
-      familySolved  = familySolved && c->isSolved_;
-    }
-
-    isSolved_ = isSolved_ || familySolved; // solved if at least of of the family os solved!
-  }
-
-  if( parent_ )
-  {
-    parent_->backTrackSolveStatus();
-  }
-}*/
-
-void POGraphNode::labelInfeasible()
-{
-  // set flag and badest reward
-  isInfeasible_ = true;
-  //expectedTotalReward_ = m_inf();
-
-  // delete children nodes
-//  for( auto children : families_ )
-//  {
-//    DEL_INFEASIBLE( children.clear(); )
-//  }
-//  families_.clear();
-
-  // backtrack results
-  /*if( parent_ )
-  {
-    parent_->backTrackBestExpectedPolicy();
-  }*/
+  parents_.append( parent );
 }
-
-/*POGraphNode::L POGraphNode::getTreePath()
-{
-  POGraphNode::L path;
-  POGraphNode::ptr node = shared_from_this();
-  for(;node;){
-    path.append(node);
-    node = node->parent_;
-  }
-
-  path.reverse();
-
-  return path;
-}
-
-POGraphNode::L POGraphNode::getTreePathFrom( const POGraphNode::ptr & start )
-{
-  POGraphNode::L subPath;
-
-  POGraphNode::ptr node = shared_from_this();
-  do
-  {
-    subPath.prepend( node );
-    node = node->parent_;
-
-//    if( node == start )
-//      std::cout << "node == start " << std::endl;
-
-  } while ( ( node != start ) && node );
-
-  return subPath;
-}*/
-
-//uint PONode::getPossibleActionsNumber() const
-//{
-//  auto logicAndState = getWitnessLogicAndState();
-
-//  logicAndState.logic->setState( logicAndState.state.get(), d_ );
-
-//  auto actions = logicAndState.logic->get_actions(); _n_get_actions++;
-
-//  return actions.size();
-//}
 
 std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( uint & nActions ) const
 {
@@ -655,60 +483,9 @@ std::string POGraphNode::actionStr( uint a ) const
 
   std::stringstream ss;
 
-  if( a >= 0 && a < actions.size() )
-    ss << *actions[a];
-  else
-    ss << "no actions";
+  if( a >= 0 && a < actions.size() )  ss << *actions[a];
+  else                                ss << "no actions";
 
   return ss.str();
 }
-
-//====free functions============//
-
-namespace utility
-{
-POGraphNode::ptr getTerminalNode( const POGraphNode::ptr & n, const WorldID & w )
-{
-  POGraphNode::ptr node;
-  if( n->isTerminal() )
-  {
-    CHECK( n->bs()( w.id() ) > eps(), "bug in getTerminalNode function, the belief state of the found node is invalid!" );
-    node = n;
-  }
-  else
-  {
-    for( auto c : n->bestFamily() )
-    {
-      if( c->bs()( w.id() ) > eps() )
-      {
-        node = getTerminalNode( c, w );
-        break;
-      }
-    }
-  }
-
-  return node;
-}
-
-void gatherPolicyFringe( const POGraphNode::ptr & node, std::set< mlr::Array< POGraphNode::ptr > > & fringe )
-{
-  for( auto f : node->families() )
-  {
-    if( f != node->bestFamily() )
-    {
-      fringe.insert( f );
-    }
-    else
-    {
-      for( auto c : f )
-      {
-        gatherPolicyFringe( c, fringe );
-      }
-    }
-  }
-}
-}
-
-//===========================================================================
-
 }

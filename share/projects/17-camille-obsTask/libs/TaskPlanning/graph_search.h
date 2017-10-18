@@ -17,14 +17,11 @@ namespace tp
 class GraphSearchPlanner : public TaskPlanner
 {
 public:
-  GraphSearchPlanner();
 
   // modifiers
   void setFol( const std::string & folDescription ) override;
   void solve() override;
   void integrate( const Policy::ptr & policy ) override;
-
-  void setDmax( uint dmax ) { dmax_ = dmax; }
 
   // getters
   Policy::ptr getPolicy() const override;
@@ -36,14 +33,10 @@ private:
 
 private:
   void buildGraph();
-  void solveBreadthFirst();
-  void breadthFirstExpand( uint d );
-
-  void solveIterativeDepthFirst();
-  POGraphNode::ptr iterativeDepthFirstExpand( const POGraphNode::ptr &, uint e );
-  uint n_exp_ = 0;
-
+  void dijkstra();
   void extractSolutions();
+
+  uint n_exp_ = 0;
 
 private:
   void checkIntegrity();
@@ -55,12 +48,15 @@ private:
 
   POGraphNode::ptr root_;
 
-  uint dmax_;
-
+  // graph building
   std::set< POGraphNode::ptr > checked_;
   std::queue< POGraphNode::ptr > queue_;
   std::list< POGraphNode::ptr > terminals_;
 
+  // dijkstra
+  std::vector< double > expectedReward_;
+
+  // constants
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
