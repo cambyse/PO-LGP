@@ -41,7 +41,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     auto K = R.getK();
 
     //get obj size
-    arr objSize = K().getFrameByName(objName)->shape->size;
+    arr objSize = K().getFrameByName(objName)->shape->size();
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2);
@@ -133,8 +133,8 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto K = R.getK();
 
     //get obj size
-    arr objSize = K().getFrameByName(objName)->shape->size;
-    arr ontoSize = K().getFrameByName(ontoName)->shape->size;
+    arr objSize = K().getFrameByName(objName)->shape->size();
+    arr ontoSize = K().getFrameByName(ontoName)->shape->size();
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
@@ -222,8 +222,8 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     auto K = R.getK();
 
     //get obj size
-    arr objSize = K().getFrameByName(objName)->shape->size;
-    arr ontoSize = K().getFrameByName(ontoName)->shape->size;
+    arr objSize = K().getFrameByName(objName)->shape->size();
+    arr ontoSize = K().getFrameByName(ontoName)->shape->size();
     //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
@@ -401,7 +401,7 @@ int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
     group1="armL"; group2="gripL";
   }
 
-  arr obj1size = R.getK()->getFrameByName(objName)->shape->size;
+  arr obj1size = R.getK()->getFrameByName(objName)->shape->size();
   double gripSize = obj1size(0);
   double above = .5*obj1size(2) - .05;
 
@@ -438,6 +438,6 @@ int Script_komoGraspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
 
 double getGripSize(Roopi& R, const char* objName, CubeSide cs){
-  arr obj1size = R.getK()->getFrameByName(objName)->shape->size;
+  arr obj1size = R.getK()->getFrameByName(objName)->shape->size();
   return obj1size(cs) + 2.*obj1size(3);
 }

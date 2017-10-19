@@ -8,7 +8,7 @@
 #include <Kin/kinViewer.h>
 //#include <memory>
 //#include <RosCom/roscom.h>
-
+#include <Kin/frame.h>
 
 //===============================================================================
 
@@ -85,7 +85,7 @@ void Prototyping(){
   auto view = R.CameraView();
 
   {
-    mlr::Shape *s = R.getK()->getShapeByName("endeffL");
+    mlr::Frame *s = R.getK()->getFrameByName("endeffL");
     auto leftTarget = R.newMarker("targetL", conv_vec2arr(s->X.pos)+ARR(.0,-.2,.3));
 
     auto leftHand = R.newCtrlTask();
@@ -113,7 +113,7 @@ void Prototyping(){
       }
     }
 
-    leftTarget->rel.pos.z -=.3;
+    leftTarget->X.pos.z -=.3;
     //    leftHand->set()->PD().setTarget( leftHand->y0 );
     rightHand->set()->PD().setTarget( rightHand->y0 );
     R.wait(leftHand+rightHand, 3.); //with timeout
@@ -209,7 +209,7 @@ void TEST(PickAndPlace2) {
   {
     auto path = R.newPathOpt();
     double t1=.75;
-    arr obj1size = R.getK()->getShapeByName("obj1")->size;
+    arr obj1size = R.getK()->getFrameByName("obj1")->shape->size();
     double gripSize = obj1size(1) + 2.*obj1size(3);
     double above = obj1size(2)*.5 + obj1size(3) - .02;
 
@@ -241,7 +241,7 @@ void TEST(PickAndPlace2) {
   }
 
   {
-    arr obj1size = R.getK()->getShapeByName("obj1")->size;
+    arr obj1size = R.getK()->getFrameByName("obj1")->shape->size();
     double gripSize = obj1size(1) + 2.*obj1size(3);
     auto gripperR = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_joint"}, R.getK()), {}, {gripSize});
     auto gripper2R = R.newCtrlTask(new TaskMap_qItself(QIP_byJointNames, {"r_gripper_l_finger_joint"}, R.getK()), {}, {::asin(gripSize/(2.*.10))});
@@ -351,8 +351,8 @@ void TEST(PerceptionOnly) {
     Access<mlr::KinematicWorld> c("viewWorld");
     c.writeAccess();
     c() = R.variable<mlr::KinematicWorld>("modelWorld").get();
-    c().getShapeByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
-    c().getShapeByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
+    c().getFrameByName("S1")->X.pos.x += .05; //move by 5cm; just to be different to modelWorld
+    c().getFrameByName("S1")->X.rot.addZ(.3); //move by 5cm; just to be different to modelWorld
     c.deAccess();
 //    OrsViewer v2("viewWorld");
     view = R.CameraView("viewWorld"); //generate depth and rgb images from a modelWorld view
@@ -392,7 +392,7 @@ int main(int argc, char** argv){
 
   //--very simple one action tests
 //  testHoming(); return 0;
-  testBasics();
+//  testBasics();
 //  testGripper();
 //  testPhysX();
 
@@ -401,9 +401,9 @@ int main(int argc, char** argv){
 //  testPerception();
 //  testPerceptionOnly();
 
-//  for(;;) testPickAndPlace();
+  for(;;) testPickAndPlace();
 
-//  for(;;) testPickAndPlace2();
+  for(;;) testPickAndPlace2();
 //  testGamepad();
 
   return 0;

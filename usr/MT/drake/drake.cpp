@@ -61,7 +61,7 @@ DEFINE_int32(target, 0, "ID of the target to pick.");
 DEFINE_double(orientation, 2 * M_PI, "Yaw angle of the box.");
 DEFINE_int32(start_position, 1, "Position index to start from");
 DEFINE_int32(end_position, 2, "Position index to end at");
-DEFINE_double(dt, 5e-3, "Integration step size");
+DEFINE_double(dt, 1e-3, "Integration step size");
 DEFINE_double(realtime_rate, 0.0, "Rate at which to run the simulation, "
     "relative to realtime");
 DEFINE_bool(quick, false, "Run only a brief simulation and return success "
@@ -329,7 +329,7 @@ std::unique_ptr<drake::systems::RigidBodyPlant<double>> BuildCombinedPlant(
   std::unique_ptr<RigidBodyTree<double>> tree = tree_builder->Build();
 
   //remove all collision groups
-  tree->removeCollisionGroupsIf([](const std::string& str)->bool{ return true; });
+//  tree->removeCollisionGroupsIf([](const std::string& str)->bool{ return true; });
 
   return std::make_unique<drake::systems::RigidBodyPlant<double>>( std::move(tree) );
 }

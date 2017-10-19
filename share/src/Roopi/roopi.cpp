@@ -415,28 +415,28 @@ Act_Thread::Ptr Roopi::GamepadControl(){
 }
 
 
-mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
-  mlr::Shape *sh;
+mlr::Frame *Roopi::newMarker(const char* name, const arr& pos){
+  mlr::Frame *a;
   {
-    NIY;
-//    auto K = setK();
-//    sh = new mlr::Shape(K, NoBody);
-//    sh->name = name;
-//    sh->type = mlr::ST_marker;
-//    sh->mesh.C = {.8,0,0};
-//    sh->size(0)=.1;
-//    sh->X.pos = sh->rel.pos = pos;
+      auto K = setK();
+      a = new mlr::Frame(K);
+      a->name = name;
+      a->X.pos = pos;
+      mlr::Shape *sh = new mlr::Shape(*a);
+      sh->type() = mlr::ST_marker;
+      sh->mesh().C = {.8,0,0};
+      sh->size()(0)=.1;
   }
-  return sh;
+  return a;
 }
 
 void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placing){
   {
     auto K = setK();
-    {
-      mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
-      sw1.apply(K);
-    }
+//    {
+//      mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
+//      sw1.apply(K);
+//    }
     if(!placing){
       mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, K, 0);
       sw2.apply(K);

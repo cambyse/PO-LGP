@@ -1,6 +1,7 @@
 #include <Roopi/roopi.h>
 #include <KOMO/komo.h>
 #include <Control/taskControl.h>
+#include <Kin/frame.h>
 
 //===============================================================================
 
@@ -16,8 +17,8 @@ void TEST(LimitsCollisions) {
     auto limit = R.newLimitAvoidance();
     R.hold(false);
 
-    arr tL = R.getK()->getShapeByName("endeffL")->X.pos.getArr();
-    arr tR = R.getK()->getShapeByName("endeffR")->X.pos.getArr();
+    arr tL = R.getK()->getFrameByName("endeffL")->X.pos.getArr();
+    arr tR = R.getK()->getFrameByName("endeffR")->X.pos.getArr();
 //    arr tL=ARR(.5, .1, 1.);
 //    arr tR=ARR(.5, -.1, 1.);
     auto L = R.newMarker("targetL", tL);
@@ -34,8 +35,8 @@ void TEST(LimitsCollisions) {
 #else
       posL->stop();
       posR->stop();
-      L->rel.pos = tL + box*randn(3);
-      Re->rel.pos = tL + box*randn(3);
+      L->X.pos = tL + box*randn(3);
+      Re->X.pos = tL + box*randn(3);
       posL->set()->setTarget({}); //box*randn(3));
       posR->set()->setTarget({}); //box*randn(3));
       posL->resetStatus();

@@ -62,6 +62,16 @@ arr komo(){
   return X;
 }
 
+void wishCode(){
+  Roopi R;
+
+  auto drake = DrakeSystem(R);
+
+
+
+
+
+}
 
 int main(int argc, char* argv[]) {
   arr X = komo();
