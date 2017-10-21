@@ -1,5 +1,7 @@
 BASE = ../..
 
+OBJS = main.o sim.o komo_fine.o
+
 PLIB = 1
 ROS = 1
 PCL = 1
