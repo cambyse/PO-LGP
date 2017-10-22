@@ -13,6 +13,7 @@
 
 #include "sim.h"
 #include "komo_fine.h"
+#include "filter.h"
 
 //===============================================================================
 
@@ -31,7 +32,7 @@ int planPath(const mlr::String& cmd){
   if(!K.get()->q.N) K.set() = Access<mlr::KinematicWorld>("world").get();
   KOMO_fineManip komo(K.get());
 
-  komo.setPathOpt(1., 30, 5.);
+  komo.setPathOpt(1., 20, 5.);
 
   if(cmd=="grasp") komo.setFineGrasp(1., "endeff", "stick", "wsg_50_base_joint_gripper_left");
   if(cmd=="place") komo.setFinePlace(1., "endeff", "stick", "table1", "wsg_50_base_joint_gripper_left");
@@ -55,14 +56,21 @@ int planPath(const mlr::String& cmd){
 //===============================================================================
 
 void TEST(PickAndPlace2) {
-  Roopi R;
-  R.startTweets();
+//  Roopi R;
+//  R.startTweets();
 
-  Access<mlr::KinematicWorld>("world").set()->init("model.g");
+  mlr::KinematicWorld K("model.g");
+  K.getFrameByName("stick")->ats.newNode({"percept"});
+
+  Access<mlr::KinematicWorld>("world").set() = K;
   Access<StringA>("jointNames").set() = Access<mlr::KinematicWorld>("world").get()->getJointNames();
+
   KinSim sim;
   sim.threadLoop();
   Access<double> ttg("timeToGo");
+
+  FilterSimple filter;
+  filter.threadLoop();
 
   for(;;){
     planPath("grasp");

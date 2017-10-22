@@ -4,6 +4,11 @@
 
 //===============================================================================
 
+struct PerceptSimple;
+typedef mlr::Array<PerceptSimple*> PerceptSimpleL;
+
+//===============================================================================
+
 struct KinSim : Thread{
   mlr::KinematicWorld K;
   uint pathRev=0, switchesRev=0;
@@ -18,6 +23,8 @@ struct KinSim : Thread{
   Access<StringA> switches;
   Access<mlr::KinematicWorld> world;
   Access<double> timeToGo;
+  Access<PerceptSimpleL> percepts_input;
+
 
   KinSim(double dt=.01);
   ~KinSim(){
