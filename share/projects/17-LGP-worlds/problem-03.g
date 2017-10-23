@@ -1,4 +1,3 @@
-Include = '../../data/baxter_model/baxter.ors'
 Include = 'problem-shared.g'
 
 ### ball

@@ -1,4 +1,3 @@
-Include = '../../data/baxter_model/baxter.ors'
 Include = 'problem-shared.g'
 
 body world { type=ST_marker size=[.2 .2 .2 .2] }
