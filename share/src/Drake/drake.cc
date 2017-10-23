@@ -524,14 +524,6 @@ void MyDrake::addRAIMachine(){
                      s->iiwa_trajectory_generator->get_plan_input_port());
 }
 
-void MyDrake::setPath(const arr &X){
-  s->rai_machine->path = X;
-}
-
-void MyDrake::setGrip(double x){
-  s->rai_machine->grip = x;
-}
-
 void MyDrake::simulate2(){
   Simulator<double> simulator(*s->system);
   simulator.Initialize();
@@ -562,7 +554,7 @@ void MyDrake::simulate2(){
   }
 }
 
-int MyDrake::DoMain(const arr& X) {
+int MyDrake::DoMain() {
   mono_setupGeometry();
 
   addMonoPlant();
@@ -575,9 +567,6 @@ int MyDrake::DoMain(const arr& X) {
   addRAIMachine();
 
   build();
-
-  setPath( X );
-  setGrip( 100. );
 
   simulate2();
 

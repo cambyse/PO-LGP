@@ -35,6 +35,11 @@ void PerceptSimple::write(ostream& os) const{
 //  os <<" trans=" <<transform <<" frame=" <<frame <<" type=" <<type;
 }
 
+void PerceptSimple::glDraw(OpenGL &gl){
+  if(geomID>=0) store.get(geomID).glDraw(gl);
+  else glDrawAxes(.2);
+}
+
 //===============================================================================
 
 FilterSimple::FilterSimple(double dt)
@@ -42,6 +47,7 @@ FilterSimple::FilterSimple(double dt)
     percepts_input(this, "percepts_input"),
     percepts_filtered(this, "percepts_filtered"),
     currentQ(this, "currentQ"),
+    robotBase(this, "robotBase"),
     filterWorld(this, "filterWorld")
 {
 
@@ -52,8 +58,14 @@ FilterSimple::FilterSimple(double dt)
 }
 
 void FilterSimple::step(){
+  //== robot base location
+  K.getFrameByName("base")->X = robotBase.get();
+
   //== joint state input
-  K.setJointState(currentQ.get());
+  arr q = currentQ.get();
+  StringA joints = Access<StringA>("jointNames").get();
+  if(q.N) K.setJointState(q, joints );
+
 
   //== perceptual inputs
 
@@ -81,7 +93,7 @@ void FilterSimple::step(){
 //    }
   }
 
-  listClone(percepts_display, percepts_input());
+//  listClone(percepts_display, percepts_input());
 
   //-- step 3: fuse matched percepts; add new percepts; clean percept inputs
   for(uint i=0;i<percepts_input().N;i++){
@@ -98,18 +110,18 @@ void FilterSimple::step(){
 
   //-- step 4: fuse with kinematic knowledge using inverse kinematics
   //TODO, with K
-  while(objects.N<percepts_filtered().N){
-    mlr::Frame *f = objects.append( new mlr::Frame(K) );
-    mlr::Shape *s = new mlr::Shape(*f);
-  }
-  for(uint i=0;i<percepts_filtered().N;i++){
-    objects(i)->shape->geomID = percepts_filtered()(i)->geomID;
-    objects(i)->X = percepts_filtered()(i)->pose;
-  }
+//  while(objects.N<percepts_filtered().N){
+//    mlr::Frame *f = objects.append( new mlr::Frame(K) );
+//    mlr::Shape *s = new mlr::Shape(*f);
+//  }
+//  for(uint i=0;i<percepts_filtered().N;i++){
+//    objects(i)->shape->geomID = percepts_filtered()(i)->geomID;
+//    objects(i)->X = percepts_filtered()(i)->pose;
+//  }
 
   //-- done
 
-//  listClone(percepts_display, percepts_filtered());
+  listClone(percepts_display, percepts_filtered());
 
   percepts_filtered.deAccess();
   percepts_input.deAccess();

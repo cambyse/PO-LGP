@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <Core/array.h>
+#include <Core/thread.h>
 
 //#include "bot_core/robot_state_t.hpp"
 
@@ -30,11 +31,6 @@ namespace drake {
 class RAI_Machine : public systems::LeafSystem<double> {
 public:
 
-    //outputs:
-    arr path;
-    double grip;
-
-
   /**
    * Constructor for the RAI_Machine
    * @param iiwa_base, The pose of the base of the IIWA robot system.
@@ -47,9 +43,6 @@ public:
 
   // This kind of a system is not a direct feedthrough.
   optional<bool> DoHasDirectFeedthrough(int, int) const final { return false;  }
-
-  void setPath(const arr& X);
-  void setGrip(double x);
 
   void SetDefaultState(const systems::Context<double>& context,
                        systems::State<double>* state) const override;

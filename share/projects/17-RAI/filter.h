@@ -15,6 +15,7 @@ struct PerceptSimple : GLDrawer{
   int frameID = -1;
   mlr::Transformation pose;
   double precision = 1.; //1 is maximum; decays as a precision in kalman filtering
+  PerceptSimple() : store(_GeomStore()), pose(0) {}
   PerceptSimple(const mlr::Geom& geom, const mlr::Transformation& pose)
     : store(_GeomStore()), geomID(geom.ID), pose(pose) {
   }
@@ -22,7 +23,7 @@ struct PerceptSimple : GLDrawer{
 
   virtual double fuse(PerceptSimple* other);
   virtual void write(ostream& os) const;
-  virtual void glDraw(OpenGL& gl){ store.get(geomID).glDraw(gl); }
+  virtual void glDraw(OpenGL& gl);
   virtual PerceptSimple* newClone() const{ return new PerceptSimple(*this); }
 
 };
@@ -38,6 +39,7 @@ struct FilterSimple : Thread{
   Access<PerceptSimpleL> percepts_input;
   Access<PerceptSimpleL> percepts_filtered;
   Access<arr> currentQ;
+  Access<mlr::Transformation> robotBase;
   Access<mlr::KinematicWorld> filterWorld;
 
   FilterSimple(double dt=.01);

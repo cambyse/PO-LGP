@@ -1,4 +1,4 @@
-#include "drake.h"
+#include <Drake/drake.h>
 
 #include <Algo/spline.h>
 #include <Geo/geoms.h>
@@ -60,17 +60,6 @@ arr komo(){
   for(uint i=0;i<2;i++) komo.displayTrajectory(.01, true); //play the trajectory
 
   return X;
-}
-
-void wishCode(){
-  Roopi R;
-
-  auto drake = DrakeSystem(R);
-
-
-
-
-
 }
 
 int main(int argc, char* argv[]) {

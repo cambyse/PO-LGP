@@ -1,6 +1,11 @@
 BASE = ../../../share
+NAME   = $(shell basename `pwd`)
+OUTPUT = lib$(NAME).so
 
-DEPEND = Core Algo Kin KOMO Drake
+SRCS = $(shell find . -maxdepth 1 -name '*.cc' )
+OBJS = $(SRCS:%.cc=%.o)
+
+DEPEND = Core Algo Kin KOMO
 
 MLR_NO_CXX11 = 1
 CXXFLAGS += -DBT_USE_DOUBLE_PRECISION -DHAVE_SPDLOG -DSPDLOG_FMT_EXTERNAL -std=gnu++14

@@ -9,7 +9,7 @@ typedef mlr::Array<PerceptSimple*> PerceptSimpleL;
 
 //===============================================================================
 
-struct KinSim : Thread{
+struct SimDrake : Thread{
   mlr::KinematicWorld K;
   uint pathRev=0, switchesRev=0;
   mlr::Spline reference;
@@ -19,7 +19,6 @@ struct KinSim : Thread{
 
   Access<arr> path;
   Access<arr> currentQ;
-  Access<mlr::Transformation> robotBase;
   Access<arr> nextQ;
   Access<StringA> switches;
   Access<mlr::KinematicWorld> world;
@@ -27,8 +26,8 @@ struct KinSim : Thread{
   Access<PerceptSimpleL> percepts_input;
 
 
-  KinSim(double dt=.01);
-  ~KinSim(){
+  SimDrake(double dt=.01);
+  ~SimDrake(){
     log.close();
   }
 

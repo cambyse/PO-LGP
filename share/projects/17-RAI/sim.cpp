@@ -5,8 +5,9 @@
 #include <Kin/frame.h>
 
 KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
-    path(this, "path"),
+    path(this, "refPath"),
     currentQ(this, "currentQ"),
+    robotBase(this, "robotBase"),
     nextQ(this, "nextQ"),
     switches(this, "switches"),
     world(this, "world"),
@@ -24,11 +25,21 @@ KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
     log.open("z.KinSim");
     K.gl().title = "KinSim";
 
+    //add random noise to perceptual objects:
+    for(mlr::Frame *a:K.frames){
+      if(a->ats["percept"]){
+        a->X.pos.y += rnd.uni(-.5, .5);
+      }
+    }
+
     currentQ.set() = K.q;
     nextQ.set() = K.q;
 }
 
 void KinSim::step(){
+  //-- publish robot base
+  robotBase.set() = K.getFrameByName("base")->X;
+
   //-- reference tracking
 
   //check for path update
@@ -80,9 +91,7 @@ void KinSim::step(){
     timeToGo.set() = 1.-phase;
   }
 
-
   //-- percept simulation
-
   PerceptSimpleL P;
   for(mlr::Frame *a:K.frames){
     if(a->ats["percept"]){

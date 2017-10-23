@@ -1,4 +1,5 @@
 #include "RAI_machine.h"
+#include "../../projects/17-RAI/filter.h"
 
 #include <utility>
 #include <vector>
@@ -31,13 +32,28 @@ struct RAI_Machine::InternalState {
   lcmt_schunk_wsg_status wsg_state;
   bot_core::robot_state_t obj_state;
 
-  InternalState(){}
+  Access<arr> accRefPath;
+  Access<double> accRefGrip;
+
+  Access<arr> currentQ;
+  Access<mlr::Transformation> robotBase;
+  Access<PerceptSimpleL> percepts_input;
+
+  arr refPath;
+  double refGrip;
+
+  InternalState()
+    : accRefPath("refPath"),
+      accRefGrip("refGrip"),
+      currentQ("currentQ"),
+      robotBase("robotBase"),
+      percepts_input("percepts_input"),
+      refGrip(100.){}
   ~InternalState(){}
 };
 
-RAI_Machine::RAI_Machine(const double period_sec) {
-
-  grip = 100.;
+RAI_Machine::RAI_Machine(const double period_sec)
+   {
 
   input_port_iiwa_state_ = this->DeclareAbstractInputPort().get_index();
   input_port_box_state_ = this->DeclareAbstractInputPort().get_index();
@@ -75,7 +91,7 @@ void RAI_Machine::CalcIiwaPlan(const systems::Context<double>& context, robotloc
   /* Call actions based on state machine logic */
   const InternalState& internal_state =
       context.get_abstract_state<InternalState>(0);
-#if 1
+
   robotlocomotion::robot_plan_t plan;
   plan.utime = 0;
   plan.num_states = 0;
@@ -84,26 +100,39 @@ void RAI_Machine::CalcIiwaPlan(const systems::Context<double>& context, robotloc
   bot_core::robot_state_t state = internal_state.iiwa_state;
   std::fill(state.joint_velocity.begin(), state.joint_velocity.end(), 0.f);
   std::fill(state.joint_effort.begin(), state.joint_effort.end(), 0.f);
+
+  arr path = internal_state.refPath;
+
   if(state.num_joints>0 && path.d0>0){
-      plan.num_states = path.d0;
-      for(uint i=0;i<path.d0;i++){
-          state.utime = i*100000;
-          floatA x;
-          copy(x,path[i]);
-          state.joint_position = conv_arr2stdvec(x);
-          plan.plan.push_back(state);
-          plan.plan_info.push_back(1);
-      }
+    if(path.d1 >(uint)state.num_joints) path.delColumns(-1);
+    CHECK_EQ(path.d1, (uint)state.num_joints, "wrong dim");
+    plan.num_states = path.d0;
+    for(uint i=0;i<path.d0;i++){
+      state.utime = i*100000;
+      floatA x;
+      copy(x,path[i]);
+      state.joint_position = conv_arr2stdvec(x);
+      plan.plan.push_back(state);
+      plan.plan_info.push_back(1);
+    }
   }
-#endif
+
   *iiwa_plan = plan; //internal_state.last_iiwa_plan;
 }
 
 
 void RAI_Machine::CalcWsgCommand(const systems::Context<double>& context, lcmt_schunk_wsg_command* wsg_command) const {
+  const InternalState& internal_state =
+      context.get_abstract_state<InternalState>(0);
+
+  double grip = internal_state.refGrip+1000.;
   lcmt_schunk_wsg_command wsgcommand = {0, grip, 40.};
   *wsg_command = wsgcommand;
 }
+
+
+
+
 
 void RAI_Machine::DoCalcUnrestrictedUpdate(
     const systems::Context<double>& context,
@@ -120,6 +149,31 @@ void RAI_Machine::DoCalcUnrestrictedUpdate(
       this->EvalAbstractInput(context, input_port_box_state_ )-> GetValue<bot_core::robot_state_t>();
   internal_state.wsg_state =
       this->EvalAbstractInput(context, input_port_wsg_status_)-> GetValue<lcmt_schunk_wsg_status>();
+
+  arr q;
+  copy(q, conv_stdvec2arr( internal_state.iiwa_state.joint_position ) );
+  q.append( .001*internal_state.wsg_state.actual_position_mm );
+  internal_state.currentQ.set() = q;
+
+  internal_state.refPath = internal_state.accRefPath.get();
+  internal_state.refGrip = internal_state.accRefGrip.get();
+
+  mlr::Transformation X;
+  X.pos.set(&internal_state.iiwa_state.pose.translation.x);
+  X.rot.set(&internal_state.iiwa_state.pose.rotation.w);
+  internal_state.robotBase.set() = X;
+
+  //-- percept simulation
+  PerceptSimpleL P;
+  PerceptSimple *p = new PerceptSimple();
+  p->pose.pos.set(&internal_state.obj_state.pose.translation.x);
+  p->pose.rot.set(&internal_state.obj_state.pose.rotation.w);
+  P.append(p);
+  if(P.N) internal_state.percepts_input.set()->append(P);
+
+
+  cout <<"HERE pathDim=" <<internal_state.refPath.dim() <<" grip=" << internal_state.refGrip <<endl;
+
 }
 
 }  // namespace drake
