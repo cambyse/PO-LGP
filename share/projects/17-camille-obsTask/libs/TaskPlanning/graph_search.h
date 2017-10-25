@@ -48,7 +48,7 @@ private:
   POGraphNode::ptr root_;
 
   // state
-  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
   arr bs_;
 
   // graph building

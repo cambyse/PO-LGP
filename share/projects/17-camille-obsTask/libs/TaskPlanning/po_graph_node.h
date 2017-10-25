@@ -110,8 +110,8 @@ public:
   double p() const { return p_; }
   arr bs()   const { return bs_; }
   std::vector< SymbolicState > resultStates() const { return resultStates_; }
-  uint getLeadingAction( const POGraphNode::ptr & parent ) const;
-  std::string getLeadingActionStr( const POGraphNode::ptr & parent ) const;
+  uint getLeadingActionFrom( const POGraphNode::ptr & parent ) const;
+  std::string getLeadingActionFromStr( const POGraphNode::ptr & parent ) const;
   // utility
   void indicateDifferentiatingFacts( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
@@ -140,7 +140,7 @@ private:
 
   // members for symbolic search
   uint N_;                                                                    ///< number of possible worlds
-  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
   mlr::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
   std::vector< SymbolicState >             resultStates_;
   static std::list< POGraphNode::ptr >     graph_;

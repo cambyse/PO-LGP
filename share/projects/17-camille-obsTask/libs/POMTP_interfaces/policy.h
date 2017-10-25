@@ -50,6 +50,7 @@ public:
   void setParent( const PolicyNode::ptr & parent ) { parent_ = parent; }
   void addChild( const PolicyNode::ptr & child )   { children_.append( child ); }
   void setState( const mlr::Array< std::shared_ptr<Graph> > & states, const arr & bs ) { states_ = states; bs_ = bs; }
+  //void setLeadingAction( const std::string & action ) { leadingAction_ = action; }
   void setNextAction( const std::string & action ) { nextAction_ = action; }
   void setTime( double t ) { time_ = t; }
   void setId( uint id ) { id_ = id; }
@@ -67,7 +68,8 @@ public:
   mlr::Array< PolicyNode::ptr > children() const { return children_; }
   mlr::Array< std::shared_ptr<Graph> > states() const { return states_; }
   arr bs() const { return bs_; }
-  std::string nextAction() const { return nextAction_; }
+  //std::string leadingAction() const { return leadingAction_; }
+  std::string nextAction()    const { return nextAction_; }
   uint N()  const  { return bs_.N; }
   double time() const { return time_; }
   uint id() const  { return id_; }
@@ -90,6 +92,7 @@ private:
   mlr::Array< std::shared_ptr<Graph> > states_;
   arr bs_;
   // action
+  //std::string leadingAction_; // action that lead to this node
   std::string nextAction_; // action to take at this node
   //
   double time_;

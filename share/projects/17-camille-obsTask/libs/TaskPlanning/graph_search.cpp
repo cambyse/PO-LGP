@@ -33,10 +33,10 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
   if( KB[ beliefStateTag_ ] == nullptr )
   {
     // create dummy array
-    folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( 1 );
+    folEngines_ = mlr::Array< std::shared_ptr<FOL_World> > ( 1 );
     std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
     fol->init(FILE(folDescription.c_str()));
-    folWorlds_( 0 ) = fol;
+    folEngines_( 0 ) = fol;
     fol->reset_state();
     // create dummy bs in observable case
     bs_ = arr( 1 );
@@ -50,7 +50,7 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
     const uint nWorlds = bsGraph->d0;
 
     // generate all the possible fol
-    folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( nWorlds );
+    folEngines_ = mlr::Array< std::shared_ptr<FOL_World> > ( nWorlds );
     bs_ = arr( nWorlds );
     for( uint w = 0; w < nWorlds; w++ )
     {
@@ -94,7 +94,7 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
       fol->reset_state();
 
       //std::cout << *fol << std::endl; // tmp
-      folWorlds_(w) = fol;
+      folEngines_(w) = fol;
       bs_(w) = probability;
     }
 
@@ -105,7 +105,7 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
     CHECK( total == 1.00, "wrong belief state definition, the total of the probabilities doesn't sum to 1" );
   }
 
-  root_ = std::make_shared< POGraphNode >( folWorlds_, bs_ );
+  root_ = std::make_shared< POGraphNode >( folEngines_, bs_ );
 }
 
 void GraphSearchPlanner::solve()
@@ -298,20 +298,43 @@ void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
   if( node->isRoot() )
   {
     policyNode->setTime( 0 );
+    policyNode->setState( node->folStates(), node->bs() );
+
     policy_->setRoot( policyNode );
     policy_->setExpectedSymReward( expectedReward_[ node->id() ] );
   }
   else
   {
     // set parent
-    auto parent = PO2Policy_[ parents_[ node->id() ] ];
+    auto graphParent = parents_[ node->id() ];
+    auto parent = PO2Policy_[ graphParent ];
     policyNode->setParent( parent );
+
+    // get action graph ( have to be reconstructed with the right action! since it is a graph!!)
+    uint a = node->getLeadingActionFrom( graphParent );
+
+    auto parentStates = graphParent->folStates(); // start states
+    mlr::Array< std::shared_ptr<Graph> > resultStates( parentStates.d0 );
+    for( auto w = 0; w < node->N(); ++w )
+    {
+      if( node->bs()( w ) > 0.0001 )
+      {
+        auto fol = folEngines_( w );
+        auto startState = parentStates( w );
+        fol->setState( startState.get() );
+        auto action = fol->get_actions()[ a ];
+        fol->transition( action );
+        auto resultState = fol->createStateCopy();
+        resultStates( w ).reset( resultState );
+      }
+    }
+    policyNode->setState( resultStates, node->bs() );
 
     // add child to parent
     policyNode->setTime( parent->time() + 1 );
 
     parent->addChild( policyNode );
-    parent->setNextAction( node->getLeadingActionStr( parents_[ node->id() ] ) );
+    parent->setNextAction( node->getLeadingActionFromStr( graphParent ) );
 
     if( node->isTerminal() )
     {
@@ -320,7 +343,6 @@ void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
   }
 
   // set node data
-  policyNode->setState( node->folStates(), node->bs() );
   policyNode->setId( node->id() );
   policyNode->setDifferentiatingFact( node->differentiatingFacts() );
   //policyNode->setTime( node->time() );

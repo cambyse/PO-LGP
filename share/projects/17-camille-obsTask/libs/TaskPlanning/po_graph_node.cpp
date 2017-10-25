@@ -119,7 +119,7 @@ std::list< POGraphNode::ptr > POGraphNode::graph_;
 POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
   : root_( nullptr )
   , N_( fols.N )
-  , folWorlds_( fols )
+  , folEngines_( fols )
   , folStates_( N_ )
   , resultStates_( N_ )
   //, folAddToStates_( N_ )
@@ -137,15 +137,15 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
 {
   for( auto w = 0; w < N_; ++w )
   {
-    folWorlds_( w )->reset_state();
-    folStates_( w ).reset( folWorlds_( w )->createStateCopy() );
+    folEngines_( w )->reset_state();
+    folStates_( w ).reset( folEngines_( w )->createStateCopy() );
   }
 
   for( auto w = 0; w < N_; ++w )
   {
     if( bs_( w ) > eps() )
     {
-      auto result = folWorlds_( w )->getState();
+      auto result = folEngines_( w )->getState();
 
       auto stateStr = getStateStr( result );
 
@@ -164,7 +164,7 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
 POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHistory, const arr & bs,  const std::vector< SymbolicState > & resultStates, uint a )
   : root_( root )
   , N_( root->N_ )
-  , folWorlds_( root->folWorlds_ )
+  , folEngines_( root->folEngines_ )
   , folStates_( N_ )
   , resultStates_( resultStates )
   //, folAddToStates_( N_ )
@@ -189,7 +189,7 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHisto
     {
       mlr::String mlrState( resultStates_[ w ].state );
       // logic
-      auto fol = folWorlds_( w );
+      auto fol = folEngines_( w );
       //fol->reset_state();
       fol->set_state( mlrState );
 
@@ -266,7 +266,7 @@ POGraphNode::L POGraphNode::expand()
     {
       if( bs_( w ) > eps() )
       {
-        auto logic = folWorlds_( w );
+        auto logic = folEngines_( w );
         auto state = folStates_( w );
         auto action = world_to_actions[ w ][ a ];
         //logic->addTerminalRule();
@@ -409,15 +409,19 @@ void POGraphNode::addParent( const POGraphNode::ptr & parent, uint action )
   leadingActions_.append( action );
 }
 
-uint POGraphNode::getLeadingAction( const POGraphNode::ptr & parent ) const
+uint POGraphNode::getLeadingActionFrom( const POGraphNode::ptr & parent ) const
 {
+  CHECK( parent, "no parent!" );
+
   uint index = parents_.findValue( parent );
   return leadingActions_( index );
 }
 
-std::string POGraphNode::getLeadingActionStr( const POGraphNode::ptr & parent ) const
+std::string POGraphNode::getLeadingActionFromStr( const POGraphNode::ptr & parent ) const
 {
-  return parent->actionStr( getLeadingAction( parent ) );
+  CHECK( parent, "no parent!" );
+
+  return parent->actionStr( getLeadingActionFrom( parent ) );
 }
 
 std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( uint & nActions ) const
@@ -430,18 +434,18 @@ std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( u
   {
     if( bs_( w ) > eps() )
     {
-      auto logic = folWorlds_( w );
+      auto logic = folEngines_( w );
       auto state = folStates_( w );
 
       logic->setState( state.get() );
 
-auto start_1 = std::chrono::high_resolution_clock::now();
+//auto start_1 = std::chrono::high_resolution_clock::now();
 
-      auto actions = folWorlds_( w )->get_actions(); _n_get_actions++;
+      auto actions = folEngines_( w )->get_actions(); _n_get_actions++;
 
-auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
-long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
-_get_actions_time_us += mcs_1;
+//auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+//long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+//_get_actions_time_us += mcs_1;
 
       world_to_actions[ w ] = actions;
       nActions = actions.size();
@@ -471,7 +475,7 @@ mlr::Array< LogicAndState > POGraphNode::getPossibleLogicAndStates() const
   {
     if( bs_( w ) > eps() )
     {
-      worlds.append( { folWorlds_( w ), folStates_( w ) } );
+      worlds.append( { folEngines_( w ), folStates_( w ) } );
     }
   }
 
@@ -484,18 +488,22 @@ std::string POGraphNode::actionStr( uint a ) const
   ls.logic->reset_state();
   ls.logic->setState( ls.state.get() );
 
-  auto start_1 = std::chrono::high_resolution_clock::now();
+  std::cout << "state:" << *ls.state.get() << std::endl;
 
-      auto actions = ls.logic->get_actions(); _n_get_actions++;
+//  auto start_1 = std::chrono::high_resolution_clock::now();
 
-  auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
-  long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
-  _get_actions_time_us += mcs_1;
+  auto actions = ls.logic->get_actions(); _n_get_actions++;
+
+//  auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+//  long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+ // _get_actions_time_us += mcs_1;
 
   std::stringstream ss;
 
   if( a >= 0 && a < actions.size() )  ss << *actions[a];
   else                                ss << "no actions";
+
+  std::cout << "action:" << ss.str() << std::endl;
 
   return ss.str();
 }

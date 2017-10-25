@@ -195,7 +195,7 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 {
   std::cout << "optimizing pose for:" << node->id() << std::endl;
 
-  effKinematics_[ node ] = mlr::Array< mlr::KinematicWorld >( node->N() );
+  effKinematics_  [ node ] = mlr::Array< mlr::KinematicWorld >( node->N() );
   poseCosts_      [ node ] = arr( node->N() );
   poseConstraints_[ node ] = arr( node->N() );
   //
@@ -230,7 +230,12 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       komo->setTiming( 1., 2, 5., 1/*, true*/ );
 //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       komo->setSquaredQVelocities();
-      komo->setFixSwitchedObjects(-1., -1., 1e3);
+      komo->setFixSwitchedObjects( -1., -1., 1e3 );
+
+      if( node->id() == 210 )
+      {
+        std::cout << *node->states()( w ) << std::endl;
+      }
 
       komo->groundTasks( 0., *node->states()( w ) );
 
