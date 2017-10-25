@@ -297,11 +297,43 @@ void plan_iterative_deepening()
 void plan_graph_search()
 {
   auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  auto mp = std::make_shared< mp::KOMOPlanner >();
 
-  tp->setFol( "LGP-blocks-fol-easy-2w.g" );
-  //tp->setFol( "LGP-blocks-fol.g" );
+  // set planner specific parameters
+  //tp->setMCParams( 50, -1, 50 );
+  mp->setNSteps( 10 );
 
+  // register symbols
+  mp->registerTask( "komoPickUp"       , groundPickUp );
+  mp->registerTask( "komoPutDown"      , groundPutDown );
+  mp->registerTask( "komoCheck"        , groundCheck );
+  mp->registerTask( "komoStack"        , groundStack );
+  mp->registerTask( "komoUnStack"      , groundUnStack );
+
+  // set start configurations
+  tp->setFol( "LGP-blocks-fol.g" );
+  mp->setKin( "LGP-blocks-kin.g" );
+
+  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
+  //mp->setKin( "LGP-blocks-kin-2w.g" );
+
+  /// TASK PLANNING
   tp->solve();
+
+  auto policy = tp->getPolicy();
+  auto po     = tp->getPlanningOrder();
+
+  // save policy
+  savePolicyToFile( policy );
+
+  /// MOTION PLANNING
+  mp->display( policy, 3000 );
+//  mp->solveAndInform( po, policy );
+
+//  // print resulting cost
+//  std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+
+//  tp->integrate( policy );
 
   mlr::wait( 30, true );
 }

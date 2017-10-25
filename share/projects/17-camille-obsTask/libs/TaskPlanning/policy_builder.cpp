@@ -50,6 +50,7 @@ void PolicyBuilder::process( PONode::ptr node )
       policy_->addLeaf( policyNode );
     }
   }
+
   // set node data
   policyNode->setState( node->folStates(), node->bs() );
   policyNode->setNextAction( node->bestActionStr() );
@@ -57,7 +58,7 @@ void PolicyBuilder::process( PONode::ptr node )
   policyNode->setDifferentiatingFact( node->differentiatingFacts() );
 
   // set node data
-  policyNode->setTime( node->time() );
+  policyNode->setTime(  node->time() );
   policyNode->setP( node->pHistory() );
 
   if( node->parent() )

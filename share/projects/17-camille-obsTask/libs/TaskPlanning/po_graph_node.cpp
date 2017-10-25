@@ -326,8 +326,7 @@ POGraphNode::L POGraphNode::expand()
         auto a = (*m)->resultStates();
         auto b = resultStates;
 
-        if( (*m)->bs() == bs )
-        if( SymbolicState::equivalent( a, b )  )
+        if( (*m)->bs() == bs && SymbolicState::equivalent( a, b )  )
         {
           child = *m;
           found = true;
@@ -357,7 +356,7 @@ POGraphNode::L POGraphNode::expand()
 
       // add child to created family
       familiy.append( child );
-      child->addParent( shared_from_this() );
+      child->addParent( shared_from_this(), a );
     }
 
     // check integrity
@@ -404,9 +403,21 @@ void POGraphNode::setAndSiblings( const POGraphNode::L & siblings )
   }
 }
 
-void POGraphNode::addParent( const POGraphNode::ptr & parent )
+void POGraphNode::addParent( const POGraphNode::ptr & parent, uint action )
 {
   parents_.append( parent );
+  leadingActions_.append( action );
+}
+
+uint POGraphNode::getLeadingAction( const POGraphNode::ptr & parent ) const
+{
+  uint index = parents_.findValue( parent );
+  return leadingActions_( index );
+}
+
+std::string POGraphNode::getLeadingActionStr( const POGraphNode::ptr & parent ) const
+{
+  return parent->actionStr( getLeadingAction( parent ) );
 }
 
 std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( uint & nActions ) const

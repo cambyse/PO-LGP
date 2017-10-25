@@ -90,7 +90,7 @@ public:
   // modifiers
   POGraphNode::L expand();
   void setAndSiblings( const POGraphNode::L & siblings );
-  void addParent( const POGraphNode::ptr & parent );
+  void addParent( const POGraphNode::ptr & parent, uint actionId = -1 );
   POGraphNode::ptr root() { return root_ ? root_ : shared_from_this(); } // root_ is nullptr when the node itself is root
 
   // getters
@@ -110,15 +110,8 @@ public:
   double p() const { return p_; }
   arr bs()   const { return bs_; }
   std::vector< SymbolicState > resultStates() const { return resultStates_; }
-
-  /*POGraphNode::L getTreePath();
-  POGraphNode::L getTreePathFrom( const POGraphNode::ptr & start );*/
-  //FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
-
-  //double prefixReward() const { return prefixReward_; }
-  //double expecteTotalReward() const { return expectedTotalReward_; }
-  //double expecteFutureReward() const { return expectedTotalReward_ - prefixReward_; }
-
+  uint getLeadingAction( const POGraphNode::ptr & parent ) const;
+  std::string getLeadingActionStr( const POGraphNode::ptr & parent ) const;
   // utility
   void indicateDifferentiatingFacts( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
@@ -160,6 +153,8 @@ private:
   POGraphNode::L  andSiblings_;           /// at the same depth!
   POGraphNode::LL families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
+
+  mlr::Array< uint > leadingActions_;     /// potentially different because of different parents
 
   //-- global search
   bool isExpanded_;

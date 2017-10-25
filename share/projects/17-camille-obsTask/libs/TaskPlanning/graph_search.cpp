@@ -117,6 +117,8 @@ void GraphSearchPlanner::solve()
   dijkstra();
 
   extractSolutions();
+
+  buildPolicy();
   //solveIterativeDepthFirst();
   //solveBreadthFirst();
 }
@@ -128,14 +130,7 @@ void GraphSearchPlanner::integrate( const Policy::ptr & policy )
 
 Policy::ptr GraphSearchPlanner::getPolicy() const
 {
-  Policy::ptr policy;
-
-//  if( solutions_.size() > 0 )
-//  {
-//    policy = *solutions_.begin();
-//  }
-
-  return policy;
+  return policy_;
 }
 
 MotionPlanningOrder GraphSearchPlanner::getPlanningOrder() const
@@ -235,7 +230,6 @@ void GraphSearchPlanner::dijkstra()
       if( alternativeReward > expectedReward_[ parent->id() ] )
       {
         expectedReward_[ parent->id() ] = alternativeReward;
-
         Q.push( parent );
       }
     }
@@ -248,10 +242,20 @@ void GraphSearchPlanner::dijkstra()
 
 void GraphSearchPlanner::extractSolutions()
 {
-  std::cout << "expected policy reward:" << expectedReward_[ root_->id() ] << std::endl;
+  bestFamily_ = std::vector< int >( root_->graph().size(), -1 );
+  parents_    = std::vector< POGraphNode::ptr >( root_->graph().size() );
 
-  for( auto f : root_->families() )
+  extractSolutionFrom( root_ );
+}
+
+void GraphSearchPlanner::extractSolutionFrom( const POGraphNode::ptr & node )
+{
+  double rewardFromNode = expectedReward_[ node->id() ];
+
+  for( auto i = 0; i < node->families().size(); ++i )
   {
+    auto f = node->families()( i );
+
     double familyReward = 0;
 
     for( auto c : f )
@@ -259,10 +263,79 @@ void GraphSearchPlanner::extractSolutions()
       familyReward += c->p() * expectedReward_[ c->id() ];
     }
 
-//    if( familyReward >=  )
-//    {
+    if( familyReward >= rewardFromNode )
+    {
+      bestFamily_[ node->id() ] = i;
 
-//    }
+      for( auto c : f )
+      {
+        parents_[ c->id() ] = node;
+
+        if( ! c->isTerminal() )
+        {
+          extractSolutionFrom( c );
+        }
+      }
+    }
+  }
+
+  CHECK( bestFamily_[ node->id() ] != -1, "" );
+}
+
+void GraphSearchPlanner::buildPolicy()
+{
+  // convert to a policy object
+  policy_ = std::make_shared< Policy >();
+  policy_->init( root_->N() );
+
+  buildPolicyFrom( root_ );
+}
+
+void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
+{
+  PolicyNode::ptr policyNode = std::make_shared< PolicyNode >();
+
+  if( node->isRoot() )
+  {
+    policyNode->setTime( 0 );
+    policy_->setRoot( policyNode );
+    policy_->setExpectedSymReward( expectedReward_[ node->id() ] );
+  }
+  else
+  {
+    // set parent
+    auto parent = PO2Policy_[ parents_[ node->id() ] ];
+    policyNode->setParent( parent );
+
+    // add child to parent
+    policyNode->setTime( parent->time() + 1 );
+
+    parent->addChild( policyNode );
+    parent->setNextAction( node->getLeadingActionStr( parents_[ node->id() ] ) );
+
+    if( node->isTerminal() )
+    {
+      policy_->addLeaf( policyNode );
+    }
+  }
+
+  // set node data
+  policyNode->setState( node->folStates(), node->bs() );
+  policyNode->setId( node->id() );
+  policyNode->setDifferentiatingFact( node->differentiatingFacts() );
+  //policyNode->setTime( node->time() );
+  policyNode->setP( node->pHistory() );
+
+  // save correspondance
+  PO2Policy_[ node ] = policyNode;
+
+  if( ! node->isTerminal() )
+  {
+    auto bestFamily = node->families()( bestFamily_[ node->id() ] );
+    for( auto c : bestFamily )
+    {
+      buildPolicyFrom( c );
+    }
   }
 }
 

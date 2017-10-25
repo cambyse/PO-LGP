@@ -35,6 +35,9 @@ private:
   void buildGraph();
   void dijkstra();
   void extractSolutions();
+  void extractSolutionFrom( const POGraphNode::ptr & );
+  void buildPolicy();
+  void buildPolicyFrom( const POGraphNode::ptr & );
 
   uint n_exp_ = 0;
 
@@ -42,19 +45,24 @@ private:
   void checkIntegrity();
 
 private:
+  POGraphNode::ptr root_;
+
   // state
   mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
   arr bs_;
 
-  POGraphNode::ptr root_;
-
   // graph building
-  std::set< POGraphNode::ptr > checked_;
+  std::set  < POGraphNode::ptr > checked_;
   std::queue< POGraphNode::ptr > queue_;
-  std::list< POGraphNode::ptr > terminals_;
+  std::list < POGraphNode::ptr > terminals_;
 
   // dijkstra
   std::vector< double > expectedReward_;
+  // policy reconstruction
+  std::vector< int >   bestFamily_;     // action to take in this bs and i
+  std::vector< POGraphNode::ptr > parents_;
+  Policy::ptr policy_;
+  std::map< POGraphNode::ptr, PolicyNode::ptr > PO2Policy_;
 
   // constants
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
