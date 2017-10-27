@@ -122,6 +122,7 @@ def qdump__Node_typed(d, value):
             d.putSubItem("parents", value["parents"])
             d.putSubItem("parentOf", value["parentOf"])
             d.putSubItem("index", value["index"])
+            d.putSubItem("numChildren", value["numChildren"])
             d.putSubItem("container", value["container"])
             d.putSubItem("keys", value["keys"])
 
