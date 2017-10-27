@@ -42,14 +42,29 @@ void solve1(){
 
   OptLGP lgp(K, L);
 
-  lgp.optFixedSequence("(grasp baxterR stick) \
-                        (push stick stickTip redBall table1) \
-                        (grasp baxterL redBall) \
-                       ", true);
+  lgp.verbose = 0;
 
-  mlr::wait();
+  mlr::timerStart();
+  for(uint d=1;d<5;d++){
+    lgp.buildTree(d);
+    MNodeL all = lgp.root->getAll();
+    cout <<"d= " <<d <<" #= " <<all.N <<" t= " <<mlr::timerRead(true) <<endl;
+  }
 
-  lgp.renderToVideo();
+
+//  lgp.updateDisplay();
+//  lgp.player();
+
+//  lgp.optFixedSequence("(grasp baxterR stick) \
+//                        (push stick stickTip redBall table1) \
+//                        (grasp baxterL redBall) \
+//                       ", true);
+
+//  lgp.run();
+
+//  mlr::wait();
+
+//  lgp.renderToVideo();
 }
 
 void solve3(){
@@ -69,12 +84,13 @@ void solve3(){
 
   OptLGP lgp(K, L);
 
-  lgp.optFixedSequence("(grasp baxterR stick1) \
-                       (push2 stick1 redBall table1) \
-                       (slideAlong stick1 redBall wall1) \
-                       (grasp baxterL redBall) \
-                       ", true);
-//                       (place stick1 redBall wall1) \
+  lgp.run();
+//  lgp.optFixedSequence("(grasp baxterR stick1) \
+//                       (push2 stick1 redBall table1) \
+//                       (slideAlong stick1 redBall wall1) \
+//                       (grasp baxterL redBall) \
+//                       ", true);
+////                       (place stick1 redBall wall1) \
 
   mlr::wait();
 
@@ -142,6 +158,8 @@ void solve5(){
 //  }
 }
 
+//  solve3();
+//  solve4();
 void solve6(){
   mlr::KinematicWorld K("problem-06.g");
   FOL_World L(FILE("fol.g"));
@@ -219,12 +237,12 @@ int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
 //  illustrate();
-//  solve1();
+  solve1();
 //  solve3();
 //  solve4();
 //  solve5();
 //  solve6();
-  solve7();
+//  solve7();
 
   return 0;
 }
