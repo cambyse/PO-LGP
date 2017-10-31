@@ -40,7 +40,7 @@ def qdump__LIST(d, value):
         with Children(d):
             for i in xrange(0, m):
                 s = "(%i)" % i
-                d.putSubItem(s, p.dereference().dereference())
+                d.putSubItem(s, p.dereference())
                 p += 1
                 i += 1
 #            d.putSubItem("p", p)
@@ -119,12 +119,12 @@ def qdump__Node_typed(d, value):
     if d.isExpanded():
         with Children(d):
             d.putSubItem("value", value["value"])
+            d.putSubItem("keys", value["keys"])
             d.putSubItem("parents", value["parents"])
+            d.putSubItem("numChildren", value["numChildren"])
             d.putSubItem("parentOf", value["parentOf"])
             d.putSubItem("index", value["index"])
-            d.putSubItem("numChildren", value["numChildren"])
             d.putSubItem("container", value["container"])
-            d.putSubItem("keys", value["keys"])
 
 def qdump__NodeL(d, value):
     qdump__LIST(d, value)
@@ -142,9 +142,10 @@ def qdump__Graph(d, value):
         with Children(d):
             for i in xrange(0, m):
                 s = "(%i)" %i
-                d.putSubItem(s, p.dereference().dereference())
+                d.putSubItem(s, p.dereference())
                 p += 1
             d.putSubItem("isNodeOfGraph", value["isNodeOfGraph"])
+            d.putSubItem("isIndexed", value["isIndexed"])
 #            d.putSubItem("p", value["p"])
 
 def qdump__BodyL(d, value):
