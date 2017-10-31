@@ -44,7 +44,7 @@ void solve1(){
 
   lgp.verbose = 0;
   mlr::timerStart();
-  for(uint d=1;d<8;d++){
+  for(uint d=1;d<10;d++){
     lgp.buildTree(d);
     MNodeL all = lgp.root->getAll();
     cout <<"d= " <<d <<" #= " <<all.N <<" t= " <<mlr::timerRead(true) <<endl;
