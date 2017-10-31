@@ -21,8 +21,9 @@
 
 #include "drake.h"
 #include "drake-internal.h"
-
 #include "RAI_machine.h"
+
+#include <Core/thread.h>
 
 #include <memory>
 #include <string>
@@ -338,10 +339,10 @@ void MyDrake::mono_setupGeometry() {
   // Locations for the posts from physical pick and place tests with
   // the iiwa+WSG.
   // TODO(sam.creasey) this should be 1.10 in the Y direction.
-  s->post_locations.push_back(Eigen::Vector3d(0.8, 0.8, 0));  // position A
-  s->post_locations.push_back(Eigen::Vector3d(0.8, -0.8, 0));  // position B
-  s->post_locations.push_back(Eigen::Vector3d(-0.8, -0.8, 0));  // position D
-  s->post_locations.push_back(Eigen::Vector3d(-0.8, 0.8, 0));  // position E
+  s->post_locations.push_back(Eigen::Vector3d(0.5, 0.5, 0));  // position A
+  s->post_locations.push_back(Eigen::Vector3d(0.5, -0.5, 0));  // position B
+  s->post_locations.push_back(Eigen::Vector3d(-0.5, -0.5, 0));  // position D
+  s->post_locations.push_back(Eigen::Vector3d(-0.5, 0.5, 0));  // position E
   s->post_locations.push_back(Eigen::Vector3d(-0.47, -0.8, 0));  // position F
 
   // Position of the pick and place location on the table, relative to
@@ -540,12 +541,18 @@ void MyDrake::simulate2(){
       Eigen::VectorXd::Zero(7),
       plan_source_context.get_mutable_state());
 
+  Access<double> timeToGo("timeToGo");
+
   // Step the simulator in some small increment.  Between steps, check
   // to see if the state machine thinks we're done, and if so that the
   // object is near the target.
   const double simulation_step = 0.1;
   while (true){
     simulator.StepTo(simulator.get_context().get_time() + simulation_step);
+    timeToGo.writeAccess();
+    if(timeToGo()>0.) timeToGo() -= simulation_step;
+    timeToGo.deAccess();
+
     if (FLAGS_quick) {
       // We've run a single step, just get out now since we won't have
       // reached our destination.

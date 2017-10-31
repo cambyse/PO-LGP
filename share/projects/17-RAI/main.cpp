@@ -15,6 +15,7 @@
 #include "komo_fine.h"
 #include "filter.h"
 #include "simDrake.h"
+#include <Msg/MotionReference.h>
 
 //===============================================================================
 
@@ -28,36 +29,46 @@
 
 //===============================================================================
 
-int planPath(const mlr::String& cmd, bool fromCurrent=false){
-  Access<mlr::KinematicWorld> K("tailKin");
-  if(!K.get()->q.N) K.set() = Access<mlr::KinematicWorld>("world").get();
-  KOMO_fineManip komo(K.get());
-  if(fromCurrent){
-    StringA joints = Access<StringA>("jointNames").get();
-    arr q = Access<arr>("currentQ").get();
-    komo.world.setJointState(q, joints);
+Msg_MotionReference planPath(const mlr::String& cmd, const mlr::Transformation& where=NoTransformation, bool fromCurrent=true){
+  Access<mlr::KinematicWorld> K("filterWorld");
+  Access<mlr::KinematicWorld> Ktail("kinTail");
+  if(!fromCurrent){
+    StringA joints = K.get()->getJointNames();
+    arr q = Ktail.get()->getJointState(joints);
+    K.set() -> setJointState(q, joints);
   }
+  KOMO_fineManip komo(K.get());
 
-
-  komo.setPathOpt(1., 20, 5.);
+  komo.setPathOpt(1., 20, 3.);
 
   if(cmd=="grasp") komo.setFineGrasp(1., "endeff", "box0", "wsg_50_base_joint_gripper_left");
-  if(cmd=="place") komo.setFinePlace(1., "endeff", "box0", "table1", "wsg_50_base_joint_gripper_left");
-  if(cmd=="home")  komo.setHoming(.9, 1., 1e2);
+  if(cmd=="place"){
+    komo.setFineLift(0., "endeff");
+    komo.setFinePlace(1., "endeff", "box0", "table1", "wsg_50_base_joint_gripper_left");
+  }
+  if(cmd=="placeFixed"){
+    komo.setFineLift(0., "endeff");
+    CHECK(!where.isZero(), "");
+    mlr::Transformation rel = where / komo.world["table1"]->X;
+    komo.setFinePlaceFixed(1., "endeff", "box0", "table1", rel, "wsg_50_base_joint_gripper_left");
+  }
+  if(cmd=="home")  komo.setFineHoming(1., "wsg_50_base_joint_gripper_left");
 
   komo.reset();
   komo.run();
-//  komo.getReport(true);
+  komo.getReport(true);
 
-//  for(;;)
-//  komo.displayTrajectory(.05, true);
-//  R.wait();
+  while(komo.displayTrajectory(.05, true));
+
+  Ktail.set() = *komo.configurations.elem(-1);
 
   StringA joints = Access<StringA>("jointNames").get();
   arr x = komo.getPath(joints);
-  Access<arr>("plan").set() = x;
-  K.set() = *komo.configurations.elem(-1);
-  return 1;
+  Msg_MotionReference ref;
+  ref.path = x;
+  ref.tau = { komo.tau };
+  ref.append = true;
+  return ref;
 }
 
 //===============================================================================
@@ -74,8 +85,8 @@ void TEST(PickAndPlace2) {
 //  joints.removeValue("slider1Joint");
   Access<StringA>("jointNames").set() = joints;
 
-//  SimDrake sim;
-  KinSim sim;
+  SimDrake sim;
+//  KinSim sim;
   sim.threadLoop();
   Access<double> ttg("timeToGo");
 
@@ -88,28 +99,38 @@ void TEST(PickAndPlace2) {
   //wait for robot pose msg
   Access<arr>("currentQ").waitForRevisionGreaterThan(10);
 
-  planPath("home", true);
-  Access<arr>("refPath").set() = Access<arr>("plan").get();
+  Msg_MotionReference ref = planPath("home");
+  Access<Msg_MotionReference>("MotionReference").set() = ref;
+  mlr::wait(1.);
+  for(;;){ ttg.waitForNextRevision(); if(ttg.get()<=0.) break;  }
 
-  for(;;){
-    planPath("grasp");
-
-    for(;;){ ttg.waitForNextRevision(); if(ttg.get()==0.) break;  }
-    Access<arr>("refPath").set() = Access<arr>("plan").get();
-    planPath("home");
-
-    for(;;){ ttg.waitForNextRevision(); if(ttg.get()==0.) break;  }
+  for(uint l=0;;l++){
+    ref = planPath("grasp");
+    Access<Msg_MotionReference>("MotionReference").set() = ref;
+    mlr::wait(1.);
+    for(;;){ ttg.waitForNextRevision(); if(ttg.get()<=0.) break;  }
     Access<StringA>("switches").set() = {"attach", "endeff", "box0"};
-    Access<arr>("refPath").set() = Access<arr>("plan").get();
-    planPath("place");
+    mlr::wait(.1);
 
-    for(;;){ ttg.waitForNextRevision(); if(ttg.get()==0.) break;  }
-    Access<arr>("refPath").set() = Access<arr>("plan").get();
-    planPath("home");
+//    ref = planPath("home");
+//    Access<Msg_MotionReference>("MotionReference").set() = ref;
+//    for(;;){ ttg.waitForNextRevision(); if(ttg.get()<=0.) break;  }
 
-    for(;;){ ttg.waitForNextRevision(); if(ttg.get()==0.) break;  }
-    Access<StringA>("switches").set() = {"attach", "table1", "box0ick"};
-    Access<arr>("refPath").set() = Access<arr>("plan").get();
+
+    if(l%2){
+      ref = planPath("placeFixed", { {.5, -.5, 1.12}, Quaternion_Id } );
+    }else{
+      ref = planPath("placeFixed", { {.5, .5, 1.12}, Quaternion_Id } );
+    }
+    Access<Msg_MotionReference>("MotionReference").set() = ref;
+    mlr::wait(1.);
+    for(;;){ ttg.waitForNextRevision(); if(ttg.get()<=0.) break;  }
+    Access<StringA>("switches").set() = {"attach", "table1", "box0"};
+    mlr::wait(.1);
+
+//    ref = planPath("home");
+//    Access<Msg_MotionReference>("MotionReference").set() = ref;
+//    for(;;){ ttg.waitForNextRevision(); if(ttg.get()<=0.) break;  }
   }
 
 

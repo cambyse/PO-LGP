@@ -5,16 +5,16 @@
 #include <Kin/frame.h>
 
 KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
-    path(this, "refPath"),
+    ref(this, "MotionReference"),
+    switches(this, "switches"),
     currentQ(this, "currentQ"),
     robotBase(this, "robotBase"),
-    nextQ(this, "nextQ"),
-    switches(this, "switches"),
-    world(this, "world"),
+//    nextQ(this, "nextQ"),
+//    world(this, "world"),
     timeToGo(this, "timeToGo"),
     percepts_input(this, "percepts_input"){
 
-    K = world.get();
+    K = Access<mlr::KinematicWorld>("world").get();
 
     reference.points = K.q;
     reference.points.append( K.q );
@@ -33,7 +33,6 @@ KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
     }
 
     currentQ.set() = K.q;
-    nextQ.set() = K.q;
 }
 
 void KinSim::step(){
@@ -43,18 +42,18 @@ void KinSim::step(){
   //-- reference tracking
 
   //check for path update
-  uint rev=path.readAccess();
-  if(pathRev != rev){
-    pathRev = rev;
+  if(ref.hasNewRevision()){
+    ref.readAccess();
     reference.points = K.getJointState();
-    reference.points.append(path());
-    reference.points.reshape(path().d0+1, K.getJointStateDimension());
+    reference.points.append(ref().path);
+    reference.points.reshape(ref().path.d0+1, K.getJointStateDimension());
     reference.setUniformNonperiodicBasis();
     phase=0.;
-    timeToGo.set() = 1.;
-    nextQ.set() = reference.points[-1];
+    CHECK(ref().tau.N==1,"");
+    planDuration = ref().tau.scalar() * ref().path.d0;
+    timeToGo.set() = planDuration;
+    ref.deAccess();
   }
-  path.deAccess();
 
   //check for switches update
   uint rev2=switches.readAccess();
@@ -78,17 +77,16 @@ void KinSim::step(){
   //set the simulation's joint state
   arr q = reference.eval(phase);
   K.setJointState(q);
-  currentQ.set() = q;
-  world.set() = K;
+  currentQ.set() = K.getJointState();
   K.gl().update();
 
   log <<q <<endl;
 
   //progress the reference tracking
   if(phase!=1.){
-    phase += dt;
+    phase += dt/planDuration;
     if(phase>1.) phase=1.;
-    timeToGo.set() = 1.-phase;
+    timeToGo.set() = planDuration*(1.-phase);
   }
 
   //-- percept simulation

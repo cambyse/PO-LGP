@@ -47,6 +47,8 @@ FilterSimple::FilterSimple(double dt)
     percepts_input(this, "percepts_input"),
     percepts_filtered(this, "percepts_filtered"),
     currentQ(this, "currentQ"),
+    switches(this, "switches"),
+    timeToGo(this, "timeToGo"),
     robotBase(this, "robotBase"),
     filterWorld(this, "filterWorld")
 {
@@ -55,17 +57,41 @@ FilterSimple::FilterSimple(double dt)
   K.gl().title = "Filter";
   K.gl().add(glDrawPercepts, &percepts_display);
 
+  for(mlr::Frame *a:K.frames){
+    if(a->ats["percept"]) objects.append(a);
+  }
 }
 
 void FilterSimple::step(){
+  //== print info
+  time += metronome.ticInterval;
+  K.gl().text.printf("%4.2fsec", time);
+  K.gl().text <<"\ntimeToGo=" <<timeToGo.get();
+
   //== robot base location
-  K.getFrameByName("base")->X = robotBase.get();
+  mlr::Transformation base = robotBase.get();
+//  if(!base.isZero()) K["base"]->X = base;
+//  cout <<"BASE = " <<K["base"]->X <<endl;
 
   //== joint state input
   arr q = currentQ.get();
   StringA joints = Access<StringA>("jointNames").get();
   if(q.N) K.setJointState(q, joints );
 
+  //== kinematic switch inputs
+  if(switches.hasNewRevision()){
+    StringA cmd = switches.get();
+    cout <<"CMD = " <<cmd <<endl;
+    if(cmd(0)=="attach"){
+      mlr::Frame *a = K.getFrameByName(cmd(1));
+      mlr::Frame *b = K.getFrameByName(cmd(2));
+
+      if(b->parent) b->unLink();
+      b->linkFrom(a, true);
+      (new mlr::Joint(*b)) -> type=mlr::JT_rigid;
+      K.calc_q();
+    }
+  }
 
   //== perceptual inputs
 
@@ -73,7 +99,11 @@ void FilterSimple::step(){
   percepts_input.writeAccess();
   percepts_filtered.writeAccess();
 
-  K.gl().text.clear() <<"#in=" <<percepts_input().N <<" #fil=" <<percepts_filtered().N <<endl;
+  K.gl().text <<"\nPerception: #in=" <<percepts_input().N <<" #fil=" <<percepts_filtered().N <<" #obj=" <<objects.N;
+
+//  if(percepts_input().N){
+//    cout <<"PERCEPT INPUT:" <<*percepts_input().elem(0) <<endl;
+//  }
 
   //-- step 1: discount precision of old percepts
   // in forward models, the variance of two Gaussians is ADDED -> precision is 1/variance
@@ -112,12 +142,17 @@ void FilterSimple::step(){
   //TODO, with K
 //  while(objects.N<percepts_filtered().N){
 //    mlr::Frame *f = objects.append( new mlr::Frame(K) );
+//    f->name = STRING("PERC_" <<objects.N);
 //    mlr::Shape *s = new mlr::Shape(*f);
 //  }
-//  for(uint i=0;i<percepts_filtered().N;i++){
+  for(uint i=0;i<objects.N;i++){
+    if(i>=percepts_filtered().N) break;
 //    objects(i)->shape->geomID = percepts_filtered()(i)->geomID;
-//    objects(i)->X = percepts_filtered()(i)->pose;
-//  }
+//    if(objects(i)->shape->geomID==-1){
+//      objects(i)->shape->geomID = K.getFrameByName("box0")->shape->geomID;
+//    }
+    objects(i)->X = percepts_filtered()(i)->pose;
+  }
 
   //-- done
 

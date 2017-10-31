@@ -35,10 +35,13 @@ struct FilterSimple : Thread{
   mlr::KinematicWorld K;
   FrameL objects;
   PerceptSimpleL percepts_display;
+  double time=0.;
 
   Access<PerceptSimpleL> percepts_input;
   Access<PerceptSimpleL> percepts_filtered;
   Access<arr> currentQ;
+  Access<StringA> switches;
+  Access<double> timeToGo;
   Access<mlr::Transformation> robotBase;
   Access<mlr::KinematicWorld> filterWorld;
 
