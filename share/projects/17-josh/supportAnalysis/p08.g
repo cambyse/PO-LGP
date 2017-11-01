@@ -1,4 +1,4 @@
-Include = 'common.g'
+#Include = 'common.g'
 
 body table { shape=9, X=<T t(0 0 .9)>, size=[1. .8 .04 .02], color=[.3 .3 .3] }
 

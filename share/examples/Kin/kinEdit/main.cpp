@@ -24,8 +24,6 @@ int MAIN(int argc,char **argv){
 
     mlr::KinematicWorld K(file);
 
-
-
     K.checkConsistency();
     K >>FILE("z.g");
     //some optional manipulations
@@ -38,6 +36,8 @@ int MAIN(int argc,char **argv){
 //    G >>FILE("z.ors");
 //    K.watch(true);
 //    return;
+
+    K.writeURDF(FILE("z.urdf"));
 
     if(mlr::checkParameter<bool>("cleanOnly")) return 0;
 
