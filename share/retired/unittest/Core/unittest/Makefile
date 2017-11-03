@@ -1,6 +1,6 @@
 BASE = ../../..
 
-LIBS += -lgtest -lpthread
+LIBS += -lpthread
 
 DEPEND = Core
 
