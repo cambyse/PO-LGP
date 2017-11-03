@@ -33,9 +33,12 @@ struct RAI_Machine::InternalState {
   lcmt_schunk_wsg_status wsg_state;
   bot_core::robot_state_t obj_state;
 
+
   Access<Msg_MotionReference> motionReference;
+  Access<double> gripperReference;
 
   Access<arr> currentQ;
+  Access<double> currentGripper;
   Access<mlr::Transformation> robotBase;
   Access<PerceptSimpleL> percepts_input;
   Access<double> timeToGo;
@@ -45,7 +48,9 @@ struct RAI_Machine::InternalState {
 
   InternalState()
     : motionReference("MotionReference"),
+      gripperReference("gripperReference"),
       currentQ("currentQ"),
+      currentGripper("currentGripper"),
       robotBase("robotBase"),
       percepts_input("percepts_input"),
       timeToGo("timeToGo"),
@@ -152,11 +157,14 @@ void RAI_Machine::DoCalcUnrestrictedUpdate(
   internal_state.wsg_state =
       this->EvalAbstractInput(context, input_port_wsg_status_)-> GetValue<lcmt_schunk_wsg_status>();
 
-  // publish current q (with gripper appended)
+  // publish current q
   arr q;
   copy(q, conv_stdvec2arr( internal_state.iiwa_state.joint_position ) );
-  q.append( .5*.001*internal_state.wsg_state.actual_position_mm );
+//  q.append( .5*.001*internal_state.wsg_state.actual_position_mm );
   internal_state.currentQ.set() = q;
+
+  // publish current gripper
+  internal_state.currentGripper.set() = .5*.001*internal_state.wsg_state.actual_position_mm;
 
   // receive the motion ref command
   if(internal_state.motionReference.hasNewRevision()){
@@ -164,6 +172,7 @@ void RAI_Machine::DoCalcUnrestrictedUpdate(
     internal_state.timeToGo.set() = internal_state.ref.tau.scalar() * (internal_state.ref.path.d0-1);
   }
 
+#if 0
   // read out gripper pose from current motion ref path
   if(internal_state.ref.path.d1 == q.N){
     double timeToGo = internal_state.timeToGo.get();
@@ -173,6 +182,12 @@ void RAI_Machine::DoCalcUnrestrictedUpdate(
     internal_state.refGrip = internal_state.ref.path(k,q.N-1) * 2.*1000.;
   }else{
     internal_state.refGrip = internal_state.wsg_state.actual_position_mm;
+  }
+#endif
+
+  // receive the gripper reference
+  if(internal_state.gripperReference.hasNewRevision()){
+    internal_state.refGrip = 2.*1000.*internal_state.gripperReference.get();
   }
 
   // publish the robot base pose

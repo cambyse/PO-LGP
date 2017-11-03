@@ -5,7 +5,6 @@
 
 double precision_transition = 20.;
 double precision_threshold = 0.25;
-double alpha = .2;
 
 //===============================================================================
 
@@ -23,7 +22,7 @@ void glDrawPercepts(void *P){
 
 //===============================================================================
 
-double PerceptSimple::fuse(PerceptSimple *other){
+double PerceptSimple::fuse(PerceptSimple *other, double alpha){
   precision += other->precision;
   pose.pos = (1.-alpha)*pose.pos + alpha*other->pose.pos;
   pose.rot.setInterpolate(alpha, pose.rot, other->pose.rot);
@@ -47,6 +46,7 @@ FilterSimple::FilterSimple(double dt)
     percepts_input(this, "percepts_input"),
     percepts_filtered(this, "percepts_filtered"),
     currentQ(this, "currentQ"),
+    currentGripper(this, "currentGripper"),
     switches(this, "switches"),
     timeToGo(this, "timeToGo"),
     robotBase(this, "robotBase"),
@@ -72,6 +72,9 @@ void FilterSimple::step(){
   mlr::Transformation base = robotBase.get();
 //  if(!base.isZero()) K["base"]->X = base;
 //  cout <<"BASE = " <<K["base"]->X <<endl;
+
+  //== gripper state
+  K["wsg_50_base_joint_gripper_left"]->joint->getQ() = currentGripper.get();
 
   //== joint state input
   arr q = currentQ.get();
@@ -129,7 +132,7 @@ void FilterSimple::step(){
   for(uint i=0;i<percepts_input().N;i++){
     PerceptSimple *p = percepts_input().elem(i);
     if(matchId(i)!=-1){ //fuse
-      percepts_filtered().elem(matchId(i))->fuse(p);
+      percepts_filtered().elem(matchId(i))->fuse(p, .8);
       delete p;
       percepts_input().elem(i) = NULL;
     }else{ //new

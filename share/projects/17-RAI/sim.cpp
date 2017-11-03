@@ -7,7 +7,10 @@
 KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
     ref(this, "MotionReference"),
     switches(this, "switches"),
+    gripper(this, "gripper"),
     currentQ(this, "currentQ"),
+    currentGripper(this, "currentGripper"),
+    jointNames(this, "jointNames"),
     robotBase(this, "robotBase"),
 //    nextQ(this, "nextQ"),
 //    world(this, "world"),
@@ -16,10 +19,11 @@ KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
 
     K = Access<mlr::KinematicWorld>("world").get();
 
-    reference.points = K.q;
-    reference.points.append( K.q );
-    reference.points.append( K.q );
-    reference.points.reshape(3, K.q.N );
+    arr q = K.getJointState(jointNames.get());
+    reference.points = q;
+    reference.points.append( q );
+    reference.points.append( q );
+    reference.points.reshape(3, q.N );
     reference.degree = 2;
     reference.setUniformNonperiodicBasis();
     log.open("z.KinSim");
@@ -32,7 +36,7 @@ KinSim::KinSim(double dt) : Thread("KinSim", dt), dt(dt),
       }
     }
 
-    currentQ.set() = K.q;
+    currentQ.set() = q;
 }
 
 void KinSim::step(){
@@ -44,9 +48,9 @@ void KinSim::step(){
   //check for path update
   if(ref.hasNewRevision()){
     ref.readAccess();
-    reference.points = K.getJointState();
+    reference.points = K.getJointState(jointNames.get());
     reference.points.append(ref().path);
-    reference.points.reshape(ref().path.d0+1, K.getJointStateDimension());
+    reference.points.reshape(ref().path.d0+1, ref().path.d1);
     reference.setUniformNonperiodicBasis();
     phase=0.;
     CHECK(ref().tau.N==1,"");
@@ -74,20 +78,28 @@ void KinSim::step(){
   }
   switches.deAccess();
 
+  //check for a gripper command
+  if(gripper.hasNewRevision()){
+    K["wsg_50_base_joint_gripper_left"]->joint->getQ() = gripper.get();
+  }
+
   //set the simulation's joint state
   arr q = reference.eval(phase);
-  K.setJointState(q);
-  currentQ.set() = K.getJointState();
+  K.setJointState(q, jointNames.get());
   K.gl().update();
-
   log <<q <<endl;
-
   //progress the reference tracking
   if(phase!=1.){
     phase += dt/planDuration;
     if(phase>1.) phase=1.;
     timeToGo.set() = planDuration*(1.-phase);
   }
+
+  //== outputs
+
+  //provide the q perception
+  currentQ.set() = K.getJointState(jointNames.get());
+  currentGripper.set() = K["wsg_50_base_joint_gripper_left"]->joint->getQ();
 
   //-- percept simulation
   PerceptSimpleL P;

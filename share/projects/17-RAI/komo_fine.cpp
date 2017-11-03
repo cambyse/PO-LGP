@@ -97,3 +97,55 @@ void KOMO_fineManip::setFinePlaceFixed(double time, const char *endeff, const ch
     setTask(time-.15, time+.05, new TaskMap_qItself(QIP_byJointNames, joints, K), OT_eq, NoArr, 1e1, 1);
 }
 
+void KOMO_fineManip::setIKGrasp(const char *endeff, const char *object){
+    mlr::KinematicWorld& K = world;
+
+    //height to grasp
+    double h = .5*shapeSize(world, object) -.02;
+    setTask(1.,1., new TaskMap_Default(posDiffTMT, K, endeff, NoVector, object), OT_eq, {0.,0.,h}, 1e2);
+
+    //anti-podal
+    setTask(1.,1., new TaskMap_Default(vecAlignTMT, K, endeff, Vector_y, object, Vector_x), OT_eq, NoArr, 1e1);
+    setTask(1.,1., new TaskMap_Default(vecAlignTMT, K, endeff, Vector_y, object, Vector_z), OT_eq, NoArr, 1e1);
+
+    //insideBox
+//    setTask(time-.1, time, new TaskMap_InsideBox(K, endeff, NoVector, object, .02), OT_ineq, NoArr, 1e2);
+
+    //vertical
+    setTask(1.,1., new TaskMap_Default(vecTMT, K, endeff, Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e0 );
+}
+
+void KOMO_fineManip::setIKPlaceFixed(const char *object, const mlr::Transformation& worldPose){
+    mlr::KinematicWorld& K = world;
+
+    setTask(1.,1., new TaskMap_Default(posDiffTMT, K, object), OT_eq, worldPose.pos.getArr(), 1e1);
+    Task *t = setTask(1.,1., new TaskMap_Default(quatDiffTMT, K, object), OT_eq, {}, 1e1);
+//    t->map->flipTargetSignOnNegScalarProduct=true;
+
+    //vertical
+//    setTask(time-.4, time, new TaskMap_Default(vecTMT, K, endeff, Vector_z), OT_sumOfSqr, {0.,0.,1.}, 1e2);
+
+}
+
+void KOMO_fineManip::setGoTo(const arr &q, const char* endeff, double up, double down){
+  mlr::KinematicWorld& K = world;
+
+  if(endeff){
+    arr profile(T, 3);
+    profile.setZero();
+
+    if(up>0.){
+      uint t0=up*T;
+      for(uint t=0;t<t0;t++) profile[t] = ARR(0.,0., .3*sin(.5*(double(t)/t0)*MLR_PI));
+      setTask(0., up, new TaskMap_Default(posDiffTMT, K, endeff), OT_eq, profile, 1e2, 1);
+    }
+
+    if(down>0.){
+      uint t0=down*T;
+      for(uint t=t0;t<T;t++) profile[t] = ARR(0.,0., -.3*sin((.5+.5*double(t-t0)/(T-t0))*MLR_PI));
+      setTask(down,1., new TaskMap_Default(posDiffTMT, K, endeff), OT_eq, profile, 1e2, 1);
+    }
+  }
+
+  setTask(1., 1., new TaskMap_qItself(), OT_eq, q, 1e1);
+}

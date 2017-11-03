@@ -21,7 +21,7 @@ struct PerceptSimple : GLDrawer{
   }
   virtual ~PerceptSimple(){}
 
-  virtual double fuse(PerceptSimple* other);
+  virtual double fuse(PerceptSimple* other, double alpha=.2);
   virtual void write(ostream& os) const;
   virtual void glDraw(OpenGL& gl);
   virtual PerceptSimple* newClone() const{ return new PerceptSimple(*this); }
@@ -40,6 +40,7 @@ struct FilterSimple : Thread{
   Access<PerceptSimpleL> percepts_input;
   Access<PerceptSimpleL> percepts_filtered;
   Access<arr> currentQ;
+  Access<double> currentGripper;
   Access<StringA> switches;
   Access<double> timeToGo;
   Access<mlr::Transformation> robotBase;

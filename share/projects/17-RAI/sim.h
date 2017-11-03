@@ -21,8 +21,11 @@ struct KinSim : Thread{
   //input
   Access<Msg_MotionReference> ref;
   Access<StringA> switches;
+  Access<double> gripper;
   //output
   Access<arr> currentQ;
+  Access<double> currentGripper;
+  Access<StringA> jointNames;
   Access<mlr::Transformation> robotBase;
 //  Access<arr> nextQ;
 //  Access<mlr::KinematicWorld> world;

@@ -17,6 +17,6 @@ LPATHS += $(DRAKE)/lib
 
 LIBS += -ldrake -lBulletCollision -lLinearMath -lfcl -lccd -loctomap -llcm -lglib-2.0 -lpthread -lnlopt -lprotobuf -lsdformat -lignition_math -ltinyxml -lfmt -lyaml_cpp -lz
 
-OPTIM=fast
+OPTIM = fast_debug
 
 include $(BASE)/build/generic.mk
