@@ -1,5 +1,5 @@
 Include = '../../data/keywords.g'
-Include = 'kin-stickHandover.g'
+#Include = 'kin-stickHandover.g'
 
 FOL_World{
   hasWait=false
@@ -77,7 +77,7 @@ DecisionRule handover {
 DecisionRule place {
   X, Y, Z,
   { (grasped X Y) (table Z) }
-  { (placed Y Z) (grasped X Y)! (free X) (held Y)! komoPlace(X Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
+  { (placed Y Z) (grasped X Y)! (free X) (held Y)! komoPlace(Y Z)=1. (INFEASIBLE grasp ANY Y)! block(INFEASIBLE grasp ANY Y)}
 }
 
 #####################################################################

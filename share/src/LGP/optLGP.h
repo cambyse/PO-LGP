@@ -27,14 +27,20 @@ struct OptLGP{
   MNodeL fringe_path;  //list of terminal nodes that have been seq tested
   MNodeL fringe_done;  //list of terminal nodes that have been path tested
 
+  //high-level
   OptLGP(mlr::KinematicWorld& kin, FOL_World& fol);
   ~OptLGP();
+
+  FOL_World& fol(){ return root->fol; }
+  const mlr::KinematicWorld& kin(){ return root->startKinematics; }
+
 
   //-- for methods called in the run loop
 private:
   MNode* getBest(MNodeL& fringe, uint level);
   MNode* popBest(MNodeL& fringe, uint level);
-  void expandBest();
+  MNode* getBest(){ return getBest(fringe_done, 3); }
+  MNode *expandBest(int stopOnLevel=-1);
   void optBestOnLevel(int level, MNodeL& fringe, MNodeL* addIfTerminal, MNodeL* addChildren);
   void optFirstOnLevel(int level, MNodeL& fringe, MNodeL* addIfTerminal);
   void clearFromInfeasibles(MNodeL& fringe);
@@ -42,13 +48,14 @@ public:
   void run(uint steps=10000);
   void init();
   void step();
+  void buildTree(uint depth);
 
   // output
   uint numFoundSolutions();
   mlr::String report(bool detailed=false);
   void initDisplay();
   void updateDisplay();
-  void renderToFile(uint i=3, const char* filePrefix="vid/z.path.");
+  void renderToVideo(uint level=3, const char* filePrefix="z.vid/z.path.");
 
   //-- kind of a gui:
   void printChoices();
@@ -58,6 +65,5 @@ public:
 
   void player(StringA cmds={});
 
-  void optFixedSequence(const mlr::String& seq);
-
+  void optFixedSequence(const mlr::String& seq, bool fullPathOnly=false, bool collisions=false);
 };

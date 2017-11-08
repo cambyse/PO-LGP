@@ -359,17 +359,25 @@ void mlr::Mesh::makeLineStrip(){
 }
 
 void mlr::Mesh::setSSCvx(const mlr::Mesh& m, double r, uint fineness){
-  Mesh ball;
-  ball.setSphere(fineness);
-  ball.scale(r);
+  if(r>0.){
+    Mesh ball;
+    ball.setSphere(fineness);
+    ball.scale(r);
 
-  clear();
-  for(uint i=0;i<m.V.d0;i++){
-    ball.translate(m.V(i,0), m.V(i,1), m.V(i,2));
-    addMesh(ball);
-    ball.translate(-m.V(i,0), -m.V(i,1), -m.V(i,2));
+    arr c=C;
+    clear();
+    for(uint i=0;i<m.V.d0;i++){
+      ball.translate(m.V(i,0), m.V(i,1), m.V(i,2));
+      addMesh(ball);
+      ball.translate(-m.V(i,0), -m.V(i,1), -m.V(i,2));
+    }
+    makeConvexHull();
+    C=c;
+  }else{
+    arr c=C;
+    operator=(m);
+    C=c;
   }
-  makeConvexHull();
 }
 
 
@@ -582,6 +590,8 @@ void mlr::Mesh::fuseNearVertices(double tol) {
   deleteUnusedVertices();
   
   cout <<"#V=" <<V.d0 <<", done" <<endl;
+
+  C.clear();
 }
 
 void getVertexNeighorsList(const mlr::Mesh& m, intA& Vt, intA& VT) {
@@ -1740,6 +1750,7 @@ void inertiaCylinder(double *I, double& mass, double density, double height, dou
 
 #ifdef MLR_extern_GJK
 GJK_point_type& NoPointType = *((GJK_point_type*)NULL);
+template<> const char* mlr::Enum<GJK_point_type>::names []={ "GJK_none", "GJK_vertex", "GJK_edge", "GJK_face", NULL };
 double GJK_sqrDistance(const mlr::Mesh& mesh1, const mlr::Mesh& mesh2,
                        const mlr::Transformation& t1, const mlr::Transformation& t2,
                        mlr::Vector& p1, mlr::Vector& p2,
@@ -2127,3 +2138,62 @@ ScalarFunction DistanceFunction_SSBox = [](arr& g, arr& H, const arr& x) -> doub
 
 
 
+
+uint mlr::Mesh::support(const arr &dir){
+  if(!graph.N){ //build graph
+      graph.resize(V.d0);
+      for(uint i=0;i<T.d0;i++){
+          graph(T(i,0)).setAppend(T(i,1));
+          graph(T(i,0)).setAppend(T(i,2));
+          graph(T(i,1)).setAppend(T(i,0));
+          graph(T(i,1)).setAppend(T(i,2));
+          graph(T(i,2)).setAppend(T(i,0));
+          graph(T(i,2)).setAppend(T(i,1));
+      }
+  }
+
+  arr q(V.d0);
+  for(uint i=0;i<V.d0;i++) q(i) = scalarProduct(dir, V[i]);
+  return argmax(q);
+
+#if 0
+  uint v=0;
+  arr q;
+  double ma = scalarProduct(dir, V[v]);
+  for(;;){
+      //comput scalar product for all neighbors
+      uintA &neigh=graph(v);
+      q.resize(neigh.N);
+      for(uint i=0;i<neigh.N;i++) q(i) = scalarProduct(dir, V[neigh(i)]);
+      uint bestNeighbor = argmax(q);
+      if(q(bestNeighbor)>ma){
+          v = neigh(bestNeighbor);
+          ma = q(bestNeighbor);
+      }else{
+          return v;
+      }
+  }
+  return -1;
+#endif
+}
+
+void mlr::Mesh::supportMargin(uintA &verts, const arr &dir, double margin, int initialization){
+  if(initialization<0 || !graph.N) initialization=support(dir);
+
+  arr p = V[initialization];
+  double max = scalarProduct(p, dir);
+
+  boolA done(V.d0); done=false;
+  uintA queue = { (uint) initialization };
+  verts.clear();
+
+  for(;queue.N;){
+      uint i = queue.popFirst();
+      if(done(i)) continue;
+      done(i) = true;
+      if(scalarProduct(V[i], dir)>=max-margin){
+          verts.append(i);
+          for(uint j : graph(i)) if(!done(j)) queue.append(j);
+      }
+  }
+}

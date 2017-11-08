@@ -7,7 +7,7 @@ typedef std::function<int(const SignalerL&, const intA&, int whoChanged)> EventF
 struct Act_Event : Act{
   const SignalerL signalers;
   EventFunction event;
-  intA statuses;
+  intA signalersStates;
 
   Act_Event(Roopi *r, const SignalerL& signalers, const EventFunction& eventFct);
   ~Act_Event();

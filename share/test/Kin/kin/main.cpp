@@ -1,4 +1,5 @@
 #include <Kin/kin.h>
+#include <Kin/frame.h>
 #include <Kin/kin_swift.h>
 #include <Kin/kin_ode.h>
 #include <Algo/spline.h>
@@ -33,12 +34,12 @@ void TEST(LoadSave){
 void testJacobianInFile(const char* filename, const char* shape){
   mlr::KinematicWorld K(filename);
 
-  mlr::Shape *sh=K.getShapeByName(shape);
+  mlr::Frame *a=K.getFrameByName(shape);
 
-  VectorFunction f = ( [&sh, &K](arr& y, arr& J, const arr& x) -> void
+  VectorFunction f = ( [&a, &K](arr& y, arr& J, const arr& x) -> void
   {
     K.setJointState(x);
-    K.kinematicsPos(y, J, sh->body, NoVector);
+    K.kinematicsPos(y, J, a, NoVector);
     if(&J) cout <<"J=" <<J <<endl;
   } );
 
@@ -56,21 +57,21 @@ void TEST(Kinematics){
 
   struct MyFct : VectorFunction{
     enum Mode {Pos, Vec, Quat, RelPos, RelVec, RelRot} mode;
-    mlr::KinematicWorld& W;
-    mlr::Body *b, *b2;
+    mlr::KinematicWorld& K;
+    mlr::Frame *b, *b2;
     mlr::Vector &vec, &vec2;
-    MyFct(Mode _mode, mlr::KinematicWorld &_W,
-          mlr::Body *_b, mlr::Vector &_vec, mlr::Body *_b2, mlr::Vector &_vec2)
-      : mode(_mode), W(_W), b(_b), b2(_b2), vec(_vec), vec2(_vec2){
+    MyFct(Mode _mode, mlr::KinematicWorld &_K,
+          mlr::Frame *_b, mlr::Vector &_vec, mlr::Frame *_b2, mlr::Vector &_vec2)
+      : mode(_mode), K(_K), b(_b), b2(_b2), vec(_vec), vec2(_vec2){
       VectorFunction::operator= ( [this](arr& y, arr& J, const arr& x) -> void{
-        W.setJointState(x);
+        K.setJointState(x);
         switch(mode){
-          case Pos:    W.kinematicsPos(y,J,b,vec); break;
-          case Vec:    W.kinematicsVec(y,J,b,vec); break;
-          case Quat:   W.kinematicsQuat(y,J,b); break;
-          case RelPos: W.kinematicsRelPos(y,J,b,vec,b2,vec2); break;
-          case RelVec: W.kinematicsRelVec(y,J,b,vec,b2); break;
-          case RelRot: W.kinematicsRelRot(y,J,b,b2); break;
+          case Pos:    K.kinematicsPos(y,J,b,vec); break;
+          case Vec:    K.kinematicsVec(y,J,b,vec); break;
+          case Quat:   K.kinematicsQuat(y,J,b); break;
+          case RelPos: K.kinematicsRelPos(y,J,b,vec,b2,vec2); break;
+          case RelVec: K.kinematicsRelVec(y,J,b,vec,b2); break;
+          case RelRot: K.kinematicsRelRot(y,J,b,b2); break;
         }
         //if(&J) cout <<"\nJ=" <<J <<endl;
       } );
@@ -85,9 +86,9 @@ void TEST(Kinematics){
 //  G.watch(true);
 
   for(uint k=0;k<10;k++){
-    mlr::Body *b = G.bodies.rndElem();
-    mlr::Body *b2 = G.bodies.rndElem();
-    mlr::Vector vec, vec2;
+    mlr::Frame *b = G.frames.rndElem();
+    mlr::Frame *b2 = G.frames.rndElem();
+    mlr::Vector vec=0, vec2=0;
     vec.setRandom();
     vec2.setRandom();
     arr x(G.getJointStateDimension());
@@ -106,6 +107,37 @@ void TEST(Kinematics){
 
 //===========================================================================
 //
+// Graph export test
+//
+
+void TEST(Graph){
+
+
+//  mlr::KinematicWorld G("arm7.g");
+//  mlr::KinematicWorld K("kinematicTests.g");
+  mlr::KinematicWorld K("../../../data/pr2_model/pr2_model.ors");
+//  mlr::KinematicWorld G("../../../projects/17-LGP-push/quatJacTest.g");
+//  G.watch(true);
+
+  K.prefixNames();
+  {
+    Graph G = K.getGraph();
+    G.displayDot();
+    mlr::wait(.5);
+  }
+
+  K.optimizeTree();
+  {
+    Graph G = K.getGraph();
+    G.displayDot();
+    mlr::wait(.5);
+  }
+
+}
+
+
+//===========================================================================
+//
 // Jacobian test
 //
 
@@ -116,13 +148,14 @@ void TEST(QuaternionKinematics){
   for(uint k=0;k<3;k++){
     mlr::Quaternion target;
     target.setRandom();
-    G.getShapeByName("ref")->rel.rot = target;
-    G.getShapeByName("marker")->rel.rot = target;
+    G.getFrameByName("ref")->Q.rot = target;
+    G.getFrameByName("marker")->Q.rot = target;
+    mlr::Frame *endeff = G.getFrameByName("endeff");
     arr x;
     G.getJointState(x);
     for(uint t=0;t<100;t++){
       arr y,J;
-      G.kinematicsQuat(y, J, G.bodies.last());  //get the new endeffector position
+      G.kinematicsQuat(y, J, endeff);  //get the new endeffector position
       arr Jinv = pseudoInverse(J, NoArr, 1e-4); //~J*inverse_SymPosDef(J*~J);
       if(scalarProduct(conv_quat2arr(target),y)<0.) target.flipSign();
       x += 0.05 * Jinv * (conv_quat2arr(target)-y);                  //simulate a time step (only kinematically)
@@ -152,7 +185,7 @@ void TEST(Copy){
   g1.readRaw(FILE("z.1"));
   g2.readRaw(FILE("z.2"));
 
-  CHECK_EQ(g1,g2,"copy operator failed!")
+  CHECK_EQ(g1, g2, "copy operator failed!")
   cout <<"** copy operator success" <<endl;
 }
 
@@ -164,15 +197,15 @@ void TEST(Copy){
 void TEST(KinematicSpeed){
 #define NUM 100000
 #if 1
-  //mlr::KinematicWorld G("kinematicTests.g");
-  mlr::KinematicWorld G("../../../data/pr2_model/pr2_model.ors");
-  G.makeLinkTree();
-  uint n=G.getJointStateDimension();
+//  mlr::KinematicWorld K("kinematicTests.g");
+  mlr::KinematicWorld K("../../../data/pr2_model/pr2_model.ors");
+  K.optimizeTree();
+  uint n=K.getJointStateDimension();
   arr x(n);
   mlr::timerStart();
   for(uint k=0;k<NUM;k++){
     rndUniform(x,-.5,.5,false);
-    G.setJointState(x);
+    K.setJointState(x);
 //    G.watch();
 //    mlr::wait(.1);
   }
@@ -266,24 +299,6 @@ void TEST(Limits){
 }
 
 //===========================================================================
-
-void TEST(JointGroups){
-  mlr::KinematicWorld G("testGroups.g");
-
-  for(uint k=0;k<2;k++){
-    cout <<"Agent 0" <<endl;
-    G.setAgent(0);
-    int key=animateConfiguration(G);
-    if(key==27 || key=='q') break;
-    cout <<"Agent 1" <<endl;
-    G.setAgent(1);
-    key=animateConfiguration(G);
-    if(key==27 || key=='q') break;
-  }
-
-}
-
-//===========================================================================
 //
 // set state test
 //
@@ -360,15 +375,15 @@ void TEST(FollowRedundantSequence){
   uint t,T,n=G.getJointStateDimension();
   arr x(n),y,J,invJ;
   x=.8;     //initialize with intermediate joint positions (non-singular positions)
-  mlr::Vector rel = G.getShapeByName("endeff")->rel.pos; //this frame describes the relative position of the endeffector wrt. 7th body
+  mlr::Vector rel = G.getFrameByName("endeff")->Q.pos; //this frame describes the relative position of the endeffector wrt. 7th body
 
   //-- generate a random endeffector trajectory
-  arr Z,Zt; //desired and true endeffector trajectories
+  arr Z, Zt; //desired and true endeffector trajectories
   generateSequence(Z, 200, 3); //3D random sequence with limits [-1,1]
   Z *= .8;
   T=Z.d0;
   G.setJointState(x);
-  mlr::Body *endeff = G.getBodyByName("arm7");
+  mlr::Frame *endeff = G.getFrameByName("arm7");
   G.kinematicsPos(y, NoArr, endeff, rel);
   for(t=0;t<T;t++) Z[t]() += y; //adjust coordinates to be inside the arm range
   plotLine(Z);
@@ -407,21 +422,23 @@ void TEST(FollowRedundantSequence){
 //---------- test standard dynamic control
 void TEST(Dynamics){
   mlr::KinematicWorld G("arm7.g");
-//  G.makeLinkTree();
+  G.optimizeTree();
+  G.fwdIndexIDs();
   cout <<G <<endl;
 
   arr u;
   bool friction=false;
-  VectorFunction diffEqn = [&G,&u,&friction](arr& y,arr&,const arr& x){
+  VectorFunction diffEqn = [&G,&u,&friction](arr& y, arr&, const arr& x){
+    checkNan(x);
     G.setJointState(x[0], x[1]);
     if(!u.N) u.resize(x.d1).setZero();
-    if(friction) u = -10. * x[1];
-    G.clearForces();
-    G.gravityToForces();
+    if(friction) u = -1e-0 * x[1];
+    checkNan(u);
     /*if(T2::addContactsToDynamics){
         G.contactsToForces(100.,10.);
       }*/
-    G.fwdDynamics(y, x[1], u);
+    G.fwdDynamics(y, x[1], u, true);
+    checkNan(y);
   };
   
   uint t,T=720,n=G.getJointStateDimension();
@@ -444,7 +461,7 @@ void TEST(Dynamics){
       //G.clearForces();
       //G.gravityToForces();
       G.fwdDynamics(qdd, qd, u);
-      CHECK(maxDiff(qdd,qdd_,0)<1e-5,"dynamics and inverse dynamics inconsistent");
+      CHECK(maxDiff(qdd,qdd_,0)<1e-5,"dynamics and inverse dynamics inconsistent:\n" <<qdd <<'\n' <<qdd_);
       //cout <<q <<qd <<qdd <<endl;
       cout <<"test dynamics: fwd-inv error =" <<maxDiff(qdd,qdd_,0) <<endl;
       q  += .5*dt*qd;
@@ -455,7 +472,7 @@ void TEST(Dynamics){
       G.gl().text.clear() <<"t=" <<t <<"  torque controlled damping (acc = - vel)\n(checking consistency of forward and inverse dynamics),  energy=" <<G.getEnergy();
     }else{
       //cout <<q <<qd <<qdd <<' ' <<G.getEnergy() <<endl;
-      arr x=cat(q,qd).reshape(2,q.N);
+      arr x=cat(q, qd).reshape(2, q.N);
       mlr::rk4_2ndOrder(x, x, diffEqn, dt);
       q=x[0]; qd=x[1];
       if(t>300){
@@ -570,8 +587,8 @@ void TEST(InverseKinematics) {
   // reachable to check if the IK handle it
   mlr::KinematicWorld world("drawer.g");
 
-  mlr::Body* drawer = world.getBodyByName("cabinet_drawer");
-  mlr::Body* marker = world.getBodyByName("marker");
+  mlr::Frame* drawer = world.getFrameByName("cabinet_drawer");
+  mlr::Frame* marker = world.getFrameByName("marker");
   arr destination = conv_vec2arr(marker->X.pos);
 
   cout << "destination: " << destination << endl;
@@ -607,6 +624,7 @@ int MAIN(int argc,char **argv){
 
   testLoadSave();
   testCopy();
+  testGraph();
   testPlayStateSequence();
   testKinematics();
   testQuaternionKinematics();
@@ -616,7 +634,6 @@ int MAIN(int argc,char **argv){
   testDynamics();
   testContacts();
   testLimits();
-  testJointGroups();
 #ifdef MLR_ODE
 //  testMeshShapesInOde();
   testPlayTorqueSequenceInOde();

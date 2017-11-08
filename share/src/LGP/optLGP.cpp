@@ -5,6 +5,7 @@
 
 OptLGP::OptLGP(mlr::KinematicWorld &kin, FOL_World &fol)
     : verbose(3), numSteps(0), fil("z.optLGP.dat"){
+  verbose = mlr::getParameter<int>("LGP/vebose", 3);
   root = new MNode(kin, fol, 4);
   displayFocus = root;
 //  threadOpenModules(true);
@@ -12,23 +13,27 @@ OptLGP::OptLGP(mlr::KinematicWorld &kin, FOL_World &fol)
 
 OptLGP::~OptLGP(){
     views.clear();
+    delete root;
+    root=NULL;
 }
 
 void OptLGP::initDisplay(){
     if(!views.N){
         views.resize(4);
-        views(1) = make_shared<OrsPathViewer>("pose", 1., -0);
+        views(1) = make_shared<OrsPathViewer>("pose", 1., -1);
         views(2) = make_shared<OrsPathViewer>("sequence", 1., -0);
         views(3) = make_shared<OrsPathViewer>("path", .1, -1);
-        int r=system("evince z.pdf &");
-        if(r) LOG(-1) <<"could not startup evince";
+        if(mlr::getParameter<bool>("LGP/displayTree", 1)){
+          int r=system("evince z.pdf &");
+          if(r) LOG(-1) <<"could not startup evince";
+        }
         for(auto& v:views) if(v) v->copy.orsDrawJoints=v->copy.orsDrawMarkers=v->copy.orsDrawProxies=false;
     }
 }
 
-void OptLGP::renderToFile(uint i, const char* filePrefix){
-    CHECK(displayFocus->komoProblem(i) && displayFocus->komoProblem(i)->configurations.N, "level " <<i <<" has not been computed for the current 'displayFocus'");
-    renderConfigurations(displayFocus->komoProblem(i)->configurations, filePrefix, -2, 600, 600);
+void OptLGP::renderToVideo(uint level, const char* filePrefix){
+    CHECK(displayFocus->komoProblem(level) && displayFocus->komoProblem(level)->configurations.N, "level " <<level <<" has not been computed for the current 'displayFocus'");
+    renderConfigurations(displayFocus->komoProblem(level)->configurations, filePrefix, -2, 600, 600, &views(3)->copy.gl().camera);
 }
 
 void OptLGP::updateDisplay(){
@@ -132,7 +137,7 @@ void OptLGP::player(StringA cmds){
     }
 }
 
-void OptLGP::optFixedSequence(const mlr::String& seq){
+void OptLGP::optFixedSequence(const mlr::String& seq, bool fullPathOnly, bool collisions){
     Graph& tmp = root->fol.KB.newSubgraph({"TMP"},{})->value;
     mlr::String tmpseq(seq);
     tmp.read(tmpseq);
@@ -144,7 +149,7 @@ void OptLGP::optFixedSequence(const mlr::String& seq){
     MNode *node = root;
 
     for(Node *actionLiteral:tmp){
-        node->optLevel(1); //optimize poses along the path
+        if(!fullPathOnly) node->optLevel(1); //optimize poses along the path
         node->expand();
         MNode *next = node->getChildByAction(actionLiteral);
         if(!next) LOG(-2) <<"action '" <<*actionLiteral <<"' is not a child of '" <<*node <<"'";
@@ -153,9 +158,9 @@ void OptLGP::optFixedSequence(const mlr::String& seq){
         node = next;
     }
 
-    node->optLevel(1);
-    node->optLevel(2);
-    node->optLevel(3);
+    if(!fullPathOnly) node->optLevel(1);
+    if(!fullPathOnly) node->optLevel(2);
+    node->optLevel(3, collisions);
 
     displayFocus = node;
     updateDisplay();
@@ -203,9 +208,12 @@ MNode *OptLGP::popBest(MNodeL &fringe, uint level){
     return best;
 }
 
-void OptLGP::expandBest(){ //expand
-    MNode *n =  popBest(fringe_expand, 0);
+MNode *OptLGP::expandBest(int stopOnDepth){ //expand
+//    MNode *n =  popBest(fringe_expand, 0);
+    MNode *n =  fringe_expand.popFirst();
+
     CHECK(n,"");
+    if(stopOnDepth>0 && n->step>(uint)stopOnDepth) return NULL;
     n->expand();
     for(MNode* ch:n->children){
         if(ch->isTerminal){
@@ -217,6 +225,7 @@ void OptLGP::expandBest(){ //expand
         }
         if(n->count(1)) fringe_pose.append(ch);
     }
+    return n;
 }
 
 void OptLGP::optBestOnLevel(int level, MNodeL &fringe, MNodeL *addIfTerminal, MNodeL *addChildren){ //optimize a seq
@@ -316,6 +325,25 @@ void OptLGP::step(){
     numSteps++;
 }
 
+void OptLGP::buildTree(uint depth){
+    init();
+
+    mlr::timerRead(true);
+    for(uint k=0;;k++){
+        MNode *b = expandBest(depth);
+        if(!b) return;
+
+        if(verbose>0){
+            mlr::String out=report();
+            fil <<out <<endl;
+            if(verbose>1) cout <<out <<endl;
+//            if(verbose>2) updateDisplay();
+        }
+//        if(!(k%1000)) cout <<" #= " <<k <<" d= " <<b->step <<' ' <<mlr::timerRead(true) <<endl;
+//        mlr::wait();
+    }
+}
+
 void OptLGP::init(){
     fringe_expand.append(root);
     fringe_pose.append(root);
@@ -337,7 +365,7 @@ void OptLGP::run(uint steps){
     if(verbose>0) report(true);
 
     //this generates the movie!
-    if(verbose>2) renderToFile();
+    if(verbose>2) renderToVideo();
 
     if(verbose>2) views.clear();
 }

@@ -88,6 +88,7 @@ void glDrawDiamond(float dx, float dy, float dz);
 void glDrawDiamond(float x, float y, float z, float dx, float dy, float dz);
 void glDrawSphere(float radius);
 void glDrawDisk(float radius);
+void glDrawProxy(const arr& p1, const arr& p2, double diskSize=.02, int colorCode=0);
 void glDrawCylinder(float radius, float length, bool closed=true);
 void glDrawCappedCylinder(float radius, float length);
 void glDrawAxis();
@@ -180,12 +181,14 @@ struct OpenGL {
   void addInit(void (*call)(void*), void* classP=NULL);
   void add(GLDrawer& c){ dataLock.writeLock(); drawers.append(&c); dataLock.unlock(); }
   void addDrawer(GLDrawer *c){ dataLock.writeLock(); drawers.append(c); dataLock.unlock(); }
-  void remove(void (*call)(void*), const void* classP=0);
+  void remove(GLDrawer& c){ dataLock.writeLock(); drawers.removeValue(&c); dataLock.unlock(); }
   //template<class T> void add(const T& x) { add(x.staticDraw, &x); } ///< add a class or struct with a staticDraw routine
   void addHoverCall(GLHoverCall *c){ hoverCalls.append(c); }
   void addClickCall(GLClickCall *c){ clickCalls.append(c); }
   void addKeyCall(GLKeyCall *c){ keyCalls.append(c); }
   void addView(uint view, void (*call)(void*), void* classP=0);
+  void addSubView(uint view, GLDrawer& c);
+  void setSubViewTiles(uint cols, uint rows);
   void setViewPort(uint view, double l, double r, double b, double t);
   
   /// @name the core draw routines (actually only for internal use)
@@ -199,7 +202,7 @@ struct OpenGL {
   int timedupdate(double sec);
   void resize(int w, int h);
   void setClearColors(float r, float g, float b, float a);
-  void unproject(double &x, double &y, double &z, bool resetCamera=false);
+  void unproject(double &x, double &y, double &z, bool resetCamera=false, int subView=-1);
   
   /// @name info & I/O
   void reportSelection();

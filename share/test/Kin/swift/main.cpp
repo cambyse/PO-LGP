@@ -1,6 +1,7 @@
 #include <Kin/kin.h>
 #include <Kin/kin_swift.h>
 #include <Gui/opengl.h>
+#include <Kin/frame.h>
 
 void TEST(Swift) {
   mlr::KinematicWorld G("swift_test.g");
@@ -10,8 +11,8 @@ void TEST(Swift) {
 
   uint t;
   for(t=0;t<50;t++){
-    G.bodies(0)->X.addRelativeTranslation(0,0,-.01);
-    G.bodies(0)->X.addRelativeRotationDeg(10,1,0,0);
+    G.frames(0)->X.addRelativeTranslation(0,0,-.01);
+    G.frames(0)->X.addRelativeRotationDeg(10,1,0,0);
     G.calc_fwdPropagateFrames();
 
     G.stepSwift();

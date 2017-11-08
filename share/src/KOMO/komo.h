@@ -69,6 +69,7 @@ struct KOMO{
 
   //-- higher-level defaults
   void setConfigFromFile();
+  void setIKOpt();
   void setPoseOpt();
   void setSequenceOpt(double _phases);
   void setPathOpt(double _phases, uint stepsPerPhase=20, double timePerPhase=5.);
@@ -78,6 +79,7 @@ struct KOMO{
    * Typically, the user does not call them directly, but uses the many methods below
    * Think of all of the below as examples for how to set arbirary tasks/switches yourself */
   struct Task* setTask(double startTime, double endTime, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2, uint order=0);
+  void setKinematicSwitch(double time, bool before, mlr::KinematicSwitch* sw);
   void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
 
   //===========================================================================
@@ -89,8 +91,8 @@ struct KOMO{
   void setHoming(double startTime=-1., double endTime=-1., double prec=1e-1);
   void setSquaredQAccelerations(double startTime=-1., double endTime=-1., double prec=1.);
   void setSquaredQVelocities(double startTime=-1., double endTime=-1., double prec=1.);
-  void setFixEffectiveJoints(double startTime=-1., double endTime=-1., double prec=1e2);
-  void setFixSwitchedObjects(double startTime=-1., double endTime=-1., double prec=1e2);
+  void setFixEffectiveJoints(double startTime=-1., double endTime=-1., double prec=1e3);
+  void setFixSwitchedObjects(double startTime=-1., double endTime=-1., double prec=1e3);
   void setSquaredQuaternionNorms(double startTime=-1., double endTime=-1., double prec=1e1);
 
   //-- tasks (tasks) mid-level
@@ -103,7 +105,7 @@ struct KOMO{
   void setLastTaskToBeVelocity();
   void setCollisions(bool hardConstraint, double margin=.05, double prec=1.);
   void setLimits(bool hardConstraint, double margin=.05, double prec=1.);
-  void setSlowAround(double time, double delta, double prec=10.);
+  void setSlowAround(double time, double delta, double prec=10., bool hardConstrained=false);
 
   //-- kinematic switches mid-level
   void setKS_placeOn(double time, bool before, const char* obj, const char* table, bool actuated=false);
@@ -116,11 +118,18 @@ struct KOMO{
 
   //-- tasks (cost/constraint terms) high-level (rough, for LGP)
   void setGrasp(double time, const char* endeffRef, const char* object, int verbose=0, double weightFromTop=1e1, double timeToLift=.15);
-  void setPlace(double time, const char* endeffRef, const char* object, const char* placeRef, int verbose=0);
+  void setPlace(double time, const char *endeff, const char* object, const char* placeRef, int verbose=0);
+  void setGraspStick(double time, const char* endeffRef, const char* object, int verbose=0, double weightFromTop=1e1, double timeToLift=.15);
   void setPlaceFixed(double time, const char* endeffRef, const char* object, const char* placeRef, const mlr::Transformation& worldPose, int verbose=0);
   void setGraspSlide(double startTime, double endTime, const char* endeffRef, const char* object, const char* placeRef, int verbose=0, double weightFromTop=1e1);
   void setHandover(double time, const char* endeffRef, const char* object, const char* prevHolder, int verbose=0);
   void setPush(double startTime, double endTime, const char* stick, const char* object, const char* table, int verbose=0);
+  void setSlide(double time, const char* stick, const char* object, const char* placeRef, int verbose=0);
+  void setSlideAlong(double time, const char *strick,  const char* object, const char* wall, int verbose=0);
+  void setDrop(double time, const char* object, const char* from, const char* to, int verbose=0);
+  void setDropEdge(double time, const char* object, const char* to, int verbose=0);
+
+
   void setAttach(double time, const char* endeff, const char* object1, const char* object2, mlr::Transformation& rel, int verbose=0);
 
   //-- tasks high-level, fine (for real world execution)
@@ -134,8 +143,8 @@ struct KOMO{
 
   //-- deprecated
   void setMoveTo(mlr::KinematicWorld& world, //in initial state
-                 mlr::Shape& endeff,         //endeffector to be moved
-                 mlr::Shape &target,         //target shape
+                 mlr::Frame& endeff,         //endeffector to be moved
+                 mlr::Frame& target,         //target shape
                  byte whichAxesToAlign=0);   //bit coded options to align axes
 
   //===========================================================================
@@ -147,11 +156,13 @@ struct KOMO{
   void setSpline(uint splineT);   ///< optimize B-spline nodes instead of the path; splineT specifies the time steps per node
   void reset();                   ///< reset the optimizer (initializes x to a default path)
   void run();                     ///< run the optimization (using OptConstrained -- its parameters are read from the cfg file)
+  arr getPath(const StringA& joints);
+  void reportProblem(ostream &os=std::cout);
   Graph getReport(bool gnuplt=false, int reportFeatures=0, ostream& featuresOs=std::cout); ///< return a 'dictionary' summarizing the optimization results (optional: gnuplot task costs; output detailed cost features per time slice)
   void reportProxies(ostream& os=std::cout); ///< report the proxies (collisions) for each time slice
   void checkGradients();          ///< checks all gradients numerically
+  void plotTrajectory();
   bool displayTrajectory(double delay=0.01, bool watch=false); ///< display the
-  bool displayTrajectory2(double delay);
   mlr::Camera& displayCamera();   ///< access to the display camera to change the view
 
   //===========================================================================
@@ -167,12 +178,12 @@ struct KOMO{
   uint dim_x(uint t) { return configurations(t+k_order)->getJointStateDimension(); }
 
   struct Conv_MotionProblem_KOMO_Problem : KOMO_Problem{
-    KOMO& MP;
+    KOMO& komo;
     uint dimPhi;
 
-    Conv_MotionProblem_KOMO_Problem(KOMO& P) : MP(P){}
+    Conv_MotionProblem_KOMO_Problem(KOMO& _komo) : komo(_komo){}
 
-    virtual uint get_k(){ return MP.k_order; }
+    virtual uint get_k(){ return komo.k_order; }
     virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, ObjectiveTypeA& featureTypes);
     virtual void phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x);
   } komo_problem;
@@ -182,8 +193,8 @@ struct KOMO{
 //===========================================================================
 
 inline arr finalPoseTo(mlr::KinematicWorld& world,
-                       mlr::Shape &endeff,
-                       mlr::Shape& target,
+                       mlr::Frame& endeff,
+                       mlr::Frame& target,
                        byte whichAxesToAlign=0,
                        uint iterate=1){
   KOMO komo(world);

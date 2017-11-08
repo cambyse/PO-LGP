@@ -47,6 +47,7 @@ struct Node {
   StringA keys;
   NodeL parents;
   NodeL parentOf;
+  uint numChildren=0;
   uint index;
 
   Node(const std::type_info& _type, void *_value_ptr, Graph& _container);
@@ -54,6 +55,8 @@ struct Node {
   virtual ~Node();
 
   void addParent(Node *p);
+  void removeParent(Node *p);
+  void swapParent(uint i, Node *p);
 
   //-- get value
   template<class T> bool isOfType() const{ return type==typeid(T); }
@@ -62,6 +65,7 @@ struct Node {
   template<class T> std::shared_ptr<T> getPtr() const;  ///< query whether node type is equal to (or derived from) shared_ptr<T>, return the shared_ptr if so
   template<class T> T& get(){ T *x=getValue<T>(); CHECK(x, "this node is not of type '" <<typeid(T).name() <<"' but type '" <<type.name() <<"'"); return *x; }
   template<class T> const T& get() const{ const T *x=getValue<T>(); CHECK(x, "this node is not of type '" <<typeid(T).name() <<"' but type '" <<type.name() <<"'"); return *x; }
+  template<class T> bool getFromString(T& x) const;
   Graph& graph() { return get<Graph>(); }
   const Graph& graph() const { return get<Graph>(); }
   bool isBoolAndTrue() const{ if(type!=typeid(bool)) return false; return *((bool*)value_ptr) == true; }
@@ -86,13 +90,13 @@ stdOutPipe(Node)
 
 struct Graph : NodeL {
   Node *isNodeOfGraph; ///< THIS is a subgraph of another graph; isNodeOfGraph points to the node that equals THIS graph
+  bool isIndexed=true;
+  bool isDoubleLinked=true;
 
   GraphEditCallbackL callbacks; ///< list of callbacks that are informed about creation and destruction of nodes
 
   ArrayG<ParseInfo> *pi;     ///< optional annotation of nodes: when detailed file parsing is enabled
-//  ArrayG<RenderingInfo> *ri; ///< optional annotation of nodes: dot style commands
-  ArrayG<RenderingInfo> *ri;
-//  mlr::Array<RenderingInfo> ri; ///< optional annotation of nodes: dot style commands
+  ArrayG<RenderingInfo> *ri; ///< optional annotation of nodes: dot style commands
 
   //-- constructors
   Graph();                                               ///< empty graph
@@ -141,6 +145,7 @@ struct Graph : NodeL {
   NodeL getNodesOfDegree(uint deg);
   template<class T> NodeL getNodesOfType(){ return findNodesOfType(typeid(T)); }
   template<class T> NodeL getNodesOfType(const char* key){ return findNodesOfType(typeid(T), {key}); }
+  NodeL getAllNodesRecursively() const;
 
   //-- get values directly
   template<class T> T* find(const char *key)     const { Node *n = findNodeOfType(typeid(T), {key}); if(!n) return NULL;  return n->getValue<T>(); }
@@ -148,8 +153,8 @@ struct Graph : NodeL {
   template<class T> T& get(const char *key) const;
   template<class T> T& get(const StringA &keys) const;
   template<class T> const T& get(const char *key, const T& defaultValue) const;
-  template<class T> bool get(T& x, const char *key)     const { Node *n = findNodeOfType(typeid(T), {key}); if(!n) return false;  x=n->get<T>();  return true; }
-  template<class T> bool get(T& x, const StringA &keys) const { Node *n = findNodeOfType(typeid(T), keys);  if(!n) return false;  x=n->get<T>();  return true; }
+  template<class T> bool get(T& x, const char *key)     const { return get<T>(x, StringA({key})); }
+  template<class T> bool get(T& x, const StringA &keys) const;
 
   //-- get lists of all values of a certain type T (or derived from T)
   template<class T> mlr::Array<T*> getValuesOfType(const char* key=NULL);
@@ -297,7 +302,7 @@ extern Singleton<Graph> registry;
 // are registered
 template<class T>
 struct Type_typed_readable:Type_typed<T> {
-  virtual Node* readIntoNewNode(Graph& container, std::istream& is) const { Node_typed<T> *n = container.newNode<T>(T()); is >>n->value; return n; }
+  virtual Node* readIntoNewNode(Graph& container, std::istream& is) const { Node_typed<T> *n = container.newNode<T>(T(0)); is >>n->value; return n; }
 };
 
 typedef mlr::Array<std::shared_ptr<Type> > TypeInfoL;
@@ -405,6 +410,14 @@ template<class T> std::shared_ptr<T> Node::getPtr() const {
 //  return typed->value;
 }
 
+template<class T> bool Node::getFromString(T& x) const{
+  if(!isOfType<mlr::String>()) return false;
+  mlr::String str = get<mlr::String>();
+  str >>x;
+  if(str.stream().good()) return true;
+  return false;
+}
+
 template<class T> Nod::Nod(const char* key, const T& x){
   n = G.newNode<T>(x);
   n->keys.append(STRING(key));
@@ -432,6 +445,17 @@ template<class T> const T& Graph::get(const char *key, const T& defaultValue) co
   Node *n = findNodeOfType(typeid(T), {key});
   if(!n) return defaultValue;
   return n->get<T>();
+}
+
+template<class T> bool Graph::get(T& x, const StringA &keys) const {
+  Node *n = findNodeOfType(typeid(T), keys);
+  if(!n){
+    n = findNodeOfType(typeid(mlr::String), keys);
+    if(!n) return false;
+    return n->getFromString<T>(x);
+  }
+  x=n->get<T>();
+  return true;
 }
 
 template<class T> mlr::Array<T*> Graph::getValuesOfType(const char* key) {

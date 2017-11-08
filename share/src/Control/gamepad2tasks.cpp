@@ -18,6 +18,7 @@
 #include "gamepad2tasks.h"
 #include <Kin/taskMaps.h>
 #include <Hardware/gamepad/gamepad.h>
+#include <Kin/frame.h>
 
 Gamepad2Tasks::Gamepad2Tasks(TaskControlMethods& _TC, const mlr::KinematicWorld& K, const arr& _q0)
   : TC(_TC), q0(_q0),
@@ -141,7 +142,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, const mlr::KinematicWorld& K)
       mlr::Vector vel(gamepadLeftRight, gamepadForwardBack, gamepadUpDown);
       if(sel==down){
         vel.set ( .5*gamepadLeftRight, .5*gamepadRotate, 2.*gamepadForwardBack );
-        vel = K.getShapeByName("endeffBase") -> X.rot * vel;
+        vel = K.getFrameByName("endeffBase") -> X.rot * vel;
       }
 //      vel = MP.world.getShapeByName("endeffBase")->X.rot*vel;
       arr ve;
@@ -164,7 +165,7 @@ bool Gamepad2Tasks::updateTasks(arr& gamepadState, const mlr::KinematicWorld& K)
     case 1: { //homing
       cout <<"homing" <<endl;
       homing->PD().setTarget(q0);
-      mlr::Joint *j = K.getJointByName("worldTranslationRotation");
+      mlr::Joint *j = K.getFrameByName("worldTranslationRotation")->joint;
       if(j){
         arr b;
         base->map->phi(b, NoArr, K);

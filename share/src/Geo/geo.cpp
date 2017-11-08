@@ -1200,6 +1200,16 @@ arr Transformation::getArr7d(){
   return t;
 }
 
+arr Transformation::getWrenchTransform(){
+  arr z(3, 3);  z.setZero();
+  arr r = skew(pos.getArr()); //(3, 3);  Featherstone::skew(r, &pos.x); skew pos
+  arr R = rot.getArr(); //(3, 3);  rot.getMatrix(R.p);
+  transpose(R);
+  arr X(6, 6);  X.setBlockMatrix(R, z, R*~r, R); //[[unklar!!]]
+  return X;
+  //cout <<"\nz=" <<z <<"\nr=" <<r <<"\nR=" <<R <<"\nX=" <<X <<endl;
+}
+
 void Transformation::applyOnPointArray(arr& pts) const{
   if(!((pts.nd==2 && pts.d1==3) || (pts.nd==3 && pts.d2==3))){
     LOG(-1) <<"wrong pts dimensions for transformation:" <<pts.dim();
@@ -1254,6 +1264,7 @@ void Transformation::read(std::istream& is) {
         case 'd': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>x[3]>>PARSE(")"); addRelativeRotationDeg(x[0], x[1], x[2], x[3]); break;
         case 'E': is>>PARSE("(")>>x[0]>>x[1]>>x[2]>>PARSE(")"); addRelativeRotation(Quaternion().setRpy(x[0], x[1], x[2])); break;
           //case 's': is>>PARSE("(")>>x[0]>>PARSE(")");                   scale(x[0]); break;
+        case 'T': break; //old convention
         case '|':
         case '>': is.putback(c); return; //those symbols finish the reading without error
         default: MLR_MSG("unknown Transformation read tag: " <<c <<"abort reading this frame"); is.putback(c); return;
@@ -1627,6 +1638,7 @@ void Camera::setKinect(){
 void Camera::setDefault(){
   setHeightAngle(12.);
   setPosition(10., -15., 8.);
+//  setPosition(10., -4., 10.);
   focus(0, 0, 1.);
   upright();
 }

@@ -161,8 +161,8 @@ template<class T> struct Array : std::vector<T> {
   void referTo(const T *buffer, uint n);
   void referTo(const Array<T>& a);
   void referToRange(const Array<T>& a, int i, int I); // -> referTo(a,{i,I})
-  void referToRange(const Array<T>& a, uint i, int j, int J); // -> referTo(a,{i,I})
-  void referToDim(const Array<T>& a, uint i); // -> referTo
+  void referToRange(const Array<T>& a, int i, int j, int J); // -> referTo(a,{i,I})
+  void referToDim(const Array<T>& a, int i); // -> referTo
   void referToDim(const Array<T>& a, uint i, uint j);
   void referToDim(const Array<T>& a, uint i, uint j, uint k);
   void takeOver(Array<T>& a);  //a becomes a reference to its previously owned memory!
@@ -180,11 +180,11 @@ template<class T> struct Array : std::vector<T> {
   T& operator()(uint i, uint j) const;
   T& operator()(uint i, uint j, uint k) const;
   Array<T> operator()(std::pair<int, int> I) const;
-  Array<T> operator()(uint i, std::pair<int, int> J) const;
+  Array<T> operator()(int i, std::pair<int, int> J) const;
   Array<T> operator()(uint i, uint j, std::initializer_list<int> K) const;
-  Array<T> operator[](uint i) const;     // calls referToDim(*this, i)
+  Array<T> operator[](int i) const;     // calls referToDim(*this, i)
   Array<T> operator[](std::initializer_list<uint> list) const; //-> remove
-  Array<T>& operator()(){ return *this; } //TODO: replace by scalar reference!
+  Array<T>& operator()(){ return *this; } //TODO: make this the scalar reference!
   T** getCarray(Array<T*>& Cpointers) const;
 
   
@@ -234,19 +234,20 @@ template<class T> struct Array : std::vector<T> {
   void insert(uint i, const T& x);
   void insert(uint i, const Array<T>& x);
   void replace(uint i, uint n, const Array<T>& x);
-  void remove(uint i, uint n=1);
+  void remove(int i, uint n=1);
   void removePerm(uint i);          //more efficient for sets, works also for non-memMove arrays
   bool removeValue(const T& x, bool errorIfMissing=true);
   void removeAllValues(const T& x);
   void delRows(uint i, uint k=1);
-  void delColumns(uint i, uint k=1);
-  void insRows(uint i, uint k=1);
+  void delColumns(int i, uint k=1);
+  void insRows(int i, uint k=1);
   void insColumns(uint i, uint k=1);
   void resizeDim(uint k, uint dk);
   void setAppend(const T& x); //? same as if(findValue(x)==-1) append(x)
   void setAppend(const Array<T>& x);
   T popFirst();
   T popLast();
+  void removeLast();
   
   /// @name sorting and permuting this array
   void sort(ElemCompare comp=lowerEqual);
@@ -733,6 +734,8 @@ template<class T> mlr::Array<T> elemWiseMin(const mlr::Array<T>& v, const mlr::A
 template<class T> mlr::Array<T> elemWiseMax(const mlr::Array<T>& v, const mlr::Array<T>& w);
 template<class T> mlr::Array<T> elemWisemax(const mlr::Array<T>& x,const T& y);
 template<class T> mlr::Array<T> elemWisemax(const T& x,const mlr::Array<T>& y);
+
+template<class T> void writeConsecutiveConstant(std::ostream& os, const mlr::Array<T>& x);
 
 
 //===========================================================================

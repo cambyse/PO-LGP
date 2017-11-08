@@ -533,7 +533,7 @@ void wait(double sec, bool msg_on_fail) {
 /// wait for an ENTER at the console
 bool wait(bool useX11) {
   if(!mlr::getInteractivity()){
-    mlr::wait(.05);
+    mlr::wait(.1);
     return true;
   }
   if(!useX11){
@@ -863,7 +863,11 @@ mlr::String::operator char*() { return p; }
 mlr::String::operator const char*() const { return p; }
 
 /// returns the i-th char
-char& mlr::String::operator()(uint i) const { CHECK(i<=N, "String range error (" <<i <<"<=" <<N <<")"); return p[i]; }
+char& mlr::String::operator()(int i) const {
+    if(i<0) i+=N;
+    CHECK((uint)i<=N, "String range error (" <<i <<"<=" <<N <<")");
+    return p[i];
+}
 
 /// return the substring from `start` to (exclusive) `end`.
 mlr::String mlr::String::getSubString(uint start, uint end) const {
@@ -917,13 +921,14 @@ void mlr::String::operator=(const char *s) {
 
 void mlr::String::set(const char *s, uint n) { resize(n, false); memmove(p, s, n); }
 
-void mlr::String::printf(const char *format, ...){
+mlr::String& mlr::String::printf(const char *format, ...){
   resize(100, false);
   va_list valist;
   va_start(valist, format);
   int len = vsnprintf(p, 100, format, valist);
   va_end(valist);
   resize(len, true);
+  return *this;
 }
 
 /// shorthand for the !strcmp command
@@ -1215,10 +1220,10 @@ Inotify::~Inotify(){
   delete fil;
 }
 
-bool Inotify::pollForModification(bool block, bool verbose){
+bool Inotify::poll(bool block, bool verbose){
   if(!block){
     struct pollfd fd_poll = {fd, POLLIN, 0};
-    int r = poll(&fd_poll, 1, 0);
+    int r = ::poll(&fd_poll, 1, 0);
     CHECK(r>=0,"poll failed");
     if(!r) return false;
   }
@@ -1248,8 +1253,9 @@ bool Inotify::pollForModification(bool block, bool verbose){
       }
     }
     if(event->len
-       && (event->mask & (IN_MODIFY|IN_CREATE|IN_DELETE))
-       && !strcmp(event->name, fil->name.p) ) return true; //report modification on specific file
+            && (event->mask & (IN_MODIFY|IN_CREATE|IN_DELETE))
+            && !strncmp(event->name, fil->name.p, fil->name.N)
+            ) return true; //report modification on specific file
     i += sizeof(struct inotify_event) + event->len;
   }
 

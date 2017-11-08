@@ -193,6 +193,7 @@ template<class T> mlr::Array<T>& mlr::Array<T>::reshape(const Array<uint> &newD)
 
 template<class T> mlr::Array<T>& mlr::Array<T>::resizeAs(const mlr::Array<T>& a) {
   CHECK(this!=&a, "never do this!!!");
+  CHECK(!reference || N==a.N, "resize of a reference (e.g. subarray) is not allowed! (only a resize without changing memory size)");
   nd=a.nd; d0=a.d0; d1=a.d1; d2=a.d2;
   resetD();
   if(nd>3) { d=new uint[nd];  memmove(d, a.d, nd*sizeof(uint)); }
@@ -533,6 +534,9 @@ template<class T> T mlr::Array<T>::popFirst() { T x; x=elem(0); remove(0);   ret
 /// remove and return the last element of the array (must have size>1)
 template<class T> T mlr::Array<T>::popLast() { T x=elem(N-1); resizeCopy(N-1); return x; }
 
+/// remove and return the last element of the array (must have size>1)
+template<class T> void mlr::Array<T>::removeLast() { resizeCopy(N-1); }
+
 /// reverse this array
 template<class T> void mlr::Array<T>::reverse() {
   mlr::Array<T> L2;
@@ -596,8 +600,10 @@ template<class T> void mlr::Array<T>::insert(uint i, const Array<T>& x){
 }
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!]
-template<class T> void mlr::Array<T>::remove(uint i, uint n) {
-  if(i==N-n) { resizeCopy(N-n); return; }
+template<class T> void mlr::Array<T>::remove(int i, uint n) {
+  if(i<0) i+=N;
+  CHECK((uint)i<N, "");
+  if((uint)i==N-n) { resizeCopy(N-n); return; }
   if(memMove) {
     if(N>i+n) memmove(p+i, p+i+n, sizeT*(N-i-n));
     resizeCopy(N-n);
@@ -617,7 +623,6 @@ template<class T> void mlr::Array<T>::removePerm(uint i) {
 
 /// remove (delete) a subsequence of the array -- the array becomes 1D!  [only with memMove!] (throws error if value does not exist)
 template<class T> bool mlr::Array<T>::removeValue(const T& x, bool errorIfMissing) {
-  CHECK(memMove, "only with memMove");
   uint i;
   for(i=0; i<N; i++) if(p[i]==x) break;
   if(errorIfMissing){
@@ -664,22 +669,23 @@ template<class T> void mlr::Array<T>::delRows(uint i, uint k) {
 }
 
 /// inserts k rows at the i-th row [must be 2D]
-template<class T> void mlr::Array<T>::insRows(uint i, uint k) {
+template<class T> void mlr::Array<T>::insRows(int i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK_EQ(nd,2, "only for matricies");
-  CHECK(i<=d0, "range check error");
-  uint n=d0;
+  if(i<0) i+=d0;
+  CHECK(i>=0 && i<(int)d0, "range error (" <<i <<">=" <<d0 <<")");
+  int n=d0;
   resizeCopy(d0+k, d1);
-  memmove(p+(i+k)*d1, p+i*d1, sizeT*d1*(n-i));
-  memset (p+ i   *d1, 0     , sizeT*d1*k);
+  if(n>i) memmove(p+(i+k)*d1, p+i*d1, sizeT*d1*(n-i));
+  if(k)   memset (p+ i   *d1, 0     , sizeT*d1*k);
 }
 
 /// deletes k columns starting from the i-th (i==d1 -> deletes the last k columns)
-template<class T> void mlr::Array<T>::delColumns(uint i, uint k) {
+template<class T> void mlr::Array<T>::delColumns(int i, uint k) {
   CHECK(memMove, "only with memMove");
   CHECK(k>0, "");
   CHECK_EQ(nd,2, "only for matricies");
-  if(i==d1) i=d1-k;
+  if(i<0) i+=d1;
   CHECK(i+k<=d1, "range check error");
   uint n=d1;
   for(uint j=0; j<d0; j++) {
@@ -809,7 +815,7 @@ template<class T> mlr::Array<T> mlr::Array<T>::operator()(std::pair<int, int> I)
 }
 
 /// range reference access
-template<class T> mlr::Array<T> mlr::Array<T>::operator()(uint i, std::pair<int, int> J) const {
+template<class T> mlr::Array<T> mlr::Array<T>::operator()(int i, std::pair<int, int> J) const {
   mlr::Array<T> z;
   z.referToRange(*this, i, J.first, J.second);
 //  if(J.size()==2)
@@ -839,7 +845,7 @@ template<class T> mlr::Array<T> mlr::Array<T>::operator()(uint i, uint j, std::i
 
 
 /// get a subarray (e.g., row of a matrix); use in conjuction with operator()() to get a reference
-template<class T> mlr::Array<T> mlr::Array<T>::operator[](uint i) const {
+template<class T> mlr::Array<T> mlr::Array<T>::operator[](int i) const {
 //  return Array(*this, i);
   mlr::Array<T> z;
 #if 1
@@ -1436,15 +1442,17 @@ template<class T> void mlr::Array<T>::referToRange(const mlr::Array<T>& a, int i
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void mlr::Array<T>::referToRange(const Array<T>& a, uint i, int j, int J) {
+template<class T> void mlr::Array<T>::referToRange(const Array<T>& a, int i, int j, int J) {
   CHECK(a.nd>1, "does not make sense");
   CHECK(a.nd<=3, "not implemented yet");
   freeMEM();
   resetD();
   reference=true; memMove=a.memMove;
+  if(i<0) i+=a.d0;
   if(j<0) j+=a.d1;
   if(J<0) J+=a.d1;
   if(j>J) return;
+  CHECK((uint)i<a.d0, "SubRange range error (" <<i <<"<" <<a.d0 <<")");
   CHECK((uint)j<a.d1 && (uint)J<a.d1, "SubRange range error (" <<j <<"<" <<a.d1 <<", " <<J <<"<" <<a.d1 <<")");
   if(a.nd==2) {
     nd=1;  d0=J+1-j; d1=0; d2=0;  N=d0;
@@ -1460,9 +1468,11 @@ template<class T> void mlr::Array<T>::referToRange(const Array<T>& a, uint i, in
 }
 
 /// make this array a subarray reference to \c a
-template<class T> void mlr::Array<T>::referToDim(const mlr::Array<T>& a, uint i) {
+template<class T> void mlr::Array<T>::referToDim(const mlr::Array<T>& a, int i) {
   CHECK(a.nd>1, "can't create subarray of array less than 2 dimensions");
-  CHECK(i<a.d0, "SubDim range error (" <<i <<"<" <<a.d0 <<")");
+  if(i<0) i+=a.d0;
+
+  CHECK(i>=0 && i<(int)a.d0, "SubDim range error (" <<i <<"<" <<a.d0 <<")");
   freeMEM();
   reference=true; memMove=a.memMove;
   if(a.nd==2) {
@@ -2378,13 +2388,13 @@ template<class T> T sumOfSqr(const mlr::Array<T>& v) {
 }
 
 /// \f$\sqrt{\sum_i x_i^2}\f$
-template<class T> T length(const mlr::Array<T>& v) { return (T)::sqrt((double)sumOfSqr(v)); }
+template<class T> T length(const mlr::Array<T>& x) { return (T)::sqrt((double)sumOfSqr(x)); }
 
-template<class T> T var(const mlr::Array<T>& v) { T m=sum(v)/v.N; return sumOfSqr(v)/v.N-m*m; }
+template<class T> T var(const mlr::Array<T>& x) { T m=sum(x)/x.N; return sumOfSqr(x)/x.N-m*m; }
 
-template<class T> mlr::Array<T> mean(const mlr::Array<T>& v) {
-  return sum(v, 0)/T(v.d0);
-}
+template<class T> mlr::Array<T> mean(const mlr::Array<T>& X) { return sum(X, 0)/T(X.d0); }
+
+template<class T> arr covar(const mlr::Array<T>& X) { arr m=mean(X); return ((~X)*X)/T(X.d0)-m*~m; }
 
 template<class T> mlr::Array<T> stdDev(const mlr::Array<T>& v) {
   CHECK(v.d0 > 1, "empirical standard deviation makes sense only for N>1")
@@ -2772,6 +2782,17 @@ template<class T> mlr::Array<T> elemWiseMax(const T& v, const mlr::Array<T>& w) 
   z.resizeAs(w.N);
   for(uint i=0; i<w.N; i++) z.elem(i) = v>w.elem(i)?v:w.elem(i);
   return z;
+}
+
+template<class T> void writeConsecutiveConstant(std::ostream &os, const mlr::Array<T> &x){
+    uint yi=0;
+    T y=x.elem(yi);
+    for(uint i=1;i<x.N-1;i++) if(x.elem(i)!=y){
+        os <<'(' <<yi <<".." <<i-1 <<')' <<y <<' ';
+        yi=i;
+        y = x.elem(yi);
+    }
+    os <<'(' <<yi <<".." <<x.N-1 <<')' <<y;
 }
 
 //===========================================================================
@@ -3732,7 +3753,7 @@ template<class T> void listDelete(mlr::Array<T*>& L) {
 }
 
 template<class T> void listReindex(mlr::Array<T*>& L) {
-  for(uint i=0;i<L.N;i++) L.elem(i)->index=i;
+  for(uint i=0;i<L.N;i++) L.elem(i)->ID=i;
 }
 
 template<class T> T* listFindByName(const mlr::Array<T*>& L, const char* name) {
@@ -4007,6 +4028,8 @@ template<class vert, class edge> void graphWriteUndirected(std::ostream& os, con
 }
 
 template<class vert, class edge> bool graphTopsort(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
+    NIY;
+#if 0
   mlr::Array<vert*> noInputs;
   noInputs.memMove=true;
   uintA newIndex(V.N);
@@ -4017,7 +4040,7 @@ template<class vert, class edge> bool graphTopsort(mlr::Array<vert*>& V, mlr::Ar
   for_list(vert,  v,  V) v->index = v_COUNT;
 
   for(vert *v:V) {
-    inputs(v->index)=v->inLinks.N;
+    inputs(v->index)=v->numInputs(); //inLinks.N;
     if(!inputs(v->index)) noInputs.append(v);
   }
   
@@ -4042,30 +4065,30 @@ template<class vert, class edge> bool graphTopsort(mlr::Array<vert*>& V, mlr::Ar
   for(vert *v:V) for(edge *e:v->outLinks) newIndex(e->index)=count++;
   E.permuteInv(newIndex);
   for_list(edge, e, E) e->index=e_COUNT;
-
+#endif
   return true;
 }
 
-template<class vert, class edge> mlr::Array<vert*> graphGetTopsortOrder(mlr::Array<vert*>& V, mlr::Array<edge*>& E) {
-  mlr::Array<vert*> noInputs;
+template<class vert> mlr::Array<vert*> graphGetTopsortOrder(mlr::Array<vert*>& V) {
+  mlr::Array<vert*> fringe;
   mlr::Array<vert*>::memMove=true;
   intA inputs(V.N);
   mlr::Array<vert*> order;
 
-  for_list(vert,  v,  V) v->index = v_COUNT;
+  for_list(vert,  v,  V) v->ID = v_COUNT;
 
   for(vert *v:V) {
-    inputs(v->index)=v->inLinks.N;
-    if(!inputs(v->index)) noInputs.append(v);
+    inputs(v->ID)=v->numInputs(); //inLinks.N;
+    if(!inputs(v->ID)) fringe.append(v);
   }
 
-  while(noInputs.N) {
-    v=noInputs.popFirst();
+  while(fringe.N) {
+    v=fringe.popFirst();
     order.append(v);
 
-    for_list(edge,  e,  v->outLinks) {
-      inputs(e->to->index)--;
-      if(!inputs(e->to->index)) noInputs.append(e->to);
+    for(vert* to : v->outLinks) {
+      inputs(to->ID)--;
+      if(!inputs(to->ID)) fringe.append(to);
     }
   }
 

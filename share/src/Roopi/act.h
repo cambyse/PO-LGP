@@ -20,4 +20,3 @@ struct Act : Signaler{
 
   typedef std::shared_ptr<Act> Ptr;
 };
-

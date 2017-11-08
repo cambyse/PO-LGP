@@ -1,6 +1,7 @@
 #include <KOMO/komo.h>
 #include <string>
 #include <map>
+#include <Core/graph.h>
 
 using namespace std;
 
@@ -26,11 +27,10 @@ void TEST(KomoSequence){
 
   komo.reset();
   komo.run();
-//  komo.checkGradients();
 
   Graph result = komo.getReport(true);
 
-  for(;;) komo.displayTrajectory(.1, true);
+  for(uint i=0;i<2;i++) if(!komo.displayTrajectory(.1, true)) break;
 }
 
 //===========================================================================

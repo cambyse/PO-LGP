@@ -40,6 +40,8 @@ struct Mesh : GLDrawer {
   uintA T;              ///< triangles (faces, empty -> point cloud)
   arr   Tn;             ///< triangle normals (optional)
 
+  uintAA graph;         ///< for every vertex, the set of neighboring vertices
+
   mlr::Transformation glX; ///< transform (only used for drawing! Otherwise use applyOnPoints)  (optional)
 
   long parsing_pos_start;
@@ -71,13 +73,17 @@ struct Mesh : GLDrawer {
   void translate(double dx, double dy, double dz);
   void translate(const arr& d);
   void transform(const Transformation& t);
-  mlr::Vector center();
+  Vector center();
   void box();
   void addMesh(const mlr::Mesh& mesh2);
   void makeConvexHull();
   void makeTriangleFan();
   void makeLineStrip();
-  
+
+  /// @name support function
+  uint support(const arr &dir);
+  void supportMargin(uintA& verts, const arr& dir, double margin, int initialization=-1);
+
   /// @name internal computations & cleanup
   void computeNormals();
   void deleteUnusedVertices();
@@ -173,7 +179,7 @@ extern ScalarFunction DistanceFunction_SSBox;
 // GJK interface
 //
 
-enum GJK_point_type { GJK_vertex=1, GJK_edge, GJK_face };
+enum GJK_point_type { GJK_none=0, GJK_vertex, GJK_edge, GJK_face };
 extern GJK_point_type& NoPointType;
 double GJK_sqrDistance(const mlr::Mesh& mesh1, const mlr::Mesh& mesh2,
                     const mlr::Transformation& t1, const mlr::Transformation& t2,

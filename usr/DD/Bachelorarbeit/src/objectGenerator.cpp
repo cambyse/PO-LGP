@@ -63,7 +63,7 @@ arr Object::sampleFromObject() {
   return s->mesh.V[rnd.num(s->mesh.V.d0)] + conv_vec2arr(s->X.pos);
 }
 
-void Object::generateMeshObject(const char* name, mlr::Mesh mesh, double xPos, double yPos, double zPos) {
+void Object::generateMeshObject(const char* name, const mlr::Mesh& mesh, double xPos, double yPos, double zPos) {
   b = new mlr::Body(world);
   b->type = mlr::BodyType::BT_static;
   b->name = name;

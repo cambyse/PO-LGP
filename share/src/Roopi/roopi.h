@@ -104,7 +104,7 @@ struct Roopi {
   //
   //-- KINEMATIC EDITING (to be done more...)
 
-  mlr::Shape* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
+  mlr::Frame* newMarker(const char* name, const arr& pos);        ///< adds a shape to the model world
   void kinematicSwitch(const char* object, const char* attachTo, bool placing); ///< switches kinematics in the model world
   WToken<mlr::KinematicWorld> setK();                             ///< get write access to the model world
   RToken<mlr::KinematicWorld> getK();                             ///< get read access to the model world

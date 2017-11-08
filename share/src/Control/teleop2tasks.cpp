@@ -18,6 +18,7 @@
 #include "teleop2tasks.h"
 #include <Kin/taskMaps.h>
 #include <Hardware/gamepad/gamepad.h>
+#include <Kin/frame.h>
 
 Teleop2Tasks::Teleop2Tasks(TaskControlMethods& _MP, const mlr::KinematicWorld& K):fmc(_MP){
   effPosR = fmc.addPDTask("MoveEffTo_endeffR", .2, 1.8,new TaskMap_Default(posTMT, K,"endeffR",NoVector,"base_footprint"));
@@ -148,7 +149,7 @@ void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float cal
     initialised = true;
   }
 
-  mlr::Quaternion orsquats = K.getShapeByName("endeffBase") -> X.rot;
+  mlr::Quaternion orsquats = K.getFrameByName("endeffBase") -> X.rot;
 //  mlr::Joint *trans = K.getJointByName("worldTranslationRotation");
 //  orsquats.setRad( q(trans->qIndex+2),{0.,0.,1.} );
   mlr::Quaternion orsquatsacc;
@@ -191,7 +192,7 @@ void Teleop2Tasks::updateTasks(floatA cal_pose_rh, floatA cal_pose_lh, float cal
   //base movement
   arr drive_des;
   double y_c,x_c,phi_c;
-  mlr::Joint *trans = K.getJointByName("worldTranslationRotation");
+  mlr::Joint *trans = K.getFrameByName("worldTranslationRotation")->joint;
   x_c = base->PD().y_target(trans->qIndex+0);
   y_c = base->PD().y_target(trans->qIndex+1);
   phi_c = base->PD().y_target(trans->qIndex+2);

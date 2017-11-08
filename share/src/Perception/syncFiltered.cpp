@@ -16,6 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
     -----------------------------------------------------------------  */
 #include "syncFiltered.h"
+#include <Kin/frame.h>
 
 SyncFiltered::SyncFiltered(const char* outputWorld_name)
   : Thread("SyncFiltered", -1.),
@@ -44,7 +45,7 @@ void SyncFiltered::step(){
 
   // delete non-existing bodies
   outputWorld.writeAccess();
-  for(mlr::Body *b:outputWorld().bodies){
+  for(mlr::Frame *b:outputWorld().frames){
     if(b->name.startsWith("perc_")){
       uint id;
       b->name.resetIstream();

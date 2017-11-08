@@ -19,6 +19,7 @@ struct Act_LGP : Act {
   mlr::KinematicWorld& kin();
   struct FOL_World& fol();
 //  struct OptLGP& opt();
+  void renderToVideo();
 
   void start();
   void stop();

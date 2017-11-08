@@ -24,15 +24,22 @@ def writeShape(link):
 
     elem = link.find("geometry/cylinder")
     if elem is not None:
-        print 'type=ST_capsule size=[0 0 %s %s]' % (elem.attrib['length'], elem.attrib['radius']),
+        print 'type=ST_cylinder size=[0 0 %s %s]' % (elem.attrib['length'], elem.attrib['radius']),
 
     elem = link.find("geometry/mesh")
     if elem is not None:
         print 'type=ST_mesh mesh=\'%s\'' % elem.attrib['filename'],
+        if elem.attrib['scale'] is not None:
+            print 'meshscale=[%s]' % elem.attrib['scale'],
 
     elem = link.find("material/color")
     if elem is not None:
         print 'color=[%s]' % elem.attrib['rgba'],
+
+    elem = link.find("material")
+    if elem is not None:
+        if elem.attrib['name'] is not None:
+            print 'colorName=%s' % elem.attrib['name'],
 
 
 links = xmlData.findall("/link")
@@ -67,8 +74,9 @@ for link in links:
     collision = link.find("collision")
     if collision is not None:
         print 'shape collision %s_0 (%s) {\n  ' % (name, name),
+        print ' color=[.8 .2 .2 .5],',
         writeShape(collision)
-        print '}\n', # end of shape
+        print ' contact }\n', # end of shape
 
 
 joints = xmlData.findall("/joint")

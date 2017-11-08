@@ -6,9 +6,9 @@ struct CooperationDemo{
   mlr::KinematicWorld kin;
   FOL_World fol;
   BodyL box;
-  mlr::Body *tableC;
-  mlr::Body *tableL;
-  mlr::Body *tableR;
+  mlr::Frame *tableC;
+  mlr::Frame *tableL;
+  mlr::Frame *tableR;
   mlr::Array<mlr::Transformation> targetAbs, targetRel;
 
   CooperationDemo(){
@@ -32,7 +32,7 @@ void CooperationDemo::prepareKin(){
     //rearrange the assembled box: moving pieces systematically being deassembled
     //grab desired final relative configuration & create initial configuration, placing objects far on the table
 
-    for(mlr::Body *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
+    for(mlr::Frame *b:kin.bodies) if(b->name.startsWith("/toolbox")) box.append(b);
 
     //memorize their relative positionings
     targetAbs.resize(box.N);
@@ -52,7 +52,7 @@ void CooperationDemo::prepareKin(){
 
     //position them on the left table
     double xpos = -.6;
-    for(mlr::Body *b:box){
+    for(mlr::Frame *b:box){
       mlr::Joint *j = b->inLinks.scalar();
       tableC->outLinks.removeValue(j);
       j->from = tableL;

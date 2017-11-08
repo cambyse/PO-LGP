@@ -193,6 +193,7 @@ std::istream& operator>>(std::istream& is, const PARSE&);
 //
 
 #define STRING(x) (((mlr::String&)(mlr::String().stream() <<x)))
+#define STRINGF(format,...) (mlr::String().printf(format, __VA_ARGS__))
 #define STREAM(x) (((mlr::String&)(mlr::String().stream() <<x)).stream())
 
 namespace mlr {
@@ -232,7 +233,7 @@ public:
   /// @name access
   operator char*();
   operator const char*() const;
-  char &operator()(uint i) const;
+  char &operator()(int i) const;
   std::iostream& stream();            ///< explicitly returns this as an std::iostream&
   String& operator()();               ///< explicitly return this as a (non-const!) String&
   String getSubString(uint start, uint end) const;
@@ -243,7 +244,7 @@ public:
   String& operator=(const String& s);
   void operator=(const char *s);
   void set(const char *s, uint n);
-  void printf(const char *format, ...);
+  String& printf(const char *format, ...);
   void resize(uint n, bool copy); //low-level resizing the string buffer - with additinal final 0
   void append(char x);
   String& setRandom();
@@ -335,7 +336,7 @@ extern String errString;
 }
 
 //----- error handling:
-#  define MLR_HERE "@" << __FILE__<<':' <<__FUNCTION__ <<':' <<__LINE__ <<": "
+#  define MLR_HERE "@" << __FILE__<<':' <<__FUNCTION__ <<':' <<__LINE__ <<":" <<mlr::realTime() <<"s "
 
 #ifndef HALT
 #  define MLR_MSG(msg){ LOG(-1) <<msg; }
@@ -473,10 +474,11 @@ namespace mlr {
       }
       CHECK(!strcmp(names[x], str.p), "");
     }
-    void write(std::ostream& os) const{
-      if(x<0) os <<"init";
-      else os <<names[x];
+    const char* name() const{
+        if(x<0) return "init";
+        else return names[x];
     }
+    void write(std::ostream& os) const{ os <<name(); }
   };
   template<class T> std::istream& operator>>(std::istream& is, Enum<T>& x){ x.read(is); return is; }
   template<class T> std::ostream& operator<<(std::ostream& os, const Enum<T>& x){ x.write(os); return os; }
@@ -501,7 +503,7 @@ private:
   
 public:
   /// ...
-  Rnd() { ready=false; };
+  Rnd() { ready=false; }
   
   
 public:/// @name initialization
@@ -565,10 +567,10 @@ struct Inotify{
   mlr::FileToken *fil;
   Inotify(const char *filename);
   ~Inotify();
-  bool pollForModification(bool block=false, bool verbose=false);
+  bool poll(bool block=false, bool verbose=false);
 
-  void waitAndReport(){ pollForModification(false, true); }
-  void waitForModification(bool verbose=false){ while(!pollForModification(true, verbose)); }
+//  void waitAndReport(){ pollForModification(false, true); }
+//  void waitForModification(bool verbose=false){ while(!pollForModification(true, verbose)); }
 };
 
 

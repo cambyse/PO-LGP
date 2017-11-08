@@ -41,13 +41,13 @@ struct PhysXInterface : GLDrawer{
   void pushToPhysx();
   void pullFromPhysx(double tau = .03);
 
-  void setArticulatedBodiesKinematic(uint agent=0);
+  void setArticulatedBodiesKinematic();
   void ShutdownPhysX();
 
   void glDraw(OpenGL&);
 
-  void addForce(mlr::Vector& force, mlr::Body* b);
-  void addForce(mlr::Vector& force, mlr::Body* b, mlr::Vector& pos);
+  void addForce(mlr::Vector& force, mlr::Frame* b);
+  void addForce(mlr::Vector& force, mlr::Frame* b, mlr::Vector& pos);
 };
 
 void bindOrsToPhysX(mlr::KinematicWorld& graph, OpenGL& gl, PhysXInterface& physx);

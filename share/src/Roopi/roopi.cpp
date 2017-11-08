@@ -4,6 +4,8 @@
 #include <Gui/viewer.h>
 #include <Kin/PhysXThread.h>
 #include <Kin/kin_swift.h>
+#include <Kin/frame.h>
+#include <Kin/switch.h>
 #include <Control/GamepadControlThread.h>
 #include <RosCom/spinner.h>
 
@@ -260,21 +262,21 @@ Act_CtrlTask::Ptr Roopi::home(){
 
 Act_CtrlTask::Ptr Roopi::lookAt(const char* shapeName, double prec, const char* endeff_name){
   if(!endeff_name) endeff_name="endeffKinect";
-  int cam = getK()->getShapeByName(endeff_name)->index;
-  int obj = getK()->getShapeByName(shapeName)->index;
+  int cam = getK()->getFrameByName(endeff_name)->ID;
+  int obj = getK()->getFrameByName(shapeName)->ID;
   return newCtrlTask(new TaskMap_Default(gazeAtTMT, cam, NoVector, obj), {}, {}, {prec});
 }
 
 Act_CtrlTask::Ptr Roopi::focusWorkspaceAt(const char* shapeName, double prec, const char* endeff_name){
   if(!endeff_name) endeff_name="endeffWorkspace";
-  int ws  = getK()->getShapeByName(endeff_name)->index;
-  int obj = getK()->getShapeByName(shapeName)->index;
+  int ws  = getK()->getFrameByName(endeff_name)->ID;
+  int obj = getK()->getFrameByName(shapeName)->ID;
   return newCtrlTask(new TaskMap_Default(posDiffTMT, ws, NoVector, obj), {}, {}, {2e-1});
 }
 
 Act_CtrlTask::Ptr Roopi::moveVel(const char* endeff_name, arr velocity){
   if(!endeff_name) endeff_name="endeffWorkspace";
-  int eff  = getK()->getShapeByName(endeff_name)->index;
+  int eff  = getK()->getFrameByName(endeff_name)->ID;
   //lift hand
   auto lift = newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
   lift->set()->PD().setTarget(lift->task->y);
@@ -344,8 +346,8 @@ Act_CtrlTask::Ptr Roopi::collisions(bool on){
 
 void Roopi::deactivateCollisions(const char* s1, const char* s2){
   s->modelWorld.writeAccess();
-  mlr::Shape *sh1 = s->modelWorld().getShapeByName(s1);
-  mlr::Shape *sh2 = s->modelWorld().getShapeByName(s2);
+  mlr::Frame *sh1 = s->modelWorld().getFrameByName(s1);
+  mlr::Frame *sh2 = s->modelWorld().getFrameByName(s2);
   if(sh1 && sh2) s->modelWorld().swift().deactivate(sh1, sh2);
   s->modelWorld.deAccess();
 }
@@ -413,32 +415,33 @@ Act_Thread::Ptr Roopi::GamepadControl(){
 }
 
 
-mlr::Shape* Roopi::newMarker(const char* name, const arr& pos){
-  mlr::Shape *sh;
+mlr::Frame *Roopi::newMarker(const char* name, const arr& pos){
+  mlr::Frame *a;
   {
-    auto K = setK();
-    sh = new mlr::Shape(K, NoBody);
-    sh->name = name;
-    sh->type = mlr::ST_marker;
-    sh->mesh.C = {.8,0,0};
-    sh->size(0)=.1;
-    sh->X.pos = sh->rel.pos = pos;
+      auto K = setK();
+      a = new mlr::Frame(K);
+      a->name = name;
+      a->X.pos = pos;
+      mlr::Shape *sh = new mlr::Shape(*a);
+      sh->type() = mlr::ST_marker;
+      sh->mesh().C = {.8,0,0};
+      sh->size()(0)=.1;
   }
-  return sh;
+  return a;
 }
 
 void Roopi::kinematicSwitch(const char* object, const char* attachTo, bool placing){
   {
     auto K = setK();
-    {
-      mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
-      sw1.apply(K);
-    }
+//    {
+//      mlr::KinematicSwitch sw1(mlr::KinematicSwitch::deleteJoint, mlr::JT_none, NULL, object, K, 0);
+//      sw1.apply(K);
+//    }
     if(!placing){
       mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_rigid, attachTo, object, K, 0);
       sw2.apply(K);
     }else{
-      mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_transXYPhi, attachTo, object, K, 0, NoTransformation, NoTransformation, 1);
+      mlr::KinematicSwitch sw2(mlr::KinematicSwitch::addJointAtTo, mlr::JT_transXYPhi, attachTo, object, K, 0, NoTransformation, NoTransformation);
       sw2.apply(K);
     }
     K().checkConsistency();
