@@ -19,6 +19,10 @@
 #include <functional>
 #include <queue>
 
+//=====================free functions======================
+static double eps() { return std::numeric_limits< double >::epsilon(); }
+static double m_inf() { return -std::numeric_limits< double >::max(); }
+
 namespace tp
 {
 
@@ -119,8 +123,6 @@ void GraphSearchPlanner::solve()
   extractSolutions();
 
   buildPolicy();
-  //solveIterativeDepthFirst();
-  //solveBreadthFirst();
 }
 
 void GraphSearchPlanner::integrate( const Policy::ptr & policy )
@@ -217,7 +219,7 @@ void GraphSearchPlanner::dijkstra()
       double one = 0;
 
       one += u->p();
-      auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] - 1 );
+      auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] - 1 ); // p->(u,v)
 
       for( auto v : u->andSiblings() )
       {
@@ -225,7 +227,7 @@ void GraphSearchPlanner::dijkstra()
         alternativeReward += v->p() * ( expectedReward_[ v->id() ] - 1 );
       }
 
-      CHECK( fabs( 1.0 - one ) < 0.00001, "corruption in probability computation!!" );
+      CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
 
       if( alternativeReward > expectedReward_[ parent->id() ] )
       {
@@ -317,7 +319,7 @@ void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
     mlr::Array< std::shared_ptr<Graph> > resultStates( parentStates.d0 );
     for( auto w = 0; w < node->N(); ++w )
     {
-      if( node->bs()( w ) > 0.0001 )
+      if( node->bs()( w ) > eps() )
       {
         auto fol = folEngines_( w );
         auto startState = parentStates( w );
@@ -345,7 +347,6 @@ void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
   // set node data
   policyNode->setId( node->id() );
   policyNode->setDifferentiatingFact( node->differentiatingFacts() );
-  //policyNode->setTime( node->time() );
   policyNode->setP( node->pHistory() );
 
   // save correspondance
@@ -360,30 +361,6 @@ void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
     }
   }
 }
-
-/*void GraphSearchPlanner::backUpFromLeafs()
-{
-  for( auto l : terminals_ )
-  {
-    backUpFrom( l );
-  }
-
-  std::cout << "backed up from leafs" << std::endl;
-}
-
-void GraphSearchPlanner::backUpFrom( const POGraphNode::ptr & node )
-{
-  for( auto p : node->parents() )
-  {
-    if( ! p->isRoot() )
-    {
-      std::cout << "visiting:" << p->id() << std::endl;
-
-      backUpFrom( p );
-    }
-  }
-}*/
-
 
 void GraphSearchPlanner::checkIntegrity()
 {
