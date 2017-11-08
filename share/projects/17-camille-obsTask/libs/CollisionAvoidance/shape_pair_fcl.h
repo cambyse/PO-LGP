@@ -12,10 +12,14 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#pragma once
+/*#pragma once
 
 #include <math_utility.h>
 
+#include <map>
+
+#include <Kin/kin.h>
+#include <Kin/frame.h>
 #include <Kin/taskMap.h>
 #include <Kin/taskMaps.h>
 
@@ -32,8 +36,8 @@ struct ShapePairFCL:TaskMap
   {
     CHECK( false, "do not use, fcl gives results that are not very usefull, to instable when colliding" );
 
-    i_ = G.getShapeByName( iShapeName )->index;
-    j_ = G.getShapeByName( jShapeName )->index;
+    i_ = G.getFrameByName( iShapeName )->index;//G.getShapeByName( iShapeName )->index;
+    j_ = G.getFrameByName( jShapeName )->index;//G.getShapeByName( jShapeName )->index;
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);
@@ -58,4 +62,4 @@ private:
 
   std::map< mlr::Shape *, std::vector<fcl::Vec3f> > vertices_;
   std::map< mlr::Shape *, std::vector<fcl::Triangle> > triangles_;
-};
+};*/

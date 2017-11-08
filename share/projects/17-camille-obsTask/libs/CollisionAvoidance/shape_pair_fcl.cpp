@@ -1,5 +1,8 @@
-#include <shape_pair_fcl.h>
+/*#include <shape_pair_fcl.h>
+
 #include <Geo/mesh.h>
+#include <Kin/proxy.h>
+#include <Kin/frame.h>
 
 #include <fcl/traversal/traversal_node_bvhs.h>
 #include <fcl/collision_node.h>
@@ -189,4 +192,4 @@ CollisionObject * ShapePairFCL::createObjectModel( mlr::Shape * s )
   CollisionObject * obj = new CollisionObject( model, pose );
 
   return obj;
-}
+}*/

@@ -22,7 +22,7 @@ void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t 
   arr tmp_y = zeros( 2 );
   arr tmp_J = zeros( 2, G.q.N );
 
-  auto body = G.getBodyByName( bobyName_ );
+  auto body = G.getFrameByName( bobyName_ );
   arr p, Jp;
   G.kinematicsPos( p, Jp, body, mlr::Vector( 0, 0, 0 ) );
 

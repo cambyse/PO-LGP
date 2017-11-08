@@ -16,6 +16,8 @@
 
 #include <math_utility.h>
 
+#include <Kin/kin.h>
+#include <Kin/frame.h>
 #include <Kin/taskMap.h>
 #include <Kin/taskMaps.h>
 
@@ -26,13 +28,13 @@ struct ApproxPointToShape:TaskMap
   ApproxPointToShape(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double radius = 0.05 )
     : radius_( radius )
   {
-    i_ = G.getShapeByName( iShapeName )->index;
-    j_ = G.getShapeByName( jShapeName )->index;
+    i_ = G.getFrameByName( iShapeName )->ID;
+    j_ = G.getFrameByName( jShapeName )->ID;
 
-    mlr::Shape *a = G.shapes( i_ );
-    mlr::Shape *b = G.shapes( j_ );
+    mlr::Frame* a = G.frames( i_ );
+    mlr::Frame* b = G.frames( j_ );
 
-    CHECK( a->mesh_radius < 0.01, "The first shape should be almost a point!" );
+    CHECK( a->shape->mesh_radius < 0.01, "The first shape should be almost a point!" );
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);

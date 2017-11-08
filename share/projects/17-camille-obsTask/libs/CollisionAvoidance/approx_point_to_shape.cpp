@@ -1,5 +1,8 @@
 #include <approx_point_to_shape.h>
 
+#include <Kin/kin.h>
+#include <Kin/proxy.h>
+
 //-------ApproxPointToShape----------------//
 
 void ApproxPointToShape::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
@@ -32,18 +35,18 @@ void ApproxPointToShape::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int 
 
 void ApproxPointToShape::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
 {
-  mlr::Shape *a = G.shapes(p->a);
-  mlr::Shape *b = G.shapes(p->b);
+  mlr::Frame *a = G.frames(p->a);
+  mlr::Frame *b = G.frames(p->b);
 
-  auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
-  auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
+  auto arel=a->X.rot/(p->posA-a->X.pos);
+  auto brel=b->X.rot/(p->posB-b->X.pos);
 
   arr posA;
   arr posB;
   arr JposA;
   arr JposB;
-  G.kinematicsPos(posA, JposA, a->body, arel);
-  G.kinematicsPos(posB, JposB, b->body, brel);
+  G.kinematicsPos(posA, JposA, a, arel);
+  G.kinematicsPos(posB, JposB, b, brel);
 
   double d   = norm2( posA - posB );
   arr JnormD = Jnorm( posA - posB );

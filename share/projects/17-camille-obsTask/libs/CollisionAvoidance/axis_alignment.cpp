@@ -21,7 +21,7 @@ void AxisAlignment::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
   arr tmp_y = zeros( 1 );
   arr tmp_J = zeros( 1, G.q.N );
 
-  auto body = G.getBodyByName( bobyName_ );
+  auto body = G.getFrameByName( bobyName_ );
 
   arr bodyAxisDirection, bodyJAxisDirection;
   G.kinematicsVec( bodyAxisDirection, bodyJAxisDirection, body, axis_ );

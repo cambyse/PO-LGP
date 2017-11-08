@@ -39,8 +39,8 @@ struct OverPlaneConstraint:TaskMap
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
   {
-    auto body = G.getBodyByName( iBobyName_ );
-    auto plane = G.getBodyByName( jPlaneBodyName_ );
+    auto body = G.getFrameByName( iBobyName_ );
+    auto plane = G.getFrameByName( jPlaneBodyName_ );
 
     arr positionPLane;
     arr positionJPLane;

@@ -1,17 +1,19 @@
 #include <observation_tasks.h>
 
+#include <Kin/frame.h>
+
 #include <math_utility.h>
 
 //===========================================================================
 
 void HeadPoseMap::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 {
-  mlr::Shape *head = G.getShapeByName("manhead");
+  mlr::Frame *head = G.getFrameByName("manhead");
   arr posHead, JposHead;
-  G.kinematicsPos(posHead, JposHead, head->body);    // get function to minimize and its jacobian in state G
+  G.kinematicsPos(posHead, JposHead, head);    // get function to minimize and its jacobian in state G
 
   arr quatHead, JquatHead;
-  G.kinematicsQuat(quatHead, JquatHead, head->body); // get function to minimize and its jacobian in state G
+  G.kinematicsQuat(quatHead, JquatHead, head); // get function to minimize and its jacobian in state G
 
   // concatenate y and J from position and orientation (quaternion)
   arr tmp_y=zeros(dim_);
@@ -63,12 +65,12 @@ HeadGetSight::HeadGetSight( const arr& objectPosition, const arr& pivotPoint )
 
 void HeadGetSight::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 {
-  mlr::Shape *head = G.getShapeByName("manhead");
+  mlr::Frame *head = G.getFrameByName("manhead");
   arr headPosition, headJPosition;
-  G.kinematicsPos( headPosition, headJPosition, head->body );
+  G.kinematicsPos( headPosition, headJPosition, head );
 
   arr headViewingDirection, headJViewingDirection;
-  G.kinematicsVec( headViewingDirection, headJViewingDirection, head->body, headViewingDirection_ ); // get function to minimize and its jacobian in state G
+  G.kinematicsVec( headViewingDirection, headJViewingDirection, head, headViewingDirection_ ); // get function to minimize and its jacobian in state G
 
   // build u : vector between head and object point
   arr u = objectPosition_ - headPosition;
@@ -135,12 +137,12 @@ HeadGetSightQuat::HeadGetSightQuat( const arr& objectPosition, const arr& pivotP
 
 void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 {
-  mlr::Shape *head = G.getShapeByName("manhead");
+  mlr::Frame *head = G.getFrameByName("manhead");
   arr headPosition, headJPosition;
-  G.kinematicsPos( headPosition, headJPosition, head->body );
+  G.kinematicsPos( headPosition, headJPosition, head );
 
   arr headQuat, JheadQuat;
-  G.kinematicsQuat( headQuat, JheadQuat, head->body ); // get function to minimize and its jacobian in state G
+  G.kinematicsQuat( headQuat, JheadQuat, head ); // get function to minimize and its jacobian in state G
 
   //arr headViewingDirection, headJViewingDirection;
   //G.kinematicsQuat();
@@ -207,7 +209,7 @@ ActiveGetSight::ActiveGetSight( mlr::String const& headName,
 void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
 {
   // get Object position and pivot position
-  mlr::Body * container = G.getBodyByName( containerName_ );
+  mlr::Frame * container = G.getFrameByName( containerName_ );
 
   CHECK( container != nullptr, "body not found!" );
 
@@ -221,14 +223,14 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   //std::cout << "world pivotPosition:" << pivotPosition << std::endl;
 
   // get Head position
-  mlr::Shape * head = G.getShapeByName( headName_ );
+  mlr::Frame * head = G.getFrameByName( headName_ );
   arr headPosition, headJPosition;
-  G.kinematicsPos( headPosition, headJPosition, head->body );
+  G.kinematicsPos( headPosition, headJPosition, head );
 
   //std::cout << "headPosition:" << headPosition << std::endl;
 
   arr headQuat, JheadQuat;
-  G.kinematicsQuat( headQuat, JheadQuat, head->body ); // get function to minimize and its jacobian in state G
+  G.kinematicsQuat( headQuat, JheadQuat, head ); // get function to minimize and its jacobian in state G
 
   // intermediary computations
   // build w1
@@ -257,9 +259,9 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   // build v : aiming direction of the sensor
   arr v, Jv;
 
-  auto aimingDirBody = head->rel.rot * ( aimingDir_ );
+  auto aimingDirBody = head->X.rot * ( aimingDir_ );
 
-  G.kinematicsVec( v, Jv, head->body, aimingDirBody ); // get function to minimize and its jacobian in state G
+  G.kinematicsVec( v, Jv, head, aimingDirBody ); // get function to minimize and its jacobian in state G
   double normV = norm2( v );
   arr JnormV = Jnorm( v );  // get Jacobian of the norm operator
   arr v1 = v / normV;
