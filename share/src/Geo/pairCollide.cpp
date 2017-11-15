@@ -7,8 +7,8 @@ extern "C"{
 #endif
 
 #include <Gui/opengl.h>
-#include <ccd/ccd.h>
-#include <ccd/quat.h>
+#include <Geo/ccd/ccd.h>
+#include <Geo/ccd/quat.h>
 
 PairCollision::PairCollision(mlr::Mesh &mesh1, mlr::Mesh &mesh2, mlr::Transformation &t1, mlr::Transformation &t2)
     : mesh1(mesh1), mesh2(mesh2), t1(t1), t2(t2) {
