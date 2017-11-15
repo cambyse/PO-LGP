@@ -14,6 +14,8 @@
 
 #include "komo_factory.h"
 
+#include <Core/graph.h>
+
 namespace mp
 {
 

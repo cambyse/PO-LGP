@@ -4,6 +4,9 @@
 
 #include <policy_visualizer.h>
 
+#include <Kin/kin.h>
+#include <Kin/switch.h>
+
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
@@ -28,7 +31,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
   {
     auto kin = std::make_shared< mlr::KinematicWorld >();
     kin->init( kinDescription.c_str() );
-    computeMeshNormals( kin->shapes );
+    computeMeshNormals( kin->frames );
     kin->calc_fwdPropagateFrames();
     //kin->watch(/*true*/);
 
@@ -54,7 +57,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 
       auto kin = std::make_shared< mlr::KinematicWorld >();
       kin->init( kinG );
-      computeMeshNormals( kin->shapes );
+      computeMeshNormals( kin->frames );
       kin->calc_fwdPropagateFrames();
       //
       //kin->watch( true );
@@ -271,7 +274,7 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
         //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
         if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node ]( w ) );
       }
-      effKinematics_[ node ]( w ).topSort();
+      //effKinematics_[ node ]( w ).topSort();
       effKinematics_[ node ]( w ).getJointState();
 
       // free
