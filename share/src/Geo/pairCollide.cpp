@@ -60,7 +60,7 @@ void PairCollision::write(std::ostream &os) const{
 
 void support_mesh(const void *_obj, const ccd_vec3_t *_dir, ccd_vec3_t *v){
     mlr::Mesh *m = (mlr::Mesh*)_obj;
-    arr dir((const double *)_dir->v, 3, true, 0);
+    arr dir((const double *)_dir->v, 3, true);
     uint vertex = m->support(dir);
     memmove(v->v, &m->V(vertex, 0), 3*m->V.sizeT);
 }
@@ -107,13 +107,13 @@ double PairCollision::GJK_libccd_penetration(const mlr::Mesh& m1,const mlr::Mesh
   //grab simplex points
   bool append;
   for(uint i=0;i<4;i++){
-      s = arr((const double *)simplex[0+i].v, 3, true, 0);
+      s = arr((const double *)simplex[0+i].v, 3, true);
       append=true;
       if(sqrDistance(s, c1)<1e-10) append=false;
       for(uint i=0;i<simplex1.d0;i++) if(sqrDistance(s, simplex1[i])<1e-10){ append=false; break; }
       if(append) simplex1.append(s);
 
-      s = arr((const double *)simplex[4+i].v, 3, true, 0);
+      s = arr((const double *)simplex[4+i].v, 3, true);
       append=true;
       if(sqrDistance(s, c2)<1e-10) append=false;
       for(uint i=0;i<simplex2.d0;i++) if(sqrDistance(s, simplex2[i])<1e-10){ append=false; break; }
