@@ -28,6 +28,8 @@ public:
   MotionPlanningOrder getPlanningOrder() const override;
   bool      terminated () const override { return solved(); }
 
+  // utility
+  void saveGraphToFile( const std::string & filename );
 private:
   bool solved() const { return root_->isSolved(); }
 
@@ -52,7 +54,7 @@ private:
   arr bs_;
 
   // graph building
-  std::set  < POGraphNode::ptr > checked_;
+  //std::set  < POGraphNode::ptr > checked_;
   std::queue< POGraphNode::ptr > queue_;
   std::list < POGraphNode::ptr > terminals_;
 

@@ -14,6 +14,7 @@
 
 #include <graph_search.h>
 #include <policy_builder.h>
+#include <graph_printer.h>
 
 #include <chrono>
 #include <functional>
@@ -32,7 +33,7 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
 
   Graph KB;
   KB.read( FILE( folDescription.c_str() ) );
-
+  //KB.isDoubleLinked = false;
   // fully observable case
   if( KB[ beliefStateTag_ ] == nullptr )
   {
@@ -42,6 +43,7 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
     fol->init(FILE(folDescription.c_str()));
     folEngines_( 0 ) = fol;
     fol->reset_state();
+    //fol->KB.isDoubleLinked = false;
     // create dummy bs in observable case
     bs_ = arr( 1 );
     bs_( 0 ) = 1.0;
@@ -146,9 +148,24 @@ MotionPlanningOrder GraphSearchPlanner::getPlanningOrder() const
   return po;
 }
 
+void GraphSearchPlanner::saveGraphToFile( const std::string & filename )
+{
+  if( ! root_ )
+  {
+    return;
+  }
+
+  std::ofstream file;
+  file.open( filename );
+
+
+
+  file.close();
+}
+
 void GraphSearchPlanner::buildGraph()
 {
-  checked_.insert( root_ );
+  //checked_.insert( root_ );
   queue_.push( root_ );
 
   while( ! queue_.empty() )

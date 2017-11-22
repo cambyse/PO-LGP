@@ -140,26 +140,8 @@ void groundPutDown( double phase, const Graph& facts, Node *n, KOMO * komo, int 
   const double t_start = phase;
   const double t_end =   phase + duration;
   //
-  //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
 
   komo->setPlace( t_end, "handL", *symbols(0), *symbols(1), verbose );
-
-//  if( *symbols(1) == "tableC_center" )
-//  {
-//    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
-//  }
-//  else if( *symbols(1) == "tableC_left" )
-//  {
-//    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
-//  }
-//  else if( *symbols(1) == "tableC_right" )
-//  {
-//    komo->setPlace( t_end, "handL", *symbols(0), "tableC", verbose );
-//  }
-//  else
-//  {
-//    CHECK( 0 , "" );
-//  }
 
   if( verbose > 0 )
   {
@@ -234,7 +216,6 @@ void plan_mcts()
 
   tp->setFol( "LGP-blocks-fol-2w.g" );
   mp->setKin( "LGP-blocks-kin-2w.g" );
-
 
   for( uint i = 0; ! tp->terminated() && i < 1 ; ++i )
   {
@@ -311,14 +292,16 @@ void plan_graph_search()
   mp->registerTask( "komoUnStack"      , groundUnStack );
 
   // set start configurations
-  tp->setFol( "LGP-blocks-fol.g" );
-  mp->setKin( "LGP-blocks-kin.g" );
+  //tp->setFol( "LGP-blocks-fol.g" );
+  //mp->setKin( "LGP-blocks-kin.g" );
 
-  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
-  //mp->setKin( "LGP-blocks-kin-2w.g" );
+  tp->setFol( "LGP-blocks-fol-easy-2w.g" );
+  mp->setKin( "LGP-blocks-kin-2w.g" );
 
   /// TASK PLANNING
   tp->solve();
+  tp->saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
 
   auto policy = tp->getPolicy();
   auto po     = tp->getPlanningOrder();

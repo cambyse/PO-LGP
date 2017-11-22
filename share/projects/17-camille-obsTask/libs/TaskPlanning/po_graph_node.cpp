@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <Core/util.h>
 
 #define DEBUG(x) //x
 #define DEL_INFEASIBLE(x) x
@@ -271,6 +272,8 @@ POGraphNode::L POGraphNode::expand()
         auto action = world_to_actions[ w ][ a ];
         //logic->addTerminalRule();
         //logic->reset_state();
+        CHECK( logic->KB.isDoubleLinked == false, "wrong parametrization!" );
+
         logic->setState( state.get() );
         logic->transition( action ); _n_transitions++;
 

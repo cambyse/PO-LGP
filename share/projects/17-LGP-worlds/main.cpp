@@ -42,13 +42,13 @@ void solve1(){
 
   OptLGP lgp(K, L);
 
-//  lgp.verbose = 0;
-//  mlr::timerStart();
-//  for(uint d=1;d<10;d++){
-//    lgp.buildTree(d);
-//    MNodeL all = lgp.root->getAll();
-//    cout <<"d= " <<d <<" #= " <<all.N <<" t= " <<mlr::timerRead(true) <<endl;
-//  }
+  lgp.verbose = 0;
+  mlr::timerStart();
+  for(uint d=1;d<10;d++){
+    lgp.buildTree(d);
+    MNodeL all = lgp.root->getAll();
+    cout <<"d= " <<d <<" #= " <<all.N <<" t= " <<mlr::timerRead(true) <<endl;
+  }
 
 //  lgp.updateDisplay();
 //  lgp.player();
@@ -58,7 +58,7 @@ void solve1(){
 //                        (grasp baxterL redBall) \
 //                       ", true);
 
-  lgp.run();
+//  lgp.run();
 
 //  mlr::wait();
 
@@ -234,8 +234,8 @@ void solve7(){
 int MAIN(int argc,char **argv){
   mlr::initCmdLine(argc, argv);
 
-  illustrate();
-//  solve1();
+//  illustrate();
+  solve1();
 //  solve3();
 //  solve4();
 //  solve5();
