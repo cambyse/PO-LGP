@@ -35,11 +35,7 @@ private:
 
 private:
   void buildGraph();
-  void dijkstra();
-  void extractSolutions();
-  void extractSolutionFrom( const POGraphNode::ptr & );
-  void buildPolicy();
-  void buildPolicyFrom( const POGraphNode::ptr & );
+  void yen( uint k );   // generates a set of policies
 
   uint n_exp_ = 0;
 
@@ -68,6 +64,41 @@ private:
 
   // constants
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+};
+
+class Yens
+{
+public:
+  Yens( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
+
+  std::list< Policy::ptr > solve( const std::list < POGraphNode::ptr > & terminals, uint k );
+private:
+};
+
+class Dijkstra
+{
+public:
+  Dijkstra( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
+
+  Policy::ptr solve( const std::list < POGraphNode::ptr > & terminals );
+
+private:
+  void dijkstra( const std::list < POGraphNode::ptr > & terminals );
+  void extractSolutions();
+  void extractSolutionFrom( const POGraphNode::ptr & );
+  void buildPolicy();
+  void buildPolicyFrom( const POGraphNode::ptr & );
+
+private:
+  const POGraphNode::ptr & root_;
+
+  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
+  std::vector< double > expectedReward_;
+  // policy reconstruction
+  std::vector< int >   bestFamily_;     // action to take in this bs and i
+  std::vector< POGraphNode::ptr > parents_;
+  Policy::ptr policy_;
+  std::map< POGraphNode::ptr, PolicyNode::ptr > PO2Policy_;
 };
 
 }

@@ -120,11 +120,13 @@ void GraphSearchPlanner::solve()
 
   buildGraph();
 
-  dijkstra();
+  /*dijkstra();
 
   extractSolutions();
 
-  buildPolicy();
+  buildPolicy();*/
+  Dijkstra solver( root_, folEngines_ );
+  policy_ = solver.solve( terminals_ );
 }
 
 void GraphSearchPlanner::integrate( const Policy::ptr & policy )
@@ -158,7 +160,8 @@ void GraphSearchPlanner::saveGraphToFile( const std::string & filename )
   std::ofstream file;
   file.open( filename );
 
-
+  GraphPrinter printer( file );
+  printer.print( root_ );
 
   file.close();
 }
@@ -201,7 +204,34 @@ void GraphSearchPlanner::buildGraph()
   std::cout << "Graph build:" << root_->graph().size() << " number of terminal nodes:" << terminals_.size() << std::endl;
 }
 
-void GraphSearchPlanner::dijkstra()
+void GraphSearchPlanner::yen( uint k )   // generates a set of policies
+{
+
+}
+
+void GraphSearchPlanner::checkIntegrity()
+{
+
+}
+
+//---------Dijkstra-----------------//
+
+Dijkstra::Dijkstra( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
+  : root_( root )
+  , folEngines_( folEngines )
+{
+}
+
+Policy::ptr Dijkstra::solve( const std::list < POGraphNode::ptr > & terminals )
+{
+  dijkstra( terminals );
+  extractSolutions();
+  buildPolicy();
+
+  return policy_;
+}
+
+void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals )
 {
   std::cout << "GraphSearchPlanner::dijkstra.." << std::endl;
 
@@ -219,7 +249,8 @@ void GraphSearchPlanner::dijkstra()
   //for( uint i = 0; i < 30; ++i )
   {
 
-  for( auto v : terminals_ )
+  // go from leafs to root
+  for( auto v : terminals )
   {
     expectedReward_[ v->id() ] = 0; // all rewards negative
     Q.push( v );
@@ -259,7 +290,7 @@ void GraphSearchPlanner::dijkstra()
   std::cout << "GraphSearchPlanner::dijkstra.. end" << std::endl;
 }
 
-void GraphSearchPlanner::extractSolutions()
+void Dijkstra::extractSolutions()
 {
   bestFamily_ = std::vector< int >( root_->graph().size(), -1 );
   parents_    = std::vector< POGraphNode::ptr >( root_->graph().size() );
@@ -267,7 +298,7 @@ void GraphSearchPlanner::extractSolutions()
   extractSolutionFrom( root_ );
 }
 
-void GraphSearchPlanner::extractSolutionFrom( const POGraphNode::ptr & node )
+void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
 {
   double rewardFromNode = expectedReward_[ node->id() ];
 
@@ -301,7 +332,7 @@ void GraphSearchPlanner::extractSolutionFrom( const POGraphNode::ptr & node )
   CHECK( bestFamily_[ node->id() ] != -1, "" );
 }
 
-void GraphSearchPlanner::buildPolicy()
+void Dijkstra::buildPolicy()
 {
   // convert to a policy object
   policy_ = std::make_shared< Policy >();
@@ -310,7 +341,7 @@ void GraphSearchPlanner::buildPolicy()
   buildPolicyFrom( root_ );
 }
 
-void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
+void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node )
 {
   PolicyNode::ptr policyNode = std::make_shared< PolicyNode >();
 
@@ -377,11 +408,6 @@ void GraphSearchPlanner::buildPolicyFrom( const POGraphNode::ptr & node )
       buildPolicyFrom( c );
     }
   }
-}
-
-void GraphSearchPlanner::checkIntegrity()
-{
-
 }
 
 }
