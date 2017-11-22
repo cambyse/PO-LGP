@@ -295,8 +295,9 @@ void plan_graph_search()
   //tp->setFol( "LGP-blocks-fol.g" );
   //mp->setKin( "LGP-blocks-kin.g" );
 
-  tp->setFol( "LGP-blocks-fol-easy-2w.g" );
-  mp->setKin( "LGP-blocks-kin-2w.g" );
+  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
+  tp->setFol( "LGP-blocks-fol-easy-1w.g" );
+  //mp->setKin( "LGP-blocks-kin-2w.g" );
 
   /// TASK PLANNING
   tp->solve();

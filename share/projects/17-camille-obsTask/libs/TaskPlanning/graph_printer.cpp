@@ -2,7 +2,7 @@
 
 namespace tp {
 
-void GraphPrinter::print( const POGraphNode::ptr & node )
+void GraphPrinter::print( const POGraphNode::ptr & node, std::list< POGraphNode::ptr > terminals )
 {
   if( ! node )
   {
@@ -10,6 +10,14 @@ void GraphPrinter::print( const POGraphNode::ptr & node )
   }
 
   ss_ << "digraph g{" << std::endl;
+
+  ss_ << "{" << std::endl;
+  ss_ << node->id() << " [style=filled, fillcolor=blue]" << std::endl;
+  for( auto t : terminals )
+  {
+    ss_ << t->id() << " [style=filled, fillcolor=green]" << std::endl;
+  }
+  ss_ << "}" << std::endl;
 
   saveGraphFrom( node );
 

@@ -161,7 +161,7 @@ void GraphSearchPlanner::saveGraphToFile( const std::string & filename )
   file.open( filename );
 
   GraphPrinter printer( file );
-  printer.print( root_ );
+  printer.print( root_, terminals_ );
 
   file.close();
 }
@@ -210,6 +210,20 @@ void GraphSearchPlanner::yen( uint k )   // generates a set of policies
 }
 
 void GraphSearchPlanner::checkIntegrity()
+{
+
+}
+
+//---------Yen----------------------//
+
+Yens::Yens( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
+  : root_( root )
+  , folEngines_( folEngines )
+{
+
+}
+
+std::list< Policy::ptr > Yens::solve( const std::list < POGraphNode::ptr > & terminals, uint k )
 {
 
 }

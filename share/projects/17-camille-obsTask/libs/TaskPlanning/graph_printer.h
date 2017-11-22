@@ -15,7 +15,7 @@ public:
 
   }
 
-  void print( const POGraphNode::ptr & node );
+  void print( const POGraphNode::ptr & node, std::list< POGraphNode::ptr > terminals = std::list< POGraphNode::ptr >() );
 
 private:
   void saveGraphFrom( const POGraphNode::ptr & node );

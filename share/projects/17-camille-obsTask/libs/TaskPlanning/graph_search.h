@@ -73,6 +73,9 @@ public:
 
   std::list< Policy::ptr > solve( const std::list < POGraphNode::ptr > & terminals, uint k );
 private:
+  const POGraphNode::ptr & root_;
+
+  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
 };
 
 class Dijkstra
