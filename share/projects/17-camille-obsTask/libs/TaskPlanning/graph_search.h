@@ -66,24 +66,15 @@ private:
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
-class Yens
-{
-public:
-  Yens( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
-
-  std::list< Policy::ptr > solve( const std::list < POGraphNode::ptr > & terminals, uint k );
-private:
-  const POGraphNode::ptr & root_;
-
-  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
-};
-
 class Dijkstra
 {
 public:
-  Dijkstra( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
+  Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
 
-  Policy::ptr solve( const std::list < POGraphNode::ptr > & terminals );
+  Policy::ptr solve( const POGraphNode::ptr & root, const std::list < POGraphNode::ptr > & terminals );
+
+  void blackListEdge( const std::pair< uint, uint > & e );
+  void resetBlackList();
 
 private:
   void dijkstra( const std::list < POGraphNode::ptr > & terminals );
@@ -93,15 +84,32 @@ private:
   void buildPolicyFrom( const POGraphNode::ptr & );
 
 private:
-  const POGraphNode::ptr & root_;
-
-  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
+  mlr::Array< std::shared_ptr< FOL_World > > folEngines_;
   std::vector< double > expectedReward_;
   // policy reconstruction
+  POGraphNode::ptr root_;
   std::vector< int >   bestFamily_;     // action to take in this bs and i
   std::vector< POGraphNode::ptr > parents_;
   Policy::ptr policy_;
   std::map< POGraphNode::ptr, PolicyNode::ptr > PO2Policy_;
+  std::map< PolicyNode::ptr, POGraphNode::ptr > Policy2PO_;
+
+  std::list< std::pair< uint, uint > > edgeBlackList_;
+};
+
+class Yens
+{
+public:
+  Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
+
+  std::list< Policy::ptr > solve( const POGraphNode::ptr & root, const std::list < POGraphNode::ptr > & terminals, uint k );
+
+private:
+  POGraphNode::ptr root_;
+
+  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
+
+  Dijkstra dijkstra_;
 };
 
 }

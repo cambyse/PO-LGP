@@ -121,12 +121,16 @@ void GraphSearchPlanner::solve()
   buildGraph();
 
   /*dijkstra();
-
   extractSolutions();
-
   buildPolicy();*/
-  Dijkstra solver( root_, folEngines_ );
-  policy_ = solver.solve( terminals_ );
+
+  /*Dijkstra solver( folEngines_ );
+  policy_ = solver.solve( root_, terminals_ );*/
+
+  Yens solver( folEngines_ );
+  auto policies = solver.solve( root_, terminals_, 10 );
+
+  policy_ = policies.front();
 }
 
 void GraphSearchPlanner::integrate( const Policy::ptr & policy )
@@ -214,35 +218,114 @@ void GraphSearchPlanner::checkIntegrity()
 
 }
 
-//---------Yen----------------------//
+//---------Yens--------------------//
 
-Yens::Yens( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
-  : root_( root )
-  , folEngines_( folEngines )
+Yens::Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
+  : folEngines_( folEngines )
+  , dijkstra_  ( folEngines )
 {
 
 }
 
-std::list< Policy::ptr > Yens::solve( const std::list < POGraphNode::ptr > & terminals, uint k )
+static std::list< PolicyNode::ptr > serializeFrom( const PolicyNode::ptr & node )
 {
+  std::list< PolicyNode::ptr > nodes;
 
+  nodes.push_back( node );
+
+  for( auto n : node->children() )
+  {
+    auto newNodes = serializeFrom( n );
+    nodes.insert( nodes.end(), newNodes.begin(), newNodes.end() );
+  }
+
+  return nodes;
+}
+
+static std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy )
+{
+  return serializeFrom( policy->root() );
+}
+
+std::list< Policy::ptr > Yens::solve( const POGraphNode::ptr & root, const std::list < POGraphNode::ptr > & terminals, const uint k )
+{
+  root_ = root;
+
+  std::list< Policy::ptr > policies;
+
+  auto policy_0 = dijkstra_.solve( root, terminals );
+  policies.push_back( policy_0 );
+
+  auto lastPolicy = policy_0;
+  for( auto l = 1; l < k; ++l )
+  {
+    // serialize the solution
+    auto s_lastPolicy = serialize( lastPolicy );
+
+    for( auto i = 0; i < s_lastPolicy.size(); ++i ) ///*auto sit = std::begin( s_lastPolicy ); sit != std::end( s_lastPolicy ); ++sit*/ ) // s is the spur node
+    {
+      auto spurNodeIt = s_lastPolicy.begin();
+      std::advance( spurNodeIt, i );
+      auto spurNode   = *spurNodeIt;
+      auto rootPath = std::list< PolicyNode::ptr >( std::begin( s_lastPolicy ), spurNodeIt );
+
+      for( auto previousPolicy : policies )
+      {
+        auto s_previousPolicy = serialize( previousPolicy );
+        auto ithNodeIt = s_previousPolicy.begin();
+        std::advance( ithNodeIt, i );
+        auto previousRootPath = std::list< PolicyNode::ptr >( std::begin( s_previousPolicy ), ithNodeIt );
+
+        if( rootPath == previousRootPath )
+        {
+          // Remove the links that are part of the previous shortest paths which share the same root path.
+          //auto e = std::pair< uint, uint >{ (*ithNodeIt)->id(), (*(++ithNodeIt))->id() };
+          //dijkstra_.blackListEdge( e );
+        }
+
+        for( auto n : rootPath )
+        {
+          
+        }
+      }
+
+
+
+      // reset
+      dijkstra_.resetBlackList();
+    }
+  }
+
+  return policies;
 }
 
 //---------Dijkstra-----------------//
 
-Dijkstra::Dijkstra( const POGraphNode::ptr & root, const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
-  : root_( root )
-  , folEngines_( folEngines )
+Dijkstra::Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
+  : folEngines_( folEngines )
 {
+
 }
 
-Policy::ptr Dijkstra::solve( const std::list < POGraphNode::ptr > & terminals )
+Policy::ptr Dijkstra::solve( const POGraphNode::ptr & root, const std::list < POGraphNode::ptr > & terminals )
 {
+  root_ = root;
+
   dijkstra( terminals );
   extractSolutions();
   buildPolicy();
 
   return policy_;
+}
+
+void Dijkstra::blackListEdge( const std::pair< uint, uint > & e )
+{
+  edgeBlackList_.push_back( e );
+}
+
+void Dijkstra::resetBlackList()
+{
+  edgeBlackList_.clear();
 }
 
 void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals )
@@ -413,6 +496,7 @@ void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node )
 
   // save correspondance
   PO2Policy_[ node ] = policyNode;
+  Policy2PO_[ policyNode ] = node;
 
   if( ! node->isTerminal() )
   {

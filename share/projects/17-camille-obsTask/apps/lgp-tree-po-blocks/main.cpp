@@ -301,7 +301,7 @@ void plan_graph_search()
 
   /// TASK PLANNING
   tp->solve();
-  tp->saveGraphToFile( "graph.gv" );
+  /*tp->saveGraphToFile( "graph.gv" );
   generatePngImage( "graph.gv" );
 
   auto policy = tp->getPolicy();
@@ -319,7 +319,7 @@ void plan_graph_search()
 
 //  tp->integrate( policy );
 
-  mlr::wait( 30, true );
+  mlr::wait( 30, true );*/
 }
 
 //===========================================================================
