@@ -53,6 +53,8 @@ void ExtensibleKOMO::registerTask( const mlr::String & type, const SymbolGrounde
 
 void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose )
 {
+  std::cout << "facts:" << facts << std::endl;
+
   for( Node *n:facts )
   {
     if( ! n->parents.N ) continue; // skip not relevant node

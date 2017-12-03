@@ -18,20 +18,25 @@ find_path( MLR_LIBRARIES_DIR
 include_directories( ${MLR_LIBRARIES_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )
 
+################################
+# External libs
+################################
+find_package(fcl REQUIRED)
+
 #################################
 # Define executable
 #################################
 
-add_executable(${project_name} main.cpp)
+file(GLOB_RECURSE SOURCES *.cpp *.h)
+
+add_library(${project_name} ${SOURCES})
+target_include_directories(${project_name} PUBLIC ".")
 target_link_libraries(
  ${project_name}
  Core
- #Motion
  Geo
- Gui
- Optim
- POMTP_interfaces
- ObservationTasks
- CollisionAvoidance
- AutonomousDriving
+ Kin
+ KOMO
+ Math_utility
+ ${fcl_LIBRARIES}
  )

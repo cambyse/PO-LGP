@@ -235,11 +235,6 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
-      if( node->id() == 210 )
-      {
-        std::cout << *node->states()( w ) << std::endl;
-      }
-
       komo->groundTasks( 0., *node->states()( w ) );
 
       komo->reset(); //huge

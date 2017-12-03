@@ -256,45 +256,45 @@ std::list< Policy::ptr > Yens::solve( const POGraphNode::ptr & root, const std::
   auto policy_0 = dijkstra_.solve( root, terminals );
   policies.push_back( policy_0 );
 
-  auto lastPolicy = policy_0;
-  for( auto l = 1; l < k; ++l )
-  {
-    // serialize the solution
-    auto s_lastPolicy = serialize( lastPolicy );
+//  auto lastPolicy = policy_0;
+//  for( auto l = 1; l < k; ++l )
+//  {
+//    // serialize the solution
+//    auto s_lastPolicy = serialize( lastPolicy );
 
-    for( auto i = 0; i < s_lastPolicy.size(); ++i ) ///*auto sit = std::begin( s_lastPolicy ); sit != std::end( s_lastPolicy ); ++sit*/ ) // s is the spur node
-    {
-      auto spurNodeIt = s_lastPolicy.begin();
-      std::advance( spurNodeIt, i );
-      auto spurNode   = *spurNodeIt;
-      auto rootPath = std::list< PolicyNode::ptr >( std::begin( s_lastPolicy ), spurNodeIt );
+//    for( auto i = 0; i < s_lastPolicy.size(); ++i ) ///*auto sit = std::begin( s_lastPolicy ); sit != std::end( s_lastPolicy ); ++sit*/ ) // s is the spur node
+//    {
+//      auto spurNodeIt = s_lastPolicy.begin();
+//      std::advance( spurNodeIt, i );
+//      auto spurNode   = *spurNodeIt;
+//      auto rootPath = std::list< PolicyNode::ptr >( std::begin( s_lastPolicy ), spurNodeIt );
 
-      for( auto previousPolicy : policies )
-      {
-        auto s_previousPolicy = serialize( previousPolicy );
-        auto ithNodeIt = s_previousPolicy.begin();
-        std::advance( ithNodeIt, i );
-        auto previousRootPath = std::list< PolicyNode::ptr >( std::begin( s_previousPolicy ), ithNodeIt );
+//      for( auto previousPolicy : policies )
+//      {
+//        auto s_previousPolicy = serialize( previousPolicy );
+//        auto ithNodeIt = s_previousPolicy.begin();
+//        std::advance( ithNodeIt, i );
+//        auto previousRootPath = std::list< PolicyNode::ptr >( std::begin( s_previousPolicy ), ithNodeIt );
 
-        if( rootPath == previousRootPath )
-        {
-          // Remove the links that are part of the previous shortest paths which share the same root path.
-          //auto e = std::pair< uint, uint >{ (*ithNodeIt)->id(), (*(++ithNodeIt))->id() };
-          //dijkstra_.blackListEdge( e );
-        }
+//        if( rootPath == previousRootPath )
+//        {
+//          // Remove the links that are part of the previous shortest paths which share the same root path.
+//          //auto e = std::pair< uint, uint >{ (*ithNodeIt)->id(), (*(++ithNodeIt))->id() };
+//          //dijkstra_.blackListEdge( e );
+//        }
 
-        for( auto n : rootPath )
-        {
+//        for( auto n : rootPath )
+//        {
           
-        }
-      }
+//        }
+//      }
 
 
 
-      // reset
-      dijkstra_.resetBlackList();
-    }
-  }
+//      // reset
+//      dijkstra_.resetBlackList();
+//    }
+//  }
 
   return policies;
 }
@@ -397,6 +397,8 @@ void Dijkstra::extractSolutions()
 
 void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
 {
+  std::cout << "extract solution from:" << node->id() << std::endl;
+
   double rewardFromNode = expectedReward_[ node->id() ];
 
   for( auto i = 0; i < node->families().size(); ++i )
@@ -410,7 +412,7 @@ void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
       familyReward += c->p() * expectedReward_[ c->id() ];
     }
 
-    if( familyReward >= rewardFromNode )
+    if( familyReward >= 1 + rewardFromNode )
     {
       bestFamily_[ node->id() ] = i;
 
@@ -418,7 +420,7 @@ void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
       {
         parents_[ c->id() ] = node;
 
-        if( ! c->isTerminal() )
+        if( ! c->isTerminal() && node->id() != c->id() )
         {
           extractSolutionFrom( c );
         }
