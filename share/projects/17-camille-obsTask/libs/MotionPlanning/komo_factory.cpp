@@ -71,4 +71,49 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
   }
 }
 
+void ExtensibleKOMO::plotVelocity( const std::string & suffix )
+{
+  std::string filename = ( "z.velocities" + suffix ).c_str();
+  std::string filenamePlt = ( "z.velocities" + suffix + ".plt" ).c_str();
+
+  ofstream fil( filename.c_str() );
+  StringA jointNames = world.getJointNames();
+  //first line: legend
+  for(auto s:jointNames) fil <<s <<' ';
+  fil <<endl;
+
+  // positions
+  x.reshape(T, world.q.N);
+
+  // speeds
+  arr velocities = zeros(T-1, world.q.N);
+
+  for( auto t = 0; t < T - 1; ++t )
+  {
+    auto x_t   = x.row( t );
+    auto x_t_1 = x.row( t + 1 );
+    auto v = x_t_1 - x_t;
+
+    velocities.setMatrixBlock( v, t, 0 );
+  }
+
+  velocities.write(fil, NULL, NULL, "  ");
+  fil.close();
+
+  ofstream fil2( filenamePlt.c_str() );
+  fil2 <<"set key autotitle columnheader" <<endl;
+  fil2 <<"set title 'velocities'" <<endl;
+  fil2 <<"set term qt 2" <<endl;
+  fil2 <<"plot '" << filename << "' \\" << endl;
+  for(uint i=1;i<=jointNames.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l lw 3 lc " <<i <<" lt " <<1-((i/10)%2) <<" \\" <<endl;
+  //    if(dualSolution.N) for(uint i=0;i<tasks.N;i++) fil <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
+  fil2 <<endl;
+  fil2.close();
+
+  // command
+  std::string command = "load '" + filenamePlt + "'";
+  gnuplot( command.c_str() );
+}
+
+
 }

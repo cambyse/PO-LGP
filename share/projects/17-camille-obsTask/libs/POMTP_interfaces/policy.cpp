@@ -164,4 +164,9 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
   return equal;
 }
 
+Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
+{
+  over->root();
+}
+
 

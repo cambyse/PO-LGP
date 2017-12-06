@@ -22,7 +22,7 @@
 
 //=====================free functions======================
 static double eps() { return std::numeric_limits< double >::epsilon(); }
-static double m_inf() { return -std::numeric_limits< double >::max(); }
+double m_inf() { return -1e9; }
 
 namespace tp
 {
@@ -110,8 +110,6 @@ void GraphSearchPlanner::setFol( const std::string & folDescription )
 
     CHECK( total == 1.00, "wrong belief state definition, the total of the probabilities doesn't sum to 1" );
   }
-
-  root_ = std::make_shared< POGraphNode >( folEngines_, bs_ );
 }
 
 void GraphSearchPlanner::solve()
@@ -128,7 +126,7 @@ void GraphSearchPlanner::solve()
   policy_ = solver.solve( root_, terminals_ );*/
 
   Yens solver( folEngines_ );
-  auto policies = solver.solve( root_, terminals_, 10 );
+  auto policies = solver.solve( graph_, 10 );
 
   policy_ = policies.front();
 }
@@ -156,7 +154,7 @@ MotionPlanningOrder GraphSearchPlanner::getPlanningOrder() const
 
 void GraphSearchPlanner::saveGraphToFile( const std::string & filename )
 {
-  if( ! root_ )
+  if( ! graph_ )
   {
     return;
   }
@@ -165,26 +163,30 @@ void GraphSearchPlanner::saveGraphToFile( const std::string & filename )
   file.open( filename );
 
   GraphPrinter printer( file );
-  printer.print( root_, terminals_ );
+  printer.print( graph_->root(), graph_->terminals() );
 
   file.close();
 }
 
 void GraphSearchPlanner::buildGraph()
 {
-  //checked_.insert( root_ );
-  queue_.push( root_ );
+  POGraphNode::ptr root = std::make_shared< POGraphNode >( folEngines_, bs_ );
 
-  while( ! queue_.empty() )
+  std::queue< POGraphNode::ptr > queue;
+  std::list < POGraphNode::ptr > terminals;
+
+  queue.push( root );
+
+  while( ! queue.empty() )
   {
-    auto current = queue_.front();
-    queue_.pop();
+    auto current = queue.front();
+    queue.pop();
 
     if( current->isTerminal() )
     {
       std::cout << "terminal for bs:" << current->bs() << std::endl;
 
-      terminals_.push_back( current );
+      terminals.push_back( current );
     }
     else
     {
@@ -194,18 +196,20 @@ void GraphSearchPlanner::buildGraph()
 
         for( auto n : newNodes )
         {
-          queue_.push( n );
+          queue.push( n );
         }
 
-        if( queue_.size() % 50 == 0 )
+        if( queue.size() % 50 == 0 )
         {
-          std::cout << "queue_.size():" << queue_.size() << std::endl;
+          std::cout << "queue_.size():" << queue.size() << std::endl;
         }
       }
     }
   }
 
-  std::cout << "Graph build:" << root_->graph().size() << " number of terminal nodes:" << terminals_.size() << std::endl;
+  std::cout << "Graph build:" << root->graph().size() << " number of terminal nodes:" << terminals.size() << std::endl;
+
+  graph_ = std::make_shared< POGraph >( root, terminals );
 }
 
 void GraphSearchPlanner::yen( uint k )   // generates a set of policies
@@ -247,54 +251,67 @@ static std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy )
   return serializeFrom( policy->root() );
 }
 
-std::list< Policy::ptr > Yens::solve( const POGraphNode::ptr & root, const std::list < POGraphNode::ptr > & terminals, const uint k )
+std::list< Policy::ptr > Yens::solve( const POGraph::ptr & graph, const uint k )
 {
-  root_ = root;
+  graph_ = graph;
 
   std::list< Policy::ptr > policies;
 
-  auto policy_0 = dijkstra_.solve( root, terminals );
+  auto policy_0 = dijkstra_.solve( graph, graph->root() );
   policies.push_back( policy_0 );
 
-//  auto lastPolicy = policy_0;
-//  for( auto l = 1; l < k; ++l )
-//  {
-//    // serialize the solution
-//    auto s_lastPolicy = serialize( lastPolicy );
+  // create the mask of edges to remove
+  auto mask = std::make_shared< GraphEdgeRewards >( graph );
 
-//    for( auto i = 0; i < s_lastPolicy.size(); ++i ) ///*auto sit = std::begin( s_lastPolicy ); sit != std::end( s_lastPolicy ); ++sit*/ ) // s is the spur node
-//    {
-//      auto spurNodeIt = s_lastPolicy.begin();
-//      std::advance( spurNodeIt, i );
-//      auto spurNode   = *spurNodeIt;
-//      auto rootPath = std::list< PolicyNode::ptr >( std::begin( s_lastPolicy ), spurNodeIt );
+  auto lastPolicy = policy_0;
+  for( auto l = 1; l < k; ++l )
+  {
+    // serialize the solution
+    auto s_lastPolicy = serialize( lastPolicy );
 
-//      for( auto previousPolicy : policies )
-//      {
-//        auto s_previousPolicy = serialize( previousPolicy );
-//        auto ithNodeIt = s_previousPolicy.begin();
-//        std::advance( ithNodeIt, i );
-//        auto previousRootPath = std::list< PolicyNode::ptr >( std::begin( s_previousPolicy ), ithNodeIt );
+    for( auto i = 0; i < s_lastPolicy.size(); ++i ) ///*auto sit = std::begin( s_lastPolicy ); sit != std::end( s_lastPolicy ); ++sit*/ ) // s is the spur node
+    {
+      auto spurNodeIt = s_lastPolicy.begin();
+      std::advance( spurNodeIt, i );
+      auto spurNode   = *spurNodeIt;
+      auto rootPath = std::list< PolicyNode::ptr >( std::begin( s_lastPolicy ), spurNodeIt );
 
-//        if( rootPath == previousRootPath )
-//        {
-//          // Remove the links that are part of the previous shortest paths which share the same root path.
-//          //auto e = std::pair< uint, uint >{ (*ithNodeIt)->id(), (*(++ithNodeIt))->id() };
-//          //dijkstra_.blackListEdge( e );
-//        }
+      for( auto previousPolicy : policies )
+      {
+        auto s_previousPolicy = serialize( previousPolicy );
+        auto ithNodeIt = s_previousPolicy.begin();
+        std::advance( ithNodeIt, i );
+        auto previousRootPath = std::list< PolicyNode::ptr >( std::begin( s_previousPolicy ), ithNodeIt );
 
-//        for( auto n : rootPath )
-//        {
-          
-//        }
-//      }
+        if( rootPath == previousRootPath )
+        {
+          // Remove the links that are part of the previous shortest paths which share the same root path.
+          auto from = (*ithNodeIt)->id();
+          auto to   = (*(++ithNodeIt))->id();
 
+          mask->removeEdge( from, to );
+        }
 
+        for( auto n : rootPath )
+        {
+          // Remove n
+          if( n->id() != spurNode->id() )
+          {
+            mask->removeNode( n->id() );
+          }
+        }
 
-//      // reset
-//      dijkstra_.resetBlackList();
-//    }
-//  }
+        auto spurPolicy = dijkstra_.solve( graph, graph->getNode( spurNode->id() ), mask );
+
+        auto altPolicy = fuse( lastPolicy, spurPolicy );
+
+        policies.push_back( altPolicy );
+      }
+
+      // reset
+      mask->reset();
+    }
+  }
 
   return policies;
 }
@@ -307,43 +324,39 @@ Dijkstra::Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines 
 
 }
 
-Policy::ptr Dijkstra::solve( const POGraphNode::ptr & root, const std::list < POGraphNode::ptr > & terminals )
+Policy::ptr Dijkstra::solve( const POGraph::ptr & graph, const POGraphNode::ptr & from, GraphEdgeRewards::ptr mask )
 {
-  root_ = root;
+  graph_ = graph;
 
-  dijkstra( terminals );
-  extractSolutions();
-  buildPolicy();
+  if( ! mask )
+  {
+    mask = std::make_shared< GraphEdgeRewards >( graph );
+  }
+
+  dijkstra( graph_->terminals(), mask );
+  extractSolutionFrom( from );
+  buildPolicy( from );
 
   return policy_;
 }
 
-void Dijkstra::blackListEdge( const std::pair< uint, uint > & e )
-{
-  edgeBlackList_.push_back( e );
-}
-
-void Dijkstra::resetBlackList()
-{
-  edgeBlackList_.clear();
-}
-
-void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals )
+void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, GraphEdgeRewards::ptr mask )
 {
   std::cout << "GraphSearchPlanner::dijkstra.." << std::endl;
 
-  expectedReward_ = std::vector< double >( root_->graph().size(), -1000 ); // distance from root to vertex[i]
+  expectedReward_ = std::vector< double >( graph_->size(), m_inf() ); // distance from root to vertex[i]
 
   auto comp = [ & ]( const POGraphNode::ptr & a, const POGraphNode::ptr & b ) -> bool
   {
     return expectedReward_[ a->id() ] > expectedReward_[ b->id() ];
   };
 
+  bestFamily_ = std::vector< int >( graph_->size(), -1 );
+  parents_    = std::vector< POGraphNode::ptr >( graph_->size() );
   std::priority_queue< POGraphNode::ptr, std::vector< POGraphNode::ptr >, decltype( comp ) > Q( comp );
 
   // expected reward up to terminal nodes
   // add terminal nodes to Q
-  //for( uint i = 0; i < 30; ++i )
   {
 
   // go from leafs to root
@@ -360,17 +373,26 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals )
     Q.pop();
 
     for( auto parent : u->parents() )
-    {
+    { 
+      bool isImpossible = false;
+      const auto r = mask->reward( parent->id(), u->id() );
+      isImpossible = isImpossible || r <= m_inf();
+
       double one = 0;
 
       one += u->p();
-      auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] - 1 ); // p->(u,v)
+      auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] + r ); // p->(u,v)
 
       for( auto v : u->andSiblings() )
       {
+        const auto r = mask->reward( parent->id(), v->id() );
+        isImpossible = isImpossible || r <= m_inf();
+
         one += v->p();
-        alternativeReward += v->p() * ( expectedReward_[ v->id() ] - 1 );
+        alternativeReward += v->p() * ( expectedReward_[ v->id() ] + r );
       }
+
+      if( isImpossible ) alternativeReward = m_inf();
 
       CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
 
@@ -385,14 +407,6 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals )
   }
 
   std::cout << "GraphSearchPlanner::dijkstra.. end" << std::endl;
-}
-
-void Dijkstra::extractSolutions()
-{
-  bestFamily_ = std::vector< int >( root_->graph().size(), -1 );
-  parents_    = std::vector< POGraphNode::ptr >( root_->graph().size() );
-
-  extractSolutionFrom( root_ );
 }
 
 void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
@@ -431,13 +445,24 @@ void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
   CHECK( bestFamily_[ node->id() ] != -1, "" );
 }
 
-void Dijkstra::buildPolicy()
+void Dijkstra::buildPolicy( const POGraphNode::ptr & from )
 {
-  // convert to a policy object
-  policy_ = std::make_shared< Policy >();
-  policy_->init( root_->N() );
+  // clear last correspondance
+  PO2Policy_.clear();
+  Policy2PO_.clear();
 
-  buildPolicyFrom( root_ );
+  if( expectedReward_[ from->id() ] == m_inf() )
+  { // no solution has been found
+    policy_.reset();
+  }
+  else
+  {
+    // convert to a policy object
+    policy_ = std::make_shared< Policy >();
+    policy_->init( from->N() );
+
+    buildPolicyFrom( from );
+  }
 }
 
 void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node )

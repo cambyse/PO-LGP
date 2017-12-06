@@ -73,8 +73,8 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
-  double start_offset_ = 1.0; // the first task should be grounded starting from this time
-  double end_offset_   = 1.0;
+  double start_offset_ = 2.0; // the first task should be grounded starting from this time
+  double end_offset_   = 2.0;
   uint microSteps_     = 10;
 };
 

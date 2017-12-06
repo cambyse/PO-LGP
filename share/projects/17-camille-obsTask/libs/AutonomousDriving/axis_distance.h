@@ -23,7 +23,7 @@
 
 using namespace std;
 
-struct AxisBound:TaskMap{
+struct AxisDistance:TaskMap{
 
   enum Axis
   {
@@ -37,8 +37,9 @@ struct AxisBound:TaskMap{
     MAX
   };
 
-  AxisBound( const std::string & object, double bound, const enum Axis & axis, const enum BoundType & boundType, const double k = 1.0 )
-    : object_( object )
+  AxisDistance( const std::string & object_1, const std::string & object_2, double bound, const enum Axis & axis, const enum BoundType & boundType, const double k = 1.0 )
+    : object_1_( object_1 )
+    , object_2_( object_2 )
     , bound_( bound )
     , boundType_( boundType )
     , id_( axis == X ? 0 : 1 )
@@ -49,22 +50,29 @@ struct AxisBound:TaskMap{
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1)
   {
-//    for( auto p : G.proxies )
-//    {
-//      std::cout << p->a << " " << p->b << std::endl;
-//    }
+    mlr::Frame *object_1 = G.getFrameByName( object_1_.c_str() );
+    arr posObject_1, posJObject_1;
+    G.kinematicsPos(posObject_1, posJObject_1, object_1);    // get function to minimize and its jacobian in state G
 
-    mlr::Frame *object = G.getFrameByName( object_.c_str() );
-    arr posObject, posJObject;
-    G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
+    mlr::Frame *object_2 = G.getFrameByName( object_2_.c_str() );
+    arr posObject_2, posJObject_2;
+    G.kinematicsPos(posObject_2, posJObject_2, object_2);    // get function to minimize and its jacobian in state G
 
     const double sign = ( ( boundType_ == MIN ) ? 1 : -1 );
 
     arr tmp_y = zeros( dim_ );
-    tmp_y( 0 ) = - k_ * sign * ( posObject( id_ ) - bound_ );
+    arr tmp_J = zeros( dim_, posJObject_1.dim(1) );
 
-    arr tmp_J = zeros( dim_, posJObject.dim(1) );
-    tmp_J.setMatrixBlock( - k_ * sign * posJObject.row( id_ ), 0 , 0 );    // jacobian
+    const double diff = posObject_1( id_ ) - posObject_2( id_ );
+    const double dist = fabs( diff );
+
+    const arr Jdiff =  posJObject_1 - posJObject_2;
+    const arr Jdist = ( diff > 0 ? posJObject_1.row( id_ ) - posJObject_2.row( id_ ) :
+                                   posJObject_2.row( id_ ) - posJObject_1.row( id_ ) );
+
+    tmp_y( 0 ) = - k_ * sign * ( dist - bound_ );
+
+    tmp_J.setMatrixBlock( - k_ * sign * Jdist, 0 , 0 );    // jacobian
 
     // commit results
     y = tmp_y;
@@ -78,12 +86,13 @@ struct AxisBound:TaskMap{
 
   virtual mlr::String shortTag(const mlr::KinematicWorld& G)
   {
-    return mlr::String("AxisBound");
+    return mlr::String("AxisDistance");
   }
 
 private:
   static const uint dim_ = 1;
-  std::string object_;
+  std::string object_1_;
+  std::string object_2_;
   const double bound_;
   const BoundType boundType_;
   const double k_;

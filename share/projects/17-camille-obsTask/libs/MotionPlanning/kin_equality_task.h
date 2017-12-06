@@ -22,7 +22,7 @@ namespace mp
 
 struct AgentKinEquality:TaskMap{
 
-  AgentKinEquality( uint id, const arr& q/*, const arr& qdot*/ )
+  AgentKinEquality( uint id, const arr& q )
     : id_( id )
     , q_  ( q )
     , dim_( q.N )

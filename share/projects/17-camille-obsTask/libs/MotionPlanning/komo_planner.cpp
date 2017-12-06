@@ -319,8 +319,8 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 
 //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
-      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-      komo->setFixSwitchedObjects();
+//      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+//      komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
       //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
@@ -391,17 +391,15 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
+
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2/*, true*/ );
+      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2 );
+
+      komo->setSquaredQAccelerations();
+      //komo->setFixEffectiveJoints( -1., -1., fixEffJointsWeight_ );
+      //komo->setFixSwitchedObjects();
 
 //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-
-      komo->setFixEffectiveJoints( -1., -1., fixEffJointsWeight_ );
-      komo->setFixSwitchedObjects();
-      komo->setSquaredQAccelerations();
-
-      //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
       for( auto node:treepath )
       {
@@ -449,7 +447,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
         }
       }
 
-      komo->set_x( pathXSolution_[ leaf ]( w ) );
+      //komo->set_x( pathXSolution_[ leaf ]( w ) );
       komo->reset();
 
       try{
@@ -460,6 +458,11 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
+      if( w == 0 )
+      {
+        //komo->displayTrajectory( 0.02, true );
+        komo->plotVelocity( std::to_string( w ) );
+      }
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
 //      komo->checkGradients();

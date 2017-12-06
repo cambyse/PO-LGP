@@ -37,6 +37,8 @@ public:
   void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
   void groundTasks( double phase, const Graph& facts, int verbose=0 );
 
+  void plotVelocity( const std::string & suffix = "" );
+
 private:
   std::map< mlr::String, SymbolGrounder > tasks_;
 };

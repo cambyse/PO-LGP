@@ -192,9 +192,11 @@ void groundPrefixIfNeeded( KOMO * komo, int verbose  )
   static std::map< KOMO * , bool > komosSetUp;
 
   if( komosSetUp.count( komo ) == 0 )
-  {
+  {      
     komosSetUp[ komo ] = true;
 
+    if( komo->world.getFrameByName( "truck" ) )
+    {
     // road bounds
     komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
     komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
@@ -203,20 +205,61 @@ void groundPrefixIfNeeded( KOMO * komo, int verbose  )
     arr truck_speed{ 0.03, 0, 0 };
     truck_speed( 0 ) = 0.03;
     komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    /*komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );*/
+
 
     // opposite car speed
     arr op_speed{ -0.03, 0, 0 };
     op_speed( 0 ) = -0.03;
     komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+    /*komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+    komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+    komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+    komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+    komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );*/
+
 
     // min speed
+    komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
     komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
     // collision
-    komo->activateCollisions( "car_ego", "truck" );
+    komo->activateCollisions( "car_ego", "truck_2" );
+    komo->activateCollisions( "car_ego", "truck_1" );
     komo->activateCollisions( "car_ego", "car_op" );
     komo->setCollisions( true );
+    }
+    else
+    {
+      // road bounds
+      komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
+      komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
+      // truck speed
+      arr truck_speed{ 0.03, 0, 0 };
+      truck_speed( 0 ) = 0.03;
+      komo->setVelocity( 0.0, -1, "truck_1", NULL, OT_eq, truck_speed );
+      komo->setVelocity( 0.0, -1, "truck_2", NULL, OT_eq, truck_speed );
+
+
+      // opposite car speed
+      arr op_speed{ -0.03, 0, 0 };
+      op_speed( 0 ) = -0.03;
+      komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+
+      // min speed
+      komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+
+      // collision
+      komo->activateCollisions( "car_ego", "truck" );
+      komo->activateCollisions( "car_ego", "car_op" );
+      komo->setCollisions( true );
+    }
   }
 }
 
@@ -257,12 +300,12 @@ void groundOvertake( double phase, const Graph& facts, Node *n, KOMO * komo, int
   //
 
   // overtake
-  komo->setTask( t_start + 0.3, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
-  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sumOfSqr, { 0.6, 0, 0 } );
+  komo->setTask( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo->setPosition( t_end, -1, "car_ego", *symbols(0), OT_sumOfSqr, { 0.6, 0, 0 } );
 
   if( verbose > 0 )
   {
-    std::cout << t_start << "->" << t_end << ": " << " overtake " <<*symbols(0) << " at " << *symbols(1) << std::endl;
+    std::cout << t_start << "->" << t_end << ": " << " overtake " <<*symbols(0) << std::endl;
   }
 }
 
@@ -311,6 +354,8 @@ void plan_graph_search()
   //tp->setFol( "LGP-overtaking-1w.g" );
   mp->setKin( "LGP-overtaking-kin-2w.g" );
   tp->setFol( "LGP-overtaking-2w.g" );
+  //mp->setKin( "LGP-overtaking-kin-3w.g" );
+  //tp->setFol( "LGP-overtaking-3w.g" );
 
   /// TASK PLANNING
   tp->solve();
@@ -324,10 +369,10 @@ void plan_graph_search()
   savePolicyToFile( policy );
 
   /// MOTION PLANNING
-  mp->solveAndInform( po, policy );
+  //mp->solveAndInform( po, policy );
 
   // print resulting cost
-  std::cout << "cost of the policy " << " " << policy->cost() << std::endl;
+  //std::cout << "cost of the policy " << " " << policy->cost() << std::endl;
 
   mp->display( policy, 3000 );
 

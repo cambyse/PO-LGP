@@ -165,4 +165,7 @@ bool policyCompare( Policy::ptr lhs, Policy::ptr rhs );
 // test if two skeletons are equals
 bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs );
 
+// joint two policies
+Policy::ptr fuse( Policy::ptr base, Policy::ptr over );
+
 

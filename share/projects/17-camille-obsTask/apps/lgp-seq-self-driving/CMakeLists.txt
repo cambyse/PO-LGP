@@ -34,4 +34,5 @@ target_link_libraries(
  ObservationTasks
  CollisionAvoidance
  AutonomousDriving
+ MotionPlanning
  )
