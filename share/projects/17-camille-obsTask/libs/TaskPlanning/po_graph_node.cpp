@@ -35,6 +35,8 @@ static double m_inf() { return -std::numeric_limits< double >::max(); }
 
 namespace tp
 {
+double m_inf() { return -1e9; }
+double eps() { return std::numeric_limits< double >::epsilon(); }
 
 struct stringSetHash {
 size_t operator()( const std::set< std::string > & facts ) const
@@ -106,15 +108,11 @@ static std::set< std::string > getObservableStateStr( Graph * state )
 
 //===========================================================================
 
-static int nodeNumber = 0;
-
 static uint _n_get_actions;
 static uint _get_actions_time_us;
 
 static uint _n_transitions;
 static uint _transition_time_us;
-
-std::list< POGraphNode::ptr > POGraphNode::graph_;
 
 /// root node init
 POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
@@ -124,8 +122,9 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
   , folStates_( N_ )
   , resultStates_( N_ )
   //, folAddToStates_( N_ )
-  , p_( 1.0 )
+  , graph_( std::make_shared< std::list< POGraphNode::ptr > >() )
   , pHistory_( 1.0 )
+  , p_( 1.0 )
   , bs_( bs )
   //, a_( -1 )
   // global search
@@ -156,9 +155,7 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
 
   auto wptr = std::shared_ptr<POGraphNode>( this, [](POGraphNode*){} );// TRICK for shared_from_this!!!!!
 
-  POGraphNode::graph_.push_back( shared_from_this() );
-
-  nodeNumber++;
+  graph_->push_back( shared_from_this() );
 }
 
 /// child node creation
@@ -170,8 +167,9 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHisto
   , resultStates_( resultStates )
   //, folAddToStates_( N_ )
   //, decisions_( N_ )
-  , p_( p )
+  , graph_( root->graph_ )
   , pHistory_( pHistory )
+  , p_( p )
   , bs_( bs )
   //, a_( a )
   // global search
@@ -229,8 +227,7 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHisto
   }
 
   // change this
-  id_ = nodeNumber;
-  nodeNumber++;
+  id_ = nodeNumber();
 }
 
 POGraphNode::L POGraphNode::expand()
@@ -324,7 +321,7 @@ POGraphNode::L POGraphNode::expand()
       bool found = false;
 
       // check for exsting node in graph
-      for( auto m = POGraphNode::graph_.begin(); m != POGraphNode::graph_.end(); ++m )
+      for( auto m = graph_->begin(); m != graph_->end(); ++m )
       {
         auto a = (*m)->resultStates();
         auto b = resultStates;
@@ -343,10 +340,8 @@ POGraphNode::L POGraphNode::expand()
         CHECK( child == nullptr, "a child was found but the pointer is still null!!" );
 
         child = std::make_shared< POGraphNode >( root(), pWorld, pWorld * pHistory_, bs, resultStates, a );
-        POGraphNode::graph_.push_back( child );
+        graph_->push_back( child );
         newNodes.push_back( child );
-
-        CHECK( nodeNumber == POGraphNode::graph_.size(), "" );
 
         // get the fact not in intersection
         std::set< std::string > differenciatingFacts;

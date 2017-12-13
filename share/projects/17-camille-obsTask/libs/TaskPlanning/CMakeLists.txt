@@ -33,3 +33,5 @@ target_link_libraries(
  MCTS
  POMTP_interfaces
  )
+
+add_subdirectory(test)

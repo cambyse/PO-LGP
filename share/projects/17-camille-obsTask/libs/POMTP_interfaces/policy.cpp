@@ -166,7 +166,26 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
 
 Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
 {
-  over->root();
+  //over->root();
+  base->root();
+
+  auto fuseFrom = [&over]( const PolicyNode::ptr & node )
+  {
+    if( node->id() == over->root()->id() )
+    {
+      // fuse policies
+
+
+      return;
+    }
+    else
+    {
+      for( auto n : node->children() )
+      {
+        //fuseFrom(  )
+      }
+    }
+  };
 }
 
 

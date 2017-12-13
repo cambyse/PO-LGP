@@ -26,6 +26,8 @@
 namespace tp
 {
 
+double m_inf();
+double eps();
 //===========================================================================
 
 struct SymbolicState
@@ -99,7 +101,8 @@ public:
   bool isTerminal() const { return isTerminal_; }
   bool isSolved() const { return   isSolved_; }
   mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
-  std::list< POGraphNode::ptr > graph() const { return graph_; }
+  std::shared_ptr< std::list< POGraphNode::ptr > > shared_node_list() const { return graph_; }
+  std::size_t nodeNumber() const { return graph_->size(); }
 
   bool isRoot() const { return root_ == nullptr; }
   uint N() const { return N_; }
@@ -143,7 +146,7 @@ private:
   mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
   mlr::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
   std::vector< SymbolicState >             resultStates_;
-  static std::list< POGraphNode::ptr >     graph_;
+  std::shared_ptr< std::list< POGraphNode::ptr > > graph_;
 
   double pHistory_;
   double p_;                              /// probability to jump to this node when there is an observation branching
