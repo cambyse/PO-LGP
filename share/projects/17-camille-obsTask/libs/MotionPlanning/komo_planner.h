@@ -12,7 +12,7 @@ namespace mp
 
 class KOMOPlanner : public MotionPlanner
 {
-  typedef std::function<void( double time, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
+  typedef std::function<void( double time, const Graph& facts, Node *n, ExtensibleKOMO *, int verbose )> SymbolGrounder;
 
 public:
   KOMOPlanner();
@@ -74,8 +74,8 @@ private:
   double secPerPhase_        = 10.;
 
   double start_offset_ = 2.0; // the first task should be grounded starting from this time
-  double end_offset_   = 2.0;
-  uint microSteps_     = 10;
+  double end_offset_   = 1.0;
+  uint microSteps_     = 20;
 };
 
 void freeKomo( ExtensibleKOMO::ptr komo );

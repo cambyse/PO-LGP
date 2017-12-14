@@ -15,6 +15,7 @@
 #include <graph_search.h>
 #include <policy_builder.h>
 #include <graph_printer.h>
+#include <yens.h>
 
 #include <chrono>
 #include <functional>
@@ -226,104 +227,6 @@ void GraphSearchPlanner::yen( uint k )   // generates a set of policies
 void GraphSearchPlanner::checkIntegrity()
 {
 
-}
-
-//---------Yens--------------------//
-
-Yens::Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
-  : folEngines_( folEngines )
-  , dijkstra_  ( folEngines )
-{
-
-}
-
-static std::list< PolicyNode::ptr > serializeFrom( const PolicyNode::ptr & node )
-{
-  std::list< PolicyNode::ptr > nodes;
-
-  nodes.push_back( node );
-
-  for( auto n : node->children() )
-  {
-    auto newNodes = serializeFrom( n );
-    nodes.insert( nodes.end(), newNodes.begin(), newNodes.end() );
-  }
-
-  return nodes;
-}
-
-static std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy )
-{
-  return serializeFrom( policy->root() );
-}
-
-std::list< Policy::ptr > Yens::solve( const POGraph::ptr & graph, const uint k )
-{
-  graph_ = graph;
-
-  std::list< Policy::ptr > policies;  // A
-  std::list< Policy::ptr > altPolicies; // B
-
-  auto policy_0 = dijkstra_.solve( graph, graph->root() );
-  policies.push_back( policy_0 );
-
-  // create the mask of edges to remove
-  auto mask = std::make_shared< GraphEdgeRewards >( graph );
-
-  auto lastPolicy = policy_0;
-  for( auto l = 1; l < k; ++l )
-  {
-    // serialize the solution
-    auto s_lastPolicy = serialize( lastPolicy );
-
-    for( auto i = 3; i < s_lastPolicy.size(); ++i ) ///*auto sit = std::begin( s_lastPolicy ); sit != std::end( s_lastPolicy ); ++sit*/ ) // s is the spur node
-    {
-      auto spurNodeIt = s_lastPolicy.begin();
-      std::advance( spurNodeIt, i );
-      auto spurNode   = *spurNodeIt;
-      auto rootPath = std::list< PolicyNode::ptr >( std::begin( s_lastPolicy ), spurNodeIt );
-
-      for( auto previousPolicy : policies )
-      {
-        auto s_previousPolicy = serialize( previousPolicy );
-        auto ithNodeIt = s_previousPolicy.begin();
-        std::advance( ithNodeIt, i );
-        auto previousRootPath = std::list< PolicyNode::ptr >( std::begin( s_previousPolicy ), ithNodeIt );
-
-        if( rootPath == previousRootPath )
-        {
-          // Remove the links that are part of the previous shortest paths which share the same root path.
-          auto from = (*ithNodeIt)->id();
-          auto to   = (*(++ithNodeIt))->id();
-
-          mask->removeEdge( from, to );
-        }
-
-        for( auto n : rootPath )
-        {
-          // Remove n
-          if( n->id() != spurNode->id() )
-          {
-            mask->removeNode( n->id() );
-          }
-        }
-
-        auto spurPolicy = dijkstra_.solve( graph, graph->getNode( spurNode->id() ), mask );
-
-        if( spurPolicy )
-        {
-          auto altPolicy = fuse( lastPolicy, spurPolicy );
-
-          altPolicies.push_back( altPolicy );
-        }
-      }
-
-      // reset
-      mask->reset();
-    }
-  }
-
-  return policies;
 }
 
 }

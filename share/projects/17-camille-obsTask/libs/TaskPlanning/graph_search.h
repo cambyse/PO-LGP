@@ -62,20 +62,4 @@ private:
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
-class Yens
-{
-public:
-  Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
-
-  std::list< Policy::ptr > solve( const POGraph::ptr & graph, uint k );
-
-private:
-  POGraph::ptr graph_;
-  GraphEdgeRewards::ptr mask_;
-
-  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
-
-  Dijkstra dijkstra_;
-};
-
 }

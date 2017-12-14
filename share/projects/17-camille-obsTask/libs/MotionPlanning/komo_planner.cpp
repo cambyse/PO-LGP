@@ -315,7 +315,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 
       // set-up komo
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2/*, true*/ );
+      komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2 );
 
 //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
@@ -324,6 +324,9 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
       komo->setSquaredQAccelerations();
       //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
+
+      if( w == 0 )
+        int a = 0;
 
       for( auto node:treepath )
       {
@@ -341,7 +344,6 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
       }
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-      //komo->displayTrajectory();
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
       //komo->checkGradients();
@@ -391,7 +393,6 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
       komo->setTiming( start_offset_ + leaf->time() + end_offset_, microSteps_, secPerPhase_, 2 );
 
@@ -410,44 +411,47 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
         if( node->time() > 0 )
         {
-          uint stepsPerPhase = komo->stepsPerPhase; // get number of steps per phases
-          uint nodeSlice = stepsPerPhase * ( start_offset_ + node->time() ) - 1;
-          arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
-
-          // set constraints enforcing the path equality among worlds
-          int nSupport = 0;
-          for( auto x = 0; x < leaf->N(); ++x )
+          for( auto s = 1; s < komo->stepsPerPhase; ++s )
           {
-            if( node->parent()->bs()( x ) > 0 )
+            uint stepsPerPhase = komo->stepsPerPhase; // get number of steps per phases
+            uint nodeSlice = stepsPerPhase * ( start_offset_ + node->time() ) - s;
+            arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
+
+            // set constraints enforcing the path equality among worlds
+            int nSupport = 0;
+            for( auto x = 0; x < leaf->N(); ++x )
             {
-              CHECK( bsToLeafs_( x ) != nullptr, "no leaf for this state!!?" );
+              if( node->parent()->bs()( x ) > 0 )
+              {
+                CHECK( bsToLeafs_( x ) != nullptr, "no leaf for this state!!?" );
 
-              auto terminalLeafx = bsToLeafs_( x );
+                auto terminalLeafx = bsToLeafs_( x );
 
-              CHECK( pathKinFrames_[ terminalLeafx ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
+                CHECK( pathKinFrames_[ terminalLeafx ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
 
-              auto pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
+                auto pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
 
-              q += node->parent()->bs()( x ) * pathLeafx( nodeSlice ).q;
+                q += node->parent()->bs()( x ) * pathLeafx( nodeSlice ).q;
 
-              nSupport++;
+                nSupport++;
+              }
             }
-          }
 
-          if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
-          {
-            AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
-            double slice_t = start_offset_ + node->time() - 1.0 / stepsPerPhase;
-            komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
+            if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
+            {
+              AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
+              double slice_t = start_offset_ + node->time() - double( s ) / stepsPerPhase;
+              komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
-            //
-            //std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
-            //
+              //
+              //std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
+              //
+            }
           }
         }
       }
 
-      //komo->set_x( pathXSolution_[ leaf ]( w ) );
+      komo->set_x( pathXSolution_[ leaf ]( w ) );
       komo->reset();
 
       try{
@@ -458,16 +462,18 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
-      if( w == 0 )
-      {
-        //komo->displayTrajectory( 0.02, true );
-        komo->plotVelocity( std::to_string( w ) );
-      }
+//      if( w == 1 )
+//      {
+//        //komo->displayTrajectory( 0.02, true );
+//        //komo->plotVelocity( std::to_string( w ) );
+//      }
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
 //      komo->checkGradients();
 
       Graph result = komo->getReport();
+      //komo->getReport(true);
+
       //DEBUG( FILE("z.problem.cost") << result; )
       double cost = result.get<double>({"total","sqrCosts"});
       double constraints = result.get<double>({"total","constraints"});

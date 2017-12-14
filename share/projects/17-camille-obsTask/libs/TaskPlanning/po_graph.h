@@ -73,7 +73,7 @@ public:
 
   void reset()
   {
-    rewards_ = std::vector< double >( size_ * size_, 0 );
+    rewards_ = std::vector< double >( size_ * size_, -1 );
   }
 
   void removeEdge( const std::size_t parent, const std::size_t child )

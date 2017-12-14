@@ -15,75 +15,134 @@
 #include "policy.h"
 #include <Core/graph.h>
 
+#include <functional>
+
 static int policyNumber = 0;
 
 //----PolicyNode---------------------//
 
-void PolicyNode::save( std::ostream& os )
+void PolicyNode::exchangeChildren( const mlr::Array< PolicyNode::ptr > & children )
 {
-  // id
-  os << "id" << std::endl;
-  os << id_  << std::endl;
+  if( children.empty() )
+    return;
 
-  // belief state size
-  os << "size" << std::endl;
-  os << bs_.size() << std::endl;
+  // exchange the leading action
+  setNextAction( children.first()->parent()->nextAction() );
 
-  // states
-  os << "states:" << std::endl;
-  for( auto w = 0; w < bs_.size(); w++ )
+  // exchange the children
+  children_ = children;
+
+  for( auto c : children )
   {
-    os << "w:" << w << std::endl;
-    if( bs_( w ) > 0 )
-    {
-      states()( w )->write( os );
-    }
+    c->setParent( shared_from_this() );
   }
-
-  os << "belief_state" << std::endl;
-  for( auto b : bs_ )
-  {
-    os << b << std::endl;
-  }
-
-  os << "next_action" << std::endl;
-  os << nextAction_ << std::endl;
-
-  os << "time" << std::endl;
-  os << time_  << std::endl;
-
-  os << "p" << std::endl;
-  os << p_  << std::endl;
-
-  os << "q" << std::endl;
-  os << q_  << std::endl;
-
-  os << "g" << std::endl;
-  os << g_  << std::endl;
-
-  os << "h" << std::endl;
-  os << h_  << std::endl;
-
-
-  /*
-        mlr::Array< std::shared_ptr<Graph> > states_;
-        arr bs_;
-        // action
-        std::string nextAction_; // action to take at this node
-        //
-        double time_;
-        uint id_;
-
-        double p_;  // probability of reaching this node
-        double q_;  // probability of reaching this node given that fact that its parent is reached
-        double g_;  // cost so far
-        double h_;  // future costs*/
 }
 
-void PolicyNode::load( std::istream& is )
+PolicyNode::ptr PolicyNode::clone() const
 {
+  auto node = std::make_shared< PolicyNode >();
 
+  mlr::Array< std::shared_ptr<Graph> > states;
+  for( const auto & s_ : states_ )
+  {
+//    auto s = std::make_shared< Graph >();
+//    s->copy( *s_ );
+    states.append( s_ );
+  }
+  node->states_ = states;
+
+  node->bs_ = bs_;
+  node->nextAction_ = nextAction_;
+  node->time_ = time_;
+  node->id_ = id_;
+  node->p_ = p_;
+  node->q_ = q_;
+  node->g_ = g_;
+  node->h_ = h_;
+  node->differentiatingFacts_ = differentiatingFacts_;
+
+  return node;
 }
+
+void PolicyNode::cloneFrom( const PolicyNode::ptr & node ) const
+{
+  CHECK( id() == node->id(), "" );
+
+  for( auto c_ : children_ )
+  {
+    auto c = c_->clone();
+    node->addChild( c );
+    c->setParent( node );
+
+    c_->cloneFrom( c );
+  }
+}
+
+//void PolicyNode::save( std::ostream& os )
+//{
+//  // id
+//  os << "id" << std::endl;
+//  os << id_  << std::endl;
+
+//  // belief state size
+//  os << "size" << std::endl;
+//  os << bs_.size() << std::endl;
+
+//  // states
+//  os << "states:" << std::endl;
+//  for( auto w = 0; w < bs_.size(); w++ )
+//  {
+//    os << "w:" << w << std::endl;
+//    if( bs_( w ) > 0 )
+//    {
+//      states()( w )->write( os );
+//    }
+//  }
+
+//  os << "belief_state" << std::endl;
+//  for( auto b : bs_ )
+//  {
+//    os << b << std::endl;
+//  }
+
+//  os << "next_action" << std::endl;
+//  os << nextAction_ << std::endl;
+
+//  os << "time" << std::endl;
+//  os << time_  << std::endl;
+
+//  os << "p" << std::endl;
+//  os << p_  << std::endl;
+
+//  os << "q" << std::endl;
+//  os << q_  << std::endl;
+
+//  os << "g" << std::endl;
+//  os << g_  << std::endl;
+
+//  os << "h" << std::endl;
+//  os << h_  << std::endl;
+
+
+//  /*
+//        mlr::Array< std::shared_ptr<Graph> > states_;
+//        arr bs_;
+//        // action
+//        std::string nextAction_; // action to take at this node
+//        //
+//        double time_;
+//        uint id_;
+
+//        double p_;  // probability of reaching this node
+//        double q_;  // probability of reaching this node given that fact that its parent is reached
+//        double g_;  // cost so far
+//        double h_;  // future costs*/
+//}
+
+//void PolicyNode::load( std::istream& is )
+//{
+
+//}
 
 //----Policy-------------------------//
 Policy::Policy()
@@ -98,25 +157,62 @@ void Policy::init( uint N )
   N_ = N;
 }
 
-void Policy::save( std::ostream& os )
+Policy::ptr Policy::clone() const
 {
-  saveFrom( root_, os );
-}
+  auto policy = std::make_shared< Policy >();
 
-void Policy::load( std::istream& is )
-{
+  policy->N_ = N_;
 
-}
+  auto root = root_->clone();
+  policy->setRoot( root );
 
-void Policy::saveFrom( const PolicyNode::ptr & node, std::ostream& os )
-{
-  node->save( os );
+  root_->cloneFrom( root );
 
-  for( auto n : node->children() )
+  policy->cost_ = cost_;
+  policy->expectedSymReward_ = expectedSymReward_;
+  policy->status_ = status_;
+
+  std::function< void( const PolicyNode::ptr & ) > updateLeafsFrom;
+  updateLeafsFrom= [&policy, &updateLeafsFrom, this] ( const PolicyNode::ptr & node )
   {
-    saveFrom( n, os );
-  }
+    for( auto leaf : leafs_ )
+    {
+      if( node->id() == leaf->id() )
+      {
+        policy->addLeaf( node );
+      }
+    }
+
+    for( auto c : node->children() )
+    {
+      updateLeafsFrom( c );
+    }
+  };
+
+  updateLeafsFrom( root );
+
+  return policy;
 }
+
+//void Policy::save( std::ostream& os )
+//{
+//  saveFrom( root_, os );
+//}
+
+//void Policy::load( std::istream& is )
+//{
+
+//}
+
+//void Policy::saveFrom( const PolicyNode::ptr & node, std::ostream& os )
+//{
+//  node->save( os );
+
+//  for( auto n : node->children() )
+//  {
+//    saveFrom( n, os );
+//  }
+//}
 
 //-----utility free functions-----------//
 PolicyNode::L getPathTo( const PolicyNode::ptr & node )
@@ -164,28 +260,125 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
   return equal;
 }
 
+static std::list< PolicyNode::ptr > serializeFrom( const PolicyNode::ptr & node )
+{
+  std::list< PolicyNode::ptr > nodes;
+
+  nodes.push_back( node );
+
+  for( auto n : node->children() )
+  {
+    auto newNodes = serializeFrom( n );
+    nodes.insert( nodes.end(), newNodes.begin(), newNodes.end() );
+  }
+
+  return nodes;
+}
+
+std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy )
+{
+  return serializeFrom( policy->root() );
+}
+
+bool equivalent( const std::list< PolicyNode::ptr > & s1, const std::list< PolicyNode::ptr > & s2 )
+{
+  if( s1.size() != s2.size() )
+    return false;
+
+  bool equal = true;
+  auto it1 = s1.begin();
+  auto it2 = s2.begin();
+  while( it1 != s1.end() )
+  {
+    equal = equal && ( (*it1)->id() == (*it2)->id() );
+    ++it1;
+    ++it2;
+  }
+
+  return equal;
+}
+
+static void setNewRewardAndBackTrack( const PolicyNode::ptr & node, double newReward )
+{
+  auto p = node->parent();
+
+  if( ! p )
+  {
+    node->setH( newReward );
+    return;
+  }
+
+  // original step Cost
+  auto stepCost = node->h() - p->h();
+
+  //
+  node->setH( newReward );
+
+  double parentFutureRewards = -stepCost;
+  for( auto c : p->children() )
+  {
+    parentFutureRewards += c->p() * c->h();
+  }
+
+  setNewRewardAndBackTrack( p, parentFutureRewards );
+}
+
 Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
 {
-  //over->root();
-  base->root();
+  auto fused = base->clone();
 
-  auto fuseFrom = [&over]( const PolicyNode::ptr & node )
+  auto nodes = serialize( fused );
+
+  // exchange children starting from the over node
+  for( const auto & node : nodes )
   {
     if( node->id() == over->root()->id() )
     {
-      // fuse policies
+      auto rewardNode = node->h();
+      auto newReward  = over->root()->h();
 
+      node->exchangeChildren( over->root()->children() );
 
-      return;
+      // update recursively the costs
+      setNewRewardAndBackTrack( node, newReward );
     }
-    else
+  }
+
+  // update leafs
+  fused->resetLeafs();
+  auto fused_nodes = serialize( fused );
+  auto base_leafs = base->leafs();
+  auto over_leafs = over->leafs();
+
+  for( auto n : fused_nodes )
+  {
+    bool isLeaf = false;
+    for( auto m : base_leafs )
     {
-      for( auto n : node->children() )
+      if( m->id() == n->id() )
       {
-        //fuseFrom(  )
+        isLeaf = true;
       }
     }
-  };
+
+    for( auto m : over_leafs )
+    {
+      if( m->id() == n->id() )
+      {
+        isLeaf = true;
+      }
+    }
+
+    if( isLeaf )
+    {
+      fused->addLeaf( n );
+    }
+  }
+
+  // update the costs
+  fused->setCost( fused->root()->h() );
+
+  return fused;
 }
 
 

@@ -486,7 +486,7 @@ std::string POGraphNode::actionStr( uint a ) const
   ls.logic->reset_state();
   ls.logic->setState( ls.state.get() );
 
-  std::cout << "state:" << *ls.state.get() << std::endl;
+//  std::cout << "state:" << *ls.state.get() << std::endl;
 
 //  auto start_1 = std::chrono::high_resolution_clock::now();
 
@@ -501,7 +501,7 @@ std::string POGraphNode::actionStr( uint a ) const
   if( a >= 0 && a < actions.size() )  ss << *actions[a];
   else                                ss << "no actions";
 
-  std::cout << "action:" << ss.str() << std::endl;
+//  std::cout << "action:" << ss.str() << std::endl;
 
   return ss.str();
 }

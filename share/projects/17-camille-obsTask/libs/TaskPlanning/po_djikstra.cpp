@@ -99,7 +99,7 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, Graph
 
 void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
 {
-  std::cout << "extract solution from:" << node->id() << std::endl;
+  //std::cout << "extract solution from:" << node->id() << std::endl;
 
   double rewardFromNode = expectedReward_[ node->id() ];
 
@@ -161,6 +161,7 @@ void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
   {
     policyNode->setTime( 0 );
     policyNode->setState( node->folStates(), node->bs() );
+    policyNode->setH( expectedReward_[ node->id() ] );
 
     policy_->setRoot( policyNode );
     policy_->setExpectedSymReward( expectedReward_[ node->id() ] );
@@ -194,6 +195,7 @@ void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
 
     // add child to parent
     policyNode->setTime( parent->time() + 1 );
+    policyNode->setH( expectedReward_[ node->id() ] );
 
     parent->addChild( policyNode );
     parent->setNextAction( node->getLeadingActionFromStr( graphParent ) );

@@ -21,6 +21,8 @@
 
 #include <Core/array.h>
 
+#include <memory>
+
 class MotionPlanningOrder
 {
 public:
@@ -39,7 +41,7 @@ private:
   uint policyId_;
 };
 
-class PolicyNode
+class PolicyNode : public std::enable_shared_from_this< PolicyNode > // note: public inheritance
 {
 public:
   typedef std::shared_ptr< PolicyNode > ptr;
@@ -49,8 +51,8 @@ public:
   // modifiers
   void setParent( const PolicyNode::ptr & parent ) { parent_ = parent; }
   void addChild( const PolicyNode::ptr & child )   { children_.append( child ); }
+  void exchangeChildren( const mlr::Array< PolicyNode::ptr > & children );
   void setState( const mlr::Array< std::shared_ptr<Graph> > & states, const arr & bs ) { states_ = states; bs_ = bs; }
-  //void setLeadingAction( const std::string & action ) { leadingAction_ = action; }
   void setNextAction( const std::string & action ) { nextAction_ = action; }
   void setTime( double t ) { time_ = t; }
   void setId( uint id ) { id_ = id; }
@@ -69,7 +71,7 @@ public:
   mlr::Array< std::shared_ptr<Graph> > states() const { return states_; }
   arr bs() const { return bs_; }
   //std::string leadingAction() const { return leadingAction_; }
-  std::string nextAction()    const { return nextAction_; }
+  std::string nextAction()      const { return nextAction_; }
   uint N()  const  { return bs_.N; }
   double time() const { return time_; }
   uint id() const  { return id_; }
@@ -77,10 +79,12 @@ public:
   double q() const { return q_; }
   double g() const { return g_; }
   double h() const { return h_; }
+  PolicyNode::ptr clone() const;
+  void cloneFrom( const PolicyNode::ptr & node ) const;
 
   // io
-  void save( std::ostream& os );
-  void load( std::istream& is );
+//  void save( std::ostream& os );
+//  void load( std::istream& is );
 
   // utility
   std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
@@ -92,7 +96,6 @@ private:
   mlr::Array< std::shared_ptr<Graph> > states_;
   arr bs_;
   // action
-  //std::string leadingAction_; // action that lead to this node
   std::string nextAction_; // action to take at this node
   //
   double time_;
@@ -125,17 +128,19 @@ public:
   void init( uint N );
   void setRoot( const PolicyNode::ptr & root )    { root_ = root; }
   void addLeaf( const PolicyNode::ptr & leaf )    { leafs_.append( leaf ); }
+  void resetLeafs()    { leafs_.clear(); }
   void setCost( double cost )                     { cost_ = cost; }
   void setExpectedSymReward( double r )           { expectedSymReward_ = r; }
   void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
   uint id() const { return id_; }
-  uint N() const { return N_; }
+  uint N()  const { return N_; }
   PolicyNode::ptr root() const { return root_; }
-  PolicyNode::L leafs()  const { return leafs_; }
+  PolicyNode::L  leafs() const { return leafs_; }
   double cost()          const { return cost_; }
   bool feasible()        const { return cost_ < std::numeric_limits< double >::infinity(); }
+  Policy::ptr clone() const;
 
   // io
   void save( std::ostream& os );
@@ -165,7 +170,14 @@ bool policyCompare( Policy::ptr lhs, Policy::ptr rhs );
 // test if two skeletons are equals
 bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs );
 
+// return a list from a tree
+std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy );
+
+// the series contain the same nodes
+bool equivalent( const std::list< PolicyNode::ptr > & s1, const std::list< PolicyNode::ptr > & s2 );
+
 // joint two policies
 Policy::ptr fuse( Policy::ptr base, Policy::ptr over );
+
 
 
