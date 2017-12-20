@@ -27,8 +27,8 @@ public:
   Policy::ptr solve( const POGraph::ptr & graph, const POGraphNode::ptr & from, GraphEdgeRewards::ptr = nullptr );
 
 private:
-  void dijkstra( const std::list < POGraphNode::ptr > & terminals, GraphEdgeRewards::ptr );
-  void extractSolutionFrom( const POGraphNode::ptr & );
+  void dijkstra( const std::list < POGraphNode::ptr > & terminals, const GraphEdgeRewards::ptr & mask );
+  void extractSolutionFrom( const POGraphNode::ptr &, const GraphEdgeRewards::ptr & mask );
   void buildPolicy( const POGraphNode::ptr & );
   void buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start );
 

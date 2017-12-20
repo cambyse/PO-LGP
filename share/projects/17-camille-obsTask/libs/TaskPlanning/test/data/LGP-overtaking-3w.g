@@ -42,17 +42,17 @@ BELIEF_START_STATE{
 {
 (free lane_2)
 (front_free truck_1)
-()=0.5
+()=0.3333
 }
 {
 (free lane_2)
 (before truck_2 truck_1)
 (front_free truck_2)
-()=0.3
+()=0.3333
 }
 {
 #(free lane_2)
-()=0.2
+()=0.3334
 }
 }
 

@@ -96,6 +96,9 @@ void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
     arr truck_speed{ 0.03, 0, 0 };
     truck_speed( 0 ) = 0.03;
     komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+    //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+
 
     // opposite car speed
     arr op_speed{ -0.03, 0, 0 };
@@ -202,6 +205,7 @@ void plan_graph_search()
   // set start configurations
   //mp->setKin( "LGP-overtaking-kin-1w.g" );
   //tp->setFol( "LGP-overtaking-1w.g" );
+  mp->setAgentFrames( { "car_ego" } );
   mp->setKin( "LGP-overtaking-kin-2w.g" );
   tp->setFol( "LGP-overtaking-2w.g" );
   //mp->setKin( "LGP-overtaking-kin-3w.g" );

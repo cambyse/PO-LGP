@@ -14,7 +14,7 @@
 
 #include "policy.h"
 #include <Core/graph.h>
-
+#include <unordered_map>
 #include <functional>
 
 static int policyNumber = 0;
@@ -280,6 +280,66 @@ std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy )
   return serializeFrom( policy->root() );
 }
 
+std::list< std::list< PolicyNode::ptr > > segmentFrom( const PolicyNode::ptr & node )
+{
+//  std::list< PolicyNode::ptr > nodes;
+
+//  if( node->children().size() == 1 )
+//  { // on the same segment, we add the following nodes
+//    auto newNodes = serializeFrom( n );
+//    nodes.insert( nodes.end(), newNodes.begin(), newNodes.end() );
+//  }
+//  else
+//  {
+
+//  }
+}
+
+std::vector< std::list< PolicyNode::ptr > > segment( const Policy::ptr & policy )
+{
+  std::unordered_map< uint, std::list< PolicyNode::ptr > > segments;
+
+  auto current = policy->root();
+
+  std::list< std::pair< PolicyNode::ptr, uint > > nodeSegPairs;
+
+  nodeSegPairs.push_back( std::make_pair( policy->root(), 0 ) );
+
+  while( ! nodeSegPairs.empty() )
+  {
+    auto nodeSegPair = nodeSegPairs.back();
+    nodeSegPairs.pop_back();
+
+    auto current  = nodeSegPair.first;
+    auto branchId = nodeSegPair.second;
+
+    segments[ branchId ].push_back( current );
+
+    if( current->children().size() == 1 )
+    { // just one child, we put the current node on the same segment
+      nodeSegPairs.push_back( { current->children().front(), branchId } );
+    }
+    else
+    {
+      for( auto c : current->children() )
+      {
+        branchId++;
+        nodeSegPairs.push_back( { c, branchId } );
+      }
+    }
+  }
+
+  // build return vector
+  std::vector< std::list< PolicyNode::ptr > > ret_segments( segments.size() );
+
+  for( auto l : segments )
+  {
+    ret_segments[ l.first ] = l.second;
+  }
+
+  return ret_segments;
+}
+
 bool equivalent( const std::list< PolicyNode::ptr > & s1, const std::list< PolicyNode::ptr > & s2 )
 {
   if( s1.size() != s2.size() )
@@ -376,7 +436,8 @@ Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
   }
 
   // update the costs
-  fused->setCost( fused->root()->h() );
+  fused->setExpectedSymReward( fused->root()->h() );
+  fused->setCost( -fused->expectedSymReward() );
 
   return fused;
 }

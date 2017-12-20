@@ -10,7 +10,7 @@ void GraphPrinter::print( const POGraphNode::ptr & node, std::list< POGraphNode:
   }
 
   ss_ << "digraph g{" << std::endl;
-
+  ss_ << "bgcolor=\"transparent\"";
   ss_ << "{" << std::endl;
   ss_ << node->id() << " [style=filled, fillcolor=blue]" << std::endl;
   for( auto t : terminals )

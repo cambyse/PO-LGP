@@ -139,6 +139,7 @@ public:
   PolicyNode::ptr root() const { return root_; }
   PolicyNode::L  leafs() const { return leafs_; }
   double cost()          const { return cost_; }
+  double expectedSymReward() const { return expectedSymReward_; }
   bool feasible()        const { return cost_ < std::numeric_limits< double >::infinity(); }
   Policy::ptr clone() const;
 
@@ -172,6 +173,9 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs );
 
 // return a list from a tree
 std::list< PolicyNode::ptr > serialize( const Policy::ptr & policy );
+
+// return a list of segments from a tree
+std::vector< std::list< PolicyNode::ptr > > segment( const Policy::ptr & policy );
 
 // the series contain the same nodes
 bool equivalent( const std::list< PolicyNode::ptr > & s1, const std::list< PolicyNode::ptr > & s2 );

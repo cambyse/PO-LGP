@@ -34,12 +34,12 @@ static void savePolicyToFile( const Policy::ptr & policy )
   auto name = namess.str();
 
   // save full policy
-  {
-    std::ofstream file;
-    file.open( skename );
-    policy->save( file );
-    file.close();
-  }
+//  {
+//    std::ofstream file;
+//    file.open( skename );
+//    policy->save( file );
+//    file.close();
+//  }
   // generate nice graph
   {
     std::ofstream file;

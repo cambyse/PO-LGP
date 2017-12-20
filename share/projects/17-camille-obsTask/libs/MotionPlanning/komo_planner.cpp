@@ -1,5 +1,7 @@
 #include <komo_planner.h>
 
+#include <chrono>
+
 #include <kin_equality_task.h>
 
 #include <policy_visualizer.h>
@@ -52,6 +54,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 
       for( auto nn : n->graph() )
       {
+        std::cout << *nn << std::endl;
         nn->newClone( kinG );
       }
 
@@ -65,6 +68,11 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       startKinematics_.append( kin );
     }
   }
+}
+
+void KOMOPlanner::setAgentFrames( const std::list< mlr::String > & frames )
+{
+  agentFrames_ = frames;
 }
 
 void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & policy )
@@ -143,7 +151,17 @@ void KOMOPlanner::display( const Policy::ptr & policy, double sec )
   MotionPlanningOrder po( policy->id() );
   po.setParam( "type", "jointPath" );
   // resolve since this planner doesn't store paths
+  //
+  auto start = std::chrono::high_resolution_clock::now();
+  //
+
   solveAndInform( po, tmp );
+
+  //
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+  std::cout << "planning time:" << ms << std::endl;
+  //
 
   // retrieve trajectories
   mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
@@ -439,7 +457,10 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
             if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
             {
-              AgentKinEquality * task = new AgentKinEquality( node->id(), q );  // tmp camille, think to delete it, or komo does it?
+              // build mask
+              arr qmask = { 1, 1, 0, 0 };
+
+              AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask );  // tmp camille, think to delete it, or komo does it?
               double slice_t = start_offset_ + node->time() - double( s ) / stepsPerPhase;
               komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 

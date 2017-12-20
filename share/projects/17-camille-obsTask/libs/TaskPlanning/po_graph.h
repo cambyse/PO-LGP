@@ -66,14 +66,42 @@ public:
   GraphEdgeRewards( const POGraph::ptr & graph )
     : graph_( graph )
     , size_( graph->size() )
-    , rewards_( size_ * size_, -1 )
+    , rewards_( size_ * size_, m_inf() )
+    , accessible_( size_, 0 )
   {
-
+    reset();
   }
 
   void reset()
   {
-    rewards_ = std::vector< double >( size_ * size_, -1 );
+    rewards_    = std::vector< double >( size_ * size_, m_inf() );
+    accessible_ = std::vector< uint >( size_, 0 );
+
+    std::list< POGraphNode::ptr > parents;
+    parents.push_back( graph_->root() );
+
+    while( ! parents.empty() )
+    {
+      auto parent = parents.back();
+      parents.pop_back();
+
+      accessible_[ parent->id() ] = 1;
+
+      for( auto f : parent->families() )
+      {
+        for( auto c : f )
+        {
+          auto i = index( parent->id(), c->id() );
+
+          rewards_[ i ] = -1;
+
+          if( ! accessible_[ c->id() ] )  // push if it has not been flagged accessible yet
+          {
+            parents.push_front( c );
+          }
+        }
+      }
+    }
   }
 
   void removeEdge( const std::size_t parent, const std::size_t child )
@@ -81,6 +109,16 @@ public:
     auto i = index( parent, child );
 
     rewards_[ i ] = m_inf();
+
+    auto n = graph_->getNode( child );
+
+    bool isAccessible = false;
+    for( auto p : n->parents() )
+    {
+      isAccessible = isAccessible || edgePossible( p->id(), n->id() );
+    }
+
+    if( ! isAccessible ) accessible_[ child ] = -1;
   }
 
   void removeNode( const std::size_t nodeId )
@@ -91,6 +129,20 @@ public:
     {
       removeEdge( p->id(), n->id() );
     }
+
+    accessible_[ nodeId ] = -1;
+  }
+
+  bool edgePossible( const std::size_t parent, const std::size_t child ) const
+  {
+    auto i = index( parent, child );
+
+    return rewards_[ i ] > m_inf();
+  }
+
+  bool nodeAccessible( const std::size_t id ) const
+  {
+    return accessible_[ id ];
   }
 
   double reward( const std::size_t parent, const std::size_t child ) const
@@ -110,5 +162,6 @@ private:
   POGraph::ptr graph_;
   const std::size_t size_;
   std::vector< double > rewards_;
+  std::vector< uint >   accessible_;
 };
 }

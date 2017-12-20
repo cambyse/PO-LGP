@@ -64,12 +64,12 @@ static void savePolicyToFile( const Policy::ptr & policy )
   auto name = namess.str();
 
   // save full policy
-  {
-    std::ofstream file;
-    file.open( skename );
-    policy->save( file );
-    file.close();
-  }
+//  {
+//    std::ofstream file;
+//    file.open( skename );
+//    policy->save( file );
+//    file.close();
+//  }
   // generate nice graph
   {
     std::ofstream file;
@@ -295,16 +295,20 @@ void plan_graph_search()
   //tp->setFol( "LGP-blocks-fol.g" );
   //mp->setKin( "LGP-blocks-kin.g" );
 
-  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
-  tp->setFol( "LGP-blocks-fol-easy-1w.g" );
+  tp->setFol( "LGP-blocks-fol-easy-2w.g" );
+  //tp->setFol( "LGP-blocks-fol-easy-1w.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
 
   /// TASK PLANNING
-  tp->solve();
-  /*tp->saveGraphToFile( "graph.gv" );
+  tp->buildGraph();
+  tp->saveGraphToFile( "graph.gv" );
   generatePngImage( "graph.gv" );
 
-  auto policy = tp->getPolicy();
+  //tp->solve();
+  //tp->saveGraphToFile( "graph.gv" );
+  //generatePngImage( "graph.gv" );
+
+  /*auto policy = tp->getPolicy();
   auto po     = tp->getPlanningOrder();
 
   // save policy

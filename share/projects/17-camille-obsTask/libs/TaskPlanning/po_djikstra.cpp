@@ -22,13 +22,13 @@ Policy::ptr Dijkstra::solve( const POGraph::ptr & graph, const POGraphNode::ptr 
   }
 
   dijkstra( graph_->terminals(), mask );
-  extractSolutionFrom( from );
+  extractSolutionFrom( from, mask );
   buildPolicy( from );
 
   return policy_;
 }
 
-void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, GraphEdgeRewards::ptr mask )
+void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, const GraphEdgeRewards::ptr & mask )
 {
   std::cout << "GraphSearchPlanner::dijkstra.." << std::endl;
 
@@ -62,32 +62,35 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, Graph
 
     for( auto parent : u->parents() )
     {
-      bool isImpossible = false;
-      const auto r = mask->reward( parent->id(), u->id() );
-      isImpossible = isImpossible || r <= m_inf();
-
-      double one = 0;
-
-      one += u->p();
-      auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] + r ); // p->(u,v)
-
-      for( auto v : u->andSiblings() )
+      if( parent->id() == 0 && u->id() == 2 )
       {
-        const auto r = mask->reward( parent->id(), v->id() );
-        isImpossible = isImpossible || r <= m_inf();
-
-        one += v->p();
-        alternativeReward += v->p() * ( expectedReward_[ v->id() ] + r );
+        std::cout << "qq" << std::endl;
       }
 
-      if( isImpossible ) alternativeReward = m_inf();
-
-      CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
-
-      if( alternativeReward > expectedReward_[ parent->id() ] )
+      if( mask->edgePossible( parent->id(), u->id() ) )
       {
-        expectedReward_[ parent->id() ] = alternativeReward;
-        Q.push( parent );
+        const auto r = mask->reward( parent->id(), u->id() );
+
+        double one = 0;
+
+        one += u->p();
+        auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] + r ); // p->(u,v)
+
+        for( auto v : u->andSiblings() )
+        {
+          const auto r = mask->reward( parent->id(), v->id() );
+
+          one += v->p();
+          alternativeReward += v->p() * ( expectedReward_[ v->id() ] + r );
+        }
+
+        CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
+
+        if( alternativeReward > expectedReward_[ parent->id() ] )
+        {
+          expectedReward_[ parent->id() ] = alternativeReward;
+          Q.push( parent );
+        }
       }
     }
   }
@@ -97,7 +100,7 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, Graph
   std::cout << "GraphSearchPlanner::dijkstra.. end" << std::endl;
 }
 
-void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
+void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node, const GraphEdgeRewards::ptr & mask )
 {
   //std::cout << "extract solution from:" << node->id() << std::endl;
 
@@ -111,7 +114,15 @@ void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
 
     for( auto c : f )
     {
-      familyReward += c->p() * expectedReward_[ c->id() ];
+      double is_removed = ! mask->edgePossible( node->id(), c->id() );
+      if( ! is_removed )
+      {
+        familyReward += c->p() * expectedReward_[ c->id() ];
+      }
+      else
+      {
+        familyReward = m_inf();
+      }
     }
 
     if( familyReward >= 1 + rewardFromNode )
@@ -124,13 +135,11 @@ void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
 
         if( ! c->isTerminal() && node->id() != c->id() )
         {
-          extractSolutionFrom( c );
+          extractSolutionFrom( c, mask );
         }
       }
     }
   }
-
-  CHECK( node->isTerminal() || bestFamily_[ node->id() ] != -1, "" );
 }
 
 void Dijkstra::buildPolicy( const POGraphNode::ptr & from )
@@ -165,6 +174,7 @@ void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
 
     policy_->setRoot( policyNode );
     policy_->setExpectedSymReward( expectedReward_[ node->id() ] );
+    policy_->setCost( -expectedReward_[ node->id() ] );
   }
   else
   {

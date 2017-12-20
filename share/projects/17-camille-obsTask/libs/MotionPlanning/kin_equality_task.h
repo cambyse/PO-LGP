@@ -22,9 +22,10 @@ namespace mp
 
 struct AgentKinEquality:TaskMap{
 
-  AgentKinEquality( uint id, const arr& q )
+  AgentKinEquality( uint id, const arr& q, const arr qmask )
     : id_( id )
     , q_  ( q )
+    , qmask_( qmask )
     , dim_( q.N )
   {
 
@@ -36,6 +37,13 @@ struct AgentKinEquality:TaskMap{
     y.setVectorBlock( G.q - q_, 0 );
 
     auto tmp_J = eye( dim_, dim_ );
+
+    // apply mask
+    for( auto i = 0; i < qmask_.d0; ++i )
+    {
+      y( i ) = y( i ) * qmask_( i );
+      tmp_J( i, i ) = tmp_J( i, i ) * qmask_( i );
+    }
 
     if(&J) J = tmp_J;
   }
@@ -54,6 +62,7 @@ private:
   // parameters
   const uint id_;
   const arr q_;
+  const arr qmask_;
   const uint dim_;
 };
 

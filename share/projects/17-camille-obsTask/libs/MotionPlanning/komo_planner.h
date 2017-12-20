@@ -19,6 +19,7 @@ public:
 
   // modifiers
   void setKin( const std::string & kinDescription ) override;
+  void setAgentFrames( const std::list< mlr::String > & frames );
 
   // informers
   void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) override;
@@ -52,6 +53,9 @@ private:
 
   KOMOFactory komoFactory_;
 
+  // agent frames
+  std::list< mlr::String > agentFrames_; // agent kin equality will be applied  on those frames
+
   // pose
   std::map< PolicyNode::ptr, mlr::Array< mlr::KinematicWorld > > effKinematics_;
   std::map< PolicyNode::ptr, arr > poseCosts_;
@@ -66,6 +70,7 @@ private:
   std::map< PolicyNode::ptr, arr > jointPathConstraints_;
   std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
   mlr::Array< PolicyNode::ptr > bsToLeafs_; //indicates the leaf terminating for a given state
+
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 

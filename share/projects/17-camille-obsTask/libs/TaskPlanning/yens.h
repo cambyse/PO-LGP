@@ -25,6 +25,8 @@ public:
   Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
 
   std::list< Policy::ptr > solve( const POGraph::ptr & graph, uint k );
+  std::list< Policy::ptr > solve_( const POGraph::ptr & graph, uint k );
+
 
 private:
   POGraph::ptr graph_;

@@ -1,5 +1,5 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_djikstra
+#define BOOST_TEST_MODULE test_yens
 #include <boost/test/unit_test.hpp>
 
 #include <graph_search.h>
@@ -52,6 +52,7 @@ static void savePolicyToFile( const Policy::ptr & policy )
   }
 }
 
+
 BOOST_AUTO_TEST_CASE( test_policy_clone )
 {
   // tests that Dijkstra works well from root and from other nodes
@@ -78,7 +79,8 @@ BOOST_AUTO_TEST_CASE( test_policy_clone )
 
 BOOST_AUTO_TEST_CASE( test_fuse_policies )
 {
-  // tests that Dijkstra works well from root and from other nodes
+  // GRAPH
+  // tests the fusion
   auto tp = std::make_shared< tp::GraphSearchPlanner >();
   tp->setFol( "data/LGP-overtaking-2w.g" );
   tp->buildGraph();
@@ -106,6 +108,7 @@ BOOST_AUTO_TEST_CASE( test_fuse_policies )
 
 BOOST_AUTO_TEST_CASE( test_yens_0 )
 {
+  // SEQUENCE
   // tests that Dijkstra works well from root and from other nodes
   auto tp = std::make_shared< tp::GraphSearchPlanner >();
   tp->setFol( "data/LGP-overtaking-1w.g" );
@@ -127,7 +130,7 @@ BOOST_AUTO_TEST_CASE( test_yens_0 )
 
   BOOST_CHECK( policies.size() == 1 );
 
-  // solve with k = 2, we should get two policies
+  // solve with k = 2, we should get at most 2+1 = 3 policies
   policies = yens.solve( graph, 3 );
 
   for( auto policy : policies )
@@ -138,6 +141,7 @@ BOOST_AUTO_TEST_CASE( test_yens_0 )
 
 BOOST_AUTO_TEST_CASE( test_yens_1 )
 {
+  //TREE
   // tests that Dijkstra works well from root and from other nodes
   auto tp = std::make_shared< tp::GraphSearchPlanner >();
   tp->setFol( "data/LGP-overtaking-2w.g" );
@@ -152,15 +156,14 @@ BOOST_AUTO_TEST_CASE( test_yens_1 )
 
   // solve with k = 0, or 1, we should get the first result of dijkstra
   auto policies = yens.solve( graph, 0 );
-
   BOOST_CHECK( policies.size() == 1 );
 
   policies = yens.solve( graph, 1 );
+  BOOST_CHECK( policies.size() == 2 );
 
-  BOOST_CHECK( policies.size() == 1 );
-
-  // solve with k = 2, we should get two policies
+  // solve with k = 3, we should get at most 3+1 = 4 policies
   policies = yens.solve( graph, 3 );
+  BOOST_CHECK( policies.size() <= 4 );
 
   for( auto policy : policies )
   {
@@ -183,22 +186,50 @@ BOOST_AUTO_TEST_CASE( test_yens_2 )
   tp::Yens yens( fols );
 
   // solve with k = 0, or 1, we should get the first result of dijkstra
-  auto policies = yens.solve( graph, 0 );
 
+  auto policies = yens.solve( graph, 0 );
   BOOST_CHECK( policies.size() == 1 );
 
   policies = yens.solve( graph, 1 );
+  BOOST_CHECK( policies.size() == 2 );
 
-  BOOST_CHECK( policies.size() == 1 );
+  // solve with k = 2, we should get at most 2+1 = 3 policies
+  policies = yens.solve( graph, 2 );
+  BOOST_CHECK( policies.size() <= 3 );
 
-  // solve with k = 2, we should get two policies
+  for( auto policy : policies )
+  {
+    savePolicyToFile( policy );
+  }
+
+  // solve with k = 3, we should get at most 3+1 = 4 policies
   policies = yens.solve( graph, 3 );
+  BOOST_CHECK( policies.size() <= 4 );
+
+  for( auto policy : policies )
+  {
+    savePolicyToFile( policy );
+  }
+
+  // solve with k = 4, we should get at most 4+1 = 5 policies
+  policies = yens.solve( graph, 4 );
+  BOOST_CHECK( policies.size() <= 5 );
+
+  for( auto policy : policies )
+  {
+    savePolicyToFile( policy );
+  }
+
+  // solve with k = 5, we should get at most 5+1 = 6 policies
+  policies = yens.solve( graph, 5 );
+  BOOST_CHECK( policies.size() <= 6 );
 
   for( auto policy : policies )
   {
     savePolicyToFile( policy );
   }
 }
+
 BOOST_AUTO_TEST_CASE( test_yens_3 )
 {
   // tests that Dijkstra works well from root and from other nodes
@@ -215,18 +246,104 @@ BOOST_AUTO_TEST_CASE( test_yens_3 )
 
   // solve with k = 0, or 1, we should get the first result of dijkstra
   auto policies = yens.solve( graph, 0 );
-
   BOOST_CHECK( policies.size() == 1 );
 
   policies = yens.solve( graph, 1 );
+  BOOST_CHECK( policies.size() == 2 );
 
-  BOOST_CHECK( policies.size() == 1 );
-
-  // solve with k = 2, we should get two policies
+  // solve with k = 3, we should get two policies
   policies = yens.solve( graph, 3 );
+  BOOST_CHECK( policies.size() <= 4 );
 
   for( auto policy : policies )
   {
     savePolicyToFile( policy );
+  }
+
+  // solve with k = 4, we should get two policies
+  policies = yens.solve( graph, 4 );
+  BOOST_CHECK( policies.size() <= 5 );
+
+  for( auto policy : policies )
+  {
+    savePolicyToFile( policy );
+  }
+}
+
+BOOST_AUTO_TEST_CASE( test_yens_4 )
+{
+  // tests that Dijkstra works well from root and from other nodes
+  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  tp->setFol( "data/LGP-blocks-fol-easy-1w.g" );
+  tp->buildGraph();
+  tp->saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
+
+  auto fols  = tp->getFolEngines();
+  auto graph = tp->getGraph();
+
+  tp::Yens yens( fols );
+
+  for( auto k = 0; k < 20; ++k )
+  {
+    auto policies = yens.solve( graph, k );
+    BOOST_CHECK( policies.size() <= k + 1 );
+
+    for( auto policy : policies )
+    {
+      savePolicyToFile( policy );
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE( test_blocks_1w )
+{
+  // tests that Dijkstra works well from root and from other nodes
+  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  tp->setFol( "data/LGP-blocks-fol-easy-1w.g" );
+  tp->buildGraph();
+  tp->saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
+
+  auto fols  = tp->getFolEngines();
+  auto graph = tp->getGraph();
+
+  tp::Yens yens( fols );
+
+  for( auto k = 0; k < 20; ++k )
+  {
+    auto policies = yens.solve( graph, k );
+    BOOST_CHECK( policies.size() <= k + 1 );
+
+    for( auto policy : policies )
+    {
+      savePolicyToFile( policy );
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE( test_blocks_2w )
+{
+  // tests that Dijkstra works well from root and from other nodes
+  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  tp->setFol( "data/LGP-blocks-fol-easy-2w.g" );
+  tp->buildGraph();
+  tp->saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
+
+  auto fols  = tp->getFolEngines();
+  auto graph = tp->getGraph();
+
+  tp::Yens yens( fols );
+
+  for( auto k = 0; k < 20; ++k )
+  {
+    auto policies = yens.solve( graph, k );
+    BOOST_CHECK( policies.size() <= k + 1 );
+
+    for( auto policy : policies )
+    {
+      savePolicyToFile( policy );
+    }
   }
 }
