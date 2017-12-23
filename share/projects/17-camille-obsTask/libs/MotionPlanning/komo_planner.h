@@ -15,11 +15,8 @@ class KOMOPlanner : public MotionPlanner
   typedef std::function<void( double time, const Graph& facts, Node *n, ExtensibleKOMO *, int verbose )> SymbolGrounder;
 
 public:
-  KOMOPlanner();
-
   // modifiers
   void setKin( const std::string & kinDescription ) override;
-  void setAgentFrames( const std::list< mlr::String > & frames );
 
   // informers
   void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) override;
@@ -53,9 +50,6 @@ private:
 
   KOMOFactory komoFactory_;
 
-  // agent frames
-  std::list< mlr::String > agentFrames_; // agent kin equality will be applied  on those frames
-
   // pose
   std::map< PolicyNode::ptr, mlr::Array< mlr::KinematicWorld > > effKinematics_;
   std::map< PolicyNode::ptr, arr > poseCosts_;
@@ -73,6 +67,9 @@ private:
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+  const mlr::String agentJointTag_   = "__agent__";
+  const mlr::String agentJointExcludeTag_   = ">__agent__";
+
 
   double kinEqualityWeight_  = 1e0;
   double fixEffJointsWeight_ = 1e3;

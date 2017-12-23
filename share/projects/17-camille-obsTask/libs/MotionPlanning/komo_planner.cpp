@@ -15,16 +15,6 @@ static double eps() { return std::numeric_limits< double >::epsilon(); }
 
 //--------Motion Planner--------------//
 
-KOMOPlanner::KOMOPlanner()
-{
-  using namespace std::placeholders;
-
-  //OverPlaneConstraintManager overPlane;
-
-  //auto groundActivateOverPlane = std::bind( &OverPlaneConstraintManager::groundActivateOverPlane, &overPlane, _1, _2, _3, _4, _5 );
-  //auto groundDeactivateOverPlane = std::bind( &OverPlaneConstraintManager::groundDeactivateOverPlane, &overPlane, _1, _2, _3, _4, _5 );
-}
-
 void KOMOPlanner::setKin( const std::string & kinDescription )
 {
   Graph G( kinDescription.c_str() );
@@ -68,11 +58,6 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       startKinematics_.append( kin );
     }
   }
-}
-
-void KOMOPlanner::setAgentFrames( const std::list< mlr::String > & frames )
-{
-  agentFrames_ = frames;
 }
 
 void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & policy )
@@ -343,9 +328,6 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
       //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
 
-      if( w == 0 )
-        int a = 0;
-
       for( auto node:treepath )
       {
         auto time = ( node->parent() ? node->parent()->time(): 0. );     // get parent time
@@ -417,8 +399,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       komo->setSquaredQAccelerations();
       //komo->setFixEffectiveJoints( -1., -1., fixEffJointsWeight_ );
       //komo->setFixSwitchedObjects();
-
-//      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      //komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
       for( auto node:treepath )
       {
@@ -457,8 +438,35 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
             if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
             {
+              auto G = *startKinematics_( w );
+
+              uintA selectedBodies;
+//              std::list< mlr::String > picks { "ego_joint" };
+//              for( const mlr::String & s : picks )
+//              {
+//                  if(s(-2)==':') s.resize(s.N-2,true);
+//                  mlr::Frame *f = G.getFrameByName(s);
+//                  if(!f) HALT("pick '" <<s <<"' not found");
+//                  if(!f->joint) HALT("pick '" <<s <<"' is not a joint");
+//                  selectedBodies.setAppend(f->ID);
+//              }
+
+              for( const auto & f: G.frames ) if( f->name.contains( agentJointTag_ ) & ! f->name.contains( agentJointExcludeTag_ ) )  selectedBodies.setAppend(f->ID);
+
               // build mask
-              arr qmask = { 1, 1, 0, 0 };
+              arr qmask = zeros( G.q.d0 );
+
+              for( auto b : selectedBodies )
+              {
+                mlr::Joint *j = G.frames.elem(b)->joint;
+
+                CHECK( j, "incoherence, the joint should not be null since it has been retrieved before" );
+
+                for( auto i = j->qIndex; i < j->qIndex + j->dim; ++i )
+                {
+                  qmask( i ) = 1;
+                }
+              }
 
               AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask );  // tmp camille, think to delete it, or komo does it?
               double slice_t = start_offset_ + node->time() - double( s ) / stepsPerPhase;
