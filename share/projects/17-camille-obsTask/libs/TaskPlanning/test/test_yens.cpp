@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE( test_policy_clone )
 
   BOOST_CHECK( pol_0->N() == pol_00->N() );
   BOOST_CHECK( pol_0->leafs().size() == pol_00->leafs().size() );
-  BOOST_CHECK( pol_0->cost() == pol_00->cost() );
+  BOOST_CHECK( pol_0->value() == pol_00->value() );
 
   savePolicyToFile( pol_00 );
 }

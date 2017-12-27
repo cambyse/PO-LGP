@@ -34,7 +34,7 @@ void PolicyBuilder::process( PONode::ptr node )
   if( node->isRoot() )
   {
     policy_->setRoot( policyNode );
-    policy_->setExpectedSymReward( node->expecteFutureReward() );
+    policy_->setValue( node->value() );
   }
   else
   {
@@ -66,8 +66,8 @@ void PolicyBuilder::process( PONode::ptr node )
     policyNode->setQ( node->pHistory() / node->parent()->pHistory() );
   }
 
-  policyNode->setG( node->prefixReward() );
-  policyNode->setH( node->expecteFutureReward() );
+  policyNode->setPrefixReward( node->prefixReward() );
+  policyNode->setValue( node->value() );
 
   // save correspondance
   PO2Policy_[ node ] = policyNode;

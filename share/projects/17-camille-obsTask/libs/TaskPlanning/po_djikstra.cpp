@@ -14,6 +14,15 @@ Dijkstra::Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines 
 
 Policy::ptr Dijkstra::solve( const POGraph::ptr & graph, const POGraphNode::ptr & from, GraphEdgeRewards::ptr mask )
 {
+  // reset state
+  values_.clear();
+  bestFamily_.clear();
+  parents_.clear();
+  policy_.reset();
+  PO2Policy_.clear();
+  Policy2PO_.clear();
+  //
+
   graph_ = graph;
 
   if( ! mask )
@@ -21,9 +30,19 @@ Policy::ptr Dijkstra::solve( const POGraph::ptr & graph, const POGraphNode::ptr 
     mask = std::make_shared< GraphEdgeRewards >( graph );
   }
 
+  // determines value of each node
   dijkstra( graph_->terminals(), mask );
-  extractSolutionFrom( from, mask );
-  buildPolicy( from );
+
+  // fill bestFamily_ and parents_
+  bool found = extractSolutionFrom( from, mask );
+
+  if( found )
+  {
+    // build policy data-structure
+    buildPolicy( from );
+  }
+
+  CHECK( ( ! found && ! policy_ ) || ( found && policy_ ), "inconsistency!" );
 
   return policy_;
 }
@@ -32,11 +51,11 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, const
 {
   std::cout << "GraphSearchPlanner::dijkstra.." << std::endl;
 
-  expectedReward_ = std::vector< double >( graph_->size(), m_inf() ); // distance from root to vertex[i]
+  values_ = std::vector< double >( graph_->size(), m_inf() ); // distance from root to vertex[i]
 
   auto comp = [ & ]( const POGraphNode::ptr & a, const POGraphNode::ptr & b ) -> bool
   {
-    return expectedReward_[ a->id() ] > expectedReward_[ b->id() ];
+    return values_[ a->id() ] < values_[ b->id() ];
   };
 
   bestFamily_ = std::vector< int >( graph_->size(), -1 );
@@ -50,7 +69,7 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, const
   // go from leafs to root
   for( auto v : terminals )
   {
-    expectedReward_[ v->id() ] = 0; // all rewards negative
+    values_[ v->id() ] = 0; // all rewards negative
     Q.push( v );
   }
 
@@ -62,11 +81,6 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, const
 
     for( auto parent : u->parents() )
     {
-      if( parent->id() == 0 && u->id() == 2 )
-      {
-        std::cout << "qq" << std::endl;
-      }
-
       if( mask->edgePossible( parent->id(), u->id() ) )
       {
         const auto r = mask->reward( parent->id(), u->id() );
@@ -74,21 +88,26 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, const
         double one = 0;
 
         one += u->p();
-        auto alternativeReward = u->p() * ( expectedReward_[ u->id() ] + r ); // p->(u,v)
+        auto alternativeValue = u->p() * ( values_[ u->id() ] + r ); // p->(u,v)
 
         for( auto v : u->andSiblings() )
         {
+          if( ! mask->edgePossible( parent->id(), v->id() ) )
+          {
+            alternativeValue = m_inf(); one = 1.0; break;
+          }
+
           const auto r = mask->reward( parent->id(), v->id() );
 
           one += v->p();
-          alternativeReward += v->p() * ( expectedReward_[ v->id() ] + r );
+          alternativeValue += v->p() * ( values_[ v->id() ] + r );
         }
 
         CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
 
-        if( alternativeReward > expectedReward_[ parent->id() ] )
+        if( alternativeValue > values_[ parent->id() ] )
         {
-          expectedReward_[ parent->id() ] = alternativeReward;
+          values_[ parent->id() ] = alternativeValue;
           Q.push( parent );
         }
       }
@@ -100,32 +119,37 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals, const
   std::cout << "GraphSearchPlanner::dijkstra.. end" << std::endl;
 }
 
-void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node, const GraphEdgeRewards::ptr & mask )
+bool Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node, const GraphEdgeRewards::ptr & mask )
 {
   //std::cout << "extract solution from:" << node->id() << std::endl;
+  double valueFromNode = values_[ node->id() ];
 
-  double rewardFromNode = expectedReward_[ node->id() ];
+  if( valueFromNode <= m_inf() )
+  {
+    return false;
+  }
 
   for( auto i = 0; i < node->families().size(); ++i )
   {
     auto f = node->families()( i );
 
-    double familyReward = 0;
+    double familyValue = 0;
+    const double r = mask->reward( node->id(), f.first()->id() );
 
     for( auto c : f )
     {
       double is_removed = ! mask->edgePossible( node->id(), c->id() );
       if( ! is_removed )
       {
-        familyReward += c->p() * expectedReward_[ c->id() ];
+        familyValue += c->p() * values_[ c->id() ];
       }
       else
       {
-        familyReward = m_inf();
+        familyValue = m_inf();
       }
     }
 
-    if( familyReward >= 1 + rewardFromNode )
+    if( familyValue >= valueFromNode - r )
     {
       bestFamily_[ node->id() ] = i;
 
@@ -140,15 +164,17 @@ void Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node, const GraphEd
       }
     }
   }
+
+  return true;
 }
 
-void Dijkstra::buildPolicy( const POGraphNode::ptr & from )
+bool Dijkstra::buildPolicy( const POGraphNode::ptr & from )
 {
   // clear last correspondance
   PO2Policy_.clear();
   Policy2PO_.clear();
 
-  if( expectedReward_[ from->id() ] == m_inf() )
+  if( values_[ from->id() ] == m_inf() )
   { // no solution has been found
     policy_.reset();
   }
@@ -162,7 +188,7 @@ void Dijkstra::buildPolicy( const POGraphNode::ptr & from )
   }
 }
 
-void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start )
+bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start )
 {
   PolicyNode::ptr policyNode = std::make_shared< PolicyNode >();
 
@@ -170,11 +196,10 @@ void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
   {
     policyNode->setTime( 0 );
     policyNode->setState( node->folStates(), node->bs() );
-    policyNode->setH( expectedReward_[ node->id() ] );
+    policyNode->setValue( values_[ node->id() ] );
 
     policy_->setRoot( policyNode );
-    policy_->setExpectedSymReward( expectedReward_[ node->id() ] );
-    policy_->setCost( -expectedReward_[ node->id() ] );
+    policy_->setValue( values_[ node->id() ] );
   }
   else
   {
@@ -205,7 +230,7 @@ void Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
 
     // add child to parent
     policyNode->setTime( parent->time() + 1 );
-    policyNode->setH( expectedReward_[ node->id() ] );
+    policyNode->setValue( values_[ node->id() ] );
 
     parent->addChild( policyNode );
     parent->setNextAction( node->getLeadingActionFromStr( graphParent ) );

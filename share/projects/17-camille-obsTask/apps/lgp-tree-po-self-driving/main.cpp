@@ -203,8 +203,6 @@ void plan_graph_search()
 
 
   // set start configurations
-  //mp->setKin( "LGP-overtaking-kin-1w.g" );
-  //tp->setFol( "LGP-overtaking-1w.g" );
   mp->setKin( "LGP-overtaking-kin-2w.g" );
   tp->setFol( "LGP-overtaking-2w.g" );
   //mp->setKin( "LGP-overtaking-kin-3w.g" );

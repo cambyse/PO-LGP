@@ -83,8 +83,8 @@ public:
   double time() const { return time_; }
   uint   depth() const{ return d_; }
   double prefixReward() const { return prefixReward_; }
-  double expecteTotalReward() const { return expectedTotalReward_; }
-  double expecteFutureReward() const { return expectedTotalReward_ - prefixReward_; }
+  double value() const { return value_; }
+  double expecteFutureReward() const { return value_ - prefixReward_; }
 
   // utility
   std::string bestActionStr() const { return actionStr( expectedBestA_ ); }
@@ -139,7 +139,7 @@ private:
 
   double lastActionReward_;                       ///  reward of the action leading to this node
   double prefixReward_;                           ///  this is the (certain) rewards of the prefix decisions
-  double expectedTotalReward_;                   ///  the expected future reward ?
+  double value_;                   ///  the expected total rewards
   //double expectedFutureReward_;                   ///  the expected future reward ?
 
   int expectedBestA_;                             ///  expected next best action

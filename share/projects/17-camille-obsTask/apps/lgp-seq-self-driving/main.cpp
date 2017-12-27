@@ -711,10 +711,61 @@ void cooperative_flying()
   for(;;) komo.displayTrajectory(.05, true);
 }
 
-void cooperative_man_model()
+void lane_insertion()
+{
+  mp::ExtensibleKOMO komo;
+  komo.setConfigFromFile();
+  komo.setModel( mlr::KinematicWorld( "model_lane_insertion.g" ) );
+
+  //komo.world.watch( true );
+  // general settings
+  komo.setSquaredQAccelerations();
+
+  // general settings
+  komo.setSquaredQAccelerations();
+
+  // road bounds
+  komo.setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
+  komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
+
+  // min speed
+  komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025}, 1e2, 1 );
+
+  // overtake constraints
+  komo.setPosition( 7.0, -1, "car_ego", "car_1", OT_sumOfSqr, { 0.225, 0, 0 } );
+  //komo.setPosition( 10, -1, "car_ego", "truck", OT_sumOfSqr, { 0.475, 0, 0 } );
+
+  // other vehicles speeds
+  arr k_speed{ 0.03, 0, 0 };
+  komo.setVelocity( 0.0, -1, "truck", NULL, OT_eq, k_speed );
+  komo.setVelocity( 0.0, -1, "car_1", NULL, OT_eq, k_speed );
+  komo.setVelocity( 0.0, -1, "car_2", NULL, OT_eq, k_speed );
+  komo.setVelocity( 0.0, -1, "car_3", NULL, OT_eq, k_speed );
+
+  komo.activateCollisions( "car_ego", "truck" );
+  komo.activateCollisions( "car_ego", "car_1" );
+  komo.activateCollisions( "car_ego", "car_2" );
+  komo.activateCollisions( "car_ego", "car_3" );
+
+  komo.setCollisions( true, 0.03 );
+
+  // launch komo
+  komo.reset();
+  komo.run();
+  //komo.checkGradients();
+
+  Graph result = komo.getReport(true);
+
+  komo.plotTrajectory();
+  komo.plotVelocity();
+
+  for(;;) komo.displayTrajectory(.05, true);
+}
+
+void test_config()
 {
   //mlr::KinematicWorld G( "model_cooperative_5.g" );
-  mlr::KinematicWorld G( "model_static.g" );
+  mlr::KinematicWorld G( "model_lane_insertion.g" );
   //std::cout << G.q.d0 << std::endl;
   G.watch( true );
 }
@@ -743,7 +794,9 @@ int main(int argc,char** argv){
 
   //cooperative_flying();
 
-  cooperative_man_model();
+  lane_insertion();
+
+  test_config();
 
 
 

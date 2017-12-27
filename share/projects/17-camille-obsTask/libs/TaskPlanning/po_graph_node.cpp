@@ -30,12 +30,10 @@
 
 
 //=====================free functions======================
-static double eps() { return std::numeric_limits< double >::epsilon(); }
-static double m_inf() { return -std::numeric_limits< double >::max(); }
 
 namespace tp
 {
-double m_inf() { return -1e9; }
+double m_inf() { return std::numeric_limits< double >::lowest(); }
 double eps() { return std::numeric_limits< double >::epsilon(); }
 
 struct stringSetHash {

@@ -112,6 +112,7 @@ public:
 
     auto n = graph_->getNode( child );
 
+    // set child as not accessible if there are no edges to the child
     bool isAccessible = false;
     for( auto p : n->parents() )
     {

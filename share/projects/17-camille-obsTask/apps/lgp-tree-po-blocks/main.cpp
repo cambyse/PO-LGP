@@ -246,7 +246,7 @@ void plan_mcts()
     mp->solveAndInform( po, policy );
 
     // print resulting cost
-    std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+    std::cout << "cost of the policy " << i << " " << policy->value() << std::endl;
 
     tp->integrate( policy );
   }

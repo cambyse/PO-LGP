@@ -113,7 +113,7 @@ PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs 
   , mcStats_( new MCStatistics )
   , lastActionReward_( 0 )
   , prefixReward_( 0 )
-  , expectedTotalReward_( m_inf() )
+  , value_( m_inf() )
   , expectedBestA_( -1 )
   , id_( 0 )
 {
@@ -159,7 +159,7 @@ PONode::PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uin
   , mcStats_( new MCStatistics )
   , lastActionReward_( 0 )
   , prefixReward_( 0 )
-  , expectedTotalReward_( m_inf() )
+  , value_( m_inf() )
   , expectedBestA_ (-1 )
 {
   // update the states
@@ -445,7 +445,7 @@ void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
   }
 
   // commit result
-  expectedTotalReward_ = mcStats_->X.first();
+  value_ = mcStats_->X.first();
 
   //std::cout << "average reward:" << expectedReward_ << std::endl;
 }
@@ -461,34 +461,34 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
 //  {
     CHECK( ! isTerminal(), "nodes that are already terminal should not be listed as nodes to expand" );
 
-    struct familyStatusType { double reward; bool solved; };
+    struct familyStatusType { double value; bool solved; };
     mlr::Array< familyStatusType > familyStatus( families_.d0 );
 
     // find best family
     // compute cost of each family
     for( auto i = 0; i < families_.d0; ++i )
     {
-      double familyReward = 0;
+      double familyValue = 0;
       bool   familySolved = true;
 
       for( auto c : families_( i ) )
       {
         //CHECK( c->lastActionReward_ == c->getWitnessLogicAndState().logic->lastStepReward, "" );
-        familyReward += c->pHistory_ / pHistory_ * c->expectedTotalReward_;
+        familyValue += c->pHistory_ / pHistory_ * c->value_;
         familySolved  = familySolved && c->isSolved_;
       }
 
-      familyStatus( i ) = { familyReward, familySolved };
+      familyStatus( i ) = { familyValue, familySolved };
     }
 
     // sort
-    double bestTotalReward = m_inf();
+    double bestTotalValue = m_inf();
     int bestFamilyId = -1;
     for( auto i = 0; i < families_.d0; ++i )
     {
-      if( familyStatus( i ).reward >= bestTotalReward )
+      if( familyStatus( i ).value >= bestTotalValue )
       {
-        bestTotalReward = familyStatus( i ).reward;
+        bestTotalValue = familyStatus( i ).value;
         bestFamilyId = i;
       }
     }
@@ -496,8 +496,8 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
     // retrieve best decision id
     bestFamily_ = families_( bestFamilyId );
     uint bestA = bestFamily_.first()->a_;
-    mcStats_->add( bestTotalReward ); // this one is more informed!
-    expectedTotalReward_  = mcStats_->X.first();
+    mcStats_->add( bestTotalValue ); // this one is more informed!
+    value_                = mcStats_->X.first();
     expectedBestA_        = bestA;
     isSolved_             = familyStatus( bestFamilyId ).solved;
 
@@ -539,7 +539,7 @@ void PONode::labelInfeasible()
   // set flag and badest reward
   mcStats_->clear();
   isInfeasible_ = true;
-  expectedTotalReward_ = m_inf();
+  value_ = m_inf();
 
   // we reset the rollouts, all the parents rollouts are potentially wrong ( too optimistic ).
   for( auto parent = parent_; parent; parent = parent->parent() )

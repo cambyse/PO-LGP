@@ -145,7 +145,7 @@ std::list< Policy::ptr > Yens::solve( const POGraph::ptr & graph, const uint K )
   // sort policies
   const auto policyComp = []( const Policy::ptr & a, const Policy::ptr & b )
   {
-    return a->expectedSymReward() > b->expectedSymReward();
+    return a->value() > b->value();
   };
   //
 

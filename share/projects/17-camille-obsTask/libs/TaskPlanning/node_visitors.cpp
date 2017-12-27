@@ -22,7 +22,7 @@ namespace tp
 
 void PrintRewardsVisitor::visit( PONode::ptr node )
 {
-  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward:" << node->expecteTotalReward() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
+  std::cout << "node:" << node->id() << " prefix reward:" << node->prefixReward() << " expected future reward:" << node->expecteFutureReward() << " expected total reward (value):" << node->value() << " rollouts + back-tracks:" << node->mcStats()->n << std::endl;
 
   for( auto c : node->bestFamily() )
   {

@@ -28,13 +28,13 @@ public:
 
 private:
   void dijkstra( const std::list < POGraphNode::ptr > & terminals, const GraphEdgeRewards::ptr & mask );
-  void extractSolutionFrom( const POGraphNode::ptr &, const GraphEdgeRewards::ptr & mask );
-  void buildPolicy( const POGraphNode::ptr & );
-  void buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start );
+  bool extractSolutionFrom( const POGraphNode::ptr &, const GraphEdgeRewards::ptr & mask );
+  bool buildPolicy( const POGraphNode::ptr & );
+  bool buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start );
 
 private:
   mlr::Array< std::shared_ptr< FOL_World > > folEngines_;
-  std::vector< double > expectedReward_;
+  std::vector< double > values_;
   // policy reconstruction
   POGraph::ptr graph_;
   std::vector< int >   bestFamily_;     // action to take in this bs and i

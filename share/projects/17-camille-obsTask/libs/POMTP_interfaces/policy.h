@@ -58,8 +58,8 @@ public:
   void setId( uint id ) { id_ = id; }
   void setP( double p ) { p_ = p; }
   void setQ( double q ) { q_ = q; }
-  void setG( double g ) { g_ = g; }
-  void setH( double h ) { h_ = h; }
+  void setPrefixReward( double g ) { prefixReward_ = g; }
+  void setValue( double v ) { value_ = v; }
 
   // utility
   void setDifferentiatingFact( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
@@ -77,8 +77,8 @@ public:
   uint id() const  { return id_; }
   double p() const { return p_; }
   double q() const { return q_; }
-  double g() const { return g_; }
-  double h() const { return h_; }
+  double prefixReward() const { return prefixReward_; }
+  double value() const { return value_; }
   PolicyNode::ptr clone() const;
   void cloneFrom( const PolicyNode::ptr & node ) const;
 
@@ -103,8 +103,8 @@ private:
 
   double p_;  // probability of reaching this node
   double q_;  // probability of reaching this node given that fact that its parent is reached
-  double g_;  // cost so far
-  double h_;  // future costs
+  double prefixReward_; // cumulted rewards so far
+  double value_; // expected future rewards
 
   // utility
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
@@ -129,8 +129,7 @@ public:
   void setRoot( const PolicyNode::ptr & root )    { root_ = root; }
   void addLeaf( const PolicyNode::ptr & leaf )    { leafs_.append( leaf ); }
   void resetLeafs()    { leafs_.clear(); }
-  void setCost( double cost )                     { cost_ = cost; }
-  void setExpectedSymReward( double r )           { expectedSymReward_ = r; }
+  void setValue( double v )           { value_ = v; }
   void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
@@ -138,9 +137,8 @@ public:
   uint N()  const { return N_; }
   PolicyNode::ptr root() const { return root_; }
   PolicyNode::L  leafs() const { return leafs_; }
-  double cost()          const { return cost_; }
-  double expectedSymReward() const { return expectedSymReward_; }
-  bool feasible()        const { return cost_ < std::numeric_limits< double >::infinity(); }
+  double value() const { return value_; }
+  bool feasible()        const { return value_ > - std::numeric_limits< double >::infinity(); }
   Policy::ptr clone() const;
 
   // io
@@ -156,9 +154,8 @@ private:
   PolicyNode::ptr root_;    // start belief state
   PolicyNode::L leafs_;     // terminal belief states
 
-  // cost
-  double cost_;
-  double expectedSymReward_; // expected number of steps in most cases
+  // value
+  double value_; // expected cumulated rewards
   enum StatusType status_;
 };
 

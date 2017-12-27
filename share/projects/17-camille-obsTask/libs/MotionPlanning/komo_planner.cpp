@@ -94,16 +94,12 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
     {
       std::cout << "Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
 
-      node->setG( std::numeric_limits< double >::infinity() );
+      node->setPrefixReward( - std::numeric_limits< double >::infinity() );
       optimizationFailed = true;
     }
   }
 
-  if( optimizationFailed )
-  {
-    policy->setCost( std::numeric_limits< double >::infinity() );
-  }
-  else
+  if( ! optimizationFailed )
   {
     // solve on path level
     optimizePath( policy );
@@ -125,7 +121,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
         }
       }
     }
-    policy->setCost( cost );
+    policy->setValue( - cost );
   }
   policy->setStatus( Policy::INFORMED );
 }
@@ -438,18 +434,10 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
             if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
             {
+              // retrieve agent joints
               auto G = *startKinematics_( w );
 
               uintA selectedBodies;
-//              std::list< mlr::String > picks { "ego_joint" };
-//              for( const mlr::String & s : picks )
-//              {
-//                  if(s(-2)==':') s.resize(s.N-2,true);
-//                  mlr::Frame *f = G.getFrameByName(s);
-//                  if(!f) HALT("pick '" <<s <<"' not found");
-//                  if(!f->joint) HALT("pick '" <<s <<"' is not a joint");
-//                  selectedBodies.setAppend(f->ID);
-//              }
 
               for( const auto & f: G.frames ) if( f->name.contains( agentJointTag_ ) & ! f->name.contains( agentJointExcludeTag_ ) )  selectedBodies.setAppend(f->ID);
 

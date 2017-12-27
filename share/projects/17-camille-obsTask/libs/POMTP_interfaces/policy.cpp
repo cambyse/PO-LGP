@@ -57,8 +57,8 @@ PolicyNode::ptr PolicyNode::clone() const
   node->id_ = id_;
   node->p_ = p_;
   node->q_ = q_;
-  node->g_ = g_;
-  node->h_ = h_;
+  node->prefixReward_ = prefixReward_;
+  node->value_ = value_;
   node->differentiatingFacts_ = differentiatingFacts_;
 
   return node;
@@ -168,8 +168,7 @@ Policy::ptr Policy::clone() const
 
   root_->cloneFrom( root );
 
-  policy->cost_ = cost_;
-  policy->expectedSymReward_ = expectedSymReward_;
+  policy->value_ = value_;
   policy->status_ = status_;
 
   std::function< void( const PolicyNode::ptr & ) > updateLeafsFrom;
@@ -236,7 +235,7 @@ PolicyNode::L getPathTo( const PolicyNode::ptr & node )
 
 bool policyCompare( Policy::ptr lhs, Policy::ptr rhs )
 {
-  return ! ( lhs->cost() == rhs->cost() ) && ( lhs->cost() < rhs->cost() );
+  return ! ( lhs->value() == rhs->value() ) && ( lhs->value() > rhs->value() );
 }
 
 bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
@@ -358,29 +357,29 @@ bool equivalent( const std::list< PolicyNode::ptr > & s1, const std::list< Polic
   return equal;
 }
 
-static void setNewRewardAndBackTrack( const PolicyNode::ptr & node, double newReward )
+static void setNewValueAndBackTrack( const PolicyNode::ptr & node, double newValue )
 {
   auto p = node->parent();
 
   if( ! p )
   {
-    node->setH( newReward );
+    node->setValue( newValue );
     return;
   }
 
   // original step Cost
-  auto stepCost = node->h() - p->h();
+  auto stepCost = node->value() - p->value();
 
   //
-  node->setH( newReward );
+  node->setValue( newValue );
 
-  double parentFutureRewards = -stepCost;
+  double parentValue = -stepCost;
   for( auto c : p->children() )
   {
-    parentFutureRewards += c->p() * c->h();
+    parentValue += c->p() * c->value();
   }
 
-  setNewRewardAndBackTrack( p, parentFutureRewards );
+  setNewValueAndBackTrack( p, parentValue );
 }
 
 Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
@@ -394,13 +393,13 @@ Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
   {
     if( node->id() == over->root()->id() )
     {
-      auto rewardNode = node->h();
-      auto newReward  = over->root()->h();
+      auto valueNode = node->value();
+      auto newValue  = over->root()->value();
 
       node->exchangeChildren( over->root()->children() );
 
       // update recursively the costs
-      setNewRewardAndBackTrack( node, newReward );
+      setNewValueAndBackTrack( node, newValue );
     }
   }
 
@@ -436,8 +435,7 @@ Policy::ptr fuse( Policy::ptr base, Policy::ptr over )
   }
 
   // update the costs
-  fused->setExpectedSymReward( fused->root()->h() );
-  fused->setCost( -fused->expectedSymReward() );
+  fused->setValue( fused->root()->value() );
 
   return fused;
 }

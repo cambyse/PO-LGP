@@ -125,13 +125,6 @@ void GraphSearchPlanner::solve()
     buildGraphImpl();
   }
 
-  /*dijkstra();
-  extractSolutions();
-  buildPolicy();*/
-
-  /*Dijkstra solver( folEngines_ );
-  policy_ = solver.solve( root_, terminals_ );*/
-
   Yens solver( folEngines_ );
   auto policies = solver.solve( graph_, 10 );
 
