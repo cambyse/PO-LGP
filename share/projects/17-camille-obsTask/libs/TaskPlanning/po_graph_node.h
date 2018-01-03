@@ -147,7 +147,7 @@ public:
   double pHistory() const { return pHistory_; }
   double p() const { return p_; }
   arr bs()   const { return bs_; }
-  std::vector< SymbolicState > resultStates() const { return resultStates_; }
+  const std::vector< SymbolicState > & resultStates() const { return resultStates_; }
   uint getLeadingActionFrom( const POGraphNode::ptr & parent ) const;
   std::string getLeadingActionFromStr( const POGraphNode::ptr & parent ) const;
   // utility

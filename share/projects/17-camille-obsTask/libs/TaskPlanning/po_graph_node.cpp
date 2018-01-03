@@ -290,14 +290,14 @@ auto elapsed_2 = std::chrono::high_resolution_clock::now() - start_2;
 long long mcs_2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_2).count();
 _state_str_time_us += mcs_2;
 
-        resultStates[ w ] = stateStr;
-        outcomesToWorlds[ observableStateStr ].push_back( w );
+        resultStates[ w ] = std::move( stateStr );
+        outcomesToWorlds[ std::move( observableStateStr ) ].push_back( w );
       }
     }
 
     // compute the observable facts intersection
     std::set< std::string > intersection = outcomesToWorlds.begin()->first;
-    for( auto outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
+    for( auto & outcome = ++outcomesToWorlds.begin(); outcome != outcomesToWorlds.end(); ++outcome )
     {
       auto facts  = outcome->first;
       std::set< std::string > inter;
@@ -310,10 +310,10 @@ _state_str_time_us += mcs_2;
 
     // create as many children as outcomes
     POGraphNode::L familiy;
-    for( auto outcome : outcomesToWorlds )
+    for( const auto & outcome : outcomesToWorlds )
     {
-      auto facts  = outcome.first;
-      auto worlds = outcome.second;
+      const auto & facts  = outcome.first;
+      const auto & worlds = outcome.second;
 
       // update belief state
       arr bs = zeros( N_ );
@@ -335,8 +335,8 @@ _state_str_time_us += mcs_2;
       // check for existing node in graph
       for( auto m = graph_->begin(); m != graph_->end(); ++m )
       {
-        auto a = (*m)->resultStates();
-        auto b = resultStates;
+        const auto & a = (*m)->resultStates();
+        const auto & b = resultStates;
 
         if( (*m)->bs() == bs && SymbolicState::equivalent( a, b )  )
         {
@@ -358,7 +358,7 @@ _state_str_time_us += mcs_2;
         // get the fact not in intersection
         std::set< std::string > differenciatingFacts;
         std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
-                             std::inserter(differenciatingFacts, differenciatingFacts.begin() ) );
+                             std::inserter( differenciatingFacts, differenciatingFacts.begin() ) );
 
         child->indicateDifferentiatingFacts( std::move( differenciatingFacts ) );
         //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
@@ -371,7 +371,7 @@ _state_str_time_us += mcs_2;
 
     // check integrity
     double pSum = 0;
-    for( auto n : familiy ) pSum += n->pHistory();
+    for( const auto & n : familiy ) pSum += n->pHistory();
 
     CHECK_ZERO( pSum / pHistory() - 1.0, 0.000001, "" );
     //
@@ -379,7 +379,7 @@ _state_str_time_us += mcs_2;
     families_.append( familiy );
 
     // indicate and relation
-    for( auto n : familiy )
+    for( const auto & n : familiy )
     {
       n->setAndSiblings( familiy );
     }
@@ -414,7 +414,7 @@ void POGraphNode::setAndSiblings( const POGraphNode::L & siblings )
 {
   andSiblings_.clear();
 
-  for( auto s : siblings )
+  for( const auto & s : siblings )
   {
     if( s != shared_from_this() ) andSiblings_.append( s );
   }
