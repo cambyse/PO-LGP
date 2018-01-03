@@ -17,6 +17,7 @@
 
 #include <unordered_map>
 
+
 #include <list>
 
 #include <chrono>
@@ -36,16 +37,19 @@ namespace tp
 double m_inf() { return std::numeric_limits< double >::lowest(); }
 double eps() { return std::numeric_limits< double >::epsilon(); }
 
-struct stringSetHash {
+struct StringSetHash {
 size_t operator()( const std::set< std::string > & facts ) const
 {
   std::string cont;
   for( auto s : facts )
+  {
     cont += s;
+  }
 
   return std::hash<std::string>()( cont );
 }
 };
+
 
 static std::string toStdString( Node * node )
 {
@@ -77,6 +81,8 @@ static SymbolicState getStateStr( Graph * state )
         )
       s.facts.insert( fact );
   }
+
+  s.factsHash_ = StringSetHash()( s.facts );
 
   return s;
 }
@@ -255,7 +261,7 @@ POGraphNode::L POGraphNode::expand()
   {
     //std::cout << "------------" << std::endl;
     //std::cout << "action:" << a << std::endl;
-    std::unordered_map< std::set< std::string >, std::list< uint >, stringSetHash > outcomesToWorlds;
+    std::unordered_map< std::set< std::string >, std::list< uint >, StringSetHash > outcomesToWorlds;
     std::vector< SymbolicState > resultStates( N_ );
 
     for( auto w = 0; w < N_; ++w )
@@ -270,7 +276,14 @@ POGraphNode::L POGraphNode::expand()
         CHECK( logic->KB.isDoubleLinked == false, "wrong parametrization!" );
 
         logic->setState( state.get() );
+
+        auto start_1 = std::chrono::high_resolution_clock::now();
+
         logic->transition( action ); _n_transitions++;
+
+        auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+        long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+        _transition_time_us += mcs_1;
 
         auto result             = logic->getState();
 
@@ -291,7 +304,7 @@ POGraphNode::L POGraphNode::expand()
       std::set_intersection( intersection.begin(), intersection.end(),
                              facts.begin(), facts.end(),
                              std::inserter( inter, inter.begin() ) );
-      intersection = inter;
+      intersection = std::move( inter );
     }
 
     // create as many children as outcomes
@@ -318,7 +331,7 @@ POGraphNode::L POGraphNode::expand()
       POGraphNode::ptr child;
       bool found = false;
 
-      // check for exsting node in graph
+      // check for existing node in graph
       for( auto m = graph_->begin(); m != graph_->end(); ++m )
       {
         auto a = (*m)->resultStates();
@@ -435,13 +448,13 @@ std::vector< std::vector<FOL_World::Handle> > POGraphNode::getPossibleActions( u
 
       logic->setState( state.get() );
 
-//auto start_1 = std::chrono::high_resolution_clock::now();
+auto start_1 = std::chrono::high_resolution_clock::now();
 
       auto actions = folEngines_( w )->get_actions(); _n_get_actions++;
 
-//auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
-//long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
-//_get_actions_time_us += mcs_1;
+auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+_get_actions_time_us += mcs_1;
 
       world_to_actions[ w ] = actions;
       nActions = actions.size();

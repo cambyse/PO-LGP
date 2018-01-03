@@ -48,11 +48,19 @@ struct SymbolicState
 
   static bool equivalent( const SymbolicState & a, const SymbolicState & b )
   {
-    a.facts == b.facts;
+    if( a.factsHash_ != b.factsHash_ )
+    {
+      return false;
+    }
+    else
+    {
+      return a.facts == b.facts;
+    }
   }
 
   std::string state;
   std::set< std::string > facts;
+  std::size_t factsHash_;
 };
 
 //===========================================================================

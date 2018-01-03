@@ -6,7 +6,7 @@ namespace tp
 
 //---------Dijkstra-----------------//
 
-Dijkstra::Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
+Dijkstra::Dijkstra( const mlr::Array< std::shared_ptr< FOL_World > > & folEngines )
   : folEngines_( folEngines )
 {
 
@@ -174,7 +174,8 @@ bool Dijkstra::buildPolicy( const POGraphNode::ptr & from )
   Policy2PO_.clear();
 
   if( values_[ from->id() ] == m_inf() )
-  { // no solution has been found
+  {
+    // no solution has been found
     policy_.reset();
   }
   else
