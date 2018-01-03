@@ -215,53 +215,36 @@ void plan_graph_search()
   tp->saveGraphToFile( "graph.gv" );
   generatePngImage( "graph.gv" );
 
-  /// 1
-  /// TASK PLANNING
-  tp->solve();
+  /// LOOP
+  MotionPlanningOrder po( -1 );
+  Policy::ptr policy;
+  Policy::ptr old_policy;
 
-  auto policy_1 = tp->getPolicy();
-  auto po_1     = tp->getPlanningOrder();
+  do
+  {
+    old_policy = policy;
 
-  // save policy
-  savePolicyToFile( policy_1 );
+    /// MOTION PLANNING
+    if( policy )
+    {
+      mp->solveAndInform( po, policy );
 
-  /// MOTION PLANNING
-  mp->solveAndInform( po_1, policy_1 );
+      tp->integrate( policy );
+    }
 
-  tp->integrate( policy_1 );
+    /// DYNAMIC PROGRAMMING
+    tp->solve();
+    policy = tp->getPolicy();
+    po     = tp->getPlanningOrder();
 
-  /// 2
-  tp->solve();
+    // save policy
+    savePolicyToFile( policy );
+  }
+  while( ! skeletonEquals( policy, old_policy ) );
+  ///
 
-  auto policy_2 = tp->getPolicy();
-  auto po_2     = tp->getPlanningOrder();
 
-  // save policy
-  savePolicyToFile( policy_2 );
-
-  /// MOTION PLANNING
-  mp->solveAndInform( po_2, policy_2 );
-
-  tp->integrate( policy_2 );
-
-  /// 3
-  tp->solve();
-
-  auto policy_3 = tp->getPolicy();
-  auto po_3     = tp->getPlanningOrder();
-
-  // save policy
-  savePolicyToFile( policy_3 );
-
-  /// MOTION PLANNING
-  mp->solveAndInform( po_3, policy_3 );
-
-  // print resulting cost
-  //std::cout << "cost of the policy " << " " << policy->cost() << std::endl;
-
-  mp->display( policy_3, 3000 );
-
-//  tp->integrate( policy );
+  mp->display( policy, 3000 );
 
   mlr::wait( 30, true );
 }

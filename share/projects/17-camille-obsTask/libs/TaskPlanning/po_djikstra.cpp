@@ -144,7 +144,7 @@ bool Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
       }
     }
 
-    if( familyValue >= valueFromNode - r )
+    if( familyValue + r >= valueFromNode - eps() )
     {
       bestFamily_[ node->id() ] = i;
 
@@ -159,6 +159,10 @@ bool Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
       }
     }
   }
+
+  //
+  CHECK( bestFamily_[ node->id() ] != -1 || node->isTerminal(), "since we extract the policy from this node, it should not be -1" );
+  //
 
   return true;
 }

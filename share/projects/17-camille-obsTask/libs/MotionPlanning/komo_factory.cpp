@@ -118,16 +118,6 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
 
 arr ExtensibleKOMO::getCostsPerPhase()
 {
-//  if(featureValues.N>1){ //old optimizer -> remove some time..
-//    arr tmp;
-//    for(auto& p:featureValues) tmp.append(p);
-//    featureValues = ARRAY<arr>(tmp);
-
-//    ObjectiveTypeA ttmp;
-//    for(auto& p:featureTypes) ttmp.append(p);
-//    featureTypes = ARRAY<ObjectiveTypeA>(ttmp);
-//  }
-
   bool wasRun = featureValues.N!=0;
 
   arr phi;

@@ -240,6 +240,9 @@ bool policyCompare( Policy::ptr lhs, Policy::ptr rhs )
 
 bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
 {
+  if( !lhs && !rhs ) return true;
+  if( !lhs || !rhs ) return false;
+
   auto ll = lhs->leafs();
   auto lr = rhs->leafs();
 
@@ -249,7 +252,7 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
   {
     if( i < lr.d0 )
     {
-      equal && ( ll(i)->id() == (lr(i))->id() );
+      equal = equal && ( ll(i)->id() == (lr(i))->id() );
     }
     else
     {

@@ -174,14 +174,17 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       // get the right world
       for( auto w = 0; w < node->N(); ++w )
       {
-        auto leaf = bsToLeafs_( w );
-        CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
+        if( node->bs()( w ) > 0 )
+        {
+          auto leaf = bsToLeafs_( w );
+          CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
 
-        auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
-        auto wcost = trajCosts( phase_start_offset_ + phase );
+          auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
+          auto wcost = trajCosts( phase_start_offset_ + phase );
 
-        cost += node->bs()( w ) * wcost;
-        //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
+          cost += node->bs()( w ) * wcost;
+          //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
+        }
       }
 
       // push children on list
@@ -195,19 +198,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
 
     /// UPDATE VALUES
     updateValues( policy );
-    // update policy cost
-//    double cost = 0;
-//    for( auto l : policy->leafs() )
-//    {
-//      for( auto w = 0; w < l->N(); ++w )
-//      {
-//        if( l->bs()( w ) > eps() )
-//        {
-//          cost        += jointPathCosts_      [ l ]( w ) * l->bs()( w );
-//        }
-//      }
-//    }
-//    policy->setValue( - cost );
+
   }
   policy->setStatus( Policy::INFORMED );
 

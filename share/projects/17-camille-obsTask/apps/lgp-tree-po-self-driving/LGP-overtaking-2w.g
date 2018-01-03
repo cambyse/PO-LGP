@@ -25,10 +25,7 @@ location
 scene
 ego_car
 truck
-lane_1_near
-lane_1_far
-lane_2_near
-lane_2_far
+lane_2
 lanes
 
 ## initial state
@@ -41,16 +38,12 @@ START_STATE {
 
 BELIEF_START_STATE{ 
 {
-(free lane_1_near)
-(free lane_1_far)
-(free lane_2_near)
-()=0.8
+(free lane_2)
+()=0.05
 }
 {
-(free lane_1_near)
-(free lane_1_far)
-#(free lane_2_near)
-()=0.2
+#(free lane_2)
+()=0.95
 }
 }
 
@@ -61,7 +54,7 @@ Rule {
 }
 
 Rule {
-  { (free lane_2_near)! (observed lanes) (following) (behind ego_car truck) } # 
+  { (free lane_2)! (observed lanes) (following) (behind ego_car truck) } # 
   { (QUIT) }
 }
 
@@ -78,13 +71,13 @@ REWARD {
 DecisionRule look {
   X
   { (scene X) (behind  ego_car truck) (observed X)!}
-  { (in_sight lane_1_near) (in_sight lane_1_near) (in_sight lane_2_near) (in_sight lane_2_near) (observed X) (following)! komoLook(X)=1. }
+  { (in_sight lane_2) (observed X) (following)! komoLook(X)=1. }
 }
 
 # Overtake
 DecisionRule overtake {
   X
-  { (vehicle X) (behind  ego_car X)  (free lane_2_near) }
+  { (vehicle X) (behind  ego_car X)  (free lane_2) }
   { (behind  ego_car X)! (before  ego_car X) komoOvertake(X)=1. }
 }
 
@@ -101,6 +94,12 @@ Rule {
   X
   { (in_sight X)  (NOT_OBSERVABLE free X) }
   { (in_sight X)! (NOT_OBSERVABLE free X)! (free X) }
+}
+
+Rule {
+  X
+  { (in_sight X)  (NOT_OBSERVABLE free X)! }
+  { (in_sight X)! }
 }
 
 
