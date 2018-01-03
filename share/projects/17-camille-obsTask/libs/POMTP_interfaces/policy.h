@@ -58,7 +58,8 @@ public:
   void setId( uint id ) { id_ = id; }
   void setP( double p ) { p_ = p; }
   void setQ( double q ) { q_ = q; }
-  void setPrefixReward( double g ) { prefixReward_ = g; }
+  //void setPrefixReward( double prefix ) { prefixReward_ = prefix; }
+  void setLastReward( double reward ) { lastReward_ = reward; }
   void setValue( double v ) { value_ = v; }
 
   // utility
@@ -70,14 +71,14 @@ public:
   mlr::Array< PolicyNode::ptr > children() const { return children_; }
   mlr::Array< std::shared_ptr<Graph> > states() const { return states_; }
   arr bs() const { return bs_; }
-  //std::string leadingAction() const { return leadingAction_; }
   std::string nextAction()      const { return nextAction_; }
   uint N()  const  { return bs_.N; }
   double time() const { return time_; }
   uint id() const  { return id_; }
   double p() const { return p_; }
   double q() const { return q_; }
-  double prefixReward() const { return prefixReward_; }
+  //double prefixReward() const { return prefixReward_; }
+  double lastReward() const { return lastReward_; }
   double value() const { return value_; }
   PolicyNode::ptr clone() const;
   void cloneFrom( const PolicyNode::ptr & node ) const;
@@ -103,7 +104,8 @@ private:
 
   double p_;  // probability of reaching this node
   double q_;  // probability of reaching this node given that fact that its parent is reached
-  double prefixReward_; // cumulted rewards so far
+  double lastReward_;
+  //double prefixReward_; // cumulted rewards so far
   double value_; // expected future rewards
 
   // utility

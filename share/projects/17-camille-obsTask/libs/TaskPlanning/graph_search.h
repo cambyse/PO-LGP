@@ -21,12 +21,15 @@ public:
 
   // modifiers
   void setFol( const std::string & folDescription ) override;
-  void buildGraph();
   void solve() override;
   void integrate( const Policy::ptr & policy ) override;
 
+  void buildGraph();
+  void setInitialReward( double r ) { initialReward_ = r; }
+
   // getters
   POGraph::ptr getGraph() const { return graph_; }
+  POWeightedGraph::ptr getWeightedGraph() const { return weightedGraph_; }
   mlr::Array< std::shared_ptr<FOL_World> > getFolEngines() const { return folEngines_; }
   Policy::ptr getPolicy() const override;
   MotionPlanningOrder getPlanningOrder() const override;
@@ -49,14 +52,11 @@ private:
   mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
   arr bs_;
   POGraph::ptr graph_;
+  POWeightedGraph::ptr weightedGraph_;
 
-  // dijkstra
-  std::vector< double > expectedReward_;
-  // policy reconstruction
-  std::vector< int >   bestFamily_;     // action to take in this bs and i
-  std::vector< POGraphNode::ptr > parents_;
+  // dynamic programming
+  double initialReward_ = -1;
   Policy::ptr policy_;
-  std::map< POGraphNode::ptr, PolicyNode::ptr > PO2Policy_;
 
   // constants
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

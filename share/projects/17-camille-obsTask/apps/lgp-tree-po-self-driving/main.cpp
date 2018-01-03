@@ -208,24 +208,58 @@ void plan_graph_search()
   //mp->setKin( "LGP-overtaking-kin-3w.g" );
   //tp->setFol( "LGP-overtaking-3w.g" );
 
-  /// TASK PLANNING
-  tp->solve();
+  /// DECISION GRAPH
+  tp->setInitialReward( -0.001 );  // balance exploration
+  tp->buildGraph();
+
   tp->saveGraphToFile( "graph.gv" );
   generatePngImage( "graph.gv" );
 
-  auto policy = tp->getPolicy();
-  auto po     = tp->getPlanningOrder();
+  /// 1
+  /// TASK PLANNING
+  tp->solve();
+
+  auto policy_1 = tp->getPolicy();
+  auto po_1     = tp->getPlanningOrder();
 
   // save policy
-  savePolicyToFile( policy );
+  savePolicyToFile( policy_1 );
 
   /// MOTION PLANNING
-  //mp->solveAndInform( po, policy );
+  mp->solveAndInform( po_1, policy_1 );
+
+  tp->integrate( policy_1 );
+
+  /// 2
+  tp->solve();
+
+  auto policy_2 = tp->getPolicy();
+  auto po_2     = tp->getPlanningOrder();
+
+  // save policy
+  savePolicyToFile( policy_2 );
+
+  /// MOTION PLANNING
+  mp->solveAndInform( po_2, policy_2 );
+
+  tp->integrate( policy_2 );
+
+  /// 3
+  tp->solve();
+
+  auto policy_3 = tp->getPolicy();
+  auto po_3     = tp->getPlanningOrder();
+
+  // save policy
+  savePolicyToFile( policy_3 );
+
+  /// MOTION PLANNING
+  mp->solveAndInform( po_3, policy_3 );
 
   // print resulting cost
   //std::cout << "cost of the policy " << " " << policy->cost() << std::endl;
 
-  mp->display( policy, 3000 );
+  mp->display( policy_3, 3000 );
 
 //  tp->integrate( policy );
 

@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE( test_policy_clone )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Dijkstra dij( fols );
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE( test_fuse_policies )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Dijkstra dij( fols );
 
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE( test_fuse_policies )
   savePolicyToFile( pol_0 );
 
   // remove 2->4, there is still a solution
-  auto mask = std::make_shared< tp::GraphEdgeRewards >( graph );
-  mask->removeEdge( 2, 4 );
+  auto clone = graph->clone();
+  clone->removeEdge( 2, 4 );
 
-  auto pol_1 = dij.solve( graph, graph->getNode( 2 ), mask );
+  auto pol_1 = dij.solve( clone, clone->getNode( 2 ) );
   savePolicyToFile( pol_1 );
 
   auto pol_fused = fuse( pol_0, pol_1 );
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( test_yens_0 )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE( test_yens_1 )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE( test_yens_2 )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE( test_yens_3 )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE( test_yens_4 )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE( test_blocks_1w )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE( test_blocks_2w )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   tp::Yens yens( fols );
 

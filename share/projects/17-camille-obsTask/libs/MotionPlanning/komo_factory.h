@@ -37,10 +37,11 @@ public:
   void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
   void groundTasks( double phase, const Graph& facts, int verbose=0 );
 
-  void plotVelocity( const std::string & suffix = "" );
-
   void setPrefixSetup() { prefixSetup_ = true; }
   bool isPrefixSetup() const { return prefixSetup_; }
+
+  void plotVelocity( const std::string & suffix = "" ) const;
+  arr getCostsPerPhase();
 
 private:
   std::map< mlr::String, SymbolGrounder > tasks_;

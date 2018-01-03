@@ -57,15 +57,16 @@ private:
   std::vector< POGraphNode::ptr > indexedNodes_;
 };
 
-class GraphEdgeRewards
+class POWeightedGraph
 {
 public:
-  using ptr = std::shared_ptr< GraphEdgeRewards >;
+  using ptr = std::shared_ptr< POWeightedGraph >;
 
 public:
-  GraphEdgeRewards( const POGraph::ptr & graph )
+  POWeightedGraph( const POGraph::ptr & graph, double r )
     : graph_( graph )
     , size_( graph->size() )
+    , initialReward_( r )
     , rewards_( size_ * size_, m_inf() )
     , accessible_( size_, 0 )
   {
@@ -93,7 +94,7 @@ public:
         {
           auto i = index( parent->id(), c->id() );
 
-          rewards_[ i ] = -1;
+          rewards_[ i ] = initialReward_;
 
           if( ! accessible_[ c->id() ] )  // push if it has not been flagged accessible yet
           {
@@ -120,6 +121,15 @@ public:
     }
 
     if( ! isAccessible ) accessible_[ child ] = -1;
+  }
+
+  void setReward( const std::size_t parent, const std::size_t child, double r )
+  {
+    CHECK( r > m_inf(), "use remove Edge to delete an edge" );
+
+    auto i = index( parent, child );
+
+    rewards_[ i ] = r;
   }
 
   void removeNode( const std::size_t nodeId )
@@ -153,6 +163,33 @@ public:
     return rewards_[ i ];
   }
 
+  //
+  POGraphNode::ptr getNode( const std::size_t i ) const
+  {
+    return graph_->getNode( i );
+  }
+
+  POGraphNode::ptr root() const
+  {
+    return graph_->root();
+  }
+
+  std::list < POGraphNode::ptr > terminals() const
+  {
+    return graph_->terminals();
+  }
+
+  std::size_t size() const { return graph_->size(); }
+
+  POWeightedGraph::ptr clone() const
+  {
+    auto copy = std::make_shared< POWeightedGraph >( graph_, initialReward_ );
+    copy->rewards_    = rewards_;
+    copy->accessible_ = accessible_;
+
+    return copy;
+  }
+
 private:
   std::size_t index( const std::size_t parent, const std::size_t child ) const
   {
@@ -162,6 +199,7 @@ private:
 private:
   POGraph::ptr graph_;
   const std::size_t size_;
+  const double initialReward_;
   std::vector< double > rewards_;
   std::vector< uint >   accessible_;
 };

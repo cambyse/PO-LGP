@@ -126,14 +126,28 @@ void GraphSearchPlanner::solve()
   }
 
   Yens solver( folEngines_ );
-  auto policies = solver.solve( graph_, 10 );
+  auto policies = solver.solve( weightedGraph_, 0 );
 
   policy_ = policies.front();
 }
 
 void GraphSearchPlanner::integrate( const Policy::ptr & policy )
 { 
+  std::list< PolicyNode::ptr > queue;
+  queue.push_back( policy->root() );
 
+  while( ! queue.empty() )
+  {
+    auto node = queue.front();
+    queue.pop_front();
+
+    for( auto c : node->children() )
+    {
+      weightedGraph_->setReward( node->id(), c->id(), c->lastReward() );
+
+      queue.push_back( c );
+    }
+  }
 }
 
 Policy::ptr GraphSearchPlanner::getPolicy() const
@@ -209,7 +223,8 @@ void GraphSearchPlanner::buildGraphImpl()
 
   std::cout << "Graph build:" << root->shared_node_list()->size() << " number of terminal nodes:" << terminals.size() << std::endl;
 
-  graph_ = std::make_shared< POGraph >( root, terminals );
+  graph_         = std::make_shared< POGraph >( root, terminals );
+  weightedGraph_ = std::make_shared< POWeightedGraph >( graph_, initialReward_ );
 }
 
 void GraphSearchPlanner::yen( uint k )   // generates a set of policies

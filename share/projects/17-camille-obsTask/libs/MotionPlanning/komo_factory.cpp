@@ -71,7 +71,7 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
   }
 }
 
-void ExtensibleKOMO::plotVelocity( const std::string & suffix )
+void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
 {
   std::string filename = ( "z.velocities" + suffix ).c_str();
   std::string filenamePlt = ( "z.velocities" + suffix + ".plt" ).c_str();
@@ -83,15 +83,16 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix )
   fil <<endl;
 
   // positions
-  x.reshape(T, world.q.N);
+  auto xx = x;
+  xx.reshape(T, world.q.N);
 
   // speeds
   arr velocities = zeros(T-1, world.q.N);
 
   for( auto t = 0; t < T - 1; ++t )
   {
-    auto x_t   = x.row( t );
-    auto x_t_1 = x.row( t + 1 );
+    auto x_t   = xx.row( t );
+    auto x_t_1 = xx.row( t + 1 );
     auto v = x_t_1 - x_t;
 
     velocities.setMatrixBlock( v, t, 0 );
@@ -113,6 +114,61 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix )
   // command
   std::string command = "load '" + filenamePlt + "'";
   gnuplot( command.c_str() );
+}
+
+arr ExtensibleKOMO::getCostsPerPhase()
+{
+//  if(featureValues.N>1){ //old optimizer -> remove some time..
+//    arr tmp;
+//    for(auto& p:featureValues) tmp.append(p);
+//    featureValues = ARRAY<arr>(tmp);
+
+//    ObjectiveTypeA ttmp;
+//    for(auto& p:featureTypes) ttmp.append(p);
+//    featureTypes = ARRAY<ObjectiveTypeA>(ttmp);
+//  }
+
+  bool wasRun = featureValues.N!=0;
+
+  arr phi;
+  ObjectiveTypeA tt;
+  if(wasRun){
+      phi.referTo( featureValues.scalar() );
+      tt.referTo( featureTypes.scalar() );
+  }
+
+  //-- collect all task costs and constraints
+  StringA name; name.resize(tasks.N);
+  arr err=zeros(maxPhase);
+  uint M=0;
+  for(uint t=0; t<T; t++){
+    uint p = std::floor( t / stepsPerPhase );
+    for(uint i=0; i<tasks.N; i++) {
+      Task *task = tasks(i);
+      if(task->prec.N>t && task->prec(t)){
+        uint d=0;
+        if(wasRun){
+          d=task->map->dim_phi(configurations({t,t+k_order}), t);
+          for(uint j=0;j<d;j++) CHECK(tt(M+j)==task->type,"");
+          if(d){
+            if(task->type==OT_sumOfSqr){
+              for(uint j=0;j<d;j++) err(p) += mlr::sqr(phi(M+j)); //sumOfSqr(phi.sub(M,M+d-1));
+            }
+            if(task->type==OT_ineq){
+              for(uint j=0;j<d;j++) err(p) += mlr::MAX(0., phi(M+j));
+            }
+            if(task->type==OT_eq){
+              for(uint j=0;j<d;j++) err(p) += fabs(phi(M+j));
+            }
+            M += d;
+          }
+        }
+      }
+    }
+  }
+  CHECK_EQ(M , phi.N, "");
+
+  return err;
 }
 
 

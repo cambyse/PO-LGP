@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( test_djikstra_1 )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   // solve from root
   {
@@ -132,32 +132,31 @@ BOOST_AUTO_TEST_CASE( test_djikstra_remove_edges )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
-
+  auto graph = tp->getWeightedGraph();
   // solve from root
   {
   // remove 2->4, there is still a solution
-  auto mask = std::make_shared< tp::GraphEdgeRewards >( graph );
-  mask->removeEdge( 2, 4 );
+  auto clone = graph->clone();
+  clone->removeEdge( 2, 4 );
 
   tp::Dijkstra dij( fols );
-  auto pol = dij.solve( graph, graph->root(), mask );
+  auto pol = dij.solve( clone, clone->root() );
 
   savePolicyToFile( pol );
   }
 
   {
   // remove 0->1, no solution from root
-  auto mask = std::make_shared< tp::GraphEdgeRewards >( graph );
-  mask->removeEdge( 0, 1 );
+  auto clone = graph->clone();
+  clone->removeEdge( 0, 1 );
 
   tp::Dijkstra dij( fols );
-  auto pol = dij.solve( graph, graph->root(), mask );
+  auto pol = dij.solve( clone, clone->root() );
 
   savePolicyToFile( pol );
 
   // but still a solution from 2!
-  pol = dij.solve( graph, graph->getNode( 2 ), mask );
+  pol = dij.solve( clone, clone->getNode( 2 ) );
 
   savePolicyToFile( pol );
 
@@ -174,16 +173,16 @@ BOOST_AUTO_TEST_CASE( test_djikstra_remove_node )
   generatePngImage( "graph.gv" );
 
   auto fols  = tp->getFolEngines();
-  auto graph = tp->getGraph();
+  auto graph = tp->getWeightedGraph();
 
   // solve from root
   {
   // remove 2->4, there is still a solution
-  auto mask = std::make_shared< tp::GraphEdgeRewards >( graph );
-  mask->removeNode( 4 );
+  auto clone = graph->clone();
+  clone->removeNode( 4 );
 
   tp::Dijkstra dij( fols );
-  auto pol = dij.solve( graph, graph->root(), mask );
+  auto pol = dij.solve( clone, clone->root() );
 
   savePolicyToFile( pol );
   }

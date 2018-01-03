@@ -66,7 +66,7 @@ void PolicyBuilder::process( PONode::ptr node )
     policyNode->setQ( node->pHistory() / node->parent()->pHistory() );
   }
 
-  policyNode->setPrefixReward( node->prefixReward() );
+  policyNode->setLastReward( node->lastReward() );
   policyNode->setValue( node->value() );
 
   // save correspondance

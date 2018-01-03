@@ -63,6 +63,7 @@ private:
   std::map< PolicyNode::ptr, arr > jointPathCosts_;
   std::map< PolicyNode::ptr, arr > jointPathConstraints_;
   std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
+  std::map< PolicyNode::ptr, mlr::Array< arr > > jointPathCostsPerPhase_;
   mlr::Array< PolicyNode::ptr > bsToLeafs_; //indicates the leaf terminating for a given state
 
   // params
@@ -75,8 +76,8 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
-  double start_offset_ = 2.0; // the first task should be grounded starting from this time
-  double end_offset_   = 1.0;
+  uint phase_start_offset_ = 2; // the first task should be grounded starting from this time
+  uint phase_end_offset_   = 1;
   uint microSteps_     = 20;
 };
 

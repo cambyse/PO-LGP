@@ -57,7 +57,7 @@ PolicyNode::ptr PolicyNode::clone() const
   node->id_ = id_;
   node->p_ = p_;
   node->q_ = q_;
-  node->prefixReward_ = prefixReward_;
+  node->lastReward_ = lastReward_;
   node->value_ = value_;
   node->differentiatingFacts_ = differentiatingFacts_;
 

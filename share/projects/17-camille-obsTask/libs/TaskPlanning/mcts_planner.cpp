@@ -240,7 +240,7 @@ void MCTSPlanner::labelIfInfeasible( const PONode::ptr & searchTreeNode, const P
 
     CHECK( searchNode->id() == policyNode->id(), "error when reapplying the informed policy into the search tree, the node ids are invalid" )
 
-    if( policyNode->prefixReward() == -std::numeric_limits< double >::infinity() )
+    if( policyNode->value() == std::numeric_limits< double >::lowest() )
     {
       searchNode->labelInfeasible(); // changes the current policy via backtraking
     }

@@ -83,6 +83,7 @@ public:
   double time() const { return time_; }
   uint   depth() const{ return d_; }
   double prefixReward() const { return prefixReward_; }
+  double lastReward() const { return lastActionReward_; }
   double value() const { return value_; }
   double expecteFutureReward() const { return value_ - prefixReward_; }
 

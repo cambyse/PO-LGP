@@ -24,11 +24,11 @@ class Dijkstra
 public:
   Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
 
-  Policy::ptr solve( const POGraph::ptr & graph, const POGraphNode::ptr & from, GraphEdgeRewards::ptr = nullptr );
+  Policy::ptr solve( const POWeightedGraph::ptr & graph, const POGraphNode::ptr & from );
 
 private:
-  void dijkstra( const std::list < POGraphNode::ptr > & terminals, const GraphEdgeRewards::ptr & mask );
-  bool extractSolutionFrom( const POGraphNode::ptr &, const GraphEdgeRewards::ptr & mask );
+  void dijkstra( const std::list < POGraphNode::ptr > & terminals );
+  bool extractSolutionFrom( const POGraphNode::ptr & );
   bool buildPolicy( const POGraphNode::ptr & );
   bool buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start );
 
@@ -36,7 +36,7 @@ private:
   mlr::Array< std::shared_ptr< FOL_World > > folEngines_;
   std::vector< double > values_;
   // policy reconstruction
-  POGraph::ptr graph_;
+  POWeightedGraph::ptr graph_;
   std::vector< int >   bestFamily_;     // action to take in this bs and i
   std::vector< POGraphNode::ptr > parents_;
   Policy::ptr policy_;
