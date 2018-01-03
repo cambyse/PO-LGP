@@ -28,6 +28,33 @@ namespace tp
 
 double m_inf();
 double eps();
+
+struct StringSetHash {
+size_t operator()( const std::set< std::string > & facts ) const
+{
+  std::string cont;
+  for( auto s : facts )
+  {
+    cont += s;
+  }
+
+  return std::hash<std::string>()( cont );
+}
+};
+
+//struct StringComp {
+//size_t operator < ( const std::string & a, const std::string & b ) const
+//{
+//  std::string cont;
+//  for( auto s : facts )
+//  {
+//    cont += s;
+//  }
+
+//  return std::hash<std::string>()( cont );
+//}
+//};
+
 //===========================================================================
 
 struct SymbolicState

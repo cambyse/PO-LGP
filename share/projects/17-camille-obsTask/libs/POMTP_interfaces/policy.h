@@ -17,6 +17,7 @@
 #include <memory>
 #include <list>
 #include <set>
+#include <unordered_set>
 #include <map>
 
 #include <Core/array.h>

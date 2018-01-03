@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <chrono>
+#include <unordered_set>
 
 #include <graph_search.h>
 #include <policy_printer.h>
@@ -94,4 +95,13 @@ BOOST_AUTO_TEST_CASE( test_LGP_blocks_fol_easy_3w )
 
   //tp->saveGraphToFile( "graph.gv" );
   //generatePngImage( "graph.gv" );
+
+//  std::unordered_set< std::string > s1;
+//  std::unordered_set< std::string > s2;
+
+//  std::set< std::string > inter;
+//  std::set_intersection( s1.begin(), s1.end(),
+//                         s2.begin(), s2.end(),
+//                         std::inserter( inter, inter.begin() ) );
+
 }

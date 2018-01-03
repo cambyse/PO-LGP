@@ -17,7 +17,6 @@
 
 #include <unordered_map>
 
-
 #include <list>
 
 #include <chrono>
@@ -36,20 +35,6 @@ namespace tp
 {
 double m_inf() { return std::numeric_limits< double >::lowest(); }
 double eps() { return std::numeric_limits< double >::epsilon(); }
-
-struct StringSetHash {
-size_t operator()( const std::set< std::string > & facts ) const
-{
-  std::string cont;
-  for( auto s : facts )
-  {
-    cont += s;
-  }
-
-  return std::hash<std::string>()( cont );
-}
-};
-
 
 static std::string toStdString( Node * node )
 {
@@ -118,6 +103,9 @@ static uint _get_actions_time_us;
 static uint _n_transitions;
 static uint _transition_time_us;
 
+static uint _n_state_str;
+static uint _state_str_time_us;
+
 /// root node init
 POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
   : root_( nullptr )
@@ -151,7 +139,13 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
     {
       auto result = folEngines_( w )->getState();
 
-      auto stateStr = getStateStr( result );
+auto start_2 = std::chrono::high_resolution_clock::now();
+
+      auto stateStr = getStateStr( result );++_n_state_str;
+
+auto elapsed_2 = std::chrono::high_resolution_clock::now() - start_2;
+long long mcs_2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_2).count();
+_state_str_time_us += mcs_2;
 
       resultStates_[ w ] = stateStr;
     }
@@ -277,18 +271,24 @@ POGraphNode::L POGraphNode::expand()
 
         logic->setState( state.get() );
 
-        auto start_1 = std::chrono::high_resolution_clock::now();
+auto start_1 = std::chrono::high_resolution_clock::now();
 
         logic->transition( action ); _n_transitions++;
 
-        auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
-        long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
-        _transition_time_us += mcs_1;
+auto elapsed_1 = std::chrono::high_resolution_clock::now() - start_1;
+long long mcs_1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_1).count();
+_transition_time_us += mcs_1;
 
         auto result             = logic->getState();
 
-        auto stateStr           = getStateStr( result );
+auto start_2 = std::chrono::high_resolution_clock::now();
+
+        auto stateStr           = getStateStr( result ); ++_n_state_str;
         auto observableStateStr = getObservableStateStr( result );
+
+auto elapsed_2 = std::chrono::high_resolution_clock::now() - start_2;
+long long mcs_2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_2).count();
+_state_str_time_us += mcs_2;
 
         resultStates[ w ] = stateStr;
         outcomesToWorlds[ observableStateStr ].push_back( w );
@@ -304,6 +304,7 @@ POGraphNode::L POGraphNode::expand()
       std::set_intersection( intersection.begin(), intersection.end(),
                              facts.begin(), facts.end(),
                              std::inserter( inter, inter.begin() ) );
+
       intersection = std::move( inter );
     }
 
@@ -359,7 +360,7 @@ POGraphNode::L POGraphNode::expand()
         std::set_difference( facts.begin(), facts.end(), intersection.begin(), intersection.end(),
                              std::inserter(differenciatingFacts, differenciatingFacts.begin() ) );
 
-        child->indicateDifferentiatingFacts( differenciatingFacts );
+        child->indicateDifferentiatingFacts( std::move( differenciatingFacts ) );
         //std::cout << "history:" << pHistory << " belief state:" << bs << " family size:" << familiy.d0 << std::endl;
       }
 
@@ -391,13 +392,20 @@ POGraphNode::L POGraphNode::expand()
   long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 
   static int n; n++;
-  if( n % 100 == 0 ) std::cout << "expansion time:" << ms << " |" << " get actions:" << _n_get_actions << " get actions time(ms):" << _get_actions_time_us / 1000 << " |" << " n transitions:" << _n_transitions << " transition time(ms):" << _transition_time_us / 1000 << " families:"<< families_.size() << std::endl;
+  if( n % 100 == 0 ) std::cout << "expansion time:" << ms << " |"
+                               << " get actions:" << _n_get_actions << " get actions time(ms):" << _get_actions_time_us / 1000.0 << " |"
+                               << " n transitions:" << _n_transitions << " transition time(ms):" << _transition_time_us / 1000.0
+                               << " n state->str:" << _n_state_str << " time(ms):" << _state_str_time_us / 1000.0
+                               << " families:"<< families_.size() << std::endl;
 
   _n_transitions = 0;
   _transition_time_us = 0;
 
   _n_get_actions = 0;
   _get_actions_time_us = 0;
+
+  _n_state_str = 0;
+  _state_str_time_us = 0;
 
   return newNodes;
 }
