@@ -519,7 +519,13 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
               uintA selectedBodies;
 
-              for( const auto & f: G.frames ) if( f->name.contains( agentJointTag_ ) & ! f->name.contains( agentJointExcludeTag_ ) )  selectedBodies.setAppend(f->ID);
+              for( const auto & f: G.frames )
+              {
+                if( f->ats["agent"] && f->ats.get<bool>("agent") )
+                {
+                  selectedBodies.setAppend(f->ID);
+                }
+              }
 
               // build mask
               arr qmask = zeros( G.q.d0 );

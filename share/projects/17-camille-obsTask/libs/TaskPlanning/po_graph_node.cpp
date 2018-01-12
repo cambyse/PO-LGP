@@ -147,7 +147,7 @@ auto elapsed_2 = std::chrono::high_resolution_clock::now() - start_2;
 long long mcs_2 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_2).count();
 _state_str_time_us += mcs_2;
 
-      resultStates_[ w ] = stateStr;
+      resultStates_[ w ] = std::move( stateStr );
     }
   }
 
@@ -184,10 +184,10 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHisto
   {
     if( bs_( w ) > eps() )
     {
-      mlr::String mlrState( resultStates_[ w ].state );
+      mlr::String mlrState( resultStates_[ w ].state ); // construct mlr string from std::string
       // logic
       auto fol = folEngines_( w );
-      //fol->reset_state();
+
       fol->set_state( mlrState );
 
       folStates_( w ).reset( fol->createStateCopy() );
@@ -365,8 +365,8 @@ _state_str_time_us += mcs_2;
       }
 
       // add child to created family
-      familiy.append( child );
       child->addParent( shared_from_this(), a );
+      familiy.append( child );
     }
 
     // check integrity
@@ -501,7 +501,7 @@ mlr::Array< LogicAndState > POGraphNode::getPossibleLogicAndStates() const
 
 std::string POGraphNode::actionStr( uint a ) const
 {
-  auto ls = getWitnessLogicAndState();
+  const auto & ls = getWitnessLogicAndState();
   ls.logic->reset_state();
   ls.logic->setState( ls.state.get() );
 

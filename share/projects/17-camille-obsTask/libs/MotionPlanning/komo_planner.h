@@ -68,9 +68,6 @@ private:
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
-  const mlr::String agentJointTag_   = "__agent__";
-  const mlr::String agentJointExcludeTag_   = ">__agent__";
-
 
   double kinEqualityWeight_  = 1e0;
   double fixEffJointsWeight_ = 1e3;

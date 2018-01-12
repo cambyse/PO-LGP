@@ -152,7 +152,7 @@ public:
   std::string getLeadingActionFromStr( const POGraphNode::ptr & parent ) const;
   // utility
   void indicateDifferentiatingFacts( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
-  std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
+  const std::set< std::string > & differentiatingFacts() const { return differentiatingFacts_; }
 
 private:
   // utility
