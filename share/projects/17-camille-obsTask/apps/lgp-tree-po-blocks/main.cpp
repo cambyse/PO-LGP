@@ -83,8 +83,18 @@ static void savePolicyToFile( const Policy::ptr & policy )
 }
 
 //==========Application specific grounders===================================
-void groundPickUp( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
 {
+  if( ! komo->isPrefixSetup() )
+  {
+    komo->setHoming( -1., -1., 1e-2 ); //gradient bug??
+  }
+}
+
+void groundPickUp( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
+{
+  groundPrefixIfNeeded( komo, verbose );
+
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
@@ -106,8 +116,10 @@ void groundPickUp( double phase, const Graph& facts, Node *n, KOMO * komo, int v
   }
 }
 
-void groundUnStack( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+void groundUnStack( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
 {
+  groundPrefixIfNeeded( komo, verbose );
+
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
@@ -129,8 +141,10 @@ void groundUnStack( double phase, const Graph& facts, Node *n, KOMO * komo, int 
   }
 }
 
-void groundPutDown( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+void groundPutDown( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
 {
+  groundPrefixIfNeeded( komo, verbose );
+
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
@@ -149,8 +163,10 @@ void groundPutDown( double phase, const Graph& facts, Node *n, KOMO * komo, int 
   }
 }
 
-void groundCheck( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+void groundCheck( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
 {
+  groundPrefixIfNeeded( komo, verbose );
+
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
@@ -169,8 +185,10 @@ void groundCheck( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
   }
 }
 
-void groundStack( double phase, const Graph& facts, Node *n, KOMO * komo, int verbose )
+void groundStack( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
 {
+  groundPrefixIfNeeded( komo, verbose );
+
   StringL symbols;
   for(Node *p:n->parents) symbols.append(&p->keys.last());
 
@@ -281,7 +299,6 @@ void plan_graph_search()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  //tp->setMCParams( 50, -1, 50 );
   mp->setNSteps( 10 );
 
   // register symbols
@@ -292,38 +309,37 @@ void plan_graph_search()
   mp->registerTask( "komoUnStack"      , groundUnStack );
 
   // set start configurations
-  //tp->setFol( "LGP-blocks-fol.g" );
-  //mp->setKin( "LGP-blocks-kin.g" );
+  tp->setFol( "LGP-blocks-fol.g" );
+  mp->setKin( "LGP-blocks-kin.g" );
 
-  tp->setFol( "LGP-blocks-fol-easy-2w.g" );
-  //tp->setFol( "LGP-blocks-fol-easy-1w.g" );
+  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
 
   /// TASK PLANNING
   tp->buildGraph();
   tp->saveGraphToFile( "graph.gv" );
-  generatePngImage( "graph.gv" );
-
-  //tp->solve();
-  //tp->saveGraphToFile( "graph.gv" );
   //generatePngImage( "graph.gv" );
 
-  /*auto policy = tp->getPolicy();
+  tp->solve();
+
+  auto policy = tp->getPolicy();
   auto po     = tp->getPlanningOrder();
 
   // save policy
   savePolicyToFile( policy );
 
   /// MOTION PLANNING
-  mp->display( policy, 3000 );
-//  mp->solveAndInform( po, policy );
+  mp->solveAndInform( po, policy );
 
 //  // print resulting cost
 //  std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
 
-//  tp->integrate( policy );
+  tp->integrate( policy );
 
-  mlr::wait( 30, true );*/
+  mp->display( policy, 3000 );
+
+
+  mlr::wait( 30, true );
 }
 
 //===========================================================================

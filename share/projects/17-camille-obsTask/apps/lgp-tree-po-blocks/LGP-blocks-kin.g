@@ -19,11 +19,11 @@ shape shelf_center_v(shelf) { type=9 rel=<T t(0  0.0 0.6)> size=[0.7 0.3 0.01 0.
 shape shelf_top_v(shelf)    { type=9 rel=<T t(0  0.0 1.2)> size=[0.7 0.3 0.01 0.005]   color=[1 0 0] }
 
 #blocks
-body block_o { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .02] color=[0 1 1] }	#on the shelf
+body block_o { type=9 size=[.1 .1 .1 .02] color=[0 1 1] }	#on the shelf
 
-body block_1 { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .01] color=[0 0 0] }	
-body block_2 { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .01] color=[0 0 0] }	
-body block_3 { type=9 rel=<T t(0 0.0 0.05)> size=[.1 .1 .1 .01] color=[0 0 0] }
+body block_1 { type=9 size=[.1 .1 .1 .01] color=[0 0 0] }	
+body block_2 { type=9 size=[.1 .1 .1 .01] color=[0 0 0] }	
+body block_3 { type=9 size=[.1 .1 .1 .01] color=[0 0 0] }
 
 #table
 body tableC{ type=9, X=<T t(-0.3 -.7 0.9)>, size=[2. .8 .04 .01], color=[.3 .5 .3] contact }
@@ -40,46 +40,46 @@ shape humanL (handL){ type=1 size=[0 0 0 0.005] color=[1 1 0] rel=<T t(0 0 0) d(
 #shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
 
 ## Joints
-joint (shelf block_o)           { from=<T t(-0.225 0 .6  ) t(0 0 0)> to=<T > type=10 } 
-joint (tableC block_2)          { from=<T t( 0.6   0 .02 ) t(0 0 0)> to=<T > type=10 }
-joint (tableC block_1)          { from=<T t( 0.15  0 .02 ) t(0 0 0)> to=<T > type=10 } 
+joint (shelf block_o)           { from=<T t(-0.225 0 .65  ) t(0 0 0)> to=<T > type=10 } 
+joint (tableC block_2)          { from=<T t( 0.6   0 .07 ) t(0 0 0)> to=<T > type=10 }
+joint (tableC block_1)          { from=<T t( 0.15  0 .07 ) t(0 0 0)> to=<T > type=10 } 
 joint (block_1 block_3)         { from=<T t( 0.0   0 .1  ) t(0 0 0)> to=<T > type=10 } 
 
 BELIEF_START_STATE { 
 {
- shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
- shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 1 0] }
- shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[1 0 0] }
+ shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 0 1] }
+ shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 1 0] }
+ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[1 0 0] }
 }
 
 {
- shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
- shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 1 0] }
- shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[1 0 0] }
+ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 0 1] }
+ shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 1 0] }
+ shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[1 0 0] }
 }
 
 {
- shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
- shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 1 0] }
- shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[1 0 0] }
+ shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 0 1] }
+ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 1 0] }
+ shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[1 0 0] }
 }
 
 {
- shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
- shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 1 0] }
- shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[1 0 0] }
+ shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 0 1] }
+ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 1 0] }
+ shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[1 0 0] }
 }
 
 {
- shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
- shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 1 0] }
- shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[1 0 0] }
+ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 0 1] }
+ shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 1 0] }
+ shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[1 0 0] }
 }
 
 {
- shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 0 1] }
- shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[0 1 0] }
- shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.05)> size=[.1 .02 .1 .01] color=[1 0 0] }
+ shape id_1(block_1) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 0 1] }
+ shape id_3(block_3) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[0 1 0] }
+ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[1 0 0] }
 }
 
 }

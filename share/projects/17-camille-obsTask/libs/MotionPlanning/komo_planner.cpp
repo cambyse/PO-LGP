@@ -323,8 +323,12 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
         cout << "KOMO FAILED: " << msg <<endl;
       }
 
-      //komo->displayTrajectory();
+//      if( node->id() == 136 )
+//      {
+//      komo->displayTrajectory();
 
+//      mlr::wait();
+//      }
       // save results
 //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
 
@@ -395,13 +399,14 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
       komo->setTiming( phase_start_offset_ + leaf->time() + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
-//      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      //komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
-//      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-//      komo->setFixSwitchedObjects();
+      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+      komo->setFixSwitchedObjects();
+      //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();
-      //komo->setSquaredFixJointVelocities();// -1., -1., 1e3 );
-      //komo->setSquaredFixSwitchedObjects();// -1., -1., 1e3 );
+      //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
+      //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
       for( auto node:treepath )
       {
@@ -433,6 +438,13 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
         mlr::KinematicWorld kin( *komo->configurations( s ) );
         pathKinFrames_[ leaf ]( w ).append( kin );
       }
+
+//      if( leaf->id() == 136 )
+//      {
+//        komo->displayTrajectory();
+
+//        mlr::wait();
+//      }
 
       pathXSolution_[ leaf ]( w ) = komo->x;
 
@@ -472,10 +484,10 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
       komo->setTiming( phase_start_offset_ + leaf->time() + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
+      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+      komo->setFixSwitchedObjects();
+      //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();
-      //komo->setFixEffectiveJoints( -1., -1., fixEffJointsWeight_ );
-      //komo->setFixSwitchedObjects();
-      //komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
       for( auto node:treepath )
       {
