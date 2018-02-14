@@ -1,6 +1,8 @@
 #include <functional>
 #include <list>
 
+#include <chrono>
+
 #include <policy.h>
 #include <policy_printer.h>
 
@@ -55,21 +57,12 @@ static void generatePngImage( const std::string & name )
   system( ss.str().c_str() );
 }
 
-static void savePolicyToFile( const Policy::ptr & policy )
+static void savePolicyToFile( const Policy::ptr & policy, const std::string & suffix = "" )
 {
   std::stringstream namess, skenamess;
-  namess << "policy-" << policy->id() << ".gv";
-  skenamess << "policy-" << policy->id() << ".ske";
-  auto skename = skenamess.str();
+  namess << "policy-" << policy->id() << suffix << ".gv";
   auto name = namess.str();
 
-  // save full policy
-//  {
-//    std::ofstream file;
-//    file.open( skename );
-//    policy->save( file );
-//    file.close();
-//  }
   // generate nice graph
   {
     std::ofstream file;
@@ -173,11 +166,12 @@ void groundCheck( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO 
   double duration=n->get<double>();
 
   //
-  const double t_start = phase+0.5;
+  const double t_start = phase + 0.5;
   const double t_end =   phase + duration;
   //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
-  komo->setTask( t_start, t_end, new ActiveGetSight( "manhead", *symbols(0), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.5 ), OT_sumOfSqr, NoArr, 1e2 );
+  komo->setTask( t_start, t_end, new ActiveGetSight( "manhead", *symbols(0), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sumOfSqr, NoArr, 1e2 );
+  komo->setTask( t_end - 0.1, t_end, new ActiveGetSight( "manhead", *symbols(0), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
   {
@@ -299,7 +293,8 @@ void plan_graph_search()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  mp->setNSteps( 10 );
+  tp->setInitialReward( -0.2 );
+  mp->setNSteps( 5 );
 
   // register symbols
   mp->registerTask( "komoPickUp"       , groundPickUp );
@@ -309,35 +304,78 @@ void plan_graph_search()
   mp->registerTask( "komoUnStack"      , groundUnStack );
 
   // set start configurations
-  tp->setFol( "LGP-blocks-fol.g" );
-  mp->setKin( "LGP-blocks-kin.g" );
+  //tp->setFol( "LGP-blocks-fol.g" );
+  //mp->setKin( "LGP-blocks-kin.g" );
 
-  //tp->setFol( "LGP-blocks-fol-easy-2w.g" );
+  //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
+
+  //tp->setFol( "LGP-blocks-fol-2w.g" );
+  //mp->setKin( "LGP-blocks-kin-2w.g" );
+
+  //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
+  //mp->setKin( "LGP-blocks-kin-2w.g" );
+
+  tp->setFol( "LGP-blocks-fol-1w.g" );
+  mp->setKin( "LGP-blocks-kin-1w.g" );
+
+  //tp->setFol( "LGP-blocks-fol-1w-model-2.g" );
+  //mp->setKin( "LGP-blocks-kin-1w.g" );
+
+  //
+  auto start = std::chrono::high_resolution_clock::now();
+  //
 
   /// TASK PLANNING
   tp->buildGraph();
   tp->saveGraphToFile( "graph.gv" );
   //generatePngImage( "graph.gv" );
 
+  Policy::ptr policy, lastPolicy;
+
+  auto n_it_max = 100;
+  auto n_it = 0;
+
   tp->solve();
 
-  auto policy = tp->getPolicy();
-  auto po     = tp->getPlanningOrder();
+  policy = tp->getPolicy();
 
   // save policy
   savePolicyToFile( policy );
 
-  /// MOTION PLANNING
-  mp->solveAndInform( po, policy );
+  do
+  {
+    lastPolicy = policy;
 
-//  // print resulting cost
-//  std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+    /// MOTION PLANNING
+    auto po     = tp->getPlanningOrder();
+    mp->solveAndInform( po, policy );
 
-  tp->integrate( policy );
+    // save policy
+    savePolicyToFile( policy, "-informed" );
+
+    tp->integrate( policy );
+
+    /// TASK PLANNING
+    tp->solve();
+
+    policy = tp->getPolicy();
+
+    // save policy
+    savePolicyToFile( policy );
+
+    n_it++;
+
+  } while( ! skeletonEquals( lastPolicy, policy ) && n_it < n_it_max );
+
+  // timing
+  //
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  long long s = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+  std::cout << "total planning time (s):" << s << std::endl;
+  //
 
   mp->display( policy, 3000 );
-
 
   mlr::wait( 30, true );
 }

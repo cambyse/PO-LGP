@@ -68,6 +68,7 @@ public:
     , size_( graph->size() )
     , initialReward_( r )
     , rewards_( size_ * size_, m_inf() )
+    , n_update_( size_ * size_, 0 )
     , accessible_( size_, 0 )
   {
     reset();
@@ -125,11 +126,28 @@ public:
 
   void setReward( const std::size_t parent, const std::size_t child, double r )
   {
-    CHECK( r > m_inf(), "use remove Edge to delete an edge" );
+    CHECK( r != -0.4, "" );
+
+    //CHECK( r > m_inf(), "use remove Edge to delete an edge" );
+    if( r == m_inf() )  // early stop if infeasibility
+    {
+      removeEdge( parent, child );
+      return;
+    }
 
     auto i = index( parent, child );
+    auto k = n_update_[ i ];
 
-    rewards_[ i ] = r;
+    CHECK( rewards_[ i ] != r, "" );
+
+//    if( k > 1 && fabs( r ) / fabs( rewards_[ i ] ) > 10.0 )  // outlier rejection
+//    {
+//      return;
+//    }
+
+    n_update_[ i ]++;
+
+    rewards_[ i ] = ( k * rewards_[ i ] + r ) / ( k + 1 );
   }
 
   void removeNode( const std::size_t nodeId )
@@ -201,6 +219,7 @@ private:
   const std::size_t size_;
   const double initialReward_;
   std::vector< double > rewards_;
+  std::vector< uint >   n_update_;
   std::vector< uint >   accessible_;
 };
 }

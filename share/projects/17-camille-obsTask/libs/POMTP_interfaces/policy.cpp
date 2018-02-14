@@ -243,22 +243,21 @@ bool skeletonEquals( Policy::ptr lhs, Policy::ptr rhs )
   if( !lhs && !rhs ) return true;
   if( !lhs || !rhs ) return false;
 
-  auto ll = lhs->leafs();
-  auto lr = rhs->leafs();
+  auto ll = serialize( lhs );
+  auto lr = serialize( rhs );
+
+  if( ll.size() != lr.size() ) return false;
 
   bool equal = true;
 
-  for( auto i = 0; i < ll.d0; ++i )
+  auto lh = ll.begin();
+  auto rh = lr.begin();
+
+  for( ; lh != ll.end() && rh != lr.end(); lh++, rh++ )
   {
-    if( i < lr.d0 )
-    {
-      equal = equal && ( ll(i)->id() == (lr(i))->id() );
-    }
-    else
-    {
-      equal = false;
-    }
+    equal = equal && ( (*lh)->id() == (*rh)->id() );
   }
+
   return equal;
 }
 

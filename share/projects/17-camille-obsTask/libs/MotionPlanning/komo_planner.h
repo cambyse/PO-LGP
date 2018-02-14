@@ -73,6 +73,8 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
+  double maxConstraint_      = 0.5;
+
   uint phase_start_offset_ = 2; // the first task should be grounded starting from this time
   uint phase_end_offset_   = 1;
   uint microSteps_     = 20;

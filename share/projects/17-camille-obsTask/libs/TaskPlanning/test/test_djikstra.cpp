@@ -6,6 +6,17 @@
 #include <po_djikstra.h>
 #include <policy_printer.h>
 
+struct GraphSearchPlannerFixture
+{
+  GraphSearchPlannerFixture()
+    : tp( std::make_shared< tp::GraphSearchPlanner >() )
+  {
+
+  }
+
+  std::shared_ptr< tp::GraphSearchPlanner > tp;
+};
+
 static void generatePngImage( const std::string & name )
 {
   std::string nameCopy( name );
@@ -63,10 +74,9 @@ BOOST_AUTO_TEST_CASE( test_djikstra_0 )
   BOOST_CHECK( KB1 == KB2 );
 }
 
-BOOST_AUTO_TEST_CASE( test_djikstra_1 )
+BOOST_FIXTURE_TEST_CASE( test_djikstra_1, GraphSearchPlannerFixture )
 {
   // tests that Dijkstra works well from root and from other nodes
-  auto tp = std::make_shared< tp::GraphSearchPlanner >();
   tp->setFol( "data/LGP-overtaking-2w.g" );
   tp->buildGraph();
   tp->saveGraphToFile( "graph.gv" );
@@ -112,20 +122,18 @@ BOOST_AUTO_TEST_CASE( test_djikstra_1 )
   }
 }
 
-BOOST_AUTO_TEST_CASE( test_graph_build )
+BOOST_FIXTURE_TEST_CASE( test_graph_build, GraphSearchPlannerFixture )
 {
-  // tests that Dijkstra works well from root and from other nodes when edges are removed
-  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  // build graph and save to image
   tp->setFol( "data/LGP-overtaking-2w.g" );
   tp->buildGraph();
   tp->saveGraphToFile( "graph-2.gv" );
   generatePngImage( "graph-2.gv" );
 }
 
-BOOST_AUTO_TEST_CASE( test_djikstra_remove_edges )
+BOOST_FIXTURE_TEST_CASE( test_djikstra_remove_edges, GraphSearchPlannerFixture )
 {
   // tests that Dijkstra works well from root and from other nodes when edges are removed
-  auto tp = std::make_shared< tp::GraphSearchPlanner >();
   tp->setFol( "data/LGP-overtaking-2w.g" );
   tp->buildGraph();
   tp->saveGraphToFile( "graph.gv" );
@@ -163,10 +171,9 @@ BOOST_AUTO_TEST_CASE( test_djikstra_remove_edges )
   }
 }
 
-BOOST_AUTO_TEST_CASE( test_djikstra_remove_node )
+BOOST_FIXTURE_TEST_CASE( test_djikstra_remove_node, GraphSearchPlannerFixture )
 {
-  // tests that Dijkstra works well from root and from other nodes when edges are removed
-  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  // tests that Dijkstra works well when removing nodes
   tp->setFol( "data/LGP-overtaking-2w.g" );
   tp->buildGraph();
   tp->saveGraphToFile( "graph.gv" );
@@ -183,6 +190,48 @@ BOOST_AUTO_TEST_CASE( test_djikstra_remove_node )
 
   tp::Dijkstra dij( fols );
   auto pol = dij.solve( clone, clone->root() );
+
+  savePolicyToFile( pol );
+  }
+}
+
+BOOST_FIXTURE_TEST_CASE( test_djikstra_block_world_2, GraphSearchPlannerFixture )
+{
+
+}
+
+BOOST_FIXTURE_TEST_CASE( test_djikstra_block_world_3, GraphSearchPlannerFixture )
+{
+  tp->setFol( "data/LGP-blocks-fol.g" );
+  tp->buildGraph();
+
+  auto fols  = tp->getFolEngines();
+  auto graph = tp->getWeightedGraph();
+
+  BOOST_CHECK_EQUAL( graph->size(), 2076 );
+  // solve from root
+  {
+  tp::Dijkstra dij( fols );
+  auto pol = dij.solve( graph, graph->root() );
+
+  savePolicyToFile( pol );
+  }
+}
+
+BOOST_FIXTURE_TEST_CASE( test_djikstra_block_world_3_model_2, GraphSearchPlannerFixture )
+{
+  tp->setFol( "data/LGP-blocks-fol-model-2.g" );
+  tp->buildGraph();
+
+  auto fols  = tp->getFolEngines();
+  auto graph = tp->getWeightedGraph();
+
+  BOOST_CHECK_EQUAL( graph->size(), 4128 );
+
+  // solve from root
+  {
+  tp::Dijkstra dij( fols );
+  auto pol = dij.solve( graph, graph->root() );
 
   savePolicyToFile( pol );
   }

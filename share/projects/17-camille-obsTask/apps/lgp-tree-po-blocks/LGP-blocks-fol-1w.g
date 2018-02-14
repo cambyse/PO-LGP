@@ -52,29 +52,24 @@ tableC_right
 
 
 ## initial state
-START_STATE { 
-(table tableC) 
+START_STATE { (table tableC) 
+(block block_1) (block block_2) (block block_3) (id block_a) (id block_b) (id block_c)
 (location tableC_center) (location tableC_left) (location tableC_right)
-(block block_1) (block block_2) (block block_3)
-(id block_a) (id block_b) (id block_c)
 (clear block_3) (clear block_2) (clear tableC_right)
-(on_table block_1 tableC_center) (on_table block_2 tableC_left)
-(on block_3 block_1)
+(on_table block_1 tableC_center) (on_table block_2 tableC_left) (on block_3 block_1)
 (hand_empty) 
+
 (is block_2 block_b)
 (identified block_2)
+
+(is block_1 block_a)
+(identified block_1)
 }
 
 BELIEF_START_STATE{ 
 {
 (is block_3 block_c)
-(is block_1 block_a)
-()=0.6
-}
-{
-(is block_1 block_c)
-(is block_3 block_a)
-()=0.4
+()=1.0
 }
 }
 
@@ -99,6 +94,7 @@ DecisionRule check {
   { (block X) (holding X) (identified X)! }
   { (in_sight X) komoCheck(X)=1. }
 }
+
 
 # Pick-up
 DecisionRule pick-up {
@@ -128,20 +124,26 @@ DecisionRule stack {
   { (holding X)! (hand_empty) (clear X) (clear Y)! (on X Y) komoStack(X Y)=1. }
 }
 
+#DecisionRule home {
+#  { (PRE_QUIT) }
+#  { (QUIT) }
+#}
+
+
 ### Rules / Observation Model
 #Observation model
 Rule {
   X, Y
   { (block X) (id Y) (NOT_OBSERVABLE is X Y) (in_sight X) }
-  { (in_sight X)! (is X Y) (identified X) (NOT_OBSERVABLE is X Y)! }
+  { (in_sight X)! (is X Y) (identified X)  (NOT_OBSERVABLE is X Y)!}
 }
 
 #deduction of the last block if they have all been identified..(is it rigorous?)
-Rule {
-  X, Y, Z, T
-  { (block X) (block Y) (block Z) (id T) (identified X) (identified Y) (identified Z)! (NOT_OBSERVABLE is Z T)}
-  { (identified Z) (is Z T) (NOT_OBSERVABLE is Z T)!}
-}
+#Rule {
+#  X, Y, Z, T
+#  { (block X) (block Y) (block Z) (id T) (identified X) (identified Y) (identified Z)! (NOT_OBSERVABLE is Z T)}
+#  { (identified Z) (is Z T) (NOT_OBSERVABLE is Z T)!}
+#}
 
 #Apply identification to the ON
 Rule {
@@ -156,18 +158,19 @@ Rule {
   { (on Z T)!}
 }
 
-#Apply identification to the ON table
-Rule {
-  X, Y, Z
-  { (block X) (location Y) (id Z) (on_table X Y) (is X Z) }
-  { (on_table Z Y)}
-}
+# remove old in sights
+#Rule {
+#  X, Y
+#  { (now_in_sight X) (in_sight Y) }
+#  { (in_sight Y)! }
+#}
 
-Rule {
-  X, Y, Z
-  { (block X) (location Y) (id Z) (on_table X Y)! (on_table Z Y) (is X Z) }
-  { (on_table Z Y)!}
-}
+# transform now in sight in in sight
+#Rule {
+#  X
+#  { (now_in_sight X) }
+#  { (now_in_sight X)! (in_sight X) }
+#}
 
 
 

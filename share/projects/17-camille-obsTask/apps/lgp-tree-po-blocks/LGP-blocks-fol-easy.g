@@ -56,25 +56,50 @@ START_STATE {
 (table tableC) 
 (location tableC_center) (location tableC_left) (location tableC_right)
 (block block_1) (block block_2) (block block_3)
-(id block_a) (id block_b) (id block_c)
 (clear block_3) (clear block_2) (clear tableC_right)
 (on_table block_1 tableC_center) (on_table block_2 tableC_left)
 (on block_3 block_1)
 (hand_empty) 
-(is block_2 block_b)
-(identified block_2)
 }
 
 BELIEF_START_STATE{ 
 {
 (is block_3 block_c)
+(is block_1 block_b)
+(is block_2 block_a)
+()=0.166666667
+}
+{
+(is block_2 block_c)
+(is block_1 block_b)
+(is block_3 block_a)
+()=0.166666667
+}
+
+{
+(is block_3 block_c)
+(is block_2 block_b)
 (is block_1 block_a)
-()=0.6
+()=0.166666667
 }
 {
 (is block_1 block_c)
+(is block_2 block_b)
 (is block_3 block_a)
-()=0.4
+()=0.166666665
+}
+
+{
+(is block_2 block_c)
+(is block_3 block_b)
+(is block_1 block_a)
+()=0.166666667
+}
+{
+(is block_1 block_c)
+(is block_3 block_b)
+(is block_2 block_a)
+()=0.166666667
 }
 }
 
@@ -133,7 +158,7 @@ DecisionRule stack {
 Rule {
   X, Y
   { (block X) (id Y) (NOT_OBSERVABLE is X Y) (in_sight X) }
-  { (in_sight X)! (is X Y) (identified X) (NOT_OBSERVABLE is X Y)! }
+  { (in_sight X)! (is X Y) (identified X)  (NOT_OBSERVABLE is X Y)!}
 }
 
 #deduction of the last block if they have all been identified..(is it rigorous?)
@@ -168,6 +193,20 @@ Rule {
   { (block X) (location Y) (id Z) (on_table X Y)! (on_table Z Y) (is X Z) }
   { (on_table Z Y)!}
 }
+
+# remove old in sights
+#Rule {
+#  X, Y
+#  { (now_in_sight X) (in_sight Y) }
+#  { (in_sight Y)! }
+#}
+
+# transform now in sight in in sight
+#Rule {
+#  X
+#  { (now_in_sight X) }
+#  { (now_in_sight X)! (in_sight X) }
+#}
 
 
 

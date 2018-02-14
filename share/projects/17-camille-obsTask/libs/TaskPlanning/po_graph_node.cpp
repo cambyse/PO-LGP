@@ -34,7 +34,7 @@
 namespace tp
 {
 double m_inf() { return std::numeric_limits< double >::lowest(); }
-double eps() { return std::numeric_limits< double >::epsilon(); }
+double eps() { return 1000 * std::numeric_limits< double >::epsilon(); }
 
 static std::string toStdString( Node * node )
 {

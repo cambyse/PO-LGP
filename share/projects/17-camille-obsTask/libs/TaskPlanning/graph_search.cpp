@@ -143,7 +143,10 @@ void GraphSearchPlanner::integrate( const Policy::ptr & policy )
 
     for( auto c : node->children() )
     {
-      weightedGraph_->setReward( node->id(), c->id(), c->lastReward() );
+      if( c->status() == PolicyNode::INFORMED )
+      {
+        weightedGraph_->setReward( node->id(), c->id(), c->lastReward() );
+      }
 
       queue.push_back( c );
     }

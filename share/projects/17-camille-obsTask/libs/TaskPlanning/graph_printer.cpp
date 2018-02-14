@@ -46,7 +46,7 @@ void GraphPrinter::saveEdge( const POGraphNode::ptr & a, const POGraphNode::ptr 
 {
   std::stringstream ss;
 
-  ss << b->getLeadingActionFromStr( a );
+  ss << b->getLeadingActionFromStr( a ) << std::endl;;
 
   auto label = ss.str();
 

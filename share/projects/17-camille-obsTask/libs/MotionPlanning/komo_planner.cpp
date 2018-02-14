@@ -33,6 +33,8 @@ bool checkPolicyIntegrity( const Policy::ptr & policy )
 
       for( auto c : node->children() )
       {
+        //CHECK( r == c->lastReward(), "two children don't have the same last reward" );
+
         isOk = isOk && r == c->lastReward();
 
         fifo.push_back( c );
@@ -49,7 +51,7 @@ static double updateValue( const PolicyNode::ptr & node )
 
   for( auto c : node->children() )
   {
-    value += node->p() * c->q() * ( c->lastReward() + updateValue( c ) );
+    value += c->q() * ( c->lastReward() + updateValue( c ) );
   }
 
   node->setValue( value );
@@ -140,14 +142,19 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       maxConstraint = std::max( constraint, maxConstraint );
     }
 
-    if( maxConstraint > 0.5 )
+    if( maxConstraint >= maxConstraint_ )
     {
       std::cout << "Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
 
       node->setLastReward( std::numeric_limits< double >::lowest() );
       node->setValue( std::numeric_limits< double >::lowest() );
+      node->setStatus( PolicyNode::INFORMED );
+
       optimizationFailed = true;
+      policy->setValue( std::numeric_limits< double >::lowest() );
     }
+
+    policy->setStatus( Policy::SKELETON );
   }  
 
   if( ! optimizationFailed )
@@ -191,6 +198,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       for( auto c : node->children() )
       {
         c->setLastReward( - cost );
+        c->setStatus( PolicyNode::INFORMED );
 
         fifo.push_back( c );
       }
@@ -199,10 +207,10 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
     /// UPDATE VALUES
     updateValues( policy );
 
+    policy->setStatus( Policy::INFORMED );
   }
-  policy->setStatus( Policy::INFORMED );
 
-  CHECK( checkPolicyIntegrity( policy ), "Policy is corrupted" );
+  //CHECK( checkPolicyIntegrity( policy ), "Policy is corrupted" );
 }
 
 void KOMOPlanner::display( const Policy::ptr & policy, double sec )
@@ -220,7 +228,7 @@ void KOMOPlanner::display( const Policy::ptr & policy, double sec )
   //
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
   long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-  std::cout << "planning time:" << ms << std::endl;
+  std::cout << "motion planning time (ms):" << ms << std::endl;
   //
 
   // retrieve trajectories
@@ -276,6 +284,8 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
 {
   std::cout << "optimizing pose for:" << node->id() << std::endl;
 
+  bool feasible = true;
+  //
   effKinematics_  [ node ] = mlr::Array< mlr::KinematicWorld >( node->N() );
   poseCosts_      [ node ] = arr( node->N() );
   poseConstraints_[ node ] = arr( node->N() );
@@ -286,22 +296,6 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
     {
       mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent() )->second( w ) );
 
-//      ExtensibleKOMO::ptr _komo;
-
-//      for( auto i = 0; i < 100; ++i )
-//      {
-//        _komo = komoFactory_.createKomo();
-//        _komo->setModel( kin, true, false, true, false, false );
-//        _komo->setTiming( 1., 2, secPerPhase, 1/*, true*/ );
-//        _komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-//        _komo->setSquaredQVelocities();
-//        _komo->setFixSwitchedObjects(-1., -1., 1e3);
-
-//        _komo->groundTasks( 0., *node->states()( w ) );
-
-//        _komo->reset(); //huge
-
-//      }
       // create komo
       auto komo = komoFactory_.createKomo();
 
@@ -341,6 +335,10 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
       poseConstraints_[ node ]( w ) = constraints;
 
       // what to do with the cost and constraints here??
+      if( constraints >= maxConstraint_ )
+      {
+        feasible = false;
+      }
 
       // update effective kinematic
       effKinematics_[ node ]( w ) = *komo->configurations.last();
@@ -359,10 +357,13 @@ void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
     }
   }
 
-  // solve for next nodes
-  for( auto c : node->children() )
+  // solve for next nodes if this one was feasible
+  if( feasible )
   {
-    optimizePosesFrom( c );
+    for( auto c : node->children() )
+    {
+      optimizePosesFrom( c );
+    }
   }
 }
 

@@ -20,6 +20,9 @@ void PolicyPrinter::print( const Policy::ptr & policy )
 {
   ss_ << "digraph g{" << std::endl;
 
+  ss_ << "label=" << "\"value=" << policy->value() << "\"" << std::endl;
+  ss_ << "labelloc=top" << std::endl;
+
   printFromNode( policy->root() );
 
   ss_ << "}" << std::endl;
@@ -27,23 +30,13 @@ void PolicyPrinter::print( const Policy::ptr & policy )
 
 void PolicyPrinter::printFromNode( const PolicyNode::ptr & node )
 {
-  for( auto c : node->children() )
+  if( node->children().size() == 1 )
   {
+    auto c = node->children().first();
+
     std::stringstream ss1;
     ss1 << node->nextAction();
-
-    auto diffFacts = c->differentiatingFacts();
-
-    for( auto fact : c->differentiatingFacts() )
-    {
-      ss1 << std::endl << fact;
-    }
-
-    if( node->children().N > 1 )
-    {
-      ss1 << std::endl << "p=" << c->p();
-      ss1 << std::endl << "q=" << c->p() / node->p();
-    }
+    ss1 << std::endl << "r=" << c->lastReward();
 
     auto label = ss1.str();
 
@@ -51,4 +44,65 @@ void PolicyPrinter::printFromNode( const PolicyNode::ptr & node )
 
     printFromNode( c );
   }
+  else if( node->children().size() > 1 )
+  {
+    auto c = node->children().first();
+
+    std::stringstream ss1;
+    ss1 << node->nextAction();
+
+    auto label1 = ss1.str();
+
+    std::string oid = std::to_string( node->id() ) + "'";
+    ss_ << "\"" << oid << "\"" << " [ " << "shape=box" << " ] " << ";" << std::endl;
+    ss_ << node->id() << "->" << "\"" << oid << "\"" << " [ label=\"" << label1 << "\" ]" << ";" << std::endl;
+
+    for( auto c : node->children() )
+    {
+      std::stringstream ss2;
+
+      auto diffFacts = c->differentiatingFacts();
+
+      for( auto fact : c->differentiatingFacts() )
+      {
+        ss2 << std::endl << fact;
+      }
+
+      ss2 << std::endl << "r=" << c->lastReward();
+      ss2 << std::endl << "p=" << c->p();
+      ss2 << std::endl << "q=" << c->p() / node->p();
+
+      auto label2 = ss2.str();
+
+      ss_ << "\"" << oid << "\"" << "->" << c->id() << " [ label=\"" << label2 << "\" ]" << ";" << std::endl;
+
+      printFromNode( c );
+    }
+  }
+//  for( auto c : node->children() )
+//  {
+//    std::stringstream ss1;
+//    ss1 << node->nextAction();
+
+//    if( node->children().N > 1 )
+//    {
+//      auto diffFacts = c->differentiatingFacts();
+
+//      for( auto fact : c->differentiatingFacts() )
+//      {
+//        ss1 << std::endl << fact;
+//      }
+
+//      ss1 << std::endl << "p=" << c->p();
+//      ss1 << std::endl << "q=" << c->p() / node->p();
+//    }
+
+//    ss1 << std::endl << "r=" << c->lastReward();
+
+//    auto label = ss1.str();
+
+//    ss_ << node->id() << "->" << c->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
+
+//    printFromNode( c );
+//  }
 }

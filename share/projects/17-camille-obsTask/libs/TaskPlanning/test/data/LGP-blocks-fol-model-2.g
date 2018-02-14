@@ -18,10 +18,6 @@ table
 id	    # block identifier
 
 in_sight   # block identification part is visible
-#view_taken # object recognition has been triggered for checking if the object X is at location Y
-#viewed	   # object X has been viewed at location Y
-#at         # object X is at location Y
-#grasped    # agent X holds/has grasped object Y
 holding     # object is held by an agent
 hand_empty  # hand is free
 on_table    # object X is on the table
@@ -52,29 +48,53 @@ tableC_right
 
 
 ## initial state
-START_STATE { 
-(table tableC) 
-(location tableC_center) (location tableC_left) (location tableC_right)
+START_STATE { (table tableC) 
 (block block_1) (block block_2) (block block_3)
 (id block_a) (id block_b) (id block_c)
+(location tableC_center) (location tableC_left) (location tableC_right)
 (clear block_3) (clear block_2) (clear tableC_right)
-(on_table block_1 tableC_center) (on_table block_2 tableC_left)
-(on block_3 block_1)
+(on_table block_1 tableC_center) (on_table block_2 tableC_left) (on block_3 block_1)
 (hand_empty) 
-(is block_2 block_b)
-(identified block_2)
 }
 
 BELIEF_START_STATE{ 
 {
 (is block_3 block_c)
+(is block_1 block_b)
+(is block_2 block_a)
+()=0.166666667
+}
+{
+(is block_2 block_c)
+(is block_1 block_b)
+(is block_3 block_a)
+()=0.166666667
+}
+
+{
+(is block_3 block_c)
+(is block_2 block_b)
 (is block_1 block_a)
-()=0.6
+()=0.166666667
 }
 {
 (is block_1 block_c)
+(is block_2 block_b)
 (is block_3 block_a)
-()=0.4
+()=0.166666665
+}
+
+{
+(is block_2 block_c)
+(is block_3 block_b)
+(is block_1 block_a)
+()=0.166666667
+}
+{
+(is block_1 block_c)
+(is block_3 block_b)
+(is block_2 block_a)
+()=0.166666667
 }
 }
 
@@ -96,7 +116,7 @@ REWARD {
 # Check
 DecisionRule check {
   X
-  { (block X) (holding X) (identified X)! }
+  { (block X) (identified X)! }
   { (in_sight X) komoCheck(X)=1. }
 }
 

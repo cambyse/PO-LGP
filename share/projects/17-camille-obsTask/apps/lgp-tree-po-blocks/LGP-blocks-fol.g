@@ -48,10 +48,11 @@ tableC_right
 
 
 ## initial state
-START_STATE { (table tableC) 
+START_STATE {
+(table tableC) 
+(location tableC_center) (location tableC_left) (location tableC_right)
 (block block_1) (block block_2) (block block_3)
 (id block_a) (id block_b) (id block_c)
-(location tableC_center) (location tableC_left) (location tableC_right)
 (clear block_3) (clear block_2) (clear tableC_right)
 (on_table block_1 tableC_center) (on_table block_2 tableC_left) (on block_3 block_1)
 (hand_empty) 

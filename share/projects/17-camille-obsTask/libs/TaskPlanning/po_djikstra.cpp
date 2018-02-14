@@ -210,6 +210,7 @@ bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
 
     // get action graph ( have to be reconstructed with the right action! since it is a graph!!)
     uint a = node->getLeadingActionFrom( graphParent );
+    policyNode->setLastReward( graph_->reward( parent->id(), node->id() ) );
 
     auto parentStates = graphParent->folStates(); // start states
     mlr::Array< std::shared_ptr<Graph> > resultStates( parentStates.d0 );
@@ -231,6 +232,7 @@ bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
     // add child to parent
     policyNode->setTime( parent->time() + 1 );
     policyNode->setValue( values_[ node->id() ] );
+    policyNode->setStatus( PolicyNode::SKELETON );
 
     parent->addChild( policyNode );
     parent->setNextAction( node->getLeadingActionFromStr( graphParent ) );

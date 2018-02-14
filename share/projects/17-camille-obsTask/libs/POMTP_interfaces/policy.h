@@ -48,6 +48,12 @@ public:
   typedef std::shared_ptr< PolicyNode > ptr;
   typedef mlr::Array< PolicyNode::ptr > L;
 
+  enum StatusType
+  {
+    SKELETON = 0,
+    INFORMED
+  };
+
 public:
   // modifiers
   void setParent( const PolicyNode::ptr & parent ) { parent_ = parent; }
@@ -59,9 +65,9 @@ public:
   void setId( uint id ) { id_ = id; }
   void setP( double p ) { p_ = p; }
   void setQ( double q ) { q_ = q; }
-  //void setPrefixReward( double prefix ) { prefixReward_ = prefix; }
   void setLastReward( double reward ) { lastReward_ = reward; }
   void setValue( double v ) { value_ = v; }
+  void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // utility
   void setDifferentiatingFact( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
@@ -83,7 +89,7 @@ public:
   double value() const { return value_; }
   PolicyNode::ptr clone() const;
   void cloneFrom( const PolicyNode::ptr & node ) const;
-
+  StatusType status() const { return status_; }
   // io
 //  void save( std::ostream& os );
 //  void load( std::istream& is );
@@ -106,8 +112,8 @@ private:
   double p_;  // probability of reaching this node
   double q_;  // probability of reaching this node given that fact that its parent is reached
   double lastReward_;
-  //double prefixReward_; // cumulted rewards so far
   double value_; // expected future rewards
+  enum StatusType status_;
 
   // utility
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
