@@ -313,11 +313,11 @@ void plan_graph_search()
   //tp->setFol( "LGP-blocks-fol-2w.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
 
-  //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
-  //mp->setKin( "LGP-blocks-kin-2w.g" );
+  tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
+  mp->setKin( "LGP-blocks-kin-2w.g" );
 
-  tp->setFol( "LGP-blocks-fol-1w.g" );
-  mp->setKin( "LGP-blocks-kin-1w.g" );
+  //tp->setFol( "LGP-blocks-fol-1w.g" );
+  //mp->setKin( "LGP-blocks-kin-1w.g" );
 
   //tp->setFol( "LGP-blocks-fol-1w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-1w.g" );
