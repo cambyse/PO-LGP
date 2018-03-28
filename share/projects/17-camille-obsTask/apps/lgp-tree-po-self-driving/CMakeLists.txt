@@ -44,5 +44,5 @@ target_link_libraries(
  CollisionAvoidance
  TaskPlanning
  MotionPlanning
- AutonomousDriving
+ GeometricUtilityTasks
  )

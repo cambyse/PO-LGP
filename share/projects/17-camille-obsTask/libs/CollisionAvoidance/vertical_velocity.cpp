@@ -26,7 +26,6 @@ void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t 
   arr p, Jp;
   G.kinematicsPos( p, Jp, body, mlr::Vector( 0, 0, 0 ) );
 
-
   // commit results
   const double w = 10;
   tmp_y( 0 ) = w * p( 0 );
@@ -37,7 +36,7 @@ void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t 
 
   //tmp_J.setMatrixBlock( Jp, 0, 0 );
 
-  //  // commit results
+  // commit results
   y = tmp_y;
   if(&J) J = tmp_J;
 }

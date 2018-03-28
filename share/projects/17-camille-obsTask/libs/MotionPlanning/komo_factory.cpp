@@ -71,6 +71,34 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
   }
 }
 
+void ExtensibleKOMO::saveTrajectory( const std::string & suffix ) const
+{
+  std::string filename = ( "z.coordinates" + suffix ).c_str();
+
+  ofstream fil( filename.c_str() );
+  StringA jointNames = world.getJointNames();
+  //first line: legend
+  for(auto s:jointNames) fil <<s <<' ';
+  fil <<endl;
+
+  // positions
+  auto xx = x;
+  xx.reshape(T, world.q.N);
+
+  // coordinate
+  arr coordinates = zeros(T, world.q.N);
+
+  for( auto t = 0; t < T; ++t )
+  {
+    auto x_t   = xx.row( t );
+
+    coordinates.setMatrixBlock( x_t, t, 0 );
+  }
+
+  coordinates.write(fil, NULL, NULL, "  ");
+  fil.close();
+}
+
 void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
 {
   std::string filename = ( "z.velocities" + suffix ).c_str();

@@ -70,7 +70,7 @@ void PolicyPrinter::printFromNode( const PolicyNode::ptr & node )
 
       ss2 << std::endl << "r=" << c->lastReward();
       ss2 << std::endl << "p=" << c->p();
-      ss2 << std::endl << "q=" << c->p() / node->p();
+      ss2 << std::endl << "q=" << c->q();
 
       auto label2 = ss2.str();
 

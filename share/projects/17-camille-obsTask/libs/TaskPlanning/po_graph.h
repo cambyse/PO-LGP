@@ -138,7 +138,7 @@ public:
     auto i = index( parent, child );
     auto k = n_update_[ i ];
 
-    CHECK( rewards_[ i ] != r, "" );
+//    CHECK( rewards_[ i ] != r, "" );
 
 //    if( k > 1 && fabs( r ) / fabs( rewards_[ i ] ) > 10.0 )  // outlier rejection
 //    {

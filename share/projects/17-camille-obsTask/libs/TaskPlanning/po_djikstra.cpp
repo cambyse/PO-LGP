@@ -55,63 +55,135 @@ void Dijkstra::dijkstra( const std::list < POGraphNode::ptr > & terminals )
 
   bestFamily_ = std::vector< int >( graph_->size(), -1 );
   parents_    = std::vector< POGraphNode::ptr >( graph_->size() );
-  std::priority_queue< POGraphNode::ptr, std::vector< POGraphNode::ptr >, decltype( comp ) > Q( comp );
 
-  // expected reward up to terminal nodes
-  // add terminal nodes to Q
-  {
+  std::vector< uint > nUpdates( graph_->size(), 0 );
+  std::priority_queue< POGraphNode::ptr, std::vector< POGraphNode::ptr >, decltype( comp ) > Q( comp );
 
   // go from leafs to root
   for( auto v : terminals )
   {
     values_[ v->id() ] = 0; // all rewards negative
-    Q.push( v );
   }
 
-  // algorithm
-  while( ! Q.empty() )
+  // expected reward up to terminal nodes
+  // add terminal nodes to Q
+  uint totalUpdates = 0;
+  bool stable = false;
+  for( auto i = 0; ! stable && i < 1000; ++i )
   {
-    auto u = Q.top();
-    Q.pop();
-
-    for( auto parent : u->parents() )
+    stable = true;
+    // go from leafs to root
+    for( auto v : terminals )
     {
-      if( graph_->edgePossible( parent->id(), u->id() ) )
+      Q.push( v );
+    }
+
+    // algorithm
+    while( ! Q.empty() )
+    {
+      auto u = Q.top();
+      Q.pop();
+
+      for( auto parent : u->parents() )
       {
-        const auto r = graph_->reward( parent->id(), u->id() );
-
-        double one = 0;
-
-        one += u->p();
-        auto alternativeValue = u->p() * ( values_[ u->id() ] + r ); // p->(u,v)
-
-        for( auto v : u->andSiblings() )
+        if( graph_->edgePossible( parent->id(), u->id() ) )
         {
-          if( ! graph_->edgePossible( parent->id(), v->id() ) )
+          const auto r = graph_->reward( parent->id(), u->id() );
+
+          double one = 0;
+
+          one += u->q();
+          auto alternativeParentValue = u->q() * ( values_[ u->id() ] + r ); // p->(u,v)
+
+          for( auto v : u->andSiblings() )
           {
-            alternativeValue = m_inf(); one = 1.0; break;
+            if( ! graph_->edgePossible( parent->id(), v->id() ) )
+            {
+              alternativeParentValue = m_inf(); one = 1.0; break;
+            }
+
+            const auto r = graph_->reward( parent->id(), v->id() );
+
+            one += v->q();
+            alternativeParentValue += v->q() * ( values_[ v->id() ] + r );
           }
 
-          const auto r = graph_->reward( parent->id(), v->id() );
+          CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
 
-          one += v->p();
-          alternativeValue += v->p() * ( values_[ v->id() ] + r );
-        }
+          if( alternativeParentValue > values_[ parent->id() ] )
+          {
+//            if( nUpdates[ parent->id() ] == 0 )
+//            {
+//              values_[ parent->id() ] = alternativeParentValue;
+//            }
+//            else
+//            {
+//              values_[ parent->id() ] = values_[ parent->id() ]alternativeParentValue;
+//            }
+            values_[ parent->id() ] = alternativeParentValue;
+            stable = false;
+            nUpdates[ parent->id() ]++;
+            totalUpdates++;
 
-        CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
-
-        if( alternativeValue > values_[ parent->id() ] )
-        {
-          values_[ parent->id() ] = alternativeValue;
-          Q.push( parent );
+            Q.push( parent );
+          }
         }
       }
     }
-  }
 
-  }
+    }
 
   std::cout << "GraphSearchPlanner::dijkstra.. end" << std::endl;
+
+//  // go from leafs to root
+//  for( auto v : terminals )
+//  {
+//    values_[ v->id() ] = 0; // all rewards negative
+//    Q.push( v );
+//  }
+
+//  // algorithm
+//  while( ! Q.empty() )
+//  {
+//    auto u = Q.top();
+//    Q.pop();
+
+//    for( auto parent : u->parents() )
+//    {
+//      if( graph_->edgePossible( parent->id(), u->id() ) )
+//      {
+//        const auto r = graph_->reward( parent->id(), u->id() );
+
+//        double one = 0;
+
+//        one += u->q();
+//        auto alternativeParentValue = u->q() * ( values_[ u->id() ] + r ); // p->(u,v)
+
+//        for( auto v : u->andSiblings() )
+//        {
+//          if( ! graph_->edgePossible( parent->id(), v->id() ) )
+//          {
+//            alternativeParentValue = m_inf(); one = 1.0; break;
+//          }
+
+//          const auto r = graph_->reward( parent->id(), v->id() );
+
+//          one += v->q();
+//          alternativeParentValue += v->q() * ( values_[ v->id() ] + r );
+//        }
+
+//        CHECK( fabs( 1.0 - one ) < eps(), "corruption in probability computation!!" );
+
+//        if( alternativeParentValue > values_[ parent->id() ] )
+//        {
+//          values_[ parent->id() ] = alternativeParentValue;
+//          Q.push( parent );
+//        }
+//      }
+//    }
+//  }
+
+//  }
 }
 
 bool Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
@@ -124,19 +196,19 @@ bool Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
     return false;
   }
 
+  int bestFamily = -1; double bestValue = m_inf();
   for( auto i = 0; i < node->families().size(); ++i )
   {
     auto f = node->families()( i );
 
     double familyValue = 0;
-    const double r = graph_->reward( node->id(), f.first()->id() );
 
     for( auto c : f )
     {
       double is_removed = ! graph_->edgePossible( node->id(), c->id() );
       if( ! is_removed )
       {
-        familyValue += c->p() * values_[ c->id() ];
+        familyValue += c->q() * values_[ c->id() ];
       }
       else
       {
@@ -144,19 +216,24 @@ bool Dijkstra::extractSolutionFrom( const POGraphNode::ptr & node )
       }
     }
 
-    if( familyValue + r >= valueFromNode - eps() )
+    if( familyValue > bestValue )
     {
-      bestFamily_[ node->id() ] = i;
+      bestFamily = i;
+      bestValue = familyValue;
+    }
+  }
 
-      for( auto c : f )
-      {
-        parents_[ c->id() ] = node;
+  bestFamily_[ node->id() ] = bestFamily;
 
-        if( ! c->isTerminal() && node->id() != c->id() )
-        {
-          extractSolutionFrom( c );
-        }
-      }
+  auto f = node->families()( bestFamily );
+
+  for( auto c : f )
+  {
+    parents_[ c->id() ] = node;
+
+    if( ! c->isTerminal() && node->id() != c->id() )
+    {
+      extractSolutionFrom( c );
     }
   }
 
@@ -186,6 +263,8 @@ bool Dijkstra::buildPolicy( const POGraphNode::ptr & from )
 
     buildPolicyFrom( from, from );
   }
+
+  checkValuesIntegrity( policy_ );
 }
 
 bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start )
@@ -246,9 +325,8 @@ bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
   // set node data
   policyNode->setId( node->id() );
   policyNode->setDifferentiatingFact( node->differentiatingFacts() );
-  policyNode->setP( node->pHistory() );
-  auto parentP = policyNode->parent() ? policyNode->parent()->p() : 1.0;
-  policyNode->setQ( node->pHistory() / parentP );
+  policyNode->setP( node->p() );
+  policyNode->setQ( node->q() ); //
 
   // save correspondance
   PO2Policy_[ node ] = policyNode;
@@ -264,4 +342,50 @@ bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
   }
 }
 
+void Dijkstra::checkValuesIntegrity( const Policy::ptr & policy )
+{
+  std::queue< PolicyNode::ptr > Q;
+
+  Q.push( policy_->root() );
+
+  while( ! Q.empty() )
+  {
+    auto node = Q.front();
+    Q.pop();
+
+    auto value = node->value();
+
+    if( node->children().size() == 0 )
+    {
+      CHECK( value == 0, "terminal node without null value!" );
+    }
+    else
+    {
+      double recalculatedValue = 0;
+      double one = 0;
+
+      for( auto c : node->children() )
+      {
+        auto r = c->lastReward();
+        //auto p = c->p();
+        auto q = c->q();
+        auto v = c->value();
+
+        recalculatedValue += q * ( r + v );
+        one += q;
+
+        Q.push( c );
+      }
+
+      if( fabs( value - recalculatedValue ) > 0.0001 )
+      {
+        std::cout << "warning!!! policy values don't seem to be consistent!!" << std::endl;
+      }
+      //CHECK( fabs( value - recalculatedValue ) < 0.001, "wrong policy values" );
+      CHECK( fabs( one - 1.0 ) < eps(), "wrong policy probabilities" );
+    }
+  }
 }
+
+}
+

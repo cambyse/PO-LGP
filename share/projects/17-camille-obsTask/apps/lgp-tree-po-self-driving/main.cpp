@@ -156,7 +156,7 @@ void groundOvertake( double phase, const Graph& facts, Node *n, mp::ExtensibleKO
 
   // overtake
   //komo->setTask( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
-  komo->setPosition( t_end, -1, "car_ego", *symbols(0), OT_sumOfSqr, { 0.6, 0, 0 } );
+  komo->setPosition( t_end, -1, "car_ego", *symbols(0), OT_sumOfSqr, { 0.45, 0, 0 } );
 
   if( verbose > 0 )
   {
@@ -178,7 +178,7 @@ void groundFollow( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO
   //
 
   // overtake
-  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sumOfSqr, { -0.55, 0, 0 } );
+  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sumOfSqr, { -0.7, 0, 0 } ); // -0.55
 
   if( verbose > 0 )
   {
@@ -203,8 +203,10 @@ void plan_graph_search()
 
 
   // set start configurations
-  mp->setKin( "LGP-overtaking-kin-2w.g" );
+  mp->setKin( "LGP-overtaking-kin-2w_bis.g" );
   tp->setFol( "LGP-overtaking-2w.g" );
+
+  //tp->setFol( "LGP-overtaking-2w.g" );
   //mp->setKin( "LGP-overtaking-kin-3w.g" );
   //tp->setFol( "LGP-overtaking-3w.g" );
 
@@ -240,10 +242,10 @@ void plan_graph_search()
     // save policy
     savePolicyToFile( policy );
   }
-  while( ! skeletonEquals( policy, old_policy ) );
+  while( false && ! skeletonEquals( policy, old_policy ) );
   ///
 
-
+  mp->solveAndInform( po, policy );
   mp->display( policy, 3000 );
 
   mlr::wait( 30, true );

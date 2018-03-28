@@ -33,6 +33,6 @@ target_link_libraries(
  POMTP_interfaces
  ObservationTasks
  CollisionAvoidance
- AutonomousDriving
+ GeometricUtilityTasks
  MotionPlanning
  )

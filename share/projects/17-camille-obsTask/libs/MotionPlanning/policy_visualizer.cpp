@@ -51,10 +51,19 @@ PolicyVisualizer::PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< ml
 
         for( uint s = 0; s < traj.N; ++s )
         {
-          configurations( s ) = &traj( s );
+          configurations( s ) = &traj( s ); //s
         }
 
         views_[ index ]->setConfigurations( configurations );
+
+        views_[ index ]->copy.gl().camera.setPosition(0., 0., 12);
+        views_[ index ]->copy.gl().camera.focus(0, 0, 0);
+
+//            setHeightAngle(12.);
+//            setPosition(10., -15., 8.);
+//          //  setPosition(10., -4., 10.);
+//            focus(0, 0, 1.);
+//            upright();
 
         index++;
       }

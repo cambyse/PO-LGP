@@ -40,6 +40,7 @@ public:
   void setPrefixSetup() { prefixSetup_ = true; }
   bool isPrefixSetup() const { return prefixSetup_; }
 
+  void saveTrajectory( const std::string & suffix = "" ) const;
   void plotVelocity( const std::string & suffix = "" ) const;
   arr getCostsPerPhase();
 

@@ -33,8 +33,19 @@ target_location_1
 target
 
 ## initial state
-START_STATE { (object target) (location target_location_0) (location target_location_1) }
-BELIEF_START_STATE{ (at target target_location_0)=0.2 (at target target_location_1)=0.8 }
+START_STATE { 
+{(object target) (location target_location_0) (location target_location_1) }
+
+BELIEF_START_STATE{ 
+{
+(at target target_location_0)
+()=0.2
+}
+{
+(at target target_location_1)
+()=0.8
+}
+}
 ### RULES 
 
 #termination rule

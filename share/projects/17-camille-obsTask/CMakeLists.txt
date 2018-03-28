@@ -6,7 +6,7 @@ project(${project_name})
 
 add_definitions(-std=c++11)
 
-add_subdirectory("libs/AutonomousDriving")
+add_subdirectory("libs/GeometricUtilityTasks")
 add_subdirectory("libs/ObservationTasks")
 add_subdirectory("libs/CollisionAvoidance")
 add_subdirectory("libs/Math_utility")

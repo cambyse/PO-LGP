@@ -17,6 +17,9 @@
 
 #include <node_visitors.h>
 
+#include <graph_search.h>
+
+#include <komo_planner.h>
 
 /*
 sort nodes before expanding?
@@ -326,13 +329,13 @@ void groundObjectPairCollisionAvoidance( double phase, const Graph& facts, Node 
   const double t_end =  komo->maxPhase;
   //
 
-  for( auto s1 : komo->world.getBodyByName( *symbols(0) )->shapes )
-  {
-    for( auto s2 : komo->world.getBodyByName( *symbols(1) )->shapes )
-    {
-      //komo->setTask( t_start, t_end, new ShapePairCollisionConstraint( komo->world, s1->name, s2->name, 0.1 ), OT_ineq, NoArr, 1e2 );
-    }
-  }
+//  for( auto s1 : komo->world.getBodyByName( *symbols(0) )->shapes )
+//  {
+//    for( auto s2 : komo->world.getBodyByName( *symbols(1) )->shapes )
+//    {
+//      //komo->setTask( t_start, t_end, new ShapePairCollisionConstraint( komo->world, s1->name, s2->name, 0.1 ), OT_ineq, NoArr, 1e2 );
+//    }
+//  }
 }
 
 //===========================================================================
@@ -375,12 +378,30 @@ void plan()
     mp->solveAndInform( po, policy );
 
     // print resulting cost
-    std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
+    //std::cout << "cost of the policy " << i << " " << policy->cost() << std::endl;
 
     tp->integrate( policy );
   }
 
   mp->display( tp->getPolicy(), 3000 );
+}
+
+void plan_graph()
+{
+  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  auto mp = std::make_shared< mp::KOMOPlanner >();
+
+  // set planner specific parameters
+  tp->setInitialReward( -0.1 );
+  mp->setNSteps( 5 );
+
+  tp->setFol( "LGP-obs-container-fol-place-pick-2-no-take-view.g" );
+  mp->setKin( "LGP-obs-container-kin.g" );
+
+  tp->buildGraph();
+
+  tp->saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
 }
 
 //===========================================================================
@@ -390,7 +411,7 @@ int main(int argc,char **argv){
 
   rnd.clockSeed();
 
-  plan();
+  plan_graph();
 
   return 0;
 }

@@ -31,6 +31,7 @@ private:
   bool extractSolutionFrom( const POGraphNode::ptr & );
   bool buildPolicy( const POGraphNode::ptr & );
   bool buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode::ptr & start );
+  void checkValuesIntegrity( const Policy::ptr & policy );
 
 private:
   mlr::Array< std::shared_ptr< FOL_World > > folEngines_;

@@ -28,7 +28,8 @@ struct AxisBound:TaskMap{
   enum Axis
   {
     X = 0,
-    Y
+    Y,
+    Z
   };
 
   enum BoundType
@@ -41,10 +42,11 @@ struct AxisBound:TaskMap{
     : object_( object )
     , bound_( bound )
     , boundType_( boundType )
-    , id_( axis == X ? 0 : 1 )
     , k_( k )
   {
-
+    if( axis == X ) id_ = 0;
+    else if( axis == Y ) id_ = 1;
+    else if( axis == Z ) id_ = 2;
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1)
@@ -87,5 +89,5 @@ private:
   const double bound_;
   const BoundType boundType_;
   const double k_;
-  const std::size_t id_;
+  std::size_t id_= 0;
 };

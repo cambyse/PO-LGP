@@ -30,12 +30,17 @@ public:
   void setNSteps( uint n ) { microSteps_ = n; }
 
 private:
-  void clearLastPolicyOptimization();
-
+  /// MARKOVIAN
   // poses
   void optimizePoses( Policy::ptr & );
   void optimizePosesFrom( const PolicyNode::ptr & );
 
+  // markovian path
+  void optimizeMarkovianPath( Policy::ptr & );
+  void optimizeMarkovianPathFrom( const PolicyNode::ptr & );
+
+  /// NON MARKOVIAN
+  void clearLastNonMarkovianResults();
   // path
   void optimizePath( Policy::ptr & );
   void optimizePathTo( const PolicyNode::ptr & );
@@ -51,13 +56,17 @@ private:
   KOMOFactory komoFactory_;
 
   // pose
-  std::map< PolicyNode::ptr, mlr::Array< mlr::KinematicWorld > > effKinematics_;
-  std::map< PolicyNode::ptr, arr > poseCosts_;
-  std::map< PolicyNode::ptr, arr > poseConstraints_;
+  std::map< uint, mlr::Array< mlr::KinematicWorld > > effKinematics_;
+  std::map< uint, arr > poseCosts_;       // node id -> costs for each world
+  std::map< uint, arr > poseConstraints_; // node id -> constraints for each world
+
+  // markovian path
+  std::map< uint, double > markovianPathCosts_; // node id -> averaged cost
+  std::map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
 
   // path
-  std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // maps each leaf to its path // memory leak?
-  std::map< PolicyNode::ptr, mlr::Array< arr > > pathXSolution_;
+  std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
+  std::map< PolicyNode::ptr, mlr::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
 
   // joint path
   std::map< PolicyNode::ptr, arr > jointPathCosts_;
@@ -69,14 +78,14 @@ private:
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 
-  double kinEqualityWeight_  = 1e0;
+  double kinEqualityWeight_  = 1e3;
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
   double maxConstraint_      = 0.5;
 
-  uint phase_start_offset_ = 2; // the first task should be grounded starting from this time
-  uint phase_end_offset_   = 1;
+  double phase_start_offset_ = 0.5; // the first task should be grounded starting from this time
+  double phase_end_offset_   = 0.5;
   uint microSteps_     = 20;
 };
 

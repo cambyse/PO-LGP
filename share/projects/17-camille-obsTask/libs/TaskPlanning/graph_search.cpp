@@ -125,10 +125,11 @@ void GraphSearchPlanner::solve()
     buildGraphImpl();
   }
 
-  Yens solver( folEngines_ );
-  auto policies = solver.solve( weightedGraph_, 0 );
+  //Yens solver( folEngines_ );
+  //auto policies = solver.solve( weightedGraph_, 0 );
 
-  policy_ = policies.front();
+  Dijkstra solver( folEngines_ );
+  policy_ = solver.solve( weightedGraph_, weightedGraph_->root() );
 }
 
 void GraphSearchPlanner::integrate( const Policy::ptr & policy )
@@ -163,7 +164,7 @@ MotionPlanningOrder GraphSearchPlanner::getPlanningOrder() const
   MotionPlanningOrder po( getPolicy()->id() );
 
   //
-  po.setParam( "type", "jointPath" );
+  po.setParam( "type", "markovJointPath" );
   //
 
   return po;

@@ -122,7 +122,7 @@ public:
   POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
 
   /// child node creation
-  POGraphNode( const POGraphNode::ptr & root, double p, double pHistory, const arr & bs, const std::vector< SymbolicState > &,uint a );
+  POGraphNode( const POGraphNode::ptr & root, double p, double q, const arr & bs, const std::vector< SymbolicState > &,uint a );
 
   // modifiers
   POGraphNode::L expand();
@@ -144,8 +144,9 @@ public:
   uint id() const { return id_; }
   POGraphNode::L parents()     const { return parents_; }
   POGraphNode::L andSiblings() const { return andSiblings_; }
-  double pHistory() const { return pHistory_; }
-  double p() const { return p_; }
+  //double pHistory() const { return pHistory_; }
+  double p() const { return p_; } // overall probability to jump to this edge
+  double q() const { return q_; } // probability to jump to this edge, given the fact that we are at the parent
   arr bs()   const { return bs_; }
   const std::vector< SymbolicState > & resultStates() const { return resultStates_; }
   uint getLeadingActionFrom( const POGraphNode::ptr & parent ) const;
@@ -183,8 +184,9 @@ private:
   std::vector< SymbolicState >             resultStates_;
   std::shared_ptr< std::list< POGraphNode::ptr > > graph_;
 
-  double pHistory_;
-  double p_;                              /// probability to jump to this node when there is an observation branching
+  //double pHistory_;
+  double p_;
+  double q_;                              /// probability to jump to this node when there is an observation branching
   arr    bs_;
 
   POGraphNode::L  parents_;

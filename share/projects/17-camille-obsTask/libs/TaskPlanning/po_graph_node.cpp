@@ -115,8 +115,9 @@ POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const
   , resultStates_( N_ )
   //, folAddToStates_( N_ )
   , graph_( std::make_shared< std::list< POGraphNode::ptr > >() )
-  , pHistory_( 1.0 )
+  //, pHistory_( 1.0 )
   , p_( 1.0 )
+  , q_( 1.0 )
   , bs_( bs )
   //, a_( -1 )
   // global search
@@ -157,7 +158,7 @@ _state_str_time_us += mcs_2;
 }
 
 /// child node creation
-POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHistory, const arr & bs,  const std::vector< SymbolicState > & resultStates, uint a )
+POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double q, const arr & bs,  const std::vector< SymbolicState > & resultStates, uint a )
   : root_( root )
   , N_( root->N_ )
   , folEngines_( root->folEngines_ )
@@ -166,8 +167,9 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double pHisto
   //, folAddToStates_( N_ )
   //, decisions_( N_ )
   , graph_( root->graph_ )
-  , pHistory_( pHistory )
+  //, pHistory_( pHistory )
   , p_( p )
+  , q_( q )
   , bs_( bs )
   //, a_( a )
   // global search
@@ -317,16 +319,16 @@ _state_str_time_us += mcs_2;
 
       // update belief state
       arr bs = zeros( N_ );
-      double pWorld = 0;
+      double q = 0;
       for( auto w : worlds )
       {
-        pWorld += bs_( w );
+        q      += bs_( w );
         bs( w ) = bs_( w );
       }
 
-      bs = bs / pWorld;
+      bs = bs / q;
 
-      CHECK( pWorld > 0, "wrong node expansion" );
+      CHECK( q > 0, "wrong node expansion" );
 
       // find or create a node for each possible outcome
       POGraphNode::ptr child;
@@ -351,7 +353,10 @@ _state_str_time_us += mcs_2;
       {
         CHECK( child == nullptr, "a child was found but the pointer is still null!!" );
 
-        child = std::make_shared< POGraphNode >( root(), pWorld, pWorld * pHistory_, bs, resultStates, a );
+        CHECK( q <= 1, "impossible probabilities" );
+        //CHECK( p_ <= q, "impossible probabilities" );
+
+        child = std::make_shared< POGraphNode >( root(), q * p_, q, bs, resultStates, a );
         graph_->push_back( child );
         newNodes.push_back( child );
 
@@ -371,18 +376,22 @@ _state_str_time_us += mcs_2;
 
     // check integrity
     double pSum = 0;
-    for( const auto & n : familiy ) pSum += n->pHistory();
+    for( const auto & n : familiy ) pSum += n->p();
 
-    CHECK_ZERO( pSum / pHistory() - 1.0, 0.000001, "" );
+    CHECK_ZERO( pSum / p() - 1.0, 0.000001, "" );
     //
 
     families_.append( familiy );
 
     // indicate and relation
+    double one = 0;
     for( const auto & n : familiy )
     {
       n->setAndSiblings( familiy );
+      one += n->q();
     }
+
+    CHECK_ZERO( one - 1.0, 0.000001, "wrong probabilities in graph nodes" );
   }
 
   isExpanded_ = true;

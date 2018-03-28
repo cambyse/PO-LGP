@@ -790,7 +790,7 @@ void lane_insertion()
 void test_config()
 {
   //mlr::KinematicWorld G( "model_cooperative_5.g" );
-  mlr::KinematicWorld G( "model_lane_insertion.g" );
+  mlr::KinematicWorld G( "model_attempt_paper.g" );
   //std::cout << G.q.d0 << std::endl;
   G.watch( true );
 }
@@ -800,7 +800,7 @@ void test_config()
 int main(int argc,char** argv){
   mlr::initCmdLine(argc,argv);
 
-  carkin();
+  //carkin();
 
   //overtake();
 
@@ -823,7 +823,7 @@ int main(int argc,char** argv){
 
   //lane_insertion();
 
-  //test_config();
+  test_config();
 
   return 0;
 }

@@ -54,6 +54,16 @@ static void savePolicyToFile( const Policy::ptr & policy )
   }
 }
 
+BOOST_AUTO_TEST_CASE( test_LGP_boxes )
+{
+  // tests that Dijkstra works well from root and from other nodes
+  auto tp = std::make_shared< tp::GraphSearchPlanner >();
+  tp->setFol( "data/LGP-obs-container-fol-simple.g" );
+  tp->buildGraph();
+  tp->saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
+}
+
 //BOOST_AUTO_TEST_CASE( test_LGP_blocks_fol_easy_1w )
 //{
 //  // tests that Dijkstra works well from root and from other nodes

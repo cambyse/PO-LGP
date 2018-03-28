@@ -30,7 +30,7 @@ struct OverPlaneConstraint:TaskMap
   {
     //collisionModel_.append( mlr::Vector( 0, 0, 0 ) );
 
-    // tmp camille is only temporary, get voxels from the sahpe
+    // tmp camille is only temporary, get voxels from the shape
     collisionModel_.append( mlr::Vector( -0.15, -0.15, 0 ) );
     collisionModel_.append( mlr::Vector( -0.15,  0.15, 0 ) );
     collisionModel_.append( mlr::Vector(  0.15, -0.15, 0 ) );

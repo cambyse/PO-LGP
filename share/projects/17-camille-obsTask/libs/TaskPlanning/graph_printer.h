@@ -19,7 +19,9 @@ public:
 
 private:
   void saveGraphFrom( const POGraphNode::ptr & node );
-  void saveEdge( const POGraphNode::ptr & a, const POGraphNode::ptr & b );
+  std::string saveObservationNode( const POGraphNode::ptr & a, const POGraphNode::ptr & b );
+  void saveActionEdge( const POGraphNode::ptr & a, const POGraphNode::ptr & b );
+  void saveObservationEdge( const std::string & oid, const POGraphNode::ptr & a, const POGraphNode::ptr & b );
 
 private:
   std::ostream & ss_;

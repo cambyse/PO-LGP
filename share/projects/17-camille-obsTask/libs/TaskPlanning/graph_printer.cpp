@@ -28,21 +28,55 @@ void GraphPrinter::saveGraphFrom( const POGraphNode::ptr & node )
 {
   for( auto f : node->families() )
   {
-    for( auto c : f )
+    if( f.size() == 1 )
     {
+      auto c = f.first();
+
       std::pair< POGraphNode::ptr, POGraphNode::ptr > edge( node, c );
 
       if( std::find( savedEdges_.begin(), savedEdges_.end(), edge ) == savedEdges_.end() )
       {
-        saveEdge( node, c );
+        saveActionEdge( node, c );
 
         saveGraphFrom( c );
+      }
+    }
+    else
+    {
+      auto c = f.first();
+
+      std::pair< POGraphNode::ptr, POGraphNode::ptr > edge( node, c );
+
+      if( std::find( savedEdges_.begin(), savedEdges_.end(), edge ) == savedEdges_.end() )
+      {
+        auto oid = saveObservationNode( node, c );
+
+        for( auto c : f )
+        {
+          saveObservationEdge( oid, node, c );
+
+          saveGraphFrom( c );
+        }
       }
     }
   }
 }
 
-void GraphPrinter::saveEdge( const POGraphNode::ptr & a, const POGraphNode::ptr & b )
+std::string GraphPrinter::saveObservationNode( const POGraphNode::ptr & a, const POGraphNode::ptr & b )
+{
+  std::stringstream ss1;
+  ss1 << b->getLeadingActionFromStr( a );
+
+  auto label1 = ss1.str();
+
+  std::string oid = std::to_string( b->id() ) + "'";
+  ss_ << "\"" << oid << "\"" << " [ " << "shape=box" << " ] " << ";" << std::endl;
+  ss_ << a->id() << "->" << "\"" << oid << "\"" << " [ label=\"" << label1 << "\" ]" << ";" << std::endl;
+
+  return oid;
+}
+
+void GraphPrinter::saveActionEdge( const POGraphNode::ptr & a, const POGraphNode::ptr & b )
 {
   std::stringstream ss;
 
@@ -51,6 +85,23 @@ void GraphPrinter::saveEdge( const POGraphNode::ptr & a, const POGraphNode::ptr 
   auto label = ss.str();
 
   ss_ << a->id() << "->" << b->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
+
+  savedEdges_.push_back( std::pair< POGraphNode::ptr, POGraphNode::ptr >( a, b ) );
+}
+
+void GraphPrinter::saveObservationEdge( const std::string & oid, const POGraphNode::ptr & a, const POGraphNode::ptr & b )
+{
+  std::stringstream ss;
+
+  auto facts =  b->differentiatingFacts();
+  for( auto f : facts )
+  {
+    ss << f << std::endl;
+  }
+
+  auto label = ss.str();
+
+  ss_ << "\"" << oid << "\"" << "->" << b->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
 
   savedEdges_.push_back( std::pair< POGraphNode::ptr, POGraphNode::ptr >( a, b ) );
 }

@@ -95,7 +95,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 
       for( auto nn : n->graph() )
       {
-        std::cout << *nn << std::endl;
+        //std::cout << *nn << std::endl;
         nn->newClone( kinG );
       }
 
@@ -104,6 +104,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       computeMeshNormals( kin->frames );
       kin->calc_fwdPropagateFrames();
       //
+      //if( w == 1 )
       //kin->watch( true );
       //
       startKinematics_.append( kin );
@@ -118,54 +119,16 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
 
   po.getParam( "type" );
 
-  if( po.getParam( "type" ) != "jointPath" )
-  {
-    CHECK( false, "not implemented yet!" );
-  }
-
-  clearLastPolicyOptimization();
+  clearLastNonMarkovianResults();
 
   // solve on pose level
-  //for( auto i = 0; i < 100; ++i )
   optimizePoses( policy );
 
   /// EARLY STOPPING, detect if pose level not possible
   bool optimizationFailed = false;
   // if a node has a constraint which is not satisfied, we set the node to infeasible i.e. infinite cost!
-  for( auto nodeConstraintsPair : poseConstraints_ )
+
   {
-    auto node = nodeConstraintsPair.first;
-
-    double maxConstraint = 0;
-    for( auto constraint : nodeConstraintsPair.second )
-    {
-      maxConstraint = std::max( constraint, maxConstraint );
-    }
-
-    if( maxConstraint >= maxConstraint_ )
-    {
-      std::cout << "Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
-
-      node->setLastReward( std::numeric_limits< double >::lowest() );
-      node->setValue( std::numeric_limits< double >::lowest() );
-      node->setStatus( PolicyNode::INFORMED );
-
-      optimizationFailed = true;
-      policy->setValue( std::numeric_limits< double >::lowest() );
-    }
-
-    policy->setStatus( Policy::SKELETON );
-  }  
-
-  if( ! optimizationFailed )
-  {
-    // solve on path level
-    optimizePath( policy );
-
-    // solve on joint path level
-    optimizeJointPath( policy );
-
-    /// INFORM POLICY NODES
     std::list< PolicyNode::ptr > fifo;
     fifo.push_back( policy->root() );
 
@@ -174,33 +137,72 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
       auto node = fifo.back();
       fifo.pop_back();
 
-      auto phase = node->time();
-
-      double cost = 0;
-
-      // get the right world
-      for( auto w = 0; w < node->N(); ++w )
+      double maxConstraint = 0;
+      for( auto constraint : poseConstraints_[ node->id() ] )
       {
-        if( node->bs()( w ) > 0 )
-        {
-          auto leaf = bsToLeafs_( w );
-          CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
-
-          auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
-          auto wcost = trajCosts( phase_start_offset_ + phase );
-
-          cost += node->bs()( w ) * wcost;
-          //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
-        }
+        maxConstraint = std::max( constraint, maxConstraint );
       }
 
-      // push children on list
-      for( auto c : node->children() )
+      if( maxConstraint >= maxConstraint_ )
       {
-        c->setLastReward( - cost );
-        c->setStatus( PolicyNode::INFORMED );
+        std::cout << "Pose Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
 
-        fifo.push_back( c );
+        node->setLastReward( std::numeric_limits< double >::lowest() );
+        node->setValue( std::numeric_limits< double >::lowest() );
+        node->setStatus( PolicyNode::INFORMED );
+
+        optimizationFailed = true;
+        policy->setValue( std::numeric_limits< double >::lowest() );
+      }
+      else
+      {
+        // push children on list
+        for( auto c : node->children() )
+        {
+          fifo.push_back( c );
+        }
+      }
+    }
+
+    policy->setStatus( Policy::SKELETON );
+  }
+
+  /// PATH OPTI
+  if( po.getParam( "type" ) == "markovJointPath" )
+  {
+    optimizeMarkovianPath( policy );
+
+    std::list< PolicyNode::ptr > fifo;
+    fifo.push_back( policy->root() );
+
+    while( ! fifo.empty()  )
+    {
+      auto node = fifo.back();
+      fifo.pop_back();
+
+      double constraint = markovianPathConstraints_[ node->id() ];
+
+      if( constraint >= maxConstraint_ )
+      {
+        std::cout << "Markovian Optimization failed on node " << node->id() << " constraint:" << constraint << std::endl;
+
+        node->setLastReward( std::numeric_limits< double >::lowest() );
+        node->setValue( std::numeric_limits< double >::lowest() );
+        node->setStatus( PolicyNode::INFORMED );
+
+        optimizationFailed = true;
+        policy->setValue( std::numeric_limits< double >::lowest() );
+      }
+      else
+      {
+        node->setLastReward( -markovianPathCosts_[ node->id() ] );
+        node->setStatus( PolicyNode::INFORMED );
+
+        // push children on list
+        for( auto c : node->children() )
+        {
+          fifo.push_back( c );
+        }
       }
     }
 
@@ -208,6 +210,65 @@ void KOMOPlanner::solveAndInform( const MotionPlanningOrder & po, Policy::ptr & 
     updateValues( policy );
 
     policy->setStatus( Policy::INFORMED );
+  }
+  else if( po.getParam( "type" ) == "jointPath" )
+  {
+    if( ! optimizationFailed )
+    {
+      // solve on path level
+      optimizePath( policy );
+
+      // solve on joint path level
+      optimizeJointPath( policy );
+
+      /// INFORM POLICY NODES
+      std::list< PolicyNode::ptr > fifo;
+      fifo.push_back( policy->root() );
+
+      while( ! fifo.empty()  )
+      {
+        auto node = fifo.back();
+        fifo.pop_back();
+
+        auto phase = node->time();
+
+        double cost = 0;
+
+        // get the right world
+        for( auto w = 0; w < node->N(); ++w )
+        {
+          if( node->bs()( w ) > 0 )
+          {
+            auto leaf = bsToLeafs_( w );
+            CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
+
+            auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
+            auto wcost = trajCosts( phase_start_offset_ + phase );
+
+            cost += node->bs()( w ) * wcost;
+            //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
+          }
+        }
+
+        // push children on list
+        for( auto c : node->children() )
+        {
+          c->setLastReward( - cost );
+          c->setStatus( PolicyNode::INFORMED );
+
+          fifo.push_back( c );
+        }
+      }
+
+      /// UPDATE VALUES
+      updateValues( policy );
+
+      policy->setStatus( Policy::INFORMED );
+    }
+  }
+  else
+  {
+    CHECK( false, "not implemented yet!" );
   }
 
   //CHECK( checkPolicyIntegrity( policy ), "Policy is corrupted" );
@@ -249,12 +310,190 @@ void KOMOPlanner::registerTask( const mlr::String & type, const SymbolGrounder &
   komoFactory_.registerTask( type, grounder );
 }
 
-void KOMOPlanner::clearLastPolicyOptimization()
-{
-  // poses
-  effKinematics_.clear();
-  poseConstraints_.clear();
+///MARKOVIAN
 
+void KOMOPlanner::optimizePoses( Policy::ptr & policy )
+{
+  optimizePosesFrom( policy->root() );
+}
+
+void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
+{
+  std::cout << "optimizing pose for:" << node->id() << std::endl;
+
+  bool feasible = true;
+
+  if( poseConstraints_.find( node->id() ) == poseConstraints_.end() )
+  {
+    //
+    effKinematics_  [ node->id() ] = mlr::Array< mlr::KinematicWorld >( node->N() );
+    poseCosts_      [ node->id() ] = arr( node->N() );
+    poseConstraints_[ node->id() ] = arr( node->N() );
+    //
+    for( auto w = 0; w < node->N(); ++w )
+    {
+      if( node->bs()( w ) > eps() )
+      {
+        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->id() )->second( w ) );
+
+        // create komo
+        auto komo = komoFactory_.createKomo();
+
+        // set-up komo
+        komo->setModel( kin, true, false, true, false, false );
+
+        komo->setTiming( 1., 2, 5., 1/*, true*/ );
+        //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+        komo->setSquaredQVelocities();
+        komo->setFixSwitchedObjects( -1., -1., 1e3 );
+
+        komo->groundTasks( 0., *node->states()( w ) );
+
+        komo->reset(); //huge
+
+        try{
+          komo->run();
+        } catch( const char* msg ){
+          cout << "KOMO FAILED: " << msg <<endl;
+        }
+
+        //      if( node->id() == 136 )
+        //      {
+        //      komo->displayTrajectory();
+
+        //      mlr::wait();
+        //      }
+        // save results
+        //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+
+        Graph result = komo->getReport();
+
+        double cost = result.get<double>( { "total","sqrCosts" } );
+        double constraints = result.get<double>( { "total","constraints" } );
+
+        poseCosts_[ node->id() ]( w )       = cost;
+        poseConstraints_[ node->id() ]( w ) = constraints;
+
+        // what to do with the cost and constraints here??
+        if( constraints >= maxConstraint_ )
+        {
+          feasible = false;
+        }
+
+        // update effective kinematic
+        effKinematics_[ node->id() ]( w ) = *komo->configurations.last();
+
+        // update switch
+        for( mlr::KinematicSwitch *sw: komo->switches )
+        {
+          //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
+          if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->id() ]( w ) );
+        }
+        //effKinematics_[ node ]( w ).topSort();
+        effKinematics_[ node->id() ]( w ).getJointState();
+
+        // free
+        freeKomo( komo );
+      }
+    }
+  }
+
+  // solve for next nodes if this one was feasible
+  if( feasible )
+  {
+    for( auto c : node->children() )
+    {
+      optimizePosesFrom( c );
+    }
+  }
+}
+
+// markovian path
+void KOMOPlanner::optimizeMarkovianPath( Policy::ptr & policy )
+{
+  optimizeMarkovianPathFrom( policy->root() );
+}
+
+void KOMOPlanner::optimizeMarkovianPathFrom( const PolicyNode::ptr & node )
+{
+  std::cout << "optimizing markovian path for:" << node->id() << std::endl;
+
+  bool feasible = true;
+
+  if( markovianPathCosts_.find( node->id() ) == markovianPathCosts_.end() )
+  {
+    markovianPathCosts_      [ node->id() ] = 0;
+    markovianPathConstraints_[ node->id() ] = 0;
+
+    for( auto w = 0; w < node->N(); ++w )
+    {
+      if( node->bs()( w ) > eps() )
+      {
+        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->id() )->second( w ) );
+
+        // create komo
+        auto komo = komoFactory_.createKomo();
+
+        // set-up komo
+        komo->setModel( kin, true, false, true, false, false );
+
+        komo->setTiming( /*phase_start_offset_ + */1.0 + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+
+        komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+        komo->setFixSwitchedObjects();
+        komo->setSquaredQAccelerations();
+
+        komo->groundTasks( /*phase_start_offset_ +*/  0, *node->states()( w ) );
+
+        komo->reset(); //huge
+
+        try{
+          komo->run();
+        } catch( const char* msg ){
+          cout << "KOMO FAILED: " << msg <<endl;
+        }
+
+        //if( node->id() == 3 )
+        {
+          //komo->displayTrajectory();
+          komo->saveTrajectory( std::to_string( node->id() ) );
+          komo->plotVelocity( std::to_string( node->id() ) );
+
+          //mlr::wait();
+        }
+
+        Graph result = komo->getReport();
+
+        double cost = result.get<double>( { "total","sqrCosts" } );
+        double constraints = result.get<double>( { "total","constraints" } );
+
+        markovianPathCosts_      [ node->id() ] += node->bs()( w ) * cost;
+        markovianPathConstraints_[ node->id() ] += node->bs()( w ) * constraints;
+
+        // what to do with the cost and constraints here??
+        if( constraints >= maxConstraint_ )
+        {
+          feasible = false;
+        }
+
+        // free
+        freeKomo( komo );
+      }
+    }
+  }
+  // solve for next nodes if this one was feasible
+  if( feasible )
+  {
+    for( auto c : node->children() )
+    {
+      optimizeMarkovianPathFrom( c );
+    }
+  }
+}
+
+///NON MARKOVIAN
+void KOMOPlanner::clearLastNonMarkovianResults()
+{
   // path
   for( auto pair : pathKinFrames_ )
   {
@@ -274,99 +513,7 @@ void KOMOPlanner::clearLastPolicyOptimization()
 
   jointPathKinFrames_.clear(); // maps each leaf to its path
 }
-
-void KOMOPlanner::optimizePoses( Policy::ptr & policy )
-{
-  optimizePosesFrom( policy->root() );
-}
-
-void KOMOPlanner::optimizePosesFrom( const PolicyNode::ptr & node )
-{
-  std::cout << "optimizing pose for:" << node->id() << std::endl;
-
-  bool feasible = true;
-  //
-  effKinematics_  [ node ] = mlr::Array< mlr::KinematicWorld >( node->N() );
-  poseCosts_      [ node ] = arr( node->N() );
-  poseConstraints_[ node ] = arr( node->N() );
-  //
-  for( auto w = 0; w < node->N(); ++w )
-  {
-    if( node->bs()( w ) > eps() )
-    {
-      mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent() )->second( w ) );
-
-      // create komo
-      auto komo = komoFactory_.createKomo();
-
-      // set-up komo
-      komo->setModel( kin, true, false, true, false, false );
-
-      komo->setTiming( 1., 2, 5., 1/*, true*/ );
-//      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-      komo->setSquaredQVelocities();
-      komo->setFixSwitchedObjects( -1., -1., 1e3 );
-
-      komo->groundTasks( 0., *node->states()( w ) );
-
-      komo->reset(); //huge
-
-      try{
-        komo->run();
-      } catch( const char* msg ){
-        cout << "KOMO FAILED: " << msg <<endl;
-      }
-
-//      if( node->id() == 136 )
-//      {
-//      komo->displayTrajectory();
-
-//      mlr::wait();
-//      }
-      // save results
-//    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-
-      Graph result = komo->getReport();
-
-      double cost = result.get<double>( { "total","sqrCosts" } );
-      double constraints = result.get<double>( { "total","constraints" } );
-
-      poseCosts_[ node ]( w )       = cost;
-      poseConstraints_[ node ]( w ) = constraints;
-
-      // what to do with the cost and constraints here??
-      if( constraints >= maxConstraint_ )
-      {
-        feasible = false;
-      }
-
-      // update effective kinematic
-      effKinematics_[ node ]( w ) = *komo->configurations.last();
-
-      // update switch
-      for( mlr::KinematicSwitch *sw: komo->switches )
-      {
-        //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
-        if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node ]( w ) );
-      }
-      //effKinematics_[ node ]( w ).topSort();
-      effKinematics_[ node ]( w ).getJointState();
-
-      // free
-      freeKomo( komo );
-    }
-  }
-
-  // solve for next nodes if this one was feasible
-  if( feasible )
-  {
-    for( auto c : node->children() )
-    {
-      optimizePosesFrom( c );
-    }
-  }
-}
-
+// path
 void KOMOPlanner::optimizePath( Policy::ptr & policy )
 {
   bsToLeafs_             = mlr::Array< PolicyNode::ptr > ( policy->N() );
@@ -399,8 +546,6 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
       // set-up komo
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
       komo->setTiming( phase_start_offset_ + leaf->time() + phase_end_offset_, microSteps_, secPerPhase_, 2 );
-
-      //komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
@@ -439,13 +584,6 @@ void KOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
         mlr::KinematicWorld kin( *komo->configurations( s ) );
         pathKinFrames_[ leaf ]( w ).append( kin );
       }
-
-//      if( leaf->id() == 136 )
-//      {
-//        komo->displayTrajectory();
-
-//        mlr::wait();
-//      }
 
       pathXSolution_[ leaf ]( w ) = komo->x;
 
@@ -578,11 +716,13 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
-//      if( w == 1 )
-//      {
-//        //komo->displayTrajectory( 0.02, true );
-//        //komo->plotVelocity( std::to_string( w ) );
-//      }
+  //    if( w == 1 )
+     {
+  //      komo->plotTrajectory();
+ //       komo->displayTrajectory( 0.02, true );
+        komo->saveTrajectory( "-j-" + std::to_string( w ) );
+        komo->plotVelocity( "-j-"   + std::to_string( w ) );
+     }
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
 //      komo->checkGradients();

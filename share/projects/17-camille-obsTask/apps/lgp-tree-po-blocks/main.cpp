@@ -19,7 +19,7 @@
 #include <vertical_velocity.h>
 #include <axis_alignment.h>
 #include <over_plane.h>
-
+#include <axis_bound.h>
 #include <node_visitors.h>
 
 /*
@@ -81,6 +81,7 @@ void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
   if( ! komo->isPrefixSetup() )
   {
     komo->setHoming( -1., -1., 1e-2 ); //gradient bug??
+    komo->setTask( -1, -1, new AxisBound( "manhead", 1.4, AxisBound::Z, AxisBound::MIN ), OT_ineq, NoArr, 1e2 );
   }
 }
 
@@ -293,7 +294,7 @@ void plan_graph_search()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  tp->setInitialReward( -0.2 );
+  tp->setInitialReward( -0.1 );
   mp->setNSteps( 5 );
 
   // register symbols
@@ -307,75 +308,115 @@ void plan_graph_search()
   //tp->setFol( "LGP-blocks-fol.g" );
   //mp->setKin( "LGP-blocks-kin.g" );
 
+  //tp->setFol( "LGP-blocks-fol-model-2.g" );
+  //mp->setKin( "LGP-blocks-kin.g" );
+
   //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
 
   //tp->setFol( "LGP-blocks-fol-2w.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
 
-  tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
-  mp->setKin( "LGP-blocks-kin-2w.g" );
+  //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
+  //mp->setKin( "LGP-blocks-kin-2w.g" );
 
   //tp->setFol( "LGP-blocks-fol-1w.g" );
   //mp->setKin( "LGP-blocks-kin-1w.g" );
 
-  //tp->setFol( "LGP-blocks-fol-1w-model-2.g" );
-  //mp->setKin( "LGP-blocks-kin-1w.g" );
+  tp->setFol( "LGP-blocks-fol-1w-model-2.g" );
+  mp->setKin( "LGP-blocks-kin-1w.g" );
 
-  //
-  auto start = std::chrono::high_resolution_clock::now();
-  //
+///
+  std::ofstream candidate, results;
+  candidate.open( "policy-candidates.data" );
+  results.open( "policy-results.data" );
+  double graph_building_s = 0;
+  double task_planning_s = 0;
+  double motion_planning_s = 0;
+  double joint_motion_planning_s = 0;
+///
 
-  /// TASK PLANNING
+{
+auto start = std::chrono::high_resolution_clock::now();
+  /// GRAPH BUILDING
   tp->buildGraph();
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+graph_building_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
   tp->saveGraphToFile( "graph.gv" );
   //generatePngImage( "graph.gv" );
 
   Policy::ptr policy, lastPolicy;
 
-  auto n_it_max = 100;
-  auto n_it = 0;
-
+{
+auto start = std::chrono::high_resolution_clock::now();
   tp->solve();
-
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
   policy = tp->getPolicy();
-
-  // save policy
-  savePolicyToFile( policy );
 
   do
   {
+    ///
+    savePolicyToFile( policy );
+    candidate << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
+    ///
+
     lastPolicy = policy;
 
+{
+auto start = std::chrono::high_resolution_clock::now();
     /// MOTION PLANNING
     auto po     = tp->getPlanningOrder();
     mp->solveAndInform( po, policy );
-
-    // save policy
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
+    ///
     savePolicyToFile( policy, "-informed" );
+    results << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
+    ///
 
-    tp->integrate( policy );
-
+{
+auto start = std::chrono::high_resolution_clock::now();
     /// TASK PLANNING
+    tp->integrate( policy );
     tp->solve();
-
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
     policy = tp->getPolicy();
 
-    // save policy
-    savePolicyToFile( policy );
+  } while( ! skeletonEquals( lastPolicy, policy ) );
 
-    n_it++;
+///
+  savePolicyToFile( policy, "-final" );
+  candidate << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
+  results << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
 
-  } while( ! skeletonEquals( lastPolicy, policy ) && n_it < n_it_max );
+  candidate.close();
+  results.close();
+///
 
-  // timing
-  //
-  auto elapsed = std::chrono::high_resolution_clock::now() - start;
-  long long s = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
-  std::cout << "total planning time (s):" << s << std::endl;
-  //
-
+{
+auto start = std::chrono::high_resolution_clock::now();
   mp->display( policy, 3000 );
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
+
+///
+  std::ofstream timings;
+  timings.open("timings.data");
+  timings << "graph_building_s="<< graph_building_s << std::endl;
+  timings << "task_planning_s="<< task_planning_s << std::endl;
+  timings << "motion_planning_s="<< motion_planning_s << std::endl;
+  timings << "joint_motion_planning_s="<< joint_motion_planning_s << std::endl;
+  timings << "total_s="<< graph_building_s + task_planning_s + motion_planning_s + joint_motion_planning_s << std::endl;
+
+  timings.close();
+///
 
   mlr::wait( 30, true );
 }
