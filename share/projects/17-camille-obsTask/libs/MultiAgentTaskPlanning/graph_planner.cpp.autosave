@@ -15,6 +15,7 @@ void Agent::setFols( const std::string & agentDescription )
   }
 
   // legacy code below
+  //////////////////////////////////////////////////////////////////////////
   const mlr::String notObservableTag = "NOT_OBSERVABLE";
 
   Graph KB;
@@ -90,7 +91,7 @@ void Agent::setFols( const std::string & agentDescription )
       bs_[ w ] = probability;
       folEngines_[ w ]->reset_state();
     }
-
+    //////////////////////////////////////////////////////
     // check that the belief state sums to 1
     double total = 0;
     for( auto p : bs_ ) total += p;

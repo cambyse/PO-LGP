@@ -34,12 +34,17 @@ class Agent
 public:
   void setFols( const std::string & agentDescription );
 
+  // getters
   bool enginesInitialized() const;
-
   uint beliefStateSize() const { return folEngines_.size(); }
+  std::vector< double > beliefState() const { return bs_; }
 
 private:
   std::vector< std::shared_ptr< FOL_World > > folEngines_;
+  std::vector< double > bs_;
+
+  // constants
+  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
 class GraphPlanner : public MultiAgentTaskPlanner
