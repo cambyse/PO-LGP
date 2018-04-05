@@ -9,60 +9,110 @@ class GraphPlannerTest : public ::testing::Test {
   GraphPlanner tp;
 };
 
-class AgentTest : public ::testing::Test {
+class WorldsTest : public ::testing::Test {
  protected:
-  Agent ag;
+  Worlds w;
 };
 
-// Agent
-TEST_F(AgentTest, ThrowIfFileNotFound) {
-  ASSERT_THROW( ag.setFols( {"data/nofile.g"} ), FolFileNotFound );
+// Worlds
+TEST_F(WorldsTest, ThrowIfFileNotFound) {
+  ASSERT_THROW( w.setFol( "data/nofile.g" ), FolFileNotFound );
 }
 
-TEST_F(AgentTest, FolEnginesInitialized) {
-  ag.setFols( "data/LGP-overtaking-agent-1.g" );
-  ASSERT_EQ( ag.enginesInitialized(), true );
+//TEST_F(WorldsTest, FolEnginesInitializedSingleAgent1W) {
+//  w.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+//  ASSERT_EQ( w.enginesInitialized(), true );
+//}
+
+//TEST_F(WorldsTest, FolEnginesInitializedSingleAgent2W) {
+//  w.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+//  ASSERT_EQ( w.enginesInitialized(), true );
+//}
+
+//TEST_F(WorldsTest, FolEnginesInitializedDoubleAgent1W) {
+//  w.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+//  ASSERT_EQ( w.enginesInitialized(), true );
+//}
+
+//TEST_F(WorldsTest, FolEnginesInitializedDoubleAgent2W) {
+//  w.setFol( "data/LGP-overtaking-double-agent-2w.g" );
+//  ASSERT_EQ( w.enginesInitialized(), true );
+//}
+
+// Agent Number
+TEST_F(WorldsTest, AgentNumberSingleAgent1W) {
+  w.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  ASSERT_EQ( w.agentNumber(), 1 );
 }
 
-TEST_F(AgentTest, FolBeliefStateSize1) {
-  ag.setFols( "data/LGP-overtaking-agent-1.g" );
-  ASSERT_EQ( ag.beliefStateSize(), 1 );
+TEST_F(WorldsTest, AgentNumberDoubleAgent1W) {
+  w.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+  ASSERT_EQ( w.agentNumber(), 2 );
 }
 
-TEST_F(AgentTest, FolBeliefState1) {
-  ag.setFols( "data/LGP-overtaking-agent-1.g" );
-  ASSERT_EQ( ag.beliefState()[ 0 ], 1.0 );
+TEST_F(WorldsTest, AgentNumberSingleAgent2W) {
+  w.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  ASSERT_EQ( w.agentNumber(), 1 );
 }
 
-TEST_F(AgentTest, FolBeliefStateSize2) {
-  ag.setFols( "data/LGP-overtaking-agent-1-bs-2.g" );
-  ASSERT_EQ( ag.beliefStateSize(), 2 );
+TEST_F(WorldsTest, AgentNumberDoubleAgent2W) {
+  w.setFol( "data/LGP-overtaking-double-agent-2w.g" );
+  ASSERT_EQ( w.agentNumber(), 2 );
 }
 
-TEST_F(AgentTest, FolBeliefState2) {
-  ag.setFols( "data/LGP-overtaking-agent-1-bs-2.g" );
+// Total Number Of Worlds
+TEST_F(WorldsTest, StartStateNumberSingleAgent1W) {
+  w.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  ASSERT_EQ( w.startStates().size(), 1 );
+}
+
+TEST_F(WorldsTest, StartStateNumberSingleAgent2W) {
+  w.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  ASSERT_EQ( w.startStates().size(), 2 );
+}
+
+
+// Agent Actions
+
+/*TEST_F(WorldsTest, FolBeliefStateSize1) {
+  w.setFol( "data/LGP-overtaking-agent-1.g" );
+  ASSERT_EQ( w.beliefStateSize(), 1 );
+}
+
+TEST_F(WorldsTest, FolBeliefState1) {
+  w.setFol( "data/LGP-overtaking-agent-1.g" );
+  ASSERT_EQ( w.beliefState()[ 0 ], 1.0 );
+}
+
+TEST_F(WorldsTest, FolBeliefStateSize2) {
+  w.setFol( "data/LGP-overtaking-agent-1-bs-2.g" );
+  ASSERT_EQ( w.beliefStateSize(), 2 );
+}
+
+TEST_F(WorldsTest, FolBeliefState2) {
+  w.setFol( "data/LGP-overtaking-agent-1-bs-2.g" );
   ASSERT_EQ( ag.beliefState()[ 1 ], 0.95 );
-}
+}*/
 
 // GraphPlanner
 TEST_F(GraphPlannerTest, ThrowIfFileNotFound) {
-  ASSERT_THROW( tp.setFols( {"data/nofile.g"} ), FolFileNotFound );
+  ASSERT_THROW( tp.setFol( "data/nofile.g" ), FolFileNotFound );
 }
 
 TEST_F(GraphPlannerTest, ThrowIfNoAgentFiles) {
-  ASSERT_THROW( tp.setFols( {} ), MissingArgument );
+  ASSERT_THROW( tp.setFol( "" ), FolFileNotFound );
 }
 
-TEST_F(GraphPlannerTest, AgentNumber) {
-  tp.setFols( {"data/LGP-overtaking-agent-1.g"} );
-  ASSERT_EQ( tp.agentNumber(), 1 );
-}
+//TEST_F(GraphPlannerTest, AgentNumber) {
+//  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+//  ASSERT_EQ( tp.agentNumber(), 1 );
+//}
 
-TEST_F(GraphPlannerTest, AgentNumber2) {
-  tp.setFols( {"data/LGP-overtaking-agent-1.g",
-               "data/LGP-overtaking-agent-2.g" } );
-  ASSERT_EQ( tp.agentNumber(), 2 );
-}
+//TEST_F(GraphPlannerTest, AgentNumber2) {
+//  tp.setFols( {"data/LGP-overtaking-agent-1.g",
+//               "data/LGP-overtaking-agent-2.g" } );
+//  ASSERT_EQ( tp.agentNumber(), 2 );
+//}
 
 int main(int argc, char **argv)
 {

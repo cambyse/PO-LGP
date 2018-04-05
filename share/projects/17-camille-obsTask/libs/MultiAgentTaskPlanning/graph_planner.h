@@ -8,18 +8,18 @@
 #include <Logic/fol_mcts_world.h>
 
 #include <policy.h>
-#include <multi_agent_task_planner.h>
+#include <task_planner.h>
 
 namespace matp
 {
 
-class MissingArgument: public std::exception
+/*class MissingArgument: public std::exception
 {
   virtual const char* what() const throw()
   {
     return "Missing Argument";
   }
-};
+};*/
 
 class FolFileNotFound: public std::exception
 {
@@ -29,29 +29,39 @@ class FolFileNotFound: public std::exception
   }
 };
 
-class Agent
+class Worlds
 {
 public:
-  void setFols( const std::string & agentDescription );
+  void setFol( const std::string & description );
 
   // getters
   bool enginesInitialized() const;
-  uint beliefStateSize() const { return folEngines_.size(); }
-  std::vector< double > beliefState() const { return bs_; }
+  uint agentNumber() const;
+  std::vector< mlr::String > startStates() const { return { "" }; }
+  //std::vector< double > beliefState( uint AgentId ) { return { 1.0 }; }
 
 private:
-  std::vector< std::shared_ptr< FOL_World > > folEngines_;
-  std::vector< double > bs_;
+  void parseNumberOfAgents( const std::string & description );
+
+private:
+//  std::vector< std::shared_ptr< FOL_World > > folEngines_;
+//  std::vector< double > bs_;
+  uint agentNumber_ = 0;
+  std::vector< mlr::String > startStates_;
 
   // constants
+  const std::string agentPrefix_  = "__AGENT_";
+  const std::string agentSuffix_  = "__";
+
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+  const mlr::String notObservableTag_ = "NOT_OBSERVABLE";
 };
 
-class GraphPlanner : public MultiAgentTaskPlanner
+class GraphPlanner : public TaskPlanner
 {
 public:
   // modifiers
-  virtual void setFols( const std::list< std::string > & agentDescription ) override;
+  virtual void setFol( const std::string & agentDescription ) override;
   virtual void solve() override;
   virtual void integrate( const Policy::ptr & policy ) override;
 
@@ -61,11 +71,11 @@ public:
   virtual MotionPlanningOrder getPlanningOrder() const override;
 
   // other getters
-  uint agentNumber() const { return agents_.size(); }
+  uint agentNumber() const { return 0;/*agents_.size();*/ }
 
 private:
   Graph world_;
-  std::vector< Agent > agents_;
+  //std::vector< Agent > agents_;
 };
 
 } // namespace matp

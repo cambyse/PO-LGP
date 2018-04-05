@@ -7,26 +7,27 @@
 namespace matp
 {
 
-void Agent::setFols( const std::string & agentDescription )
+void Worlds::setFol( const std::string & description )
 {
-  if( ! boost::filesystem::exists( agentDescription ) )
+  if( ! boost::filesystem::exists( description ) )
   {
     throw FolFileNotFound();
   }
 
-  // legacy code below
-  const mlr::String notObservableTag = "NOT_OBSERVABLE";
+  ////////////////////////////////////parse number of agents//////////////////////////////////////
+  parseNumberOfAgents( description );
 
-  Graph KB;
-  KB.read( FILE( agentDescription.c_str() ) );
-  //KB.isDoubleLinked = false;
+  //////////////////////////////////////////////////////////////////////////
+  //parseBeliefStateOfAgents(  )
+
+  /*//KB.isDoubleLinked = false;
   // fully observable case
   if( KB[ beliefStateTag_ ] == nullptr )
   {
     // create dummy array
     folEngines_ = mlr::Array< std::shared_ptr<FOL_World> > ( 1 );
     std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
-    fol->init(FILE(agentDescription.c_str()));
+    fol->init(FILE(description.c_str()));
     folEngines_[ 0 ] = fol;
     fol->reset_state();
     //fol->KB.isDoubleLinked = false;
@@ -48,10 +49,10 @@ void Agent::setFols( const std::string & agentDescription )
     {
       // retrieve the facts of the belief state
       std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
-      fol->init(FILE(agentDescription.c_str()));
+      fol->init(FILE(description.c_str()));
       auto n = bsGraph->elem(w);
 
-      std::cout << "n:" << *n << std::endl;
+      //std::cout << "n:" << *n << std::endl;
 
       // add facts
       double probability = -1;
@@ -68,7 +69,7 @@ void Agent::setFols( const std::string & agentDescription )
         if( ! fact.empty() )
         {
           // tag this fact as not observable
-          StringA notObservableFact; notObservableFact.append( notObservableTag );
+          StringA notObservableFact; notObservableFact.append( notObservableTag_ );
           for( auto s : fact ) notObservableFact.append( s );
 
           fol->addFact(notObservableFact);
@@ -90,31 +91,53 @@ void Agent::setFols( const std::string & agentDescription )
       bs_[ w ] = probability;
       folEngines_[ w ]->reset_state();
     }
-
+    //////////////////////////////////////////////////////
     // check that the belief state sums to 1
     double total = 0;
     for( auto p : bs_ ) total += p;
 
     CHECK( total == 1.00, "wrong belief state definition, the total of the probabilities doesn't sum to 1" );
-  }
+  }*/
 }
 
-bool Agent::enginesInitialized() const
+bool Worlds::enginesInitialized() const
 {
-  return ! folEngines_.empty();
+  return false;
+}
+
+uint Worlds::agentNumber() const
+{
+  return agentNumber_;
+}
+
+void Worlds::parseNumberOfAgents( const std::string & description )
+{
+  Graph KB;
+  KB.read( FILE( description.c_str() ) );
+
+  uint agentIDCandidate = 1;
+  std::string agentNameCandidate = agentPrefix_ + std::to_string( agentIDCandidate ) + agentSuffix_;
+
+  while( KB[ agentNameCandidate.c_str() ] != nullptr )
+  {
+    agentIDCandidate++;
+    agentNameCandidate = agentPrefix_ + std::to_string( agentIDCandidate ) + agentSuffix_;
+  }
+
+  agentNumber_ = agentIDCandidate;
 }
 
 // modifiers
-void GraphPlanner::setFols( const std::list< std::string > & agentDescritions )
+void GraphPlanner::setFol( const std::string & agentDescrition )
 {
-  if( agentDescritions.empty() ) throw MissingArgument();
+  if( ! boost::filesystem::exists( agentDescrition ) ) throw FolFileNotFound();
 
-  for( auto agent : agentDescritions )
-  {
-    Agent ag;
-    ag.setFols( agent );
-    agents_.push_back( ag );
-  }
+//  for( auto agent : agentDescritions )
+//  {
+//    Agent ag;
+//    ag.setFol( agent );
+//    agents_.push_back( ag );
+//  }
 }
 
 void GraphPlanner::solve()
