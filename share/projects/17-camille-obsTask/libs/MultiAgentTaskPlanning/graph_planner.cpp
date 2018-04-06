@@ -7,6 +7,29 @@
 namespace matp
 {
 
+StringA nodeToStringA( Node * facts )
+{
+  StringA factStringA;
+
+  for( auto f : facts->parents )
+  {
+    factStringA.append( f->keys.last() );
+  }
+
+  return factStringA;
+}
+
+std::string getStateStr( FOL_World & fol )
+{
+  auto stateGraph = fol.getState();
+
+  std::stringstream ss;
+  stateGraph->write( ss );
+
+  return ss.str();
+}
+///////
+
 void Worlds::setFol( const std::string & description )
 {
   if( ! boost::filesystem::exists( description ) )
@@ -18,7 +41,7 @@ void Worlds::setFol( const std::string & description )
   parseNumberOfAgents( description );
 
   //////////////////////////////////////////////////////////////////////////
-  //parseBeliefStateOfAgents(  )
+  buildPossibleStartStates( description );
 
   /*//KB.isDoubleLinked = false;
   // fully observable case
@@ -125,6 +148,52 @@ void Worlds::parseNumberOfAgents( const std::string & description )
   }
 
   agentNumber_ = agentIDCandidate;
+}
+
+void Worlds::buildPossibleStartStates( const std::string & description )
+{
+  Graph KB;
+  KB.read( FILE( description.c_str() ) );
+
+  if( KB[ possibleFactsTag_.c_str() ] == nullptr )
+  {
+    FOL_World fol( FILE( description.c_str() ) );
+    fol.reset_state();
+
+    auto state = getStateStr( fol );
+
+    startStates_.push_back( state );
+  }
+  else
+  {
+    // get number of possible worlds
+    auto eventualFactsGraph = &KB.get<Graph>( possibleFactsTag_.c_str() );
+    const uint nWorlds = eventualFactsGraph->d0;
+
+    for( uint w = 0; w < nWorlds; w++ )
+    {
+      // build basic fol
+      FOL_World fol( FILE( description.c_str() ) );
+
+      // get additional facts
+      auto facts = eventualFactsGraph->elem( w );
+
+      //std::cout << *facts << std::endl;
+
+      for( auto fact : facts->graph() )
+      {
+        auto factStringA = nodeToStringA( fact );
+
+        fol.addFact( factStringA );
+      }
+
+      fol.reset_state();
+
+      auto state = getStateStr( fol );
+
+      startStates_.push_back( state );
+    }
+  }
 }
 
 // modifiers

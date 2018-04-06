@@ -63,14 +63,31 @@ TEST_F(WorldsTest, AgentNumberDoubleAgent2W) {
 // Total Number Of Worlds
 TEST_F(WorldsTest, StartStateNumberSingleAgent1W) {
   w.setFol( "data/LGP-overtaking-single-agent-1w.g" );
-  ASSERT_EQ( w.startStates().size(), 1 );
+  ASSERT_EQ( w.possibleStartStates().size(), 1 );
 }
 
 TEST_F(WorldsTest, StartStateNumberSingleAgent2W) {
   w.setFol( "data/LGP-overtaking-single-agent-2w.g" );
-  ASSERT_EQ( w.startStates().size(), 2 );
+  ASSERT_EQ( w.possibleStartStates().size(), 2 );
 }
 
+// Start state content
+TEST_F(WorldsTest, StartStatesSizeSingleAgent1W) {
+  w.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  ASSERT_GT( w.possibleStartStates()[ 0 ].size(), 1 );
+}
+
+TEST_F(WorldsTest, StartStatesSizeSingleAgent2W) {
+  w.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  ASSERT_GT( w.possibleStartStates()[ 0 ].size(), 1 );
+  ASSERT_GT( w.possibleStartStates()[ 1 ].size(), 1 );
+}
+
+//TEST_F(WorldsTest, StartStatesSizeSingleAgent2W) {
+//  w.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+//  ASSERT_GT( w.possibleStartStates()[ 0 ].size(), 1 );
+//  ASSERT_GT( w.possibleStartStates()[ 1 ].size(), 1 );
+//}
 
 // Agent Actions
 

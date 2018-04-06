@@ -37,21 +37,23 @@ public:
   // getters
   bool enginesInitialized() const;
   uint agentNumber() const;
-  std::vector< mlr::String > startStates() const { return { "" }; }
+  std::vector<std::string > possibleStartStates() const { return startStates_; }
   //std::vector< double > beliefState( uint AgentId ) { return { 1.0 }; }
 
 private:
   void parseNumberOfAgents( const std::string & description );
+  void buildPossibleStartStates( const std::string & description );
 
 private:
 //  std::vector< std::shared_ptr< FOL_World > > folEngines_;
 //  std::vector< double > bs_;
   uint agentNumber_ = 0;
-  std::vector< mlr::String > startStates_;
+  std::vector< std::string > startStates_;
 
   // constants
   const std::string agentPrefix_  = "__AGENT_";
   const std::string agentSuffix_  = "__";
+  const std::string possibleFactsTag_ = "EVENTUAL_FACTS";
 
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
   const mlr::String notObservableTag_ = "NOT_OBSERVABLE";
