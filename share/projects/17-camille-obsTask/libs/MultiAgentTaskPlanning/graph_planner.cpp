@@ -9,7 +9,8 @@ void GraphPlanner::setFol( const std::string & descrition )
 {
   if( ! boost::filesystem::exists( descrition ) ) throw FolFileNotFound();
 
-  worlds_.setFol( descrition );
+  parser_.parse( descrition );
+  graph_ = DecisionGraph( parser_.engine(), parser_.possibleStartStates(), parser_.egoBeliefState() );
 }
 
 void GraphPlanner::solve()
@@ -36,6 +37,16 @@ Policy::ptr GraphPlanner::getPolicy() const
 MotionPlanningOrder GraphPlanner::getPlanningOrder() const
 {
   return MotionPlanningOrder( 0 );
+}
+
+void GraphPlanner::buildGraph()
+{
+  if( ! parser_.successfullyParsed() )
+  {
+    return;
+  }
+
+  graph_.build();
 }
 
 }

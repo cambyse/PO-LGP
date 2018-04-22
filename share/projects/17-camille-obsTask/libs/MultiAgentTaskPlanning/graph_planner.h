@@ -10,7 +10,8 @@
 #include <policy.h>
 #include <task_planner.h>
 
-#include <worlds.h>
+#include <logic_parser.h>
+#include <decision_graph.h>
 
 namespace matp
 {
@@ -28,11 +29,16 @@ public:
   virtual Policy::ptr getPolicy() const override;
   virtual MotionPlanningOrder getPlanningOrder() const override;
 
+  // other modifiers
+  void buildGraph();
+  DecisionGraph decisionGraph() const { return graph_; }
+
   // other getters
-  uint agentNumber() const { return worlds_.agentNumber(); }
+  uint agentNumber() const { return parser_.agentNumber(); }
 
 private:
-  Worlds worlds_;
+  LogicParser parser_;
+  DecisionGraph graph_;
 };
 
 } // namespace matp

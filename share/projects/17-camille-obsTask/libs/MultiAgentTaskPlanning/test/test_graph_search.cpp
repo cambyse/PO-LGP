@@ -23,6 +23,25 @@ TEST_F(GraphPlannerTest, AgentNumber) {
   ASSERT_EQ( tp.agentNumber(), 2 );
 }
 
+TEST_F(GraphPlannerTest, emptyGraph) {
+  tp.buildGraph();
+  auto graph = tp.decisionGraph();
+  ASSERT_TRUE( graph.empty() );
+}
+
+TEST_F(GraphPlannerTest, OneNodeIfCorrectFile) {
+  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  auto graph = tp.decisionGraph();
+  ASSERT_TRUE( graph.size() == 1 );
+}
+
+TEST_F(GraphPlannerTest, buildGraph) {
+  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  tp.buildGraph();
+  auto graph = tp.decisionGraph();
+  ASSERT_TRUE( graph.size() > 1 );
+}
+
 //
 int main(int argc, char **argv)
 {
