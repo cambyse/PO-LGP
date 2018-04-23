@@ -1,6 +1,7 @@
 #pragma once
 
 #include <set>
+#include <queue>
 #include <vector>
 #include <string>
 
@@ -22,6 +23,7 @@ struct NodeData
   std::vector< double      > beliefState;
   std::string leadingArtifact; // leading action of leading observation
   //
+  uint agentId;
   NodeType nodeType;
 };
 
@@ -33,8 +35,8 @@ public:
   DecisionGraph( const LogicEngine &, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState );
   bool empty() const { return nodes_.size() == 0; }
   std::size_t size() const { return nodes_.size(); }
-  void build();
-  void expand( const GraphNode< NodeData >::ptr & node );
+  void build( int maxSteps );
+  std::queue< GraphNode< NodeData >::ptr > expand( const GraphNode< NodeData >::ptr & node );
   GraphNode< NodeData >::ptr root() const { return root_; }
 
   // public for testing purpose

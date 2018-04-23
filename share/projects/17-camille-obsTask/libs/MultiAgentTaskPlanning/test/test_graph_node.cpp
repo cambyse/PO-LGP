@@ -16,6 +16,19 @@ TEST(GraphNode, ChildNodeNotRoot) {
   ASSERT_EQ( ! child->isRoot(), true );
 }
 
+TEST(GraphNode, ChildId) {
+  auto root = GraphNode< double >::root( 0.0 );
+  auto child1 = root->makeChild( 1.0 );
+  auto child2 = root->makeChild( 1.0 );
+  ASSERT_EQ( child2->id(), 2 );
+}
+
+TEST(GraphNode, ChildDepth) {
+  auto root = GraphNode< double >::root( 0.0 );
+  auto child1 = root->makeChild( 1.0 );
+  ASSERT_EQ( child1->depth(), 1 );
+}
+
 TEST(GraphNode, SingleChildHasNoSibling) {
   auto root = GraphNode< double >::root( 0.0 );
   auto child = root->makeChild( 1.0 );

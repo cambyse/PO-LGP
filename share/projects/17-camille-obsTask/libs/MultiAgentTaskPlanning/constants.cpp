@@ -70,9 +70,9 @@ StringA nodeToStringA( Node * facts )
   return factStringA;
 }
 
-std::list< std::string > getFacts( const std::string & state )
+std::set< std::string > getFacts( const std::string & state )
 {
-  std::list< std::string > facts;
+  std::set< std::string > facts;
 
   using tokenizer = boost::tokenizer<boost::char_separator<char> >;
 
@@ -83,8 +83,12 @@ std::list< std::string > getFacts( const std::string & state )
   {
     boost::replace_all(fact, "{", "");
     boost::replace_all(fact, "}", "");
+    //boost::replace_all(fact, " ", "");
 
-    facts.push_back( fact );
+    if( ! fact.empty() )
+    {
+      facts.insert( fact );
+    }
   }
 
   return facts;
@@ -102,14 +106,38 @@ bool isObservable( const std::string & fact )
 
 std::string getStateStr( FOL_World & fol )
 {
+//  std::stringstream ss;
+//  fol.write_state( ss );
+//  return ss.str();
+
   std::stringstream ss;
-  fol.write_state( ss );
+
+  ss << "{";
+  for( auto fact : *fol.getState() )
+  {
+    std::stringstream sss;
+    sss << *fact;
+    auto factsStr = sss.str();
+
+    if( factsStr.back() != ',' )
+    {
+      factsStr.push_back( ',' );
+    }
+
+    ss << factsStr;
+  }
+  ss << "}";
 
   return ss.str();
 }
 
-std::string concatenateFacts( const std::list< std::string > & facts )
+std::string concatenateFacts( const std::set< std::string > & facts )
 {
+  if( facts.empty() )
+  {
+    return "";
+  }
+
   std::stringstream ss;
   ss << "{";
   for( auto fact : facts )
@@ -120,22 +148,42 @@ std::string concatenateFacts( const std::list< std::string > & facts )
   return ss.str();
 }
 
-std::string getObservableState( const std::string & state )
+std::set< std::string > getObservableFacts( const std::set< std::string > & facts )
 {
-  std::list< std::string > facts = getFacts( state );
-  std::list< std::string > observableFacts;
+  std::set< std::string > observableFacts;
 
   for( auto fact : facts )
   {
     if( isObservable( fact ) )
     {
-      observableFacts.push_back( fact );
+      observableFacts.insert( fact );
     }
   }
+
+  return observableFacts;
+}
+
+std::string getObservableState( const std::string & state )
+{
+  std::set< std::string > facts = getFacts( state );
+
+  std::set< std::string > observableFacts = getObservableFacts( facts );
 
   std::string observableState = concatenateFacts( observableFacts );
 
   return observableState;
+}
+
+std::set< std::string > getEmergingFacts( const std::set< std::string > & intersectingFacts, const std::set< std::string > & fullFacts )
+{
+  std::set< std::string > observations = fullFacts;
+
+  for( auto fact : intersectingFacts )
+  {
+    observations.erase( fact );
+  }
+
+  return observations;
 }
 
 }

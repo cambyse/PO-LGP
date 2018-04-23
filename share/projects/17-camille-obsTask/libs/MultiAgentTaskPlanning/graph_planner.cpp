@@ -46,7 +46,7 @@ void GraphPlanner::buildGraph()
     return;
   }
 
-  graph_.build();
+  graph_.build( - 1 );
 }
 
 }

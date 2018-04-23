@@ -1,6 +1,7 @@
 #include <decision_graph.h>
 
 #include <set>
+#include <queue>
 #include <algorithm>
 
 namespace matp
@@ -31,34 +32,71 @@ DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std
   nodes_.push_back( root_ );
 }
 
-void DecisionGraph::build()
+void DecisionGraph::build( int maxSteps )
 {
+  std::queue< GraphNode< NodeData >::ptr > queue;
+  queue.push( root_ );
 
+  uint step = 0;
+  while( ! queue.empty() && step < maxSteps )
+  {
+    auto node = queue.front();
+    queue.pop();
+
+    step = node->depth() / 2 / engine_.agentNumber();
+
+    auto queueExtension = expand( node );
+
+    while( ! queueExtension.empty() )
+    {
+      queue.push( std::move( queueExtension.front() ) );
+      queueExtension.pop();
+    }
+  }
 }
 
-void DecisionGraph::expand( const GraphNode< NodeData >::ptr & node )
+std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode< NodeData >::ptr & node )
 {
   auto bs     = node->data().beliefState;
   auto states = node->data().states;
 
-  for( auto agentId = 0; agentId < engine_.agentNumber(); ++agentId )
+  std::queue< GraphNode< NodeData >::ptr > nextQueue;
+
+  nextQueue.push( node );
+
+  // for each agent
+  for( uint agentId = 0; agentId < engine_.agentNumber(); ++agentId )
   {
-    auto actions = getCommonPossibleActions( node, agentId );
+    auto queue = nextQueue; // copy
+    nextQueue = std::queue< GraphNode< NodeData >::ptr >();
 
-    for( auto action : actions )
+    while( ! queue.empty() )
     {
-      auto child = node->makeChild( { states, bs, action, NodeData::NodeType::OBSERVATION } );
-      nodes_.push_back( child );
+      auto node = queue.front();
+      queue.pop();
 
-      auto outcomes = getPossibleOutcomes( node, action );
+      // for each agent
+      auto actions = getCommonPossibleActions( node, agentId );
 
-      for( auto outcome : outcomes )
+      for( auto action : actions )
       {
-        auto childChild = child->makeChild( { outcome.states, outcome.beliefState, action, NodeData::NodeType::ACTION } );
-        nodes_.push_back( childChild );
+        auto child = node->makeChild( { states, bs, action, agentId, NodeData::NodeType::OBSERVATION } );
+        nodes_.push_back( child );
+
+        auto outcomes = getPossibleOutcomes( node, action );
+
+        // for each outcome
+        for( auto outcome : outcomes )
+        {
+          auto childChild = child->makeChild( { outcome.states, outcome.beliefState, outcome.leadingArtifact, agentId+1, NodeData::NodeType::ACTION } );
+          nodes_.push_back( childChild );
+          nextQueue.push( childChild );
+        }
       }
     }
   }
+
+  return nextQueue;
 }
 
 std::vector< std::string > DecisionGraph::getCommonPossibleActions( const GraphNode< NodeData >::ptr & node, uint agentId ) const
@@ -107,7 +145,8 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
   auto bs     = node->data().beliefState;
   auto states = node->data().states;
 
-  std::map< std::string, std::vector< std::pair< uint, std::string > > > observableStatesToStates;
+  std::map< std::set< std::string >, std::vector< std::pair< uint, std::string > > > observableStatesToStates;
+  std::set< std::string > factIntersection;
 
   for( auto w = 0; w < bs.size(); ++w )
   {
@@ -119,31 +158,49 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
       engine.transition( action );
 
       auto result           = engine.getState();
-      auto observableResult = getObservableState( result );
+      auto facts            = getFacts( result );
+      auto observableFacts  = getObservableFacts( facts );
 
-      observableStatesToStates[ observableResult ].push_back( std::make_pair( w, result ) );
+      std::set< std::string > newIntersection;
+
+      if( factIntersection.empty() )
+      {
+        newIntersection = facts;
+      }
+      else
+      {
+        std::set_intersection( facts.begin(), facts.end(), factIntersection.begin(), factIntersection.end(),
+                               std::inserter( newIntersection, newIntersection.begin() ) );
+      }
+
+      // store results
+      factIntersection = newIntersection;
+      observableStatesToStates[ observableFacts ].push_back( std::make_pair( w, result ) );
     }
   }
 
+
   for( auto observableResultPair : observableStatesToStates )
   {
-    std::vector< std::string > states;
+    std::vector< std::string > states( bs.size(), "" );
     std::vector< double > newBs( bs.size(), 0 );
 
     const auto & worldToOutcomes = observableResultPair.second;
+    auto observationFacts = getEmergingFacts( factIntersection, observableResultPair.first );
+    auto observation      = concatenateFacts( observationFacts );
 
     for( const auto & worldOutcome :  worldToOutcomes )
     {
       auto w = worldOutcome.first;
       auto state = worldOutcome.second;
 
-      states.push_back( state );
+      states[ w ] = state;
       newBs[ w ] = bs[ w ];
     }
 
     newBs = normalizeBs( newBs );
 
-    outcomes.push_back( { states, newBs } );
+    outcomes.push_back( { states, newBs, observation } );
   }
 
   return outcomes;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <set>
 
 #include <Logic/fol.h>
 #include <Logic/fol_mcts_world.h>
@@ -22,11 +23,13 @@ int getAgentId( const std::string actionName );
 bool isOfAgent( const std::string & str, uint agentId );
 bool isOfAgent( const FOL_World::Handle & action, uint agentId );
 StringA nodeToStringA( Node * facts );
-std::list< std::string > getFacts( const std::string & state );
+std::set< std::string > getFacts( const std::string & state );
 bool isObservable( const std::string & fact );
 std::string getStateStr( FOL_World & fol );
-std::string concatenateFacts( const std::list< std::string > & facts );
+std::string concatenateFacts( const std::set< std::string > & facts );
+std::set< std::string > getObservableFacts( const std::set< std::string > & facts );
 std::string getObservableState( const std::string & state );
+std::set< std::string > getEmergingFacts( const std::set< std::string > & intersectingFacts, const std::set< std::string > & fullFacts );
 
 // constants
 const std::string agentPrefix_     = "__AGENT_";

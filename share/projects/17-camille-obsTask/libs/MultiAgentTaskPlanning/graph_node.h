@@ -16,6 +16,7 @@ public:
 private:
   GraphNode( const T & data )
     : id_( 0 )
+    , depth_( 0 )
     , data_( data )
   {
 
@@ -24,13 +25,14 @@ private:
   GraphNode( const weak_ptr & parent, uint id, const T & data )
     : parent_( parent )
     , id_( id )
+    , depth_( parent.lock()->depth_ + 1 )
     , data_( data )
   {
 
   }
 
 public:
-  static ptr root( const T & data ) { return ptr( new GraphNode< T >( data ) ); }
+  static ptr root( const T & data ) { counter_ = 1; return ptr( new GraphNode< T >( data ) ); }
 
   bool isRoot() const { return parent_.lock() == nullptr; }
   std::list< ptr > children() const { return children_; }
@@ -50,14 +52,15 @@ public:
     return siblings;
   }
   uint id() const { return id_; }
+  uint depth() const { return depth_; }
   T data() const { return data_; }
 
   ptr makeChild( const T & data )
   {
-    this->shared_from_this();
-    auto child = ptr( new GraphNode< T >( this->shared_from_this(), id_+ 1, data ) );
-
+    auto child = ptr( new GraphNode< T >( this->shared_from_this(), counter_, data ) );
     children_.push_back( child );
+
+    counter_++;
 
     return child;
   }
@@ -71,12 +74,17 @@ public:
   {
     children_.clear();
   }
-
+public:
+  static uint counter_;
 private:
-  weak_ptr parent_;
   uint id_;
+  uint depth_;
+  weak_ptr parent_;
   T data_;
   std::list< ptr > children_;
 };
+
+template<typename T>
+uint GraphNode<T>::counter_=0;
 
 } // namespace matp
