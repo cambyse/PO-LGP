@@ -6,32 +6,6 @@
 namespace matp
 {
 
-static StringA nodeToStringA( Node * facts )
-{
-  StringA factStringA;
-
-  for( auto f : facts->parents )
-  {
-    factStringA.append( f->keys.last() );
-  }
-
-  return factStringA;
-}
-
-static std::string getStateStr( FOL_World & fol )
-{
-  auto stateGraph = fol.getState();
-
-  std::stringstream ss;
-  ss << "{";
-  stateGraph->write( ss );
-  ss << "}";
-
-  return ss.str();
-}
-
-///////
-
 void LogicParser::parse( const std::string & description )
 {
   if( ! boost::filesystem::exists( description ) )

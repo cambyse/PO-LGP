@@ -3,58 +3,6 @@
 namespace matp
 {
 
-static std::string actionToString( Node * action )
-{
-  std::stringstream ss;
-  ss << *action;
-  return ss.str();
-}
-
-static std::string actionToString( const FOL_World::Handle & action )
-{
-  std::stringstream ss;
-  ss << *action;
-  return ss.str();
-}
-
-static int getAgentId( const std::string actionName )
-{
-  //auto prefix = actionName.substr( 0, agentPrefix_.size() );
-  auto prefixIndex = actionName.find( agentPrefix_ );
-
-  if( prefixIndex == std::string::npos )
-  {
-    return -1;
-  }
-
-  auto prefix = actionName.substr( prefixIndex, agentPrefix_.size() );
-
-  if( prefix != agentPrefix_ )
-  {
-    return -1;
-  }
-
-  auto actionNameFiltered = actionName.substr( prefixIndex + agentPrefix_.size(), actionName.size() );
-  auto suffixStartIndex = actionNameFiltered.find_first_of( agentSuffix_ );
-  auto idString = actionNameFiltered.substr( 0, suffixStartIndex );
-
-  return std::stoi( idString );
-}
-
-static bool isOfAgent( const std::string & str, uint agentId )
-{
-  auto agentPattern = agentPrefix_ + std::to_string( agentId ) + agentSuffix_;
-
-  return str.find( agentPattern ) != -1;
-}
-
-static bool isOfAgent( const FOL_World::Handle & action, uint agentId )
-{
-  auto actionFact = actionToString( action );
-
-  return isOfAgent( actionFact, agentId );
-}
-
 // LogicEngine
 LogicEngine::LogicEngine( const LogicEngine & engine ) // copy ctor
 {
@@ -94,28 +42,36 @@ uint LogicEngine::totalActionsNumber( uint agentId ) const
   }
 }
 
-std::vector<FOL_World::Handle> LogicEngine::getPossibleActions( uint agentId )
+std::vector<std::string> LogicEngine::getPossibleActions( uint agentId )
 {
   if( ! initialized() ) throw NotInitialized();
 
-  std::vector<FOL_World::Handle> filtered_actions;
+  std::vector<std::string> filteredActions;
 
   auto actions = engine_->get_actions();
 
   for( auto action : actions )
   {
-    if( isOfAgent( action, agentId ) )
+    if( isOfAgent( action, agentId ) || agentNumber_ == 1 )
     {
-      filtered_actions.push_back( action );
+      filteredActions.push_back( actionToString( action ) );
     }
   }
 
-  return filtered_actions;
+  return filteredActions;
 }
 
-void LogicEngine::transition( const FOL_World::Handle & action )
+void LogicEngine::transition( const std::string & action )
 {
-  engine_->transition( action );
+  auto actions = engine_->get_actions();
+
+  for( auto a : actions )
+  {
+    if( actionToString( a ) == action )
+    {
+      engine_->transition( a );
+    }
+  }
 }
 
 void LogicEngine::setState( const std::string & state )
@@ -128,6 +84,7 @@ std::string LogicEngine::getState() const
 {
   std::stringstream ss;
   engine_->write_state( ss );
+  //auto state = engine_->getState();
   return ss.str();
 }
 

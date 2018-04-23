@@ -3,9 +3,6 @@
 #include <memory>
 #include <list>
 
-#include <Logic/fol.h>
-#include <Logic/fol_mcts_world.h>
-
 #include <constants.h>
 
 namespace matp
@@ -19,6 +16,7 @@ class NotInitialized: public std::exception
   }
 };
 
+// Logic Engine
 class LogicEngine
 {
 public:
@@ -33,8 +31,8 @@ public:
 
   uint agentNumber() const { return agentNumber_; }
   uint totalActionsNumber( uint agentId ) const;
-  std::vector<FOL_World::Handle> getPossibleActions( uint agentId );
-  void transition( const FOL_World::Handle & action );
+  std::vector<std::string> getPossibleActions( uint agentId );
+  void transition( const std::string & action );
   void setState( const std::string & state );
   std::string getState() const;
 

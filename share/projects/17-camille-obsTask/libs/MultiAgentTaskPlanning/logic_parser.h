@@ -47,11 +47,6 @@ private:
   uint agentNumber_ = 0;
   std::vector< double > egoBeliefState_;
   std::vector< std::string > startStates_;
-
-  // constants
-  const std::string possibleFactsTag_ = "EVENTUAL_FACTS";
-  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
-  const mlr::String notObservableTag_ = "NOT_OBSERVABLE";
 };
 
 } // namespace matp
