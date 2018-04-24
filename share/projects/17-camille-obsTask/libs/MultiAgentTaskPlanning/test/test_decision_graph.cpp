@@ -173,11 +173,74 @@ TEST(DecisionGraph, buildFromRootDouble2WD3) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
-  graph.build(2);
+  graph.build(1);
   ASSERT_EQ( graph.size(), 24 );
 }
 
+TEST(DecisionGraph, buildCheckNodeDepth) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(1);
+  for( auto node : graph.nodes() )
+  {
+    ASSERT_LE( node->depth(), 4 );
+  }
+}
+
+
+// Terminal label
+TEST(DecisionGraph, terminalNodes) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(2);
+  auto leafs = graph.terminalNodes();
+
+  bool found = false;
+  int agentId = -1;
+  for( auto l : leafs )
+  {
+    if( l->id() == 25 )
+    {
+      found = true;
+      agentId = l->data().agentId;
+    }
+  }
+
+  ASSERT_TRUE( found );
+  ASSERT_EQ( agentId, 1 );// terminal a last ego action
+}
+
+TEST(DecisionGraph, terminalNodesHaveNoChildren) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(2);
+  auto leafs = graph.terminalNodes();
+
+  for( auto l : leafs )
+  {
+    ASSERT_EQ( l->children().size(), 0 );
+  }
+}
+
 // Print graph
+TEST(DecisionGraph, buildGraphAndPrintD1) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(1);
+  graph.saveGraphToFile( "buildGraphAndPrintD1.gv" );
+}
+
+TEST(DecisionGraph, buildGraphAndPrintD2) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(2);
+  graph.saveGraphToFile( "buildGraphAndPrintD2.gv" );
+}
 
 //
 int main(int argc, char **argv)

@@ -23,6 +23,7 @@ struct NodeData
   std::vector< double      > beliefState;
   std::string leadingArtifact; // leading action of leading observation
   //
+  bool terminal;
   uint agentId;
   NodeType nodeType;
 };
@@ -30,22 +31,29 @@ struct NodeData
 class DecisionGraph
 {
 public:
+  using GraphNodeType = GraphNode< NodeData >;
+public:
   DecisionGraph() = default;
 
   DecisionGraph( const LogicEngine &, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState );
   bool empty() const { return nodes_.size() == 0; }
   std::size_t size() const { return nodes_.size(); }
   void build( int maxSteps );
-  std::queue< GraphNode< NodeData >::ptr > expand( const GraphNode< NodeData >::ptr & node );
-  GraphNode< NodeData >::ptr root() const { return root_; }
+  std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node );
+  GraphNodeType::ptr root() const { return root_; }
+  std::list< GraphNodeType::ptr > nodes() const { return nodes_; }
+  std::list< GraphNodeType::ptr > terminalNodes() const { return terminalNodes_; }
+
+  void saveGraphToFile( const std::string & filename ) const;
 
   // public for testing purpose
-  std::vector< std::string > getCommonPossibleActions( const GraphNode< NodeData >::ptr & node, uint agentId ) const;
-  std::vector< NodeData > getPossibleOutcomes( const GraphNode< NodeData >::ptr & node, const std::string & action ) const;
+  std::vector< std::string > getCommonPossibleActions( const GraphNodeType::ptr & node, uint agentId ) const;
+  std::vector< NodeData > getPossibleOutcomes( const GraphNodeType::ptr & node, const std::string & action ) const;
 
 private:
   LogicEngine engine_;
-  GraphNode< NodeData >::ptr root_;
-  std::list< GraphNode< NodeData >::ptr > nodes_;
+  GraphNodeType::ptr root_;
+  std::list< GraphNodeType::ptr > nodes_;
+  std::list< GraphNodeType::ptr > terminalNodes_;
 };
 } // namespace matp

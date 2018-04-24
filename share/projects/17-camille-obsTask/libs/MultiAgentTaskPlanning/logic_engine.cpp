@@ -58,6 +58,13 @@ std::vector<std::string> LogicEngine::getPossibleActions( uint agentId )
     }
   }
 
+  // test
+  if( engine_->is_terminal_state() )
+  {
+    CHECK_EQ( actions.size(), 0, "terminal state still has possible actions!" );
+  }
+  //
+
   return filteredActions;
 }
 

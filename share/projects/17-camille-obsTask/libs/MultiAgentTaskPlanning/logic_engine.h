@@ -28,7 +28,7 @@ public:
 
   void init( const std::string & file );
   bool initialized() const { return engine_ != nullptr; }
-
+  bool isTerminal()  const { return engine_->is_terminal_state(); }
   uint agentNumber() const { return agentNumber_; }
   uint totalActionsNumber( uint agentId ) const;
   std::vector<std::string> getPossibleActions( uint agentId );
