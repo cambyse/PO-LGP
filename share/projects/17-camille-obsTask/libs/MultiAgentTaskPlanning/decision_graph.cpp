@@ -90,7 +90,7 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
 
       for( auto action : actions )
       {
-        auto child = node->makeChild( { states, bs, action, false, agentId, NodeData::NodeType::OBSERVATION } );
+        auto child = node->makeChild( { states, bs, action, false, 1.0, agentId, NodeData::NodeType::OBSERVATION } );
         nodes_.push_back( child );
 
         auto outcomes = getPossibleOutcomes( node, action );
@@ -100,7 +100,7 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
         {
           CHECK( node->data().agentId == agentId, "Corruption in the queue!" );
           auto nextAgentId = ( agentId + 1 ) % engine_.agentNumber();
-          auto childChild = child->makeChild( { outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, nextAgentId, NodeData::NodeType::ACTION } );
+          auto childChild = child->makeChild( { outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, outcome.p, nextAgentId, NodeData::NodeType::ACTION } );
 
           nodes_.push_back( childChild );
 
@@ -245,18 +245,20 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
     auto observation      = concatenateFacts( observationFacts );
     auto terminal         = terminalOutcome[ observableResultPair.first ];
 
+    double p = 0;
     for( const auto & worldOutcome :  worldToOutcomes )
     {
       auto w = worldOutcome.first;
       auto state = worldOutcome.second;
 
+      p += bs[ w ];
       states[ w ] = state;
       newBs[ w ] = bs[ w ];
     }
 
     newBs = normalizeBs( newBs );
 
-    outcomes.push_back( { states, newBs, observation, terminal } );
+    outcomes.push_back( { states, newBs, observation, terminal, p } );
   }
 
   return outcomes;

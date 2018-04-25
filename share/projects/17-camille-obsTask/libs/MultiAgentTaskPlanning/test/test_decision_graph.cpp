@@ -212,6 +212,26 @@ TEST(DecisionGraph, terminalNodes) {
   ASSERT_EQ( agentId, 1 );// terminal a last ego action
 }
 
+// Terminal label
+TEST(DecisionGraph, probabilityAtObservationNode) {
+  LogicParser parser;
+  parser.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( parser.engine(), parser.possibleStartStates(), parser.egoBeliefState() );
+  graph.build(2);
+  auto nodes = graph.nodes();
+
+  double p = -1;
+  for( auto l : nodes )
+  {
+    if( l->id() == 2 )
+    {
+      p = l->data().p;
+    }
+  }
+
+  ASSERT_EQ( p, 0.95 );
+}
+
 TEST(DecisionGraph, terminalNodesHaveNoChildren) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
@@ -226,20 +246,28 @@ TEST(DecisionGraph, terminalNodesHaveNoChildren) {
 }
 
 // Print graph
-TEST(DecisionGraph, buildGraphAndPrintD1) {
+TEST(DecisionGraph, buildGraphAndPrint2WD1) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.build(1);
-  graph.saveGraphToFile( "buildGraphAndPrintD1.gv" );
+  graph.saveGraphToFile( "buildGraphAndPrint2WD1.gv" );
 }
 
-TEST(DecisionGraph, buildGraphAndPrintD2) {
+TEST(DecisionGraph, buildGraphAndPrint2WD2) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.build(2);
-  graph.saveGraphToFile( "buildGraphAndPrintD2.gv" );
+  graph.saveGraphToFile( "buildGraphAndPrint2WD2.gv" );
+}
+
+TEST(DecisionGraph, buildGraphAndPrint1WD2) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-1w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(2);
+  graph.saveGraphToFile( "buildGraphAndPrint1WD2.gv" );
 }
 
 //

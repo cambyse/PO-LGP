@@ -36,6 +36,7 @@ public:
 
   bool isRoot() const { return parent_.lock() == nullptr; }
   std::list< ptr > children() const { return children_; }
+  ptr parent() { return parent_.lock(); }
   std::list< ptr > siblings() const
   {
     auto parent = parent_.lock();

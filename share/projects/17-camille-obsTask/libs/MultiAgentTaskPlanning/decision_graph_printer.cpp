@@ -1,5 +1,7 @@
 #include <decision_graph_printer.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 namespace matp
 {
 
@@ -41,11 +43,34 @@ void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node
   for(  auto c : node->children() )
   {
     std::stringstream ss;
+    std::string label;
 
-    auto label = c->data().leadingArtifact;
+    if( node->data().nodeType == NodeData::NodeType::ACTION )
+    {
+      auto agentLabel = agentPrefix_ + std::to_string( node->data().agentId ) + agentSuffix_;
+      auto leadingArtifact = c->data().leadingArtifact;
+      auto actionLabel = leadingArtifact.substr( agentLabel.size() + 1, leadingArtifact.size() - agentLabel.size() );
 
-    ss << c->data().leadingArtifact << std::endl;;
-    auto label = ss.str();
+      boost::replace_all(agentLabel, "__", "");
+      boost::replace_all(actionLabel, "(", "");
+      boost::replace_all(actionLabel, ")", "");
+
+      ss << agentLabel << std::endl;
+      ss << actionLabel;
+
+      label = ss.str();
+      boost::replace_all(label, "{", "");
+    }
+    else
+    {
+      if( ! c->data().leadingArtifact.empty() )
+      {
+        ss << c->data().leadingArtifact << std::endl;
+      }
+      ss << c->data().p;
+
+      label = ss.str();
+    }
 
     ss_ << node->id() << "->" << c->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
 

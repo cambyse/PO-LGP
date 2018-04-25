@@ -39,14 +39,14 @@ MotionPlanningOrder GraphPlanner::getPlanningOrder() const
   return MotionPlanningOrder( 0 );
 }
 
-void GraphPlanner::buildGraph()
+void GraphPlanner::buildGraph( int maxSteps )
 {
   if( ! parser_.successfullyParsed() )
   {
     return;
   }
 
-  graph_.build( - 1 );
+  graph_.build( maxSteps );
 }
 
 }

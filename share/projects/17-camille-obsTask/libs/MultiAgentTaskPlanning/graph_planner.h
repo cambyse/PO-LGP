@@ -30,7 +30,7 @@ public:
   virtual MotionPlanningOrder getPlanningOrder() const override;
 
   // other modifiers
-  void buildGraph();
+  void buildGraph( int maxSteps = -1 );
   DecisionGraph decisionGraph() const { return graph_; }
 
   // other getters

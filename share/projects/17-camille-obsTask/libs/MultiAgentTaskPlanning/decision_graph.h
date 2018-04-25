@@ -24,6 +24,7 @@ struct NodeData
   std::string leadingArtifact; // leading action of leading observation
   //
   bool terminal;
+  double p; // probability to reach this node given the parent
   uint agentId;
   NodeType nodeType;
 };
