@@ -36,11 +36,35 @@ TEST_F(GraphPlannerTest, OneNodeIfCorrectFile) {
 }
 
 TEST_F(GraphPlannerTest, buildGraph) {
-  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
-  tp.buildGraph();
+  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  tp.buildGraph( 3 );
+  tp.saveGraphToFile( "LGP-overtaking-single-agent-2w.gv" );
   auto graph = tp.decisionGraph();
   ASSERT_TRUE( graph.size() > 1 );
 }
+
+TEST_F(GraphPlannerTest, buildGraphDoubleAgent1w) {
+  tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+  tp.buildGraph( 2 );
+  tp.saveGraphToFile( "LGP-overtaking-double-agent-1w.gv" );
+  auto graph = tp.decisionGraph();
+  ASSERT_TRUE( graph.size() > 1 );
+}
+
+TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
+  tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+  tp.solve();
+  auto policy = tp.getPolicy();
+  ASSERT_NE( policy, nullptr );
+}
+
+TEST_F(GraphPlannerTest, solveSingleAgent2w) {
+  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  tp.solve();
+  auto policy = tp.getPolicy();
+  ASSERT_NE( policy, nullptr );
+}
+// - early stop in VI if stable
 
 //
 int main(int argc, char **argv)

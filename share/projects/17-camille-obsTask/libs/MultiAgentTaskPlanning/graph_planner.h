@@ -31,14 +31,20 @@ public:
 
   // other modifiers
   void buildGraph( int maxSteps = -1 );
-  DecisionGraph decisionGraph() const { return graph_; }
+  void valueIteration();
+  void saveGraphToFile( const std::string & filename ) const { graph_.saveGraphToFile( filename ); }
 
   // other getters
+  DecisionGraph decisionGraph() const { return graph_; }
   uint agentNumber() const { return parser_.agentNumber(); }
 
 private:
   LogicParser parser_;
   DecisionGraph graph_;
+
+  // value iteration
+  std::vector< double > values_;
+
 };
 
 } // namespace matp
