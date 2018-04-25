@@ -91,6 +91,14 @@ TEST(GraphNode, AddExistingChild) {
   ASSERT_EQ( childchild->children().size(), 1 );
 }
 
+TEST(GraphNode, RemoveChild) {
+  auto root = GraphNode< double >::root( 0.0 );
+  auto child1 = root->makeChild( 1.0 );
+  auto child2 = root->makeChild( 1.0 );
+  root->removeChild( child2 );
+  ASSERT_EQ( root->children().size(), 1 );
+}
+
 TEST(GraphNode, ClearChildren) {
   auto root = GraphNode< double >::root( 0.0 );
   auto child1 = root->makeChild( 1.0 );

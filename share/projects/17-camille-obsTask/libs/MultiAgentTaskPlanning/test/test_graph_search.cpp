@@ -51,19 +51,33 @@ TEST_F(GraphPlannerTest, buildGraphDoubleAgent1w) {
   ASSERT_TRUE( graph.size() > 1 );
 }
 
-TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
-  tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+//TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
+//  tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+//  tp.solve();
+//  auto policy = tp.getPolicy();
+//  ASSERT_NE( policy, nullptr );
+//}
+
+TEST_F(GraphPlannerTest, solveDoubleAgent2w) {
+  tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
   tp.solve();
   auto policy = tp.getPolicy();
   ASSERT_NE( policy, nullptr );
 }
 
-TEST_F(GraphPlannerTest, solveSingleAgent2w) {
-  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
-  tp.solve();
-  auto policy = tp.getPolicy();
-  ASSERT_NE( policy, nullptr );
-}
+//TEST_F(GraphPlannerTest, solveSingleAgent2w) {
+//  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+//  tp.solve();
+//  auto policy = tp.getPolicy();
+//  ASSERT_NE( policy, nullptr );
+//}
+
+//TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
+//  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+//  tp.solve();
+//  auto policy = tp.getPolicy();
+//  ASSERT_NE( policy, nullptr );
+//}
 // - early stop in VI if stable
 
 //

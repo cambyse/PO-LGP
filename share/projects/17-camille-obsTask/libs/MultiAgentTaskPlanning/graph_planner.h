@@ -32,6 +32,8 @@ public:
   // other modifiers
   void buildGraph( int maxSteps = -1 );
   void valueIteration();
+  void buildPolicy();
+
   void saveGraphToFile( const std::string & filename ) const { graph_.saveGraphToFile( filename ); }
 
   // other getters

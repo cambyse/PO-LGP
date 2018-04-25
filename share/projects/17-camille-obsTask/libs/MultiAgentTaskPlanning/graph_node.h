@@ -71,12 +71,23 @@ public:
     children_.push_back( child );
   }
 
+  void removeChild( const ptr & child )
+  {
+//    for( auto c : children_ )
+//    {
+//      if(  )
+//    }
+    children_.remove( child );
+  }
+
   void clearChildren()
   {
     children_.clear();
   }
+
 public:
   static uint counter_;
+
 private:
   uint id_;
   uint depth_;

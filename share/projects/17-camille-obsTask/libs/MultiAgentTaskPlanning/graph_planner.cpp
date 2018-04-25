@@ -17,11 +17,13 @@ void GraphPlanner::setFol( const std::string & descrition )
 
 void GraphPlanner::solve()
 {
-  uint maxSteps = 2;
+  uint maxSteps = 3;
 
-  buildGraph( 2 );
+  buildGraph( maxSteps );
 
   valueIteration();
+
+  buildPolicy();
 }
 
 void GraphPlanner::integrate( const Policy::ptr & policy )
@@ -133,6 +135,77 @@ void GraphPlanner::valueIteration()
   }
 
   std::cout << "GraphPlanner::valueIteration.. end" << std::endl;
+}
+
+void GraphPlanner::buildPolicy()
+{
+  using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
+
+  auto graph = graph_; // copy
+
+  std::queue< NodeTypePtr > Q;
+
+  Q.push( graph.root() );
+
+  while( ! Q.empty() )
+  {
+    auto u = Q.front();
+    Q.pop();
+
+    if( u->data().nodeType == NodeData::NodeType::ACTION )
+    {
+      if( u->data().agentId == 0 )
+      {
+        double bestValue = m_inf();
+        uint bestId = -1;
+        for( auto v : u->children() )
+        {
+          if( values_[ v->id() ] >= bestValue )
+          {
+            bestValue = values_[ v->id() ];
+            bestId = v->id();
+
+            std::cout << "best child of " << u->id() << " is " << v->id() << std::endl;
+          }
+        }
+
+        // remove other nodes
+        while( u->children().size() > 1 )
+        {
+          for( auto v : u->children() )
+          {
+            if( v->id() != bestId )
+            {
+              u->removeChild( v );
+
+              std::cout << "remove " << v->id() << std::endl;
+            }
+          }
+        }
+        //
+        for( auto v : u->children() )
+        {
+          Q.push( v );
+        }
+      }
+      else
+      {
+        for( auto v : u->children() )
+        {
+          Q.push( v );
+        }
+      }
+    }
+    else if( u->data().nodeType == NodeData::NodeType::OBSERVATION )
+    {
+      for( auto v : u->children() )
+      {
+        Q.push( v );
+      }
+    }
+  }
+
+  graph.saveGraphToFile( "lastSolution.gv" );
 }
 
 }
