@@ -27,7 +27,7 @@ public:
   // getters
   virtual bool terminated() const override;
   virtual Policy::ptr getPolicy() const override;
-  NewPolicy::ptr getNewPolicy() const;
+  NewPolicy getNewPolicy() const;
 
   virtual MotionPlanningOrder getPlanningOrder() const override;
 
@@ -48,7 +48,7 @@ private:
 private:
   LogicParser parser_;
   DecisionGraph graph_;
-  NewPolicy::ptr policy_;
+  NewPolicy policy_;
 
   // value iteration
   std::vector< double > values_;

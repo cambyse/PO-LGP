@@ -62,7 +62,7 @@ TEST_F(GraphPlannerTest, solveDoubleAgent2w) {
   tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
   tp.solve();
   auto policy = tp.getNewPolicy();
-  ASSERT_NE( policy, nullptr );
+  ASSERT_FALSE( policy.empty() );
 }
 
 //TEST_F(GraphPlannerTest, solveSingleAgent2w) {

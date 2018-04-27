@@ -7,6 +7,11 @@ namespace matp
 
 void GraphPrinter::print( const DecisionGraph & graph )
 {
+  if( ! graph.root() )
+  {
+    return;
+  }
+
   ss_ << "digraph g{" << std::endl;
   ss_ << "bgcolor=\"transparent\"";
   ss_ << "{" << std::endl;
@@ -50,7 +55,7 @@ void GraphPrinter::print( const DecisionGraph & graph )
 
 void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node )
 {
-  for(  auto c : node->children() )
+  for( auto c : node->children() )
   {
     std::stringstream ss;
     std::string label;

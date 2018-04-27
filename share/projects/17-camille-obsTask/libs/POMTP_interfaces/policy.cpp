@@ -13,9 +13,11 @@
     --------------------------------------------------------------  */
 
 #include "policy.h"
-#include <Core/graph.h>
 #include <unordered_map>
 #include <functional>
+#include <queue>
+
+#include <Core/graph.h>
 
 static int policyNumber = 0;
 
@@ -194,12 +196,70 @@ Policy::ptr Policy::clone() const
 }
 
 //----NewPolicy-------------------------//
+NewPolicy::NewPolicy()
+  : status_( SKELETON )
+  , id_( policyNumber )
+{
+
+}
+
 NewPolicy::NewPolicy( const GraphNodeTypePtr & root )
   : status_( SKELETON )
   , id_( policyNumber )
   , root_( root )
 {
   policyNumber++;
+}
+
+NewPolicy::NewPolicy( const NewPolicy & policy )
+{
+  copy( policy );
+}
+
+NewPolicy & NewPolicy::operator= ( const NewPolicy & policy )
+{
+  copy( policy );
+
+  return *this;
+}
+
+void NewPolicy::copy( const NewPolicy & policy )
+{
+  if( policy.root_ )
+  {
+    id_ = policy.id_;
+    value_ = policy.value_;
+    status_ = policy.status_;
+
+    auto rootData = policy.root_->data();
+
+    root_ = GraphNodeType::root( rootData );
+
+    std::queue< std::pair < GraphNodeTypePtr, GraphNodeTypePtr > > Q;
+
+    Q.push( std::make_pair( policy.root_, root_ ) ); // original - copy
+
+    while( ! Q.empty() )
+    {
+      auto u = Q.front();
+      Q.pop();
+
+      auto uOriginal = u.first;
+      auto uCopy     = u.second;
+
+      for( auto v : uOriginal->children() )
+      {
+        auto vCopy = uCopy->makeChild( v->data() );
+
+        Q.push( std::make_pair( v, vCopy ) );
+
+        if( vCopy->data().terminal )
+        {
+          leafs_.push_back( vCopy );
+        }
+      }
+    }
+  }
 }
 
 //void NewPolicy::init( uint N )

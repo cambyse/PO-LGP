@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <list>
 
@@ -13,15 +14,17 @@ public:
 private:
   GraphNode( const T & data )
     : id_( 0 )
+    , graphId_( graphCounter_ )
     , depth_( 0 )
     , data_( data )
   {
-
+    graphCounter_++;
   }
 
   GraphNode( const weak_ptr & parent, uint id, const T & data )
     : parent_( parent )
     , id_( id )
+    , graphId_( parent.lock()->graphId_ )
     , depth_( parent.lock()->depth_ + 1 )
     , data_( data )
   {
@@ -29,7 +32,7 @@ private:
   }
 
 public:
-  static ptr root( const T & data ) { counter_ = 1; return ptr( new GraphNode< T >( data ) ); }
+  static ptr root( const T & data ) { graphCounter_++; return ptr( new GraphNode< T >( data ) ); }
 
   bool isRoot() const { return parent_.lock() == nullptr; }
   std::list< ptr > children() const { return children_; }
@@ -55,10 +58,10 @@ public:
 
   ptr makeChild( const T & data )
   {
-    auto child = ptr( new GraphNode< T >( this->shared_from_this(), counter_, data ) );
-    children_.push_back( child );
+    auto counter = ++counter_[ graphId_ ];
 
-    counter_++;
+    auto child = ptr( new GraphNode< T >( this->shared_from_this(), counter, data ) );
+    children_.push_back( child );
 
     return child;
   }
@@ -79,15 +82,18 @@ public:
   }
 
 public:
-  static uint counter_;
+  static std::map< uint, uint > counter_;
+  static uint graphCounter_;
 
 private:
   uint id_;
   uint depth_;
+  uint graphId_;
   weak_ptr parent_;
   T data_;
   std::list< ptr > children_;
 };
 
-template<typename T>
-uint GraphNode<T>::counter_=0;
+template < typename T > std::map< uint, uint > GraphNode< T >::counter_;
+template < typename T > uint GraphNode< T >::graphCounter_ = 0;
+

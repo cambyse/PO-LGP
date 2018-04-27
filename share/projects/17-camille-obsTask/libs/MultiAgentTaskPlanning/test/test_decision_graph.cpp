@@ -186,6 +186,21 @@ TEST(DecisionGraph, decisionGraphCopy) {
 
   ASSERT_NE( graph.root(), graphCopy.root() );
   ASSERT_EQ( graph.size(), graphCopy.size() );
+
+//  auto originalNodes = graph.nodes();
+//  auto nodesCopy     = graphCopy.nodes();
+
+//  auto o = originalNodes.begin();
+//  auto c = nodesCopy.begin();
+//  for( auto i = 0; i < originalNodes.size(); ++i )
+//  {
+//    auto original = o->lock();
+//    auto copy     = c->lock();
+
+//    ASSERT_EQ( original->data().leadingArtifact, copy->data().leadingArtifact );
+//    ++o;
+//    ++c;
+//  }
 }
 
 TEST(DecisionGraph, decisionGraphAssignment) {

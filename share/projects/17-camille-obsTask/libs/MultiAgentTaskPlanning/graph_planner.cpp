@@ -44,7 +44,7 @@ Policy::ptr GraphPlanner::getPolicy() const
   return nullptr;
 }
 
-NewPolicy::ptr GraphPlanner::getNewPolicy() const
+NewPolicy GraphPlanner::getNewPolicy() const
 {
   return policy_;
 }
@@ -211,9 +211,7 @@ void GraphPlanner::buildPolicy()
 {
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
-  std::queue< NodeTypePtr > Q;
-
-  Q.push( decidedGraph_.root() );
+  std::queue< std::pair< NodeTypePtr, NewPolicy::GraphNodeTypePtr > > Q;
 
   // create policy root node from decision graph node
   auto root = decidedGraph_.root();
@@ -222,19 +220,35 @@ void GraphPlanner::buildPolicy()
 
   auto policyRoot = GraphNode< NewPolicyNodeData >::root( rootData );
 
-  //policy_ = std::make_shared< NewPolicy >( policyRoot );
+  Q.push( std::make_pair( decidedGraph_.root(), policyRoot ) );
 
   while( ! Q.empty() )
   {
-    auto u = Q.front();
+    auto uPair = Q.front();
     Q.pop();
 
+    auto u     = uPair.first;
+    auto uCopy = uPair.second;
 
     for( auto v : u->children() )
     {
-      Q.push( v );
+      NewPolicyNodeData data;
+
+      data.beliefState = v->data().beliefState;
+      data.startTime   = v->depth() / 2;
+      data.endTime     = data.startTime + 1;
+      data.markovianReturn = -1;
+      data.terminal    = v->data().terminal;
+
+      // get komo tag
+
+      auto vCopy = uCopy->makeChild( data );
+
+      Q.push( std::make_pair( v, vCopy ) );
     }
   }
+
+  policy_ = NewPolicy( policyRoot );
 }
 
 }

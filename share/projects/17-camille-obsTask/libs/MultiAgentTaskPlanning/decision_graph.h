@@ -53,6 +53,7 @@ public:
   // public for testing purpose
   std::vector< std::string > getCommonPossibleActions( const GraphNodeType::ptr & node, uint agentId ) const;
   std::vector< NodeData > getPossibleOutcomes( const GraphNodeType::ptr & node, const std::string & action ) const;
+
 private:
   void copy( const DecisionGraph & );
 

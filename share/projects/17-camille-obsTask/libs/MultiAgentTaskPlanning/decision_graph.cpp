@@ -290,22 +290,27 @@ void DecisionGraph::copy( const DecisionGraph & graph )
 
     std::queue< std::pair < GraphNodeType::ptr, GraphNodeType::ptr > > Q;
 
-    Q.push( std::make_pair( graph.root(), root_ ) );
+    Q.push( std::make_pair( graph.root(), root_ ) ); // original - copy
 
     while( ! Q.empty() )
     {
       auto u = Q.front();
       Q.pop();
 
-      for( auto v : u.first->children() )
+      auto uOriginal = u.first;
+      auto uCopy     = u.second;
+
+      for( auto v : uOriginal->children() )
       {
-        auto vCopy = u.second->makeChild( u.first->data() );
+        auto vCopy = uCopy->makeChild( v->data() );
 
         Q.push( std::make_pair( v, vCopy ) );
 
-        nodes_.push_back( v );
+        nodes_.push_back( vCopy );
 
-        if( v->data().terminal )
+        CHECK( v->data().leadingArtifact == vCopy->data().leadingArtifact,"" );
+
+        if( vCopy->data().terminal )
         {
           terminalNodes_.push_back( vCopy );
         }

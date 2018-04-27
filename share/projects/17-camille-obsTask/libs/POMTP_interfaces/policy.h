@@ -232,6 +232,7 @@ struct NewPolicyNodeData
 {
   std::vector< double      > beliefState;
   std::string komoTag;
+  bool terminal;
   double startTime;
   double endTime;
   double markovianReturn;
@@ -251,7 +252,12 @@ public:
   };
 
 public:
+  NewPolicy();
   NewPolicy( const GraphNodeTypePtr & root );
+
+  NewPolicy( const NewPolicy & );
+  NewPolicy & operator= ( const NewPolicy & );
+
 
   // modifier
   //void init( uint N );
@@ -262,6 +268,7 @@ public:
   void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
+  bool empty() const { return root_ == nullptr; }
   uint id() const { return id_; }
   //uint N()  const { return N_; }
   GraphNodeTypePtr root() const { return root_; }
@@ -271,11 +278,12 @@ public:
   //NewPolicy::ptr clone() const;
 
 private:
+  void copy( const NewPolicy & );
   //void saveFrom( const PolicyNode::ptr & node, std::ostream& os );
 
 private:
   uint id_;                  // identifier of the policy, meant to be unique
-  //uint N_;                   // size of the belief state
+  //uint N_;                 // size of the belief state
   GraphNodeTypePtr root_;    // start belief state
   std::list< std::weak_ptr< GraphNodeType > > leafs_;     // terminal belief states
 
