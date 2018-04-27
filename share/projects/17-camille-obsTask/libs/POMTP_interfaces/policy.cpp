@@ -193,24 +193,54 @@ Policy::ptr Policy::clone() const
   return policy;
 }
 
-//void Policy::save( std::ostream& os )
+//----NewPolicy-------------------------//
+NewPolicy::NewPolicy( const GraphNodeTypePtr & root )
+  : status_( SKELETON )
+  , id_( policyNumber )
+  , root_( root )
+{
+  policyNumber++;
+}
+
+//void NewPolicy::init( uint N )
 //{
-//  saveFrom( root_, os );
+//  N_ = N;
 //}
 
-//void Policy::load( std::istream& is )
+//NewPolicy::ptr NewPolicy::clone() const
 //{
+//  auto policy = std::make_shared< NewPolicy >();
 
-//}
+//  policy->N_ = N_;
 
-//void Policy::saveFrom( const PolicyNode::ptr & node, std::ostream& os )
-//{
-//  node->save( os );
+//  auto root = root_->clone();
+//  policy->setRoot( root );
 
-//  for( auto n : node->children() )
+//  root_->cloneFrom( root );
+
+//  policy->value_ = value_;
+//  policy->status_ = status_;
+
+//  std::function< void( const PolicyNode::ptr & ) > updateLeafsFrom;
+//  updateLeafsFrom= [&policy, &updateLeafsFrom, this] ( const PolicyNode::ptr & node )
 //  {
-//    saveFrom( n, os );
-//  }
+//    for( auto leaf : leafs_ )
+//    {
+//      if( node->id() == leaf->id() )
+//      {
+//        policy->addLeaf( node );
+//      }
+//    }
+
+//    for( auto c : node->children() )
+//    {
+//      updateLeafsFrom( c );
+//    }
+//  };
+
+//  updateLeafsFrom( root );
+
+//  return policy;
 //}
 
 //-----utility free functions-----------//

@@ -36,6 +36,9 @@ public:
 public:
   DecisionGraph() = default;
 
+  DecisionGraph( const DecisionGraph & ); // copy ctor
+  DecisionGraph& operator= ( const DecisionGraph & ); // assignment operator
+
   DecisionGraph( const LogicEngine &, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState );
   bool empty() const { return nodes_.size() == 0; }
   std::size_t size() const { return nodes_.size(); }
@@ -50,6 +53,8 @@ public:
   // public for testing purpose
   std::vector< std::string > getCommonPossibleActions( const GraphNodeType::ptr & node, uint agentId ) const;
   std::vector< NodeData > getPossibleOutcomes( const GraphNodeType::ptr & node, const std::string & action ) const;
+private:
+  void copy( const DecisionGraph & );
 
 private:
   LogicEngine engine_;

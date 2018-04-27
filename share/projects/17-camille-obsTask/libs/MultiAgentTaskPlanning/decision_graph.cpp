@@ -26,6 +26,19 @@ std::vector < double > normalizeBs( const std::vector < double > & bs )
   return newBs;
 }
 
+// copy
+DecisionGraph::DecisionGraph( const DecisionGraph & graph ) // copy ctor
+{
+  copy( graph );
+}
+
+DecisionGraph& DecisionGraph::operator= ( const DecisionGraph & graph ) // assignment operator
+{
+  copy( graph );
+
+  return *this;
+}
+
 // DecisionGraph
 DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState )
   : engine_( engine )
@@ -262,6 +275,43 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
   }
 
   return outcomes;
+}
+
+void DecisionGraph::copy( const DecisionGraph & graph )
+{
+  if( graph.root() )
+  {
+    engine_ = graph.engine_;
+
+    auto rootData = graph.root()->data();
+
+    root_ = GraphNodeType::root( rootData );
+    nodes_.push_back( root_ );
+
+    std::queue< std::pair < GraphNodeType::ptr, GraphNodeType::ptr > > Q;
+
+    Q.push( std::make_pair( graph.root(), root_ ) );
+
+    while( ! Q.empty() )
+    {
+      auto u = Q.front();
+      Q.pop();
+
+      for( auto v : u.first->children() )
+      {
+        auto vCopy = u.second->makeChild( u.first->data() );
+
+        Q.push( std::make_pair( v, vCopy ) );
+
+        nodes_.push_back( v );
+
+        if( v->data().terminal )
+        {
+          terminalNodes_.push_back( vCopy );
+        }
+      }
+    }
+  }
 }
 
 } // namespace matp

@@ -35,6 +35,7 @@ target_link_libraries(
  Core
  Logic
  MCTS
+ MathUtility
  POMTP_interfaces
  )
 

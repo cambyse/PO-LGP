@@ -27,12 +27,12 @@ public:
   // getters
   virtual bool terminated() const override;
   virtual Policy::ptr getPolicy() const override;
+  NewPolicy::ptr getNewPolicy() const;
+
   virtual MotionPlanningOrder getPlanningOrder() const override;
 
   // other modifiers
   void buildGraph( int maxSteps = -1 );
-  void valueIteration();
-  void buildPolicy();
 
   void saveGraphToFile( const std::string & filename ) const { graph_.saveGraphToFile( filename ); }
 
@@ -41,11 +41,18 @@ public:
   uint agentNumber() const { return parser_.agentNumber(); }
 
 private:
+  void valueIteration();
+  void decideOnDecisionGraphCopy();
+  void buildPolicy();
+
+private:
   LogicParser parser_;
   DecisionGraph graph_;
+  NewPolicy::ptr policy_;
 
   // value iteration
   std::vector< double > values_;
+  DecisionGraph decidedGraph_;
 
 };
 

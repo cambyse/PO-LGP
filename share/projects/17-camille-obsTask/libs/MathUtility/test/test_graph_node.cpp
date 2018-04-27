@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-using namespace matp;
-
 // GraphNode
 TEST(GraphNode, RootNode) {
   auto root = GraphNode< double >::root( 0.0 );

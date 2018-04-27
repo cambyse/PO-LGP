@@ -19,10 +19,11 @@
 #include <set>
 #include <unordered_set>
 #include <map>
+#include <memory>
 
 #include <Core/array.h>
 
-#include <memory>
+#include <graph_node.h>
 
 class MotionPlanningOrder
 {
@@ -162,6 +163,121 @@ private:
   uint N_;                  // size of the belief state
   PolicyNode::ptr root_;    // start belief state
   PolicyNode::L leafs_;     // terminal belief states
+
+  // value
+  double value_; // expected cumulated rewards
+  enum StatusType status_;
+};
+
+//class NewPolicyNodeData
+//{
+//public:
+
+//  enum StatusType
+//  {
+//    SKELETON = 0,
+//    INFORMED
+//  };
+
+//public:
+//  // modifiers
+//  //void setNextAction( const std::string & action ) { nextAction_ = action; }
+//  void setTime( double t ) { time_ = t; }
+//  void setP( double p ) { p_ = p; }
+//  void setQ( double q ) { q_ = q; }
+//  void setLastReward( double reward ) { lastReward_ = reward; }
+//  void setValue( double v ) { value_ = v; }
+//  void setStatus( const enum StatusType & status ){ status_ = status; }
+
+//  // utility
+//  void setDifferentiatingFact( const std::set< std::string > & facts ) { differentiatingFacts_ = facts; }
+
+//  // getters
+//  arr bs() const { return bs_; }
+//  //std::string nextAction()      const { return nextAction_; }
+//  uint N()  const  { return bs_.N; }
+//  double time() const { return time_; }
+//  double p() const { return p_; }
+//  double q() const { return q_; }
+//  //double prefixReward() const { return prefixReward_; }
+//  double lastReward() const { return lastReward_; }
+//  double value() const { return value_; }
+//  PolicyNode::ptr clone() const;
+//  void cloneFrom( const PolicyNode::ptr & node ) const;
+//  StatusType status() const { return status_; }
+
+//  // utility
+//  std::set< std::string > differentiatingFacts() const { return differentiatingFacts_; }
+
+//private:
+//  // state / belief state
+//  mlr::Array< std::shared_ptr<Graph> > states_;
+//  arr bs_;
+//  // action
+//  //std::string nextAction_; // action to take at this node
+//  //
+//  double time_;
+
+//  double p_;  // probability of reaching this node
+//  double q_;  // probability of reaching this node given that fact that its parent is reached
+//  double lastReward_;
+//  double value_; // expected future rewards
+//  enum StatusType status_;
+
+//  // utility
+//  std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
+//};
+
+struct NewPolicyNodeData
+{
+  std::vector< double      > beliefState;
+  std::string komoTag;
+  double startTime;
+  double endTime;
+  double markovianReturn;
+};
+
+class NewPolicy
+{
+public:
+  using ptr = std::shared_ptr< GraphNode< NewPolicyNodeData > >;
+  using GraphNodeType = GraphNode< NewPolicyNodeData >;
+  using GraphNodeTypePtr = std::shared_ptr< GraphNode< NewPolicyNodeData > >;
+
+  enum StatusType
+  {
+    SKELETON = 0,
+    INFORMED
+  };
+
+public:
+  NewPolicy( const GraphNodeTypePtr & root );
+
+  // modifier
+  //void init( uint N );
+  //void setRoot( const GraphNodeTypePtr & root )    { root_ = root; }
+  void addLeaf( const GraphNodeTypePtr & leaf )    { leafs_.push_back( leaf ); }
+  void resetLeafs()    { leafs_.clear(); }
+  //void setValue( double v )           { value_ = v; }
+  void setStatus( const enum StatusType & status ){ status_ = status; }
+
+  // getter
+  uint id() const { return id_; }
+  //uint N()  const { return N_; }
+  GraphNodeTypePtr root() const { return root_; }
+  std::list< std::weak_ptr< GraphNodeType > >  leafs() const { return leafs_; }
+  double value() const { return value_; }
+  bool feasible()        const { return value_ > - std::numeric_limits< double >::infinity(); }
+  //NewPolicy::ptr clone() const;
+
+private:
+  //void saveFrom( const PolicyNode::ptr & node, std::ostream& os );
+
+private:
+  uint id_;                  // identifier of the policy, meant to be unique
+  //uint N_;                   // size of the belief state
+  GraphNodeTypePtr root_;    // start belief state
+  std::list< std::weak_ptr< GraphNodeType > > leafs_;     // terminal belief states
 
   // value
   double value_; // expected cumulated rewards

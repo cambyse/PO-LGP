@@ -3,9 +3,6 @@
 #include <memory>
 #include <list>
 
-namespace matp
-{
-
 template < typename T >
 class GraphNode : public std::enable_shared_from_this< GraphNode< T > >
 {
@@ -73,10 +70,6 @@ public:
 
   void removeChild( const ptr & child )
   {
-//    for( auto c : children_ )
-//    {
-//      if(  )
-//    }
     children_.remove( child );
   }
 
@@ -98,5 +91,3 @@ private:
 
 template<typename T>
 uint GraphNode<T>::counter_=0;
-
-} // namespace matp

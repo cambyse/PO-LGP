@@ -30,4 +30,5 @@ target_link_libraries(
  ${project_name}
  Core
  Logic
+ MathUtility
  )

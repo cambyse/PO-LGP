@@ -30,3 +30,5 @@ target_link_libraries(
  ${project_name}
  Core
  )
+
+add_subdirectory(test)

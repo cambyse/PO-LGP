@@ -23,6 +23,8 @@ void GraphPlanner::solve()
 
   valueIteration();
 
+  decideOnDecisionGraphCopy();
+
   buildPolicy();
 }
 
@@ -40,6 +42,11 @@ bool GraphPlanner::terminated() const
 Policy::ptr GraphPlanner::getPolicy() const
 {
   return nullptr;
+}
+
+NewPolicy::ptr GraphPlanner::getNewPolicy() const
+{
+  return policy_;
 }
 
 MotionPlanningOrder GraphPlanner::getPlanningOrder() const
@@ -141,15 +148,15 @@ void GraphPlanner::valueIteration()
   std::cout << "GraphPlanner::valueIteration.. end" << std::endl;
 }
 
-void GraphPlanner::buildPolicy()
+void GraphPlanner::decideOnDecisionGraphCopy()
 {
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
-  auto graph = graph_; // copy
+  decidedGraph_ = graph_; // copy
 
   std::queue< NodeTypePtr > Q;
 
-  Q.push( graph.root() );
+  Q.push( decidedGraph_.root() );
 
   while( ! Q.empty() )
   {
@@ -197,7 +204,37 @@ void GraphPlanner::buildPolicy()
     }
   }
 
-  graph.saveGraphToFile( "lastSolution.gv" );
+  decidedGraph_.saveGraphToFile( "lastSolution.gv" );
+}
+
+void GraphPlanner::buildPolicy()
+{
+  using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
+
+  std::queue< NodeTypePtr > Q;
+
+  Q.push( decidedGraph_.root() );
+
+  // create policy root node from decision graph node
+  auto root = decidedGraph_.root();
+  NewPolicyNodeData rootData;
+  rootData.beliefState = root->data().beliefState;
+
+  auto policyRoot = GraphNode< NewPolicyNodeData >::root( rootData );
+
+  //policy_ = std::make_shared< NewPolicy >( policyRoot );
+
+  while( ! Q.empty() )
+  {
+    auto u = Q.front();
+    Q.pop();
+
+
+    for( auto v : u->children() )
+    {
+      Q.push( v );
+    }
+  }
 }
 
 }

@@ -37,6 +37,6 @@ target_link_libraries(
  Geo
  Kin
  KOMO
- Math_utility
+ MathUtility
  ${fcl_LIBRARIES}
  )

@@ -177,6 +177,29 @@ TEST(DecisionGraph, buildFromRootDouble2WD3) {
   ASSERT_EQ( graph.size(), 24 );
 }
 
+TEST(DecisionGraph, decisionGraphCopy) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(1);
+  auto graphCopy = graph;
+
+  ASSERT_NE( graph.root(), graphCopy.root() );
+  ASSERT_EQ( graph.size(), graphCopy.size() );
+}
+
+TEST(DecisionGraph, decisionGraphAssignment) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-double-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(1);
+  DecisionGraph graphCopy;
+  graphCopy = graph;
+
+  ASSERT_NE( graph.root(), graphCopy.root() );
+  ASSERT_EQ( graph.size(), graphCopy.size() );
+}
+
 TEST(DecisionGraph, buildCheckNodeDepth) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );

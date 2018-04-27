@@ -35,5 +35,5 @@ target_link_libraries(
  Gui
  Optim
  KOMO
- Math_utility
+ MathUtility
  )
