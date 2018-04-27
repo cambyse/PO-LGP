@@ -74,8 +74,10 @@ void GraphPlanner::valueIteration()
   // go from leafs to root
   auto nodes = graph_.nodes();
   auto terminals = graph_.terminalNodes();
-  for( auto v : terminals )
+  for( auto weakV : terminals )
   {
+    auto v = weakV.lock();
+
     values_[ v->id() ] = 0; // all rewards negative
   }
 
@@ -85,8 +87,10 @@ void GraphPlanner::valueIteration()
   bool stable = false;
   for( auto i = 0; ! stable && i < 1000; ++i )
   {
-    for( auto u : nodes )
+    for( auto weakU : nodes )
     {
+      auto u = weakU.lock();
+
       if( u->data().nodeType == NodeData::NodeType::ACTION )
       {
         if( u->data().agentId == 0 )
@@ -152,9 +156,10 @@ void GraphPlanner::buildPolicy()
     auto u = Q.front();
     Q.pop();
 
-    if( u->data().nodeType == NodeData::NodeType::ACTION )
+    // EGO DECISION : we prune the actions that are sub-optimal
+    if( u->data().agentId == 0 )
     {
-      if( u->data().agentId == 0 )
+      if( u->data().nodeType == NodeData::NodeType::ACTION )
       {
         double bestValue = m_inf();
         uint bestId = -1;
@@ -165,7 +170,7 @@ void GraphPlanner::buildPolicy()
             bestValue = values_[ v->id() ];
             bestId = v->id();
 
-            std::cout << "best child of " << u->id() << " is " << v->id() << std::endl;
+            //std::cout << "best child of " << u->id() << " is " << v->id() << std::endl;
           }
         }
 
@@ -178,30 +183,17 @@ void GraphPlanner::buildPolicy()
             {
               u->removeChild( v );
 
-              std::cout << "remove " << v->id() << std::endl;
+              //std::cout << "remove " << v->id() << std::endl;
             }
           }
         }
-        //
-        for( auto v : u->children() )
-        {
-          Q.push( v );
-        }
-      }
-      else
-      {
-        for( auto v : u->children() )
-        {
-          Q.push( v );
-        }
       }
     }
-    else if( u->data().nodeType == NodeData::NodeType::OBSERVATION )
+
+    // push children on Q
+    for( auto v : u->children() )
     {
-      for( auto v : u->children() )
-      {
-        Q.push( v );
-      }
+      Q.push( v );
     }
   }
 

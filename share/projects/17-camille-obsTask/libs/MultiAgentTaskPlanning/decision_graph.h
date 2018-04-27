@@ -42,8 +42,8 @@ public:
   void build( int maxSteps );
   std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node );
   GraphNodeType::ptr root() const { return root_; }
-  std::list< GraphNodeType::ptr > nodes() const { return nodes_; }
-  std::list< GraphNodeType::ptr > terminalNodes() const { return terminalNodes_; }
+  std::list< std::weak_ptr< GraphNodeType > > nodes() const { return nodes_; }
+  std::list< std::weak_ptr< GraphNodeType > > terminalNodes() const { return terminalNodes_; }
 
   void saveGraphToFile( const std::string & filename ) const;
 
@@ -54,7 +54,7 @@ public:
 private:
   LogicEngine engine_;
   GraphNodeType::ptr root_;
-  std::list< GraphNodeType::ptr > nodes_;
-  std::list< GraphNodeType::ptr > terminalNodes_;
+  std::list< std::weak_ptr< GraphNodeType > > nodes_;
+  std::list< std::weak_ptr< GraphNodeType > > terminalNodes_;
 };
 } // namespace matp

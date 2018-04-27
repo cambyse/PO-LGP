@@ -11,25 +11,35 @@ void GraphPrinter::print( const DecisionGraph & graph )
   ss_ << "bgcolor=\"transparent\"";
   ss_ << "{" << std::endl;
   ss_ << graph.root()->id() << " [style=filled, fillcolor=blue]" << std::endl;
-  for( auto n : graph.nodes() )
+  for( auto weakN : graph.nodes() )
   {
-    if( n->data().agentId == 0 )
-    {
-      ss_ << n->id() << " [shape=square, style=filled, fillcolor=" << ( n->id() == 0 ? "blue" : "cyan" ) << "]" << std::endl;
-    }
-    else
-    {
-      ss_ << n->id() << " [shape=circle]" << std::endl;
-    }
+    auto n = weakN.lock();
 
-    if( n->data().nodeType == NodeData::NodeType::OBSERVATION )
+    if( n )
     {
-      ss_ << n->id() << " [shape=diamond]" << std::endl;
+      if( n->data().agentId == 0 )
+      {
+        ss_ << n->id() << " [shape=square, style=filled, fillcolor=" << ( n->id() == 0 ? "blue" : "cyan" ) << "]" << std::endl;
+      }
+      else
+      {
+        ss_ << n->id() << " [shape=circle]" << std::endl;
+      }
+
+      if( n->data().nodeType == NodeData::NodeType::OBSERVATION )
+      {
+        ss_ << n->id() << " [shape=diamond]" << std::endl;
+      }
     }
   }
-  for( auto n : graph.terminalNodes() )
+  for( auto weakN : graph.terminalNodes() )
   {
-    ss_ << n->id() << " [style=filled, fillcolor=green]" << std::endl;
+    auto n = weakN.lock();
+
+    if( n )
+    {
+      ss_ << n->id() << " [style=filled, fillcolor=green]" << std::endl;
+    }
   }
   ss_ << "}" << std::endl;
 

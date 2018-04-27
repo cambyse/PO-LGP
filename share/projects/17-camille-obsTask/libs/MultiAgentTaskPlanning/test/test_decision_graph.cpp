@@ -184,7 +184,7 @@ TEST(DecisionGraph, buildCheckNodeDepth) {
   graph.build(1);
   for( auto node : graph.nodes() )
   {
-    ASSERT_LE( node->depth(), 4 );
+    ASSERT_LE( node.lock()->depth(), 4 );
   }
 }
 
@@ -199,8 +199,10 @@ TEST(DecisionGraph, terminalNodes) {
 
   bool found = false;
   int agentId = -1;
-  for( auto l : leafs )
+  for( auto weakL : leafs )
   {
+    auto l = weakL.lock();
+
     if( l->id() == 25 )
     {
       found = true;
@@ -223,9 +225,9 @@ TEST(DecisionGraph, probabilityAtObservationNode) {
   double p = -1;
   for( auto l : nodes )
   {
-    if( l->id() == 2 )
+    if( l.lock()->id() == 2 )
     {
-      p = l->data().p;
+      p = l.lock()->data().p;
     }
   }
 
@@ -239,8 +241,10 @@ TEST(DecisionGraph, terminalNodesHaveNoChildren) {
   graph.build(2);
   auto leafs = graph.terminalNodes();
 
-  for( auto l : leafs )
+  for( auto weakL : leafs )
   {
+    auto l = weakL.lock();
+
     ASSERT_EQ( l->children().size(), 0 );
   }
 }
