@@ -13,11 +13,7 @@ void LogicParser::parse( const std::string & description )
     throw FolFileNotFound();
   }
 
-  //parseNumberOfAgents( description );
-
   setUpEngine( description );
-
-  //retrieveAgentActions();
 
   buildPossibleStartStates( description );
 

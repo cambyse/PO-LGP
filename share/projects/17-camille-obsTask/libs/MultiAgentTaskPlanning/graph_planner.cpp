@@ -234,6 +234,7 @@ void GraphPlanner::buildPolicy()
     {
       NewPolicyNodeData data;
 
+      // put it into a function
       data.beliefState = v->data().beliefState;
       data.startTime   = v->depth() / 2;
       data.endTime     = data.startTime + 1;

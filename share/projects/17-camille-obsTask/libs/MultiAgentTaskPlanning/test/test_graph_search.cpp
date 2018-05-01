@@ -65,6 +65,11 @@ TEST_F(GraphPlannerTest, solveDoubleAgent2w) {
   ASSERT_FALSE( policy.empty() );
 }
 
+TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
+
+  ASSERT_FALSE( true );
+}
+
 //TEST_F(GraphPlannerTest, solveSingleAgent2w) {
 //  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
 //  tp.solve();
