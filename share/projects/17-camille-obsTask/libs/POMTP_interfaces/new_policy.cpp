@@ -16,6 +16,8 @@
 
 #include <queue>
 
+#include <new_policy_printer.h>
+
 static int policyNumber = 0;
 
 //----NewPolicy-------------------------//
@@ -48,7 +50,46 @@ NewPolicy & NewPolicy::operator= ( const NewPolicy & policy )
 
 void NewPolicy::save( const std::string & file ) const
 {
+  std::ofstream ofs( file );
+  boost::archive::text_oarchive oa(ofs);
+  oa << *this;
+}
 
+void NewPolicy::load( const std::string & file )
+{
+  std::ifstream ifs( file );
+  boost::archive::text_iarchive ia(ifs);
+  ia >> *this;
+}
+
+void NewPolicy::saveToGraphFile( const std::string & filename ) const
+{
+  if( ! root_ )
+  {
+    return;
+  }
+
+  std::ofstream file;
+  file.open( filename );
+
+  NewPolicyPrinter printer( file );
+  printer.print( *this );
+
+  file.close();
+
+  // png
+  std::string nameCopy( filename );
+  const std::string ext( ".gv" );
+  std::string newName = nameCopy.replace( nameCopy.find( ext ), ext.length(), ".png" );
+
+  std::stringstream ss;
+  ss << "dot"   << " ";
+  ss << "-Tpng" << " ";
+  ss << "-o"    << " ";
+  ss << newName << " ";
+  ss << filename;
+
+  system( ss.str().c_str() );
 }
 
 void NewPolicy::copy( const NewPolicy & policy )

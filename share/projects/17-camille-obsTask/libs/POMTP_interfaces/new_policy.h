@@ -18,12 +18,24 @@
 
 #include <graph_node.h>
 
+#include <boost/serialization/vector.hpp>
+
 struct NewPolicyNodeData
 {
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
   bool terminal;
   double markovianReturn;
+
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & beliefState;
+    ar & leadingKomoArgs;
+    ar & terminal;
+    ar & markovianReturn;
+  }
 };
 
 class NewPolicy
@@ -46,11 +58,10 @@ public:
   NewPolicy( const NewPolicy & );
   NewPolicy & operator= ( const NewPolicy & );
 
-
   // modifier
   void addLeaf( const GraphNodeTypePtr & leaf )    { leafs_.push_back( leaf ); }
   void resetLeafs()    { leafs_.clear(); }
-  //void setValue( double v )           { value_ = v; }
+  void setValue( double v )           { value_ = v; }
   void setStatus( const enum StatusType & status ){ status_ = status; }
 
   // getter
@@ -59,10 +70,24 @@ public:
   GraphNodeTypePtr root() const { return root_; }
   std::list< std::weak_ptr< GraphNodeType > >  leafs() const { return leafs_; }
   double value() const { return value_; }
+  enum StatusType status() const { return status_; }
   bool feasible()        const { return value_ > - std::numeric_limits< double >::infinity(); }
 
   // io
   void save( const std::string & file ) const;
+  void load( const std::string & file );
+  void saveToGraphFile( const std::string & file ) const;
+
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & id_;
+    ar & root_;
+    ar & leafs_;
+    ar & value_;
+    ar & status_;
+  }
 
 private:
   void copy( const NewPolicy & );

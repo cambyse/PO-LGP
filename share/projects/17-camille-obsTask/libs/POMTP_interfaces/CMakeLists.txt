@@ -32,3 +32,5 @@ target_link_libraries(
  Logic
  MathUtility
  )
+
+add_subdirectory(test)
