@@ -18,6 +18,9 @@ find_path( MLR_LIBRARIES_DIR
 include_directories( ${MLR_LIBRARIES_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )
 
+#find Boost
+find_package(Boost COMPONENTS system filesystem serialization REQUIRED)
+
 #################################
 # Define executable
 #################################
@@ -28,6 +31,7 @@ add_library(${project_name} ${SOURCES})
 target_include_directories(${project_name} PUBLIC ".")
 target_link_libraries(
  ${project_name}
+ ${Boost_LIBRARIES}
  Core
  )
 

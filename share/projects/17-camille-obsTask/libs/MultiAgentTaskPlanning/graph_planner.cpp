@@ -1,11 +1,26 @@
 #include <graph_planner.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 double m_inf() { return std::numeric_limits< double >::lowest(); }
 
 namespace matp
 {
+std::vector< std::string > decisionArtifactToKomoArgs( const std::string & _artifact )
+{
+  std::vector< std::string > args;
+
+  auto artifact = _artifact;
+
+  boost::replace_all(artifact, "(", "");
+  boost::replace_all(artifact, ")", "");
+
+  boost::split( args, artifact, boost::is_any_of(" ") );
+
+  return args;
+}
+
 // modifiers
 void GraphPlanner::setFol( const std::string & descrition )
 {
@@ -62,6 +77,27 @@ void GraphPlanner::buildGraph( int maxSteps )
   }
 
   graph_.build( maxSteps );
+}
+
+NewPolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData ) const
+{
+  NewPolicyNodeData pData;
+
+  pData.beliefState = dData.beliefState;
+  pData.terminal    = dData.terminal;
+  pData.markovianReturn = r0_;
+  pData.leadingKomoArgs = decisionArtifactToKomoArgs( dData.leadingArtifact );
+
+  /* put it into a function
+        data.beliefState = v->data().beliefState;
+        data.startTime   = v->depth() / 2;
+        data.endTime     = data.startTime + 1;
+        data.markovianReturn = -1;
+        data.terminal    = v->data().terminal;
+  */
+  // get komo tag
+
+  return pData;
 }
 
 void GraphPlanner::valueIteration()
@@ -203,8 +239,7 @@ void GraphPlanner::decideOnDecisionGraphCopy()
       Q.push( v );
     }
   }
-
-  decidedGraph_.saveGraphToFile( "lastSolution.gv" );
+  //decidedGraph_.saveGraphToFile( "lastSolution.gv" );
 }
 
 void GraphPlanner::buildPolicy()
@@ -232,16 +267,7 @@ void GraphPlanner::buildPolicy()
 
     for( auto v : u->children() )
     {
-      NewPolicyNodeData data;
-
-      // put it into a function
-      data.beliefState = v->data().beliefState;
-      data.startTime   = v->depth() / 2;
-      data.endTime     = data.startTime + 1;
-      data.markovianReturn = -1;
-      data.terminal    = v->data().terminal;
-
-      // get komo tag
+      NewPolicyNodeData data = decisionGraphtoPolicyData( v->data() );
 
       auto vCopy = uCopy->makeChild( data );
 

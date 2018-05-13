@@ -228,69 +228,7 @@ private:
 //  std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 //};
 
-struct NewPolicyNodeData
-{
-  std::vector< double      > beliefState;
-  std::string komoTag;
-  bool terminal;
-  double startTime;
-  double endTime;
-  double markovianReturn;
-};
 
-class NewPolicy
-{
-public:
-  using ptr = std::shared_ptr< GraphNode< NewPolicyNodeData > >;
-  using GraphNodeType = GraphNode< NewPolicyNodeData >;
-  using GraphNodeTypePtr = std::shared_ptr< GraphNode< NewPolicyNodeData > >;
-
-  enum StatusType
-  {
-    SKELETON = 0,
-    INFORMED
-  };
-
-public:
-  NewPolicy();
-  NewPolicy( const GraphNodeTypePtr & root );
-
-  NewPolicy( const NewPolicy & );
-  NewPolicy & operator= ( const NewPolicy & );
-
-
-  // modifier
-  //void init( uint N );
-  //void setRoot( const GraphNodeTypePtr & root )    { root_ = root; }
-  void addLeaf( const GraphNodeTypePtr & leaf )    { leafs_.push_back( leaf ); }
-  void resetLeafs()    { leafs_.clear(); }
-  //void setValue( double v )           { value_ = v; }
-  void setStatus( const enum StatusType & status ){ status_ = status; }
-
-  // getter
-  bool empty() const { return root_ == nullptr; }
-  uint id() const { return id_; }
-  //uint N()  const { return N_; }
-  GraphNodeTypePtr root() const { return root_; }
-  std::list< std::weak_ptr< GraphNodeType > >  leafs() const { return leafs_; }
-  double value() const { return value_; }
-  bool feasible()        const { return value_ > - std::numeric_limits< double >::infinity(); }
-  //NewPolicy::ptr clone() const;
-
-private:
-  void copy( const NewPolicy & );
-  //void saveFrom( const PolicyNode::ptr & node, std::ostream& os );
-
-private:
-  uint id_;                  // identifier of the policy, meant to be unique
-  //uint N_;                 // size of the belief state
-  GraphNodeTypePtr root_;    // start belief state
-  std::list< std::weak_ptr< GraphNodeType > > leafs_;     // terminal belief states
-
-  // value
-  double value_; // expected cumulated rewards
-  enum StatusType status_;
-};
 
 // utility free functions
 PolicyNode::L getPathTo( const PolicyNode::ptr & node );
