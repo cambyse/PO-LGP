@@ -32,9 +32,7 @@ void GraphPlanner::setFol( const std::string & descrition )
 
 void GraphPlanner::solve()
 {
-  uint maxSteps = 3;
-
-  buildGraph( maxSteps );
+  buildGraph( maxDepth_ );
 
   valueIteration();
 
@@ -271,7 +269,10 @@ void GraphPlanner::buildPolicy()
 
       auto vCopy = uCopy->makeChild( data );
 
-      Q.push( std::make_pair( v, vCopy ) );
+      for( auto w : v->children() ) // skip obs nodes
+      {
+        Q.push( std::make_pair( w, vCopy ) );
+      }
     }
   }
 

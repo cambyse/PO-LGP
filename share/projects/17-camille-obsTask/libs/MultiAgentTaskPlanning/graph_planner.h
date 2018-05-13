@@ -35,6 +35,7 @@ public:
 
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }
+  void setMaxDepth( uint d ) { maxDepth_ = d; }
   void buildGraph( int maxSteps = -1 );
   void saveGraphToFile( const std::string & filename ) const { graph_.saveGraphToFile( filename ); }
 
@@ -54,6 +55,9 @@ private:
   LogicParser parser_;
   DecisionGraph graph_;
   NewPolicy policy_;
+
+  // graph expansion
+  uint maxDepth_ = 3;
 
   // value iteration
   double r0_ = -1;

@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <boost/filesystem.hpp>
+
 using namespace matp;
 
 class GraphPlannerTest : public ::testing::Test {
@@ -108,8 +110,19 @@ TEST_F(GraphPlannerTest, PolicySave) {
   tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
   tp.solve();
   auto policy = tp.getNewPolicy();
-  policy.save( "saved_policy.gv" );
-  ASSERT_TRUE( false );
+  const std::string policyFileName( "saved_policy.po" );
+  policy.save( policyFileName);
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName ) );
+}
+
+TEST_F(GraphPlannerTest, PolicySaveToGraph) {
+  tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
+  tp.setMaxDepth( 2 );
+  tp.solve();
+  auto policy = tp.getNewPolicy();
+  const std::string policyFileName( "LGP-overtaking-double-agent-2w.gv" );
+  policy.saveToGraphFile( policyFileName );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName ) );
 }
 
 //TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
