@@ -40,3 +40,6 @@ target_link_libraries(
  ObservationTasks
  CollisionAvoidance
 )
+
+add_subdirectory(test)
+

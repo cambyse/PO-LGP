@@ -64,6 +64,7 @@ public:
   uint id() const { return id_; }
   uint depth() const { return depth_; }
   T data() const { return data_; }
+  T& data() { return data_; }
 
   ptr makeChild( const T & data )
   {

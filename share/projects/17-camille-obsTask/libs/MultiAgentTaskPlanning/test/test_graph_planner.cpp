@@ -104,6 +104,7 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
   ASSERT_EQ( pData.terminal       , terminal );
   ASSERT_EQ( pData.markovianReturn, r0 );
   ASSERT_EQ( pData.leadingKomoArgs.size(), 4 );
+  ASSERT_EQ( pData.p, p );
 }
 
 TEST_F(GraphPlannerTest, PolicySave) {
@@ -111,7 +112,7 @@ TEST_F(GraphPlannerTest, PolicySave) {
   tp.solve();
   auto policy = tp.getNewPolicy();
   const std::string policyFileName( "saved_policy.po" );
-  policy.save( policyFileName);
+  policy.save( policyFileName );
   ASSERT_TRUE( boost::filesystem::exists( policyFileName ) );
 }
 

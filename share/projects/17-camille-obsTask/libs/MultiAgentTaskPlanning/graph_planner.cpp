@@ -85,15 +85,7 @@ NewPolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dDat
   pData.terminal    = dData.terminal;
   pData.markovianReturn = r0_;
   pData.leadingKomoArgs = decisionArtifactToKomoArgs( dData.leadingArtifact );
-
-  /* put it into a function
-        data.beliefState = v->data().beliefState;
-        data.startTime   = v->depth() / 2;
-        data.endTime     = data.startTime + 1;
-        data.markovianReturn = -1;
-        data.terminal    = v->data().terminal;
-  */
-  // get komo tag
+  pData.p           = dData.p;
 
   return pData;
 }
@@ -104,8 +96,7 @@ void GraphPlanner::valueIteration()
 
   double alpha = 0.5;
 
-  values_ = std::vector< double >( graph_.size(), 0 ); // distance from root to vertex[i]
-
+  values_ = std::vector< double >( graph_.size(), -5 ); // distance from root to vertex[i]
 
   auto comp = [ & ]( const NodeTypePtr & a, const NodeTypePtr & b ) -> bool
   {
@@ -152,14 +143,14 @@ void GraphPlanner::valueIteration()
             values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
           }
         }
-        else
+        else // other agent
         {
           double newValue = 0;
 
           uint n = u->children().size();
           for( auto v : u->children() )
           {
-            newValue += 1.0 / n * values_[ v->id() ] ;
+            newValue += 1.0 / n * values_[ v->id() ] ; // average
           }
 
           values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;

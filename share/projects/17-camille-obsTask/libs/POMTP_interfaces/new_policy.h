@@ -26,6 +26,7 @@ struct NewPolicyNodeData
   std::vector< std::string > leadingKomoArgs;
   bool terminal;
   double markovianReturn;
+  double p;
 
   friend class boost::serialization::access;
   template<class Archive>
@@ -35,6 +36,7 @@ struct NewPolicyNodeData
     ar & leadingKomoArgs;
     ar & terminal;
     ar & markovianReturn;
+    ar & p;
   }
 };
 
@@ -72,6 +74,8 @@ public:
   double value() const { return value_; }
   enum StatusType status() const { return status_; }
   bool feasible()        const { return value_ > - std::numeric_limits< double >::infinity(); }
+
+  uint N() const { return root_->data().beliefState.size(); }
 
   // io
   void save( const std::string & file ) const;
