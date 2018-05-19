@@ -303,12 +303,14 @@ void DecisionGraph::copy( const DecisionGraph & graph )
       for( auto v : uOriginal->children() )
       {
         auto vCopy = uCopy->makeChild( v->data() );
+        vCopy->setId( v->id() );
 
         Q.push( std::make_pair( v, vCopy ) );
 
         nodes_.push_back( vCopy );
 
-        CHECK( v->data().leadingArtifact == vCopy->data().leadingArtifact,"" );
+        CHECK( v->id() == vCopy->id(), "" );
+        CHECK( v->data().leadingArtifact == vCopy->data().leadingArtifact, "" );
 
         if( vCopy->data().terminal )
         {

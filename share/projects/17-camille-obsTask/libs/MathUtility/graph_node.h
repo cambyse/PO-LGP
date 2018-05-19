@@ -62,6 +62,7 @@ public:
     return siblings;
   }
   uint id() const { return id_; }
+  void setId( uint id ) { id_ = id; }
   uint depth() const { return depth_; }
   T data() const { return data_; }
   T& data() { return data_; }

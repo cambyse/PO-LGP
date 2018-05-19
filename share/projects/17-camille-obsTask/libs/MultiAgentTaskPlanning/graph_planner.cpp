@@ -32,7 +32,7 @@ void GraphPlanner::setFol( const std::string & descrition )
 
 void GraphPlanner::solve()
 {
-  buildGraph( maxDepth_ );
+  buildGraph();
 
   valueIteration();
 
@@ -67,14 +67,14 @@ MotionPlanningOrder GraphPlanner::getPlanningOrder() const
   return MotionPlanningOrder( 0 );
 }
 
-void GraphPlanner::buildGraph( int maxSteps )
+void GraphPlanner::buildGraph()
 {
   if( ! parser_.successfullyParsed() )
   {
     return;
   }
 
-  graph_.build( maxSteps );
+  graph_.build( maxDepth_ );
 }
 
 NewPolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData ) const
@@ -82,7 +82,6 @@ NewPolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dDat
   NewPolicyNodeData pData;
 
   pData.beliefState = dData.beliefState;
-  pData.terminal    = dData.terminal;
   pData.markovianReturn = r0_;
   pData.leadingKomoArgs = decisionArtifactToKomoArgs( dData.leadingArtifact );
   pData.p           = dData.p;
@@ -228,7 +227,6 @@ void GraphPlanner::decideOnDecisionGraphCopy()
       Q.push( v );
     }
   }
-  //decidedGraph_.saveGraphToFile( "lastSolution.gv" );
 }
 
 void GraphPlanner::buildPolicy()

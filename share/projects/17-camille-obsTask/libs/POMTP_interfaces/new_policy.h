@@ -24,7 +24,6 @@ struct NewPolicyNodeData
 {
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
-  bool terminal;
   double markovianReturn;
   double p;
 
@@ -34,7 +33,6 @@ struct NewPolicyNodeData
   {
     ar & beliefState;
     ar & leadingKomoArgs;
-    ar & terminal;
     ar & markovianReturn;
     ar & p;
   }

@@ -34,6 +34,28 @@ NewPolicy::NewPolicy( const GraphNodeTypePtr & root )
   , root_( root )
 {
   policyNumber++;
+
+  // reconstruct the leafs from root
+  std::list < GraphNodeTypePtr > Q;
+  Q.push_back( root );
+
+  while ( ! Q.empty() )
+  {
+    auto n = Q.front();
+    Q.pop_front();
+
+    if( n->children().size() == 0 )
+    {
+      leafs_.push_back( n );
+    }
+    else
+    {
+      for( auto c : n->children() )
+      {
+        Q.push_back( c );
+      }
+    }
+  }
 }
 
 NewPolicy::NewPolicy( const NewPolicy & policy )
@@ -122,7 +144,7 @@ void NewPolicy::copy( const NewPolicy & policy )
 
         Q.push( std::make_pair( v, vCopy ) );
 
-        if( vCopy->data().terminal )
+        if( v->children().size() == 0 )
         {
           leafs_.push_back( vCopy );
         }

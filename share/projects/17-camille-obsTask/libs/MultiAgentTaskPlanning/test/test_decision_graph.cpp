@@ -177,7 +177,7 @@ TEST(DecisionGraph, buildFromRootDouble2WD3) {
   ASSERT_EQ( graph.size(), 24 );
 }
 
-TEST(DecisionGraph, decisionGraphCopy) {
+TEST(DecisionGraph, decisionGraphCopy1) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
@@ -186,21 +186,6 @@ TEST(DecisionGraph, decisionGraphCopy) {
 
   ASSERT_NE( graph.root(), graphCopy.root() );
   ASSERT_EQ( graph.size(), graphCopy.size() );
-
-//  auto originalNodes = graph.nodes();
-//  auto nodesCopy     = graphCopy.nodes();
-
-//  auto o = originalNodes.begin();
-//  auto c = nodesCopy.begin();
-//  for( auto i = 0; i < originalNodes.size(); ++i )
-//  {
-//    auto original = o->lock();
-//    auto copy     = c->lock();
-
-//    ASSERT_EQ( original->data().leadingArtifact, copy->data().leadingArtifact );
-//    ++o;
-//    ++c;
-//  }
 }
 
 TEST(DecisionGraph, decisionGraphAssignment) {
@@ -210,6 +195,42 @@ TEST(DecisionGraph, decisionGraphAssignment) {
   graph.build(1);
   DecisionGraph graphCopy;
   graphCopy = graph;
+
+  ASSERT_NE( graph.root(), graphCopy.root() );
+  ASSERT_EQ( graph.size(), graphCopy.size() );
+}
+
+TEST(DecisionGraph, decisionGraphAssignment2) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-single-agent-1w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(3);
+  DecisionGraph graphCopy;
+  graphCopy = graph;
+
+  std::list< std::pair< DecisionGraph::GraphNodeType::ptr, DecisionGraph::GraphNodeType::ptr > > Q;
+  Q.push_back( std::make_pair( graph.root(), graphCopy.root() ) );
+
+  while( ! Q.empty() )
+  {
+    auto pair = Q.front();
+    Q.pop_front();
+
+    auto original = pair.first;
+    auto copy     = pair.second;
+
+    EXPECT_EQ( original->id(), copy->id() );
+
+    auto originalChildrenL = original->children();
+    auto copyChildrenL     = copy->children();
+    std::vector< DecisionGraph::GraphNodeType::ptr > originalChildren{ originalChildrenL.begin(), originalChildrenL.end() };
+    std::vector< DecisionGraph::GraphNodeType::ptr > copyChildren{ copyChildrenL.begin(), copyChildrenL.end() };
+
+    for( auto i = 0; i < originalChildren.size(); ++i )
+    {
+      Q.push_back( std::make_pair( originalChildren[i], copyChildren[i] ) );
+    }
+  }
 
   ASSERT_NE( graph.root(), graphCopy.root() );
   ASSERT_EQ( graph.size(), graphCopy.size() );
