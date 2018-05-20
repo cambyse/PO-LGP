@@ -573,9 +573,13 @@ void NewKOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       }
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-
-//      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-      //komo->checkGradients();
+//      if( leaf->id() == 3 )
+//      {
+//        //      komo->plotTrajectory();
+//        komo->displayTrajectory( 0.02, true );
+//        komo->saveTrajectory( "-j-" + std::to_string( w ) );
+//        komo->plotVelocity( "-j-"   + std::to_string( w ) );
+//      }
 
       Graph result = komo->getReport();
       //DEBUG( FILE("z.problem.cost") << result; )
@@ -653,7 +657,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
             auto parent = node->parent().get();
             for( auto x = 0; x < N; ++x )
             {
-              if( parent->data().beliefState[ x ] > 0 )
+              if( node->data().beliefState[ x ] > 0 )
               {
                 CHECK( bsToLeafs_( x ) != nullptr, "no leaf for this state!!?" );
 
@@ -663,7 +667,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
                 auto pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
 
-                q += parent->data().beliefState[ x ] * pathLeafx( nodeSlice ).q;
+                q += node->data().beliefState[ x ] * pathLeafx( nodeSlice ).q;
 
                 nSupport++;
               }
@@ -722,7 +726,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
-//     if( leaf->id() == 2 )
+//     if( leaf->id() == 3 )
 //     {
 //  //      komo->plotTrajectory();
 //        komo->displayTrajectory( 0.02, true );
