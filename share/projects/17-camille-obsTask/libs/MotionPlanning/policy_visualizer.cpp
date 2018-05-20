@@ -56,7 +56,7 @@ PolicyVisualizer::PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< ml
 
         views_[ index ]->setConfigurations( configurations );
 
-        views_[ index ]->copy.gl().camera.setPosition(0., 0., 12);
+        views_[ index ]->copy.gl().camera.setPosition(0., 0., 20);
         views_[ index ]->copy.gl().camera.focus(0, 0, 0);
 
 //            setHeightAngle(12.);

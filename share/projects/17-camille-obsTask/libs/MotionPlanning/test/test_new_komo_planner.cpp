@@ -206,7 +206,7 @@ TEST_F(NewKomoPlannerFixture, ParseKinFileDoesntThrow2w)
 /////////////////////SINGLE AGENT OBSERVABLE/////////////////////////////
 TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WMarkovianPath)
 {
-  EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin.g" ) );
+  planner.setKin( "data/LGP-overtaking-kin.g" );
 
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
@@ -214,12 +214,13 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WMarkovianPath)
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
-  planner.solveAndInform( po, policy );
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
 }
 
 TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WJointPath)
 {
-  EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin.g" ) );
+  planner.setKin( "data/LGP-overtaking-kin.g" );
 
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
@@ -227,7 +228,8 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WJointPath)
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "jointPath" );
 
-  planner.solveAndInform( po, policy );
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
 }
 
 TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WDisplay)
@@ -244,7 +246,46 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WDisplay)
 }
 
 /////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
+TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WMarkovianPath)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "markovJointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WJointPath)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WDisplay)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
+}
 
 ////////////////////////////////
 int main(int argc, char **argv)

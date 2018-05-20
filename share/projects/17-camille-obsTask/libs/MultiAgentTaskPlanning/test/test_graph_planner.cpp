@@ -112,9 +112,11 @@ TEST_F(GraphPlannerTest, PolicySave) {
   tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
   tp.solve();
   auto policy = tp.getNewPolicy();
-  const std::string policyFileName( "saved_policy.po" );
-  policy.save( policyFileName );
-  ASSERT_TRUE( boost::filesystem::exists( policyFileName ) );
+  const std::string policyFileName( "LGP-overtaking-single-agent-2w" );
+  policy.save( policyFileName + ".po" );
+  policy.saveToGraphFile( policyFileName + ".gv" );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".po" ) );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".gv" ) );
 }
 
 TEST_F(GraphPlannerTest, PolicySaveToGraph) {
@@ -122,10 +124,11 @@ TEST_F(GraphPlannerTest, PolicySaveToGraph) {
   tp.setMaxDepth( 2 );
   tp.solve();
   auto policy = tp.getNewPolicy();
-  const std::string policyFileName( "LGP-overtaking-double-agent-2w.gv" );
-  policy.saveToGraphFile( policyFileName );
-  policy.save( "LGP-overtaking-double-agent-2w-policy.po" );
-  ASSERT_TRUE( boost::filesystem::exists( policyFileName ) );
+  const std::string policyFileName( "LGP-overtaking-double-agent-2w" );
+  policy.save( policyFileName + ".po" );
+  policy.saveToGraphFile( policyFileName + ".gv" );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".po" ) );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".gv" ) );
 }
 
 TEST_F(GraphPlannerTest, PolicyLeafs) {
@@ -135,9 +138,9 @@ TEST_F(GraphPlannerTest, PolicyLeafs) {
   tp.saveGraphToFile( "LGP-overtaking-single-agent-1w-decision-graph.gv" );
   tp.saveDecidedGraphToFile( "LGP-overtaking-single-agent-1w-decided-decision-graph.gv" );
   auto policy = tp.getNewPolicy();
-  const std::string policyFileName( "LGP-overtaking-single-agent-1w-policy.gv" );
-  policy.saveToGraphFile( policyFileName );
-  policy.save( "LGP-overtaking-single-agent-1w-policy.po" );
+  const std::string policyFileName( "LGP-overtaking-single-agent-1w-policy" );
+  policy.save( policyFileName + ".po" );
+  policy.saveToGraphFile( policyFileName + ".gv" );
   auto leafs = policy.leafs();
   auto leaf = leafs.front();
   EXPECT_EQ( leafs.size(), 1 );
