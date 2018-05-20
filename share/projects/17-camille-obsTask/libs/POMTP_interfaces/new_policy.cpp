@@ -153,4 +153,19 @@ void NewPolicy::copy( const NewPolicy & policy )
   }
 }
 
+std::list< NewPolicy::GraphNodeTypePtr > getPathTo( const NewPolicy::GraphNodeTypePtr & node )
+{
+  std::list< NewPolicy::GraphNodeTypePtr > path;
 
+  auto n = node;
+
+  path.push_front( n );
+
+  while( n->parent() )
+  {
+    path.push_front( n->parent() );
+    n = n->parent();
+  }
+
+  return path;
+}

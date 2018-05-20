@@ -13,8 +13,6 @@ find_path( MLR_LIBRARIES_DIR
            NAMES libCore.so
            PATHS "${PROJECT_SOURCE_DIR}/../../../../src" )
 
-#message( "path Camille: ${PROJECT_SOURCE_DIR}/../../../../src" )
-
 include_directories( ${MLR_LIBRARIES_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )
 

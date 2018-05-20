@@ -305,7 +305,7 @@ void NewKOMOPlanner::display( const NewPolicy & policy, double sec )
   mlr::wait( sec, true );
 }
 
-void NewKOMOPlanner::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+void NewKOMOPlanner::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   komoFactory_.registerTask( type, grounder );
 }
@@ -521,24 +521,26 @@ void NewKOMOPlanner::optimizePath( NewPolicy & policy )
 {
   bsToLeafs_             = mlr::Array< PolicyNodePtr > ( policy.N() );
 
-  for( auto l : policy. )
+  for( auto l : policy.leafs() )
   {
-    optimizePathTo( l );
+    optimizePathTo( l.lock() );
   }
 }
 
-void NewKOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
+void NewKOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 {
-  pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( leaf->N() );
-  pathXSolution_[ leaf ] = mlr::Array< arr                               >( leaf->N() );
+  const auto N = leaf->data().beliefState.size();
+
+  pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( N );
+  pathXSolution_[ leaf ] = mlr::Array< arr                               >( N );
 
   //-- collect 'path nodes'
-  PolicyNode::L treepath = getPathTo( leaf );
+  auto treepath = getPathTo( leaf );
 
   // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < leaf->N(); ++w )
+  for( auto w = 0; w < N; ++w )
   {
-    if( leaf->bs()( w ) > eps() )
+    if( leaf->data().beliefState[ w ] > eps() )
     {
       // indicate this leaf as terminal for this node, this is used during the joint optimization..
       bsToLeafs_( w ) = leaf;
@@ -547,8 +549,9 @@ void NewKOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
+      auto time = leaf->depth(); // tmp camille
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( phase_start_offset_ + leaf->time() + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( phase_start_offset_ + time + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
@@ -559,8 +562,8 @@ void NewKOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
 
       for( auto node:treepath )
       {
-        auto time = ( node->parent() ? node->parent()->time(): 0. );     // get parent time
-        komo->groundTasks( phase_start_offset_ + time, *node->states()( w ) ); // ground parent action (included in the initial state)
+        auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
+        komo->groundTasks( phase_start_offset_ + time, node->data().leadingKomoArgs ); // ground parent action (included in the initial state)
       }
 
 //      DEBUG( FILE("z.fol") <<fol; )
@@ -596,35 +599,38 @@ void NewKOMOPlanner::optimizePathTo( const PolicyNode::ptr & leaf )
   }
 }
 
-void NewKOMOPlanner::optimizeJointPath( Policy::ptr & policy )
+void NewKOMOPlanner::optimizeJointPath( NewPolicy & policy )
 {
-  for( auto l : policy->leafs() )
+  for( auto l : policy.leafs() )
   {
-    optimizeJointPathTo( l );
+    optimizeJointPathTo( l.lock() );
   }
 }
 
-void NewKOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
+void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 {
-  jointPathKinFrames_  [ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( leaf->N() );
-  jointPathCosts_      [ leaf ] = arr( leaf->N() );
-  jointPathConstraints_[ leaf ] = arr( leaf->N() );
-  jointPathCostsPerPhase_[ leaf ] = mlr::Array< arr >( leaf->N() );
+  const auto N = leaf->data().beliefState.size();
+
+  jointPathKinFrames_  [ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( N );
+  jointPathCosts_      [ leaf ] = arr( N );
+  jointPathConstraints_[ leaf ] = arr( N );
+  jointPathCostsPerPhase_[ leaf ] = mlr::Array< arr >( N );
 
   //-- collect 'path nodes'
-  PolicyNode::L treepath = getPathTo( leaf );
+  auto treepath = getPathTo( leaf );
 
   // solve problem for all ( relevant ) worlds
-  for( auto w = 0; w < leaf->N(); ++w )
+  for( auto w = 0; w < N; ++w )
   {
-    if( leaf->bs()( w ) > eps() )
+    if( leaf->data().beliefState[ w ] > eps() )
     {
       // create komo
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
+      auto leafTime = leaf->depth() * 1.0;
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( phase_start_offset_ + leaf->time() + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
@@ -634,23 +640,24 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
       for( auto node:treepath )
       {
         // set task
-        auto time = ( node->parent() ? node->parent()->time(): 0. );   // get parent time
+        auto time = ( node->parent() ? node->depth() * 1.0 : 0. );   // get parent time
 
-        komo->groundTasks( phase_start_offset_ +  time, *node->states()( w ) );          // ground parent action (included in the initial state)
+        komo->groundTasks( phase_start_offset_ +  time, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
 
-        if( node->time() > 0 )
+        if( node->depth() > 0 )
         {
           for( auto s = 1; s < komo->stepsPerPhase; ++s )
           {
             uint stepsPerPhase = komo->stepsPerPhase; // get number of steps per phases
-            uint nodeSlice = stepsPerPhase * ( phase_start_offset_ + node->time() ) - s;
+            uint nodeSlice = stepsPerPhase * ( phase_start_offset_ + node->depth() ) - s;
             arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
 
             // set constraints enforcing the path equality among worlds
             int nSupport = 0;
-            for( auto x = 0; x < leaf->N(); ++x )
+            auto parent = node->parent().get();
+            for( auto x = 0; x < N; ++x )
             {
-              if( node->parent()->bs()( x ) > 0 )
+              if( parent->data().beliefState[ x ] > 0 )
               {
                 CHECK( bsToLeafs_( x ) != nullptr, "no leaf for this state!!?" );
 
@@ -660,7 +667,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
 
                 auto pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
 
-                q += node->parent()->bs()( x ) * pathLeafx( nodeSlice ).q;
+                q += parent->data().beliefState[ x ] * pathLeafx( nodeSlice ).q;
 
                 nSupport++;
               }
@@ -697,7 +704,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
               }
 
               AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask );  // tmp camille, think to delete it, or komo does it?
-              double slice_t = phase_start_offset_ + node->time() - double( s ) / stepsPerPhase;
+              double slice_t = phase_start_offset_ + node->depth() - double( s ) / stepsPerPhase;
               komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
               //
@@ -755,7 +762,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNode::ptr & leaf )
   }
 }
 
-void freeKomo( ExtensibleKOMO::ptr komo )
+void freeKomo( NewExtensibleKOMO::ptr komo )
 {
   listDelete( komo->configurations );
   listDelete( komo->tasks );

@@ -16,8 +16,9 @@ foreach(test ${tests})
     get_filename_component(test_name ${test} NAME_WE)
     add_executable(${test_name} ${test})
     target_link_libraries(${test_name}
+                          GeometricUtilityTasks
                           MotionPlanning
-                          ${GTEST_LIBRARIES}
+                          #${GTEST_LIBRARIES}
                           gtest
                           pthread
                           )

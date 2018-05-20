@@ -104,3 +104,5 @@ private:
   double value_; // expected cumulated rewards
   enum StatusType status_;
 };
+
+std::list< NewPolicy::GraphNodeTypePtr > getPathTo( const NewPolicy::GraphNodeTypePtr & node );

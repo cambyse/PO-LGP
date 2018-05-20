@@ -5,14 +5,13 @@
 #include <new_policy.h>
 #include <motion_planner.h>
 
-#include <komo_factory.h>
+#include <new_komo_factory.h>
 
 namespace mp
 {
 
 class NewKOMOPlanner : public MotionPlanner
 {
-  using SymbolGrounder = std::function<void( double time, const Graph& facts, Node *n, ExtensibleKOMO *, int verbose )>;
   using PolicyNodePtr = NewPolicy::GraphNodeTypePtr;
 
 public:
@@ -26,7 +25,7 @@ public:
   void display( const NewPolicy &, double );
 
   // ground symbols
-  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  void registerTask( const std::string & type, const SymbolGrounder & grounder );
 
   void setNSteps( uint n ) { microSteps_ = n; }
 
@@ -34,27 +33,27 @@ private:
   /// MARKOVIAN
   // poses
   void optimizePoses( NewPolicy & );
-  void optimizePosesFrom( const NewPolicy::GraphNodeTypePtr & );
+  void optimizePosesFrom( const PolicyNodePtr & );
 
   // markovian path
   void optimizeMarkovianPath( NewPolicy &  );
-  void optimizeMarkovianPathFrom( const NewPolicy::GraphNodeTypePtr & );
+  void optimizeMarkovianPathFrom( const PolicyNodePtr & );
 
   /// NON MARKOVIAN
   void clearLastNonMarkovianResults();
   // path
   void optimizePath( NewPolicy & );
-  void optimizePathTo( const NewPolicy::GraphNodeType & );
+  void optimizePathTo( const PolicyNodePtr & );
 
   // joint path
   void optimizeJointPath( NewPolicy & );
-  void optimizeJointPathTo( const NewPolicy::GraphNodeType & );
+  void optimizeJointPathTo( const PolicyNodePtr & );
 
 private:
   // state
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_;
 
-  KOMOFactory komoFactory_;
+  NewKOMOFactory komoFactory_;
 
   // pose
   std::map< uint, mlr::Array< mlr::KinematicWorld > > effKinematics_;
@@ -90,6 +89,6 @@ private:
   uint microSteps_     = 20;
 };
 
-void freeKomo( ExtensibleKOMO::ptr komo );
+void freeKomo( NewExtensibleKOMO::ptr komo );
 
 }
