@@ -43,7 +43,7 @@ PolicyVisualizer::PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< ml
       mlr::Array< mlr::KinematicWorld > & traj = (*leaf)( w );
       if( traj.N > 0 )
       {
-        std::string windowName = name + std::string( "-world-" ) + std::to_string( w );
+        std::string windowName = name + std::string( "-world-" ) + std::to_string( w ) + " - " + std::to_string( index ) ;
 
         views_[ index ] = std::make_shared< OrsPathViewer >( windowName.c_str(),  0.05, -0 );
 

@@ -39,16 +39,12 @@ public:
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void groundTasks( double phase, const std::vector< std::string >& facts, int verbose=0 );
 
-  void setPrefixSetup() { prefixSetup_ = true; }
-  bool isPrefixSetup() const { return prefixSetup_; }
-
   void saveTrajectory( const std::string & suffix = "" ) const;
   void plotVelocity( const std::string & suffix = "" ) const;
   arr getCostsPerPhase();
 
 private:
   std::map< std::string, SymbolGrounder > tasks_;
-  bool prefixSetup_ = false; //
 };
 
 //=====ExtensibleKOMO==============================================

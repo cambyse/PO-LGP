@@ -77,50 +77,49 @@ private:
 
 
 /////////////////Grounders////////////////////
-void groundPrefixIfNeeded( mp::NewExtensibleKOMO * komo, int verbose  )
+void init( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
 {
-  if( ! komo->isPrefixSetup() )
-  {
-    komo->setPrefixSetup();
+  // road bounds
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
-    // road bounds
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
+  // min speed
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
-    // min speed
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  // truck speed
+  arr truck_speed{ 0.03, 0, 0 };
+  truck_speed( 0 ) = 0.03;
+  komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
 
-    // truck speed
-    arr truck_speed{ 0.03, 0, 0 };
-    truck_speed( 0 ) = 0.03;
-    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
-    //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
-    //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+  // min speed
+  komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
+  // collision
+  komo->activateCollisions( "car_ego", "truck" );
+  komo->activateCollisions( "car_ego", "car_op" );
+  komo->setCollisions( true );
+}
 
-    // opposite car speed
-    arr op_speed{ -0.03, 0, 0 };
-    op_speed( 0 ) = -0.03;
-    komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+void groundInitSingleAgent( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+{
+  init( phase, args, komo, verbose );
 
-    komo->activateCollisions( "car_ego", "truck" );
-    komo->activateCollisions( "car_ego", "car_op" );
+  // opposite car speed
+  arr op_speed{ -0.03, 0, 0 };
+  komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+}
 
-    // min speed
-    komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+void groundInitDoubleAgent( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+{
+  init( phase, args, komo, verbose );
 
-    // collision
-    komo->activateCollisions( "car_ego", "truck" );
-    komo->activateCollisions( "car_ego", "car_op" );
-    komo->setCollisions( true );
-  }
+  arr op_speed{ -0.03, 0, 0 };
+  komo->setVelocity( 0, 1.5, "car_op", NULL, OT_eq, op_speed );
 }
 
 void groundLook( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   //
   const double t_start = phase;
   const double t_end =   phase + 1;
@@ -137,8 +136,6 @@ void groundLook( double phase, const std::vector< std::string > & args, mp::NewE
 
 void groundOvertake( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   //
   const double t_start = phase;
   const double t_end =   phase + 1.0;
@@ -156,8 +153,6 @@ void groundOvertake( double phase, const std::vector< std::string > & args, mp::
 
 void groundFollow( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   //
   const double t_start = phase;
   const double t_end =   phase + 1.0;
@@ -171,6 +166,43 @@ void groundFollow( double phase, const std::vector< std::string > & args, mp::Ne
     std::cout << t_start << "->" << t_end << ": " << " follow " << args[0] << " at " << args[1] << std::endl;
   }
 }
+
+void groundAccelerate( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+{
+  //
+  const double t_start = phase;
+  const double t_end =   phase + 1.0;
+  //
+
+  // opposite car speed
+  arr op_speed{ -0.05, 0, 0 };
+  komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
+}
+
+void groundContinue( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+{
+  //
+  const double t_start = phase;
+  const double t_end =   phase + 1.0;
+  //
+
+  // opposite car speed
+  arr op_speed{ -0.03, 0, 0 };
+  komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
+}
+
+void groundSlowDown( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+{
+  //
+  const double t_start = phase;
+  const double t_end =   phase + 1.0;
+  //
+
+  // opposite car speed
+  arr op_speed{ -0.02, 0, 0 };
+  komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
+}
+
 //////////////Fixture////////////////
 struct NewKomoPlannerFixture : public ::testing::Test
 {
@@ -178,9 +210,16 @@ protected:
   virtual void SetUp()
   {
     // register symbols
+    planner.registerTask( "initSingleAgent"      , groundInitSingleAgent );
+    planner.registerTask( "initDoubleAgent"      , groundInitDoubleAgent );
+
     planner.registerTask( "__AGENT_0__look"      , groundLook );
     planner.registerTask( "__AGENT_0__overtake"  , groundOvertake );
     planner.registerTask( "__AGENT_0__follow"    , groundFollow );
+
+    planner.registerTask( "__AGENT_1__accelerate", groundAccelerate );
+    planner.registerTask( "__AGENT_1__continue"  , groundContinue );
+    planner.registerTask( "__AGENT_1__slow_down" , groundSlowDown );
   }
 
   virtual void TearDown()
@@ -211,6 +250,9 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WMarkovianPath)
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
 
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
+
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
@@ -224,6 +266,9 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WJointPath)
 
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "jointPath" );
@@ -239,6 +284,9 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WDisplay)
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
 
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
+
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "jointPath" );
 
@@ -252,6 +300,9 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WMarkovianPath)
 
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "markovJointPath" );
@@ -267,6 +318,9 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WJointPath)
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
 
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
+
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "jointPath" );
 
@@ -280,6 +334,60 @@ TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WDisplay)
 
   NewPolicy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
+}
+
+/////////////////////TWO AGENTS FULLY OBSERVABLE/////////////////////////////
+TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WMarkovianPath)
+{
+  planner.setKin( "data/LGP-overtaking-kin.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-double-agent-1w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "markovJointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WJointPath)
+{
+  planner.setKin( "data/LGP-overtaking-kin.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-double-agent-1w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WDisplay)
+{
+  planner.setKin( "data/LGP-overtaking-kin.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-double-agent-1w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
   MotionPlanningOrder po( policy.id() );
   po.setParam( "type", "jointPath" );

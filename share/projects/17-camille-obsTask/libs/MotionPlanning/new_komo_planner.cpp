@@ -726,7 +726,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
-//     if( leaf->id() == 3 )
+//     if( leaf->id() == 7 )
 //     {
 //  //      komo->plotTrajectory();
 //        komo->displayTrajectory( 0.02, true );
