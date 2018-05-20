@@ -124,6 +124,7 @@ TEST_F(GraphPlannerTest, PolicySaveToGraph) {
   auto policy = tp.getNewPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-2w.gv" );
   policy.saveToGraphFile( policyFileName );
+  policy.save( "LGP-overtaking-double-agent-2w-policy.po" );
   ASSERT_TRUE( boost::filesystem::exists( policyFileName ) );
 }
 
@@ -136,19 +137,12 @@ TEST_F(GraphPlannerTest, PolicyLeafs) {
   auto policy = tp.getNewPolicy();
   const std::string policyFileName( "LGP-overtaking-single-agent-1w-policy.gv" );
   policy.saveToGraphFile( policyFileName );
+  policy.save( "LGP-overtaking-single-agent-1w-policy.po" );
   auto leafs = policy.leafs();
   auto leaf = leafs.front();
   EXPECT_EQ( leafs.size(), 1 );
   EXPECT_EQ( leaf.lock()->id(), 2 );
 }
-
-//TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
-//  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
-//  tp.solve();
-//  auto policy = tp.getPolicy();
-//  ASSERT_NE( policy, nullptr );
-//}
-// - early stop in VI if stable
 
 //
 int main(int argc, char **argv)

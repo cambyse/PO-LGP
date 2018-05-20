@@ -54,6 +54,10 @@ void NewExtensibleKOMO::registerTask( const std::string & type, const SymbolGrou
 void NewExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >& facts, int verbose )
 {
   //std::cout << "facts:" << facts << std::endl;
+  if( facts.empty() )
+  {
+    return;
+  }
 
   auto type = facts.front();
 

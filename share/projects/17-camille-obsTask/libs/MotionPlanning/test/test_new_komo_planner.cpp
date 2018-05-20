@@ -174,18 +174,24 @@ void groundFollow( double phase, const std::vector< std::string > & args, mp::Ne
 //////////////Fixture////////////////
 struct NewKomoPlannerFixture : public ::testing::Test
 {
+protected:
+  virtual void SetUp()
+  {
+    // register symbols
+    planner.registerTask( "__AGENT_0__look"      , groundLook );
+    planner.registerTask( "__AGENT_0__overtake"  , groundOvertake );
+    planner.registerTask( "__AGENT_0__follow"    , groundFollow );
+  }
+
+  virtual void TearDown()
+  {
+
+  }
+
   mp::NewKOMOPlanner planner;
 };
 
 /////////////////////////////////////
-
-TEST_F(NewKomoPlannerFixture, AddGrounderDoesntThrow)
-{
-  // register symbols
-  EXPECT_NO_THROW( planner.registerTask( "komoLook"      , groundLook ) );
-  EXPECT_NO_THROW( planner.registerTask( "komoOvertake"  , groundOvertake ) );
-  EXPECT_NO_THROW( planner.registerTask( "komoFollow"    , groundFollow ) );
-}
 
 TEST_F(NewKomoPlannerFixture, ParseKinFileDoesntThrow1w)
 {
@@ -196,6 +202,48 @@ TEST_F(NewKomoPlannerFixture, ParseKinFileDoesntThrow2w)
 {
   EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" ) );
 }
+
+/////////////////////SINGLE AGENT OBSERVABLE/////////////////////////////
+TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WMarkovianPath)
+{
+  EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin.g" ) );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "markovJointPath" );
+
+  planner.solveAndInform( po, policy );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WJointPath)
+{
+  EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin.g" ) );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  planner.solveAndInform( po, policy );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WDisplay)
+{
+  planner.setKin( "data/LGP-overtaking-kin.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.display( policy, 1.0 ) );
+}
+
+/////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
 
 
 ////////////////////////////////

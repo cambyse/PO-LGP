@@ -22,7 +22,7 @@ public:
   void solveAndInform( const MotionPlanningOrder &, NewPolicy & ) override;
 
   // display
-  void display( const NewPolicy &, double );
+  void display( const NewPolicy & policy, double sec ) override;
 
   // ground symbols
   void registerTask( const std::string & type, const SymbolGrounder & grounder );

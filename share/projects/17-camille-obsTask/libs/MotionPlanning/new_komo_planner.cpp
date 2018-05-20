@@ -117,7 +117,7 @@ void NewKOMOPlanner::solveAndInform( const MotionPlanningOrder & po, NewPolicy &
   CHECK( startKinematics_.d0 == policy.N(), "consitency problem, the belief state size of the policy differs from the belief state size of the kinematics" );
   CHECK( po.policyId() == policy.id(), "id of the policy and the planning orders are not consistent" );
 
-  po.getParam( "type" );
+  //po.getParam( "type" );
 
   clearLastNonMarkovianResults();
 
@@ -323,79 +323,76 @@ void NewKOMOPlanner::optimizePosesFrom( const NewPolicy::GraphNodeTypePtr & node
 
   bool feasible = true;
 
-  if( poseConstraints_.find( node->id() ) == poseConstraints_.end() )
+  const auto N = node->data().beliefState.size();
+  //
+  effKinematics_  [ node->id() ] = mlr::Array< mlr::KinematicWorld >( N );
+  poseCosts_      [ node->id() ] = arr( N );
+  poseConstraints_[ node->id() ] = arr( N );
+  //
+  for( auto w = 0; w < N; ++w )
   {
-    const auto N = node->data().beliefState.size();
-    //
-    effKinematics_  [ node->id() ] = mlr::Array< mlr::KinematicWorld >( N );
-    poseCosts_      [ node->id() ] = arr( N );
-    poseConstraints_[ node->id() ] = arr( N );
-    //
-    for( auto w = 0; w < N; ++w )
+    if( node->data().beliefState[ w ] > eps() )
     {
-      if( node->data().beliefState[ w ] > eps() )
-      {
-        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->id() )->second( w ) );
+      mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->id() )->second( w ) );
 
-        // create komo
-        auto komo = komoFactory_.createKomo();
+      // create komo
+      auto komo = komoFactory_.createKomo();
 
-        // set-up komo
-        komo->setModel( kin, true, false, true, false, false );
+      // set-up komo
+      komo->setModel( kin, true, false, true, false, false );
 
-        komo->setTiming( 1., 2, 5., 1/*, true*/ );
-        //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
-        komo->setSquaredQVelocities();
-        komo->setFixSwitchedObjects( -1., -1., 1e3 );
+      komo->setTiming( 1., 2, 5., 1/*, true*/ );
+      //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      komo->setSquaredQVelocities();
+      komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
-        komo->groundTasks( 0., node->data().leadingKomoArgs );
+      komo->groundTasks( 0., node->data().leadingKomoArgs );
 
-        komo->reset(); //huge
+      komo->reset(); //huge
 
-        try{
-          komo->run();
-        } catch( const char* msg ){
-          cout << "KOMO FAILED: " << msg <<endl;
-        }
-
-        //      if( node->id() == 136 )
-        //      {
-        //      komo->displayTrajectory();
-
-        //      mlr::wait();
-        //      }
-        // save results
-        //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-
-        Graph result = komo->getReport();
-
-        double cost = result.get<double>( { "total","sqrCosts" } );
-        double constraints = result.get<double>( { "total","constraints" } );
-
-        poseCosts_[ node->id() ]( w )       = cost;
-        poseConstraints_[ node->id() ]( w ) = constraints;
-
-        // what to do with the cost and constraints here??
-        if( constraints >= maxConstraint_ )
-        {
-          feasible = false;
-        }
-
-        // update effective kinematic
-        effKinematics_[ node->id() ]( w ) = *komo->configurations.last();
-
-        // update switch
-        for( mlr::KinematicSwitch *sw: komo->switches )
-        {
-          //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
-          if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->id() ]( w ) );
-        }
-        //effKinematics_[ node ]( w ).topSort();
-        effKinematics_[ node->id() ]( w ).getJointState();
-
-        // free
-        freeKomo( komo );
+      try{
+        komo->run();
+      } catch( const char* msg ){
+        cout << "KOMO FAILED: " << msg <<endl;
       }
+
+      //      if( node->id() == 136 )
+      //      {
+      //      komo->displayTrajectory();
+
+      //      mlr::wait();
+      //      }
+      // save results
+      //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+
+      Graph result = komo->getReport();
+
+      double cost = result.get<double>( { "total","sqrCosts" } );
+      double constraints = result.get<double>( { "total","constraints" } );
+
+      poseCosts_[ node->id() ]( w )       = cost;
+      poseConstraints_[ node->id() ]( w ) = constraints;
+
+      // what to do with the cost and constraints here??
+      if( constraints >= maxConstraint_ )
+      {
+        feasible = false;
+      }
+
+      // update effective kinematic
+      effKinematics_[ node->id() ]( w ) = *komo->configurations.last();
+
+      // update switch
+      for( mlr::KinematicSwitch *sw: komo->switches )
+      {
+        //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
+        if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->id() ]( w ) );
+      }
+      //effKinematics_[ node ]( w ).topSort();
+      effKinematics_[ node->id() ]( w ).getJointState();
+
+      // free
+      freeKomo( komo );
     }
   }
 
@@ -456,14 +453,14 @@ void NewKOMOPlanner::optimizeMarkovianPathFrom( const NewPolicy::GraphNodeTypePt
           cout << "KOMO FAILED: " << msg <<endl;
         }
 
-        //if( node->id() == 3 )
-        {
-          //komo->displayTrajectory();
-          komo->saveTrajectory( std::to_string( node->id() ) );
-          komo->plotVelocity( std::to_string( node->id() ) );
+//        if( node->id() == 2 )
+//        {
+////          komo->displayTrajectory();
+////          komo->saveTrajectory( std::to_string( node->id() ) );
+////          komo->plotVelocity( std::to_string( node->id() ) );
 
-          //mlr::wait();
-        }
+//          //mlr::wait();
+//        }
 
         Graph result = komo->getReport();
 
@@ -549,9 +546,9 @@ void NewKOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      auto time = leaf->depth(); // tmp camille
+      auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
-      komo->setTiming( phase_start_offset_ + time + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
@@ -628,7 +625,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      auto leafTime = leaf->depth() * 1.0;
+      auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true, false, true, false, false );
       komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
@@ -640,9 +637,8 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       for( auto node:treepath )
       {
         // set task
-        auto time = ( node->parent() ? node->depth() * 1.0 : 0. );   // get parent time
-
-        komo->groundTasks( phase_start_offset_ +  time, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
+        auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
+        komo->groundTasks( phase_start_offset_ + time, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
 
         if( node->depth() > 0 )
         {
@@ -726,13 +722,13 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
-  //    if( w == 1 )
-     {
-  //      komo->plotTrajectory();
- //       komo->displayTrajectory( 0.02, true );
-        komo->saveTrajectory( "-j-" + std::to_string( w ) );
-        komo->plotVelocity( "-j-"   + std::to_string( w ) );
-     }
+//     if( leaf->id() == 2 )
+//     {
+//  //      komo->plotTrajectory();
+//        komo->displayTrajectory( 0.02, true );
+//        komo->saveTrajectory( "-j-" + std::to_string( w ) );
+//        komo->plotVelocity( "-j-"   + std::to_string( w ) );
+//     }
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
 //      komo->checkGradients();
