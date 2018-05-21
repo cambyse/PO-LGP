@@ -19,9 +19,9 @@ joint (lane_1 truck)           { from=<T t( -1.3   0    .05 ) t(0 0 0)> to=<T > 
 
 BELIEF_START_STATE { 
 {
-joint (lane_2 car_op)          { from=<T t( 1.9      0  .05 ) t(0 0 0)> to=<T >  type=3 }
+joint (lane_2 car_op)          { from=<T t( 0.9      0  .05 ) t(0 0 0)> to=<T >  type=3 }
 }
 {
-joint (lane_2 car_op)          { from=<T t( 0.9      0  .05 ) t(0 0 0)> to=<T >  type=3 }
+joint (lane_2 car_op)          { from=<T t( 1.9      0  .05 ) t(0 0 0)> to=<T >  type=3 }
 }
 }

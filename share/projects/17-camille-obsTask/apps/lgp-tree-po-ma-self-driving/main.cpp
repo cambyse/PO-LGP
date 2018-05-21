@@ -15,24 +15,8 @@
 #include <axis_bound.h>
 #include <node_visitors.h>
 
-/*
-sort nodes before expanding?
-dot -Tpng -o policy.png policy.gv
 
-test a logic : mlr/share/example/DomainPlayer
-
-QUESTIONS  :
-- why no proxy?
-- how to solve collision avoidance if objects penetrate
-- kinematic switches ( commented part of the code ) in solvePath, solvePose, etc..
-
-TODO :
-=> constraints are difficult to evaluate with collision avoidance, mybe need a refactoring as in 3/
-2/ symbolic search, use costs from other levels? -> How to inform?           | 1
-5/ collision avoidance, rule for proxy ?, get out of a collision             | 2
-*/
 //===========================================================================
-
 
 static void generatePngImage( const std::string & name )
 {

@@ -395,6 +395,57 @@ TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WDisplay)
   EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
 }
 
+/////////////////////TWO AGENTS PARTIALLY OBSERVABLE/////////////////////////////
+TEST_F(NewKomoPlannerFixture, PlanTwoAgents2WMarkovianPath)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-double-agent-2w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "markovJointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanTwoAgents2WJointPath)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-double-agent-2w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+}
+
+TEST_F(NewKomoPlannerFixture, PlanTwoAgents2WDisplay)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  NewPolicy policy;
+  policy.load( "data/LGP-overtaking-double-agent-2w-policy.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
+
+  MotionPlanningOrder po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
+}
+
 ////////////////////////////////
 int main(int argc, char **argv)
 {

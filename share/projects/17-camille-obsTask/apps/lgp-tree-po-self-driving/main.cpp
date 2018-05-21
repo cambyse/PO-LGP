@@ -17,7 +17,6 @@
 
 //===========================================================================
 
-
 static void generatePngImage( const std::string & name )
 {
   std::string nameCopy( name );

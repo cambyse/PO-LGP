@@ -12,37 +12,34 @@
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
-
-//--------Check integrity-------------//
-
-bool checkPolicyIntegrity( const Policy::ptr & policy )
+static arr extractAgentQMask( const mlr::KinematicWorld & G )  // retrieve agent joints
 {
-  bool isOk = true;
+  uintA selectedBodies;
 
-  std::list< PolicyNode::ptr > fifo;
-  fifo.push_back( policy->root() );
-
-  while( ! fifo.empty()  )
+  for( const auto & f: G.frames )
   {
-    auto node = fifo.back();
-    fifo.pop_back();
-
-    if( ! node->children().empty() )
+    if( f->ats["agent"] && f->ats.get<bool>("agent") )
     {
-      const auto r = node->children().first()->lastReward();
-
-      for( auto c : node->children() )
-      {
-        //CHECK( r == c->lastReward(), "two children don't have the same last reward" );
-
-        isOk = isOk && r == c->lastReward();
-
-        fifo.push_back( c );
-      }
+      selectedBodies.setAppend(f->ID);
     }
   }
 
-  return isOk;
+  // build mask
+  arr qmask = zeros( G.q.d0 );
+
+  for( auto b : selectedBodies )
+  {
+    mlr::Joint *j = G.frames.elem(b)->joint;
+
+    CHECK( j, "incoherence, the joint should not be null since it has been retrieved before" );
+
+    for( auto i = j->qIndex; i < j->qIndex + j->dim; ++i )
+    {
+      qmask( i ) = 1;
+    }
+  }
+
+  return qmask;
 }
 
 //static double updateValue( const NewPolicy::GraphNodeType::ptr & node )
@@ -573,7 +570,7 @@ void NewKOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       }
 
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
-//      if( leaf->id() == 3 )
+//      if( leaf->id() == 10 )
 //      {
 //        //      komo->plotTrajectory();
 //        komo->displayTrajectory( 0.02, true );
@@ -653,8 +650,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
             arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
 
             // set constraints enforcing the path equality among worlds
-            int nSupport = 0;
-            auto parent = node->parent().get();
+            uint nSupport = 0;
             for( auto x = 0; x < N; ++x )
             {
               if( node->data().beliefState[ x ] > 0 )
@@ -675,33 +671,7 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
             if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
             {
-              // retrieve agent joints
-              auto G = *startKinematics_( w );
-
-              uintA selectedBodies;
-
-              for( const auto & f: G.frames )
-              {
-                if( f->ats["agent"] && f->ats.get<bool>("agent") )
-                {
-                  selectedBodies.setAppend(f->ID);
-                }
-              }
-
-              // build mask
-              arr qmask = zeros( G.q.d0 );
-
-              for( auto b : selectedBodies )
-              {
-                mlr::Joint *j = G.frames.elem(b)->joint;
-
-                CHECK( j, "incoherence, the joint should not be null since it has been retrieved before" );
-
-                for( auto i = j->qIndex; i < j->qIndex + j->dim; ++i )
-                {
-                  qmask( i ) = 1;
-                }
-              }
+              arr qmask = extractAgentQMask( *startKinematics_( w ) );
 
               AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask );  // tmp camille, think to delete it, or komo does it?
               double slice_t = phase_start_offset_ + node->depth() - double( s ) / stepsPerPhase;
@@ -734,13 +704,9 @@ void NewKOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 //        komo->plotVelocity( "-j-"   + std::to_string( w ) );
 //     }
 
-//      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
-//      komo->checkGradients();
       auto costs = komo->getCostsPerPhase();
       Graph result = komo->getReport();
-      //komo->getReport(true);
 
-      //DEBUG( FILE("z.problem.cost") << result; )
       double cost = result.get<double>({"total","sqrCosts"});
       double constraints = result.get<double>({"total","constraints"});
 

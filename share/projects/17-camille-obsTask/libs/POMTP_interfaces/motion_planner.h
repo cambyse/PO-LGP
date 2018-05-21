@@ -25,8 +25,6 @@ public:
 
 public:
     virtual void setKin( const std::string & kinDescription ) = 0; // specify start kinematics
-    virtual void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) {}
     virtual void solveAndInform( const MotionPlanningOrder &, NewPolicy & ) = 0;
-    virtual void display( const Policy::ptr &, double sec = 30 ) {};
     virtual void display( const NewPolicy &, double sec = 30 ) {};
 };
