@@ -21,7 +21,7 @@ namespace mp
 
 //==============KOMOFactory==============================================
 
-void KOMOFactory::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+void KOMOFactory::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
 }
@@ -46,29 +46,50 @@ ExtensibleKOMO::ExtensibleKOMO()
 
 }
 
-void ExtensibleKOMO::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+void ExtensibleKOMO::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
 }
 
-void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose )
+void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >& facts, int verbose )
 {
-  std::cout << "facts:" << facts << std::endl;
-
-  for( Node *n:facts )
+  //std::cout << "facts:" << facts << std::endl;
+  if( facts.empty() )
   {
-    if( ! n->parents.N ) continue; // skip not relevant node
-
-    if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
-    {
-      mlr::String type = n->keys.last();
-      tasks_[ type ]( phase, facts, n, this, verbose ); // ground the symbol
-    }
-    else if( n->keys.N && n->keys.last().startsWith("komo") )
-    {
-      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
-    }
+    return;
   }
+
+  auto type = facts.front();
+
+  std::vector< std::string >args;
+  if( facts.size() > 1 )
+  {
+    args = std::vector< std::string > { facts.begin() + 1, facts.end() };
+  }
+
+  if( tasks_.find( type ) != tasks_.end() )
+  {
+    tasks_[ type ]( phase, args, this, verbose ); // ground the symbol
+  }
+  else
+  {
+    HALT("UNKNOWN komo TAG: '" << type <<"'");
+  }
+
+//  for( Node *n:facts )
+//  {
+//    if( ! n->parents.N ) continue; // skip not relevant node
+
+//    if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
+//    {
+//      mlr::String type = n->keys.last();
+//      tasks_[ type ]( phase, facts, n, this, verbose ); // ground the symbol
+//    }
+//    else if( n->keys.N && n->keys.last().startsWith("komo") )
+//    {
+//      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
+//    }
+//  }
 }
 
 void ExtensibleKOMO::saveTrajectory( const std::string & suffix ) const

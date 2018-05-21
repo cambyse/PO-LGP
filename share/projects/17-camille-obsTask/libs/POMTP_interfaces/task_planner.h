@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <policy.h>
+#include <skeleton.h>
 
 class TaskPlanner
 {
@@ -24,9 +24,9 @@ public:
 public:
     virtual void setFol( const std::string & folDescription ) = 0;
     virtual void solve() = 0;
-    virtual void integrate( const Policy::ptr & policy ) = 0;
+    virtual void integrate( const Skeleton & policy ) = 0;
 
     virtual bool terminated() const = 0;
-    virtual Policy::ptr getPolicy() const = 0;
-    virtual MotionPlanningOrder getPlanningOrder() const = 0;
+    virtual Skeleton getPolicy() const = 0;
+    virtual MotionPlanningParameters getPlanningParameters() const = 0;
 };

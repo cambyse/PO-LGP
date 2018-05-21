@@ -65,7 +65,7 @@ TEST_F(GraphPlannerTest, buildGraphDoubleAgent1w) {
 TEST_F(GraphPlannerTest, solveDoubleAgent2w) {
   tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
   tp.solve();
-  auto policy = tp.getNewPolicy();
+  auto policy = tp.getPolicy();
   ASSERT_FALSE( policy.empty() );
 }
 
@@ -111,7 +111,7 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
 TEST_F(GraphPlannerTest, PolicySaveSingleAgent2W) {
   tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
   tp.solve();
-  auto policy = tp.getNewPolicy();
+  auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-single-agent-2w" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
@@ -123,7 +123,7 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1W) {
   tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
   tp.setMaxDepth( 2 );
   tp.solve();
-  auto policy = tp.getNewPolicy();
+  auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-1w" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
@@ -136,7 +136,7 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent2W) {
   tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
   tp.setMaxDepth( 2 );
   tp.solve();
-  auto policy = tp.getNewPolicy();
+  auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-2w" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
@@ -150,7 +150,7 @@ TEST_F(GraphPlannerTest, PolicyLeafs) {
   tp.solve();
   tp.saveGraphToFile( "LGP-overtaking-single-agent-1w-decision-graph.gv" );
   tp.saveDecidedGraphToFile( "LGP-overtaking-single-agent-1w-decided-decision-graph.gv" );
-  auto policy = tp.getNewPolicy();
+  auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-single-agent-1w-policy" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );

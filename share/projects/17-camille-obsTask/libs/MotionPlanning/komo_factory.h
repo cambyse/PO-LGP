@@ -24,42 +24,39 @@ namespace mp
 {
 
 //=====ExtensibleKOMO==============================================
+class ExtensibleKOMO;
+
+typedef std::function<void( double time, const std::vector< std::string >& facts, ExtensibleKOMO *, int verbose )> SymbolGrounder;
 
 class ExtensibleKOMO : public KOMO
 {
-  typedef std::function<void( double time, const Graph& facts, Node *n, ExtensibleKOMO *, int verbose )> SymbolGrounder;
 
 public:
   typedef std::shared_ptr< ExtensibleKOMO > ptr;
 public:
   ExtensibleKOMO();
 
-  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
-  void groundTasks( double phase, const Graph& facts, int verbose=0 );
-
-  void setPrefixSetup() { prefixSetup_ = true; }
-  bool isPrefixSetup() const { return prefixSetup_; }
+  void registerTask( const std::string & type, const SymbolGrounder & grounder );
+  void groundTasks( double phase, const std::vector< std::string >& facts, int verbose=0 );
 
   void saveTrajectory( const std::string & suffix = "" ) const;
   void plotVelocity( const std::string & suffix = "" ) const;
   arr getCostsPerPhase();
 
 private:
-  std::map< mlr::String, SymbolGrounder > tasks_;
-  bool prefixSetup_ = false; //
+  std::map< std::string, SymbolGrounder > tasks_;
 };
 
 //=====ExtensibleKOMO==============================================
 
 class KOMOFactory
 {
-  typedef std::function<void( double, const Graph& facts, Node *n, ExtensibleKOMO *, int verbose )> SymbolGrounder;
 
 public:
-  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  void registerTask( const std::string & type, const SymbolGrounder & grounder );
   std::shared_ptr< ExtensibleKOMO > createKomo() const;
 private:
-  std::map< mlr::String, SymbolGrounder > tasks_;
+  std::map< std::string, SymbolGrounder > tasks_;
 };
 
 }

@@ -1,4 +1,4 @@
-#include "new_komo_planner.h"
+#include "komo_planner.h"
 #include <gtest/gtest.h>
 
 using namespace std;
@@ -77,7 +77,7 @@ private:
 
 
 /////////////////Grounders////////////////////
-void init( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void init( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   // road bounds
   komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
@@ -101,7 +101,7 @@ void init( double phase, const std::vector< std::string > & args, mp::NewExtensi
   komo->setCollisions( true );
 }
 
-void groundInitSingleAgent( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundInitSingleAgent( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   init( phase, args, komo, verbose );
 
@@ -110,7 +110,7 @@ void groundInitSingleAgent( double phase, const std::vector< std::string > & arg
   komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundInitDoubleAgent( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundInitDoubleAgent( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   init( phase, args, komo, verbose );
 
@@ -118,7 +118,7 @@ void groundInitDoubleAgent( double phase, const std::vector< std::string > & arg
   komo->setVelocity( 0, 1.5, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundLook( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundLook( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -134,7 +134,7 @@ void groundLook( double phase, const std::vector< std::string > & args, mp::NewE
   }
 }
 
-void groundOvertake( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundOvertake( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -151,7 +151,7 @@ void groundOvertake( double phase, const std::vector< std::string > & args, mp::
   }
 }
 
-void groundFollow( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundFollow( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -167,7 +167,7 @@ void groundFollow( double phase, const std::vector< std::string > & args, mp::Ne
   }
 }
 
-void groundAccelerate( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundAccelerate( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -179,7 +179,7 @@ void groundAccelerate( double phase, const std::vector< std::string > & args, mp
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundContinue( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundContinue( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -191,7 +191,7 @@ void groundContinue( double phase, const std::vector< std::string > & args, mp::
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundSlowDown( double phase, const std::vector< std::string > & args, mp::NewExtensibleKOMO * komo, int verbose )
+void groundSlowDown( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -204,7 +204,7 @@ void groundSlowDown( double phase, const std::vector< std::string > & args, mp::
 }
 
 //////////////Fixture////////////////
-struct NewKomoPlannerFixture : public ::testing::Test
+struct KomoPlannerFixture : public ::testing::Test
 {
 protected:
   virtual void SetUp()
@@ -227,220 +227,220 @@ protected:
 
   }
 
-  mp::NewKOMOPlanner planner;
+  mp::KOMOPlanner planner;
 };
 
 /////////////////////////////////////
 
-TEST_F(NewKomoPlannerFixture, ParseKinFileDoesntThrow1w)
+TEST_F(KomoPlannerFixture, ParseKinFileDoesntThrow1w)
 {
   EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin.g" ) );
 }
 
-TEST_F(NewKomoPlannerFixture, ParseKinFileDoesntThrow2w)
+TEST_F(KomoPlannerFixture, ParseKinFileDoesntThrow2w)
 {
   EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" ) );
 }
 
 /////////////////////SINGLE AGENT OBSERVABLE/////////////////////////////
-TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WMarkovianPath)
+TEST_F(KomoPlannerFixture, PlanSingleAgent1WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WJointPath)
+TEST_F(KomoPlannerFixture, PlanSingleAgent1WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanSingleAgent1WDisplay)
+TEST_F(KomoPlannerFixture, PlanSingleAgent1WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-single-agent-1w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.display( policy, 1.0 ) );
 }
 
 /////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
-TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WMarkovianPath)
+TEST_F(KomoPlannerFixture, PlanSingleAgent2WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WJointPath)
+TEST_F(KomoPlannerFixture, PlanSingleAgent2WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanSingleAgent2WDisplay)
+TEST_F(KomoPlannerFixture, PlanSingleAgent2WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-single-agent-2w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initSingleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
 }
 
 /////////////////////TWO AGENTS FULLY OBSERVABLE/////////////////////////////
-TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WMarkovianPath)
+TEST_F(KomoPlannerFixture, PlanTwoAgents1WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-double-agent-1w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WJointPath)
+TEST_F(KomoPlannerFixture, PlanTwoAgents1WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-double-agent-1w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanTwoAgents1WDisplay)
+TEST_F(KomoPlannerFixture, PlanTwoAgents1WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-double-agent-1w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
 }
 
 /////////////////////TWO AGENTS PARTIALLY OBSERVABLE/////////////////////////////
-TEST_F(NewKomoPlannerFixture, PlanTwoAgents2WMarkovianPath)
+TEST_F(KomoPlannerFixture, PlanTwoAgents2WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-double-agent-2w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanTwoAgents2WJointPath)
+TEST_F(KomoPlannerFixture, PlanTwoAgents2WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-double-agent-2w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), NewPolicy::INFORMED );
+  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
 }
 
-TEST_F(NewKomoPlannerFixture, PlanTwoAgents2WDisplay)
+TEST_F(KomoPlannerFixture, PlanTwoAgents2WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  NewPolicy policy;
+  Skeleton policy;
   policy.load( "data/LGP-overtaking-double-agent-2w-policy.po" );
 
   // add set up
   policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
 
-  MotionPlanningOrder po( policy.id() );
+  MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.display( policy, 50.0 ) );

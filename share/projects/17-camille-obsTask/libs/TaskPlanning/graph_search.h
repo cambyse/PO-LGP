@@ -5,7 +5,7 @@
 #include <Logic/fol.h>
 #include <Logic/fol_mcts_world.h>
 
-#include <policy.h>
+#include <skeleton.h>
 #include <task_planner.h>
 
 #include <po_graph.h>
@@ -56,7 +56,7 @@ private:
 
   // dynamic programming
   double initialReward_ = -1;
-  Policy::ptr policy_;
+  Skeleton skeleton_;
 
   // constants
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

@@ -19,10 +19,10 @@
 namespace mp
 {
 // the visualizer can work as long as the kinmeatic frames it has to display exist!
-class PolicyVisualizer
+class TrajectoryTreeVisualizer
 {
 public:           // for each terminal node, for each possible world, each frame
-  PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name );
+  TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name );
 
 private:
   std::vector< std::shared_ptr< OrsPathViewer > > views_;

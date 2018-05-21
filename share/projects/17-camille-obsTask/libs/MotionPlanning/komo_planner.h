@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <policy.h>
+#include <skeleton.h>
 #include <motion_planner.h>
 
 #include <komo_factory.h>
@@ -12,42 +12,42 @@ namespace mp
 
 class KOMOPlanner : public MotionPlanner
 {
-  typedef std::function<void( double time, const Graph& facts, Node *n, ExtensibleKOMO *, int verbose )> SymbolGrounder;
+  using PolicyNodePtr = Skeleton::GraphNodeTypePtr;
 
 public:
   // modifiers
   void setKin( const std::string & kinDescription ) override;
 
   // informers
-  void solveAndInform( const MotionPlanningOrder &, Policy::ptr & ) override;
+  void solveAndInform( const MotionPlanningParameters &, Skeleton & ) override;
 
   // display
-  void display( const Policy::ptr &, double ) override;
+  void display( const Skeleton & policy, double sec ) override;
 
   // ground symbols
-  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  void registerTask( const std::string & type, const SymbolGrounder & grounder );
 
   void setNSteps( uint n ) { microSteps_ = n; }
 
 private:
   /// MARKOVIAN
   // poses
-  void optimizePoses( Policy::ptr & );
-  void optimizePosesFrom( const PolicyNode::ptr & );
+  void optimizePoses( Skeleton & );
+  void optimizePosesFrom( const PolicyNodePtr & );
 
   // markovian path
-  void optimizeMarkovianPath( Policy::ptr & );
-  void optimizeMarkovianPathFrom( const PolicyNode::ptr & );
+  void optimizeMarkovianPath( Skeleton &  );
+  void optimizeMarkovianPathFrom( const PolicyNodePtr & );
 
   /// NON MARKOVIAN
   void clearLastNonMarkovianResults();
   // path
-  void optimizePath( Policy::ptr & );
-  void optimizePathTo( const PolicyNode::ptr & );
+  void optimizePath( Skeleton & );
+  void optimizePathTo( const PolicyNodePtr & );
 
   // joint path
-  void optimizeJointPath( Policy::ptr & );
-  void optimizeJointPathTo( const PolicyNode::ptr & );
+  void optimizeJointPath( Skeleton & );
+  void optimizeJointPathTo( const PolicyNodePtr & );
 
 private:
   // state
@@ -65,15 +65,15 @@ private:
   std::map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
 
   // path
-  std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
-  std::map< PolicyNode::ptr, mlr::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
+  std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
+  std::map< PolicyNodePtr, mlr::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
 
   // joint path
-  std::map< PolicyNode::ptr, arr > jointPathCosts_;
-  std::map< PolicyNode::ptr, arr > jointPathConstraints_;
-  std::map< PolicyNode::ptr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
-  std::map< PolicyNode::ptr, mlr::Array< arr > > jointPathCostsPerPhase_;
-  mlr::Array< PolicyNode::ptr > bsToLeafs_; //indicates the leaf terminating for a given state
+  std::map< PolicyNodePtr, arr > jointPathCosts_;
+  std::map< PolicyNodePtr, arr > jointPathConstraints_;
+  std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
+  std::map< PolicyNodePtr, mlr::Array< arr > > jointPathCostsPerPhase_;
+  mlr::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

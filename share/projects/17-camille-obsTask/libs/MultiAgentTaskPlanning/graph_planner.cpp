@@ -41,7 +41,7 @@ void GraphPlanner::solve()
   buildPolicy();
 }
 
-void GraphPlanner::integrate( const Policy::ptr & policy )
+void GraphPlanner::integrate( const Skeleton & policy )
 {
 
 }
@@ -52,19 +52,14 @@ bool GraphPlanner::terminated() const
   return false;
 }
 
-Policy::ptr GraphPlanner::getPolicy() const
-{
-  return nullptr;
-}
-
-NewPolicy GraphPlanner::getNewPolicy() const
+Skeleton GraphPlanner::getPolicy() const
 {
   return policy_;
 }
 
-MotionPlanningOrder GraphPlanner::getPlanningOrder() const
+MotionPlanningParameters GraphPlanner::getPlanningParameters() const
 {
-  return MotionPlanningOrder( 0 );
+  return MotionPlanningParameters( 0 );
 }
 
 void GraphPlanner::buildGraph()
@@ -77,9 +72,9 @@ void GraphPlanner::buildGraph()
   graph_.build( maxDepth_ );
 }
 
-NewPolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData ) const
+SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData ) const
 {
-  NewPolicyNodeData pData;
+  SkeletonNodeData pData;
 
   pData.beliefState = dData.beliefState;
   pData.markovianReturn = r0_;
@@ -233,14 +228,14 @@ void GraphPlanner::buildPolicy()
 {
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
-  std::queue< std::pair< NodeTypePtr, NewPolicy::GraphNodeTypePtr > > Q;
+  std::queue< std::pair< NodeTypePtr, Skeleton::GraphNodeTypePtr > > Q;
 
   // create policy root node from decision graph node
   auto root = decidedGraph_.root();
-  NewPolicyNodeData rootData;
+  SkeletonNodeData rootData;
   rootData.beliefState = root->data().beliefState;
 
-  auto policyRoot = GraphNode< NewPolicyNodeData >::root( rootData );
+  auto policyRoot = GraphNode< SkeletonNodeData >::root( rootData );
 
   Q.push( std::make_pair( decidedGraph_.root(), policyRoot ) );
 
@@ -254,7 +249,7 @@ void GraphPlanner::buildPolicy()
 
     for( auto v : u->children() )
     {
-      NewPolicyNodeData data = decisionGraphtoPolicyData( v->data() );
+      SkeletonNodeData data = decisionGraphtoPolicyData( v->data() );
 
       auto vCopy = uCopy->makeChild( data );
 
@@ -265,7 +260,7 @@ void GraphPlanner::buildPolicy()
     }
   }
 
-  policy_ = NewPolicy( policyRoot );
+  policy_ = Skeleton( policyRoot );
 }
 
 }

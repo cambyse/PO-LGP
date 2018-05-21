@@ -1,10 +1,10 @@
-#include <new_policy_printer.h>
+#include <skeleton_printer.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
-void NewPolicyPrinter::print( const NewPolicy & policy )
+void SkeletonPrinter::print( const Skeleton & skeleton )
 {
-  if( ! policy.root() )
+  if( ! skeleton.root() )
   {
     return;
   }
@@ -12,31 +12,9 @@ void NewPolicyPrinter::print( const NewPolicy & policy )
   ss_ << "digraph g{" << std::endl;
   ss_ << "bgcolor=\"transparent\"";
   ss_ << "{" << std::endl;
-  ss_ << policy.root()->id() << " [style=filled, fillcolor=blue]" << std::endl;
+  ss_ << skeleton.root()->id() << " [style=filled, fillcolor=blue]" << std::endl;
 
-//  for( auto weakN : policy.nodes() )
-//  {
-//    auto n = weakN.lock();
-
-//    if( n )
-//    {
-//      if( n->data().agentId == 0 )
-//      {
-//        ss_ << n->id() << " [shape=square, style=filled, fillcolor=" << ( n->id() == 0 ? "blue" : "cyan" ) << "]" << std::endl;
-//      }
-//      else
-//      {
-//        ss_ << n->id() << " [shape=circle]" << std::endl;
-//      }
-
-//      if( n->data().nodeType == NodeData::NodeType::OBSERVATION )
-//      {
-//        ss_ << n->id() << " [shape=diamond]" << std::endl;
-//      }
-//    }
-//  }
-
-  for( auto weakN : policy.leafs() )
+  for( auto weakN : skeleton.leafs() )
   {
     auto n = weakN.lock();
 
@@ -47,12 +25,12 @@ void NewPolicyPrinter::print( const NewPolicy & policy )
   }
   ss_ << "}" << std::endl;
 
-  saveGraphFrom( policy.root() );
+  saveGraphFrom( skeleton.root() );
 
   ss_ << "}" << std::endl;
 }
 
-void NewPolicyPrinter::saveGraphFrom( const NewPolicy::GraphNodeType::ptr & node )
+void SkeletonPrinter::saveGraphFrom( const Skeleton::GraphNodeType::ptr & node )
 {
   for( auto c : node->children() )
   {

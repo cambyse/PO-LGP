@@ -12,12 +12,12 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include <policy_visualizer.h>
+#include <trajectory_tree_visualizer.h>
 
 namespace mp
 {
 
-PolicyVisualizer::PolicyVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name )
+TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name )
 {
   // get number of views
   uint n = 0;

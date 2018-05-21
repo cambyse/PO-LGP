@@ -20,7 +20,25 @@
 
 #include <boost/serialization/vector.hpp>
 
-struct NewPolicyNodeData
+class MotionPlanningParameters
+{
+public:
+  MotionPlanningParameters( uint policyId )
+    : policyId_( policyId )
+  {
+
+  }
+
+  uint policyId() const { return policyId_; }
+  std::string getParam( const std::string & paramName ) const { CHECK( params_.find( paramName ) != params_.end(), "parameter doesn't exist!" ); return params_.find( paramName )->second; }
+  void setParam( const std::string & paramName, const std::string & value ) { params_[ paramName ] = value; }
+
+private:
+  std::map< std::string, std::string > params_;  // used to store arbitrary info usefull for the motion palnning of a given policy
+  uint policyId_;
+};
+
+struct SkeletonNodeData
 {
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
@@ -38,12 +56,12 @@ struct NewPolicyNodeData
   }
 };
 
-class NewPolicy
+class Skeleton
 {
 public:
-  using ptr = std::shared_ptr< GraphNode< NewPolicyNodeData > >;
-  using GraphNodeType = GraphNode< NewPolicyNodeData >;
-  using GraphNodeTypePtr = std::shared_ptr< GraphNode< NewPolicyNodeData > >;
+  using ptr = std::shared_ptr< GraphNode< SkeletonNodeData > >;
+  using GraphNodeType = GraphNode< SkeletonNodeData >;
+  using GraphNodeTypePtr = std::shared_ptr< GraphNode< SkeletonNodeData > >;
 
   enum StatusType
   {
@@ -52,11 +70,11 @@ public:
   };
 
 public:
-  NewPolicy();
-  NewPolicy( const GraphNodeTypePtr & root );
+  Skeleton();
+  Skeleton( const GraphNodeTypePtr & root );
 
-  NewPolicy( const NewPolicy & );
-  NewPolicy & operator= ( const NewPolicy & );
+  Skeleton( const Skeleton & );
+  Skeleton & operator= ( const Skeleton & );
 
   // modifier
   void addLeaf( const GraphNodeTypePtr & leaf )    { leafs_.push_back( leaf ); }
@@ -92,7 +110,7 @@ public:
   }
 
 private:
-  void copy( const NewPolicy & );
+  void copy( const Skeleton & );
   //void saveFrom( const PolicyNode::ptr & node, std::ostream& os );
 
 private:
@@ -105,4 +123,4 @@ private:
   enum StatusType status_;
 };
 
-std::list< NewPolicy::GraphNodeTypePtr > getPathTo( const NewPolicy::GraphNodeTypePtr & node );
+std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node );

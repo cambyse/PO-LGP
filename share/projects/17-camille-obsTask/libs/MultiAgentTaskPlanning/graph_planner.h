@@ -7,7 +7,7 @@
 #include <Logic/fol.h>
 #include <Logic/fol_mcts_world.h>
 
-#include <new_policy.h>
+#include <skeleton.h>
 #include <task_planner.h>
 
 #include <logic_parser.h>
@@ -24,14 +24,13 @@ public:
   // modifiers
   virtual void setFol( const std::string & descrition ) override;
   virtual void solve() override;
-  virtual void integrate( const Policy::ptr & policy ) override;
+  virtual void integrate( const Skeleton & policy ) override;
 
   // getters
   virtual bool terminated() const override;
-  virtual Policy::ptr getPolicy() const override;
-  NewPolicy getNewPolicy() const;
+  Skeleton getPolicy() const override;
 
-  virtual MotionPlanningOrder getPlanningOrder() const override;
+  virtual MotionPlanningParameters getPlanningParameters() const override;
 
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }
@@ -45,7 +44,7 @@ public:
   uint agentNumber() const { return parser_.agentNumber(); }
 
   // stand-alone
-  NewPolicyNodeData decisionGraphtoPolicyData( const NodeData & n ) const;
+  SkeletonNodeData decisionGraphtoPolicyData( const NodeData & n ) const;
 
 private:
   void valueIteration();
@@ -55,7 +54,7 @@ private:
 private:
   LogicParser parser_;
   DecisionGraph graph_;
-  NewPolicy policy_;
+  Skeleton policy_;
 
   // graph expansion
   uint maxDepth_ = 3;

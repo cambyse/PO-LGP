@@ -12,28 +12,28 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#include "new_policy.h"
+#include "skeleton.h"
 
 #include <queue>
 
-#include <new_policy_printer.h>
+#include <skeleton_printer.h>
 
-static int policyNumber = 0;
+static int skeletonNumber = 0;
 
-//----NewPolicy-------------------------//
-NewPolicy::NewPolicy()
+//----Skeleton-------------------------//
+Skeleton::Skeleton()
   : status_( SKELETON )
-  , id_( policyNumber )
+  , id_( skeletonNumber )
 {
 
 }
 
-NewPolicy::NewPolicy( const GraphNodeTypePtr & root )
+Skeleton::Skeleton( const GraphNodeTypePtr & root )
   : status_( SKELETON )
-  , id_( policyNumber )
+  , id_( skeletonNumber )
   , root_( root )
 {
-  policyNumber++;
+  skeletonNumber++;
 
   // reconstruct the leafs from root
   std::list < GraphNodeTypePtr > Q;
@@ -58,33 +58,33 @@ NewPolicy::NewPolicy( const GraphNodeTypePtr & root )
   }
 }
 
-NewPolicy::NewPolicy( const NewPolicy & policy )
+Skeleton::Skeleton( const Skeleton & policy )
 {
   copy( policy );
 }
 
-NewPolicy & NewPolicy::operator= ( const NewPolicy & policy )
+Skeleton & Skeleton::operator= ( const Skeleton & policy )
 {
   copy( policy );
 
   return *this;
 }
 
-void NewPolicy::save( const std::string & file ) const
+void Skeleton::save( const std::string & file ) const
 {
   std::ofstream ofs( file );
   boost::archive::text_oarchive oa(ofs);
   oa << *this;
 }
 
-void NewPolicy::load( const std::string & file )
+void Skeleton::load( const std::string & file )
 {
   std::ifstream ifs( file );
   boost::archive::text_iarchive ia(ifs);
   ia >> *this;
 }
 
-void NewPolicy::saveToGraphFile( const std::string & filename ) const
+void Skeleton::saveToGraphFile( const std::string & filename ) const
 {
   if( ! root_ )
   {
@@ -94,7 +94,7 @@ void NewPolicy::saveToGraphFile( const std::string & filename ) const
   std::ofstream file;
   file.open( filename );
 
-  NewPolicyPrinter printer( file );
+  SkeletonPrinter printer( file );
   printer.print( *this );
 
   file.close();
@@ -114,7 +114,7 @@ void NewPolicy::saveToGraphFile( const std::string & filename ) const
   system( ss.str().c_str() );
 }
 
-void NewPolicy::copy( const NewPolicy & policy )
+void Skeleton::copy( const Skeleton & policy )
 {
   if( policy.root_ )
   {
@@ -153,9 +153,9 @@ void NewPolicy::copy( const NewPolicy & policy )
   }
 }
 
-std::list< NewPolicy::GraphNodeTypePtr > getPathTo( const NewPolicy::GraphNodeTypePtr & node )
+std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node )
 {
-  std::list< NewPolicy::GraphNodeTypePtr > path;
+  std::list< Skeleton::GraphNodeTypePtr > path;
 
   auto n = node;
 
