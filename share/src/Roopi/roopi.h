@@ -159,6 +159,15 @@ struct Roopi {
   Act::Ptr placeDistDir(const char* objName, const char* ontoName, double deltaX=0., double deltaY=0., double deltaZ=0., int deltaTheta=0){
     return run( [this, objName, ontoName, deltaX, deltaY, deltaZ, deltaTheta](){ return Script_placeDistDir(*this, objName, ontoName, deltaX, deltaY, deltaZ, deltaTheta); } );
   }
+  Act::Ptr placeDistDirTable(const char* objName, const char* ontoName, const char* tableName, double deltaX=0., double deltaY=0., double deltaZ=0., int deltaTheta=0){
+    return run( [this, objName, ontoName, tableName, deltaX, deltaY, deltaZ, deltaTheta](){ return Script_placeDistDirTable(*this, objName, ontoName, tableName, deltaX, deltaY, deltaZ, deltaTheta); } );
+  }
+  Act::Ptr holdDistDir(const char* objName, const char* ontoName, double deltaX=0., double deltaY=0., double deltaZ=0., int deltaTheta=0){
+    return run( [this, objName, ontoName, deltaX, deltaY, deltaZ, deltaTheta](){ return Script_holdDistDir(*this, objName, ontoName, deltaX, deltaY, deltaZ, deltaTheta); } );
+  }
+  Act::Ptr releaseDistDir(const char* objName, const char* ontoName, const char* tableName, double deltaX=0., double deltaY=0., double deltaZ=0., int deltaTheta=0){
+    return run( [this, objName, ontoName, tableName, deltaX, deltaY, deltaZ, deltaTheta](){ return Script_releaseDistDir(*this, objName, ontoName, tableName, deltaX, deltaY, deltaZ, deltaTheta); } );
+  }
   Act::Ptr pointPosition(const char* objName, const char* ontoName, LeftOrRight lr, double deltaX=0., double deltaY=0., double deltaZ=0.){
     return run( [this, objName, ontoName, lr, deltaX, deltaY, deltaZ](){ return Script_pointPosition(*this, objName, ontoName, lr, deltaX, deltaY, deltaZ); } );
   }

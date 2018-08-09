@@ -34,12 +34,14 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
   //query some info from the kinematics first
   double width, above;
+  //uint obj, eff, grasp1, grasp2, workspace;
   uint obj, eff, grasp1, grasp2;
   {
     auto K = R.getK();
 
     //get obj size
     arr objSize = K().getShapeByName(objName)->size;
+    //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2);
 
@@ -55,6 +57,8 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
         grasp1 = K().getJointByName("l_gripper_joint")->to->index;
         grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
       }
+      //cam = K().getShapeByName("endeffKinect")->index;
+      //workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
     }
@@ -63,6 +67,8 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
   {
     //attention, gripper positioning, alignment, open gripper
     auto look = R.lookAt(objName);
+    //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
+    //R.wait(1.);
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
 #if 1
@@ -86,9 +92,10 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
 
     pos->stop();//don't control obj position when closing gripper
     look->stop();
+    //ws->stop();
 
     //close gripper
-    gripSize = width-.015;//+.015;
+    gripSize = width-.03;//+.015;
     gripperR->set()->PD().setTarget( {gripSize} );
     gripper2R->set()->PD().setTarget( {::asin(gripSize/(2.*.10))} );
     gripperR->resetStatus();
@@ -112,6 +119,7 @@ int Script_graspBox(Roopi& R, const char* objName, LeftOrRight rl){
     auto look = R.lookAt(objName);
     R.wait(1.);
   }
+
   return AS_done;
 }
 
@@ -150,6 +158,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
 
   //query some info from the kinematics first
   double width, above;
+  //uint obj, onto, eff, grasp1, grasp2, workspace;
   uint obj, onto, eff, grasp1, grasp2;
   {
     auto K = R.getK();
@@ -157,6 +166,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     //get obj size
     arr objSize = K().getShapeByName(objName)->size;
     arr ontoSize = K().getShapeByName(ontoName)->size;
+    //width = objSize(1);
     width = objSize(0);
     above = .5*objSize(2)+.5*ontoSize(2);
 
@@ -180,6 +190,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
           HALT("which hand is this? Something's wrong");
         }
       }
+      //workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
     }
@@ -188,6 +199,8 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
   {
     //attention & gripper positioning
     auto look = R.lookAt(objName);
+    //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
+    //R.wait(1.);
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {0.,0.,above+.1});
 #if 1
     auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
@@ -197,7 +210,8 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
     auto quat = R.newCtrlTask(new TaskMap_Default(quatTMT, obj) );
     quat->set()->PD().setTarget(rot.getArr4d());
 #endif
-    R.wait({-pos});
+    //R.wait({-ws, -up, -pos});
+    R.wait({/*-up,*/ -pos});
 
     //lowering
     pos->set()->PD().setTarget( ARR(0,0,above) );
@@ -229,7 +243,7 @@ int Script_place(Roopi& R, const char* objName, const char* ontoName, const mlr:
   return AS_done;
 }
 
-int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, double deltaX, double deltaY, double deltaZ, int deltaTheta){
+int Script_placeDistDirTable(Roopi& R, const char* objName, const char* ontoName, const char* tableName, double deltaX, double deltaY, double deltaZ, int deltaTheta){
 
   //query some info from the kinematics first
   double width, above;
@@ -308,7 +322,264 @@ int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, dou
     //switch
     pos->stop();//don't control obj position during kinematic switch
     look->stop();
+    R.kinematicSwitch(objName, tableName, true);
+
+    //open gripper
+    double gripSize = width + .05;
+    auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
+    auto look2 = R.lookAt(objName);
+    R.wait({-gripperR, -gripper2R});
+  }
+
+  {
+    //lift hand
+    auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
+    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->PD().setGains(0, 10.);
+    lift->set()->PD().v_target = ARR(0,0,.2);
+    R.wait(1.);
+  }
+  return AS_done;
+}
+
+int Script_placeDistDir(Roopi& R, const char* objName, const char* ontoName, double deltaX, double deltaY, double deltaZ, int deltaTheta){
+
+  //query some info from the kinematics first
+  double width, above;
+  //uint obj, onto, eff, grasp1, grasp2, workspace;
+  uint obj, onto, eff, grasp1, grasp2;
+  {
+    auto K = R.getK();
+
+    //get obj size
+    arr objSize = K().getShapeByName(objName)->size;
+    arr ontoSize = K().getShapeByName(ontoName)->size;
+    //width = objSize(1);
+    width = objSize(0);
+    above = .5*objSize(2)+.5*ontoSize(2);
+
+    //relevant shapes
+    mlr::Shape *ob = K().getShapeByName(objName);
+    obj = ob->index;
+    onto = K().getShapeByName(ontoName)->index;
+    if(R.getRobot()=="pr2"){
+      mlr::Shape *sh = K().getShapeByName("pr2R");
+      if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the right hand..
+        eff = sh->index;
+        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
+        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+      }else{
+        sh = K().getShapeByName("pr2L");
+        if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the left hand..
+          eff = sh->index;
+          grasp1 = K().getJointByName("l_gripper_joint")->to->index;
+          grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        }else{
+          HALT("which hand is this? Something's wrong");
+        }
+      }
+      //workspace = K().getShapeByName("endeffWorkspace")->index;
+    }else{
+      NIY;
+    }
+  }
+
+  {
+    //attention & gripper positioning
+    auto look = R.lookAt(objName);
+    //auto ws =   R.newCtrlTask(new TaskMap_Default(posDiffTMT, workspace, NoVector, obj), {}, {}, {2e-1});
+    //R.wait(1.);
+    //auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
+    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1+deltaZ});
+    auto al1 = R.newCtrlTask();
+    auto al2 = R.newCtrlTask();
+    auto al3 = R.newCtrlTask();
+    if (deltaTheta==0){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    } else if (deltaTheta==1){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+    } else if (deltaTheta==2){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    } else if (deltaTheta==3){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+    }
+    al1->set()->PD().setGainsAsNatural(1., .9);
+    al1->start();
+    al2->set()->PD().setGainsAsNatural(1., .9);
+    al2->start();
+    al3->set()->PD().setGainsAsNatural(1., .9);
+    al3->start();
+    //R.wait({&ws, &up, &pos});
+    //R.wait({&up, &pos});
+    R.wait({-pos});
+
+    //lowering
+    pos->set()->PD().setTarget( ARR(deltaX,deltaY,above+deltaZ) );
+    pos->resetStatus();
+    R.wait({-pos});
+
+    //switch
+    pos->stop();//don't control obj position during kinematic switch
+    look->stop();
+    //ws->stop();
     R.kinematicSwitch(objName, ontoName, true);
+
+    //open gripper
+    double gripSize = width + .05;
+    auto gripperR =  R.newCtrlTask(new TaskMap_qItself({grasp1}, false), {}, {gripSize});
+    auto gripper2R = R.newCtrlTask(new TaskMap_qItself({grasp2}, false), {}, {::asin(gripSize/(2.*.10))});
+    auto look2 = R.lookAt(objName);
+    R.wait({-gripperR, -gripper2R});
+  }
+
+  {
+    //lift hand
+    auto lift = R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff));
+    lift->set()->PD().setTarget(lift->task->y);
+    lift->set()->PD().setGains(0, 10.);
+    lift->set()->PD().v_target = ARR(0,0,.2);
+    R.wait(1.);
+  }
+  return AS_done;
+}
+
+int Script_holdDistDir(Roopi& R, const char* objName, const char* ontoName, double deltaX, double deltaY, double deltaZ, int deltaTheta){
+
+  //query some info from the kinematics first
+  double width, above;
+  uint obj, onto, eff, grasp1, grasp2;
+  {
+    auto K = R.getK();
+
+    //get obj size
+    arr objSize = K().getShapeByName(objName)->size;
+    arr ontoSize = K().getShapeByName(ontoName)->size;
+    width = objSize(0);
+    above = .5*objSize(2)+.5*ontoSize(2);
+
+    //relevant shapes
+    mlr::Shape *ob = K().getShapeByName(objName);
+    obj = ob->index;
+    onto = K().getShapeByName(ontoName)->index;
+    if(R.getRobot()=="pr2"){
+      mlr::Shape *sh = K().getShapeByName("pr2R");
+      if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the right hand..
+        eff = sh->index;
+        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
+        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+      }else{
+        sh = K().getShapeByName("pr2L");
+        if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the left hand..
+          eff = sh->index;
+          grasp1 = K().getJointByName("l_gripper_joint")->to->index;
+          grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        }else{
+          HALT("which hand is this? Something's wrong");
+        }
+      }
+    }else{
+      NIY;
+    }
+  }
+
+  {
+    //attention & gripper positioning
+    auto look = R.lookAt(objName);
+    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1+deltaZ});
+    auto al1 = R.newCtrlTask();
+    auto al2 = R.newCtrlTask();
+    auto al3 = R.newCtrlTask();
+    if (deltaTheta==0){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    } else if (deltaTheta==1){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+    } else if (deltaTheta==2){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+    } else if (deltaTheta==3){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+    }
+    al1->set()->PD().setGainsAsNatural(1., .9);
+    al1->start();
+    al2->set()->PD().setGainsAsNatural(1., .9);
+    al2->start();
+    al3->set()->PD().setGainsAsNatural(1., .9);
+    al3->start();
+    R.wait({-pos});
+
+    //lowering
+    pos->set()->PD().setTarget( ARR(deltaX,deltaY,above+deltaZ) );
+    pos->resetStatus();
+    R.wait({-pos});
+
+  }
+
+  return AS_done;
+}
+
+int Script_releaseDistDir(Roopi& R, const char* objName, const char* ontoName, const char* tableName, double deltaX, double deltaY, double deltaZ, int deltaTheta){
+
+  //query some info from the kinematics first
+  double width, above;
+  uint obj, onto, eff, grasp1, grasp2;
+  {
+    auto K = R.getK();
+
+    //get obj size
+    arr objSize = K().getShapeByName(objName)->size;
+    arr ontoSize = K().getShapeByName(ontoName)->size;
+    width = objSize(0);
+    above = .5*objSize(2)+.5*ontoSize(2);
+
+    //relevant shapes
+    mlr::Shape *ob = K().getShapeByName(objName);
+    obj = ob->index;
+    onto = K().getShapeByName(ontoName)->index;
+    if(R.getRobot()=="pr2"){
+      mlr::Shape *sh = K().getShapeByName("pr2R");
+      if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the right hand..
+        eff = sh->index;
+        grasp1 = K().getJointByName("r_gripper_joint")->to->index;
+        grasp2 = K().getJointByName("r_gripper_l_finger_joint")->to->index;
+      }else{
+        sh = K().getShapeByName("pr2L");
+        if(sh->body->index == ob->body->inLinks.scalar()->from->index){ //this is the left hand..
+          eff = sh->index;
+          grasp1 = K().getJointByName("l_gripper_joint")->to->index;
+          grasp2 = K().getJointByName("l_gripper_l_finger_joint")->to->index;
+        }else{
+          HALT("which hand is this? Something's wrong");
+        }
+      }
+    }else{
+      NIY;
+    }
+  }
+
+  {
+    //attention & gripper positioning
+    auto look = R.lookAt(objName);
+    R.wait({-look});
+
+    //switch
+    look->stop();
+    R.kinematicSwitch(objName, tableName, true);
 
     //open gripper
     double gripSize = width + .05;
@@ -333,25 +604,54 @@ int Script_pointPosition(Roopi& R, const char* objName, const char* ontoName, Le
   //assume objName in hand, place at a position relative to ontoName and keep in gripper
   //query some info from the kinematics first
   double above;
-  uint obj, onto;
+  uint obj, onto, eff;
   {
     auto K = R.getK();
     //get obj size
+//    arr objSize = K().getShapeByName(objName)->size;
+//    above = .5*objSize(2);
     above = 0.06;
     //relevant shapes
     obj = K().getShapeByName(objName)->index;
     onto = K().getShapeByName(ontoName)->index;
+    if(R.getRobot()=="pr2"){
+      if(rl==LR_right){
+        eff = K().getShapeByName("pr2R")->index;
+      }else{
+        eff = K().getShapeByName("pr2L")->index;
+      }
+    }else{
+      NIY;
+    }
   }
   {
     //attention, positioning
     auto look = R.lookAt(ontoName);
+    //auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+.1+deltaZ});
     auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, obj, NoVector, onto), {2.,.9}, {deltaX,deltaY,above+deltaZ});
+//    auto up =   R.newCtrlTask(new TaskMap_Default(vecTMT, eff, Vector_z), {}, {0.,0.,1.});
+//    auto pos =  R.newCtrlTask(new TaskMap_Default(posDiffTMT, eff, NoVector, obj), {}, {0.,0.,above+.1});
+//    R.wait({-pos, -up});
     auto al1 = R.newCtrlTask();
     auto al2 = R.newCtrlTask();
     auto al3 = R.newCtrlTask();
-    al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
-    al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
-    al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+//    if (deltaTheta==0){
+      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+//    } else if (deltaTheta==1){
+//      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+//      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_y, onto, Vector_z) );
+//      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+//    } else if (deltaTheta==2){
+//      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+//      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+//      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_y) );
+//    } else if (deltaTheta==3){
+//      al1->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_z) );
+//      al2->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_z, onto, Vector_z) );
+//      al3->setMap(new TaskMap_Default(vecAlignTMT, obj, Vector_x, onto, Vector_x) );
+//    }
     al1->set()->PD().setGainsAsNatural(1., .9);
     al1->start();
     al2->set()->PD().setGainsAsNatural(1., .9);
@@ -367,6 +667,7 @@ int Script_armsNeutral(Roopi& R){
   //query some info from the kinematics first
   uint shoulderPanJointR, shoulderLiftJointR, upperArmRollJointR, elbowFlexJointR, forearmRollJointR;
   uint shoulderPanJointL, shoulderLiftJointL, upperArmRollJointL, elbowFlexJointL, forearmRollJointL;
+//  uint torsoLiftJoint;
   {
     auto K = R.getK();
     if(R.getRobot()=="pr2"){
@@ -431,6 +732,7 @@ int Script_workspaceReady(Roopi& R, const char* objName){
     mlr::Shape *ob = K().getShapeByName(objName);
     obj = ob->index;
     if(R.getRobot()=="pr2"){
+//      mlr::Shape *sh = K().getShapeByName("pr2R");
       workspace = K().getShapeByName("endeffWorkspace")->index;
     }else{
       NIY;
