@@ -64,7 +64,7 @@ void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node
     {
       auto agentLabel = agentPrefix_ + std::to_string( node->data().agentId ) + agentSuffix_;
       auto leadingArtifact = c->data().leadingArtifact;
-      auto actionLabel = leadingArtifact.substr( agentLabel.size() + 1, leadingArtifact.size() - agentLabel.size() );
+      auto actionLabel = extractActionLabel( leadingArtifact, node->data().agentId );
 
       boost::replace_all(agentLabel, "__", "");
       boost::replace_all(actionLabel, "(", "");
@@ -90,6 +90,20 @@ void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node
     ss_ << node->id() << "->" << c->id() << " [ label=\"" << label << "\" ]" << ";" << std::endl;
 
     saveGraphFrom( c );
+  }
+}
+
+std::string GraphPrinter::extractActionLabel( const std::string & leadingArtifact, uint agentId ) const
+{
+  auto agentLabel = agentPrefix_ + std::to_string( agentId ) + agentSuffix_;
+
+  if( leadingArtifact.find( agentLabel ) != -1 )
+  {
+    return leadingArtifact.substr( agentLabel.size() + 1, leadingArtifact.size() );
+  }
+  else
+  {
+    return leadingArtifact;
   }
 }
 

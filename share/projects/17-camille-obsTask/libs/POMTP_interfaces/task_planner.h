@@ -28,5 +28,4 @@ public:
 
     virtual bool terminated() const = 0;
     virtual Skeleton getPolicy() const = 0;
-    virtual MotionPlanningParameters getPlanningParameters() const = 0;
 };

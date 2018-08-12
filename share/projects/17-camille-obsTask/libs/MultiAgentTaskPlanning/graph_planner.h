@@ -30,8 +30,6 @@ public:
   virtual bool terminated() const override;
   Skeleton getPolicy() const override;
 
-  virtual MotionPlanningParameters getPlanningParameters() const override;
-
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }
   void setMaxDepth( uint d ) { maxDepth_ = d; }

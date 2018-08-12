@@ -19,6 +19,7 @@ public:
 
 private:
   void saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node );
+  std::string extractActionLabel( const std::string & leadingArtifact, uint agentId ) const;
 
 private:
   std::ostream & ss_;

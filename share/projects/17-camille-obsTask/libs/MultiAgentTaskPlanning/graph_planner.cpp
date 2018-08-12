@@ -57,11 +57,6 @@ Skeleton GraphPlanner::getPolicy() const
   return skeleton_;
 }
 
-MotionPlanningParameters GraphPlanner::getPlanningParameters() const
-{
-  return MotionPlanningParameters( 0 );
-}
-
 void GraphPlanner::buildGraph()
 {
   if( ! parser_.successfullyParsed() )

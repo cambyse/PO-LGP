@@ -263,14 +263,15 @@ void plan_graph_search()
 
   // set planner specific parameters
   tp.setR0( -0.1 );
+  tp.setMaxDepth( 3 );
   mp->setNSteps( 5 );
 
   // register symbols
-  mp->registerTask( "komoPickUp"       , groundPickUp );
-  mp->registerTask( "komoPutDown"      , groundPutDown );
-  mp->registerTask( "komoCheck"        , groundCheck );
-  mp->registerTask( "komoStack"        , groundStack );
-  mp->registerTask( "komoUnStack"      , groundUnStack );
+  mp->registerTask( "pick-up"       , groundPickUp );
+  mp->registerTask( "put-down"      , groundPutDown );
+  mp->registerTask( "check"        , groundCheck );
+  mp->registerTask( "stack"        , groundStack );
+  mp->registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
   //tp->setFol( "LGP-blocks-fol.g" );
@@ -324,23 +325,24 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 }
   policy = tp.getPolicy();
 
-  //do
-  //{
+  do
+  {
     ///
     savePolicyToFile( policy );
-    //candidate << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
+    candidate << policy.id() << "," << std::max( -10.0, policy.value() ) << std::endl;
     ///
 
-    //lastPolicy = policy;
+    lastPolicy = policy;
 
-//{
-//auto start = std::chrono::high_resolution_clock::now();
-//    /// MOTION PLANNING
-//    auto po     = tp.getPlanningOrder();
-//    mp->solveAndInform( po, policy );
-//auto elapsed = std::chrono::high_resolution_clock::now() - start;
-//motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
-//}
+{
+auto start = std::chrono::high_resolution_clock::now();
+    /// MOTION PLANNING
+    auto po     = MotionPlanningParameters( policy.id() );
+    po.setParam( "type", "markovJointPath" );
+    mp->solveAndInform( po, policy );
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
 //    ///
 //    savePolicyToFile( policy, "-informed" );
 //    results << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
@@ -356,6 +358,8 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 //}
 //    policy = tp->getPolicy();
 
+    } while( 0 );
+
 //  } while( ! skeletonEquals( lastPolicy, policy ) );
 
 /////
@@ -367,12 +371,12 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 //  results.close();
 /////
 
-//{
-//auto start = std::chrono::high_resolution_clock::now();
-//  mp->display( policy, 3000 );
-//auto elapsed = std::chrono::high_resolution_clock::now() - start;
-//joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
-//}
+{
+auto start = std::chrono::high_resolution_clock::now();
+  mp->display( policy, 3000 );
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
 
 /////
 //  std::ofstream timings;
