@@ -49,12 +49,12 @@ public:
 private:
   void valueIteration();
   void decideOnDecisionGraphCopy();
-  void buildPolicy();
+  void buildSkeleton();
 
 private:
   LogicParser parser_;
   DecisionGraph graph_;
-  Skeleton policy_;
+  Skeleton skeleton_;
 
   // graph expansion
   uint maxDepth_ = 3;

@@ -37,12 +37,12 @@ target_link_libraries(
  Gui
  Optim
  Logic
- MCTS
+ #MCTS
  KOMO
  POMTP_interfaces
  ObservationTasks
  CollisionAvoidance
- TaskPlanning
+ MultiAgentTaskPlanning
  MotionPlanning
  GeometricUtilityTasks
  )

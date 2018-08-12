@@ -19,7 +19,6 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 ################################
 # External libs
 ################################
-find_package(fcl REQUIRED)
 
 #################################
 # Define executable
@@ -36,5 +35,4 @@ target_link_libraries(
  Kin
  KOMO
  MathUtility
- ${fcl_LIBRARIES}
  )

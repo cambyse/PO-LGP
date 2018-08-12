@@ -82,7 +82,7 @@ TEST_F(GraphPlannerTest, DecisionArtifactToKomoTag) {
 TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
   auto r0 = -2;
   auto agentId = 5;
-  auto beliefState = std::vector< double >( { 0.4, 0.6 } );
+  //auto beliefState = std::vector< double >( { 0.4, 0.6 } );
   auto leadingArtifact = "(actionName X Y Z)";
   auto nodeType = NodeData::NodeType::ACTION;
   auto p = 0.5;
@@ -93,7 +93,7 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
 
   NodeData nData;
   nData.agentId = agentId;
-  nData.beliefState = beliefState;
+  //nData.beliefState = beliefState;
   nData.leadingArtifact = leadingArtifact;
   nData.nodeType = nodeType;
   nData.p = p;
@@ -102,7 +102,7 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
 
   auto pData = tp.decisionGraphtoPolicyData( nData );
 
-  ASSERT_EQ( pData.beliefState    , beliefState );
+  //ASSERT_EQ( pData.beliefState    , beliefState );
   ASSERT_EQ( pData.markovianReturn, r0 );
   ASSERT_EQ( pData.leadingKomoArgs.size(), 4 );
   ASSERT_EQ( pData.p, p );
@@ -127,6 +127,24 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1W) {
   const std::string policyFileName( "LGP-overtaking-double-agent-1w" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
+  tp.saveGraphToFile(policyFileName + "-full.gv");
+  tp.saveDecidedGraphToFile(policyFileName + "-decided.gv");
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".po" ) );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".gv" ) );
+  ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".png" ) );
+}
+
+TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1WTweaked) {
+  tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
+  tp.setMaxDepth( 2 );
+  tp.solve();
+  auto policy = tp.getPolicy();
+  const std::string policyFileName( "LGP-overtaking-double-agent-1w-tweaked" );
+  auto leafs = policy.leafs();
+  leafs.front().lock()->data().leadingKomoArgs = { "__AGENT_0__follow", "truck" };
+  policy.save( policyFileName + ".po" );
+  policy.saveToGraphFile( policyFileName + ".gv" );
+  tp.saveDecidedGraphToFile(policyFileName + "-decided.gv");
   ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".po" ) );
   ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".gv" ) );
   ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".png" ) );
@@ -138,6 +156,7 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent2W) {
   tp.solve();
   auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-2w" );
+  tp.saveDecidedGraphToFile(policyFileName + "-decided.gv");
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
   ASSERT_TRUE( boost::filesystem::exists( policyFileName + ".po" ) );

@@ -38,12 +38,12 @@ void GraphPlanner::solve()
 
   decideOnDecisionGraphCopy();
 
-  buildPolicy();
+  buildSkeleton();
 }
 
 void GraphPlanner::integrate( const Skeleton & policy )
 {
-
+  CHECK( 0, "Not implemented yet!" );
 }
 
 // getters
@@ -54,7 +54,7 @@ bool GraphPlanner::terminated() const
 
 Skeleton GraphPlanner::getPolicy() const
 {
-  return policy_;
+  return skeleton_;
 }
 
 MotionPlanningParameters GraphPlanner::getPlanningParameters() const
@@ -224,7 +224,7 @@ void GraphPlanner::decideOnDecisionGraphCopy()
   }
 }
 
-void GraphPlanner::buildPolicy()
+void GraphPlanner::buildSkeleton()
 {
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
@@ -260,7 +260,7 @@ void GraphPlanner::buildPolicy()
     }
   }
 
-  policy_ = Skeleton( policyRoot );
+  skeleton_ = Skeleton( policyRoot );
 }
 
 }

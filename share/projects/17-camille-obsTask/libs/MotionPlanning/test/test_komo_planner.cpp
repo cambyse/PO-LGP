@@ -114,7 +114,7 @@ void groundInitDoubleAgent( double phase, const std::vector< std::string > & arg
 {
   init( phase, args, komo, verbose );
 
-  arr op_speed{ -0.03, 0, 0 };
+  arr op_speed{ -0.04, 0, 0 };
   komo->setVelocity( 0, 1.5, "car_op", NULL, OT_eq, op_speed );
 }
 
@@ -175,7 +175,7 @@ void groundAccelerate( double phase, const std::vector< std::string > & args, mp
   //
 
   // opposite car speed
-  arr op_speed{ -0.05, 0, 0 };
+  arr op_speed{ -0.07, 0, 0 };
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
@@ -187,7 +187,7 @@ void groundContinue( double phase, const std::vector< std::string > & args, mp::
   //
 
   // opposite car speed
-  arr op_speed{ -0.03, 0, 0 };
+  arr op_speed{ -0.04, 0, 0 };
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
@@ -199,7 +199,7 @@ void groundSlowDown( double phase, const std::vector< std::string > & args, mp::
   //
 
   // opposite car speed
-  arr op_speed{ -0.02, 0, 0 };
+  arr op_speed{ -0.015, 0, 0 };
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
@@ -393,6 +393,22 @@ TEST_F(KomoPlannerFixture, PlanTwoAgents1WDisplay)
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.display( policy, 50.0 ) );
+}
+
+TEST_F(KomoPlannerFixture, PlanTwoAgents1WTweakedDisplay)
+{
+  planner.setKin( "data/LGP-overtaking-kin.g" );
+
+  Skeleton policy;
+  policy.load( "data/LGP-overtaking-double-agent-1w-tweaked.po" );
+
+  // add set up
+  policy.root()->data().leadingKomoArgs = {"initDoubleAgent"};
+
+  MotionPlanningParameters po( policy.id() );
+  po.setParam( "type", "jointPath" );
+
+  EXPECT_NO_THROW( planner.display( policy, 1000.0 ) );
 }
 
 /////////////////////TWO AGENTS PARTIALLY OBSERVABLE/////////////////////////////
