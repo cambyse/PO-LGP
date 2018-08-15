@@ -263,7 +263,7 @@ void plan_graph_search()
 
   // set planner specific parameters
   tp.setR0( -0.1 );
-  tp.setMaxDepth( 3 );
+  tp.setMaxDepth( 8 );
   mp->setNSteps( 5 );
 
   // register symbols
@@ -312,7 +312,7 @@ auto start = std::chrono::high_resolution_clock::now();
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 graph_building_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }
-  tp.saveGraphToFile( "graph.gv" );
+  //tp.saveGraphToFile( "graph.gv" );
   //generatePngImage( "graph.gv" );
 
   Skeleton policy, lastPolicy;

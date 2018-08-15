@@ -249,13 +249,14 @@ TEST(DecisionGraph, buildCheckNodeDepth) {
 
 
 // Terminal label
-TEST(DecisionGraph, terminalNodes) {
+TEST(DecisionGraph, terminalNodesAD) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
-  graph.build(2);
-  auto leafs = graph.terminalNodes();
 
+  graph.build(2);
+
+  auto leafs = graph.terminalNodes();
   bool found = false;
   int agentId = -1;
   for( auto weakL : leafs )
@@ -271,6 +272,18 @@ TEST(DecisionGraph, terminalNodes) {
 
   ASSERT_TRUE( found );
   ASSERT_EQ( agentId, 1 );// terminal a last ego action
+}
+
+TEST(DecisionGraph, terminalNodesBLOCKS) {
+  LogicParser p;
+  p.parse( "data/LGP-blocks-fol-1w-model-2.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+
+  graph.build(7);
+
+  auto leafs = graph.terminalNodes();
+
+  ASSERT_TRUE( ! leafs.empty() );
 }
 
 // Terminal label

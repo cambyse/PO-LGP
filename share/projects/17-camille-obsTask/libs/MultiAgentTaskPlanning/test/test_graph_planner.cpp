@@ -179,6 +179,17 @@ TEST_F(GraphPlannerTest, PolicyLeafs) {
   EXPECT_EQ( leaf.lock()->id(), 2 );
 }
 
+TEST_F(GraphPlannerTest, PolicyValue)
+{
+  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  tp.setMaxDepth( 2 );
+
+  tp.solve();
+
+  auto policy = tp.getPolicy();
+  EXPECT_EQ( policy.value(), -2.0 );
+}
+
 //
 int main(int argc, char **argv)
 {

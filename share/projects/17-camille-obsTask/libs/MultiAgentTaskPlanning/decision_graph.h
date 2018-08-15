@@ -58,7 +58,7 @@ private:
   void copy( const DecisionGraph & );
 
 private:
-  LogicEngine engine_;
+  mutable LogicEngine engine_;
   GraphNodeType::ptr root_;
   std::list< std::weak_ptr< GraphNodeType > > nodes_;
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes_;

@@ -85,7 +85,7 @@ void GraphPlanner::valueIteration()
 
   double alpha = 0.5;
 
-  values_ = std::vector< double >( graph_.size(), -5 ); // distance from root to vertex[i]
+  values_ = std::vector< double >( graph_.size(), -10.0 ); // magic value!! distance from root to vertex[i]
 
   auto comp = [ & ]( const NodeTypePtr & a, const NodeTypePtr & b ) -> bool
   {
@@ -123,9 +123,9 @@ void GraphPlanner::valueIteration()
             // max operation, choose the best child
             for( auto v : u->children() )
             {
-              if( values_[ v->id() ] - 1 > newValue )
+              if( values_[ v->id() ] + r0_ > newValue )
               {
-                newValue = values_[ v->id() ] - 1;
+                newValue = values_[ v->id() ] + r0_;
               }
             }
 
@@ -256,6 +256,7 @@ void GraphPlanner::buildSkeleton()
   }
 
   skeleton_ = Skeleton( policyRoot );
+  skeleton_.setValue( values_[ decisionGraph().root()->id() ] );
 }
 
 }

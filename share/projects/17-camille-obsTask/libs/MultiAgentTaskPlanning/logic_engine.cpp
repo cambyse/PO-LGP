@@ -84,6 +84,7 @@ void LogicEngine::transition( const std::string & action )
 void LogicEngine::setState( const std::string & state )
 {
   auto mlrState = mlr::String( state );
+  engine_->reset_state();
   engine_->set_state( mlrState );
 }
 

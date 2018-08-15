@@ -165,7 +165,7 @@ void DecisionGraph::saveGraphToFile( const std::string & filename ) const
 
 std::vector< std::string > DecisionGraph::getCommonPossibleActions( const GraphNode< NodeData >::ptr & node, uint agentId ) const
 {
-  auto engine = engine_; // copy to be const
+  LogicEngine & engine = engine_; // copy to be const
   auto bs     = node->data().beliefState;
   auto states = node->data().states;
 
@@ -205,7 +205,7 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
 {
   std::vector< NodeData > outcomes;
 
-  auto engine = engine_; // copy to be const
+  LogicEngine & engine = engine_; // copy to be const
   auto bs     = node->data().beliefState;
   auto states = node->data().states;
 
