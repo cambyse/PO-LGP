@@ -34,6 +34,8 @@ void GraphPlanner::solve()
 {
   buildGraph();
 
+  initializeRewards();
+
   valueIteration();
 
   decideOnDecisionGraphCopy();
@@ -43,7 +45,21 @@ void GraphPlanner::solve()
 
 void GraphPlanner::integrate( const Skeleton & policy )
 {
-  CHECK( 0, "Not implemented yet!" );
+  std::queue< Skeleton::GraphNodeTypePtr > Q;
+  Q.push( policy.root() );
+
+  while( ! Q.empty() )
+  {
+    auto n = Q.front();
+    Q.pop();
+
+    rewards_[ n->id() ] = n->data().markovianReturn;
+
+    for( auto c : n->children() )
+    {
+      Q.push( c );
+    }
+  }
 }
 
 // getters
@@ -57,6 +73,18 @@ Skeleton GraphPlanner::getPolicy() const
   return skeleton_;
 }
 
+double GraphPlanner::reward( uint nodeId ) const
+{
+  auto it = rewards_.find( nodeId );
+
+  if( it != rewards_.end() )
+  {
+    return it->second;
+  }
+
+  return m_inf();
+}
+
 void GraphPlanner::buildGraph()
 {
   if( ! parser_.successfullyParsed() )
@@ -65,6 +93,14 @@ void GraphPlanner::buildGraph()
   }
 
   graph_.build( maxDepth_ );
+}
+
+void GraphPlanner::initializeRewards()
+{
+  for( const auto & n : graph_.nodes() )
+  {
+    rewards_[ n.lock()->id() ] = r0_;
+  }
 }
 
 SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData ) const
@@ -84,7 +120,6 @@ void GraphPlanner::valueIteration()
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   double alpha = 0.5;
-  //constexpr double badValue = -10000;
   constexpr double initValue = -10.0;
 
   values_ = std::vector< double >( graph_.size(), initValue ); // magic value!! distance from root to vertex[i]
@@ -130,7 +165,7 @@ void GraphPlanner::valueIteration()
             {
               if( values_[ v->id() ] + r0_ > newValue )
               {
-                newValue = values_[ v->id() ] + r0_;
+                newValue = values_[ v->id() ] + rewards_[ v->id() ];
               }
             }
 

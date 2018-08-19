@@ -4,6 +4,8 @@
 
 #include <queue>
 #include <string>
+#include <unordered_map>
+
 #include <Logic/fol.h>
 #include <Logic/fol_mcts_world.h>
 
@@ -29,11 +31,13 @@ public:
   // getters
   virtual bool terminated() const override;
   Skeleton getPolicy() const override;
+  double reward( uint nodeId ) const; // exposed for testing purpose only
 
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }
   void setMaxDepth( uint d ) { maxDepth_ = d; }
   void buildGraph();
+  void initializeRewards();
   void saveGraphToFile( const std::string & filename ) const { graph_.saveGraphToFile( filename ); }
   void saveDecidedGraphToFile( const std::string & filename ) const { decidedGraph_.saveGraphToFile( filename ); }
 
@@ -59,6 +63,7 @@ private:
 
   // value iteration
   double r0_ = -1;
+  std::unordered_map< uint, double > rewards_; // current state of rewards
   std::vector< double > values_;
   DecisionGraph decidedGraph_;
 

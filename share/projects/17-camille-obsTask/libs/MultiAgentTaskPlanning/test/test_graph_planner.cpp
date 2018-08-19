@@ -190,6 +190,22 @@ TEST_F(GraphPlannerTest, PolicyValue)
   EXPECT_NEAR( policy.value(), -2.0, 0.001);
 }
 
+TEST_F(GraphPlannerTest, IntegratePolicy)
+{
+  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  tp.setMaxDepth( 2 );
+  tp.solve();
+  auto policy = tp.getPolicy();
+  policy.root()->data().markovianReturn = -0.2;
+  auto child = policy.root()->children().front();
+  child->data().markovianReturn = -0.3;
+
+  tp.integrate( policy );
+
+  EXPECT_EQ( tp.reward( policy.root()->id() ), -0.2 );
+  EXPECT_EQ( tp.reward( child->id() ), -0.3 );
+}
+
 //
 int main(int argc, char **argv)
 {
