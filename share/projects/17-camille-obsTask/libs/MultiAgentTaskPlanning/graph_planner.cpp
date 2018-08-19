@@ -84,8 +84,10 @@ void GraphPlanner::valueIteration()
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   double alpha = 0.5;
+  //constexpr double badValue = -10000;
+  constexpr double initValue = -10.0;
 
-  values_ = std::vector< double >( graph_.size(), -10.0 ); // magic value!! distance from root to vertex[i]
+  values_ = std::vector< double >( graph_.size(), initValue ); // magic value!! distance from root to vertex[i]
 
   auto comp = [ & ]( const NodeTypePtr & a, const NodeTypePtr & b ) -> bool
   {
@@ -105,9 +107,12 @@ void GraphPlanner::valueIteration()
   // expected reward up to terminal nodes
   // add terminal nodes to Q
   uint totalUpdates = 0;
+  constexpr double eps = 0.01;
   bool stable = false;
   for( auto i = 0; ! stable && i < 1000; ++i )
   {
+    double maxDiff = 0;
+
     for( auto weakU : nodes )
     {
       auto u = weakU.lock();
@@ -118,7 +123,7 @@ void GraphPlanner::valueIteration()
         {
           if( ! u->data().terminal )
           {
-            double newValue = m_inf();
+            double newValue = m_inf(); // if no children and not terminal, it means that it is infeasible hence m_inf
 
             // max operation, choose the best child
             for( auto v : u->children() )
@@ -129,7 +134,16 @@ void GraphPlanner::valueIteration()
               }
             }
 
-            values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
+            if( newValue == m_inf() )
+            {
+              values_[ u->id() ] = newValue;
+            }
+            else
+            {
+              values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
+            }
+
+            maxDiff = std::max( maxDiff, std::abs( values_[ u->id() ] - newValue ) );
           }
         }
         else // other agent
@@ -142,6 +156,7 @@ void GraphPlanner::valueIteration()
             newValue += 1.0 / n * values_[ v->id() ] ; // average
           }
 
+          maxDiff = std::max( maxDiff, std::abs( values_[ u->id() ] - newValue ) );
           values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
         }
       }
@@ -154,9 +169,12 @@ void GraphPlanner::valueIteration()
           newValue += v->data().p * values_[ v->id() ] ;
         }
 
+        maxDiff = std::max( maxDiff, std::abs( values_[ u->id() ] - newValue ) );
         values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
       }
     }
+
+    stable = maxDiff < eps;
   }
 
   std::cout << "GraphPlanner::valueIteration.. end" << std::endl;

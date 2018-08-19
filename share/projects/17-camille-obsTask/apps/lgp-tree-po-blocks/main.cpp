@@ -274,7 +274,7 @@ void plan_graph_search()
   mp->registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
-  //tp->setFol( "LGP-blocks-fol.g" );
+  //tp.setFol( "LGP-blocks-fol.g" );
   //mp->setKin( "LGP-blocks-kin.g" );
 
   //tp->setFol( "LGP-blocks-fol-model-2.g" );
@@ -343,20 +343,20 @@ auto start = std::chrono::high_resolution_clock::now();
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }
-//    ///
-//    savePolicyToFile( policy, "-informed" );
-//    results << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
-//    ///
+    ///
+    savePolicyToFile( policy, "-informed" );
+    results << policy.id() << "," << std::max( -10.0, policy.value() ) << std::endl;
+    ///
 
-//{
-//auto start = std::chrono::high_resolution_clock::now();
-//    /// TASK PLANNING
-//    tp->integrate( policy );
-//    tp->solve();
-//auto elapsed = std::chrono::high_resolution_clock::now() - start;
-//task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
-//}
-//    policy = tp->getPolicy();
+{
+auto start = std::chrono::high_resolution_clock::now();
+    /// TASK PLANNING
+    tp.integrate( policy );
+    tp.solve();
+auto elapsed = std::chrono::high_resolution_clock::now() - start;
+task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+}
+    policy = tp.getPolicy();
 
     } while( 0 );
 

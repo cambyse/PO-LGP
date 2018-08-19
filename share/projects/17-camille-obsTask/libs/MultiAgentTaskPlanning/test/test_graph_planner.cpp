@@ -187,7 +187,7 @@ TEST_F(GraphPlannerTest, PolicyValue)
   tp.solve();
 
   auto policy = tp.getPolicy();
-  EXPECT_EQ( policy.value(), -2.0 );
+  EXPECT_NEAR( policy.value(), -2.0, 0.001);
 }
 
 //

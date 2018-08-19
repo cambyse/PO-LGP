@@ -42,24 +42,22 @@ static arr extractAgentQMask( const mlr::KinematicWorld & G )  // retrieve agent
   return qmask;
 }
 
-//static double updateValue( const Policy::GraphNodeType::ptr & node )
-//{
-//  double value = 0;
+static double updateValue( const Skeleton::GraphNodeType::ptr & node )
+{
+  double value = 0;
 
-//  for( auto c : node->children() )
-//  {
-//    value += c->p() * ( c->data().markovianReturn + updateValue( c ) );
-//  }
+  for( auto c : node->children() )
+  {
+    value += c->data().p * ( c->data().markovianReturn + updateValue( c ) );
+  }
 
-//  node->setValue( value );
+  return value;
+}
 
-//  return value;
-//}
-
-//static void updateValues( Policy & policy )
-//{
-//  policy.setValue( updateValue( policy.root() ) );
-//}
+static void updateValues( Skeleton & policy )
+{
+  policy.setValue( updateValue( policy.root() ) );
+}
 
 //--------Motion Planner--------------//
 
@@ -204,7 +202,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
     }
 
     /// UPDATE VALUES
-    //updateValues( policy );
+    updateValues( policy );
 
     policy.setStatus( Skeleton::INFORMED );
   }
@@ -258,7 +256,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       }
 
       /// UPDATE VALUES
-      //updateValues( policy );
+      updateValues( policy );
 
       policy.setStatus( Skeleton::INFORMED );
     }

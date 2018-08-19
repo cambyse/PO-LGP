@@ -43,7 +43,7 @@ struct SkeletonNodeData
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
   double markovianReturn;
-  double p;
+  double p; // probability to reach this node given the parent
 
   friend class boost::serialization::access;
   template<class Archive>
