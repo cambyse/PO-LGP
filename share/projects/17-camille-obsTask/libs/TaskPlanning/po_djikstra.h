@@ -15,7 +15,7 @@
 #pragma once
 
 #include "po_graph.h"
-#include "policy.h"
+#include "skeleton.h"
 
 namespace tp
 {

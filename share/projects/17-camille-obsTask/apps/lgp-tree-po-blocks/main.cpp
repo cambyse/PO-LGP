@@ -262,7 +262,7 @@ void plan_graph_search()
   auto mp = std::make_shared< mp::KOMOPlanner >();
 
   // set planner specific parameters
-  tp.setR0( -0.1 );
+  tp.setR0( -0.001 );
   tp.setMaxDepth( 8 );
   mp->setNSteps( 5 );
 

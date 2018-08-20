@@ -149,6 +149,7 @@ void Skeleton::copy( const Skeleton & policy )
     id_ = policy.id_;
     value_ = policy.value_;
     status_ = policy.status_;
+    leafs_.clear();
 
     auto rootData = policy.root_->data();
 
@@ -200,10 +201,13 @@ bool operator== ( const Skeleton & a, const Skeleton & b )
     auto itA = nodesA.begin();
     auto itB = nodesB.begin();
 
-    equal = equal && (*itA)->id() == (*itB)->id();
+    while( itA != nodesA.end() && itB != nodesB.end() )
+    {
+      equal = equal && (*itA)->data().decisionGraphNodeId == (*itB)->data().decisionGraphNodeId;
 
-    ++itA;
-    ++itB;
+      ++itA;
+      ++itB;
+    }
   }
 
   return equal;

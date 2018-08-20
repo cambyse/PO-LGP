@@ -100,12 +100,13 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
   nData.states = states;
   nData.terminal = terminal;
 
-  auto pData = tp.decisionGraphtoPolicyData( nData );
+  auto pData = tp.decisionGraphtoPolicyData( nData, 1 );
 
   //ASSERT_EQ( pData.beliefState    , beliefState );
   ASSERT_EQ( pData.markovianReturn, r0 );
   ASSERT_EQ( pData.leadingKomoArgs.size(), 4 );
   ASSERT_EQ( pData.p, p );
+  ASSERT_EQ( pData.decisionGraphNodeId, 1 );
 }
 
 TEST_F(GraphPlannerTest, PolicySaveSingleAgent2W) {

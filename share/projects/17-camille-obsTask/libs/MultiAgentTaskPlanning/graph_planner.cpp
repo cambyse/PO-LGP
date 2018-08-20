@@ -32,10 +32,13 @@ void GraphPlanner::setFol( const std::string & descrition )
 
 void GraphPlanner::solve()
 {
-  if( rewards_.empty() )
+  if( graph_.empty() )
   {
     buildGraph();
+  }
 
+  if( rewards_.empty() )
+  {
     initializeRewards();
   }
 
@@ -56,7 +59,7 @@ void GraphPlanner::integrate( const Skeleton & policy )
     auto n = Q.front();
     Q.pop();
 
-    rewards_[ n->id() ] = n->data().markovianReturn;
+    rewards_[ n->data().decisionGraphNodeId ] = n->data().markovianReturn;
 
     for( auto c : n->children() )
     {
@@ -78,14 +81,7 @@ Skeleton GraphPlanner::getPolicy() const
 
 double GraphPlanner::reward( uint nodeId ) const
 {
-  auto it = rewards_.find( nodeId );
-
-  if( it != rewards_.end() )
-  {
-    return it->second;
-  }
-
-  return m_inf();
+  return rewards_[ nodeId ];
 }
 
 void GraphPlanner::buildGraph()
@@ -100,13 +96,15 @@ void GraphPlanner::buildGraph()
 
 void GraphPlanner::initializeRewards()
 {
+  rewards_ = std::vector< double >( graph_.nodes().size(), r0_ );
+
   for( const auto & n : graph_.nodes() )
   {
     rewards_[ n.lock()->id() ] = r0_;
   }
 }
 
-SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData ) const
+SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData, uint id ) const
 {
   SkeletonNodeData pData;
 
@@ -114,6 +112,7 @@ SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData
   pData.markovianReturn = r0_;
   pData.leadingKomoArgs = decisionArtifactToKomoArgs( dData.leadingArtifact );
   pData.p           = dData.p;
+  pData.decisionGraphNodeId = id;
 
   return pData;
 }
@@ -125,7 +124,7 @@ void GraphPlanner::valueIteration()
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   double alpha = 0.5;
-  constexpr double initValue = -10.0;
+  constexpr double initValue = 10.0;
 
   values_ = std::vector< double >( graph_.size(), initValue ); // magic value!! distance from root to vertex[i]
 
@@ -135,7 +134,7 @@ void GraphPlanner::valueIteration()
   };
 
   // go from leafs to root
-  auto nodes = graph_.nodes();
+  const auto nodes = graph_.nodes();
   auto terminals = graph_.terminalNodes();
   for( auto weakV : terminals )
   {
@@ -157,6 +156,11 @@ void GraphPlanner::valueIteration()
     {
       auto u = weakU.lock();
 
+      if( u->id() == 196 )
+      {
+        int a = 0;
+      }
+
       if( u->data().nodeType == NodeData::NodeType::ACTION )
       {
         if( u->data().agentId == 0 )
@@ -168,14 +172,20 @@ void GraphPlanner::valueIteration()
             // max operation, choose the best child
             for( auto v : u->children() )
             {
-              if( values_[ v->id() ] + r0_ > newValue )
+              const auto r = rewards_[ v->id() ];
+
+              if( values_[ v->id() ] == 0 && fabs( r ) < 0.05 )
               {
-                auto r = rewards_[ v->id() ];
+                int a = 0;
+              }
+
+              if( values_[ v->id() ] + r > newValue )
+              {
                 newValue = values_[ v->id() ] + r;
               }
             }
 
-            if( newValue == m_inf() )
+            if( newValue == m_inf() ) // there were no children so unfeasible
             {
               values_[ u->id() ] = newValue;
             }
@@ -299,17 +309,17 @@ void GraphPlanner::buildSkeleton()
     Q.pop();
 
     auto u     = uPair.first;
-    auto uCopy = uPair.second;
+    auto uSke = uPair.second;
 
     for( auto v : u->children() )
     {
-      SkeletonNodeData data = decisionGraphtoPolicyData( v->data() );
+      SkeletonNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
 
-      auto vCopy = uCopy->makeChild( data );
+      auto vSke = uSke->makeChild( data );
 
       for( auto w : v->children() ) // skip obs nodes
       {
-        Q.push( std::make_pair( w, vCopy ) );
+        Q.push( std::make_pair( w, vSke ) );
       }
     }
   }

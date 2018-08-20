@@ -42,8 +42,9 @@ struct SkeletonNodeData
 {
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
-  double markovianReturn;
-  double p; // probability to reach this node given the parent
+  double markovianReturn = 0;
+  double p = 0; // probability to reach this node given the parent
+  uint decisionGraphNodeId = 0; // id of the corresponding node in decision graph
 
   friend class boost::serialization::access;
   template<class Archive>
@@ -53,6 +54,7 @@ struct SkeletonNodeData
     ar & leadingKomoArgs;
     ar & markovianReturn;
     ar & p;
+    ar & decisionGraphNodeId;
   }
 };
 

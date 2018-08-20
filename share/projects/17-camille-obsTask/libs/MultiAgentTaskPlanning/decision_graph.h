@@ -40,7 +40,7 @@ public:
   DecisionGraph& operator= ( const DecisionGraph & ); // assignment operator
 
   DecisionGraph( const LogicEngine &, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState );
-  bool empty() const { return nodes_.size() == 0; }
+  bool empty() const { return nodes_.size() <= 1; } // root node
   std::size_t size() const { return nodes_.size(); }
   void build( int maxSteps );
   std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node );

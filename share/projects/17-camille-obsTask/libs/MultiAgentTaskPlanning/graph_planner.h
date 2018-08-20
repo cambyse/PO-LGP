@@ -46,7 +46,7 @@ public:
   uint agentNumber() const { return parser_.agentNumber(); }
 
   // stand-alone
-  SkeletonNodeData decisionGraphtoPolicyData( const NodeData & n ) const;
+  SkeletonNodeData decisionGraphtoPolicyData( const NodeData & n, uint ) const;
 
 private:
   void valueIteration();
@@ -63,7 +63,7 @@ private:
 
   // value iteration
   double r0_ = -1;
-  std::unordered_map< uint, double > rewards_; // current state of rewards
+  std::vector< double > rewards_; // current state of rewards
   std::vector< double > values_;
   DecisionGraph decidedGraph_;
 
