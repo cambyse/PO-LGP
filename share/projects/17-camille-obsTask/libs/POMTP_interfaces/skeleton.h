@@ -123,4 +123,8 @@ private:
   enum StatusType status_;
 };
 
+bool operator== ( const Skeleton & a, const Skeleton & b );
+bool operator!= ( const Skeleton & a, const Skeleton & b );
+
+
 std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node );

@@ -20,6 +20,34 @@
 
 static int skeletonNumber = 0;
 
+//----Free functions-------------------//
+static std::list< Skeleton::GraphNodeTypePtr> nodes( const Skeleton & a )
+{
+  std::list< Skeleton::GraphNodeTypePtr > nlist;
+
+  std::queue< Skeleton::GraphNodeTypePtr > Q;
+
+  if( ! a.empty() )
+  {
+    Q.push( a.root() );
+    nlist.push_back( a.root() );
+  }
+
+  while( ! Q.empty() )
+  {
+    auto n = Q.front();
+    Q.pop();
+
+    for( const auto & c : n->children() )
+    {
+      Q.push( c );
+      nlist.push_back( c );
+    }
+  }
+
+  return nlist;
+}
+
 //----Skeleton-------------------------//
 Skeleton::Skeleton()
   : status_( SKELETON )
@@ -151,6 +179,38 @@ void Skeleton::copy( const Skeleton & policy )
       }
     }
   }
+}
+
+bool operator== ( const Skeleton & a, const Skeleton & b )
+{
+  std::list< Skeleton::GraphNodeTypePtr > nodesA = nodes( a );
+  std::list< Skeleton::GraphNodeTypePtr > nodesB = nodes( b );
+
+  bool equal = true;
+  if( nodesA.size() != nodesB.size() )
+  {
+    equal = false;
+  }
+  else if( nodesA.empty() )
+  {
+    return true;
+  }
+  else
+  {
+    auto itA = nodesA.begin();
+    auto itB = nodesB.begin();
+
+    equal = equal && (*itA)->id() == (*itB)->id();
+
+    ++itA;
+    ++itB;
+  }
+
+  return equal;
+}
+bool operator!= ( const Skeleton & a, const Skeleton & b )
+{
+  return ! ( a == b );
 }
 
 std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node )

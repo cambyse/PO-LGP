@@ -7,7 +7,7 @@
 #include <boost/filesystem.hpp>
 
 // GraphNode
-TEST(Skeleton, Save) {
+TEST(Skeleton, SaveLoad) {
   Skeleton p;
   //
   const std::string filename( "policy" );
@@ -24,6 +24,47 @@ TEST(Skeleton, Save) {
 
   ASSERT_EQ( pp.value(), value );
   ASSERT_EQ( pp.status(), status );
+}
+
+TEST(Skeleton, Equality) {
+  // root
+  SkeletonNodeData rootData;
+  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+  Skeleton p( root );
+  //
+  const std::string filename( "policy" );
+  const double value = 1.0;
+  const Skeleton::StatusType status( Skeleton::INFORMED );
+  //
+
+  p.setValue( 1.0 );
+  p.setStatus( status );
+  p.save( filename );
+
+  Skeleton pp;
+  pp.load( filename );
+
+  ASSERT_EQ( pp, p );
+}
+
+TEST(Skeleton, NonEquality) {
+  // root
+  SkeletonNodeData rootData;
+  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+  Skeleton p( root );
+  //
+  const std::string filename( "policy" );
+  const double value = 1.0;
+  const Skeleton::StatusType status( Skeleton::INFORMED );
+  //
+
+  p.setValue( 1.0 );
+  p.setStatus( status );
+  p.save( filename );
+
+  Skeleton pp;
+
+  ASSERT_NE( pp, p );
 }
 
 // GraphNode
@@ -51,7 +92,6 @@ TEST(Skeleton, SaveToGraph) {
   // policy
   Skeleton p( root );
   p.setValue( 1.0 );
-
   p.saveToGraphFile( "policy_graph.gv" );
 
   ASSERT_TRUE( boost::filesystem::exists( filename ) );

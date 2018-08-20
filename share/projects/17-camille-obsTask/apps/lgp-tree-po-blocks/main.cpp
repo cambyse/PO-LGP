@@ -358,14 +358,14 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 }
     policy = tp.getPolicy();
 
-    } while( 0 );
+//    } while( 0 );
 
-//  } while( ! skeletonEquals( lastPolicy, policy ) );
+  } while( lastPolicy != policy/*skeletonEquals( lastPolicy, policy )*/ );
 
 /////
-//  savePolicyToFile( policy, "-final" );
-//  candidate << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
-//  results << policy->id() << "," << std::max( -10.0, policy->value() ) << std::endl;
+  savePolicyToFile( policy, "-final" );
+  candidate << policy.id() << "," << std::max( -10.0, policy.value() ) << std::endl;
+  results << policy.id() << "," << std::max( -10.0, policy.value() ) << std::endl;
 
 //  candidate.close();
 //  results.close();

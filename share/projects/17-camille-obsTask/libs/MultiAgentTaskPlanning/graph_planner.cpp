@@ -32,9 +32,12 @@ void GraphPlanner::setFol( const std::string & descrition )
 
 void GraphPlanner::solve()
 {
-  buildGraph();
+  if( rewards_.empty() )
+  {
+    buildGraph();
 
-  initializeRewards();
+    initializeRewards();
+  }
 
   valueIteration();
 
@@ -117,6 +120,8 @@ SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData
 
 void GraphPlanner::valueIteration()
 {
+  std::cout << "GraphPlanner::valueIteration.. start" << std::endl;
+
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   double alpha = 0.5;
@@ -165,7 +170,8 @@ void GraphPlanner::valueIteration()
             {
               if( values_[ v->id() ] + r0_ > newValue )
               {
-                newValue = values_[ v->id() ] + rewards_[ v->id() ];
+                auto r = rewards_[ v->id() ];
+                newValue = values_[ v->id() ] + r;
               }
             }
 
