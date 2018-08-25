@@ -259,19 +259,19 @@ void groundStack( double phase, const std::vector< std::string >& facts, mp::Ext
 void plan_graph_search()
 {
   matp::GraphPlanner tp;
-  auto mp = std::make_shared< mp::KOMOPlanner >();
+  mp::KOMOPlanner mp;
 
   // set planner specific parameters
-  tp.setR0( -0.001 );
+  tp.setR0( -0.1 );
   tp.setMaxDepth( 8 );
-  mp->setNSteps( 5 );
+  mp.setNSteps( 10 );
 
   // register symbols
-  mp->registerTask( "pick-up"       , groundPickUp );
-  mp->registerTask( "put-down"      , groundPutDown );
-  mp->registerTask( "check"        , groundCheck );
-  mp->registerTask( "stack"        , groundStack );
-  mp->registerTask( "unstack"      , groundUnStack );
+  mp.registerTask( "pick-up"      , groundPickUp );
+  mp.registerTask( "put-down"     , groundPutDown );
+  mp.registerTask( "check"        , groundCheck );
+  mp.registerTask( "stack"        , groundStack );
+  mp.registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
   //tp.setFol( "LGP-blocks-fol.g" );
@@ -283,8 +283,9 @@ void plan_graph_search()
   //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
 
-  //tp->setFol( "LGP-blocks-fol-2w.g" );
-  //mp->setKin( "LGP-blocks-kin-2w.g" );
+  // checked doesn't work with n steps = 5
+  tp.setFol( "LGP-blocks-fol-2w.g" );
+  mp.setKin( "LGP-blocks-kin-2w.g" );
 
   //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
@@ -292,8 +293,9 @@ void plan_graph_search()
   //tp->setFol( "LGP-blocks-fol-1w.g" );
   //mp->setKin( "LGP-blocks-kin-1w.g" );
 
-  tp.setFol( "LGP-blocks-fol-1w-model-2.g" );
-  mp->setKin( "LGP-blocks-kin-1w.g" );
+  // checked
+  //tp.setFol( "LGP-blocks-fol-1w-model-2.g" );
+  //mp->setKin( "LGP-blocks-kin-1w.g" );
 
 ///
   std::ofstream candidate, results;
@@ -339,7 +341,7 @@ auto start = std::chrono::high_resolution_clock::now();
     /// MOTION PLANNING
     auto po     = MotionPlanningParameters( policy.id() );
     po.setParam( "type", "markovJointPath" );
-    mp->solveAndInform( po, policy );
+    mp.solveAndInform( po, policy );
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }
@@ -360,20 +362,20 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 
 //    } while( 0 );
 
-  } while( lastPolicy != policy/*skeletonEquals( lastPolicy, policy )*/ );
+  } while( lastPolicy != policy );
 
 /////
   savePolicyToFile( policy, "-final" );
   candidate << policy.id() << "," << std::max( -10.0, policy.value() ) << std::endl;
   results << policy.id() << "," << std::max( -10.0, policy.value() ) << std::endl;
 
-//  candidate.close();
-//  results.close();
+  candidate.close();
+  results.close();
 /////
 
 {
 auto start = std::chrono::high_resolution_clock::now();
-  mp->display( policy, 3000 );
+  mp.display( policy, 3000 );
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }

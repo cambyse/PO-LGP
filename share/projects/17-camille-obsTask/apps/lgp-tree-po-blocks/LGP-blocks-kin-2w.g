@@ -42,7 +42,7 @@ shape id_2(block_2) { type=9 rel=<T t(0 -0.05 0.0)> size=[.1 .02 .1 .01] color=[
 
 ## Joints
 joint (shelf block_o)           { from=<T t(-0.225 0 .65  ) t(0 0 0)> to=<T > type=10 } 
-joint (tableC block_2)          { from=<T t( 0.3   0 .07 ) t(0 0 0)> to=<T > type=10 }
+joint (tableC block_2)          { from=<T t( 0.6   0 .07 ) t(0 0 0)> to=<T > type=10 }
 joint (tableC block_1)          { from=<T t( 0.15  0 .07 ) t(0 0 0)> to=<T > type=10 } 
 joint (block_1 block_3)         { from=<T t( 0.0   0 .1  ) t(0 0 0)> to=<T > type=10 } 
 

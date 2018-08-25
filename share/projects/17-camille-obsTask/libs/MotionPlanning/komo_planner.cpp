@@ -659,7 +659,9 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
                 CHECK( pathKinFrames_[ terminalLeafx ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
 
-                auto pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
+                const auto & pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
+
+                CHECK_EQ( q.N, pathLeafx( nodeSlice ).q.N, "wrong q dimensions!" );
 
                 q += node->data().beliefState[ x ] * pathLeafx( nodeSlice ).q;
 
@@ -676,7 +678,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
               komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
               //
-              //std::cout << slice_t << "->" << slice_t << ": kin equality " << std::endl;
+              std::cout << "depth:" << node->depth() << " slice:" << slice_t << " has kin equality, q size = " << qmask.size() << std::endl;
               //
             }
           }

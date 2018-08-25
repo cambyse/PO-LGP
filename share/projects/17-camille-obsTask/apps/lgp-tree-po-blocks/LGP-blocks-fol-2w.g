@@ -63,15 +63,22 @@ START_STATE { (table tableC)
 (identified block_2)
 }
 
+EVENTUAL_FACTS{ 
+{
+(NOT_OBSERVABLE is block_3 block_c)
+(NOT_OBSERVABLE is block_1 block_a)
+}
+{
+(NOT_OBSERVABLE is block_1 block_c)
+(NOT_OBSERVABLE is block_3 block_a)
+}
+}
+
 BELIEF_START_STATE{ 
 {
-(is block_3 block_c)
-(is block_1 block_a)
 ()=0.6
 }
 {
-(is block_1 block_c)
-(is block_3 block_a)
 ()=0.4
 }
 }
