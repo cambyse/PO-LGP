@@ -263,7 +263,7 @@ void plan_graph_search()
 
   // set planner specific parameters
   tp.setR0( -0.1 );
-  tp.setMaxDepth( 10 );
+  tp.setMaxDepth( 9 );
   mp.setNSteps( 10 );
 
   // register symbols

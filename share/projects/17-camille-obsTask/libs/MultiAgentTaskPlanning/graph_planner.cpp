@@ -136,6 +136,23 @@ void GraphPlanner::valueIteration()
     return values_[ a->id() ] < values_[ b->id() ];
   };
 
+  auto diff_func = []( double a, double b ) -> double
+  {
+    const double gentle_m_inf = -10e8;
+    if( a < gentle_m_inf && b < gentle_m_inf )
+    {
+      return 0;
+    }
+    else if( a >= gentle_m_inf && b >= gentle_m_inf )
+    {
+      return fabs( a -b );
+    }
+    else
+    {
+      return std::numeric_limits< double >::infinity();
+    }
+  };
+
   // go from leafs to root
   const auto nodes = graph_.nodes();
   auto terminals = graph_.terminalNodes();
@@ -149,20 +166,17 @@ void GraphPlanner::valueIteration()
   // expected reward up to terminal nodes
   // add terminal nodes to Q
   uint totalUpdates = 0;
-  constexpr double eps = 0.01;
+  constexpr double eps = 10e-4;
   bool stable = false;
-  for( auto i = 0; ! stable && i < 1000; ++i )
+  for( auto i = 0; ! stable && i < 100; ++i )
   {
+    std::cout << " it: " << i << std::endl;
+
     double maxDiff = 0;
 
     for( auto weakU : nodes )
     {
       auto u = weakU.lock();
-
-      if( u->id() == 196 )
-      {
-        int a = 0;
-      }
 
       if( u->data().nodeType == NodeData::NodeType::ACTION )
       {
@@ -170,61 +184,79 @@ void GraphPlanner::valueIteration()
         {
           if( ! u->data().terminal )
           {
-            double newValue = m_inf(); // if no children and not terminal, it means that it is infeasible hence m_inf
+            double newTargetValue = m_inf(); // if no children and not terminal, it means that it is infeasible hence m_inf
 
             // max operation, choose the best child
             for( auto v : u->children() )
             {
               const auto r = rewards_[ v->id() ];
 
-              if( values_[ v->id() ] == 0 && fabs( r ) < 0.05 )
+              if( values_[ v->id() ] + r > newTargetValue )
               {
-                int a = 0;
-              }
-
-              if( values_[ v->id() ] + r > newValue )
-              {
-                newValue = values_[ v->id() ] + r;
+                newTargetValue = values_[ v->id() ] + r;
               }
             }
 
-            if( newValue == m_inf() ) // there were no children so unfeasible
+            if( newTargetValue == m_inf() ) // there were no children so unfeasible
             {
-              values_[ u->id() ] = newValue;
+              const auto diff = diff_func( values_[ u->id() ], m_inf() );
+              maxDiff = std::max( maxDiff, diff );
+
+              //std::cout << "A update " << u->id() << " old value:" << values_[ u->id() ] << " new value:" << m_inf() << std::endl;
+              //std::cout << "diff:" << diff << " maxDiff:" << maxDiff << std::endl;
+
+              values_[ u->id() ] = m_inf();
             }
             else
             {
-              values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
-            }
+              const auto newValue = values_[ u->id() ] * ( 1 - alpha ) + alpha * newTargetValue;
+              const auto diff = diff_func( values_[ u->id() ], newValue );
+              maxDiff = std::max( maxDiff, diff );
 
-            maxDiff = std::max( maxDiff, std::abs( values_[ u->id() ] - newValue ) );
+              //std::cout << "B update " << u->id() << " old value:" << values_[ u->id() ] << " new value:" << newValue << std::endl;
+              //std::cout << "diff:" << diff << " maxDiff:" << maxDiff << std::endl;
+
+              values_[ u->id() ] = newValue;
+            }
           }
         }
         else // other agent
         {
-          double newValue = 0;
+          double newTargetValue = 0;
 
           uint n = u->children().size();
           for( auto v : u->children() )
           {
-            newValue += 1.0 / n * values_[ v->id() ] ; // average
+            newTargetValue += 1.0 / n * values_[ v->id() ] ; // average
           }
 
-          maxDiff = std::max( maxDiff, std::abs( values_[ u->id() ] - newValue ) );
-          values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
+          const auto newValue = values_[ u->id() ] * ( 1 - alpha ) + alpha * newTargetValue;
+          const auto diff = diff_func( values_[ u->id() ], newValue );
+          maxDiff = std::max( maxDiff, diff );
+
+          //std::cout << "C update " << u->id() << " old value:" << values_[ u->id() ] << " new value:" << newValue << std::endl;
+          //std::cout << "diff:" << diff << " maxDiff:" << maxDiff << std::endl;
+
+          values_[ u->id() ] = newValue;
         }
       }
       else if( u->data().nodeType == NodeData::NodeType::OBSERVATION )
       {
-        double newValue = 0;
+        double newTargetValue = 0;
 
         for( auto v : u->children() )
         {
-          newValue += v->data().p * values_[ v->id() ] ;
+          newTargetValue += v->data().p * values_[ v->id() ] ;
         }
 
-        maxDiff = std::max( maxDiff, std::abs( values_[ u->id() ] - newValue ) );
-        values_[ u->id() ] = values_[ u->id() ] * ( 1 - alpha ) + alpha * newValue;
+        const auto newValue = values_[ u->id() ] * ( 1 - alpha ) + alpha * newTargetValue;
+        const auto diff = diff_func( values_[ u->id() ], newValue );
+        maxDiff = std::max( maxDiff, diff );
+
+        //std::cout << "D update " << u->id() << " old value:" << values_[ u->id() ] << " new value:" << newValue << std::endl;
+        //std::cout << "diff:" << diff << " maxDiff:" << maxDiff << std::endl;
+
+        values_[ u->id() ] = newValue;
       }
     }
 

@@ -43,6 +43,7 @@ public:
 
   // other getters
   DecisionGraph decisionGraph() const { return graph_; }
+  std::vector< double > values() const { return values_; }
   uint agentNumber() const { return parser_.agentNumber(); }
 
   // stand-alone

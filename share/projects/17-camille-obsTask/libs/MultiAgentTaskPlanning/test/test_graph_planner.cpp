@@ -22,25 +22,32 @@ TEST_F(GraphPlannerTest, ThrowIfNoAgentFiles) {
 
 TEST_F(GraphPlannerTest, AgentNumber) {
   tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
+
   ASSERT_EQ( tp.agentNumber(), 2 );
 }
 
 TEST_F(GraphPlannerTest, emptyGraph) {
   tp.buildGraph();
+
   auto graph = tp.decisionGraph();
+
   ASSERT_TRUE( graph.empty() );
 }
 
 TEST_F(GraphPlannerTest, OneNodeIfCorrectFile) {
   tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+
   auto graph = tp.decisionGraph();
+
   ASSERT_TRUE( graph.size() == 1 );
 }
 
 TEST_F(GraphPlannerTest, buildGraph) {
   tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
   tp.setMaxDepth( 3 );
+
   tp.buildGraph();
+
   tp.saveGraphToFile( "LGP-overtaking-single-agent-2w.gv" );
   auto graph = tp.decisionGraph();
   ASSERT_TRUE( graph.size() > 1 );
@@ -49,7 +56,9 @@ TEST_F(GraphPlannerTest, buildGraph) {
 TEST_F(GraphPlannerTest, buildGraphDoubleAgent1w) {
   tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
   tp.setMaxDepth( 2 );
+
   tp.buildGraph();
+
   tp.saveGraphToFile( "LGP-overtaking-double-agent-1w.gv" );
   auto graph = tp.decisionGraph();
   ASSERT_TRUE( graph.size() > 1 );
@@ -64,7 +73,9 @@ TEST_F(GraphPlannerTest, buildGraphDoubleAgent1w) {
 
 TEST_F(GraphPlannerTest, solveDoubleAgent2w) {
   tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
+
   tp.solve();
+
   auto policy = tp.getPolicy();
   ASSERT_FALSE( policy.empty() );
 }
@@ -111,7 +122,9 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
 
 TEST_F(GraphPlannerTest, PolicySaveSingleAgent2W) {
   tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+
   tp.solve();
+
   auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-single-agent-2w" );
   policy.save( policyFileName + ".po" );
@@ -123,7 +136,9 @@ TEST_F(GraphPlannerTest, PolicySaveSingleAgent2W) {
 TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1W) {
   tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
   tp.setMaxDepth( 2 );
+
   tp.solve();
+
   auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-1w" );
   policy.save( policyFileName + ".po" );
@@ -138,7 +153,9 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1W) {
 TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1WTweaked) {
   tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
   tp.setMaxDepth( 2 );
+
   tp.solve();
+
   auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-1w-tweaked" );
   auto leafs = policy.leafs();
@@ -154,7 +171,9 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1WTweaked) {
 TEST_F(GraphPlannerTest, PolicySaveDoubleAgent2W) {
   tp.setFol( "data/LGP-overtaking-double-agent-2w.g" );
   tp.setMaxDepth( 2 );
+
   tp.solve();
+
   auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-2w" );
   tp.saveDecidedGraphToFile(policyFileName + "-decided.gv");
@@ -167,7 +186,9 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent2W) {
 TEST_F(GraphPlannerTest, PolicyLeafs) {
   tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
   tp.setMaxDepth( 2 );
+
   tp.solve();
+
   tp.saveGraphToFile( "LGP-overtaking-single-agent-1w-decision-graph.gv" );
   tp.saveDecidedGraphToFile( "LGP-overtaking-single-agent-1w-decided-decision-graph.gv" );
   auto policy = tp.getPolicy();
@@ -205,6 +226,35 @@ TEST_F(GraphPlannerTest, IntegratePolicy)
 
   EXPECT_EQ( tp.reward( policy.root()->id() ), -0.2 );
   EXPECT_EQ( tp.reward( child->id() ), -0.3 );
+}
+
+TEST_F(GraphPlannerTest, ValueIteration) {
+  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  tp.setMaxDepth( 2 );
+
+  tp.solve();
+
+  auto values = tp.values();
+
+  const auto eps = 10e-3;
+  const auto inf = -10e8;
+
+  EXPECT_NEAR(values[0], -2, eps);
+
+  EXPECT_NEAR(values[1], -1, eps);
+  EXPECT_NEAR(values[2], -1, eps);
+
+  EXPECT_NEAR(values[5], 0, eps);
+  EXPECT_NEAR(values[6], 0, eps);
+
+  EXPECT_LE(values[3], inf);
+  EXPECT_LE(values[4], inf);
+
+  EXPECT_LE(values[7], inf);
+  EXPECT_LE(values[8], inf);
+
+  EXPECT_LE(values[9], inf);
+  EXPECT_LE(values[10], inf);
 }
 
 //
