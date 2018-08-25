@@ -58,43 +58,58 @@ START_STATE {
 (hand_empty) 
 }
 
+EVENTUAL_FACTS{ 
+{
+(NOT_OBSERVABLE is block_3 block_c)
+(NOT_OBSERVABLE is block_1 block_b)
+(NOT_OBSERVABLE is block_2 block_a)
+}
+{
+(NOT_OBSERVABLE is block_2 block_c)
+(NOT_OBSERVABLE is block_1 block_b)
+(NOT_OBSERVABLE is block_3 block_a)
+}
+
+{
+(NOT_OBSERVABLE is block_3 block_c)
+(NOT_OBSERVABLE is block_2 block_b)
+(NOT_OBSERVABLE is block_1 block_a)
+}
+{
+(NOT_OBSERVABLE is block_1 block_c)
+(NOT_OBSERVABLE is block_2 block_b)
+(NOT_OBSERVABLE is block_3 block_a)
+}
+
+{
+(NOT_OBSERVABLE is block_2 block_c)
+(NOT_OBSERVABLE is block_3 block_b)
+(NOT_OBSERVABLE is block_1 block_a)
+}
+{
+(NOT_OBSERVABLE is block_1 block_c)
+(NOT_OBSERVABLE is block_3 block_b)
+(NOT_OBSERVABLE is block_2 block_a)
+}
+}
+
 BELIEF_START_STATE{ 
 {
-(is block_3 block_c)
-(is block_1 block_b)
-(is block_2 block_a)
 ()=0.166666667
 }
 {
-(is block_2 block_c)
-(is block_1 block_b)
-(is block_3 block_a)
-()=0.166666667
-}
-
-{
-(is block_3 block_c)
-(is block_2 block_b)
-(is block_1 block_a)
 ()=0.166666667
 }
 {
-(is block_1 block_c)
-(is block_2 block_b)
-(is block_3 block_a)
-()=0.166666665
-}
-
-{
-(is block_2 block_c)
-(is block_3 block_b)
-(is block_1 block_a)
 ()=0.166666667
 }
 {
-(is block_1 block_c)
-(is block_3 block_b)
-(is block_2 block_a)
+()=0.166666667
+}
+{
+()=0.166666667
+}
+{
 ()=0.166666667
 }
 }

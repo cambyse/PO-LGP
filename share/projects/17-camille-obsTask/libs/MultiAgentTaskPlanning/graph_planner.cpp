@@ -86,12 +86,15 @@ double GraphPlanner::reward( uint nodeId ) const
 
 void GraphPlanner::buildGraph()
 {
+  std::cout << "GraphPlanner::buildGraph.." << std::endl;
   if( ! parser_.successfullyParsed() )
   {
     return;
   }
 
   graph_.build( maxDepth_ );
+
+  std::cout << "GraphPlanner::buildGraph.. end" << std::endl;
 }
 
 void GraphPlanner::initializeRewards()

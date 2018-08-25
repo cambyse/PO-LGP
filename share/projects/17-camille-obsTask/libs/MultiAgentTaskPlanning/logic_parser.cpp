@@ -109,7 +109,7 @@ void LogicParser::parseBeliefState( const std::string & description )
     }
 
     // check that the total sums to 1
-    if( totalProba != 1.00 )
+    if( fabs( totalProba - 1.00 ) > 10e-4 )
     {
       throw IncoherentDefinition();
     }

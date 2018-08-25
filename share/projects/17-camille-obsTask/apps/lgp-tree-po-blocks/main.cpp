@@ -263,7 +263,7 @@ void plan_graph_search()
 
   // set planner specific parameters
   tp.setR0( -0.1 );
-  tp.setMaxDepth( 8 );
+  tp.setMaxDepth( 10 );
   mp.setNSteps( 10 );
 
   // register symbols
@@ -274,18 +274,19 @@ void plan_graph_search()
   mp.registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
-  //tp.setFol( "LGP-blocks-fol.g" );
-  //mp->setKin( "LGP-blocks-kin.g" );
+  tp.setFol( "LGP-blocks-fol.g" );
+  mp.setKin( "LGP-blocks-kin.g" );
 
   //tp->setFol( "LGP-blocks-fol-model-2.g" );
   //mp->setKin( "LGP-blocks-kin.g" );
 
-  //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
-  //mp->setKin( "LGP-blocks-kin-2w.g" );
+  // checked, probably doesn't work with n steps = 5
+  //tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
+  //mp.setKin( "LGP-blocks-kin-2w.g" );
 
   // checked doesn't work with n steps = 5
-  tp.setFol( "LGP-blocks-fol-2w.g" );
-  mp.setKin( "LGP-blocks-kin-2w.g" );
+  //tp.setFol( "LGP-blocks-fol-2w.g" );
+  //mp.setKin( "LGP-blocks-kin-2w.g" );
 
   //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
