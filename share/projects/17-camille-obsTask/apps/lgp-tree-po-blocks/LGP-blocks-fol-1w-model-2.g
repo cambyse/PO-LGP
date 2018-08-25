@@ -64,14 +64,11 @@ START_STATE { (table tableC)
 
 (is block_1 block_a)
 (identified block_1)
+
+(is block_3 block_c)
+(identified block_3)
 }
 
-BELIEF_START_STATE{ 
-{
-(is block_3 block_c)
-()=1.0
-}
-}
 
 ### Termination RULES 
 Rule {

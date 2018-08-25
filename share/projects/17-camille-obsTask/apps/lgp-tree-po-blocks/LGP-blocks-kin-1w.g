@@ -8,7 +8,7 @@ Include = 'data/man_model.ors'
 ### objs
 
 #right
-body  shelf { X=<T t(-.75 -0.7 0.93) d(-90 0 0 1)> }
+body  shelf { X=<T t(-.95 -0.7 0.93) d(-90 0 0 1)> }
 shape shelf_back(shelf)   { type=9 rel=<T t(0  -0.15 0.6)>   size=[0.7 0.03 1.2 0.005] color=[1 0 0] }
 shape shelf_left(shelf)   { type=9 rel=<T t( .35  0.0  0.6)> size=[0.03 0.3 1.2 0.005] color=[1 0 0] }
 shape shelf_center(shelf) { type=9 rel=<T t(0 0.0  0.6)>     size=[0.03 0.3 1.2 0.005] color=[1 0 0] }
