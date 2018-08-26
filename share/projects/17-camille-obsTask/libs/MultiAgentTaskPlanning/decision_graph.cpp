@@ -8,6 +8,29 @@
 
 namespace matp
 {
+
+bool sameState ( const NodeData & a, const NodeData & b )
+{
+  return a.hash() == b.hash();
+}
+
+std::ostream& operator<<(std::ostream& stream, NodeData const& data)
+{
+  stream << "states:" << std::endl;
+  for( auto s : data.states )
+  {
+    stream << s << std::endl;
+  }
+
+  stream << "belief state:" << std::endl;
+  for( auto p : data.beliefState )
+  {
+    stream << p << std::endl;
+  }
+
+  return stream;
+}
+
 std::vector < double > normalizeBs( const std::vector < double > & bs )
 {
   std::vector < double > newBs = bs;
@@ -42,7 +65,7 @@ DecisionGraph& DecisionGraph::operator= ( const DecisionGraph & graph ) // assig
 // DecisionGraph
 DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState )
   : engine_( engine )
-  , root_( GraphNode< NodeData >::root( NodeData( { startStates, egoBeliefState } ) ) )
+  , root_( GraphNode< NodeData >::root( NodeData( startStates, egoBeliefState, "", false, 0, 0, NodeData::NodeType::ACTION ) ) )
 {
   nodes_.push_back( root_ );
 }
@@ -113,7 +136,19 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
         {
           CHECK( node->data().agentId == agentId, "Corruption in the queue!" );
           auto nextAgentId = ( agentId + 1 ) % engine_.agentNumber();
+
+//          for( auto s : outcome.states ) // tmp camille
+//          {
+//            std::cout << "creating child with states : " << s << std::endl;
+//          }
+
           auto childChild = child->makeChild( { outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, outcome.p, nextAgentId, NodeData::NodeType::ACTION } );
+
+//          for( auto s : outcome.states ) // tmp camille
+//          {
+//            std::cout << "after creation : " << childChild->data() << std::endl;
+//          }
+
 
           nodes_.push_back( childChild );
 
@@ -203,6 +238,8 @@ std::vector< std::string > DecisionGraph::getCommonPossibleActions( const GraphN
 
 std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< NodeData >::ptr & node, const std::string & action ) const
 {
+  //std::cout << "DecisionGraph::getPossibleOutcomes of " << node->id() << std::endl; // tmp camille
+
   std::vector< NodeData > outcomes;
 
   LogicEngine & engine = engine_; // copy to be const
@@ -223,10 +260,14 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
 
       engine.transition( action );
 
-      auto result           = engine.getState();
-      auto facts            = getFacts( result );
+      auto _result          = engine.getState();
+      auto filteredFacts    = getFacts( _result );
+      auto result     = filteredFacts.first;
+      auto facts = filteredFacts.second;
       auto observableFacts  = getObservableFacts( facts );
       auto terminal         = engine.isTerminal();
+
+      //std::cout << result << std::endl; // tmp camille
 
       std::set< std::string > newIntersection;
 
@@ -271,7 +312,7 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
 
     newBs = normalizeBs( newBs );
 
-    outcomes.push_back( { states, newBs, observation, terminal, p } );
+    outcomes.push_back( NodeData( states, newBs, observation, terminal, p, node->data().agentId, NodeData::NodeType::OBSERVATION)  );
   }
 
   return outcomes;

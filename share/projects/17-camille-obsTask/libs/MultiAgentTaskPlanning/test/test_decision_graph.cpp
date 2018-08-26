@@ -75,6 +75,93 @@ TEST(DecisionGraph, expandFromRoot2W) {
   ASSERT_EQ( rootChildren.size(), actions.size() );
 }
 
+TEST(DecisionGraph, expandCheckStateInequality) {  // graph connection if an equivalent symbolic state exits
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvfe"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_FALSE( sameState( data1, data2 ) );
+  }
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_FALSE( sameState( data1, data2 ) );
+  }
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", true, 0.0, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_FALSE( sameState( data1, data2 ) );
+  }
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", false, 0.0, 1, NodeData::NodeType::ACTION );
+
+  ASSERT_FALSE( sameState( data1, data2 ) );
+  }
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::OBSERVATION );
+
+  ASSERT_FALSE( sameState( data1, data2 ) );
+  }
+}
+TEST(DecisionGraph, expandCheckStateEquality) {  // graph connection if an equivalent symbolic state exits
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_TRUE( sameState( data1, data2 ) );
+  }
+
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "frfr", false, 0.0, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_TRUE( sameState( data1, data2 ) );
+  }
+
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "frfr", false, 0.2, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_TRUE( sameState( data1, data2 ) );
+  }
+}
+
+TEST(DecisionGraph, expandCheckStateEqualityAfterExpansion) {  // graph connection if an equivalent symbolic state exits
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-single-agent-2w.g" );
+  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  auto actions = graph.getCommonPossibleActions( graph.root(), 0 );
+  graph.expand( graph.root() );
+  graph.saveGraphToFile( "expandRewires-1.gv" );
+
+  auto rootChildren = graph.root()->children();
+  ASSERT_EQ( graph.size(), 6 );
+
+  // expand 5
+  for( auto c : graph.nodes() )
+  {
+    auto cc = c.lock();
+    if( cc->id() == 5 )
+    {
+      graph.expand( cc );
+      graph.saveGraphToFile( "expandRewires-2.gv" );
+    }
+  }
+  // compare state of 4, 5, 9, 10
+  for( auto c : graph.nodes() )
+  {
+    auto cc = c.lock();
+    if( cc->id() == 4 || cc->id() == 5 || cc->id() == 9 || cc->id() == 10 )
+    {
+      std::cout << cc->id() << ":" << cc->data();
+    }
+  }
+}
+
 TEST(DecisionGraph, expandFromRootDouble2W) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );

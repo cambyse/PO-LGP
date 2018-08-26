@@ -83,12 +83,13 @@ TEST(GraphNode, GraphNodeData) {
   ASSERT_EQ( child->data(), 1.0 );
 }
 
-TEST(GraphNode, AddExistingChild) {
+TEST(GraphNode, AddExistingChild) { // for graph
   auto root = GraphNode< double >::root( 0.0 );
   auto child = root->makeChild( 1.0 );
   auto childchild = child->makeChild( 1.0 );
   childchild->addExistingChild( child );
   ASSERT_EQ( childchild->children().size(), 1 );
+  ASSERT_EQ( child->parents().size(), 2 );
 }
 
 TEST(GraphNode, RemoveChild) {
@@ -97,6 +98,7 @@ TEST(GraphNode, RemoveChild) {
   auto child2 = root->makeChild( 1.0 );
   root->removeChild( child2 );
   ASSERT_EQ( root->children().size(), 1 );
+  ASSERT_EQ( child2->parents().size(), 0 );
 }
 
 TEST(GraphNode, ClearChildren) {
@@ -105,6 +107,8 @@ TEST(GraphNode, ClearChildren) {
   auto child2 = root->makeChild( 1.0 );
   root->clearChildren();
   ASSERT_EQ( root->children().size(), 0 );
+  ASSERT_EQ( child1->parents().size(), 0 );
+  ASSERT_EQ( child2->parents().size(), 0 );
 }
 
 TEST(GraphNode, SerializeSingleNode) {

@@ -23,7 +23,7 @@ int getAgentId( const std::string actionName );
 bool isOfAgent( const std::string & str, uint agentId );
 bool isOfAgent( const FOL_World::Handle & action, uint agentId );
 StringA nodeToStringA( Node * facts );
-std::set< std::string > getFacts( const std::string & state );
+std::pair< std::string, std::set< std::string > > getFacts( const std::string & state );
 bool isObservable( const std::string & fact );
 std::string getStateStr( FOL_World & fol );
 std::string concatenateFacts( const std::set< std::string > & facts );

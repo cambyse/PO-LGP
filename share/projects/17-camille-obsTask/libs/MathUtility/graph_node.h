@@ -11,6 +11,8 @@
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/list.hpp>
 
+#include <Core/util.h>
+
 template < typename T >
 class GraphNode : public std::enable_shared_from_this< GraphNode< T > >
 {
@@ -31,39 +33,53 @@ private:
   }
 
   GraphNode( const weak_ptr & parent, uint id, const T & data )
-    : parent_( parent )
-    , id_( id )
+    : id_( id )
     , graphId_( parent.lock()->graphId_ )
     , depth_( parent.lock()->depth_ + 1 )
     , data_( data )
   {
-
+    parents_.push_back( parent );
   }
 
 public:
   static ptr root( const T & data ) { graphCounter_++; return ptr( new GraphNode< T >( data ) ); }
 
-  bool isRoot() const { return parent_.lock() == nullptr; }
+  bool isRoot() const { return parent() == nullptr; }
   std::list< ptr > children() const { return children_; }
-  ptr parent() { return parent_.lock(); }
+  ptr parent() const
+  {
+    if( parents_.size() == 0 )
+    {
+      return nullptr;
+    }
+    else
+    {
+      CHECK_EQ( parents_.size(), 1, "multiple parents, ambiguous call!" );
+      return parents_.front().lock();
+    }
+  }
+  std::list< weak_ptr > parents() const { return parents_; }
   std::list< ptr > siblings() const
   {
-    auto parent = parent_.lock();
-    std::list< ptr > siblings;
-
-    for( auto s : parent->children() )
+    for( const auto _parent : parents_ )
     {
-      if( s != this->shared_from_this() )
-      {
-        siblings.push_back( s );
-      }
-    }
+      const auto parent = _parent.lock();
+      std::list< ptr > siblings;
 
-    return siblings;
+      for( auto s : parent->children() )
+      {
+        if( s != this->shared_from_this() )
+        {
+          siblings.push_back( s );
+        }
+      }
+
+      return siblings;
+    }
   }
   uint id() const { return id_; }
   void setId( uint id ) { id_ = id; }
-  uint depth() const { return depth_; }
+  uint depth() const { CHECK(parents_.size() == 0 || parents_.size() == 1, "ambiguous call to a node depth in a graph"); return depth_; }
   T data() const { return data_; }
   T& data() { return data_; }
 
@@ -80,16 +96,22 @@ public:
   void addExistingChild( const ptr & child )
   {
     children_.push_back( child );
+    child->addParent( this->shared_from_this() );
   }
 
   void removeChild( const ptr & child )
   {
-    children_.remove( child );
+    child->removeParent( this->shared_from_this() );
+    children_.remove( child ); 
   }
 
   void clearChildren()
   {
-    children_.clear();
+    while( ! children_.empty() )
+    {
+      removeChild( children_.front() );
+    }
+    //children_.clear();
   }
 
   friend class boost::serialization::access;
@@ -102,7 +124,7 @@ public:
     ar & id_;
     ar & depth_;
     ar & graphId_;
-    ar & parent_;
+    ar & parents_;
     ar & data_;
     ar & children_;
   }
@@ -112,10 +134,27 @@ public:
   static uint graphCounter_;
 
 private:
+  void addParent( const ptr & parent )
+  {
+    parents_.push_back( parent );
+  }
+
+  void removeParent( const weak_ptr & parent )
+  {
+    parents_.remove_if( [parent](weak_ptr p){ // no standard comparison between weak_ptr
+      ptr sparent = parent.lock();
+      ptr sp = p.lock();
+      if(sparent && sp)
+          return sparent == sp;
+      return false;
+    });
+  }
+
+private:
   uint id_;
   uint depth_;
   uint graphId_;
-  weak_ptr parent_;
+  std::list< weak_ptr > parents_;
   T data_;
   std::list< ptr > children_;
 };

@@ -19,6 +19,36 @@ struct NodeData
     OBSERVATION
   };
 
+  NodeData()
+    : states()
+    , beliefState()
+    , leadingArtifact()
+    , terminal( false )
+    , p( 0.0 )
+    , agentId( 0 )
+    , nodeType( NodeType::ACTION )
+  {
+    computeHash();
+  }
+
+  NodeData( const std::vector< std::string > & states,
+            const std::vector< double      > & beliefState,
+            const std::string leadingArtifact,
+            bool terminal,
+            double p,
+            uint agentId,
+            NodeType nodeType )
+    : states( states )
+    , beliefState( beliefState )
+    , leadingArtifact( leadingArtifact )
+    , terminal( terminal )
+    , p( p )
+    , agentId( agentId )
+    , nodeType( nodeType)
+  {
+    computeHash();
+  }
+
   std::vector< std::string > states;
   std::vector< double      > beliefState;
   std::string leadingArtifact; // leading action of leading observation
@@ -27,11 +57,40 @@ struct NodeData
   double p; // probability to reach this node given the parent
   uint agentId;
   NodeType nodeType;
+
+  std::size_t hash() const
+  {
+    return hash_;
+  }
+
+private:
+  void computeHash()  // element depending on the parent are not included into the hash
+  {
+    hash_ = 0;
+    for( const auto s : states )
+    {
+      hash_+=std::hash<std::string>()(s);
+    }
+    for( const auto p : beliefState )
+    {
+      hash_+=std::hash<double>()(p);
+    }
+    hash_+=std::hash<bool>()(terminal);
+    hash_+=agentId;
+    hash_+=(int)nodeType;
+  }
+
+  std::size_t hash_;
 };
+
+bool sameState ( const NodeData & a, const NodeData & b );
+
+std::ostream& operator<<(std::ostream& stream, NodeData const& data);
 
 class DecisionGraph
 {
 public:
+  using GraphNodeDataType = NodeData;
   using GraphNodeType = GraphNode< NodeData >;
 public:
   DecisionGraph() = default;
