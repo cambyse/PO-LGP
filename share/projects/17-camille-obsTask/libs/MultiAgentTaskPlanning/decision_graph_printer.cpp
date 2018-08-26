@@ -55,6 +55,15 @@ void GraphPrinter::print( const DecisionGraph & graph )
 
 void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node )
 {
+  if( printedNodes_.count( node->id() ) != 0 )
+  {
+    return;
+  }
+  else
+  {
+    printedNodes_.insert( node->id() );
+  }
+
   for( auto c : node->children() )
   {
     std::stringstream ss;

@@ -23,6 +23,7 @@ private:
 
 private:
   std::ostream & ss_;
+  std::set< uint > printedNodes_;
 };
 
 }

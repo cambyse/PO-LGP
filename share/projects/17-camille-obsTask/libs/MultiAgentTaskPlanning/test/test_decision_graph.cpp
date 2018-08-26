@@ -151,15 +151,22 @@ TEST(DecisionGraph, expandCheckStateEqualityAfterExpansion) {  // graph connecti
       graph.saveGraphToFile( "expandRewires-2.gv" );
     }
   }
+  std::map< uint, DecisionGraph::GraphNodeDataType > data;
   // compare state of 4, 5, 9, 10
   for( auto c : graph.nodes() )
   {
     auto cc = c.lock();
     if( cc->id() == 4 || cc->id() == 5 || cc->id() == 9 || cc->id() == 10 )
     {
-      std::cout << cc->id() << ":" << cc->data();
+      data[ cc->id() ] = cc->data();
+      //std::cout << cc->id() << ":" << cc->data();
     }
   }
+
+  ASSERT_TRUE( sameState( data[4], data[9] ) );
+  ASSERT_TRUE( sameState( data[5], data[10] ) );
+  ASSERT_FALSE( sameState( data[4], data[10] ) );
+  ASSERT_FALSE( sameState( data[5], data[9] ) );
 }
 
 TEST(DecisionGraph, expandFromRootDouble2W) {
@@ -261,6 +268,14 @@ TEST(DecisionGraph, buildFromRootDouble2WD3) {
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.build(1);
+  ASSERT_EQ( graph.size(), 24 );
+}
+
+TEST(DecisionGraph, buildGraph2W) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-single-agent-2w.g" );  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(10, true);
+  graph.saveGraphToFile("LGP-overtaking-single-agent-2w-graph.gv");
   ASSERT_EQ( graph.size(), 24 );
 }
 

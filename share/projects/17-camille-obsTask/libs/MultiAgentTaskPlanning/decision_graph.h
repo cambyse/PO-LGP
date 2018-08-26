@@ -4,6 +4,7 @@
 #include <queue>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include <logic_engine.h>
 
@@ -101,10 +102,10 @@ public:
   DecisionGraph( const LogicEngine &, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState );
   bool empty() const { return nodes_.size() <= 1; } // root node
   std::size_t size() const { return nodes_.size(); }
-  void build( int maxSteps );
-  std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node );
+  void build( int maxSteps, bool graph = false );
+  std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node, bool graph = false );
   GraphNodeType::ptr root() const { return root_; }
-  std::list< std::weak_ptr< GraphNodeType > > nodes() const { return nodes_; }
+  std::vector< std::weak_ptr< GraphNodeType > > nodes() const { return nodes_; }
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes() const { return terminalNodes_; }
 
   void saveGraphToFile( const std::string & filename ) const;
@@ -119,7 +120,8 @@ private:
 private:
   mutable LogicEngine engine_;
   GraphNodeType::ptr root_;
-  std::list< std::weak_ptr< GraphNodeType > > nodes_;
+  std::vector< std::weak_ptr< GraphNodeType > > nodes_;
+  std::unordered_map< std::size_t, uint > hash_to_id_;
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes_;
 };
 } // namespace matp

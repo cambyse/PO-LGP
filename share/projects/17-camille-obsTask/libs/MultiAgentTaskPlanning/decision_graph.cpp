@@ -70,7 +70,7 @@ DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std
   nodes_.push_back( root_ );
 }
 
-void DecisionGraph::build( int maxSteps )
+void DecisionGraph::build( int maxSteps, bool graph )
 {
   std::queue< GraphNode< NodeData >::ptr > queue;
   queue.push( root_ );
@@ -86,7 +86,7 @@ void DecisionGraph::build( int maxSteps )
 
     if( step < maxSteps )
     {
-      auto queueExtension = expand( node );
+      auto queueExtension = expand( node, graph );
 
       while( ! queueExtension.empty() )
       {
@@ -101,7 +101,7 @@ void DecisionGraph::build( int maxSteps )
   }
 }
 
-std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode< NodeData >::ptr & node )
+std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode< NodeData >::ptr & node, bool graph )
 {
   auto bs     = node->data().beliefState;
   auto states = node->data().states;
@@ -127,7 +127,9 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
       for( auto action : actions )
       {
         auto child = node->makeChild( { states, bs, action, false, 1.0, agentId, NodeData::NodeType::OBSERVATION } );
+
         nodes_.push_back( child );
+        hash_to_id_[ child->data().hash() ] = child->id();
 
         auto outcomes = getPossibleOutcomes( node, action );
 
@@ -137,28 +139,37 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
           CHECK( node->data().agentId == agentId, "Corruption in the queue!" );
           auto nextAgentId = ( agentId + 1 ) % engine_.agentNumber();
 
-//          for( auto s : outcome.states ) // tmp camille
-//          {
-//            std::cout << "creating child with states : " << s << std::endl;
-//          }
+          const auto childChildData = GraphNodeDataType( outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, outcome.p, nextAgentId, NodeData::NodeType::ACTION );
 
-          auto childChild = child->makeChild( { outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, outcome.p, nextAgentId, NodeData::NodeType::ACTION } );
-
-//          for( auto s : outcome.states ) // tmp camille
-//          {
-//            std::cout << "after creation : " << childChild->data() << std::endl;
-//          }
-
-
-          nodes_.push_back( childChild );
-
-          if( outcome.terminal )
+          bool nodeNeedsToBeCreated = true;
+          if( graph )
           {
-            terminalNodes_.push_back( childChild );
-          }
-          else
+            if( hash_to_id_.count( childChildData.hash() ) )
+            {
+              auto childChildId = hash_to_id_[ childChildData.hash() ];
+              auto childChild = nodes_[ childChildId ];
+
+              child->addExistingChild( childChild.lock() );
+
+              nodeNeedsToBeCreated = false;
+            }
+          }// tree case
+
+          if( nodeNeedsToBeCreated )
           {
-            nextQueue.push( childChild );
+            const auto childChild = child->makeChild( childChildData );
+            hash_to_id_[ childChild->data().hash() ] = childChild->id();
+
+            nodes_.push_back( childChild );
+
+            if( outcome.terminal )
+            {
+              terminalNodes_.push_back( childChild );
+            }
+            else
+            {
+              nextQueue.push( childChild );
+            }
           }
         }
       }
