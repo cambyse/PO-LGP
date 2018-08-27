@@ -257,6 +257,20 @@ TEST_F(GraphPlannerTest, ValueIteration) {
   EXPECT_LE(values[10], inf);
 }
 
+TEST_F(GraphPlannerTest, solveGraph2W) {
+  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  tp.setMaxDepth( 10 );
+
+  tp.buildGraph( true );
+  tp.solve();
+
+  auto policy = tp.getPolicy();
+
+  std::string policyFileName = "LGP-overtaking-single-agent-2w-graph-solving";
+  policy.save( policyFileName + ".po" );
+  policy.saveToGraphFile( policyFileName + ".gv" );
+}
+
 //
 int main(int argc, char **argv)
 {

@@ -274,8 +274,8 @@ void plan_graph_search()
   mp.registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
-  tp.setFol( "LGP-blocks-fol.g" );
-  mp.setKin( "LGP-blocks-kin.g" );
+  //tp.setFol( "LGP-blocks-fol.g" );
+  //mp.setKin( "LGP-blocks-kin.g" );
 
   //tp->setFol( "LGP-blocks-fol-model-2.g" );
   //mp->setKin( "LGP-blocks-kin.g" );
@@ -285,8 +285,8 @@ void plan_graph_search()
   //mp.setKin( "LGP-blocks-kin-2w.g" );
 
   // checked doesn't work with n steps = 5
-  //tp.setFol( "LGP-blocks-fol-2w.g" );
-  //mp.setKin( "LGP-blocks-kin-2w.g" );
+  tp.setFol( "LGP-blocks-fol-2w.g" );
+  mp.setKin( "LGP-blocks-kin-2w.g" );
 
   //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp->setKin( "LGP-blocks-kin-2w.g" );
@@ -296,7 +296,7 @@ void plan_graph_search()
 
   // checked
   //tp.setFol( "LGP-blocks-fol-1w-model-2.g" );
-  //mp->setKin( "LGP-blocks-kin-1w.g" );
+  //mp.setKin( "LGP-blocks-kin-1w.g" );
 
 ///
   std::ofstream candidate, results;
@@ -311,7 +311,7 @@ void plan_graph_search()
 {
 auto start = std::chrono::high_resolution_clock::now();
   /// GRAPH BUILDING
-  tp.buildGraph();
+  tp.buildGraph(true);
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 graph_building_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }

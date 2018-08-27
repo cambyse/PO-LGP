@@ -46,6 +46,8 @@ void GraphPlanner::solve()
 
   decideOnDecisionGraphCopy();
 
+  decidedGraph_.saveGraphToFile( "decided.gv" );
+
   buildSkeleton();
 }
 
@@ -84,7 +86,7 @@ double GraphPlanner::reward( uint nodeId ) const
   return rewards_[ nodeId ];
 }
 
-void GraphPlanner::buildGraph()
+void GraphPlanner::buildGraph( bool graph )
 {
   std::cout << "GraphPlanner::buildGraph.." << std::endl;
   if( ! parser_.successfullyParsed() )
@@ -92,7 +94,7 @@ void GraphPlanner::buildGraph()
     return;
   }
 
-  graph_.build( maxDepth_ );
+  graph_.build( maxDepth_, graph );
 
   std::cout << "GraphPlanner::buildGraph.. end" << std::endl;
 }
@@ -127,7 +129,7 @@ void GraphPlanner::valueIteration()
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   double alpha = 0.5;
-  constexpr double initValue = 10.0;
+  const double initValue = maxDepth_ * r0_;
 
   values_ = std::vector< double >( graph_.size(), initValue ); // magic value!! distance from root to vertex[i]
 
@@ -168,10 +170,8 @@ void GraphPlanner::valueIteration()
   uint totalUpdates = 0;
   constexpr double eps = 10e-4;
   bool stable = false;
-  for( auto i = 0; ! stable && i < 100; ++i )
+  for( auto i = 0; ! stable && i < 1000; ++i )
   {
-    std::cout << " it: " << i << std::endl;
-
     double maxDiff = 0;
 
     for( auto weakU : nodes )
@@ -261,6 +261,8 @@ void GraphPlanner::valueIteration()
     }
 
     stable = maxDiff < eps;
+
+    std::cout << "it: " << i << " maxDiff: " << maxDiff << std::endl;
   }
 
   std::cout << "GraphPlanner::valueIteration.. end" << std::endl;
@@ -268,8 +270,15 @@ void GraphPlanner::valueIteration()
 
 void GraphPlanner::decideOnDecisionGraphCopy()
 {
+  std::cout << "GraphPlanner::decideOnDecisionGraphCopy.." << std::endl;
+
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
+  std::vector< bool > toKeep( graph_.size(), false );
+  std::vector< bool > decided( graph_.size(), false );
+  toKeep[0] = true; // always keep root
+
+  decidedGraph_.reset();
   decidedGraph_ = graph_; // copy
 
   std::queue< NodeTypePtr > Q;
@@ -280,6 +289,8 @@ void GraphPlanner::decideOnDecisionGraphCopy()
   {
     auto u = Q.front();
     Q.pop();
+
+    decided[ u->id() ] = true;
 
     // EGO DECISION : we prune the actions that are sub-optimal
     if( u->data().agentId == 0 )
@@ -295,6 +306,12 @@ void GraphPlanner::decideOnDecisionGraphCopy()
             bestValue = values_[ v->id() ];
             bestId = v->id();
 
+            // keep this node and all its observation counterparts
+            toKeep[v->id()] = true;
+            for( auto w : v->children() )
+            {
+              toKeep[w->id()] = true;
+            }
             //std::cout << "best child of " << u->id() << " is " << v->id() << std::endl;
           }
         }
@@ -318,13 +335,40 @@ void GraphPlanner::decideOnDecisionGraphCopy()
     // push children on Q
     for( auto v : u->children() )
     {
-      Q.push( v );
+      if( ! decided[v->id()] )
+      {
+        Q.push( v );
+      }
     }
   }
+
+  // remove nodes that don't have to be kept
+  for( auto n : decidedGraph_.nodes() )
+  {
+    auto nn = n.lock();
+    if( nn )
+    {
+      if( ! toKeep[ nn->id() ] )
+      {
+        for( auto p : nn->parents() )
+        {
+          auto pp = p.lock();
+          if( pp )
+          {
+            pp->removeChild( nn );
+          }
+        }
+      }
+    }
+  }
+
+  std::cout << "GraphPlanner::decideOnDecisionGraphCopy.. end" << std::endl;
 }
 
 void GraphPlanner::buildSkeleton()
 {
+  std::cout << "GraphPlanner::buildSkeleton.." << std::endl;
+
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   std::queue< std::pair< NodeTypePtr, Skeleton::GraphNodeTypePtr > > Q;
@@ -361,6 +405,8 @@ void GraphPlanner::buildSkeleton()
 
   skeleton_ = Skeleton( policyRoot );
   skeleton_.setValue( values_[ decisionGraph().root()->id() ] );
+
+  std::cout << "GraphPlanner::buildSkeleton.. end" << std::endl;
 }
 
 }

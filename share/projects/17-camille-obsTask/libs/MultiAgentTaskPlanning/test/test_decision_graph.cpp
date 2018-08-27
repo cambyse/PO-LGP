@@ -271,14 +271,6 @@ TEST(DecisionGraph, buildFromRootDouble2WD3) {
   ASSERT_EQ( graph.size(), 24 );
 }
 
-TEST(DecisionGraph, buildGraph2W) {
-  LogicParser p;
-  p.parse( "data/LGP-overtaking-single-agent-2w.g" );  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
-  graph.build(10, true);
-  graph.saveGraphToFile("LGP-overtaking-single-agent-2w-graph.gv");
-  ASSERT_EQ( graph.size(), 24 );
-}
-
 TEST(DecisionGraph, decisionGraphCopy1) {
   LogicParser p;
   p.parse( "data/LGP-overtaking-double-agent-2w.g" );
@@ -446,6 +438,24 @@ TEST(DecisionGraph, buildGraphAndPrint1WD2) {
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.build(2);
   graph.saveGraphToFile( "buildGraphAndPrint1WD2.gv" );
+}
+
+// Specific to graphs (vs. tree)
+TEST(DecisionGraph, buildGraph2W) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-single-agent-2w.g" );  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(10, true);
+  graph.saveGraphToFile("LGP-overtaking-single-agent-2w-graph.gv");
+  ASSERT_EQ( graph.size(), 17 );
+}
+
+TEST(DecisionGraph, copyOfGraph) {
+  LogicParser p;
+  p.parse( "data/LGP-overtaking-single-agent-2w.g" );  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
+  graph.build(10, true);
+  DecisionGraph graphCopy( graph );
+
+  EXPECT_EQ( graph.size(), graphCopy.size() );
 }
 
 //

@@ -45,7 +45,7 @@ struct NodeData
     , terminal( terminal )
     , p( p )
     , agentId( agentId )
-    , nodeType( nodeType)
+    , nodeType( nodeType )
   {
     computeHash();
   }
@@ -77,8 +77,8 @@ private:
       hash_+=std::hash<double>()(p);
     }
     hash_+=std::hash<bool>()(terminal);
-    hash_+=agentId;
-    hash_+=(int)nodeType;
+    hash_+=std::hash<uint>()(agentId);
+    hash_+=std::hash<uint>()((uint)nodeType);
   }
 
   std::size_t hash_;
@@ -95,6 +95,8 @@ public:
   using GraphNodeType = GraphNode< NodeData >;
 public:
   DecisionGraph() = default;
+  //~DecisionGraph();
+  void reset();
 
   DecisionGraph( const DecisionGraph & ); // copy ctor
   DecisionGraph& operator= ( const DecisionGraph & ); // assignment operator
@@ -103,7 +105,7 @@ public:
   bool empty() const { return nodes_.size() <= 1; } // root node
   std::size_t size() const { return nodes_.size(); }
   void build( int maxSteps, bool graph = false );
-  std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node, bool graph = false );
+  std::queue< GraphNodeType::ptr > expand( const GraphNodeType::ptr & node );
   GraphNodeType::ptr root() const { return root_; }
   std::vector< std::weak_ptr< GraphNodeType > > nodes() const { return nodes_; }
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes() const { return terminalNodes_; }
@@ -121,7 +123,8 @@ private:
   mutable LogicEngine engine_;
   GraphNodeType::ptr root_;
   std::vector< std::weak_ptr< GraphNodeType > > nodes_;
-  std::unordered_map< std::size_t, uint > hash_to_id_;
+  std::unordered_map< std::size_t, std::list< uint > > hash_to_id_;
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes_;
+  bool isGraph_ = false; // if false is only a tree
 };
 } // namespace matp

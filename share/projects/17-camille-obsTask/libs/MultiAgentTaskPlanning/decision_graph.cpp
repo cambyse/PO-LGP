@@ -49,6 +49,13 @@ std::vector < double > normalizeBs( const std::vector < double > & bs )
   return newBs;
 }
 
+void DecisionGraph::reset()
+{
+  nodes_.clear();
+  hash_to_id_.clear();
+  terminalNodes_.clear();
+}
+
 // copy
 DecisionGraph::DecisionGraph( const DecisionGraph & graph ) // copy ctor
 {
@@ -74,6 +81,7 @@ void DecisionGraph::build( int maxSteps, bool graph )
 {
   std::queue< GraphNode< NodeData >::ptr > queue;
   queue.push( root_ );
+  isGraph_ = graph;
 
   uint step = 0;
 
@@ -86,7 +94,7 @@ void DecisionGraph::build( int maxSteps, bool graph )
 
     if( step < maxSteps )
     {
-      auto queueExtension = expand( node, graph );
+      auto queueExtension = expand( node );
 
       while( ! queueExtension.empty() )
       {
@@ -101,7 +109,7 @@ void DecisionGraph::build( int maxSteps, bool graph )
   }
 }
 
-std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode< NodeData >::ptr & node, bool graph )
+std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode< NodeData >::ptr & node )
 {
   auto bs     = node->data().beliefState;
   auto states = node->data().states;
@@ -126,10 +134,10 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
 
       for( auto action : actions )
       {
-        auto child = node->makeChild( { states, bs, action, false, 1.0, agentId, NodeData::NodeType::OBSERVATION } );
+        // node after action, will receive one or several observations
+        auto child = node->makeChild( GraphNodeDataType( states, bs, action, false, 1.0, agentId, NodeData::NodeType::OBSERVATION ) );
 
         nodes_.push_back( child );
-        hash_to_id_[ child->data().hash() ] = child->id();
 
         auto outcomes = getPossibleOutcomes( node, action );
 
@@ -139,14 +147,15 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
           CHECK( node->data().agentId == agentId, "Corruption in the queue!" );
           auto nextAgentId = ( agentId + 1 ) % engine_.agentNumber();
 
+          // node after observation, will have to choose between several actions
           const auto childChildData = GraphNodeDataType( outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, outcome.p, nextAgentId, NodeData::NodeType::ACTION );
 
           bool nodeNeedsToBeCreated = true;
-          if( graph )
+          if( isGraph_ )
           {
             if( hash_to_id_.count( childChildData.hash() ) )
             {
-              auto childChildId = hash_to_id_[ childChildData.hash() ];
+              auto childChildId = hash_to_id_[ childChildData.hash() ].front();
               auto childChild = nodes_[ childChildId ];
 
               child->addExistingChild( childChild.lock() );
@@ -158,7 +167,7 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
           if( nodeNeedsToBeCreated )
           {
             const auto childChild = child->makeChild( childChildData );
-            hash_to_id_[ childChild->data().hash() ] = childChild->id();
+            hash_to_id_[ childChild->data().hash() ].push_back( childChild->id() );
 
             nodes_.push_back( childChild );
 
@@ -331,9 +340,12 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
 
 void DecisionGraph::copy( const DecisionGraph & graph )
 {
+  reset();
+
   if( graph.root() )
   {
     engine_ = graph.engine_;
+    isGraph_ = graph.isGraph_;
 
     auto rootData = graph.root()->data();
 
@@ -352,21 +364,50 @@ void DecisionGraph::copy( const DecisionGraph & graph )
       auto uOriginal = u.first;
       auto uCopy     = u.second;
 
-      for( auto v : uOriginal->children() )
-      {
-        auto vCopy = uCopy->makeChild( v->data() );
-        vCopy->setId( v->id() );
+      CHECK( uCopy->data().nodeType == GraphNodeDataType::NodeType::ACTION, "wrong node type" );
 
-        Q.push( std::make_pair( v, vCopy ) );
-
+      for( auto vOriginal : uOriginal->children() )
+      {        
+        auto vCopy = uCopy->makeChild( vOriginal->data() );
+        vCopy->setId( vOriginal->id() );
         nodes_.push_back( vCopy );
 
-        CHECK( v->id() == vCopy->id(), "" );
-        CHECK( v->data().leadingArtifact == vCopy->data().leadingArtifact, "" );
+        std::cout << "copy " << vCopy->id() << std::endl;
 
-        if( vCopy->data().terminal )
+        CHECK( ! vCopy->data().terminal, "termination can appear only after the observation!" );
+        CHECK( vCopy->data().nodeType == GraphNodeDataType::NodeType::OBSERVATION, "wrong node type" );
+
+        for( auto wOriginal : vOriginal->children() )
         {
-          terminalNodes_.push_back( vCopy );
+          CHECK( wOriginal->data().nodeType == GraphNodeDataType::NodeType::ACTION, "wrong node type" );
+
+          if( isGraph_ && hash_to_id_.count( wOriginal->data().hash() ) != 0 )
+          {
+            std::cout << "rewire to " << wOriginal->id() << std::endl;
+
+            CHECK( hash_to_id_.at( wOriginal->data().hash() ).size() == 1, "datastructure corruption" );
+            CHECK( hash_to_id_.at( wOriginal->data().hash() ).front() == wOriginal->id(), "datastructure corruption" );
+            auto wCopy = nodes_[ wOriginal->id() ].lock();
+            vCopy->addExistingChild( wCopy );
+          }
+          else
+          {
+            auto wCopy = vCopy->makeChild( wOriginal->data() );
+            wCopy->setId( wOriginal->id() );
+            nodes_.push_back( wCopy );
+            hash_to_id_[ wCopy->data().hash() ].push_back( wCopy->id() );
+
+            std::cout << "copy " << wCopy->id() << std::endl;
+
+            if( wCopy->data().terminal )
+            {
+              terminalNodes_.push_back( wCopy );
+            }
+            else
+            {
+              Q.push( std::make_pair( wOriginal, wCopy ) );
+            }
+          }
         }
       }
     }

@@ -36,7 +36,7 @@ public:
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }
   void setMaxDepth( uint d ) { maxDepth_ = d; }
-  void buildGraph();
+  void buildGraph( bool graph = false );
   void initializeRewards();
   void saveGraphToFile( const std::string & filename ) const { graph_.saveGraphToFile( filename ); }
   void saveDecidedGraphToFile( const std::string & filename ) const { decidedGraph_.saveGraphToFile( filename ); }
