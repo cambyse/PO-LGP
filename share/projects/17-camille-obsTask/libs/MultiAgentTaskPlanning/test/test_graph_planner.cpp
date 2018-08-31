@@ -209,7 +209,7 @@ TEST_F(GraphPlannerTest, PolicyValue)
   tp.solve();
 
   auto policy = tp.getPolicy();
-  EXPECT_NEAR( policy.value(), -2.0, 0.001);
+  EXPECT_NEAR( policy.value(), -2.0, 0.01);
 }
 
 TEST_F(GraphPlannerTest, IntegratePolicy)
@@ -269,6 +269,22 @@ TEST_F(GraphPlannerTest, solveGraph2W) {
   std::string policyFileName = "LGP-overtaking-single-agent-2w-graph-solving";
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
+}
+
+TEST_F(GraphPlannerTest, compareNumberOfNodesOfDecidedGraphAndPolicy) {
+  tp.setFol( "data/LGP-overtaking-single-agent-2w.g" );
+  tp.setMaxDepth( 10 );
+
+  tp.buildGraph( true );
+  tp.solve();
+
+  auto decided = tp.decidedDecisionGraph();
+  auto policy = tp.getPolicy();
+
+  std::string decidedFileName = "LGP-overtaking-single-agent-2w-graph-decided";
+  decided.saveGraphToFile( decidedFileName + ".gv" );
+
+  EXPECT_EQ( decided.size(), 8 );
 }
 
 //

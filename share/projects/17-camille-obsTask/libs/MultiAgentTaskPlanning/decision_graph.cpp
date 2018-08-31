@@ -35,16 +35,24 @@ std::vector < double > normalizeBs( const std::vector < double > & bs )
 {
   std::vector < double > newBs = bs;
 
-  double sum = 0;
-  for( auto p : bs )
+  auto sumfunc = []( const std::vector < double > bs ) -> double
   {
-    sum += p;
-  }
+    double sum = 0;
+    for( auto p : bs )
+    {
+      sum += p;
+    }
+    return sum;
+  };
+
+  const auto sum = sumfunc( bs );
 
   for( auto w = 0; w < bs.size(); ++w )
   {
     newBs[ w ] = bs[ w ] / sum;
   }
+
+  CHECK( fabs( sumfunc( newBs ) - 1.0 ) < 0.00001, "" );
 
   return newBs;
 }
@@ -72,7 +80,7 @@ DecisionGraph& DecisionGraph::operator= ( const DecisionGraph & graph ) // assig
 // DecisionGraph
 DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState )
   : engine_( engine )
-  , root_( GraphNode< NodeData >::root( NodeData( startStates, egoBeliefState, "", false, 0, 0, NodeData::NodeType::ACTION ) ) )
+  , root_( GraphNode< NodeData >::root( NodeData( startStates, egoBeliefState, "", false, 1.0, 0, NodeData::NodeType::ACTION ) ) )
 {
   nodes_.push_back( root_ );
 }
@@ -188,6 +196,36 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
   return nextQueue;
 }
 
+void DecisionGraph::_addNode( const std::weak_ptr< GraphNodeType > & _node )
+{
+  nodes_.push_back( _node );
+
+  auto node = _node.lock();
+  if( node->data().nodeType ==  DecisionGraph::GraphNodeDataType::NodeType::ACTION )
+  {
+    hash_to_id_[ node->data().hash() ].push_back( node->id() );
+
+    if( node->data().terminal )
+    {
+      terminalNodes_.push_back( node );
+    }
+  }
+}
+
+void DecisionGraph::removeNode( const std::weak_ptr< GraphNodeType > & _node )
+{
+  auto node = _node.lock();
+  for( auto _p : node->parents() )
+  {
+    auto p = _p.lock();
+    if( p )
+    {
+      p->removeChild( node );
+      nodes_[ node->id() ].reset();
+    }
+  }
+}
+
 void DecisionGraph::saveGraphToFile( const std::string & filename ) const
 {
   if( ! root_ )
@@ -280,12 +318,11 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
 
       engine.transition( action );
 
-      auto _result          = engine.getState();
-      auto filteredFacts    = getFacts( _result );
-      auto result     = filteredFacts.first;
-      auto facts = filteredFacts.second;
-      auto observableFacts  = getObservableFacts( facts );
-      auto terminal         = engine.isTerminal();
+      const auto _result          = engine.getState();
+      const auto facts            = getFilteredFacts( _result );// without komo and action tags
+      const auto result           = concatenateFacts( facts );
+      const auto observableFacts  = getObservableFacts( facts );
+      const auto terminal         = engine.isTerminal();
 
       //std::cout << result << std::endl; // tmp camille
 

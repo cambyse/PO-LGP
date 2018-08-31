@@ -262,8 +262,8 @@ void plan_graph_search()
   mp::KOMOPlanner mp;
 
   // set planner specific parameters
-  tp.setR0( -0.1 );
-  tp.setMaxDepth( 9 );
+  tp.setR0( -0.5 );
+  tp.setMaxDepth( 15 );
   mp.setNSteps( 10 );
 
   // register symbols

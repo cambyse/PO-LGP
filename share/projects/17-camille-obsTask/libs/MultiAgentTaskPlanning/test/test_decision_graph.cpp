@@ -77,54 +77,61 @@ TEST(DecisionGraph, expandFromRoot2W) {
 
 TEST(DecisionGraph, expandCheckStateInequality) {  // graph connection if an equivalent symbolic state exits
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvfe"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvfe"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
 
-  ASSERT_FALSE( sameState( data1, data2 ) );
+  EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {0.99}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
 
-  ASSERT_FALSE( sameState( data1, data2 ) );
+  EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", true, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", true, 0.0, 0, NodeData::NodeType::ACTION );
 
-  ASSERT_FALSE( sameState( data1, data2 ) );
+  EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", false, 0.0, 1, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", false, 0.0, 1, NodeData::NodeType::ACTION );
 
-  ASSERT_FALSE( sameState( data1, data2 ) );
+  EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::OBSERVATION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::OBSERVATION );
 
-  ASSERT_FALSE( sameState( data1, data2 ) );
+  EXPECT_FALSE( sameState( data1, data2 ) );
   }
 }
 TEST(DecisionGraph, expandCheckStateEquality) {  // graph connection if an equivalent symbolic state exits
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
 
   ASSERT_TRUE( sameState( data1, data2 ) );
   }
 
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "frfr", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "frfr", false, 0.0, 0, NodeData::NodeType::ACTION );
 
   ASSERT_TRUE( sameState( data1, data2 ) );
   }
 
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {}, "frfr", false, 0.2, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "frfr", false, 0.2, 0, NodeData::NodeType::ACTION );
+
+  ASSERT_TRUE( sameState( data1, data2 ) );
+  }
+
+  {
+  DecisionGraph::GraphNodeDataType data1( {"vdvf", "qqqq"}, {1.0, 0.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf", "qq"},   {1.0, 0.0}, "frfr", false, 0.2, 0, NodeData::NodeType::ACTION );
 
   ASSERT_TRUE( sameState( data1, data2 ) );
   }
@@ -156,17 +163,13 @@ TEST(DecisionGraph, expandCheckStateEqualityAfterExpansion) {  // graph connecti
   for( auto c : graph.nodes() )
   {
     auto cc = c.lock();
-    if( cc->id() == 4 || cc->id() == 5 || cc->id() == 9 || cc->id() == 10 )
-    {
-      data[ cc->id() ] = cc->data();
-      //std::cout << cc->id() << ":" << cc->data();
-    }
+    data[ cc->id() ] = cc->data();
   }
 
-  ASSERT_TRUE( sameState( data[4], data[9] ) );
-  ASSERT_TRUE( sameState( data[5], data[10] ) );
-  ASSERT_FALSE( sameState( data[4], data[10] ) );
-  ASSERT_FALSE( sameState( data[5], data[9] ) );
+  ASSERT_TRUE( sameState( data[2], data[7] ) );
+  ASSERT_TRUE( sameState( data[3], data[8] ) );
+  ASSERT_FALSE( sameState( data[2], data[8] ) );
+  ASSERT_FALSE( sameState( data[3], data[7] ) );
 }
 
 TEST(DecisionGraph, expandFromRootDouble2W) {

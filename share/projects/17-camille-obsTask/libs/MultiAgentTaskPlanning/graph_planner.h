@@ -15,6 +15,8 @@
 #include <logic_parser.h>
 #include <decision_graph.h>
 
+#include <value_iteration.h>
+
 namespace matp
 {
 
@@ -43,6 +45,7 @@ public:
 
   // other getters
   DecisionGraph decisionGraph() const { return graph_; }
+  DecisionGraph decidedDecisionGraph() const { return decidedGraph_; }
   std::vector< double > values() const { return values_; }
   uint agentNumber() const { return parser_.agentNumber(); }
 

@@ -68,13 +68,18 @@ private:
   void computeHash()  // element depending on the parent are not included into the hash
   {
     hash_ = 0;
-    for( const auto s : states )
+
+    CHECK_EQ( states.size(), beliefState.size(), "corrrupted belief state" );
+
+    for( auto i = 0; i < states.size(); ++i )
     {
-      hash_+=std::hash<std::string>()(s);
-    }
-    for( const auto p : beliefState )
-    {
-      hash_+=std::hash<double>()(p);
+      auto s = states[i];
+      auto p = beliefState[i];
+      if( p > 10e-8 )
+      {
+        hash_+=std::hash<std::string>()(s);
+        hash_+=std::hash<double>()(p);
+      }
     }
     hash_+=std::hash<bool>()(terminal);
     hash_+=std::hash<uint>()(agentId);
@@ -110,6 +115,8 @@ public:
   std::vector< std::weak_ptr< GraphNodeType > > nodes() const { return nodes_; }
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes() const { return terminalNodes_; }
 
+  void _addNode( const std::weak_ptr< GraphNodeType > & node ); // for tests only!!
+  void removeNode( const std::weak_ptr< GraphNodeType > & node );
   void saveGraphToFile( const std::string & filename ) const;
 
   // public for testing purpose

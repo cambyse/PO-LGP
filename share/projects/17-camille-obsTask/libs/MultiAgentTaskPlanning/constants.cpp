@@ -70,9 +70,9 @@ StringA nodeToStringA( Node * facts )
   return factStringA;
 }
 
-std::pair< std::string, std::set< std::string > > getFacts( const std::string & state )
+std::set< std::string > getFilteredFacts( const std::string & state )
 {
-  std::string filteredResult("{");
+  //std::string filteredResult("{");
   std::set< std::string > facts;
 
   using tokenizer = boost::tokenizer<boost::char_separator<char> >;
@@ -87,15 +87,36 @@ std::pair< std::string, std::set< std::string > > getFacts( const std::string & 
 
     if( ! fact.empty() && ( fact.find( "decision(") == std::string::npos ) && ( fact.find( "komo") == std::string::npos ) )
     {
-      filteredResult.append( fact ).append( "," );
+      //filteredResult.append( fact ).append( "," );
       facts.insert( fact );
     }
   }
 
-  filteredResult.append( "}" );
+  //filteredResult.append( "}" );
 
-  return std::make_pair( filteredResult, facts );
+  return facts;
 }
+
+//std::string concatenateFacts( const std::set< std::string >  & facts )
+//{
+//  std::string filteredResult("{");
+
+//  bool first = true;
+//  for( auto fact : facts )
+//  {
+//    if( ! first )
+//    {
+//      filteredResult.append(",");
+//    }
+//    filteredResult.append(fact);
+
+//    first = false;
+//  }
+
+//  filteredResult.append( "}" );
+
+//  return filteredResult;
+//}
 
 bool isObservable( const std::string & fact )
 {
@@ -168,7 +189,7 @@ std::set< std::string > getObservableFacts( const std::set< std::string > & fact
 
 std::string getObservableState( const std::string & state )
 {
-  std::set< std::string > facts = getFacts( state ).second;
+  std::set< std::string > facts = getFilteredFacts( state );
 
   std::set< std::string > observableFacts = getObservableFacts( facts );
 
