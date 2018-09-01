@@ -215,7 +215,10 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
     optimizePath( policy );
 
     // solve on joint path level
-    optimizeJointPath( policy );
+    if( policy.N() > 1 )
+    {
+      optimizeJointPath( policy );
+    }
 
     /// INFORM POLICY NODES
     std::list< Skeleton::GraphNodeTypePtr > fifo;
@@ -231,14 +234,15 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       double cost = 0;
 
       // get the right world
+      auto & pathCostsPerPhase = policy.N() > 1 ? jointPathCostsPerPhase_ : pathCostsPerPhase_;
       for( auto w = 0; w < node->data().beliefState.size(); ++w )
       {
         if( node->data().beliefState[ w ] > 0 )
         {
           auto leaf = bsToLeafs_( w );
-          CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
+          CHECK( pathCostsPerPhase.find( leaf ) != pathCostsPerPhase.end(), "corruption in datastructure" );
 
-          auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
+          auto trajCosts = pathCostsPerPhase[ leaf ]( w );
           auto wcost = trajCosts( phase_start_offset_ + phase );
 
           cost += node->data().beliefState[ w ] * wcost;
@@ -290,7 +294,8 @@ void KOMOPlanner::display( const Skeleton & policy, double sec )
   // retrieve trajectories
   mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
 
-  for( auto leafWorldKinFramesPair : jointPathKinFrames_ )
+  const auto & kinFrames = policy.N() > 1 ? jointPathKinFrames_ : pathKinFrames_;
+  for( auto leafWorldKinFramesPair : kinFrames )
   {
     frames.append( leafWorldKinFramesPair.second );
   }
@@ -525,6 +530,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
   pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( N );
   pathXSolution_[ leaf ] = mlr::Array< arr                               >( N );
+  pathCostsPerPhase_[ leaf ] = mlr::Array< arr >( N );
 
   //-- collect 'path nodes'
   auto treepath = getPathTo( leaf );
@@ -576,10 +582,12 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 //        komo->plotVelocity( "-j-"   + std::to_string( w ) );
 //      }
 
+      auto costs = komo->getCostsPerPhase();
       Graph result = komo->getReport();
-      //DEBUG( FILE("z.problem.cost") << result; )
       double cost        = result.get<double>( {"total","sqrCosts"} );
       double constraints = result.get<double>( {"total","constraints"} );
+
+      pathCostsPerPhase_[ leaf ]( w ) = costs;
 
       for( auto s = 0; s < komo->configurations.N; ++s )
       {

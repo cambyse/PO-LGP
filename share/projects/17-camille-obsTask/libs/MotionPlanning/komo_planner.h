@@ -67,6 +67,7 @@ private:
   // path
   std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
   std::map< PolicyNodePtr, mlr::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
+  std::map< PolicyNodePtr, mlr::Array< arr > > pathCostsPerPhase_;
 
   // joint path
   std::map< PolicyNodePtr, arr > jointPathCosts_;
@@ -78,7 +79,7 @@ private:
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
 
-  double kinEqualityWeight_  = 1e3;
+  double kinEqualityWeight_  = 1e4;
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 

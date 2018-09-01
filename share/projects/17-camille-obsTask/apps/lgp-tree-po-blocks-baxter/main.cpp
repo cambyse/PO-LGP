@@ -80,7 +80,7 @@ void groundPickUp( double phase, const std::vector< std::string >& facts, mp::Ex
   //disconnect object from table
   komo->setKinematicSwitch( t_end, true, "delete", "tableC", facts[0].c_str() );
   //connect graspRef with object
-  komo->setKinematicSwitch( t_end, true, "ballZero", "handL", facts[0].c_str() );
+  komo->setKinematicSwitch( t_end, true, "ballZero", "baxterR", facts[0].c_str() );
 
   if( verbose > 0 )
   {
@@ -102,7 +102,7 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, mp::E
   //disconnect object from table
   komo->setKinematicSwitch( t_end, true, "delete", facts[1].c_str(), facts[0].c_str() );
   //connect graspRef with object
-  komo->setKinematicSwitch( t_end, true, "ballZero", "handL", facts[0].c_str() );
+  komo->setKinematicSwitch( t_end, true, "ballZero", "baxterR", facts[0].c_str() );
 
   if( verbose > 0 )
   {
@@ -121,7 +121,7 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, mp::E
   const double t_end =   phase + duration;
   //
 
-  komo->setPlace( t_end, "handL", facts[0].c_str(), facts[1].c_str(), verbose );
+  komo->setPlace( t_end, "baxterR", facts[0].c_str(), facts[1].c_str(), verbose );
 
   if( verbose > 0 )
   {
@@ -139,9 +139,9 @@ void groundCheck( double phase, const std::vector< std::string >& facts, mp::Ext
   const double t_start = phase + 0.5;
   const double t_end =   phase + duration;
   //
-  //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
-  komo->setTask( t_start, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sumOfSqr, NoArr, 1e2 );
-  komo->setTask( t_end - 0.1, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
+
+  komo->setTask( t_start, t_end, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sumOfSqr, NoArr, 1e2 );
+  komo->setTask( t_end - 0.1, t_end, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
   {
@@ -159,9 +159,8 @@ void groundStack( double phase, const std::vector< std::string >& facts, mp::Ext
   const double t_start = phase;
   const double t_end =   phase + duration;
   //
-  //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
 
-  komo->setPlace( t_end, "handL", facts[0].c_str(), facts[1].c_str(), verbose );
+  komo->setPlace( t_end, "baxterR", facts[0].c_str(), facts[1].c_str(), verbose );
 
   if( verbose > 0 )
   {
@@ -171,96 +170,13 @@ void groundStack( double phase, const std::vector< std::string >& facts, mp::Ext
 
 //===========================================================================
 
-//void plan_mcts()
-//{
-//  // instanciate planners
-//  auto tp = std::make_shared< tp::MCTSPlanner >();
-//  auto mp = std::make_shared< mp::KOMOPlanner >();
-
-//  // set planner specific parameters
-//  tp->setMCParams( /*10*/100, -1, /*50*/100 );
-//  //tp->setMCParams( 50, -1, 50 );
-//  mp->setNSteps( 10 );
-
-//  // register symbols
-//  mp->registerTask( "komoPickUp"       , groundPickUp );
-//  mp->registerTask( "komoPutDown"      , groundPutDown );
-//  mp->registerTask( "komoCheck"        , groundCheck );
-//  mp->registerTask( "komoStack"        , groundStack );
-//  mp->registerTask( "komoUnStack"      , groundUnStack );
-
-//  // set start configurations
-//  //tp->setFol( "LGP-blocks-fol.g" );
-//  //mp->setKin( "LGP-blocks-kin.g" );
-
-//  tp->setFol( "LGP-blocks-fol-2w.g" );
-//  mp->setKin( "LGP-blocks-kin-2w.g" );
-
-//  for( uint i = 0; ! tp->terminated() && i < 1 ; ++i )
-//  {
-//    std::cout << "Task planning to generate " << i << "th policy" << std::endl;
-
-//    // TASK PLANNING
-//    tp->solve();
-//    auto policy = tp->getPolicy();
-//    auto po     = tp->getPlanningOrder();
-
-//    // save policy
-//    savePolicyToFile( policy );
-
-//    //-------------------------------------------------------------------
-////    for( auto j = 0; j < 10; ++j )
-////    {
-////      tp->solve();
-////      policy = tp->getPolicy();
-
-////      // save policy
-////      savePolicyToFile( policy );
-////    }
-//    //-------------------------------------------------------------------
-
-//    std::cout << "Motion Planning for policy " << i << std::endl;
-
-//    // MOTION PLANNING
-//    mp->solveAndInform( po, policy );
-
-//    // print resulting cost
-//    std::cout << "cost of the policy " << i << " " << policy->value() << std::endl;
-
-//    tp->integrate( policy );
-//  }
-
-//  std::cout << "best policy:" << tp->getPolicy()->id() << std::endl;
-//  mp->display( tp->getPolicy(), 3000 );
-//}
-
-////===========================================================================
-
-//void plan_iterative_deepening()
-//{
-//  // instanciate planners
-//  auto tp = std::make_shared< tp::IterativeDeepeningPlanner >();
-
-//  tp->setDmax( 12 );
-
-//  //tp->setFol( "LGP-blocks-fol-2w.g" );
-//  tp->setFol( "LGP-blocks-fol.g" );
-
-
-//  tp->solve();
-
-//  mlr::wait( 30, true );
-//}
-
-//===========================================================================
-
 void plan_graph_search()
 {
   matp::GraphPlanner tp;
   mp::KOMOPlanner mp;
 
   // set planner specific parameters
-  tp.setR0( -0.5 );
+  tp.setR0( -0.015 );
   tp.setMaxDepth( 15 );
   mp.setNSteps( 10 );
 
@@ -272,29 +188,31 @@ void plan_graph_search()
   mp.registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
-  //tp.setFol( "LGP-blocks-fol-model-2.g" );
-  //mp.setKin( "LGP-blocks-kin.g" );
+  //tp.setFol( "LGP-blocks-fol-unified.g" );
+  tp.setFol( "LGP-blocks-fol-model-2-unified.g" );
+  mp.setKin( "LGP-blocks-kin-unified.g" );
 
+  //tp.setFol( "LGP-blocks-fol-model-2.g" );
   //tp.setFol( "LGP-blocks-fol.g" );
   //mp.setKin( "LGP-blocks-kin.g" );
 
   // checked, probably doesn't work with n steps = 5
-  //tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
-  //mp.setKin( "LGP-blocks-kin-2w.g" );
+  //tp.setFol( "LGP-blocks-fol-2w-unified.g" );
+  //tp.setFol( "LGP-blocks-fol-2w-model-2-unified.g" );
+  //mp.setKin( "LGP-blocks-kin-2w-unified.g" );
 
-  // checked doesn't work with n steps = 5
   //tp.setFol( "LGP-blocks-fol-2w.g" );
-  //mp.setKin( "LGP-blocks-kin-2w.g" );
-
   //tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
   //mp.setKin( "LGP-blocks-kin-2w.g" );
-
-  //tp->setFol( "LGP-blocks-fol-1w.g" );
-  //mp->setKin( "LGP-blocks-kin-1w.g" );
 
   // checked
-  tp.setFol( "LGP-blocks-fol-1w-model-2.g" );
-  mp.setKin( "LGP-blocks-kin-1w.g" );
+  //tp.setFol( "LGP-blocks-fol-1w-unified.g" );
+  //tp.setFol( "LGP-blocks-fol-1w-model-2-unified.g" );
+  //mp.setKin( "LGP-blocks-kin-1w-unified.g" );
+
+  //tp.setFol( "LGP-blocks-fol.g" );
+  //tp.setFol( "LGP-blocks-fol-1w-model-2.g" );
+  //mp.setKin( "LGP-blocks-kin-1w.g" );
 
 ///
   std::ofstream candidate, results;
@@ -372,7 +290,7 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 
 {
 auto start = std::chrono::high_resolution_clock::now();
-  mp.display( policy, 3000 );
+  mp.display( policy, 0 );
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }
@@ -392,6 +310,16 @@ joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(e
   mlr::wait( 30, true );
 }
 
+void baxter()
+{
+  mlr::KinematicWorld kin;
+  kin.init( "LGP-blocks-kin-2w.g" );
+  kin.watch( true );
+  kin.write( std::cout );
+
+  mlr::wait( 300, true );
+}
+
 //===========================================================================
 
 int main(int argc,char **argv)
@@ -401,8 +329,8 @@ int main(int argc,char **argv)
   rnd.clockSeed();
 
   plan_graph_search();
-  //plan_iterative_deepening();
-  //plan_mcts();
+
+  //baxter();
 
   return 0;
 }
