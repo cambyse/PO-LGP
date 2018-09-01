@@ -115,8 +115,6 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
 
   //ASSERT_EQ( pData.beliefState    , beliefState );
   ASSERT_EQ( pData.markovianReturn, r0 );
-  ASSERT_EQ( pData.leadingKomoArgs.size(), 4 );
-  //ASSERT_EQ( pData.p, p );
   ASSERT_EQ( pData.decisionGraphNodeId, 1 );
 }
 

@@ -117,6 +117,7 @@ public:
   void _addEdge( uint child, uint parent, double p, const std::string & artifact ); // for tests only!!
 
   void removeNode( const std::weak_ptr< GraphNodeType > & node );
+  void purgeNodes( const std::vector< bool > & ); // remove nodes from nodes_ and terminalNodes_ that are not valid anymore
   void saveGraphToFile( const std::string & filename ) const;
 
   // public for testing purpose

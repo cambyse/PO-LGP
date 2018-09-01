@@ -16,6 +16,7 @@
 #include <decision_graph.h>
 
 #include <value_iteration.h>
+#include <decide_on_graph.h>
 
 namespace matp
 {

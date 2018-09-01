@@ -274,22 +274,22 @@ void plan_graph_search()
   mp.registerTask( "unstack"      , groundUnStack );
 
   // set start configurations
-  tp.setFol( "LGP-blocks-fol.g" );
-  mp.setKin( "LGP-blocks-kin.g" );
+  //tp.setFol( "LGP-blocks-fol-model-2.g" );
+  //mp.setKin( "LGP-blocks-kin.g" );
 
-  //tp->setFol( "LGP-blocks-fol-model-2.g" );
-  //mp->setKin( "LGP-blocks-kin.g" );
+  //tp.setFol( "LGP-blocks-fol.g" );
+  //mp.setKin( "LGP-blocks-kin.g" );
 
   // checked, probably doesn't work with n steps = 5
-  //tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
-  //mp.setKin( "LGP-blocks-kin-2w.g" );
+  tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
+  mp.setKin( "LGP-blocks-kin-2w.g" );
 
   // checked doesn't work with n steps = 5
   //tp.setFol( "LGP-blocks-fol-2w.g" );
   //mp.setKin( "LGP-blocks-kin-2w.g" );
 
-  //tp->setFol( "LGP-blocks-fol-2w-model-2.g" );
-  //mp->setKin( "LGP-blocks-kin-2w.g" );
+  //tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
+  //mp.setKin( "LGP-blocks-kin-2w.g" );
 
   //tp->setFol( "LGP-blocks-fol-1w.g" );
   //mp->setKin( "LGP-blocks-kin-1w.g" );
@@ -360,8 +360,6 @@ auto elapsed = std::chrono::high_resolution_clock::now() - start;
 task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }
     policy = tp.getPolicy();
-
-//    } while( 0 );
 
   } while( lastPolicy != policy );
 

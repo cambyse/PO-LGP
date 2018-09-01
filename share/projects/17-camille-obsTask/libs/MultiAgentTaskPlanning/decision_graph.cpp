@@ -235,6 +235,26 @@ void DecisionGraph::_addEdge( uint child, uint parent, double p, const std::stri
 void DecisionGraph::removeNode( const std::weak_ptr< GraphNodeType > & _node )
 {
   auto node = _node.lock();
+
+  // check in terminals
+  for( auto tIt = terminalNodes_.begin(); tIt != terminalNodes_.end(); ++tIt )
+  {
+    if( tIt->lock()->id() == node->id() )
+    {
+      terminalNodes_.erase( tIt );
+    }
+  }
+
+  // check in nodes
+  for( auto tIt = nodes_.begin(); tIt != nodes_.end(); ++tIt )
+  {
+    if( tIt->lock()->id() == node->id() )
+    {
+      nodes_.erase( tIt );
+    }
+  }
+
+  // inform parents
   for( auto _p : node->parents() )
   {
     auto p = _p.lock();
@@ -244,6 +264,16 @@ void DecisionGraph::removeNode( const std::weak_ptr< GraphNodeType > & _node )
       nodes_[ node->id() ].reset();
     }
   }
+}
+
+void DecisionGraph::purgeNodes( const std::vector< bool > & toKeep ) // remove nodes from nodes_ and terminalNodes_ that are not valid anymore
+{
+  auto to_keep_lambda = [&] ( const std::weak_ptr< GraphNodeType > & node ) -> bool
+  {
+    return ! toKeep[ node.lock()->id() ];
+  };
+  nodes_.erase( std::remove_if(nodes_.begin(), nodes_.end(), to_keep_lambda), nodes_.end() );
+  terminalNodes_.erase( std::remove_if(terminalNodes_.begin(), terminalNodes_.end(), to_keep_lambda), terminalNodes_.end() );
 }
 
 void DecisionGraph::saveGraphToFile( const std::string & filename ) const
@@ -430,7 +460,7 @@ void DecisionGraph::copy( const DecisionGraph & graph )
         vCopy->setId( vOriginal->id() );
         nodes_.push_back( vCopy );
 
-        std::cout << "copy " << vCopy->id() << std::endl;
+        //std::cout << "copy " << vCopy->id() << std::endl;
 
         CHECK( ! vCopy->data().terminal, "termination can appear only after the observation!" );
         CHECK( vCopy->data().nodeType == GraphNodeDataType::NodeType::OBSERVATION, "wrong node type" );
@@ -441,7 +471,7 @@ void DecisionGraph::copy( const DecisionGraph & graph )
 
           if( isGraph_ && hash_to_id_.count( wOriginal->data().hash() ) != 0 )
           {
-            std::cout << "rewire to " << wOriginal->id() << std::endl;
+            //std::cout << "rewire to " << wOriginal->id() << std::endl;
 
             CHECK( hash_to_id_.at( wOriginal->data().hash() ).size() == 1, "datastructure corruption" );
             CHECK( hash_to_id_.at( wOriginal->data().hash() ).front() == wOriginal->id(), "datastructure corruption" );
@@ -455,7 +485,7 @@ void DecisionGraph::copy( const DecisionGraph & graph )
             nodes_.push_back( wCopy );
             hash_to_id_[ wCopy->data().hash() ].push_back( wCopy->id() );
 
-            std::cout << "copy " << wCopy->id() << std::endl;
+            //std::cout << "copy " << wCopy->id() << std::endl;
 
             if( wCopy->data().terminal )
             {

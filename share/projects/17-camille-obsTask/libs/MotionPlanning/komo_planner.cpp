@@ -120,7 +120,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
   optimizePoses( policy );
 
   /// EARLY STOPPING, detect if pose level not possible
-  bool optimizationFailed = false;
+  bool poseOptimizationFailed = false;
   // if a node has a constraint which is not satisfied, we set the node to infeasible i.e. infinite cost!
 
   {
@@ -146,7 +146,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
         //node->setValue( std::numeric_limits< double >::lowest() );
         //node->data().setStatus( PolicyNode::INFORMED );
 
-        optimizationFailed = true;
+        poseOptimizationFailed = true;
         policy.setValue( std::numeric_limits< double >::lowest() );
       }
       else
@@ -161,6 +161,9 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
 
     policy.setStatus( Skeleton::SKELETON );
   }
+
+  if( poseOptimizationFailed )  // early stopping
+    return;
 
   /// PATH OPTI
   if( po.getParam( "type" ) == "markovJointPath" )
@@ -185,7 +188,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
         //node->setValue( std::numeric_limits< double >::lowest() );
         //node->setStatus( PolicyNode::INFORMED );
 
-        optimizationFailed = true;
+        poseOptimizationFailed = true;
         policy.setValue( std::numeric_limits< double >::lowest() );
       }
       else
@@ -208,58 +211,55 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
   }
   else if( po.getParam( "type" ) == "jointPath" )
   {
-    if( ! optimizationFailed )
+    // solve on path level
+    optimizePath( policy );
+
+    // solve on joint path level
+    optimizeJointPath( policy );
+
+    /// INFORM POLICY NODES
+    std::list< Skeleton::GraphNodeTypePtr > fifo;
+    fifo.push_back( policy.root() );
+
+    while( ! fifo.empty()  )
     {
-      // solve on path level
-      optimizePath( policy );
+      auto node = fifo.back();
+      fifo.pop_back();
 
-      // solve on joint path level
-      optimizeJointPath( policy );
+      auto phase = node->depth() * 1.0;
 
-      /// INFORM POLICY NODES
-      std::list< Skeleton::GraphNodeTypePtr > fifo;
-      fifo.push_back( policy.root() );
+      double cost = 0;
 
-      while( ! fifo.empty()  )
+      // get the right world
+      for( auto w = 0; w < node->data().beliefState.size(); ++w )
       {
-        auto node = fifo.back();
-        fifo.pop_back();
-
-        auto phase = node->depth() * 1.0;
-
-        double cost = 0;
-
-        // get the right world
-        for( auto w = 0; w < node->data().beliefState.size(); ++w )
+        if( node->data().beliefState[ w ] > 0 )
         {
-          if( node->data().beliefState[ w ] > 0 )
-          {
-            auto leaf = bsToLeafs_( w );
-            CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
+          auto leaf = bsToLeafs_( w );
+          CHECK( jointPathCostsPerPhase_.find( leaf ) != jointPathCostsPerPhase_.end(), "corruption in datastructure" );
 
-            auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
-            auto wcost = trajCosts( phase_start_offset_ + phase );
+          auto trajCosts = jointPathCostsPerPhase_[ leaf ]( w );
+          auto wcost = trajCosts( phase_start_offset_ + phase );
 
-            cost += node->data().beliefState[ w ] * wcost;
-            //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
-          }
-        }
-
-        // push children on list
-        for( auto c : node->children() )
-        {
-          c->data().markovianReturn = - cost;
-          //c->setStatus( PolicyNode::INFORMED );
-
-          fifo.push_back( c );
+          cost += node->data().beliefState[ w ] * wcost;
+          //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
         }
       }
 
-      /// UPDATE VALUES
-      updateValues( policy );
+      // push children on list
+      for( auto c : node->children() )
+      {
+        c->data().markovianReturn = - cost;
+        //c->setStatus( PolicyNode::INFORMED );
 
-      policy.setStatus( Skeleton::INFORMED );
+        fifo.push_back( c );
+      }
     }
+
+    /// UPDATE VALUES
+    updateValues( policy );
+
+    policy.setStatus( Skeleton::INFORMED );
   }
   else
   {
