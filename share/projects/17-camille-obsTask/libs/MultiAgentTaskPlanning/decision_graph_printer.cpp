@@ -12,6 +12,8 @@ void GraphPrinter::print( const DecisionGraph & graph )
     return;
   }
 
+  edges_ = graph.edges();
+
   ss_ << "digraph g{" << std::endl;
   ss_ << "bgcolor=\"transparent\"";
   ss_ << "{" << std::endl;
@@ -69,10 +71,13 @@ void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node
     std::stringstream ss;
     std::string label;
 
+    auto edge = edges_[ c->id()][ node->id() ];
+    auto p = edge.first;
+    auto leadingArtifact = edge.second;
+
     if( node->data().nodeType == NodeData::NodeType::ACTION )
     {
       auto agentLabel = agentPrefix_ + std::to_string( node->data().agentId ) + agentSuffix_;
-      auto leadingArtifact = c->data().leadingArtifact;
       auto actionLabel = extractActionLabel( leadingArtifact, node->data().agentId );
 
       boost::replace_all(agentLabel, "__", "");
@@ -87,11 +92,11 @@ void GraphPrinter::saveGraphFrom( const DecisionGraph::GraphNodeType::ptr & node
     }
     else
     {
-      if( ! c->data().leadingArtifact.empty() )
+      if( ! leadingArtifact.empty() )
       {
-        ss << c->data().leadingArtifact << std::endl;
+        ss << leadingArtifact << std::endl;
       }
-      ss << c->data().p;
+      ss << p;
 
       label = ss.str();
     }

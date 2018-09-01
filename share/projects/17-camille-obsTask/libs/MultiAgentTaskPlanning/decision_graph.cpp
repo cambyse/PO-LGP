@@ -59,6 +59,7 @@ std::vector < double > normalizeBs( const std::vector < double > & bs )
 
 void DecisionGraph::reset()
 {
+  edges_.clear();
   nodes_.clear();
   hash_to_id_.clear();
   terminalNodes_.clear();
@@ -80,9 +81,10 @@ DecisionGraph& DecisionGraph::operator= ( const DecisionGraph & graph ) // assig
 // DecisionGraph
 DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState )
   : engine_( engine )
-  , root_( GraphNode< NodeData >::root( NodeData( startStates, egoBeliefState, "", false, 1.0, 0, NodeData::NodeType::ACTION ) ) )
+  , root_( GraphNode< NodeData >::root( NodeData( startStates, egoBeliefState, false, 0, NodeData::NodeType::ACTION ) ) )
 {
   nodes_.push_back( root_ );
+  edges_.push_back( EdgeDataType() ); // dummy edge coming to root
 }
 
 void DecisionGraph::build( int maxSteps, bool graph )
@@ -92,7 +94,6 @@ void DecisionGraph::build( int maxSteps, bool graph )
   isGraph_ = graph;
 
   uint step = 0;
-
   while( ! queue.empty() )
   {
     auto node = queue.front();
@@ -143,20 +144,24 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
       for( auto action : actions )
       {
         // node after action, will receive one or several observations
-        auto child = node->makeChild( GraphNodeDataType( states, bs, action, false, 1.0, agentId, NodeData::NodeType::OBSERVATION ) );
-
+        auto child = node->makeChild( GraphNodeDataType( states, bs, false, agentId, NodeData::NodeType::OBSERVATION ) );
         nodes_.push_back( child );
-
-        auto outcomes = getPossibleOutcomes( node, action );
+        edges_.push_back( { { node->id(), std::make_pair( 1.0, action ) } } );
+        CHECK_EQ( edges_.size() - 1, child->id(), "corruption in edge data structure" );
 
         // for each outcome
+        auto outcomes = getPossibleOutcomes( node, action );
         for( auto outcome : outcomes )
         {
           CHECK( node->data().agentId == agentId, "Corruption in the queue!" );
           auto nextAgentId = ( agentId + 1 ) % engine_.agentNumber();
 
+          // outcome.p
           // node after observation, will have to choose between several actions
-          const auto childChildData = GraphNodeDataType( outcome.states, outcome.beliefState, outcome.leadingArtifact, outcome.terminal, outcome.p, nextAgentId, NodeData::NodeType::ACTION );
+          auto p    = std::get<0>(outcome);
+          auto data = std::get<1>(outcome);
+          auto observation = std::get<2>(outcome);
+          const auto childChildData = GraphNodeDataType( data.states, data.beliefState, data.terminal, nextAgentId, NodeData::NodeType::ACTION );
 
           bool nodeNeedsToBeCreated = true;
           if( isGraph_ )
@@ -167,19 +172,21 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
               auto childChild = nodes_[ childChildId ];
 
               child->addExistingChild( childChild.lock() );
+              edges_[ childChildId ][ child->id() ] = std::make_pair( p, observation );
 
               nodeNeedsToBeCreated = false;
             }
-          }// tree case
-
+          }
+          // tree case
           if( nodeNeedsToBeCreated )
           {
             const auto childChild = child->makeChild( childChildData );
             hash_to_id_[ childChild->data().hash() ].push_back( childChild->id() );
-
             nodes_.push_back( childChild );
+            edges_.push_back( { { child->id(), std::make_pair( p, observation ) } } );
+            CHECK_EQ( edges_.size() - 1, childChild->id(), "corruption in edge data structure" );
 
-            if( outcome.terminal )
+            if( data.terminal )
             {
               terminalNodes_.push_back( childChild );
             }
@@ -209,6 +216,19 @@ void DecisionGraph::_addNode( const std::weak_ptr< GraphNodeType > & _node )
     {
       terminalNodes_.push_back( node );
     }
+  }
+}
+
+void DecisionGraph::_addEdge( uint child, uint parent, double p, const std::string & artifact )
+{
+  if( child == edges_.size() )
+  {
+    edges_.push_back( { { parent, std::make_pair( p, artifact ) } } );
+    CHECK_EQ( edges_.size()-1, child, "edges should be added in the right order!!" );
+  }
+  else
+  {
+    edges_[ child ][ parent ] = std::make_pair( p, artifact );
   }
 }
 
@@ -294,11 +314,11 @@ std::vector< std::string > DecisionGraph::getCommonPossibleActions( const GraphN
   return possibleActions;
 }
 
-std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< NodeData >::ptr & node, const std::string & action ) const
+std::vector< std::tuple< double, NodeData, std::string > > DecisionGraph::getPossibleOutcomes( const GraphNode< NodeData >::ptr & node, const std::string & action ) const
 {
   //std::cout << "DecisionGraph::getPossibleOutcomes of " << node->id() << std::endl; // tmp camille
 
-  std::vector< NodeData > outcomes;
+  std::vector< std::tuple< double, NodeData, std::string > > outcomes;
 
   LogicEngine & engine = engine_; // copy to be const
   auto bs     = node->data().beliefState;
@@ -369,7 +389,7 @@ std::vector< NodeData > DecisionGraph::getPossibleOutcomes( const GraphNode< Nod
 
     newBs = normalizeBs( newBs );
 
-    outcomes.push_back( NodeData( states, newBs, observation, terminal, p, node->data().agentId, NodeData::NodeType::OBSERVATION)  );
+    outcomes.push_back( std::make_tuple( p, NodeData( states, newBs, terminal, node->data().agentId, NodeData::NodeType::OBSERVATION ), observation ) );
   }
 
   return outcomes;
@@ -383,6 +403,7 @@ void DecisionGraph::copy( const DecisionGraph & graph )
   {
     engine_ = graph.engine_;
     isGraph_ = graph.isGraph_;
+    edges_ = graph.edges_;
 
     auto rootData = graph.root()->data();
 

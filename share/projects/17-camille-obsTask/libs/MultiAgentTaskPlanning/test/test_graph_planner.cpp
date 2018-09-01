@@ -105,9 +105,9 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
   NodeData nData;
   nData.agentId = agentId;
   //nData.beliefState = beliefState;
-  nData.leadingArtifact = leadingArtifact;
+  //nData.leadingArtifact = leadingArtifact;
   nData.nodeType = nodeType;
-  nData.p = p;
+  //nData.p = p;
   nData.states = states;
   nData.terminal = terminal;
 
@@ -116,7 +116,7 @@ TEST_F(GraphPlannerTest, DecisionGraphNodeToPolicyNode) {
   //ASSERT_EQ( pData.beliefState    , beliefState );
   ASSERT_EQ( pData.markovianReturn, r0 );
   ASSERT_EQ( pData.leadingKomoArgs.size(), 4 );
-  ASSERT_EQ( pData.p, p );
+  //ASSERT_EQ( pData.p, p );
   ASSERT_EQ( pData.decisionGraphNodeId, 1 );
 }
 

@@ -77,61 +77,47 @@ TEST(DecisionGraph, expandFromRoot2W) {
 
 TEST(DecisionGraph, expandCheckStateInequality) {  // graph connection if an equivalent symbolic state exits
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvfe"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvfe"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
 
   EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {0.99}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {0.99}, false, 0, NodeData::NodeType::ACTION );
 
   EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", true, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, true, 0, NodeData::NodeType::ACTION );
 
   EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", false, 0.0, 1, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, false, 1, NodeData::NodeType::ACTION );
 
   EXPECT_FALSE( sameState( data1, data2 ) );
   }
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::OBSERVATION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION );
 
   EXPECT_FALSE( sameState( data1, data2 ) );
   }
 }
 TEST(DecisionGraph, expandCheckStateEquality) {  // graph connection if an equivalent symbolic state exits
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
 
   ASSERT_TRUE( sameState( data1, data2 ) );
   }
 
   {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "frfr", false, 0.0, 0, NodeData::NodeType::ACTION );
-
-  ASSERT_TRUE( sameState( data1, data2 ) );
-  }
-
-  {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, "frfr", false, 0.2, 0, NodeData::NodeType::ACTION );
-
-  ASSERT_TRUE( sameState( data1, data2 ) );
-  }
-
-  {
-  DecisionGraph::GraphNodeDataType data1( {"vdvf", "qqqq"}, {1.0, 0.0}, "", false, 0.0, 0, NodeData::NodeType::ACTION );
-  DecisionGraph::GraphNodeDataType data2( {"vdvf", "qq"},   {1.0, 0.0}, "frfr", false, 0.2, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data1( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
+  DecisionGraph::GraphNodeDataType data2( {"vdvf"}, {1.0}, false, 0, NodeData::NodeType::ACTION );
 
   ASSERT_TRUE( sameState( data1, data2 ) );
   }
@@ -228,7 +214,7 @@ TEST(DecisionGraph, expandedLeadingAction) {
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.expand( graph.root() );
 
-  auto leadingAction = graph.root()->children().front()->data().leadingArtifact;
+  auto leadingAction = graph.edges() [ 0 ][ 1 ].second;
   ASSERT_NE( leadingAction.find( "look lanes" ), std::string::npos );
 }
 
@@ -239,7 +225,7 @@ TEST(DecisionGraph, expandedLeadingObservation0) {
   graph.expand( graph.root() );
   auto childChild = graph.root()->children().back()->children().back();
 
-  auto leadingObservation = childChild->data().leadingArtifact;
+  auto leadingObservation = graph.edges() [ childChild->id() ][ 0 ].second;
   ASSERT_EQ( leadingObservation, "" );
 }
 
@@ -250,7 +236,7 @@ TEST(DecisionGraph, expandedLeadingObservation1) {
   graph.expand( graph.root() );
   auto childChild = graph.root()->children().front()->children().front();
 
-  auto leadingObservation = childChild->data().leadingArtifact;
+  auto leadingObservation = graph.edges() [ childChild->id() ][ 0 ].second;
   ASSERT_NE( leadingObservation.find( "free lane_2" ), std::string::npos );
 }
 
@@ -261,7 +247,7 @@ TEST(DecisionGraph, expandedLeadingObservation2) {
   graph.expand( graph.root() );
   auto childChild = graph.root()->children().front()->children().back();
 
-  auto leadingObservation = childChild->data().leadingArtifact;
+  auto leadingObservation = graph.edges() [ childChild->id() ][ 0 ].second;;
   ASSERT_EQ( leadingObservation, "" );
 }
 
@@ -384,24 +370,24 @@ TEST(DecisionGraph, terminalNodesBLOCKS) {
 }
 
 // Terminal label
-TEST(DecisionGraph, probabilityAtObservationNode) {
-  LogicParser parser;
-  parser.parse( "data/LGP-overtaking-double-agent-2w.g" );
-  DecisionGraph graph( parser.engine(), parser.possibleStartStates(), parser.egoBeliefState() );
-  graph.build(2);
-  auto nodes = graph.nodes();
+//TEST(DecisionGraph, probabilityAtObservationNode) {
+//  LogicParser parser;
+//  parser.parse( "data/LGP-overtaking-double-agent-2w.g" );
+//  DecisionGraph graph( parser.engine(), parser.possibleStartStates(), parser.egoBeliefState() );
+//  graph.build(2);
+//  auto nodes = graph.nodes();
 
-  double p = -1;
-  for( auto l : nodes )
-  {
-    if( l.lock()->id() == 2 )
-    {
-      p = l.lock()->data().p;
-    }
-  }
+//  double p = -1;
+//  for( auto l : nodes )
+//  {
+//    if( l.lock()->id() == 2 )
+//    {
+//      p = l.lock()->data().p;
+//    }
+//  }
 
-  ASSERT_EQ( p, 0.95 );
-}
+//  ASSERT_EQ( p, 0.95 );
+//}
 
 TEST(DecisionGraph, terminalNodesHaveNoChildren) {
   LogicParser p;

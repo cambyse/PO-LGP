@@ -24,6 +24,8 @@ private:
 private:
   std::ostream & ss_;
   std::set< uint > printedNodes_;
+
+  std::vector< DecisionGraph::EdgeDataType > edges_; // store them here since they don't follow naturaly with the nodes
 };
 
 }

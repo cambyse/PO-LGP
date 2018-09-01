@@ -44,7 +44,9 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
 
   // go from leafs to root
   const auto nodes = graph.nodes();
-  auto terminals = graph.terminalNodes();
+  const auto terminals = graph.terminalNodes();
+  auto edges = graph.edges();
+
   for( auto weakV : terminals )
   {
     auto v = weakV.lock();
@@ -138,10 +140,11 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
       else if( u->data().nodeType == NodeData::NodeType::OBSERVATION )
       {
         double newTargetValue = 0;
-
         for( auto v : u->children() )
         {
-          newTargetValue += v->data().p * values[ v->id() ] ;
+          CHECK_EQ( edges[ v->id() ].count( u->id() ), 1, "corruption in edge data structure" );
+          const double p = edges[ v->id() ][ u->id() ].first;
+          newTargetValue += p * values[ v->id() ] ;
         }
 
         const auto newValue = values[ u->id() ] * ( 1 - alpha ) + alpha * newTargetValue;

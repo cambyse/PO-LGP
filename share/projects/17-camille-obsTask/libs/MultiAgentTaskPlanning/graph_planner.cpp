@@ -47,7 +47,7 @@ void GraphPlanner::solve()
 
   decideOnDecisionGraphCopy();
 
-  decidedGraph_.saveGraphToFile( "decided.gv" );
+  //decidedGraph_.saveGraphToFile( "decided.gv" );
 
   buildSkeleton();
 }
@@ -116,8 +116,8 @@ SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData
 
   pData.beliefState = dData.beliefState;
   pData.markovianReturn = r0_;
-  pData.leadingKomoArgs = decisionArtifactToKomoArgs( dData.leadingArtifact );
-  pData.p           = dData.p;
+  //pData.leadingKomoArgs = decisionArtifactToKomoArgs( dData.leadingArtifact );
+  //pData.p           = dData.p;
   pData.decisionGraphNodeId = id;
 
   return pData;
@@ -553,11 +553,14 @@ void GraphPlanner::buildSkeleton()
     auto u     = uPair.first;
     auto uSke = uPair.second;
 
-    std::cout << "u->id()" << u->id() << " action:" << u->data().leadingArtifact << std::endl;
+    //std::cout << "u->id()" << u->id() << " action:" << u->data().leadingArtifact << std::endl;
 
     for( auto v : u->children() )
     {
+      auto edge = decidedGraph_.edges()[ v->id() ][ u->id() ];
       SkeletonNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
+      data.p = edge.first;
+      data.leadingKomoArgs = decisionArtifactToKomoArgs( edge.second );
 
       auto vSke = uSke->makeChild( data );
 

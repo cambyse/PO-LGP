@@ -23,9 +23,8 @@ struct NodeData
   NodeData()
     : states()
     , beliefState()
-    , leadingArtifact()
+    //, leadingArtifact()
     , terminal( false )
-    , p( 0.0 )
     , agentId( 0 )
     , nodeType( NodeType::ACTION )
   {
@@ -34,16 +33,14 @@ struct NodeData
 
   NodeData( const std::vector< std::string > & states,
             const std::vector< double      > & beliefState,
-            const std::string leadingArtifact,
+            //const std::string leadingArtifact,
             bool terminal,
-            double p,
             uint agentId,
             NodeType nodeType )
     : states( states )
     , beliefState( beliefState )
-    , leadingArtifact( leadingArtifact )
+    //, leadingArtifact( leadingArtifact )
     , terminal( terminal )
-    , p( p )
     , agentId( agentId )
     , nodeType( nodeType )
   {
@@ -52,10 +49,9 @@ struct NodeData
 
   std::vector< std::string > states;
   std::vector< double      > beliefState;
-  std::string leadingArtifact; // leading action of leading observation
+  //std::string leadingArtifact; // leading action of leading observation
   //
   bool terminal;
-  double p; // probability to reach this node given the parent
   uint agentId;
   NodeType nodeType;
 
@@ -98,9 +94,10 @@ class DecisionGraph
 public:
   using GraphNodeDataType = NodeData;
   using GraphNodeType = GraphNode< NodeData >;
+  using EdgeDataType = std::unordered_map< uint, std::pair< double, std::string > >;
+
 public:
   DecisionGraph() = default;
-  //~DecisionGraph();
   void reset();
 
   DecisionGraph( const DecisionGraph & ); // copy ctor
@@ -114,24 +111,30 @@ public:
   GraphNodeType::ptr root() const { return root_; }
   std::vector< std::weak_ptr< GraphNodeType > > nodes() const { return nodes_; }
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes() const { return terminalNodes_; }
+  std::vector< EdgeDataType > edges() const { return edges_; }
 
   void _addNode( const std::weak_ptr< GraphNodeType > & node ); // for tests only!!
+  void _addEdge( uint child, uint parent, double p, const std::string & artifact ); // for tests only!!
+
   void removeNode( const std::weak_ptr< GraphNodeType > & node );
   void saveGraphToFile( const std::string & filename ) const;
 
   // public for testing purpose
   std::vector< std::string > getCommonPossibleActions( const GraphNodeType::ptr & node, uint agentId ) const;
-  std::vector< NodeData > getPossibleOutcomes( const GraphNodeType::ptr & node, const std::string & action ) const;
+  std::vector< std::tuple< double, NodeData, std::string > > getPossibleOutcomes( const GraphNodeType::ptr & node, const std::string & action ) const;
 
 private:
   void copy( const DecisionGraph & );
 
 private:
   mutable LogicEngine engine_;
+  // nodes
   GraphNodeType::ptr root_;
   std::vector< std::weak_ptr< GraphNodeType > > nodes_;
   std::unordered_map< std::size_t, std::list< uint > > hash_to_id_;
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes_;
   bool isGraph_ = false; // if false is only a tree
+  // edges
+  std::vector< EdgeDataType > edges_;// child-id -> <p, leading artifact> p = // probability to reach this node given the parent
 };
 } // namespace matp
