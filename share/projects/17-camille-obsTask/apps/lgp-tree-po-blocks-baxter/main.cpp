@@ -12,11 +12,11 @@
 #include <komo_planner.h>
 
 #include <observation_tasks.h>
-#include <approx_point_to_shape.h>
-#include <vertical_velocity.h>
-#include <axis_alignment.h>
-#include <over_plane.h>
-#include <axis_bound.h>
+//#include <approx_point_to_shape.h>
+//#include <vertical_velocity.h>
+//#include <axis_alignment.h>
+//#include <over_plane.h>
+//#include <axis_bound.h>
 
 //===========================================================================
 
@@ -176,7 +176,7 @@ void plan_graph_search()
   mp::KOMOPlanner mp;
 
   // set planner specific parameters
-  tp.setR0( -0.015 );
+  tp.setR0( -0.5 );
   tp.setMaxDepth( 15 );
   mp.setNSteps( 10 );
 
@@ -189,30 +189,18 @@ void plan_graph_search()
 
   // set start configurations
   //tp.setFol( "LGP-blocks-fol-unified.g" );
-  tp.setFol( "LGP-blocks-fol-model-2-unified.g" );
-  mp.setKin( "LGP-blocks-kin-unified.g" );
-
-  //tp.setFol( "LGP-blocks-fol-model-2.g" );
-  //tp.setFol( "LGP-blocks-fol.g" );
-  //mp.setKin( "LGP-blocks-kin.g" );
+  //tp.setFol( "LGP-blocks-fol-model-2-unified.g" );
+  //mp.setKin( "LGP-blocks-kin-unified.g" );
 
   // checked, probably doesn't work with n steps = 5
   //tp.setFol( "LGP-blocks-fol-2w-unified.g" );
   //tp.setFol( "LGP-blocks-fol-2w-model-2-unified.g" );
   //mp.setKin( "LGP-blocks-kin-2w-unified.g" );
 
-  //tp.setFol( "LGP-blocks-fol-2w.g" );
-  //tp.setFol( "LGP-blocks-fol-2w-model-2.g" );
-  //mp.setKin( "LGP-blocks-kin-2w.g" );
-
   // checked
-  //tp.setFol( "LGP-blocks-fol-1w-unified.g" );
+  tp.setFol( "LGP-blocks-fol-1w-unified.g" );
   //tp.setFol( "LGP-blocks-fol-1w-model-2-unified.g" );
-  //mp.setKin( "LGP-blocks-kin-1w-unified.g" );
-
-  //tp.setFol( "LGP-blocks-fol.g" );
-  //tp.setFol( "LGP-blocks-fol-1w-model-2.g" );
-  //mp.setKin( "LGP-blocks-kin-1w.g" );
+  mp.setKin( "LGP-blocks-kin-1w-unified.g" );
 
 ///
   std::ofstream candidate, results;
@@ -290,7 +278,7 @@ task_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).
 
 {
 auto start = std::chrono::high_resolution_clock::now();
-  mp.display( policy, 0 );
+  mp.display( policy, 30 );
 auto elapsed = std::chrono::high_resolution_clock::now() - start;
 joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 }
@@ -312,12 +300,14 @@ joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(e
 
 void baxter()
 {
-  mlr::KinematicWorld kin;
-  kin.init( "LGP-blocks-kin-2w.g" );
-  kin.watch( true );
-  kin.write( std::cout );
+  {
+    mlr::KinematicWorld kin;
+    kin.init( "LGP-blocks-kin-1w-unified.g" );
+    kin.watch();
+    kin.write( std::cout );
 
-  mlr::wait( 300, true );
+    mlr::wait( 300, true );
+  }
 }
 
 //===========================================================================
