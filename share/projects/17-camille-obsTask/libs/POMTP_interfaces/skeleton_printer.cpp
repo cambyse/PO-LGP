@@ -59,6 +59,7 @@ void SkeletonPrinter::saveGraphFrom( const Skeleton::GraphNodeType::ptr & node )
     ss << std::endl;
 
     //
+    std::cout << "print return to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
     ss << "r=" << c->data().markovianReturn << std::endl;
 
     label = ss.str();

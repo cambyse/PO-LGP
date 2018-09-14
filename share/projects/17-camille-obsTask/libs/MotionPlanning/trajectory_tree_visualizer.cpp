@@ -45,7 +45,7 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
       {
         std::string windowName = name + std::string( "-world-" ) + std::to_string( w ) + " - " + std::to_string( index ) ;
 
-        views_[ index ] = std::make_shared< OrsPathViewer >( windowName.c_str(),  0.05, -0 );
+        views_[ index ] = std::make_shared< OrsPathViewer >( windowName.c_str(),  0.15, -0 ); //0.05
 
         mlr::Array< mlr::KinematicWorld * > configurations( traj.N );
 
@@ -64,6 +64,14 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
 //          //  setPosition(10., -4., 10.);
 //            focus(0, 0, 1.);
 //            upright();
+        {
+          auto & kin = views_[ index ];
+          const double zf = 1.47;
+          const double s = 0.55;
+          kin->copy.gl().camera.setPosition(s * 10., s * 3., zf + s * ( 2.28 - zf ));
+          kin->copy.gl().camera.focus(0, 0, zf);
+          kin->copy.gl().camera.upright();
+        }
 
         index++;
       }

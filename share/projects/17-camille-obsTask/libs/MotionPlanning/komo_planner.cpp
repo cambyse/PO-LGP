@@ -133,7 +133,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       fifo.pop_back();
 
       double maxConstraint = 0;
-      for( auto constraint : poseConstraints_[ node->id() ] )
+      for( auto constraint : poseConstraints_[ node->data().decisionGraphNodeId ] )
       {
         maxConstraint = std::max( constraint, maxConstraint );
       }
@@ -178,7 +178,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       auto node = fifo.back();
       fifo.pop_back();
 
-      double constraint = markovianPathConstraints_[ node->id() ];
+      double constraint = markovianPathConstraints_[ node->data().decisionGraphNodeId ];
 
       if( constraint >= maxConstraint_ )
       {
@@ -193,7 +193,10 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       }
       else
       {
-        node->data().markovianReturn =  -markovianPathCosts_[ node->id() ];
+        if( node->id() == 1 )
+        std::cout << "return of 1:" << markovianPathCosts_[ node->data().decisionGraphNodeId ] << std::endl;
+
+        node->data().markovianReturn =  -markovianPathCosts_[ node->data().decisionGraphNodeId ];
         //node->setStatus( PolicyNode::INFORMED );
 
         // push children on list
@@ -300,9 +303,36 @@ void KOMOPlanner::display( const Skeleton & policy, double sec )
     frames.append( leafWorldKinFramesPair.second );
   }
 
+  // display
   TrajectoryTreeVisualizer viz( frames, "policy" );
 
   mlr::wait( sec, true );
+}
+std::pair< double, double > KOMOPlanner::evaluateLastSolution()
+{
+  // retrieve trajectories
+  mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
+
+  //CHECK( jointPathKinFrames_.size() == 0, "not supported yet if branching!" );
+
+  const auto & kinFrames = jointPathKinFrames_.size() > 1 ? jointPathKinFrames_ : pathKinFrames_;
+  for( auto leafWorldKinFramesPair : kinFrames )
+  {
+    frames.append( leafWorldKinFramesPair.second );
+  }
+  // evaluation
+  for( auto k = 0; k < frames.N; ++k )
+  {
+    for( auto l = 0; l < frames.at(k).N; ++l )
+    {
+      auto eval = evaluate( frames.at(k).at(l), secPerPhase_ / microSteps_ );
+
+      auto length = eval.first;
+      auto acc_cost = eval.second;
+
+      return std::make_pair( length, acc_cost );
+    }
+  }
 }
 
 void KOMOPlanner::registerTask( const std::string & type, const SymbolGrounder & grounder )
@@ -325,15 +355,15 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
 
   const auto N = node->data().beliefState.size();
   //
-  effKinematics_  [ node->id() ] = mlr::Array< mlr::KinematicWorld >( N );
-  poseCosts_      [ node->id() ] = arr( N );
-  poseConstraints_[ node->id() ] = arr( N );
+  effKinematics_  [ node->data().decisionGraphNodeId ] = mlr::Array< mlr::KinematicWorld >( N );
+  poseCosts_      [ node->data().decisionGraphNodeId ] = arr( N );
+  poseConstraints_[ node->data().decisionGraphNodeId ] = arr( N );
   //
   for( auto w = 0; w < N; ++w )
   {
     if( node->data().beliefState[ w ] > eps() )
     {
-      mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->id() )->second( w ) );
+      mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
 
       // create komo
       auto komo = komoFactory_.createKomo();
@@ -370,8 +400,8 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       double cost = result.get<double>( { "total","sqrCosts" } );
       double constraints = result.get<double>( { "total","constraints" } );
 
-      poseCosts_[ node->id() ]( w )       = cost;
-      poseConstraints_[ node->id() ]( w ) = constraints;
+      poseCosts_[ node->data().decisionGraphNodeId ]( w )       = cost;
+      poseConstraints_[ node->data().decisionGraphNodeId ]( w ) = constraints;
 
       // what to do with the cost and constraints here??
       if( constraints >= maxConstraint_ )
@@ -380,16 +410,16 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       }
 
       // update effective kinematic
-      effKinematics_[ node->id() ]( w ) = *komo->configurations.last();
+      effKinematics_[ node->data().decisionGraphNodeId ]( w ) = *komo->configurations.last();
 
       // update switch
       for( mlr::KinematicSwitch *sw: komo->switches )
       {
         //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
-        if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->id() ]( w ) );
+        if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->data().decisionGraphNodeId ]( w ) );
       }
       //effKinematics_[ node ]( w ).topSort();
-      effKinematics_[ node->id() ]( w ).getJointState();
+      effKinematics_[ node->data().decisionGraphNodeId ]( w ).getJointState();
 
       // free
       freeKomo( komo );
@@ -414,14 +444,14 @@ void KOMOPlanner::optimizeMarkovianPath( Skeleton & policy )
 
 void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & node )
 {
-  std::cout << "optimizing markovian path for:" << node->id() << std::endl;
+  //std::cout << "optimizing markovian path for:" << node->id() << std::endl;
 
   bool feasible = true;
 
-  if( markovianPathCosts_.find( node->id() ) == markovianPathCosts_.end() )
+  if( markovianPathCosts_.find( node->data().decisionGraphNodeId ) == markovianPathCosts_.end() )
   {
-    markovianPathCosts_      [ node->id() ] = 0;
-    markovianPathConstraints_[ node->id() ] = 0;
+    markovianPathCosts_      [ node->data().decisionGraphNodeId ] = 0;
+    markovianPathConstraints_[ node->data().decisionGraphNodeId ] = 0;
 
     const auto N = node->data().beliefState.size();
 
@@ -429,8 +459,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
     {
       if( node->data().beliefState[ w ] > eps() )
       {
-        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->id() )->second( w ) );
-
+        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
         // create komo
         auto komo = komoFactory_.createKomo();
 
@@ -467,8 +496,8 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         double cost = result.get<double>( { "total","sqrCosts" } );
         double constraints = result.get<double>( { "total","constraints" } );
 
-        markovianPathCosts_      [ node->id() ] += node->data().beliefState[ w ] * cost;
-        markovianPathConstraints_[ node->id() ] += node->data().beliefState[ w ] * constraints;
+        markovianPathCosts_      [ node->data().decisionGraphNodeId ] += node->data().beliefState[ w ] * cost;
+        markovianPathConstraints_[ node->data().decisionGraphNodeId ] += node->data().beliefState[ w ] * constraints;
 
         // what to do with the cost and constraints here??
         if( constraints >= maxConstraint_ )
@@ -686,7 +715,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
               komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
               //
-              std::cout << "depth:" << node->depth() << " slice:" << slice_t << " has kin equality, q size = " << qmask.size() << std::endl;
+              //std::cout << "depth:" << node->depth() << " slice:" << slice_t << " has kin equality, q size = " << qmask.size() << std::endl;
               //
             }
           }

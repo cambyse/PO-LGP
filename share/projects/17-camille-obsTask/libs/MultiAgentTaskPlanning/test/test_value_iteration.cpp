@@ -34,7 +34,7 @@ TEST(ValueIteration, OnUnsolvedRootCyclicGraphValuesAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedRootCyclicGraphValuesAreInfinity.gv" );
 
-  std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0 };
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -82,7 +82,7 @@ TEST(ValueIteration, OnUnsolvedCyclicGraphValuesAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedCyclicGraphValuesAreInfinity.gv" );
 
-  std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 };
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -119,29 +119,29 @@ TEST(ValueIteration, OnUnsolvedBranchValuesAreInfinity) {
   auto child_o_30 = child_a_20->makeChild( DecisionGraph::GraphNodeDataType({"", ""}, {0.0, 1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
   auto child_a_40 = child_o_30->makeChild( DecisionGraph::GraphNodeDataType({"", ""}, {0.0, 1.0}, true, 0, NodeData::NodeType::ACTION) );
 
-  graph._addNode( child_o_1 );
+  graph._addNode( child_o_1 );  // 1
   graph._addEdge( child_o_1->id(), root->id(), 1.0, "" );
 
-  graph._addNode( child_a_2 );
+  graph._addNode( child_a_2 ); // 2
   graph._addEdge( child_a_2->id(), child_o_1->id(), 0.5, "" );
-  graph._addNode( child_o_3 );
+  graph._addNode( child_o_3 ); // 3
   graph._addEdge( child_o_3->id(), child_a_2->id(), 1.0, "" );
-  graph._addNode( child_a_4 );
+  graph._addNode( child_a_4 ); // 4
   graph._addEdge( child_a_4->id(), child_o_3->id(), 1.0, "" );
-  graph._addNode( child_o_5 );
+  graph._addNode( child_o_5 ); // 5
   graph._addEdge( child_o_5->id(), child_a_4->id(), 1.0, "" );
   graph._addEdge( child_a_2->id(), child_o_5->id(), 1.0, "" );
 
-  graph._addNode( child_a_20 );
+  graph._addNode( child_a_20 ); // 6
   graph._addEdge( child_a_20->id(), child_o_1->id(), 0.5, "" );
   graph._addNode( child_o_30 );
-  graph._addEdge( child_o_30->id(), child_a_20->id(), 0.5, "" );
+  graph._addEdge( child_o_30->id(), child_a_20->id(), 1.0, "" );
   graph._addNode( child_a_40 );
-  graph._addEdge( child_a_40->id(), child_o_30->id(), 0.5, "" );
+  graph._addEdge( child_a_40->id(), child_o_30->id(), 1.0, "" );
 
   graph.saveGraphToFile( "OnUnsolvedBranchValuesAreInfinity.gv" );
 
-  std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 };
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -188,7 +188,7 @@ TEST(ValueIteration, OnSolvedAcyclicGraph) {
 
   graph.saveGraphToFile( "OnSolvedAcyclicGraph.gv" );
 
-  std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0 };
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -233,7 +233,7 @@ TEST(ValueIteration, OnUnsolvedAcyclicGraphValueAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedAcyclicGraph.gv" );
 
-  std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0 };
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -286,23 +286,190 @@ TEST(ValueIteration, OnActionBranchingValueIterationChosesRightAction) {
 
   graph.saveGraphToFile( "OnActionBranchingValueIterationChosesRightAction.gv" );
 
-  std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0, -1000.0, -1.0, -1.0, -1.0 };
+  //std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0, -1000.0, -1.0, -1.0, -1.0 };
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
 
+  auto rewardSetter = [&] ( uint from, uint to, double r )
+  {
+    rewards[ from * graph.size() + to ] = r;
+  };
+
+  rewardSetter( 6, 7, -1000.0 );
 //  /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
 //  /////
 
   EXPECT_NEAR( values[0], -2.0, 0.001 );
 
-  EXPECT_LE( values[5], -100.0 );
-//  EXPECT_LE( values[2], -100.0 );
-
-//  EXPECT_LE( values[3], -100.0 );
-//  EXPECT_LE( values[4], -100.0 );
-
-//  EXPECT_LE( values[5], -100.0 );
+  EXPECT_NEAR( values[5], -1000.0, 0.001 );
+  EXPECT_NEAR( values[6], -1000.0, 0.001 );
 }
 
+
+TEST(ValueIteration, ValueAfterObservationBranchingPoint) {
+  LogicEngine engine;
+  std::vector< std::string > startStates;
+  std::vector< double > egoBeliefState;
+  DecisionGraph graph( engine, startStates, egoBeliefState );
+
+  auto root = graph.root();
+
+  // first action + observation
+  auto child_o_0 = root->makeChild( DecisionGraph::GraphNodeDataType({"action_0"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_0 );
+  graph._addEdge( child_o_0->id(), root->id(), 1.0, "" );
+
+  // branch 1 - obs 1
+  auto child_a_0 = child_o_0->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_0 );
+  graph._addEdge( child_a_0->id(), child_o_0->id(), 0.5, "" );
+  auto child_o_1 = child_a_0->makeChild( DecisionGraph::GraphNodeDataType({"action_1"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_1 );
+  graph._addEdge( child_o_1->id(), root->id(), 1.0, "" );
+  auto child_a_f0 = child_o_1->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, true, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_f0 );
+  graph._addEdge( child_a_f0->id(), child_o_1->id(), 1.0, "" );
+
+  // branch 2 - obs 2
+  auto child_a_10 = child_o_0->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_10 );
+  graph._addEdge( child_a_10->id(), child_o_0->id(), 0.5, "" );
+  auto child_o_10 = child_a_10->makeChild( DecisionGraph::GraphNodeDataType({"action_2"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_10 );
+  graph._addEdge( child_o_10->id(), root->id(), 1.0, "" );
+  auto child_a_f1 = child_o_10->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, true, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_f1 );
+  graph._addEdge( child_a_f1->id(), child_o_10->id(), 1.0, "" );
+
+  graph.saveGraphToFile( "ValueAfterObservationBranchingPoint.gv" );
+
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+
+//  auto rewardSetter = [&] ( uint from, uint to, double r )
+//  {
+//    rewards[ from * graph.size() + to ] = r;
+//  };
+
+//  rewardSetter( 2, 7, -1000.0 );
+//  /////
+  auto values = ValueIterationAlgorithm::process( graph, rewards );
+//  /////
+
+  EXPECT_NEAR( values[0], -2.0, 0.001 );
+  EXPECT_NEAR( values[1], -1.0, 0.001 );
+}
+
+TEST(ValueIteration, ValueAfterObservationBranchingPoint2DisymmetricBranches) {
+  LogicEngine engine;
+  std::vector< std::string > startStates;
+  std::vector< double > egoBeliefState;
+  DecisionGraph graph( engine, startStates, egoBeliefState );
+
+  auto root = graph.root();
+
+  // first action
+  auto child_o_0 = root->makeChild( DecisionGraph::GraphNodeDataType({"action_0"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_0 );
+  graph._addEdge( child_o_0->id(), root->id(), 1.0, "" );
+
+  // branch 1 - obs 1
+  auto child_a_0 = child_o_0->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_0 );
+  graph._addEdge( child_a_0->id(), child_o_0->id(), 0.5, "" );
+  auto child_o_1 = child_a_0->makeChild( DecisionGraph::GraphNodeDataType({"action_1"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_1 );
+  graph._addEdge( child_o_1->id(), root->id(), 1.0, "" );
+  auto child_a_f0 = child_o_1->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, true, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_f0 );
+  graph._addEdge( child_a_f0->id(), child_o_1->id(), 1.0, "" );
+
+  // branch 2 - obs 2
+  auto child_a_10 = child_o_0->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_10 );
+  graph._addEdge( child_a_10->id(), child_o_0->id(), 0.5, "" );
+  auto child_o_10 = child_a_10->makeChild( DecisionGraph::GraphNodeDataType({"action_2"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_10 );
+  graph._addEdge( child_o_10->id(), root->id(), 1.0, "" );
+  auto child_a_f1 = child_o_10->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, true, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_f1 );
+  graph._addEdge( child_a_f1->id(), child_o_10->id(), 1.0, "" );
+
+  graph.saveGraphToFile( "ValueAfterObservationBranchingPoint2DisymmetricBranches.gv" );
+
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+
+  auto rewardSetter = [&] ( uint from, uint to, double r )
+  {
+    rewards[ from * graph.size() + to ] = r;
+  };
+
+  rewardSetter( 5, 6, -1000.0 );
+//  /////
+  auto values = ValueIterationAlgorithm::process( graph, rewards );
+//  /////
+
+  EXPECT_NEAR( values[0], -501.5, 0.01 );
+  EXPECT_NEAR( values[1], -500.5, 0.01 );
+}
+
+TEST(ValueIteration, ValueAfterObservationBranchingPoint2DisymmetricBranchesOneActionStepBefore) {
+  LogicEngine engine;
+  std::vector< std::string > startStates;
+  std::vector< double > egoBeliefState;
+  DecisionGraph graph( engine, startStates, egoBeliefState );
+
+  auto root = graph.root();
+
+  // first action + observation
+  auto child_o_0 = root->makeChild( DecisionGraph::GraphNodeDataType({"action_0"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_0 );
+  graph._addEdge( child_o_0->id(), root->id(), 1.0, "" );
+  auto child_a_00 = child_o_0->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_00 );
+  graph._addEdge( child_a_00->id(), child_o_0->id(), 1.0, "" );
+  auto child_o_00 = child_a_00->makeChild( DecisionGraph::GraphNodeDataType({"action_0"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_00 );
+  graph._addEdge( child_o_00->id(), child_a_00->id(), 1.0, "" );
+
+  // branch 1 - obs 1
+  auto child_a_0 = child_o_00->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_0 );
+  graph._addEdge( child_a_0->id(), child_o_00->id(), 0.5, "" );
+  auto child_o_1 = child_a_0->makeChild( DecisionGraph::GraphNodeDataType({"action_1"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_1 );
+  graph._addEdge( child_o_1->id(), root->id(), 1.0, "" );
+  auto child_a_f0 = child_o_1->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, true, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_f0 );
+  graph._addEdge( child_a_f0->id(), child_o_1->id(), 1.0, "" );
+
+  // branch 2 - obs 2
+  auto child_a_10 = child_o_00->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, false, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_10 );
+  graph._addEdge( child_a_10->id(), child_o_00->id(), 0.5, "" );
+  auto child_o_10 = child_a_10->makeChild( DecisionGraph::GraphNodeDataType({"action_2"}, {1.0}, false, 0, NodeData::NodeType::OBSERVATION) );
+  graph._addNode( child_o_10 );
+  graph._addEdge( child_o_10->id(), root->id(), 1.0, "" );
+  auto child_a_f1 = child_o_10->makeChild( DecisionGraph::GraphNodeDataType({""}, {1.0}, true, 0, NodeData::NodeType::ACTION) );
+  graph._addNode( child_a_f1 );
+  graph._addEdge( child_a_f1->id(), child_o_10->id(), 1.0, "" );
+
+  graph.saveGraphToFile( "ValueAfterObservationBranchingPoint2DisymmetricBranchesOneActionStepBefore.gv" );
+
+  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+
+  auto rewardSetter = [&] ( uint from, uint to, double r )
+  {
+    rewards[ from * graph.size() + to ] = r;
+  };
+
+  rewardSetter( 7, 8, -1000.0 );
+//  /////
+  auto values = ValueIterationAlgorithm::process( graph, rewards );
+//  /////
+
+  EXPECT_NEAR( values[0], -502.5, 0.01 );
+  EXPECT_NEAR( values[1], -501.5, 0.01 );
+}
 
 //
 int main(int argc, char **argv)

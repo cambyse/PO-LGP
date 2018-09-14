@@ -11,6 +11,11 @@ namespace matp
 
 std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & graph, std::vector< double > & rewards )
 {
+  auto fromToIndex = [&graph] ( uint from, uint to )->uint
+  {
+    return from * graph.size() + to;
+  };
+
   std::cout << "valueIteration.. start" << std::endl;
 
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
@@ -57,14 +62,14 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
   // expected reward up to terminal nodes
   // add terminal nodes to Q
   uint totalUpdates = 0;
-  constexpr double eps = 10e-4;
+  constexpr double eps = 10e-5;
   bool stable = false;
   for( auto i = 0; ! stable && i < 1000; ++i )
   {
     double maxDiff = 0;
 
     auto itNodes = nodes;
-    //std::random_shuffle ( itNodes.begin(), itNodes.end() );
+    std::random_shuffle ( itNodes.begin(), itNodes.end() );
 
     for( auto weakU : itNodes )
     {
@@ -86,7 +91,7 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
             // max operation, choose the best child
             for( auto v : u->children() )
             {
-              const auto r = rewards[ v->id() ];
+              const auto r = rewards[ fromToIndex( u->id(), v->id() ) ];
 
               if( values[ v->id() ] + r > newTargetValue )
               {
@@ -140,12 +145,16 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
       else if( u->data().nodeType == NodeData::NodeType::OBSERVATION )
       {
         double newTargetValue = 0;
+        double sumP = 0;
         for( auto v : u->children() )
         {
           CHECK_EQ( edges[ v->id() ].count( u->id() ), 1, "corruption in edge data structure" );
           const double p = edges[ v->id() ][ u->id() ].first;
+          sumP+=p;
           newTargetValue += p * values[ v->id() ] ;
         }
+
+        CHECK( fabs(sumP-1.0) < 0.001, "wrong belief state!" );
 
         const auto newValue = values[ u->id() ] * ( 1 - alpha ) + alpha * newTargetValue;
         const auto diff = diff_func( values[ u->id() ], newValue );

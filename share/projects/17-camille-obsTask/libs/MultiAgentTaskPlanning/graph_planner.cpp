@@ -38,6 +38,9 @@ void GraphPlanner::solve()
     buildGraph();
   }
 
+  //graph_.saveGraphToFile( "graph.gv" );
+
+
   if( rewards_.empty() )
   {
     initializeRewards();
@@ -57,18 +60,74 @@ void GraphPlanner::integrate( const Skeleton & policy )
   std::queue< Skeleton::GraphNodeTypePtr > Q;
   Q.push( policy.root() );
 
+  auto decisionGraphNodes = graph_.nodes();
+
   while( ! Q.empty() )
   {
     auto n = Q.front();
     Q.pop();
 
-    rewards_[ n->data().decisionGraphNodeId ] = n->data().markovianReturn;
-
-    for( auto c : n->children() )
+    if( n->id() == 0 )
     {
-      Q.push( c );
+      CHECK_EQ( n->children().size(), 1, "wrong skeleton" );
+
+      for( auto c : n->children() )
+      {
+        std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
+
+        rewards_[ fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+        Q.push( c );
+      }
     }
+    else
+    {
+      // we have to skip the observation node
+      for( auto c : n->children() )
+      {
+        // find correct parent in decision graph
+        // 1 - get similar nod in graph
+        auto c_g = decisionGraphNodes[ c->data().decisionGraphNodeId ];
+
+        auto id_right_parent = -1;
+        for( auto p_g : c_g.lock()->parents() )
+        {
+          for( auto p_p_g : p_g.lock()->parents() )
+          {
+            if( p_p_g.lock()->id() == n->data().decisionGraphNodeId )
+            {
+              id_right_parent = p_g.lock()->id();
+
+              std::cout << "integrate from " << id_right_parent << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
+
+              rewards_[ fromToIndex( id_right_parent, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+
+              Q.push( c );
+
+              break;
+            }
+          }
+        }
+      }
+    }
+
+//    auto nn = decisionGraphNodes[ n->id() ];
+
+//    for( auto nnn : nn.lock()->children() ) // observation
+//    {
+//    for( auto cc : nnn->children() )
+//    {
+//    for( auto c : n->children() )
+//    {
+//      std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
+
+//      //rewards_[ fromToIndex( nnn->id(), c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+//      Q.push( c );
+//    }
+//    }
+//    }
   }
+
+  // go through
 }
 
 // getters
@@ -82,9 +141,9 @@ Skeleton GraphPlanner::getPolicy() const
   return skeleton_;
 }
 
-double GraphPlanner::reward( uint nodeId ) const
+double GraphPlanner::reward( uint from, uint to ) const
 {
-  return rewards_[ nodeId ];
+  return rewards_[ fromToIndex( from, to ) ];
 }
 
 void GraphPlanner::buildGraph( bool graph )
@@ -97,16 +156,19 @@ void GraphPlanner::buildGraph( bool graph )
 
   graph_.build( maxDepth_, graph );
 
-  std::cout << "GraphPlanner::buildGraph.. end" << std::endl;
+  std::cout << "GraphPlanner::buildGraph.. end, size of graph:" << graph_.size() << std::endl;
 }
 
 void GraphPlanner::initializeRewards()
 {
-  rewards_ = std::vector< double >( graph_.nodes().size(), r0_ );
+  rewards_ = std::vector< double >( graph_.nodes().size() * graph_.nodes().size(), r0_ );
 
   for( const auto & n : graph_.nodes() )
   {
-    rewards_[ n.lock()->id() ] = r0_;
+    for( const auto & m : graph_.nodes() )
+    {
+      rewards_[ fromToIndex( n.lock()->id(), m.lock()->id() ) ] = r0_;
+    }
   }
 }
 
@@ -124,7 +186,6 @@ SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData
 void GraphPlanner::valueIteration()
 {
   values_ = ValueIterationAlgorithm::process( graph_, rewards_ );
-
 }
 
 void GraphPlanner::decideOnDecisionGraphCopy()
@@ -166,8 +227,11 @@ void GraphPlanner::buildSkeleton()
       SkeletonNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
       data.p = edge.first;
       data.leadingKomoArgs = decisionArtifactToKomoArgs( edge.second );
+      data.markovianReturn = rewards_[ fromToIndex( u->id(), v->id() ) ];
 
       auto vSke = uSke->makeChild( data );
+
+      std::cout << "build ske from " << uSke->id() << "(" << u->id() << ") to " << vSke->id()<< " (" << v->id() << ") = " << data.markovianReturn << std::endl;
 
       for( auto w : v->children() ) // skip obs nodes
       {
@@ -179,7 +243,12 @@ void GraphPlanner::buildSkeleton()
   skeleton_ = Skeleton( policyRoot );
   skeleton_.setValue( values_[ decisionGraph().root()->id() ] );
 
-  std::cout << "GraphPlanner::buildSkeleton.. end" << std::endl;
+  std::cout << "GraphPlanner::buildSkeleton.. end (value=" << skeleton_.value() << ")" << std::endl;
+}
+
+uint GraphPlanner::fromToIndex( uint from, uint to ) const
+{
+  return from * graph_.size() + to;
 }
 
 }

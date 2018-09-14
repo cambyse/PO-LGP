@@ -18,4 +18,6 @@ add_subdirectory("lgp-seq-self-driving")
 add_subdirectory("lgp-tree-po-self-driving")
 add_subdirectory("lgp-tree-po-ma-self-driving")
 
+add_subdirectory("tmkit-path-evaluator")
+
 

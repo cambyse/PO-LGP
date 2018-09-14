@@ -43,6 +43,6 @@ target_link_libraries(
  POMTP_interfaces
  ObservationTasks
  CollisionAvoidance
- TaskPlanning
+ MultiAgentTaskPlanning
  MotionPlanning
  )

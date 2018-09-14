@@ -59,6 +59,7 @@ std::vector < double > normalizeBs( const std::vector < double > & bs )
 
 void DecisionGraph::reset()
 {
+  //root_.reset();
   edges_.clear();
   nodes_.clear();
   hash_to_id_.clear();
@@ -81,8 +82,19 @@ DecisionGraph& DecisionGraph::operator= ( const DecisionGraph & graph ) // assig
 // DecisionGraph
 DecisionGraph::DecisionGraph( const LogicEngine & engine, const std::vector< std::string > & startStates, const std::vector< double > & egoBeliefState )
   : engine_( engine )
-  , root_( GraphNode< NodeData >::root( NodeData( startStates, egoBeliefState, false, 0, NodeData::NodeType::ACTION ) ) )
+  , root_( GraphNode< NodeData >::root( NodeData( sortFacts( startStates ), egoBeliefState, false, 0, NodeData::NodeType::ACTION ) ) )
 {
+  // sort states before creating root
+  std::vector< std::string > sortedStartState = startStates;
+
+  for( auto & s : sortedStartState )
+  {
+    s = concatenateFacts( getFilteredFacts( s ) );
+  }
+
+  root_ = GraphNode< NodeData >::root( NodeData( sortedStartState, egoBeliefState, false, 0, NodeData::NodeType::ACTION ) );
+  hash_to_id_[ root_->data().hash() ].push_back( 0 );
+
   nodes_.push_back( root_ );
   edges_.push_back( EdgeDataType() ); // dummy edge coming to root
 }
@@ -438,6 +450,7 @@ void DecisionGraph::copy( const DecisionGraph & graph )
     auto rootData = graph.root()->data();
 
     root_ = GraphNodeType::root( rootData );
+    hash_to_id_[ root_->data().hash() ].push_back( 0 );
     nodes_.push_back( root_ );
 
     std::queue< std::pair < GraphNodeType::ptr, GraphNodeType::ptr > > Q;

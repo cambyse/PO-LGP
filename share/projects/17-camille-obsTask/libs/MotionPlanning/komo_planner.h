@@ -6,6 +6,7 @@
 #include <motion_planner.h>
 
 #include <komo_factory.h>
+#include <path_evaluator.h>
 
 namespace mp
 {
@@ -23,6 +24,7 @@ public:
 
   // display
   void display( const Skeleton & policy, double sec ) override;
+  std::pair< double, double > evaluateLastSolution();
 
   // ground symbols
   void registerTask( const std::string & type, const SymbolGrounder & grounder );

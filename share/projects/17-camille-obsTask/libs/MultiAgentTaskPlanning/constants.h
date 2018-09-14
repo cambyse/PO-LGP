@@ -24,6 +24,7 @@ bool isOfAgent( const std::string & str, uint agentId );
 bool isOfAgent( const FOL_World::Handle & action, uint agentId );
 StringA nodeToStringA( Node * facts );
 std::set< std::string > getFilteredFacts( const std::string & state );
+std::vector< std::string > sortFacts( const std::vector< std::string > & facts );
 std::string concatenateFacts( const std::set< std::string >  & facts );
 bool isObservable( const std::string & fact );
 std::string getStateStr( FOL_World & fol );

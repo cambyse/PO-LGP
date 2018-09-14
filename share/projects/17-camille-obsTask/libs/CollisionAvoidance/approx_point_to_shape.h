@@ -34,7 +34,7 @@ struct ApproxPointToShape:TaskMap
     mlr::Frame* a = G.frames( i_ );
     mlr::Frame* b = G.frames( j_ );
 
-    CHECK( a->shape->mesh_radius < 0.01, "The first shape should be almost a point!" );
+    //CHECK( a->shape->mesh_radius < 0.01, "The first shape should be almost a point!" );
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);

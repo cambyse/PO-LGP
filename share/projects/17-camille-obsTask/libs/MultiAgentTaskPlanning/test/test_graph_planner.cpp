@@ -64,6 +64,18 @@ TEST_F(GraphPlannerTest, buildGraphDoubleAgent1w) {
   ASSERT_TRUE( graph.size() > 1 );
 }
 
+TEST_F(GraphPlannerTest, buildBlocksSingleAgent1w) {
+  tp.setFol( "data/LGP-blocks-fol-1w-model-2-unified.g" );
+  tp.setMaxDepth( 20 );
+
+  tp.buildGraph( true );
+
+  auto graph = tp.decisionGraph();
+  graph.saveGraphToFile( "LGP-blocks-fol-1w-model-2-unified.gv" );
+
+  ASSERT_TRUE( graph.size() > 1 );
+}
+
 //TEST_F(GraphPlannerTest, solveDoubleAgent1w) {
 //  tp.setFol( "data/LGP-overtaking-double-agent-1w.g" );
 //  tp.solve();
@@ -216,14 +228,14 @@ TEST_F(GraphPlannerTest, IntegratePolicy)
   tp.setMaxDepth( 2 );
   tp.solve();
   auto policy = tp.getPolicy();
-  policy.root()->data().markovianReturn = -0.2;
+  policy.root()->data().markovianReturn = 0.0;
   auto child = policy.root()->children().front();
   child->data().markovianReturn = -0.3;
 
   tp.integrate( policy );
 
-  EXPECT_EQ( tp.reward( policy.root()->id() ), -0.2 );
-  EXPECT_EQ( tp.reward( child->id() ), -0.3 );
+  EXPECT_EQ( tp.reward( policy.root()->id(), child->id() ), -0.3 );
+  //EXPECT_EQ( tp.reward( child->id() ), -0.3 );
 }
 
 TEST_F(GraphPlannerTest, ValueIteration) {

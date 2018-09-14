@@ -45,13 +45,13 @@ void ApproxPointToShape::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G,
   arr posB;
   arr JposA;
   arr JposB;
-  G.kinematicsPos(posA, JposA, a, arel);
-  G.kinematicsPos(posB, JposB, b, brel);
+  G.kinematicsPos(posA, JposA, a);//, arel);
+  G.kinematicsPos(posB, JposB, b);//, brel);
 
   double d   = norm2( posA - posB );
   arr JnormD = Jnorm( posA - posB );
 
   const double w = 10;
-  y( 0 ) = w * ( - d + 0.05 );
+  y( 0 ) = w * ( - d + radius_ );
   J = w * ( - JnormD * ( JposA - JposB ) );
 }

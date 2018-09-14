@@ -34,7 +34,7 @@ public:
   // getters
   virtual bool terminated() const override;
   Skeleton getPolicy() const override;
-  double reward( uint nodeId ) const; // exposed for testing purpose only
+  double reward( uint from, uint to  ) const; // exposed for testing purpose only
 
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }
@@ -57,6 +57,7 @@ private:
   void valueIteration();
   void decideOnDecisionGraphCopy();
   void buildSkeleton();
+  uint fromToIndex( uint from, uint to ) const;
 
 private:
   LogicParser parser_;

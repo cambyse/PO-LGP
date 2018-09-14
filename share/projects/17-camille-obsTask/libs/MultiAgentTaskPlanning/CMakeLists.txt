@@ -25,7 +25,7 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 # Define executable
 #################################
 
-file(GLOB_RECURSE SOURCES *.cpp *.h)
+file(GLOB SOURCES *.cpp *.h)
 
 add_library(${project_name} ${SOURCES})
 target_include_directories(${project_name} PUBLIC ".")

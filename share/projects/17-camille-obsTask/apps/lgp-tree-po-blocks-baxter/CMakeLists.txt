@@ -40,7 +40,7 @@ target_link_libraries(
  KOMO
  POMTP_interfaces
  ObservationTasks
- #CollisionAvoidance
+ CollisionAvoidance
  MultiAgentTaskPlanning
  MotionPlanning
  GeometricUtilityTasks

@@ -13,6 +13,11 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
 {
   std::cout << "GraphPlanner::decideOnDecisionGraphCopy.." << std::endl;
 
+  const auto fromToIndex = [&graph]( uint from, uint to ) -> uint
+  {
+    return from * graph.size() + to;
+  };
+
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
   std::vector< bool > toKeep( graph.size(), false );
@@ -42,9 +47,9 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
         uint bestId = -1;
         for( auto v : u->children() )
         {
-          if( rewards[ v->id() ] + values[ v->id() ] >= bestValue )
+          if( rewards[ fromToIndex( u->id(), v->id() ) ] + values[ v->id() ] >= bestValue )
           {
-            bestValue = rewards[ v->id() ] + values[ v->id() ];
+            bestValue = rewards[ fromToIndex( u->id(), v->id() ) ] + values[ v->id() ];
             bestId = v->id();
             //std::cout << "best child of " << u->id() << " is " << v->id() << std::endl;
           }
