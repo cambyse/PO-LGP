@@ -30,6 +30,7 @@ public:
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
 
   void setNSteps( uint n ) { microSteps_ = n; }
+  void setMinMarkovianCost( double m ) { minMarkovianCost_ = m; }
 
 private:
   /// MARKOVIAN
@@ -85,10 +86,13 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
-  double maxConstraint_      = 0.5;
+  double maxConstraint_      = 1000*0.5;
 
   double phase_start_offset_ = 0.5; // the first task should be grounded starting from this time
   double phase_end_offset_   = 0.5;
+
+  double minMarkovianCost_   = 0;
+
   uint microSteps_     = 20;
 };
 

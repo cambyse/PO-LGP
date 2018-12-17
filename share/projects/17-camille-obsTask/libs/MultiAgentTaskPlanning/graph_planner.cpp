@@ -73,7 +73,7 @@ void GraphPlanner::integrate( const Skeleton & policy )
 
       for( auto c : n->children() )
       {
-        std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
+        //std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
 
         rewards_[ fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
         Q.push( c );
@@ -97,7 +97,7 @@ void GraphPlanner::integrate( const Skeleton & policy )
             {
               id_right_parent = p_g.lock()->id();
 
-              std::cout << "integrate from " << id_right_parent << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
+              //std::cout << "integrate from " << id_right_parent << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
 
               rewards_[ fromToIndex( id_right_parent, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
 
@@ -231,7 +231,7 @@ void GraphPlanner::buildSkeleton()
 
       auto vSke = uSke->makeChild( data );
 
-      std::cout << "build ske from " << uSke->id() << "(" << u->id() << ") to " << vSke->id()<< " (" << v->id() << ") = " << data.markovianReturn << std::endl;
+      //std::cout << "build ske from " << uSke->id() << "(" << u->id() << ") to " << vSke->id()<< " (" << v->id() << ") = " << data.markovianReturn << std::endl;
 
       for( auto w : v->children() ) // skip obs nodes
       {

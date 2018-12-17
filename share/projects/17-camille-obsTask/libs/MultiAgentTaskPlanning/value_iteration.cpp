@@ -169,7 +169,7 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
 
     stable = maxDiff < eps;
 
-    std::cout << "it: " << i << " maxDiff: " << maxDiff << std::endl;
+    //std::cout << "it: " << i << " maxDiff: " << maxDiff << std::endl;
   }
 
   std::cout << "valueIteration.. end" << std::endl;

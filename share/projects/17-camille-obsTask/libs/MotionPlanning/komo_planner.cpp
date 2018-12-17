@@ -193,10 +193,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       }
       else
       {
-        if( node->id() == 1 )
-        std::cout << "return of 1:" << markovianPathCosts_[ node->data().decisionGraphNodeId ] << std::endl;
-
-        node->data().markovianReturn =  -markovianPathCosts_[ node->data().decisionGraphNodeId ];
+        node->data().markovianReturn =  -( minMarkovianCost_ + markovianPathCosts_[ node->data().decisionGraphNodeId ] );
         //node->setStatus( PolicyNode::INFORMED );
 
         // push children on list
@@ -304,9 +301,12 @@ void KOMOPlanner::display( const Skeleton & policy, double sec )
   }
 
   // display
-  TrajectoryTreeVisualizer viz( frames, "policy" );
+  if( sec > 0 )
+  {
+    TrajectoryTreeVisualizer viz( frames, "policy" );
 
-  mlr::wait( sec, true );
+    mlr::wait( sec, true );
+  }
 }
 std::pair< double, double > KOMOPlanner::evaluateLastSolution()
 {
@@ -344,12 +344,14 @@ void KOMOPlanner::registerTask( const std::string & type, const SymbolGrounder &
 
 void KOMOPlanner::optimizePoses( Skeleton & policy )
 {
+  std::cout << "optimizing poses.." << std::endl;
+
   optimizePosesFrom( policy.root() );
 }
 
 void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
 {
-  std::cout << "optimizing pose for:" << node->id() << std::endl;
+  //std::cout << "optimizing pose for:" << node->id() << std::endl;
 
   bool feasible = true;
 
@@ -439,6 +441,8 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
 // markovian path
 void KOMOPlanner::optimizeMarkovianPath( Skeleton & policy )
 {
+  std::cout << "optimizing markovian paths.." << std::endl;
+
   optimizeMarkovianPathFrom( policy.root() );
 }
 
@@ -545,6 +549,8 @@ void KOMOPlanner::clearLastNonMarkovianResults()
 // path
 void KOMOPlanner::optimizePath( Skeleton & policy )
 {
+  std::cout << "optimizing full path.." << std::endl;
+
   bsToLeafs_             = mlr::Array< PolicyNodePtr > ( policy.N() );
 
   for( auto l : policy.leafs() )
@@ -610,6 +616,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 //        komo->saveTrajectory( "-j-" + std::to_string( w ) );
 //        komo->plotVelocity( "-j-"   + std::to_string( w ) );
 //      }
+      //komo->getReport(true);
 
       auto costs = komo->getCostsPerPhase();
       Graph result = komo->getReport();
@@ -634,6 +641,8 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
 void KOMOPlanner::optimizeJointPath( Skeleton & policy )
 {
+  std::cout << "optimizing full joint path.." << std::endl;
+
   for( auto l : policy.leafs() )
   {
     optimizeJointPathTo( l.lock() );

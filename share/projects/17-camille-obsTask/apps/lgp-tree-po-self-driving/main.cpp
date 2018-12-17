@@ -1,19 +1,16 @@
 #include <functional>
 #include <list>
 
-#include <policy.h>
-#include <policy_printer.h>
+//#include <policy.h>
 
-#include <policy_builder.h>
-
-#include <mcts_planner.h>
-#include <iterative_deepening.h>
-#include <graph_search.h>
+//#include <mcts_planner.h>
+//#include <iterative_deepening.h>
+#include <graph_planner.h>
 
 #include <komo_planner.h>
 
 #include <axis_bound.h>
-#include <node_visitors.h>
+//#include <node_visitors.h>
 
 //===========================================================================
 
@@ -33,31 +30,24 @@ static void generatePngImage( const std::string & name )
   system( ss.str().c_str() );
 }
 
-static void savePolicyToFile( const Policy::ptr & policy )
+static void savePolicyToFile( const Skeleton & policy, const std::string & suffix = "" )
 {
   std::stringstream namess, skenamess;
-  namess << "policy-" << policy->id() << ".gv";
-  skenamess << "policy-" << policy->id() << ".ske";
-  auto skename = skenamess.str();
+  namess << "policy-" << policy.id() << suffix << ".gv";
   auto name = namess.str();
 
-  // save full policy
-//  {
-//    std::ofstream file;
-//    file.open( skename );
-//    policy->save( file );
-//    file.close();
-//  }
+  policy.save( name );
+  policy.saveToGraphFile( name );
   // generate nice graph
-  {
-    std::ofstream file;
-    file.open( name );
-    PolicyPrinter printer( file );
-    printer.print( policy );
-    file.close();
+  //  {
+  //    std::ofstream file;
+  //    file.open( name );
+  //    PolicyPrinter printer( file );
+  //    printer.print( policy );
+  //    file.close();
 
-    generatePngImage( name );
-  }
+  //    generatePngImage( name );
+  //  }
 }
 
 //==========Application specific grounders===================================

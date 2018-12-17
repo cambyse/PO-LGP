@@ -276,7 +276,7 @@ TEST_F(GraphPlannerTest, solveGraph2W) {
 
   auto policy = tp.getPolicy();
 
-  std::string policyFileName = "LGP-overtaking-single-agent-2w-graph-solving";
+  std::string policyFileName = "LGP-overtaking-single-agent-2w";
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
 }
