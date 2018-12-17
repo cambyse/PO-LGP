@@ -91,18 +91,6 @@ void LogicEngine::setState( const std::string & state )
 std::string LogicEngine::getState() const
 {
   return getStateStr( *engine_ );
-//  std::stringstream ss;
-//  /*engine_->write_state( ss );
-//  return ss.str();*/
-
-//  auto state = engine_->getState();
-
-//  for( auto s : * state )
-//  {
-//    ss << *s;
-//  }
-
-//  return ss.str();
 }
 
 void LogicEngine::parseNumberOfAgents()

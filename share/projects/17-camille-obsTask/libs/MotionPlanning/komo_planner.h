@@ -27,6 +27,7 @@ public:
   std::pair< double, double > evaluateLastSolution();
 
   // ground symbols
+  void registerInit( const InitGrounder & grounder );
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
 
   void setNSteps( uint n ) { microSteps_ = n; }
@@ -39,7 +40,7 @@ private:
   void optimizePosesFrom( const PolicyNodePtr & );
 
   // markovian path
-  void optimizeMarkovianPath( Skeleton &  );
+  void optimizeMarkovianPath( Skeleton & );
   void optimizeMarkovianPathFrom( const PolicyNodePtr & );
 
   /// NON MARKOVIAN

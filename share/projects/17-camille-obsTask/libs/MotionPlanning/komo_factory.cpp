@@ -21,6 +21,11 @@ namespace mp
 
 //==============KOMOFactory==============================================
 
+void KOMOFactory::registerInit( const InitGrounder & grounder )
+{
+  initGrounder_ = grounder;
+}
+
 void KOMOFactory::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
@@ -29,6 +34,8 @@ void KOMOFactory::registerTask( const std::string & type, const SymbolGrounder &
 std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
 {
   auto komo = std::make_shared< ExtensibleKOMO >();
+  komo->registerInit( initGrounder_ );
+
   for ( auto task : tasks_ )
   {
     komo->registerTask( task.first, task.second );
@@ -49,6 +56,19 @@ ExtensibleKOMO::ExtensibleKOMO()
 void ExtensibleKOMO::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
+}
+
+void ExtensibleKOMO::registerInit( const InitGrounder & grounder )
+{
+  initGrounder_ = grounder;
+}
+
+void ExtensibleKOMO::groundInit( int verbose )
+{
+  if( initGrounder_ )
+  {
+    initGrounder_( this, verbose );
+  }
 }
 
 void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >& facts, int verbose )

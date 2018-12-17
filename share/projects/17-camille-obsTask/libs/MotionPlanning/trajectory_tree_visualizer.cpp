@@ -64,14 +64,16 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
 //          //  setPosition(10., -4., 10.);
 //            focus(0, 0, 1.);
 //            upright();
-        {
-          auto & kin = views_[ index ];
-          const double zf = 1.47;
-          const double s = 0.55;
-          kin->copy.gl().camera.setPosition(s * 10., s * 3., zf + s * ( 2.28 - zf ));
-          kin->copy.gl().camera.focus(0, 0, zf);
-          kin->copy.gl().camera.upright();
-        }
+
+        // for baxter
+//        {
+//          auto & kin = views_[ index ];
+//          const double zf = 1.47;
+//          const double s = 0.55;
+//          kin->copy.gl().camera.setPosition(s * 10., s * 3., zf + s * ( 2.28 - zf ));
+//          kin->copy.gl().camera.focus(0, 0, zf);
+//          kin->copy.gl().camera.upright();
+//        }
 
         index++;
       }

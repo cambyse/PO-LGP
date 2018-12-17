@@ -335,6 +335,11 @@ std::pair< double, double > KOMOPlanner::evaluateLastSolution()
   }
 }
 
+void KOMOPlanner::registerInit( const InitGrounder & grounder )
+{
+  komoFactory_.registerInit( grounder );
+}
+
 void KOMOPlanner::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   komoFactory_.registerTask( type, grounder );
@@ -378,6 +383,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
+      komo->groundInit();
       komo->groundTasks( 0., node->data().leadingKomoArgs );
 
       komo->reset(); //huge
@@ -476,6 +482,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         komo->setFixSwitchedObjects();
         komo->setSquaredQAccelerations();
 
+        komo->groundInit();
         komo->groundTasks( /*phase_start_offset_ +*/  0, node->data().leadingKomoArgs );
 
         komo->reset(); //huge
@@ -593,6 +600,8 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
+      komo->groundInit();
+
       for( auto node:treepath )
       {
         auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
@@ -678,6 +687,8 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       komo->setFixSwitchedObjects();
       //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();
+
+      komo->groundInit();
 
       for( auto node:treepath )
       {

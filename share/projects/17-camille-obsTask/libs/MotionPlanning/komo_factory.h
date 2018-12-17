@@ -26,6 +26,7 @@ namespace mp
 //=====ExtensibleKOMO==============================================
 class ExtensibleKOMO;
 
+typedef std::function<void( ExtensibleKOMO *, int verbose )> InitGrounder;
 typedef std::function<void( double time, const std::vector< std::string >& facts, ExtensibleKOMO *, int verbose )> SymbolGrounder;
 
 class ExtensibleKOMO : public KOMO
@@ -36,6 +37,9 @@ public:
 public:
   ExtensibleKOMO();
 
+  void registerInit( const InitGrounder & grounder );
+  void groundInit( int verbose = 0 );
+
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void groundTasks( double phase, const std::vector< std::string >& facts, int verbose=0 );
 
@@ -44,6 +48,7 @@ public:
   arr getCostsPerPhase();
 
 private:
+  InitGrounder initGrounder_;
   std::map< std::string, SymbolGrounder > tasks_;
 };
 
@@ -53,9 +58,11 @@ class KOMOFactory
 {
 
 public:
+  void registerInit( const InitGrounder & grounder );
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   std::shared_ptr< ExtensibleKOMO > createKomo() const;
 private:
+  InitGrounder initGrounder_;
   std::map< std::string, SymbolGrounder > tasks_;
 };
 
