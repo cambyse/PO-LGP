@@ -26,23 +26,29 @@ scene
 ego_car
 truck
 lane_2
-lanes
+lane
 
 ## initial state
 START_STATE { 
+(lane lane_2)
 (vehicle ego_car) (vehicle truck) 
 (behind  ego_car truck)
-(scene   lanes)
 (following)
+}
+
+EVENTUAL_FACTS{ 
+{
+}
+{
+(NOT_OBSERVABLE free lane_2)
+}
 }
 
 BELIEF_START_STATE{ 
 {
-(free lane_2)
 ()=0.05
 }
 {
-#(free lane_2)
 ()=0.95
 }
 }
@@ -54,7 +60,7 @@ Rule {
 }
 
 Rule {
-  { (free lane_2)! (observed lanes) (following) (behind ego_car truck) } # 
+  { (free lane_2)! (observed lane_2) (following) (behind ego_car truck) } # 
   { (QUIT) }
 }
 
@@ -70,8 +76,8 @@ REWARD {
 # Look
 DecisionRule look {
   X
-  { (scene X) (behind  ego_car truck) (observed X)!}
-  { (in_sight lane_2) (observed X) (following)! komoLook(X)=1. }
+  { (lane X) (behind  ego_car truck) (observed X)!}
+  { (in_sight X) (observed X) (following)! komoLook(X)=1. }
 }
 
 # Overtake

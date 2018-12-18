@@ -1,16 +1,11 @@
 #include <functional>
 #include <list>
 
-//#include <policy.h>
-
-//#include <mcts_planner.h>
-//#include <iterative_deepening.h>
 #include <graph_planner.h>
 
 #include <komo_planner.h>
 
 #include <axis_bound.h>
-//#include <node_visitors.h>
 
 //===========================================================================
 
@@ -54,52 +49,43 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 
 void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
 {
-  if( ! komo->isPrefixSetup() )
-  {      
-    komo->setPrefixSetup();
+  // road bounds
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
-    // road bounds
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
+  // min speed
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
-    // min speed
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
-
-    // truck speed
-    arr truck_speed{ 0.03, 0, 0 };
-    truck_speed( 0 ) = 0.03;
-    komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
-    //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
-    //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+  // truck speed
+  arr truck_speed{ 0.03, 0, 0 };
+  truck_speed( 0 ) = 0.03;
+  komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+  //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
+  //komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
 
 
-    // opposite car speed
-    arr op_speed{ -0.03, 0, 0 };
-    op_speed( 0 ) = -0.03;
-    komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
+  // opposite car speed
+  arr op_speed{ -0.03, 0, 0 };
+  op_speed( 0 ) = -0.03;
+  komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
 
-    komo->activateCollisions( "car_ego", "truck" );
-    komo->activateCollisions( "car_ego", "car_op" );
+  komo->activateCollisions( "car_ego", "truck" );
+  komo->activateCollisions( "car_ego", "car_op" );
 
-    // min speed
-    komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  // min speed
+  komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
+  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
-    // collision
-    komo->activateCollisions( "car_ego", "truck" );
-    komo->activateCollisions( "car_ego", "car_op" );
-    komo->setCollisions( true );
-  }
+  // collision
+  komo->activateCollisions( "car_ego", "truck" );
+  komo->activateCollisions( "car_ego", "car_op" );
+  komo->setCollisions( true );
 }
 
-void groundLook( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
+void groundLook( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
+  double duration=1.0;
 
-  StringL symbols;
-  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-  double duration=n->get<double>();
   //
   const double t_start = phase;
   const double t_end =   phase + duration;
@@ -110,18 +96,14 @@ void groundLook( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO *
 
   if( verbose > 0 )
   {
-    std::cout << t_start << "->" << t_end << ": " << " look " <<*symbols(0) << " at " << *symbols(1) << std::endl;
+    std::cout << t_start << "->" << t_end << ": " << " look " << facts[0] << " at " << facts[1] << std::endl;
   }
 }
 
-void groundOvertake( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
+void groundOvertake( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
+  double duration=1.0;
 
-  StringL symbols;
-  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-  double duration=n->get<double>();
   //
   const double t_start = phase;
   const double t_end =   phase + duration;
@@ -129,22 +111,18 @@ void groundOvertake( double phase, const Graph& facts, Node *n, mp::ExtensibleKO
 
   // overtake
   //komo->setTask( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
-  komo->setPosition( t_end, -1, "car_ego", *symbols(0), OT_sumOfSqr, { 0.45, 0, 0 } );
+  komo->setPosition( t_end, -1, "car_ego", facts[0].c_str(), OT_sumOfSqr, { 0.45, 0, 0 } );
 
   if( verbose > 0 )
   {
-    std::cout << t_start << "->" << t_end << ": " << " overtake " <<*symbols(0) << std::endl;
+    std::cout << t_start << "->" << t_end << ": " << " overtake " << facts[0] << std::endl;
   }
 }
 
-void groundFollow( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO * komo, int verbose )
+void groundFollow( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
+  double duration=1.0;
 
-  StringL symbols;
-  for(Node *p:n->parents) symbols.append(&p->keys.last());
-
-  double duration=n->get<double>();
   //
   const double t_start = phase;
   const double t_end =   phase + duration;
@@ -155,7 +133,7 @@ void groundFollow( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO
 
   if( verbose > 0 )
   {
-    std::cout << t_start << "->" << t_end << ": " << " follow " <<*symbols(0) << " at " << *symbols(1) << std::endl;
+    std::cout << t_start << "->" << t_end << ": " << " follow " << facts[0] << " at " << facts[1] << std::endl;
   }
 }
 
@@ -163,63 +141,70 @@ void groundFollow( double phase, const Graph& facts, Node *n, mp::ExtensibleKOMO
 
 void plan_graph_search()
 {
-  auto tp = std::make_shared< tp::GraphSearchPlanner >();
-  auto mp = std::make_shared< mp::KOMOPlanner >();
+  matp::GraphPlanner tp;
+  mp::KOMOPlanner mp;
 
   // set planner specific parameters
-  mp->setNSteps( 20 );
+  mp.setNSteps( 20 );
 
   // register symbols
-  mp->registerTask( "komoLook"      , groundLook );
-  mp->registerTask( "komoOvertake"  , groundOvertake );
-  mp->registerTask( "komoFollow"    , groundFollow );
+  mp.registerInit( groundPrefixIfNeeded );
+  mp.registerTask( "look"      , groundLook );
+  mp.registerTask( "overtake"  , groundOvertake );
+  mp.registerTask( "follow"    , groundFollow );
 
 
   // set start configurations
-  mp->setKin( "LGP-overtaking-kin-2w_bis.g" );
-  tp->setFol( "LGP-overtaking-2w.g" );
+  //mp.setKin( "LGP-overtaking-kin-2w_bis.g" );
+  //tp.setFol( "LGP-overtaking-2w.g" );
+  //tp.setFol( "LGP-overtaking-2w.g" );
 
-  //tp->setFol( "LGP-overtaking-2w.g" );
-  //mp->setKin( "LGP-overtaking-kin-3w.g" );
-  //tp->setFol( "LGP-overtaking-3w.g" );
+  //mp.setKin( "LGP-overtaking-kin-3w.g" ); // needs another init!!
+  //tp.setFol( "LGP-overtaking-3w.g" );
+
+  mp.setKin( "LGP-overtaking-kin-1w.g" ); // needs another init!!
+  tp.setFol( "LGP-overtaking-1w.g" );
 
   /// DECISION GRAPH
-  tp->setInitialReward( -0.001 );  // balance exploration
-  tp->buildGraph();
+  tp.setR0( -0.001 );  // balance exploration
+  tp.buildGraph();
 
-  tp->saveGraphToFile( "graph.gv" );
+  tp.saveGraphToFile( "graph.gv" );
   generatePngImage( "graph.gv" );
 
   /// LOOP
-  MotionPlanningOrder po( -1 );
-  Policy::ptr policy;
-  Policy::ptr old_policy;
+  Skeleton policy, lastPolicy;
+  tp.solve();
+  policy = tp.getPolicy();
 
+  uint nIt = 0;
+  const uint maxIt = 1000;
   do
   {
-    old_policy = policy;
+    nIt++;
+
+    lastPolicy = policy;
 
     /// MOTION PLANNING
-    if( policy )
-    {
-      mp->solveAndInform( po, policy );
+    auto po     = MotionPlanningParameters( policy.id() );
+    po.setParam( "type", "markovJointPath" );
+    mp.solveAndInform( po, policy );
 
-      tp->integrate( policy );
-    }
+    ///
+    savePolicyToFile( policy, "-informed" );
+    ///
 
-    /// DYNAMIC PROGRAMMING
-    tp->solve();
-    policy = tp->getPolicy();
-    po     = tp->getPlanningOrder();
+    /// TASK PLANNING
+    tp.integrate( policy );
+    tp.solve();
 
-    // save policy
-    savePolicyToFile( policy );
+    policy = tp.getPolicy();
   }
-  while( false && ! skeletonEquals( policy, old_policy ) );
+  while( lastPolicy != policy && nIt != maxIt );
   ///
 
-  mp->solveAndInform( po, policy );
-  mp->display( policy, 3000 );
+  savePolicyToFile( policy, "-final" );
+  mp.display( policy, 3000 );
 
   mlr::wait( 30, true );
 }
@@ -233,8 +218,6 @@ int main(int argc,char **argv)
   rnd.clockSeed();
 
   plan_graph_search();
-  //plan_iterative_deepening();
-  //plan_mcts();
 
   return 0;
 }
