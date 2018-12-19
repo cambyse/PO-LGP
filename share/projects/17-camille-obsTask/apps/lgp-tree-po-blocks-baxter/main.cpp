@@ -8,7 +8,7 @@
 #include <graph_planner.h>
 
 #include <komo_planner.h>
-#include <approx_point_to_shape.h>
+#include <approx_shape_to_sphere.h>
 #include <observation_tasks.h>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -135,13 +135,13 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, mp::E
   const double radius = 0.25;
 
   if( facts[0] != "block_1" )
-    komo->setTask( t_end - 0.5, t_end + 0.5, new ApproxPointToShape( komo->world, facts[0].c_str(), "block_1", radius ), OT_ineq );
+    komo->setTask( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_1", radius ), OT_ineq );
 
   if( facts[0] != "block_2" )
-    komo->setTask( t_end - 0.5, t_end + 0.5, new ApproxPointToShape( komo->world, facts[0].c_str(), "block_2", radius ), OT_ineq );
+    komo->setTask( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_2", radius ), OT_ineq );
 
   if( facts[0] != "block_3" )
-    komo->setTask( t_end - 0.5, t_end + 0.5, new ApproxPointToShape( komo->world, facts[0].c_str(), "block_3", radius ), OT_ineq );
+    komo->setTask( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_3", radius ), OT_ineq );
 
 //  if( facts[0] != "block_4" )
 //    komo->setTask( t_end - 0.5, t_end, new ApproxPointToShape( komo->world, facts[0].c_str(), "block_4", radius ), OT_ineq );

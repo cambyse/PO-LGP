@@ -40,7 +40,6 @@ void GraphPlanner::solve()
 
   //graph_.saveGraphToFile( "graph.gv" );
 
-
   if( rewards_.empty() )
   {
     initializeRewards();

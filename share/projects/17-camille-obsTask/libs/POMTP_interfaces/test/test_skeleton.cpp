@@ -67,6 +67,47 @@ TEST(Skeleton, NonEquality) {
   ASSERT_NE( pp, p );
 }
 
+TEST(Skeleton, HashingEquality) {
+  // root
+  SkeletonNodeData rootData;
+  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+  Skeleton p( root );
+  //
+  const std::string filename( "policy" );
+  const double value = 1.0;
+  const Skeleton::StatusType status( Skeleton::INFORMED );
+  //
+
+  p.setValue( 1.0 );
+  p.setStatus( status );
+  p.save( filename );
+
+  Skeleton pp;
+  pp.load( filename );
+
+  ASSERT_EQ( pp.hash(), p.hash() );
+}
+
+TEST(Skeleton, HashingInequality) {
+  // root
+  SkeletonNodeData rootData;
+  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+  Skeleton p( root );
+  //
+  const std::string filename( "policy" );
+  const double value = 1.0;
+  const Skeleton::StatusType status( Skeleton::INFORMED );
+  //
+
+  p.setValue( 1.0 );
+  p.setStatus( status );
+  p.save( filename );
+
+  Skeleton pp;
+
+  ASSERT_NE( pp.hash(), p.hash() );
+}
+
 // GraphNode
 TEST(Skeleton, SaveToGraph) {
 

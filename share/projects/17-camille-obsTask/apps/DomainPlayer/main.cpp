@@ -26,7 +26,7 @@ void TEST(FOL_World){
 //===========================================================================
 
 void TEST(PlayFOL_World){
-  const char *file = "../PlannerExample/boxes_new.g";
+  const char *file = "../lgp-learn-self-driving/LGP-merging-1w.g";
   if(mlr::argc>1) file = mlr::argv[1];
 
   FOL_World world(FILE(file));

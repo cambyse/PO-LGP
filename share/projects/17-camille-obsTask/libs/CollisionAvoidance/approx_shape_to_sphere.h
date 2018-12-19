@@ -23,9 +23,9 @@
 
 using namespace std;
 
-struct ApproxPointToShape:TaskMap
+struct ApproxShapeToSphere:TaskMap
 {
-  ApproxPointToShape(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double radius = 0.05 )
+  ApproxShapeToSphere(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double radius = 0.05 )
     : radius_( radius )
   {
     i_ = G.getFrameByName( iShapeName )->ID;
@@ -38,6 +38,8 @@ struct ApproxPointToShape:TaskMap
   }
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);
+
+  void phiSphere( arr& y, arr& J, const mlr::KinematicWorld& G );
 
   void phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
 

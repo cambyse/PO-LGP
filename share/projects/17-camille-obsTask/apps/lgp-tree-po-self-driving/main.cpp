@@ -47,7 +47,7 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 
 //==========Application specific grounders===================================
 
-void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
+void init( mp::ExtensibleKOMO * komo, int verbose  )
 {
   // road bounds
   komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
@@ -148,7 +148,7 @@ void plan_graph_search()
   mp.setNSteps( 20 );
 
   // register symbols
-  mp.registerInit( groundPrefixIfNeeded );
+  mp.registerInit( init );
   mp.registerTask( "look"      , groundLook );
   mp.registerTask( "overtake"  , groundOvertake );
   mp.registerTask( "follow"    , groundFollow );

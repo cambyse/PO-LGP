@@ -15,7 +15,7 @@
 #include "skeleton.h"
 
 #include <queue>
-
+#include <iostream>
 #include <skeleton_printer.h>
 
 static int skeletonNumber = 0;
@@ -112,6 +112,20 @@ void Skeleton::load( const std::string & file )
   ia >> *this;
 }
 
+size_t Skeleton::hash() const
+{
+  std::list< Skeleton::GraphNodeTypePtr > nodesA = nodes( *this );
+
+  std::size_t hash = 0;
+
+  for( const auto n : nodesA )
+  {
+    hash += 2 << n->depth() + n->data().decisionGraphNodeId;
+  }
+
+  return hash;
+}
+
 void Skeleton::saveToGraphFile( const std::string & filename ) const
 {
   if( ! root_ )
@@ -184,6 +198,7 @@ void Skeleton::copy( const Skeleton & policy )
 
 bool operator== ( const Skeleton & a, const Skeleton & b )
 {
+//  return a.hash() == b.hash();
   std::list< Skeleton::GraphNodeTypePtr > nodesA = nodes( a );
   std::list< Skeleton::GraphNodeTypePtr > nodesB = nodes( b );
 

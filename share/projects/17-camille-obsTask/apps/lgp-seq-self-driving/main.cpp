@@ -265,7 +265,6 @@ void cooperative()
   komo.activateCollisions( "car_ego", "car_op" );
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
-
   komo.setCollisions( true, 0.03 );
 
   //mlr::wait( 30, true );

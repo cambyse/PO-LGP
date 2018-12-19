@@ -111,6 +111,8 @@ public:
     ar & status_;
   }
 
+  size_t hash() const;
+
 private:
   void copy( const Skeleton & );
   //void saveFrom( const PolicyNode::ptr & node, std::ostream& os );
@@ -128,5 +130,12 @@ private:
 bool operator== ( const Skeleton & a, const Skeleton & b );
 bool operator!= ( const Skeleton & a, const Skeleton & b );
 
-
 std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node );
+
+struct SkeletonHasher
+{
+    std::size_t operator()( const Skeleton & s ) const noexcept
+    {
+        return s.hash();
+    }
+};
