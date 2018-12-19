@@ -39,7 +39,6 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 
 //===========================================================================
 
-std::map< std::string, double > car_offsets;
 void init( mp::ExtensibleKOMO * komo, int verbose, std::vector< double > randomVec )
 {
   // ego car
@@ -67,27 +66,32 @@ void init( mp::ExtensibleKOMO * komo, int verbose, std::vector< double > randomV
   /// RANDOMIZE SCENE
   double scale = 0.3;
 
-  if( car_offsets.empty() )
-  {
-    car_offsets["car_1"] = 0;//rnd.uni(low, high);
-    car_offsets["car_2"] = scale * randomVec[0];
-    car_offsets["car_3"] = scale * randomVec[1];
-    car_offsets["car_4"] = 0;//rnd.uni(low, high);
-    car_offsets["car_5"] = 0;//rnd.uni(low, high);
-    car_offsets["car_6"] = 0;//rnd.uni(low, high);
-  }
-
   // initial position
   mlr::KinematicWorld world;
   world.copy(komo->world);
-  for(const auto dist : car_offsets)
-  {
-    auto car_a = dist.first.c_str();
-    auto offset = dist.second;
 
-    world.getFrameByName(car_a)->Q.addRelativeTranslation(-offset,0,0);
-    world.getFrameByName(car_a)->X.addRelativeTranslation(-offset,0,0);
+  //randomVec={-1.0, -1.0};
+
+  uint i = 0;
+  for( const auto & f: world.frames )
+  {
+    if( f->ats["random_bounds"]  )
+    {
+      auto random_bounds = f->ats.get<arr>("random_bounds");
+
+      for( uint j = 0; j < 1/*joint_offsets[f->joint->dim*/; ++j )
+      {
+        world.q(f->joint->qIndex + j) = random_bounds(j) * randomVec[i];
+        ++i;
+      }
+    }
   }
+
+  world.calc_Q_from_q();
+  world.calc_fwdPropagateFrames();
+
+  //world.watch(true);
+
   komo->setModel(world);
 }
 
@@ -104,7 +108,7 @@ void groundMergeBetween( double phase, const std::vector< std::string >& facts, 
   komo->setPosition( phase+1, -1, car_before.c_str(), "car_ego", OT_sumOfSqr, {-0.7, 0, 0} );
 
   //setKeepDistanceTask( phase+1, -1, komo, car_successors );
-  std::cout << "merge between " << car_before << " and " << car_next << std::endl;
+  //std::cout << "merge between " << car_before << " and " << car_next << std::endl;
 }
 
 std::vector< double > randomVector( uint dim )
@@ -152,9 +156,11 @@ void plan()
   using namespace std::placeholders;
 
   std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > skeletonsToStart;
-  for(uint i = 0; i < 1000; ++i)
+  for(uint i = 0; i < 500; ++i)
   {
-    car_offsets.clear();
+    std::cout << "*********" << std::endl;
+    std::cout << "***"<< i << "***" << std::endl;
+    std::cout << "*********" << std::endl;
 
     matp::GraphPlanner tp;
     mp::KOMOPlanner mp;
@@ -212,10 +218,10 @@ void plan()
 
     skeletonsToStart[policy].push_back(vec);
 
-   // savePolicyToFile( policy, "-final" );
+    //savePolicyToFile( policy, "-final" );
 
-//    mp.display( policy, 3000 );
-//    mlr::wait( 30, true );
+    //mp.display( policy, 3000 );
+    //mlr::wait( 30, true );
   }
 
   saveDataToFileveDataToFile("result-data.csv", skeletonsToStart);
@@ -227,7 +233,6 @@ int main(int argc,char **argv)
 {
   mlr::initCmdLine(argc,argv);
 
-  //sequence();
   plan();
 
   return 0;
