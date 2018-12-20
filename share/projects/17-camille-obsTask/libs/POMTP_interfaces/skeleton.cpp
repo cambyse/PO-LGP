@@ -156,6 +156,17 @@ void Skeleton::saveToGraphFile( const std::string & filename ) const
   system( ss.str().c_str() );
 }
 
+
+void Skeleton::saveAll( const std::string & suffix ) const
+{
+  std::stringstream namess, skenamess;
+  namess << "policy-" << id() << suffix << ".gv";
+  auto name = namess.str();
+
+  save( name );
+  saveToGraphFile( name );
+}
+
 void Skeleton::copy( const Skeleton & policy )
 {
   if( policy.root_ )

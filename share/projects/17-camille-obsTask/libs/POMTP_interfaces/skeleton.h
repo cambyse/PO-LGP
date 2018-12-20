@@ -99,6 +99,7 @@ public:
   void save( const std::string & file ) const;
   void load( const std::string & file );
   void saveToGraphFile( const std::string & file ) const;
+  void saveAll( const std::string & suffix = "" ) const;
 
   friend class boost::serialization::access;
   template<class Archive>

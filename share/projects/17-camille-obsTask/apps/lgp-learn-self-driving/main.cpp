@@ -1,45 +1,13 @@
-#include <functional>
 #include <list>
 #include <Kin/frame.h>
 #include <approx_shape_to_sphere.h>
 #include <graph_planner.h>
-
 #include <komo_planner.h>
-
+#include <tamp_controller.h>
 #include <axis_bound.h>
 
 //TODO:
-//-add tamp controller to control main loop
-//-deduce number of var parameters from .kin file
 //
-
-//===========================================================================
-
-static void generatePngImage( const std::string & name )
-{
-  std::string nameCopy( name );
-  const std::string ext( ".gv" );
-  std::string newName = nameCopy.replace( nameCopy.find( ext ), ext.length(), ".png" );
-
-  std::stringstream ss;
-  ss << "dot"   << " ";
-  ss << "-Tpng" << " ";
-  ss << "-o"    << " ";
-  ss << newName << " ";
-  ss << name;
-
-  system( ss.str().c_str() );
-}
-
-static void savePolicyToFile( const Skeleton & policy, const std::string & suffix = "" )
-{
-  std::stringstream namess, skenamess;
-  namess << "policy-" << policy.id() << suffix << ".gv";
-  auto name = namess.str();
-
-  policy.save( name );
-  policy.saveToGraphFile( name );
-}
 
 //===========================================================================
 
@@ -73,30 +41,6 @@ void init( mp::ExtensibleKOMO * komo, int verbose )
   // initial position
   mlr::KinematicWorld world;
   world.copy(komo->world);
-
-  //randomVec={-1.0, -1.0};
-
-//  uint i = 0;
-//  for( const auto & f: world.frames )
-//  {
-//    if( f->ats["random_bounds"]  )
-//    {
-//      auto random_bounds = f->ats.get<arr>("random_bounds");
-
-//      for( uint j = 0; j < 1/*joint_offsets[f->joint->dim*/; ++j )
-//      {
-//        world.q(f->joint->qIndex + j) = random_bounds(j) * randomVec[i];
-//        ++i;
-//      }
-//    }
-//  }
-
-//  world.calc_Q_from_q();
-//  world.calc_fwdPropagateFrames();
-
-//  //world.watch(true);
-
-//  komo->setModel(world);
 }
 
 void groundContinue( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
@@ -137,8 +81,7 @@ void saveDataToFileveDataToFile( const std::string filename, const std::unordere
   {
     const auto skeleton = dataPair.first;
 
-    savePolicyToFile( skeleton, "-" + std::to_string(skeId) );
-    skeleton.save("skeleton-" + std::to_string(skeId) + ".po");
+    skeleton.saveAll( "-" + std::to_string(skeId) );
 
     const auto deltas = dataPair.second;
     for( const auto vec : deltas )
@@ -157,10 +100,9 @@ void saveDataToFileveDataToFile( const std::string filename, const std::unordere
 
 void plan()
 {
-  using namespace std::placeholders;
-
   std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > skeletonsToStart;
-  for(uint i = 0; i < 1 /*500*/; ++i)
+
+  for( uint i = 0; i < 500; ++i )
   {
     std::cout << "*********" << std::endl;
     std::cout << "***"<< i << "***" << std::endl;
@@ -177,7 +119,6 @@ void plan()
     mp.setNSteps( 20 );
 
     // register symbols
-    auto vec = mp.drawRandomVector({-0.5, 0.7});//{1.0, 0.2}); // randomization
     mp.registerInit( init );
     mp.registerTask( "continue"        , groundContinue );
     mp.registerTask( "merge_between"   , groundMergeBetween );
@@ -190,43 +131,22 @@ void plan()
     //tp.saveGraphToFile( "graph.gv" );
     //generatePngImage( "graph.gv" );
 
-    /// LOOP
-    Skeleton policy, lastPolicy;
-    tp.solve();
-    policy = tp.getPolicy();
+    // set initial parameters
+    //auto vec = mp.drawRandomVector(); // random
+//    auto vec = mp.drawRandomVector({0.7626620612244897,-0.05964662244897959});//plan 0
+//    auto vec = mp.drawRandomVector({-0.7991766000000001,-0.5479612000000003});//plan 1
+//    auto vec = mp.drawRandomVector({-0.3448865342857143,0.026629800000000006});//plan 2
+    auto vec = mp.drawRandomVector({0.03870015128205127,-0.8419756923076921});//plan 3
+//    auto vec = mp.drawRandomVector({-0.5610455045454545,-0.2883110378636364});//plan 4
+//    auto vec = mp.drawRandomVector({0.15762804745098036,0.6434303333333331});//plan 5
+//    auto vec = mp.drawRandomVector({-0.2806867376470588,0.3627838470588235});//plan 6
 
-    uint nIt = 0;
-    const uint maxIt = 1000;
-    do
-    {
-      nIt++;
+    TAMPController controller( tp, mp );
 
-      lastPolicy = policy;
-
-      /// MOTION PLANNING
-      auto po     = MotionPlanningParameters( policy.id() );
-      po.setParam( "type", "markovJointPath" );
-      mp.solveAndInform( po, policy );
-
-      ///
-      //savePolicyToFile( policy, "-informed" );
-      ///
-
-      /// TASK PLANNING
-      tp.integrate( policy );
-      tp.solve();
-
-      policy = tp.getPolicy();
-    }
-    while( lastPolicy != policy && nIt != maxIt );
+    auto policy = controller.plan(1000, false, false, true, 30);
 
     skeletonsToStart[policy].push_back(vec);
-
-    savePolicyToFile( policy, "-final" );
-    mp.display( policy, 3000 );
-    mlr::wait( 30, true );
   }
-
   saveDataToFileveDataToFile("result-data.csv", skeletonsToStart);
 }
 
