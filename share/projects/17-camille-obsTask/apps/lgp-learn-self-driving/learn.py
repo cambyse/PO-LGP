@@ -40,6 +40,18 @@ def plot_boundaries(clf, XY, figure_filepath=None):
   if figure_filepath:
     fig.savefig(figure_filepath)
 
+def print_centroids(XY):
+  last_col = XY.shape[1] - 1
+  Y = XY[:, last_col].astype(int)
+  number_of_skeletons = np.max(Y)+1
+
+  #centroids = np.zeros(shape=(number_of_skeletons, 2))
+
+  for i in range(np.max(Y)+1):
+    X_of_i = XY[XY[:,last_col] == i][:, 0:2]
+    centroid = np.average(X_of_i, axis=0)
+    print("centroid of skeleton {} is: {},{}".format(i, centroid[0], centroid[1]))
+
 def separate_data_set(XY):
   training_XY = []
   test_XY = []
@@ -77,11 +89,15 @@ def analyse(dataset_filepath, output_model_filepath, output_image_dir):
 
   plot_data(XY, figure_filepath=os.path.join(output_image_dir, "all_data.svg"))
 
+  # separate data
   training_XY, test_XY = separate_data_set(XY)
+  print_centroids(training_XY)
 
+  # learn and plot model
   clf = learn_model(training_XY)
   plot_boundaries(clf, training_XY, figure_filepath=os.path.join(output_image_dir, "decision_boundaries.svg"))
 
+  # save and log results
   print("accuracy score (training set):{}".format(evaluate_model(clf, training_XY)))
   print("accuracy score (test set):{}".format(evaluate_model(clf, test_XY)))
 
