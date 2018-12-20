@@ -428,9 +428,10 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
-      komo->groundInit( randomVec_ );
+      komo->groundInit();
       komo->groundTasks( 0., node->data().leadingKomoArgs );
 
+      if( node->isRoot() ) komo->applyRandomization( randomVec_ );
       komo->reset(); //huge
 
       try{
@@ -527,9 +528,10 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         komo->setFixSwitchedObjects();
         komo->setSquaredQAccelerations();
 
-        komo->groundInit( randomVec_ );
+        komo->groundInit();
         komo->groundTasks( /*phase_start_offset_ +*/  0, node->data().leadingKomoArgs );
 
+        if( node->isRoot() ) komo->applyRandomization( randomVec_ );
         komo->reset(); //huge
 
         try{
@@ -645,7 +647,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
-      komo->groundInit( randomVec_ );
+      komo->groundInit();
 
       for( auto node:treepath )
       {
@@ -655,6 +657,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
 //      DEBUG( FILE("z.fol") <<fol; )
 //          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
+      komo->applyRandomization( randomVec_ );
       komo->reset();
       try{
         komo->run();
@@ -733,7 +736,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();
 
-      komo->groundInit( randomVec_ );
+      komo->groundInit();
 
       for( auto node:treepath )
       {
@@ -787,6 +790,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
         }
       }
 
+      komo->applyRandomization( randomVec_ );
       komo->set_x( pathXSolution_[ leaf ]( w ) );
       komo->reset();
 

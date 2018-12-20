@@ -138,7 +138,7 @@ void saveDataToFileveDataToFile( const std::string filename, const std::unordere
     const auto skeleton = dataPair.first;
 
     savePolicyToFile( skeleton, "-" + std::to_string(skeId) );
-    skeleton.save("skeleton-" + std::to_string(skeId) + ".ske");
+    skeleton.save("skeleton-" + std::to_string(skeId) + ".po");
 
     const auto deltas = dataPair.second;
     for( const auto vec : deltas )
@@ -177,8 +177,8 @@ void plan()
     mp.setNSteps( 20 );
 
     // register symbols
-    auto vec = mp.drawRandomVector({-1.0, -1.0}); // randomization
-    mp.registerInit( init );//std::bind( init, _1, _2, vec ) );
+    auto vec = mp.drawRandomVector({-0.5, 0.7});//{1.0, 0.2}); // randomization
+    mp.registerInit( init );
     mp.registerTask( "continue"        , groundContinue );
     mp.registerTask( "merge_between"   , groundMergeBetween );
 
@@ -222,8 +222,7 @@ void plan()
 
     skeletonsToStart[policy].push_back(vec);
 
-    //savePolicyToFile( policy, "-final" );
-
+    savePolicyToFile( policy, "-final" );
     mp.display( policy, 3000 );
     mlr::wait( 30, true );
   }

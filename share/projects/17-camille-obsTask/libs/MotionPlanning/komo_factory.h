@@ -38,10 +38,13 @@ public:
   ExtensibleKOMO();
 
   void registerInit( const InitGrounder & grounder );
-  void groundInit( std::vector< double > randomVec, int verbose = 0 );
+  //void groundInit( std::vector< double > randomVec, bool applyInitialRandoVector, int verbose = 0 );
+  void groundInit( int verbose = 0 );
 
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void groundTasks( double phase, const std::vector< std::string >& facts, int verbose=0 );
+
+  void applyRandomization( const std::vector< double > & randomVec );
 
   void saveTrajectory( const std::string & suffix = "" ) const;
   void plotVelocity( const std::string & suffix = "" ) const;
