@@ -142,7 +142,6 @@ public:
 
   uint nInitSingleAgent = 0;
   uint nInitDoubleAgent = 0;
-
 };
 
 void groundLook( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
@@ -230,6 +229,18 @@ void groundSlowDown( double phase, const std::vector< std::string > & args, mp::
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
+void groundMergeBetween( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+{
+  auto car_before = facts[0];
+  auto car_next = facts[1];
+
+  komo->setPosition( phase+1, -1, "car_ego", car_next.c_str(), OT_sumOfSqr, {-0.7, 0, 0} );
+  komo->setPosition( phase+1, -1, car_before.c_str(), "car_ego", OT_sumOfSqr, {-0.7, 0, 0} );
+
+  //setKeepDistanceTask( phase+1, -1, komo, car_successors );
+  //std::cout << "merge between " << car_before << " and " << car_next << std::endl;
+}
+
 //////////////Fixture////////////////
 struct KomoPlannerFixture : public ::testing::Test
 {
@@ -244,6 +255,8 @@ protected:
     planner.registerTask( "__AGENT_1__accelerate", groundAccelerate );
     planner.registerTask( "__AGENT_1__continue"  , groundContinue );
     planner.registerTask( "__AGENT_1__slow_down" , groundSlowDown );
+
+    planner.registerTask( "merge_between" , groundMergeBetween );
   }
 
   virtual void TearDown()
@@ -322,6 +335,45 @@ TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithAtEachStageFor
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
   EXPECT_EQ( initGrounder.nInitSingleAgent, 10 );  // 6 (pose) + 2 (paths) + 2(joint paths)
+}
+
+TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithNoRandomVector)
+{
+  planner.setKin(  "data/LGP-overtaking-kin-2w_bis.g" );
+  auto randomVec = planner.drawRandomVector();
+
+//  Skeleton policy;
+//  policy.load( "data/LGP-overtaking-single-agent-2w.po" );
+
+//  MotionPlanningParameters po( policy.id() );
+//  po.setParam( "type", "jointPath" );
+
+//  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( randomVec.size(), 0 );
+}
+
+
+TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithRandomVectorOfCorrectSize)
+{
+  planner.setKin( "data/LGP-merging-kin.g" );
+  auto randomVec = planner.drawRandomVector();
+
+//  Skeleton policy;
+//  policy.load( "data/LGP-merging-kin-skeleton-5.po" );
+
+//  MotionPlanningParameters po( policy.id() );
+//  po.setParam( "type", "jointPath" );
+
+//  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( randomVec.size(), 2 );
+}
+
+TEST_F(KomoPlannerSingleAgentFixture, TestRandomVectorOverride)
+{
+  planner.setKin( "data/LGP-merging-kin.g" );
+  std::vector<double> randomVec = planner.drawRandomVector({1.0, 0.5});
+
+  EXPECT_EQ( randomVec, std::vector<double>({1.0, 0.5}) );
 }
 
 /////////////////////SINGLE AGENT OBSERVABLE/////////////////////////////

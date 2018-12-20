@@ -18,6 +18,7 @@ class KOMOPlanner : public MotionPlanner
 public:
   // modifiers
   void setKin( const std::string & kinDescription ) override;
+  std::vector< double > drawRandomVector( const std::vector< double > & override = std::vector< double >() );
 
   // informers
   void solveAndInform( const MotionPlanningParameters &, Skeleton & ) override;
@@ -58,6 +59,8 @@ private:
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_;
 
   KOMOFactory komoFactory_;
+
+  std::vector< double > randomVec_; // used to randomize the initial configuration
 
   // pose
   std::map< uint, mlr::Array< mlr::KinematicWorld > > effKinematics_;

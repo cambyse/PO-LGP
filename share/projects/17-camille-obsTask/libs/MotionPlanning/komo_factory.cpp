@@ -13,7 +13,7 @@
     --------------------------------------------------------------  */
 
 #include "komo_factory.h"
-
+#include <Kin/frame.h>
 #include <Core/graph.h>
 
 namespace mp
@@ -63,12 +63,42 @@ void ExtensibleKOMO::registerInit( const InitGrounder & grounder )
   initGrounder_ = grounder;
 }
 
-void ExtensibleKOMO::groundInit( int verbose )
+void ExtensibleKOMO::groundInit( std::vector< double > randomVec, int verbose )
 {
   if( initGrounder_ )
   {
     initGrounder_( this, verbose );
   }
+
+  // apply random vector
+  // initial position
+  mlr::KinematicWorld world;
+  world.copy(this->world);
+
+  //randomVec={-1.0, -1.0};
+
+  uint i = 0;
+  for( const auto & f: world.frames )
+  {
+    if( f->ats["random_bounds"]  )
+    {
+      auto randomBounds = f->ats.get<arr>("random_bounds");
+
+      for( uint j = 0; j < randomBounds.size(); ++j )
+      {
+        if( randomBounds(j) > 0 )
+        {
+          world.q(f->joint->qIndex + j) += randomBounds(j) * randomVec[i];
+          ++i;
+        }
+      }
+    }
+  }
+
+  world.calc_Q_from_q();
+  world.calc_fwdPropagateFrames();
+
+  this->setModel(world);
 }
 
 void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >& facts, int verbose )

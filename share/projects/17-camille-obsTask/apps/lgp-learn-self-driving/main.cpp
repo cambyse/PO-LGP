@@ -8,6 +8,10 @@
 
 #include <axis_bound.h>
 
+//TODO:
+//-add tamp controller to control main loop
+//-deduce number of var parameters from .kin file
+//
 
 //===========================================================================
 
@@ -39,7 +43,7 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 
 //===========================================================================
 
-void init( mp::ExtensibleKOMO * komo, int verbose, std::vector< double > randomVec )
+void init( mp::ExtensibleKOMO * komo, int verbose )
 {
   // ego car
   arr ego_desired_speed{ 0.04, 0, 0 };
@@ -72,27 +76,27 @@ void init( mp::ExtensibleKOMO * komo, int verbose, std::vector< double > randomV
 
   //randomVec={-1.0, -1.0};
 
-  uint i = 0;
-  for( const auto & f: world.frames )
-  {
-    if( f->ats["random_bounds"]  )
-    {
-      auto random_bounds = f->ats.get<arr>("random_bounds");
+//  uint i = 0;
+//  for( const auto & f: world.frames )
+//  {
+//    if( f->ats["random_bounds"]  )
+//    {
+//      auto random_bounds = f->ats.get<arr>("random_bounds");
 
-      for( uint j = 0; j < 1/*joint_offsets[f->joint->dim*/; ++j )
-      {
-        world.q(f->joint->qIndex + j) = random_bounds(j) * randomVec[i];
-        ++i;
-      }
-    }
-  }
+//      for( uint j = 0; j < 1/*joint_offsets[f->joint->dim*/; ++j )
+//      {
+//        world.q(f->joint->qIndex + j) = random_bounds(j) * randomVec[i];
+//        ++i;
+//      }
+//    }
+//  }
 
-  world.calc_Q_from_q();
-  world.calc_fwdPropagateFrames();
+//  world.calc_Q_from_q();
+//  world.calc_fwdPropagateFrames();
 
-  //world.watch(true);
+//  //world.watch(true);
 
-  komo->setModel(world);
+//  komo->setModel(world);
 }
 
 void groundContinue( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
@@ -156,7 +160,7 @@ void plan()
   using namespace std::placeholders;
 
   std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > skeletonsToStart;
-  for(uint i = 0; i < 500; ++i)
+  for(uint i = 0; i < 1 /*500*/; ++i)
   {
     std::cout << "*********" << std::endl;
     std::cout << "***"<< i << "***" << std::endl;
@@ -173,8 +177,8 @@ void plan()
     mp.setNSteps( 20 );
 
     // register symbols
-    auto vec = randomVector(2); // randomization
-    mp.registerInit( std::bind( init, _1, _2, vec ) );
+    auto vec = mp.drawRandomVector({-1.0, -1.0}); // randomization
+    mp.registerInit( init );//std::bind( init, _1, _2, vec ) );
     mp.registerTask( "continue"        , groundContinue );
     mp.registerTask( "merge_between"   , groundMergeBetween );
 
@@ -220,8 +224,8 @@ void plan()
 
     //savePolicyToFile( policy, "-final" );
 
-    //mp.display( policy, 3000 );
-    //mlr::wait( 30, true );
+    mp.display( policy, 3000 );
+    mlr::wait( 30, true );
   }
 
   saveDataToFileveDataToFile("result-data.csv", skeletonsToStart);

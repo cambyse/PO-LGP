@@ -107,6 +107,51 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
   }
 }
 
+std::vector< double > KOMOPlanner::drawRandomVector( const std::vector< double > & override )
+{
+  if( startKinematics_.size() == 0 )
+  {
+    return std::vector< double >();
+  }
+
+  if( override.size() > 0 )
+  {
+    randomVec_ = override;
+    return randomVec_;
+  }
+
+  auto world = startKinematics_(0);
+
+  // get size of random Vector
+  uint randomVecSize = 0;
+  for( auto f : world->frames )
+  {
+    if( f->ats["random_bounds"]  )
+    {
+      auto randomBounds = f->ats.get<arr>("random_bounds");
+
+      for( auto b : randomBounds )
+      {
+        if( b > 0 )
+        {
+          randomVecSize++;
+        }
+      }
+    }
+  }
+
+  // draw it
+  randomVec_ = std::vector< double >( randomVecSize );
+
+  for( auto i = 0; i < randomVecSize; ++i )
+  {
+    auto v = rnd.uni(-1.0, 1.0);
+    randomVec_[i] = v;
+  }
+
+  return randomVec_;
+}
+
 void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton & policy )
 {
   CHECK( startKinematics_.d0 == policy.N(), "consitency problem, the belief state size of the policy differs from the belief state size of the kinematics" );
@@ -383,7 +428,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
-      komo->groundInit();
+      komo->groundInit( randomVec_ );
       komo->groundTasks( 0., node->data().leadingKomoArgs );
 
       komo->reset(); //huge
@@ -482,7 +527,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         komo->setFixSwitchedObjects();
         komo->setSquaredQAccelerations();
 
-        komo->groundInit();
+        komo->groundInit( randomVec_ );
         komo->groundTasks( /*phase_start_offset_ +*/  0, node->data().leadingKomoArgs );
 
         komo->reset(); //huge
@@ -600,7 +645,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
-      komo->groundInit();
+      komo->groundInit( randomVec_ );
 
       for( auto node:treepath )
       {
@@ -688,7 +733,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();
 
-      komo->groundInit();
+      komo->groundInit( randomVec_ );
 
       for( auto node:treepath )
       {
