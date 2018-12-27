@@ -6,12 +6,6 @@ project(${project_name})
 add_definitions(-std=c++11)
 
 #################################
-# Locate dependencies
-#################################
-
-find_package(Boost)
-
-#################################
 # Locate MLR libs
 #################################
 
@@ -26,21 +20,16 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 # Define executable
 #################################
 
-file(GLOB PROJECT_SRC "*.cpp")
+file(GLOB_RECURSE SOURCES *.cpp *.h)
 
-add_executable(${project_name} ${PROJECT_SRC})
+add_library(${project_name} ${SOURCES})
+target_include_directories(${project_name} PUBLIC ".")
 target_link_libraries(
  ${project_name}
  Core
- Geo
- Optim
  Logic
- KOMO
+ MathUtility
  POMTP_interfaces
- POMTP_controllers
- ObservationTasks
- CollisionAvoidance
- MultiAgentTaskPlanning
- MotionPlanning
- GeometricUtilityTasks
  )
+
+add_subdirectory(test)

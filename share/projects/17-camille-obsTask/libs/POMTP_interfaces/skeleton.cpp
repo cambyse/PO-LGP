@@ -160,11 +160,11 @@ void Skeleton::saveToGraphFile( const std::string & filename ) const
 void Skeleton::saveAll( const std::string & suffix ) const
 {
   std::stringstream namess, skenamess;
-  namess << "policy-" << id() << suffix << ".gv";
+  namess << "policy-" << id() << suffix;
   auto name = namess.str();
 
-  save( name );
-  saveToGraphFile( name );
+  save( name + ".po" );
+  saveToGraphFile( name + ".gv" );
 }
 
 void Skeleton::copy( const Skeleton & policy )

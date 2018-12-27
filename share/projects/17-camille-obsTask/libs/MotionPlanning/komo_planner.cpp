@@ -299,7 +299,6 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       for( auto c : node->children() )
       {
         c->data().markovianReturn = - cost;
-        //c->setStatus( PolicyNode::INFORMED );
 
         fifo.push_back( c );
       }

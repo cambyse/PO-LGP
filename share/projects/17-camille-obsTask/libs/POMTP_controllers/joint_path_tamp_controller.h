@@ -14,22 +14,16 @@
 
 #pragma once
 
-#include <task_planner.h>
-#include <motion_planner.h>
+#include <tamp_controller.h>
 
-class TAMPController
+class JointPathTAMPController : public TAMPController
 {
 public:
-  TAMPController( TaskPlanner & tp, MotionPlanner & mp )
-    : tp_( tp )
-    , mp_( mp )
+  JointPathTAMPController( TaskPlanner & tp, MotionPlanner & mp )
+    : TAMPController( tp, mp )
   {
 
   }
 
-  virtual Skeleton plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs = 0 ) = 0;
-
-protected:
-  TaskPlanner & tp_;
-  MotionPlanner & mp_;
+  Skeleton plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs = 0 ) override;
 };

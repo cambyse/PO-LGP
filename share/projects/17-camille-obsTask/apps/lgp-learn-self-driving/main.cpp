@@ -3,7 +3,8 @@
 #include <approx_shape_to_sphere.h>
 #include <graph_planner.h>
 #include <komo_planner.h>
-#include <tamp_controller.h>
+#include <markovian_tamp_controller.h>
+#include <joint_path_tamp_controller.h>
 #include <axis_bound.h>
 
 //TODO:
@@ -102,7 +103,7 @@ void plan()
 {
   std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > skeletonsToStart;
 
-  for( uint i = 0; i < 500; ++i )
+  for( uint i = 0; i < 10000; ++i )
   {
     std::cout << "*********" << std::endl;
     std::cout << "***"<< i << "***" << std::endl;
@@ -124,7 +125,7 @@ void plan()
     mp.registerTask( "merge_between"   , groundMergeBetween );
 
     /// DECISION GRAPH
-    tp.setR0( -0.001 );  // balance exploration
+    tp.setR0( -0.01 );  // balance exploration
     tp.setMaxDepth( 5 );
     tp.buildGraph();
 
@@ -132,20 +133,26 @@ void plan()
     //generatePngImage( "graph.gv" );
 
     // set initial parameters
-    //auto vec = mp.drawRandomVector(); // random
-//    auto vec = mp.drawRandomVector({0.7626620612244897,-0.05964662244897959});//plan 0
-//    auto vec = mp.drawRandomVector({-0.7991766000000001,-0.5479612000000003});//plan 1
-//    auto vec = mp.drawRandomVector({-0.3448865342857143,0.026629800000000006});//plan 2
-    auto vec = mp.drawRandomVector({0.03870015128205127,-0.8419756923076921});//plan 3
-//    auto vec = mp.drawRandomVector({-0.5610455045454545,-0.2883110378636364});//plan 4
-//    auto vec = mp.drawRandomVector({0.15762804745098036,0.6434303333333331});//plan 5
-//    auto vec = mp.drawRandomVector({-0.2806867376470588,0.3627838470588235});//plan 6
+    auto vec = mp.drawRandomVector(); // random
+//    auto vec = mp.drawRandomVector({0.745718947008547,-0.08723548758290603});//plan 0
+//    auto vec = mp.drawRandomVector({-0.7867631799485865,-0.5741730488431879});//plan 1
+//    auto vec = mp.drawRandomVector({-0.38302520754166647,0.04392461586388886});//plan 2
+//    auto vec = mp.drawRandomVector({-0.020404977034782636,-0.8433419808695655});//plan 3
+//    auto vec = mp.drawRandomVector({-0.5512255441448696,-0.2612012252334004});//plan 4
+//    auto vec = muzp.drawRandomVector({0.16063258833188399,0.6229994332567289});//plan 5
+//    auto vec = mp.drawRandomVector({-0.26539484409956043,0.3638281736456812});//plan 6
 
-    TAMPController controller( tp, mp );
+    //MarkovianTAMPController controller( tp, mp );
+    JointPathTAMPController controller( tp, mp );
 
-    auto policy = controller.plan(1000, false, false, true, 30);
+    auto policy = controller.plan(1000, false, false, false, 30);
 
     skeletonsToStart[policy].push_back(vec);
+
+    if( i % 100 == 0 )
+    {
+      saveDataToFileveDataToFile("result-data-" + std::to_string(i) + ".csv", skeletonsToStart);
+    }
   }
   saveDataToFileveDataToFile("result-data.csv", skeletonsToStart);
 }

@@ -1,18 +1,17 @@
-#include <tamp_controller.h>
+#include <markovian_tamp_controller.h>
 
-Skeleton TAMPController::plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs )
+Skeleton MarkovianTAMPController::plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs )
 {
   /// LOOP
-  Skeleton policy, lastPolicy;
+  Skeleton policy, previousPolicy;
   tp_.solve();
   policy = tp_.getPolicy();
 
   uint nIt = 0;
-  do
+
+  while( policy != previousPolicy && nIt != maxIt )
   {
     nIt++;
-
-    lastPolicy = policy;
 
     /// MOTION PLANNING
     auto po     = MotionPlanningParameters( policy.id() );
@@ -25,9 +24,9 @@ Skeleton TAMPController::plan( uint maxIt, bool saveInformed, bool saveFinal, bo
     tp_.integrate( policy );
     tp_.solve();
 
+    previousPolicy = policy;
     policy = tp_.getPolicy();
   }
-  while( lastPolicy != policy && nIt != maxIt );
 
   if( saveFinal ) policy.saveAll( "-final" );
 
