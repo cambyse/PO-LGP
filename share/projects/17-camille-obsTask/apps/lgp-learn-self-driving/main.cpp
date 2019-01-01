@@ -1,5 +1,6 @@
 #include <list>
 #include <Kin/frame.h>
+#include <car_kinematic.h>
 #include <approx_shape_to_sphere.h>
 #include <graph_planner.h>
 #include <komo_planner.h>
@@ -17,6 +18,7 @@ void init( mp::ExtensibleKOMO * komo, int verbose )
   // ego car
   arr ego_desired_speed{ 0.04, 0, 0 };
   komo->setVelocity( 0.0, -1.0, "car_ego", NULL, OT_sumOfSqr, ego_desired_speed );
+  komo->setTask( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
 
   // car speeds
   arr desired_speed{ 0.03, 0, 0 };
@@ -139,8 +141,10 @@ void plan()
 //    auto vec = mp.drawRandomVector({-0.38302520754166647,0.04392461586388886});//plan 2
 //    auto vec = mp.drawRandomVector({-0.020404977034782636,-0.8433419808695655});//plan 3
 //    auto vec = mp.drawRandomVector({-0.5512255441448696,-0.2612012252334004});//plan 4
-//    auto vec = muzp.drawRandomVector({0.16063258833188399,0.6229994332567289});//plan 5
+//    auto vec = mp.drawRandomVector({0.16063258833188399,0.6229994332567289});//plan 5
 //    auto vec = mp.drawRandomVector({-0.26539484409956043,0.3638281736456812});//plan 6
+
+//    auto vec = mp.drawRandomVector({0.970007,0.035656});
 
     //MarkovianTAMPController controller( tp, mp );
     JointPathTAMPController controller( tp, mp );
@@ -149,7 +153,7 @@ void plan()
 
     skeletonsToStart[policy].push_back(vec);
 
-    if( i % 100 == 0 )
+    if( i && i % 100 == 0 )
     {
       saveDataToFileveDataToFile("result-data-" + std::to_string(i) + ".csv", skeletonsToStart);
     }

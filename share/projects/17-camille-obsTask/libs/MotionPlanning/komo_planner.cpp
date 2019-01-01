@@ -438,7 +438,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       } catch( const char* msg ){
         cout << "KOMO FAILED: " << msg <<endl;
       }
-
+      //komo->checkGradients();
       //      if( node->id() == 136 )
       //      {
       //      komo->displayTrajectory();

@@ -51,6 +51,8 @@ struct TaskMap_Default:TaskMap {
   TaskMap_Default(const Node *parameters, const mlr::KinematicWorld& G);
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const WorldL& Ks, double tau, int t=-1) { TaskMap::phi(y,J,Ks,tau,t); }
+
   virtual uint dim_phi(const mlr::KinematicWorld& G);
   virtual mlr::String shortTag(const mlr::KinematicWorld& G);
 };

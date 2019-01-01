@@ -10,62 +10,6 @@ using namespace std;
 
 //===========================================================================
 
-struct CarKinematic:TaskMap{
-
-  CarKinematic( const std::string & object )
-    : object_( object )
-  {
-
-  }
-
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
-  {
-    return mlr::String("CarKinematic");
-  }
-
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1) override
-  {
-    CHECK(order==1,"");
-
-    mlr::Frame *object = G.getFrameByName( object_.c_str() );
-
-    // get speed vector
-    arr y_vel,Jvel;
-    TaskMap_Default vel(posDiffTMT, object->ID );
-    vel.order = 1;
-    vel.phi(y_vel, Jvel, G, int( t ));
-
-    // get orientation vector
-    arr y_vec,Jvec;
-    TaskMap_Default pos(vecTMT, object->ID, mlr::Vector(0,1,0));
-    pos.order = 0;
-    pos.phi(y_vec, Jvec, G, t);
-
-    // commit results
-    const double scale = 10;
-    y.resize(1);
-    y(0) = scale * scalarProduct(y_vel, y_vec)  ;
-
-    // commit results
-    if(&J){
-     J = scale * ( ~y_vel * Jvec + ~y_vec * Jvel );
-    }
-  }
-
-  virtual uint dim_phi(const mlr::KinematicWorld& K) override
-  {
-    return dim_;
-  }
-
-private:
-  static const uint dim_ = 1;
-  std::string object_;
-};
-
-
-
-//===========================================================================
-
 void overtake()
 {
   mp::ExtensibleKOMO komo;
