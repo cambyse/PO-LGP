@@ -9,7 +9,7 @@ add_definitions(-std=c++11)
 # Locate dependencies
 #################################
 
-find_package(Boost)
+find_package(Boost COMPONENTS filesystem REQUIRED )
 
 #################################
 # Locate MLR libs

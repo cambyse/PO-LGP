@@ -95,7 +95,7 @@ def analyse(dataset_filepath, output_model_filepath, output_image_dir):
 
   # learn and plot model
   clf = learn_model(training_XY)
-  plot_boundaries(clf, training_XY, figure_filepath=os.path.join(output_image_dir, "decision_boundaries.svg"))
+  plot_boundaries(clf, training_XY, figure_filepath=os.path.join(output_image_dir, "decision_regions.svg"))
 
   # save and log results
   print("accuracy score (training set):{}".format(evaluate_model(clf, training_XY)))
@@ -110,7 +110,7 @@ if __name__ == "__main__":
   if len(sys.argv) > 1:
     dataset_filepath = sys.argv[1]
     directory = os.path.dirname(dataset_filepath)
-    output_model_filepath = os.path.join(directory, "learned_model.joblib")
+    output_model_filepath = os.path.join(directory, "learned_regions.joblib")
     output_image_dir = directory
     analyse(dataset_filepath, output_model_filepath, output_image_dir)
 

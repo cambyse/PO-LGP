@@ -1,4 +1,9 @@
 #include <list>
+#include <unordered_set>
+
+#include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
+
 #include <Kin/frame.h>
 #include <car_kinematic.h>
 #include <approx_shape_to_sphere.h>
@@ -8,8 +13,6 @@
 #include <joint_path_tamp_controller.h>
 #include <axis_bound.h>
 
-//TODO:
-//
 
 //===========================================================================
 
@@ -37,13 +40,6 @@ void init( mp::ExtensibleKOMO * komo, int verbose )
   komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
   komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_5", "car_6", radius ), OT_ineq );
   komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_6", "car_7", radius ), OT_ineq );
-
-  /// RANDOMIZE SCENE
-  double scale = 0.3;
-
-  // initial position
-  mlr::KinematicWorld world;
-  world.copy(komo->world);
 }
 
 void groundContinue( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
@@ -107,9 +103,9 @@ void plan()
 
   for( uint i = 0; i < 10000; ++i )
   {
-    std::cout << "*********" << std::endl;
-    std::cout << "***"<< i << "***" << std::endl;
-    std::cout << "*********" << std::endl;
+    std::cout << "*********************" << std::endl;
+    std::cout << "*******"<< i << "******" << std::endl;
+    std::cout << "*********************" << std::endl;
 
     matp::GraphPlanner tp;
     mp::KOMOPlanner mp;
@@ -145,11 +141,12 @@ void plan()
 //    auto vec = mp.drawRandomVector({-0.26539484409956043,0.3638281736456812});//plan 6
 
 //    auto vec = mp.drawRandomVector({0.970007,0.035656});
+//    auto vec = mp.drawRandomVector({0.970007,-0.535656});
 
     //MarkovianTAMPController controller( tp, mp );
     JointPathTAMPController controller( tp, mp );
 
-    auto policy = controller.plan(1000, false, false, false, 30);
+    auto policy = controller.plan(1000, false, true, true, 30);
 
     skeletonsToStart[policy].push_back(vec);
 
@@ -161,6 +158,144 @@ void plan()
   saveDataToFileveDataToFile("result-data.csv", skeletonsToStart);
 }
 
+std::list< std::vector< double > > parseDeltas( const std::string & filepath )
+{
+  std::list< std::vector< double > > deltas;
+
+  std::ifstream infile;
+  infile.open(filepath);
+
+  std::string line;
+
+  while ( std::getline(infile, line) )
+  {
+    char split_char = ';';
+    std::istringstream iss(line);
+    std::vector< double > delta;
+
+    for ( std::string each; std::getline( iss, each, split_char ); delta.push_back( std::stod( each ) ) );
+
+    delta.pop_back(); // remove last elements because it is the skeleton number
+
+    deltas.push_back( delta );
+  }
+
+  return deltas;
+}
+
+std::unordered_set< Skeleton, SkeletonHasher > parseSkeletons( const std::string & folderpath )
+{
+  std::unordered_set< Skeleton, SkeletonHasher > skeletons;
+
+  auto p = boost::filesystem::path( folderpath );
+
+  for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator( p ) ) )
+  {
+    auto filepath = entry.path().string();
+
+    if( filepath.find(".po") != std::string::npos )
+    {
+      Skeleton ske; ske.load( filepath );
+      skeletons.insert( ske );
+    }
+  }
+
+  return skeletons;
+}
+
+std::string getKinFilepath( const std::string & folderpath )
+{
+  auto p = boost::filesystem::path( folderpath );
+
+  for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator( p ) ) )
+  {
+    auto filepath = entry.path().string();
+
+    if( filepath.find("-kin.g") != std::string::npos )
+    {
+      return filepath;
+    }
+  }
+
+  return "";
+}
+
+void saveSkeletonValuesToFile( const std::string filename, const std::map< std::vector< double >, std::unordered_set< Skeleton, SkeletonHasher > > & deltasToValues )
+{
+  std::ofstream of;
+  of.open( filename );
+
+  for( const auto dataPair : deltasToValues )
+  {
+    const auto delta = dataPair.first;
+    const auto skeletons = dataPair.second;
+
+    for( auto d : delta )
+    {
+      of << d << ";";
+    }
+
+    of << "nan" << ";";
+
+    for( const auto skeleton : skeletons )
+    {
+      //skeleton.saveAll( "-" + std::to_string(skeId) );
+      of << skeleton.value() << ";";
+    }
+
+    of << std::endl;
+  }
+
+  of.close();
+}
+
+void evaluate_all_skeletons( const std::string & result_filepath  )
+{
+  // retrieve deltas
+  auto deltas = parseDeltas( result_filepath );
+
+  // retrieve skeletons
+  const auto folderpath = boost::filesystem::path( result_filepath ).parent_path().string();
+  auto skeletons = parseSkeletons( folderpath );
+
+  // retrieve kin file
+  auto kin_filepath = getKinFilepath( folderpath );
+
+  // replan for each skeleton and each delta
+  std::map< std::vector< double >, std::unordered_set< Skeleton, SkeletonHasher > > deltasToValues;
+  for( const auto & vec : deltas )
+  {
+    for( auto skeleton : skeletons )
+    {
+      // plan for each skeleton
+      mp::KOMOPlanner mp;
+
+      // set worlds
+      mp.setKin( kin_filepath.c_str() );
+
+      // set planner specific parameters
+      mp.setNSteps( 20 );
+
+      // register symbols
+      mp.registerInit( init );
+      mp.registerTask( "continue"        , groundContinue );
+      mp.registerTask( "merge_between"   , groundMergeBetween );
+
+      /// APPLY DELTAS
+      mp.drawRandomVector( vec );
+
+      /// MOTION PLANNING
+      auto po     = MotionPlanningParameters( skeleton.id() );
+      po.setParam( "type", "jointPath" );
+      mp.solveAndInform( po, skeleton );
+
+      deltasToValues[vec].insert( skeleton );
+    }
+  }
+
+  saveSkeletonValuesToFile( folderpath + "/" + "result-values.csv", deltasToValues );
+}
+
 //===========================================================================
 
 int main(int argc,char **argv)
@@ -168,6 +303,7 @@ int main(int argc,char **argv)
   mlr::initCmdLine(argc,argv);
 
   plan();
+  //evaluate_all_skeletons("joint_car_kin/100/result-data-100.csv");
 
   return 0;
 }
