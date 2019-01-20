@@ -92,15 +92,20 @@ void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std
 
   // header
   const auto witnessSkeleton = deltasToSkeletons.begin()->second;
+  const auto witnessQr = witnessSkeleton.qresult();
   of << "header_size" << ";" << 5 << std::endl; // 1
-  of << "n_worlds" << ";" << witnessSkeleton.qresult().nWorlds() << std::endl; // 2
+  of << "n_worlds" << ";" << witnessQr.nWorlds() << std::endl; // 2
   of << "q_mask" << ";"; // 3
-  for( uint j = 0; j < witnessSkeleton.qresult().qDim(); ++j )
+  for( uint j = 0; j < witnessQr.qDim(); ++j )
   {
-     of << witnessSkeleton.qresult().qmask(j) << ";";
+     of << witnessQr.qmask(j);
+     if( j != witnessQr.qDim() - 1 )
+     {
+       of << ";";
+     }
   }
   of << std::endl;
-  of << "steps_per_phase" << ";" << witnessSkeleton.qresult().stepsPerPhase() << std::endl; // 4
+  of << "steps_per_phase" << ";" << witnessQr.stepsPerPhase() << std::endl; // 4
 
   // table header
   const auto delta = deltasToSkeletons.begin()->first; // 5
@@ -137,7 +142,12 @@ void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std
 
         for( auto q : qvec )
         {
-          of << q << ";";
+          of << q;
+
+          if( s != qr.nSteps(w) - 1 )
+          {
+            of << ";";
+          }
         }
       }
     }
@@ -209,7 +219,7 @@ void plan( const std::string & outputFolderPath )
 
     deltasToSkeletons.push_back( std::make_pair( vec, policy ) );
 
-    if( i && i % 100 == 0 )
+    //if( i && i % 100 == 0 )
     {
       saveDataToFileveDataToFile(outputFolderPath, "result-data-" + std::to_string(i) + ".csv", deltasToSkeletons);
     }

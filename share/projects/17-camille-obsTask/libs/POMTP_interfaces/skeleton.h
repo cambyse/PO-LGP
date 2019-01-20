@@ -107,7 +107,7 @@ public:
 
     return world_to_q_list_[ w ][ s ];
   }
-  uint qmask( uint i )
+  uint qmask( uint i ) const
   {
     CHECK( i < qDim(), "" );
 

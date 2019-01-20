@@ -10,6 +10,34 @@ from mlxtend.plotting import plot_decision_regions
 
 SKELETON_HASH_HEADER = 'skeleton_hash'
 
+def extract_data(f):
+  qs_list = []
+  max_width = 0
+  for line in f.readlines():
+    qs = np.fromstring(line, sep=";")
+    qs_list.append(qs)
+    max_width = max(max_width, qs.shape[0])
+  data = np.full([len(qs_list), max_width], np.nan)  # np.loadtxt(f, delimiter=";")
+  for i, qs in enumerate(qs_list):
+    data[i, 0:len(qs)] = qs
+  return data
+
+
+def extract_header(f):
+  header_size = int(f.readline().split(";")[1])
+  n_worlds = int(f.readline().split(";")[1])
+  qmask = np.array(f.readline().split(";")[1:-1])
+  steps_per_phase = int(f.readline().split(";")[1])
+  table_header = f.readline().replace('\n', '').split(";")
+
+  print("header_size:{}".format(header_size))
+  print("n_worlds:{}".format(n_worlds))
+  print("qmask:{}".format(qmask))
+  print("steps_per_phase:{}".format(steps_per_phase))
+  print("table_header:{}".format(table_header))
+  
+  return n_worlds, qmask, steps_per_phase,table_header
+
 def plot_data(XY, figure_filepath=None):
   last_col = XY.shape[1] - 1
   X = XY[:, 0:last_col]
@@ -61,7 +89,7 @@ def index_of_skeleton_hash(header):
   return None
 
 def retrieve_classes(header, xyq):
-  XZ = xyq[:, 0: index_of_skeleton_hash(header)].copy()
+  XZ = xyq[:, 0: index_of_skeleton_hash(header)+1].copy()
 
   hashToClass = {}
   for i, hash in enumerate(xyq[:, -1]):
@@ -103,13 +131,15 @@ def evaluate_model(clf,XY):
 
 def analyse(dataset_filepath, output_dir):
   with open(dataset_filepath) as f:
-    header = f.readline().split(";")
-    data = np.loadtxt(f, delimiter=";")
+    n_worlds, qmask, steps_per_phase, table_header = extract_header(f)
+    data = extract_data(f)
 
   xyq = data[1:,0:data.shape[1]]
 
   # separate classes
-  XZ = retrieve_classes(header, xyq)
+  XZ = retrieve_classes(table_header, xyq)
+  print("XZ:{}".format(XZ))
+
   plot_data(XZ, figure_filepath=os.path.join(output_dir, "all_data.svg"))
 
   # separate data
