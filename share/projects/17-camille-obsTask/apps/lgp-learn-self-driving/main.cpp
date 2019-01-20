@@ -91,7 +91,19 @@ void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std
   std::unordered_set< Skeleton, SkeletonHasher > skeletons;
 
   // header
-  const auto delta = deltasToSkeletons.begin()->first;
+  const auto witnessSkeleton = deltasToSkeletons.begin()->second;
+  of << "header_size" << ";" << 5 << std::endl; // 1
+  of << "n_worlds" << ";" << witnessSkeleton.qresult().nWorlds() << std::endl; // 2
+  of << "q_mask" << ";"; // 3
+  for( uint j = 0; j < witnessSkeleton.qresult().qDim(); ++j )
+  {
+     of << witnessSkeleton.qresult().qmask(j) << ";";
+  }
+  of << std::endl;
+  of << "steps_per_phase" << ";" << witnessSkeleton.qresult().stepsPerPhase() << std::endl; // 4
+
+  // table header
+  const auto delta = deltasToSkeletons.begin()->first; // 5
   for( uint i = 0; i < delta.size(); ++i )
   {
     of << "d" << i << ";";
@@ -107,21 +119,38 @@ void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std
 
     skeletons.insert( skeleton );
 
+    // delta
     for( auto d : delta )
     {
       of << d << ";";
     }
-    of << skeleton.hash() << std::endl;
+
+    // skeleton data
+    of << skeleton.hash();
+
+    const auto qr = skeleton.qresult();
+    for( uint w = 0; w < qr.nWorlds(); ++w )
+    {
+      for( uint s = 0; s < qr.nSteps(w); ++s )
+      {
+        const auto qvec = qr.q(w,s);
+
+        for( auto q : qvec )
+        {
+          of << q << ";";
+        }
+      }
+    }
+
+    of << std::endl;
   }
 
   of.close();
 
   // save all unique skeletons
-  //uint n = 0;
   for( const auto & skeleton : skeletons )
   {
-    skeleton.saveAll( outputFolderPath, /*"-" + std::to_string( n ) + */"-" + std::to_string( skeleton.hash() ) );
-    //n++;
+    skeleton.saveAll( outputFolderPath, "-" + std::to_string( skeleton.hash() ) );
   }
 }
 

@@ -105,6 +105,8 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       startKinematics_.append( kin );
     }
   }
+
+  computeQMask();
 }
 
 std::vector< double > KOMOPlanner::drawRandomVector( const std::vector< double > & override )
@@ -251,7 +253,6 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
 
     /// UPDATE VALUES
     updateValues( policy );
-
     policy.setStatus( Skeleton::INFORMED );
   }
   else if( po.getParam( "type" ) == "jointPath" )
@@ -304,9 +305,9 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       }
     }
 
-    /// UPDATE VALUES
+    /// UPDATE VALUES AND STATUS
     updateValues( policy );
-
+    policy.setQResult(policy.N()>1 ? jointPathQResult_ : pathQResult_);
     policy.setStatus( Skeleton::INFORMED );
   }
   else
@@ -387,6 +388,17 @@ void KOMOPlanner::registerInit( const InitGrounder & grounder )
 void KOMOPlanner::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   komoFactory_.registerTask( type, grounder );
+}
+
+void KOMOPlanner::computeQMask()
+{
+  qmask_ = extractAgentQMask( *startKinematics_( 0 ) );
+
+  // sanity check
+  for( uint w = 1; w < startKinematics_.size(); ++w )
+  {
+    CHECK( qmask_ == extractAgentQMask( *startKinematics_( 1 ) ), "corruption in agent joint definition" );
+  }
 }
 
 ///MARKOVIAN
@@ -624,6 +636,8 @@ void KOMOPlanner::optimizePath( Skeleton & policy )
   {
     optimizePathTo( l.lock() );
   }
+
+  computePathQResult(policy);
 }
 
 void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
@@ -708,6 +722,24 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
   }
 }
 
+void KOMOPlanner::computePathQResult( const Skeleton& policy )
+{
+  pathQResult_ = QResult( policy.N(), qmask_, microSteps_ );
+  for( uint w = 0; w < bsToLeafs_.size(); ++w )
+  {
+    const PolicyNodePtr leaf = bsToLeafs_.at(w);
+    const auto trajForW = pathKinFrames_.at(leaf).at(w);
+    const uint nSteps = trajForW.size(); //  .at(w)->size();
+
+    pathQResult_.createTrajectory(w, nSteps);
+
+    for( uint s = 0; s < nSteps; ++s )
+    {
+      pathQResult_.setQ( w, s, trajForW.at(s).q );
+    }
+  }
+}
+
 void KOMOPlanner::optimizeJointPath( Skeleton & policy )
 {
   std::cout << "optimizing full joint path.." << std::endl;
@@ -716,6 +748,8 @@ void KOMOPlanner::optimizeJointPath( Skeleton & policy )
   {
     optimizeJointPathTo( l.lock() );
   }
+
+  computeJointPathQResult( policy );
 }
 
 void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
@@ -785,9 +819,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
             if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
             {
-              arr qmask = extractAgentQMask( *startKinematics_( w ) );
-
-              AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask );  // tmp camille, think to delete it, or komo does it?
+              AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask_ );  // tmp camille, think to delete it, or komo does it?
               double slice_t = phase_start_offset_ + node->depth() - double( s ) / stepsPerPhase;
               komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
@@ -837,6 +869,24 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       // free
       freeKomo( komo );
+    }
+  }
+}
+
+void KOMOPlanner::computeJointPathQResult( const Skeleton& policy )
+{
+  jointPathQResult_ = QResult( policy.N(), qmask_, microSteps_ );
+  for( uint w = 0; w < bsToLeafs_.size(); ++w )
+  {
+    const PolicyNodePtr leaf = bsToLeafs_.at(w);
+    const auto trajForW = jointPathKinFrames_.at(leaf).at(w);
+    const uint nSteps = trajForW.size(); //  .at(w)->size();
+
+    jointPathQResult_.createTrajectory(w, nSteps);
+
+    for( uint s = 0; s < nSteps; ++s )
+    {
+      jointPathQResult_.setQ( w, s, trajForW.at(s).q );
     }
   }
 }

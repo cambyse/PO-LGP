@@ -65,16 +65,21 @@ public:
 
   QResult()
   : world_to_q_list_(0)
-  , tau_( 0.0 )
+  , qmask_(0)
+  , stepsPerPhase_( 0.0 )
   {
 
   }
 
-  QResult(uint nWorlds, double tau)
+  QResult(uint nWorlds, arr qmask, uint stepsPerPhase)
     : world_to_q_list_(nWorlds)
-    , tau_( tau )
+    , qmask_(qmask.size())
+    , stepsPerPhase_( stepsPerPhase )
   {
-
+    for( uint j = 0; j < qmask.size(); ++j )
+    {
+      qmask_[j] = uint( qmask.at(j) );
+    }
   }
 
   void createTrajectory( uint w, uint nSteps )
@@ -92,14 +97,21 @@ public:
     world_to_q_list_[ w ][ s ] = q;
   }
 
-  double tau() const { return tau_; }
+  double stepsPerPhase() const { return stepsPerPhase_; }
   std::size_t nWorlds() const { return world_to_q_list_.size(); }
+  std::size_t qDim() const { return qmask_.size(); }
   std::vector< double > q( uint w, uint s ) const
   {
     CHECK( w < nWorlds(), "" );
     CHECK( s < world_to_q_list_[ w ].size(), "" );
 
     return world_to_q_list_[ w ][ s ];
+  }
+  uint qmask( uint i )
+  {
+    CHECK( i < qDim(), "" );
+
+    return qmask_.at(i);
   }
   std::size_t nSteps( uint w ) const
   {
@@ -113,12 +125,14 @@ public:
   void serialize(Archive & ar, const unsigned int version)
   {
     ar & world_to_q_list_;
-    ar & tau_;
+    ar & qmask_;
+    ar & stepsPerPhase_;
   }
 
 private:
   std::vector< std::vector < std::vector < double > > > world_to_q_list_;
-  double tau_; // time interval between each q
+  std::vector< uint > qmask_;
+  uint stepsPerPhase_;
 };
 
 class Skeleton

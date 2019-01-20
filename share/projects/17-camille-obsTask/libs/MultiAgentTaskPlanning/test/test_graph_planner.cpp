@@ -202,7 +202,7 @@ TEST_F(GraphPlannerTest, PolicyLeafs) {
   tp.saveGraphToFile( "LGP-overtaking-single-agent-1w-decision-graph.gv" );
   tp.saveDecidedGraphToFile( "LGP-overtaking-single-agent-1w-decided-decision-graph.gv" );
   auto policy = tp.getPolicy();
-  const std::string policyFileName( "LGP-overtaking-single-agent-1w-policy" );
+  const std::string policyFileName( "LGP-overtaking-single-agent-1w" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
   auto leafs = policy.leafs();

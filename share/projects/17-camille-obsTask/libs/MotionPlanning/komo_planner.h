@@ -36,6 +36,8 @@ public:
   void setMinMarkovianCost( double m ) { minMarkovianCost_ = m; }
 
 private:
+  void computeQMask();
+
   /// MARKOVIAN
   // poses
   void optimizePoses( Skeleton & );
@@ -50,15 +52,17 @@ private:
   // path
   void optimizePath( Skeleton & );
   void optimizePathTo( const PolicyNodePtr & );
+  void computePathQResult( const Skeleton& policy );
 
   // joint path
   void optimizeJointPath( Skeleton & );
   void optimizeJointPathTo( const PolicyNodePtr & );
+  void computeJointPathQResult( const Skeleton& policy );
 
 private:
   // state
   mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_;
-
+  arr qmask_; //1 for agent, 0 for non agent joint
   KOMOFactory komoFactory_;
 
   std::vector< double > randomVec_; // used to randomize the initial configuration
@@ -77,11 +81,13 @@ private:
   std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
   std::map< PolicyNodePtr, mlr::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
   std::map< PolicyNodePtr, mlr::Array< arr > > pathCostsPerPhase_;
+  QResult pathQResult_;
 
   // joint path
   std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
   std::map< PolicyNodePtr, mlr::Array< arr > > jointPathCostsPerPhase_;
   mlr::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
+  QResult jointPathQResult_;
 
   // params
   const mlr::String beliefStateTag_  = "BELIEF_START_STATE";

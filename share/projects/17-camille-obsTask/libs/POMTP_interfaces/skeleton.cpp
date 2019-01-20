@@ -51,7 +51,7 @@ static std::list< Skeleton::GraphNodeTypePtr> nodes( const Skeleton & a )
 //----QResult-------------------------//
 bool operator==(const QResult & a, const QResult & b)
 {
-  return ( a.tau_ == b.tau_ ) && ( a.world_to_q_list_ == b.world_to_q_list_ );
+  return ( a.stepsPerPhase_ == b.stepsPerPhase_ ) && ( a.world_to_q_list_ == b.world_to_q_list_ ) && ( a.qmask_ == b.qmask_ );
 }
 
 //----Skeleton-------------------------//
@@ -162,7 +162,6 @@ void Skeleton::saveToGraphFile( const std::string & filename ) const
   system( ss.str().c_str() );
 }
 
-
 void Skeleton::saveAll( const std::string & folder, const std::string & suffix ) const
 {
   std::stringstream namess, skenamess;
@@ -179,6 +178,7 @@ void Skeleton::copy( const Skeleton & policy )
   {
     id_ = policy.id_;
     value_ = policy.value_;
+    qr_ = policy.qr_;
     status_ = policy.status_;
     leafs_.clear();
 
