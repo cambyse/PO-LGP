@@ -157,10 +157,10 @@ void Skeleton::saveToGraphFile( const std::string & filename ) const
 }
 
 
-void Skeleton::saveAll( const std::string & suffix ) const
+void Skeleton::saveAll( const std::string & folder, const std::string & suffix ) const
 {
   std::stringstream namess, skenamess;
-  namess << "policy-" << id() << suffix;
+  namess << folder << "/" << "policy-" << id() << suffix;
   auto name = namess.str();
 
   save( name + ".po" );

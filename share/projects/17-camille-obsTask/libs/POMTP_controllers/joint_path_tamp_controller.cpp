@@ -27,7 +27,7 @@ Skeleton JointPathTAMPController::plan(  const TAMPlanningConfiguration & config
     mp_.solveAndInform( po, policy );
 
     if( policy.feasible() ) markovPolicies.push_back( policy );
-    if( config.saveInformedPolicy ) policy.saveAll( "-informed" );
+    if( config.saveInformedPolicy ) policy.saveAll( ".", "-informed" );
 
     /// TASK PLANNING
     tp_.integrate( policy );
@@ -57,7 +57,7 @@ Skeleton JointPathTAMPController::plan(  const TAMPlanningConfiguration & config
   policy = *jointPolicies.begin();
 
   /// DIPSLAY
-  if( config.saveFinalPolicy ) policy.saveAll( "-final" );
+  if( config.saveFinalPolicy ) policy.saveAll( ".", "-final" );
 
   if( config.showFinalPolicy )
   {

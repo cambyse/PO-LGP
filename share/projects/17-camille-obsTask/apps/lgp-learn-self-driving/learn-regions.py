@@ -8,6 +8,8 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_decision_regions
 
+SKELETON_HASH_HEADER = 'skeleton_hash'
+
 def plot_data(XY, figure_filepath=None):
   last_col = XY.shape[1] - 1
   X = XY[:, 0:last_col]
@@ -52,11 +54,17 @@ def print_centroids(XY):
     centroid = np.average(X_of_i, axis=0)
     print("centroid of skeleton {} is: {},{}".format(i, centroid[0], centroid[1]))
 
-def retrieve_classes(XY):
-  XZ = XY.copy()
+def index_of_skeleton_hash(header):
+  for i, h in enumerate(header) :
+    if h == SKELETON_HASH_HEADER:
+      return i
+  return None
+
+def retrieve_classes(header, xyq):
+  XZ = xyq[:, 0: index_of_skeleton_hash(header)].copy()
 
   hashToClass = {}
-  for i, hash in enumerate(XY[:, -1]):
+  for i, hash in enumerate(xyq[:, -1]):
     if not hash in hashToClass:
       hashToClass[hash]=len(hashToClass)
     XZ[i, -1] = hashToClass[hash]
@@ -95,12 +103,13 @@ def evaluate_model(clf,XY):
 
 def analyse(dataset_filepath, output_dir):
   with open(dataset_filepath) as f:
+    header = f.readline().split(";")
     data = np.loadtxt(f, delimiter=";")
 
-  XY = data[:,0:data.shape[1]]
+  xyq = data[1:,0:data.shape[1]]
 
   # separate classes
-  XZ = retrieve_classes(XY)
+  XZ = retrieve_classes(header, xyq)
   plot_data(XZ, figure_filepath=os.path.join(output_dir, "all_data.svg"))
 
   # separate data

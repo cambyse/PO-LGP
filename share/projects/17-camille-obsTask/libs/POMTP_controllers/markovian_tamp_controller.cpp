@@ -18,7 +18,7 @@ Skeleton MarkovianTAMPController::plan( const TAMPlanningConfiguration & config 
     po.setParam( "type", "markovJointPath" );
     mp_.solveAndInform( po, policy );
 
-    if( config.saveInformedPolicy ) policy.saveAll( "-informed" );
+    if( config.saveInformedPolicy ) policy.saveAll( ".", "-informed" );
 
     /// TASK PLANNING
     tp_.integrate( policy );
@@ -28,7 +28,7 @@ Skeleton MarkovianTAMPController::plan( const TAMPlanningConfiguration & config 
     policy = tp_.getPolicy();
   }
 
-  if( config.saveFinalPolicy ) policy.saveAll( "-final" );
+  if( config.saveFinalPolicy ) policy.saveAll( ".", "-final" );
 
   if( config.saveFinalPolicy )
   {

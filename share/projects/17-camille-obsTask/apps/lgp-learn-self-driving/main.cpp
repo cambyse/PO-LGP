@@ -15,6 +15,11 @@
 #include <axis_distance.h>
 
 //TODO : save skeleton (saveAll, possibility to give a full name)
+// - check q and qdot in optimization levels
+// refactor optimization levels
+// output the q vectors
+// try learn with deep network
+
 //===========================================================================
 
 void init( mp::ExtensibleKOMO * komo, int verbose )
@@ -79,34 +84,50 @@ std::vector< double > randomVector( uint dim )
   return vec;
 }
 
-void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std::string & filename, const std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > & skeletonsToStart )
+void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std::string & filename, const std::list< std::pair< std::vector< double >, Skeleton > > & deltasToSkeletons )
 {
   std::ofstream of;
   of.open( outputFolderPath + "/" + filename );
+  std::unordered_set< Skeleton, SkeletonHasher > skeletons;
 
-  for( const auto dataPair : skeletonsToStart )
+  // header
+  const auto delta = deltasToSkeletons.begin()->first;
+  for( uint i = 0; i < delta.size(); ++i )
   {
-    const auto skeleton = dataPair.first;
+    of << "d" << i << ";";
+  }
+  of << "skeleton_hash";
+  of << std::endl;
 
-    skeleton.saveAll( "-" + std::to_string( skeleton.hash() ) );
+  // data
+  for( const auto dataPair : deltasToSkeletons )
+  {
+    const auto delta = dataPair.first;
+    const auto skeleton = dataPair.second;
 
-    const auto deltas = dataPair.second;
-    for( const auto vec : deltas )
+    skeletons.insert( skeleton );
+
+    for( auto d : delta )
     {
-      for( auto d : vec )
-      {
-        of << d << ";";
-      }
-      of << skeleton.hash() << std::endl;
+      of << d << ";";
     }
+    of << skeleton.hash() << std::endl;
   }
 
   of.close();
+
+  // save all unique skeletons
+  //uint n = 0;
+  for( const auto & skeleton : skeletons )
+  {
+    skeleton.saveAll( outputFolderPath, /*"-" + std::to_string( n ) + */"-" + std::to_string( skeleton.hash() ) );
+    //n++;
+  }
 }
 
 void plan( const std::string & outputFolderPath )
 {
-  std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > skeletonsToStart;
+  std::list< std::pair< std::vector< double >, Skeleton > > deltasToSkeletons;
 
   for( uint i = 0; i < 1000; ++i )
   {
@@ -139,21 +160,11 @@ void plan( const std::string & outputFolderPath )
     //generatePngImage( "graph.gv" );
 
     // set initial parameters
-//    auto vec = mp.drawRandomVector(); // random
-//    auto vec = mp.drawRandomVector({0.745718947008547,-0.08723548758290603});//plan 0
-//    auto vec = mp.drawRandomVector({-0.7867631799485865,-0.5741730488431879});//plan 1
-//    auto vec = mp.drawRandomVector({-0.38302520754166647,0.04392461586388886});//plan 2
-//    auto vec = mp.drawRandomVector({-0.020404977034782636,-0.8433419808695655});//plan 3
-//    auto vec = mp.drawRandomVector({-0.5512255441448696,-0.2612012252334004});//plan 4
-//    auto vec = mp.drawRandomVector({0.16063258833188399,0.6229994332567289});//plan 5
-//    auto vec = mp.drawRandomVector({-0.26539484409956043,0.3638281736456812});//plan 6
-
-//    auto vec = mp.drawRandomVector({0.970007,0.035656});
-//    auto vec = mp.drawRandomVector({1,0.2});
+    auto vec = mp.drawRandomVector(); // random
 
     //auto vec = mp.drawRandomVector({0,0}); // middle // ok
     //auto vec = mp.drawRandomVector({1,1});   // middle
-    auto vec = mp.drawRandomVector({-1,-1}); // middle // ok
+    //auto vec = mp.drawRandomVector({-1,-1}); // middle // ok
     //auto vec = mp.drawRandomVector({-1,1}); // middle
     //auto vec = mp.drawRandomVector({1,-1}); // rear //ok
     //auto vec = mp.drawRandomVector({0.5,-1}); // front
@@ -163,18 +174,18 @@ void plan( const std::string & outputFolderPath )
 
     TAMPlanningConfiguration conf;
     conf.maxIterations = 1000;
-    conf.showFinalPolicy = true;
-    conf.showDurationSecs = 30;
+    //conf.showFinalPolicy = true;
+    //conf.showDurationSecs = 30;
     auto policy = controller.plan(conf);
 
-    skeletonsToStart[policy].push_back(vec);
+    deltasToSkeletons.push_back( std::make_pair( vec, policy ) );
 
     if( i && i % 100 == 0 )
     {
-      saveDataToFileveDataToFile(outputFolderPath, "result-data-" + std::to_string(i) + ".csv", skeletonsToStart);
+      saveDataToFileveDataToFile(outputFolderPath, "result-data-" + std::to_string(i) + ".csv", deltasToSkeletons);
     }
   }
-  saveDataToFileveDataToFile(outputFolderPath, "result-data.csv", skeletonsToStart);
+  saveDataToFileveDataToFile(outputFolderPath, "result-data.csv", deltasToSkeletons);
 }
 
 std::list< std::vector< double > > parseDeltas( const std::string & filepath )
