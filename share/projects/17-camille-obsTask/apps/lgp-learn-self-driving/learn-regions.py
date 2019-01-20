@@ -93,7 +93,7 @@ def evaluate_model(clf,XY):
 
   return accuracy_score(Y, Y_pred)
 
-def analyse(dataset_filepath, output_model_filepath, output_image_dir):
+def analyse(dataset_filepath, output_dir):
   with open(dataset_filepath) as f:
     data = np.loadtxt(f, delimiter=";")
 
@@ -101,7 +101,7 @@ def analyse(dataset_filepath, output_model_filepath, output_image_dir):
 
   # separate classes
   XZ = retrieve_classes(XY)
-  plot_data(XZ, figure_filepath=os.path.join(output_image_dir, "all_data.svg"))
+  plot_data(XZ, figure_filepath=os.path.join(output_dir, "all_data.svg"))
 
   # separate data
   training_XY, test_XY = separate_data_set(XZ)
@@ -109,22 +109,20 @@ def analyse(dataset_filepath, output_model_filepath, output_image_dir):
 
   # learn and plot model
   clf = learn_model(training_XY)
-  plot_boundaries(clf, training_XY, figure_filepath=os.path.join(output_image_dir, "decision_regions.svg"))
+  plot_boundaries(clf, training_XY, figure_filepath=os.path.join(output_dir, "decision_regions.svg"))
 
   # save and log results
   print("accuracy score (training set):{}".format(evaluate_model(clf, training_XY)))
   print("accuracy score (test set):{}".format(evaluate_model(clf, test_XY)))
 
-  dump(clf, output_model_filepath)
+  dump(clf, os.path.join(output_dir, "learned_regions.joblib"))
 
   plt.show()
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     dataset_filepath = sys.argv[1]
-    directory = os.path.dirname(dataset_filepath)
-    output_model_filepath = os.path.join(directory, "learned_regions.joblib")
-    output_image_dir = directory
-    analyse(dataset_filepath, output_model_filepath, output_image_dir)
+    output_dir = os.path.dirname(dataset_filepath)
+    analyse(dataset_filepath, output_dir)
 
 
