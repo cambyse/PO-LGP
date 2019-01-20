@@ -48,6 +48,12 @@ static std::list< Skeleton::GraphNodeTypePtr> nodes( const Skeleton & a )
   return nlist;
 }
 
+//----QResult-------------------------//
+bool operator==(const QResult & a, const QResult & b)
+{
+  return ( a.tau_ == b.tau_ ) && ( a.world_to_q_list_ == b.world_to_q_list_ );
+}
+
 //----Skeleton-------------------------//
 Skeleton::Skeleton()
   : status_( SKELETON )
