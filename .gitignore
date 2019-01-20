@@ -134,3 +134,6 @@ srv_gen
 *Feedback.msg
 *Goal.msg
 *Result.msg
+
+%% PYCHARM
+share/projects/17-camille-obsTask/*.xml
