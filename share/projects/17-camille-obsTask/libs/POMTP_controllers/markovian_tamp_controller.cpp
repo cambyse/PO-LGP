@@ -1,6 +1,6 @@
 #include <markovian_tamp_controller.h>
 
-Skeleton MarkovianTAMPController::plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs )
+Skeleton MarkovianTAMPController::plan( const TAMPlanningConfiguration & config )
 {
   /// LOOP
   Skeleton policy, previousPolicy;
@@ -9,7 +9,7 @@ Skeleton MarkovianTAMPController::plan( uint maxIt, bool saveInformed, bool save
 
   uint nIt = 0;
 
-  while( policy != previousPolicy && nIt != maxIt )
+  while( policy != previousPolicy && nIt != config.maxIterations )
   {
     nIt++;
 
@@ -18,7 +18,7 @@ Skeleton MarkovianTAMPController::plan( uint maxIt, bool saveInformed, bool save
     po.setParam( "type", "markovJointPath" );
     mp_.solveAndInform( po, policy );
 
-    if( saveInformed ) policy.saveAll( "-informed" );
+    if( config.saveInformedPolicy ) policy.saveAll( "-informed" );
 
     /// TASK PLANNING
     tp_.integrate( policy );
@@ -28,12 +28,12 @@ Skeleton MarkovianTAMPController::plan( uint maxIt, bool saveInformed, bool save
     policy = tp_.getPolicy();
   }
 
-  if( saveFinal ) policy.saveAll( "-final" );
+  if( config.saveFinalPolicy ) policy.saveAll( "-final" );
 
-  if( show )
+  if( config.saveFinalPolicy )
   {
     mp_.display( policy, 3000 );
-    mlr::wait( secs, true );
+    mlr::wait( config.showDurationSecs, true );
   }
 
   return policy;

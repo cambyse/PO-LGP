@@ -31,6 +31,7 @@ public:
   void registerInit( const InitGrounder & grounder );
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
 
+  void setSecsPerPhase( double s ) { secPerPhase_ = s; }
   void setNSteps( uint n ) { microSteps_ = n; }
   void setMinMarkovianCost( double m ) { minMarkovianCost_ = m; }
 
@@ -68,6 +69,7 @@ private:
   std::map< uint, arr > poseConstraints_; // node id -> constraints for each world
 
   // markovian path
+  std::map< uint, mlr::Array< mlr::KinematicWorld > > effMarkovianPathKinematics_;
   std::map< uint, double > markovianPathCosts_; // node id -> averaged cost
   std::map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
 
@@ -77,8 +79,6 @@ private:
   std::map< PolicyNodePtr, mlr::Array< arr > > pathCostsPerPhase_;
 
   // joint path
-  std::map< PolicyNodePtr, arr > jointPathCosts_;
-  std::map< PolicyNodePtr, arr > jointPathConstraints_;
   std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
   std::map< PolicyNodePtr, mlr::Array< arr > > jointPathCostsPerPhase_;
   mlr::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
@@ -90,10 +90,10 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
-  double maxConstraint_      = 1000*0.5;
+  double maxConstraint_      = 10 * 0.5;
 
-  double phase_start_offset_ = 0.5; // the first task should be grounded starting from this time
-  double phase_end_offset_   = 0.5;
+  uint phase_start_offset_ = 1; // the first task should be grounded starting from this time
+  uint phase_end_offset_   = 1;
 
   double minMarkovianCost_   = 0;
 

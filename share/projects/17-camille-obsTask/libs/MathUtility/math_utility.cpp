@@ -19,7 +19,7 @@ double norm2( const arr & x )
   return sqrt( ( ( ~ x ) * x )( 0 ) );
 }
 
-arr Jnorm( const arr & x )
+arr Jnorm2( const arr & x )
 {
   arr J( 1, x.N );
 
@@ -57,7 +57,7 @@ arr normalizedX( const arr & x, const arr & Jx,  arr & Jx1 )
 {
   double normX = norm2( x );
   arr x1 = x / normX;
-  arr JnormX = Jnorm( x );
+  arr JnormX = Jnorm2( x );
   Jx1 = ( Jx * normX - x * JnormX * Jx ) / ( normX * normX ); // jacobian of u normalized
 
   return x1;

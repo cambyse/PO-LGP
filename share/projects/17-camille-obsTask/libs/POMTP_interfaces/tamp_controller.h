@@ -17,6 +17,15 @@
 #include <task_planner.h>
 #include <motion_planner.h>
 
+struct TAMPlanningConfiguration
+{
+  uint maxIterations = 0;
+  bool saveInformedPolicy = false;
+  bool saveFinalPolicy = false;
+  bool showFinalPolicy = false;
+  uint showDurationSecs = 0;
+};
+
 class TAMPController
 {
 public:
@@ -27,7 +36,7 @@ public:
 
   }
 
-  virtual Skeleton plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs = 0 ) = 0;
+  virtual Skeleton plan( const TAMPlanningConfiguration & ) = 0;
 
 protected:
   TaskPlanner & tp_;

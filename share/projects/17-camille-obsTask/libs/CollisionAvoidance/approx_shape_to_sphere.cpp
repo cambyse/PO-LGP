@@ -47,32 +47,32 @@ void ApproxShapeToSphere::phiSphere( arr& y, arr& J, const mlr::KinematicWorld& 
   G.kinematicsPos(posB, JposB, b);//, brel);
 
   double d   = norm2( posA - posB );
-  arr JnormD = Jnorm( posA - posB );
+  arr JnormD = Jnorm2( posA - posB );
 
   const double w = 10;
   y( 0 ) = w * ( - d + radius_ );
   J = w * ( - JnormD * ( JposA - JposB ) );
 }
 
-void ApproxShapeToSphere::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
-{
-  mlr::Frame *a = G.frames(p->a);
-  mlr::Frame *b = G.frames(p->b);
+//void ApproxShapeToSphere::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
+//{
+//  mlr::Frame *a = G.frames(p->a);
+//  mlr::Frame *b = G.frames(p->b);
 
-  auto arel=a->X.rot/(p->posA-a->X.pos);
-  auto brel=b->X.rot/(p->posB-b->X.pos);
+//  auto arel=a->X.rot/(p->posA-a->X.pos);
+//  auto brel=b->X.rot/(p->posB-b->X.pos);
 
-  arr posA;
-  arr posB;
-  arr JposA;
-  arr JposB;
-  G.kinematicsPos(posA, JposA, a);//, arel);
-  G.kinematicsPos(posB, JposB, b);//, brel);
+//  arr posA;
+//  arr posB;
+//  arr JposA;
+//  arr JposB;
+//  G.kinematicsPos(posA, JposA, a);//, arel);
+//  G.kinematicsPos(posB, JposB, b);//, brel);
 
-  double d   = norm2( posA - posB );
-  arr JnormD = Jnorm( posA - posB );
+//  double d   = norm2( posA - posB );
+//  arr JnormD = Jnorm( posA - posB );
 
-  const double w = 10;
-  y( 0 ) = w * ( - d + radius_ );
-  J = w * ( - JnormD * ( JposA - JposB ) );
-}
+//  const double w = 10;
+//  y( 0 ) = w * ( - d + radius_ );
+//  J = w * ( - JnormD * ( JposA - JposB ) );
+//}

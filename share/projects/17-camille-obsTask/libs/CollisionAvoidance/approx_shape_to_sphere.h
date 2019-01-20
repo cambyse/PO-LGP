@@ -41,7 +41,7 @@ struct ApproxShapeToSphere:TaskMap
 
   void phiSphere( arr& y, arr& J, const mlr::KinematicWorld& G );
 
-  void phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
+  //void phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
 
   uint dim_phi(const mlr::KinematicWorld& G)
   {

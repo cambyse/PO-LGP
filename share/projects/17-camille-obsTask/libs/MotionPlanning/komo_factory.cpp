@@ -195,7 +195,7 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
   {
     auto x_t   = xx.row( t );
     auto x_t_1 = xx.row( t + 1 );
-    auto v = x_t_1 - x_t;
+    auto v = ( x_t_1 - x_t ) / tau;
 
     velocities.setMatrixBlock( v, t, 0 );
   }

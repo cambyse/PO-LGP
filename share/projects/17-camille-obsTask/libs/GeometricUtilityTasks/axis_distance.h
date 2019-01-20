@@ -37,12 +37,19 @@ struct AxisDistance:TaskMap{
     MAX
   };
 
-  AxisDistance( const std::string & object_1, const std::string & object_2, double bound, const enum Axis & axis, const enum BoundType & boundType, const double k = 1.0 )
+  enum DistanceType
+  {
+    ABS = 0,
+    SIGNED
+  };
+
+  AxisDistance( const std::string & object_1, const std::string & object_2, double bound, const enum Axis & axis, const enum BoundType & boundType, const enum DistanceType & distType, const double k = 1.0 )
     : object_1_( object_1 )
     , object_2_( object_2 )
     , bound_( bound )
     , boundType_( boundType )
     , id_( axis == X ? 0 : 1 )
+    , distanceType_( distType )
     , k_( k )
   {
 
@@ -63,17 +70,28 @@ struct AxisDistance:TaskMap{
     arr tmp_y = zeros( dim_ );
     arr tmp_J = zeros( dim_, posJObject_1.dim(1) );
 
-    const double diff = posObject_1( id_ ) - posObject_2( id_ );
-    const double dist = fabs( diff );
+    if( distanceType_ == ABS )
+    {
+      const double diff = posObject_1( id_ ) - posObject_2( id_ );
+      const double dist = fabs( diff );
 
-    const arr Jdiff =  posJObject_1 - posJObject_2;
-    const arr Jdist = ( diff > 0 ? posJObject_1.row( id_ ) - posJObject_2.row( id_ ) :
-                                   posJObject_2.row( id_ ) - posJObject_1.row( id_ ) );
+      //const arr Jdiff =  posJObject_1 - posJObject_2;
+      const arr Jdist = ( diff > 0 ? posJObject_1.row( id_ ) - posJObject_2.row( id_ ) :
+                                     posJObject_2.row( id_ ) - posJObject_1.row( id_ ) );
 
-    tmp_y( 0 ) = - k_ * sign * ( dist - bound_ );
+      tmp_y( 0 ) = - k_ * sign * ( dist - bound_ );
 
-    tmp_J.setMatrixBlock( - k_ * sign * Jdist, 0 , 0 );    // jacobian
+      tmp_J.setMatrixBlock( - k_ * sign * Jdist, 0 , 0 );    // jacobian
+    }
+    else
+    {
+      const double diff = posObject_1( id_ ) - posObject_2( id_ );
+      const arr Jdiff =  posJObject_1.row( id_ ) - posJObject_2.row( id_ );
 
+      tmp_y( 0 ) = - k_ * sign * ( diff - bound_ );
+
+      tmp_J.setMatrixBlock( - k_ * sign * Jdiff, 0 , 0 );    // jacobian
+    }
     // commit results
     y = tmp_y;
     if(&J) J = tmp_J;
@@ -95,6 +113,7 @@ private:
   std::string object_2_;
   const double bound_;
   const BoundType boundType_;
+  const DistanceType distanceType_;
   const double k_;
   const std::size_t id_;
 };

@@ -45,16 +45,28 @@ def print_centroids(XY):
   Y = XY[:, last_col].astype(int)
   number_of_skeletons = np.max(Y)+1
 
-  #centroids = np.zeros(shape=(number_of_skeletons, 2))
+  centroids = np.zeros(shape=(number_of_skeletons, 2))
 
   for i in range(np.max(Y)+1):
     X_of_i = XY[XY[:,last_col] == i][:, 0:2]
     centroid = np.average(X_of_i, axis=0)
     print("centroid of skeleton {} is: {},{}".format(i, centroid[0], centroid[1]))
 
+def retrieve_classes(XY):
+  XZ = XY.copy()
+
+  hashToClass = {}
+  for i, hash in enumerate(XY[:, -1]):
+    if not hash in hashToClass:
+      hashToClass[hash]=len(hashToClass)
+    XZ[i, -1] = hashToClass[hash]
+
+  return XZ
+
 def separate_data_set(XY):
   training_XY = []
   test_XY = []
+
   for i, xy in enumerate(XY):
     if i % 2 == 0:
       training_XY.append(xy)
@@ -87,11 +99,13 @@ def analyse(dataset_filepath, output_model_filepath, output_image_dir):
 
   XY = data[:,0:data.shape[1]]
 
-  plot_data(XY, figure_filepath=os.path.join(output_image_dir, "all_data.svg"))
+  # separate classes
+  XZ = retrieve_classes(XY)
+  plot_data(XZ, figure_filepath=os.path.join(output_image_dir, "all_data.svg"))
 
   # separate data
-  training_XY, test_XY = separate_data_set(XY)
-  print_centroids(training_XY)
+  training_XY, test_XY = separate_data_set(XZ)
+  print_centroids(XZ)
 
   # learn and plot model
   clf = learn_model(training_XY)
@@ -104,7 +118,6 @@ def analyse(dataset_filepath, output_model_filepath, output_image_dir):
   dump(clf, output_model_filepath)
 
   plt.show()
-
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:

@@ -274,7 +274,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       auto node = fifo.back();
       fifo.pop_back();
 
-      auto phase = node->depth() * 1.0;
+      uint phase = node->depth();
 
       double cost = 0;
 
@@ -424,6 +424,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
 
       komo->setTiming( 1., 2, 5., 1/*, true*/ );
       //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
+      //komo->setSquaredQVelocities();
       komo->setSquaredQVelocities();
       komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
@@ -505,23 +506,29 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
 
   if( markovianPathCosts_.find( node->data().decisionGraphNodeId ) == markovianPathCosts_.end() )
   {
+    const auto N = node->data().beliefState.size();
+    effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ] = mlr::Array< mlr::KinematicWorld >( N );
+
     markovianPathCosts_      [ node->data().decisionGraphNodeId ] = 0;
     markovianPathConstraints_[ node->data().decisionGraphNodeId ] = 0;
-
-    const auto N = node->data().beliefState.size();
 
     for( auto w = 0; w < N; ++w )
     {
       if( node->data().beliefState[ w ] > eps() )
       {
-        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
+        if(!node->isRoot()) CHECK( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId ) != effMarkovianPathKinematics_.end(),"no parent effective kinematic!" );
+
+        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
+
+        CHECK( kin.q.size() > 0, "wrong start configuration!");
+
         // create komo
         auto komo = komoFactory_.createKomo();
 
         // set-up komo
         komo->setModel( kin, true, false, true, false, false );
 
-        komo->setTiming( /*phase_start_offset_ + */1.0 + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+        komo->setTiming( 1.0, microSteps_, secPerPhase_, 2 );
 
         komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
         komo->setFixSwitchedObjects();
@@ -539,14 +546,13 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
           cout << "KOMO FAILED: " << msg <<endl;
         }
 
-//        if( node->id() == 2 )
-//        {
-////          komo->displayTrajectory();
-////          komo->saveTrajectory( std::to_string( node->id() ) );
-////          komo->plotVelocity( std::to_string( node->id() ) );
-
-//          //mlr::wait();
-//        }
+        if( node->id() == 1 )
+        {          
+//          komo->displayTrajectory();
+//////      komo->saveTrajectory( std::to_string( node->id() ) );
+//            komo->plotVelocity( std::to_string( node->id() ) );
+////          //mlr::wait();
+        }
 
         Graph result = komo->getReport();
 
@@ -561,6 +567,18 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         {
           feasible = false;
         }
+
+        // update effective kinematic
+        effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ]( w ) = *komo->configurations.last();
+
+        // update switch
+        for( mlr::KinematicSwitch * sw: komo->switches )
+        {
+          //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
+          if( sw->timeOfApplication>=2 ) sw->apply( effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ]( w ) );
+        }
+        //effKinematics_[ node ]( w ).topSort();
+        effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ]( w ).getJointState();
 
         // free
         freeKomo( komo );
@@ -588,10 +606,6 @@ void KOMOPlanner::clearLastNonMarkovianResults()
   pathKinFrames_.clear(); // maps each leaf to its path
 
   // joint path
-  jointPathCosts_.clear();
-  jointPathConstraints_.clear();
-
-  // path
   for( auto pair : jointPathKinFrames_ )
   {
     pair.second.clear();
@@ -642,7 +656,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
       //komo->setSquaredQVelocities();
-      komo->setSquaredQAccelerations();
+      komo->setSquaredQAccelerations();//phase_start_offset_);
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
       //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
 
@@ -670,9 +684,8 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 //        //      komo->plotTrajectory();
 //        komo->displayTrajectory( 0.02, true );
 //        komo->saveTrajectory( "-j-" + std::to_string( w ) );
-//        komo->plotVelocity( "-j-"   + std::to_string( w ) );
+//          komo->plotVelocity();// "-j-"   + std::to_string( w ) );
 //      }
-      //komo->getReport(true);
 
       auto costs = komo->getCostsPerPhase();
       Graph result = komo->getReport();
@@ -710,8 +723,6 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
   const auto N = leaf->data().beliefState.size();
 
   jointPathKinFrames_  [ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( N );
-  jointPathCosts_      [ leaf ] = arr( N );
-  jointPathConstraints_[ leaf ] = arr( N );
   jointPathCostsPerPhase_[ leaf ] = mlr::Array< arr >( N );
 
   //-- collect 'path nodes'
@@ -732,7 +743,6 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
       komo->setFixSwitchedObjects();
-      //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();
 
       komo->groundInit();
@@ -816,8 +826,6 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       double constraints = result.get<double>({"total","constraints"});
 
       // store costs
-      jointPathCosts_      [ leaf ]( w )   = cost;
-      jointPathConstraints_[ leaf ]( w )   = constraints;
       jointPathCostsPerPhase_[ leaf ]( w ) = costs;
 
       // store result

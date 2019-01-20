@@ -12,34 +12,31 @@
 #include <markovian_tamp_controller.h>
 #include <joint_path_tamp_controller.h>
 #include <axis_bound.h>
+#include <axis_distance.h>
 
-
+//TODO : save skeleton (saveAll, possibility to give a full name)
 //===========================================================================
 
 void init( mp::ExtensibleKOMO * komo, int verbose )
 {
   // ego car
-  arr ego_desired_speed{ 0.04, 0, 0 };
-  komo->setVelocity( 0.0, -1.0, "car_ego", NULL, OT_sumOfSqr, ego_desired_speed );
+  arr ego_start_speed{ 1.0, 0, 0 }; // approx 50 kmh
+  komo->setVelocity( 0.0, 0.5, "car_ego", NULL, OT_sumOfSqr, ego_start_speed );
   komo->setTask( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
 
   // car speeds
-  arr desired_speed{ 0.03, 0, 0 };
-  komo->setVelocity( 0.0, -1, "car_1", NULL, OT_sumOfSqr, desired_speed );
-  komo->setVelocity( 0.0, -1, "car_2", NULL, OT_sumOfSqr, desired_speed );
-  komo->setVelocity( 0.0, -1, "car_3", NULL, OT_sumOfSqr, desired_speed );
-  komo->setVelocity( 0.0, -1, "car_4", NULL, OT_sumOfSqr, desired_speed );
-  komo->setVelocity( 0.0, -1, "car_5", NULL, OT_sumOfSqr, desired_speed );
-  komo->setVelocity( 0.0, -1, "car_6", NULL, OT_sumOfSqr, desired_speed );
-  komo->setVelocity( 0.0, -1, "car_7", NULL, OT_sumOfSqr, desired_speed );
+  arr desired_speed{ 1.0, 0, 0 };
+  komo->setVelocity( 0.0, -1, "car_1", NULL, OT_eq, desired_speed );
+  komo->setVelocity( 0.0, -1, "car_2", NULL, OT_eq, desired_speed );
+  komo->setVelocity( 0.0, -1, "car_3", NULL, OT_eq, desired_speed );
+  komo->setVelocity( 0.0, -1, "car_4", NULL, OT_eq, desired_speed );
+  komo->setVelocity( 0.0, -1, "car_5", NULL, OT_eq, desired_speed );
 
-  const auto radius = 0.35;
-  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_1", "car_2", radius ), OT_ineq );
-  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_2", "car_3", radius ), OT_ineq );
-  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_3", "car_4", radius ), OT_ineq );
-  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
-  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_5", "car_6", radius ), OT_ineq );
-  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_6", "car_7", radius ), OT_ineq );
+//  const auto radius = 0.35;
+//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_1", "car_2", radius ), OT_ineq );
+//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_2", "car_3", radius ), OT_ineq );
+//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_3", "car_4", radius ), OT_ineq );
+//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
 }
 
 void groundContinue( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
@@ -51,8 +48,20 @@ void groundMergeBetween( double phase, const std::vector< std::string >& facts, 
   auto car_before = facts[0];
   auto car_next = facts[1];
 
-  komo->setPosition( phase+1, -1, "car_ego", car_next.c_str(), OT_sumOfSqr, {-0.7, 0, 0} );
-  komo->setPosition( phase+1, -1, car_before.c_str(), "car_ego", OT_sumOfSqr, {-0.7, 0, 0} );
+  komo->setTask( phase+0.8, -1, new AxisDistance( std::string("car_ego"),  std::string("lane_2"), 0.05, AxisDistance::Y, AxisDistance::MAX, AxisDistance::ABS ), OT_ineq );
+
+  komo->setTask( phase, -1, new AxisDistance( std::string("car_ego"), car_next, -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
+  komo->setTask( phase, -1, new AxisDistance( car_before, std::string("car_ego"), -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
+
+  arr ego_desired_speed{ 1.0, 0, 0 }; // approx 50 kmh
+  komo->setVelocity( phase+0.8, -1, "car_ego", NULL, OT_sumOfSqr, ego_desired_speed );
+
+//  komo->setPosition( phase+0.8, -1, "car_ego", car_next.c_str(), OT_sumOfSqr, {-2.0, 0, 0} );
+//  komo->setPosition( phase+0.8, -1, car_before.c_str(), "car_ego", OT_sumOfSqr, {-2.0, 0, 0} );
+
+//  const auto radius = 0.1;
+//  komo->setTask( phase, -1, new ApproxShapeToSphere( komo->world, "car_ego", car_next.c_str(),   radius ), OT_ineq );
+//  komo->setTask( phase, -1, new ApproxShapeToSphere( komo->world, car_before.c_str(), "car_ego", radius ), OT_ineq );
 
   //setKeepDistanceTask( phase+1, -1, komo, car_successors );
   //std::cout << "merge between " << car_before << " and " << car_next << std::endl;
@@ -70,17 +79,16 @@ std::vector< double > randomVector( uint dim )
   return vec;
 }
 
-void saveDataToFileveDataToFile( const std::string filename, const std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > & skeletonsToStart )
+void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std::string & filename, const std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > & skeletonsToStart )
 {
   std::ofstream of;
-  of.open(filename);
+  of.open( outputFolderPath + "/" + filename );
 
-  uint skeId = 0;
   for( const auto dataPair : skeletonsToStart )
   {
     const auto skeleton = dataPair.first;
 
-    skeleton.saveAll( "-" + std::to_string(skeId) );
+    skeleton.saveAll( "-" + std::to_string( skeleton.hash() ) );
 
     const auto deltas = dataPair.second;
     for( const auto vec : deltas )
@@ -89,19 +97,18 @@ void saveDataToFileveDataToFile( const std::string filename, const std::unordere
       {
         of << d << ";";
       }
-      of << skeId << std::endl;
+      of << skeleton.hash() << std::endl;
     }
-    skeId++;
   }
 
   of.close();
 }
 
-void plan()
+void plan( const std::string & outputFolderPath )
 {
   std::unordered_map< Skeleton, std::list< std::vector< double > >, SkeletonHasher > skeletonsToStart;
 
-  for( uint i = 0; i < 10000; ++i )
+  for( uint i = 0; i < 1000; ++i )
   {
     std::cout << "*********************" << std::endl;
     std::cout << "*******"<< i << "******" << std::endl;
@@ -116,6 +123,7 @@ void plan()
 
     // set planner specific parameters
     mp.setNSteps( 20 );
+    mp.setSecsPerPhase( 1.0 );
 
     // register symbols
     mp.registerInit( init );
@@ -124,14 +132,14 @@ void plan()
 
     /// DECISION GRAPH
     tp.setR0( -0.01 );  // balance exploration
-    tp.setMaxDepth( 5 );
+    tp.setMaxDepth( 7 );
     tp.buildGraph();
 
     //tp.saveGraphToFile( "graph.gv" );
     //generatePngImage( "graph.gv" );
 
     // set initial parameters
-    auto vec = mp.drawRandomVector(); // random
+//    auto vec = mp.drawRandomVector(); // random
 //    auto vec = mp.drawRandomVector({0.745718947008547,-0.08723548758290603});//plan 0
 //    auto vec = mp.drawRandomVector({-0.7867631799485865,-0.5741730488431879});//plan 1
 //    auto vec = mp.drawRandomVector({-0.38302520754166647,0.04392461586388886});//plan 2
@@ -141,21 +149,32 @@ void plan()
 //    auto vec = mp.drawRandomVector({-0.26539484409956043,0.3638281736456812});//plan 6
 
 //    auto vec = mp.drawRandomVector({0.970007,0.035656});
-//    auto vec = mp.drawRandomVector({0.970007,-0.535656});
+//    auto vec = mp.drawRandomVector({1,0.2});
+
+    //auto vec = mp.drawRandomVector({0,0}); // middle // ok
+    //auto vec = mp.drawRandomVector({1,1});   // middle
+    auto vec = mp.drawRandomVector({-1,-1}); // middle // ok
+    //auto vec = mp.drawRandomVector({-1,1}); // middle
+    //auto vec = mp.drawRandomVector({1,-1}); // rear //ok
+    //auto vec = mp.drawRandomVector({0.5,-1}); // front
 
     //MarkovianTAMPController controller( tp, mp );
     JointPathTAMPController controller( tp, mp );
 
-    auto policy = controller.plan(1000, false, true, true, 30);
+    TAMPlanningConfiguration conf;
+    conf.maxIterations = 1000;
+    conf.showFinalPolicy = true;
+    conf.showDurationSecs = 30;
+    auto policy = controller.plan(conf);
 
     skeletonsToStart[policy].push_back(vec);
 
     if( i && i % 100 == 0 )
     {
-      saveDataToFileveDataToFile("result-data-" + std::to_string(i) + ".csv", skeletonsToStart);
+      saveDataToFileveDataToFile(outputFolderPath, "result-data-" + std::to_string(i) + ".csv", skeletonsToStart);
     }
   }
-  saveDataToFileveDataToFile("result-data.csv", skeletonsToStart);
+  saveDataToFileveDataToFile(outputFolderPath, "result-data.csv", skeletonsToStart);
 }
 
 std::list< std::vector< double > > parseDeltas( const std::string & filepath )
@@ -302,7 +321,13 @@ int main(int argc,char **argv)
 {
   mlr::initCmdLine(argc,argv);
 
-  plan();
+  std::string outputFolderPath;
+  if( argc <= 1 )
+    outputFolderPath = std::string( argv[0] );
+  else
+    outputFolderPath = std::string( argv[1] );
+
+  plan( outputFolderPath );
   //evaluate_all_skeletons("joint_car_kin/100/result-data-100.csv");
 
   return 0;

@@ -91,7 +91,7 @@ public:
   std::list< std::weak_ptr< GraphNodeType > >  leafs() const { return leafs_; }
   double value() const { return value_; }
   enum StatusType status() const { return status_; }
-  bool feasible()        const { return value_ > - std::numeric_limits< double >::infinity(); }
+  bool feasible()        const { return value_ > std::numeric_limits< double >::lowest(); }
 
   uint N() const { return root_->data().beliefState.size(); }
 

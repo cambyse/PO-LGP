@@ -2,7 +2,7 @@
 
 #include <set>
 
-Skeleton JointPathTAMPController::plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs )
+Skeleton JointPathTAMPController::plan(  const TAMPlanningConfiguration & config )
 {
   auto skeletonComp = []( const Skeleton & a, const Skeleton & b ) { return  a.value() > b.value(); };
 
@@ -15,22 +15,24 @@ Skeleton JointPathTAMPController::plan( uint maxIt, bool saveInformed, bool save
 
   uint nIt = 0;
 
-  while( policy != previousPolicy && nIt != maxIt )
+  while( policy != previousPolicy && nIt != config.maxIterations )
   {
     nIt++;
+
+    //policy.load("policy-2-informed.po");
 
     /// MOTION PLANNING
     auto po     = MotionPlanningParameters( policy.id() );
     po.setParam( "type", "markovJointPath" );
     mp_.solveAndInform( po, policy );
 
-    if( saveInformed ) policy.saveAll( "-informed" );
+    if( policy.feasible() ) markovPolicies.push_back( policy );
+    if( config.saveInformedPolicy ) policy.saveAll( "-informed" );
 
     /// TASK PLANNING
     tp_.integrate( policy );
     tp_.solve();
 
-    markovPolicies.push_back( policy );
     previousPolicy = policy;
     policy = tp_.getPolicy();
   }
@@ -55,12 +57,12 @@ Skeleton JointPathTAMPController::plan( uint maxIt, bool saveInformed, bool save
   policy = *jointPolicies.begin();
 
   /// DIPSLAY
-  if( saveFinal ) policy.saveAll( "-final" );
+  if( config.saveFinalPolicy ) policy.saveAll( "-final" );
 
-  if( show )
+  if( config.showFinalPolicy )
   {
     mp_.display( policy, 3000 );
-    mlr::wait( secs, true );
+    mlr::wait( config.showDurationSecs, true );
   }
 
   return policy;

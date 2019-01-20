@@ -152,7 +152,7 @@ void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
   arr u = objectPosition_ - headPosition;
   double normU = norm2( u );
   arr Ju = - headJPosition;
-  arr JnormU = Jnorm( u );  // get Jacobian of the norm operator
+  arr JnormU = Jnorm2( u );  // get Jacobian of the norm operator
   arr u1 = u / normU;
   arr Ju1 = ( Ju * normU - u * JnormU * Ju ) / ( normU * normU ); // jacobian of u normalized
 
@@ -238,7 +238,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   double normW = norm2( w );
   //std::cout << "normW:" << normW << std::endl;
   arr w1 = w * 1. / normW;
-  arr JnormW = Jnorm( w );
+  arr JnormW = Jnorm2( w );
 
   arr Jw = aimJPosition - pivotJPosition;
   arr Jw1 = ( Jw * normW - w * JnormW * Jw ) / ( normW * normW );
@@ -251,7 +251,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   arr u = aimPosition - headPosition;
   double normU = norm2( u );
   arr Ju = aimJPosition - headJPosition;
-  arr JnormU = Jnorm( u );  // get Jacobian of the norm operator
+  arr JnormU = Jnorm2( u );  // get Jacobian of the norm operator
   arr u1 = u / normU;
   arr Ju1 = ( Ju * normU - u * JnormU * Ju ) / ( normU * normU ); // jacobian of u normalized
   //std::cout << "u1:" << u1 << std::endl;
@@ -263,7 +263,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
 
   G.kinematicsVec( v, Jv, head, aimingDirBody ); // get function to minimize and its jacobian in state G
   double normV = norm2( v );
-  arr JnormV = Jnorm( v );  // get Jacobian of the norm operator
+  arr JnormV = Jnorm2( v );  // get Jacobian of the norm operator
   arr v1 = v / normV;
   arr Jv1 = ( Jv * normV - v * JnormV * Jv ) / ( normV * normV ); // jacobian of u normalized
 

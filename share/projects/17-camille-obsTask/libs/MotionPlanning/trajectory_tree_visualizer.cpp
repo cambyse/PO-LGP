@@ -56,9 +56,6 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
 
         views_[ index ]->setConfigurations( configurations );
 
-        //views_[ index ]->copy.gl().camera.setPosition(0., 0., 20);
-        //views_[ index ]->copy.gl().camera.focus(0, 0, 0);
-
 //            setHeightAngle(12.);
 //            setPosition(10., -15., 8.);
 //          //  setPosition(10., -4., 10.);

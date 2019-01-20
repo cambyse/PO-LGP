@@ -20,7 +20,7 @@ using namespace std;
 
 double norm2( const arr & x );
 
-arr Jnorm( const arr & x );
+arr Jnorm2( const arr & x );
 
 double dot( const arr & a, const arr & b );
 
