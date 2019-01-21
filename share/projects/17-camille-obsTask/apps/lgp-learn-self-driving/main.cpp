@@ -219,7 +219,7 @@ void plan( const std::string & outputFolderPath )
 
     deltasToSkeletons.push_back( std::make_pair( vec, policy ) );
 
-    //if( i && i % 100 == 0 )
+    if( i && i % 100 == 0 )
     {
       saveDataToFileveDataToFile(outputFolderPath, "result-data-" + std::to_string(i) + ".csv", deltasToSkeletons);
     }

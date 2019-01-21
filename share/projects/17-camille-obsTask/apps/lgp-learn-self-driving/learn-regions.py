@@ -35,7 +35,7 @@ def extract_header(f):
   print("qmask:{}".format(qmask))
   print("steps_per_phase:{}".format(steps_per_phase))
   print("table_header:{}".format(table_header))
-  
+
   return n_worlds, qmask, steps_per_phase,table_header
 
 def plot_data(XY, figure_filepath=None):
@@ -92,7 +92,7 @@ def retrieve_classes(header, xyq):
   XZ = xyq[:, 0: index_of_skeleton_hash(header)+1].copy()
 
   hashToClass = {}
-  for i, hash in enumerate(xyq[:, -1]):
+  for i, hash in enumerate(xyq[:, index_of_skeleton_hash(header)]):
     if not hash in hashToClass:
       hashToClass[hash]=len(hashToClass)
     XZ[i, -1] = hashToClass[hash]
