@@ -13,11 +13,15 @@ SKELETON_HASH_HEADER = 'skeleton_hash'
 def extract_data(f):
   qs_list = []
   max_width = 0
+
   for line in f.readlines():
     qs = np.fromstring(line, sep=";")
-    qs_list.append(qs)
-    max_width = max(max_width, qs.shape[0])
+    if len(qs) > 0:
+      qs_list.append(qs)
+      max_width = max(max_width, qs.shape[0])
+
   data = np.full([len(qs_list), max_width], np.nan)  # np.loadtxt(f, delimiter=";")
+
   for i, qs in enumerate(qs_list):
     data[i, 0:len(qs)] = qs
   return data
@@ -89,10 +93,11 @@ def index_of_skeleton_hash(header):
   return None
 
 def retrieve_classes(header, xyq):
-  XZ = xyq[:, 0: index_of_skeleton_hash(header)+1].copy()
+  skeleton_column_index = index_of_skeleton_hash(header)
+  XZ = xyq[:, 0: skeleton_column_index+1].copy()
 
   hashToClass = {}
-  for i, hash in enumerate(xyq[:, index_of_skeleton_hash(header)]):
+  for i, hash in enumerate(xyq[:, skeleton_column_index]):
     if not hash in hashToClass:
       hashToClass[hash]=len(hashToClass)
     XZ[i, -1] = hashToClass[hash]
@@ -138,7 +143,6 @@ def analyse(dataset_filepath, output_dir):
 
   # separate classes
   XZ = retrieve_classes(table_header, xyq)
-  print("XZ:{}".format(XZ))
 
   plot_data(XZ, figure_filepath=os.path.join(output_dir, "all_data.svg"))
 
