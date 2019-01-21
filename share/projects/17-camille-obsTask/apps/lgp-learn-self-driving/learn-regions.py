@@ -102,6 +102,9 @@ def retrieve_classes(header, xyq):
       hashToClass[hash]=len(hashToClass)
     XZ[i, -1] = hashToClass[hash]
 
+  for hash, id in hashToClass.items():
+    print("skeleton: {} <-> {}".format(id, int(hash)))
+
   return XZ
 
 def separate_data_set(XY):

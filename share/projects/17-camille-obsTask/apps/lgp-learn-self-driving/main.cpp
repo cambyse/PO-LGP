@@ -25,7 +25,7 @@
 void init( mp::ExtensibleKOMO * komo, int verbose )
 {
   // ego car
-  arr ego_start_speed{ 1.0, 0, 0 }; // approx 50 kmh
+  arr ego_start_speed{ 1.0, 0, 0 }; // 10 m/s
   komo->setVelocity( 0.0, 0.5, "car_ego", NULL, OT_sumOfSqr, ego_start_speed );
   komo->setTask( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
 
@@ -213,8 +213,10 @@ void plan( const std::string & outputFolderPath )
 
     TAMPlanningConfiguration conf;
     conf.maxIterations = 1000;
-    //conf.showFinalPolicy = true;
-    //conf.showDurationSecs = 30;
+    conf.showFinalPolicy = true;
+    conf.showDurationSecs = 30;
+    conf.saveFinalPolicy = true;
+    conf.saveInformedPolicy = true;
     auto policy = controller.plan(conf);
 
     deltasToSkeletons.push_back( std::make_pair( vec, policy ) );

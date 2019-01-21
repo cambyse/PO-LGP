@@ -348,7 +348,7 @@ void KOMOPlanner::display( const Skeleton & policy, double sec )
   // display
   if( sec > 0 )
   {
-    TrajectoryTreeVisualizer viz( frames, "policy" );
+    TrajectoryTreeVisualizer viz( frames, "policy", microSteps_ * secPerPhase_ );
 
     mlr::wait( sec, true );
   }

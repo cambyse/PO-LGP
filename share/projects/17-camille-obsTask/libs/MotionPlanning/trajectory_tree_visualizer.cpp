@@ -17,7 +17,8 @@
 namespace mp
 {
 
-TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name )
+TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name, uint stepsPerSecs )
+  : stepsPerSecs_( stepsPerSecs )
 {
   // get number of views
   uint n = 0;
@@ -45,7 +46,7 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
       {
         std::string windowName = name + std::string( "-world-" ) + std::to_string( w ) + " - " + std::to_string( index ) ;
 
-        views_[ index ] = std::make_shared< OrsPathViewer >( windowName.c_str(),  0.05, -0 ); //0.05
+        views_[ index ] = std::make_shared< OrsPathViewer >( windowName.c_str(),  1.0 / stepsPerSecs_, -0 ); //0.05
 
         mlr::Array< mlr::KinematicWorld * > configurations( traj.N );
 

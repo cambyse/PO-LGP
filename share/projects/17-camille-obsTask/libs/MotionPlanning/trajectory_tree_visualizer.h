@@ -22,10 +22,11 @@ namespace mp
 class TrajectoryTreeVisualizer
 {
 public:           // for each terminal node, for each possible world, each frame
-  TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name );
+  TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name, uint stepsPerSecs );
 
 private:
   std::vector< std::shared_ptr< OrsPathViewer > > views_;
+  uint stepsPerSecs_;
 };
 
 }

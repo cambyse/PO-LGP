@@ -103,7 +103,7 @@ private:
 
   double minMarkovianCost_   = 0;
 
-  uint microSteps_     = 20;
+  uint microSteps_     = 20; // per phase
 };
 
 void freeKomo( ExtensibleKOMO::ptr komo );
