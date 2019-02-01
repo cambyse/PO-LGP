@@ -1,3 +1,5 @@
+import numpy as np
+
 # from itertools import tee
 #
 # def pairwise(iterable):
@@ -20,3 +22,29 @@ class TaskMap:
 
     def phi(self, x):
         pass
+
+class TargetPosition(TaskMap):
+    def __init__(self, goal=np.array([0, 0])):
+        super(TargetPosition, self).__init__(name="target_position", order=0, dim=2)
+        self.goal = goal
+    def phi(self, x):
+        cost = x - self.goal
+        Jcost = np.array([[1, 0], [0, 1]])
+        return cost, Jcost
+
+class TargetVelocity(TaskMap):
+    def __init__(self, goal=np.array([0, 0])):
+        super(TargetVelocity, self).__init__(name="target_velocity", order=1, dim=2)
+        self.goal = goal
+    def phi(self, v):
+        v_cost = v - self.goal
+        Jv_cost = np.array([[1, 0], [0, 1]])
+        return v_cost, Jv_cost
+
+class AccelerationPenalty(TaskMap):
+    def __init__(self):
+        super(AccelerationPenalty, self).__init__(name="acceleration_penalty", order=2, dim=2)
+    def phi(self, a):
+        a_cost = np.array([a[0], a[1]])
+        Ja_cost = np.array([[1, 0], [0, 1]])
+        return a_cost, Ja_cost

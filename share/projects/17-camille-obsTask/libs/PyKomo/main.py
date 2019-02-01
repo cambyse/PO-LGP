@@ -1,61 +1,63 @@
 import time
-import numpy as np
-from task_map import TaskMap
-from komo import PyKOMO
 import matplotlib.pyplot as plt
 
-class TargetPosition(TaskMap):
-    def __init__(self, goal=np.array([0, 0])):
-        super(TargetPosition, self).__init__(name="target_position", order=0, dim=2)
-        self.goal = goal
-    def phi(self, x):
-        cost = x - self.goal
-        Jcost = np.array([[1, 0], [0, 1]])
-        return cost, Jcost
-
-class TargetVelocity(TaskMap):
-    def __init__(self, goal=np.array([0, 0])):
-        super(TargetVelocity, self).__init__(name="target_velocity", order=1, dim=2)
-        self.goal = goal
-    def phi(self, v):
-        v_cost = v - self.goal
-        Jv_cost = np.array([[1, 0], [0, 1]])
-        return v_cost, Jv_cost
-
-class AccelerationPenalty(TaskMap):
-    def __init__(self):
-        super(AccelerationPenalty, self).__init__(name="acceleration_penalty", order=2, dim=2)
-    def phi(self, a):
-        a_cost = np.array([a[0], a[1]])
-        Ja_cost = np.array([[1, 0], [0, 1]])
-        return a_cost, Ja_cost
+from task_map import *
+from komo import PyKOMO
+from path_builder import PathBuilder
 
 if __name__ == "__main__":
     x0 = np.array([0, 0])
     print("x0:{}".format(x0))
 
-    n_steps = 11
-    end_common_root = 3
-    end_branch_1 = n_steps-4
-    p_1 = 0.4
-    path_1 = [(i, p_1) for i in range(end_common_root)] + [(i, p_1) for i in range(end_common_root, end_branch_1)]
-    path_2 = [(i, 1 - p_1) for i in range(end_common_root)] + [(i, 1 - p_1) for i in range(end_branch_1, n_steps)]
+    # n_phases = 11
+    # end_common_root = 3
+    # end_branch_1 = n_phases-4
+    # p_1 = 0.5
+    # path_1 = [(i, p_1) for i in range(end_common_root)] + [(i, p_1) for i in range(end_common_root, end_branch_1)]# + [(0, 0.5), (1, 0.5)]
+    # path_2 = [(i, 1 - p_1) for i in range(end_common_root)] + [(i, 1 - p_1) for i in range(end_branch_1, n_phases)]# + [(0, 0.5), (1, 0.5)]
+    p_1 = 0.5
+
+    pb = PathBuilder()
+    pb.add_edge(0, 1)
+    pb.add_edge(1, 2)
+    pb.add_edge(2, 3, p_1)
+    pb.add_edge(3, 4, p_1)
+    pb.add_edge(4, 5, p_1)
+    pb.add_edge(5, 6, p_1)
+
+    pb.add_edge(2, 7, 1 - p_1)
+    pb.add_edge(7, 8, 1 - p_1)
+    pb.add_edge(8, 9, 1 - p_1)
+    pb.add_edge(9, 10, 1 - p_1)
+
+    path_1, path_2 = pb.get_paths()
 
     komo = PyKOMO()
-    komo.set_n_steps(n_steps)
+    komo.set_n_phases(pb.n_nodes())
 
     komo.add_task(TargetPosition(goal=[0, 0]), start=0, end=1)
 
+
+    # pos
     komo.add_task(AccelerationPenalty(), wpath=path_1)
     komo.add_task(TargetPosition(goal=[3, 3]), wpath=path_1, start=4, end=-1)
 
     komo.add_task(AccelerationPenalty(), wpath=path_2)
     komo.add_task(TargetPosition(goal=[3, -3]), wpath=path_2, start=4, end=-1)
 
-    #komo.add_task(TargetPosition(goal=[5, 0]), start=5, end=6)
-    #komo.add_task(TargetVelocity(goal=[1, 2]), path=linear_path, start=0, end=3)
-    #komo.add_task(TargetVelocity(goal=[1, -2]), path=linear_path, start=3, end=6)
-    #komo.add_task(TargetVelocity(goal=[1, 0]), path=linear_path, start=8, end=-1)
+    # vel
+    # komo.add_task(AccelerationPenalty(), wpath=path_1)
+    # komo.add_task(TargetVelocity(goal=[1, 1]), wpath=path_1, start=4, end=-1)
+    #
+    # komo.add_task(AccelerationPenalty(), wpath=path_2)
+    # komo.add_task(TargetVelocity(goal=[1, -1]), wpath=path_2, start=4, end=-1)
+
+    # pos
+    # komo.add_task(AccelerationPenalty(), wpath=path_1)
+    # komo.add_task(TargetPosition(goal=[3, 3]), wpath=path_1, start=3, end=4)
+    #
+    # komo.add_task(AccelerationPenalty(), wpath=path_2)
+    # komo.add_task(TargetPosition(goal=[3, -3]), wpath=path_2, start=3, end=4)
 
     start = time.time()
     x = komo.run(x0)
