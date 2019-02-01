@@ -5,8 +5,8 @@ class MotionProblem:
         self.task_maps = []
         self.dim = 0
 
-    def add_task(self, task):
-        self.task_maps.append(task)
+    def add_task(self, task, wpath, start, end):
+        self.task_maps.append((wpath, start, end, task))
         self.dim += task.dim
 
     def gamma(self, x):
@@ -17,43 +17,61 @@ class MotionProblem:
         Jgamma = np.zeros((self.dim * n_steps, n_steps * x_dim))
 
         col_offset = 0
-        for task in self.task_maps:
-            self.fill_gamma(x, task, col_offset, gamma, Jgamma)
+        for path, start, end, task in self.task_maps:
+            if path is None:
+                path = [(i, 1.0) for i in range(n_steps)]
+            self.fill_gamma(x, task, col_offset, path, start, end, gamma, Jgamma)
             col_offset += task.dim
 
         return gamma, Jgamma
 
-    def fill_gamma(self, x, task, dim_offset, gamma, Jgamma):
+    def get_step(self, wpath, s):
+        if s < 0:
+            assert False
+        if s >= len(wpath):
+            return wpath[-1]
+        return wpath[s]
+
+    def fill_gamma(self, x, task, dim_offset, wpath, start, end, gamma, Jgamma):
         n_steps = x.shape[0]
         x_dim = x.shape[1]
 
+        if end == -1:
+            end = n_steps
+
         if task.order == 0:
-            for s in range(0, n_steps):
-                phi, Jphi = task.phi(x[s])
+            for _s in range(start, end):
+                t, w = self.get_step(wpath, _s)
+                phi, Jphi = task.phi(x[t])
                 for dim_index in range(task.dim):
-                    i = self.dim*s+dim_offset+dim_index
-                    gamma[i] = phi[dim_index]
+                    i = self.dim*t+dim_offset+dim_index
+                    gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
-                        Jgamma[i,x_dim*s+k] += Jphi[dim_index, k]
+                        Jgamma[i,x_dim*t+k] = w * Jphi[dim_index, k]
         elif task.order == 1:
-            for s in range(1, n_steps):
-                phi, Jphi = task.phi(x[s]-x[s-1])
+            for _s in range(start+1, end):
+                t, w = self.get_step(wpath, _s)
+                tm1, _ = self.get_step(wpath, _s-1)
+                phi, Jphi = task.phi(x[t]-x[tm1])
                 for dim_index in range(task.dim):
-                    i = self.dim * s + dim_offset + dim_index
-                    gamma[i] = phi[dim_index]
+                    i = self.dim * t + dim_offset + dim_index
+                    gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
-                        Jgamma[i,x_dim*(s-1)+k] = -Jphi[dim_index, k]
-                        Jgamma[i,x_dim*s+k] = Jphi[dim_index, k]
+                        Jgamma[i,x_dim*(tm1)+k] = -w * Jphi[dim_index, k]
+                        Jgamma[i,x_dim*t+k] = w * Jphi[dim_index, k]
         elif task.order == 2:
-            for s in range(1, n_steps-1):
-                phi, Jphi = task.phi(x[s-1] - 2 * x[s] + x[s+1])
+            for _s in range(start+1, end-1):
+                t, w = self.get_step(wpath, _s)
+                tm1, _ = self.get_step(wpath, _s - 1)
+                tp1, _ = self.get_step(wpath, _s + 1)
+                phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1])
                 for dim_index in range(task.dim):
-                    i = self.dim * s + dim_offset + dim_index
-                    gamma[i] = phi[dim_index]
+                    i = self.dim * t + dim_offset + dim_index
+                    gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
-                        Jgamma[i,x_dim*(s-1)+k] = Jphi[dim_index, k]
-                        Jgamma[i,x_dim*s+k] = -2 * Jphi[dim_index, k]
-                        Jgamma[i,x_dim*(s+1)+k] = Jphi[dim_index, k]
+                        Jgamma[i,x_dim*(tm1)+k] = w * Jphi[dim_index, k]
+                        Jgamma[i,x_dim*t+k] = - w * 2 * Jphi[dim_index, k]
+                        Jgamma[i,x_dim*(tp1)+k] = w * Jphi[dim_index, k]
 
     def traj_cost(self, x):
         c, _ = self.gamma(x)
@@ -67,8 +85,12 @@ class PyKOMO:
         self.eps = 0.01
         self.n_steps = 1
 
-    def add_task(self, task):
-        self.motion_problem.add_task(task)
+    def add_task(self, task, wpath=None, start=0, end=-1):
+        if wpath is None:
+            if end == -1:
+                end=self.n_steps
+            wpath = [(i, 1.0) for i in range(start, self.n_steps)]
+        self.motion_problem.add_task(task, wpath, start, end)
 
     def traj_cost(self, x):
         return self.motion_problem.traj_cost(x)
@@ -89,13 +111,13 @@ class PyKOMO:
             A = 2 * np.matmul(JgammaT, Jgamma) + _lambda * I
             B = 2 * np.matmul(JgammaT, gamma)
             d = np.linalg.solve(A, -B)
+
             while self.traj_cost(np.reshape(x_flat + _alpha * d, x.shape)) > self.traj_cost(x) + self.rho * np.matmul(np.transpose(B),
                                                                              _alpha * d):  # line search
                 _alpha = _alpha * 0.5
             x_flat = x_flat + _alpha * d
             x = np.reshape(x_flat, x.shape)
             _alpha = 1
-
             if np.linalg.norm(_alpha * d) < self.eps:
                 break
 
