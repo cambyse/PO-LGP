@@ -108,11 +108,11 @@ class PyKOMO:
     def set_n_phases(self, n):
         self.n_phases = n
 
-    def run(self, x0):
+    def run(self, x0, initial_solution=None):
         _lambda = self.lambda_0
         _alpha = 1
 
-        x = self.get_init(x0)
+        x = self.get_init(x0, override=initial_solution)
         x_flat = np.ndarray.flatten(x)
         I = np.identity(x_flat.shape[0])
         while True:
@@ -133,7 +133,10 @@ class PyKOMO:
 
         return x
 
-    def get_init(self, x0):
+    def get_init(self, x0, override=None):
+        if override is not None:
+            return override
+
         x = np.zeros((self.n_phases, x0.shape[0]))
         for i in range(self.n_phases):
             x[i,:]=x0
