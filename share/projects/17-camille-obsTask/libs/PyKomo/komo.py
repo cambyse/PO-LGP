@@ -44,29 +44,32 @@ class MotionProblem:
                 t, w = self.get_step(wpath, phase)
                 phi, Jphi = task.phi(x[t])
                 for dim_index in range(task.dim):
-                    i = self.dim*t+dim_offset+dim_index
+                    #i = self.dim*t+dim_offset+dim_index
+                    i = n_steps * (dim_offset + dim_index) + t
                     gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
                         Jgamma[i, x_dim * t + k] = w * Jphi[dim_index, k]
         elif task.order == 1:
             for phase in range(start+1, end):
-                t, w = self.get_step(wpath, phase)
+                t, w   = self.get_step(wpath, phase)
                 tm1, _ = self.get_step(wpath, phase-1)
                 phi, Jphi = task.phi(x[t]-x[tm1])
                 for dim_index in range(task.dim):
-                    i = self.dim * t + dim_offset + dim_index
+                    #i = self.dim * t + dim_offset + dim_index
+                    i = n_steps * (dim_offset + dim_index) + t
                     gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
                         Jgamma[i, x_dim * tm1 + k] =-w * Jphi[dim_index, k]
                         Jgamma[i, x_dim * t   + k] = w * Jphi[dim_index, k]
         elif task.order == 2:
             for phase in range(start+1, end-1):
-                t, w = self.get_step(wpath, phase)
                 tm1, _ = self.get_step(wpath, phase - 1)
+                t, w   = self.get_step(wpath, phase)
                 tp1, _ = self.get_step(wpath, phase + 1)
                 phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1])
                 for dim_index in range(task.dim):
-                    i = self.dim * t + dim_offset + dim_index
+                    #i = self.dim * t + dim_offset + dim_index
+                    i = n_steps * (dim_offset + dim_index) + t
                     gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
                         Jgamma[i, x_dim * tm1+k] = w * Jphi[dim_index, k]

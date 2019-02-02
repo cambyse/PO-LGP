@@ -23,13 +23,16 @@ class TaskMap:
     def phi(self, x):
         pass
 
+    def phi(self, v, x):
+        pass
+
 class TargetPosition(TaskMap):
     def __init__(self, goal=np.array([0, 0])):
         super(TargetPosition, self).__init__(name="target_position", order=0, dim=2)
         self.goal = goal
     def phi(self, x):
-        cost = x - self.goal
-        Jcost = np.array([[1, 0], [0, 1]])
+        cost = x[:2] - self.goal
+        Jcost = np.array([[1, 0, 0], [0, 1, 0]])
         return cost, Jcost
 
 class TargetVelocity(TaskMap):
@@ -37,8 +40,8 @@ class TargetVelocity(TaskMap):
         super(TargetVelocity, self).__init__(name="target_velocity", order=1, dim=2)
         self.goal = goal
     def phi(self, v):
-        v_cost = v - self.goal
-        Jv_cost = np.array([[1, 0], [0, 1]])
+        v_cost = v[:2] - self.goal
+        Jv_cost = np.array([[1, 0, 0], [0, 1, 0]])
         return v_cost, Jv_cost
 
 class AccelerationPenalty(TaskMap):
@@ -46,5 +49,13 @@ class AccelerationPenalty(TaskMap):
         super(AccelerationPenalty, self).__init__(name="acceleration_penalty", order=2, dim=2)
     def phi(self, a):
         a_cost = np.array([a[0], a[1]])
-        Ja_cost = np.array([[1, 0], [0, 1]])
+        Ja_cost = np.array([[1, 0, 0], [0, 1, 0]])
         return a_cost, Ja_cost
+
+# class CarOrientation(TaskMap):
+#     def __init__(self):
+#         super(CarOrientation, self).__init__(name="car_orientation", order=0, dim=1)
+#     def phi(self, a, x):
+#         a_cost = np.array([a[0], a[1]])
+#         Ja_cost = np.array([[1, 0, 0], [0, 1, 0]])
+#         return a_cost, Ja_cost
