@@ -27,9 +27,9 @@ class MotionProblem:
 
     def get_step(self, wpath, s):
         if s < 0:
-            assert False
+            return None, None
         if s >= len(wpath):
-            return wpath[-1]
+            return None, None
         return wpath[s]
 
     def fill_gamma(self, x, task, dim_offset, wpath, start, end, gamma, Jgamma):
@@ -37,44 +37,50 @@ class MotionProblem:
         x_dim = x.shape[1]
 
         if end == -1:
-            end = n_steps
+            end = len(wpath)-1
 
-        if task.order == 0:
-            for phase in range(start, end):
-                t, w = self.get_step(wpath, phase)
-                phi, Jphi = task.phi(x[t])
+        for phase in range(start, end):
+            # get time steps
+            tm1, _ = self.get_step(wpath, phase - 1)
+            t, w = self.get_step(wpath, phase)
+            tp1, _ = self.get_step(wpath, phase + 1)
+            context = self.extract_context(tm1, t, tp1, x)
+            if task.order == 0:
+                phi, Jphi = task.phi(x[t], context)
                 for dim_index in range(task.dim):
                     #i = self.dim*t+dim_offset+dim_index
                     i = n_steps * (dim_offset + dim_index) + t
                     gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
                         Jgamma[i, x_dim * t + k] = w * Jphi[dim_index, k]
-        elif task.order == 1:
-            for phase in range(start+1, end):
-                t, w   = self.get_step(wpath, phase)
-                tm1, _ = self.get_step(wpath, phase-1)
-                phi, Jphi = task.phi(x[t]-x[tm1])
-                for dim_index in range(task.dim):
-                    #i = self.dim * t + dim_offset + dim_index
-                    i = n_steps * (dim_offset + dim_index) + t
-                    gamma[i] = w * phi[dim_index]
-                    for k in range(x_dim):
-                        Jgamma[i, x_dim * tm1 + k] =-w * Jphi[dim_index, k]
-                        Jgamma[i, x_dim * t   + k] = w * Jphi[dim_index, k]
-        elif task.order == 2:
-            for phase in range(start+1, end-1):
-                tm1, _ = self.get_step(wpath, phase - 1)
-                t, w   = self.get_step(wpath, phase)
-                tp1, _ = self.get_step(wpath, phase + 1)
-                phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1])
-                for dim_index in range(task.dim):
-                    #i = self.dim * t + dim_offset + dim_index
-                    i = n_steps * (dim_offset + dim_index) + t
-                    gamma[i] = w * phi[dim_index]
-                    for k in range(x_dim):
-                        Jgamma[i, x_dim * tm1+k] = w * Jphi[dim_index, k]
-                        Jgamma[i, x_dim * t  +k] =-w * 2 * Jphi[dim_index, k]
-                        Jgamma[i, x_dim * tp1+k] = w * Jphi[dim_index, k]
+            elif task.order == 1:
+                if tm1 is not None:
+                    phi, Jphi = task.phi(x[t]-x[tm1], context)
+                    for dim_index in range(task.dim):
+                        #i = self.dim * t + dim_offset + dim_index
+                        i = n_steps * (dim_offset + dim_index) + t
+                        gamma[i] = w * phi[dim_index]
+                        for k in range(x_dim):
+                            Jgamma[i, x_dim * tm1 + k] =-w * Jphi[dim_index, k]
+                            Jgamma[i, x_dim * t   + k] = w * Jphi[dim_index, k]
+            elif task.order == 2:
+                if tm1 is not None and tp1 is not None:
+                    phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1], context)
+                    for dim_index in range(task.dim):
+                        #i = self.dim * t + dim_offset + dim_index
+                        i = n_steps * (dim_offset + dim_index) + t
+                        gamma[i] = w * phi[dim_index]
+                        for k in range(x_dim):
+                            Jgamma[i, x_dim * tm1+k] = w * Jphi[dim_index, k]
+                            Jgamma[i, x_dim * t  +k] =-w * 2 * Jphi[dim_index, k]
+                            Jgamma[i, x_dim * tp1+k] = w * Jphi[dim_index, k]
+
+    def extract_context(self, tm1, t, tp1, x):
+        context = [None, None, None]
+        for i, _t in enumerate([tm1, t, tp1]):
+            if _t is not None:
+                context[i] = x[_t]
+        return context
 
     def traj_cost(self, x):
         c, _ = self.gamma(x)

@@ -11,6 +11,21 @@ from matplotlib.collections import PatchCollection
 L = 5.8
 W = 1.9
 
+def rotate(point, radians, origin=(0, 0)):
+    """Rotate a point around a given point.
+
+    I call this the "low performance" version since it's recalculating
+    the same values more than once [cos(radians), sin(radians), x-ox, y-oy).
+    It's more readable than the next function, though.
+    """
+    x, y = point
+    ox, oy = origin
+
+    qx = ox + math.cos(radians) * (x - ox) + math.sin(radians) * (y - oy)
+    qy = oy + -math.sin(radians) * (x - ox) + math.cos(radians) * (y - oy)
+
+    return qx, qy
+
 if __name__ == "__main__":
     x0 = np.array([0, 0, 0])
     print("x0:{}".format(x0))
@@ -44,19 +59,15 @@ if __name__ == "__main__":
     komo.add_task(AccelerationPenalty(), wpath=path_2)
     komo.add_task(TargetPosition(goal=[100, -30]), wpath=path_2, start=4, end=-1)
 
-    # vel
+    #vel
     # komo.add_task(AccelerationPenalty(), wpath=path_1)
-    # komo.add_task(TargetVelocity(goal=[10, 5]), wpath=path_1, start=4, end=-1)
+    # komo.add_task(TargetVelocity(goal=[15, 5]), wpath=path_1, start=4, end=-1)
     #
     # komo.add_task(AccelerationPenalty(), wpath=path_2)
-    # komo.add_task(TargetVelocity(goal=[10, -5]), wpath=path_2, start=4, end=-1)
+    # komo.add_task(TargetVelocity(goal=[15, -5]), wpath=path_2, start=4, end=-1)
 
-    # pos
-    # komo.add_task(AccelerationPenalty(), wpath=path_1)
-    # komo.add_task(TargetPosition(goal=[3, 3]), wpath=path_1, start=3, end=4)
-    #
-    # komo.add_task(AccelerationPenalty(), wpath=path_2)
-    # komo.add_task(TargetPosition(goal=[3, -3]), wpath=path_2, start=3, end=4)
+    komo.add_task(CarOrientation(), wpath=path_1)
+    komo.add_task(CarOrientation(), wpath=path_2)
 
     start = time.time()
     x = komo.run(x0)
@@ -70,10 +81,11 @@ if __name__ == "__main__":
     for i, _x in enumerate(x):
         color = 1.0 - i / 2 / len(x)
         p = np.zeros(shape=(4,2))
-        p[0, :] = [_x[0]-0.5*L, _x[1]-0.5*W]
-        p[1, :] = [_x[0] - 0.5*L, _x[1] + 0.5*W]
-        p[2, :] = [_x[0] + 0.5*L, _x[1] + 0.5*W]
-        p[3, :] = [_x[0] + 0.5*L, _x[1] - 0.5*W]
+        theta = -_x[2]
+        p[0, :] = _x[:2] + rotate([-0.5*L, - 0.5*W], theta)
+        p[1, :] = _x[:2] + rotate([-0.5*L,   0.5*W], theta)
+        p[2, :] = _x[:2] + rotate([ 0.5*L,   0.5*W], theta)
+        p[3, :] = _x[:2] + rotate([ 0.5*L, - 0.5*W], theta)
         polygon = Polygon(p, closed=True)
         patches.append(polygon)
     p = PatchCollection(patches, alpha=0.4)
