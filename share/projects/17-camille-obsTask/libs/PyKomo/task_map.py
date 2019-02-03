@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from enum import Enum
 
 # from itertools import tee
 #
@@ -15,11 +16,17 @@ import math
 #     next(c, None)
 #     return zip(a, b, c)
 
+class TaskMapType(Enum):
+    COST = 1
+    EQ = 2
+    INEQ = 3
+
 class TaskMap:
-    def __init__(self, name = '', order = 0, dim = 1):
+    def __init__(self, name = '', order = 0, dim = 1, type = TaskMapType.COST):
         self.order = order
         self.name = name
         self.dim = dim
+        self.type = type
 
     def phi(self, _, context):
         pass
@@ -52,7 +59,7 @@ class AccelerationPenalty(TaskMap):
 
 class CarOrientation(TaskMap):
     def __init__(self):
-        super(CarOrientation, self).__init__(name="car_orientation", order=0, dim=2)
+        super(CarOrientation, self).__init__(name="car_orientation", order=0, dim=2, type=TaskMapType.EQ)
     def phi(self, x, context):
         if context[0] is None:
             cost = np.array([0, 0])

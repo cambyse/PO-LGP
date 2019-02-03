@@ -1,4 +1,5 @@
 import numpy as np
+from task_map import TaskMapType
 
 class MotionProblem:
     def __init__(self):
@@ -9,7 +10,7 @@ class MotionProblem:
         self.task_maps.append((wpath, start, end, task))
         self.dim += task.dim
 
-    def gamma(self, x):
+    def gamma(self, x, filter=[TaskMapType.COST, TaskMapType.EQ, TaskMapType.INEQ]):
         n_steps = x.shape[0]
         x_dim = x.shape[1]
 
@@ -18,9 +19,10 @@ class MotionProblem:
 
         col_offset = 0
         for path, start, end, task in self.task_maps:
-            if path is None:
-                path = [(i, 1.0) for i in range(n_steps)]
-            self.fill_gamma(x, task, col_offset, path, start, end, gamma, Jgamma)
+            if task.type in filter:
+                if path is None:
+                    path = [(i, 1.0) for i in range(n_steps)]
+                self.fill_gamma(x, task, col_offset, path, start, end, gamma, Jgamma)
             col_offset += task.dim
 
         return gamma, Jgamma
@@ -37,7 +39,7 @@ class MotionProblem:
         x_dim = x.shape[1]
 
         if end == -1:
-            end = len(wpath)-1
+            end = len(wpath)
 
         for phase in range(start, end):
             # get time steps
@@ -48,7 +50,6 @@ class MotionProblem:
             if task.order == 0:
                 phi, Jphi = task.phi(x[t], context)
                 for dim_index in range(task.dim):
-                    #i = self.dim*t+dim_offset+dim_index
                     i = n_steps * (dim_offset + dim_index) + t
                     gamma[i] = w * phi[dim_index]
                     for k in range(x_dim):
@@ -57,7 +58,6 @@ class MotionProblem:
                 if tm1 is not None:
                     phi, Jphi = task.phi(x[t]-x[tm1], context)
                     for dim_index in range(task.dim):
-                        #i = self.dim * t + dim_offset + dim_index
                         i = n_steps * (dim_offset + dim_index) + t
                         gamma[i] = w * phi[dim_index]
                         for k in range(x_dim):
@@ -67,7 +67,6 @@ class MotionProblem:
                 if tm1 is not None and tp1 is not None:
                     phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1], context)
                     for dim_index in range(task.dim):
-                        #i = self.dim * t + dim_offset + dim_index
                         i = n_steps * (dim_offset + dim_index) + t
                         gamma[i] = w * phi[dim_index]
                         for k in range(x_dim):
@@ -83,7 +82,15 @@ class MotionProblem:
         return context
 
     def traj_cost(self, x):
-        c, _ = self.gamma(x)
+        c, _ = self.gamma(x, filter=[TaskMapType.COST])
+        return np.dot(c, c)
+
+    def equality_constraint(self, x):
+        c, _ = self.gamma(x, filter=[TaskMapType.EQ])
+        return np.dot(c, c)
+
+    def inequality_constraint(self, x):
+        c, _ = self.gamma(x, filter=[TaskMapType.INEQ])
         return np.dot(c, c)
 
 class PyKOMO:
@@ -94,25 +101,31 @@ class PyKOMO:
         self.eps = 0.01
         self.n_phases = 1
 
-    def add_task(self, task, wpath=None, start=0, end=-1):
+    def add_task(self, task, wpath=None, start=0, end=-1): #end not included
         if wpath is None:
 
             wpath = [(i, 1.0) for i in range(start, self.n_phases)]
         if end == -1:
-            end = len(wpath)-1
+            end = len(wpath)
         self.motion_problem.add_task(task, wpath, start, end)
 
     def traj_cost(self, x):
         return self.motion_problem.traj_cost(x)
 
+    def equality_constraint(self, x):
+        return self.motion_problem.equality_constraint(x)
+
+    def inequality_constraint(self, x):
+        return self.motion_problem.inequality_constraint(x)
+
     def set_n_phases(self, n):
         self.n_phases = n
 
-    def run(self, x0, initial_solution=None):
+    def run(self, x0, initial=None):
         _lambda = self.lambda_0
         _alpha = 1
 
-        x = self.get_init(x0, override=initial_solution)
+        x = self.get_init(x0, override=initial)
         x_flat = np.ndarray.flatten(x)
         I = np.identity(x_flat.shape[0])
         while True:
@@ -125,6 +138,7 @@ class PyKOMO:
             while self.traj_cost(np.reshape(x_flat + _alpha * d, x.shape)) > self.traj_cost(x) + self.rho * np.matmul(np.transpose(B),
                                                                              _alpha * d):  # line search
                 _alpha = _alpha * 0.5
+
             x_flat = x_flat + _alpha * d
             x = np.reshape(x_flat, x.shape)
             _alpha = 1
