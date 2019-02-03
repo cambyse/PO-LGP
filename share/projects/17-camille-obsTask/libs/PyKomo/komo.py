@@ -1,6 +1,10 @@
 import numpy as np
 from task_map import TaskMapType
 
+def is_semi_pos_def(m):
+    eigvals = np.linalg.eigvals(m)
+    return np.all( eigvals >= 0)
+
 class MotionProblem:
     def __init__(self):
         self.task_maps = []
@@ -10,7 +14,7 @@ class MotionProblem:
         self.task_maps.append((wpath, start, end, task))
         self.dim += task.dim
 
-    def gamma(self, x, filter=[TaskMapType.COST, TaskMapType.EQ, TaskMapType.INEQ]):
+    def gamma(self, x, mu=1, filter=[TaskMapType.COST, TaskMapType.EQ]): #mu = additional coefficient for constraint (square penalty)
         n_steps = x.shape[0]
         x_dim = x.shape[1]
 
@@ -22,7 +26,9 @@ class MotionProblem:
             if task.type in filter:
                 if path is None:
                     path = [(i, 1.0) for i in range(n_steps)]
-                self.fill_gamma(x, task, col_offset, path, start, end, gamma, Jgamma)
+                if end == -1:
+                    end = len(path)
+                self.fill_gamma(x, task, col_offset, path, start, end, mu, gamma, Jgamma)
             col_offset += task.dim
 
         return gamma, Jgamma
@@ -34,12 +40,9 @@ class MotionProblem:
             return None, None
         return wpath[s]
 
-    def fill_gamma(self, x, task, dim_offset, wpath, start, end, gamma, Jgamma):
+    def fill_gamma(self, x, task, dim_offset, wpath, start, end, mu, gamma, Jgamma):
         n_steps = x.shape[0]
         x_dim = x.shape[1]
-
-        if end == -1:
-            end = len(wpath)
 
         for phase in range(start, end):
             # get time steps
@@ -47,6 +50,8 @@ class MotionProblem:
             t, w = self.get_step(wpath, phase)
             tp1, _ = self.get_step(wpath, phase + 1)
             context = self.extract_context(tm1, t, tp1, x)
+            if task.type == TaskMapType.EQ:
+                w = w*mu
             if task.order == 0:
                 phi, Jphi = task.phi(x[t], context)
                 for dim_index in range(task.dim):
@@ -89,22 +94,18 @@ class MotionProblem:
         c, _ = self.gamma(x, filter=[TaskMapType.EQ])
         return np.dot(c, c)
 
-    def inequality_constraint(self, x):
-        c, _ = self.gamma(x, filter=[TaskMapType.INEQ])
-        return np.dot(c, c)
-
 class PyKOMO:
     def __init__(self):
         self.motion_problem = MotionProblem()
         self.lambda_0 = 0.1
         self.rho = 0.01
-        self.eps = 0.01
+        self.eps = 0.01 #update size
+        self.eps_h = 0.001 #max constraint violation
         self.n_phases = 1
 
     def add_task(self, task, wpath=None, start=0, end=-1): #end not included
         if wpath is None:
-
-            wpath = [(i, 1.0) for i in range(start, self.n_phases)]
+            wpath = [(i, 1.0) for i in range(0, self.n_phases)]
         if end == -1:
             end = len(wpath)
         self.motion_problem.add_task(task, wpath, start, end)
@@ -115,13 +116,24 @@ class PyKOMO:
     def equality_constraint(self, x):
         return self.motion_problem.equality_constraint(x)
 
-    def inequality_constraint(self, x):
-        return self.motion_problem.inequality_constraint(x)
-
     def set_n_phases(self, n):
         self.n_phases = n
 
     def run(self, x0, initial=None):
+        return self.run_gauss_newton_with_square_penalty(x0, initial)
+
+    def run_gauss_newton_with_square_penalty(self, x0, initial=None):
+        current_mu = 1.0
+        x = self.run_gauss_newton(x0, initial, mu=current_mu)
+        constraint_violation = self.equality_constraint(x)
+
+        while constraint_violation > self.eps_h:
+            current_mu *= 10
+            x = self.run_gauss_newton(x0, initial=x, mu=current_mu)
+            constraint_violation = self.equality_constraint(x)
+        return x
+
+    def run_gauss_newton(self, x0, initial=None, mu=1):
         _lambda = self.lambda_0
         _alpha = 1
 
@@ -129,9 +141,11 @@ class PyKOMO:
         x_flat = np.ndarray.flatten(x)
         I = np.identity(x_flat.shape[0])
         while True:
-            gamma, Jgamma = self.motion_problem.gamma(x)
+            gamma, Jgamma = self.motion_problem.gamma(x, mu=mu)
             JgammaT = np.transpose(Jgamma)
-            A = 2 * np.matmul(JgammaT, Jgamma) + _lambda * I
+            approxHessian = 2 * np.matmul(JgammaT, Jgamma)
+            #print(is_semi_pos_def(approxHessian))
+            A = approxHessian + _lambda * I
             B = 2 * np.matmul(JgammaT, gamma)
             d = np.linalg.solve(A, -B)
 

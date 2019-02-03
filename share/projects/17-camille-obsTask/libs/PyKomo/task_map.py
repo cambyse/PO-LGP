@@ -19,7 +19,6 @@ from enum import Enum
 class TaskMapType(Enum):
     COST = 1
     EQ = 2
-    INEQ = 3
 
 class TaskMap:
     def __init__(self, name = '', order = 0, dim = 1, type = TaskMapType.COST):

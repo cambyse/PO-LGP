@@ -12,6 +12,25 @@ if __name__ == "__main__":
     x0 = np.array([0, 0, 0])
     print("x0:{}".format(x0))
 
+    # pb = PathBuilder()
+    # pb.add_edge(0, 1)
+    # pb.add_edge(1, 2)
+    # pb.add_edge(2, 3)
+    # pb.add_edge(3, 4)
+    # pb.add_edge(4, 5)
+    # pb.add_edge(5, 6)
+    #
+    # path = pb.get_paths()
+    # n_steps = pb.n_nodes()
+    #
+    # komo = PyKOMO()
+    # komo.set_n_phases(n_steps)
+    #
+    # komo.add_task(TargetPosition(goal=[0, 0]), start=0, end=1)
+    # komo.add_task(AccelerationPenalty())
+    # komo.add_task(TargetPosition(goal=[100, -30]), start=4, end=5)
+    # komo.add_task(CarOrientation())
+
     p_1 = 0.2
     p_2 = 0.2
     p_3 = 0.2

@@ -11,6 +11,19 @@ from plot import draw_car
 
 SHOW_PLOTS = True
 
+def build_linear_traj():
+    pb = PathBuilder()
+    pb.add_edge(0, 1)
+    pb.add_edge(1, 2)
+    pb.add_edge(2, 3)
+    pb.add_edge(3, 4)
+    pb.add_edge(4, 5)
+    pb.add_edge(5, 6)
+
+    path = pb.get_paths()
+
+    return path, pb.n_nodes()
+
 def build_2_branchs_tree(p_1):
     pb = PathBuilder()
     pb.add_edge(0, 1)
@@ -89,6 +102,31 @@ def build_mille_pattes():
     n_steps = pb.n_nodes()
 
     return path_1, path_2, path_3, path_4, path_5, n_steps
+
+def test_linear_traj():
+    x0 = np.array([0, 0, 0])
+    print("x0:{}".format(x0))
+
+    path, n_steps = build_linear_traj()
+
+    komo = PyKOMO()
+    komo.set_n_phases(n_steps)
+
+    komo.add_task(TargetPosition(goal=[0, 0]), start=0, end=1)
+    komo.add_task(AccelerationPenalty())
+    komo.add_task(TargetPosition(goal=[100, -30]), start=4, end=-1)
+    komo.add_task(CarOrientation())
+
+    start = time.time()
+    x = komo.run(x0)  # , initial=initial)
+    end = time.time()
+
+    print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
+                                                                          komo.equality_constraint(x), end - start))
+
+    # plot traj
+    if SHOW_PLOTS:
+        draw_car(x)
 
 def test_tree_2_branches_pos():
     x0 = np.array([0, 0, 0])
