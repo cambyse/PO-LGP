@@ -5,14 +5,14 @@ import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
 from komo import PyKOMO
-from path_builder import PathBuilder
+from tree_builder import TreeBuilder
 from task_map import *
 from plot import draw_car
 
 SHOW_PLOTS = True
 
 def build_linear_traj():
-    pb = PathBuilder()
+    pb = TreeBuilder()
     pb.add_edge(0, 1)
     pb.add_edge(1, 2)
     pb.add_edge(2, 3)
@@ -25,7 +25,7 @@ def build_linear_traj():
     return path, pb.n_nodes()
 
 def build_2_branchs_tree(p_1):
-    pb = PathBuilder()
+    pb = TreeBuilder()
     pb.add_edge(0, 1)
     pb.add_edge(1, 2)
     pb.add_edge(2, 3, p_1)
@@ -45,7 +45,7 @@ def build_2_branchs_tree(p_1):
 def build_3_branchs_tree(p_1, p_2):
     p_3 = 1 - p_2 - p_1
 
-    pb = PathBuilder()
+    pb = TreeBuilder()
     pb.add_edge(0, 1)
     pb.add_edge(1, 2)
     pb.add_edge(2, 3, p_1)
@@ -74,7 +74,7 @@ def build_mille_pattes():
     p_4 = 0.2
     p_5 = 1 - p_1 - p_2 - p_3 - p_4
 
-    pb = PathBuilder()
+    pb = TreeBuilder()
     pb.add_edge(0, 1, 1.0)
     pb.add_edge(1, 2, 1.0)
     pb.add_edge(2, 3, 1.0 - p_1)

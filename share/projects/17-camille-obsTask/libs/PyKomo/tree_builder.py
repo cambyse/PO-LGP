@@ -1,6 +1,6 @@
 import numpy as np
 
-class PathBuilder:
+class TreeBuilder:
     def __init__(self):
         self.adjacency_matrix = np.empty(shape=(0, 0))
 

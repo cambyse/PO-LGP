@@ -2,10 +2,10 @@ import nose.tools as nt
 import sys
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
-from path_builder import PathBuilder
+from tree_builder import TreeBuilder
 
 def build_simple_path_builder():
-    pb = PathBuilder()
+    pb = TreeBuilder()
     pb.add_edge(0, 1)
     pb.add_edge(1, 2)
     pb.add_edge(2, 3, p=0.5)
@@ -13,10 +13,10 @@ def build_simple_path_builder():
     return pb
 
 def test_class_creation():
-    pb = PathBuilder()
+    pb = TreeBuilder()
 
 def test_add_edge():
-    pb = PathBuilder()
+    pb = TreeBuilder()
     pb.add_edge(0, 1)
 
     nt.assert_equals(pb.n_nodes(), 2)

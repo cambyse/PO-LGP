@@ -1,5 +1,6 @@
 import numpy as np
 from task_map import TaskMapType
+from scipy import linalg
 
 def is_semi_pos_def(m):
     eigvals = np.linalg.eigvals(m)
@@ -9,6 +10,7 @@ class MotionProblem:
     def __init__(self):
         self.task_maps = []
         self.dim = 0
+        self.kinematic_world = None
 
     def add_task(self, task, wpath, start, end):
         self.task_maps.append((wpath, start, end, task))
@@ -53,7 +55,7 @@ class MotionProblem:
             if task.type == TaskMapType.EQ:
                 w = w*mu
             if task.order == 0:
-                phi, Jphi = task.phi(x[t], context)
+                phi, Jphi = task.phi(x[t], context, self.kinematic_world)
                 for dim_index in range(task.dim):
                     i = n_steps * (dim_offset + dim_index) + t
                     gamma[i] = w * phi[dim_index]
@@ -61,7 +63,7 @@ class MotionProblem:
                         Jgamma[i, x_dim * t + k] = w * Jphi[dim_index, k]
             elif task.order == 1:
                 if tm1 is not None:
-                    phi, Jphi = task.phi(x[t]-x[tm1], context)
+                    phi, Jphi = task.phi(x[t]-x[tm1], context, self.kinematic_world)
                     for dim_index in range(task.dim):
                         i = n_steps * (dim_offset + dim_index) + t
                         gamma[i] = w * phi[dim_index]
@@ -70,7 +72,7 @@ class MotionProblem:
                             Jgamma[i, x_dim * t   + k] = w * Jphi[dim_index, k]
             elif task.order == 2:
                 if tm1 is not None and tp1 is not None:
-                    phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1], context)
+                    phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1], context, self.kinematic_world)
                     for dim_index in range(task.dim):
                         i = n_steps * (dim_offset + dim_index) + t
                         gamma[i] = w * phi[dim_index]
@@ -86,13 +88,16 @@ class MotionProblem:
                 context[i] = x[_t]
         return context
 
-    def traj_cost(self, x):
-        c, _ = self.gamma(x, filter=[TaskMapType.COST])
+    def traj_cost(self, x, mu):
+        c, _ = self.gamma(x, mu=mu)#, filter=[TaskMapType.COST])
         return np.dot(c, c)
 
     def equality_constraint(self, x):
         c, _ = self.gamma(x, filter=[TaskMapType.EQ])
         return np.dot(c, c)
+
+    def set_kinematic_world(self, kin):
+        self.kinematic_world = kin
 
 class PyKOMO:
     def __init__(self):
@@ -110,11 +115,14 @@ class PyKOMO:
             end = len(wpath)
         self.motion_problem.add_task(task, wpath, start, end)
 
-    def traj_cost(self, x):
-        return self.motion_problem.traj_cost(x)
+    def traj_cost(self, x, mu=1):
+        return self.motion_problem.traj_cost(x, mu)
 
     def equality_constraint(self, x):
         return self.motion_problem.equality_constraint(x)
+
+    def set_kinematic_world(self, kin):
+        self.motion_problem.set_kinematic_world(kin)
 
     def set_n_phases(self, n):
         self.n_phases = n
@@ -134,6 +142,11 @@ class PyKOMO:
         return x
 
     def run_gauss_newton(self, x0, initial=None, mu=1):
+        import time
+        duration = 0
+        start = time.time()
+        duration += (time.time() - start)
+
         _lambda = self.lambda_0
         _alpha = 1
 
@@ -144,12 +157,11 @@ class PyKOMO:
             gamma, Jgamma = self.motion_problem.gamma(x, mu=mu)
             JgammaT = np.transpose(Jgamma)
             approxHessian = 2 * np.matmul(JgammaT, Jgamma)
-            #print(is_semi_pos_def(approxHessian))
             A = approxHessian + _lambda * I
             B = 2 * np.matmul(JgammaT, gamma)
             d = np.linalg.solve(A, -B)
 
-            while self.traj_cost(np.reshape(x_flat + _alpha * d, x.shape)) > self.traj_cost(x) + self.rho * np.matmul(np.transpose(B),
+            while self.traj_cost(np.reshape(x_flat + _alpha * d, x.shape), mu) > self.traj_cost(x, mu) + self.rho * np.matmul(np.transpose(B),
                                                                              _alpha * d):  # line search
                 _alpha = _alpha * 0.5
 
