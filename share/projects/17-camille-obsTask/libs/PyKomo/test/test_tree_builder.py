@@ -1,4 +1,4 @@
-import nose.tools as nt
+import nose as nt
 import sys
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
@@ -10,6 +10,16 @@ def build_simple_path_builder():
     pb.add_edge(1, 2)
     pb.add_edge(2, 3, p=0.5)
     pb.add_edge(2, 4, p=0.5)
+    return pb
+
+
+def build_path_builder_with_cycle():
+    pb = TreeBuilder()
+    pb.add_edge(0, 1)
+    pb.add_edge(1, 2)
+    pb.add_edge(2, 3)
+    pb.add_edge(3, 4)
+    pb.add_edge(4, 0)
     return pb
 
 def test_class_creation():
@@ -63,3 +73,7 @@ def test_get_paths():
     nt.assert_equals(2, len(pb.get_paths()))
     nt.assert_equals([(0, 1.0), (1, 1.0), (2, 1.0), (3, 0.5)], pb.get_paths()[0])
     nt.assert_equals([(0, 1.0), (1, 1.0), (2, 1.0), (4, 0.5)], pb.get_paths()[1])
+
+def test_get_paths_with_cycles():
+    pb = build_path_builder_with_cycle()
+    nt.assert_equals(1, len(pb.get_paths()))

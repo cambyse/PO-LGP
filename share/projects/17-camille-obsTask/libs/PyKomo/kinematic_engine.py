@@ -107,8 +107,21 @@ class KinematicWorld:
         pose = joint.compute_pose(q, q_id)
         return pose
 
-    def draw(self, x, patches):
-        assert x.shape[1] == self.get_dim(), "wrong trajectory dimension"
+    def draw(self, x):
+        import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
+
+        fig, ax = plt.subplots()
+        patches = []
+        self.draw_on_patches(x, patches)
+        p = PatchCollection(patches, alpha=0.4)
+        ax.add_collection(p)
+        ax.set_aspect(1.0)
+        plt.autoscale(tight=True)
+        plt.show()
+
+    def draw_on_patches(self, x, patches):
+        assert x.shape[1] == self.get_dim(), "wrong trajectory dimension:{} vs {}".format(x.shape[1], self.get_dim())
 
         for s in self.shapes:
             if s.name in self.fixed_poses:

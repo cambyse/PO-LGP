@@ -15,9 +15,6 @@ class TreeBuilder:
             self.adjacency_matrix = adjacency_matrix
         self.adjacency_matrix[_from, _to]=p
 
-    def get_paths(self):
-        pass
-
     def n_nodes(self):
         return self.adjacency_matrix.shape[0]
 

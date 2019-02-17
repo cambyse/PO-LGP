@@ -17,8 +17,8 @@ class TaskMap:
         pass
 
 class TargetPosition(TaskMap):
-    def __init__(self, goal=np.array([0, 0])):
-        super(TargetPosition, self).__init__(name="target_position", order=0, dim=2)
+    def __init__(self, goal=np.array([0, 0]), type = TaskMapType.COST):
+        super(TargetPosition, self).__init__(name="target_position", order=0, dim=2, type=type)
         self.goal = goal
     def phi(self, x, context, _):
         cost = x[:2] - self.goal
@@ -48,8 +48,8 @@ class CircleAvoidance(TaskMap):
         return cost, Jcost
 
 class TargetVelocity(TaskMap):
-    def __init__(self, goal=np.array([0, 0])):
-        super(TargetVelocity, self).__init__(name="target_velocity", order=1, dim=2)
+    def __init__(self, goal=np.array([0, 0]), type = TaskMapType.COST):
+        super(TargetVelocity, self).__init__(name="target_velocity", order=1, dim=2, type=type)
         self.goal = goal
     def phi(self, v, context, _):
         v_cost = v[:2] - self.goal
