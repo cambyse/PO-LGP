@@ -121,9 +121,9 @@ def test_linear_traj():
     komo.add_task(TargetPosition(goal=[100, -30]), start=4, end=-1)
     komo.add_task(CarOrientation())
 
-    start = time.time()
-    x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    start = time.clock()
+    x = komo.run(x0)
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))
@@ -165,9 +165,9 @@ def test_tree_2_branches_pos():
     komo.add_task(CarOrientation(), wpath=path_1)
     komo.add_task(CarOrientation(), wpath=path_2)
 
-    start = time.time()
+    start = time.clock()
     x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))
@@ -202,9 +202,9 @@ def test_tree_2_branches_vel():
     komo.add_task(CarOrientation(), wpath=path_1)
     komo.add_task(CarOrientation(), wpath=path_2)
 
-    start = time.time()
+    start = time.clock()
     x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))
@@ -250,9 +250,9 @@ def test_tree_3_branches_pos():
     komo.add_task(CarOrientation(), wpath=path_2)
     komo.add_task(CarOrientation(), wpath=path_3)
 
-    start = time.time()
+    start = time.clock()
     x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))
@@ -296,9 +296,9 @@ def test_mille_pattes():
     komo.add_task(CarOrientation(), wpath=path_4)
     komo.add_task(CarOrientation(), wpath=path_5)
 
-    start = time.time()
+    start = time.clock()
     x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))
@@ -343,9 +343,9 @@ def test_linear_traj_among_two_circles():
     komo.add_task(CircleAvoidance(circle_name="circle_1"))
     komo.add_task(CircleAvoidance(circle_name="circle_10"))
 
-    start = time.time()
+    start = time.clock()
     x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))
@@ -369,7 +369,7 @@ def test_traj_tree_in_font_of_obstacle():
     pb = TreeBuilder()
     pb.add_edge(0, 1)
 
-    p = 0.3
+    p = 0.7
 
     pb.add_edge(1, 2, p)
     pb.add_edge(2, 3, p)
@@ -405,9 +405,9 @@ def test_traj_tree_in_font_of_obstacle():
     komo.add_task(CircleAvoidance(circle_name="circle_1"), wpath=path_2)
     komo.add_task(CircleAvoidance(circle_name="circle_2"), wpath=path_2)
 
-    start = time.time()
+    start = time.clock()
     x = komo.run(x0)  # , initial=initial)
-    end = time.time()
+    end = time.clock()
 
     print("final x:{}\ncost(x):{} \neq constraint:{}\nopt-time:{}".format(x, komo.traj_cost(x),
                                                                           komo.equality_constraint(x), end - start))

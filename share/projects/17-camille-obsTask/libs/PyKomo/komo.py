@@ -1,6 +1,7 @@
 import numpy as np
 from task_map import TaskMapType
 from scipy import linalg
+from scipy.linalg import solve_banded
 
 def is_semi_pos_def(m):
     eigvals = np.linalg.eigvals(m)
@@ -55,31 +56,40 @@ class MotionProblem:
             if task.type == TaskMapType.EQ:
                 w = w*mu
             if task.order == 0:
-                phi, Jphi = task.phi(x[t], context, self.kinematic_world)
-                for dim_index in range(task.dim):
-                    i = n_steps * (dim_offset + dim_index) + t
-                    gamma[i] = w * phi[dim_index]
-                    for k in range(x_dim):
-                        Jgamma[i, x_dim * t + k] = w * Jphi[dim_index, k]
+                self.fill_gama_0(Jgamma, context, dim_offset, gamma, n_steps, t, task, w, x, x_dim)
             elif task.order == 1:
-                if tm1 is not None:
-                    phi, Jphi = task.phi(x[t]-x[tm1], context, self.kinematic_world)
-                    for dim_index in range(task.dim):
-                        i = n_steps * (dim_offset + dim_index) + t
-                        gamma[i] = w * phi[dim_index]
-                        for k in range(x_dim):
-                            Jgamma[i, x_dim * tm1 + k] =-w * Jphi[dim_index, k]
-                            Jgamma[i, x_dim * t   + k] = w * Jphi[dim_index, k]
+                self.fill_gamma_1(Jgamma, context, dim_offset, gamma, n_steps, t, task, tm1, w, x, x_dim)
             elif task.order == 2:
-                if tm1 is not None and tp1 is not None:
-                    phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1], context, self.kinematic_world)
-                    for dim_index in range(task.dim):
-                        i = n_steps * (dim_offset + dim_index) + t
-                        gamma[i] = w * phi[dim_index]
-                        for k in range(x_dim):
-                            Jgamma[i, x_dim * tm1+k] = w * Jphi[dim_index, k]
-                            Jgamma[i, x_dim * t  +k] =-w * 2 * Jphi[dim_index, k]
-                            Jgamma[i, x_dim * tp1+k] = w * Jphi[dim_index, k]
+                self.fill_gamma_2(Jgamma, context, dim_offset, gamma, n_steps, t, task, tm1, tp1, w, x, x_dim)
+
+    def fill_gamma_2(self, Jgamma, context, dim_offset, gamma, n_steps, t, task, tm1, tp1, w, x, x_dim):
+        if tm1 is not None and tp1 is not None:
+            phi, Jphi = task.phi(x[tm1] - 2 * x[t] + x[tp1], context, self.kinematic_world)
+            for dim_index in range(task.dim):
+                i = n_steps * (dim_offset + dim_index) + t
+                gamma[i] = w * phi[dim_index]
+                for k in range(x_dim):
+                    Jgamma[i, x_dim * tm1 + k] = w * Jphi[dim_index, k]
+                    Jgamma[i, x_dim * t + k] = -w * 2 * Jphi[dim_index, k]
+                    Jgamma[i, x_dim * tp1 + k] = w * Jphi[dim_index, k]
+
+    def fill_gamma_1(self, Jgamma, context, dim_offset, gamma, n_steps, t, task, tm1, w, x, x_dim):
+        if tm1 is not None:
+            phi, Jphi = task.phi(x[t] - x[tm1], context, self.kinematic_world)
+            for dim_index in range(task.dim):
+                i = n_steps * (dim_offset + dim_index) + t
+                gamma[i] = w * phi[dim_index]
+                for k in range(x_dim):
+                    Jgamma[i, x_dim * tm1 + k] = -w * Jphi[dim_index, k]
+                    Jgamma[i, x_dim * t + k] = w * Jphi[dim_index, k]
+
+    def fill_gama_0(self, Jgamma, context, dim_offset, gamma, n_steps, t, task, w, x, x_dim):
+        phi, Jphi = task.phi(x[t], context, self.kinematic_world)
+        for dim_index in range(task.dim):
+            i = n_steps * (dim_offset + dim_index) + t
+            gamma[i] = w * phi[dim_index]
+            for k in range(x_dim):
+                Jgamma[i, x_dim * t + k] = w * Jphi[dim_index, k]
 
     def extract_context(self, tm1, t, tp1, x):
         context = [None, None, None]
@@ -128,6 +138,9 @@ class PyKOMO:
         self.n_phases = n
 
     def run(self, x0, initial=None):
+        # from pycallgraph import PyCallGraph, Config
+        # from pycallgraph.output import GraphvizOutput
+        # with PyCallGraph(output=GraphvizOutput()):
         return self.run_gauss_newton_with_square_penalty(x0, initial)
 
     def run_gauss_newton_with_square_penalty(self, x0, initial=None):
@@ -142,11 +155,6 @@ class PyKOMO:
         return x
 
     def run_gauss_newton(self, x0, initial=None, mu=1):
-        import time
-        duration = 0
-        start = time.time()
-        duration += (time.time() - start)
-
         _lambda = self.lambda_0
         _alpha = 1
 
@@ -155,14 +163,26 @@ class PyKOMO:
         I = np.identity(x_flat.shape[0])
         while True:
             gamma, Jgamma = self.motion_problem.gamma(x, mu=mu)
-            JgammaT = np.transpose(Jgamma)
-            approxHessian = 2 * np.matmul(JgammaT, Jgamma)
-            A = approxHessian + _lambda * I
-            B = 2 * np.matmul(JgammaT, gamma)
-            d = np.linalg.solve(A, -B)
+
+            def matrix_preparation():
+                JgammaT = np.transpose(Jgamma)
+                approxHessian = 2 * np.matmul(JgammaT, Jgamma)
+                A = approxHessian + _lambda * I
+                B = 2 * np.matmul(JgammaT, gamma)
+                return A, B
+
+            def solve():
+                return np.linalg.solve(A, -B)
+
+            A, B = matrix_preparation()
+            d = solve()
+
+            # import matplotlib.pyplot as plt
+            # plt.matshow(Jgamma!=0)
+            # plt.show()
 
             while self.traj_cost(np.reshape(x_flat + _alpha * d, x.shape), mu) > self.traj_cost(x, mu) + self.rho * np.matmul(np.transpose(B),
-                                                                             _alpha * d):  # line search
+                                                                             _alpha * d):  # line search, very costly!!
                 _alpha = _alpha * 0.5
 
             x_flat = x_flat + _alpha * d
@@ -170,6 +190,10 @@ class PyKOMO:
             _alpha = 1
             if np.linalg.norm(_alpha * d) < self.eps:
                 break
+
+        # print("time_gathering:{}".format(time_gathering))
+        # print("time_mul:{}".format(time_mul))
+        # print("time_solve:{}".format(time_solve))
 
         return x
 

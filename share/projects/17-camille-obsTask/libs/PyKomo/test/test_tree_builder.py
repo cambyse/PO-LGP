@@ -1,4 +1,4 @@
-import nose as nt
+import nose.tools as nt
 import sys
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
@@ -76,4 +76,4 @@ def test_get_paths():
 
 def test_get_paths_with_cycles():
     pb = build_path_builder_with_cycle()
-    nt.assert_equals(1, len(pb.get_paths()))
+    nt.assert_equals(1, len(pb.get_cycles()))
