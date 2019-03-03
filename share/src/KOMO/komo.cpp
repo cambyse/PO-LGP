@@ -1228,8 +1228,7 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensio
 //      CHECK(task->prec.N<=MP.T,"");
       WorldL configurations(komo.k_order+1);
       for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
-      uint m = task->map->dim_phi(configurations, t);
-      //uint m = task->map->dim_phi(komo.configurations({t,t+komo.k_order}), t); //dimensionality of this task
+      uint m = task->map->dim_phi(configurations, t); //dimensionality of this task
       featureTimes.append(consts<uint>(task->path(t), m));
       featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
@@ -1241,17 +1240,13 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
   //-- set the trajectory
   komo.set_x(x);
 
-
   CHECK(dimPhi,"getStructure must be called first");
   phi.resize(dimPhi);
   if(&tt) tt.resize(dimPhi);
   if(&J)
   {
     J.resize(dimPhi);
-    for(uint i=0;i<dimPhi;i++)
-    {
-      J(i) = arr(x.N);
-    }
+    for(uint i=0;i<dimPhi;i++) J(i) = arr(x.N);
   }
 
   arr y, Jy;
@@ -1283,9 +1278,9 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
             for(uint j=0; j<qN; ++j)
             {
               auto col_in_jacobian = qN * task->path(t+k)+j;
-              col_in_jacobian -= get_k() * qN; // shift back
+              col_in_jacobian -= get_k() * qN; // shift back to compensate for the prefix
 
-              if(col_in_jacobian < x.N) // < 0 implicitely handled by overflow
+              if(col_in_jacobian < x.N) // case col < 0 implicitely handled by overflow
               {
                 J(M+i)(col_in_jacobian)=Jy(i,komo.k_order * k + j);
               }
