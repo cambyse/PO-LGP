@@ -231,10 +231,14 @@ bool KOMO::parseTask(const Node *n, int stepsPerPhase){
 }
 
 Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
+  return setTreeTask(startTime, endTime, NoUintA, map, type, target, prec, order);
+}
+
+Task *KOMO::setTreeTask(double startTime, double endTime, const uintA& path, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
   CHECK(k_order>=order,"");
   map->order = order;
   Task *task = addTask(map->shortTag(world), map, type);
-  task->setCostSpecs(startTime, endTime, stepsPerPhase, T, target, prec);
+  task->setCostSpecs(startTime, endTime, stepsPerPhase, T, target, prec, path);
   return task;
 }
 
@@ -1222,8 +1226,11 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensio
   for(uint t=0;t<komo.T;t++){
     for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
 //      CHECK(task->prec.N<=MP.T,"");
-      uint m = task->map->dim_phi(komo.configurations({t,t+komo.k_order}), t); //dimensionality of this task
-      featureTimes.append(consts<uint>(t, m));
+      WorldL configurations(komo.k_order+1);
+      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
+      uint m = task->map->dim_phi(configurations, t);
+      //uint m = task->map->dim_phi(komo.configurations({t,t+komo.k_order}), t); //dimensionality of this task
+      featureTimes.append(consts<uint>(task->path(t), m));
       featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
   }
@@ -1238,14 +1245,23 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
   CHECK(dimPhi,"getStructure must be called first");
   phi.resize(dimPhi);
   if(&tt) tt.resize(dimPhi);
-  if(&J) J.resize(dimPhi);
+  if(&J)
+  {
+    J.resize(dimPhi);
+    for(uint i=0;i<dimPhi;i++)
+    {
+      J(i) = arr(x.N);
+    }
+  }
 
   arr y, Jy;
   uint M=0;
   for(uint t=0;t<komo.T;t++){
     for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
-        //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
-      task->map->phi(y, (&J?Jy:NoArr), komo.configurations({t,t+komo.k_order}), komo.tau, t);
+      //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
+      WorldL configurations(komo.k_order+1);
+      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
+      task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
       if(!y.N) continue;
       if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
 
@@ -1256,11 +1272,26 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
       y *= sqrt(task->prec(t));
 
       //write into phi and J
+      const auto & qN = komo.configurations(0)->q.N;
       phi.setVectorBlock(y, M);
       if(&J){
         Jy *= sqrt(task->prec(t));
-        if(t<komo.k_order) Jy.delColumns(0,(komo.k_order-t)*komo.configurations(0)->q.N); //delete the columns that correspond to the prefix!!
-        for(uint i=0;i<y.N;i++) J(M+i) = Jy[i]; //copy it to J(M+i); which is the Jacobian of the M+i'th feature w.r.t. its variables
+        for(uint i=0;i<y.N;i++)
+        {
+          for(uint k=0; k<=komo.k_order; ++k)
+          {
+            for(uint j=0; j<qN; ++j)
+            {
+              auto col_in_jacobian = qN * task->path(t+k)+j;
+              col_in_jacobian -= get_k() * qN; // shift back
+
+              if(col_in_jacobian < x.N) // < 0 implicitely handled by overflow
+              {
+                J(M+i)(col_in_jacobian)=Jy(i,komo.k_order * k + j);
+              }
+            }
+          }
+        }
       }
       if(&tt) for(uint i=0;i<y.N;i++) tt(M+i) = task->type;
 
@@ -1273,6 +1304,52 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
   komo.featureValues = ARRAY<arr>(phi);
   if(&tt) komo.featureTypes = ARRAY<ObjectiveTypeA>(tt);
 }
+
+//void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x){
+//  //-- set the trajectory
+//  komo.set_x(x);
+
+
+//  CHECK(dimPhi,"getStructure must be called first");
+//  phi.resize(dimPhi);
+//  if(&tt) tt.resize(dimPhi);
+//  if(&J) J.resize(dimPhi);
+
+//  arr y, Jy;
+//  uint M=0;
+//  for(uint t=0;t<komo.T;t++){
+//    for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
+//      //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
+//      WorldL configurations(komo.k_order+1);
+//      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
+//      task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
+//      if(!y.N) continue;
+//      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
+
+//      //linear transform (target shift)
+//      if(task->target.N==1) y -= task->target.elem(0);
+//      else if(task->target.nd==1) y -= task->target;
+//      else if(task->target.nd==2) y -= task->target[t];
+//      y *= sqrt(task->prec(t));
+
+//      //write into phi and J
+//      phi.setVectorBlock(y, M);
+//      if(&J){
+//        Jy *= sqrt(task->prec(t));
+//        if(t<komo.k_order) Jy.delColumns(0,(komo.k_order-t)*komo.configurations(0)->q.N); //delete the columns that correspond to the prefix!!
+//        for(uint i=0;i<y.N;i++) J(M+i) = Jy[i]; //copy it to J(M+i); which is the Jacobian of the M+i'th feature w.r.t. its variables
+//      }
+//      if(&tt) for(uint i=0;i<y.N;i++) tt(M+i) = task->type;
+
+//      //counter for features phi
+//      M += y.N;
+//    }
+//  }
+
+//  CHECK_EQ(M, dimPhi, "");
+//  komo.featureValues = ARRAY<arr>(phi);
+//  if(&tt) komo.featureTypes = ARRAY<ObjectiveTypeA>(tt);
+//}
 
 
 arr KOMO::getPath(const StringA &joints){

@@ -7,17 +7,19 @@ struct Task {
   TaskMap *map;
   const mlr::Enum<ObjectiveType> type;  ///< element of {sumOfSqr, inequality, equality}
   mlr::String name;
-  arr target, prec;     ///< optional linear, time-dependent, rescaling (with semantics of target & precision)
+  arr target, prec;     ///< optional linear, time-dependent, rescaling (with semantics of target & precision) // in branch time
+  uintA path;           ///< way to traverse x allow traj tree opt : link from branch index to x index
 
   Task(TaskMap *m, const ObjectiveType& type) : map(m), type(type){}
   ~Task(){ if(map) delete map; map=NULL; }
 
   void setCostSpecs(int fromTime, int toTime,
                     const arr& _target=ARR(0.),
-                    double _prec=1.);
-  void setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T,
+                    double _prec=1., const uintA& path=NoUintA);
+  void setCostSpecs(double fromTime, double toTime,
+                    int stepsPerPhase, uint T,
                     const arr& _target,
-                    double _prec);
+                    double _prec, const uintA& path=NoUintA);
   bool isActive(uint t){ return (prec.N>t && prec(t)); }
   void write(std::ostream& os) const{
     os <<"TASK '" <<name <<"'"

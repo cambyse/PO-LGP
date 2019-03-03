@@ -6,27 +6,33 @@
 void Task::setCostSpecs(int fromTime,
                         int toTime,
                         const arr& _target,
-                        double _prec){
+                        double _prec,
+                        const uintA& _path){
   if(&_target) target = _target; else target = {0.};
   if(fromTime<0) fromTime=0;
   CHECK(toTime>=fromTime,"");
-  prec.resize(toTime+1).setZero();
-  for(uint t=fromTime;t<=(uint)toTime;t++) prec(t) = _prec;
+  prec.resize(toTime).setZero();
+  for(uint t=fromTime;t<(uint)toTime;t++) prec(t) = _prec; // time on branch
 }
 
 #define STEP(t) (floor(t*double(stepsPerPhase) + .500001))-1
 
-void Task::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T, const arr& _target, double _prec){
+void Task::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T, const arr& _target, double _prec, const uintA& _path){
   if(stepsPerPhase<0) stepsPerPhase=T;
   if(STEP(toTime)>T-1){
       LOG(-1) <<"beyond the time!: endTime=" <<toTime <<" phases=" <<double(T)/stepsPerPhase;
   }
+
+  CHECK(&path, "case without path not handled yet!");
+  path = _path;
+
   int tFrom = (fromTime<0.?0:STEP(fromTime)+map->order);
-  int tTo = (toTime<0.?T-1:STEP(toTime));
+  //int tTo = (toTime<0.?T-1:STEP(toTime));
+  int tTo = (toTime<0.?path.d0-2:STEP(toTime));
   if(tTo<0) tTo=0;
   if(tFrom>tTo && tFrom-tTo<=(int)map->order) tFrom=tTo;
 
-  setCostSpecs(tFrom, tTo, _target, _prec);
+  setCostSpecs(tFrom, tTo, _target, _prec, _path);
 }
 
 //===========================================================================
