@@ -38,19 +38,22 @@ class TreeBuilder:
         leafs = self.get_leafs()
         paths=[]
         for l in leafs:
-            path=[]
-            current = l
-            parents = self.get_parents(current)
-            while len(parents) == 1:
-                parent = parents[0]
-                p = self.p(parent, current)
-                path.append((current, p))
-                current = parent
-                parents = self.get_parents(current)
-            path.append((0, 1.0))
-            path.reverse()
-            paths.append(path)
+            paths.append(self.get_path(l))
         return paths
+
+    def get_path(self, l):
+        path = []
+        current = l
+        parents = self.get_parents(current)
+        while len(parents) == 1:
+            parent = parents[0]
+            p = self.p(parent, current)
+            path.append((current, p))
+            current = parent
+            parents = self.get_parents(current)
+        path.append((0, 1.0))
+        path.reverse()
+        return path
 
     def get_cycles(self):
         return [1]

@@ -262,41 +262,36 @@ protected:
 
 /////////////////////////////////////
 
-//TEST(RowShifting, Foo1)
-//{
-//  arr J;
-//  uint xN = 20;
-//  uint band_size = 6;// (k+1)*dim_xmax
-//  uint phiN = xN * 3; // xN * nTask * taskDim
-//  RowShifted *Jaux = makeRowShifted(J, phiN, band_size, xN);
+TEST(RowShifting, Understanding_RowShifting)
+{
+  arr J;
+  uint xN = 20;
+  uint band_size = 6;// (k+1)*dim_xmax
+  uint phiN = xN * 3; // xN * nTask * taskDim
+  RowShifted *Jaux = makeRowShifted(J, phiN, band_size, xN);
 
-//  EXPECT_EQ(J.d0, phiN);
-//  EXPECT_EQ(J.d1, band_size);
-//  EXPECT_EQ(Jaux->real_d1, xN);
+  EXPECT_EQ(J.d0, phiN);
+  EXPECT_EQ(J.d1, band_size);
+  EXPECT_EQ(Jaux->real_d1, xN);
 
-//  // assign
-//  J(0, 0) = 1; // store phiN * band_size elements
-//  J(1, Jaux->rowShift(1)) = 1;
+  // assign
+  J(0, 0) = 1; // store phiN * band_size elements
+  J(1, Jaux->rowShift(1)) = 1;
 
-//  //J(30, 1) = 1;
+  //J(30, 1) = 1;
 
-//  // necessary?
-//  Jaux->reshift();
-//  Jaux->computeColPatches(true);
+  // necessary?
+  Jaux->reshift();
+  Jaux->computeColPatches(true);
 
-//  // unshift
-//  auto Junshifted = unpack(J); // store phiN * xN
+  // unshift
+  auto Junshifted = unpack(J); // store phiN * xN
 
-//  EXPECT_EQ(Junshifted.d0, phiN);
-//  EXPECT_EQ(Junshifted.d1, xN);
-//  EXPECT_EQ(Junshifted(0, 0), 1);
-//  EXPECT_EQ(Junshifted(1, 1), 1);
-
-//  //EXPECT_EQ(Junshifted(30, 1), 1);
-
-//  std::cout << "J " << std::endl<< J << std::endl;
-//  std::cout << "Junshifted " << std::endl << Junshifted << std::endl;
-//}
+  EXPECT_EQ(Junshifted.d0, phiN);
+  EXPECT_EQ(Junshifted.d1, xN);
+  EXPECT_EQ(Junshifted(0, 0), 1);
+  EXPECT_EQ(Junshifted(1, 1), 1);
+}
 
 TEST_F(KomoTreeExtensionFixture, Foo2)
 {
@@ -325,10 +320,10 @@ TEST_F(KomoTreeExtensionFixture, Foo2)
   }
 
   komo.setTreeTask(0, -1, path_1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
-  komo.setTreeTask(0, 5, path_1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+  komo.setTreeTask(0,  5, path_1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
 
   komo.setTreeTask(0, -1, path_2, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
-  komo.setTreeTask(0, 5, path_2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
+  komo.setTreeTask(3,  5, path_2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
 
   komo.reset();
   komo.checkGradients();

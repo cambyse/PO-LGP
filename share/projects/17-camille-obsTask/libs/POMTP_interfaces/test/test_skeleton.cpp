@@ -6,6 +6,31 @@
 
 #include <boost/filesystem.hpp>
 
+Skeleton build_3_nodes_Skeleton()
+{
+  SkeletonNodeData rootData;
+  //rootData.beliefState = { 1.0 };
+  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+
+  // child 1
+  SkeletonNodeData childData1;
+  //childData.beliefState = { 1.0 };
+  childData1.leadingKomoArgs = { "komoAction", "X", "Y", "Z" };
+  root->makeChild( childData1 );
+
+  // child 1
+  SkeletonNodeData childData2;
+  //childData.beliefState = { 1.0 };
+  childData2.leadingKomoArgs = { "komoAction", "A", "B", "C" };
+  root->makeChild( childData2 );
+
+  // policy
+  Skeleton p( root );
+  p.setValue( 1.0 );
+
+  return p;
+}
+
 // QResult
 TEST(QResult, DefaultConstruction) {
   QResult result;
@@ -171,31 +196,20 @@ TEST(Skeleton, HashingInequality) {
   ASSERT_NE( pp.hash(), p.hash() );
 }
 
+TEST(Skeleton, NumberOfNodes) {
+  // root
+  Skeleton p = build_3_nodes_Skeleton();
+
+  ASSERT_EQ(p.nNodes(), 3);
+}
+
 // GraphNode
 TEST(Skeleton, SaveToGraph) {
 
   const std::string filename( "policy_graph.gv" );
 
-  // root
-  SkeletonNodeData rootData;
-  //rootData.beliefState = { 1.0 };
-  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+  Skeleton p = build_3_nodes_Skeleton();
 
-  // child 1
-  SkeletonNodeData childData1;
-  //childData.beliefState = { 1.0 };
-  childData1.leadingKomoArgs = { "komoAction", "X", "Y", "Z" };
-  root->makeChild( childData1 );
-
-  // child 1
-  SkeletonNodeData childData2;
-  //childData.beliefState = { 1.0 };
-  childData2.leadingKomoArgs = { "komoAction", "A", "B", "C" };
-  root->makeChild( childData2 );
-
-  // policy
-  Skeleton p( root );
-  p.setValue( 1.0 );
   p.saveToGraphFile( "policy_graph.gv" );
 
   ASSERT_TRUE( boost::filesystem::exists( filename ) );

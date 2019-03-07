@@ -234,11 +234,11 @@ Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, ObjectiveTyp
   return setTreeTask(startTime, endTime, NoUintA, map, type, target, prec, order);
 }
 
-Task *KOMO::setTreeTask(double startTime, double endTime, const uintA& path, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
+Task *KOMO::setTreeTask(double startTime, double endTime, const uintA& branch, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
   CHECK(k_order>=order,"");
   map->order = order;
   Task *task = addTask(map->shortTag(world), map, type);
-  task->setCostSpecs(startTime, endTime, stepsPerPhase, T, target, prec, path);
+  task->setCostSpecs(startTime, endTime, stepsPerPhase, T, target, prec, branch);
   return task;
 }
 
@@ -1227,9 +1227,9 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensio
     for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
 //      CHECK(task->prec.N<=MP.T,"");
       WorldL configurations(komo.k_order+1);
-      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
+      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->branch(t+k));
       uint m = task->map->dim_phi(configurations, t); //dimensionality of this task
-      featureTimes.append(consts<uint>(task->path(t), m));
+      featureTimes.append(consts<uint>(task->branch(t), m));
       featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
   }
@@ -1255,7 +1255,7 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
     for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
       //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
       WorldL configurations(komo.k_order+1);
-      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
+      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->branch(t+k));
       task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
       if(!y.N) continue;
       if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
@@ -1277,7 +1277,7 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
           {
             for(uint j=0; j<qN; ++j)
             {
-              auto col_in_jacobian = qN * task->path(t+k)+j;
+              auto col_in_jacobian = qN * task->branch(t+k)+j;
               col_in_jacobian -= get_k() * qN; // shift back to compensate for the prefix
 
               if(col_in_jacobian < x.N) // case col < 0 implicitely handled by overflow
@@ -1316,7 +1316,7 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
 //    for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
 //      //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
 //      WorldL configurations(komo.k_order+1);
-//      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->path(t+k));
+//      for(uint k = 0; k<=komo.k_order; ++k) configurations(k) = komo.configurations(task->branch(t+k));
 //      task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
 //      if(!y.N) continue;
 //      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);

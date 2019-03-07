@@ -173,6 +173,7 @@ public:
   bool feasible()        const { return value_ > std::numeric_limits< double >::lowest(); }
 
   uint N() const { return root_->data().beliefState.size(); }
+  uint nNodes() const;
 
   // io
   void save( const std::string & file ) const;

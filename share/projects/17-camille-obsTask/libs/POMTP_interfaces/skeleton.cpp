@@ -16,6 +16,7 @@
 
 #include <queue>
 #include <iostream>
+#include <set>
 #include <skeleton_printer.h>
 
 static int skeletonNumber = 0;
@@ -102,6 +103,21 @@ Skeleton & Skeleton::operator= ( const Skeleton & policy )
   copy( policy );
 
   return *this;
+}
+
+uint Skeleton::nNodes() const
+{
+  std::set< uint > node_ids;
+
+  for(const auto l : leafs_)
+  {
+    for(const auto n : getPathTo(l.lock()))
+    {
+      node_ids.insert(n->id());
+    }
+  }
+
+  return node_ids.size();
 }
 
 void Skeleton::save( const std::string & file ) const
