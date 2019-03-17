@@ -7,7 +7,7 @@ class TreeBuilder:
     def add_edge(self, _from, _to, p=1.0):
         max_node = max(_from, _to)
         size = max_node+1
-        if self.adjacency_matrix.shape[0] < size :
+        if self.adjacency_matrix.shape[0] < size:
             old_adjacency_matrix = np.copy(self.adjacency_matrix)
             old_size = old_adjacency_matrix.shape[0]
             adjacency_matrix = np.zeros((size, size))

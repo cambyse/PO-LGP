@@ -56,16 +56,12 @@ def test_get_parents():
     pb = build_simple_path_builder()
     nt.assert_equals([], pb.get_parents(0))
 
-    pb = build_simple_path_builder()
     nt.assert_equals([0], pb.get_parents(1))
 
-    pb = build_simple_path_builder()
     nt.assert_equals([1], pb.get_parents(2))
 
-    pb = build_simple_path_builder()
     nt.assert_equals([2], pb.get_parents(3))
 
-    pb = build_simple_path_builder()
     nt.assert_equals([2], pb.get_parents(4))
 
 def test_get_paths():

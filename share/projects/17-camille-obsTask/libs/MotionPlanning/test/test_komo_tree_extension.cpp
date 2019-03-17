@@ -293,7 +293,7 @@ TEST(RowShifting, Understanding_RowShifting)
   EXPECT_EQ(Junshifted(1, 1), 1);
 }
 
-TEST_F(KomoTreeExtensionFixture, Foo2)
+TEST_F(KomoTreeExtensionFixture, SimpleTwoBranchesTreePlanning)
 {
   //komo->setTiming( 1., 2, 5., 1/*, true*/ );
   komo.setTiming( 10, 10, 1.0, 2 );
