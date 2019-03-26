@@ -415,3 +415,6 @@ def test_traj_tree_in_font_of_obstacle():
     # plot traj
     if SHOW_PLOTS:
         kin.draw(x)
+
+if __name__ == "__main__":
+     test_traj_tree_in_font_of_obstacle()

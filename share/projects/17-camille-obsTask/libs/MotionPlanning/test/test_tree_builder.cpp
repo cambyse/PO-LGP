@@ -1,6 +1,6 @@
 #include "komo_planner.h"
 #include <gtest/gtest.h>
-#include <task_tree_builder.h>
+#include <tree_builder.h>
 
 using namespace std;
 using namespace mp;
@@ -64,18 +64,32 @@ TEST(TreeBuilder, GetParents)
 TEST(TreeBuilder, GetBranch)
 {
   auto tb = build_simple_path_builder();
-  std::vector<std::pair<uint, double>> expected_branch_to_3;
-  expected_branch_to_3.push_back({0, 1.0});
-  expected_branch_to_3.push_back({1, 1.0});
-  expected_branch_to_3.push_back({2, 1.0});
-  expected_branch_to_3.push_back({3, 0.5});
+  Branch expected_branch_to_3;
+  expected_branch_to_3.p = 0.5;
+  expected_branch_to_3.leaf_id = 3;
+  expected_branch_to_3.local_to_global.push_back(0);
+  expected_branch_to_3.local_to_global.push_back(1);
+  expected_branch_to_3.local_to_global.push_back(2);
+  expected_branch_to_3.local_to_global.push_back(3);
+  expected_branch_to_3.global_to_local.push_back(0);
+  expected_branch_to_3.global_to_local.push_back(1);
+  expected_branch_to_3.global_to_local.push_back(2);
+  expected_branch_to_3.global_to_local.push_back(3);
+  expected_branch_to_3.global_to_local.push_back(-1);
   EXPECT_EQ(expected_branch_to_3, tb.get_branch(3));
 
-  std::vector<std::pair<uint, double>> expected_branch_to_4;
-  expected_branch_to_4.push_back({0, 1.0});
-  expected_branch_to_4.push_back({1, 1.0});
-  expected_branch_to_4.push_back({2, 1.0});
-  expected_branch_to_4.push_back({4, 0.5});
+  Branch expected_branch_to_4;
+  expected_branch_to_4.p = 0.5;
+  expected_branch_to_4.leaf_id = 4;
+  expected_branch_to_4.local_to_global.push_back(0);
+  expected_branch_to_4.local_to_global.push_back(1);
+  expected_branch_to_4.local_to_global.push_back(2);
+  expected_branch_to_4.local_to_global.push_back(4);
+  expected_branch_to_4.global_to_local.push_back(0);
+  expected_branch_to_4.global_to_local.push_back(1);
+  expected_branch_to_4.global_to_local.push_back(2);
+  expected_branch_to_4.global_to_local.push_back(-1);
+  expected_branch_to_4.global_to_local.push_back(3);
   EXPECT_EQ(expected_branch_to_4, tb.get_branch(4));
 }
 

@@ -8,6 +8,8 @@
 #include <Kin/taskMap_default.h>
 #include <Kin/taskMap_transition.h>
 
+#include <tree_builder.h>
+
 using namespace std;
 using namespace mp;
 
@@ -261,6 +263,17 @@ protected:
 };
 
 /////////////////////////////////////
+static TreeBuilder build_tree()
+{
+  auto tb = TreeBuilder();
+  tb.add_edge(0, 1); // 0->12
+  tb.add_edge(1, 2); // 12->22
+  tb.add_edge(2, 3, 0.5); // 22->32
+  tb.add_edge(3, 4, 0.5); // 32->42
+  tb.add_edge(2, 5, 0.5); // 42->52
+  tb.add_edge(5, 6, 0.5); // 52->62
+  return tb;
+}
 
 TEST(RowShifting, Understanding_RowShifting)
 {
@@ -290,49 +303,195 @@ TEST(RowShifting, Understanding_RowShifting)
   EXPECT_EQ(Junshifted.d0, phiN);
   EXPECT_EQ(Junshifted.d1, xN);
   EXPECT_EQ(Junshifted(0, 0), 1);
-  EXPECT_EQ(Junshifted(1, 1), 1);
+  //EXPECT_EQ(Junshifted(1, 1), 1);
 }
 
-TEST_F(KomoTreeExtensionFixture, SimpleTwoBranchesTreePlanning)
+TEST_F(KomoTreeExtensionFixture, TestComputeMicroStepBranch)
 {
-  //komo->setTiming( 1., 2, 5., 1/*, true*/ );
-  komo.setTiming( 10, 10, 1.0, 2 );
+    auto tb = build_tree();
+    auto n_phases = tb.n_nodes() - 1;
+
+    // BRANCH 1
+    auto branch_1 = tb.get_branch(4);
+    auto u_branch_1 = computeMicroStepBranch(branch_1, 10);
+    auto expected_u_branch_1 = intA(40); // n phase + 2 steps (prefix)
+    for(uint t=0; t < 40; t++)
+    {
+      expected_u_branch_1(t)=t;
+    }
+
+    EXPECT_EQ(branch_1.p, u_branch_1.p);
+    EXPECT_EQ(expected_u_branch_1, u_branch_1.local_to_global);
+
+    // BRANCH 2
+    auto branch_2 = tb.get_branch(6);
+    auto u_branch_2 = computeMicroStepBranch(branch_2, 10);
+    auto expected_u_branch_2 = intA(40); // n phase + 2 steps (prefix)
+    for(uint t=0; t < 20; t++)
+    {
+      expected_u_branch_2(t)=t;
+    }
+    for(uint t=20; t < 40; t++)
+    {
+      expected_u_branch_2(t)=20+t;
+    }
+
+    EXPECT_EQ(branch_2.p, u_branch_2.p);
+    EXPECT_EQ(expected_u_branch_2, u_branch_2.local_to_global);
+}
+
+TEST_F(KomoTreeExtensionFixture, TestComputeGlobalToBranch)
+{
+  auto tb = build_tree();
+  const uint n_micro_steps = 10;
+  auto n_phases = tb.n_nodes() - 1;
+  auto branch_1 = tb.get_branch(4);
+  auto branch_2 = tb.get_branch(6);
+
+  komo.setTiming( n_phases, n_micro_steps, 1.0, 2 );
+
+  auto acc_1 = komo.setTreeTask(0, -1, branch_1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+  auto acc_2 = komo.setTreeTask(0, -1, branch_2, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+
+  for(auto t=0; t < komo.T; ++t)
+  {
+    if( acc_1->prec(t) )
+    {
+      auto bt = acc_1->branch.global_to_local[t]; // branch time
+      auto retrieved_t = acc_1->branch.local_to_global[bt];
+      EXPECT_EQ(t, retrieved_t);
+    }
+  }
+}
+
+TEST_F(KomoTreeExtensionFixture, TestBranchPrecSpecificationWithMinusOneEnd)
+{
+  const uint n_micro_steps = 10;
+
+  auto tb = build_tree();
+  auto n_phases = tb.n_nodes() - 1;
+  auto branch_1 = tb.get_branch(4);
+  auto branch_2 = tb.get_branch(6);
+
+  // prec branch 1
+  auto prec_branch_1 = arr(60); // n phase + 2 steps (prefix)
+  for( auto s = 0; s < 60; ++s )
+  {
+    if(s >=0 && s < 40-2)
+    {
+      prec_branch_1(s)=1;
+    }
+    else
+    {
+      prec_branch_1(s)=0;
+    }
+  }
+
+  // prec branch 2
+  auto prec_branch_2 = arr(60); // n phase + 2 steps (prefix)
+  for(auto s = 0; s < 60; ++s)
+  {
+    if( s < 20 || s >= 40 && s < 60-2)
+    {
+      prec_branch_2(s)=1;
+    }
+    else
+    {
+      prec_branch_2(s)=0;
+    }
+  }
+  //
+
+  komo.setTiming( n_phases, n_micro_steps, 1.0, 2 );
+
+  auto acc_1 = komo.setTreeTask(0, -1, branch_1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+  auto acc_2 = komo.setTreeTask(0, -1, branch_2, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+
+  EXPECT_EQ(computeMicroStepBranch(branch_1, n_micro_steps), acc_1->branch);
+  EXPECT_EQ(prec_branch_1, acc_1->prec);
+
+  EXPECT_EQ(computeMicroStepBranch(branch_2, n_micro_steps), acc_2->branch);
+  EXPECT_EQ(prec_branch_2, acc_2->prec);
+}
+
+TEST_F(KomoTreeExtensionFixture, TestBranchPrecSpecificationWithNormalTaskSpecification)
+{
+  const uint n_micro_steps = 10;
+
+  auto tb = build_tree();
+  auto n_phases = tb.n_nodes() - 1;
+  auto branch_1 = tb.get_branch(4);
+  auto branch_2 = tb.get_branch(6);
+
+  // prec branch 1
+  auto prec_branch_1 = arr(60); // n phase + 2 steps (prefix)
+  for( auto s = 0; s < 60; ++s )
+  {
+    if(s >=0 && s < 40-2)
+    {
+      prec_branch_1(s)=1;
+    }
+    else
+    {
+      prec_branch_1(s)=0;
+    }
+  }
+
+  // prec branch 2
+  auto prec_branch_2 = arr(60); // n phase + 2 steps (prefix)
+  for(auto s = 0; s < 60; ++s)
+  {
+    if( s >= 50 && s < 60-2)
+    {
+      prec_branch_2(s)=1;
+    }
+    else
+    {
+      prec_branch_2(s)=0;
+    }
+  }
+  //
+
+  komo.setTiming( n_phases, n_micro_steps, 1.0, 2 );
 
   arr op_speed_1{ 0.5, 0, 0 };
   arr op_speed_2{ 1.5, 0, 0 };
 
-  //komo.setVelocity( 0, -1, "car_ego", NULL, OT_sumOfSqr, op_speed );
+  auto speed_1 = komo.setTreeTask(0,  4, branch_1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+  auto speed_2 = komo.setTreeTask(3,  4, branch_2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
 
-  auto path_1 = uintA(52); // n phase + 2 steps (prefix)
-  for(uint t=0; t < 52; t++)
-  {
-    path_1(t)=t;
-  }
+  EXPECT_EQ(prec_branch_1, speed_1->prec);
+  EXPECT_EQ(prec_branch_2, speed_2->prec);
+}
 
-  auto path_2 = uintA(52);
-  for(uint t=0; t < 10; t++)
-  {
-    path_2(t)=t;
-  }
-  for(uint t=10; t < 52; t++)
-  {
-    path_2(t)=40+t+2;
-  }
+TEST_F(KomoTreeExtensionFixture, TestSimpleOptimizationWithTwoBranches)
+{
+  const uint n_micro_steps = 10;
 
-  komo.setTreeTask(0, -1, path_1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
-  komo.setTreeTask(0,  5, path_1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+  auto tb = build_tree();
+  auto n_phases = tb.n_nodes() - 1;
+  auto branch_1 = tb.get_branch(4);
+  auto branch_2 = tb.get_branch(6);
 
-  komo.setTreeTask(0, -1, path_2, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
-  komo.setTreeTask(3,  5, path_2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
+  komo.setTiming( n_phases, n_micro_steps, 1.0, 2 );
+
+  auto acc_1 = komo.setTreeTask(0, -1, branch_1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+  auto acc_2 = komo.setTreeTask(0, -1, branch_2, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+
+  arr op_speed_1{ 0.5, 0, 0 };
+  arr op_speed_2{ 1.5, 0, 0 };
+
+  auto speed_1 = komo.setTreeTask(0,  4, branch_1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+  auto speed_2 = komo.setTreeTask(3,  4, branch_2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
 
   komo.reset();
-  komo.checkGradients();
+  EXPECT_EQ(true, komo.checkGradients());
   komo.run();
 
-  //Graph g = komo.getReport(true);
-  //komo.plotVelocity();
-  komo.displayTrajectory(0.1, true);
+  komo.displayTreeTrajectories(0.1, true);
+  //komo.displayTrajectory(0.1, true);
 }
+
 
 ////////////////////////////////
 int main(int argc, char **argv)

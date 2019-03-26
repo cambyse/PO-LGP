@@ -1,4 +1,4 @@
-#include <task_tree_builder.h>
+#include <tree_builder.h>
 
 namespace mp
 {
@@ -65,31 +65,43 @@ namespace mp
     return parents;
   }
 
-  std::vector<std::pair<uint, double>> TreeBuilder::get_branch(uint leaf) const
+  Branch TreeBuilder::get_branch(uint leaf) const
   {
-    std::vector<std::pair<uint, double>> branch;
+    Branch branch;
     auto current = leaf;
     auto parents = get_parents(current);
 
-    while(parents.size()==1)
+    CHECK(parents.size() > 0, "No parents for this leaf!");
+    CHECK(parents.size() < 2, "Not implemented yet!, needs graph support!");
+
+    branch.p = p(parents[0], leaf);
+    branch.leaf_id = leaf;
+
+    while(parents.size())
     {
       auto parent = parents[0];
       auto p = this->p(parent, current);
-      branch.push_back(std::make_pair(current, p));
+      branch.local_to_global.push_back(current);
       current = parent;
       parents = get_parents(current);
     }
 
-    CHECK(parents.size() < 2, "Not implemented yet!, needs graph support");
+    branch.local_to_global.push_back(0);
+    std::reverse(branch.local_to_global.begin(), branch.local_to_global.end());
 
-    branch.push_back(std::make_pair(0, 1.0));
-    std::reverse(branch.begin(), branch.end());
+    branch.global_to_local = std::vector< int >(n_nodes(), -1);
+    for( auto local = 0; local < branch.local_to_global.size(); ++local )
+    {
+      auto global = branch.local_to_global[local];
+      branch.global_to_local[global] = local;
+    }
+
     return branch;
   }
 
-  std::vector<std::vector<std::pair<uint, double>>> TreeBuilder::get_branches() const
+  std::vector<Branch> TreeBuilder::get_branches() const
   {
-    std::vector<std::vector<std::pair<uint, double>>> branches;
+    std::vector<Branch> branches;
 
     for(auto l : get_leafs())
     {

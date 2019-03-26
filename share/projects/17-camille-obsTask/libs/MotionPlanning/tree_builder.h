@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <Core/array.h>
 
+#include <KOMO/task.h>
+
 namespace mp
 {
   class TreeBuilder
@@ -14,8 +16,8 @@ namespace mp
     double p(uint from, uint to) const;
     std::vector<uint> get_leafs() const;
     std::vector<uint> get_parents(uint node) const;
-    std::vector<std::pair<uint, double>> get_branch(uint leaf) const;
-    std::vector<std::vector<std::pair<uint, double>>> get_branches() const;
+    Branch get_branch(uint leaf) const;
+    std::vector<Branch> get_branches() const;
 
     void add_edge(uint from, uint to, double p = 1.0);
 
