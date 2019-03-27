@@ -186,6 +186,7 @@ struct KOMO{
 
     Conv_MotionProblem_KOMO_Problem(KOMO& _komo) : komo(_komo){}
 
+    WorldL getConfigurations(Task* task, uint t) const;
     virtual uint get_k(){ return komo.k_order; }
     virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, ObjectiveTypeA& featureTypes);
     virtual void phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x);

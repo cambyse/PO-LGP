@@ -1,17 +1,7 @@
 #include "task.h"
 #include <Core/graph.h>
 
-bool operator==(const Branch& a, const Branch& b)
-{
-    return (a.p == b.p) && (a.local_to_global == b.local_to_global) && (a.global_to_local == b.global_to_local) && (a.leaf_id == b.leaf_id);
-}
-
-bool operator<(const Branch& a, const Branch& b)
-{
-    return a.leaf_id < b.leaf_id;
-}
-
-Branch computeMicroStepBranch(const Branch& a, int stepsPerPhase)
+Branch Branch::computeMicroStepBranch(const Branch& a, int stepsPerPhase)
 {
     Branch b;
 
@@ -43,11 +33,44 @@ Branch computeMicroStepBranch(const Branch& a, int stepsPerPhase)
         b.global_to_local[global] = local;
     }
 
+    // hack
+    if( b.local_to_global.size() < 3 )
+    {
+        b.local_to_global.push_back(2);
+        b.global_to_local.push_back(2);
+    }
+
     return b;
 }
 
-//===========================================================================
+Branch Branch::linearTrajectory(int T)
+{
+    Branch b;
+    b.p = 1.0;
 
+    b.global_to_local = std::vector< int >(T);
+    b.local_to_global = std::vector< int >(T);
+
+    for(auto t = 0; t < T; ++t)
+    {
+        b.global_to_local[t] = t;
+        b.local_to_global[t] = t;
+    }
+
+    return b;
+}
+
+bool operator==(const Branch& a, const Branch& b)
+{
+    return (a.p == b.p) && (a.local_to_global == b.local_to_global) && (a.global_to_local == b.global_to_local) && (a.leaf_id == b.leaf_id);
+}
+
+bool operator<(const Branch& a, const Branch& b)
+{
+    return a.leaf_id < b.leaf_id;
+}
+
+//===========================================================================
 
 //#define STEP(p) (floor(branch.pathFromRoot[p]*double(stepsPerPhase) + .500001))-1
 
@@ -64,7 +87,7 @@ void Task::setCostSpecs(int fromTime,
     if(fromTime<0) fromTime=0;
     CHECK(toTime>=fromTime,"");
     prec.resize(T).setZero();
-    for(int local = 0; local < int(branch.local_to_global.size())-2; ++local)
+    for(int local = 0; local < int(branch.local_to_global.size())-2; ++local) // clarify magic number
     {
         if(local >= fromTime && local < toTime)
         {
@@ -82,7 +105,7 @@ void Task::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint 
     }
 
     CHECK(&branch_time_spec, "case without branch not handled yet!");
-    branch = computeMicroStepBranch(branch_time_spec, stepsPerPhase);
+    branch = Branch::computeMicroStepBranch(branch_time_spec, stepsPerPhase);
 
     int tFrom = (fromTime<0.?0              :phaseToStep(fromTime, stepsPerPhase));
     int tTo =   (toTime  <0.?maxStepOnBranch:phaseToStep(toTime, stepsPerPhase));

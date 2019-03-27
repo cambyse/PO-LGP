@@ -9,12 +9,14 @@ struct Branch
     std::vector< int > global_to_local;
     double p; // probability to reach the leaf
     uint leaf_id;
+
+    static Branch computeMicroStepBranch(const Branch& a, int stepsPerPhase);
+    static Branch linearTrajectory(int T);
 };
 
 bool operator==(const Branch& a, const Branch& b);
 bool operator<(const Branch& a, const Branch& b);
 
-Branch computeMicroStepBranch(const Branch& a, int stepsPerPhase);
 
 struct Task {
   TaskMap *map;
@@ -34,8 +36,8 @@ struct Task {
                     const arr& _target,
                     double _prec, const Branch& branch_time_spec=Branch());
 
-  int to_local_t(int global_t) const { return branch.global_to_local[global_t]; }
-  int to_global_t(int local_t) const { return branch.local_to_global[local_t]; }
+  int to_local_t(int global_t) const { CHECK(global_t < branch.global_to_local.size(), "wrong dimensions!");return branch.global_to_local[global_t]; }
+  int to_global_t(int local_t) const { CHECK(local_t < branch.local_to_global.size(), "wrong dimensions!"); return branch.local_to_global[local_t];/*local_t < branch.local_to_global.size() ? branch.local_to_global[local_t] : branch.local_to_global.back();*/ }
 
   bool isActive(uint t){ return (prec.N>t && prec(t)); }
   void write(std::ostream& os) const{

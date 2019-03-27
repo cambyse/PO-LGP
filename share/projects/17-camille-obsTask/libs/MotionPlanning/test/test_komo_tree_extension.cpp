@@ -60,7 +60,7 @@ protected:
 TEST_F(KomoTreeExtensionFixture, TestComputeMicroStepBranch)
 {
     // BRANCH 1
-    auto u_branch_1 = computeMicroStepBranch(branch_1, 10);
+    auto u_branch_1 = Branch::computeMicroStepBranch(branch_1, 10);
     auto expected_u_branch_1 = intA(40); // n phase + 2 steps (prefix)
     for(uint t=0; t < 40; t++)
     {
@@ -72,7 +72,7 @@ TEST_F(KomoTreeExtensionFixture, TestComputeMicroStepBranch)
 
     // BRANCH 2
     auto branch_2 = tb.get_branch(6);
-    auto u_branch_2 = computeMicroStepBranch(branch_2, 10);
+    auto u_branch_2 = Branch::computeMicroStepBranch(branch_2, 10);
     auto expected_u_branch_2 = intA(40); // n phase + 2 steps (prefix)
     for(uint t=0; t < 20; t++)
     {
@@ -141,10 +141,10 @@ TEST_F(KomoTreeExtensionFixture, TestBranchPrecSpecificationWithMinusOneEnd)
   auto acc_1 = komo.setTreeTask(0, -1, branch_1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
   auto acc_2 = komo.setTreeTask(0, -1, branch_2, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
 
-  EXPECT_EQ(computeMicroStepBranch(branch_1, n_micro_steps), acc_1->branch);
+  EXPECT_EQ(Branch::computeMicroStepBranch(branch_1, n_micro_steps), acc_1->branch);
   EXPECT_EQ(prec_branch_1, acc_1->prec);
 
-  EXPECT_EQ(computeMicroStepBranch(branch_2, n_micro_steps), acc_2->branch);
+  EXPECT_EQ(Branch::computeMicroStepBranch(branch_2, n_micro_steps), acc_2->branch);
   EXPECT_EQ(prec_branch_2, acc_2->prec);
 }
 
@@ -191,6 +191,39 @@ TEST_F(KomoTreeExtensionFixture, TestBranchPrecSpecificationWithNormalTaskSpecif
   EXPECT_EQ(prec_branch_2, speed_2->prec);
 }
 
+TEST_F(KomoTreeExtensionFixture, TestPoseOptimizationOrder1)
+{
+  komo.setTiming( 1, 2, 1.0, 1 );
+  komo.setSquaredQVelocities();
+
+  arr op_speed_1{ 0.5, 0, 0 };
+
+  auto speed_1 = komo.setTask(0,  -1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+
+  komo.reset();
+  EXPECT_EQ(true, komo.checkGradients());
+  komo.run();
+
+  komo.displayTreeTrajectories(0.1, true);
+}
+
+TEST_F(KomoTreeExtensionFixture, TestLinearTrajectory)
+{
+  komo.setTiming( 5, n_micro_steps, 1.0, 2 );
+
+  auto acc_1 = komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+
+  arr op_speed_1{ 0.5, 0, 0 };
+
+  auto speed_1 = komo.setTask(0,  4, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+
+  komo.reset();
+  EXPECT_EQ(true, komo.checkGradients());
+  komo.run();
+
+  komo.displayTreeTrajectories(0.1, true);
+}
+
 TEST_F(KomoTreeExtensionFixture, TestSimpleOptimizationWithTwoBranches)
 {
   komo.setTiming( n_phases, n_micro_steps, 1.0, 2 );
@@ -214,7 +247,6 @@ TEST_F(KomoTreeExtensionFixture, TestSimpleOptimizationWithTwoBranches)
   komo.displayTreeTrajectories(0.1, true);
   //komo.displayTrajectory(0.1, true);
 }
-
 
 TEST(RowShifting, Understanding_RowShifting)
 {
