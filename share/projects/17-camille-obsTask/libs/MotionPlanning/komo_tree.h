@@ -71,11 +71,13 @@ public:
   virtual bool displayTrajectory(double delay=0.01, bool watch=false) override; ///< display th
 
 private:
+  mlr::Array<TreeTask*> tree_tasks;
+
   struct Conv_Tree_KOMO_Problem : KOMO_Problem{
-    KOMO& komo;
+    KOMOTree& komo;
     uint dimPhi;
 
-    Conv_Tree_KOMO_Problem(KOMO& _komo) : komo(_komo){}
+    Conv_Tree_KOMO_Problem(KOMOTree& _komo) : komo(_komo){}
 
     WorldL getConfigurations(TreeTask* task, uint t) const;
     virtual uint get_k(){ return komo.k_order; }

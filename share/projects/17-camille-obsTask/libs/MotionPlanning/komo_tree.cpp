@@ -25,71 +25,71 @@ namespace mp
 
 Branch Branch::computeMicroStepBranch(const Branch& a, int stepsPerPhase)
 {
-    Branch b;
+  Branch b;
 
-    b.p = a.p;
-    b.leaf_id = a.leaf_id;
+  b.p = a.p;
+  b.leaf_id = a.leaf_id;
 
-    // local
-    int n_phases = a.local_to_global.size() - 1;
+  // local
+  int n_phases = a.local_to_global.size() - 1;
 
-    b.local_to_global = std::vector< int >(n_phases * stepsPerPhase); // 2 == prefix
+  b.local_to_global = std::vector< int >(n_phases * stepsPerPhase); // 2 == prefix
 
-    for(int phaseEndIndex = 1; phaseEndIndex <= n_phases; ++phaseEndIndex)
+  for(int phaseEndIndex = 1; phaseEndIndex <= n_phases; ++phaseEndIndex)
+  {
+    const uint phaseEnd = a.local_to_global[phaseEndIndex];
+
+    for(int s = 0; s < stepsPerPhase; ++s)
     {
-        const uint phaseEnd = a.local_to_global[phaseEndIndex];
-
-        for(int s = 0; s < stepsPerPhase; ++s)
-        {
-            b.local_to_global[phaseEndIndex * stepsPerPhase - s - 1] = phaseEnd * stepsPerPhase - s -1;
-        }
+      b.local_to_global[phaseEndIndex * stepsPerPhase - s - 1] = phaseEnd * stepsPerPhase - s -1;
     }
+  }
 
-    // global
-    int n_global_phases = a.global_to_local.size() - 1;
-    b.global_to_local = std::vector< int >(n_global_phases * stepsPerPhase, -1);
+  // global
+  int n_global_phases = a.global_to_local.size() - 1;
+  b.global_to_local = std::vector< int >(n_global_phases * stepsPerPhase, -1);
 
-    for(int local = 0; local < n_phases * stepsPerPhase; ++local)
-    {
-        const auto global =b.local_to_global[local];
-        b.global_to_local[global] = local;
-    }
+  for(int local = 0; local < n_phases * stepsPerPhase; ++local)
+  {
+    const auto global =b.local_to_global[local];
+    b.global_to_local[global] = local;
+  }
 
-    // hack
-    if( b.local_to_global.size() < 3 )
-    {
-        b.local_to_global.push_back(2);
-        b.global_to_local.push_back(2);
-    }
+  // hack
+  if( b.local_to_global.size() < 3 )
+  {
+    b.local_to_global.push_back(2);
+    b.global_to_local.push_back(2);
+  }
 
-    return b;
+  return b;
 }
 
 Branch Branch::linearTrajectory(int T)
 {
-    Branch b;
-    b.p = 1.0;
+  Branch b;
+  b.p = 1.0;
 
-    b.global_to_local = std::vector< int >(T);
-    b.local_to_global = std::vector< int >(T);
+  b.global_to_local = std::vector< int >(T);
+  b.local_to_global = std::vector< int >(T);
 
-    for(auto t = 0; t < T; ++t)
-    {
-        b.global_to_local[t] = t;
-        b.local_to_global[t] = t;
-    }
+  for(auto t = 0; t < T; ++t)
+  {
+    b.global_to_local[t] = t;
+    b.local_to_global[t] = t;
+  }
 
-    return b;
+  return b;
 }
 
 bool operator==(const Branch& a, const Branch& b)
 {
-    return (a.p == b.p) && (a.local_to_global == b.local_to_global) && (a.global_to_local == b.global_to_local) && (a.leaf_id == b.leaf_id);
+  return (a.p == b.p) && (a.local_to_global == b.local_to_global) && (a.global_to_local == b.global_to_local) && (a.leaf_id == b.leaf_id);
 }
 
 bool operator<(const Branch& a, const Branch& b)
 {
-    return a.leaf_id < b.leaf_id;
+  return a.leaf_id < b.leaf_id;
 }
 
 //===========================================================================
@@ -98,43 +98,43 @@ bool operator<(const Branch& a, const Branch& b)
 
 double phaseToStep(double p, double stepsPerPhase)
 {
-    return floor(p*double(stepsPerPhase));//(floor(p*double(stepsPerPhase) + .500001))-1;
+  return floor(p*double(stepsPerPhase));//(floor(p*double(stepsPerPhase) + .500001))-1;
 }
 
 void TreeTask::setCostSpecs(int fromTime,
-                        int toTime, int T,
-                        const arr& _target,
-                        double _prec){
-    if(&_target) target = _target; else target = {0.};
-    if(fromTime<0) fromTime=0;
-    CHECK(toTime>=fromTime,"");
-    prec.resize(T).setZero();
-    for(int local = 0; local < int(branch.local_to_global.size())-2; ++local) // clarify magic number
+                            int toTime, int T,
+                            const arr& _target,
+                            double _prec){
+  if(&_target) target = _target; else target = {0.};
+  if(fromTime<0) fromTime=0;
+  CHECK(toTime>=fromTime,"");
+  prec.resize(T).setZero();
+  for(int local = 0; local < int(branch.local_to_global.size())-2; ++local) // clarify magic number
+  {
+    if(local >= fromTime && local < toTime)
     {
-        if(local >= fromTime && local < toTime)
-        {
-            auto global = branch.local_to_global[local];
-            prec(global) = _prec;
-        }
+      auto global = branch.local_to_global[local];
+      prec(global) = _prec;
     }
+  }
 }
 
 void TreeTask::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T, const arr& _target, double _prec, const Branch& branch_time_spec){
-    if(stepsPerPhase<0) stepsPerPhase=T;
-    uint maxStepOnBranch = *std::max_element(branch_time_spec.local_to_global.begin(), branch_time_spec.local_to_global.end()) * stepsPerPhase;
-    if(phaseToStep(toTime, stepsPerPhase)>maxStepOnBranch){
-        LOG(-1) <<"beyond the time!: endTime=" <<toTime <<" phases=" <<double(T)/stepsPerPhase;
-    }
+  if(stepsPerPhase<0) stepsPerPhase=T;
+  uint maxStepOnBranch = *std::max_element(branch_time_spec.local_to_global.begin(), branch_time_spec.local_to_global.end()) * stepsPerPhase;
+  if(phaseToStep(toTime, stepsPerPhase)>maxStepOnBranch){
+    LOG(-1) <<"beyond the time!: endTime=" <<toTime <<" phases=" <<double(T)/stepsPerPhase;
+  }
 
-    CHECK(&branch_time_spec, "case without branch not handled yet!");
-    branch = Branch::computeMicroStepBranch(branch_time_spec, stepsPerPhase);
+  CHECK(&branch_time_spec, "case without branch not handled yet!");
+  branch = Branch::computeMicroStepBranch(branch_time_spec, stepsPerPhase);
 
-    int tFrom = (fromTime<0.?0              :phaseToStep(fromTime, stepsPerPhase));
-    int tTo =   (toTime  <0.?maxStepOnBranch:phaseToStep(toTime, stepsPerPhase));
-    if(tTo<0) tTo=0;
-    if(tFrom>tTo && tFrom-tTo<=(int)map->order) tFrom=tTo;
+  int tFrom = (fromTime<0.?0              :phaseToStep(fromTime, stepsPerPhase));
+  int tTo =   (toTime  <0.?maxStepOnBranch:phaseToStep(toTime, stepsPerPhase));
+  if(tTo<0) tTo=0;
+  if(tFrom>tTo && tFrom-tTo<=(int)map->order) tFrom=tTo;
 
-    setCostSpecs(tFrom, tTo, T, _target, _prec);
+  setCostSpecs(tFrom, tTo, T, _target, _prec);
 }
 
 //==============KOMOTree==============================================
@@ -166,7 +166,9 @@ void KOMOTree::run(){
 bool KOMOTree::checkGradients(){
   CHECK(T,"");
 
-  return checkJacobianCP(Convert(komo_problem), x, 1e-4);
+  auto cp = Conv_KOMO_Tree_ConstrainedProblem(komo_tree_problem);
+
+  return checkJacobianCP(cp, x, 1e-4);
 }
 
 Task *KOMOTree::setTask(double startTime, double endTime, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
@@ -176,7 +178,7 @@ Task *KOMOTree::setTask(double startTime, double endTime, TaskMap *map, Objectiv
 TreeTask* KOMOTree::addTreeTask(const char* name, TaskMap *m, const ObjectiveType& termType){
   TreeTask *t = new TreeTask(m, termType);
   t->name=name;
-  tasks.append(t);
+  tree_tasks.append(t);
   return t;
 }
 
@@ -193,10 +195,9 @@ bool KOMOTree::displayTrajectory(double delay, bool watch){
 
   // retrieve branches
   std::set<mp::Branch> branches;
-  for(auto t: this->tasks)
+  for(auto t: tree_tasks)
   {
-    auto tree_task = dynamic_cast< TreeTask* >(t); // hack ?
-    branches.insert(tree_task->branch);
+    branches.insert(t->branch);
   }
 
   // name viewer
@@ -244,14 +245,13 @@ void KOMOTree::Conv_Tree_KOMO_Problem::getStructure(uintA& variableDimensions, u
   featureTimes.clear();
   featureTypes.clear();
   for(uint t=0;t<komo.T;t++){
-    for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
+    for(TreeTask *task: komo.tree_tasks) if(task->prec.N>t && task->prec(t)){
       //      CHECK(task->prec.N<=MP.T,"");
-      auto tree_task = dynamic_cast< TreeTask* >(task); // hack ?
-      const auto local_t = tree_task->to_local_t(t);
-      WorldL configurations = getConfigurations(tree_task, local_t);
+      const auto local_t = task->to_local_t(t);
+      WorldL configurations = getConfigurations(task, local_t);
       uint m = task->map->dim_phi(configurations, t); //dimensionality of this task
-      featureTimes.append(consts<uint>(tree_task->to_global_t(local_t), m));
-      featureTypes.append(consts<ObjectiveType>(tree_task->type, m));
+      featureTimes.append(consts<uint>(task->to_global_t(local_t), m));
+      featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
   }
   dimPhi = featureTimes.N;
@@ -283,12 +283,11 @@ void KOMOTree::Conv_Tree_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Objective
   arr y, Jy;
   uint M=0;
   for(uint t=0;t<komo.T;t++){
-    for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
+    for(TreeTask *task: komo.tree_tasks) if(task->prec.N>t && task->prec(t)){
       //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
-      auto tree_task = dynamic_cast< TreeTask* >(task); // hack ?
-      const auto local_t = tree_task->to_local_t(t);
-      WorldL configurations = getConfigurations(tree_task, local_t);
-      tree_task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
+      const auto local_t = task->to_local_t(t);
+      WorldL configurations = getConfigurations(task, local_t);
+      task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
       if(!y.N) continue;
       if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
 
@@ -296,20 +295,20 @@ void KOMOTree::Conv_Tree_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Objective
       if(task->target.N==1) y -= task->target.elem(0);
       else if(task->target.nd==1) y -= task->target;
       else if(task->target.nd==2) y -= task->target[t];
-      y *= tree_task->branch.p * sqrt(task->prec(t));
+      y *= task->branch.p * sqrt(task->prec(t));
 
       //write into phi and J
       const auto & qN = komo.configurations(0)->q.N;
       phi.setVectorBlock(y, M);
       if(&J){
-        Jy *= tree_task->branch.p * sqrt(task->prec(t));
+        Jy *= task->branch.p * sqrt(task->prec(t));
         for(uint i=0;i<y.N;i++)
         {
           for(uint k=0; k<=komo.k_order; ++k)
           {
             for(uint j=0; j<qN; ++j)
             {
-              auto col_in_jacobian = qN * tree_task->to_global_t(local_t+k)+j;
+              auto col_in_jacobian = qN * task->to_global_t(local_t+k)+j;
               col_in_jacobian -= get_k() * qN; // shift back to compensate for the prefix
 
               if(col_in_jacobian < x.N) // case col < 0 implicitely handled by overflow
