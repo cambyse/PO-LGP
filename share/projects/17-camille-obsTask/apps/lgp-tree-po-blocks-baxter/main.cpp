@@ -58,7 +58,7 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 }
 
 //==========Application specific grounders===================================
-void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
+void groundPrefixIfNeeded( KOMO * komo, int verbose  )
 {
   //  if( ! komo->isPrefixSetup() )
   //  {
@@ -67,7 +67,7 @@ void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
   //  }
 }
 
-void groundPickUp( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundPickUp( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -91,7 +91,7 @@ void groundPickUp( double phase, const std::vector< std::string >& facts, mp::Ex
   }
 }
 
-void groundUnStack( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -121,7 +121,7 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, mp::E
   }
 }
 
-void groundPutDown( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -154,7 +154,7 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, mp::E
   }
 }
 
-void groundCheck( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundCheck( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -176,7 +176,7 @@ void groundCheck( double phase, const std::vector< std::string >& facts, mp::Ext
   }
 }
 
-void groundStack( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundStack( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 

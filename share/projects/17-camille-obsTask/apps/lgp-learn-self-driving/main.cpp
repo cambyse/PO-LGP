@@ -22,7 +22,7 @@
 
 //===========================================================================
 
-void init( mp::ExtensibleKOMO * komo, int verbose )
+void init( KOMO * komo, int verbose )
 {
   // ego car
   arr ego_start_speed{ 1.0, 0, 0 }; // 10 m/s
@@ -44,11 +44,11 @@ void init( mp::ExtensibleKOMO * komo, int verbose )
 //  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
 }
 
-void groundContinue( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundContinue( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
 }
 
-void groundMergeBetween( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   auto car_before = facts[0];
   auto car_next = facts[1];

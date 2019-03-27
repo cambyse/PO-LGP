@@ -232,15 +232,11 @@ bool KOMO::parseTask(const Node *n, int stepsPerPhase){
 }
 
 Task *KOMO::setTask(double startTime, double endTime, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
-  return setTreeTask(startTime, endTime, Branch::linearTrajectory(T/stepsPerPhase+1), map, type, target, prec, order);
-}
-
-Task *KOMO::setTreeTask(double startTime, double endTime, const Branch& branch, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
-  CHECK(k_order>=order,"");
-  map->order = order;
-  Task *task = addTask(map->shortTag(world), map, type);
-  task->setCostSpecs(startTime, endTime, stepsPerPhase, T, target, prec, branch);
-  return task;
+    CHECK(k_order>=order,"");
+    map->order = order;
+    Task *task = addTask(map->shortTag(world), map, type);
+    task->setCostSpecs(startTime, endTime, stepsPerPhase, T, target, prec);
+    return task;
 }
 
 void KOMO::setKinematicSwitch(double time, bool before, mlr::KinematicSwitch *sw){
@@ -857,24 +853,24 @@ void setTasks(KOMO& MP,
   }else{
     t->map->order=1; //make this a velocity task!
   }
-  t->setCostSpecs(0, MP.T-1, MP.T, {0.}, 1e0);
+  t->setCostSpecs(0, MP.T-1, {0.}, 1e0);
 
   if(timeSteps!=0){
     t = MP.addTask("final_vel", new TaskMap_qItself(), OT_sumOfSqr);
     t->map->order=1; //make this a velocity task!
-    t->setCostSpecs(MP.T-4, MP.T-1, MP.T, {0.}, zeroVelPrec);
+    t->setCostSpecs(MP.T-4, MP.T-1, {0.}, zeroVelPrec);
   }
 
   if(colPrec<0){ //interpreted as hard constraint (default)
     t = MP.addTask("collisionConstraints", new CollisionConstraint(margin), OT_ineq);
-    t->setCostSpecs(0, MP.T-1, MP.T, {0.}, 1.);
+    t->setCostSpecs(0, MP.T-1, {0.}, 1.);
   }else{ //cost term
     t = MP.addTask("collision", new TaskMap_Proxy(allPTMT, {0u}, margin), OT_sumOfSqr);
-    t->setCostSpecs(0, MP.T-1, MP.T, {0.}, colPrec);
+    t->setCostSpecs(0, MP.T-1, {0.}, colPrec);
   }
 
   t = MP.addTask("endeff_pos", new TaskMap_Default(posTMT, endeff.ID, NoVector, target.ID, NoVector), OT_sumOfSqr);
-  t->setCostSpecs(MP.T-1, MP.T-1, MP.T, {0.}, posPrec);
+  t->setCostSpecs(MP.T-1, MP.T-1, {0.}, posPrec);
 
 
   for(uint i=0;i<3;i++) if(whichAxesToAlign&(1<<i)){
@@ -884,7 +880,7 @@ void setTasks(KOMO& MP,
     t = MP.addTask(STRING("endeff_align_"<<i),
                    new TaskMap_Default(vecAlignTMT, endeff.ID, axis, target.ID, axis),
                    OT_sumOfSqr);
-    t->setCostSpecs(MP.T-1, MP.T-1, MP.T, {1.}, alignPrec);
+    t->setCostSpecs(MP.T-1, MP.T-1, {1.}, alignPrec);
   }
 }
 
@@ -893,7 +889,6 @@ void KOMO::setMoveTo(mlr::KinematicWorld& world, mlr::Frame& endeff, mlr::Frame&
 //  MP = new KOMO(world);
   setModel(world);
   this->world.checkConsistency();
-
 
   setTasks(*this, endeff, target, whichAxesToAlign, 1, -1, -1.);
   reset();
@@ -996,81 +991,33 @@ void KOMO::plotTrajectory(){
   gnuplot("load 'z.trajectories.plt'");
 }
 
-bool KOMO::displayTreeTrajectories(double delay, bool watch){
-    const char* tag = "KOMO planned trajectory";
+bool KOMO::displayTrajectory(double delay, bool watch){
+  //  return displayTrajectory(watch?-1:1, "KOMO planned trajectory", delay);
+  const char* tag = "KOMO planned trajectory";
+  if(!gl){
+    gl = new OpenGL ("KOMO display");
+    gl->camera.setDefault();
+  }
 
-    // retrieve branches
-    std::set<Branch> branches;
-    for(auto t: this->tasks)
-    {
-        branches.insert(t->branch);
+  for(uint t=0; t<T; t++) {
+    //if(t >20 && t <= 40) continue;
+    gl->clear();
+    gl->add(glStandardScene, 0);
+    gl->addDrawer(configurations(t+k_order));
+    if(delay<0.){
+      if(delay<-10.) FILE("z.graph") <<*configurations(t+k_order);
+      gl->watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+    }else{
+      gl->update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
+      if(delay) mlr::wait(delay);
     }
-
-    // name viewer
-    auto name = [](uint m, uint leaf_id)
-    {
-        std::stringstream ss;
-        ss << "KOMO display - branch " << m << " - leaf " << leaf_id;
-        return ss.str();
-    };
-
-    // create viewer for each branch consecutively
-    uint branch_number = 0;
-    for(const auto branch : branches)
-    {
-        auto gl = std::make_shared< OpenGL >(name(branch_number, branch.leaf_id).c_str());
-        gl->camera.setDefault();
-        auto T = branch.local_to_global.size();
-        for(uint local = k_order; local < T; ++local)
-        {
-            auto global = branch.local_to_global[local];
-            gl->clear();
-            gl->add(glStandardScene, 0);
-            gl->addDrawer(configurations(global));
-            if(delay<0.){
-                if(delay<-10.) FILE("z.graph") <<*configurations(global);
-                gl->watch(STRING(tag <<" (time " <<std::setw(3) << local <<'/' <<T <<')').p);
-            }else{
-                gl->update(STRING(tag <<" (time " <<std::setw(3) << local <<'/' <<T <<')').p);
-                if(delay) mlr::wait(delay);
-            }
-        }
-        ++branch_number;
-    }
-
-    return true;
+  }
+  if(watch){
+    int key = gl->watch(STRING(tag <<" (time " <<std::setw(3) <<T-1 <<'/' <<T <<')').p);
+    return !(key==27 || key=='q');
+  }else
+    return false;
 }
-
-
-
-//bool KOMO::displayTrajectory(double delay, bool watch){
-//  //  return displayTrajectory(watch?-1:1, "KOMO planned trajectory", delay);
-//  const char* tag = "KOMO planned trajectory";
-//  if(!gl){
-//    gl = new OpenGL ("KOMO display");
-//    gl->camera.setDefault();
-//  }
-
-//  for(uint t=0; t<T; t++) {
-//    //if(t >20 && t <= 40) continue;
-//    gl->clear();
-//    gl->add(glStandardScene, 0);
-//    gl->addDrawer(configurations(t+k_order));
-//    if(delay<0.){
-//      if(delay<-10.) FILE("z.graph") <<*configurations(t+k_order);
-//      gl->watch(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
-//    }else{
-//      gl->update(STRING(tag <<" (time " <<std::setw(3) <<t <<'/' <<T <<')').p);
-//      if(delay) mlr::wait(delay);
-//    }
-//  }
-//  if(watch){
-//    int key = gl->watch(STRING(tag <<" (time " <<std::setw(3) <<T-1 <<'/' <<T <<')').p);
-//    return !(key==27 || key=='q');
-//  }else
-//    return false;
-//}
-
 
 mlr::Camera& KOMO::displayCamera(){
   if(!gl){
@@ -1264,7 +1211,6 @@ arr KOMO::getInitialization(){
   for(uint t=0;t<T;t++) x.append(configurations(t+k_order)->getJointState());
   return x;
 }
-
 void KOMO::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensions, uintA& featureTimes, ObjectiveTypeA& featureTypes){
   CHECK_EQ(komo.configurations.N, komo.k_order+komo.T, "configurations are not setup yet: use komo.reset()");
   variableDimensions.resize(komo.T);
@@ -1275,49 +1221,30 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::getStructure(uintA& variableDimensio
   for(uint t=0;t<komo.T;t++){
     for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
 //      CHECK(task->prec.N<=MP.T,"");
-      const auto local_t = task->to_local_t(t);
-      WorldL configurations = getConfigurations(task, local_t);
-      uint m = task->map->dim_phi(configurations, t); //dimensionality of this task
-      featureTimes.append(consts<uint>(task->to_global_t(local_t), m));
+      uint m = task->map->dim_phi(komo.configurations({t,t+komo.k_order}), t); //dimensionality of this task
+      featureTimes.append(consts<uint>(t, m));
       featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
   }
   dimPhi = featureTimes.N;
 }
 
-WorldL KOMO::Conv_MotionProblem_KOMO_Problem::getConfigurations(Task* task, uint local_t) const
-{
-    //uint n = std::min(komo.k_order+1, uint(task->branch.local_to_global.size() - local_t));
-
-    WorldL configurations(komo.k_order+1);
-    for(uint k = 0; k<=komo.k_order; ++k)
-    {
-        configurations(k) = komo.configurations(task->to_global_t(local_t+k));
-    }
-    return configurations;
-}
-
 void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x){
   //-- set the trajectory
   komo.set_x(x);
 
+
   CHECK(dimPhi,"getStructure must be called first");
   phi.resize(dimPhi);
   if(&tt) tt.resize(dimPhi);
-  if(&J)
-  {
-    J.resize(dimPhi);
-    for(uint i=0;i<dimPhi;i++) J(i) = arr(x.N);
-  }
+  if(&J) J.resize(dimPhi);
 
   arr y, Jy;
   uint M=0;
   for(uint t=0;t<komo.T;t++){
     for(Task *task: komo.tasks) if(task->prec.N>t && task->prec(t)){
-      //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
-      const auto local_t = task->to_local_t(t);
-      WorldL configurations = getConfigurations(task, local_t);
-      task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
+        //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
+      task->map->phi(y, (&J?Jy:NoArr), komo.configurations({t,t+komo.k_order}), komo.tau, t);
       if(!y.N) continue;
       if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
 
@@ -1325,29 +1252,14 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
       if(task->target.N==1) y -= task->target.elem(0);
       else if(task->target.nd==1) y -= task->target;
       else if(task->target.nd==2) y -= task->target[t];
-      y *= task->branch.p * sqrt(task->prec(t));
+      y *= sqrt(task->prec(t));
 
       //write into phi and J
-      const auto & qN = komo.configurations(0)->q.N;
       phi.setVectorBlock(y, M);
       if(&J){
-        Jy *= task->branch.p * sqrt(task->prec(t));
-        for(uint i=0;i<y.N;i++)
-        {
-          for(uint k=0; k<=komo.k_order; ++k)
-          {
-            for(uint j=0; j<qN; ++j)
-            {
-              auto col_in_jacobian = qN * task->to_global_t(local_t+k)+j;
-              col_in_jacobian -= get_k() * qN; // shift back to compensate for the prefix
-
-              if(col_in_jacobian < x.N) // case col < 0 implicitely handled by overflow
-              {
-                J(M+i)(col_in_jacobian)=Jy(i,qN * k + j);
-              }
-            }
-          }
-        }
+        Jy *= sqrt(task->prec(t));
+        if(t<komo.k_order) Jy.delColumns(0,(komo.k_order-t)*komo.configurations(0)->q.N); //delete the columns that correspond to the prefix!!
+        for(uint i=0;i<y.N;i++) J(M+i) = Jy[i]; //copy it to J(M+i); which is the Jacobian of the M+i'th feature w.r.t. its variables
       }
       if(&tt) for(uint i=0;i<y.N;i++) tt(M+i) = task->type;
 

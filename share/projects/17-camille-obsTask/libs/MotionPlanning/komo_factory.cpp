@@ -73,7 +73,6 @@ void ExtensibleKOMO::groundInit( int verbose )
 
 void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >& facts, int verbose )
 {
-  //std::cout << "facts:" << facts << std::endl;
   if( facts.empty() )
   {
     return;
@@ -95,21 +94,6 @@ void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >
   {
     HALT("UNKNOWN komo TAG: '" << type <<"'");
   }
-
-//  for( Node *n:facts )
-//  {
-//    if( ! n->parents.N ) continue; // skip not relevant node
-
-//    if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
-//    {
-//      mlr::String type = n->keys.last();
-//      tasks_[ type ]( phase, facts, n, this, verbose ); // ground the symbol
-//    }
-//    else if( n->keys.N && n->keys.last().startsWith("komo") )
-//    {
-//      HALT("UNKNOWN komo TAG: '" <<n->keys.last() <<"'");
-//    }
-//  }
 }
 
 void ExtensibleKOMO::applyRandomization( const std::vector< double > & randomVec )

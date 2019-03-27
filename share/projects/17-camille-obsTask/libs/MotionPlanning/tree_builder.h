@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <Core/array.h>
 
-#include <KOMO/task.h>
+#include "komo_tree.h"
 
 namespace mp
 {

@@ -1,4 +1,4 @@
-#include "komo_planner.h"
+#include "komo_tree.h"
 #include <gtest/gtest.h>
 #include <functional>
 
@@ -47,7 +47,7 @@ protected:
   }
 
   mlr::KinematicWorld kin;
-  ExtensibleKOMO komo;
+  KOMOTree komo;
   const uint n_micro_steps = 10;
   TreeBuilder tb;
   uint n_phases;
@@ -204,7 +204,7 @@ TEST_F(KomoTreeExtensionFixture, TestPoseOptimizationOrder1)
   EXPECT_EQ(true, komo.checkGradients());
   komo.run();
 
-  komo.displayTreeTrajectories(0.1, true);
+  komo.displayTrajectory(0.1, true);
 }
 
 TEST_F(KomoTreeExtensionFixture, TestLinearTrajectory)
@@ -221,7 +221,7 @@ TEST_F(KomoTreeExtensionFixture, TestLinearTrajectory)
   EXPECT_EQ(true, komo.checkGradients());
   komo.run();
 
-  komo.displayTreeTrajectories(0.1, true);
+  komo.displayTrajectory(0.1, true);
 }
 
 TEST_F(KomoTreeExtensionFixture, TestSimpleOptimizationWithTwoBranches)
@@ -244,7 +244,7 @@ TEST_F(KomoTreeExtensionFixture, TestSimpleOptimizationWithTwoBranches)
   EXPECT_EQ(true, komo.checkGradients());
   komo.run();
 
-  komo.displayTreeTrajectories(0.1, true);
+  komo.displayTrajectory(0.1, true);
   //komo.displayTrajectory(0.1, true);
 }
 

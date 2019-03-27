@@ -26,8 +26,8 @@ namespace mp
 //=====ExtensibleKOMO==============================================
 class ExtensibleKOMO;
 
-typedef std::function<void( ExtensibleKOMO *, int verbose )> InitGrounder;
-typedef std::function<void( double time, const std::vector< std::string >& facts, ExtensibleKOMO *, int verbose )> SymbolGrounder;
+typedef std::function<void( KOMO *, int verbose )> InitGrounder;
+typedef std::function<void( double time, const std::vector< std::string >& facts, KOMO *, int verbose )> SymbolGrounder;
 
 class ExtensibleKOMO : public KOMO
 {

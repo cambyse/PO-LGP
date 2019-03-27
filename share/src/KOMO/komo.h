@@ -78,8 +78,7 @@ struct KOMO{
    * they allow the user to add a cost task, or a kinematic switch in the problem definition
    * Typically, the user does not call them directly, but uses the many methods below
    * Think of all of the below as examples for how to set arbirary tasks/switches yourself */
-  struct Task* setTask(double startTime, double endTime, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2, uint order=0);
-  struct Task* setTreeTask(double startTime, double endTime, const Branch& branch, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2, uint order=0);
+  virtual struct Task* setTask(double startTime, double endTime, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2, uint order=0);
   void setKinematicSwitch(double time, bool before, mlr::KinematicSwitch* sw);
   void setKinematicSwitch(double time, bool before, const char *type, const char* ref1, const char* ref2, const mlr::Transformation& jFrom=NoTransformation, const mlr::Transformation& jTo=NoTransformation);
 
@@ -156,16 +155,15 @@ struct KOMO{
   //-- optimization macros
   void setSpline(uint splineT);   ///< optimize B-spline nodes instead of the path; splineT specifies the time steps per node
   void reset();                   ///< reset the optimizer (initializes x to a default path)
-  void run();                     ///< run the optimization (using OptConstrained -- its parameters are read from the cfg file)
+  virtual void run();                     ///< run the optimization (using OptConstrained -- its parameters are read from the cfg file)
   arr getPath(const StringA& joints);
   void reportProblem(ostream &os=std::cout);
   Graph getReport(bool gnuplt=false, int reportFeatures=0, ostream& featuresOs=std::cout); ///< return a 'dictionary' summarizing the optimization results (optional: gnuplot task costs; output detailed cost features per time slice)
   void reportProxies(ostream& os=std::cout); ///< report the proxies (collisions) for each time slice
-  bool checkGradients();          ///< checks all gradients numerically
+  virtual bool checkGradients();          ///< checks all gradients numerically
   void plotTrajectory();
 
-  //bool displayTrajectory(double delay=0.01, bool watch=false); ///< display the
-  bool displayTreeTrajectories(double delay=0.01, bool watch=false); ///< display the
+  virtual bool displayTrajectory(double delay=0.01, bool watch=false); ///< display the
   mlr::Camera& displayCamera();   ///< access to the display camera to change the view
 
   //===========================================================================

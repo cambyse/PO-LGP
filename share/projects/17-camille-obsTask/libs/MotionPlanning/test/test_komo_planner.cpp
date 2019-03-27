@@ -76,7 +76,7 @@ private:
 class InitialGrounder
 {
 public:
-  void init( mp::ExtensibleKOMO * komo, int verbose )
+  void init( KOMO * komo, int verbose )
   {
     // road bounds
     komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
@@ -100,7 +100,7 @@ public:
     komo->setCollisions( true );
   }
 
-  virtual void groundInitSingleAgent( mp::ExtensibleKOMO * komo, int verbose )
+  virtual void groundInitSingleAgent( KOMO * komo, int verbose )
   {
     init( komo, verbose );
 
@@ -109,7 +109,7 @@ public:
     komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
   }
 
-  virtual void groundInitDoubleAgent( mp::ExtensibleKOMO * komo, int verbose )
+  virtual void groundInitDoubleAgent( KOMO * komo, int verbose )
   {
     init( komo, verbose );
 
@@ -121,14 +121,14 @@ public:
 class InitGrounderMock : public InitialGrounder
 {
 public:
-  virtual void groundInitSingleAgent( mp::ExtensibleKOMO * komo, int verbose )
+  virtual void groundInitSingleAgent( KOMO * komo, int verbose )
   {
     InitialGrounder::groundInitSingleAgent( komo, verbose );
 
     nInitSingleAgent++;
   }
 
-  virtual void groundInitDoubleAgent( mp::ExtensibleKOMO * komo, int verbose )
+  virtual void groundInitDoubleAgent( KOMO * komo, int verbose )
   {
     InitialGrounder::groundInitDoubleAgent( komo, verbose );
 
@@ -139,7 +139,7 @@ public:
   uint nInitDoubleAgent = 0;
 };
 
-void groundLook( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
+void groundLook( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -155,7 +155,7 @@ void groundLook( double phase, const std::vector< std::string > & args, mp::Exte
   }
 }
 
-void groundOvertake( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
+void groundOvertake( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -172,7 +172,7 @@ void groundOvertake( double phase, const std::vector< std::string > & args, mp::
   }
 }
 
-void groundFollow( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
+void groundFollow( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -188,7 +188,7 @@ void groundFollow( double phase, const std::vector< std::string > & args, mp::Ex
   }
 }
 
-void groundAccelerate( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
+void groundAccelerate( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -200,7 +200,7 @@ void groundAccelerate( double phase, const std::vector< std::string > & args, mp
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundContinue( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
+void groundContinue( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -212,7 +212,7 @@ void groundContinue( double phase, const std::vector< std::string > & args, mp::
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundSlowDown( double phase, const std::vector< std::string > & args, mp::ExtensibleKOMO * komo, int verbose )
+void groundSlowDown( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -224,7 +224,7 @@ void groundSlowDown( double phase, const std::vector< std::string > & args, mp::
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundMergeBetween( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
 {
   auto car_before = facts[0];
   auto car_next = facts[1];

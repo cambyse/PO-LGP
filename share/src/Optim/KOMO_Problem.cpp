@@ -1,7 +1,7 @@
 /*  ------------------------------------------------------------------
     Copyright 2016 Marc Toussaint
     email: marc.toussaint@informatik.uni-stuttgart.de
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or (at
@@ -90,20 +90,27 @@ Conv_KOMO_ConstrainedProblem::Conv_KOMO_ConstrainedProblem(KOMO_Problem& P) : KO
 void Conv_KOMO_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x){
   KOMO.phi(phi, (&J?J_KOMO:NoArrA), (&H?H_KOMO:NoArrA), tt, x);
 
-  //-- construct J
+  //-- construct a row-shifed J from the array of featureJs
   if(&J){
-    //J = mlr::Array<double>(phi.N, x.N);
-    J = zeros(phi.N, x.N);
+    uint k=KOMO.get_k();
+    uint dim_xmax = max(variableDimensions);
+    RowShifted *Jaux = makeRowShifted(J, phi.N, (k+1)*dim_xmax, x.N);
+    J.setZero();
 
     //loop over features
     for(uint i=0; i<phi.N; i++) {
       arr& Ji = J_KOMO(i);
       CHECK(Ji.N<=J.d1,"");
+      //        J({i, 0, J_KOMO(i}).N-1) = J_KOMO(i);
       memmove(&J(i,0), Ji.p, Ji.sizeT*Ji.N);
+      uint t=featureTimes(i);
+      if(t<=k) Jaux->rowShift(i) = 0;
+      else Jaux->rowShift(i) =  varDimIntegral(t-k-1);
     }
-  }
 
-  //std::cout << J << std::endl;
+    Jaux->reshift();
+    Jaux->computeColPatches(true);
+  }
 
   if(&H){
     bool hasFterm = false;
@@ -116,40 +123,3 @@ void Conv_KOMO_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA&
     }
   }
 }
-
-//void Conv_KOMO_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x){
-//  KOMO.phi(phi, (&J?J_KOMO:NoArrA), (&H?H_KOMO:NoArrA), tt, x);
-
-////  //-- construct a row-shifed J from the array of featureJs
-//  if(&J){
-//    uint k=KOMO.get_k();
-//    uint dim_xmax = max(variableDimensions);
-//    RowShifted *Jaux = makeRowShifted(J, phi.N, (k+1)*dim_xmax, x.N);
-//    J.setZero();
-
-//    //loop over features
-//    for(uint i=0; i<phi.N; i++) {
-//      arr& Ji = J_KOMO(i);
-//      CHECK(Ji.N<=J.d1,"");
-//      //        J({i, 0, J_KOMO(i}).N-1) = J_KOMO(i);
-//      memmove(&J(i,0), Ji.p, Ji.sizeT*Ji.N);
-//      uint t=featureTimes(i);
-//      if(t<=k) Jaux->rowShift(i) = 0;
-//      else Jaux->rowShift(i) =  varDimIntegral(t-k-1);
-//    }
-
-//    Jaux->reshift();
-//    Jaux->computeColPatches(true);
-//  }
-
-//  if(&H){
-//    bool hasFterm = false;
-//    if(&tt) hasFterm = (tt.findValue(OT_f) != -1);
-//    if(hasFterm){
-//      CHECK(H_KOMO.N, "this problem has f-terms -- I need a Hessian!");
-//      NIY
-//    }else{
-//      H.clear();
-//    }
-//  }
-//}
