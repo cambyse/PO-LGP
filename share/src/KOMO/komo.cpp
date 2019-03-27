@@ -1006,10 +1006,19 @@ bool KOMO::displayTreeTrajectories(double delay, bool watch){
         branches.insert(t->branch);
     }
 
+    // name viewer
+    auto name = [](uint m, uint leaf_id)
+    {
+        std::stringstream ss;
+        ss << "KOMO display - branch " << m << " - leaf " << leaf_id;
+        return ss.str();
+    };
+
     // create viewer for each branch consecutively
+    uint branch_number = 0;
     for(const auto branch : branches)
     {
-        auto gl = std::make_shared< OpenGL >("KOMO display");
+        auto gl = std::make_shared< OpenGL >(name(branch_number, branch.leaf_id).c_str());
         gl->camera.setDefault();
         auto T = branch.local_to_global.size();
         for(uint local = k_order; local < T; ++local)
@@ -1026,6 +1035,7 @@ bool KOMO::displayTreeTrajectories(double delay, bool watch){
                 if(delay) mlr::wait(delay);
             }
         }
+        ++branch_number;
     }
 
     return true;

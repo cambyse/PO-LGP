@@ -35,11 +35,6 @@ struct AxisBound:TaskMap{
 
   virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1)
   {
-//    for( auto p : G.proxies )
-//    {
-//      std::cout << p->a << " " << p->b << std::endl;
-//    }
-
     mlr::Frame *object = G.getFrameByName( object_.c_str() );
     arr posObject, posJObject;
     G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
