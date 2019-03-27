@@ -251,7 +251,7 @@ void KOMOTree::Conv_Tree_KOMO_Problem::getStructure(uintA& variableDimensions, u
       WorldL configurations = getConfigurations(task, local_t);
       uint m = task->map->dim_phi(configurations, t); //dimensionality of this task
       featureTimes.append(consts<uint>(task->to_global_t(local_t), m));
-      featureTypes.append(consts<ObjectiveType>(task->type, m));
+     featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
   }
   dimPhi = featureTimes.N;

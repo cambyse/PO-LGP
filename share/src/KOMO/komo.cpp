@@ -1233,7 +1233,6 @@ void KOMO::Conv_MotionProblem_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Obje
   //-- set the trajectory
   komo.set_x(x);
 
-
   CHECK(dimPhi,"getStructure must be called first");
   phi.resize(dimPhi);
   if(&tt) tt.resize(dimPhi);

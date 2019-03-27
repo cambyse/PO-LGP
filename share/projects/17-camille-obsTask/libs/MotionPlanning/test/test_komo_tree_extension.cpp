@@ -13,6 +13,12 @@
 using namespace std;
 using namespace mp;
 
+/*
+ *
+ * Tests for helping developping the tree extension, always asserts checkGradients at least
+ *
+ */
+
 //////////////Fixture////////////////
 static TreeBuilder build_tree()
 {

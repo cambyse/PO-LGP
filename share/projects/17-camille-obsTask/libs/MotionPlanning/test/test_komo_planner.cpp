@@ -3,8 +3,13 @@
 #include <functional>
 
 using namespace std;
-
 using namespace mp;
+
+/*
+ *
+ * Tests of classical linear traj komo with car examples
+ *
+ */
 
 /////////////////Tasks////////////////////////
 struct AxisBound:TaskMap{
