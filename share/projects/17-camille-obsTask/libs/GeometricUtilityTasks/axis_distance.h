@@ -16,14 +16,14 @@
 
 #include <math_utility.h>
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 #include <Kin/proxy.h>
 
 using namespace std;
 
-struct AxisDistance:TaskMap{
+struct AxisDistance:Feature{
 
   enum Axis
   {
@@ -55,13 +55,13 @@ struct AxisDistance:TaskMap{
 
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1)
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1)
   {
-    mlr::Frame *object_1 = G.getFrameByName( object_1_.c_str() );
+    rai::Frame *object_1 = G.getFrameByName( object_1_.c_str() );
     arr posObject_1, posJObject_1;
     G.kinematicsPos(posObject_1, posJObject_1, object_1);    // get function to minimize and its jacobian in state G
 
-    mlr::Frame *object_2 = G.getFrameByName( object_2_.c_str() );
+    rai::Frame *object_2 = G.getFrameByName( object_2_.c_str() );
     arr posObject_2, posJObject_2;
     G.kinematicsPos(posObject_2, posJObject_2, object_2);    // get function to minimize and its jacobian in state G
 
@@ -97,14 +97,14 @@ struct AxisDistance:TaskMap{
     if(&J) J = tmp_J;
   }
 
-  virtual uint dim_phi(const mlr::KinematicWorld& G)
+  virtual uint dim_phi(const rai::KinematicWorld& G)
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("AxisDistance");
+    return rai::String("AxisDistance");
   }
 
 private:

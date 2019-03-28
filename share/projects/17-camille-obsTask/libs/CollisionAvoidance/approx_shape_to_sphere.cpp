@@ -5,13 +5,13 @@
 
 //-------ApproxShapeToSphere----------------//
 
-void ApproxShapeToSphere::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
+void ApproxShapeToSphere::phi( arr& y, arr& J, const rai::KinematicWorld& G, int t )
 {
   arr tmp_y = zeros( dim_phi( G ) );
   arr tmp_J = zeros( dim_phi( G ), G.q.N );
 
   phiSphere(tmp_y, tmp_J, G);
-//  for( mlr::Proxy *p: G.proxies )
+//  for( rai::Proxy *p: G.proxies )
 //  {
 //    if((p->a==i_ && p->b==j_) || (p->a==j_ && p->b==i_))
 //    {
@@ -34,10 +34,10 @@ void ApproxShapeToSphere::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int
   if(&J) J = tmp_J;
 }
 
-void ApproxShapeToSphere::phiSphere( arr& y, arr& J, const mlr::KinematicWorld& G )
+void ApproxShapeToSphere::phiSphere( arr& y, arr& J, const rai::KinematicWorld& G )
 {
-  mlr::Frame* a = G.frames( i_ );
-  mlr::Frame* b = G.frames( j_ );
+  rai::Frame* a = G.frames( i_ );
+  rai::Frame* b = G.frames( j_ );
 
   arr posA;
   arr posB;
@@ -54,10 +54,10 @@ void ApproxShapeToSphere::phiSphere( arr& y, arr& J, const mlr::KinematicWorld& 
   J = w * ( - JnormD * ( JposA - JposB ) );
 }
 
-//void ApproxShapeToSphere::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
+//void ApproxShapeToSphere::phiProxy( arr& y, arr& J, const rai::KinematicWorld& G, rai::Proxy * p )
 //{
-//  mlr::Frame *a = G.frames(p->a);
-//  mlr::Frame *b = G.frames(p->b);
+//  rai::Frame *a = G.frames(p->a);
+//  rai::Frame *b = G.frames(p->b);
 
 //  auto arel=a->X.rot/(p->posA-a->X.pos);
 //  auto brel=b->X.rot/(p->posB-b->X.pos);

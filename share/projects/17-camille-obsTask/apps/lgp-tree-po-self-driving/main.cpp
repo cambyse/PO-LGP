@@ -73,13 +73,13 @@ void init( mp::ExtensibleKOMO * komo, int verbose  )
   komo->activateCollisions( "car_ego", "car_op" );
 
   // min speed
-  komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
+  komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sos );
   komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // collision
   komo->activateCollisions( "car_ego", "truck" );
   komo->activateCollisions( "car_ego", "car_op" );
-  komo->setCollisions( true );
+  komo->add_collision( true );
 }
 
 void groundLook( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
@@ -92,7 +92,7 @@ void groundLook( double phase, const std::vector< std::string >& facts, mp::Exte
   //
 
   // look
-  komo->setTask( t_start + 0.9, t_end, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo->setTask( t_start + 0.9, t_end, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   if( verbose > 0 )
   {
@@ -110,8 +110,8 @@ void groundOvertake( double phase, const std::vector< std::string >& facts, mp::
   //
 
   // overtake
-  //komo->setTask( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
-  komo->setPosition( t_end, -1, "car_ego", facts[0].c_str(), OT_sumOfSqr, { 0.45, 0, 0 } );
+  //komo->setTask( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo->setPosition( t_end, -1, "car_ego", facts[0].c_str(), OT_sos, { 0.45, 0, 0 } );
 
   if( verbose > 0 )
   {
@@ -129,7 +129,7 @@ void groundFollow( double phase, const std::vector< std::string >& facts, mp::Ex
   //
 
   // overtake
-  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sumOfSqr, { -0.7, 0, 0 } ); // -0.55
+  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sos, { -0.7, 0, 0 } ); // -0.55
 
   if( verbose > 0 )
   {
@@ -206,14 +206,14 @@ void plan_graph_search()
   savePolicyToFile( policy, "-final" );
   mp.display( policy, 3000 );
 
-  mlr::wait( 30, true );
+  rai::wait( 30, true );
 }
 
 //===========================================================================
 
 int main(int argc,char **argv)
 {
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 

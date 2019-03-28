@@ -20,7 +20,7 @@
 
 #include <Kin/kin.h>
 #include <Kin/frame.h>
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 #include <fcl/traversal/traversal_node_bvhs.h>
@@ -30,9 +30,9 @@
 
 using namespace std;
 
-struct ShapePairFCL:TaskMap
+struct ShapePairFCL:Feature
 {
-  ShapePairFCL(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName )
+  ShapePairFCL(const rai::KinematicWorld& G, const char* iShapeName, const char* jShapeName )
   {
     CHECK( false, "do not use, fcl gives results that are not very usefull, to instable when colliding" );
 
@@ -40,26 +40,26 @@ struct ShapePairFCL:TaskMap
     j_ = G.getFrameByName( jShapeName )->index;//G.getShapeByName( jShapeName )->index;
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t);
 
-  void phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
+  void phiProxy( arr& y, arr& J, const rai::KinematicWorld& G, rai::Proxy * p );
 
-  void phiFCL( arr& y, arr& J, const mlr::KinematicWorld& G );
+  void phiFCL( arr& y, arr& J, const rai::KinematicWorld& G );
 
-  uint dim_phi(const mlr::KinematicWorld& G)
+  uint dim_phi(const rai::KinematicWorld& G)
   {
     return 1;// + constantVectors_.N;
   }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("_ShapePairFCL"); }
+  rai::String shortTag(const rai::KinematicWorld& G){ return STRING("_ShapePairFCL"); }
 
 private:
-  fcl::CollisionObject * createObjectModel( mlr::Shape * s );
+  fcl::CollisionObject * createObjectModel( rai::Shape * s );
 
 private:
   uint i_;
   uint j_;
 
-  std::map< mlr::Shape *, std::vector<fcl::Vec3f> > vertices_;
-  std::map< mlr::Shape *, std::vector<fcl::Triangle> > triangles_;
+  std::map< rai::Shape *, std::vector<fcl::Vec3f> > vertices_;
+  std::map< rai::Shape *, std::vector<fcl::Triangle> > triangles_;
 };*/

@@ -29,9 +29,9 @@ class POLGPNode;
 struct ActionNode;
 struct PlainMC;
 struct MCStatistics;
-typedef mlr::Array<ActionNode*> ActionNodeL;
-typedef mlr::Array<POLGPNode*> POLGPNodeL;
-typedef mlr::Array< mlr::Array<POLGPNode*> > POLGPNodeLL;
+typedef rai::Array<ActionNode*> ActionNodeL;
+typedef rai::Array<POLGPNode*> POLGPNodeL;
+typedef rai::Array< rai::Array<POLGPNode*> > POLGPNodeLL;
 
 extern uint COUNT_kin, COUNT_evals, COUNT_poseOpt, COUNT_pathOpt;
 
@@ -66,14 +66,14 @@ class POLGPNode
 
 public:
   /// root node init
-  POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
+  POLGPNode( rai::Array< std::shared_ptr< FOL_World > > fols, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory );
 
   /// child node creation
   POLGPNode( POLGPNode *parent, double pHistory, const arr & bs, uint a );
 
   // modifiers
   void expand();
-  void setAndSiblings( const mlr::Array< POLGPNode * > & siblings );
+  void setAndSiblings( const rai::Array< POLGPNode * > & siblings );
   void setBestFamily( const POLGPNodeL & f ) { bestFamily_ = f; expectedBestA_ = f( 0 )->a_; }
   void generateMCRollouts( uint num, int stepAbort );
   void backTrackBestExpectedPolicy( POLGPNode * node = nullptr ); // backtrack up to the node node, per default, backup up to root
@@ -106,18 +106,18 @@ public:
   double pHistory() const { return pHistory_; }
   bool isRoot() const { return parent_ == nullptr; }
   arr bs() const { return bs_; }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_->komos(); }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_->komos(); }
-  mlr::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_->komos(); }
+  rai::Array< std::shared_ptr<ExtensibleKOMO> > komoPoseProblems() const { return poseProblem_->komos(); }
+  rai::Array< std::shared_ptr<ExtensibleKOMO> > komoPathProblems() const { return pathProblem_->komos(); }
+  rai::Array< std::shared_ptr<ExtensibleKOMO> > komoJointPathProblems() const { return jointProblem_->komos(); }
 
   POLGPNodeL getTreePath();
   POLGPNodeL getTreePathFrom( POLGPNode * start );
   FOL_World::Handle & decision( uint w ) const { return decisions_( w ); }
 
   // for geometric levels
-  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics() const { return startKinematics_; }
-  mlr::Array< mlr::KinematicWorld > & effKinematics() { return effKinematics_; }
-  mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
+  rai::Array< std::shared_ptr< const rai::KinematicWorld > > startKinematics() const { return startKinematics_; }
+  rai::Array< rai::KinematicWorld > & effKinematics() { return effKinematics_; }
+  rai::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
   GeometricLevelBase::ptr poseGeometricLevel() const { return poseProblem_; }
   GeometricLevelBase::ptr pathGeometricLevel() const { return pathProblem_; }
   GeometricLevelBase::ptr jointPathGeometricLevel() const { return jointProblem_; }
@@ -137,7 +137,7 @@ private:
   // utility
   uint getPossibleActionsNumber() const;
   LogicAndState getWitnessLogicAndState() const;
-  template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
+  template < typename T > T getWitnessElem( const rai::Array< T > array ) const
   {
     CHECK( array.d0 == N_, "wrong dimensions!" );
     for( auto w = 0; w < N_; ++w )
@@ -149,7 +149,7 @@ private:
     }
   }
 
-  mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
+  rai::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
 
 private:
@@ -157,28 +157,28 @@ private:
 
   // members for symbolic search
   uint N_;                                                                    ///< number of possible worlds
-  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
-  mlr::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
-  //mlr::Array< Graph* >  folAddToStates_; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
+  rai::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  rai::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
+  //rai::Array< Graph* >  folAddToStates_; ///< facts that are added to the state /after/ the fol.transition, e.g., infeasibility predicates
 
   //-- kinematics: the kinematic structure of the world after the decision path
-  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_; ///< initial start state kinematics
-  mlr::Array< mlr::KinematicWorld > effKinematics_;                            ///< the effective kinematics (computed from kinematics and symbolic state)
+  rai::Array< std::shared_ptr< const rai::KinematicWorld > > startKinematics_; ///< initial start state kinematics
+  rai::Array< rai::KinematicWorld > effKinematics_;                            ///< the effective kinematics (computed from kinematics and symbolic state)
 
   double pHistory_;
   arr bs_;
 
   int a_;                                         ///< action id that leads to this node
-  mlr::Array< FOL_World::Handle > decisions_;     ///< actions leading to this node ( one for each logic )
+  rai::Array< FOL_World::Handle > decisions_;     ///< actions leading to this node ( one for each logic )
 
   uint d_;                                        ///< decision depth/step of this node
   double time_;                                   ///< real time, root = 0, represents the end of the parent action
 
-  mlr::Array< POLGPNode * > andSiblings_;            /// at the same depth!
-  mlr::Array< mlr::Array< POLGPNode * > > families_;
+  rai::Array< POLGPNode * > andSiblings_;            /// at the same depth!
+  rai::Array< rai::Array< POLGPNode * > > families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
-  mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
+  rai::Array< std::shared_ptr< PlainMC > > rootMCs_;
   MCStatistics * mcStats_;
   double lastActionReward_;                       ///  reward of the action leading to this node
   double prefixReward_;                           ///  this is the (certain) rewards of the prefix decisions
@@ -199,7 +199,7 @@ private:
   GeometricLevelBase::ptr pathProblem_;
   GeometricLevelBase::ptr jointProblem_;
 
-  std::map< mlr::String, GeometricLevelBase::ptr > geometricLevels_;
+  std::map< rai::String, GeometricLevelBase::ptr > geometricLevels_;
 
   //--
   int id_;
@@ -209,5 +209,5 @@ namespace utility
 {
   // free functions
   POLGPNode * getTerminalNode( POLGPNode *, const WorldID & w );
-  void        gatherPolicyFringe( POLGPNode *, std::set< mlr::Array< POLGPNode * > > & );
+  void        gatherPolicyFringe( POLGPNode *, std::set< rai::Array< POLGPNode * > > & );
 }

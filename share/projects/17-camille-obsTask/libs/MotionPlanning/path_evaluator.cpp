@@ -11,11 +11,11 @@
 
 namespace mp
 {
-std::pair< double, double > evaluate( mlr::Array< mlr::KinematicWorld > & kinFrames, double tau )
+std::pair< double, double > evaluate( rai::Array< rai::KinematicWorld > & kinFrames, double tau )
 {
   std::vector< arr > framesY;
 
-  TaskMap_Transition tm( kinFrames.front() );
+  TM_Transition tm( kinFrames.front() );
   tm.effectiveJointsOnly = false;
   tm.order = 2;
   arr y, J;
@@ -43,7 +43,7 @@ std::pair< double, double > evaluate( mlr::Array< mlr::KinematicWorld > & kinFra
       Gs(1) = &kinFrames.at(i);
       Gs(2) = &kinFrames.at(i+1);
 
-      tm.phi( y, J, Gs, tau );
+      tm.phi( y, J, Gs );
 
       framesY.push_back( y );
     }

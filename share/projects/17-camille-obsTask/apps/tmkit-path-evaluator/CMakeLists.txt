@@ -17,7 +17,7 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 
 find_path( MLR_LIBRARIES_DIR
            NAMES libCore.so
-           PATHS "${PROJECT_SOURCE_DIR}/../../../../src" )
+           PATHS "/home/mtoussai/git/copy/mlr/share/rai/rai" )
 
 #################################
 # Locate AMINO libs

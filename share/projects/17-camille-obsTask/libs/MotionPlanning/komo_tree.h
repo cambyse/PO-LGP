@@ -18,7 +18,7 @@
 #include <memory>
 #include <map>
 
-#include <KOMO/komo.h>
+#include <KOMO/komo-ext.h>
 
 namespace mp
 {
@@ -39,10 +39,10 @@ struct Branch
 bool operator==(const Branch& a, const Branch& b);
 bool operator<(const Branch& a, const Branch& b);
 
-struct TreeTask : public Task {
+struct TreeTask : public Objective {
   Branch branch;           ///< way to traverse x allow traj tree opt : link from branch index to x index
 
-  TreeTask(TaskMap *m, const ObjectiveType& type) : Task(m, type){}
+  TreeTask(Feature *m, const ObjectiveType& type) : Objective(std::shared_ptr<Feature>(m), type){}
   virtual ~TreeTask(){}
 
   void setCostSpecs(int fromTime, int toTime, int T,
@@ -59,19 +59,19 @@ struct TreeTask : public Task {
 
 //=====KOMOTree==============================================
 
-class KOMOTree : public KOMO
+class KOMOTree : public KOMO_ext
 {
 public:
   KOMOTree();
   virtual void run() override;
-  virtual bool checkGradients() override;
-  virtual struct Task* setTask(double startTime, double endTime, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2, uint order=0) override;
-  TreeTask* addTreeTask(const char* name, TaskMap *map, const ObjectiveType& termType); ///< manually add a task
-  struct TreeTask* setTreeTask(double startTime, double endTime, const Branch& branch, TaskMap* map, ObjectiveType type=OT_sumOfSqr, const arr& target=NoArr, double prec=1e2, uint order=0);
-  virtual bool displayTrajectory(double delay=0.01, bool watch=false) override; ///< display th
+  virtual bool checkGradients();
+  virtual struct Objective* setTask(double startTime, double endTime, Feature* map, ObjectiveType type=OT_sos, const arr& target=NoArr, double prec=1e2, uint order=0);
+  TreeTask* addTreeTask(const char* name, Feature *map, const ObjectiveType& termType); ///< manually add a task
+  struct TreeTask* setTreeTask(double startTime, double endTime, const Branch& branch, Feature* map, ObjectiveType type=OT_sos, const arr& target=NoArr, double prec=1e2, uint order=0);
+  virtual bool displayTrajectory(double delay=0.01, bool watch=false); ///< display th
 
 private:
-  mlr::Array<TreeTask*> tree_tasks;
+  rai::Array<TreeTask*> tree_tasks;
 
   struct Conv_Tree_KOMO_Problem : KOMO_Problem{
     KOMOTree& komo;
@@ -82,7 +82,8 @@ private:
     WorldL getConfigurations(TreeTask* task, uint t) const;
     virtual uint get_k(){ return komo.k_order; }
     virtual void getStructure(uintA& variableDimensions, uintA& featureTimes, ObjectiveTypeA& featureTypes);
-    virtual void phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x);
+    virtual void phi(arr& phi, arrA& J, arrA& H, uintA& featureTimes, ObjectiveTypeA& tt, const arr& x, arr& lambda);
+//    virtual void phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x);
   } komo_tree_problem;
 };
 
@@ -96,7 +97,7 @@ struct Conv_KOMO_Tree_ConstrainedProblem : ConstrainedProblem{
 
   Conv_KOMO_Tree_ConstrainedProblem(KOMO_Problem& P);
 
-  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x);
+  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda);
 };
 
 }

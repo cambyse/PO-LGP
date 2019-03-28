@@ -12,7 +12,7 @@
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
-static arr extractAgentQMask( const mlr::KinematicWorld & G )  // retrieve agent joints
+static arr extractAgentQMask( const rai::KinematicWorld & G )  // retrieve agent joints
 {
   uintA selectedBodies;
 
@@ -29,7 +29,7 @@ static arr extractAgentQMask( const mlr::KinematicWorld & G )  // retrieve agent
 
   for( auto b : selectedBodies )
   {
-    mlr::Joint *j = G.frames.elem(b)->joint;
+    rai::Joint *j = G.frames.elem(b)->joint;
 
     CHECK( j, "incoherence, the joint should not be null since it has been retrieved before" );
 
@@ -67,7 +67,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 
   if( G[ beliefStateTag_ ] == nullptr )
   {
-    auto kin = std::make_shared< mlr::KinematicWorld >();
+    auto kin = std::make_shared< rai::KinematicWorld >();
     kin->init( kinDescription.c_str() );
     computeMeshNormals( kin->frames );
     kin->calc_fwdPropagateFrames();
@@ -94,7 +94,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
         nn->newClone( kinG );
       }
 
-      auto kin = std::make_shared< mlr::KinematicWorld >();
+      auto kin = std::make_shared< rai::KinematicWorld >();
       kin->init( kinG );
       computeMeshNormals( kin->frames );
       kin->calc_fwdPropagateFrames();
@@ -337,7 +337,7 @@ void KOMOPlanner::display( const Skeleton & policy, double sec )
   //
 
   // retrieve trajectories
-  mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
+  rai::Array< rai::Array< rai::Array< rai::KinematicWorld > > > frames;
 
   const auto & kinFrames = policy.N() > 1 ? jointPathKinFrames_ : pathKinFrames_;
   for( auto leafWorldKinFramesPair : kinFrames )
@@ -350,13 +350,13 @@ void KOMOPlanner::display( const Skeleton & policy, double sec )
   {
     TrajectoryTreeVisualizer viz( frames, "policy", microSteps_ * secPerPhase_ );
 
-    mlr::wait( sec, true );
+    rai::wait( sec, true );
   }
 }
 std::pair< double, double > KOMOPlanner::evaluateLastSolution()
 {
   // retrieve trajectories
-  mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > frames;
+  rai::Array< rai::Array< rai::Array< rai::KinematicWorld > > > frames;
 
   //CHECK( jointPathKinFrames_.size() == 0, "not supported yet if branching!" );
 
@@ -418,7 +418,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
 
   const auto N = node->data().beliefState.size();
   //
-  effKinematics_  [ node->data().decisionGraphNodeId ] = mlr::Array< mlr::KinematicWorld >( N );
+  effKinematics_  [ node->data().decisionGraphNodeId ] = rai::Array< rai::KinematicWorld >( N );
   poseCosts_      [ node->data().decisionGraphNodeId ] = arr( N );
   poseConstraints_[ node->data().decisionGraphNodeId ] = arr( N );
   //
@@ -426,13 +426,13 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
   {
     if( node->data().beliefState[ w ] > eps() )
     {
-      mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
+      rai::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
 
       // create komo
       auto komo = komoFactory_.createKomo();
 
       // set-up komo
-      komo->setModel( kin, true, false, true, false, false );
+      komo->setModel( kin, true/*, false, true, false, false */);
 
       komo->setTiming( 1., 2, 5., 1/*, true*/ );
       //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
@@ -456,7 +456,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       //      {
       //      komo->displayTrajectory();
 
-      //      mlr::wait();
+      //      rai::wait();
       //      }
       // save results
       //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
@@ -479,7 +479,7 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
       effKinematics_[ node->data().decisionGraphNodeId ]( w ) = *komo->configurations.last();
 
       // update switch
-      for( mlr::KinematicSwitch *sw: komo->switches )
+      for( rai::KinematicSwitch *sw: komo->switches )
       {
         //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
         if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->data().decisionGraphNodeId ]( w ) );
@@ -519,7 +519,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
   if( markovianPathCosts_.find( node->data().decisionGraphNodeId ) == markovianPathCosts_.end() )
   {
     const auto N = node->data().beliefState.size();
-    effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ] = mlr::Array< mlr::KinematicWorld >( N );
+    effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ] = rai::Array< rai::KinematicWorld >( N );
 
     markovianPathCosts_      [ node->data().decisionGraphNodeId ] = 0;
     markovianPathConstraints_[ node->data().decisionGraphNodeId ] = 0;
@@ -530,7 +530,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
       {
         if(!node->isRoot()) CHECK( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId ) != effMarkovianPathKinematics_.end(),"no parent effective kinematic!" );
 
-        mlr::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
+        rai::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
 
         CHECK( kin.q.size() > 0, "wrong start configuration!");
 
@@ -538,7 +538,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         auto komo = komoFactory_.createKomo();
 
         // set-up komo
-        komo->setModel( kin, true, false, true, false, false );
+        komo->setModel( kin, true/*, false, true, false, false*/ );
 
         komo->setTiming( 1.0, microSteps_, secPerPhase_, 2 );
 
@@ -563,7 +563,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
 //          komo->displayTrajectory();
 //////      komo->saveTrajectory( std::to_string( node->id() ) );
 //            komo->plotVelocity( std::to_string( node->id() ) );
-////          //mlr::wait();
+////          //rai::wait();
         }
 
         Graph result = komo->getReport();
@@ -584,7 +584,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & 
         effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ]( w ) = *komo->configurations.last();
 
         // update switch
-        for( mlr::KinematicSwitch * sw: komo->switches )
+        for( rai::KinematicSwitch * sw: komo->switches )
         {
           //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
           if( sw->timeOfApplication>=2 ) sw->apply( effMarkovianPathKinematics_[ node->data().decisionGraphNodeId ]( w ) );
@@ -630,7 +630,7 @@ void KOMOPlanner::optimizePath( Skeleton & policy )
 {
   std::cout << "optimizing full path.." << std::endl;
 
-  bsToLeafs_             = mlr::Array< PolicyNodePtr > ( policy.N() );
+  bsToLeafs_             = rai::Array< PolicyNodePtr > ( policy.N() );
 
   for( auto l : policy.leafs() )
   {
@@ -644,9 +644,9 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 {
   const auto N = leaf->data().beliefState.size();
 
-  pathKinFrames_[ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( N );
-  pathXSolution_[ leaf ] = mlr::Array< arr                               >( N );
-  pathCostsPerPhase_[ leaf ] = mlr::Array< arr >( N );
+  pathKinFrames_[ leaf ] = rai::Array< rai::Array< rai::KinematicWorld > >( N );
+  pathXSolution_[ leaf ] = rai::Array< arr                               >( N );
+  pathCostsPerPhase_[ leaf ] = rai::Array< arr >( N );
 
   //-- collect 'path nodes'
   auto treepath = getPathTo( leaf );
@@ -664,7 +664,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
       // set-up komo
       auto leafTime = leaf->depth();
-      komo->setModel( *startKinematics_( w ), true, false, true, false, false );
+      komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
       komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
@@ -710,7 +710,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
       for( auto s = 0; s < komo->configurations.N; ++s )
       {
-        mlr::KinematicWorld kin( *komo->configurations( s ) );
+        rai::KinematicWorld kin( *komo->configurations( s ) );
         pathKinFrames_[ leaf ]( w ).append( kin );
       }
 
@@ -756,8 +756,8 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 {
   const auto N = leaf->data().beliefState.size();
 
-  jointPathKinFrames_  [ leaf ] = mlr::Array< mlr::Array< mlr::KinematicWorld > >( N );
-  jointPathCostsPerPhase_[ leaf ] = mlr::Array< arr >( N );
+  jointPathKinFrames_  [ leaf ] = rai::Array< rai::Array< rai::KinematicWorld > >( N );
+  jointPathCostsPerPhase_[ leaf ] = rai::Array< arr >( N );
 
   //-- collect 'path nodes'
   auto treepath = getPathTo( leaf );
@@ -772,7 +772,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       // set-up komo
       auto leafTime = leaf->depth();
-      komo->setModel( *startKinematics_( w ), true, false, true, false, false );
+      komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
       komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
 
       komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
@@ -821,7 +821,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
             {
               AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask_ );  // tmp camille, think to delete it, or komo does it?
               double slice_t = phase_start_offset_ + node->depth() - double( s ) / stepsPerPhase;
-              komo->setTask( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
+              komo->addObjective( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
               //
               //std::cout << "depth:" << node->depth() << " slice:" << slice_t << " has kin equality, q size = " << qmask.size() << std::endl;
@@ -863,7 +863,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       // store result
       for( auto s = 0; s < komo->configurations.N; ++s )
       {
-        mlr::KinematicWorld kin( *komo->configurations( s ) );
+        rai::KinematicWorld kin( *komo->configurations( s ) );
         jointPathKinFrames_[ leaf ]( w ).append( kin );
       }
 
@@ -894,7 +894,7 @@ void KOMOPlanner::computeJointPathQResult( const Skeleton& policy )
 void freeKomo( ExtensibleKOMO::ptr komo )
 {
   listDelete( komo->configurations );
-  listDelete( komo->tasks );
+  listDelete( komo->objectives );
   listDelete( komo->switches );
 }
 

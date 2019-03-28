@@ -105,7 +105,7 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO 
   komo->setGrasp( t_end, "baxterR", facts[0].c_str(), 0 );
 
   //  // donw before pick
-  //komo->setTask(t_start, t_start+.20, new TaskMap_Default(posTMT, komo->world, "baxterR"), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down
+  //komo->setTask(t_start, t_start+.20, new TM_Default(TMT_pos, komo->world, "baxterR"), OT_sos, {0.,0.,-.1}, 1e1, 1); //move down
 
   //disconnect object from table
   //komo->setKinematicSwitch( t_end, true, "delete", facts[1].c_str(), facts[0].c_str() );
@@ -113,7 +113,7 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO 
   //komo->setKinematicSwitch( t_end, true, "ballZero", "baxterR", facts[0].c_str() );
 
   //  // lift after pick
-  //komo->setTask(t_end+.10, t_end+.10, new TaskMap_Default(posTMT, komo->world,"baxterR"), OT_sumOfSqr, {0.,0.,+.1}, 1e1, 1); //move up
+  //komo->setTask(t_end+.10, t_end+.10, new TM_Default(TMT_pos, komo->world,"baxterR"), OT_sos, {0.,0.,+.1}, 1e1, 1); //move up
 
   if( verbose > 0 )
   {
@@ -165,9 +165,9 @@ void groundCheck( double phase, const std::vector< std::string >& facts, KOMO * 
   const double t_end =   phase + duration;
   //
   komo->setTask( t_start, t_end, new LimitsConstraint(0.05), OT_ineq, NoArr ); // avoid self collision with baxter
-  //komo->setTask( t_start, t_end, new TaskMap_Transition(komo->world), OT_sumOfSqr, NoArr, 1e-1, 2);
+  //komo->setTask( t_start, t_end, new TM_Transition(komo->world), OT_sos, NoArr, 1e-1, 2);
 
-  komo->setTask( t_start, t_end, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sumOfSqr, NoArr, 1e2 );
+  komo->setTask( t_start, t_end, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sos, NoArr, 1e2 );
   komo->setTask( t_end - 0.1, t_end, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
@@ -361,7 +361,7 @@ void plan_graph_search()
 void baxter()
 {
   {
-    mlr::KinematicWorld kin;
+    rai::KinematicWorld kin;
     kin.init( "LGP-blocks-kin-unified-b6.g" );
 
 //    const double zf = 1.47;
@@ -378,7 +378,7 @@ void baxter()
     kin.watch();
     kin.write( std::cout );
 
-    mlr::wait( 300, true );
+    rai::wait( 300, true );
   }
 }
 
@@ -386,7 +386,7 @@ void baxter()
 
 int main(int argc,char **argv)
 {
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 

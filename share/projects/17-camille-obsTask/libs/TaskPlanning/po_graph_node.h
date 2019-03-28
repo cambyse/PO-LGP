@@ -114,12 +114,12 @@ class POGraphNode : public std::enable_shared_from_this< POGraphNode > // note: 
   friend class NodeVisitorBase;
 public:
   typedef std::shared_ptr< POGraphNode > ptr;
-  typedef mlr::Array< POGraphNode::ptr > L;
-  typedef mlr::Array< mlr::Array<POGraphNode::ptr > > LL;
+  typedef rai::Array< POGraphNode::ptr > L;
+  typedef rai::Array< rai::Array<POGraphNode::ptr > > LL;
 
 public:
   /// root node init
-  POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
+  POGraphNode( rai::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
 
   /// child node creation
   POGraphNode( const POGraphNode::ptr & root, double p, double q, const arr & bs, const std::vector< SymbolicState > &,uint a );
@@ -135,7 +135,7 @@ public:
   POGraphNode::LL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
   bool isSolved() const { return   isSolved_; }
-  mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
+  rai::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
   std::shared_ptr< std::list< POGraphNode::ptr > > shared_node_list() const { return graph_; }
   std::size_t nodeNumber() const { return graph_->size(); }
 
@@ -159,7 +159,7 @@ private:
   // utility
   std::vector< std::vector<FOL_World::Handle> > getPossibleActions( uint & nActions ) const;
   LogicAndState getWitnessLogicAndState() const;
-  template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
+  template < typename T > T getWitnessElem( const rai::Array< T > array ) const
   {
     CHECK( array.d0 == N_, "wrong dimensions!" );
     for( auto w = 0; w < N_; ++w )
@@ -171,7 +171,7 @@ private:
     }
   }
 
-  mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
+  rai::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
 
 private:
@@ -179,8 +179,8 @@ private:
 
   // members for symbolic search
   uint N_;                                                                    ///< number of possible worlds
-  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
-  mlr::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
+  rai::Array< std::shared_ptr<FOL_World> > folEngines_;
+  rai::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
   std::vector< SymbolicState >             resultStates_;
   std::shared_ptr< std::list< POGraphNode::ptr > > graph_;
 
@@ -194,7 +194,7 @@ private:
   POGraphNode::LL families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
-  mlr::Array< uint > leadingActions_;     /// potentially different because of different parents
+  rai::Array< uint > leadingActions_;     /// potentially different because of different parents
 
   //-- global search
   bool isExpanded_;
@@ -212,7 +212,7 @@ namespace utility
 {
   // free functions
   POGraphNode::ptr getTerminalNode( const POGraphNode::ptr &, const WorldID & w );
-  void   gatherPolicyFringe( const POGraphNode::ptr &s, std::set< mlr::Array< POGraphNode::ptr> > & );
+  void   gatherPolicyFringe( const POGraphNode::ptr &s, std::set< rai::Array< POGraphNode::ptr> > & );
 }
 
 }

@@ -16,12 +16,12 @@
 
 #include <math_utility.h>
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 using namespace std;
 
-struct AxisAlignment:TaskMap
+struct AxisAlignment:Feature
 {
   AxisAlignment( const char* bobyName, const arr & axis )
     : bobyName_     ( bobyName )
@@ -30,13 +30,13 @@ struct AxisAlignment:TaskMap
 
   }
 
-  virtual void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t );
+  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G, int t );
 
-  uint dim_phi( const mlr::KinematicWorld& G ) { return 1; }
+  uint dim_phi( const rai::KinematicWorld& G ) { return 1; }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("AxisAlignment"); }
+  rai::String shortTag(const rai::KinematicWorld& G){ return STRING("AxisAlignment"); }
 
   private:
-    const mlr::String bobyName_;
+    const rai::String bobyName_;
     const arr axis_;
 };

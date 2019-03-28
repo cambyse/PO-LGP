@@ -61,36 +61,36 @@ private:
 
 private:
   // state
-  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > startKinematics_;
+  rai::Array< std::shared_ptr< const rai::KinematicWorld > > startKinematics_;
   arr qmask_; //1 for agent, 0 for non agent joint
   KOMOFactory komoFactory_;
 
   std::vector< double > randomVec_; // used to randomize the initial configuration
 
   // pose
-  std::map< uint, mlr::Array< mlr::KinematicWorld > > effKinematics_;
+  std::map< uint, rai::Array< rai::KinematicWorld > > effKinematics_;
   std::map< uint, arr > poseCosts_;       // node id -> costs for each world
   std::map< uint, arr > poseConstraints_; // node id -> constraints for each world
 
   // markovian path
-  std::map< uint, mlr::Array< mlr::KinematicWorld > > effMarkovianPathKinematics_;
+  std::map< uint, rai::Array< rai::KinematicWorld > > effMarkovianPathKinematics_;
   std::map< uint, double > markovianPathCosts_; // node id -> averaged cost
   std::map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
 
   // path
-  std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
-  std::map< PolicyNodePtr, mlr::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
-  std::map< PolicyNodePtr, mlr::Array< arr > > pathCostsPerPhase_;
+  std::map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
+  std::map< PolicyNodePtr, rai::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
+  std::map< PolicyNodePtr, rai::Array< arr > > pathCostsPerPhase_;
   QResult pathQResult_;
 
   // joint path
-  std::map< PolicyNodePtr, mlr::Array< mlr::Array< mlr::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
-  std::map< PolicyNodePtr, mlr::Array< arr > > jointPathCostsPerPhase_;
-  mlr::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
+  std::map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
+  std::map< PolicyNodePtr, rai::Array< arr > > jointPathCostsPerPhase_;
+  rai::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
   QResult jointPathQResult_;
 
   // params
-  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+  const rai::String beliefStateTag_  = "BELIEF_START_STATE";
 
   double kinEqualityWeight_  = 1e4;
   double fixEffJointsWeight_ = 1e3;

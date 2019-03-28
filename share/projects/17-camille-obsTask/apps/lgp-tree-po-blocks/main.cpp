@@ -140,7 +140,7 @@ void groundCheck( double phase, const std::vector< std::string >& facts, mp::Ext
   const double t_end =   phase + duration;
   //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
-  komo->setTask( t_start, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sumOfSqr, NoArr, 1e2 );
+  komo->setTask( t_start, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sos, NoArr, 1e2 );
   komo->setTask( t_end - 0.1, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
@@ -249,7 +249,7 @@ void groundStack( double phase, const std::vector< std::string >& facts, mp::Ext
 
 //  tp->solve();
 
-//  mlr::wait( 30, true );
+//  rai::wait( 30, true );
 //}
 
 //===========================================================================
@@ -389,14 +389,14 @@ joint_motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(e
   timings.close();
 /////
 
-  mlr::wait( 30, true );
+  rai::wait( 30, true );
 }
 
 //===========================================================================
 
 int main(int argc,char **argv)
 {
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 

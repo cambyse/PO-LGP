@@ -16,14 +16,14 @@
 
 #include <math_utility.h>
 
-//#include <Kin/taskMap.h>
+//#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 #include <Kin/proxy.h>
 
 //===========================================================================
 
-struct CarKinematic:TaskMap{
+struct CarKinematic:Feature{
 
   CarKinematic( const std::string & object )
     : object_( object )
@@ -31,18 +31,18 @@ struct CarKinematic:TaskMap{
 
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("CarKinematic");
+    return rai::String("CarKinematic");
   }
 
   virtual void phi(arr& y, arr& J, const WorldL& Gs, double tau, int t=-1) override
   {
-    //TaskMap::phi(y,J,Ks,tau,t);
+    //Feature::phi(y,J,Ks,tau,t);
     CHECK(order==1,"");
     CHECK(Gs.size() >= 1,"");
 
-    mlr::Frame *object = Gs(1)->getFrameByName( object_.c_str() );
+    rai::Frame *object = Gs(1)->getFrameByName( object_.c_str() );
     const auto Xoffset = -0.5 * object->shape->size(0);
 
     // initialize y and J
@@ -56,13 +56,13 @@ struct CarKinematic:TaskMap{
 
     // get speed vector
     arr y_vel,Jvel;
-    TaskMap_Default vel(posDiffTMT, object->ID, mlr::Vector(Xoffset,0,0));
+    TM_Default vel(TMT_posDiff, object->ID, rai::Vector(Xoffset,0,0));
     vel.order = 1;
     vel.phi(y_vel, Jvel, Gs, tau, t);
 
     // get orientation vector
     arr y_vec,Jvec;
-    TaskMap_Default vec(vecTMT, object->ID, mlr::Vector(0,1,0));
+    TM_Default vec(TMT_vec, object->ID, rai::Vector(0,1,0));
     vec.order = 0;
     vec.phi(y_vec, Jvec, *Gs(1), t);
 
@@ -89,7 +89,7 @@ struct CarKinematic:TaskMap{
     }
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1) override
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1) override
   {
     CHECK(false,"The phi function taking the list of kinematic worlds should be taken");
   }
@@ -99,7 +99,7 @@ struct CarKinematic:TaskMap{
 //    return Ks.size();
 //  }
 
-  virtual uint dim_phi(const mlr::KinematicWorld& K) override
+  virtual uint dim_phi(const rai::KinematicWorld& K) override
   {
     //CHECK(false,"The phi function taking the list of kinematic worlds should be taken");
 

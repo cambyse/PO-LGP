@@ -43,7 +43,7 @@ AOSearch::AOSearch( const KOMOFactory & komoFactory )
 // modifiers
 void AOSearch::prepareFol( const std::string & folDescription )
 {
-  const mlr::String notObservableTag = "NOT_OBSERVABLE";
+  const rai::String notObservableTag = "NOT_OBSERVABLE";
 
   Graph KB;
   KB.read( FILE( folDescription.c_str() ) );
@@ -52,7 +52,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
   if( KB[ beliefStateTag_ ] == nullptr )
   {
     // create dummy array
-    folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( 1 );
+    folWorlds_ = rai::Array< std::shared_ptr<FOL_World> > ( 1 );
     std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
     fol->init(FILE(folDescription.c_str()));
     folWorlds_( 0 ) = fol;
@@ -69,7 +69,7 @@ void AOSearch::prepareFol( const std::string & folDescription )
     const uint nWorlds = bsGraph->d0;
 
     // generate all the possible fol
-    folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( nWorlds );
+    folWorlds_ = rai::Array< std::shared_ptr<FOL_World> > ( nWorlds );
     bs_ = arr( nWorlds );
     for( uint w = 0; w < nWorlds; w++ )
     {
@@ -109,7 +109,7 @@ void AOSearch::prepareKin( const std::string & kinDescription )
 
   if( G[ beliefStateTag_ ] == nullptr )
   {
-    auto kin = std::make_shared< mlr::KinematicWorld >();
+    auto kin = std::make_shared< rai::KinematicWorld >();
     kin->init( kinDescription.c_str() );
     computeMeshNormals( kin->shapes );
     kin->calc_fwdPropagateFrames();
@@ -135,7 +135,7 @@ void AOSearch::prepareKin( const std::string & kinDescription )
         nn->newClone( kinG );
       }
 
-      auto kin = std::make_shared< mlr::KinematicWorld >();
+      auto kin = std::make_shared< rai::KinematicWorld >();
       kin->init( kinG );
       computeMeshNormals( kin->shapes );
       kin->calc_fwdPropagateFrames();
@@ -454,14 +454,14 @@ void AOSearch::updateDisplay( const WorldID & ww, bool poses, bool seqs, bool pa
   }
 }
 
-mlr::Array< POLGPNode * > AOSearch::getNodesToExpand() const
+rai::Array< POLGPNode * > AOSearch::getNodesToExpand() const
 {
   return getNodesToExpand( root_ );
 }
 
-mlr::Array< POLGPNode * > AOSearch::getNodesToExpand( POLGPNode * node ) const
+rai::Array< POLGPNode * > AOSearch::getNodesToExpand( POLGPNode * node ) const
 {
-  mlr::Array< POLGPNode * >  nodes;
+  rai::Array< POLGPNode * >  nodes;
 
   // starts from root
   if( ! node->isSymbolicallySolved() )
@@ -542,14 +542,14 @@ void AOSearch::printSearchTree( std::iostream & ss ) const
 
 //--------private----------------//
 
-mlr::Array< POLGPNode * > AOSearch::getTerminalNodes() const
+rai::Array< POLGPNode * > AOSearch::getTerminalNodes() const
 {
   return getTerminalNodes( root_ );
 }
 
-mlr::Array< POLGPNode * > AOSearch::getTerminalNodes( POLGPNode * n ) const
+rai::Array< POLGPNode * > AOSearch::getTerminalNodes( POLGPNode * n ) const
 {
-  mlr::Array< POLGPNode * > nodes;
+  rai::Array< POLGPNode * > nodes;
 
   if( n->isSymbolicallyTerminal() )
   {

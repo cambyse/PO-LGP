@@ -100,7 +100,7 @@ void ExtensibleKOMO::applyRandomization( const std::vector< double > & randomVec
 {
   // apply random vector
   // initial position
-  mlr::KinematicWorld world;
+  rai::KinematicWorld world;
   world.copy(this->world);
 
   //randomVec={-1.0, -1.0};
@@ -193,7 +193,7 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
   fil2 <<"set term qt 2" <<endl;
   fil2 <<"plot '" << filename << "' \\" << endl;
   for(uint i=1;i<=jointNames.N;i++) fil2 <<(i>1?"  ,''":"     ") <<" u 0:"<<i<<" w l lw 3 lc " <<i <<" lt " <<1-((i/10)%2) <<" \\" <<endl;
-  //    if(dualSolution.N) for(uint i=0;i<tasks.N;i++) fil <<"  ,'' u 0:"<<1+tasks.N+i<<" w l \\" <<endl;
+  //    if(dualSolution.N) for(uint i=0;i<objectives.N;i++) fil <<"  ,'' u 0:"<<1+objectives.N+i<<" w l \\" <<endl;
   fil2 <<endl;
   fil2.close();
 
@@ -209,29 +209,29 @@ arr ExtensibleKOMO::getCostsPerPhase()
   arr phi;
   ObjectiveTypeA tt;
   if(wasRun){
-      phi.referTo( featureValues.scalar() );
-      tt.referTo( featureTypes.scalar() );
+      phi.referTo( featureValues );
+      tt.referTo( featureTypes );
   }
 
   //-- collect all task costs and constraints
-  StringA name; name.resize(tasks.N);
+  StringA name; name.resize(objectives.N);
   arr err=zeros(maxPhase);
   uint M=0;
   for(uint t=0; t<T; t++){
     uint p = std::floor( t / stepsPerPhase );
-    for(uint i=0; i<tasks.N; i++) {
-      Task *task = tasks(i);
-      if(task->prec.N>t && task->prec(t)){
+    for(uint i=0; i<objectives.N; i++) {
+      Objective *task = objectives(i);
+      if(task->isActive(t)){
         uint d=0;
         if(wasRun){
-          d=task->map->dim_phi(configurations({t,t+k_order}), t);
+          d=task->map->__dim_phi(configurations({t,t+k_order}));
           for(uint j=0;j<d;j++) CHECK(tt(M+j)==task->type,"");
           if(d){
-            if(task->type==OT_sumOfSqr){
-              for(uint j=0;j<d;j++) err(p) += mlr::sqr(phi(M+j)); //sumOfSqr(phi.sub(M,M+d-1));
+            if(task->type==OT_sos){
+              for(uint j=0;j<d;j++) err(p) += rai::sqr(phi(M+j)); //sumOfSqr(phi.sub(M,M+d-1));
             }
             if(task->type==OT_ineq){
-              for(uint j=0;j<d;j++) err(p) += mlr::MAX(0., phi(M+j));
+              for(uint j=0;j<d;j++) err(p) += rai::MAX(0., phi(M+j));
             }
             if(task->type==OT_eq){
               for(uint j=0;j<d;j++) err(p) += fabs(phi(M+j));

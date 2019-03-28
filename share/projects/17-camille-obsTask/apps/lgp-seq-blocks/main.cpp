@@ -11,10 +11,10 @@ static void appyTm( KOMO & komo )
 {
   ///ALL TIME TASK MAPS
   /*
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_r", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_g", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_r", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_g", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
   */
 
   komo.setTask( 0.0, 10.0, new ApproxPointToShape(komo.world, "humanL", "tableC" ), OT_ineq, NoArr, 1e2);
@@ -64,12 +64,12 @@ static void appyTm( KOMO & komo )
 void move_blocks()
 {
 //  {
-//    mlr::KinematicWorld kin;
+//    rai::KinematicWorld kin;
 //    kin.init( "model.g" );
 //    kin.watch();
 //    kin.write( std::cout );
 
-//    mlr::wait( 30, true );
+//    rai::wait( 30, true );
 //  }
 
   KOMO komo;
@@ -117,7 +117,7 @@ void move_blocks()
 //===========================================================================
 
 int main(int argc,char** argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   //move_1();
 

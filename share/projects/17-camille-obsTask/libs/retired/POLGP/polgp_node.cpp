@@ -84,7 +84,7 @@ static std::set< std::string > getObservableStateStr( Graph * state )
 static int nodeNumber = 0;
 
 /// root node init
-POLGPNode::POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory )
+POLGPNode::POLGPNode( rai::Array< std::shared_ptr< FOL_World > > fols, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & kins, const arr & bs, const KOMOFactory & komoFactory )
   : parent_( nullptr )
   , N_( fols.N )
   , folWorlds_( fols )
@@ -132,7 +132,7 @@ POLGPNode::POLGPNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const mlr
 
   for( auto w = 0; w < N_; ++w )
   {
-    effKinematics_( w ) = mlr::KinematicWorld( * startKinematics_( w ) );
+    effKinematics_( w ) = rai::KinematicWorld( * startKinematics_( w ) );
   }
 
   std::size_t s = 0;
@@ -307,7 +307,7 @@ void POLGPNode::expand()
     }
 
     // create as many children as outcomes
-    mlr::Array< POLGPNode * > familiy;
+    rai::Array< POLGPNode * > familiy;
     for( auto outcome : outcomesToWorlds )
     {
       auto facts  = outcome.first;
@@ -359,7 +359,7 @@ void POLGPNode::expand()
   isExpanded_ = true;
 }
 
-void POLGPNode::setAndSiblings( const mlr::Array< POLGPNode * > & siblings )
+void POLGPNode::setAndSiblings( const rai::Array< POLGPNode * > & siblings )
 {
   for( auto s : siblings )
   {
@@ -384,7 +384,7 @@ void POLGPNode::generateMCRollouts( uint num, int stepAbort )
     // retrieve history
     if( bs_( w ) > eps() )
     {
-      mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
+      rai::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
 
       for( uint i=1 ; i < treepath.N; i++ )
       {
@@ -430,7 +430,7 @@ void POLGPNode::backTrackBestExpectedPolicy( POLGPNode * node )
   else
   {
     struct familyStatusType { double reward; bool solved; };
-    mlr::Array< familyStatusType > familyStatus( families_.d0 );
+    rai::Array< familyStatusType > familyStatus( families_.d0 );
 
     // find best family
     // compute cost of each family
@@ -570,9 +570,9 @@ void POLGPNode::labelInfeasible()
 //  node->recomputeAllMCStats(false);
 }
 
-mlr::Array< POLGPNode * > POLGPNode::getTreePath()
+rai::Array< POLGPNode * > POLGPNode::getTreePath()
 {
-  mlr::Array< POLGPNode * > path;
+  rai::Array< POLGPNode * > path;
   POLGPNode * node = this;
   for(;node;){
     path.prepend(node);
@@ -581,9 +581,9 @@ mlr::Array< POLGPNode * > POLGPNode::getTreePath()
   return path;
 }
 
-mlr::Array< POLGPNode * > POLGPNode::getTreePathFrom( POLGPNode * start )
+rai::Array< POLGPNode * > POLGPNode::getTreePathFrom( POLGPNode * start )
 {
-  mlr::Array< POLGPNode * > subPath;
+  rai::Array< POLGPNode * > subPath;
 
   POLGPNode * node = this;
   do
@@ -619,9 +619,9 @@ LogicAndState POLGPNode::getWitnessLogicAndState() const
   return worlds.first();
 }
 
-mlr::Array< LogicAndState > POLGPNode::getPossibleLogicAndStates() const
+rai::Array< LogicAndState > POLGPNode::getPossibleLogicAndStates() const
 {
-  mlr::Array< LogicAndState > worlds;
+  rai::Array< LogicAndState > worlds;
 
   for( auto w = 0; w < N_; ++w )
   {
@@ -677,7 +677,7 @@ POLGPNode * getTerminalNode( POLGPNode * n, const WorldID & w )
   return node;
 }
 
-void gatherPolicyFringe( POLGPNode * node, std::set< mlr::Array< POLGPNode * > > & fringe )
+void gatherPolicyFringe( POLGPNode * node, std::set< rai::Array< POLGPNode * > > & fringe )
 {
   for( auto f : node->families() )
   {

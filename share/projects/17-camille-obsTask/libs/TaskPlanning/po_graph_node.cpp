@@ -107,7 +107,7 @@ static uint _n_state_str;
 static uint _state_str_time_us;
 
 /// root node init
-POGraphNode::POGraphNode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
+POGraphNode::POGraphNode( rai::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
   : root_( nullptr )
   , N_( fols.N )
   , folEngines_( fols )
@@ -186,7 +186,7 @@ POGraphNode::POGraphNode( const POGraphNode::ptr & root, double p, double q, con
   {
     if( bs_( w ) > eps() )
     {
-      mlr::String mlrState( resultStates_[ w ].state ); // construct mlr string from std::string
+      rai::String mlrState( resultStates_[ w ].state ); // construct mlr string from std::string
       // logic
       auto fol = folEngines_( w );
 
@@ -493,9 +493,9 @@ LogicAndState POGraphNode::getWitnessLogicAndState() const
   return worlds.first();
 }
 
-mlr::Array< LogicAndState > POGraphNode::getPossibleLogicAndStates() const
+rai::Array< LogicAndState > POGraphNode::getPossibleLogicAndStates() const
 {
-  mlr::Array< LogicAndState > worlds;
+  rai::Array< LogicAndState > worlds;
 
   for( auto w = 0; w < N_; ++w )
   {

@@ -16,14 +16,14 @@
 
 #include <math_utility.h>
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 #include <Kin/proxy.h>
 
 using namespace std;
 
-struct AxisBound:TaskMap{
+struct AxisBound:Feature{
 
   enum Axis
   {
@@ -49,14 +49,14 @@ struct AxisBound:TaskMap{
     else if( axis == Z ) id_ = 2;
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1)
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1)
   {
 //    for( auto p : G.proxies )
 //    {
 //      std::cout << p->a << " " << p->b << std::endl;
 //    }
 
-    mlr::Frame *object = G.getFrameByName( object_.c_str() );
+    rai::Frame *object = G.getFrameByName( object_.c_str() );
     arr posObject, posJObject;
     G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
 
@@ -73,14 +73,14 @@ struct AxisBound:TaskMap{
     if(&J) J = tmp_J;
   }
 
-  virtual uint dim_phi(const mlr::KinematicWorld& G)
+  virtual uint dim_phi(const rai::KinematicWorld& G)
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("AxisBound");
+    return rai::String("AxisBound");
   }
 
 private:

@@ -18,37 +18,37 @@
 
 #include <Kin/kin.h>
 #include <Kin/frame.h>
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 using namespace std;
 
-struct ApproxShapeToSphere:TaskMap
+struct ApproxShapeToSphere:Feature
 {
-  ApproxShapeToSphere(const mlr::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double radius = 0.05 )
+  ApproxShapeToSphere(const rai::KinematicWorld& G, const char* iShapeName, const char* jShapeName, double radius = 0.05 )
     : radius_( radius )
   {
     i_ = G.getFrameByName( iShapeName )->ID;
     j_ = G.getFrameByName( jShapeName )->ID;
 
-    mlr::Frame* a = G.frames( i_ );
-    mlr::Frame* b = G.frames( j_ );
+    rai::Frame* a = G.frames( i_ );
+    rai::Frame* b = G.frames( j_ );
 
     //CHECK( a->shape->mesh_radius < 0.01, "The first shape should be almost a point!" );
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t);
 
-  void phiSphere( arr& y, arr& J, const mlr::KinematicWorld& G );
+  void phiSphere( arr& y, arr& J, const rai::KinematicWorld& G );
 
-  //void phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p );
+  //void phiProxy( arr& y, arr& J, const rai::KinematicWorld& G, rai::Proxy * p );
 
-  uint dim_phi(const mlr::KinematicWorld& G)
+  uint dim_phi(const rai::KinematicWorld& G)
   {
     return 1;
   }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("_ApproxPointToShape"); }
+  rai::String shortTag(const rai::KinematicWorld& G){ return STRING("_ApproxPointToShape"); }
 
 private:
   uint i_;

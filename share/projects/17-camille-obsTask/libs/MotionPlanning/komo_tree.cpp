@@ -105,10 +105,12 @@ void TreeTask::setCostSpecs(int fromTime,
                             int toTime, int T,
                             const arr& _target,
                             double _prec){
+#if 0 //MARC_TODO!
   if(&_target) target = _target; else target = {0.};
   if(fromTime<0) fromTime=0;
   CHECK(toTime>=fromTime,"");
   prec.resize(T).setZero();
+#endif
   for(int local = 0; local < int(branch.local_to_global.size())-2; ++local) // clarify magic number
   {
     if(local >= fromTime && local < toTime)
@@ -140,15 +142,15 @@ void TreeTask::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, u
 //==============KOMOTree==============================================
 
 KOMOTree::KOMOTree()
-  : KOMO()
+  : KOMO_ext()
   , komo_tree_problem(*this)
 {
 
 }
 
 void KOMOTree::run(){
-  mlr::KinematicWorld::setJointStateCount=0;
-  mlr::timerStart();
+  rai::KinematicWorld::setJointStateCount=0;
+  rai::timerStart();
   CHECK(T,"");
   if(opt) delete opt;
 
@@ -157,8 +159,8 @@ void KOMOTree::run(){
   opt->run();
 
   if(verbose>0){
-    cout <<"** optimization time=" <<mlr::timerRead()
-        <<" setJointStateCount=" <<mlr::KinematicWorld::setJointStateCount <<endl;
+    cout <<"** optimization time=" <<rai::timerRead()
+        <<" setJointStateCount=" <<rai::KinematicWorld::setJointStateCount <<endl;
   }
   if(verbose>1) cout <<getReport(false);
 }
@@ -171,18 +173,18 @@ bool KOMOTree::checkGradients(){
   return checkJacobianCP(cp, x, 1e-4);
 }
 
-Task *KOMOTree::setTask(double startTime, double endTime, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
+Objective* KOMOTree::setTask(double startTime, double endTime, Feature *map, ObjectiveType type, const arr& target, double prec, uint order){
   return setTreeTask(startTime, endTime, Branch::linearTrajectory(T/stepsPerPhase+1), map, type, target, prec, order);
 }
 
-TreeTask* KOMOTree::addTreeTask(const char* name, TaskMap *m, const ObjectiveType& termType){
+TreeTask* KOMOTree::addTreeTask(const char* name, Feature *m, const ObjectiveType& termType){
   TreeTask *t = new TreeTask(m, termType);
   t->name=name;
   tree_tasks.append(t);
   return t;
 }
 
-TreeTask *KOMOTree::setTreeTask(double startTime, double endTime, const Branch& branch, TaskMap *map, ObjectiveType type, const arr& target, double prec, uint order){
+TreeTask *KOMOTree::setTreeTask(double startTime, double endTime, const Branch& branch, Feature *map, ObjectiveType type, const arr& target, double prec, uint order){
   CHECK(k_order>=order,"");
   map->order = order;
   TreeTask *task = addTreeTask(map->shortTag(world), map, type);
@@ -226,7 +228,7 @@ bool KOMOTree::displayTrajectory(double delay, bool watch){
         gl->watch(STRING(tag <<" (time " <<std::setw(3) << local <<'/' <<T <<')').p);
       }else{
         gl->update(STRING(tag <<" (time " <<std::setw(3) << local <<'/' <<T <<')').p);
-        if(delay) mlr::wait(delay);
+        if(delay) rai::wait(delay);
       }
     }
     ++branch_number;
@@ -245,11 +247,11 @@ void KOMOTree::Conv_Tree_KOMO_Problem::getStructure(uintA& variableDimensions, u
   featureTimes.clear();
   featureTypes.clear();
   for(uint t=0;t<komo.T;t++){
-    for(TreeTask *task: komo.tree_tasks) if(task->prec.N>t && task->prec(t)){
+    for(TreeTask *task: komo.tree_tasks) if(task->isActive(t)){
       //      CHECK(task->prec.N<=MP.T,"");
       const auto local_t = task->to_local_t(t);
       WorldL configurations = getConfigurations(task, local_t);
-      uint m = task->map->dim_phi(configurations, t); //dimensionality of this task
+      uint m = task->map->__dim_phi(configurations); //dimensionality of this task
       featureTimes.append(consts<uint>(task->to_global_t(local_t), m));
      featureTypes.append(consts<ObjectiveType>(task->type, m));
     }
@@ -267,7 +269,7 @@ WorldL KOMOTree::Conv_Tree_KOMO_Problem::getConfigurations(TreeTask* task, uint 
   return configurations;
 }
 
-void KOMOTree::Conv_Tree_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, ObjectiveTypeA& tt, const arr& x){
+void KOMOTree::Conv_Tree_KOMO_Problem:: phi(arr& phi, arrA& J, arrA& H, uintA& featureTimes, ObjectiveTypeA& tt, const arr& x, arr& lambda){
   //-- set the trajectory
   komo.set_x(x);
 
@@ -283,25 +285,27 @@ void KOMOTree::Conv_Tree_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Objective
   arr y, Jy;
   uint M=0;
   for(uint t=0;t<komo.T;t++){
-    for(TreeTask *task: komo.tree_tasks) if(task->prec.N>t && task->prec(t)){
+    for(TreeTask *task: komo.tree_tasks) if(task->isActive(t)){
       //TODO: sightly more efficient: pass only the configurations that correspond to the map->order
       const auto local_t = task->to_local_t(t);
       WorldL configurations = getConfigurations(task, local_t);
-      task->map->phi(y, (&J?Jy:NoArr), configurations, komo.tau, t);
+      task->map->__phi(y, (&J?Jy:NoArr), configurations);
       if(!y.N) continue;
-      if(absMax(y)>1e10) MLR_MSG("WARNING y=" <<y);
+      if(absMax(y)>1e10) RAI_MSG("WARNING y=" <<y);
 
       //linear transform (target shift)
+#if 0 //MARC_TODO!
       if(task->target.N==1) y -= task->target.elem(0);
       else if(task->target.nd==1) y -= task->target;
       else if(task->target.nd==2) y -= task->target[t];
       y *= task->branch.p * sqrt(task->prec(t));
+#endif
 
       //write into phi and J
       const auto & qN = komo.configurations(0)->q.N;
       phi.setVectorBlock(y, M);
       if(&J){
-        Jy *= task->branch.p * sqrt(task->prec(t));
+        Jy *= task->branch.p/* * sqrt(task->prec(t))*/; //MARC_TODO
         for(uint i=0;i<y.N;i++)
         {
           for(uint k=0; k<=komo.k_order; ++k)
@@ -327,8 +331,8 @@ void KOMOTree::Conv_Tree_KOMO_Problem::phi(arr& phi, arrA& J, arrA& H, Objective
   }
 
   CHECK_EQ(M, dimPhi, "");
-  komo.featureValues = ARRAY<arr>(phi);
-  if(&tt) komo.featureTypes = ARRAY<ObjectiveTypeA>(tt);
+  komo.featureValues = phi;
+  if(&tt) komo.featureTypes = tt;
 }
 
 //-- converters
@@ -337,12 +341,12 @@ Conv_KOMO_Tree_ConstrainedProblem::Conv_KOMO_Tree_ConstrainedProblem(KOMO_Proble
   varDimIntegral = integral(variableDimensions);
 }
 
-void Conv_KOMO_Tree_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& tt, const arr& x){
-  KOMO.phi(phi, (&J?J_KOMO:NoArrA), (&H?H_KOMO:NoArrA), tt, x);
+void Conv_KOMO_Tree_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda){
+  KOMO.phi(phi, (&J?J_KOMO:NoArrA), (&H?H_KOMO:NoArrA), featureTimes, ot, x, lambda);
 
   //-- construct J
   if(&J){
-    //J = mlr::Array<double>(phi.N, x.N);
+    //J = rai::Array<double>(phi.N, x.N);
     J = zeros(phi.N, x.N);
 
     //loop over features

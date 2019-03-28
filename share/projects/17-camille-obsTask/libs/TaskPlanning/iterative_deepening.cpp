@@ -28,7 +28,7 @@ IterativeDeepeningPlanner::IterativeDeepeningPlanner()
 
 void IterativeDeepeningPlanner::setFol( const std::string & folDescription )
 {
-  const mlr::String notObservableTag = "NOT_OBSERVABLE";
+  const rai::String notObservableTag = "NOT_OBSERVABLE";
 
   Graph KB;
   KB.read( FILE( folDescription.c_str() ) );
@@ -37,7 +37,7 @@ void IterativeDeepeningPlanner::setFol( const std::string & folDescription )
   if( KB[ beliefStateTag_ ] == nullptr )
   {
     // create dummy array
-    folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( 1 );
+    folWorlds_ = rai::Array< std::shared_ptr<FOL_World> > ( 1 );
     std::shared_ptr<FOL_World> fol = std::make_shared<FOL_World>();
     fol->init(FILE(folDescription.c_str()));
     folWorlds_( 0 ) = fol;
@@ -54,7 +54,7 @@ void IterativeDeepeningPlanner::setFol( const std::string & folDescription )
     const uint nWorlds = bsGraph->d0;
 
     // generate all the possible fol
-    folWorlds_ = mlr::Array< std::shared_ptr<FOL_World> > ( nWorlds );
+    folWorlds_ = rai::Array< std::shared_ptr<FOL_World> > ( nWorlds );
     bs_ = arr( nWorlds );
     for( uint w = 0; w < nWorlds; w++ )
     {

@@ -12,7 +12,7 @@ using namespace mp;
  */
 
 /////////////////Tasks////////////////////////
-struct AxisBound:TaskMap{
+struct AxisBound:Feature{
 
   enum Axis
   {
@@ -38,9 +38,9 @@ struct AxisBound:TaskMap{
     else if( axis == Z ) id_ = 2;
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1)
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G)
   {
-    mlr::Frame *object = G.getFrameByName( object_.c_str() );
+    rai::Frame *object = G.getFrameByName( object_.c_str() );
     arr posObject, posJObject;
     G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
 
@@ -57,14 +57,14 @@ struct AxisBound:TaskMap{
     if(&J) J = tmp_J;
   }
 
-  virtual uint dim_phi(const mlr::KinematicWorld& G)
+  virtual uint dim_phi(const rai::KinematicWorld& G)
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("AxisBound");
+    return rai::String("AxisBound");
   }
 
 private:
@@ -81,14 +81,14 @@ private:
 class InitialGrounder
 {
 public:
-  void init( KOMO * komo, int verbose )
+  void init( KOMO_ext* komo, int verbose )
   {
     // road bounds
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
+    komo->addObjective( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
+    komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
     // min speed
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+    komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
     // truck speed
     arr truck_speed{ 0.03, 0, 0 };
@@ -96,16 +96,16 @@ public:
     komo->setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
 
     // min speed
-    komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sumOfSqr );
-    komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+    komo->addObjective( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sos );
+    komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
     // collision
     komo->activateCollisions( "car_ego", "truck" );
     komo->activateCollisions( "car_ego", "car_op" );
-    komo->setCollisions( true );
+    komo->add_collision( true );
   }
 
-  virtual void groundInitSingleAgent( KOMO * komo, int verbose )
+  virtual void groundInitSingleAgent( KOMO_ext* komo, int verbose )
   {
     init( komo, verbose );
 
@@ -114,7 +114,7 @@ public:
     komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
   }
 
-  virtual void groundInitDoubleAgent( KOMO * komo, int verbose )
+  virtual void groundInitDoubleAgent( KOMO_ext* komo, int verbose )
   {
     init( komo, verbose );
 
@@ -126,14 +126,14 @@ public:
 class InitGrounderMock : public InitialGrounder
 {
 public:
-  virtual void groundInitSingleAgent( KOMO * komo, int verbose )
+  virtual void groundInitSingleAgent( KOMO_ext* komo, int verbose )
   {
     InitialGrounder::groundInitSingleAgent( komo, verbose );
 
     nInitSingleAgent++;
   }
 
-  virtual void groundInitDoubleAgent( KOMO * komo, int verbose )
+  virtual void groundInitDoubleAgent( KOMO_ext* komo, int verbose )
   {
     InitialGrounder::groundInitDoubleAgent( komo, verbose );
 
@@ -144,7 +144,7 @@ public:
   uint nInitDoubleAgent = 0;
 };
 
-void groundLook( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
+void groundLook( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -152,7 +152,7 @@ void groundLook( double phase, const std::vector< std::string > & args, KOMO * k
   //
 
   // look
-  komo->setTask( t_start + 0.9, t_end, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo->addObjective( t_start + 0.9, t_end, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   if( verbose > 0 )
   {
@@ -160,7 +160,7 @@ void groundLook( double phase, const std::vector< std::string > & args, KOMO * k
   }
 }
 
-void groundOvertake( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
+void groundOvertake( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -168,8 +168,8 @@ void groundOvertake( double phase, const std::vector< std::string > & args, KOMO
   //
 
   // overtake
-  //komo->setTask( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
-  komo->setPosition( t_end, -1, "car_ego", args[0].c_str(), OT_sumOfSqr, { 0.45, 0, 0 } );
+  //komo->addObjective( t_start -0.5, t_start + 0.5, new AxisBound( "car_ego", 0.05, AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo->setPosition( t_end, -1, "car_ego", args[0].c_str(), OT_sos, { 0.45, 0, 0 } );
 
   if( verbose > 0 )
   {
@@ -177,7 +177,7 @@ void groundOvertake( double phase, const std::vector< std::string > & args, KOMO
   }
 }
 
-void groundFollow( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
+void groundFollow( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -185,7 +185,7 @@ void groundFollow( double phase, const std::vector< std::string > & args, KOMO *
   //
 
   // overtake
-  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sumOfSqr, { -0.7, 0, 0 } ); // -0.55
+  komo->setPosition( t_end, -1, "car_ego", "truck", OT_sos, { -0.7, 0, 0 } ); // -0.55
 
   if( verbose > 0 )
   {
@@ -193,7 +193,7 @@ void groundFollow( double phase, const std::vector< std::string > & args, KOMO *
   }
 }
 
-void groundAccelerate( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
+void groundAccelerate( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -205,7 +205,7 @@ void groundAccelerate( double phase, const std::vector< std::string > & args, KO
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundContinue( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
+void groundContinue( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -217,7 +217,7 @@ void groundContinue( double phase, const std::vector< std::string > & args, KOMO
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundSlowDown( double phase, const std::vector< std::string > & args, KOMO * komo, int verbose )
+void groundSlowDown( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
   const double t_start = phase;
@@ -229,13 +229,13 @@ void groundSlowDown( double phase, const std::vector< std::string > & args, KOMO
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
+void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO_ext* komo, int verbose )
 {
   auto car_before = facts[0];
   auto car_next = facts[1];
 
-  komo->setPosition( phase+1, -1, "car_ego", car_next.c_str(), OT_sumOfSqr, {-0.7, 0, 0} );
-  komo->setPosition( phase+1, -1, car_before.c_str(), "car_ego", OT_sumOfSqr, {-0.7, 0, 0} );
+  komo->setPosition( phase+1, -1, "car_ego", car_next.c_str(), OT_sos, {-0.7, 0, 0} );
+  komo->setPosition( phase+1, -1, car_before.c_str(), "car_ego", OT_sos, {-0.7, 0, 0} );
 
   //setKeepDistanceTask( phase+1, -1, komo, car_successors );
   //std::cout << "merge between " << car_before << " and " << car_next << std::endl;

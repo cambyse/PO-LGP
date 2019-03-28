@@ -20,8 +20,8 @@ void move()
   komo.setSquaredQAccelerations();
 
   //activate collision avoidance
-  //komo.setCollisions( true, 0.05 );
-  //komo.setTask( 0.0, 5.0, new TaskMap_GJK( komo.world, "handL", "obstacle", false, true ), OT_ineq, NoArr, 1e1 );
+  //komo.add_collision( true, 0.05 );
+  //komo.setTask( 0.0, 5.0, new TM_GJK( komo.world, "handL", "obstacle", false, true ), OT_ineq, NoArr, 1e1 );
 
   komo.setTask( 0.0, 5.0, new ApproxPointToShape( komo.world, "humanL", "obstacle", 0.05 ), OT_ineq, NoArr, 1e1 );
 
@@ -49,7 +49,7 @@ void move()
 //===========================================================================
 
 int main(int argc,char** argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   //move_1();
 

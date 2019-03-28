@@ -102,14 +102,14 @@ void groundGraspObject( double phase, const std::vector< std::string >& facts, m
   const double t_end =   phase  + duration;
   //
 
-  //komo->setTask( t_approach, t_approach, new TaskMap_Default(posTMT, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
-  //komo->setTask( t_start,    t_approach, new TaskMap_Default(posTMT,   komo->world, *symbols(0) ), OT_sumOfSqr, {0.,0.,-.2}, 1e1, 1);
+  //komo->setTask( t_approach, t_approach, new TM_Default(TMT_pos, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.5}), OT_sos, NoArr, 1e2);
+  //komo->setTask( t_start,    t_approach, new TM_Default(TMT_pos,   komo->world, *symbols(0) ), OT_sos, {0.,0.,-.2}, 1e1, 1);
 
-  //komo->setTask( t_switch, t_end, new TaskMap_Default(posTMT, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.1}), OT_sumOfSqr, NoArr, 1e2);
-  //komo->setTask( t_switch, t_end, new TaskMap_Default(posTMT, komo->world, *symbols(0) ), OT_sumOfSqr, {0.,0.,.2}, 1e1, 1);
+  //komo->setTask( t_switch, t_end, new TM_Default(TMT_pos, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.1}), OT_sos, NoArr, 1e2);
+  //komo->setTask( t_switch, t_end, new TM_Default(TMT_pos, komo->world, *symbols(0) ), OT_sos, {0.,0.,.2}, 1e1, 1);
 
   // approach
-  //komo->setTask( t_start, t_approach, new TaskMap_Default(posTMT, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.4}), OT_sumOfSqr, NoArr, 1e2);
+  //komo->setTask( t_start, t_approach, new TM_Default(TMT_pos, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.4}), OT_sos, NoArr, 1e2);
   //komo->setTask( t_approach, t_end, new VerticalVelocity( *symbols(0), { 0.0,0.0 } ), OT_eq, NoArr, 1e1, 1 );
 
   //disconnect object from table
@@ -118,7 +118,7 @@ void groundGraspObject( double phase, const std::vector< std::string >& facts, m
   komo->setKinematicSwitch( t_switch, true, "ballZero", facts[0].c_str(), facts[1].c_str() );
 
   // escape
-  //komo->setTask( t_escape, t_end, new TaskMap_Default(posTMT, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
+  //komo->setTask( t_escape, t_end, new TM_Default(TMT_pos, komo->world, *symbols(0), NoVector, *symbols(1), {0.,0.,0.5}), OT_sos, NoArr, 1e2);
 
   if( verbose > 0 )
   {
@@ -169,13 +169,13 @@ void groundGetSight( double phase, const std::vector< std::string >& facts, mp::
   const double t_end =   phase + duration;
   //
 
-  mlr::String arg = facts[0].c_str();
+  rai::String arg = facts[0].c_str();
 
   komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
                                                                         arg,
                                                                         //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                                         ARR( -0.0, 0.1, 0.4 ), ARR( 0, -1, 0 ) ),  // pivot position  in container frame
-                OT_sumOfSqr, NoArr, 1e2 );
+                OT_sos, NoArr, 1e2 );
 
   komo->setTask( t_end-0.2, t_end, new ActiveGetSight      ( "manhead",
                                                                         arg,
@@ -199,14 +199,14 @@ void groundTakeView( double phase, const std::vector< std::string >& facts, mp::
   //
 
   // no movement
-  auto *map = new TaskMap_Transition( komo->world );
+  auto *map = new TM_Transition( komo->world );
   map->posCoeff = 0.;
   map->velCoeff = 1.;
   map->accCoeff = 0.;
-  komo->setTask( t_start, t_end, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+  komo->setTask( t_start, t_end, map, OT_sos, NoArr, 1e2, 1 );
 
   // in sight expressed as a constraint
-//  mlr::String arg = *symbols(0);
+//  rai::String arg = *symbols(0);
 //  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
 //                                                                        arg,
 //                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
@@ -234,19 +234,19 @@ void groundActivateOverPlane( double phase, const std::vector< std::string >& fa
 
   if( facts[0] == "container_0" )
   {
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 0, 0, 1.0 ) ), OT_sumOfSqr, NoArr, 1e2 );
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_sumOfSqr, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 0, 0, 1.0 ) ), OT_sos, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_sos, NoArr, 1e2 );
 
-    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_0", facts[1].c_str() , 0.05 ), OT_sumOfSqr, NoArr, 1e2 );
+    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_0", facts[1].c_str() , 0.05 ), OT_sos, NoArr, 1e2 );
 
     //activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
   }
   else if( facts[0] == "container_1" )
   {
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 0, 0, 1.0 ) ), OT_sumOfSqr, NoArr, 1e2 );
-    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_sumOfSqr, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 0, 0, 1.0 ) ), OT_sos, NoArr, 1e2 );
+    komo->setTask( t_start, t_end, new AxisAlignment( "container_1", ARR( 1.0, 0, 0 ) ), OT_sos, NoArr, 1e2 );
 
-    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_1", facts[1].c_str(), 0.05 ), OT_sumOfSqr, NoArr, 1e2 );
+    auto task = komo->setTask( t_start, t_end, new OverPlaneConstraint( komo->world, "container_1", facts[1].c_str(), 0.05 ), OT_sos, NoArr, 1e2 );
 
     //activeTasks_.push_back( ActiveTask{ komo, symbols, task } );
   }
@@ -454,7 +454,7 @@ void plan()
 //===========================================================================
 
 int main(int argc,char **argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 

@@ -15,12 +15,12 @@
 
 #pragma once
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 
 namespace mp
 {
 
-struct AgentKinEquality:TaskMap{
+struct AgentKinEquality:Feature{
 
   AgentKinEquality( uint id, const arr& q, const arr qmask )
     : id_( id )
@@ -31,7 +31,7 @@ struct AgentKinEquality:TaskMap{
 
   }
 
-  virtual void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1 )
+  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G, int t=-1 )
   {
     y = zeros( dim_ );
     y.setVectorBlock( G.q - q_, 0 );
@@ -48,14 +48,14 @@ struct AgentKinEquality:TaskMap{
     if(&J) J = tmp_J;
   }
 
-  virtual uint dim_phi( const mlr::KinematicWorld& G )
+  virtual uint dim_phi( const rai::KinematicWorld& G )
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag( const mlr::KinematicWorld& G )
+  virtual rai::String shortTag( const rai::KinematicWorld& G )
   {
-    return mlr::String( "AgentKinEquality" );
+    return rai::String( "AgentKinEquality" );
   }
 
 private:

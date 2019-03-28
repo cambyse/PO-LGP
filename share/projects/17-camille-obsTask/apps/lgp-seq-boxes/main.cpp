@@ -9,11 +9,11 @@ using namespace std;
 
 //===========================================================================
 
-static void setRigid( double time, mlr::String const& object1Name, mlr::String const& object2Name, KOMO& komo )
+static void setRigid( double time, rai::String const& object1Name, rai::String const& object2Name, KOMO& komo )
 {
-  mlr::Shape * s1 = komo.world.getShapeByName( object1Name );
-  mlr::Shape * s2 = komo.world.getShapeByName( object2Name );
-  mlr::Transformation t;
+  rai::Shape * s1 = komo.world.getShapeByName( object1Name );
+  rai::Shape * s2 = komo.world.getShapeByName( object2Name );
+  rai::Transformation t;
   arr relPos;
   arr relPosJ;
 
@@ -33,9 +33,9 @@ static void setRigid( double time, mlr::String const& object1Name, mlr::String c
   {
     for( auto s2 : object2->shapes )
     {
-//      mlr::Shape * object1 = komo.world.getShapeByName( s1->name );
-//      mlr::Shape * object2 = komo.world.getShapeByName( s2->name );
-      mlr::Transformation t;
+//      rai::Shape * object1 = komo.world.getShapeByName( s1->name );
+//      rai::Shape * object2 = komo.world.getShapeByName( s2->name );
+      rai::Transformation t;
       arr relPos;
       arr relPosJ;
 
@@ -54,14 +54,14 @@ static void setRigid( double time, mlr::String const& object1Name, mlr::String c
 }
 
 
-/*struct AllObjectsCollisionAvoidance:TaskMap
+/*struct AllObjectsCollisionAvoidance:Feature
 {
   AllObjectsCollisionAvoidance( double margin=.02 )
     : margin_( margin )
   {
   }
 
-  virtual void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
+  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G, int t )
   {
     //::PairCollisionConstraint::phi( y, J, G, t );
 //    arr tmp_y = zeros( 1 );
@@ -78,8 +78,8 @@ static void setRigid( double time, mlr::String const& object1Name, mlr::String c
 
       tmp_y( k ) = margin_ - p->d;
 
-      mlr::Shape *a = G.shapes(p->a);
-      mlr::Shape *b = G.shapes(p->b);
+      rai::Shape *a = G.shapes(p->a);
+      rai::Shape *b = G.shapes(p->b);
 
       auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
       auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
@@ -107,9 +107,9 @@ static void setRigid( double time, mlr::String const& object1Name, mlr::String c
     if(&J) J = tmp_J;
   }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("AllObjectsCOllisionAvoidance"); }
+  rai::String shortTag(const rai::KinematicWorld& G){ return STRING("AllObjectsCOllisionAvoidance"); }
 
-  uint dim_phi(const mlr::KinematicWorld& G)
+  uint dim_phi(const rai::KinematicWorld& G)
   {
     return ( G.shapes.N ) * ( G.shapes.N );
   }
@@ -141,7 +141,7 @@ void move_0(){
                                                               "container_0",
                                                               ARR( -0.0, 0.2, 0.4 ),// pivot position  in container frame
                                                               ARR(  0.0, -1.0,0 )), // aiming dir
-                  OT_sumOfSqr, NoArr, 1e2 );
+                  OT_sos, NoArr, 1e2 );
   }
 
   {
@@ -164,7 +164,7 @@ void move_0(){
 //  {
     const double time = start_time + 2.0 + 1.0;
     //arrive sideways
-    //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+    //komo.setTask( time, time, new TM_Default( TMT_vec, komo.world, "handL", Vector_x ), OT_sos, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
     komo.setKinematicSwitch( time, true, "delete", "tableC", "container_0_bottom" );
@@ -184,7 +184,7 @@ void move_0(){
 //                                                              "container_1",
 //                                                              //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
 //                                                              ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
-//                  OT_sumOfSqr, NoArr, 1e2 );
+//                  OT_sos, NoArr, 1e2 );
 //  }
 
   /////PLACE ON TABLE FOR CONTAINER 0
@@ -242,7 +242,7 @@ void move_1(){
 //    komo.setTask( 1.0, 2.0, new ActiveGetSight      ( "manhead",
 //                                                              "container_0",
 //                                                              ARR( -0.0, 0.2, 0.4 ) ),  // pivot position  in container frame
-//                  OT_sumOfSqr, NoArr, 1e2 );
+//                  OT_sos, NoArr, 1e2 );
 //  }
 
   //////TAKE VIEW // 2->3
@@ -250,11 +250,11 @@ void move_1(){
 //    komo.setTask( time, time + 1.0, new TakeView      ( ),
 //                  OT_eq, NoArr, 1e2, 1 );
 
-    auto *map = new TaskMap_Transition(komo.world);
+    auto *map = new TM_Transition(komo.world);
     map->posCoeff = 0.;
     map->velCoeff = 1.;
     map->accCoeff = 0.;
-    komo.setTask( 2.0, 3.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+    komo.setTask( 2.0, 3.0, map, OT_sos, NoArr, 1e2, 1 );
   }
 
   //////OVER PLANE + AXIS ALIGNMENT
@@ -269,7 +269,7 @@ void move_1(){
   /////GRASP CONTAINER//// 3->4
 //  {
     //arrive sideways
-    //komo.setTask( time, time, new TaskMap_Default( vecTMT, komo.world, "handL", Vector_x ), OT_sumOfSqr, {0.,0.,1.}, 1e1 );
+    //komo.setTask( time, time, new TM_Default( TMT_vec, komo.world, "handL", Vector_x ), OT_sos, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
     komo.setKinematicSwitch( 4.0, true, "delete", "tableC", "container_1_bottom" );
@@ -287,16 +287,16 @@ void move_1(){
                                                               "container_1",
                                                               //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
                                                               ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-                  OT_sumOfSqr, NoArr, 1e2 );
+                  OT_sos, NoArr, 1e2 );
   }
 
   /////TAKE VIEW CONTAINER 1 6->7
     {
-      auto *map = new TaskMap_Transition(komo.world);
+      auto *map = new TM_Transition(komo.world);
       map->posCoeff = 0.;
       map->velCoeff = 1.;
       map->accCoeff = 0.;
-      komo.setTask( 5.0, 6.0, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+      komo.setTask( 5.0, 6.0, map, OT_sos, NoArr, 1e2, 1 );
     }
 
   /////PLACE ON TABLE FOR CONTAINER 1
@@ -312,14 +312,14 @@ void move_1(){
     //// GRASP BALL
     {
       //approach
-      /*komo.setTask( 2.0, 2.4, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,-.15}, 1e1, 1);
-      komo.setTask( 2.6, 3.0, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,.15},  1e1, 1);*/
+      /*komo.setTask( 2.0, 2.4, new TM_Default(TMT_pos, komo.world, "handL" ), OT_sos, {0.,0.,-.15}, 1e1, 1);
+      komo.setTask( 2.6, 3.0, new TM_Default(TMT_pos, komo.world, "handL" ), OT_sos, {0.,0.,.15},  1e1, 1);*/
 
-//    komo.setTask(2.0, 2.5, new TaskMap_Default(posTMT, komo.world, "handL"), OT_eq, {0.,0.,-.1}, 1e1, 1); //move down
-//    komo.setTask(2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL"), OT_eq, {0.,0.,.1}, 1e1, 1); // move up
+//    komo.setTask(2.0, 2.5, new TM_Default(TMT_pos, komo.world, "handL"), OT_eq, {0.,0.,-.1}, 1e1, 1); //move down
+//    komo.setTask(2.5, 3.0, new TM_Default(TMT_pos, komo.world, "handL"), OT_eq, {0.,0.,.1}, 1e1, 1); // move up
 
       // approach
-      /*komo.setTask( 2.0, 2.25, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "target", {0.,0.,0.45}), OT_sumOfSqr, NoArr, 1e2);
+      /*komo.setTask( 2.0, 2.25, new TM_Default(TMT_pos, komo.world, "handL", NoVector, "target", {0.,0.,0.45}), OT_sos, NoArr, 1e2);
       komo.setTask( 2.25, 5.0, new VerticalVelocity("handL", { 0.0,0.0 } ), OT_eq, NoArr, 1e1, 1 );
       */
 
@@ -328,10 +328,10 @@ void move_1(){
       //connect graspRef with object
       komo.setKinematicSwitch( 2.5/*8.0*/, true, "ballZero", "handL", "target" );
       // null velocity
-      //komo.setTask( 2.5, 2.7, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_eq, {0.,0.,0.},  1e1, 1);
+      //komo.setTask( 2.5, 2.7, new TM_Default(TMT_pos, komo.world, "handL" ), OT_eq, {0.,0.,0.},  1e1, 1);
 
       // escape
-      //komo.setTask( 2.7, 3.0, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.45}), OT_sumOfSqr, NoArr, 1e2);
+      //komo.setTask( 2.7, 3.0, new TM_Default(TMT_pos, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.45}), OT_sos, NoArr, 1e2);
 
       // collision avoidance
       komo.setTask( 0.0, 9.0, new ApproxPointToShape( komo.world, "humanL", "container_1_front", 0.03 ), OT_ineq, NoArr, 1e2 );
@@ -344,21 +344,21 @@ void move_1(){
 
       //komo.setTask( 2.7, 3.0, new VelocityDirection("handL", { 0.0,0.0,  1.0 } ), OT_eq, NoArr, 1e1, 0);
 
-      //komo.setTask( 2.0, 2.25, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
-      //komo.setTask( 2.6, 3.0, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
+      //komo.setTask( 2.0, 2.25, new TM_Default(TMT_pos, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.5}), OT_sos, NoArr, 1e2);
+      //komo.setTask( 2.6, 3.0, new TM_Default(TMT_pos, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.5}), OT_sos, NoArr, 1e2);
 
-      /*komo.setTask( 2.25, 2.5, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1);
+      /*komo.setTask( 2.25, 2.5, new TM_Default(TMT_pos, komo.world, "handL" ), OT_sos, {0.,0.,-.1}, 1e1, 1);
 
-      komo.setTask( 2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL", NoVector, "target", {0.,0.,0.5}), OT_sumOfSqr, NoArr, 1e2);
-      komo.setTask( 2.5, 3.0, new TaskMap_Default(posTMT, komo.world, "handL" ), OT_sumOfSqr, {0.,0.,.1}, 1e1, 1);
+      komo.setTask( 2.5, 3.0, new TM_Default(TMT_pos, komo.world, "handL", NoVector, "target", {0.,0.,0.5}), OT_sos, NoArr, 1e2);
+      komo.setTask( 2.5, 3.0, new TM_Default(TMT_pos, komo.world, "handL" ), OT_sos, {0.,0.,.1}, 1e1, 1);
       */
 
       //komo.setKinematicSwitch( time, true, "addRigid", "handR", "target", NoTransformation, NoTransformation );
 
 
-      //komo.setPosition(time, time + 1.0, "handR", "target", OT_sumOfSqr, NoArr, 1e2);
+      //komo.setPosition(time, time + 1.0, "handR", "target", OT_sos, NoArr, 1e2);
       //komo.setGrasp(time + 1.0, "handR", "target", 0, 1e1);
-//      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "tableC", "handR", 0.05 ), OT_sumOfSqr /*OT_ineq*/, NoArr, 1e2 );
+//      komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "tableC", "handR", 0.05 ), OT_sos /*OT_ineq*/, NoArr, 1e2 );
 //       komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_front", "upWristL", 0.05 ), OT_ineq, NoArr, 1e2 );
 //       komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_left", "upWristL",  0.05  ),OT_ineq /*OT_ineq*/, NoArr, 1e2 );
 //       komo.setTask( 1.0, 9.0, new ShapePairCollisionConstraint( komo.world, "container_1_right", "upWristL", 0.05 ), OT_ineq, NoArr, 1e2 );
@@ -382,19 +382,19 @@ void move_1(){
 //  }
 
 //  if(komo.stepsPerPhase>2){ //velocities down and up
-//    komo.setTask(time-.15, time, new TaskMap_Default(posTMT, komo.world, "handL"), OT_sumOfSqr, {0.,0.,-.1}, 1e1, 1); //move down
-//    komo.setTask(time, time+.15, new TaskMap_Default(posTMT, komo.world, "occluding_object_1"), OT_sumOfSqr, {0.,0.,.1}, 1e1, 1); // move up
+//    komo.setTask(time-.15, time, new TM_Default(TMT_pos, komo.world, "handL"), OT_sos, {0.,0.,-.1}, 1e1, 1); //move down
+//    komo.setTask(time, time+.15, new TM_Default(TMT_pos, komo.world, "occluding_object_1"), OT_sos, {0.,0.,.1}, 1e1, 1); // move up
 //  }
 
 //  komo.setTask( 1.0, 2.0, new HeadGetSight( ARR(  1.0, -0.0, 1.9 ),    // object position
 //                                            ARR(  1.0, -0.0, 1.9 ) ),  // pivot position
-//                OT_sumOfSqr, NoArr, 1e2 );
+//                OT_sos, NoArr, 1e2 );
 
-  //komo.setTask(.3, .5, new HandPositionMap(), OT_sumOfSqr, ARR(.5,.5,1.3), 1e2);
-  //komo.setTask(.8, 1., new HandPositionMap(), OT_sumOfSqr, ARR(.8,0.,1.3), 1e2);
-  //komo.setTask(.8, 1., new TaskMap_Default(posDiffTMT, komo.world, "/human/humanR", NoVector, "target", NoVector), OT_sumOfSqr, NoArr, 1e2);
+  //komo.setTask(.3, .5, new HandPositionMap(), OT_sos, ARR(.5,.5,1.3), 1e2);
+  //komo.setTask(.8, 1., new HandPositionMap(), OT_sos, ARR(.8,0.,1.3), 1e2);
+  //komo.setTask(.8, 1., new TM_Default(TMT_posDiff, komo.world, "/human/humanR", NoVector, "target", NoVector), OT_sos, NoArr, 1e2);
 
-//  komo.setTask(.3, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), OT_sumOfSqr, NoArr, 1e2);
+//  komo.setTask(.3, 1., new TM_Default(TMT_gazeAt, komo.world, "eyes", NoVector, "target", NoVector), OT_sos, NoArr, 1e2);
 
   //komo.setSlowAround( 5.0, .1, 1e3 );
 
@@ -410,18 +410,18 @@ void move_1(){
 
 //void move_pr2()
 //{
-//  mlr::KinematicWorld kin;
+//  rai::KinematicWorld kin;
 //  kin.init( "model.g" );
 //  kin.watch();
 //  kin.write( std::cout );
 
-//  mlr::wait( 300, true );
+//  rai::wait( 300, true );
 //}
 
 void move_debug(){
 
   {
-    mlr::KinematicWorld kin;
+    rai::KinematicWorld kin;
     kin.init( "debug-kin-parsing.kin" );
     kin.watch();
     kin.write( std::cout );
@@ -429,13 +429,13 @@ void move_debug(){
   
   KOMO komo;
   //komo.setConfigFromFile();
-  mlr::KinematicWorld kin;
+  rai::KinematicWorld kin;
   kin.init( "debug-kin.kin" );
   kin.watch();
 
   komo.setModel( kin );
 
-  // mlr::Body *b = komo.world.getBodyByName("/human/base");
+  // rai::Body *b = komo.world.getBodyByName("/human/base");
   // b->X.addRelativeTranslation(.3,0,0);
 
   //  komo.setHoming(-1., -1., 1e-1);
@@ -452,29 +452,29 @@ void move_debug(){
  // komo.setSquaredFixJointVelocities(-1., -1., 1e3);
  // komo.setSquaredFixSwitchedObjects(-1., -1., 1e3);
 
-  //komo.setPosition(1., 1.1, "humanL", "target", OT_sumOfSqr, NoArr, 1e2);
+  //komo.setPosition(1., 1.1, "humanL", "target", OT_sos, NoArr, 1e2);
 
-  //komo.setPosition(1., 2.0, "manhead", "target", OT_sumOfSqr, ARR(0,0,0), 1e2);  // objective to have the head on the target on this time slab
-  //komo.setTask(startTime, endTime, new TaskMap_Default(posTMT, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
+  //komo.setPosition(1., 2.0, "manhead", "target", OT_sos, ARR(0,0,0), 1e2);  // objective to have the head on the target on this time slab
+  //komo.setTask(startTime, endTime, new TM_Default(TMT_pos, world, shape, NoVector, shapeRel, NoVector), type, target, prec);
 
-  //arr targetArr1 = HeadPoseMap::buildTarget( mlr::Vector( 0, -0.3, 1.7 ), 80 );
-  //komo.setTask(1.0, 3.0, new HeadPoseMap(), OT_sumOfSqr, targetArr1, 1e2);
+  //arr targetArr1 = HeadPoseMap::buildTarget( rai::Vector( 0, -0.3, 1.7 ), 80 );
+  //komo.setTask(1.0, 3.0, new HeadPoseMap(), OT_sos, targetArr1, 1e2);
 
   komo.setGrasp( 1.0, "humanR", "occluding_object_1" );
 //  komo.setTask( 1.0, 2.0, new HeadGetSight    ( ARR(  0.0, -1.0, 1.6 ),    // object position
 //                                                ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
-//                                                OT_sumOfSqr, NoArr, 1e2 );
+//                                                OT_sos, NoArr, 1e2 );
 
 
 //  komo.setTask( 1.0, 2.0, new HeadGetSight( ARR(  1.0, -0.0, 1.9 ),    // object position
 //                                            ARR(  1.0, -0.0, 1.9 ) ),  // pivot position
-//                OT_sumOfSqr, NoArr, 1e2 );
+//                OT_sos, NoArr, 1e2 );
 
-  //komo.setTask(.3, .5, new HandPositionMap(), OT_sumOfSqr, ARR(.5,.5,1.3), 1e2);
-  //komo.setTask(.8, 1., new HandPositionMap(), OT_sumOfSqr, ARR(.8,0.,1.3), 1e2);
-  //komo.setTask(.8, 1., new TaskMap_Default(posDiffTMT, komo.world, "/human/humanR", NoVector, "target", NoVector), OT_sumOfSqr, NoArr, 1e2);
+  //komo.setTask(.3, .5, new HandPositionMap(), OT_sos, ARR(.5,.5,1.3), 1e2);
+  //komo.setTask(.8, 1., new HandPositionMap(), OT_sos, ARR(.8,0.,1.3), 1e2);
+  //komo.setTask(.8, 1., new TM_Default(TMT_posDiff, komo.world, "/human/humanR", NoVector, "target", NoVector), OT_sos, NoArr, 1e2);
 
-//  komo.setTask(.3, 1., new TaskMap_Default(gazeAtTMT, komo.world, "eyes", NoVector, "target", NoVector), OT_sumOfSqr, NoArr, 1e2);
+//  komo.setTask(.3, 1., new TM_Default(TMT_gazeAt, komo.world, "eyes", NoVector, "target", NoVector), OT_sos, NoArr, 1e2);
 
   komo.setSlowAround( 3.0, .1, 1e3 );
 
@@ -490,12 +490,12 @@ void move_debug(){
 void move_blocks()
 {
 //  {
-//    mlr::KinematicWorld kin;
+//    rai::KinematicWorld kin;
 //    kin.init( "model_shelf.g" );
 //    kin.watch();
 //    kin.write( std::cout );
 
-//    mlr::wait( 30, true );
+//    rai::wait( 30, true );
 //  }
 
   KOMO komo;
@@ -508,10 +508,10 @@ void move_blocks()
 
   ///ALL TIME TASK MAPS
   /*
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_r", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_g", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_r", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_g", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
   */
 
   ///GRASP A, PUT IT on TABLE
@@ -559,7 +559,7 @@ void move_blocks()
 //===========================================================================
 
 int main(int argc,char** argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   //move_1();
 

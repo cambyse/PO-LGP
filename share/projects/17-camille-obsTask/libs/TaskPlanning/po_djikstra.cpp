@@ -6,7 +6,7 @@ namespace tp
 
 //---------Dijkstra-----------------//
 
-Dijkstra::Dijkstra( const mlr::Array< std::shared_ptr< FOL_World > > & folEngines )
+Dijkstra::Dijkstra( const rai::Array< std::shared_ptr< FOL_World > > & folEngines )
   : folEngines_( folEngines )
 {
 
@@ -292,7 +292,7 @@ bool Dijkstra::buildPolicyFrom( const POGraphNode::ptr & node, const POGraphNode
     policyNode->setLastReward( graph_->reward( parent->id(), node->id() ) );
 
     auto parentStates = graphParent->folStates(); // start states
-    mlr::Array< std::shared_ptr<Graph> > resultStates( parentStates.d0 );
+    rai::Array< std::shared_ptr<Graph> > resultStates( parentStates.d0 );
     for( auto w = 0; w < node->N(); ++w )
     {
       if( node->bs()( w ) > eps() )

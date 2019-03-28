@@ -22,7 +22,7 @@ namespace tp
 class Yens
 {
 public:
-  Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
+  Yens( const rai::Array< std::shared_ptr<FOL_World> > & folEngines );
 
   std::list< Policy::ptr > solve( const POWeightedGraph::ptr & graph, uint k );
   std::list< Policy::ptr > solve_( const POWeightedGraph::ptr & graph, uint k );
@@ -31,7 +31,7 @@ public:
 private:
   POWeightedGraph::ptr graph_;
 
-  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
+  rai::Array< std::shared_ptr<FOL_World> > folEngines_;
 
   Dijkstra dijkstra_;
 };

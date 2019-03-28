@@ -1,23 +1,23 @@
 #pragma once
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 
 // reach a given head pose
-struct HeadPoseMap:TaskMap{
+struct HeadPoseMap:Feature{
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1);
 
-  virtual uint dim_phi(const mlr::KinematicWorld& G)
+  virtual uint dim_phi(const rai::KinematicWorld& G)
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("HeadPoseMap");
+    return rai::String("HeadPoseMap");
   }
 
-  static arr buildTarget( mlr::Vector const& position, double yaw_deg );
+  static arr buildTarget( rai::Vector const& position, double yaw_deg );
 
 private:
   static const uint dim_ = 7;
@@ -25,20 +25,20 @@ private:
 
 // to reach the visibility of a given object position
 // it requires the pivotPoint, but the pivot point could be deduced by geometric reasoning in the constructor
-struct HeadGetSight:TaskMap{
+struct HeadGetSight:Feature{
 
   HeadGetSight( const arr& objectPosition, const arr& pivotPoint );
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1);
 
-  virtual uint dim_phi(const mlr::KinematicWorld& G)
+  virtual uint dim_phi(const rai::KinematicWorld& G)
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("HeadGetSight");
+    return rai::String("HeadGetSight");
   }
 
 private:
@@ -46,7 +46,7 @@ private:
   static const uint dim_ = 6;
   const arr objectPosition_;
   const arr pivotPoint_;
-  const mlr::Vector headViewingDirection_;  // is Vec to be compatible with the interface of G.kinematicsVec
+  const rai::Vector headViewingDirection_;  // is Vec to be compatible with the interface of G.kinematicsVec
 
   // state
   arr w1_;
@@ -54,20 +54,20 @@ private:
 };
 
 // same as HeadGetSight but using quaternions for the head orientation
-struct HeadGetSightQuat:TaskMap{
+struct HeadGetSightQuat:Feature{
 
   HeadGetSightQuat( const arr& objectPosition, const arr& pivotPoint );
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1);
 
-  virtual uint dim_phi(const mlr::KinematicWorld& G)
+  virtual uint dim_phi(const rai::KinematicWorld& G)
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag(const mlr::KinematicWorld& G)
+  virtual rai::String shortTag(const rai::KinematicWorld& G)
   {
-    return mlr::String("HeadGetSightQuat");
+    return rai::String("HeadGetSightQuat");
   }
 
 private:
@@ -75,7 +75,7 @@ private:
   static const uint dim_ = 8;
   const arr objectPosition_;
   const arr pivotPoint_;
-  const mlr::Vector headViewingDirection_;  // is Vec to be compatible with the interface of G.kinematicsVec
+  const rai::Vector headViewingDirection_;  // is Vec to be compatible with the interface of G.kinematicsVec
 
   // state
   arr w1_;
@@ -85,32 +85,32 @@ private:
 
 // Active get sight, we assume that one of the object of the scene is attached to one hand of the robot
 // the task will optimize the hand position and the head position
-struct ActiveGetSight:TaskMap{
+struct ActiveGetSight:Feature{
 
-  ActiveGetSight( mlr::String const& sensorName,
-                  mlr::String const& containerName,
+  ActiveGetSight( rai::String const& sensorName,
+                  rai::String const& containerName,
                   arr const& pivotPoint,
                   arr const& aimingDir,
                   double preferedDistance = 0.8 );
 
-  virtual void phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t=-1 );
+  virtual void phi( arr& y, arr& J, rai::KinematicWorld const& G, int t=-1 );
 
-  virtual uint dim_phi( mlr::KinematicWorld const& G )
+  virtual uint dim_phi( rai::KinematicWorld const& G )
   {
     return dim_;
   }
 
-  virtual mlr::String shortTag( mlr::KinematicWorld const& G )
+  virtual rai::String shortTag( rai::KinematicWorld const& G )
   {
-    return mlr::String( "ActiveGetSight" );
+    return rai::String( "ActiveGetSight" );
   }
 
   // parameters
   static const uint dim_ = 7;
-  const mlr::String headName_;
-  const mlr::String containerName_;
-  const mlr::Vector aimingDir_;     // in sensor's shape frame
-  const mlr::Vector pivotPoint_;    // in container's frame
+  const rai::String headName_;
+  const rai::String containerName_;
+  const rai::Vector aimingDir_;     // in sensor's shape frame
+  const rai::Vector pivotPoint_;    // in container's frame
   double preferedDistance_;
 };
 

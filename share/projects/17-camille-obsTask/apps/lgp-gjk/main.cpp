@@ -18,17 +18,17 @@ using namespace fcl;
 
 void move()
 {
-  mlr::KinematicWorld W;
+  rai::KinematicWorld W;
   W.init( "model.g" );
 
   W.watch();
 
-  mlr::Shape *s1 = W.getShapeByName( "obstacle" );
-  mlr::Shape *s2 = W.getShapeByName( "block" );
+  rai::Shape *s1 = W.getShapeByName( "obstacle" );
+  rai::Shape *s2 = W.getShapeByName( "block" );
   CHECK(s1 && s2,"");
   CHECK(s1->sscCore.V.N,"");
   CHECK(s2->sscCore.V.N,"");
-  mlr::Vector p1, p2, e1, e2;
+  rai::Vector p1, p2, e1, e2;
   GJK_point_type pt1, pt2;
 
   GJK_sqrDistance(s1->sscCore, s2->sscCore, s1->X, s2->X, p1, p2, e1, e2, pt1, pt2);
@@ -55,10 +55,10 @@ void move()
   std::cout << "v norm:" << sqrt( norm2( v ) ) << std::endl;
   std::cout << "v:" << v << std::endl;
 
-  mlr::wait( true );
+  rai::wait( true );
 }
 
-CollisionObject * createObjectModel( mlr::Shape * s )
+CollisionObject * createObjectModel( rai::Shape * s )
 {
   CHECK( s, "" );
   CHECK( s->mesh.V.N, "" );
@@ -106,13 +106,13 @@ CollisionObject * createObjectModel( mlr::Shape * s )
 
 void move_fcl()
 {
-  mlr::KinematicWorld W;
+  rai::KinematicWorld W;
   W.init( "model.g" );
 
   W.watch();
 
-  mlr::Shape *s1 = W.getShapeByName( "obstacle" );
-  mlr::Shape *s2 = W.getShapeByName( "block" );
+  rai::Shape *s1 = W.getShapeByName( "obstacle" );
+  rai::Shape *s2 = W.getShapeByName( "block" );
   CHECK(s1 && s2,"");
   CHECK(s1->mesh.V.N,"");
   CHECK(s2->mesh.V.N,"");
@@ -141,12 +141,12 @@ void move_fcl()
   std::cout << "v:" << v << std::endl;
 
 
-  mlr::wait( true );
+  rai::wait( true );
 }
 
 void move_fcl_tm()
 {
-  mlr::KinematicWorld W;
+  rai::KinematicWorld W;
   W.init( "model.g" );
 
   W.watch();
@@ -156,14 +156,14 @@ void move_fcl_tm()
   arr y, J;
   tm->phi( y, J, W, 0 );
 
-  mlr::wait( true );
+  rai::wait( true );
 }
 
 //=========================================================================
 
 int main(int argc,char** argv)
 {
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   //move_fcl();
   move_fcl_tm();

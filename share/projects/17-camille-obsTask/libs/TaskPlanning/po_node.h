@@ -35,12 +35,12 @@ class PONode : public std::enable_shared_from_this< PONode > // note: public inh
   friend class NodeVisitorBase;
 public:
   typedef std::shared_ptr< PONode > ptr;
-  typedef mlr::Array< PONode::ptr > L;
-  typedef mlr::Array< mlr::Array<PONode::ptr > > LL;
+  typedef rai::Array< PONode::ptr > L;
+  typedef rai::Array< rai::Array<PONode::ptr > > LL;
 
 public:
   /// root node init
-  PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
+  PONode( rai::Array< std::shared_ptr< FOL_World > > fols, const arr & bs );
 
   /// child node creation
   PONode( const PONode::ptr & parent, double pHistory, const arr & bs, uint a );
@@ -66,7 +66,7 @@ public:
   PONode::LL families() const { return families_; }
   bool isTerminal() const { return isTerminal_; }
   bool isSolved() const { return   isSolved_; }
-  mlr::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
+  rai::Array< std::shared_ptr<Graph> > folStates() const { return folStates_; }
 
   uint N() const { return N_; }
   int id() const { return id_; }
@@ -99,7 +99,7 @@ private:
   uint getPossibleActionsNumber() const;
   std::vector< std::vector<FOL_World::Handle> > getPossibleActions( uint & nActions ) const;
   LogicAndState getWitnessLogicAndState() const;
-  template < typename T > T getWitnessElem( const mlr::Array< T > array ) const
+  template < typename T > T getWitnessElem( const rai::Array< T > array ) const
   {
     CHECK( array.d0 == N_, "wrong dimensions!" );
     for( auto w = 0; w < N_; ++w )
@@ -111,7 +111,7 @@ private:
     }
   }
 
-  mlr::Array< LogicAndState > getPossibleLogicAndStates() const;
+  rai::Array< LogicAndState > getPossibleLogicAndStates() const;
   std::string actionStr( uint ) const;
 
 private:
@@ -119,14 +119,14 @@ private:
 
   // members for symbolic search
   uint N_;                                                                    ///< number of possible worlds
-  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
-  mlr::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
+  rai::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  rai::Array< std::shared_ptr<Graph> >     folStates_;                        ///< INITIAL fol state, state when the PARENT action has been executed
 
   double pHistory_;
   arr    bs_;
 
   int a_;                                         ///< action id that leads to this node
-  mlr::Array< FOL_World::Handle > decisions_;     ///< actions leading to this node ( one for each logic )
+  rai::Array< FOL_World::Handle > decisions_;     ///< actions leading to this node ( one for each logic )
 
   uint d_;                                        ///< decision depth/step of this node
   double time_;                                   ///< real time, root = 0, represents the end of the parent action
@@ -135,7 +135,7 @@ private:
   PONode::LL families_;
   std::set< std::string > differentiatingFacts_;  ///< used only for debugging purposes
 
-  mlr::Array< std::shared_ptr< PlainMC > > rootMCs_;
+  rai::Array< std::shared_ptr< PlainMC > > rootMCs_;
   std::shared_ptr< MCStatistics > mcStats_;       /// best results (future rewards) of the rollouts
 
   double lastActionReward_;                       ///  reward of the action leading to this node
@@ -162,7 +162,7 @@ namespace utility
 {
   // free functions
   PONode::ptr getTerminalNode( const PONode::ptr &, const WorldID & w );
-  void   gatherPolicyFringe( const PONode::ptr &s, std::set< mlr::Array< PONode::ptr> > & );
+  void   gatherPolicyFringe( const PONode::ptr &s, std::set< rai::Array< PONode::ptr> > & );
 }
 
 }

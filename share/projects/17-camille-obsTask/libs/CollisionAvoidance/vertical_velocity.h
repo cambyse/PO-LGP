@@ -16,12 +16,12 @@
 
 #include <math_utility.h>
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 using namespace std;
 
-struct VerticalVelocity:TaskMap
+struct VerticalVelocity:Feature
 {
   VerticalVelocity( const char* bobyName, const arr & dir )
     : bobyName_     ( bobyName )
@@ -30,13 +30,13 @@ struct VerticalVelocity:TaskMap
 
   }
 
-  void phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t );
+  void phi( arr& y, arr& J, const rai::KinematicWorld& G, int t );
 
-  uint dim_phi( const mlr::KinematicWorld& G ) { return 1; }
+  uint dim_phi( const rai::KinematicWorld& G ) { return 1; }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("MovementDirection"); }
+  rai::String shortTag(const rai::KinematicWorld& G){ return STRING("MovementDirection"); }
 
   private:
-    const mlr::String bobyName_;
+    const rai::String bobyName_;
     const arr dir_;
 };

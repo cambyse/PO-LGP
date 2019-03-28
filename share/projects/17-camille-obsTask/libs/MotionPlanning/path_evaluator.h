@@ -5,6 +5,6 @@
 namespace mp
 {
 
-std::pair< double, double > evaluate( mlr::Array< mlr::KinematicWorld > & kinFrames, double tau );
+std::pair< double, double > evaluate( rai::Array< rai::KinematicWorld > & kinFrames, double tau );
 
 }

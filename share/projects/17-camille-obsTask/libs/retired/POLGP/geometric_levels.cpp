@@ -38,7 +38,7 @@ void PoseLevelType::solve()
   {
     if( node_->bs()( w ) > eps() )
     {
-      mlr::KinematicWorld kin = node_->isRoot() ? *node_->startKinematics()( w ) : node_->parent()->effKinematics()( w );
+      rai::KinematicWorld kin = node_->isRoot() ? *node_->startKinematics()( w ) : node_->parent()->effKinematics()( w );
 
       // create komo
       auto komo = komoFactory_.createKomo();
@@ -57,10 +57,10 @@ void PoseLevelType::solve()
 //      setModel(
 //            W,
 //            useSwift
-//            mlr::getParameter<bool>("KOMO/meldFixedJoints", false),
-//            mlr::getParameter<bool>("KOMO/makeConvexHulls", true),
-//            mlr::getParameter<bool>("KOMO/makeSSBoxes", false),
-//            mlr::getParameter<bool>("KOMO/activateAllContact", false)
+//            rai::getParameter<bool>("KOMO/meldFixedJoints", false),
+//            rai::getParameter<bool>("KOMO/makeConvexHulls", true),
+//            rai::getParameter<bool>("KOMO/makeSSBoxes", false),
+//            rai::getParameter<bool>("KOMO/activateAllContact", false)
 //            );
 
       komo->setTiming( 1., 2, 5., 1/*, true*/ );
@@ -80,7 +80,7 @@ void PoseLevelType::solve()
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
       COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
+      COUNT_kin += rai::KinematicWorld::setJointStateCount;
       COUNT_poseOpt++;
       //poseCount++;
 
@@ -125,7 +125,7 @@ void PoseLevelType::solve()
         node_->effKinematics()( w ) = *komos_( w )->configurations.last();
 
         // update switch
-        for( mlr::KinematicSwitch *sw: komos_( w )->switches )
+        for( rai::KinematicSwitch *sw: komos_( w )->switches )
         {
           //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
           if( sw->timeOfApplication>=2 ) sw->apply( node_->effKinematics()( w ) );
@@ -283,7 +283,7 @@ void PathLevelType::solve()
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
       COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
+      COUNT_kin += rai::KinematicWorld::setJointStateCount;
       COUNT_pathOpt++;
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
@@ -469,7 +469,7 @@ void JointPathLevelType::solve()
       // all the komo lead to the same agent trajectory, its ok to use one of it for the rest
       //komo->displayTrajectory();
       COUNT_evals += komo->opt->newton.evals;
-      COUNT_kin += mlr::KinematicWorld::setJointStateCount;
+      COUNT_kin += rai::KinematicWorld::setJointStateCount;
       //COUNT_jointPathOpt++;
 
 //      DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )

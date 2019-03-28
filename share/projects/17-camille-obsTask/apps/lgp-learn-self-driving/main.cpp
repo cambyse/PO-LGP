@@ -26,7 +26,7 @@ void init( KOMO * komo, int verbose )
 {
   // ego car
   arr ego_start_speed{ 1.0, 0, 0 }; // 10 m/s
-  komo->setVelocity( 0.0, 0.5, "car_ego", NULL, OT_sumOfSqr, ego_start_speed );
+  komo->setVelocity( 0.0, 0.5, "car_ego", NULL, OT_sos, ego_start_speed );
   komo->setTask( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
 
   // car speeds
@@ -59,10 +59,10 @@ void groundMergeBetween( double phase, const std::vector< std::string >& facts, 
   komo->setTask( phase, -1, new AxisDistance( car_before, std::string("car_ego"), -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
 
   arr ego_desired_speed{ 1.0, 0, 0 }; // approx 50 kmh
-  komo->setVelocity( phase+0.8, -1, "car_ego", NULL, OT_sumOfSqr, ego_desired_speed );
+  komo->setVelocity( phase+0.8, -1, "car_ego", NULL, OT_sos, ego_desired_speed );
 
-//  komo->setPosition( phase+0.8, -1, "car_ego", car_next.c_str(), OT_sumOfSqr, {-2.0, 0, 0} );
-//  komo->setPosition( phase+0.8, -1, car_before.c_str(), "car_ego", OT_sumOfSqr, {-2.0, 0, 0} );
+//  komo->setPosition( phase+0.8, -1, "car_ego", car_next.c_str(), OT_sos, {-2.0, 0, 0} );
+//  komo->setPosition( phase+0.8, -1, car_before.c_str(), "car_ego", OT_sos, {-2.0, 0, 0} );
 
 //  const auto radius = 0.1;
 //  komo->setTask( phase, -1, new ApproxShapeToSphere( komo->world, "car_ego", car_next.c_str(),   radius ), OT_ineq );
@@ -371,7 +371,7 @@ void evaluate_all_skeletons( const std::string & result_filepath  )
 
 int main(int argc,char **argv)
 {
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   std::string outputFolderPath;
   if( argc <= 1 )

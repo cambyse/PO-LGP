@@ -13,12 +13,12 @@ using namespace fcl;
 
 //-------ShapePairFCL----------------//
 
-void ShapePairFCL::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
+void ShapePairFCL::phi( arr& y, arr& J, const rai::KinematicWorld& G, int t )
 {
   arr tmp_y = zeros( dim_phi( G ) );
   arr tmp_J = zeros( dim_phi( G ), G.q.N );
 
-  for( mlr::Proxy *p: G.proxies )
+  for( rai::Proxy *p: G.proxies )
   {
     if((p->a==i_ && p->b==j_) || (p->a==j_ && p->b==i_))
     {
@@ -41,10 +41,10 @@ void ShapePairFCL::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
   if(&J) J = tmp_J;
 }
 
-void ShapePairFCL::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::Proxy * p )
+void ShapePairFCL::phiProxy( arr& y, arr& J, const rai::KinematicWorld& G, rai::Proxy * p )
 {
-  mlr::Shape *a = G.shapes(p->a);
-  mlr::Shape *b = G.shapes(p->b);
+  rai::Shape *a = G.shapes(p->a);
+  rai::Shape *b = G.shapes(p->b);
 
   auto arel=a->body->X.rot/(p->posA-a->body->X.pos);
   auto brel=b->body->X.rot/(p->posB-b->body->X.pos);
@@ -64,10 +64,10 @@ void ShapePairFCL::phiProxy( arr& y, arr& J, const mlr::KinematicWorld& G, mlr::
   J = w * ( - JnormD * ( JposA - JposB ) );
 }
 
-void ShapePairFCL::phiFCL( arr& y, arr& J, const mlr::KinematicWorld& G )
+void ShapePairFCL::phiFCL( arr& y, arr& J, const rai::KinematicWorld& G )
 {
-  mlr::Shape *s1 = i_<0?NULL: G.shapes(i_);
-  mlr::Shape *s2 = j_<0?NULL: G.shapes(j_);
+  rai::Shape *s1 = i_<0?NULL: G.shapes(i_);
+  rai::Shape *s2 = j_<0?NULL: G.shapes(j_);
   CHECK(s1 && s2,"");
 
   auto m1 = createObjectModel( s1 );
@@ -86,8 +86,8 @@ void ShapePairFCL::phiFCL( arr& y, arr& J, const mlr::KinematicWorld& G )
   auto p1 = result.nearest_points[ 0 ];
   auto p2 = result.nearest_points[ 1 ];
 
-  mlr::Vector pposA( p1[ 0 ], p1[ 1 ], p1[ 2 ] );
-  mlr::Vector pposB( p2[ 0 ], p2[ 1 ], p2[ 2 ] );
+  rai::Vector pposA( p1[ 0 ], p1[ 1 ], p1[ 2 ] );
+  rai::Vector pposB( p2[ 0 ], p2[ 1 ], p2[ 2 ] );
 
   /////////
   auto a = s1;
@@ -134,7 +134,7 @@ void ShapePairFCL::phiFCL( arr& y, arr& J, const mlr::KinematicWorld& G )
   delete m2;
 }
 
-CollisionObject * ShapePairFCL::createObjectModel( mlr::Shape * s )
+CollisionObject * ShapePairFCL::createObjectModel( rai::Shape * s )
 {
   CHECK( s, "" );
 

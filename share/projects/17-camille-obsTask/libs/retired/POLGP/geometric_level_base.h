@@ -24,21 +24,21 @@ struct GeometricLevelBase
   typedef std::shared_ptr< GeometricLevelBase > ptr;
 
   GeometricLevelBase( const GeometricLevelBase& that ) = delete;  // no copy
-  GeometricLevelBase( POLGPNode * node, mlr::String const& name, const KOMOFactory & komoFactory );
+  GeometricLevelBase( POLGPNode * node, rai::String const& name, const KOMOFactory & komoFactory );
 
   bool isSolved() const    { return isSolved_; }
   bool isTerminal() const  { return isTerminal_; }
   bool isInfeasible() const{ return isInfeasible_; }
 
-  mlr::String name() const { return name_; }
+  rai::String name() const { return name_; }
 
   const KOMOFactory & komoFactory() const { return komoFactory_; }
 
 //  ExtensibsetSquaredQVelocitiesleKOMO::ptr   komo( uint w ) const { return komos_( w ); }
   ExtensibleKOMO::ptr & komo( uint w )       { return komos_( w ); }
 
-  mlr::Array< ExtensibleKOMO::ptr >   komos() const { return komos_; }
-  mlr::Array< ExtensibleKOMO::ptr > & komos()       { return komos_; }
+  rai::Array< ExtensibleKOMO::ptr >   komos() const { return komos_; }
+  rai::Array< ExtensibleKOMO::ptr > & komos()       { return komos_; }
 
   double cost( uint w ) const { return costs_( w ); }
 
@@ -47,7 +47,7 @@ struct GeometricLevelBase
 
 protected:
   // parameters
-  mlr::String name_;
+  rai::String name_;
   uint N_;
   double maxConstraints_ = 0.8;
   double maxCost_        = 5;
@@ -60,11 +60,11 @@ protected:
 
   // state
   POLGPNode * node_;
-  mlr::Array< double > costs_;          // optimization result costs ( one per world )
-  mlr::Array< double > constraints_;    // optimization result costs ( one per world )
-  mlr::Array< int >   solved_;         // whether the optimization has been solved ( one per world )
-  mlr::Array< int >   infeasibles_;    // whether the optimization succedded or not ( one per world )
-  mlr::Array< ExtensibleKOMO::ptr > komos_; // opti state after optimization ( one per world )
+  rai::Array< double > costs_;          // optimization result costs ( one per world )
+  rai::Array< double > constraints_;    // optimization result costs ( one per world )
+  rai::Array< int >   solved_;         // whether the optimization has been solved ( one per world )
+  rai::Array< int >   infeasibles_;    // whether the optimization succedded or not ( one per world )
+  rai::Array< ExtensibleKOMO::ptr > komos_; // opti state after optimization ( one per world )
   double cost_;                         // weighed by believe state
   double constraint_;                  // weighed by believe state
   bool isTerminal_;                     // terminal node and solved

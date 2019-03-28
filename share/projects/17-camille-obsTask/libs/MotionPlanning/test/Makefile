@@ -48,24 +48,13 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/camille/Dev/Phd/mlr/share/projects/17-camille-obsTask/libs/MotionPlanning/test
+CMAKE_SOURCE_DIR = /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/camille/Dev/Phd/mlr/share/projects/17-camille-obsTask/libs/MotionPlanning/test
+CMAKE_BINARY_DIR = /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask
 
 #=============================================================================
 # Targets provided globally by CMake.
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
 
 # Special rule for the target rebuild_cache
 rebuild_cache:
@@ -78,16 +67,27 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
+
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/camille/Dev/Phd/mlr/share/projects/17-camille-obsTask/libs/MotionPlanning/test/CMakeFiles /home/camille/Dev/Phd/mlr/share/projects/17-camille-obsTask/libs/MotionPlanning/test/CMakeFiles/progress.marks
-	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/camille/Dev/Phd/mlr/share/projects/17-camille-obsTask/libs/MotionPlanning/test/CMakeFiles 0
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask/CMakeFiles /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask/libs/MotionPlanning/test/CMakeFiles/progress.marks
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	$(MAKE) -f CMakeFiles/Makefile2 clean
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/clean
 .PHONY : clean
 
 # The main clean target
@@ -97,98 +97,186 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	$(MAKE) -f CMakeFiles/Makefile2 preinstall
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	$(MAKE) -f CMakeFiles/Makefile2 preinstall
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
-#=============================================================================
-# Target rules for targets named CMakeCXXCompilerId
+# Convenience name for target.
+libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/rule:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/rule
+.PHONY : libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/rule
 
-# Build rule for target.
-CMakeCXXCompilerId: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeCXXCompilerId
-.PHONY : CMakeCXXCompilerId
+# Convenience name for target.
+test_komo_tree_extension: libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/rule
 
-# fast build rule for target.
-CMakeCXXCompilerId/fast:
-	$(MAKE) -f CMakeFiles/CMakeCXXCompilerId.dir/build.make CMakeFiles/CMakeCXXCompilerId.dir/build
-.PHONY : CMakeCXXCompilerId/fast
-
-#=============================================================================
-# Target rules for targets named test_new_komo_planner
-
-# Build rule for target.
-test_new_komo_planner: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 test_new_komo_planner
-.PHONY : test_new_komo_planner
+.PHONY : test_komo_tree_extension
 
 # fast build rule for target.
-test_new_komo_planner/fast:
-	$(MAKE) -f CMakeFiles/test_new_komo_planner.dir/build.make CMakeFiles/test_new_komo_planner.dir/build
-.PHONY : test_new_komo_planner/fast
+test_komo_tree_extension/fast:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/build
+.PHONY : test_komo_tree_extension/fast
 
-CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.o: CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.o
+# Convenience name for target.
+libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/rule:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/rule
+.PHONY : libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/rule
 
-.PHONY : CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.o
+# Convenience name for target.
+test_komo_and_komo_tree_comparison: libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/rule
+
+.PHONY : test_komo_and_komo_tree_comparison
+
+# fast build rule for target.
+test_komo_and_komo_tree_comparison/fast:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/build
+.PHONY : test_komo_and_komo_tree_comparison/fast
+
+# Convenience name for target.
+libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/rule:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/rule
+.PHONY : libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/rule
+
+# Convenience name for target.
+test_tree_builder: libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/rule
+
+.PHONY : test_tree_builder
+
+# fast build rule for target.
+test_tree_builder/fast:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/build
+.PHONY : test_tree_builder/fast
+
+# Convenience name for target.
+libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/rule:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f CMakeFiles/Makefile2 libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/rule
+.PHONY : libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/rule
+
+# Convenience name for target.
+test_komo_planner: libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/rule
+
+.PHONY : test_komo_planner
+
+# fast build rule for target.
+test_komo_planner/fast:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/build
+.PHONY : test_komo_planner/fast
+
+test_komo_and_komo_tree_comparison.o: test_komo_and_komo_tree_comparison.cpp.o
+
+.PHONY : test_komo_and_komo_tree_comparison.o
 
 # target to build an object file
-CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.o:
-	$(MAKE) -f CMakeFiles/CMakeCXXCompilerId.dir/build.make CMakeFiles/CMakeCXXCompilerId.dir/CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.o
-.PHONY : CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.o
+test_komo_and_komo_tree_comparison.cpp.o:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/test_komo_and_komo_tree_comparison.cpp.o
+.PHONY : test_komo_and_komo_tree_comparison.cpp.o
 
-CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.i: CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.i
+test_komo_and_komo_tree_comparison.i: test_komo_and_komo_tree_comparison.cpp.i
 
-.PHONY : CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.i
+.PHONY : test_komo_and_komo_tree_comparison.i
 
 # target to preprocess a source file
-CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.i:
-	$(MAKE) -f CMakeFiles/CMakeCXXCompilerId.dir/build.make CMakeFiles/CMakeCXXCompilerId.dir/CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.i
-.PHONY : CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.i
+test_komo_and_komo_tree_comparison.cpp.i:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/test_komo_and_komo_tree_comparison.cpp.i
+.PHONY : test_komo_and_komo_tree_comparison.cpp.i
 
-CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.s: CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.s
+test_komo_and_komo_tree_comparison.s: test_komo_and_komo_tree_comparison.cpp.s
 
-.PHONY : CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.s
+.PHONY : test_komo_and_komo_tree_comparison.s
 
 # target to generate assembly for a file
-CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.s:
-	$(MAKE) -f CMakeFiles/CMakeCXXCompilerId.dir/build.make CMakeFiles/CMakeCXXCompilerId.dir/CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.s
-.PHONY : CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.cpp.s
+test_komo_and_komo_tree_comparison.cpp.s:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_and_komo_tree_comparison.dir/test_komo_and_komo_tree_comparison.cpp.s
+.PHONY : test_komo_and_komo_tree_comparison.cpp.s
 
-test_new_komo_planner.o: test_new_komo_planner.cpp.o
+test_komo_planner.o: test_komo_planner.cpp.o
 
-.PHONY : test_new_komo_planner.o
+.PHONY : test_komo_planner.o
 
 # target to build an object file
-test_new_komo_planner.cpp.o:
-	$(MAKE) -f CMakeFiles/test_new_komo_planner.dir/build.make CMakeFiles/test_new_komo_planner.dir/test_new_komo_planner.cpp.o
-.PHONY : test_new_komo_planner.cpp.o
+test_komo_planner.cpp.o:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/test_komo_planner.cpp.o
+.PHONY : test_komo_planner.cpp.o
 
-test_new_komo_planner.i: test_new_komo_planner.cpp.i
+test_komo_planner.i: test_komo_planner.cpp.i
 
-.PHONY : test_new_komo_planner.i
+.PHONY : test_komo_planner.i
 
 # target to preprocess a source file
-test_new_komo_planner.cpp.i:
-	$(MAKE) -f CMakeFiles/test_new_komo_planner.dir/build.make CMakeFiles/test_new_komo_planner.dir/test_new_komo_planner.cpp.i
-.PHONY : test_new_komo_planner.cpp.i
+test_komo_planner.cpp.i:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/test_komo_planner.cpp.i
+.PHONY : test_komo_planner.cpp.i
 
-test_new_komo_planner.s: test_new_komo_planner.cpp.s
+test_komo_planner.s: test_komo_planner.cpp.s
 
-.PHONY : test_new_komo_planner.s
+.PHONY : test_komo_planner.s
 
 # target to generate assembly for a file
-test_new_komo_planner.cpp.s:
-	$(MAKE) -f CMakeFiles/test_new_komo_planner.dir/build.make CMakeFiles/test_new_komo_planner.dir/test_new_komo_planner.cpp.s
-.PHONY : test_new_komo_planner.cpp.s
+test_komo_planner.cpp.s:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_planner.dir/test_komo_planner.cpp.s
+.PHONY : test_komo_planner.cpp.s
+
+test_komo_tree_extension.o: test_komo_tree_extension.cpp.o
+
+.PHONY : test_komo_tree_extension.o
+
+# target to build an object file
+test_komo_tree_extension.cpp.o:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/test_komo_tree_extension.cpp.o
+.PHONY : test_komo_tree_extension.cpp.o
+
+test_komo_tree_extension.i: test_komo_tree_extension.cpp.i
+
+.PHONY : test_komo_tree_extension.i
+
+# target to preprocess a source file
+test_komo_tree_extension.cpp.i:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/test_komo_tree_extension.cpp.i
+.PHONY : test_komo_tree_extension.cpp.i
+
+test_komo_tree_extension.s: test_komo_tree_extension.cpp.s
+
+.PHONY : test_komo_tree_extension.s
+
+# target to generate assembly for a file
+test_komo_tree_extension.cpp.s:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_komo_tree_extension.dir/test_komo_tree_extension.cpp.s
+.PHONY : test_komo_tree_extension.cpp.s
+
+test_tree_builder.o: test_tree_builder.cpp.o
+
+.PHONY : test_tree_builder.o
+
+# target to build an object file
+test_tree_builder.cpp.o:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/test_tree_builder.cpp.o
+.PHONY : test_tree_builder.cpp.o
+
+test_tree_builder.i: test_tree_builder.cpp.i
+
+.PHONY : test_tree_builder.i
+
+# target to preprocess a source file
+test_tree_builder.cpp.i:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/test_tree_builder.cpp.i
+.PHONY : test_tree_builder.cpp.i
+
+test_tree_builder.s: test_tree_builder.cpp.s
+
+.PHONY : test_tree_builder.s
+
+# target to generate assembly for a file
+test_tree_builder.cpp.s:
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(MAKE) -f libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/build.make libs/MotionPlanning/test/CMakeFiles/test_tree_builder.dir/test_tree_builder.cpp.s
+.PHONY : test_tree_builder.cpp.s
 
 # Help Target
 help:
@@ -196,16 +284,24 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... CMakeCXXCompilerId"
-	@echo "... test_new_komo_planner"
-	@echo "... CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.o"
-	@echo "... CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.i"
-	@echo "... CMakeFiles/3.5.1/CompilerIdCXX/CMakeCXXCompilerId.s"
-	@echo "... test_new_komo_planner.o"
-	@echo "... test_new_komo_planner.i"
-	@echo "... test_new_komo_planner.s"
+	@echo "... edit_cache"
+	@echo "... test_komo_tree_extension"
+	@echo "... test_komo_and_komo_tree_comparison"
+	@echo "... test_tree_builder"
+	@echo "... test_komo_planner"
+	@echo "... test_komo_and_komo_tree_comparison.o"
+	@echo "... test_komo_and_komo_tree_comparison.i"
+	@echo "... test_komo_and_komo_tree_comparison.s"
+	@echo "... test_komo_planner.o"
+	@echo "... test_komo_planner.i"
+	@echo "... test_komo_planner.s"
+	@echo "... test_komo_tree_extension.o"
+	@echo "... test_komo_tree_extension.i"
+	@echo "... test_komo_tree_extension.s"
+	@echo "... test_tree_builder.o"
+	@echo "... test_tree_builder.i"
+	@echo "... test_tree_builder.s"
 .PHONY : help
 
 
@@ -217,6 +313,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/mtoussai/git/copy/mlr/share/projects/17-camille-obsTask && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

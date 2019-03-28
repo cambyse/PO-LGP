@@ -166,13 +166,13 @@ void groundStack( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
 //  const double t_end =   phase + duration;
 //  //
 
-//  mlr::String arg = *symbols(0);
+//  rai::String arg = *symbols(0);
 
 //  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
 //                                                                        arg,
 //                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
 //                                                                        ARR( -0.0, 0.1, 0.4 ) ),  // pivot position  in container frame
-//                OT_sumOfSqr, NoArr, 1e2 );
+//                OT_sos, NoArr, 1e2 );
 
 //  komo->setTask( t_end-0.2, t_end, new ActiveGetSight      ( "manhead",
 //                                                                        arg,
@@ -199,14 +199,14 @@ void groundStack( double phase, const Graph& facts, Node *n, KOMO * komo, int ve
 //  //
 
 //  // no movement
-//  auto *map = new TaskMap_Transition( komo->world );
+//  auto *map = new TM_Transition( komo->world );
 //  map->posCoeff = 0.;
 //  map->velCoeff = 1.;
 //  map->accCoeff = 0.;
-//  komo->setTask( t_start, t_end, map, OT_sumOfSqr, NoArr, 1e2, 1 );
+//  komo->setTask( t_start, t_end, map, OT_sos, NoArr, 1e2, 1 );
 
 //  // in sight expressed as a constraint
-////  mlr::String arg = *symbols(0);
+////  rai::String arg = *symbols(0);
 ////  komo->setTask( t_start, t_end, new ActiveGetSight      ( "manhead",
 ////                                                                        arg,
 ////                                                                        //ARR( -0.0, -0.0, 0.0 ),    // object position in container frame
@@ -290,7 +290,7 @@ void plan()
 //===========================================================================
 
 int main(int argc,char **argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   rnd.clockSeed();
 

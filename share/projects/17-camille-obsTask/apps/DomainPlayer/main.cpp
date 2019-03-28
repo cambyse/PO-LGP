@@ -27,10 +27,10 @@ void TEST(FOL_World){
 
 void TEST(PlayFOL_World){
   const char *file = "../lgp-learn-self-driving/LGP-merging-1w.g";
-  if(mlr::argc>1) file = mlr::argv[1];
+  if(rai::argc>1) file = rai::argv[1];
 
   FOL_World world(FILE(file));
-  world.verbose = mlr::getParameter<int>("verbose", 2);
+  world.verbose = rai::getParameter<int>("verbose", 2);
 
   for(bool go=true;go;){
     bool terminal = world.is_terminal_state();
@@ -66,7 +66,7 @@ void TEST(PlayFOL_World){
 //===========================================================================
 
 int main(int argn, char** argv){
-  mlr::initCmdLine(argn, argv);
+  rai::initCmdLine(argn, argv);
   rnd.clockSeed();
 
 //  testMCTS();

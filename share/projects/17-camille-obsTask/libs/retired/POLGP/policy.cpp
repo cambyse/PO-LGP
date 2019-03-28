@@ -74,7 +74,7 @@ PolicyBuilder::PolicyBuilder( POLGPNode * root )
     // clone the kinematic configurations
     for( auto s = 0; s < kinematicConfigurations.d0; ++s )
     {
-      mlr::KinematicWorld* clone = new mlr::KinematicWorld();
+      rai::KinematicWorld* clone = new rai::KinematicWorld();
       clone->copy( *(kinematicConfigurations(s)) );
       clonedKinematicConfigurations(s) = clone;
     }

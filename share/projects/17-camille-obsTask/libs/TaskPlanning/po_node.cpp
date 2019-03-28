@@ -90,7 +90,7 @@ static uint _transition_time_us;
 
 
 /// root node init
-PONode::PONode( mlr::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
+PONode::PONode( rai::Array< std::shared_ptr< FOL_World > > fols, const arr & bs )
   : parent_( nullptr )
   , N_( fols.N )
   , folWorlds_( fols )
@@ -191,7 +191,7 @@ auto start_2 = std::chrono::high_resolution_clock::now();
       fol->write_state( ss );
       auto s = ss.str();
 
-      mlr::String mlr_s( s );
+      rai::String mlr_s( s );
 
       fol->set_state( mlr_s );
       std::cout << "state:" << s << std::endl;*/
@@ -410,7 +410,7 @@ void PONode::generateMCRollouts( uint num, int stepAbort, uint maxHorizon )
       // retrieve history
       if( bs_( w ) > eps() )
       {
-        mlr::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
+        rai::Array<MCTS_Environment::Handle> prefixDecisions( treepath.N-1 );
 
         for( uint i=1 ; i < treepath.N; i++ )
         {
@@ -462,7 +462,7 @@ void PONode::backTrackBestExpectedPolicy( PONode::ptr until_node )
     CHECK( ! isTerminal(), "nodes that are already terminal should not be listed as nodes to expand" );
 
     struct familyStatusType { double value; bool solved; };
-    mlr::Array< familyStatusType > familyStatus( families_.d0 );
+    rai::Array< familyStatusType > familyStatus( families_.d0 );
 
     // find best family
     // compute cost of each family
@@ -684,9 +684,9 @@ LogicAndState PONode::getWitnessLogicAndState() const
   return worlds.first();
 }
 
-mlr::Array< LogicAndState > PONode::getPossibleLogicAndStates() const
+rai::Array< LogicAndState > PONode::getPossibleLogicAndStates() const
 {
-  mlr::Array< LogicAndState > worlds;
+  rai::Array< LogicAndState > worlds;
 
   for( auto w = 0; w < N_; ++w )
   {
@@ -750,7 +750,7 @@ PONode::ptr getTerminalNode( const PONode::ptr & n, const WorldID & w )
   return node;
 }
 
-void gatherPolicyFringe( const PONode::ptr & node, std::set< mlr::Array< PONode::ptr > > & fringe )
+void gatherPolicyFringe( const PONode::ptr & node, std::set< rai::Array< PONode::ptr > > & fringe )
 {
   for( auto f : node->families() )
   {

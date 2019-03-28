@@ -16,28 +16,28 @@
 
 #include <math_utility.h>
 
-#include <Kin/taskMap.h>
+#include <Kin/feature.h>
 #include <Kin/taskMaps.h>
 
 using namespace std;
 
-struct OverPlaneConstraint:TaskMap
+struct OverPlaneConstraint:Feature
 {
-  OverPlaneConstraint( const mlr::KinematicWorld& G, const char* iBobyName, const char* jPlaneBodyName, double _margin=.02 )
+  OverPlaneConstraint( const rai::KinematicWorld& G, const char* iBobyName, const char* jPlaneBodyName, double _margin=.02 )
     : iBobyName_     ( iBobyName )
     , jPlaneBodyName_( jPlaneBodyName )
     , margin_( _margin )
   {
-    //collisionModel_.append( mlr::Vector( 0, 0, 0 ) );
+    //collisionModel_.append( rai::Vector( 0, 0, 0 ) );
 
     // tmp camille is only temporary, get voxels from the shape
-    collisionModel_.append( mlr::Vector( -0.15, -0.15, 0 ) );
-    collisionModel_.append( mlr::Vector( -0.15,  0.15, 0 ) );
-    collisionModel_.append( mlr::Vector(  0.15, -0.15, 0 ) );
-    collisionModel_.append( mlr::Vector(  0.15, 0.15, 0 ) );
+    collisionModel_.append( rai::Vector( -0.15, -0.15, 0 ) );
+    collisionModel_.append( rai::Vector( -0.15,  0.15, 0 ) );
+    collisionModel_.append( rai::Vector(  0.15, -0.15, 0 ) );
+    collisionModel_.append( rai::Vector(  0.15, 0.15, 0 ) );
   }
 
-  virtual void phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
   {
     auto body = G.getFrameByName( iBobyName_ );
     auto plane = G.getFrameByName( jPlaneBodyName_ );
@@ -77,18 +77,18 @@ struct OverPlaneConstraint:TaskMap
     if(&J) J = tmp_J;
   }
 
-  mlr::String shortTag(const mlr::KinematicWorld& G){ return STRING("OverTableConstraint"); }
+  rai::String shortTag(const rai::KinematicWorld& G){ return STRING("OverTableConstraint"); }
 
-  uint dim_phi(const mlr::KinematicWorld& G)
+  uint dim_phi(const rai::KinematicWorld& G)
   {
     return collisionModel_.N;// + constantVectors_.N;
   }
 
 private:
-  mlr::String iBobyName_;
-  mlr::String jPlaneBodyName_;
+  rai::String iBobyName_;
+  rai::String jPlaneBodyName_;
   double margin_;
-  mlr::Array< mlr::Vector > collisionModel_;
-  //mlr::Array< mlr::Vector > constantVectors_;
+  rai::Array< rai::Vector > collisionModel_;
+  //rai::Array< rai::Vector > constantVectors_;
 
 };

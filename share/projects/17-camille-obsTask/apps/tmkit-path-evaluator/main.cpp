@@ -24,7 +24,7 @@
 
 //===========================================================================
 
-std::pair< double, double > evaluate( mlr::Array< mlr::KinematicWorld > & kinFrames, double tau );
+std::pair< double, double > evaluate( rai::Array< rai::KinematicWorld > & kinFrames, double tau );
 
 void baxter()
 {
@@ -86,9 +86,9 @@ void baxter()
       }
 
       // convertion to KOMO
-      mlr::Array< mlr::KinematicWorld > kinFrames;
+      rai::Array< rai::KinematicWorld > kinFrames;
 
-      mlr::KinematicWorld kin;
+      rai::KinematicWorld kin;
       kin.init( kinFile.c_str() );
 
       for( auto i = 0; i < frames.size(); ++i )
@@ -111,7 +111,7 @@ void baxter()
         kin.setJointState( q_, names );
 
         //kin.watch();
-        //mlr::wait( 0.2, true );
+        //rai::wait( 0.2, true );
 
         kinFrames.push_back( kin );
       }
@@ -150,7 +150,7 @@ void baxter()
 
 int main(int argc,char **argv)
 {
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   baxter();
 

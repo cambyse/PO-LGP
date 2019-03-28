@@ -64,11 +64,11 @@ public:
   void printSearchTree( std::iostream & ) const;
 
 private:
-  mlr::Array< POLGPNode * > getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
-  mlr::Array< POLGPNode * > getNodesToExpand( POLGPNode * ) const;
+  rai::Array< POLGPNode * > getNodesToExpand() const;   // go along the best solution so far and accumulates the nodes that haven't been expanded, it goes up to the "deepest nodes" of the temporary path
+  rai::Array< POLGPNode * > getNodesToExpand( POLGPNode * ) const;
 
-  mlr::Array< POLGPNode * > getTerminalNodes() const;
-  mlr::Array< POLGPNode * > getTerminalNodes( POLGPNode * ) const;
+  rai::Array< POLGPNode * > getTerminalNodes() const;
+  rai::Array< POLGPNode * > getTerminalNodes( POLGPNode * ) const;
 
   POLGPNode * getTerminalNode( const WorldID & w ) const;
 
@@ -77,8 +77,8 @@ private:
 
 private:
   //FOL_World fol;      // first order logic symbols
-  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
-  mlr::Array< std::shared_ptr< const mlr::KinematicWorld > > kinematics_;
+  rai::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  rai::Array< std::shared_ptr< const rai::KinematicWorld > > kinematics_;
 
   arr bs_;
   POLGPNode * root_; // root and "current" node
@@ -96,14 +96,14 @@ private:
 
   // geometric levels
   const KOMOFactory & komoFactory_;
-  mlr::Array< GeometricLevelFactoryBase::ptr > geometricLevelFactories_;
+  rai::Array< GeometricLevelFactoryBase::ptr > geometricLevelFactories_;
 
   // display
-  mlr::Array< std::shared_ptr< OrsPathViewer > > poseViews_;
-  mlr::Array< std::shared_ptr< OrsPathViewer > > pathViews_;
+  rai::Array< std::shared_ptr< OrsPathViewer > > poseViews_;
+  rai::Array< std::shared_ptr< OrsPathViewer > > pathViews_;
 
   // params
-  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+  const rai::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
 //===========================================================================
@@ -111,7 +111,7 @@ private:
 //class SearchSpaceTree{
 //public: // public members
 //  //FOL_World fol;      // first order logic symbols
-//  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+//  rai::Array< std::shared_ptr<FOL_World> > folWorlds_;
 //  arr bs_;
 
 //  PartiallyObservableNode *root,*node; // root and "current" node
@@ -120,12 +120,12 @@ private:
 //  OrsPathViewer seqView;
 //  OrsPathViewer pathView;
 
-//  mlr::Array<PartiallyObservableNode*> mcFringe;
-//  mlr::Array<PartiallyObservableNode*> terminals;
-//  mlr::Array<PartiallyObservableNode*> poseFringe;
-//  mlr::Array<PartiallyObservableNode*> seqFringe;
-//  mlr::Array<PartiallyObservableNode*> pathFringe;
-//  mlr::Array<PartiallyObservableNode*> done;
+//  rai::Array<PartiallyObservableNode*> mcFringe;
+//  rai::Array<PartiallyObservableNode*> terminals;
+//  rai::Array<PartiallyObservableNode*> poseFringe;
+//  rai::Array<PartiallyObservableNode*> seqFringe;
+//  rai::Array<PartiallyObservableNode*> pathFringe;
+//  rai::Array<PartiallyObservableNode*> done;
 
 //public: // public methods
 //  SearchSpaceTree( const KOMOFactory & );
@@ -140,17 +140,17 @@ private:
 
 //  // technically const but let as such, as the semantic is not const
 //  bool execRandomChoice();
-//  bool execChoice( mlr::String cmd );
+//  bool execChoice( rai::String cmd );
 
 //  // const
 //  void displayTree() const{ int r=system("evince z.pdf &");  if(r) LOG(-1) <<"could not startup evince"; }
 //  void printChoices() const;
-//  mlr::String queryForChoice() const;
+//  rai::String queryForChoice() const;
 
 //private: // private methods
 
 //private: // private members
-//  mlr::KinematicWorld kin;
+//  rai::KinematicWorld kin;
 
 //  KOMOFactory komoFactory_;
 
@@ -166,8 +166,8 @@ private:
 //double seqCost(PartiallyObservableNode* n);
 //double pathHeuristic(PartiallyObservableNode* n);
 //double pathCost(PartiallyObservableNode* n);
-//PartiallyObservableNode* getBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
-//PartiallyObservableNode* popBest(mlr::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
+//PartiallyObservableNode* getBest(rai::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
+//PartiallyObservableNode* popBest(rai::Array<PartiallyObservableNode*>& fringe, double heuristic(PartiallyObservableNode*));
 
 //typedef ActionNode MNode;
 
@@ -178,5 +178,5 @@ private:
 //double seqCost(MNode* n);
 //double pathHeuristic(MNode* n);
 //double pathCost(MNode* n);
-//MNode* getBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*));
-//MNode* popBest(mlr::Array<MNode*>& fringe, double heuristic(MNode*));
+//MNode* getBest(rai::Array<MNode*>& fringe, double heuristic(MNode*));
+//MNode* popBest(rai::Array<MNode*>& fringe, double heuristic(MNode*));

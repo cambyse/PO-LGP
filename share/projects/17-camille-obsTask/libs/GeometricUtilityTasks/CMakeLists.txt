@@ -11,7 +11,7 @@ add_definitions(-std=c++11)
 
 find_path( MLR_LIBRARIES_DIR
            NAMES libCore.so
-           PATHS "${PROJECT_SOURCE_DIR}/../../../../src" )
+           PATHS "/home/mtoussai/git/copy/mlr/share/rai/rai" )
 
 include_directories( ${MLR_LIBRARIES_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )

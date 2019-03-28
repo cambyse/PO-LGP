@@ -62,7 +62,7 @@ Skeleton JointPathTAMPController::plan(  const TAMPlanningConfiguration & config
   if( config.showFinalPolicy )
   {
     mp_.display( policy, 3000 );
-    mlr::wait( config.showDurationSecs, true );
+    rai::wait( config.showDurationSecs, true );
   }
 
   return policy;

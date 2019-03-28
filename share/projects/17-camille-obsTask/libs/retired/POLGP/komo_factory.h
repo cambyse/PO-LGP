@@ -30,11 +30,11 @@ public:
 public:
   ExtensibleKOMO();
 
-  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  void registerTask( const rai::String & type, const SymbolGrounder & grounder );
   void groundTasks( double phase, const Graph& facts, int verbose=0 );
 
 private:
-  std::map< mlr::String, SymbolGrounder > tasks_;
+  std::map< rai::String, SymbolGrounder > tasks_;
 };
 
 //=====ExtensibleKOMO==============================================
@@ -44,9 +44,9 @@ class KOMOFactory
   typedef std::function<void( double, const Graph& facts, Node *n, KOMO *, int verbose )> SymbolGrounder;
 
 public:
-  void registerTask( const mlr::String & type, const SymbolGrounder & grounder );
+  void registerTask( const rai::String & type, const SymbolGrounder & grounder );
   std::shared_ptr< ExtensibleKOMO > createKomo() const;
 private:
-  std::map< mlr::String, SymbolGrounder > tasks_;
+  std::map< rai::String, SymbolGrounder > tasks_;
 };
 struct PartiallyObservableNode;

@@ -14,7 +14,7 @@ void overtake()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_overtake.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_overtake.g" ) );
 
 
   // general settings
@@ -29,10 +29,10 @@ void overtake()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.6, 0, 0 } );
+  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { 0.6, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -45,9 +45,9 @@ void overtake()
   komo.activateCollisions( "car_ego", "truck" );
   komo.activateCollisions( "car_ego", "car_op" );
 
-  komo.setCollisions( true, 0.03 );
+  komo.add_collision( true, 0.03 );
 
-  //mlr::wait( 30, true );
+  //rai::wait( 30, true );
 
   // launch komo
   komo.reset();
@@ -66,7 +66,7 @@ void carkin()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_carkin.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_carkin.g" ) );
 
   // general settings
   komo.setSquaredQAccelerations();
@@ -80,10 +80,10 @@ void carkin()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.6, 0, 0 } );
+  komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.6, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -98,9 +98,9 @@ void carkin()
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
 
-  komo.setCollisions( true, 0.03 );
+  komo.add_collision( true, 0.03 );
 
-  //mlr::wait( 30, true );
+  //rai::wait( 30, true );
 
   // launch komo
   komo.reset();
@@ -119,7 +119,7 @@ void attempt()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_attempt.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_attempt.g" ) );
 
   // general settings
   komo.setSquaredQAccelerations();
@@ -132,10 +132,10 @@ void attempt()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // move back constraints
-  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sumOfSqr, { -0.6, 0, 0 } );
+  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { -0.6, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -150,9 +150,9 @@ void attempt()
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
 
-  komo.setCollisions( true, 0.03 );
+  komo.add_collision( true, 0.03 );
 
-  //mlr::wait( 30, true );
+  //rai::wait( 30, true );
 
   // launch komo
   komo.reset();
@@ -171,7 +171,7 @@ void cooperative()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative.g" ) );
 
   // general settings
   komo.setSquaredQAccelerations();
@@ -181,21 +181,21 @@ void cooperative()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "car_op", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.6, 0, 0 } );
+  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { 0.6, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -209,9 +209,9 @@ void cooperative()
   komo.activateCollisions( "car_ego", "car_op" );
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
-  komo.setCollisions( true, 0.03 );
+  komo.add_collision( true, 0.03 );
 
-  //mlr::wait( 30, true );
+  //rai::wait( 30, true );
 
   // launch komo
   komo.reset();
@@ -230,7 +230,7 @@ void cooperative_2()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative_2.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative_2.g" ) );
 
   // general settings
   komo.setSquaredQAccelerations();
@@ -240,25 +240,25 @@ void cooperative_2()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck_2",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "car_op", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 2.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.4, 0, 0 } );
+  komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -278,7 +278,7 @@ void cooperative_2()
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
 
-  komo.setCollisions( true, 0.05 );
+  komo.add_collision( true, 0.05 );
 
   // launch komo
   komo.reset();
@@ -297,7 +297,7 @@ void cooperative_3()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative_3.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative_3.g" ) );
 
   // general settings
   komo.setSquaredQAccelerations();
@@ -307,26 +307,26 @@ void cooperative_3()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck_2",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "car_op", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.4, 0, 0 } );
-  komo.setPosition( 5.0, -1, "car_ego", "truck_2", OT_sumOfSqr, { 0.4, 0, 0 } );
+  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
+  komo.setPosition( 5.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -348,7 +348,7 @@ void cooperative_3()
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
 
-  komo.setCollisions( true, 0.05 );
+  komo.add_collision( true, 0.05 );
 
   // launch komo
   komo.reset();
@@ -367,7 +367,7 @@ void cooperative_3_bis()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative_3.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative_3.g" ) );
 
   // general settings
   komo.setSquaredQAccelerations();
@@ -377,26 +377,26 @@ void cooperative_3_bis()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "truck_2", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck_2",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "car_op", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "car_op",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.4, 0, 0 } );
-  komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sumOfSqr, { 0.4, 0, 0 } );
+  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
+  komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -419,7 +419,7 @@ void cooperative_3_bis()
   //komo.activateCollisions( "car_ego", "car_op_2" );
 
 
-  komo.setCollisions( true, 0.05 );
+  komo.add_collision( true, 0.05 );
 
   // launch komo
   komo.reset();
@@ -438,7 +438,7 @@ void cooperative_4()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative_4.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative_4.g" ) );
 
   //komo.world.watch( true );
   // general settings
@@ -458,18 +458,18 @@ void cooperative_4()
   komo.setTask( 0.0, -1, new AxisBound( "car_3",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  //komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  //komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.06 }, 1e2, 1 );
 
   // get sight
-  //komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  //komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.4, 0, 0 } );
-  //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sumOfSqr, { 0.4, 0, 0 } );
+  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
+  //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // vehicle speeds
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
@@ -499,7 +499,7 @@ void cooperative_4()
 
   komo.activateCollisions( "car_2", "car_3" );
 
-  komo.setCollisions( true, 0.05 );
+  komo.add_collision( true, 0.05 );
 
   // launch komo
   komo.reset();
@@ -518,7 +518,7 @@ void cooperative_5()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative_5.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative_5.g" ) );
 
   //komo.world.watch( true );
   // general settings
@@ -538,7 +538,7 @@ void cooperative_5()
   komo.setTask( 0.0, -1, new AxisBound( "car_3",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  //komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  //komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
@@ -546,18 +546,18 @@ void cooperative_5()
   komo.setVelocity( 0.0, -1, "car_ego", NULL, OT_eq, { 0.07, 0, 0 } );
 
   // get sight
-  //komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  //komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.4, 0, 0 } );
-  //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sumOfSqr, { 0.4, 0, 0 } );
+  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
+  //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // vehicle speeds
   komo.setVelocity( 0.0, -1, "truck", NULL, OT_eq, { 0.03, 0, 0 } );
 
-  //komo.setVelocity( 0.0, -1, "car_1", NULL, OT_sumOfSqr, { 0.03, 0, 0 } );
-  //komo.setVelocity( 0.0, -1, "car_2", NULL, OT_sumOfSqr, { 0.03, 0, 0 } );
-  //komo.setVelocity( 0.0, -1, "car_3", NULL, OT_sumOfSqr, { 0.03, 0, 0 } );
+  //komo.setVelocity( 0.0, -1, "car_1", NULL, OT_sos, { 0.03, 0, 0 } );
+  //komo.setVelocity( 0.0, -1, "car_2", NULL, OT_sos, { 0.03, 0, 0 } );
+  //komo.setVelocity( 0.0, -1, "car_3", NULL, OT_sos, { 0.03, 0, 0 } );
 
 
   komo.setTask( 0.0, -1, new AxisBound( "car_1",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
@@ -584,7 +584,7 @@ void cooperative_5()
 
   komo.activateCollisions( "car_2", "car_3" );
 
-  komo.setCollisions( true, 0.05 );
+  komo.add_collision( true, 0.05 );
 
   // launch komo
   komo.reset();
@@ -603,7 +603,7 @@ void cooperative_flying()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_cooperative_flying.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_cooperative_flying.g" ) );
 
   //komo.world.watch( true );
   // general settings
@@ -623,18 +623,18 @@ void cooperative_flying()
   komo.setTask( 0.0, -1, new AxisBound( "car_3",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   komo.setTask( 0.0, -1, new AxisBound( "truck", -0.12, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  //komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sumOfSqr );
+  //komo.setTask( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.12, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.05 }, 1e2, 1 );
 
   // get sight
-  //komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sumOfSqr );
+  //komo.setTask( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   // overtake constraints
-  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sumOfSqr, { 0.4, 0, 0 } );
-  //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sumOfSqr, { 0.4, 0, 0 } );
+  //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
+  //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // vehicle speeds
   komo.setTask( 0.0, -1, new AxisBound( "truck",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
@@ -664,7 +664,7 @@ void cooperative_flying()
 
   komo.activateCollisions( "car_2", "car_3" );
 
-  komo.setCollisions( true, 0.05 );
+  komo.add_collision( true, 0.05 );
 
   // launch komo
   komo.reset();
@@ -683,7 +683,7 @@ void lane_insertion()
 {
   mp::ExtensibleKOMO komo;
   komo.setConfigFromFile();
-  komo.setModel( mlr::KinematicWorld( "model_lane_insertion.g" ) );
+  komo.setModel( rai::KinematicWorld( "model_lane_insertion.g" ) );
 
   //komo.world.watch( true );
   // general settings
@@ -700,8 +700,8 @@ void lane_insertion()
   komo.setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025}, 1e2, 1 );
 
   // overtake constraints
-  komo.setPosition( 7.0, -1, "car_ego", "car_1", OT_sumOfSqr, { 0.225, 0, 0 } );
-  //komo.setPosition( 10, -1, "car_ego", "truck", OT_sumOfSqr, { 0.475, 0, 0 } );
+  komo.setPosition( 7.0, -1, "car_ego", "car_1", OT_sos, { 0.225, 0, 0 } );
+  //komo.setPosition( 10, -1, "car_ego", "truck", OT_sos, { 0.475, 0, 0 } );
 
   // other vehicles speeds
   arr k_speed{ 0.03, 0, 0 };
@@ -715,7 +715,7 @@ void lane_insertion()
   komo.activateCollisions( "car_ego", "car_2" );
   komo.activateCollisions( "car_ego", "car_3" );
 
-  komo.setCollisions( true, 0.03 );
+  komo.add_collision( true, 0.03 );
 
   // launch komo
   komo.reset();
@@ -732,8 +732,8 @@ void lane_insertion()
 
 void test_config()
 {
-  //mlr::KinematicWorld G( "model_cooperative_5.g" );
-  mlr::KinematicWorld G( "model_attempt_paper.g" );
+  //rai::KinematicWorld G( "model_cooperative_5.g" );
+  rai::KinematicWorld G( "model_attempt_paper.g" );
   //std::cout << G.q.d0 << std::endl;
   G.watch( true );
 }
@@ -741,7 +741,7 @@ void test_config()
 //===========================================================================
 
 int main(int argc,char** argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   //carkin();
 

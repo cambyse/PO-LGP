@@ -37,6 +37,6 @@ std::set< std::string > getEmergingFacts( const std::set< std::string > & inters
 const std::string agentPrefix_     = "__AGENT_";
 const std::string agentSuffix_     = "__";
 const std::string possibleFactsTag_= "EVENTUAL_FACTS";
-const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
-const mlr::String notObservableTag_= "NOT_OBSERVABLE";
+const rai::String beliefStateTag_  = "BELIEF_START_STATE";
+const rai::String notObservableTag_= "NOT_OBSERVABLE";
 } // namespace matp

@@ -4,7 +4,7 @@ namespace tp {
 
 //---------Yens--------------------//
 
-Yens::Yens( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines )
+Yens::Yens( const rai::Array< std::shared_ptr<FOL_World> > & folEngines )
   : folEngines_( folEngines )
   , dijkstra_  ( folEngines )
 {

@@ -16,7 +16,7 @@
 
 //==============KOMOFactory==============================================
 
-void KOMOFactory::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+void KOMOFactory::registerTask( const rai::String & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
 }
@@ -41,7 +41,7 @@ ExtensibleKOMO::ExtensibleKOMO()
 
 }
 
-void ExtensibleKOMO::registerTask( const mlr::String & type, const SymbolGrounder & grounder )
+void ExtensibleKOMO::registerTask( const rai::String & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
 }
@@ -54,7 +54,7 @@ void ExtensibleKOMO::groundTasks( double phase, const Graph& facts, int verbose 
 
     if( n->keys.N && tasks_.count( n->keys.last() ) != 0 )
     {
-      mlr::String type = n->keys.last();
+      rai::String type = n->keys.last();
       tasks_[ type ]( phase, facts, n, this, verbose ); // ground the symbol
     }
     else if( n->keys.N && n->keys.last().startsWith("komo") )

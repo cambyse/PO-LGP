@@ -17,7 +17,7 @@
 namespace mp
 {
 
-TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array< mlr::Array< mlr::KinematicWorld > > > & frames, const std::string & name, uint stepsPerSecs )
+TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const rai::Array< rai::Array< rai::Array< rai::KinematicWorld > > > & frames, const std::string & name, uint stepsPerSecs )
   : stepsPerSecs_( stepsPerSecs )
 {
   // get number of views
@@ -41,14 +41,16 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
   {
     for( uint w = 0; w < leaf->N; ++w )
     {
-      mlr::Array< mlr::KinematicWorld > & traj = (*leaf)( w );
+      rai::Array< rai::KinematicWorld > & traj = (*leaf)( w );
       if( traj.N > 0 )
       {
         std::string windowName = name + std::string( "-world-" ) + std::to_string( w ) + " - " + std::to_string( index ) ;
 
-        views_[ index ] = std::make_shared< OrsPathViewer >( windowName.c_str(),  1.0 / stepsPerSecs_, -0 ); //0.05
+        Var<WorldL> configs;
+        configs.name() = windowName.c_str();
+        views_[ index ] = std::make_shared< KinPathViewer >(configs ,  1.0 / stepsPerSecs_, -0 ); //0.05
 
-        mlr::Array< mlr::KinematicWorld * > configurations( traj.N );
+        rai::Array< rai::KinematicWorld * > configurations( traj.N );
 
         for( uint s = 0; s < traj.N; ++s )
         {
@@ -85,7 +87,7 @@ TrajectoryTreeVisualizer::TrajectoryTreeVisualizer( const mlr::Array< mlr::Array
 //  }
 
 
-  threadOpenModules( true );
+//  threadOpenModules( true );
 }
 
 }

@@ -18,7 +18,7 @@
 #include <memory>
 #include <map>
 
-#include <KOMO/komo.h>
+#include <KOMO/komo-ext.h>
 
 namespace mp
 {
@@ -26,8 +26,8 @@ namespace mp
 //=====ExtensibleKOMO==============================================
 class ExtensibleKOMO;
 
-typedef std::function<void( KOMO *, int verbose )> InitGrounder;
-typedef std::function<void( double time, const std::vector< std::string >& facts, KOMO *, int verbose )> SymbolGrounder;
+typedef std::function<void( KOMO_ext*, int verbose )> InitGrounder;
+typedef std::function<void( double time, const std::vector< std::string >& facts, KOMO_ext*, int verbose )> SymbolGrounder;
 
 class ExtensibleKOMO : public KOMO
 {

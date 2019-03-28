@@ -6,9 +6,9 @@
 
 //===========================================================================
 
-void HeadPoseMap::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
+void HeadPoseMap::phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
 {
-  mlr::Frame *head = G.getFrameByName("manhead");
+  rai::Frame *head = G.getFrameByName("manhead");
   arr posHead, JposHead;
   G.kinematicsPos(posHead, JposHead, head);    // get function to minimize and its jacobian in state G
 
@@ -29,9 +29,9 @@ void HeadPoseMap::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
   if(&J) J = tmp_J;
 }
 
-arr HeadPoseMap::buildTarget( mlr::Vector const& position, double yaw_deg )
+arr HeadPoseMap::buildTarget( rai::Vector const& position, double yaw_deg )
 {
-  mlr::Quaternion target_quat;
+  rai::Quaternion target_quat;
   target_quat.setDeg(yaw_deg, 0.0, 0.0, 1.0);
 
   arr target_arr(dim_);
@@ -44,7 +44,7 @@ arr HeadPoseMap::buildTarget( mlr::Vector const& position, double yaw_deg )
 //===========================================================================
 
 HeadGetSight::HeadGetSight( const arr& objectPosition, const arr& pivotPoint )
-  : TaskMap()
+  : Feature()
   , objectPosition_( objectPosition )
   , pivotPoint_    ( pivotPoint )
   , headViewingDirection_( 0.0, -1.0, 0.0 )
@@ -63,9 +63,9 @@ HeadGetSight::HeadGetSight( const arr& objectPosition, const arr& pivotPoint )
   // determine the pivot point
 }
 
-void HeadGetSight::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
+void HeadGetSight::phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
 {
-  mlr::Frame *head = G.getFrameByName("manhead");
+  rai::Frame *head = G.getFrameByName("manhead");
   arr headPosition, headJPosition;
   G.kinematicsPos( headPosition, headJPosition, head );
 
@@ -111,7 +111,7 @@ void HeadGetSight::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 //===========================================================================
 
 HeadGetSightQuat::HeadGetSightQuat( const arr& objectPosition, const arr& pivotPoint )
-  : TaskMap()
+  : Feature()
   , objectPosition_( objectPosition )
   , pivotPoint_    ( pivotPoint )
   , headViewingDirection_( 0.0, -1.0, 0.0 )
@@ -119,8 +119,8 @@ HeadGetSightQuat::HeadGetSightQuat( const arr& objectPosition, const arr& pivotP
 {
   w1_ = objectPosition_ - pivotPoint_;
   //std::cout << "w1:" << w1_ << std::endl;
-  mlr::Quaternion targetQuat;
-  targetQuat.setDiff( mlr::Vector( 0, -1.0, 0 ), w1_ / norm2( w1_ ) );
+  rai::Quaternion targetQuat;
+  targetQuat.setDiff( rai::Vector( 0, -1.0, 0 ), w1_ / norm2( w1_ ) );
 
   targetQuat_ = conv_quat2arr( targetQuat );
 
@@ -135,9 +135,9 @@ HeadGetSightQuat::HeadGetSightQuat( const arr& objectPosition, const arr& pivotP
   // determine the pivot point
 }
 
-void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
+void HeadGetSightQuat::phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
 {
-  mlr::Frame *head = G.getFrameByName("manhead");
+  rai::Frame *head = G.getFrameByName("manhead");
   arr headPosition, headJPosition;
   G.kinematicsPos( headPosition, headJPosition, head );
 
@@ -191,12 +191,12 @@ void HeadGetSightQuat::phi(arr& y, arr& J, const mlr::KinematicWorld& G, int t)
 
 //===========================================================================
 
-ActiveGetSight::ActiveGetSight( mlr::String const& headName,
-                                        mlr::String const& containerName,
+ActiveGetSight::ActiveGetSight( rai::String const& headName,
+                                        rai::String const& containerName,
                                         arr const& pivotPoint,
                                         arr const& aimingDir,
                                         double preferedDistance )
-  : TaskMap()
+  : Feature()
   , headName_     ( headName )
   , containerName_( containerName )
   , pivotPoint_   ( pivotPoint )
@@ -206,10 +206,10 @@ ActiveGetSight::ActiveGetSight( mlr::String const& headName,
 
 }
 
-void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
+void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G, int t )
 {
   // get Object position and pivot position
-  mlr::Frame * container = G.getFrameByName( containerName_ );
+  rai::Frame * container = G.getFrameByName( containerName_ );
 
   CHECK( container != nullptr, "body not found!" );
 
@@ -223,7 +223,7 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   //std::cout << "world pivotPosition:" << pivotPosition << std::endl;
 
   // get Head position
-  mlr::Frame * head = G.getFrameByName( headName_ );
+  rai::Frame * head = G.getFrameByName( headName_ );
   arr headPosition, headJPosition;
   G.kinematicsPos( headPosition, headJPosition, head );
 
@@ -243,8 +243,8 @@ void ActiveGetSight::phi( arr& y, arr& J, mlr::KinematicWorld const& G, int t )
   arr Jw = aimJPosition - pivotJPosition;
   arr Jw1 = ( Jw * normW - w * JnormW * Jw ) / ( normW * normW );
   //std::cout << "w1:" << w1 << std::endl;
-  //mlr::Quaternion _targetQuat;
-  //_targetQuat.setDiff( mlr::Vector( 0, -1.0, 0 ), w1 );
+  //rai::Quaternion _targetQuat;
+  //_targetQuat.setDiff( rai::Vector( 0, -1.0, 0 ), w1 );
   //arr targetQuat = conv_quat2arr( _targetQuat );
 
   // build u : vector between aiming point and head

@@ -17,14 +17,14 @@
 
 //-----VerticalVelocity----------------//
 
-void VerticalVelocity::phi( arr& y, arr& J, const mlr::KinematicWorld& G, int t )
+void VerticalVelocity::phi( arr& y, arr& J, const rai::KinematicWorld& G, int t )
 {
   arr tmp_y = zeros( 2 );
   arr tmp_J = zeros( 2, G.q.N );
 
   auto body = G.getFrameByName( bobyName_ );
   arr p, Jp;
-  G.kinematicsPos( p, Jp, body, mlr::Vector( 0, 0, 0 ) );
+  G.kinematicsPos( p, Jp, body, rai::Vector( 0, 0, 0 ) );
 
   // commit results
   const double w = 10;

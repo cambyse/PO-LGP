@@ -22,7 +22,7 @@ namespace tp
 class Dijkstra
 {
 public:
-  Dijkstra( const mlr::Array< std::shared_ptr<FOL_World> > & folEngines );
+  Dijkstra( const rai::Array< std::shared_ptr<FOL_World> > & folEngines );
 
   Policy::ptr solve( const POWeightedGraph::ptr & graph, const POGraphNode::ptr & from );
 
@@ -34,7 +34,7 @@ private:
   void checkValuesIntegrity( const Policy::ptr & policy );
 
 private:
-  mlr::Array< std::shared_ptr< FOL_World > > folEngines_;
+  rai::Array< std::shared_ptr< FOL_World > > folEngines_;
   std::vector< double > values_;
   // policy reconstruction
   POWeightedGraph::ptr graph_;

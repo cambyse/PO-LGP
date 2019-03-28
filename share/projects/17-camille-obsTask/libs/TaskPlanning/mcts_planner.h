@@ -68,7 +68,7 @@ private:
 
 private:
   // state
-  mlr::Array< std::shared_ptr<FOL_World> > folWorlds_;
+  rai::Array< std::shared_ptr<FOL_World> > folWorlds_;
   arr bs_;
 
   PONode::ptr root_;
@@ -89,7 +89,7 @@ private:
 
   AlternativeGenerationStrategyType alternativeStrategy_;
 
-  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+  const rai::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
 }

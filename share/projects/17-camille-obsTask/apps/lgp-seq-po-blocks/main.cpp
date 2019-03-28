@@ -13,17 +13,17 @@ void move_blocks()
   komo.setConfigFromFile();
 
   // baxter
-  mlr::String sensorShapeName = "endeffHead";
+  rai::String sensorShapeName = "endeffHead";
   arr sensorDir = ARR( 0.0, 0.0, -1.0 );
-  mlr::String handL = "baxterL";
-  mlr::String handCL = "baxterCL";
+  rai::String handL = "baxterL";
+  rai::String handCL = "baxterCL";
   arr pivotPoint = ARR( 0.05, 0.0, 0.0 );
 
 
   // man
-//  mlr::String sensorShapeName = "manhead";
-//  mlr::String handL = "handL";
-//  mlr::String handCL = "humanL";
+//  rai::String sensorShapeName = "manhead";
+//  rai::String handL = "handL";
+//  rai::String handCL = "humanL";
 
 //  arr sensorDir = ARR( 0.0, -1.0, 0.0 );
 //  arr pivotPoint = ARR( 0.0, -0.05, 0.0 );
@@ -44,10 +44,10 @@ void move_blocks()
 
   ///ALL TIME TASK MAPS
   /*
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_r", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_g", "tableC" ), OT_ineq, NoArr, 1e2);
-  komo.setTask( 0.0, 10.0, new TaskMap_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_o", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_r", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_g", "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
   */
 
   komo.setTask( 0.0, 10.0, new ApproxPointToShape(komo.world, handCL, "tableC" ), OT_ineq, NoArr, 1e2);
@@ -111,7 +111,7 @@ void move_blocks()
 //===========================================================================
 
 int main(int argc,char** argv){
-  mlr::initCmdLine(argc,argv);
+  rai::initCmdLine(argc,argv);
 
   //move_1();
 

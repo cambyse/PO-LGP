@@ -30,7 +30,7 @@ public:
   // getters
   POGraph::ptr getGraph() const { return graph_; }
   POWeightedGraph::ptr getWeightedGraph() const { return weightedGraph_; }
-  mlr::Array< std::shared_ptr<FOL_World> > getFolEngines() const { return folEngines_; }
+  rai::Array< std::shared_ptr<FOL_World> > getFolEngines() const { return folEngines_; }
   Policy::ptr getPolicy() const override;
   MotionPlanningOrder getPlanningOrder() const override;
   bool      terminated () const override { return policy_ != nullptr; }
@@ -49,7 +49,7 @@ private:
 
 private:
   // state
-  mlr::Array< std::shared_ptr<FOL_World> > folEngines_;
+  rai::Array< std::shared_ptr<FOL_World> > folEngines_;
   arr bs_;
   POGraph::ptr graph_;
   POWeightedGraph::ptr weightedGraph_;
@@ -59,7 +59,7 @@ private:
   Skeleton skeleton_;
 
   // constants
-  const mlr::String beliefStateTag_  = "BELIEF_START_STATE";
+  const rai::String beliefStateTag_  = "BELIEF_START_STATE";
 };
 
 }
