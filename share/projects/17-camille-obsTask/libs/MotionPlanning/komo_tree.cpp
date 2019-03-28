@@ -105,18 +105,18 @@ void TreeTask::setCostSpecs(int fromTime,
                             int toTime, int T,
                             const arr& _target,
                             double _prec){
-#if 0 //MARC_TODO!
-  if(&_target) target = _target; else target = {0.};
+//#if 0 //MARC_TODO!
+  //if(&_target) target = _target; else target = {0.};
   if(fromTime<0) fromTime=0;
   CHECK(toTime>=fromTime,"");
-  prec.resize(T).setZero();
-#endif
+  vars.resize(T).setZero();
+//#endif
   for(int local = 0; local < int(branch.local_to_global.size())-2; ++local) // clarify magic number
   {
     if(local >= fromTime && local < toTime)
     {
       auto global = branch.local_to_global[local];
-      prec(global) = _prec;
+      vars(global) = _prec;
     }
   }
 }
@@ -300,6 +300,7 @@ void KOMOTree::Conv_Tree_KOMO_Problem:: phi(arr& phi, arrA& J, arrA& H, uintA& f
       else if(task->target.nd==2) y -= task->target[t];
       y *= task->branch.p * sqrt(task->prec(t));
 #endif
+      y *= task->branch.p;
 
       //write into phi and J
       const auto & qN = komo.configurations(0)->q.N;
@@ -359,7 +360,7 @@ void Conv_KOMO_Tree_ConstrainedProblem::phi(arr& phi, arr& J, arr& H, ObjectiveT
 
   if(&H){
     bool hasFterm = false;
-    if(&tt) hasFterm = (tt.findValue(OT_f) != -1);
+    if(&ot) hasFterm = (ot.findValue(OT_f) != -1);
     if(hasFterm){
       CHECK(H_KOMO.N, "this problem has f-terms -- I need a Hessian!");
       NIY

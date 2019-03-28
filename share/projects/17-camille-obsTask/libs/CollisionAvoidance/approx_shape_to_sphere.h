@@ -37,7 +37,7 @@ struct ApproxShapeToSphere:Feature
     //CHECK( a->shape->mesh_radius < 0.01, "The first shape should be almost a point!" );
   }
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G );
 
   void phiSphere( arr& y, arr& J, const rai::KinematicWorld& G );
 

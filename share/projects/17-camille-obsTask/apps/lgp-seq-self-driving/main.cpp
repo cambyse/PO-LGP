@@ -1,7 +1,7 @@
 #include <KOMO/komo.h>
 
 #include <observation_tasks.h>
-#include <approx_point_to_shape.h>
+//#include <approx_point_to_shape.h>
 #include <axis_bound.h>
 #include <axis_distance.h>
 #include <komo_factory.h>

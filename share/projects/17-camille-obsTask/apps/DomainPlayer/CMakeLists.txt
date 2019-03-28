@@ -17,7 +17,7 @@ find_package(Boost)
 
 find_path( MLR_LIBRARIES_DIR
            NAMES libCore.so
-           PATHS "/home/mtoussai/git/copy/mlr/share/rai/rai" )
+           PATHS "/home/camille/Dev/Phd/mlr_sparse/rai/rai" )
 
 #message( "path Camille: /home/mtoussai/git/copy/mlr/share/rai/rai" )
 

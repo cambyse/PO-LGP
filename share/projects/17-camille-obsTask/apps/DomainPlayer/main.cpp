@@ -4,7 +4,7 @@
 //===========================================================================
 
 void TEST(FOL_World){
-  FOL_World world(FILE("boxes_new.kvg"));
+  FOL_World world("boxes_new.kvg");
 
   auto actions = world.get_actions();
   for(auto& a:actions){ cout <<"DECISION: " <<*a <<endl; }
@@ -29,7 +29,7 @@ void TEST(PlayFOL_World){
   const char *file = "../lgp-learn-self-driving/LGP-merging-1w.g";
   if(rai::argc>1) file = rai::argv[1];
 
-  FOL_World world(FILE(file));
+  FOL_World world(file);
   world.verbose = rai::getParameter<int>("verbose", 2);
 
   for(bool go=true;go;){

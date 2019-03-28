@@ -6,7 +6,7 @@
 
 //===========================================================================
 
-void HeadPoseMap::phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
+void HeadPoseMap::phi(arr& y, arr& J, const rai::KinematicWorld& G )
 {
   rai::Frame *head = G.getFrameByName("manhead");
   arr posHead, JposHead;
@@ -63,7 +63,7 @@ HeadGetSight::HeadGetSight( const arr& objectPosition, const arr& pivotPoint )
   // determine the pivot point
 }
 
-void HeadGetSight::phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
+void HeadGetSight::phi(arr& y, arr& J, const rai::KinematicWorld& G )
 {
   rai::Frame *head = G.getFrameByName("manhead");
   arr headPosition, headJPosition;
@@ -135,7 +135,7 @@ HeadGetSightQuat::HeadGetSightQuat( const arr& objectPosition, const arr& pivotP
   // determine the pivot point
 }
 
-void HeadGetSightQuat::phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
+void HeadGetSightQuat::phi(arr& y, arr& J, const rai::KinematicWorld& G )
 {
   rai::Frame *head = G.getFrameByName("manhead");
   arr headPosition, headJPosition;
@@ -206,7 +206,7 @@ ActiveGetSight::ActiveGetSight( rai::String const& headName,
 
 }
 
-void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G, int t )
+void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G )
 {
   // get Object position and pivot position
   rai::Frame * container = G.getFrameByName( containerName_ );

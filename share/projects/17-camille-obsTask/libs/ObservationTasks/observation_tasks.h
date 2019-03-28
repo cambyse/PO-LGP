@@ -5,7 +5,7 @@
 // reach a given head pose
 struct HeadPoseMap:Feature{
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G );
 
   virtual uint dim_phi(const rai::KinematicWorld& G)
   {
@@ -29,7 +29,7 @@ struct HeadGetSight:Feature{
 
   HeadGetSight( const arr& objectPosition, const arr& pivotPoint );
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G );
 
   virtual uint dim_phi(const rai::KinematicWorld& G)
   {
@@ -58,7 +58,7 @@ struct HeadGetSightQuat:Feature{
 
   HeadGetSightQuat( const arr& objectPosition, const arr& pivotPoint );
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1);
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G );
 
   virtual uint dim_phi(const rai::KinematicWorld& G)
   {
@@ -93,7 +93,7 @@ struct ActiveGetSight:Feature{
                   arr const& aimingDir,
                   double preferedDistance = 0.8 );
 
-  virtual void phi( arr& y, arr& J, rai::KinematicWorld const& G, int t=-1 );
+  virtual void phi( arr& y, arr& J, rai::KinematicWorld const& G );
 
   virtual uint dim_phi( rai::KinematicWorld const& G )
   {

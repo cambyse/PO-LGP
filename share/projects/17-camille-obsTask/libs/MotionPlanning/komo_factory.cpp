@@ -48,7 +48,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
 //==============ExtensibleKOMO==============================================
 
 ExtensibleKOMO::ExtensibleKOMO()
-  : KOMO()
+  : KOMO_ext()
 {
 
 }
@@ -204,6 +204,8 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
 
 arr ExtensibleKOMO::getCostsPerPhase()
 {
+  auto maxPhase = T / stepsPerPhase;
+
   bool wasRun = featureValues.N!=0;
 
   arr phi;

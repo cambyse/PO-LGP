@@ -5,7 +5,7 @@
 
 //-------ApproxShapeToSphere----------------//
 
-void ApproxShapeToSphere::phi( arr& y, arr& J, const rai::KinematicWorld& G, int t )
+void ApproxShapeToSphere::phi( arr& y, arr& J, const rai::KinematicWorld& G )
 {
   arr tmp_y = zeros( dim_phi( G ) );
   arr tmp_J = zeros( dim_phi( G ), G.q.N );

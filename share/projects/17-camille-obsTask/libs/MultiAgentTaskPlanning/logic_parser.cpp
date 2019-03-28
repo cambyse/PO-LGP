@@ -46,7 +46,7 @@ void LogicParser::buildPossibleStartStates( const std::string & description )
 
   if( KB[ possibleFactsTag_.c_str() ] == nullptr )
   {
-    FOL_World fol( FILE( description.c_str() ) );
+    FOL_World fol( description.c_str() );
 
     fol.reset_state();
     auto state = getStateStr( fol );
@@ -61,7 +61,7 @@ void LogicParser::buildPossibleStartStates( const std::string & description )
     for( uint w = 0; w < nWorlds; w++ )
     {
       // build basic fol
-      FOL_World fol( FILE( description.c_str() ) );
+      FOL_World fol( description.c_str() );
 
       // get additional facts
       auto facts = eventualFactsGraph->elem( w );

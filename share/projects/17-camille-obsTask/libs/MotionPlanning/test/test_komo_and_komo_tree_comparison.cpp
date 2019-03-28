@@ -86,7 +86,7 @@ double plan_tree_traj_type_1_with_komo_tree(uint micro_steps, const rai::Kinemat
   komo.run();
   auto time = rai::timerPause();
 
-  //komo.displayTrajectory(0.1, true);
+  komo.displayTrajectory(0.1, true);
 
   return time;
 }
@@ -135,7 +135,8 @@ TEST_F(KomoTreeComparisonFixture, TestKOMOTreeOnTree1Example)
 {
   uint micro_steps = 20;
   double time = 0;
-  EXPECT_NO_THROW( time = plan_tree_traj_type_1_with_komo_tree(micro_steps, kin) );
+  //EXPECT_NO_THROW( time = plan_tree_traj_type_1_with_komo_tree(micro_steps, kin) );
+  plan_tree_traj_type_1_with_komo_tree(micro_steps, kin);
 
   std::cout << "TestKOMOTreeOnTree1Example:"<< time << std::endl;
 }
@@ -145,6 +146,7 @@ TEST_F(KomoTreeComparisonFixture, TestKOMOOnTree1Example)
   uint micro_steps = 20;
   double time = 0;
   EXPECT_NO_THROW( time = plan_tree_traj_type_1_with_komo(micro_steps, kin) );
+  plan_tree_traj_type_1_with_komo(micro_steps, kin);
 
   std::cout << "TestKOMOOnTree1Example:"<< time << std::endl;
 }
@@ -224,7 +226,8 @@ TEST_F(KomoTreeComparisonFixture, TestKOMOTreeOnTree2Example)
 {
   uint micro_steps = 10;
   double time = 0;
-  EXPECT_NO_THROW( time = plan_tree_traj_type_2_with_komo_tree(micro_steps, kin) );
+  plan_tree_traj_type_2_with_komo_tree(micro_steps, kin);
+  //EXPECT_NO_THROW( time = plan_tree_traj_type_2_with_komo_tree(micro_steps, kin) );
 
   std::cout << "TestKOMOTreeOnTree2Example:"<< time << std::endl;
 }
@@ -244,7 +247,11 @@ double plan_linear_traj(uint n_phases, uint micro_steps, KOMO & komo)
 
   rai::timerStart();
   komo.run();
-  return rai::timerPause();
+  auto time = rai::timerPause();
+
+  //komo.displayTrajectory();
+
+  return time;
 }
 
 TEST_F(KomoTreeComparisonFixture, TestKOMOOnLinearTrajectory)

@@ -41,7 +41,6 @@ bool operator<(const Branch& a, const Branch& b);
 
 struct TreeTask : public Objective {
   Branch branch;           ///< way to traverse x allow traj tree opt : link from branch index to x index
-
   TreeTask(Feature *m, const ObjectiveType& type) : Objective(std::shared_ptr<Feature>(m), type){}
   virtual ~TreeTask(){}
 
@@ -63,7 +62,7 @@ class KOMOTree : public KOMO_ext
 {
 public:
   KOMOTree();
-  virtual void run() override;
+  void run();
   virtual bool checkGradients();
   virtual struct Objective* setTask(double startTime, double endTime, Feature* map, ObjectiveType type=OT_sos, const arr& target=NoArr, double prec=1e2, uint order=0);
   TreeTask* addTreeTask(const char* name, Feature *map, const ObjectiveType& termType); ///< manually add a task

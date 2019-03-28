@@ -24,7 +24,7 @@ LogicEngine& LogicEngine::operator=( const LogicEngine & engine ) // assignment 
 void LogicEngine::init( const std::string & file )
 {
   descriptionFile_ = file;
-  engine_ = std::shared_ptr< FOL_World >( new FOL_World( FILE( descriptionFile_.c_str() ) ) );
+  engine_ = std::shared_ptr< FOL_World >( new FOL_World( descriptionFile_.c_str() ) );
 
   parseNumberOfAgents();
   parseActions();

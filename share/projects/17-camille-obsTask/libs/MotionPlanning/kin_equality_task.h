@@ -31,7 +31,7 @@ struct AgentKinEquality:Feature{
 
   }
 
-  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G, int t=-1 )
+  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G )
   {
     y = zeros( dim_ );
     y.setVectorBlock( G.q - q_, 0 );
