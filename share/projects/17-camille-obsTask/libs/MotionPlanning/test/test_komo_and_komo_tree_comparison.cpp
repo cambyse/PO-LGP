@@ -94,15 +94,16 @@ double plan_tree_traj_type_1_with_komo_tree(uint micro_steps, const mlr::Kinemat
 double plan_tree_traj_type_1_with_komo(uint micro_steps, const mlr::KinematicWorld & kin)
 {
   double time = 0;
+  arr op_speed_1{ 0.5, 0, 0 };
+  arr op_speed_2{ 1.5, 0, 0 };
+
   // plan for branch 1
   {
     KOMO komo; komo.setModel(kin);
     komo.setTiming( 2, micro_steps, 1.0, 2 );
 
-    arr op_speed_1{ 0.5, 0, 0 };
-
     komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
-    komo.setTask(0,  1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+    komo.setTask(0, -1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
 
     komo.reset();
 
@@ -116,9 +117,9 @@ double plan_tree_traj_type_1_with_komo(uint micro_steps, const mlr::KinematicWor
     KOMO komo; komo.setModel(kin);
     komo.setTiming( 2, micro_steps, 1.0, 2 );
 
-    arr op_speed_2{ 1.5, 0, 0 };
     komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
-    komo.setTask(0,  1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
+    komo.setTask(0,  1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+    komo.setTask(1,  2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
 
     komo.reset();
 
@@ -220,13 +221,101 @@ double plan_tree_traj_type_2_with_komo_tree(uint micro_steps, const mlr::Kinemat
   return time;
 }
 
+double plan_tree_traj_type_2_with_komo(uint micro_steps, const mlr::KinematicWorld & kin)
+{
+  double time = 0;
+  arr op_speed_1{ 0.5, 0, 0 };
+  arr op_speed_2{ 1.0, 0, 0 };
+  arr op_speed_3{ 1.5, 0, 0 };
+  arr op_speed_4{ 2.0, 0, 0 };
+
+  // plan for branch 1
+  {
+    KOMO komo; komo.setModel(kin);
+    komo.setTiming( 3, micro_steps, 1.0, 2 );
+
+    komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+    komo.setTask(0, -1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+
+    komo.reset();
+
+    //EXPECT_EQ(true, komo.checkGradients());
+    mlr::timerStart();
+    komo.run();
+    time += mlr::timerPause();
+  }
+  // plan for branch 2
+  {
+    KOMO komo; komo.setModel(kin);
+    komo.setTiming( 3, micro_steps, 1.0, 2 );
+
+    komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+    komo.setTask(0,  2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+    komo.setTask(2,  3, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
+
+    komo.reset();
+
+    //EXPECT_EQ(true, komo.checkGradients());
+    mlr::timerStart();
+    komo.run();
+    time += mlr::timerPause();
+  }
+
+  // plan for branch 3
+  {
+    KOMO komo; komo.setModel(kin);
+    komo.setTiming( 3, micro_steps, 1.0, 2 );
+
+    komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+    komo.setTask(0,  1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+    komo.setTask(1,  2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
+    komo.setTask(2,  3, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_3, 1.0, 1);
+
+    komo.reset();
+
+    //EXPECT_EQ(true, komo.checkGradients());
+    mlr::timerStart();
+    komo.run();
+    time += mlr::timerPause();
+  }
+
+  // plan for branch 4
+  {
+    KOMO komo; komo.setModel(kin);
+    komo.setTiming( 3, micro_steps, 1.0, 2 );
+
+    komo.setTask(0, -1, new TaskMap_Transition(komo.world), OT_sumOfSqr, NoArr, 1.0, 2);
+    komo.setTask(0,  1, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_1, 1.0, 1);
+    komo.setTask(1,  2, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_2, 1.0, 1);
+    komo.setTask(2,  3, new TaskMap_Default(posTMT, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sumOfSqr, op_speed_4, 1.0, 1);
+
+    komo.reset();
+
+    //EXPECT_EQ(true, komo.checkGradients());
+    mlr::timerStart();
+    komo.run();
+    time += mlr::timerPause();
+  }
+
+  return 2 * time; // simulate other pass of optimization with additional equality constraint
+}
+
 TEST_F(KomoTreeComparisonFixture, TestKOMOTreeOnTree2Example)
 {
-  uint micro_steps = 10;
+  uint micro_steps = 20;
   double time = 0;
   EXPECT_NO_THROW( time = plan_tree_traj_type_2_with_komo_tree(micro_steps, kin) );
 
   std::cout << "TestKOMOTreeOnTree2Example:"<< time << std::endl;
+}
+
+TEST_F(KomoTreeComparisonFixture, TestKOMOOnTree2Example)
+{
+  uint micro_steps = 20;
+  double time = 0;
+  EXPECT_NO_THROW( time = plan_tree_traj_type_2_with_komo(micro_steps, kin) );
+
+  std::cout << "TestKOMOOnTree2Example:"<< time << std::endl;
 }
 
 /////////////TRAJ//////////////////

@@ -9,6 +9,9 @@ file(GLOB_RECURSE tests *.cpp)
 #find GTest
 find_package(GTest REQUIRED)
 
+#find Eigen
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
 include_directories(${GTEST_INCLUDE_DIRS})
 
 # specify target for each test
@@ -21,6 +24,7 @@ foreach(test ${tests})
                           #${GTEST_LIBRARIES}
                           gtest
                           pthread
+                          Eigen3::Eigen
                           )
 endforeach()
 

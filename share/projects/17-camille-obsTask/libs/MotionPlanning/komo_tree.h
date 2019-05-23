@@ -73,7 +73,7 @@ public:
 private:
   mlr::Array<TreeTask*> tree_tasks;
 
-  struct Conv_Tree_KOMO_Problem : KOMO_Problem{
+  struct Conv_Tree_KOMO_Problem : KOMO_Problem{ // Graph_Problem
     KOMOTree& komo;
     uint dimPhi;
 

@@ -63,6 +63,31 @@ OptNewton::StopCriterion OptNewton::step(){
 
   //compute Delta
   arr R=Hx;
+
+//  cout << "{";
+//  for( uint i = 0; i < R.d0; ++i )
+//  {
+//      for( uint j = 0; j < R.d1; ++j )
+//      {
+//          if( R(i, j) != 0 )
+//          {
+//              cout << "{" << i << "," << j << "," << R(i, j) << "},";
+//          }
+//      }
+//  }
+
+//  cout << "}" << endl;
+
+//  cout << "{";
+//  for( uint i = 0; i < gx.d0; ++i )
+//  {
+//     cout << -gx(i) << ",";
+//  }
+//  cout << "}" << endl;
+
+//  cout << R << endl;
+//  cout << -gx << endl;
+
   if(beta) { //Levenberg Marquardt damping
     if(isRowShifted(R)) for(uint i=0; i<R.d0; i++) R(i,0) += beta; //(R(i,0) is the diagonal in the packed matrix!!)
     else for(uint i=0; i<R.d0; i++) R(i,i) += beta;
