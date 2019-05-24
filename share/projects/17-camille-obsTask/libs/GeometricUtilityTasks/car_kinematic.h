@@ -14,12 +14,9 @@
 
 #pragma once
 
-#include <math_utility.h>
-
-//#include <Kin/taskMap.h>
 #include <Kin/taskMaps.h>
-
 #include <Kin/proxy.h>
+#include <Kin/frame.h>
 
 //===========================================================================
 
@@ -93,11 +90,6 @@ struct CarKinematic:TaskMap{
   {
     CHECK(false,"The phi function taking the list of kinematic worlds should be taken");
   }
-
-//  virtual uint dim_phi(const WorldL& Ks, int t) override
-//  {
-//    return Ks.size();
-//  }
 
   virtual uint dim_phi(const mlr::KinematicWorld& K) override
   {
