@@ -60,6 +60,12 @@ struct Velocity:TaskMap{
     vel.order = 1;
     vel.phi(y_vel, Jvel, Gs, tau, t);
 
+    // get omega quat
+//    arr omega_quat,Jomega_quat;
+//    TaskMap_Default om(quatDiffTMT, object->ID, mlr::Vector(Xoffset,0,0));
+//    om.order = 1;
+//    om.phi(omega_quat, Jomega_quat, Gs, tau, t);
+
     // get orientation vector
     arr y_vec,Jvec;
     TaskMap_Default vec(vecTMT, object->ID, mlr::Vector(1,0,0));

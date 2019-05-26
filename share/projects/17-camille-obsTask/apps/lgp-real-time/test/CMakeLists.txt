@@ -21,7 +21,7 @@ foreach(test ${tests})
     target_link_libraries(${test_name}
                           ${OpenCV_LIBS}
                           GeometricUtilityTasks
-                          MotionPlanning
+                          CollisionAvoidance
                           gtest
                           pthread
                           )
