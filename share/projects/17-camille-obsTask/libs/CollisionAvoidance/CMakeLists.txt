@@ -23,6 +23,9 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 ################################
 #find_package(fcl REQUIRED)
 
+#find OpenCV
+find_package(OpenCV REQUIRED)
+
 #################################
 # Define executable
 #################################
@@ -38,5 +41,6 @@ target_link_libraries(
  Kin
  KOMO
  MathUtility
+ ${OpenCV_LIBS}
  #${fcl_LIBRARIES}
  )

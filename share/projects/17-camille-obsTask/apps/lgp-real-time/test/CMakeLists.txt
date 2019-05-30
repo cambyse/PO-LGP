@@ -6,9 +6,6 @@ string(REPLACE " " "_" project_name ${project_name})
 # list all tests
 file(GLOB_RECURSE tests *.cpp)
 
-#find OpenCV
-find_package(OpenCV REQUIRED)
-
 #find GTest
 find_package(GTest REQUIRED)
 
@@ -19,7 +16,6 @@ foreach(test ${tests})
     get_filename_component(test_name ${test} NAME_WE)
     add_executable(${test_name} ${test})
     target_link_libraries(${test_name}
-                          ${OpenCV_LIBS}
                           GeometricUtilityTasks
                           CollisionAvoidance
                           gtest

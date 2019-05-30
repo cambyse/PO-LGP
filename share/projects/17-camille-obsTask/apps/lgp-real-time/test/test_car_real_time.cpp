@@ -7,10 +7,6 @@
 #include <KOMO/komo.h>
 #include <gtest/gtest.h>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
 #include <car_kinematic.h>
 #include <velocity.h>
 #include <occupancy_grid.h>
@@ -138,7 +134,7 @@ TEST(KOMO_realtime, box)
       //print_configurations(komo);
       std::cout << "optimization time (ms):" << execution_time_us / 1000 << std::endl;
       //    komo.getReport(true);
-      komo.displayTrajectory(0.1);
+      //komo.displayTrajectory(0.1);
       //
     }
   }

@@ -20,12 +20,18 @@
 #include <Kin/taskMap.h>
 #include <Kin/taskMaps.h>
 
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+
 struct CircularCage:TaskMap{
 
   CircularCage( const std::string & object, const arr & center, double radius )
     : object_( object )
     , center_( center )
-    , radius_( radius )
+    , max_radius_( radius )
     , safety_distance_(0.1)
   {
 
@@ -46,7 +52,10 @@ struct CircularCage:TaskMap{
     y.resize(1);//zeros(dim_phi(Gs, t));
 
     //y(0) = pos(0) - 1;
-    y(0) = safety_distance_ - ( radius_ - sqrt(pow(pos(0)-center_(0), 2.0) + pow(pos(1)-center_(1), 2.0)) ) ;
+    const auto radius = sqrt(pow(pos(0)-center_(0), 2.0) + pow(pos(1)-center_(1), 2.0));
+    y(0) = safety_distance_ + radius - max_radius_;
+
+    //std::cout << "y(0)" << y(0) << std::endl;
 
     if(&J)
     {
@@ -66,7 +75,7 @@ struct CircularCage:TaskMap{
 private:
   static const uint dim_ = 1;
   std::string object_;
-  double radius_;
+  double max_radius_;
   arr center_;
   double safety_distance_;
 };
