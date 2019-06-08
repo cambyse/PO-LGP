@@ -6,6 +6,9 @@ project(${project_name})
 
 add_definitions(-std=c++11)
 
+set(MLR_LIBRARIES_DIR "/home/camille/Dev/mlr/rai/lib")
+set(MLR_INCLUDE_DIR "/home/camille/Dev/mlr/rai/rai")
+
 add_subdirectory("libs/GeometricUtilityTasks")
 add_subdirectory("libs/ObservationTasks")
 add_subdirectory("libs/CollisionAvoidance")

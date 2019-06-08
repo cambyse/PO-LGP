@@ -17,7 +17,7 @@ find_package(Boost)
 
 find_path( MLR_LIBRARIES_DIR
            NAMES libCore.so
-           PATHS "/home/camille/Dev/Phd/mlr_sparse/rai/rai" )
+           PATHS "/home/camille/Dev/mlr/rai" )
 
 include_directories( ${MLR_LIBRARIES_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )
