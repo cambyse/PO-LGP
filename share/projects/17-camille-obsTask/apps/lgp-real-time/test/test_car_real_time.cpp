@@ -67,6 +67,7 @@ void init_from_pose(double x, double y, double yaw,  KOMO & komo)
 //  }
 //}
 
+
 TEST(KOMO_realtime, box)
 {
   std::list< std::string > maps;
@@ -76,7 +77,7 @@ TEST(KOMO_realtime, box)
   maps.push_back("data/sensor_map_circle_500.png");
 
   mlr::KinematicWorld kin( "data/LGP-real-time.g" );
-  const uint n_executed_steps = 50;
+  const uint n_executed_steps = 1; //50;
   const uint n_steps_per_phases = 5;
 
   for( auto map: maps )
@@ -89,7 +90,7 @@ TEST(KOMO_realtime, box)
     auto * car_kin = new CarKinematic("car_ego");
     auto * circular_cage = new CircularCage("car_ego", {0.0, 0.0}, 2.5);
     auto * ocg = new OccupancyGrid("car_ego");
-    ocg->setDataFromFile(map);
+    ocg->setMapFromFile(map);
 
     for(auto i = 0; i < n_executed_steps; ++i)
     {
@@ -99,9 +100,9 @@ TEST(KOMO_realtime, box)
       komo.setTiming(3.0, n_steps_per_phases, 1);
 
       // optimization objectives
-      komo.setSquaredQAccelerations();
-      komo.setTask(0, -1, vel, OT_sumOfSqr, NoArr, 1e2, 1);
-      komo.setTask(0, -1, car_kin, OT_eq, NoArr, 1e2, 1);
+      //komo.setSquaredQAccelerations();
+      //komo.setTask(0, -1, vel, OT_sumOfSqr, NoArr, 1e2, 1);
+      //komo.setTask(0, -1, car_kin, OT_eq, NoArr, 1e2, 1);
       //komo.setTask(0, -1, circular_cage, OT_ineq, NoArr, 1e2, 1);
       komo.setTask(0, -1, ocg, OT_ineq, NoArr, 1e2, 1);
 
@@ -109,9 +110,9 @@ TEST(KOMO_realtime, box)
       auto pose = first_traj_poses.back();
       init_from_pose(pose(0), pose(1), pose(2), komo);
 
-      //komo.world.watch();
-      //komo.checkGradients();
-
+      komo.world.watch();
+      komo.checkGradients();
+      continue;
       //DEBUG
       //std::cout << "init:" << std::endl;
       //print_configurations(komo);
@@ -146,14 +147,16 @@ TEST(KOMO_realtime, circle_caging)
 
   auto * circular_cage = new CircularCage("car_ego", {0.0, 0.0}, 2.5);
   auto * ocg = new OccupancyGrid("car_ego");
-  ocg->setDataFromFile("data/sensor_map_circle_500.png");
+
+  ocg->setMapFromFile("data/sensor_map_circle_500.png");
 
   std::list< arr > test_poses;
-  test_poses.push_back({0.0, 5.5, 0.0});
-  test_poses.push_back({3.5, 0.0, 0.0});
+
   test_poses.push_back({0.0, 0.0, 0.0});
   test_poses.push_back({0.5, 0.5, 0.0});
   test_poses.push_back({1.5, 0.5, 0.0});
+  test_poses.push_back({0.0, 5.5, 0.0});
+  test_poses.push_back({3.5, 0.0, 0.0});
 
   for(auto pose : test_poses)
   {

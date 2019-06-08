@@ -28,11 +28,11 @@
 
 struct CircularCage:TaskMap{
 
-  CircularCage( const std::string & object, const arr & center, double radius )
+  CircularCage( const std::string & object, const arr & center, double radius, double safety_distance = 0.5 )
     : object_( object )
     , center_( center )
     , max_radius_( radius )
-    , safety_distance_(0.1)
+    , safety_distance_( safety_distance )
   {
 
   }
@@ -83,28 +83,108 @@ private:
 void show_img(const std::string & window_name, const cv::Mat & mat)
 {
   cv::Mat normalized;
-  cv::normalize(mat, normalized, 0, 1.0, cv::NORM_MINMAX);
+  if(mat.type() == CV_8U)
+    normalized = mat;
+  else
+    cv::normalize(mat, normalized, 0, 1.0, cv::NORM_MINMAX);
   cv::flip(normalized, normalized, 0);
   imshow(window_name, normalized);
 }
 
+class SubPixAccessor
+{
+  uint i_, j_;
+  float weight_tl_, weight_tr_, weight_bl_, weight_br_;
+  bool on_image_;
+public:
+
+  SubPixAccessor(uint rows, uint cols, double cell_size, double x, double y)
+  {
+    float float_i = 0.5 * rows + y / cell_size;
+    float float_j = 0.5 * cols + x / cell_size;
+
+    i_ = uint(float_i);
+    j_ = uint(float_j);
+
+    auto d_i = float_i - i_;
+    auto d_j = float_j - j_;
+
+    weight_tl_ = (1.0 - d_j) * (1.0 - d_i);
+    weight_tr_ = (d_j)       * (1.0 - d_i);
+    weight_bl_ = (1.0 - d_j) * (d_i);
+    weight_br_ = (d_j)       * (d_i);
+
+    on_image_= i_ >= 0 && i_ < rows -1 && j_ >= 0 && j_ < cols - 1;
+  }
+
+  double get_value(const cv::Mat & mat) const
+  {
+    return weight_tl_ * mat.at<float>(i_, j_) +
+    weight_tr_ * mat.at<float>(i_, j_+1) +
+    weight_bl_ * mat.at<float>(i_+1, j_) +
+    weight_br_ * mat.at<float>(i_+1, j_+1);
+  }
+
+  bool on_image() const
+  {
+    return on_image_;
+  }
+
+  uint i() const { return i_; }
+  uint j() const { return j_; }
+};
+
 struct OccupancyGrid:TaskMap{
 
-  OccupancyGrid( const std::string & object )
+  OccupancyGrid( const std::string & object, double safety_distance = 0.5 )
     : object_( object )
-    , cell_size_(0.01)
-    , safety_distance_(0.1)
+    , cell_size_(0.025)
+    , safety_distance_(safety_distance)
   {
 
   }
 
   double cell_size() const { return cell_size_; }
 
-  void setDataFromFile(const std::string & filename)
+  void computeDistanceMap()
   {
     const int delta = 0;
     const int ddepth = -1;
 
+    cv::distanceTransform(sensor_map_bw_, dist_, CV_DIST_L2, CV_DIST_MASK_PRECISE); //
+    cv::Sobel(dist_, grad_x_, ddepth, 1, 0, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
+    cv::Sobel(dist_, grad_y_, ddepth, 0, 1, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
+
+    cv::distanceTransform(sensor_map_bw_inv_, dist_inv_, CV_DIST_L2, CV_DIST_MASK_PRECISE); //CV_DIST_L2
+    cv::Sobel(dist_inv_, grad_x_inv_, ddepth, 1, 0, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
+    cv::Sobel(dist_inv_, grad_y_inv_, ddepth, 0, 1, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
+
+    if(1)
+    {
+//      std::cout << dist_.type() << " val:" << dist_inv_.at<float>(150,147) << std::endl;
+//      std::cout << dist_.type() << " val:" << dist_inv_.at<float>(149,147) << std::endl;
+//      std::cout << grad_x_.at<float>(500,500) << std::endl;
+//      auto dx = dist_inv_.at<float>(150,147) - dist_inv_.at<float>(149,147);
+//      std::cout << "dx:" << dx << std::endl;
+//      std::cout << grad_x_.type() << " grad_x:" << " " << grad_x_inv_.at<float>(150,147) << std::endl;
+//      std::cout << grad_y_.type() << " grad_y:" << " " << grad_y_inv_.at<float>(149,147) << std::endl;
+
+//      show_img("Normal", sensor_map_bw_);
+//      show_img("Inverted", sensor_map_bw_inv_);
+//        show_img("Distance Transform Image", dist_);
+//        show_img("Gradient x Image", grad_x_);
+//        show_img("Gradient y Image", grad_y_);
+
+//      show_img("Distance Transform Image Inv", dist_inv_);
+//      show_img("Gradient x Image Inv", grad_x_inv_);
+//      show_img("Gradient y Image Inv", grad_y_inv_);
+
+//      cv::waitKey(1);
+    }
+  }
+
+  void setMapFromFile(const std::string & filename)
+  {
     cv::Mat sensor_map = cv::imread(filename.c_str());
     cv::flip(sensor_map, sensor_map, 0);
     cv::cvtColor(sensor_map, sensor_map_bw_, cv::COLOR_BGR2GRAY);
@@ -112,35 +192,15 @@ struct OccupancyGrid:TaskMap{
     cv::threshold(sensor_map_bw_, sensor_map_bw_,     127, 255, cv::THRESH_BINARY);
     cv::threshold(sensor_map_bw_, sensor_map_bw_inv_, 127, 255, cv::THRESH_BINARY_INV);
 
-    cv::distanceTransform(sensor_map_bw_, dist_, CV_DIST_L2, 3);//, 2, 3);
-    cv::Sobel(dist_, grad_x_, ddepth, 1, 0, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
-    cv::Sobel(dist_, grad_y_, ddepth, 0, 1, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
+    computeDistanceMap();
+  }
 
-    cv::distanceTransform(sensor_map_bw_inv_, dist_inv_, CV_DIST_L2, 3);//, 2, 3);
-    cv::Sobel(dist_inv_, grad_x_inv_, ddepth, 1, 0, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
-    cv::Sobel(dist_inv_, grad_y_inv_, ddepth, 0, 1, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
+  void setMap(const cv::Mat & sensor_map)
+  {
+    cv::threshold(sensor_map, sensor_map_bw_,     127, 255, cv::THRESH_BINARY);
+    cv::threshold(sensor_map_bw_, sensor_map_bw_inv_, 127, 255, cv::THRESH_BINARY_INV);
 
-    if(0)
-    {
-      std::cout << dist_.type() << " val:" << dist_inv_.at<float>(150,147) << std::endl;
-      std::cout << dist_.type() << " val:" << dist_inv_.at<float>(149,147) << std::endl;
-      auto dx = dist_inv_.at<float>(150,147) - dist_inv_.at<float>(149,147);
-      std::cout << "dx:" << dx << std::endl;
-      std::cout << grad_x_.type() << " grad_x:" << " " << grad_x_inv_.at<float>(150,147) << std::endl;
-      std::cout << grad_y_.type() << " grad_y:" << " " << grad_y_inv_.at<float>(149,147) << std::endl;
-
-//      show_img("Normal", sensor_map_bw_);
-//      show_img("Inverted", sensor_map_bw_inv_);
-//      show_img("Distance Transform Image", dist_);
-//      show_img("Gradient x Image", grad_x_);
-//      show_img("Gradient y Image", grad_y_);
-
-//      show_img("Distance Transform Image Inv", dist_inv_);
-//      show_img("Gradient x Image Inv", grad_x_inv_);
-//      show_img("Gradient y Image Inv", grad_y_inv_);
-
-      cv::waitKey();
-    }
+    computeDistanceMap();
   }
 
   virtual mlr::String shortTag(const mlr::KinematicWorld& G)
@@ -177,51 +237,50 @@ struct OccupancyGrid:TaskMap{
 
   std::vector<double> get_distance_info(double x, double y) const
   {
-    uint i, j;
-    convert(x, y, i, j);
+    SubPixAccessor pix(dist_.rows, dist_.cols, cell_size_, x, y);
 
     double dist = 0;
     double gx = 0;
     double gy = 0;
 
-    if( on_map(i, j) )
+    if( pix.on_image() )
     {
-      auto d = dist_.at<float>(i, j);
-      auto d_inv = dist_inv_.at<float>(i, j);
+      auto d = pix.get_value(dist_);
+      auto d_inv = pix.get_value(dist_inv_);
 
-      auto grad_x = grad_x_.at<float>(i, j);
-      auto grad_x_inv = grad_x_inv_.at<float>(i, j);
+      auto grad_x = pix.get_value(grad_x_);
+      auto grad_x_inv = pix.get_value(grad_x_inv_);
 
-      auto grad_y = grad_y_.at<float>(i, j);
-      auto grad_y_inv = grad_y_inv_.at<float>(i, j);
+      auto grad_y = pix.get_value(grad_y_);
+      auto grad_y_inv = pix.get_value(grad_y_inv_);
 
       dist = cell_size_ * (d - d_inv);
-      gx = grad_x - grad_x_inv;
-      gy = grad_y - grad_y_inv;
+      gx = (grad_x - grad_x_inv);
+      gy = (grad_y - grad_y_inv);
     }
     else // not fully exact here, just tries to go back on closest point on map
     {
       double dx = 0;
       double dy = 0;
-      if(i < 0)
+      if(pix.i() < 0)
       {
-        dy = cell_size_ * i;
+        dy = cell_size_ * pix.i();
         //gy = 1;
       }
-      else if( i > dist_.rows )
+      else if( pix.i() > dist_.rows )
       {
-        dy = -cell_size_ * (i - dist_.rows);
+        dy = -cell_size_ * (pix.i() - dist_.rows);
         gy = -1;
       }
 
-      if(j < 0)
+      if(pix.j() < 0)
       {
-        dx = cell_size_ * j;
+        dx = cell_size_ * pix.j();
         gx = 1;
       }
-      else if( j > dist_.cols )
+      else if( pix.j() > dist_.cols )
       {
-        dx = -cell_size_ * (j - dist_.cols);
+        dx = -cell_size_ * (pix.j() - dist_.cols);
         gx = -1;
       }
 
@@ -236,16 +295,31 @@ struct OccupancyGrid:TaskMap{
 
 private:
 
-  bool on_map(int i, int j) const
+  void convert(double x, double y, uint & i, uint & j, float & d_i, float & d_j) const
   {
-    return i >= 0 && i < dist_.rows && j >= 0 && j < dist_.cols;
+    float float_i = 0.5 * dist_.rows + y / cell_size_;
+    float float_j = 0.5 * dist_.cols + x / cell_size_;
+
+    i = uint(float_i);
+    j = uint(float_j);
+
+    d_i = float_i - i;
+    d_j = float_j - j;
   }
 
-  void convert(double x, double y, uint & i, uint & j) const
+  double get_value_at(const cv::Mat & mat, uint i, uint j, float d_i, float d_j) const
   {
-    i = 0.5 * dist_.rows + y / cell_size_;
-    j = 0.5 * dist_.cols + x / cell_size_;
+    float weight_tl = (1.0 - d_j) * (1.0 - d_i);
+    float weight_tr = (d_j)       * (1.0 - d_i);
+    float weight_bl = (1.0 - d_j) * (d_i);
+    float weight_br = (d_j)       * (d_i);
+
+    return weight_tl * mat.at<float>(i, j) +
+    weight_tr * mat.at<float>(i, j+1) +
+    weight_bl * mat.at<float>(i+1, j) +
+    weight_br * mat.at<float>(i+1, j+1);
   }
+
 
 private:
   static const uint dim_ = 1;
