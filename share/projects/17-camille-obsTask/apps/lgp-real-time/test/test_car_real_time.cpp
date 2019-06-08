@@ -129,7 +129,7 @@ TEST(KOMO_realtime, box)
       first_traj_poses.push_back({x, y, yaw});
 
       // ASSERT NO COLLISIONS
-      EXPECT_TRUE( ocg->get_distance_info(x, y)[0] > 0.0 );
+      EXPECT_TRUE( ocg->get_distance_info({x, y})[0] > 0.0 );
 
       // DEBUG
       //print_configurations(komo);

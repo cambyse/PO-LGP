@@ -140,6 +140,7 @@ struct OccupancyGrid:TaskMap{
     : object_( object )
     , cell_size_(0.025)
     , safety_distance_(safety_distance)
+    , map_center_position_(zeros(2))
   {
 
   }
@@ -195,8 +196,10 @@ struct OccupancyGrid:TaskMap{
     computeDistanceMap();
   }
 
-  void setMap(const cv::Mat & sensor_map)
+  void setMap(const cv::Mat & sensor_map, const arr & map_center_position)
   {
+    map_center_position_ = map_center_position;
+
     cv::threshold(sensor_map, sensor_map_bw_,     127, 255, cv::THRESH_BINARY);
     cv::threshold(sensor_map_bw_, sensor_map_bw_inv_, 127, 255, cv::THRESH_BINARY_INV);
 
@@ -215,9 +218,9 @@ struct OccupancyGrid:TaskMap{
     arr pos, Jpos;
     G.kinematicsPos(pos, Jpos, object);
 
-    y.resize(1);//zeros(dim_phi(Gs, t));
+    y.resize(1);
 
-    auto dist_info = get_distance_info(pos(0), pos(1));
+    auto dist_info = get_distance_info(pos);
 
     y(0) = safety_distance_ - dist_info[0];
 
@@ -235,8 +238,11 @@ struct OccupancyGrid:TaskMap{
     return dim_;
   }
 
-  std::vector<double> get_distance_info(double x, double y) const
+  std::vector<double> get_distance_info(const arr & global_pos) const
   {
+    const auto x = global_pos(0) - map_center_position_(0);
+    const auto y = global_pos(1) - map_center_position_(1);
+
     SubPixAccessor pix(dist_.rows, dist_.cols, cell_size_, x, y);
 
     double dist = 0;
@@ -246,17 +252,26 @@ struct OccupancyGrid:TaskMap{
     if( pix.on_image() )
     {
       auto d = pix.get_value(dist_);
-      auto d_inv = pix.get_value(dist_inv_);
 
-      auto grad_x = pix.get_value(grad_x_);
-      auto grad_x_inv = pix.get_value(grad_x_inv_);
+      if(d>0)
+      {
+        auto grad_x = pix.get_value(grad_x_);
+        auto grad_y = pix.get_value(grad_y_);
 
-      auto grad_y = pix.get_value(grad_y_);
-      auto grad_y_inv = pix.get_value(grad_y_inv_);
+        dist = cell_size_ * (d);
+        gx = (grad_x);
+        gy = (grad_y);
+      }
+      else
+      {
+        auto d_inv = pix.get_value(dist_inv_);
+        auto grad_x_inv = pix.get_value(grad_x_inv_);
+        auto grad_y_inv = pix.get_value(grad_y_inv_);
 
-      dist = cell_size_ * (d - d_inv);
-      gx = (grad_x - grad_x_inv);
-      gy = (grad_y - grad_y_inv);
+        dist = cell_size_ * (- d_inv);
+        gx = (- grad_x_inv);
+        gy = (- grad_y_inv);
+      }
     }
     else // not fully exact here, just tries to go back on closest point on map
     {
@@ -326,7 +341,7 @@ private:
   const std::string object_;
   const double cell_size_;
   const double safety_distance_;
-
+  arr map_center_position_;
   cv::Mat sensor_map_bw_, sensor_map_bw_inv_, dist_, dist_inv_, grad_x_, grad_y_, grad_x_inv_, grad_y_inv_;
 };
 
