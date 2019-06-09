@@ -28,6 +28,8 @@ void LogicEngine::init( const std::string & file )
 
   parseNumberOfAgents();
   parseActions();
+
+  engine_->reset_state();
 }
 
 uint LogicEngine::totalActionsNumber( uint agentId ) const

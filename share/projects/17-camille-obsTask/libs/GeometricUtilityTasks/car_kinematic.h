@@ -36,7 +36,7 @@ struct CarKinematic:Feature{
     return rai::String("CarKinematic");
   }
 
-  virtual void phi(arr& y, arr& J, const WorldL& Gs, double tau, int t=-1) override
+  virtual void phi(arr& y, arr& J, const WorldL& Gs) override
   {
     //Feature::phi(y,J,Ks,tau,t);
     CHECK(order==1,"");
@@ -58,13 +58,13 @@ struct CarKinematic:Feature{
     arr y_vel,Jvel;
     TM_Default vel(TMT_posDiff, object->ID, rai::Vector(Xoffset,0,0));
     vel.order = 1;
-    vel.phi(y_vel, Jvel, Gs, tau, t);
+    vel.__phi(y_vel, Jvel, Gs);
 
     // get orientation vector
     arr y_vec,Jvec;
     TM_Default vec(TMT_vec, object->ID, rai::Vector(0,1,0));
     vec.order = 0;
-    vec.phi(y_vec, Jvec, *Gs(1), t);
+    vec.phi(y_vec, Jvec, *Gs(1));
 
     // commit results
     y(0) = scalarProduct(y_vel, y_vec);
@@ -89,7 +89,7 @@ struct CarKinematic:Feature{
     }
   }
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1) override
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G) override
   {
     CHECK(false,"The phi function taking the list of kinematic worlds should be taken");
   }

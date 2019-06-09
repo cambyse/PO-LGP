@@ -51,12 +51,12 @@ void GraphPlanner::solve()
 
   //decidedGraph_.saveGraphToFile( "decided.gv" );
 
-  buildSkeleton();
+  buildPolicy();
 }
 
-void GraphPlanner::integrate( const Skeleton & policy )
+void GraphPlanner::integrate( const Policy & policy )
 {
-  std::queue< Skeleton::GraphNodeTypePtr > Q;
+  std::queue< Policy::GraphNodeTypePtr > Q;
   Q.push( policy.root() );
 
   auto decisionGraphNodes = graph_.nodes();
@@ -68,7 +68,7 @@ void GraphPlanner::integrate( const Skeleton & policy )
 
     if( n->id() == 0 )
     {
-      CHECK_EQ( n->children().size(), 1, "wrong skeleton" );
+      CHECK_EQ( n->children().size(), 1, "wrong Policy" );
 
       for( auto c : n->children() )
       {
@@ -135,9 +135,9 @@ bool GraphPlanner::terminated() const
   return false;
 }
 
-Skeleton GraphPlanner::getPolicy() const
+Policy GraphPlanner::getPolicy() const
 {
-  return skeleton_;
+  return policy_;
 }
 
 double GraphPlanner::reward( uint from, uint to ) const
@@ -171,9 +171,9 @@ void GraphPlanner::initializeRewards()
   }
 }
 
-SkeletonNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData, uint id ) const
+PolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData, uint id ) const
 {
-  SkeletonNodeData pData;
+  PolicyNodeData pData;
 
   pData.beliefState = dData.beliefState;
   pData.markovianReturn = r0_;
@@ -193,20 +193,20 @@ void GraphPlanner::decideOnDecisionGraphCopy()
   decidedGraph_ = DecideOnGraphAlgorithm::process( graph_, values_, rewards_ );
 }
 
-void GraphPlanner::buildSkeleton()
+void GraphPlanner::buildPolicy()
 {
-  std::cout << "GraphPlanner::buildSkeleton.." << std::endl;
+  std::cout << "GraphPlanner::buildPolicy.." << std::endl;
 
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
-  std::queue< std::pair< NodeTypePtr, Skeleton::GraphNodeTypePtr > > Q;
+  std::queue< std::pair< NodeTypePtr, Policy::GraphNodeTypePtr > > Q;
 
   // create policy root node from decision graph node
   auto root = decidedGraph_.root();
-  SkeletonNodeData rootData;
+  PolicyNodeData rootData;
   rootData.beliefState = root->data().beliefState;
 
-  auto policyRoot = GraphNode< SkeletonNodeData >::root( rootData );
+  auto policyRoot = GraphNode< PolicyNodeData >::root( rootData );
 
   Q.push( std::make_pair( decidedGraph_.root(), policyRoot ) );
 
@@ -223,7 +223,7 @@ void GraphPlanner::buildSkeleton()
     for( auto v : u->children() )
     {
       auto edge = decidedGraph_.edges()[ v->id() ][ u->id() ];
-      SkeletonNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
+      PolicyNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
       data.p = edge.first;
       data.leadingKomoArgs = decisionArtifactToKomoArgs( edge.second );
       data.markovianReturn = rewards_[ fromToIndex( u->id(), v->id() ) ];
@@ -239,10 +239,10 @@ void GraphPlanner::buildSkeleton()
     }
   }
 
-  skeleton_ = Skeleton( policyRoot );
-  skeleton_.setValue( values_[ decisionGraph().root()->id() ] );
+  policy_ = Policy( policyRoot );
+  policy_.setValue( values_[ decisionGraph().root()->id() ] );
 
-  std::cout << "GraphPlanner::buildSkeleton.. end (value=" << skeleton_.value() << ")" << std::endl;
+  std::cout << "GraphPlanner::buildPolicy.. end (value=" << policy_.value() << ")" << std::endl;
 }
 
 uint GraphPlanner::fromToIndex( uint from, uint to ) const

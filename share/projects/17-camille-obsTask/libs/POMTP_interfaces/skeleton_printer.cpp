@@ -2,9 +2,9 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
-void SkeletonPrinter::print( const Skeleton & skeleton )
+void PolicyPrinter::print( const Policy & Policy )
 {
-  if( ! skeleton.root() )
+  if( ! Policy.root() )
   {
     return;
   }
@@ -12,9 +12,9 @@ void SkeletonPrinter::print( const Skeleton & skeleton )
   ss_ << "digraph g{" << std::endl;
   ss_ << "bgcolor=\"transparent\"";
   ss_ << "{" << std::endl;
-  ss_ << skeleton.root()->id() << " [style=filled, fillcolor=blue]" << std::endl;
+  ss_ << Policy.root()->id() << " [style=filled, fillcolor=blue]" << std::endl;
 
-  for( auto weakN : skeleton.leafs() )
+  for( auto weakN : Policy.leafs() )
   {
     auto n = weakN.lock();
 
@@ -25,12 +25,12 @@ void SkeletonPrinter::print( const Skeleton & skeleton )
   }
   ss_ << "}" << std::endl;
 
-  saveGraphFrom( skeleton.root() );
+  saveGraphFrom( Policy.root() );
 
   ss_ << "}" << std::endl;
 }
 
-void SkeletonPrinter::saveGraphFrom( const Skeleton::GraphNodeType::ptr & node )
+void PolicyPrinter::saveGraphFrom( const Policy::GraphNodeType::ptr & node )
 {
   for( auto c : node->children() )
   {

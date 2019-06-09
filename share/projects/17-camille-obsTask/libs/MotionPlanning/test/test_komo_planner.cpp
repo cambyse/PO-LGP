@@ -313,7 +313,7 @@ TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithAtEachStageFor
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -327,7 +327,7 @@ TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithAtEachStageFor
 {
   planner.setKin(  "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -381,35 +381,35 @@ TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent1WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent1WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent1WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -423,35 +423,35 @@ TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -465,35 +465,35 @@ TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents1WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents1WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents1WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -506,7 +506,7 @@ TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents1WTweakedDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-1w-tweaked.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -520,35 +520,35 @@ TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents2WMarkovianPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "markovJointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents2WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
 TEST_F(KomoPlannerDoubleAgentFixture, PlanTwoAgents2WDisplay)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-double-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
@@ -577,14 +577,14 @@ TEST_F(KomoPlannerSingleAgentFixture, QResultSetAfterJointPathPlanning1W)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-1w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
   EXPECT_EQ( policy.qresult().nWorlds(), 1 );
   EXPECT_GE( policy.qresult().nSteps(0), 1 );
 }
@@ -594,14 +594,14 @@ TEST_F(KomoPlannerSingleAgentFixture, QResultSetAfterJointPathPlanning2W)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
-  Skeleton policy;
+  Policy policy;
   policy.load( "data/LGP-overtaking-single-agent-2w.po" );
 
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_EQ( policy.status(), Skeleton::INFORMED );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
   EXPECT_EQ( policy.qresult().nWorlds(), 2 );
   EXPECT_GE( policy.qresult().nSteps(1), 1 );
 }

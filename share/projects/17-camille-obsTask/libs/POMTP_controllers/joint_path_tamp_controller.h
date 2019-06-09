@@ -24,6 +24,6 @@ public:
   {
 
   }
-  Skeleton plan( const TAMPlanningConfiguration & ) override;
+  Policy plan( const TAMPlanningConfiguration & ) override;
   //Skeleton plan( uint maxIt, bool saveInformed, bool saveFinal, bool show, int secs = 0 ) override;
 };

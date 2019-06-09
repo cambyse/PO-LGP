@@ -22,12 +22,12 @@
 
 //===========================================================================
 
-void init( KOMO * komo, int verbose )
+void init( KOMO_ext * komo, int verbose )
 {
   // ego car
   arr ego_start_speed{ 1.0, 0, 0 }; // 10 m/s
   komo->setVelocity( 0.0, 0.5, "car_ego", NULL, OT_sos, ego_start_speed );
-  komo->setTask( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
+  komo->addObjective( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
 
   // car speeds
   arr desired_speed{ 1.0, 0, 0 };
@@ -38,25 +38,25 @@ void init( KOMO * komo, int verbose )
   komo->setVelocity( 0.0, -1, "car_5", NULL, OT_eq, desired_speed );
 
 //  const auto radius = 0.35;
-//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_1", "car_2", radius ), OT_ineq );
-//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_2", "car_3", radius ), OT_ineq );
-//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_3", "car_4", radius ), OT_ineq );
-//  komo->setTask( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
+//  komo->addObjective( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_1", "car_2", radius ), OT_ineq );
+//  komo->addObjective( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_2", "car_3", radius ), OT_ineq );
+//  komo->addObjective( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_3", "car_4", radius ), OT_ineq );
+//  komo->addObjective( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
 }
 
-void groundContinue( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
+void groundContinue( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
 }
 
-void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO * komo, int verbose )
+void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   auto car_before = facts[0];
   auto car_next = facts[1];
 
-  komo->setTask( phase+0.8, -1, new AxisDistance( std::string("car_ego"),  std::string("lane_2"), 0.05, AxisDistance::Y, AxisDistance::MAX, AxisDistance::ABS ), OT_ineq );
+  komo->addObjective( phase+0.8, -1, new AxisDistance( std::string("car_ego"),  std::string("lane_2"), 0.05, AxisDistance::Y, AxisDistance::MAX, AxisDistance::ABS ), OT_ineq );
 
-  komo->setTask( phase, -1, new AxisDistance( std::string("car_ego"), car_next, -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
-  komo->setTask( phase, -1, new AxisDistance( car_before, std::string("car_ego"), -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
+  komo->addObjective( phase, -1, new AxisDistance( std::string("car_ego"), car_next, -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
+  komo->addObjective( phase, -1, new AxisDistance( car_before, std::string("car_ego"), -1.2, AxisDistance::X, AxisDistance::MAX, AxisDistance::SIGNED ), OT_ineq );
 
   arr ego_desired_speed{ 1.0, 0, 0 }; // approx 50 kmh
   komo->setVelocity( phase+0.8, -1, "car_ego", NULL, OT_sos, ego_desired_speed );
@@ -65,8 +65,8 @@ void groundMergeBetween( double phase, const std::vector< std::string >& facts, 
 //  komo->setPosition( phase+0.8, -1, car_before.c_str(), "car_ego", OT_sos, {-2.0, 0, 0} );
 
 //  const auto radius = 0.1;
-//  komo->setTask( phase, -1, new ApproxShapeToSphere( komo->world, "car_ego", car_next.c_str(),   radius ), OT_ineq );
-//  komo->setTask( phase, -1, new ApproxShapeToSphere( komo->world, car_before.c_str(), "car_ego", radius ), OT_ineq );
+//  komo->addObjective( phase, -1, new ApproxShapeToSphere( komo->world, "car_ego", car_next.c_str(),   radius ), OT_ineq );
+//  komo->addObjective( phase, -1, new ApproxShapeToSphere( komo->world, car_before.c_str(), "car_ego", radius ), OT_ineq );
 
   //setKeepDistanceTask( phase+1, -1, komo, car_successors );
   //std::cout << "merge between " << car_before << " and " << car_next << std::endl;
@@ -84,11 +84,11 @@ std::vector< double > randomVector( uint dim )
   return vec;
 }
 
-void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std::string & filename, const std::list< std::pair< std::vector< double >, Skeleton > > & deltasToSkeletons )
+void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std::string & filename, const std::list< std::pair< std::vector< double >, Policy > > & deltasToSkeletons )
 {
   std::ofstream of;
   of.open( outputFolderPath + "/" + filename );
-  std::unordered_set< Skeleton, SkeletonHasher > skeletons;
+  std::unordered_set< Policy, PolicyHasher > skeletons;
 
   // header
   const auto witnessSkeleton = deltasToSkeletons.begin()->second;
@@ -166,7 +166,7 @@ void saveDataToFileveDataToFile( const std::string & outputFolderPath, const std
 
 void plan( const std::string & outputFolderPath )
 {
-  std::list< std::pair< std::vector< double >, Skeleton > > deltasToSkeletons;
+  std::list< std::pair< std::vector< double >, Policy > > deltasToSkeletons;
 
   for( uint i = 0; i < 1000; ++i )
   {
@@ -254,9 +254,9 @@ std::list< std::vector< double > > parseDeltas( const std::string & filepath )
   return deltas;
 }
 
-std::unordered_set< Skeleton, SkeletonHasher > parseSkeletons( const std::string & folderpath )
+std::unordered_set< Policy, PolicyHasher > parseSkeletons( const std::string & folderpath )
 {
-  std::unordered_set< Skeleton, SkeletonHasher > skeletons;
+  std::unordered_set< Policy, PolicyHasher > skeletons;
 
   auto p = boost::filesystem::path( folderpath );
 
@@ -266,7 +266,7 @@ std::unordered_set< Skeleton, SkeletonHasher > parseSkeletons( const std::string
 
     if( filepath.find(".po") != std::string::npos )
     {
-      Skeleton ske; ske.load( filepath );
+      Policy ske; ske.load( filepath );
       skeletons.insert( ske );
     }
   }
@@ -291,7 +291,7 @@ std::string getKinFilepath( const std::string & folderpath )
   return "";
 }
 
-void saveSkeletonValuesToFile( const std::string filename, const std::map< std::vector< double >, std::unordered_set< Skeleton, SkeletonHasher > > & deltasToValues )
+void saveSkeletonValuesToFile( const std::string filename, const std::map< std::vector< double >, std::unordered_set< Policy, PolicyHasher > > & deltasToValues )
 {
   std::ofstream of;
   of.open( filename );
@@ -333,7 +333,7 @@ void evaluate_all_skeletons( const std::string & result_filepath  )
   auto kin_filepath = getKinFilepath( folderpath );
 
   // replan for each skeleton and each delta
-  std::map< std::vector< double >, std::unordered_set< Skeleton, SkeletonHasher > > deltasToValues;
+  std::map< std::vector< double >, std::unordered_set< Policy, PolicyHasher > > deltasToValues;
   for( const auto & vec : deltas )
   {
     for( auto skeleton : skeletons )

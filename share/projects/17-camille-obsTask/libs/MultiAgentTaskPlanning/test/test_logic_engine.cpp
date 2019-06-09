@@ -1,3 +1,5 @@
+#include <boost/algorithm/string/replace.hpp>
+
 #include <logic_engine.h>
 
 #include <gtest/gtest.h>
@@ -90,6 +92,10 @@ TEST(LogicEngine, DoubleAgentSetState) {
   engine.transition( actions[0] );
   engine.setState( initState );
   auto state = engine.getState();
+
+  boost::replace_all(initState, ": ", ":");
+  std::cout << state << " " << initState  << std::endl;
+
   ASSERT_TRUE( state == initState );
 }
 

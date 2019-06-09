@@ -25,7 +25,7 @@ static void generatePngImage( const std::string & name )
   system( ss.str().c_str() );
 }
 
-static void savePolicyToFile( const Skeleton & policy, const std::string & suffix = "" )
+static void savePolicyToFile( const Policy & policy, const std::string & suffix = "" )
 {
   std::stringstream namess, skenamess;
   namess << "policy-" << policy.id() << suffix << ".gv";
@@ -47,14 +47,14 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 
 //==========Application specific grounders===================================
 
-void init( mp::ExtensibleKOMO * komo, int verbose  )
+void init( KOMO_ext * komo, int verbose  )
 {
   // road bounds
-  komo->setTask( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
-  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
 
   // min speed
-  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -73,8 +73,8 @@ void init( mp::ExtensibleKOMO * komo, int verbose  )
   komo->activateCollisions( "car_ego", "car_op" );
 
   // min speed
-  komo->setTask( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sos );
-  komo->setTask( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo->addObjective( 0.0, 1.0, new AxisBound( "car_ego", -0.1, AxisBound::Y, AxisBound::MAX ), OT_sos );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // collision
   komo->activateCollisions( "car_ego", "truck" );
@@ -82,7 +82,7 @@ void init( mp::ExtensibleKOMO * komo, int verbose  )
   komo->add_collision( true );
 }
 
-void groundLook( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundLook( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   double duration=1.0;
 
@@ -92,7 +92,7 @@ void groundLook( double phase, const std::vector< std::string >& facts, mp::Exte
   //
 
   // look
-  komo->setTask( t_start + 0.9, t_end, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo->addObjective( t_start + 0.9, t_end, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
 
   if( verbose > 0 )
   {
@@ -100,7 +100,7 @@ void groundLook( double phase, const std::vector< std::string >& facts, mp::Exte
   }
 }
 
-void groundOvertake( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundOvertake( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   double duration=1.0;
 
@@ -119,7 +119,7 @@ void groundOvertake( double phase, const std::vector< std::string >& facts, mp::
   }
 }
 
-void groundFollow( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundFollow( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   double duration=1.0;
 
@@ -173,7 +173,7 @@ void plan_graph_search()
   generatePngImage( "graph.gv" );
 
   /// LOOP
-  Skeleton policy, lastPolicy;
+  Policy policy, lastPolicy;
   tp.solve();
   policy = tp.getPolicy();
 

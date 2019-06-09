@@ -49,7 +49,7 @@ struct AxisBound:Feature{
     else if( axis == Z ) id_ = 2;
   }
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1)
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G)
   {
 //    for( auto p : G.proxies )
 //    {

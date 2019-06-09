@@ -29,11 +29,11 @@ public:
   // modifiers
   virtual void setFol( const std::string & descrition ) override;
   virtual void solve() override;
-  virtual void integrate( const Skeleton & policy ) override;
+  virtual void integrate( const Policy & policy ) override;
 
   // getters
   virtual bool terminated() const override;
-  Skeleton getPolicy() const override;
+  Policy getPolicy() const override;
   double reward( uint from, uint to  ) const; // exposed for testing purpose only
 
   // other modifiers
@@ -51,18 +51,18 @@ public:
   uint agentNumber() const { return parser_.agentNumber(); }
 
   // stand-alone
-  SkeletonNodeData decisionGraphtoPolicyData( const NodeData & n, uint ) const;
+  PolicyNodeData decisionGraphtoPolicyData( const NodeData & n, uint ) const;
 
 private:
   void valueIteration();
   void decideOnDecisionGraphCopy();
-  void buildSkeleton();
+  void buildPolicy();
   uint fromToIndex( uint from, uint to ) const;
 
 private:
   LogicParser parser_;
   DecisionGraph graph_;
-  Skeleton skeleton_;
+  Policy policy_;
 
   // graph expansion
   uint maxDepth_ = 3;

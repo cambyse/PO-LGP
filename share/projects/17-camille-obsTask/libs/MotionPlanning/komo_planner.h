@@ -13,7 +13,7 @@ namespace mp
 
 class KOMOPlanner : public MotionPlanner
 {
-  using PolicyNodePtr = Skeleton::GraphNodeTypePtr;
+  using PolicyNodePtr = Policy::GraphNodeTypePtr;
 
 public:
   // modifiers
@@ -21,10 +21,10 @@ public:
   std::vector< double > drawRandomVector( const std::vector< double > & override = std::vector< double >() );
 
   // informers
-  void solveAndInform( const MotionPlanningParameters &, Skeleton & ) override;
+  void solveAndInform( const MotionPlanningParameters &, Policy & ) override;
 
   // display
-  void display( const Skeleton & policy, double sec ) override;
+  void display( const Policy & policy, double sec ) override;
   std::pair< double, double > evaluateLastSolution();
 
   // ground symbols
@@ -40,24 +40,24 @@ private:
 
   /// MARKOVIAN
   // poses
-  void optimizePoses( Skeleton & );
+  void optimizePoses( Policy & );
   void optimizePosesFrom( const PolicyNodePtr & );
 
   // markovian path
-  void optimizeMarkovianPath( Skeleton & );
+  void optimizeMarkovianPath( Policy & );
   void optimizeMarkovianPathFrom( const PolicyNodePtr & );
 
   /// NON MARKOVIAN
   void clearLastNonMarkovianResults();
   // path
-  void optimizePath( Skeleton & );
+  void optimizePath( Policy & );
   void optimizePathTo( const PolicyNodePtr & );
-  void computePathQResult( const Skeleton& policy );
+  void computePathQResult( const Policy& policy );
 
   // joint path
-  void optimizeJointPath( Skeleton & );
+  void optimizeJointPath( Policy & );
   void optimizeJointPathTo( const PolicyNodePtr & );
-  void computeJointPathQResult( const Skeleton& policy );
+  void computeJointPathQResult( const Policy& policy );
 
 private:
   // state

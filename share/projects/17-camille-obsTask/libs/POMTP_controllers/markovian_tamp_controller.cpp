@@ -1,9 +1,9 @@
 #include <markovian_tamp_controller.h>
 
-Skeleton MarkovianTAMPController::plan( const TAMPlanningConfiguration & config )
+Policy MarkovianTAMPController::plan( const TAMPlanningConfiguration & config )
 {
   /// LOOP
-  Skeleton policy, previousPolicy;
+  Policy policy, previousPolicy;
   tp_.solve();
   policy = tp_.getPolicy();
 

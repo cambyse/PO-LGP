@@ -114,6 +114,7 @@ TEST_F(ParserTest, ReapplyStartState) {
   auto startStates = w.possibleStartStates();
   auto bs = w.egoBeliefState();
 
+  engine.resetState();
   auto n = engine.getPossibleActions( 0 ).size();
   auto startState = engine.getState();
   engine.setState( startStates.back() );

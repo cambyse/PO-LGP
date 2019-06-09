@@ -37,7 +37,7 @@ static void generatePngImage( const std::string & name )
   system( ss.str().c_str() );
 }
 
-static void savePolicyToFile( const Skeleton & policy, const std::string & suffix = "" )
+static void savePolicyToFile( const Policy & policy, const std::string & suffix = "" )
 {
   std::stringstream namess, skenamess;
   namess << "policy-" << policy.id() << suffix << ".gv";
@@ -272,7 +272,7 @@ void plan_graph_search()
     //tp.saveGraphToFile( "graph.gv" );
     //generatePngImage( "graph.gv" );
 
-    Skeleton policy, lastPolicy;
+    Policy policy, lastPolicy;
 
     {
       auto start = std::chrono::high_resolution_clock::now();

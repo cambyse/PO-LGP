@@ -42,7 +42,7 @@ static arr extractAgentQMask( const rai::KinematicWorld & G )  // retrieve agent
   return qmask;
 }
 
-static double updateValue( const Skeleton::GraphNodeType::ptr & node )
+static double updateValue( const Policy::GraphNodeType::ptr & node )
 {
   double value = 0;
 
@@ -54,7 +54,7 @@ static double updateValue( const Skeleton::GraphNodeType::ptr & node )
   return value;
 }
 
-static void updateValues( Skeleton & policy )
+static void updateValues( Policy & policy )
 {
   policy.setValue( updateValue( policy.root() ) );
 }
@@ -154,7 +154,7 @@ std::vector< double > KOMOPlanner::drawRandomVector( const std::vector< double >
   return randomVec_;
 }
 
-void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton & policy )
+void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & policy )
 {
   CHECK( startKinematics_.d0 == policy.N(), "consitency problem, the belief state size of the policy differs from the belief state size of the kinematics" );
   CHECK( po.policyId() == policy.id(), "id of the policy and the planning orders are not consistent" );
@@ -171,7 +171,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
   // if a node has a constraint which is not satisfied, we set the node to infeasible i.e. infinite cost!
 
   {
-    std::list< Skeleton::GraphNodeTypePtr > fifo;
+    std::list< Policy::GraphNodeTypePtr > fifo;
     fifo.push_back( policy.root() );
 
     while( ! fifo.empty()  )
@@ -206,7 +206,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
       }
     }
 
-    policy.setStatus( Skeleton::SKELETON );
+    policy.setStatus( Policy::SKELETON );
   }
 
   if( poseOptimizationFailed )  // early stopping
@@ -217,7 +217,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
   {
     optimizeMarkovianPath( policy );
 
-    std::list< Skeleton::GraphNodeTypePtr > fifo;
+    std::list< Policy::GraphNodeTypePtr > fifo;
     fifo.push_back( policy.root() );
 
     while( ! fifo.empty()  )
@@ -253,7 +253,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
 
     /// UPDATE VALUES
     updateValues( policy );
-    policy.setStatus( Skeleton::INFORMED );
+    policy.setStatus( Policy::INFORMED );
   }
   else if( po.getParam( "type" ) == "jointPath" )
   {
@@ -267,7 +267,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
     }
 
     /// INFORM POLICY NODES
-    std::list< Skeleton::GraphNodeTypePtr > fifo;
+    std::list< Policy::GraphNodeTypePtr > fifo;
     fifo.push_back( policy.root() );
 
     while( ! fifo.empty()  )
@@ -308,7 +308,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
     /// UPDATE VALUES AND STATUS
     updateValues( policy );
     policy.setQResult(policy.N()>1 ? jointPathQResult_ : pathQResult_);
-    policy.setStatus( Skeleton::INFORMED );
+    policy.setStatus( Policy::INFORMED );
   }
   else
   {
@@ -318,9 +318,9 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Skeleton 
   //CHECK( checkPolicyIntegrity( policy ), "Policy is corrupted" );
 }
 
-void KOMOPlanner::display( const Skeleton & policy, double sec )
+void KOMOPlanner::display( const Policy & policy, double sec )
 {
-  Skeleton tmp( policy );
+  Policy tmp( policy );
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
   // resolve since this planner doesn't store paths
@@ -403,14 +403,14 @@ void KOMOPlanner::computeQMask()
 
 ///MARKOVIAN
 
-void KOMOPlanner::optimizePoses( Skeleton & policy )
+void KOMOPlanner::optimizePoses( Policy & policy )
 {
   std::cout << "optimizing poses.." << std::endl;
 
   optimizePosesFrom( policy.root() );
 }
 
-void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
+void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
 {
   //std::cout << "optimizing pose for:" << node->id() << std::endl;
 
@@ -503,14 +503,14 @@ void KOMOPlanner::optimizePosesFrom( const Skeleton::GraphNodeTypePtr & node )
 }
 
 // markovian path
-void KOMOPlanner::optimizeMarkovianPath( Skeleton & policy )
+void KOMOPlanner::optimizeMarkovianPath( Policy & policy )
 {
   std::cout << "optimizing markovian paths.." << std::endl;
 
   optimizeMarkovianPathFrom( policy.root() );
 }
 
-void KOMOPlanner::optimizeMarkovianPathFrom( const Skeleton::GraphNodeTypePtr & node )
+void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & node )
 {
   //std::cout << "optimizing markovian path for:" << node->id() << std::endl;
 
@@ -626,7 +626,7 @@ void KOMOPlanner::clearLastNonMarkovianResults()
   jointPathKinFrames_.clear(); // maps each leaf to its path
 }
 // path
-void KOMOPlanner::optimizePath( Skeleton & policy )
+void KOMOPlanner::optimizePath( Policy & policy )
 {
   std::cout << "optimizing full path.." << std::endl;
 
@@ -722,7 +722,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
   }
 }
 
-void KOMOPlanner::computePathQResult( const Skeleton& policy )
+void KOMOPlanner::computePathQResult( const Policy& policy )
 {
   pathQResult_ = QResult( policy.N(), qmask_, microSteps_ );
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
@@ -740,7 +740,7 @@ void KOMOPlanner::computePathQResult( const Skeleton& policy )
   }
 }
 
-void KOMOPlanner::optimizeJointPath( Skeleton & policy )
+void KOMOPlanner::optimizeJointPath( Policy & policy )
 {
   std::cout << "optimizing full joint path.." << std::endl;
 
@@ -873,7 +873,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
   }
 }
 
-void KOMOPlanner::computeJointPathQResult( const Skeleton& policy )
+void KOMOPlanner::computeJointPathQResult( const Policy& policy )
 {
   jointPathQResult_ = QResult( policy.N(), qmask_, microSteps_ );
   for( uint w = 0; w < bsToLeafs_.size(); ++w )

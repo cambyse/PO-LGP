@@ -35,7 +35,7 @@ public:
   void transition( const std::string & action );
   void setState( const std::string & state );
   std::string getState() const;
-
+  void resetState() { engine_->reset_state(); } // provided for test convinience
 private:
   void parseNumberOfAgents();
   void parseActions();

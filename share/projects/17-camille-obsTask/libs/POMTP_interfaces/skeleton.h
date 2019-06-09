@@ -38,7 +38,7 @@ private:
   uint policyId_;
 };
 
-struct SkeletonNodeData
+struct PolicyNodeData
 {
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
@@ -135,12 +135,12 @@ private:
   uint stepsPerPhase_;
 };
 
-class Skeleton
+class Policy
 {
 public:
-  using ptr = std::shared_ptr< GraphNode< SkeletonNodeData > >;
-  using GraphNodeType = GraphNode< SkeletonNodeData >;
-  using GraphNodeTypePtr = std::shared_ptr< GraphNode< SkeletonNodeData > >;
+  using ptr = std::shared_ptr< GraphNode< PolicyNodeData > >;
+  using GraphNodeType = GraphNode< PolicyNodeData >;
+  using GraphNodeTypePtr = std::shared_ptr< GraphNode< PolicyNodeData > >;
 
   enum StatusType
   {
@@ -149,11 +149,11 @@ public:
   };
 
 public:
-  Skeleton();
-  Skeleton( const GraphNodeTypePtr & root );
+  Policy();
+  Policy( const GraphNodeTypePtr & root );
 
-  Skeleton( const Skeleton & );
-  Skeleton & operator= ( const Skeleton & );
+  Policy( const Policy & );
+  Policy & operator= ( const Policy & );
 
   // modifier
   void addLeaf( const GraphNodeTypePtr & leaf )    { leafs_.push_back( leaf ); }
@@ -196,7 +196,7 @@ public:
   size_t hash() const;
 
 private:
-  void copy( const Skeleton & );
+  void copy( const Policy & );
 
 private:
   uint id_;                  // identifier of the policy, meant to be unique
@@ -209,14 +209,14 @@ private:
   enum StatusType status_;
 };
 
-bool operator== ( const Skeleton & a, const Skeleton & b );
-bool operator!= ( const Skeleton & a, const Skeleton & b );
+bool operator== ( const Policy & a, const Policy & b );
+bool operator!= ( const Policy & a, const Policy & b );
 
-std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node );
+std::list< Policy::GraphNodeTypePtr > getPathTo( const Policy::GraphNodeTypePtr & node );
 
-struct SkeletonHasher
+struct PolicyHasher
 {
-    std::size_t operator()( const Skeleton & s ) const noexcept
+    std::size_t operator()( const Policy & s ) const noexcept
     {
         return s.hash();
     }

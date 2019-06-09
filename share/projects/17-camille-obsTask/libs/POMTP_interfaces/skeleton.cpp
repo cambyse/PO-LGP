@@ -19,14 +19,14 @@
 #include <set>
 #include <skeleton_printer.h>
 
-static int skeletonNumber = 0;
+static int PolicyNumber = 0;
 
 //----Free functions-------------------//
-static std::list< Skeleton::GraphNodeTypePtr> nodes( const Skeleton & a )
+static std::list< Policy::GraphNodeTypePtr> nodes( const Policy & a )
 {
-  std::list< Skeleton::GraphNodeTypePtr > nlist;
+  std::list< Policy::GraphNodeTypePtr > nlist;
 
-  std::queue< Skeleton::GraphNodeTypePtr > Q;
+  std::queue< Policy::GraphNodeTypePtr > Q;
 
   if( ! a.empty() )
   {
@@ -55,20 +55,20 @@ bool operator==(const QResult & a, const QResult & b)
   return ( a.stepsPerPhase_ == b.stepsPerPhase_ ) && ( a.world_to_q_list_ == b.world_to_q_list_ ) && ( a.qmask_ == b.qmask_ );
 }
 
-//----Skeleton-------------------------//
-Skeleton::Skeleton()
+//----Policy-------------------------//
+Policy::Policy()
   : status_( SKELETON )
-  , id_( skeletonNumber )
+  , id_( PolicyNumber )
 {
 
 }
 
-Skeleton::Skeleton( const GraphNodeTypePtr & root )
+Policy::Policy( const GraphNodeTypePtr & root )
   : status_( SKELETON )
-  , id_( skeletonNumber )
+  , id_( PolicyNumber )
   , root_( root )
 {
-  skeletonNumber++;
+  PolicyNumber++;
 
   // reconstruct the leafs from root
   std::list < GraphNodeTypePtr > Q;
@@ -93,19 +93,19 @@ Skeleton::Skeleton( const GraphNodeTypePtr & root )
   }
 }
 
-Skeleton::Skeleton( const Skeleton & policy )
+Policy::Policy( const Policy & policy )
 {
   copy( policy );
 }
 
-Skeleton & Skeleton::operator= ( const Skeleton & policy )
+Policy & Policy::operator= ( const Policy & policy )
 {
   copy( policy );
 
   return *this;
 }
 
-uint Skeleton::nNodes() const
+uint Policy::nNodes() const
 {
   std::set< uint > node_ids;
 
@@ -120,23 +120,23 @@ uint Skeleton::nNodes() const
   return node_ids.size();
 }
 
-void Skeleton::save( const std::string & file ) const
+void Policy::save( const std::string & file ) const
 {
   std::ofstream ofs( file );
   boost::archive::text_oarchive oa(ofs);
   oa << *this;
 }
 
-void Skeleton::load( const std::string & file )
+void Policy::load( const std::string & file )
 {
   std::ifstream ifs( file );
   boost::archive::text_iarchive ia(ifs);
   ia >> *this;
 }
 
-size_t Skeleton::hash() const
+size_t Policy::hash() const
 {
-  std::list< Skeleton::GraphNodeTypePtr > nodesA = nodes( *this );
+  std::list< Policy::GraphNodeTypePtr > nodesA = nodes( *this );
 
   std::size_t hash = 0;
 
@@ -148,7 +148,7 @@ size_t Skeleton::hash() const
   return hash;
 }
 
-void Skeleton::saveToGraphFile( const std::string & filename ) const
+void Policy::saveToGraphFile( const std::string & filename ) const
 {
   if( ! root_ )
   {
@@ -158,7 +158,7 @@ void Skeleton::saveToGraphFile( const std::string & filename ) const
   std::ofstream file;
   file.open( filename );
 
-  SkeletonPrinter printer( file );
+  PolicyPrinter printer( file );
   printer.print( *this );
 
   file.close();
@@ -178,7 +178,7 @@ void Skeleton::saveToGraphFile( const std::string & filename ) const
   system( ss.str().c_str() );
 }
 
-void Skeleton::saveAll( const std::string & folder, const std::string & suffix ) const
+void Policy::saveAll( const std::string & folder, const std::string & suffix ) const
 {
   std::stringstream namess, skenamess;
   namess << folder << "/" << "policy-" << id() << suffix;
@@ -188,7 +188,7 @@ void Skeleton::saveAll( const std::string & folder, const std::string & suffix )
   saveToGraphFile( name + ".gv" );
 }
 
-void Skeleton::copy( const Skeleton & policy )
+void Policy::copy( const Policy & policy )
 {
   if( policy.root_ )
   {
@@ -229,11 +229,11 @@ void Skeleton::copy( const Skeleton & policy )
   }
 }
 
-bool operator== ( const Skeleton & a, const Skeleton & b )
+bool operator== ( const Policy & a, const Policy & b )
 {
 //  return a.hash() == b.hash();
-  std::list< Skeleton::GraphNodeTypePtr > nodesA = nodes( a );
-  std::list< Skeleton::GraphNodeTypePtr > nodesB = nodes( b );
+  std::list< Policy::GraphNodeTypePtr > nodesA = nodes( a );
+  std::list< Policy::GraphNodeTypePtr > nodesB = nodes( b );
 
   bool equal = true;
   if( nodesA.size() != nodesB.size() )
@@ -260,14 +260,14 @@ bool operator== ( const Skeleton & a, const Skeleton & b )
 
   return equal;
 }
-bool operator!= ( const Skeleton & a, const Skeleton & b )
+bool operator!= ( const Policy & a, const Policy & b )
 {
   return ! ( a == b );
 }
 
-std::list< Skeleton::GraphNodeTypePtr > getPathTo( const Skeleton::GraphNodeTypePtr & node )
+std::list< Policy::GraphNodeTypePtr > getPathTo( const Policy::GraphNodeTypePtr & node )
 {
-  std::list< Skeleton::GraphNodeTypePtr > path;
+  std::list< Policy::GraphNodeTypePtr > path;
 
   auto n = node;
 

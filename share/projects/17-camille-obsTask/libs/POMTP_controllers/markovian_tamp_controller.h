@@ -25,5 +25,5 @@ public:
 
   }
 
-  Skeleton plan( const TAMPlanningConfiguration & ) override;
+  Policy plan( const TAMPlanningConfiguration & ) override;
 };

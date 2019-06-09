@@ -15,13 +15,7 @@ find_package(Boost)
 # Locate MLR libs
 #################################
 
-find_path( MLR_LIBRARIES_DIR
-           NAMES libCore.so
-           PATHS "/home/camille/Dev/Phd/mlr_sparse/rai/rai" )
-
-#message( "path Camille: /home/mtoussai/git/copy/mlr/share/rai/rai" )
-
-include_directories( ${MLR_LIBRARIES_DIR} )
+include_directories( ${MLR_INCLUDE_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )
 
 #################################

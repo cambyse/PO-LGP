@@ -4,19 +4,19 @@
 
 #include <skeleton.h>
 
-class SkeletonPrinter
+class PolicyPrinter
 {
 public:
-  SkeletonPrinter( std::ostream & ss )
+  PolicyPrinter( std::ostream & ss )
     : ss_( ss )
   {
 
   }
 
-  void print( const Skeleton & policy );
+  void print( const Policy & policy );
 
 private:
-  void saveGraphFrom( const Skeleton::GraphNodeType::ptr & node );
+  void saveGraphFrom( const Policy::GraphNodeType::ptr & node );
 
 private:
   std::ostream & ss_;

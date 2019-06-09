@@ -12,7 +12,7 @@
 #include <komo_planner.h>
 
 #include <observation_tasks.h>
-#include <approx_point_to_shape.h>
+#include <approx_shape_to_sphere.h>
 #include <vertical_velocity.h>
 #include <axis_alignment.h>
 #include <over_plane.h>
@@ -36,7 +36,7 @@ static void generatePngImage( const std::string & name )
   system( ss.str().c_str() );
 }
 
-static void savePolicyToFile( const Skeleton & policy, const std::string & suffix = "" )
+static void savePolicyToFile( const Policy & policy, const std::string & suffix = "" )
 {
   std::stringstream namess, skenamess;
   namess << "policy-" << policy.id() << suffix << ".gv";
@@ -57,7 +57,7 @@ static void savePolicyToFile( const Skeleton & policy, const std::string & suffi
 }
 
 //==========Application specific grounders===================================
-void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
+void groundPrefixIfNeeded( KOMO_ext * komo, int verbose  )
 {
 //  if( ! komo->isPrefixSetup() )
 //  {
@@ -66,7 +66,7 @@ void groundPrefixIfNeeded( mp::ExtensibleKOMO * komo, int verbose  )
 //  }
 }
 
-void groundPickUp( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundPickUp( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -78,9 +78,9 @@ void groundPickUp( double phase, const std::vector< std::string >& facts, mp::Ex
   //
 
   //disconnect object from table
-  komo->setKinematicSwitch( t_end, true, "delete", "tableC", facts[0].c_str() );
+  komo->addSwitch( t_end, true, "delete", "tableC", facts[0].c_str() );
   //connect graspRef with object
-  komo->setKinematicSwitch( t_end, true, "ballZero", "handL", facts[0].c_str() );
+  komo->addSwitch( t_end, true, "ballZero", "handL", facts[0].c_str() );
 
   if( verbose > 0 )
   {
@@ -88,7 +88,7 @@ void groundPickUp( double phase, const std::vector< std::string >& facts, mp::Ex
   }
 }
 
-void groundUnStack( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -100,9 +100,9 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, mp::E
   //
 
   //disconnect object from table
-  komo->setKinematicSwitch( t_end, true, "delete", facts[1].c_str(), facts[0].c_str() );
+  komo->addSwitch( t_end, true, "delete", facts[1].c_str(), facts[0].c_str() );
   //connect graspRef with object
-  komo->setKinematicSwitch( t_end, true, "ballZero", "handL", facts[0].c_str() );
+  komo->addSwitch( t_end, true, "ballZero", "handL", facts[0].c_str() );
 
   if( verbose > 0 )
   {
@@ -110,7 +110,7 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, mp::E
   }
 }
 
-void groundPutDown( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -129,7 +129,7 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, mp::E
   }
 }
 
-void groundCheck( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundCheck( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -140,8 +140,8 @@ void groundCheck( double phase, const std::vector< std::string >& facts, mp::Ext
   const double t_end =   phase + duration;
   //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
-  komo->setTask( t_start, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sos, NoArr, 1e2 );
-  komo->setTask( t_end - 0.1, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
+  komo->addObjective( t_start, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sos, NoArr, 1e2 );
+  komo->addObjective( t_end - 0.1, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
 
   if( verbose > 0 )
   {
@@ -149,7 +149,7 @@ void groundCheck( double phase, const std::vector< std::string >& facts, mp::Ext
   }
 }
 
-void groundStack( double phase, const std::vector< std::string >& facts, mp::ExtensibleKOMO * komo, int verbose )
+void groundStack( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
@@ -316,7 +316,7 @@ graph_building_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed)
   //tp.saveGraphToFile( "graph.gv" );
   //generatePngImage( "graph.gv" );
 
-  Skeleton policy, lastPolicy;
+  Policy policy, lastPolicy;
 
 {
 auto start = std::chrono::high_resolution_clock::now();

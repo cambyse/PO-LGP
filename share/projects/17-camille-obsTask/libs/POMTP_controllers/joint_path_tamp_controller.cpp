@@ -2,14 +2,14 @@
 
 #include <set>
 
-Skeleton JointPathTAMPController::plan(  const TAMPlanningConfiguration & config )
+Policy JointPathTAMPController::plan(  const TAMPlanningConfiguration & config )
 {
-  auto skeletonComp = []( const Skeleton & a, const Skeleton & b ) { return  a.value() > b.value(); };
+  auto skeletonComp = []( const Policy & a, const Policy & b ) { return  a.value() > b.value(); };
 
   /// LOOP
-  std::vector< Skeleton > markovPolicies;
-  std::vector< Skeleton > jointPolicies;
-  Skeleton policy, previousPolicy;
+  std::vector< Policy > markovPolicies;
+  std::vector< Policy > jointPolicies;
+  Policy policy, previousPolicy;
   tp_.solve();
   policy = tp_.getPolicy();
 

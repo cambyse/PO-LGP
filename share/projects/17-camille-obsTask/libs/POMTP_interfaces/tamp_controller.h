@@ -36,7 +36,7 @@ public:
 
   }
 
-  virtual Skeleton plan( const TAMPlanningConfiguration & ) = 0;
+  virtual Policy plan( const TAMPlanningConfiguration & ) = 0;
 
 protected:
   TaskPlanner & tp_;

@@ -55,7 +55,7 @@ struct AxisDistance:Feature{
 
   }
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t=-1)
+  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G)
   {
     rai::Frame *object_1 = G.getFrameByName( object_1_.c_str() );
     arr posObject_1, posJObject_1;

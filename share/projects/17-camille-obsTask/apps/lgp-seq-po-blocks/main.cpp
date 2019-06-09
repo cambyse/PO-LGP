@@ -1,7 +1,7 @@
-#include <KOMO/komo.h>
+#include <KOMO/komo-ext.h>
 
 #include <observation_tasks.h>
-#include <approx_point_to_shape.h>
+#include <approx_shape_to_sphere.h>
 
 using namespace std;
 
@@ -9,7 +9,7 @@ using namespace std;
 
 void move_blocks()
 {
-  KOMO komo;
+  KOMO_ext komo;
   komo.setConfigFromFile();
 
   // baxter
@@ -50,50 +50,50 @@ void move_blocks()
   komo.setTask( 0.0, 10.0, new TM_AboveBox(komo.world, "block_b", "tableC" ), OT_ineq, NoArr, 1e2);
   */
 
-  komo.setTask( 0.0, 10.0, new ApproxPointToShape(komo.world, handCL, "tableC" ), OT_ineq, NoArr, 1e2);
+  komo.addObjective(0.0, 10.0, new ApproxShapeToSphere(komo.world, handCL, "tableC" ), OT_ineq, NoArr, 1e2);
 
   ///GRASP C, PUT IT on TABLE
   //grasp C
-  komo.setKinematicSwitch( 2.0, true, "delete",   NULL, "block_c" );
-  komo.setKinematicSwitch( 2.0, true, "ballZero", handL, "block_c" );
+  komo.addSwitch( 2.0, true, "delete",   NULL, "block_c" );
+  komo.addSwitch( 2.0, true, "ballZero", handL, "block_c" );
 
   //observe C
-  komo.setTask( 2.5, 3.0, new ActiveGetSight( sensorShapeName, "block_c", pivotPoint, sensorDir, 0.5 ) );
+  komo.addObjective( 2.5, 3.0, new ActiveGetSight( sensorShapeName, "block_c", pivotPoint, sensorDir, 0.5 ) );
 
   //place on table
   komo.setPlace( 4.0, handL, "block_c", "tableC" );
 
 //  ///GRASP O, PUT IT on A
 //  //grasp
-//  komo.setKinematicSwitch( 5.0, true, "delete",   NULL, "block_o" );
-//  komo.setKinematicSwitch( 5.0, true, "ballZero", "handL", "block_o" );
+//  komo.addSwitch( 5.0, true, "delete",   NULL, "block_o" );
+//  komo.addSwitch( 5.0, true, "ballZero", "handL", "block_o" );
 
 //  //put on A
 //  komo.setPlace( 6.0, "handL", "block_o", "block_a" );
 
 //  ///GRASP C, PUT IT on O
 //  //grasp
-//  komo.setKinematicSwitch( 7.0, true, "delete",   NULL, "block_c" );
-//  komo.setKinematicSwitch( 7.0, true, "ballZero", "handL", "block_c" );
+//  komo.addSwitch( 7.0, true, "delete",   NULL, "block_c" );
+//  komo.addSwitch( 7.0, true, "ballZero", "handL", "block_c" );
 
 //  //put on O
 //  komo.setPlace( 8.0, "handL", "block_c", "block_o" );
 
   ///GRASP B, PUT IT on C
   //grasp B
-  komo.setKinematicSwitch( 5.0, true, "delete",   NULL, "block_b" );
-  komo.setKinematicSwitch( 5.0, true, "ballZero", handL, "block_b" );
+  komo.addSwitch( 5.0, true, "delete",   NULL, "block_b" );
+  komo.addSwitch( 5.0, true, "ballZero", handL, "block_b" );
 
   //observe B
-  komo.setTask( 5.5, 6.0, new ActiveGetSight( sensorShapeName, "block_b", pivotPoint, sensorDir, 0.5 ) );
+  komo.addObjective( 5.5, 6.0, new ActiveGetSight( sensorShapeName, "block_b", pivotPoint, sensorDir, 0.5 ) );
 
   //put on C
   komo.setPlace( 7.0, handL, "block_b", "block_c" );
 
   ///GRASP A, PUT IT on B
   //grasp
-  komo.setKinematicSwitch( 8.0, true, "delete",   NULL, "block_a" );
-  komo.setKinematicSwitch( 8.0, true, "ballZero", handL, "block_a" );
+  komo.addSwitch( 8.0, true, "delete",   NULL, "block_a" );
+  komo.addSwitch( 8.0, true, "ballZero", handL, "block_a" );
 
   //put on C
   komo.setPlace( 9.0, handL, "block_a", "block_b" );

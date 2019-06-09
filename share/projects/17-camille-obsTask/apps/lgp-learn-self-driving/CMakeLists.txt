@@ -15,11 +15,7 @@ find_package(Boost COMPONENTS filesystem REQUIRED )
 # Locate MLR libs
 #################################
 
-find_path( MLR_LIBRARIES_DIR
-           NAMES libCore.so
-           PATHS "/home/mtoussai/git/copy/mlr/share/rai/rai" )
-
-include_directories( ${MLR_LIBRARIES_DIR} )
+include_directories( ${MLR_INCLUDE_DIR} )
 link_directories(    ${MLR_LIBRARIES_DIR} )
 
 #################################

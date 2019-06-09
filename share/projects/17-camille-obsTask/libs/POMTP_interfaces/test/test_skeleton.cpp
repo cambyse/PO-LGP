@@ -6,26 +6,26 @@
 
 #include <boost/filesystem.hpp>
 
-Skeleton build_3_nodes_Skeleton()
+Policy build_3_nodes_Policy()
 {
-  SkeletonNodeData rootData;
+  PolicyNodeData rootData;
   //rootData.beliefState = { 1.0 };
-  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
+  Policy::GraphNodeTypePtr root = Policy::GraphNodeType::root( rootData );
 
   // child 1
-  SkeletonNodeData childData1;
+  PolicyNodeData childData1;
   //childData.beliefState = { 1.0 };
   childData1.leadingKomoArgs = { "komoAction", "X", "Y", "Z" };
   root->makeChild( childData1 );
 
   // child 1
-  SkeletonNodeData childData2;
+  PolicyNodeData childData2;
   //childData.beliefState = { 1.0 };
   childData2.leadingKomoArgs = { "komoAction", "A", "B", "C" };
   root->makeChild( childData2 );
 
   // policy
-  Skeleton p( root );
+  Policy p( root );
   p.setValue( 1.0 );
 
   return p;
@@ -87,12 +87,12 @@ TEST(QResult, setGetTrajectory) {
 }
 
 // GraphNode
-TEST(Skeleton, SaveLoad) {
-  Skeleton p;
+TEST(Policy, SaveLoad) {
+  Policy p;
   //
   const std::string filename( "policy" );
   const double value = 1.0;
-  const Skeleton::StatusType status( Skeleton::INFORMED );
+  const Policy::StatusType status( Policy::INFORMED );
   QResult qr(2, {1, 0}, 0.1);
   qr.createTrajectory(0, 2);
   qr.createTrajectory(1, 1);
@@ -106,7 +106,7 @@ TEST(Skeleton, SaveLoad) {
   p.setStatus( status );
   p.save( filename );
 
-  Skeleton pp;
+  Policy pp;
   pp.load( filename );
 
   ASSERT_EQ( pp.value(), value );
@@ -114,101 +114,101 @@ TEST(Skeleton, SaveLoad) {
   ASSERT_EQ( pp.status(), status );
 }
 
-TEST(Skeleton, Equality) {
+TEST(Policy, Equality) {
   // root
-  SkeletonNodeData rootData;
-  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
-  Skeleton p( root );
+  PolicyNodeData rootData;
+  Policy::GraphNodeTypePtr root = Policy::GraphNodeType::root( rootData );
+  Policy p( root );
   //
   const std::string filename( "policy" );
   const double value = 1.0;
-  const Skeleton::StatusType status( Skeleton::INFORMED );
+  const Policy::StatusType status( Policy::INFORMED );
   //
 
   p.setValue( 1.0 );
   p.setStatus( status );
   p.save( filename );
 
-  Skeleton pp;
+  Policy pp;
   pp.load( filename );
 
   ASSERT_EQ( pp, p );
 }
 
-TEST(Skeleton, NonEquality) {
+TEST(Policy, NonEquality) {
   // root
-  SkeletonNodeData rootData;
-  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
-  Skeleton p( root );
+  PolicyNodeData rootData;
+  Policy::GraphNodeTypePtr root = Policy::GraphNodeType::root( rootData );
+  Policy p( root );
   //
   const std::string filename( "policy" );
   const double value = 1.0;
-  const Skeleton::StatusType status( Skeleton::INFORMED );
+  const Policy::StatusType status( Policy::INFORMED );
   //
 
   p.setValue( 1.0 );
   p.setStatus( status );
   p.save( filename );
 
-  Skeleton pp;
+  Policy pp;
 
   ASSERT_NE( pp, p );
 }
 
-TEST(Skeleton, HashingEquality) {
+TEST(Policy, HashingEquality) {
   // root
-  SkeletonNodeData rootData;
-  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
-  Skeleton p( root );
+  PolicyNodeData rootData;
+  Policy::GraphNodeTypePtr root = Policy::GraphNodeType::root( rootData );
+  Policy p( root );
   //
   const std::string filename( "policy" );
   const double value = 1.0;
-  const Skeleton::StatusType status( Skeleton::INFORMED );
+  const Policy::StatusType status( Policy::INFORMED );
   //
 
   p.setValue( 1.0 );
   p.setStatus( status );
   p.save( filename );
 
-  Skeleton pp;
+  Policy pp;
   pp.load( filename );
 
   ASSERT_EQ( pp.hash(), p.hash() );
 }
 
-TEST(Skeleton, HashingInequality) {
+TEST(Policy, HashingInequality) {
   // root
-  SkeletonNodeData rootData;
-  Skeleton::GraphNodeTypePtr root = Skeleton::GraphNodeType::root( rootData );
-  Skeleton p( root );
+  PolicyNodeData rootData;
+  Policy::GraphNodeTypePtr root = Policy::GraphNodeType::root( rootData );
+  Policy p( root );
   //
   const std::string filename( "policy" );
   const double value = 1.0;
-  const Skeleton::StatusType status( Skeleton::INFORMED );
+  const Policy::StatusType status( Policy::INFORMED );
   //
 
   p.setValue( 1.0 );
   p.setStatus( status );
   p.save( filename );
 
-  Skeleton pp;
+  Policy pp;
 
   ASSERT_NE( pp.hash(), p.hash() );
 }
 
-TEST(Skeleton, NumberOfNodes) {
+TEST(Policy, NumberOfNodes) {
   // root
-  Skeleton p = build_3_nodes_Skeleton();
+  Policy p = build_3_nodes_Policy();
 
   ASSERT_EQ(p.nNodes(), 3);
 }
 
 // GraphNode
-TEST(Skeleton, SaveToGraph) {
+TEST(Policy, SaveToGraph) {
 
   const std::string filename( "policy_graph.gv" );
 
-  Skeleton p = build_3_nodes_Skeleton();
+  Policy p = build_3_nodes_Policy();
 
   p.saveToGraphFile( "policy_graph.gv" );
 
