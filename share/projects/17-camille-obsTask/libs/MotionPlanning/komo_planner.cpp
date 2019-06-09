@@ -90,9 +90,11 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 
       for( auto nn : n->graph() )
       {
-        //std::cout << *nn << std::endl;
         nn->newClone( kinG );
       }
+
+      auto bsNode = kinG.getNode( beliefStateTag_ );
+      kinG.removeValue(bsNode);
 
       auto kin = std::make_shared< rai::KinematicWorld >();
       kin->init( kinG );
@@ -191,7 +193,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
 
         node->data().markovianReturn = std::numeric_limits< double >::lowest();
         //node->setValue( std::numeric_limits< double >::lowest() );
-        //node->data().setStatus( PolicyNode::INFORMED );
+        node->data().status = PolicyNodeData::INFORMED;
 
         poseOptimizationFailed = true;
         policy.setValue( std::numeric_limits< double >::lowest() );
@@ -206,7 +208,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       }
     }
 
-    policy.setStatus( Policy::SKELETON );
+    policy.setStatus( Policy::INFORMED );
   }
 
   if( poseOptimizationFailed )  // early stopping
@@ -241,7 +243,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       else
       {
         node->data().markovianReturn =  -( minMarkovianCost_ + markovianPathCosts_[ node->data().decisionGraphNodeId ] );
-        //node->setStatus( PolicyNode::INFORMED );
+        node->data().status = PolicyNodeData::INFORMED;
 
         // push children on list
         for( auto c : node->children() )
@@ -532,7 +534,8 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
 
         rai::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
 
-        CHECK( kin.q.size() > 0, "wrong start configuration!");
+        //kin.calc_q(); // this line is necessary to have the assert being valid (since rai version)
+        //CHECK( kin.q.size() > 0, "wrong start configuration!");
 
         // create komo
         auto komo = komoFactory_.createKomo();

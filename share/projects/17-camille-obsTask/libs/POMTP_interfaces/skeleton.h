@@ -40,8 +40,15 @@ private:
 
 struct PolicyNodeData
 {
+  enum StatusType
+  {
+    UNPLANNED = 0,
+    INFORMED = 1
+  };
+
   std::vector< double      > beliefState;
   std::vector< std::string > leadingKomoArgs;
+  enum StatusType status = StatusType::UNPLANNED;
   double markovianReturn = 0;
   double p = 0; // probability to reach this node given the parent
   uint decisionGraphNodeId = 0; // id of the corresponding node in decision graph
@@ -52,6 +59,7 @@ struct PolicyNodeData
   {
     ar & beliefState;
     ar & leadingKomoArgs;
+    ar & status;
     ar & markovianReturn;
     ar & p;
     ar & decisionGraphNodeId;

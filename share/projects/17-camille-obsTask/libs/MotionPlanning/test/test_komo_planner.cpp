@@ -342,13 +342,6 @@ TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithNoRandomVector
   planner.setKin(  "data/LGP-overtaking-kin-2w_bis.g" );
   auto randomVec = planner.drawRandomVector();
 
-//  Skeleton policy;
-//  policy.load( "data/LGP-overtaking-single-agent-2w.po" );
-
-//  MotionPlanningParameters po( policy.id() );
-//  po.setParam( "type", "jointPath" );
-
-//  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
   EXPECT_EQ( randomVec.size(), 0 );
 }
 
@@ -358,13 +351,6 @@ TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithRandomVectorOf
   planner.setKin( "data/LGP-merging-kin.g" );
   auto randomVec = planner.drawRandomVector();
 
-//  Skeleton policy;
-//  policy.load( "data/LGP-merging-kin-skeleton-5.po" );
-
-//  MotionPlanningParameters po( policy.id() );
-//  po.setParam( "type", "jointPath" );
-
-//  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
   EXPECT_EQ( randomVec.size(), 2 );
 }
 
@@ -415,7 +401,7 @@ TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent1WDisplay)
   MotionPlanningParameters po( policy.id() );
   po.setParam( "type", "jointPath" );
 
-  EXPECT_NO_THROW( planner.display( policy, 10.0 ) );
+  EXPECT_NO_THROW( planner.display( policy, 3.0 ) );
 }
 
 /////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
@@ -431,6 +417,32 @@ TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WMarkovianPath)
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
   EXPECT_EQ( policy.status(), Policy::INFORMED );
+}
+
+TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WMarkovianPath_NodeSetAsPlanned)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  Policy policy;
+  policy.load( "data/LGP-overtaking-single-agent-2w.po" );
+
+  MotionPlanningParameters po( policy.id() );
+  po.setParam( "type", "markovJointPath" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_EQ( policy.status(), Policy::INFORMED );
+
+  for(const auto & leaf: policy.leafs())
+  {
+    auto path = getPathTo( leaf.lock() );
+    for( const auto & n: path )
+    {
+      if(n->data().markovianReturn != 0)
+        EXPECT_EQ( n->data().status, PolicyNodeData::INFORMED );
+      else
+        EXPECT_EQ( n->data().status, PolicyNodeData::UNPLANNED );
+    }
+  }
 }
 
 TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WJointPath)

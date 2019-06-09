@@ -102,6 +102,7 @@ void ExtensibleKOMO::applyRandomization( const std::vector< double > & randomVec
   // initial position
   rai::KinematicWorld world;
   world.copy(this->world);
+  world.calc_q();
 
   //randomVec={-1.0, -1.0};
 

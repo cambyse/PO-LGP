@@ -84,7 +84,7 @@ void GraphPlanner::integrate( const Policy & policy )
       for( auto c : n->children() )
       {
         // find correct parent in decision graph
-        // 1 - get similar nod in graph
+        // 1 - get similar node in graph
         auto c_g = decisionGraphNodes[ c->data().decisionGraphNodeId ];
 
         auto id_right_parent = -1;
@@ -108,22 +108,6 @@ void GraphPlanner::integrate( const Policy & policy )
         }
       }
     }
-
-//    auto nn = decisionGraphNodes[ n->id() ];
-
-//    for( auto nnn : nn.lock()->children() ) // observation
-//    {
-//    for( auto cc : nnn->children() )
-//    {
-//    for( auto c : n->children() )
-//    {
-//      std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
-
-//      //rewards_[ fromToIndex( nnn->id(), c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
-//      Q.push( c );
-//    }
-//    }
-//    }
   }
 
   // go through

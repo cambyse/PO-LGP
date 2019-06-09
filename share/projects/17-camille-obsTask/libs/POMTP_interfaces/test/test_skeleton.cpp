@@ -32,6 +32,14 @@ Policy build_3_nodes_Policy()
 }
 
 // QResult
+TEST(PolicyNodeData, DefaultConstruction) {
+  PolicyNodeData data;
+
+  ASSERT_EQ( data.status, PolicyNodeData::UNPLANNED );
+}
+
+
+// QResult
 TEST(QResult, DefaultConstruction) {
   QResult result;
 
