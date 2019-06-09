@@ -85,6 +85,21 @@ TEST(LogicEngine, DoubleAgentApplyAccelerating2W) {
 }
 
 // Get and reset states
+TEST(LogicEngine, SingleAgentSetState) {
+  LogicEngine engine( "data/LGP-overtaking-single-agent-2w.g" );
+  auto initState = engine.getState();
+  auto actions = engine.getPossibleActions( 0 );
+  engine.transition( actions[1] );
+  engine.setState( initState );
+  auto state = engine.getState();
+
+  //boost::replace_all(initState, ": ", ":");
+  std::cout << state << " " << initState  << std::endl;
+
+  ASSERT_TRUE( state == initState );
+}
+
+
 TEST(LogicEngine, DoubleAgentSetState) {
   LogicEngine engine( "data/LGP-overtaking-double-agent-2w.g" );
   auto initState = engine.getState();
@@ -93,7 +108,9 @@ TEST(LogicEngine, DoubleAgentSetState) {
   engine.setState( initState );
   auto state = engine.getState();
 
-  boost::replace_all(initState, ": ", ":");
+  //boost::replace_all(initState, ": ", ":");
+  //boost::replace_all(state, ": ", ":");
+
   std::cout << state << " " << initState  << std::endl;
 
   ASSERT_TRUE( state == initState );

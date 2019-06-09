@@ -214,7 +214,7 @@ TEST(DecisionGraph, expandedLeadingAction) {
   DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.expand( graph.root() );
 
-  auto leadingAction = graph.edges() [ 0 ][ 1 ].second;
+  auto leadingAction = graph.edges() [ 1 ][ 0 ].second;
   ASSERT_NE( leadingAction.find( "look lanes" ), std::string::npos );
 }
 
@@ -236,7 +236,7 @@ TEST(DecisionGraph, expandedLeadingObservation1) {
   graph.expand( graph.root() );
   auto childChild = graph.root()->children().front()->children().front();
 
-  auto leadingObservation = graph.edges() [ childChild->id() ][ 0 ].second;
+  auto leadingObservation = graph.edges() [ childChild->id() ][ 1 ].second;
   ASSERT_NE( leadingObservation.find( "free lane_2" ), std::string::npos );
 }
 
@@ -435,7 +435,7 @@ TEST(DecisionGraph, buildGraph2W) {
   p.parse( "data/LGP-overtaking-single-agent-2w.g" );  DecisionGraph graph( p.engine(), p.possibleStartStates(), p.egoBeliefState() );
   graph.build(10, true);
   graph.saveGraphToFile("LGP-overtaking-single-agent-2w-graph.gv");
-  ASSERT_EQ( graph.size(), 17 );
+  ASSERT_EQ( graph.size(), 14 );
 }
 
 TEST(DecisionGraph, copyOfGraph) {

@@ -87,7 +87,7 @@ std::set< std::string > getFilteredFacts( const std::string & state )
 
     if( ! fact.empty() && ( fact.find( "decision(") == std::string::npos ) && ( fact.find( "komo") == std::string::npos ) )
     {
-      //filteredResult.append( fact ).append( "," );
+      //fact.append( "," );
       facts.insert( fact );
     }
   }
@@ -174,7 +174,7 @@ std::string concatenateFacts( const std::set< std::string > & facts )
   ss << "{";
   for( auto fact : facts )
   {
-    ss << fact;
+    ss << fact << ",";
   }
   ss << "}";
   return ss.str();

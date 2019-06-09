@@ -136,6 +136,6 @@ private:
   std::list< std::weak_ptr< GraphNodeType > > terminalNodes_;
   bool isGraph_ = false; // if false is only a tree
   // edges
-  std::vector< EdgeDataType > edges_;// child-id -> <p, leading artifact> p = // probability to reach this node given the parent
+  std::vector< EdgeDataType > edges_;// child-id -> <p, leading artifact> p = // probability to reach this node given the parent, usage edges_[child_id] -> gives a map of from->p
 };
 } // namespace matp
