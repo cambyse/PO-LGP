@@ -230,11 +230,29 @@ TEST_F(GraphPlannerTest, IntegratePolicy)
   auto policy = tp.getPolicy();
   policy.root()->data().markovianReturn = 0.0;
   auto child = policy.root()->children().front();
+  child->data().status = PolicyNodeData::INFORMED;
   child->data().markovianReturn = -0.3;
 
   tp.integrate( policy );
 
   EXPECT_EQ( tp.reward( policy.root()->id(), child->id() ), -0.3 );
+  //EXPECT_EQ( tp.reward( child->id() ), -0.3 );
+}
+
+TEST_F(GraphPlannerTest, IntegratePolicy_OnlyReturnOfPlannedNodeIsIntegrated)
+{
+  tp.setFol( "data/LGP-overtaking-single-agent-1w.g" );
+  tp.setMaxDepth( 2 );
+  tp.solve();
+  auto policy = tp.getPolicy();
+  policy.root()->data().markovianReturn = 0.0;
+  auto child = policy.root()->children().front();
+  child->data().status = PolicyNodeData::UNPLANNED;
+  child->data().markovianReturn = -0.3;
+
+  tp.integrate( policy );
+
+  EXPECT_EQ( tp.reward( policy.root()->id(), child->id() ), tp.R0() );
   //EXPECT_EQ( tp.reward( child->id() ), -0.3 );
 }
 

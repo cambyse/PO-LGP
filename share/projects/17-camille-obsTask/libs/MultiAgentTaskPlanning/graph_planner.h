@@ -35,6 +35,7 @@ public:
   virtual bool terminated() const override;
   Policy getPolicy() const override;
   double reward( uint from, uint to  ) const; // exposed for testing purpose only
+  double R0() const { return r0_; }
 
   // other modifiers
   void setR0( double r0 ) { r0_ = r0; }

@@ -73,8 +73,10 @@ void GraphPlanner::integrate( const Policy & policy )
       for( auto c : n->children() )
       {
         //std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
-
-        rewards_[ fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+        if(c->data().status == PolicyNodeData::INFORMED)
+        {
+          rewards_[ fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+        }
         Q.push( c );
       }
     }
