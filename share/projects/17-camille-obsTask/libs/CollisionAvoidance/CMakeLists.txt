@@ -17,6 +17,15 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 ################################
 #find_package(fcl REQUIRED)
 
+#find OpenCV
+find_package(OpenCV 3.3.1 REQUIRED)
+
+#message(STATUS "OpenCV library status:")
+#message(STATUS "    version: ${OpenCV_VERSION}")
+#message(STATUS "    libraries: ${OpenCV_LIBS}")
+#message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+#message(STATUS "    libs path: ${OPENCV_LIBRARY_DIRS}")
+
 #################################
 # Define executable
 #################################
@@ -32,5 +41,6 @@ target_link_libraries(
  Kin
  KOMO
  MathUtility
+ ${OpenCV_LIBS}
  #${fcl_LIBRARIES}
  )

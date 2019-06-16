@@ -111,6 +111,46 @@ namespace mp
     return branches;
   }
 
+  intA TreeBuilder::get_vars(double from, double to, uint leaf, uint order, uint steps) const
+  {
+    auto branch = get_branch(leaf);
+    const auto duration = to - from;
+    uint d0 = duration * steps;
+    uint from_step = from * steps;
+
+    intA vars(d0, order+1);
+
+    for(auto t=0; t < d0; ++t)
+    {      
+      for(auto j=0; j <= order; ++j)
+      {
+        int k = from_step+t+j-int(order);
+
+        if(k < 0) // prefix handling (we don't branch during the prefix)
+        {
+          vars(t, j) = k;
+        }
+        else
+        {
+          int from_node = branch.local_to_global[floor(k / double(steps))];
+          int to_node   = branch.local_to_global[ceil(k / double(steps) + 0.00001)];
+          int r = k % steps;
+
+          if( k < from_node * steps || steps == 1 )
+          {
+            vars(t, j) = from_node * steps + r; // connect to previous phase
+          }
+          else
+          {
+            vars(t, j) = (to_node - 1) * steps + r; // in new branched phase
+          }
+        }
+      }
+    }
+
+    return vars;
+  }
+
   void TreeBuilder::add_edge(uint from, uint to, double p)
   {
     uint max = std::max(from, to);
