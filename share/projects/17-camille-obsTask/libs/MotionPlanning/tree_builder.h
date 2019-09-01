@@ -19,6 +19,7 @@ namespace mp
     Branch get_branch(uint leaf) const;
     std::vector<Branch> get_branches() const;
     intA get_vars(double from, double to, uint leaf, uint order=2, uint steps=1) const;
+    arr get_scales(double from, double to, uint leaf, uint steps=1) const;
 
     void add_edge(uint from, uint to, double p = 1.0);
 

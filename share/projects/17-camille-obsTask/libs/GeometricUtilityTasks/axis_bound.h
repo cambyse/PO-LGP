@@ -35,7 +35,8 @@ struct AxisBound:Feature{
   enum BoundType
   {
     MIN = 0,
-    MAX
+    MAX,
+    EQUAL
   };
 
   AxisBound( const std::string & object, double bound, const enum Axis & axis, const enum BoundType & boundType, const double k = 1.0 )

@@ -201,10 +201,40 @@ TEST(TreeBuilder, GetVarsNSteps5)
   tb.add_edge(1, 4);
   tb.add_edge(4, 5);
 
-  auto leafs = tb.get_leafs();
   // order 0
   EXPECT_EQ(intA(15, 1, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}), tb.get_vars(0, 3.0, 3, 0, steps));
   EXPECT_EQ(intA(15, 1, {0, 1, 2, 3, 4, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}), tb.get_vars(0, 3.0, 5, 0, steps));
+}
+
+TEST(TreeBuilder, GetScaleNSteps5)
+{
+  auto steps = 5;
+
+  TreeBuilder tb;
+  tb.add_edge(0, 1, 1.0);
+
+  tb.add_edge(1, 2, 0.2);
+  tb.add_edge(2, 3, 1.0);
+
+  tb.add_edge(1, 4, 0.8);
+  tb.add_edge(4, 5, 1.0);
+
+  // order 0
+  auto expect_near = [](const arr & arr_1, const arr & arr_2, double eps)
+  {
+    bool near = true;
+    for(auto i = 0; i < arr_1.d0; ++i)
+    {
+      near = near && fabs(arr_1(i) - arr_2(i)) < eps;
+    }
+
+    EXPECT_TRUE(near);
+  };
+
+  expect_near(arr(15, {1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}), tb.get_scales(0, 3.0, 3, steps), 0.001);
+  expect_near(arr(15, {1.0, 1.0, 1.0, 1.0, 1.0, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8}), tb.get_scales(0, 3.0, 5, steps), 0.001);
+  expect_near(arr(10, {1.0, 1.0, 1.0, 1.0, 1.0, 0.8, 0.8, 0.8, 0.8, 0.8}), tb.get_scales(0, 2.0, 5, steps), 0.001);
+  expect_near(arr(10, {0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}), tb.get_scales(1.0, 3.0, 3, steps), 0.001);
 }
 
 

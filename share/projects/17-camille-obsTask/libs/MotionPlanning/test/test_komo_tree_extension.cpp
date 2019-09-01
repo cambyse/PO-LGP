@@ -69,6 +69,7 @@ protected:
     kin.init("data/LGP-mono-car.g");
     komo.setModel(kin);
     komo.sparseOptimization = true;
+    //komo.k_order = 2;
   }
 
   virtual void TearDown()
@@ -217,7 +218,7 @@ protected:
 //  EXPECT_EQ(prec_branch_2, speed_2->vars);
 //}
 
-TEST_F(KomoSparseFixture, TestLinearTrajectory)
+/*TEST_F(KomoSparseFixture, TestLinearTrajectory)
 {
   intA vars(5 * n_micro_steps, 3);
   for(auto t = 0; t < vars.d0; ++t)
@@ -240,7 +241,7 @@ TEST_F(KomoSparseFixture, TestLinearTrajectory)
   komo.run();
 
   //komo.displayTrajectory(0.1, true);
-}
+}*/
 
 TEST_F(KomoSparseFixture, TestTrajectoryWithTwoBranches)
 {
@@ -284,12 +285,15 @@ TEST_F(KomoSparseFixture, TestTrajectoryWithTwoBranches)
 
   auto acc_1 = komo.addObjective(-123., 123., new TM_Transition(komo.world), OT_sos, NoArr, 1.0, 2);
   acc_1->vars = all_branches_var_order_2;
+  //acc_1->scales = 0.1 * ones(acc_1->vars.d0);
 
   arr op_speed_1{ 0.5, 0, 0 };
   auto speed_1 = komo.addObjective(-123.,  123, new TM_Default(TMT_pos, komo.world, "car_ego", NoVector, NULL, NoVector), OT_sos, op_speed_1, 1.0, 1);
   speed_1->vars = all_branches_var_order_1;
+  //speed_1->scales = 1.0 * ones(speed_1->vars.d0);
 
   komo.reset();
+
   //EXPECT_THROW( komo.checkGradients(), std::exception ); // NIY
   komo.run();
 

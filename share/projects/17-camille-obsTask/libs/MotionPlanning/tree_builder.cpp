@@ -151,6 +151,38 @@ namespace mp
     return vars;
   }
 
+  arr TreeBuilder::get_scales(double from, double to, uint leaf, uint steps) const
+  {
+      auto branch = get_branch(leaf);
+      const auto duration = to - from;
+      uint d0 = duration * steps;
+      uint from_step = from * steps;
+
+      //arr scales(d0);
+      arr full_scale = arr((branch.local_to_global.size() - 1) * steps);
+
+      double p = 1.0;
+      for(auto i = 0; i < branch.local_to_global.size() - 1; ++i)
+      {
+          auto global_i = branch.local_to_global[i];
+          auto global_j = branch.local_to_global[i+1];
+          p *= adjacency_matrix_(global_i, global_j);
+
+          for(auto s = 0; s < steps; ++s)
+          {
+              full_scale(steps * i + s) = p;
+          }
+      }
+
+      arr scale(d0);
+      for(auto i = 0; i < d0; ++i)
+      {
+          scale(i) = full_scale(i + from_step);
+      }
+
+      return scale;
+  }
+
   void TreeBuilder::add_edge(uint from, uint to, double p)
   {
     uint max = std::max(from, to);
