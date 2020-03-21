@@ -35,3 +35,5 @@ target_link_libraries(
  KOMO
  MathUtility
  )
+
+add_subdirectory(test)

@@ -44,3 +44,5 @@ target_link_libraries(
  ${OpenCV_LIBS}
  #${fcl_LIBRARIES}
  )
+
+add_subdirectory(test)

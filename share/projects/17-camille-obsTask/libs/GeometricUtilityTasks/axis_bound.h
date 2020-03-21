@@ -39,11 +39,9 @@ struct AxisBound:Feature{
     EQUAL
   };
 
-  AxisBound( const std::string & object, double bound, const enum Axis & axis, const enum BoundType & boundType, const double k = 1.0 )
+  AxisBound( const std::string & object, const enum Axis & axis, const enum BoundType & boundType )
     : object_( object )
-    , bound_( bound )
     , boundType_( boundType )
-    , k_( k )
   {
     if( axis == X ) id_ = 0;
     else if( axis == Y ) id_ = 1;
@@ -52,22 +50,17 @@ struct AxisBound:Feature{
 
   virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G)
   {
-//    for( auto p : G.proxies )
-//    {
-//      std::cout << p->a << " " << p->b << std::endl;
-//    }
-
     rai::Frame *object = G.getFrameByName( object_.c_str() );
     arr posObject, posJObject;
     G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
 
-    const double sign = ( ( boundType_ == MIN ) ? 1 : -1 );
+    const double sign = ( ( boundType_ == MIN ) ? -1 : 1 );
 
     arr tmp_y = zeros( dim_ );
-    tmp_y( 0 ) = - k_ * sign * ( posObject( id_ ) - bound_ );
+    tmp_y( 0 ) = sign * posObject( id_ );
 
     arr tmp_J = zeros( dim_, posJObject.dim(1) );
-    tmp_J.setMatrixBlock( - k_ * sign * posJObject.row( id_ ), 0 , 0 );    // jacobian
+    tmp_J.setMatrixBlock( sign * posJObject.row( id_ ), 0 , 0 );    // jacobian
 
     // commit results
     y = tmp_y;
@@ -87,8 +80,6 @@ struct AxisBound:Feature{
 private:
   static const uint dim_ = 1;
   std::string object_;
-  const double bound_;
   const BoundType boundType_;
-  const double k_;
   std::size_t id_= 0;
 };

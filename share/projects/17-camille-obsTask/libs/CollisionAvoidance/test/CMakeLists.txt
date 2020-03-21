@@ -9,21 +9,18 @@ file(GLOB_RECURSE tests *.cpp)
 #find GTest
 find_package(GTest REQUIRED)
 
-#find Eigen
-find_package (Eigen3 REQUIRED)
-
 include_directories(${GTEST_INCLUDE_DIRS})
-include_directories(${EIGEN3_INCLUDE_DIR})
 
 # specify target for each test
 foreach(test ${tests})
     get_filename_component(test_name ${test} NAME_WE)
     add_executable(${test_name} ${test})
     target_link_libraries(${test_name}
-                          MotionPlanning
+                          KOMO
                           #${GTEST_LIBRARIES}
                           gtest
                           pthread
+                          #Eigen3::Eigen
                           )
 endforeach()
 

@@ -151,6 +151,18 @@ namespace mp
     return vars;
   }
 
+//  std::vector<intA> TreeBuilder::get_all_vars(uint order, uint steps) const
+//  {
+//      std::vector<intA> all_vars;
+
+//      for(auto l : get_leafs())
+//      {
+//        all_vars.push_back(get_vars(0.0, -1, l, order, steps));
+//      }
+
+//      return all_vars;
+//  }
+
   arr TreeBuilder::get_scales(double from, double to, uint leaf, uint steps) const
   {
       auto branch = get_branch(leaf);
