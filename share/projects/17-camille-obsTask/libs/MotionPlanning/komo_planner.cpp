@@ -9,6 +9,8 @@
 #include <Kin/kin.h>
 #include <Kin/switch.h>
 
+#include <boost/filesystem.hpp>
+
 namespace mp
 {
 static double eps() { return std::numeric_limits< double >::epsilon(); }
@@ -59,11 +61,43 @@ static void updateValues( Policy & policy )
   policy.setValue( updateValue( policy.root() ) );
 }
 
+class WorkingDirLock
+{
+public:
+  WorkingDirLock()
+    : working_dir_(boost::filesystem::current_path())
+  {
+
+  }
+
+  ~WorkingDirLock()
+  {
+    boost::filesystem::current_path(working_dir_);
+  }
+
+private:
+  boost::filesystem::path working_dir_;
+};
+
+static Graph loadKin(const std::string & kinDescription)
+{
+  WorkingDirLock lock;
+  return Graph(kinDescription.c_str());
+}
+
+static std::shared_ptr< rai::KinematicWorld > createKin(const Graph & kinG )
+{
+  WorkingDirLock lock;
+  auto kin = std::make_shared< rai::KinematicWorld >();
+  kin->init( kinG );
+  return kin;
+}
+
 //--------Motion Planner--------------//
 
 void KOMOPlanner::setKin( const std::string & kinDescription )
 {
-  Graph G( kinDescription.c_str() );
+  Graph G = loadKin(kinDescription);
 
   if( G[ beliefStateTag_ ] == nullptr )
   {
@@ -83,7 +117,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
     // build the different worlds
     for( uint w = 0; w < nWorlds; w++ )
     {
-      Graph kinG( kinDescription.c_str() );
+      Graph kinG = loadKin(kinDescription);
 
       // copy unobservable facts
       auto n = bsGraph->elem(w);
@@ -96,8 +130,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       auto bsNode = kinG.getNode( beliefStateTag_ );
       kinG.removeValue(bsNode);
 
-      auto kin = std::make_shared< rai::KinematicWorld >();
-      kin->init( kinG );
+      auto kin = createKin(kinG);
       computeMeshNormals( kin->frames );
       kin->calc_fwdPropagateFrames();
       //

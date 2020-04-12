@@ -1,6 +1,7 @@
 #include <functional>
 #include <list>
 
+#include <boost/filesystem.hpp>
 #include <chrono>
 
 #include <Kin/kinViewer.h>
@@ -241,16 +242,15 @@ void plan_graph_search()
 
     // checked, probably doesn't work with n steps = 5
     // B
-    //tp.setFol( "LGP-blocks-fol-2w-unified.g" );
-    //mp.setKin( "LGP-blocks-kin-2w-unified.g" );
+    tp.setFol( "LGP-blocks-fol-2w-unified.g" );
+    mp.setKin( "LGP-blocks-kin-2w-unified.g" );
 
     //tp.setFol( "LGP-blocks-fol-2w-model-2-unified.g" );
 
     // checked
     // A
-    tp.setFol( "LGP-blocks-fol-1w-unified.g" );
-    mp.setKin( "LGP-blocks-kin-1w-unified.g" );
-
+    //tp.setFol( "LGP-blocks-fol-1w-unified.g" ); // "/home/camille/Dev/mlr_build/apps/lgp-tree-po-blocks-baxter/LGP-blocks-fol-1w-unified.g"
+    //mp.setKin( "LGP-blocks-kin-1w-unified.g" );
     //tp.setFol( "LGP-blocks-fol-1w-model-2-unified.g" );
 
     // 4 blocks linear
