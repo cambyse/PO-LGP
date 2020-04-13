@@ -32,26 +32,32 @@ block_2
 block_3 
 block_4
 block_5
+block_6
 block_a  #block identifier
 block_b  #block identifier
 block_c  #block identifier
 block_d
 block_e
+block_f
 tableC
 
 ## initial state
 START_STATE { 
 (table tableC) 
 (location tableC)
-(block block_1) (block block_2) (block block_3) (block block_4) (block block_5)
-(id block_a) (id block_b) (id block_c) (id block_d) (id block_e)
-(UNEQUAL block_1 block_2) (UNEQUAL block_1 block_3) (UNEQUAL block_1 block_4) (UNEQUAL block_1 block_5)
-(UNEQUAL block_2 block_3) (UNEQUAL block_2 block_4) (UNEQUAL block_2 block_5)
-(UNEQUAL block_3 block_4) (UNEQUAL block_3 block_5)
-(UNEQUAL block_4 block_5)
-(clear block_4) (clear block_5) (clear tableC)
-(on_table block_1 tableC) (on_table block_2 tableC) (on block_3 block_1) (on block_4 block_2) (on block_5 block_3)
+(block block_1) (block block_2) (block block_3) (block block_4) (block block_5) (block block_6)
+(id block_a) (id block_b) (id block_c) (id block_d) (id block_e) (id block_f)
+(UNEQUAL block_1 block_2) (UNEQUAL block_1 block_3) (UNEQUAL block_1 block_4) (UNEQUAL block_1 block_5) (UNEQUAL block_1 block_6)
+(UNEQUAL block_2 block_3) (UNEQUAL block_2 block_4) (UNEQUAL block_2 block_5) (UNEQUAL block_2 block_6)
+(UNEQUAL block_3 block_4) (UNEQUAL block_3 block_5) (UNEQUAL block_3 block_6)
+(UNEQUAL block_4 block_5) (UNEQUAL block_4 block_6)
+(UNEQUAL block_5 block_6)
+(clear block_6) (clear block_5) (clear tableC)
+(on_table block_1 tableC) (on_table block_2 tableC) (on block_3 block_1) (on block_4 block_2) (on block_5 block_3) (on block_6 block_4)
 (hand_empty) 
+
+(is block_6 block_f)
+(identified block_6)
 
 (is block_5 block_e)
 (identified block_5)
@@ -79,10 +85,11 @@ BELIEF_START_STATE{
 ()=1.0
 }
 }
-  #{ (on block_a block_b) (on block_b block_c) (on block_c block_d) (on block_d block_e) (hand_empty) } # 
+
 ### Termination RULES 
 Rule {
-  { (on block_b block_a) (on block_c block_b) (on block_d block_c) (on block_e block_d) (hand_empty) } # 
+  #{ (on block_a block_b) (on block_b block_c) (on block_c block_d) (on block_d block_e) (hand_empty) } # 
+  { (on block_b block_a) (on block_c block_b) (on block_d block_c) (on block_e block_d) (on block_f block_e) (hand_empty) } # 
   { (QUIT) }
 }
 
