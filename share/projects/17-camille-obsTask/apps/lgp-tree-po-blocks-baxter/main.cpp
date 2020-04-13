@@ -135,14 +135,25 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_
 
   const double radius = 0.25;
 
-  if( facts[0] != "block_1" )
-    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_1", radius ), OT_ineq );
+  // hacky collision avoidance
+//  std::vector<std::string> blocks{"block_1", "block_2", "block_3"};
 
-  if( facts[0] != "block_2" )
-    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_2", radius ), OT_ineq );
+//  for(const auto & fixed_block: blocks)
+//  {
+//    if(facts[0] != fixed_block)
+//    {
+//      komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), fixed_block.c_str(), radius ), OT_ineq );
+//    }
+//  }
 
-  if( facts[0] != "block_3" )
-    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_3", radius ), OT_ineq );
+//  if( facts[0] != "block_1" )
+//    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_1", radius ), OT_ineq );
+
+//  if( facts[0] != "block_2" )
+//    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_2", radius ), OT_ineq );
+
+//  if( facts[0] != "block_3" )
+//    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_3", radius ), OT_ineq );
 
 //  if( facts[0] != "block_4" )
 //    komo->setTask( t_end - 0.5, t_end, new ApproxPointToShape( komo->world, facts[0].c_str(), "block_4", radius ), OT_ineq );

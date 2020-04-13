@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <map>
 #include <skeleton.h>
 
 class MotionPlanner

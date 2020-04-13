@@ -29,7 +29,7 @@ static arr extractAgentQMask( const rai::KinematicWorld & G )  // retrieve agent
   // build mask
   arr qmask = zeros( G.q.d0 );
 
-  for( auto b : selectedBodies )
+  for( const auto& b : selectedBodies )
   {
     rai::Joint *j = G.frames.elem(b)->joint;
 
@@ -48,7 +48,7 @@ static double updateValue( const Policy::GraphNodeType::ptr & node )
 {
   double value = 0;
 
-  for( auto c : node->children() )
+  for( const auto& c : node->children() )
   {
     value += c->data().p * ( c->data().markovianReturn + updateValue( c ) );
   }
@@ -111,7 +111,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
   }
   else
   {
-    auto bsGraph = &G.get<Graph>( beliefStateTag_ );
+    const auto& bsGraph = &G.get<Graph>( beliefStateTag_ );
     const uint nWorlds = bsGraph->d0;
 
     // build the different worlds
@@ -122,12 +122,12 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
       // copy unobservable facts
       auto n = bsGraph->elem(w);
 
-      for( auto nn : n->graph() )
+      for( const auto& nn : n->graph() )
       {
         nn->newClone( kinG );
       }
 
-      auto bsNode = kinG.getNode( beliefStateTag_ );
+      const auto& bsNode = kinG.getNode( beliefStateTag_ );
       kinG.removeValue(bsNode);
 
       auto kin = createKin(kinG);
@@ -157,17 +157,17 @@ std::vector< double > KOMOPlanner::drawRandomVector( const std::vector< double >
     return randomVec_;
   }
 
-  auto world = startKinematics_(0);
+  const auto& world = startKinematics_(0);
 
   // get size of random Vector
   uint randomVecSize = 0;
-  for( auto f : world->frames )
+  for( const auto& f : world->frames )
   {
     if( f->ats["random_bounds"]  )
     {
-      auto randomBounds = f->ats.get<arr>("random_bounds");
+      const auto& randomBounds = f->ats.get<arr>("random_bounds");
 
-      for( auto b : randomBounds )
+      for( const auto& b : randomBounds )
       {
         if( b > 0 )
         {
@@ -215,7 +215,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       fifo.pop_back();
 
       double maxConstraint = 0;
-      for( auto constraint : poseConstraints_[ node->data().decisionGraphNodeId ] )
+      for( const auto& constraint : poseConstraints_[ node->data().decisionGraphNodeId ] )
       {
         maxConstraint = std::max( constraint, maxConstraint );
       }
@@ -223,6 +223,10 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       if( maxConstraint >= maxConstraint_ )
       {
         std::cout << "Pose Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
+        std::cout << "action: " << std::endl;
+        for(const auto & arg: node->data().leadingKomoArgs)
+          std::cout << arg << " ";
+        std::cout << std::endl;
 
         node->data().markovianReturn = std::numeric_limits< double >::lowest();
         //node->setValue( std::numeric_limits< double >::lowest() );
@@ -234,7 +238,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       else
       {
         // push children on list
-        for( auto c : node->children() )
+        for( const auto& c : node->children() )
         {
           fifo.push_back( c );
         }
@@ -279,7 +283,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
         node->data().status = PolicyNodeData::INFORMED;
 
         // push children on list
-        for( auto c : node->children() )
+        for( const auto& c : node->children() )
         {
           fifo.push_back( c );
         }
@@ -320,11 +324,11 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       {
         if( node->data().beliefState[ w ] > 0 )
         {
-          auto leaf = bsToLeafs_( w );
+          const auto& leaf = bsToLeafs_( w );
           CHECK( pathCostsPerPhase.find( leaf ) != pathCostsPerPhase.end(), "corruption in datastructure" );
 
-          auto trajCosts = pathCostsPerPhase[ leaf ]( w );
-          auto wcost = trajCosts( phase_start_offset_ + phase );
+          const auto& trajCosts = pathCostsPerPhase[ leaf ]( w );
+          const auto& wcost = trajCosts( phase_start_offset_ + phase );
 
           cost += node->data().beliefState[ w ] * wcost;
           //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
@@ -332,7 +336,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       }
 
       // push children on list
-      for( auto c : node->children() )
+      for( const auto& c : node->children() )
       {
         c->data().markovianReturn = - cost;
 
@@ -375,7 +379,7 @@ void KOMOPlanner::display( const Policy & policy, double sec )
   rai::Array< rai::Array< rai::Array< rai::KinematicWorld > > > frames;
 
   const auto & kinFrames = policy.N() > 1 ? jointPathKinFrames_ : pathKinFrames_;
-  for( auto leafWorldKinFramesPair : kinFrames )
+  for( const auto& leafWorldKinFramesPair : kinFrames )
   {
     frames.append( leafWorldKinFramesPair.second );
   }
@@ -396,7 +400,7 @@ std::pair< double, double > KOMOPlanner::evaluateLastSolution()
   //CHECK( jointPathKinFrames_.size() == 0, "not supported yet if branching!" );
 
   const auto & kinFrames = jointPathKinFrames_.size() > 1 ? jointPathKinFrames_ : pathKinFrames_;
-  for( auto leafWorldKinFramesPair : kinFrames )
+  for( const auto& leafWorldKinFramesPair : kinFrames )
   {
     frames.append( leafWorldKinFramesPair.second );
   }
@@ -487,12 +491,12 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
         cout << "KOMO FAILED: " << msg <<endl;
       }
       //komo->checkGradients();
-      //      if( node->id() == 136 )
-      //      {
-      //      komo->displayTrajectory();
+//            if( node->id() == 26 )
+//            {
+//            komo->displayTrajectory();
 
-      //      rai::wait();
-      //      }
+//            rai::wait();
+//            }
       // save results
       //    DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
 
@@ -530,7 +534,7 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
   // solve for next nodes if this one was feasible
   if( feasible )
   {
-    for( auto c : node->children() )
+    for( const auto& c : node->children() )
     {
       optimizePosesFrom( c );
     }
@@ -636,7 +640,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
   // solve for next nodes if this one was feasible
   if( feasible )
   {
-    for( auto c : node->children() )
+    for( const auto& c : node->children() )
     {
       optimizeMarkovianPathFrom( c );
     }
@@ -647,14 +651,14 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
 void KOMOPlanner::clearLastNonMarkovianResults()
 {
   // path
-  for( auto pair : pathKinFrames_ )
+  for( auto& pair : pathKinFrames_ )
   {
     pair.second.clear();
   }
   pathKinFrames_.clear(); // maps each leaf to its path
 
   // joint path
-  for( auto pair : jointPathKinFrames_ )
+  for( auto& pair : jointPathKinFrames_ )
   {
     pair.second.clear();
   }
@@ -668,7 +672,7 @@ void KOMOPlanner::optimizePath( Policy & policy )
 
   bsToLeafs_             = rai::Array< PolicyNodePtr > ( policy.N() );
 
-  for( auto l : policy.leafs() )
+  for( const auto& l : policy.leafs() )
   {
     optimizePathTo( l.lock() );
   }
@@ -712,7 +716,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
       komo->groundInit();
 
-      for( auto node:treepath )
+      for( const auto& node:treepath )
       {
         auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
         komo->groundTasks( phase_start_offset_ + time, node->data().leadingKomoArgs ); // ground parent action (included in the initial state)
@@ -764,7 +768,7 @@ void KOMOPlanner::computePathQResult( const Policy& policy )
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
-    const auto trajForW = pathKinFrames_.at(leaf).at(w);
+    const auto& trajForW = pathKinFrames_.at(leaf).at(w);
     const uint nSteps = trajForW.size(); //  .at(w)->size();
 
     pathQResult_.createTrajectory(w, nSteps);
@@ -780,7 +784,7 @@ void KOMOPlanner::optimizeJointPath( Policy & policy )
 {
   std::cout << "optimizing full joint path.." << std::endl;
 
-  for( auto l : policy.leafs() )
+  for( const auto& l : policy.leafs() )
   {
     optimizeJointPathTo( l.lock() );
   }
@@ -817,7 +821,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
       komo->groundInit();
 
-      for( auto node:treepath )
+      for( const auto& node:treepath )
       {
         // set task
         auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
@@ -839,7 +843,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
               {
                 CHECK( bsToLeafs_( x ) != nullptr, "no leaf for this state!!?" );
 
-                auto terminalLeafx = bsToLeafs_( x );
+                const auto& terminalLeafx = bsToLeafs_( x );
 
                 CHECK( pathKinFrames_[ terminalLeafx ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
 
@@ -915,7 +919,7 @@ void KOMOPlanner::computeJointPathQResult( const Policy& policy )
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
-    const auto trajForW = jointPathKinFrames_.at(leaf).at(w);
+    const auto& trajForW = jointPathKinFrames_.at(leaf).at(w);
     const uint nSteps = trajForW.size(); //  .at(w)->size();
 
     jointPathQResult_.createTrajectory(w, nSteps);

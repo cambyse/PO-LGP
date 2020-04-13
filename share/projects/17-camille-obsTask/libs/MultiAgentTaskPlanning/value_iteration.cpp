@@ -75,11 +75,6 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
     {
       const auto& u = weakU.lock();
 
-      if( u->id() == 3 )
-      {
-        int a = 0;
-      }
-
       if( u->data().nodeType == NodeData::NodeType::ACTION )
       {
         if( u->data().agentId == 0 )
@@ -170,6 +165,11 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
     stable = maxDiff < eps;
 
     //std::cout << "it: " << i << " maxDiff: " << maxDiff << std::endl;
+  }
+
+  if(!stable)
+  {
+    std::cout << "warning: Value iteration finished without convergence!" << std::endl;
   }
 
   std::cout << "valueIteration.. end" << std::endl;

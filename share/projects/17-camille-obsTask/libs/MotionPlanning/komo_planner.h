@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 #include <skeleton.h>
 #include <motion_planner.h>
@@ -68,24 +69,24 @@ private:
   std::vector< double > randomVec_; // used to randomize the initial configuration
 
   // pose
-  std::map< uint, rai::Array< rai::KinematicWorld > > effKinematics_;
-  std::map< uint, arr > poseCosts_;       // node id -> costs for each world
-  std::map< uint, arr > poseConstraints_; // node id -> constraints for each world
+  std::unordered_map< uint, rai::Array< rai::KinematicWorld > > effKinematics_;
+  std::unordered_map< uint, arr > poseCosts_;       // node id -> costs for each world
+  std::unordered_map< uint, arr > poseConstraints_; // node id -> constraints for each world
 
   // markovian path
-  std::map< uint, rai::Array< rai::KinematicWorld > > effMarkovianPathKinematics_;
-  std::map< uint, double > markovianPathCosts_; // node id -> averaged cost
-  std::map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
+  std::unordered_map< uint, rai::Array< rai::KinematicWorld > > effMarkovianPathKinematics_;
+  std::unordered_map< uint, double > markovianPathCosts_; // node id -> averaged cost
+  std::unordered_map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
 
   // path
-  std::map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
-  std::map< PolicyNodePtr, rai::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
-  std::map< PolicyNodePtr, rai::Array< arr > > pathCostsPerPhase_;
+  std::unordered_map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
+  std::unordered_map< PolicyNodePtr, rai::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
+  std::unordered_map< PolicyNodePtr, rai::Array< arr > > pathCostsPerPhase_;
   QResult pathQResult_;
 
   // joint path
-  std::map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
-  std::map< PolicyNodePtr, rai::Array< arr > > jointPathCostsPerPhase_;
+  std::unordered_map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
+  std::unordered_map< PolicyNodePtr, rai::Array< arr > > jointPathCostsPerPhase_;
   rai::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
   QResult jointPathQResult_;
 
@@ -96,7 +97,7 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
-  double maxConstraint_      = 10 * 0.5;
+  double maxConstraint_      = 10 * 0.75;
 
   uint phase_start_offset_ = 1; // the first task should be grounded starting from this time
   uint phase_end_offset_   = 1;

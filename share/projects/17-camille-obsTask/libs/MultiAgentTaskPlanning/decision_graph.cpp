@@ -132,8 +132,8 @@ void DecisionGraph::build( int maxSteps, bool graph )
 
 std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode< NodeData >::ptr & node )
 {
-  auto bs     = node->data().beliefState;
-  auto states = node->data().states;
+  const auto& bs     = node->data().beliefState;
+  const auto& states = node->data().states;
 
   std::queue< GraphNode< NodeData >::ptr > nextQueue;
 
@@ -147,13 +147,13 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
 
     while( ! queue.empty() )
     {
-      auto node = queue.front();
+      const auto& node = queue.front();
       queue.pop();
 
       // for each agent
-      auto actions = getCommonPossibleActions( node, agentId );
+      const auto& actions = getCommonPossibleActions( node, agentId );
 
-      for( auto action : actions )
+      for( const auto& action : actions )
       {
         // node after action, will receive one or several observations
         auto child = node->makeChild( GraphNodeDataType( states, bs, false, agentId, NodeData::NodeType::OBSERVATION ) );
@@ -163,7 +163,7 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
 
         // for each outcome
         auto outcomes = getPossibleOutcomes( node, action );
-        for( auto outcome : outcomes )
+        for( const auto& outcome : outcomes )
         {
           CHECK( node->data().agentId == agentId, "Corruption in the queue!" );
           auto nextAgentId = ( agentId + 1 ) % engine_.agentNumber();
@@ -193,6 +193,7 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
           if( nodeNeedsToBeCreated )
           {
             const auto childChild = child->makeChild( childChildData );
+
             hash_to_id_[ childChild->data().hash() ].push_back( childChild->id() );
             nodes_.push_back( childChild );
             edges_.push_back( { { child->id(), std::make_pair( p, observation ) } } );

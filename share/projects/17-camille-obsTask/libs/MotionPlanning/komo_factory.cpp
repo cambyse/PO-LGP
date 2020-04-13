@@ -36,7 +36,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
   auto komo = std::make_shared< ExtensibleKOMO >();
   komo->registerInit( initGrounder_ );
 
-  for ( auto task : tasks_ )
+  for ( const auto& task : tasks_ )
   {
     komo->registerTask( task.first, task.second );
   }
@@ -78,7 +78,7 @@ void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >
     return;
   }
 
-  auto type = facts.front();
+  const auto& type = facts.front();
 
   std::vector< std::string >args;
   if( facts.size() > 1 )
@@ -111,7 +111,7 @@ void ExtensibleKOMO::applyRandomization( const std::vector< double > & randomVec
   {
     if( f->ats["random_bounds"]  )
     {
-      auto randomBounds = f->ats.get<arr>("random_bounds");
+      const auto& randomBounds = f->ats.get<arr>("random_bounds");
 
       for( uint j = 0; j < randomBounds.size(); ++j )
       {
@@ -137,7 +137,7 @@ void ExtensibleKOMO::saveTrajectory( const std::string & suffix ) const
   ofstream fil( filename.c_str() );
   StringA jointNames = world.getJointNames();
   //first line: legend
-  for(auto s:jointNames) fil <<s <<' ';
+  for(const auto& s:jointNames) fil <<s <<' ';
   fil <<endl;
 
   // positions
@@ -149,7 +149,7 @@ void ExtensibleKOMO::saveTrajectory( const std::string & suffix ) const
 
   for( auto t = 0; t < T; ++t )
   {
-    auto x_t   = xx.row( t );
+    const auto& x_t   = xx.row( t );
 
     coordinates.setMatrixBlock( x_t, t, 0 );
   }
@@ -166,7 +166,7 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
   ofstream fil( filename.c_str() );
   StringA jointNames = world.getJointNames();
   //first line: legend
-  for(auto s:jointNames) fil <<s <<' ';
+  for(const auto& s:jointNames) fil <<s <<' ';
   fil <<endl;
 
   // positions
@@ -178,9 +178,9 @@ void ExtensibleKOMO::plotVelocity( const std::string & suffix ) const
 
   for( auto t = 0; t < T - 1; ++t )
   {
-    auto x_t   = xx.row( t );
-    auto x_t_1 = xx.row( t + 1 );
-    auto v = ( x_t_1 - x_t ) / tau;
+    const auto& x_t   = xx.row( t );
+    const auto& x_t_1 = xx.row( t + 1 );
+    const auto& v = ( x_t_1 - x_t ) / tau;
 
     velocities.setMatrixBlock( v, t, 0 );
   }
