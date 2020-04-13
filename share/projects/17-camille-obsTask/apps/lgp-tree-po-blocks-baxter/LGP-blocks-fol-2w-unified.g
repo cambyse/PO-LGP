@@ -30,15 +30,11 @@ clear       # object X top is clear
 identified  # object X as been identified, the agnt knows which block it is
 is
 
-#now_in_sight # getting sight of location X
-#collision_avoidance_activated # 
-
 # keyword
 NOT_OBSERVABLE
+UNEQUAL
 
 ## constants
-#container_0
-#container_1
 block_1
 block_2 
 block_3 
@@ -50,7 +46,8 @@ tableC
 
 ## initial state
 START_STATE { (table tableC) 
-(block block_1) (block block_2) (block block_3) (id block_a) (id block_b) (id block_c)
+(block block_1) (block block_2) (block block_3) (id block_a) (id block_b) (id block_c) 
+(UNEQUAL block_1 block_2) (UNEQUAL block_1 block_3) (UNEQUAL block_2 block_3)
 (location tableC)
 (clear block_3) (clear block_2)
 (on_table block_1 tableC) (on_table block_2 tableC) (on block_3 block_1)
@@ -148,7 +145,7 @@ Rule {
 #deduction of the last block if they have all been identified..(is it rigorous?)
 Rule {
   X, Y, Z, T
-  { (block X) (block Y) (block Z) (id T) (identified X) (identified Y) (identified Z)! (NOT_OBSERVABLE is Z T)}
+  { (block X) (block Y) (block Z) (id T) (identified X) (identified Y) (UNEQUAL X Y) (identified Z)! (NOT_OBSERVABLE is Z T)}
   { (identified Z) (is Z T) (NOT_OBSERVABLE is Z T)!}
 }
 
