@@ -242,10 +242,9 @@ void plan_graph_search()
 
     // checked, probably doesn't work with n steps = 5
     // B
-    tp.setFol( "LGP-blocks-fol-2w-unified.g" );
-    mp.setKin( "LGP-blocks-kin-2w-unified.g" );
-
-    //tp.setFol( "LGP-blocks-fol-2w-model-2-unified.g" );
+    //tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
+    tp.setFol( "LGP-blocks-fol-2w-one-table-no-precondition.g" );
+    mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
 
     // checked
     // A

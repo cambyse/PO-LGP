@@ -30,15 +30,11 @@ clear       # object X top is clear
 identified  # object X as been identified, the agnt knows which block it is
 is
 
-#now_in_sight # getting sight of location X
-#collision_avoidance_activated # 
-
 # keyword
 NOT_OBSERVABLE
+UNEQUAL
 
 ## constants
-#container_0
-#container_1
 block_1
 block_2 
 block_3 
@@ -50,6 +46,7 @@ tableC
 ## initial state
 START_STATE { (table tableC) 
 (block block_1) (block block_2) (block block_3) (id block_a) (id block_b) (id block_c)
+(UNEQUAL block_1 block_2) (UNEQUAL block_1 block_3) (UNEQUAL block_2 block_3)
 (location tableC)
 (clear block_3) (clear block_2)
 (on_table block_1 tableC) (on_table block_2 tableC) (on block_3 block_1)
@@ -79,7 +76,6 @@ BELIEF_START_STATE{
 }
 }
 
-
 ### Termination RULES 
 Rule {
   { (on block_a block_b) (on block_b block_c) (hand_empty) } # 
@@ -95,11 +91,18 @@ REWARD {
 }
 
 ### Tasks definitions
+# Check
+DecisionRule check {
+  X
+  { (block X) (holding X) (identified X)! }
+  { (in_sight X) komoCheck(X)=1. }
+}
+
 # Pick-up
 DecisionRule pick-up {
   X, Y
   { (block X) (location Y) (clear X) (on_table X Y) (hand_empty) }
-  { (on_table X Y)! (clear X)! (hand_empty)! (holding X) (clear Y) komoPickUp(X Y)=1. }
+  { (on_table X Y)! (holding X) (hand_empty)! (clear X)! (clear Y) komoPickUp(X Y)=1. }
 }
 
 # Put-down
@@ -109,60 +112,19 @@ DecisionRule put-down {
   { (holding X)! (hand_empty) (clear X) (on_table X Y) komoPutDown(X Y)=1. }
 }
 
-# Check
-DecisionRule check {
-  X
-  { (block X) (identified X)! }
-  { (in_sight X) komoCheck(X)=1. }
-}
-
 # Stack
 DecisionRule stack {
   X, Y
   { (block X) (block Y) (holding X) (clear Y) }
-  { (holding X)! (hand_empty) (clear Y)! (clear X) (on X Y) komoStack(X Y)=1. }
+  { (holding X)! (hand_empty) (clear X) (clear Y)! (on X Y) komoStack(X Y)=1. }
 }
 
 # Unstack
 DecisionRule unstack {
   X, Y
-  { (block X) (block Y) (on X Y) (clear X) (hand_empty) }
-  { (holding X) (hand_empty)! (clear X)! (clear Y) (on X Y)! komoUnStack(X Y)=1. }
+  { (block X) (block Y) (clear X) (on X Y) (hand_empty) }
+  { (on X Y)! (holding X) (hand_empty)! (clear X)! (clear Y) komoUnStack(X Y)=1. }
 }
-
-# Get sight
-#DecisionRule get_sight {
-#  X
-#  { (INFEASIBLE get_sight X)! (location X) (in_sight X)! } #(in_sight X)! is a trick
-#  { (now_in_sight X) komoGetSight(X)=1. }
-#}
-
-# Take a view
-#DecisionRule take_view {
-#  X, Y
-#  { (object X) (in_sight Y) (view_taken X Y)! }
-#  { (view_taken X Y) komoTakeView(X Y)=1.0 }
-#}
-
-# Grasp
-#DecisionRule grasp {
-#  X, Y
-#  { (grasped X Y)! (INFEASIBLE grasp X Y)! (agent X) (container Y) (held Y)! (busy X)! }
-#  { (grasped X Y)=2.0 (busy X) (held Y) (on_table Y)! komoGrasp(X Y)=1. }
-#}
-
-# Place
-#DecisionRule place {
-#  X, Y, Z,
-#  { (placed X Y Z)! (grasped X Y) (table Z) }
-#  { (placed X Y Z)  (on_table Y)  (busy X)! (held Y)! komoPlace(X Y Z)=1. }
-#}
-
-#DecisionRule home {
-#  { (PRE_QUIT) }
-#  { (QUIT) }
-#}
-
 
 ### Rules / Observation Model
 #Observation model
@@ -175,7 +137,7 @@ Rule {
 #deduction of the last block if they have all been identified..(is it rigorous?)
 Rule {
   X, Y, Z, T
-  { (block X) (block Y) (block Z) (id T) (identified X) (identified Y) (identified Z)! (NOT_OBSERVABLE is Z T)}
+  { (block X) (block Y) (block Z) (id T) (identified X) (identified Y) (UNEQUAL X Y) (identified Z)! (NOT_OBSERVABLE is Z T)}
   { (identified Z) (is Z T) (NOT_OBSERVABLE is Z T)!}
 }
 
@@ -191,55 +153,3 @@ Rule {
   { (block X) (block Y) (id Z) (id T) (is X Z) (is Y T) (on X Y)! (on Z T)}
   { (on Z T)!}
 }
-
-#Apply identification to the ON table
-#Rule {
-#  X, Y, Z
-#  { (block X) (location Y) (id Z) (on_table X Y) (is X Y) }
-#  { (on_table Z Y)}
-#}
-
-# Object seen = Observation model
-#Rule {
-#  X, Y
-#  { (object X) (location Y) (NOT_OBSERVABLE at X Y) (in_sight Y) (view_taken X Y) }
-#  { (viewed X Y)  (at X Y)  (NOT_OBSERVABLE at X Y)!}
-#}
-
-# remove old in sights
-#Rule {
-#  X, Y
-#  { (now_in_sight X) (in_sight Y) }
-#  { (in_sight Y)! }
-#}
-
-# transform now in sight in in sight
-#Rule {
-#  X
-#  { (now_in_sight X) }
-#  { (now_in_sight X)! (in_sight X) }
-#}
-
-### Collision avoidance
-# over plane activation
-#Rule {
-#  X, Y
-#  { (container X) (table Y) (on_table X)! (collision_avoidance_activated X Y)! }
-#  { (collision_avoidance_activated X Y) komoActivateOverPlane(X Y)=1. }
-#}
-
-# over plane deactivation
-#Rule {
-#  X, Y
-#  { (container X) (table Y) (on_table X) (collision_avoidance_activated X Y) }
-#  { (collision_avoidance_activated X Y)! komoDeactivateOverPlane(X Y)=1. }
-#}
-
-# mutex collision avoidance
-#Rule {
-#  X, Y
-#  { (mutex_objects X) (mutex_objects Y) (collision_avoidance_activated X Y)! }
-#  { (collision_avoidance_activated X Y) komoCollisionAvoidance(X Y)=1. }
-#}
-
-
