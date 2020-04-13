@@ -201,8 +201,8 @@ void GraphPlanner::buildPolicy()
     auto uPair = Q.front();
     Q.pop();
 
-    auto u     = uPair.first;
-    auto uSke = uPair.second;
+    const auto& u     = uPair.first;
+    const auto& uSke = uPair.second;
 
     //std::cout << "u->id()" << u->id() << " action:" << u->data().leadingArtifact << std::endl;
 
