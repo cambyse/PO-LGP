@@ -82,4 +82,4 @@ REWARD {
 }
 
 ### Tasks definitions
-Include = 'LGP-blocks-actions-observations-no-precondition.g'
+Include = 'LGP-blocks-actions-no-observations.g'

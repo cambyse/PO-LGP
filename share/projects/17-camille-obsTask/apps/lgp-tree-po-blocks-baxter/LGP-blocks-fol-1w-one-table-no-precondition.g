@@ -44,11 +44,12 @@ block_c  #block identifier
 tableC
 
 ## initial state
-START_STATE { (table tableC) 
+START_STATE {
+(table tableC) 
+(location tableC)
 (block block_1) (block block_2) (block block_3) (id block_a) (id block_b) (id block_c)
 (UNEQUAL block_1 block_2) (UNEQUAL block_1 block_3) (UNEQUAL block_2 block_3)
-(location tableC)
-(clear block_3) (clear block_2)
+(clear block_3) (clear block_2) (clear tableC)
 (on_table block_1 tableC) (on_table block_2 tableC) (on block_3 block_1)
 (hand_empty) 
 
@@ -78,4 +79,4 @@ REWARD {
 }
 
 ### Tasks definitions
-Include = 'LGP-blocks-actions-observations-no-precondition.g'
+Include = 'LGP-blocks-actions-no-observations.g'

@@ -219,7 +219,7 @@ void plan_graph_search()
     mp::KOMOPlanner mp;
 
     // set planner specific parameters
-    tp.setR0( -5 ); //-0.25//-0.1//-0.015 );
+    tp.setR0( -0.25 ); //-0.25//-0.1//-0.015 );
     tp.setMaxDepth( 20 );
     mp.setNSteps( 20 );
     mp.setMinMarkovianCost( 0.00 );
@@ -233,11 +233,11 @@ void plan_graph_search()
 
     // set start configurations
     // D
-    tp.setFol( "LGP-blocks-fol-one-table-no-precondition.g" );
+    //tp.setFol( "LGP-blocks-fol-one-table-no-precondition.g" );
     //mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // C
-    //tp.setFol( "LGP-blocks-fol-one-table.g" );
+    tp.setFol( "LGP-blocks-fol-one-table.g" );
     mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // checked, probably doesn't work with n steps = 5
@@ -302,8 +302,8 @@ void plan_graph_search()
         motion_planning_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
       }
       ///
-      savePolicyToFile( policy, "-informed" );
-      results << policy.id() << "," << std::min( 10.0, -policy.value() ) << std::endl;
+      //savePolicyToFile( policy, "-informed" );
+      //results << policy.id() << "," << std::min( 10.0, -policy.value() ) << std::endl;
       ///
 
       {

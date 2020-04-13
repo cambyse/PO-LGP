@@ -32,7 +32,6 @@ target_link_libraries(
  Gui
  Optim
  Logic
- #MCTS
  KOMO
  POMTP_interfaces
  ObservationTasks

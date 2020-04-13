@@ -80,4 +80,4 @@ REWARD {
 #  }
 }
 ### Tasks definitions
-Include = 'LGP-blocks-actions-observations.g'
+Include = 'LGP-blocks-actions-no-observations.g'
