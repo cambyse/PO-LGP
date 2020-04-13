@@ -49,7 +49,7 @@ void LogicParser::buildPossibleStartStates( const std::string & description )
     FOL_World fol( description.c_str() );
 
     fol.reset_state();
-    auto state = getStateStr( fol );
+    const auto& state = getStateStr( fol );
     startStates_.push_back( state );
   }
   else
@@ -64,17 +64,16 @@ void LogicParser::buildPossibleStartStates( const std::string & description )
       FOL_World fol( description.c_str() );
 
       // get additional facts
-      auto facts = eventualFactsGraph->elem( w );
+      const auto& facts = eventualFactsGraph->elem( w );
 
       for( auto fact : facts->graph() )
       {
-        auto factStringA = nodeToStringA( fact );
-
+        const auto& factStringA = nodeToStringA( fact );
         fol.addFact( factStringA );
       }
 
       fol.reset_state();
-      auto state = getStateStr( fol );
+      const auto& state = getStateStr( fol );
       startStates_.push_back( state );
     }
   }
@@ -92,16 +91,16 @@ void LogicParser::parseBeliefState( const std::string & description )
   else
   {
     // get number of possible worlds
-    auto beliefStateGraph = &KB.get<Graph>( beliefStateTag_ );
+    const auto& beliefStateGraph = &KB.get<Graph>( beliefStateTag_ );
     const uint nWorlds = beliefStateGraph->d0;
 
     // parse belief state
     double totalProba = 0;
     for( uint w = 0; w < nWorlds; w++ )
     {
-      auto beliefNode = beliefStateGraph->elem( w );
-      auto probaNode = beliefNode->graph().first();
-      auto proba = probaNode->get<double>();
+      const auto& beliefNode = beliefStateGraph->elem( w );
+      const auto& probaNode = beliefNode->graph().first();
+      const auto& proba = probaNode->get<double>();
 
       egoBeliefState_.push_back( proba );
 

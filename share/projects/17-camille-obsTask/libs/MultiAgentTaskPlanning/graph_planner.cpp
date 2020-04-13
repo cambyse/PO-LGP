@@ -59,7 +59,7 @@ void GraphPlanner::integrate( const Policy & policy )
   std::queue< Policy::GraphNodeTypePtr > Q;
   Q.push( policy.root() );
 
-  auto decisionGraphNodes = graph_.nodes();
+  const auto& decisionGraphNodes = graph_.nodes();
 
   while( ! Q.empty() )
   {
@@ -70,7 +70,7 @@ void GraphPlanner::integrate( const Policy & policy )
     {
       CHECK_EQ( n->children().size(), 1, "wrong Policy" );
 
-      for( auto c : n->children() )
+      for( const auto & c : n->children() )
       {
         //std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
         if(c->data().status == PolicyNodeData::INFORMED)
@@ -83,16 +83,16 @@ void GraphPlanner::integrate( const Policy & policy )
     else
     {
       // we have to skip the observation node
-      for( auto c : n->children() )
+      for( const auto& c : n->children() )
       {
         // find correct parent in decision graph
         // 1 - get similar node in graph
-        auto c_g = decisionGraphNodes[ c->data().decisionGraphNodeId ];
+        const auto& c_g = decisionGraphNodes[ c->data().decisionGraphNodeId ];
 
         auto id_right_parent = -1;
-        for( auto p_g : c_g.lock()->parents() )
+        for( const auto& p_g : c_g.lock()->parents() )
         {
-          for( auto p_p_g : p_g.lock()->parents() )
+          for( const auto& p_p_g : p_g.lock()->parents() )
           {
             if( p_p_g.lock()->id() == n->data().decisionGraphNodeId )
             {
@@ -188,11 +188,11 @@ void GraphPlanner::buildPolicy()
   std::queue< std::pair< NodeTypePtr, Policy::GraphNodeTypePtr > > Q;
 
   // create policy root node from decision graph node
-  auto root = decidedGraph_.root();
+  const auto& root = decidedGraph_.root();
   PolicyNodeData rootData;
   rootData.beliefState = root->data().beliefState;
 
-  auto policyRoot = GraphNode< PolicyNodeData >::root( rootData );
+  const auto& policyRoot = GraphNode< PolicyNodeData >::root( rootData );
 
   Q.push( std::make_pair( decidedGraph_.root(), policyRoot ) );
 
@@ -206,7 +206,7 @@ void GraphPlanner::buildPolicy()
 
     //std::cout << "u->id()" << u->id() << " action:" << u->data().leadingArtifact << std::endl;
 
-    for( auto v : u->children() )
+    for( const auto& v : u->children() )
     {
       auto edge = decidedGraph_.edges()[ v->id() ][ u->id() ];
       PolicyNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
@@ -218,7 +218,7 @@ void GraphPlanner::buildPolicy()
 
       //std::cout << "build ske from " << uSke->id() << "(" << u->id() << ") to " << vSke->id()<< " (" << v->id() << ") = " << data.markovianReturn << std::endl;
 
-      for( auto w : v->children() ) // skip obs nodes
+      for( const auto& w : v->children() ) // skip obs nodes
       {
         Q.push( std::make_pair( w, vSke ) );
       }

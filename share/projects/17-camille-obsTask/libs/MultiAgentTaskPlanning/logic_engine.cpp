@@ -50,9 +50,9 @@ std::vector<std::string> LogicEngine::getPossibleActions( uint agentId )
 
   std::vector<std::string> filteredActions;
 
-  auto actions = engine_->get_actions();
+  const auto& actions = engine_->get_actions();
 
-  for( auto action : actions )
+  for( const auto& action : actions )
   {
     if( isOfAgent( action, agentId ) || agentNumber_ == 1 )
     {
@@ -74,7 +74,7 @@ void LogicEngine::transition( const std::string & action )
 {
   auto actions = engine_->get_actions();
 
-  for( auto a : actions )
+  for( const auto& a : actions )
   {
     if( actionToString( a ) == action )
     {
@@ -114,13 +114,13 @@ void LogicEngine::parseNumberOfAgents()
 
 void LogicEngine::parseActions()
 {
-  auto actions = engine_->decisionRules;
+  const auto& actions = engine_->decisionRules;
 
   actionsNames_ = std::vector< std::vector< std::string > > ( agentNumber_ );
 
-  for( auto actionNode : actions )
+  for( const auto& actionNode : actions )
   {
-    auto actionName = actionToString( actionNode );
+    const auto& actionName = actionToString( actionNode );
 
     auto agentId = getAgentId( actionName );
 

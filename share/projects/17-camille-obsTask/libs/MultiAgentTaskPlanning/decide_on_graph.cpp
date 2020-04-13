@@ -33,7 +33,7 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
 
   while( ! Q.empty() )
   {
-    auto u = Q.front();
+    const auto& u = Q.front();
     Q.pop();
 
     decided[ u->id() ] = true;
@@ -45,7 +45,7 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
       {
         double bestValue = m_inf();
         uint bestId = -1;
-        for( auto v : u->children() )
+        for( const auto& v : u->children() )
         {
           if( rewards[ fromToIndex( u->id(), v->id() ) ] + values[ v->id() ] >= bestValue )
           {
@@ -55,7 +55,7 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
           }
         }
 
-        for( auto v : u->children() )
+        for( const auto& v : u->children() )
         {
           if( v->id() != bestId )
           {
@@ -67,12 +67,12 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
           {
             // keep this node and all its observation counterparts
             toKeep[ v->id() ] = true;
-            for( auto w : v->children() )
+            for( const auto& w : v->children() )
             {
               toKeep[ w->id() ] = true;
             }
 
-            for( auto w : v->children() )
+            for( const auto& w : v->children() )
             {
               Q.push( w );
             }
@@ -85,15 +85,15 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
   decidedGraph.purgeNodes( toKeep );
 
   // remove nodes that don't have to be kept
-  for( auto _n : toRemove )
+  for( const auto& _n : toRemove )
   {
     if( _n.lock() )
     {
-      auto n = _n.lock();
+      const auto& n = _n.lock();
 
-      for( auto _p : n->parents() )
+      for( const auto& _p : n->parents() )
       {
-        auto p = _p.lock();
+        const auto& p = _p.lock();
         if( p )
         {
           p->removeChild( n );

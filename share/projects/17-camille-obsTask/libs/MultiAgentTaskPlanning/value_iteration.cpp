@@ -48,13 +48,13 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
   };
 
   // go from leafs to root
-  const auto nodes = graph.nodes();
-  const auto terminals = graph.terminalNodes();
+  const auto& nodes = graph.nodes();
+  const auto& terminals = graph.terminalNodes();
   auto edges = graph.edges();
 
-  for( auto weakV : terminals )
+  for( const auto& weakV : terminals )
   {
-    auto v = weakV.lock();
+    const auto& v = weakV.lock();
 
     values[ v->id() ] = 0; // all rewards negative
   }
@@ -71,9 +71,9 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
     auto itNodes = nodes;
     std::random_shuffle ( itNodes.begin(), itNodes.end() );
 
-    for( auto weakU : itNodes )
+    for( const auto& weakU : itNodes )
     {
-      auto u = weakU.lock();
+      const auto& u = weakU.lock();
 
       if( u->id() == 3 )
       {
