@@ -233,18 +233,18 @@ void plan_graph_search()
 
     // set start configurations
     // D
-    //tp.setFol( "LGP-blocks-fol-model-2-unified.g" );
-    //mp.setKin( "LGP-blocks-kin-unified.g" );
+    tp.setFol( "LGP-blocks-fol-one-table-no-precondition.g" );
+    //mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // C
-    //tp.setFol( "LGP-blocks-fol-unified.g" );
-    //mp.setKin( "LGP-blocks-kin-unified.g" );
+    //tp.setFol( "LGP-blocks-fol-one-table.g" );
+    mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // checked, probably doesn't work with n steps = 5
     // B
-    tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
     //tp.setFol( "LGP-blocks-fol-2w-one-table-no-precondition.g" );
-    mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
 
     // A
     //tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
