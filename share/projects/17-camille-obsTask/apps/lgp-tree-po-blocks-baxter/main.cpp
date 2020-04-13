@@ -248,8 +248,8 @@ void plan_graph_search()
     //mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // C
-    tp.setFol( "LGP-blocks-fol-one-table.g" );
-    mp.setKin( "LGP-blocks-kin-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // checked, probably doesn't work with n steps = 5
     // B
@@ -263,13 +263,21 @@ void plan_graph_search()
     //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
 
     // 4 blocks linear
-    //tp.setFol( "LGP-blocks-fol-1w-unified-4-blocks.g" );
-    //mp.setKin( "LGP-blocks-kin-1w-unified-4-blocks.g" );
+    //tp.setFol( "LGP-blocks-fol-4-blocks-1w-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-4-blocks-1w-one-table.g" );
 
     // 4 blocks new version
     //tp.setFol( "LGP-blocks-fol-1w-unified-4-blocks-new.g" );
     //tp.setFol( "LGP-blocks-fol-2w-model-2-unified.g" );
     //mp.setKin( "LGP-blocks-kin-1w-unified-4-blocks-new.g" );
+
+    // 5 blocks linear
+    //tp.setFol( "LGP-blocks-fol-5-blocks-1w-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-5-blocks-1w-one-table.g" );
+
+    // 6 blocks linear
+    tp.setFol( "LGP-blocks-fol-6-blocks-1w-one-table.g" );
+    mp.setKin( "LGP-blocks-kin-6-blocks-1w-one-table.g" );
 
     {
       auto start = std::chrono::high_resolution_clock::now();
