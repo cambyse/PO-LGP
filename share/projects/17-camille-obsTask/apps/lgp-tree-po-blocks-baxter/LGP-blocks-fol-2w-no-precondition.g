@@ -98,7 +98,7 @@ REWARD {
 # Check
 DecisionRule check {
   X
-  { (block X) (holding X) (identified X)! }
+  { (block X) (identified X)! }
   { (in_sight X) komoCheck(X)=1. }
 }
 
