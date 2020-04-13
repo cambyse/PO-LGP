@@ -242,15 +242,14 @@ void plan_graph_search()
 
     // checked, probably doesn't work with n steps = 5
     // B
-    //tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
-    tp.setFol( "LGP-blocks-fol-2w-one-table-no-precondition.g" );
+    tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-2w-one-table-no-precondition.g" );
     mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
 
-    // checked
     // A
-    //tp.setFol( "LGP-blocks-fol-1w-unified.g" ); // "/home/camille/Dev/mlr_build/apps/lgp-tree-po-blocks-baxter/LGP-blocks-fol-1w-unified.g"
-    //mp.setKin( "LGP-blocks-kin-1w-unified.g" );
-    //tp.setFol( "LGP-blocks-fol-1w-model-2-unified.g" );
+    //tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-1w-one-table-no-precondition.g" );
+    //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
 
     // 4 blocks linear
     //tp.setFol( "LGP-blocks-fol-1w-unified-4-blocks.g" );

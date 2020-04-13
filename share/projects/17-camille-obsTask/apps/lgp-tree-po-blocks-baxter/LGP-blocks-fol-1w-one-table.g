@@ -50,25 +50,20 @@ START_STATE { (table tableC)
 
 (is block_2 block_b)
 (identified block_2)
+
+(is block_1 block_a)
+(identified block_1)
 }
 
 EVENTUAL_FACTS{ 
 {
-(NOT_OBSERVABLE is block_3 block_c)
-(NOT_OBSERVABLE is block_1 block_a)
-}
-{
-(NOT_OBSERVABLE is block_1 block_c)
-(NOT_OBSERVABLE is block_3 block_a)
+(is block_3 block_c)
 }
 }
 
 BELIEF_START_STATE{ 
 {
-()=0.6
-}
-{
-()=0.4
+()=1.0
 }
 }
 
@@ -87,4 +82,3 @@ REWARD {
 }
 ### Tasks definitions
 Include = 'LGP-blocks-actions-observations.g'
-
