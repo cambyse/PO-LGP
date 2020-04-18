@@ -9,89 +9,11 @@
 #include <Kin/kin.h>
 #include <Kin/switch.h>
 
-#include <boost/filesystem.hpp>
+#include <komo_planner_utils.h>
 
 namespace mp
 {
-static double eps() { return std::numeric_limits< double >::epsilon(); }
-static arr extractAgentQMask( const rai::KinematicWorld & G )  // retrieve agent joints
-{
-  uintA selectedBodies;
-
-  for( const auto & f: G.frames )
-  {
-    if( f->ats["agent"] && f->ats.get<bool>("agent") )
-    {
-      selectedBodies.setAppend(f->ID);
-    }
-  }
-
-  // build mask
-  arr qmask = zeros( G.q.d0 );
-
-  for( const auto& b : selectedBodies )
-  {
-    rai::Joint *j = G.frames.elem(b)->joint;
-
-    CHECK( j, "incoherence, the joint should not be null since it has been retrieved before" );
-
-    for( auto i = j->qIndex; i < j->qIndex + j->dim; ++i )
-    {
-      qmask( i ) = 1;
-    }
-  }
-
-  return qmask;
-}
-
-static double updateValue( const Policy::GraphNodeType::ptr & node )
-{
-  double value = 0;
-
-  for( const auto& c : node->children() )
-  {
-    value += c->data().p * ( c->data().markovianReturn + updateValue( c ) );
-  }
-
-  return value;
-}
-
-static void updateValues( Policy & policy )
-{
-  policy.setValue( updateValue( policy.root() ) );
-}
-
-class WorkingDirLock
-{
-public:
-  WorkingDirLock()
-    : working_dir_(boost::filesystem::current_path())
-  {
-
-  }
-
-  ~WorkingDirLock()
-  {
-    boost::filesystem::current_path(working_dir_);
-  }
-
-private:
-  boost::filesystem::path working_dir_;
-};
-
-static Graph loadKin(const std::string & kinDescription)
-{
-  WorkingDirLock lock;
-  return Graph(kinDescription.c_str());
-}
-
-static std::shared_ptr< rai::KinematicWorld > createKin(const Graph & kinG )
-{
-  WorkingDirLock lock;
-  auto kin = std::make_shared< rai::KinematicWorld >();
-  kin->init( kinG );
-  return kin;
-}
+static constexpr double eps = std::numeric_limits< double >::epsilon();
 
 //--------Motion Planner--------------//
 
@@ -195,7 +117,6 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   CHECK( po.policyId() == policy.id(), "id of the policy and the planning orders are not consistent" );
 
   //po.getParam( "type" );
-
   clearLastNonMarkovianResults();
 
   // solve on pose level
@@ -204,49 +125,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   /// EARLY STOPPING, detect if pose level not possible
   bool poseOptimizationFailed = false;
   // if a node has a constraint which is not satisfied, we set the node to infeasible i.e. infinite cost!
-
-  {
-    std::list< Policy::GraphNodeTypePtr > fifo;
-    fifo.push_back( policy.root() );
-
-    while( ! fifo.empty()  )
-    {
-      auto node = fifo.back();
-      fifo.pop_back();
-
-      double maxConstraint = 0;
-      for( const auto& constraint : poseConstraints_[ node->data().decisionGraphNodeId ] )
-      {
-        maxConstraint = std::max( constraint, maxConstraint );
-      }
-
-      if( maxConstraint >= maxConstraint_ )
-      {
-        std::cout << "Pose Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
-        std::cout << "action: " << std::endl;
-        for(const auto & arg: node->data().leadingKomoArgs)
-          std::cout << arg << " ";
-        std::cout << std::endl;
-
-        node->data().markovianReturn = std::numeric_limits< double >::lowest();
-        //node->setValue( std::numeric_limits< double >::lowest() );
-        node->data().status = PolicyNodeData::INFORMED;
-
-        poseOptimizationFailed = true;
-        policy.setValue( std::numeric_limits< double >::lowest() );
-      }
-      else
-      {
-        // push children on list
-        for( const auto& c : node->children() )
-        {
-          fifo.push_back( c );
-        }
-      }
-    }
-
-    policy.setStatus( Policy::INFORMED );
-  }
+  savePoseOptimizationResults(policy, poseOptimizationFailed);
 
   if( poseOptimizationFailed )  // early stopping
     return;
@@ -255,44 +134,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   if( po.getParam( "type" ) == "markovJointPath" )
   {
     optimizeMarkovianPath( policy );
-
-    std::list< Policy::GraphNodeTypePtr > fifo;
-    fifo.push_back( policy.root() );
-
-    while( ! fifo.empty()  )
-    {
-      auto node = fifo.back();
-      fifo.pop_back();
-
-      double constraint = markovianPathConstraints_[ node->data().decisionGraphNodeId ];
-
-      if( constraint >= maxConstraint_ )
-      {
-        std::cout << "Markovian Optimization failed on node " << node->id() << " constraint:" << constraint << std::endl;
-
-        node->data().markovianReturn = std::numeric_limits< double >::lowest();
-        //node->setValue( std::numeric_limits< double >::lowest() );
-        //node->setStatus( PolicyNode::INFORMED );
-
-        poseOptimizationFailed = true;
-        policy.setValue( std::numeric_limits< double >::lowest() );
-      }
-      else
-      {
-        node->data().markovianReturn =  -( minMarkovianCost_ + markovianPathCosts_[ node->data().decisionGraphNodeId ] );
-        node->data().status = PolicyNodeData::INFORMED;
-
-        // push children on list
-        for( const auto& c : node->children() )
-        {
-          fifo.push_back( c );
-        }
-      }
-    }
-
-    /// UPDATE VALUES
-    updateValues( policy );
-    policy.setStatus( Policy::INFORMED );
+    saveMarkovianPathOptimizationResults( policy );
   }
   else if( po.getParam( "type" ) == "jointPath" )
   {
@@ -305,49 +147,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
       optimizeJointPath( policy );
     }
 
-    /// INFORM POLICY NODES
-    std::list< Policy::GraphNodeTypePtr > fifo;
-    fifo.push_back( policy.root() );
-
-    while( ! fifo.empty()  )
-    {
-      auto node = fifo.back();
-      fifo.pop_back();
-
-      uint phase = node->depth();
-
-      double cost = 0;
-
-      // get the right world
-      auto & pathCostsPerPhase = policy.N() > 1 ? jointPathCostsPerPhase_ : pathCostsPerPhase_;
-      for( auto w = 0; w < node->data().beliefState.size(); ++w )
-      {
-        if( node->data().beliefState[ w ] > 0 )
-        {
-          const auto& leaf = bsToLeafs_( w );
-          CHECK( pathCostsPerPhase.find( leaf ) != pathCostsPerPhase.end(), "corruption in datastructure" );
-
-          const auto& trajCosts = pathCostsPerPhase[ leaf ]( w );
-          const auto& wcost = trajCosts( phase_start_offset_ + phase );
-
-          cost += node->data().beliefState[ w ] * wcost;
-          //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
-        }
-      }
-
-      // push children on list
-      for( const auto& c : node->children() )
-      {
-        c->data().markovianReturn = - cost;
-
-        fifo.push_back( c );
-      }
-    }
-
-    /// UPDATE VALUES AND STATUS
-    updateValues( policy );
-    policy.setQResult(policy.N()>1 ? jointPathQResult_ : pathQResult_);
-    policy.setStatus( Policy::INFORMED );
+    saveJointPathOptimizationResults( policy );
   }
   else
   {
@@ -361,6 +161,7 @@ void KOMOPlanner::display( const Policy & policy, double sec )
 {
   Policy tmp( policy );
   MotionPlanningParameters po( policy.id() );
+
   po.setParam( "type", "jointPath" );
   // resolve since this planner doesn't store paths
   //
@@ -378,7 +179,7 @@ void KOMOPlanner::display( const Policy & policy, double sec )
   // retrieve trajectories
   rai::Array< rai::Array< rai::Array< rai::KinematicWorld > > > frames;
 
-  const auto & kinFrames = policy.N() > 1 ? jointPathKinFrames_ : pathKinFrames_;
+  const auto & kinFrames = jointPathKinFrames_.size() > 1 ? jointPathKinFrames_ : pathKinFrames_;
   for( const auto& leafWorldKinFramesPair : kinFrames )
   {
     frames.append( leafWorldKinFramesPair.second );
@@ -463,7 +264,7 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
   //
   for( auto w = 0; w < N; ++w )
   {
-    if( node->data().beliefState[ w ] > eps() )
+    if( node->data().beliefState[ w ] > eps )
     {
       rai::KinematicWorld kin = node->isRoot() ? *( startKinematics_( w ) ) : ( effKinematics_.find( node->parent()->data().decisionGraphNodeId )->second( w ) );
 
@@ -541,6 +342,53 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
   }
 }
 
+void KOMOPlanner::savePoseOptimizationResults( Policy & policy, bool & poseOptimizationFailed ) const
+{
+  std::list< Policy::GraphNodeTypePtr > fifo;
+  fifo.push_back( policy.root() );
+
+  while( ! fifo.empty()  )
+  {
+    auto node = fifo.back();
+    fifo.pop_back();
+
+    double maxConstraint = 0;
+    auto cIt = poseConstraints_.find(node->data().decisionGraphNodeId);
+
+    CHECK(cIt != poseConstraints_.end(), "the result of the pose optimization should be contained in the map");
+    for( const auto& constraint : cIt->second )
+    {
+      maxConstraint = std::max( constraint, maxConstraint );
+    }
+
+    if( maxConstraint >= maxConstraint_ )
+    {
+      std::cout << "Pose Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
+      std::cout << "action: " << std::endl;
+      for(const auto & arg: node->data().leadingKomoArgs)
+        std::cout << arg << " ";
+      std::cout << std::endl;
+
+      node->data().markovianReturn = std::numeric_limits< double >::lowest();
+      //node->setValue( std::numeric_limits< double >::lowest() );
+      node->data().status = PolicyNodeData::INFORMED;
+
+      poseOptimizationFailed = true;
+      policy.setValue( std::numeric_limits< double >::lowest() );
+    }
+    else
+    {
+      // push children on list
+      for( const auto& c : node->children() )
+      {
+        fifo.push_back( c );
+      }
+    }
+  }
+
+  policy.setStatus( Policy::INFORMED );
+}
+
 // markovian path
 void KOMOPlanner::optimizeMarkovianPath( Policy & policy )
 {
@@ -565,7 +413,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
 
     for( auto w = 0; w < N; ++w )
     {
-      if( node->data().beliefState[ w ] > eps() )
+      if( node->data().beliefState[ w ] > eps )
       {
         if(!node->isRoot()) CHECK( effMarkovianPathKinematics_.find( node->parent()->data().decisionGraphNodeId ) != effMarkovianPathKinematics_.end(),"no parent effective kinematic!" );
 
@@ -647,6 +495,51 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
   }
 }
 
+void KOMOPlanner::saveMarkovianPathOptimizationResults( Policy & policy ) const
+{
+  std::list< Policy::GraphNodeTypePtr > fifo;
+  fifo.push_back( policy.root() );
+
+  while( ! fifo.empty()  )
+  {
+    auto node = fifo.back();
+    fifo.pop_back();
+
+    auto kIt = markovianPathConstraints_.find(node->data().decisionGraphNodeId);
+    auto cIt = markovianPathCosts_.find(node->data().decisionGraphNodeId);
+    CHECK(kIt != markovianPathConstraints_.end(), "map should contain optimization results");
+
+    double constraint = kIt->second;
+    double cost = cIt->second;
+
+    if( constraint >= maxConstraint_ )
+    {
+      std::cout << "Markovian Optimization failed on node " << node->id() << " constraint:" << constraint << std::endl;
+
+      node->data().markovianReturn = std::numeric_limits< double >::lowest();
+      //node->setValue( std::numeric_limits< double >::lowest() );
+      //node->setStatus( PolicyNode::INFORMED );
+
+      policy.setValue( std::numeric_limits< double >::lowest() );
+    }
+    else
+    {
+      node->data().markovianReturn =  -( minMarkovianCost_ + cost );
+      node->data().status = PolicyNodeData::INFORMED;
+
+      // push children on list
+      for( const auto& c : node->children() )
+      {
+        fifo.push_back( c );
+      }
+    }
+  }
+
+  /// UPDATE VALUES
+  updateValues( policy );
+  policy.setStatus( Policy::INFORMED );
+}
+
 ///NON MARKOVIAN
 void KOMOPlanner::clearLastNonMarkovianResults()
 {
@@ -694,7 +587,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
   // solve problem for all ( relevant ) worlds
   for( auto w = 0; w < N; ++w )
   {
-    if( leaf->data().beliefState[ w ] > eps() )
+    if( leaf->data().beliefState[ w ] > eps )
     {
       // indicate this leaf as terminal for this node, this is used during the joint optimization..
       bsToLeafs_( w ) = leaf;
@@ -805,7 +698,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
   // solve problem for all ( relevant ) worlds
   for( auto w = 0; w < N; ++w )
   {
-    if( leaf->data().beliefState[ w ] > eps() )
+    if( leaf->data().beliefState[ w ] > eps )
     {
       // create komo
       auto komo = komoFactory_.createKomo();
@@ -931,11 +824,54 @@ void KOMOPlanner::computeJointPathQResult( const Policy& policy )
   }
 }
 
-void freeKomo( ExtensibleKOMO::ptr komo )
+void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
 {
-  listDelete( komo->configurations );
-  listDelete( komo->objectives );
-  listDelete( komo->switches );
+  /// INFORM POLICY NODES
+  std::list< Policy::GraphNodeTypePtr > fifo;
+  fifo.push_back( policy.root() );
+
+  while( ! fifo.empty()  )
+  {
+    auto node = fifo.back();
+    fifo.pop_back();
+
+    uint phase = node->depth();
+
+    double cost = 0;
+
+    // get the right world
+    auto & pathCostsPerPhase = jointPathKinFrames_.size() > 1 ? jointPathCostsPerPhase_ : pathCostsPerPhase_;
+    for( auto w = 0; w < node->data().beliefState.size(); ++w )
+    {
+      if( node->data().beliefState[ w ] > 0 )
+      {
+        const auto& leaf = bsToLeafs_( w );
+        auto tIt = pathCostsPerPhase.find(leaf);
+
+        CHECK( pathCostsPerPhase.find( leaf ) != pathCostsPerPhase.end(), "corruption in datastructure" );
+        CHECK(tIt!=pathCostsPerPhase.end(), "optimization results should be in the map");
+
+        const auto& trajCosts = tIt->second( w );
+        const auto& wcost = trajCosts( phase_start_offset_ + phase );
+
+        cost += node->data().beliefState[ w ] * wcost;
+        //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
+      }
+    }
+
+    // push children on list
+    for( const auto& c : node->children() )
+    {
+      c->data().markovianReturn = - cost;
+
+      fifo.push_back( c );
+    }
+  }
+
+  /// UPDATE VALUES AND STATUS
+  updateValues( policy );
+  policy.setQResult(policy.N()>1 ? jointPathQResult_ : pathQResult_);
+  policy.setStatus( Policy::INFORMED );
 }
 
 }

@@ -43,10 +43,12 @@ private:
   // poses
   void optimizePoses( Policy & );
   void optimizePosesFrom( const PolicyNodePtr & );
+  void savePoseOptimizationResults( Policy &, bool & poseOptimizationFailed ) const;
 
   // markovian path
   void optimizeMarkovianPath( Policy & );
   void optimizeMarkovianPathFrom( const PolicyNodePtr & );
+  void saveMarkovianPathOptimizationResults( Policy & ) const;
 
   /// NON MARKOVIAN
   void clearLastNonMarkovianResults();
@@ -59,6 +61,7 @@ private:
   void optimizeJointPath( Policy & );
   void optimizeJointPathTo( const PolicyNodePtr & );
   void computeJointPathQResult( const Policy& policy );
+  void saveJointPathOptimizationResults( Policy & ) const;
 
 private:
   // state
@@ -106,7 +109,5 @@ private:
 
   uint microSteps_     = 20; // per phase
 };
-
-void freeKomo( ExtensibleKOMO::ptr komo );
 
 }

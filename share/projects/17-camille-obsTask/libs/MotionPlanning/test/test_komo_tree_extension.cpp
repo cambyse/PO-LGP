@@ -296,9 +296,7 @@ TEST_F(KomoSparseFixture, TestTrajectoryWithTwoBranches)
 
   //EXPECT_THROW( komo.checkGradients(), std::exception ); // NIY
   komo.run();
-
   komo.plotTrajectory();
-
   komo.displayTrajectory(1, true);
 }
 
