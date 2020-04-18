@@ -203,7 +203,7 @@ namespace mp
     if(adjacency_matrix_.d0 < size)
     {
       auto old_adjacency_matrix = adjacency_matrix_;
-      auto old_size = old_adjacency_matrix.d0;
+      const auto& old_size = old_adjacency_matrix.d0;
       auto adjacency_matrix = arr(size, size);
       adjacency_matrix.setMatrixBlock(old_adjacency_matrix, 0, 0);
       adjacency_matrix_ = adjacency_matrix;

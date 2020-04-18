@@ -10,6 +10,8 @@
 #include <Kin/switch.h>
 
 #include <komo_planner_utils.h>
+#include <tree_builder.h>
+
 
 namespace mp
 {
@@ -149,11 +151,14 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
 
     saveJointPathOptimizationResults( policy );
   }
+  else if( po.getParam( "type" ) == "jointSparse" )
+  {
+    optimizeJointSparse( policy );
+  }
   else
   {
     CHECK( false, "not implemented yet!" );
   }
-
   //CHECK( checkPolicyIntegrity( policy ), "Policy is corrupted" );
 }
 
@@ -785,7 +790,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 //     }
 
       auto costs = komo->getCostsPerPhase();
-      Graph result = komo->getReport();
+      const auto& result = komo->getReport();
 
       double cost = result.get<double>({"total","sqrCosts"});
       double constraints = result.get<double>({"total","constraints"});
@@ -796,7 +801,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       // store result
       for( auto s = 0; s < komo->configurations.N; ++s )
       {
-        rai::KinematicWorld kin( *komo->configurations( s ) );
+        const rai::KinematicWorld& kin( *komo->configurations( s ) );
         jointPathKinFrames_[ leaf ]( w ).append( kin );
       }
 
@@ -872,6 +877,33 @@ void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
   updateValues( policy );
   policy.setQResult(policy.N()>1 ? jointPathQResult_ : pathQResult_);
   policy.setStatus( Policy::INFORMED );
+}
+
+void KOMOPlanner::optimizeJointSparse( Policy & policy )
+{
+  TreeBuilder tree_builder;
+
+  std::list< Policy::GraphNodeTypePtr > fifo;
+  fifo.push_back( policy.root() );
+
+  while( ! fifo.empty()  )
+  {
+    auto b = fifo.back();
+    fifo.pop_back();
+
+    const auto& a = b->parent();
+
+    if(a)
+    {
+      const auto& p = b->data().p;
+      tree_builder.add_edge(a->id(), b->id(), 0);
+    }
+
+    for(const auto&c : b->children())
+    {
+      fifo.push_back(c);
+    }
+  }
 }
 
 }

@@ -63,6 +63,9 @@ private:
   void computeJointPathQResult( const Policy& policy );
   void saveJointPathOptimizationResults( Policy & ) const;
 
+  // joint sparse
+  void optimizeJointSparse( Policy & );
+
 private:
   // state
   rai::Array< std::shared_ptr< const rai::KinematicWorld > > startKinematics_;
