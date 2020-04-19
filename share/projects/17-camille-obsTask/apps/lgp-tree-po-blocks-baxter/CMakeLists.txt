@@ -22,7 +22,7 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 # Define executable
 #################################
 
-file(GLOB PROJECT_SRC "*.cpp")
+file(GLOB PROJECT_SRC "*.cpp" "*.h")
 
 add_executable(${project_name} ${PROJECT_SRC})
 target_link_libraries(
