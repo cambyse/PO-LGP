@@ -3,6 +3,8 @@
 #include <algorithm>    // std::random_shuffle
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+#include <belief_state.h>
+#include <stack>
 
 static double m_inf() { return std::numeric_limits< double >::lowest(); }
 
@@ -185,7 +187,8 @@ void GraphPlanner::buildPolicy()
 
   using NodeTypePtr = std::shared_ptr< DecisionGraph::GraphNodeType >;
 
-  std::queue< std::pair< NodeTypePtr, Policy::GraphNodeTypePtr > > Q;
+  std::stack< std::pair< NodeTypePtr, Policy::GraphNodeTypePtr > > Q;
+  //std::queue< std::pair< NodeTypePtr, Policy::GraphNodeTypePtr > > Q;
 
   // create policy root node from decision graph node
   const auto& root = decidedGraph_.root();
@@ -198,28 +201,26 @@ void GraphPlanner::buildPolicy()
 
   while( ! Q.empty() )
   {
-    auto uPair = Q.front();
+    auto uPair = Q.top();
     Q.pop();
 
     const auto& u     = uPair.first;
     const auto& uSke = uPair.second;
 
-    //std::cout << "u->id()" << u->id() << " action:" << u->data().leadingArtifact << std::endl;
-
     for( const auto& v : u->children() )
     {
       auto edge = decidedGraph_.edges()[ v->id() ][ u->id() ];
       PolicyNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
-      data.p = edge.first;
       data.leadingKomoArgs = decisionArtifactToKomoArgs( edge.second );
       data.markovianReturn = rewards_[ fromToIndex( u->id(), v->id() ) ];
-
+      data.p = transitionProbability(uSke->data().beliefState, data.beliefState);
       auto vSke = uSke->makeChild( data );
 
-      //std::cout << "build ske from " << uSke->id() << "(" << u->id() << ") to " << vSke->id()<< " (" << v->id() << ") = " << data.markovianReturn << std::endl;
+      //std::cout << "build ske from " << uSke->id() << "(" << u->id() << ") to " << vSke->id()<< " (" << v->id() << ") , p = " << data.p << std::endl;
 
       for( const auto& w : v->children() ) // skip obs nodes
       {
+        auto edge = decidedGraph_.edges()[ w->id() ][ v->id() ];
         Q.push( std::make_pair( w, vSke ) );
       }
     }

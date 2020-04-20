@@ -100,7 +100,7 @@ void HeadGetSight::phi(arr& y, arr& J, const rai::KinematicWorld& G )
   if( moveAroundPivotDefined_ )
   {
     tmp_y.setVectorBlock( u1 -  w1_     , u.d0 - 1 );            // cost
-    tmp_J.setMatrixBlock( Ju1, Ju.d0 - 1, 0 );                    // jacobian
+    tmp_J.setMatrixBlock( Ju1, Ju.d0 - 1, 0 );                   // jacobian
   }
 
   // commit results
@@ -235,7 +235,7 @@ void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G )
   // intermediary computations
   // build w1
   arr w = aimPosition - pivotPosition;
-  double normW = norm2( w );
+  const double normW = norm2( w );
   //std::cout << "normW:" << normW << std::endl;
   arr w1 = w * 1. / normW;
   arr JnormW = Jnorm2( w );
@@ -249,7 +249,7 @@ void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G )
 
   // build u : vector between aiming point and head
   arr u = aimPosition - headPosition;
-  double normU = norm2( u );
+  const double normU = norm2( u );
   arr Ju = aimJPosition - headJPosition;
   arr JnormU = Jnorm2( u );  // get Jacobian of the norm operator
   arr u1 = u / normU;
@@ -262,7 +262,7 @@ void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G )
   auto aimingDirBody = head->X.rot * ( aimingDir_ );
 
   G.kinematicsVec( v, Jv, head, aimingDirBody ); // get function to minimize and its jacobian in state G
-  double normV = norm2( v );
+  const double normV = norm2( v );
   arr JnormV = Jnorm2( v );  // get Jacobian of the norm operator
   arr v1 = v / normV;
   arr Jv1 = ( Jv * normV - v * JnormV * Jv ) / ( normV * normV ); // jacobian of u normalized
@@ -273,7 +273,7 @@ void ActiveGetSight::phi( arr& y, arr& J, rai::KinematicWorld const& G )
 
   // head orientation
   tmp_y.setVectorBlock( ( u1  - v1 )     , 0 );    // cost
-  tmp_J.setMatrixBlock( ( Ju1 - Jv1 ), 0 , 0 ); // jacobian
+  tmp_J.setMatrixBlock( ( Ju1 - Jv1 ), 0 , 0 );    // jacobian
 
   // head alignment
   tmp_y.setVectorBlock( u1 -  w1,   u1.d0  );                    // cost

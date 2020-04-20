@@ -224,8 +224,8 @@ std::list< Policy::GraphNodeTypePtr > getPathTo( const Policy::GraphNodeTypePtr 
 
 struct PolicyHasher
 {
-    std::size_t operator()( const Policy & s ) const noexcept
-    {
-        return s.hash();
-    }
+  std::size_t operator()( const Policy & s ) const noexcept
+  {
+    return s.hash();
+  }
 };

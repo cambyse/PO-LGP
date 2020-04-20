@@ -83,6 +83,13 @@ public:
   T data() const { return data_; }
   T& data() { return data_; }
 
+  ptr makeChild( const T & data, uint id )
+  {
+    auto child = makeChild(data);
+    child->id_ = id;
+    return child;
+  }
+
   ptr makeChild( const T & data )
   {
     auto counter = ++counter_[ graphId_ ];

@@ -90,7 +90,7 @@ struct ActiveGetSight:Feature{
   ActiveGetSight( rai::String const& sensorName,
                   rai::String const& containerName,
                   arr const& pivotPoint,
-                  arr const& aimingDir,
+                  arr const& aimingDir, // sensor
                   double preferedDistance = 0.8 );
 
   virtual void phi( arr& y, arr& J, rai::KinematicWorld const& G );

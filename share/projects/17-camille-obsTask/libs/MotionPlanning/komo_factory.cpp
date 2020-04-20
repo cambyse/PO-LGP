@@ -31,12 +31,22 @@ void KOMOFactory::registerTask( const std::string & type, const SymbolGrounder &
   tasks_[ type ] = grounder;
 }
 
+void KOMOFactory::registerTask( const std::string & type, const TreeSymbolGrounder & grounder )
+{
+  treeTasks_[ type ] = grounder;
+}
+
 std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
 {
   auto komo = std::make_shared< ExtensibleKOMO >();
   komo->registerInit( initGrounder_ );
 
   for ( const auto& task : tasks_ )
+  {
+    komo->registerTask( task.first, task.second );
+  }
+
+  for ( const auto& task : treeTasks_ )
   {
     komo->registerTask( task.first, task.second );
   }
@@ -56,6 +66,11 @@ ExtensibleKOMO::ExtensibleKOMO()
 void ExtensibleKOMO::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
+}
+
+void ExtensibleKOMO::registerTask( const std::string & type, const TreeSymbolGrounder & grounder )
+{
+  treeTasks_[ type ] = grounder;
 }
 
 void ExtensibleKOMO::registerInit( const InitGrounder & grounder )
@@ -89,6 +104,31 @@ void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >
   if( tasks_.find( type ) != tasks_.end() )
   {
     tasks_[ type ]( phase, args, this, verbose ); // ground the symbol
+  }
+  else
+  {
+    HALT("UNKNOWN komo TAG: '" << type <<"'");
+  }
+}
+
+void ExtensibleKOMO::groundTasks( double start, const Vars& branch, const arr & scales, const std::vector< std::string >& facts, int verbose )
+{
+  if( facts.empty() )
+  {
+    return;
+  }
+
+  const auto& type = facts.front();
+
+  std::vector< std::string >args;
+  if( facts.size() > 1 )
+  {
+    args = std::vector< std::string > { facts.begin() + 1, facts.end() };
+  }
+
+  if( treeTasks_.find( type ) != treeTasks_.end() )
+  {
+    treeTasks_[ type ]( start, branch, scales, args, this, verbose ); // ground the symbol
   }
   else
   {

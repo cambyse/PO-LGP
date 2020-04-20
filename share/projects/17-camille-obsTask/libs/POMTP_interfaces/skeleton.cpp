@@ -216,7 +216,7 @@ void Policy::copy( const Policy & policy )
 
       for( auto v : uOriginal->children() )
       {
-        auto vCopy = uCopy->makeChild( v->data() );
+        auto vCopy = uCopy->makeChild( v->data(), v->id() );
 
         Q.push( std::make_pair( v, vCopy ) );
 

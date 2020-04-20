@@ -31,6 +31,7 @@ public:
   // ground symbols
   void registerInit( const InitGrounder & grounder );
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
+  void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
 
   void setSecsPerPhase( double s ) { secPerPhase_ = s; }
   void setNSteps( uint n ) { microSteps_ = n; }
@@ -103,7 +104,7 @@ private:
   double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
-  double maxConstraint_      = 10 * 0.75;
+  double maxConstraint_      = 10 * 0.8;
 
   uint phase_start_offset_ = 1; // the first task should be grounded starting from this time
   uint phase_end_offset_   = 1;

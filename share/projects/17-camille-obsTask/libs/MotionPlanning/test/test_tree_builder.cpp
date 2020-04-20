@@ -188,6 +188,22 @@ TEST(TreeBuilder, GetVarsNSteps10)
   EXPECT_EQ(intA(10, 2, {9, 20,  20, 21,  21, 22,  22, 23,  23, 24,  24, 25,  25, 26,  26, 27,  27, 28,  28, 29}), tb.get_vars(1.0, 2.0, 3, 1, steps));
 }
 
+TEST(TreeBuilder, GetVarsNSteps102Branchings)
+{
+  auto steps = 10;
+
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(1, 3);
+  tb.add_edge(3, 4);
+  tb.add_edge(3, 5);
+  // order 0 and 1
+  EXPECT_EQ(intA(10, 1, {40, 41, 42, 43, 44, 45, 46, 47, 48, 49}), tb.get_vars(2.0, 3.0, 5, 0, steps));
+  EXPECT_EQ(intA(10, 2, {29, 40,  40, 41,  41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49}), tb.get_vars(2.0, 3.0, 5 , 1, steps));
+}
+
+
 TEST(TreeBuilder, GetVarsNSteps5)
 {
   auto steps = 5;

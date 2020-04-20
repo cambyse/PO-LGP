@@ -180,8 +180,8 @@ std::queue< GraphNode< NodeData >::ptr > DecisionGraph::expand( const GraphNode<
           {
             if( hash_to_id_.count( childChildData.hash() ) )
             {
-              auto childChildId = hash_to_id_[ childChildData.hash() ].front();
-              auto childChild = nodes_[ childChildId ];
+              const auto& childChildId = hash_to_id_[ childChildData.hash() ].front();
+              const auto& childChild = nodes_[ childChildId ];
 
               child->addExistingChild( childChild.lock() );
               edges_[ childChildId ][ child->id() ] = std::make_pair( p, observation );

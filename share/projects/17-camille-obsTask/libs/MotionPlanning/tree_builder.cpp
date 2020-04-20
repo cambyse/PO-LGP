@@ -136,7 +136,7 @@ namespace mp
           int to_node   = branch.local_to_global[ceil(k / double(steps) + 0.00001)];
           int r = k % steps;
 
-          if( k < from_node * steps || steps == 1 )
+          if( t % steps + j < order /*k < from_node * steps*/ || steps == 1 )
           {
             vars(t, j) = from_node * steps + r; // connect to previous phase
           }

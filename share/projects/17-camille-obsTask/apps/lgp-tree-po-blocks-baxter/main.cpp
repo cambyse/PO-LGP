@@ -102,14 +102,14 @@ void plan_graph_search()
     //mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // C
-    //tp.setFol( "LGP-blocks-fol-one-table.g" );
-    //mp.setKin( "LGP-blocks-kin-one-table.g" );
+    tp.setFol( "LGP-blocks-fol-one-table.g" );
+    mp.setKin( "LGP-blocks-kin-one-table.g" );
 
     // checked, probably doesn't work with n steps = 5
     // B
-    tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
     //tp.setFol( "LGP-blocks-fol-2w-one-table-no-precondition.g" );
-    mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
 
     // A
     //tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
@@ -140,8 +140,8 @@ void plan_graph_search()
       auto elapsed = std::chrono::high_resolution_clock::now() - start;
       graph_building_s+=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
     }
-    tp.saveGraphToFile( "graph.gv" );
-    generatePngImage( "graph.gv" );
+    //tp.saveGraphToFile( "graph.gv" );
+    //generatePngImage( "graph.gv" );
 
     Policy policy, lastPolicy;
 
@@ -273,11 +273,12 @@ void komo_tree_dev()
   mp.registerTask( "stack"        , groundTreeStack );
   mp.registerTask( "unstack"      , groundTreeUnStack );
   //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
-  mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+  //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+  mp.setKin( "LGP-blocks-kin-one-table.g" );
 
   // load policy
   Policy policy;
-  policy.load("policy-0-2w");
+  policy.load("policy-0-3w");
 
   // plan
   auto po     = MotionPlanningParameters( policy.id() );
