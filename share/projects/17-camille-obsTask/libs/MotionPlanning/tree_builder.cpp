@@ -65,9 +65,9 @@ namespace mp
     return parents;
   }
 
-  Branch TreeBuilder::get_branch(uint leaf) const
+  _Branch TreeBuilder::get_branch(uint leaf) const
   {
-    Branch branch;
+    _Branch branch;
     auto current = leaf;
     auto parents = get_parents(current);
 
@@ -99,9 +99,9 @@ namespace mp
     return branch;
   }
 
-  std::vector<Branch> TreeBuilder::get_branches() const
+  std::vector<_Branch> TreeBuilder::get_branches() const
   {
-    std::vector<Branch> branches;
+    std::vector<_Branch> branches;
 
     for(auto l : get_leafs())
     {
@@ -114,6 +114,12 @@ namespace mp
   intA TreeBuilder::get_vars0(double from, double to, uint leaf, uint steps) const
   {
     auto branch = get_branch(leaf);
+
+    if(from > to && to < 0)
+    {
+      to = branch.local_to_global.size() - 1;
+    }
+
     const auto duration = ceil(to - from);
     uint d0 = duration * steps;
     uint from_step = from * steps;

@@ -16,8 +16,9 @@ namespace mp
     double p(uint from, uint to) const;
     std::vector<uint> get_leafs() const;
     std::vector<uint> get_parents(uint node) const;
-    Branch get_branch(uint leaf) const;
-    std::vector<Branch> get_branches() const;
+    _Branch get_branch(uint leaf) const;
+    std::vector<_Branch> get_branches() const;
+    intA get_vars0(double from, double to, uint leaf, uint steps=1) const;
     intA get_vars(double from, double to, uint leaf, uint order=2, uint steps=1) const;
     //std::vector<intA> get_all_vars(uint order=2, uint steps=1) const;
     arr get_scales(double from, double to, uint leaf, uint steps=1) const;

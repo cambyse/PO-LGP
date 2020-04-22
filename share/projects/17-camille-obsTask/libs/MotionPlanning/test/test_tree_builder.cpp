@@ -64,7 +64,7 @@ TEST(TreeBuilder, GetParents)
 TEST(TreeBuilder, GetBranch)
 {
   auto tb = build_simple_path_builder();
-  Branch expected_branch_to_3;
+  _Branch expected_branch_to_3;
   expected_branch_to_3.p = 0.5;
   expected_branch_to_3.leaf_id = 3;
   expected_branch_to_3.local_to_global.push_back(0);
@@ -78,7 +78,7 @@ TEST(TreeBuilder, GetBranch)
   expected_branch_to_3.global_to_local.push_back(-1);
   EXPECT_EQ(expected_branch_to_3, tb.get_branch(3));
 
-  Branch expected_branch_to_4;
+  _Branch expected_branch_to_4;
   expected_branch_to_4.p = 0.5;
   expected_branch_to_4.leaf_id = 4;
   expected_branch_to_4.local_to_global.push_back(0);
@@ -188,6 +188,30 @@ TEST(TreeBuilder, GetVarsNSteps10)
   EXPECT_EQ(intA(10, 2, {9, 20,  20, 21,  21, 22,  22, 23,  23, 24,  24, 25,  25, 26,  26, 27,  27, 28,  28, 29}), tb.get_vars(1.0, 2.0, 3, 1, steps));
 }
 
+TEST(TreeBuilder, GetVarsNegativeTime)
+{
+  auto stepss = {1, 10};
+
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(1, 3);
+
+  auto orders = {0, 1, 2};
+
+  for(const auto& order: orders)
+  {
+    for(const auto& steps: stepss)
+    {
+      auto a = tb.get_vars(0.0, 2.0, 2, order, steps);
+      auto b = tb.get_vars(0.0, -1.0, 2, order, steps);
+
+      EXPECT_EQ(a, b);
+    }
+  }
+
+}
+
 TEST(TreeBuilder, GetVarsNSteps102Branchings)
 {
   auto steps = 10;
@@ -203,6 +227,46 @@ TEST(TreeBuilder, GetVarsNSteps102Branchings)
   EXPECT_EQ(intA(10, 2, {29, 40,  40, 41,  41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49}), tb.get_vars(2.0, 3.0, 5 , 1, steps));
 }
 
+TEST(TreeBuilder, GetVarsNStepsVarsConcatenations)
+{
+  auto steps = 10;
+
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(1, 3);
+  tb.add_edge(3, 4);
+  tb.add_edge(3, 5);
+
+  auto orders = {0, 1, 2};
+
+  for(const auto & order: orders)
+  {
+    // to 2
+    auto vars01_to_2 = tb.get_vars(0, 1.0, 2, order, 10);
+    auto vars12_to_2 = tb.get_vars(1.0, 2.0, 2, order, 10);
+
+    auto vars02 = vars01_to_2;
+    vars02.append(vars12_to_2);
+
+    auto vars02_to_2 = tb.get_vars(0, 2.0, 2, order, 10);
+
+    EXPECT_EQ(vars02_to_2, vars02);
+
+    // to 5
+    auto vars01_to_5 = tb.get_vars(0, 1.0, 5, order, 10);
+    auto vars12_to_5 = tb.get_vars(1.0, 2.0, 5, order, 10);
+    auto vars23_to_5 = tb.get_vars(2.0, 3.0, 5, order, 10);
+
+    auto vars03 = vars01_to_5;
+    vars03.append(vars12_to_5);
+    vars03.append(vars23_to_5);
+
+    auto vars03_to_5 = tb.get_vars(0, 3.0, 5, order, 10);
+
+    EXPECT_EQ(vars03_to_5, vars03);
+  }
+}
 
 TEST(TreeBuilder, GetVarsNSteps5)
 {
