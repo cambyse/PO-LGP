@@ -23,9 +23,9 @@
 namespace mp
 {
 
-Branch Branch::computeMicroStepBranch(const Branch& a, int stepsPerPhase)
+_Branch _Branch::computeMicroStepBranch(const _Branch& a, int stepsPerPhase)
 {
-  Branch b;
+  _Branch b;
 
   b.p = a.p;
   b.leaf_id = a.leaf_id;
@@ -65,9 +65,9 @@ Branch Branch::computeMicroStepBranch(const Branch& a, int stepsPerPhase)
   return b;
 }
 
-Branch Branch::linearTrajectory(int T)
+_Branch _Branch::linearTrajectory(int T)
 {
-  Branch b;
+  _Branch b;
   b.p = 1.0;
 
   b.global_to_local = std::vector< int >(T);
@@ -82,12 +82,12 @@ Branch Branch::linearTrajectory(int T)
   return b;
 }
 
-bool operator==(const Branch& a, const Branch& b)
+bool operator==(const _Branch& a, const _Branch& b)
 {
   return (a.p == b.p) && (a.local_to_global == b.local_to_global) && (a.global_to_local == b.global_to_local) && (a.leaf_id == b.leaf_id);
 }
 
-bool operator<(const Branch& a, const Branch& b)
+bool operator<(const _Branch& a, const _Branch& b)
 {
   return a.leaf_id < b.leaf_id;
 }
@@ -121,7 +121,7 @@ void TreeTask::setCostSpecs(int fromTime,
   }
 }
 
-void TreeTask::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T, const arr& _target, double _prec, const Branch& branch_time_spec){
+void TreeTask::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, uint T, const arr& _target, double _prec, const _Branch& branch_time_spec){
   if(stepsPerPhase<0) stepsPerPhase=T;
   uint maxStepOnBranch = *std::max_element(branch_time_spec.local_to_global.begin(), branch_time_spec.local_to_global.end()) * stepsPerPhase;
   if(phaseToStep(toTime, stepsPerPhase)>maxStepOnBranch){
@@ -129,7 +129,7 @@ void TreeTask::setCostSpecs(double fromTime, double toTime, int stepsPerPhase, u
   }
 
   CHECK(&branch_time_spec, "case without branch not handled yet!");
-  branch = Branch::computeMicroStepBranch(branch_time_spec, stepsPerPhase);
+  branch = _Branch::computeMicroStepBranch(branch_time_spec, stepsPerPhase);
 
   int tFrom = (fromTime<0.?0              :phaseToStep(fromTime, stepsPerPhase));
   int tTo =   (toTime  <0.?maxStepOnBranch:phaseToStep(toTime, stepsPerPhase));
@@ -174,7 +174,7 @@ bool KOMOTree::checkGradients(){
 }
 
 Objective* KOMOTree::setTask(double startTime, double endTime, Feature *map, ObjectiveType type, const arr& target, double prec, uint order){
-  return setTreeTask(startTime, endTime, Branch::linearTrajectory(T/stepsPerPhase+1), map, type, target, prec, order);
+  return setTreeTask(startTime, endTime, _Branch::linearTrajectory(T/stepsPerPhase+1), map, type, target, prec, order);
 }
 
 TreeTask* KOMOTree::addTreeTask(const char* name, Feature *m, const ObjectiveType& termType){
@@ -184,7 +184,7 @@ TreeTask* KOMOTree::addTreeTask(const char* name, Feature *m, const ObjectiveTyp
   return t;
 }
 
-TreeTask *KOMOTree::setTreeTask(double startTime, double endTime, const Branch& branch, Feature *map, ObjectiveType type, const arr& target, double prec, uint order){
+TreeTask *KOMOTree::setTreeTask(double startTime, double endTime, const _Branch& branch, Feature *map, ObjectiveType type, const arr& target, double prec, uint order){
   CHECK(k_order>=order,"");
   map->order = order;
   TreeTask *task = addTreeTask(map->shortTag(world), map, type);
@@ -196,7 +196,7 @@ bool KOMOTree::displayTrajectory(double delay, bool watch){
   const char* tag = "KOMO planned trajectory";
 
   // retrieve branches
-  std::set<mp::Branch> branches;
+  std::set<mp::_Branch> branches;
   for(auto t: tree_tasks)
   {
     branches.insert(t->branch);

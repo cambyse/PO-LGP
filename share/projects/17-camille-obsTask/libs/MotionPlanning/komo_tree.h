@@ -25,22 +25,22 @@ namespace mp
 
 //=====TreeTask==============================================
 
-struct Branch
+struct _Branch
 {
     std::vector< int > local_to_global;
     std::vector< int > global_to_local;
     double p; // probability to reach the leaf
     uint leaf_id;
 
-    static Branch computeMicroStepBranch(const Branch& a, int stepsPerPhase);
-    static Branch linearTrajectory(int T);
+    static _Branch computeMicroStepBranch(const _Branch& a, int stepsPerPhase);
+    static _Branch linearTrajectory(int T);
 };
 
-bool operator==(const Branch& a, const Branch& b);
-bool operator<(const Branch& a, const Branch& b);
+bool operator==(const _Branch& a, const _Branch& b);
+bool operator<(const _Branch& a, const _Branch& b);
 
 struct TreeTask : public Objective {
-  Branch branch;           ///< way to traverse x allow traj tree opt : link from branch index to x index
+  _Branch branch;           ///< way to traverse x allow traj tree opt : link from branch index to x index
   TreeTask(Feature *m, const ObjectiveType& type) : Objective(std::shared_ptr<Feature>(m), type){}
   virtual ~TreeTask(){}
 
@@ -50,7 +50,7 @@ struct TreeTask : public Objective {
   void setCostSpecs(double fromTime, double toTime,
                     int stepsPerPhase, uint T,
                     const arr& _target,
-                    double _prec, const Branch& branch_time_spec=Branch());
+                    double _prec, const _Branch& branch_time_spec=_Branch());
 
   int to_local_t(int global_t) const { CHECK(global_t < branch.global_to_local.size(), "wrong dimensions!");return branch.global_to_local[global_t]; }
   int to_global_t(int local_t) const { CHECK(local_t < branch.local_to_global.size(), "wrong dimensions!"); return branch.local_to_global[local_t];/*local_t < branch.local_to_global.size() ? branch.local_to_global[local_t] : branch.local_to_global.back();*/ }
@@ -66,7 +66,7 @@ public:
   virtual bool checkGradients();
   virtual struct Objective* setTask(double startTime, double endTime, Feature* map, ObjectiveType type=OT_sos, const arr& target=NoArr, double prec=1e2, uint order=0);
   TreeTask* addTreeTask(const char* name, Feature *map, const ObjectiveType& termType); ///< manually add a task
-  struct TreeTask* setTreeTask(double startTime, double endTime, const Branch& branch, Feature* map, ObjectiveType type=OT_sos, const arr& target=NoArr, double prec=1e2, uint order=0);
+  struct TreeTask* setTreeTask(double startTime, double endTime, const _Branch& branch, Feature* map, ObjectiveType type=OT_sos, const arr& target=NoArr, double prec=1e2, uint order=0);
   virtual bool displayTrajectory(double delay=0.01, bool watch=false); ///< display th
 
 private:

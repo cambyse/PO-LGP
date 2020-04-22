@@ -57,8 +57,8 @@ protected:
   const uint n_micro_steps = 10;
   TreeBuilder tb;
   uint n_phases;
-  Branch branch_1;
-  Branch branch_2;
+  _Branch branch_1;
+  _Branch branch_2;
 };
 
 struct KomoSparseFixture : public ::testing::Test

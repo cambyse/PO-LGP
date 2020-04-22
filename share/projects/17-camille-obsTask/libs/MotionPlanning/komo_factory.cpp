@@ -111,7 +111,7 @@ void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >
   }
 }
 
-void ExtensibleKOMO::groundTasks( double start, const Vars& branch, const arr & scales, const std::vector< std::string >& facts, int verbose )
+void ExtensibleKOMO::groundTasks( double start, const Vars& branch, double p, const std::vector< std::string >& facts, int verbose )
 {
   if( facts.empty() )
   {
@@ -128,7 +128,7 @@ void ExtensibleKOMO::groundTasks( double start, const Vars& branch, const arr & 
 
   if( treeTasks_.find( type ) != treeTasks_.end() )
   {
-    treeTasks_[ type ]( start, branch, scales, args, this, verbose ); // ground the symbol
+    treeTasks_[ type ]( start, branch, p, args, this, verbose ); // ground the symbol
   }
   else
   {

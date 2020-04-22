@@ -10,6 +10,9 @@
 #include <Kin/kin.h>
 #include <Kin/switch.h>
 #include <Kin/TM_transition.h>
+#include <Kin/TM_FlagConstraints.h>
+#include <Kin/TM_FixSwitchedObjects.h>
+
 
 #include <belief_state.h>
 #include <komo_planner_utils.h>
@@ -918,9 +921,6 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematics_.front());
   komo->sparseOptimization = true;
-  komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-  komo->setFixSwitchedObjects();
-  //komo->setSquaredQAccelerations();
   komo->groundInit();
 
   const auto nPhases = treeBuilder.n_nodes() - 1;
@@ -942,18 +942,16 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
     auto q = l;
     auto p = q->parent();
 
-    if(l->id() == 22)
-      int a=0;
     auto vars0 = treeBuilder.get_vars(0, l->depth(), l->id(), 0, microSteps_);
     auto vars1 = treeBuilder.get_vars(0, l->depth(), l->id(), 1, microSteps_);
     auto vars2 = treeBuilder.get_vars(0, l->depth(), l->id(), 2, microSteps_);
     Vars branch{vars0, vars1, vars2, microSteps_};
     allVars.push_back(branch);
 
+    // tasks valid at all times
     // square acc
-    auto acc = komo->addObjective(-123., 123., new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
-    acc->vars = vars2;
-    acc->scales = ones(acc->vars.d0) * transitionProbability(policy.root()->data().beliefState, l->data().beliefState);
+    double prob = transitionProbability(policy.root()->data().beliefState, l->data().beliefState);
+    W(komo.get()).addObjective(0.0, -1, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
     while(p)
     {
@@ -963,7 +961,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
       auto scales = treeBuilder.get_scales(p->depth(), q->depth(), l->id(), microSteps_);
 
       // ground other tasks
-      komo->groundTasks(start, branch, scales, q->data().leadingKomoArgs, 1);
+      komo->groundTasks(start, branch, prob, q->data().leadingKomoArgs, 1);
 
       q = p;
       p = q->parent();
@@ -972,6 +970,8 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
 
   W(komo.get()).reset(allVars);
   komo->run();
+
+  //komo->getReport(true);
 
   //komo->displayTrajectory(0.1, true, false);
   Var<WorldL> configs;

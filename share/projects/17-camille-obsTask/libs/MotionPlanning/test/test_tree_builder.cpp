@@ -317,7 +317,6 @@ TEST(TreeBuilder, GetScaleNSteps5)
   expect_near(arr(10, {0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}), tb.get_scales(1.0, 3.0, 3, steps), 0.001);
 }
 
-
 ////////////////////////////////
 int main(int argc, char **argv)
 {

@@ -115,21 +115,22 @@ void W::setupConfigurations(const std::list<Vars>& branches)
 
 void W::addObjective(double start, double end, const mp::Vars & branch, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
 {
+  CHECK(scale != -1, "please put a meaningful scale");
   auto obj = komo_->addObjective(-123., -123., map, type, target, scale, order, deltaFromStep, deltaToStep);
   obj->vars = branch.getVars(start, end, order);
 }
 
-void W::addSwitch_stable(double time, const mp::Vars & branch, const char* from, const char* to)
+void W::addSwitch_stable(double time, const mp::Vars & branch, double p, const char* from, const char* to)
 {
   auto sw = new KinematicSwitch(SW_effJoint, JT_free, from, to, world_);
   sw->timeOfApplication = branch.getStep(time);
   komo_->switches.append(sw);
 
-  addObjective(time, -1.0, branch, new TM_ZeroQVel(world_, to), OT_eq, NoArr, 3e1, 1, +1, -1);
-  addObjective(time, -1.0, branch, new TM_LinAngVel(world_, to), OT_eq, NoArr, 1e1, 2, +0, +1);
+  addObjective(time, -1.0, branch, new TM_ZeroQVel(world_, to), OT_eq, NoArr, p * 3e1, 1, +1, -1);
+  addObjective(time, -1.0, branch, new TM_LinAngVel(world_, to), OT_eq, NoArr, p * 1e1, 2, +0, +1);
 }
 
-void W::addSwitch_stableOn(double time, const mp::Vars & branch, const char* from, const char* to)
+void W::addSwitch_stableOn(double time, const mp::Vars & branch, double p, const char* from, const char* to)
 {
   Transformation rel{0};
   rel.pos.set(0,0, .5*(shapeSize(world_, from) + shapeSize(world_, to)));
@@ -138,7 +139,7 @@ void W::addSwitch_stableOn(double time, const mp::Vars & branch, const char* fro
   sw->timeOfApplication = branch.getStep(time);
   komo_->switches.append(sw);
 
-  addObjective(time, -1.0, branch, new TM_ZeroQVel(world_, to), OT_eq, NoArr, 3e1, 1, +1, -1);
-  addObjective(time, -1.0, branch, new TM_LinAngVel(world_, to), OT_eq, NoArr, 1e1, 2, +0, +1);
+  addObjective(time, -1.0, branch, new TM_ZeroQVel(world_, to), OT_eq, NoArr, p * 3e1, 1, +1, -1);
+  addObjective(time, -1.0, branch, new TM_LinAngVel(world_, to), OT_eq, NoArr, p * 1e1, 2, +0, +1);
 }
 }

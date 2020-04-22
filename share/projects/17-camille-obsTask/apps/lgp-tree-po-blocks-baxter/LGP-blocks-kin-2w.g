@@ -16,7 +16,7 @@ body block_3 { type=9 size=[.1 .1 .1 .01] color=[0 0 0] }
 body tableC{ type=9, X=<T t(0.7 0 0.9)>, size=[0.8 1.5 .04 .01], color=[.3 .5 .3] contact }
 
 ## GRASP references
-shape baxterR (endeffR){ type=1 size=[0 0 0 0.005] color=[1 1 0] rel=<T t(0.2 0 0) d(0 0 0 1)> contact }
+shape baxterR (endeffR){ type=1 size=[0 0 0 0.005] color=[1 1 0] rel=<T t(0.17 0 0) d(0 0 0 1)> contact }
 shape baxterL (endeffL){ type=1 size=[0 0 0 0.005] color=[1 1 0] rel=<T t(0 0 0) d(0 0 0 1)> contact }
 
 ## Ids
