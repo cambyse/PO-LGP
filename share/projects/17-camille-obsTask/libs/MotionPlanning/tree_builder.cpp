@@ -111,57 +111,57 @@ namespace mp
     return branches;
   }
 
-  intA TreeBuilder::get_vars(double from, double to, uint leaf, uint order, uint steps) const
+  intA TreeBuilder::get_vars0(double from, double to, uint leaf, uint steps) const
   {
     auto branch = get_branch(leaf);
-    const auto duration = to - from;
+    const auto duration = ceil(to - from);
     uint d0 = duration * steps;
     uint from_step = from * steps;
 
-    intA vars(d0, order+1);
+    intA vars(d0);
 
     for(auto t=0; t < d0; ++t)
-    {      
-      for(auto j=0; j <= order; ++j)
+    {
+      int k = from_step + t;
+
+      if(k < 0) // prefix handling (we don't branch during the prefix)
       {
-        int k = from_step+t+j-int(order);
+        vars(t) = k;
+      }
+      else
+      {
+        int from_node = branch.local_to_global[floor(k / double(steps))];
+        int to_node   = branch.local_to_global[ceil(k / double(steps) + 0.00001)];
+        int r = k % steps;
 
-        if(k < 0) // prefix handling (we don't branch during the prefix)
-        {
-          vars(t, j) = k;
-        }
-        else
-        {
-          int from_node = branch.local_to_global[floor(k / double(steps))];
-          int to_node   = branch.local_to_global[ceil(k / double(steps) + 0.00001)];
-          int r = k % steps;
-
-          if( t % steps + j < order /*k < from_node * steps*/ || steps == 1 )
-          {
-            vars(t, j) = from_node * steps + r; // connect to previous phase
-          }
-          else
-          {
-            vars(t, j) = (to_node - 1) * steps + r; // in new branched phase
-          }
-        }
+        vars(t) = (steps > 1 ? to_node - 1 : from_node) * steps + r; // in new branched phase
       }
     }
 
     return vars;
   }
 
-//  std::vector<intA> TreeBuilder::get_all_vars(uint order, uint steps) const
-//  {
-//      std::vector<intA> all_vars;
+  intA TreeBuilder::get_vars(double from, double to, uint leaf, uint order, uint steps) const
+  {
+    std::vector<intA> splitted_vars(order+1);// = get_vars0(from, to, leaf, steps);
+    for(auto j = 0; j < order+1; ++j)
+    {
+      auto delta = double(j) / steps;
+      splitted_vars[j] = get_vars0(from - delta, to - delta, leaf, steps);
+    }
 
-//      for(auto l : get_leafs())
-//      {
-//        all_vars.push_back(get_vars(0.0, -1, l, order, steps));
-//      }
+    auto d0 = splitted_vars.front().d0;
+    intA vars(d0, order + 1);
+    for(auto i = 0; i < d0; ++i)
+    {
+      for(auto j = 0; j < order+1; ++j)
+      {
+        vars(i, order - j) = splitted_vars[j](i);
+      }
+    }
 
-//      return all_vars;
-//  }
+    return vars;
+  }
 
   arr TreeBuilder::get_scales(double from, double to, uint leaf, uint steps) const
   {
