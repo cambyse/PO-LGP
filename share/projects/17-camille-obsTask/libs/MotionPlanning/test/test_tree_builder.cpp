@@ -298,6 +298,20 @@ TEST(TreeBuilder, GetVarsNSteps5)
   EXPECT_EQ(intA(15, 1, {0, 1, 2, 3, 4, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}), tb.get_vars({0, 3.0}, 5, 0, steps));
 }
 
+TEST(TreeBuilder, GetScalesVarsAtEnd)
+{
+  auto steps = 5;
+
+  auto tb = build_3_edges_1_branching();
+
+  EXPECT_EQ(intA(1, 1, {9}), tb.get_vars({2.0, 2.0}, 2, 0, steps));
+  EXPECT_EQ(arr{0.6}, tb.get_scales({2.0, 2.0}, 2, steps));
+  EXPECT_EQ(arr{0.6}, tb.get_scales({2.0, -1.0}, 2, steps));
+
+  EXPECT_EQ(intA(1, 2, {8, 9}), tb.get_vars({2.0, 2.0}, 2, 1, steps));
+  EXPECT_EQ(intA(1, 2, {8, 9}), tb.get_vars({2.0, -1.0}, 2, 1, steps));
+}
+
 // scales
 TEST(TreeBuilder, GetScaleNSteps5)
 {
@@ -341,12 +355,11 @@ TEST(TreeBuilder, SpecUntilLeaves)
   auto spec1 = tb.get_spec({0.0, -1.0}, {0, 1}, 1, steps);
   TaskSpec expected_spec0{intA(15, 1, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}),
                           arr{1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.4, 0.4, 0.4, 0.4, 0.4}};
-  TaskSpec expected_spec1{intA(30, 1, {-1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 4, 10, 10, 11, 11, 12, 12, 13, 13, 14}),
+  TaskSpec expected_spec1{intA(15, 2, {-1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 4, 10, 10, 11, 11, 12, 12, 13, 13, 14}),
                           arr{1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.4, 0.4, 0.4, 0.4, 0.4}};
   EXPECT_EQ(expected_spec0, spec0);
   EXPECT_EQ(expected_spec1, spec1);
 }
-
 
 TEST(TreeBuilder, SpecInterval)
 {
@@ -358,11 +371,22 @@ TEST(TreeBuilder, SpecInterval)
   auto spec1 = tb.get_spec({0.5, 1.5}, {0, 1}, 1, steps);
   TaskSpec expected_spec0{intA(7, 1, {2, 3, 4, 5, 6, 10, 11}),
                                   arr{1.0, 1.0, 1.0, 0.6, 0.6, 0.4, 0.4}};
-  TaskSpec expected_spec1{intA(14, 1, {1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 4, 10, 10, 11}),
+  TaskSpec expected_spec1{intA(7, 2, {1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 4, 10, 10, 11}),
                                    arr{1.0, 1.0, 1.0, 0.6, 0.6, 0.4, 0.4}};
   EXPECT_EQ(expected_spec0, spec0);
   EXPECT_EQ(expected_spec1, spec1);
 }
+
+
+TEST(TreeBuilder, Step)
+{
+  auto steps = 5;
+
+  auto tb = build_3_edges_1_branching();
+
+  EXPECT_EQ(1, tb.get_step(0.5, {0, 1}, 5)); // should be 2??
+}
+
 
 ////////////////////////////////
 int main(int argc, char **argv)

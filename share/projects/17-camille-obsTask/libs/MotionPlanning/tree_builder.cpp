@@ -161,19 +161,13 @@ bool operator==(const TaskSpec& a, const TaskSpec& b)
     return branches;
   }
 
-  intA TreeBuilder::get_vars0(const TimeInterval& interval, uint leaf, uint steps) const
+  intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch, uint steps) const
   {
-    auto branch = get_branch(leaf);
     auto from = interval.from;
     auto to = interval.to;
 
-    if(from > to && to < 0)
-    {
-      to = branch.local_to_global.size() - 1;
-    }
-
-    const auto duration = ceil(to - from);
-    uint d0 = duration * steps;
+    const auto duration = to - from; //ceil(to - from);
+    uint d0 = ceil(duration * steps);
     uint from_step = from * steps;
 
     intA vars(d0);
@@ -201,14 +195,28 @@ bool operator==(const TaskSpec& a, const TaskSpec& b)
 
   intA TreeBuilder::get_vars(const TimeInterval& interval, uint leaf, uint order, uint steps) const
   {
-    const auto& from = interval.from;
-    const auto& to = interval.to;
+    auto branch = get_branch(leaf);
+    auto from = interval.from;
+    auto to = interval.to;
+
+    // handle the case of to == -1
+    if(from > to && to < 0)
+    {
+      to = branch.local_to_global.size() - 1;
+    }
+
+    // handle the case of from == to
+    if(from == to)
+    {
+      from -= (1.0 - 0.0001)/ steps;
+    }
+
 
     std::vector<intA> splitted_vars(order+1);// = get_vars0(from, to, leaf, steps);
     for(auto j = 0; j < order+1; ++j)
     {
       auto delta = double(j) / steps;
-      splitted_vars[j] = get_vars0({from - delta, to - delta}, leaf, steps);
+      splitted_vars[j] = get_vars0({from - delta, to - delta}, branch, steps);
     }
 
     auto d0 = splitted_vars.front().d0;
@@ -222,6 +230,53 @@ bool operator==(const TaskSpec& a, const TaskSpec& b)
     }
 
     return vars;
+  }
+
+  arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps) const
+  {
+      auto from = interval.from;
+      auto to = interval.to;
+
+      auto branch = get_branch(leaf);
+
+      // handle case to == -1
+      if(from > to && to < 0)
+      {
+        to = branch.local_to_global.size() - 1;
+      }
+
+      // handle the case of from == to
+      if(from == to)
+      {
+        from -= (1.0 - 0.0001)/ steps;
+      }
+
+      const auto duration = to - from;
+      uint d0 = ceil(duration * steps);
+      uint from_step = from * steps;
+
+      arr full_scale = arr((branch.local_to_global.size() - 1) * steps);
+
+      double p = 1.0;
+      for(auto i = 0; i < branch.local_to_global.size() - 1; ++i)
+      {
+          auto global_i = branch.local_to_global[i];
+          auto global_j = branch.local_to_global[i+1];
+          p *= adjacency_matrix_(global_i, global_j);
+
+          for(auto s = 0; s < steps; ++s)
+          {
+              full_scale(steps * i + s) = p;
+          }
+      }
+
+      arr scale(d0);
+      for(auto i = 0; i < d0; ++i)
+      {
+          scale(i) = full_scale(i + from_step);
+      }
+
+      return scale;
   }
 
   TaskSpec TreeBuilder::get_spec(const TimeInterval& interval, const Edge& start_edge, uint order, uint steps) const
@@ -270,57 +325,32 @@ bool operator==(const TaskSpec& a, const TaskSpec& b)
     }
 
     // flatten
-    intA vars(splitted_no_doubles_vars.size() * (order + 1), 1);
+    intA vars(splitted_no_doubles_vars.size(), (order + 1));
 
     for(auto s = 0; s < splitted_no_doubles_vars.size(); ++s)
     {
       for(auto j = 0; j < order + 1; ++j)
       {
-        vars(s * (order + 1) + j, 0) = splitted_no_doubles_vars[s](j, 0);
+        vars(s, j) = splitted_no_doubles_vars[s](j, 0);
       }
     }
+
+    CHECK(vars.d0 == no_doubles_scales.d0, "size corruption");
 
     return TaskSpec{std::move(vars), std::move(no_doubles_scales)};
   }
 
-  arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps) const
+  int TreeBuilder::get_step(double time, const Edge& edge, uint steps) const
   {
-      auto from = interval.from;
-      auto to = interval.to;
+    //int step = time * microSteps - 1;
+    //return order0(step, 0);
 
-      auto branch = get_branch(leaf);
+    auto spec = get_spec({time, time}, edge, 0, steps);
 
-      if(from > to && to < 0)
-      {
-        to = branch.local_to_global.size() - 1;
-      }
+    CHECK(spec.vars.d0 == 1, "wrong spec!");
 
-      const auto duration = to - from;
-      uint d0 = duration * steps;
-      uint from_step = from * steps;
-
-      arr full_scale = arr((branch.local_to_global.size() - 1) * steps);
-
-      double p = 1.0;
-      for(auto i = 0; i < branch.local_to_global.size() - 1; ++i)
-      {
-          auto global_i = branch.local_to_global[i];
-          auto global_j = branch.local_to_global[i+1];
-          p *= adjacency_matrix_(global_i, global_j);
-
-          for(auto s = 0; s < steps; ++s)
-          {
-              full_scale(steps * i + s) = p;
-          }
-      }
-
-      arr scale(d0);
-      for(auto i = 0; i < d0; ++i)
-      {
-          scale(i) = full_scale(i + from_step);
-      }
-
-      return scale;
+    return spec.vars.front();
+    //return 0;
   }
 
   void TreeBuilder::add_edge(uint from, uint to, double p)

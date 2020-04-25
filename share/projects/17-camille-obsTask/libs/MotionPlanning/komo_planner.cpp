@@ -950,12 +950,12 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
 
     // tasks valid at all times
     // square acc
-    double prob = transitionProbability(policy.root()->data().beliefState, l->data().beliefState);
-    W(komo.get()).addObjective(0, -1, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
+    //double prob = transitionProbability(policy.root()->data().beliefState, l->data().beliefState);
+    //W(komo.get()).addObjective(0, -1, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
     while(p)
     {
-      //if(!visited[q->id()])
+      if(!visited[q->id()])
       {
         double start = p->depth();
         double end = q->depth();
@@ -963,10 +963,17 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
         //double prob = transitionProbability(policy.root()->data().beliefState, q->data().beliefState);
         //W(komo.get()).addObjective(start, end, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
-        // ground other tasks
-        komo->groundTasks(start, branch, prob, q->data().leadingKomoArgs, 1);
+        Interval interval;
+        interval.time = {start, start + 1.0};
+        interval.edge = {p->id(), q->id()};
 
-        //visited[q->id()] = 1;
+        // square acc
+        W(komo.get()).addObjective(interval, treeBuilder, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
+
+        // ground other tasks
+        komo->groundTasks(interval, treeBuilder, q->data().leadingKomoArgs, 1);
+
+        visited[q->id()] = 1;
       }
       q = p;
       p = q->parent();

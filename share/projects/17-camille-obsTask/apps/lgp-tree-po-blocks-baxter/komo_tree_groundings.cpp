@@ -14,11 +14,9 @@
 
 using namespace rai;
 
-void groundTreePickUp(double start, const mp::Vars& branch, double p, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
+void groundTreePickUp(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  const double end = start + 1.0;
-
-  groundTreeUnStack(start, branch, p, facts, komo, verbose);
+  groundTreeUnStack(it, tb, facts, komo, verbose);
 
   //  if( verbose > 0 )
   //  {
@@ -26,58 +24,55 @@ void groundTreePickUp(double start, const mp::Vars& branch, double p, const std:
   //  }
 }
 
-void groundTreeUnStack(double start, const mp::Vars& branch, double p, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
+void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  const double end = start + 1.0;
-
   // switch
   const auto& eff = "baxterR";
   const auto& object = facts[0].c_str();
-  mp::W(komo).addSwitch_stable(end, branch, p, eff, object);
+  mp::W(komo).addSwitch_stable({{it.time.to, it.time.to}, it.edge}, tb, eff, object);
 
   // costs
   //mp::W(komo).addObjective(end - 0.3,end, branch, new TM_Default(TMT_vecAlign, komo->world, "baxterR", Vector(ARR( 1.0, 0.0, 0.0 )), nullptr, ARR( 0.0, 0.0, -1.0 )), OT_sos, ARR(1.), 1e2, 0); // pb quat normalization
-  mp::W(komo).addObjective(end - 0.1, end, branch, new TM_InsideBox(komo->world, eff, NoVector, object, 0.04), OT_ineq, NoArr, p * 1e2, 0); // inside object at grasp moment
+  mp::W(komo).addObjective({{it.time.to-0.3, it.time.to}, it.edge}, tb, new TM_InsideBox(komo->world, eff, NoVector, object, 0.04), OT_ineq, NoArr, 1e2, 0); // inside object at grasp moment
 
   if(verbose > 0)
   {
-    std::cout << "from: " << start << " -> " << end << " : unstack " << facts[0] << " from " << facts[1] << std::endl;
+    std::cout << "from: " << it.time.from << " -> " << it.time.to << " : unstack " << facts[0] << " from " << facts[1] << std::endl;
   }
 }
 
-void groundTreePutDown(double start, const mp::Vars& branch, double p, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
+void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  const double end = start + 1.0;
   const auto& object = facts[0].c_str();
   const auto& place = facts[1].c_str();
 
-  mp::W(komo).addObjective(end, end, branch, new TM_AboveBox(komo->world, object, place), OT_ineq, NoArr, p * 1e1, 0);
-  mp::W(komo).addSwitch_stableOn(end, branch, p, place, object);
+  mp::Interval end{{it.time.to, it.time.to}, it.edge};
+  mp::W(komo).addObjective(end, tb, new TM_AboveBox(komo->world, object, place), OT_ineq, NoArr, 1e1, 0);
+  mp::W(komo).addSwitch_stableOn(end, tb, place, object);
 
   if(verbose > 0)
   {
-    std::cout << "from: " << start << " -> " << end << " : put down " << facts[0] << " at " << facts[1] << std::endl;
+    std::cout << "from: " << it.time.from << " -> " << it.time.to << " : put down " << facts[0] << " at " << facts[1] << std::endl;
   }
 }
 
-void groundTreeCheck(double start, const mp::Vars& branch, double p, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
+void groundTreeCheck(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  const double end = start + 1.0;
-
-  mp::W(komo).addObjective(start, end, branch, new LimitsConstraint(0.05), OT_ineq, NoArr, 1e1, 0);
+  mp::W(komo).addObjective(it, tb, new LimitsConstraint(0.05), OT_ineq, NoArr, 1e1, 0);
 
   //mp::W(komo).addObjective(start, end, branch, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sos, NoArr, 1e2,0 ); // slight offset (0.01) to break symmetry and avoid quternion normalization problem
-  mp::W(komo).addObjective(end-0.1, end, branch, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_eq, NoArr, p * 1e2, 0 );
+  mp::Interval end{{it.time.to-0.1, it.time.to}, it.edge};
+  mp::W(komo).addObjective(end, tb, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_eq, NoArr, 1e2, 0 );
 
   if(verbose > 0)
   {
-    std::cout << "from: " << start << " -> " << end << " : check " << facts[0] << std::endl;
+    std::cout << "from: " << it.time.from << " -> " << it.time.to << " : check " << facts[0] << std::endl;
   }
 }
 
-void groundTreeStack(double start, const mp::Vars& branch, double p, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
+void groundTreeStack(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  groundTreePutDown(start, branch, p, facts, komo, verbose);
+  groundTreePutDown(it, tb, facts, komo, verbose);
   //  komo->setPlace( t_end, "baxterR", facts[0].c_str(), facts[1].c_str(), verbose );
 
   //  if( verbose > 0 )

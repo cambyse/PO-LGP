@@ -29,7 +29,7 @@ class ExtensibleKOMO;
 
 typedef std::function<void( KOMO_ext*, int verbose )> InitGrounder;
 typedef std::function<void( double time, const std::vector< std::string >& facts, KOMO_ext*, int verbose )> SymbolGrounder;
-typedef std::function<void( double time, const Vars& vars, double p, const std::vector< std::string >& facts, KOMO_ext* komo, int verbose )> TreeSymbolGrounder;
+typedef std::function<void( const Interval& interval, const TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext* komo, int verbose )> TreeSymbolGrounder;
 
 class ExtensibleKOMO : public KOMO_ext
 {
@@ -45,7 +45,7 @@ public:
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
   void groundTasks( double phase, const std::vector< std::string >& facts, int verbose=0 );
-  void groundTasks( double start, const Vars& vars, double p, const std::vector< std::string >& facts, int verbose=0 );
+  void groundTasks( const Interval& interval, const TreeBuilder& tb, const std::vector< std::string >& facts, int verbose=0 );
 
   void applyRandomization( const std::vector< double > & randomVec );
 
