@@ -77,6 +77,14 @@ struct Edge // edge in Tree
   uint to;
 };
 
+struct TaskSpec
+{
+  intA vars;
+  arr scales;
+};
+
+bool operator==(const TaskSpec& a, const TaskSpec& b);
+
 class TreeBuilder
 {
 public:
@@ -92,9 +100,8 @@ public:
   std::vector<_Branch> get_branches() const;
   intA get_vars0(const TimeInterval& interval, uint leaf, uint steps=1) const;
   intA get_vars(const TimeInterval& interval, uint leaf, uint order=2, uint steps=1) const;
-  intA get_vars(const TimeInterval& interval, const Edge& start_edge, uint order=2, uint steps=1) const;
-
-  arr get_scales(double from, double to, uint leaf, uint steps=1) const;
+  arr get_scales(const TimeInterval& interval, uint leaf, uint steps=1) const;
+  TaskSpec get_spec(const TimeInterval& interval, const Edge& start_edge, uint order=2, uint steps=1) const;
 
   void add_edge(uint from, uint to, double p = 1.0);
 

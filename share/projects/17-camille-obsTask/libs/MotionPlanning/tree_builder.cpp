@@ -3,6 +3,11 @@
 
 namespace mp
 {
+bool operator==(const TaskSpec& a, const TaskSpec& b)
+{
+  return (a.vars == b.vars) && (a.scales == b.scales);
+}
+
   TreeBuilder::TreeBuilder()
     : adjacency_matrix_ ( arr(uint(0), uint(0)) )
   {
@@ -219,7 +224,7 @@ namespace mp
     return vars;
   }
 
-  intA TreeBuilder::get_vars(const TimeInterval& interval, const Edge& start_edge, uint order, uint steps) const
+  TaskSpec TreeBuilder::get_spec(const TimeInterval& interval, const Edge& start_edge, uint order, uint steps) const
   {
     // get leaves fron start_edge
     std::vector<uint> leaves = get_leaves_from(start_edge.to);
@@ -227,9 +232,11 @@ namespace mp
 
     // get vars for each leaves
     std::vector<std::vector<intA>> slitted_varss(leaves.size());
+    std::vector<arr> scaless(leaves.size());
     for(auto i = 0; i < leaves.size(); ++i)
     {
       auto vars = get_vars(interval, leaves[i], order, steps);
+      auto scales = get_scales(interval, leaves[i], steps);
       std::vector<intA> splitted_vars = std::vector<intA>(vars.size() / (order+1));
       for(auto s = 0; s < vars.size() / (order+1); ++s)
       {
@@ -241,19 +248,23 @@ namespace mp
         splitted_vars[s] = std::move(steps);
       }
       slitted_varss[i] = std::move(splitted_vars);
+      scaless[i] = std::move(scales);
     }
 
     // remove doubles
     std::vector<intA> splitted_no_doubles_vars;
+    arr no_doubles_scales;
     for(auto i = 0; i < slitted_varss.size(); ++i)
     {
       for(auto s = 0; s < slitted_varss[i].size(); ++s)
       {
         const auto & steps = slitted_varss[i][s];
+        double scale = scaless[i](s);
 
         if(std::find(splitted_no_doubles_vars.begin(), splitted_no_doubles_vars.end(), steps) == splitted_no_doubles_vars.end())
         {
           splitted_no_doubles_vars.push_back(steps);
+          no_doubles_scales.append(scale);
         }
       }
     }
@@ -269,17 +280,25 @@ namespace mp
       }
     }
 
-    return vars;
+    return TaskSpec{std::move(vars), std::move(no_doubles_scales)};
   }
 
-  arr TreeBuilder::get_scales(double from, double to, uint leaf, uint steps) const
+  arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps) const
   {
+      auto from = interval.from;
+      auto to = interval.to;
+
       auto branch = get_branch(leaf);
+
+      if(from > to && to < 0)
+      {
+        to = branch.local_to_global.size() - 1;
+      }
+
       const auto duration = to - from;
       uint d0 = duration * steps;
       uint from_step = from * steps;
 
-      //arr scales(d0);
       arr full_scale = arr((branch.local_to_global.size() - 1) * steps);
 
       double p = 1.0;
