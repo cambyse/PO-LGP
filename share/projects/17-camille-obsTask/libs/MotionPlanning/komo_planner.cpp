@@ -942,9 +942,9 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
     auto q = l;
     auto p = q->parent();
 
-    auto vars0 = treeBuilder.get_vars(0, l->depth(), l->id(), 0, microSteps_);
-    auto vars1 = treeBuilder.get_vars(0, l->depth(), l->id(), 1, microSteps_);
-    auto vars2 = treeBuilder.get_vars(0, l->depth(), l->id(), 2, microSteps_);
+    auto vars0 = treeBuilder.get_vars({0, l->depth()}, l->id(), 0, microSteps_);
+    auto vars1 = treeBuilder.get_vars({0, l->depth()}, l->id(), 1, microSteps_);
+    auto vars2 = treeBuilder.get_vars({0, l->depth()}, l->id(), 2, microSteps_);
     Vars branch{vars0, vars1, vars2, microSteps_};
     allVars.push_back(branch);
 

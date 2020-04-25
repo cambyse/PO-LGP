@@ -1,4 +1,5 @@
 #include <tree_builder.h>
+#include <list>
 
 namespace mp
 {
@@ -65,6 +66,50 @@ namespace mp
     return parents;
   }
 
+  std::vector<uint> TreeBuilder::get_children(uint node) const
+  {
+    std::vector<uint> children;
+
+    auto row = adjacency_matrix_.row(node);
+
+    for(uint i = 0; i < n_nodes(); ++i)
+    {
+      if(row(0, i) != 0)
+      {
+        children.push_back(i);
+      }
+    }
+
+    return children;
+  }
+
+  std::vector<uint> TreeBuilder::get_leaves_from(uint node) const
+  {
+    std::vector<uint> leaves;
+    std::list<uint> queue;
+    queue.push_back(node);
+
+    while(!queue.empty())
+    {
+      auto p = queue.back();
+      queue.pop_back();
+
+      auto children = get_children(p);
+      if(children.size() == 0)
+      {
+        leaves.push_back(p);
+      }
+      else
+      {
+        for(const auto& q: children)
+        {
+          queue.push_back(q);
+        }
+      }
+    }
+    return leaves;
+  }
+
   _Branch TreeBuilder::get_branch(uint leaf) const
   {
     _Branch branch;
@@ -111,9 +156,11 @@ namespace mp
     return branches;
   }
 
-  intA TreeBuilder::get_vars0(double from, double to, uint leaf, uint steps) const
+  intA TreeBuilder::get_vars0(const TimeInterval& interval, uint leaf, uint steps) const
   {
     auto branch = get_branch(leaf);
+    auto from = interval.from;
+    auto to = interval.to;
 
     if(from > to && to < 0)
     {
@@ -147,13 +194,16 @@ namespace mp
     return vars;
   }
 
-  intA TreeBuilder::get_vars(double from, double to, uint leaf, uint order, uint steps) const
+  intA TreeBuilder::get_vars(const TimeInterval& interval, uint leaf, uint order, uint steps) const
   {
+    const auto& from = interval.from;
+    const auto& to = interval.to;
+
     std::vector<intA> splitted_vars(order+1);// = get_vars0(from, to, leaf, steps);
     for(auto j = 0; j < order+1; ++j)
     {
       auto delta = double(j) / steps;
-      splitted_vars[j] = get_vars0(from - delta, to - delta, leaf, steps);
+      splitted_vars[j] = get_vars0({from - delta, to - delta}, leaf, steps);
     }
 
     auto d0 = splitted_vars.front().d0;
@@ -163,6 +213,59 @@ namespace mp
       for(auto j = 0; j < order+1; ++j)
       {
         vars(i, order - j) = splitted_vars[j](i);
+      }
+    }
+
+    return vars;
+  }
+
+  intA TreeBuilder::get_vars(const TimeInterval& interval, const Edge& start_edge, uint order, uint steps) const
+  {
+    // get leaves fron start_edge
+    std::vector<uint> leaves = get_leaves_from(start_edge.to);
+    std::sort(leaves.begin(), leaves.end()); // unnecessary but easier to debug
+
+    // get vars for each leaves
+    std::vector<std::vector<intA>> slitted_varss(leaves.size());
+    for(auto i = 0; i < leaves.size(); ++i)
+    {
+      auto vars = get_vars(interval, leaves[i], order, steps);
+      std::vector<intA> splitted_vars = std::vector<intA>(vars.size() / (order+1));
+      for(auto s = 0; s < vars.size() / (order+1); ++s)
+      {
+        auto steps = intA(order+1, 1);
+        for(auto j = 0; j < order + 1; ++j)
+        {
+          steps(j, 0) = vars(s, j);
+        }
+        splitted_vars[s] = std::move(steps);
+      }
+      slitted_varss[i] = std::move(splitted_vars);
+    }
+
+    // remove doubles
+    std::vector<intA> splitted_no_doubles_vars;
+    for(auto i = 0; i < slitted_varss.size(); ++i)
+    {
+      for(auto s = 0; s < slitted_varss[i].size(); ++s)
+      {
+        const auto & steps = slitted_varss[i][s];
+
+        if(std::find(splitted_no_doubles_vars.begin(), splitted_no_doubles_vars.end(), steps) == splitted_no_doubles_vars.end())
+        {
+          splitted_no_doubles_vars.push_back(steps);
+        }
+      }
+    }
+
+    // flatten
+    intA vars(splitted_no_doubles_vars.size() * (order + 1), 1);
+
+    for(auto s = 0; s < splitted_no_doubles_vars.size(); ++s)
+    {
+      for(auto j = 0; j < order + 1; ++j)
+      {
+        vars(s * (order + 1) + j, 0) = splitted_no_doubles_vars[s](j, 0);
       }
     }
 

@@ -65,6 +65,18 @@ struct Vars // Branch
   }
 };
 
+struct TimeInterval
+{
+  double from;
+  double to;
+};
+
+struct Edge // edge in Tree
+{
+  uint from;
+  uint to;
+};
+
 class TreeBuilder
 {
 public:
@@ -74,10 +86,14 @@ public:
   double p(uint from, uint to) const;
   std::vector<uint> get_leafs() const;
   std::vector<uint> get_parents(uint node) const;
+  std::vector<uint> get_children(uint node) const;
+  std::vector<uint> get_leaves_from(uint node) const;
   _Branch get_branch(uint leaf) const;
   std::vector<_Branch> get_branches() const;
-  intA get_vars0(double from, double to, uint leaf, uint steps=1) const;
-  intA get_vars(double from, double to, uint leaf, uint order=2, uint steps=1) const;
+  intA get_vars0(const TimeInterval& interval, uint leaf, uint steps=1) const;
+  intA get_vars(const TimeInterval& interval, uint leaf, uint order=2, uint steps=1) const;
+  intA get_vars(const TimeInterval& interval, const Edge& start_edge, uint order=2, uint steps=1) const;
+
   arr get_scales(double from, double to, uint leaf, uint steps=1) const;
 
   void add_edge(uint from, uint to, double p = 1.0);

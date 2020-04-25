@@ -252,11 +252,11 @@ TEST_F(KomoSparseFixture, TestTrajectoryWithTwoBranches)
   tree_builder.add_edge(1, 4);
   tree_builder.add_edge(4, 5);
 
-  auto all_branches_var_order_2 = tree_builder.get_vars(0, 3.0, 3, 2, n_micro_steps);
-  all_branches_var_order_2.append(tree_builder.get_vars(1.0, 3.0, 5, 2, n_micro_steps));
+  auto all_branches_var_order_2 = tree_builder.get_vars({0, 3.0}, 3, 2, n_micro_steps);
+  all_branches_var_order_2.append(tree_builder.get_vars({1.0, 3.0}, 5, 2, n_micro_steps));
 
-  auto all_branches_var_order_1 = tree_builder.get_vars(0, 3.0, 3, 1, n_micro_steps);
-  all_branches_var_order_1.append(tree_builder.get_vars(1.0, 3.0, 5, 1, n_micro_steps));
+  auto all_branches_var_order_1 = tree_builder.get_vars({0, 3.0}, 3, 1, n_micro_steps);
+  all_branches_var_order_1.append(tree_builder.get_vars({1.0, 3.0}, 5, 1, n_micro_steps));
 
   //EXPECT_EQ( all_branches_var, vars );
 
