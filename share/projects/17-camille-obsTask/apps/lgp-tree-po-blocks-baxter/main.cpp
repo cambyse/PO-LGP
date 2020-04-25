@@ -278,6 +278,7 @@ void komo_tree_dev()
 
   // load policy
   Policy policy;
+  //policy.load("policy-0-2w");
   policy.load("policy-0-3w");
 
   // plan

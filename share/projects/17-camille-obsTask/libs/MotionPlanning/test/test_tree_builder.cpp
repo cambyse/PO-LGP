@@ -15,6 +15,37 @@ TreeBuilder build_simple_path_builder()
   return tb;
 }
 
+TreeBuilder build_5_edges_2_branchings()
+{
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(1, 3);
+  tb.add_edge(3, 4);
+  tb.add_edge(3, 5);
+  return tb;
+}
+
+TreeBuilder build_5_edges_1_branching()
+{
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(2, 3);
+  tb.add_edge(1, 4);
+  tb.add_edge(4, 5);
+  return tb;
+}
+
+TreeBuilder build_3_edges_1_branching()
+{
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(1, 3);
+  return tb;
+}
+
 TEST(TreeBuilder, ClassCreation)
 {
   auto tb = TreeBuilder();
@@ -175,12 +206,10 @@ TEST(TreeBuilder, GetVarsNSteps2)
 
 TEST(TreeBuilder, GetVarsNSteps10)
 {
+  auto tb = build_3_edges_1_branching();
+
   auto steps = 10;
 
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(1, 3);
   // order 1
   EXPECT_EQ(intA(10, 1, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), tb.get_vars(0, 1.0, 2, 0, steps));
   EXPECT_EQ(intA(10, 1, {20, 21, 22, 23, 24, 25, 26, 27, 28, 29}), tb.get_vars(1.0, 2.0, 3, 0, steps));
@@ -190,13 +219,9 @@ TEST(TreeBuilder, GetVarsNSteps10)
 
 TEST(TreeBuilder, GetVarsNegativeTime)
 {
+  auto tb = build_3_edges_1_branching();
+
   auto stepss = {1, 10};
-
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(1, 3);
-
   auto orders = {0, 1, 2};
 
   for(const auto& order: orders)
@@ -214,14 +239,10 @@ TEST(TreeBuilder, GetVarsNegativeTime)
 
 TEST(TreeBuilder, GetVarsNSteps102Branchings)
 {
+  auto tb = build_5_edges_2_branchings();
+
   auto steps = 10;
 
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(1, 3);
-  tb.add_edge(3, 4);
-  tb.add_edge(3, 5);
   // order 0 and 1
   EXPECT_EQ(intA(10, 1, {40, 41, 42, 43, 44, 45, 46, 47, 48, 49}), tb.get_vars(2.0, 3.0, 5, 0, steps));
   EXPECT_EQ(intA(10, 2, {29, 40,  40, 41,  41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49}), tb.get_vars(2.0, 3.0, 5 , 1, steps));
@@ -229,15 +250,9 @@ TEST(TreeBuilder, GetVarsNSteps102Branchings)
 
 TEST(TreeBuilder, GetVarsNStepsVarsConcatenations)
 {
+  auto tb = build_5_edges_2_branchings();
+
   auto steps = 10;
-
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(1, 3);
-  tb.add_edge(3, 4);
-  tb.add_edge(3, 5);
-
   auto orders = {0, 1, 2};
 
   for(const auto & order: orders)
@@ -272,20 +287,19 @@ TEST(TreeBuilder, GetVarsNSteps5)
 {
   auto steps = 5;
 
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-
-  tb.add_edge(1, 2);
-  tb.add_edge(2, 3);
-
-  tb.add_edge(1, 4);
-  tb.add_edge(4, 5);
+  auto tb = build_5_edges_1_branching();
 
   // order 0
   EXPECT_EQ(intA(15, 1, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}), tb.get_vars(0, 3.0, 3, 0, steps));
   EXPECT_EQ(intA(15, 1, {0, 1, 2, 3, 4, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}), tb.get_vars(0, 3.0, 5, 0, steps));
 }
 
+TEST(TreeBuilder, Foo)
+{
+
+}
+
+// scales
 TEST(TreeBuilder, GetScaleNSteps5)
 {
   auto steps = 5;
