@@ -934,7 +934,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   leafs.sort([](std::weak_ptr< Policy::GraphNodeType >a, std::weak_ptr< Policy::GraphNodeType >b)->bool
   {return a.lock()->id() < b.lock()->id();});
 
-  std::vector<uint> visited(treeBuilder.n_nodes() - 1, 0);
+  std::vector<uint> visited(treeBuilder.n_nodes(), 0);
   std::list<Vars> allVars;
   for(const auto& leaf: leafs)
   {
@@ -942,16 +942,11 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
     auto q = l;
     auto p = q->parent();
 
-    auto vars0 = treeBuilder.get_vars({0, l->depth()}, l->id(), 0, microSteps_);
-    auto vars1 = treeBuilder.get_vars({0, l->depth()}, l->id(), 1, microSteps_);
-    auto vars2 = treeBuilder.get_vars({0, l->depth()}, l->id(), 2, microSteps_);
+    auto vars0 = treeBuilder.get_vars({0, 1.0 * l->depth()}, l->id(), 0, microSteps_);
+    auto vars1 = treeBuilder.get_vars({0, 1.0 * l->depth()}, l->id(), 1, microSteps_);
+    auto vars2 = treeBuilder.get_vars({0, 1.0 * l->depth()}, l->id(), 2, microSteps_);
     Vars branch{vars0, vars1, vars2, microSteps_};
     allVars.push_back(branch);
-
-    // tasks valid at all times
-    // square acc
-    //double prob = transitionProbability(policy.root()->data().beliefState, l->data().beliefState);
-    //W(komo.get()).addObjective(0, -1, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
     while(p)
     {
@@ -959,9 +954,6 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
       {
         double start = p->depth();
         double end = q->depth();
-
-        //double prob = transitionProbability(policy.root()->data().beliefState, q->data().beliefState);
-        //W(komo.get()).addObjective(start, end, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
         Interval interval;
         interval.time = {start, start + 1.0};
@@ -987,7 +979,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
 
   //komo->displayTrajectory(0.1, true, false);
   Var<WorldL> configs;
-  auto v = std::make_shared< KinPathViewer >(configs,  0.1, -0 );
+  auto v = std::make_shared<KinPathViewer>(configs,  0.1, -0 );
   v->setConfigurations(komo->configurations);
   rai::wait();
 }

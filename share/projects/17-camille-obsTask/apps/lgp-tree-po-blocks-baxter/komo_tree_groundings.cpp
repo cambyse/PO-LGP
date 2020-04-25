@@ -17,11 +17,6 @@ using namespace rai;
 void groundTreePickUp(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
   groundTreeUnStack(it, tb, facts, komo, verbose);
-
-  //  if( verbose > 0 )
-  //  {
-  //    std::cout << "from: " << start << " -> " << end << " pick up " << facts[0] << " from " << facts[1] << std::endl;
-  //  }
 }
 
 void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
@@ -37,7 +32,7 @@ void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const 
 
   if(verbose > 0)
   {
-    std::cout << "from: " << it.time.from << " -> " << it.time.to << " : unstack " << facts[0] << " from " << facts[1] << std::endl;
+    std::cout << "from: " << it.time.from << "(" << it.edge.from << ")" << " -> " << it.time.to << "(" << it.edge.to << ")" <<  " : unstack " << facts[0] << " from " << facts[1] << std::endl;
   }
 }
 
@@ -52,7 +47,7 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
 
   if(verbose > 0)
   {
-    std::cout << "from: " << it.time.from << " -> " << it.time.to << " : put down " << facts[0] << " at " << facts[1] << std::endl;
+    std::cout << "from: " << it.time.from << "(" << it.edge.from << ")" << " -> " << it.time.to << "(" << it.edge.to << ")" << " : put down " << facts[0] << " at " << facts[1] << std::endl;
   }
 }
 
@@ -66,17 +61,11 @@ void groundTreeCheck(const mp::Interval& it, const mp::TreeBuilder& tb, const st
 
   if(verbose > 0)
   {
-    std::cout << "from: " << it.time.from << " -> " << it.time.to << " : check " << facts[0] << std::endl;
+    std::cout << "from: " << it.time.from << "(" << it.edge.from << ")" << " -> " << it.time.to << "(" << it.edge.to << ")" << " : check " << facts[0] << std::endl;
   }
 }
 
 void groundTreeStack(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
   groundTreePutDown(it, tb, facts, komo, verbose);
-  //  komo->setPlace( t_end, "baxterR", facts[0].c_str(), facts[1].c_str(), verbose );
-
-  //  if( verbose > 0 )
-  //  {
-  //    std::cout << " stack " << facts[0] << " on " << facts[1] << std::endl;
-  //  }
 }
