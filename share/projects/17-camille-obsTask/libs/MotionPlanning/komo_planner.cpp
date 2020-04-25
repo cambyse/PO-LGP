@@ -19,7 +19,6 @@
 #include <tree_builder.h>
 #include <komo_wrapper.h>
 
-
 namespace mp
 {
 static constexpr double eps = std::numeric_limits< double >::epsilon();
@@ -935,6 +934,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   leafs.sort([](std::weak_ptr< Policy::GraphNodeType >a, std::weak_ptr< Policy::GraphNodeType >b)->bool
   {return a.lock()->id() < b.lock()->id();});
 
+  std::vector<uint> visited(treeBuilder.n_nodes() - 1, 0);
   std::list<Vars> allVars;
   for(const auto& leaf: leafs)
   {
@@ -951,18 +951,23 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
     // tasks valid at all times
     // square acc
     double prob = transitionProbability(policy.root()->data().beliefState, l->data().beliefState);
-    W(komo.get()).addObjective(0.0, -1, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
+    W(komo.get()).addObjective(0, -1, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
     while(p)
     {
-      double start = p->depth();
-      double end = q->depth();  
+      //if(!visited[q->id()])
+      {
+        double start = p->depth();
+        double end = q->depth();
 
-      auto scales = treeBuilder.get_scales(p->depth(), q->depth(), l->id(), microSteps_);
+        //double prob = transitionProbability(policy.root()->data().beliefState, q->data().beliefState);
+        //W(komo.get()).addObjective(start, end, branch, new TM_Transition(komo->world), OT_sos, NoArr, prob, 2);
 
-      // ground other tasks
-      komo->groundTasks(start, branch, prob, q->data().leadingKomoArgs, 1);
+        // ground other tasks
+        komo->groundTasks(start, branch, prob, q->data().leadingKomoArgs, 1);
 
+        //visited[q->id()] = 1;
+      }
       q = p;
       p = q->parent();
     }

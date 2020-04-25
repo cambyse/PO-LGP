@@ -60,9 +60,7 @@ void W::setupConfigurations(const std::list<Vars>& branches)
   for(const auto& branch: branches)
   {
     //std::cout << "branch " << i << std::endl;
-    //int ns = 0;
     for(uint s=1; s<branch.order0.d0; s++) {
-      //for(uint s=1; s<komo_->k_order+komo_->T; s++) {
       auto s_global = branch.order0(s,0);
       auto s_m_1_global = branch.order0(s-1, 0);
 
@@ -78,7 +76,6 @@ void W::setupConfigurations(const std::list<Vars>& branches)
       for(KinematicSwitch *sw:komo_->switches) {
         if(sw->timeOfApplication == s_global) {
           sw->apply(K);
-          //ns++;
           //std::cout << "  apply switch at" << s_global << std::endl;
         }
       }
