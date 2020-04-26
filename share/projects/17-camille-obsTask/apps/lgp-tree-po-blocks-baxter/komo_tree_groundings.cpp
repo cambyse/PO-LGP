@@ -14,6 +14,8 @@
 
 using namespace rai;
 
+double shapeSize(const KinematicWorld& K, const char* name, uint i=2);
+
 void groundTreePickUp(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
   groundTreeUnStack(it, tb, facts, komo, verbose);
@@ -24,11 +26,19 @@ void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   // switch
   const auto& eff = "baxterR";
   const auto& object = facts[0].c_str();
-  mp::W(komo).addSwitch_stable({{it.time.to, it.time.to}, it.edge}, tb, eff, object);
 
-  // costs
+  // approach (from up)
   //mp::W(komo).addObjective(end - 0.3,end, branch, new TM_Default(TMT_vecAlign, komo->world, "baxterR", Vector(ARR( 1.0, 0.0, 0.0 )), nullptr, ARR( 0.0, 0.0, -1.0 )), OT_sos, ARR(1.), 1e2, 0); // pb quat normalization
   mp::W(komo).addObjective({{it.time.to-0.3, it.time.to}, it.edge}, tb, new TM_InsideBox(komo->world, eff, NoVector, object, 0.04), OT_ineq, NoArr, 1e2, 0); // inside object at grasp moment
+
+  // switch
+  mp::Interval st{{it.time.to, it.time.to}, it.edge};
+  mp::W(komo).addSwitch(st, tb, new KinematicSwitch(SW_effJoint, JT_free, eff, object, komo->world));
+
+  // after (stay stable)
+  mp::Interval future{{it.time.to, it.time.to + 2.0}, it.edge}; // fix for at least the 2 nexts
+  mp::W(komo).addObjective(future, tb, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
+  mp::W(komo).addObjective(future, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
 
   if(verbose > 0)
   {
@@ -41,9 +51,20 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   const auto& object = facts[0].c_str();
   const auto& place = facts[1].c_str();
 
+  // approach
   mp::Interval end{{it.time.to, it.time.to}, it.edge};
   mp::W(komo).addObjective(end, tb, new TM_AboveBox(komo->world, object, place), OT_ineq, NoArr, 1e1, 0);
-  mp::W(komo).addSwitch_stableOn(end, tb, place, object);
+
+  // switch
+  mp::Interval st{{it.time.to, it.time.to}, it.edge};
+  Transformation rel{0};
+  rel.pos.set(0,0, .5*(shapeSize(komo->world, place) + shapeSize(komo->world, object)));
+  mp::W(komo).addSwitch(st, tb, new KinematicSwitch(SW_effJoint, JT_transXYPhi, place, object, komo->world, SWInit_zero, 0, rel));
+
+  // after (stay stable)
+  mp::Interval future{{it.time.to, -1.0}, it.edge}; // how to improve it? ground until the end sounds inefficient!
+  mp::W(komo).addObjective(future, tb, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
+  mp::W(komo).addObjective(future, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
 
   if(verbose > 0)
   {

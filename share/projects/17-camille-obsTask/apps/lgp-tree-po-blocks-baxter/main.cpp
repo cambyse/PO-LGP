@@ -263,13 +263,13 @@ void komo_tree_dev()
   mp.registerTask( "stack"        , groundTreeStack );
   mp.registerTask( "unstack"      , groundTreeUnStack );
   //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
-  mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
-  //mp.setKin( "LGP-blocks-kin-one-table.g" );
+  //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+  mp.setKin( "LGP-blocks-kin-one-table.g" );
 
   // load policy
   Policy policy;
-  policy.load("policy-0-2w");
-  //policy.load("policy-0-3w");
+  //policy.load("policy-0-2w");
+  policy.load("policy-0-3w");
 
   // plan
   auto po     = MotionPlanningParameters( policy.id() );

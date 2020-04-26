@@ -307,9 +307,11 @@ TEST(TreeBuilder, GetScalesVarsAtEnd)
   EXPECT_EQ(intA(1, 1, {9}), tb.get_vars({2.0, 2.0}, 2, 0, steps));
   EXPECT_EQ(arr{0.6}, tb.get_scales({2.0, 2.0}, 2, steps));
   EXPECT_EQ(arr{0.6}, tb.get_scales({2.0, -1.0}, 2, steps));
+  EXPECT_EQ(arr{0.6}, tb.get_scales({2.0, 5.0}, 2, steps));
 
   EXPECT_EQ(intA(1, 2, {8, 9}), tb.get_vars({2.0, 2.0}, 2, 1, steps));
   EXPECT_EQ(intA(1, 2, {8, 9}), tb.get_vars({2.0, -1.0}, 2, 1, steps));
+  EXPECT_EQ(intA(1, 2, {8, 9}), tb.get_vars({2.0, 5.0}, 2, 1, steps));
 }
 
 // scales

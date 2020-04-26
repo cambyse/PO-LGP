@@ -976,6 +976,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   komo->run();
 
   //komo->getReport(true);
+  //for(auto c: komo->configurations) std::cout << c->q.N << std::endl;
 
   //komo->displayTrajectory(0.1, true, false);
   Var<WorldL> configs;

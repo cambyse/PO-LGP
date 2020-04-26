@@ -8,12 +8,12 @@
 
 using namespace rai;
 
-double shapeSize(const KinematicWorld& K, const char* name, uint i=2);
-
 namespace mp
 {
 void W::reset(const std::list<Vars>& branches, double initNoise)
 {
+  CHECK(komo_->sparseOptimization, "valid only in sparse mode!");
+
   if(!komo_->configurations.N) setupConfigurations(branches);
   komo_->x = komo_->getPath_decisionVariable();
   komo_->dual.clear();
@@ -54,13 +54,12 @@ void W::setupConfigurations(const std::list<Vars>& branches)
   komo_->configurations(1)->copy(*komo_->configurations(0), true);
   komo_->configurations(2)->copy(*komo_->configurations(1), true);
   std::vector<int> visited(komo_->T+komo_->k_order, 0);
-  //visited[0] = 1; visited[1] = 1; visited[2] = 1;
 
-  //int i = 0;
   for(const auto& branch: branches)
   {
     //std::cout << "branch " << i << std::endl;
-    for(uint s=1; s<branch.order0.d0; s++) {
+    for(uint s=1; s<branch.order0.d0; s++)
+    {
       auto s_global = branch.order0(s,0);
       auto s_m_1_global = branch.order0(s-1, 0);
 
@@ -72,6 +71,7 @@ void W::setupConfigurations(const std::list<Vars>& branches)
       CHECK(K.frames.d0>0, "Copied wrong element");
       K.setTimes(komo_->tau); //(tau*(int(s)-int(k_order)));
       K.checkConsistency();
+
       //apply potential graph switches
       for(KinematicSwitch *sw:komo_->switches) {
         if(sw->timeOfApplication == s_global) {
@@ -113,40 +113,20 @@ void W::setupConfigurations(const std::list<Vars>& branches)
 void W::addObjective(const Interval& it, const TreeBuilder& tb, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
 {
   CHECK(scale != -1, "please put a meaningful scale");
+
   auto obj = komo_->addObjective(-123., -123., map, type, target, scale, order, deltaFromStep, deltaToStep);
-  //obj->vars = branch.getVars(start, end, order);
   auto spec = tb.get_spec(it.time, it.edge, order, komo_->stepsPerPhase);
 
   obj->vars = spec.vars;
   obj->scales = spec.scales;
 }
 
-void W::addSwitch_stable(const Interval& it, const TreeBuilder& tb, const char* from, const char* to)
+void W::addSwitch(const Interval& it, const TreeBuilder& tb, KinematicSwitch * sw)
 {
   CHECK(it.time.from == it.time.to, "Wrong interval for a switch");
 
-  auto sw = new KinematicSwitch(SW_effJoint, JT_free, from, to, world_);
   sw->timeOfApplication = tb.get_step(it.time.to, it.edge, komo_->stepsPerPhase);
   komo_->switches.append(sw);
-
-  Interval future{{it.time.to, -1}, it.edge};
-  addObjective(future, tb, new TM_ZeroQVel(world_, to), OT_eq, NoArr, 3e1, 1, +1, -1);
-  addObjective(future, tb, new TM_LinAngVel(world_, to), OT_eq, NoArr, 1e1, 2, +0, +1);
 }
 
-void W::addSwitch_stableOn(const Interval& it, const TreeBuilder& tb, const char* from, const char* to)
-{
-  CHECK(it.time.from == it.time.to, "Wrong interval for a switch");
-
-  Transformation rel{0};
-  rel.pos.set(0,0, .5*(shapeSize(world_, from) + shapeSize(world_, to)));
-
-  auto sw = new KinematicSwitch(SW_effJoint, JT_transXYPhi, from, to, world_, SWInit_zero, 0, rel);
-  sw->timeOfApplication = tb.get_step(it.time.to, it.edge, komo_->stepsPerPhase);
-  komo_->switches.append(sw);
-
-  Interval future{{it.time.to, -1}, it.edge};
-  addObjective(future, tb, new TM_ZeroQVel(world_, to), OT_eq, NoArr, 3e1, 1, +1, -1);
-  addObjective(future, tb, new TM_LinAngVel(world_, to), OT_eq, NoArr, 1e1, 2, +0, +1);
-}
 }
