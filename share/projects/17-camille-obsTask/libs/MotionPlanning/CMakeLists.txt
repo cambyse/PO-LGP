@@ -29,6 +29,7 @@ target_link_libraries(
  Optim
  KOMO
  POMTP_interfaces
+ pthread
 )
 
 add_subdirectory(test)

@@ -149,14 +149,6 @@ void GraphPlanner::buildGraph( bool graph )
 void GraphPlanner::initializeRewards()
 {
   rewards_ = std::vector< double >( graph_.nodes().size() * graph_.nodes().size(), r0_ );
-
-  for( const auto & n : graph_.nodes() )
-  {
-    for( const auto & m : graph_.nodes() )
-    {
-      rewards_[ fromToIndex( n.lock()->id(), m.lock()->id() ) ] = r0_;
-    }
-  }
 }
 
 PolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData, uint id ) const

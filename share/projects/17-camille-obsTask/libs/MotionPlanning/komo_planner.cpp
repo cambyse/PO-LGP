@@ -19,6 +19,9 @@
 #include <tree_builder.h>
 #include <komo_wrapper.h>
 
+#include <thread>
+#include <future>
+
 namespace mp
 {
 static constexpr double eps = std::numeric_limits< double >::epsilon();
@@ -581,9 +584,19 @@ void KOMOPlanner::optimizePath( Policy & policy )
 
   bsToLeafs_             = rai::Array< PolicyNodePtr > ( policy.N() );
 
+  std::list<std::future<bool>> futures;
   for( const auto& l : policy.leafs() )
   {
-    optimizePathTo( l.lock() );
+     futures.push_back(std::async(std::launch::async,
+                [&]{
+                    optimizePathTo( l.lock() );
+                    return true;
+                  }));
+  }
+
+  for(auto &future: futures)
+  {
+    future.get();
   }
 
   computePathQResult(policy);
@@ -693,10 +706,24 @@ void KOMOPlanner::optimizeJointPath( Policy & policy )
 {
   std::cout << "optimizing full joint path.." << std::endl;
 
+  std::list<std::future<bool>> futures;
+  for( const auto& l : policy.leafs() )
+  {
+     futures.push_back(std::async(std::launch::async,
+                [&]{
+                    optimizeJointPathTo( l.lock() );
+                    return true;
+                  }));
+  }
+
+  for(auto &future: futures)
+  {
+    future.get();
+  }/*
   for( const auto& l : policy.leafs() )
   {
     optimizeJointPathTo( l.lock() );
-  }
+  }*/
 
   computeJointPathQResult( policy );
 }
