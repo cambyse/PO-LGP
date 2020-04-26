@@ -1,4 +1,4 @@
-Include = 'baxter-clean.ors'
+Include = 'baxter-clean-left.ors'
 Include = '../lockboxNew.ors'
 
 Delete shape visual

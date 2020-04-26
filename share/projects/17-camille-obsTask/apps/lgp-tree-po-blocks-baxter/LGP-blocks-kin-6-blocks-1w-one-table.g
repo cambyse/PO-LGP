@@ -1,4 +1,4 @@
-Include = 'data/baxter_model/baxter.ors'
+Include = 'data/baxter_model/baxter-left.ors'
 #Delete shape visual
 
 #Include = '../../data/reba-human/human.ors'

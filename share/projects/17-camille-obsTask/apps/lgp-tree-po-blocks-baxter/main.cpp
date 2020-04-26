@@ -249,7 +249,7 @@ void komo_tree_dev()
   // set planner specific parameters
   mp.setNSteps( 20 );
   mp.setMinMarkovianCost( 0.00 );
-  ///
+
   // register symbols
   mp.registerTask( "pick-up"      , groundPickUp );
   mp.registerTask( "put-down"     , groundPutDown );
