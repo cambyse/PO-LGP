@@ -16,6 +16,11 @@ using namespace rai;
 
 double shapeSize(const KinematicWorld& K, const char* name, uint i=2);
 
+void groundTreeInit( const mp::TreeBuilder& tb, KOMO_ext* komo, int verbose )
+{
+
+}
+
 void groundTreePickUp(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
   groundTreeUnStack(it, tb, facts, komo, verbose);
@@ -27,7 +32,7 @@ void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   const auto& eff = "baxterR";
   const auto& object = facts[0].c_str();
 
-  // approach (from up)
+  // approach
   //mp::W(komo).addObjective(end - 0.3,end, branch, new TM_Default(TMT_vecAlign, komo->world, "baxterR", Vector(ARR( 1.0, 0.0, 0.0 )), nullptr, ARR( 0.0, 0.0, -1.0 )), OT_sos, ARR(1.), 1e2, 0); // pb quat normalization
   mp::W(komo).addObjective({{it.time.to-0.3, it.time.to}, it.edge}, tb, new TM_InsideBox(komo->world, eff, NoVector, object, 0.04), OT_ineq, NoArr, 1e2, 0); // inside object at grasp moment
 
@@ -74,7 +79,8 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
 
 void groundTreeCheck(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  mp::W(komo).addObjective(it, tb, new LimitsConstraint(0.05), OT_ineq, NoArr, 1e1, 0);
+  mp::Interval second_half{{it.time.to-0.5, it.time.to}, it.edge};
+  mp::W(komo).addObjective(second_half, tb, new LimitsConstraint(0.05), OT_ineq, NoArr, 1e1, 0);
 
   //mp::W(komo).addObjective(start, end, branch, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sos, NoArr, 1e2,0 ); // slight offset (0.01) to break symmetry and avoid quternion normalization problem
   mp::Interval end{{it.time.to-0.1, it.time.to}, it.edge};

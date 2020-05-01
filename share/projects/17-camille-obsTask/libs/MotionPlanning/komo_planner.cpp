@@ -239,6 +239,11 @@ void KOMOPlanner::registerInit( const InitGrounder & grounder )
   komoFactory_.registerInit( grounder );
 }
 
+void KOMOPlanner::registerInit( const TreeInitGrounder & grounder )
+{
+  komoFactory_.registerInit( grounder );
+}
+
 void KOMOPlanner::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   komoFactory_.registerTask( type, grounder );
@@ -343,7 +348,6 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
         //    CHECK_EQ(sw->timeOfApplication, 1, "need to do this before the optimization..");
         if( sw->timeOfApplication>=2 ) sw->apply( effKinematics_[ node->data().decisionGraphNodeId ]( w ) );
       }
-      //effKinematics_[ node ]( w ).topSort();
       effKinematics_[ node->data().decisionGraphNodeId ]( w ).getJointState();
 
       // free
@@ -446,11 +450,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
 
         // set-up komo
         komo->setModel( kin, true/*, false, true, false, false*/ );
-
         komo->setTiming( 1.0, microSteps_, secPerPhase_, 2 );
-
-        //komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-        //komo->setFixSwitchedObjects();
         komo->setSquaredQAccelerations();
 
         komo->groundInit();
@@ -465,13 +465,13 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
           cout << "KOMO FAILED: " << msg <<endl;
         }
 
-        if( node->id() == 1 )
-        {          
-//          komo->displayTrajectory();
-//////      komo->saveTrajectory( std::to_string( node->id() ) );
+//        if( node->id() == 1 )
+//        {
+//            komo->displayTrajectory();
+//            komo->saveTrajectory( std::to_string( node->id() ) );
 //            komo->plotVelocity( std::to_string( node->id() ) );
-////          //rai::wait();
-        }
+//           //rai::wait();
+//        }
 
         Graph result = komo->getReport();
 
@@ -628,13 +628,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
       komo->setTiming( leafTime, microSteps_, secPerPhase_, 2 );
-
-      //komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-      //komo->setFixSwitchedObjects();
-      //komo->setSquaredQVelocities();
-      komo->setSquaredQAccelerations();//phase_start_offset_);
-      //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
-      //komo->setSquaredFixSwitchedObjects( -1., -1., 1e3 );
+      komo->setSquaredQAccelerations();
 
       komo->groundInit();
 
@@ -644,8 +638,6 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
         komo->groundTasks( time, node->data().leadingKomoArgs ); // ground parent action (included in the initial state)
       }
 
-//      DEBUG( FILE("z.fol") <<fol; )
-//          DEBUG( komo->MP->reportFeatures(true, FILE("z.problem")); )
       komo->applyRandomization( randomVec_ );
       komo->reset();
       try{
@@ -691,7 +683,7 @@ void KOMOPlanner::computePathQResult( const Policy& policy )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
     const auto& trajForW = pathKinFrames_.at(leaf).at(w);
-    const uint nSteps = trajForW.size(); //  .at(w)->size();
+    const uint nSteps = trajForW.size();
 
     pathQResult_.createTrajectory(w, nSteps);
 
@@ -750,9 +742,6 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
       komo->setTiming( leafTime, microSteps_, secPerPhase_, 2 );
-
-      //komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-      //komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
 
       komo->groundInit();
@@ -760,8 +749,8 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       for( const auto& node:treepath )
       {
         // set task
-        auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
-        komo->groundTasks( time, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
+        auto start = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
+        komo->groundTasks( start, node->data().leadingKomoArgs, 1 );          // ground parent action (included in the initial state)
 
         if( node->depth() > 0 )
         {
@@ -947,7 +936,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematics_.front());
   komo->sparseOptimization = true;
-  komo->groundInit();
+  komo->groundInit(treeBuilder);
 
   const auto nPhases = treeBuilder.n_nodes() - 1;
   komo->setTiming(nPhases, microSteps_, secPerPhase_, 2);

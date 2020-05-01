@@ -26,6 +26,11 @@ void KOMOFactory::registerInit( const InitGrounder & grounder )
   initGrounder_ = grounder;
 }
 
+void KOMOFactory::registerInit( const TreeInitGrounder & grounder )
+{
+  treeInitGrounder_ = grounder;
+}
+
 void KOMOFactory::registerTask( const std::string & type, const SymbolGrounder & grounder )
 {
   tasks_[ type ] = grounder;
@@ -40,6 +45,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOFactory::createKomo() const
 {
   auto komo = std::make_shared< ExtensibleKOMO >();
   komo->registerInit( initGrounder_ );
+  komo->registerInit( treeInitGrounder_ );
 
   for ( const auto& task : tasks_ )
   {
@@ -78,11 +84,24 @@ void ExtensibleKOMO::registerInit( const InitGrounder & grounder )
   initGrounder_ = grounder;
 }
 
+void ExtensibleKOMO::registerInit( const TreeInitGrounder & grounder )
+{
+  treeInitGrounder_ = grounder;
+}
+
 void ExtensibleKOMO::groundInit( int verbose )
 {
   if( initGrounder_ )
   {
     initGrounder_( this, verbose );
+  }
+}
+
+void ExtensibleKOMO::groundInit( const TreeBuilder &tb, int verbose )
+{
+  if( treeInitGrounder_ )
+  {
+    treeInitGrounder_( tb, this, verbose );
   }
 }
 

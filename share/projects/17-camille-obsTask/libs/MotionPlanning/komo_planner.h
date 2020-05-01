@@ -30,6 +30,7 @@ public:
 
   // ground symbols
   void registerInit( const InitGrounder & grounder );
+  void registerInit( const TreeInitGrounder & grounder );
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
 

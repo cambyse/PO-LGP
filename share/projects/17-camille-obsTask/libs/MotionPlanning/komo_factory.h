@@ -28,6 +28,7 @@ namespace mp
 class ExtensibleKOMO;
 
 typedef std::function<void( KOMO_ext*, int verbose )> InitGrounder;
+typedef std::function<void( const TreeBuilder& tb, KOMO_ext*, int verbose )> TreeInitGrounder;
 typedef std::function<void( double time, const std::vector< std::string >& facts, KOMO_ext*, int verbose )> SymbolGrounder;
 typedef std::function<void( const Interval& interval, const TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext* komo, int verbose )> TreeSymbolGrounder;
 
@@ -40,7 +41,9 @@ public:
   ExtensibleKOMO();
 
   void registerInit( const InitGrounder & grounder );
+  void registerInit( const TreeInitGrounder & grounder );
   void groundInit( int verbose = 0 );
+  void groundInit( const TreeBuilder& tb, int verbose = 0 );
 
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
@@ -55,6 +58,7 @@ public:
 
 private:
   InitGrounder initGrounder_;
+  TreeInitGrounder treeInitGrounder_;
   std::map< std::string, SymbolGrounder > tasks_;
   std::map< std::string, TreeSymbolGrounder > treeTasks_;
 };
@@ -65,11 +69,13 @@ class KOMOFactory
 
 public:
   void registerInit( const InitGrounder & grounder );
+  void registerInit( const TreeInitGrounder & grounder );
   void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
   std::shared_ptr< ExtensibleKOMO > createKomo() const;
 private:
   InitGrounder initGrounder_;
+  TreeInitGrounder treeInitGrounder_;
   std::map< std::string, SymbolGrounder > tasks_;
   std::map< std::string, TreeSymbolGrounder > treeTasks_;
 };
