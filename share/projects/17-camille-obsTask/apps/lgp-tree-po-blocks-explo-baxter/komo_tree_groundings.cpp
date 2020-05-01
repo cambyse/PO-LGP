@@ -74,12 +74,24 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
 
 void groundTreeCheck(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
+  const auto& side = facts[1].c_str();
+
+  std::map<std::string, arr> sideToPivot{
+    {"side_0", ARR( 0.05, 0.01, 0 )},
+    {"side_1", ARR( 0.00, 0.05, 0 )},
+    {"side_2", ARR( -0.05, 0.00, 0 )},
+    {"side_3", ARR( 0.00, -0.05, 0 )},
+    {"side_4", ARR( 0.00, 0.00, 0.05 )},
+    {"side_5", ARR( 0.00, 0.00, -0.05 )}
+  };
+
+  auto pivot = sideToPivot[side];
   mp::Interval second_half{{it.time.to-0.5, it.time.to}, it.edge};
   mp::W(komo).addObjective(second_half, tb, new LimitsConstraint(0.05), OT_ineq, NoArr, 1e1, 0);
 
   //mp::W(komo).addObjective(start, end, branch, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sos, NoArr, 1e2,0 ); // slight offset (0.01) to break symmetry and avoid quternion normalization problem
   mp::Interval end{{it.time.to-0.1, it.time.to}, it.edge};
-  mp::W(komo).addObjective(end, tb, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_eq, NoArr, 1e2, 0 );
+  mp::W(komo).addObjective(end, tb, new ActiveGetSight( "head", facts[0].c_str(), pivot, ARR( -1, 0, 0 ), 0.65 ), OT_eq, NoArr, 1e2, 0 );
 
   if(verbose > 0)
   {

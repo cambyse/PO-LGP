@@ -183,6 +183,42 @@ void plan_graph_search()
   std::cout << "ACC COSTS: [" << ba::min( acc_acc_cost ) << " " << ba::max( acc_acc_cost ) << "] mean:" << ba::mean( acc_acc_cost ) << " std_dev:" << sqrt( ba::variance( acc_acc_cost ) ) << std::endl;
 }
 
+void komo_tree_dev()
+{
+  mp::KOMOPlanner mp;
+
+  // set planner specific parameters
+  mp.setNSteps( 20 );
+  mp.setMinMarkovianCost( 0.00 );
+  mp.setExecutionPolicy(std::launch::async);
+
+  // register symbols
+  mp.registerInit( groundInit );
+  mp.registerTask( "pick-up"      , groundPickUp );
+  mp.registerTask( "put-down"     , groundPutDown );
+  mp.registerTask( "check"        , groundCheck );
+
+  mp.registerInit( groundTreeInit );
+  mp.registerTask( "pick-up"      , groundTreePickUp );
+  mp.registerTask( "put-down"     , groundTreePutDown );
+  mp.registerTask( "check"        , groundTreeCheck );
+
+  mp.setKin( "LGP-blocks-kin-one-block.g" );
+
+  // load policy
+  Policy policy;
+  //policy.load("policy-0-2w");
+  //policy.load("policy-0-6w");
+  policy.load("policy-0");
+
+  // plan
+  auto po     = MotionPlanningParameters( policy.id() );
+  po.setParam( "type", "jointSparse" );
+  mp.solveAndInform( po, policy );
+  //mp.display(policy, 200);
+}
+
+
 //===========================================================================
 
 int main(int argc,char **argv)
@@ -191,7 +227,9 @@ int main(int argc,char **argv)
 
   rnd.clockSeed();
 
-  plan_graph_search();
+  komo_tree_dev();
+
+  //plan_graph_search();
 
   return 0;
 }
