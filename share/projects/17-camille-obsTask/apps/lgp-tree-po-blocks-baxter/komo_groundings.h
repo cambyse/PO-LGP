@@ -3,19 +3,17 @@
 #include <graph_planner.h>
 
 //==========Application specific grounders===================================
-void groundPrefixIfNeeded( KOMO_ext * komo, int verbose  )
+
+void groundInit( KOMO_ext * komo, int verbose )
 {
-  //  if( ! komo->isPrefixSetup() )
-  //  {
-  //    komo->setHoming( -1., -1., 1e-2 ); //gradient bug??
-  //    komo->setTask( -1, -1, new AxisBound( "manhead", 1.4, AxisBound::Z, AxisBound::MIN ), OT_ineq, NoArr, 1e2 );
-  //  }
+  const double fixEffJointsWeight = 1e3;
+
+  komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight );
+  komo->setFixSwitchedObjects();
 }
 
 void groundPickUp( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   double duration=1.0;
 
   //
@@ -38,8 +36,6 @@ void groundPickUp( double phase, const std::vector< std::string >& facts, KOMO_e
 
 void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   double duration=1.0;
 
   //
@@ -68,8 +64,6 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO_
 
 void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   double duration=1.0;
 
   //
@@ -112,8 +106,6 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_
 
 void groundCheck( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   double duration=1.0;
 
   //
@@ -134,8 +126,6 @@ void groundCheck( double phase, const std::vector< std::string >& facts, KOMO_ex
 
 void groundStack( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  groundPrefixIfNeeded( komo, verbose );
-
   double duration=1.0;
 
   //

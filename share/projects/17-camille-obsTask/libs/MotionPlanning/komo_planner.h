@@ -101,13 +101,9 @@ private:
   const rai::String beliefStateTag_  = "BELIEF_START_STATE";
 
   double kinEqualityWeight_  = 1e4;
-  double fixEffJointsWeight_ = 1e3;
   double secPerPhase_        = 10.;
 
   double maxConstraint_      = 10 * 0.8;
-
-  uint phase_start_offset_ = 1; // the first task should be grounded starting from this time
-  uint phase_end_offset_   = 1;
 
   double minMarkovianCost_   = 0;
 

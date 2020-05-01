@@ -297,7 +297,7 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
       //      komo->setHoming( -1., -1., 1e-1 ); //gradient bug??
       //komo->setSquaredQVelocities();
       komo->setSquaredQVelocities();
-      komo->setFixSwitchedObjects( -1., -1., 1e3 );
+      //komo->setFixSwitchedObjects( -1., -1., 1e3 );
 
       komo->groundInit();
       komo->groundTasks( 0., node->data().leadingKomoArgs );
@@ -384,12 +384,12 @@ void KOMOPlanner::savePoseOptimizationResults( Policy & policy, bool & poseOptim
     {
       std::cout << "Pose Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
       std::cout << "action: " << std::endl;
+
       for(const auto & arg: node->data().leadingKomoArgs)
         std::cout << arg << " ";
       std::cout << std::endl;
 
       node->data().markovianReturn = std::numeric_limits< double >::lowest();
-      //node->setValue( std::numeric_limits< double >::lowest() );
       node->data().status = PolicyNodeData::INFORMED;
 
       poseOptimizationFailed = true;
@@ -449,12 +449,12 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
 
         komo->setTiming( 1.0, microSteps_, secPerPhase_, 2 );
 
-        komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-        komo->setFixSwitchedObjects();
+        //komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+        //komo->setFixSwitchedObjects();
         komo->setSquaredQAccelerations();
 
         komo->groundInit();
-        komo->groundTasks( /*phase_start_offset_ +*/  0, node->data().leadingKomoArgs );
+        komo->groundTasks(0, node->data().leadingKomoArgs );
 
         if( node->isRoot() ) komo->applyRandomization( randomVec_ );
         komo->reset(); //huge
@@ -627,10 +627,10 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       // set-up komo
       auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
-      komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( leafTime, microSteps_, secPerPhase_, 2 );
 
-      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-      komo->setFixSwitchedObjects();
+      //komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+      //komo->setFixSwitchedObjects();
       //komo->setSquaredQVelocities();
       komo->setSquaredQAccelerations();//phase_start_offset_);
       //komo->setSquaredFixJointVelocities( -1., -1., 1e3 );
@@ -641,7 +641,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       for( const auto& node:treepath )
       {
         auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
-        komo->groundTasks( phase_start_offset_ + time, node->data().leadingKomoArgs ); // ground parent action (included in the initial state)
+        komo->groundTasks( time, node->data().leadingKomoArgs ); // ground parent action (included in the initial state)
       }
 
 //      DEBUG( FILE("z.fol") <<fol; )
@@ -749,10 +749,10 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       // set-up komo
       auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
-      komo->setTiming( phase_start_offset_ + leafTime + phase_end_offset_, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( leafTime, microSteps_, secPerPhase_, 2 );
 
-      komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
-      komo->setFixSwitchedObjects();
+      //komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight_ );
+      //komo->setFixSwitchedObjects();
       komo->setSquaredQAccelerations();
 
       komo->groundInit();
@@ -761,14 +761,14 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       {
         // set task
         auto time = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
-        komo->groundTasks( phase_start_offset_ + time, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
+        komo->groundTasks( time, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
 
         if( node->depth() > 0 )
         {
           for( auto s = 1; s < komo->stepsPerPhase; ++s )
           {
             uint stepsPerPhase = komo->stepsPerPhase; // get number of steps per phases
-            uint nodeSlice = stepsPerPhase * ( phase_start_offset_ + node->depth() ) - s;
+            uint nodeSlice = stepsPerPhase * node->depth() - s;
             arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
 
             // set constraints enforcing the path equality among worlds
@@ -796,7 +796,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
             if( nSupport > 1 )  // enforce kin equality between at least two worlds, useless with just one world!
             {
               AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask_ );  // tmp camille, think to delete it, or komo does it?
-              double slice_t = phase_start_offset_ + node->depth() - double( s ) / stepsPerPhase;
+              double slice_t = node->depth() - double( s ) / stepsPerPhase;
               komo->addObjective( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
 
               //
@@ -895,7 +895,7 @@ void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
         CHECK(tIt!=pathCostsPerPhase.end(), "optimization results should be in the map");
 
         const auto& trajCosts = tIt->second( w );
-        const auto& wcost = trajCosts( phase_start_offset_ + phase );
+        const auto& wcost = trajCosts( phase - 1 );
 
         cost += node->data().beliefState[ w ] * wcost;
         //std::cout << "cost of phase:" << cost << " phase:" << phase << std::endl;
