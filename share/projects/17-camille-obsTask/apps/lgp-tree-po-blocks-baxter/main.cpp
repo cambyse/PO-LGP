@@ -252,7 +252,7 @@ void komo_tree_dev()
   // set planner specific parameters
   mp.setNSteps( 20 );
   mp.setMinMarkovianCost( 0.00 );
-  mp.setExecutionPolicy(std::launch::deferred);
+  mp.setExecutionPolicy(std::launch::async);
 
   // register symbols
   mp.registerInit( groundInit );
