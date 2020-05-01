@@ -84,8 +84,6 @@ void plan_graph_search()
     mp.registerTask( "pick-up"      , groundPickUp );
     mp.registerTask( "put-down"     , groundPutDown );
     mp.registerTask( "check"        , groundCheck );
-    mp.registerTask( "stack"        , groundStack );
-    mp.registerTask( "unstack"      , groundUnStack );
 
     // C
     tp.setFol( "LGP-blocks-fol-one-block.g" );

@@ -8,23 +8,18 @@ FOL_World{
 }
 
 ## basic predicates
-#location
-#object
-#mutex_objects	# objects that should never collide
-#container
-block
 location
+block
+side
 table
-id	    # block identifier
-
 in_sight   # block identification part is visible
 holding     # object is held by an agent
 hand_empty  # hand is free
 on_table    # object X is on the table
 on	    # object X is on object Y
-clear       # object X top is clear
 identified  # object X as been identified, the agnt knows which block it is
 is
+colored
 
 # keyword
 NOT_OBSERVABLE
@@ -32,50 +27,69 @@ UNEQUAL
 
 ## constants
 block_1
-block_2 
-block_3 
-block_a  #block identifier
-block_b  #block identifier
-block_c  #block identifier
+side_0
+side_1
+side_2
+side_3
+side_4
+side_5
 tableC
 
 ## initial state
-START_STATE { 
+START_STATE {
 (table tableC) 
 (location tableC)
-(block block_1) (block block_2) (block block_3) (id block_a) (id block_b) (id block_c)
-(UNEQUAL block_1 block_2) (UNEQUAL block_1 block_3) (UNEQUAL block_2 block_3)
-(clear block_3) (clear block_2) (clear tableC)
-(on_table block_1 tableC) (on_table block_2 tableC) (on block_3 block_1)
+(block block_1)
+(side side_0) (side side_1) (side side_2) (side side_3) (side side_4) (side side_5)
+(on_table block_1 tableC)
 (hand_empty) 
-
-(is block_2 block_b)
-(identified block_2)
 }
 
 EVENTUAL_FACTS{ 
 {
-(NOT_OBSERVABLE is block_3 block_c)
-(NOT_OBSERVABLE is block_1 block_a)
+(NOT_OBSERVABLE colored side_0)
 }
 {
-(NOT_OBSERVABLE is block_1 block_c)
-(NOT_OBSERVABLE is block_3 block_a)
+(NOT_OBSERVABLE colored side_1)
+}
+{
+(NOT_OBSERVABLE colored side_2)
+}
+{
+(NOT_OBSERVABLE colored side_3)
+}
+{
+(NOT_OBSERVABLE colored side_4)
+}
+{
+(NOT_OBSERVABLE colored side_5)
 }
 }
 
 BELIEF_START_STATE{ 
 {
-()=0.6
+()=0.166666667
 }
 {
-()=0.4
+()=0.166666667
+}
+{
+()=0.166666667
+}
+{
+()=0.166666667
+}
+{
+()=0.166666667
+}
+{
+()=0.166666667
 }
 }
 
 ### Termination RULES 
 Rule {
-  { (on block_a block_b) (on block_b block_c) (hand_empty) } # 
+  { (identified block_1) (on_table block_1 tableC)} # 
   { (QUIT) }
 }
 
@@ -86,6 +100,6 @@ REWARD {
 #    weight=1.
 #  }
 }
+
 ### Tasks definitions
 Include = 'LGP-blocks-actions-observations.g'
-

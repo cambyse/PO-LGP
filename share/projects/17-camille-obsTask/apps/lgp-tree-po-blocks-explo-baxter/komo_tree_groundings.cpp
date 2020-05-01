@@ -23,11 +23,6 @@ void groundTreeInit( const mp::TreeBuilder& tb, KOMO_ext* komo, int verbose )
 
 void groundTreePickUp(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
-  groundTreeUnStack(it, tb, facts, komo, verbose);
-}
-
-void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
-{
   // switch
   const auto& eff = "baxterR";
   const auto& object = facts[0].c_str();
@@ -41,13 +36,13 @@ void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   mp::W(komo).addSwitch(st, tb, new KinematicSwitch(SW_effJoint, JT_free, eff, object, komo->world));
 
   // after (stay stable)
-  mp::Interval future{{it.time.to, it.time.to + 2.0}, it.edge}; // fix for at least the 2 nexts
+  mp::Interval future{{it.time.to, -1.0}, it.edge}; // fix for at least the 2 nexts
   mp::W(komo).addObjective(future, tb, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
   mp::W(komo).addObjective(future, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
 
   if(verbose > 0)
   {
-    std::cout << "from: " << it.time.from << "(" << it.edge.from << ")" << " -> " << it.time.to << "(" << it.edge.to << ")" <<  " : unstack " << facts[0] << " from " << facts[1] << std::endl;
+    std::cout << "from: " << it.time.from << "(" << it.edge.from << ")" << " -> " << it.time.to << "(" << it.edge.to << ")" <<  " : pick-up " << facts[0] << " from " << facts[1] << std::endl;
   }
 }
 
@@ -90,9 +85,4 @@ void groundTreeCheck(const mp::Interval& it, const mp::TreeBuilder& tb, const st
   {
     std::cout << "from: " << it.time.from << "(" << it.edge.from << ")" << " -> " << it.time.to << "(" << it.edge.to << ")" << " : check " << facts[0] << std::endl;
   }
-}
-
-void groundTreeStack(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
-{
-  groundTreePutDown(it, tb, facts, komo, verbose);
 }
