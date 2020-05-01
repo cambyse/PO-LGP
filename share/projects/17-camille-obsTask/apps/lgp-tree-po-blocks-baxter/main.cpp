@@ -252,6 +252,7 @@ void komo_tree_dev()
   // set planner specific parameters
   mp.setNSteps( 20 );
   mp.setMinMarkovianCost( 0.00 );
+  mp.setExecutionPolicy(std::launch::deferred);
 
   // register symbols
   mp.registerInit( groundInit );
@@ -268,22 +269,22 @@ void komo_tree_dev()
   mp.registerTask( "stack"        , groundTreeStack );
   mp.registerTask( "unstack"      , groundTreeUnStack );
   //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
-  mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+  //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
   //mp.setKin( "LGP-blocks-kin-one-table.g" );
-  //mp.setKin( "LGP-blocks-kin-4-blocks-24w-one-table.g" );
+  mp.setKin( "LGP-blocks-kin-4-blocks-24w-one-table.g" );
 
 
   // load policy
   Policy policy;
-  policy.load("policy-0-2w");
+  //policy.load("policy-0-2w");
   //policy.load("policy-0-6w");
-  //policy.load("policy-0-24w");
+  policy.load("policy-0-24w");
 
   // plan
-  auto po     = MotionPlanningParameters( policy.id() );
-  po.setParam( "type", "jointSparse" );
-  mp.solveAndInform( po, policy );
-  //mp.display(policy, 200);
+  //auto po     = MotionPlanningParameters( policy.id() );
+  //po.setParam( "type", "jointSparse" );
+  //mp.solveAndInform( po, policy );
+  mp.display(policy, 200);
 }
 
 //===========================================================================

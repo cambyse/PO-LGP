@@ -584,14 +584,16 @@ void KOMOPlanner::optimizePath( Policy & policy )
 
   bsToLeafs_             = rai::Array< PolicyNodePtr > ( policy.N() );
 
-  std::list<std::future<bool>> futures;
-  for( const auto& l : policy.leafs() )
+  std::list<std::future<void>> futures;
+  auto leaves = policy.leaves();
+  for( const auto& l : leaves )
   {
-     futures.push_back(std::async(std::launch::async,
-                [&]{
-                    optimizePathTo( l.lock() );
-                    return true;
-                  }));
+     auto future = std::async(executionPolicy_,
+                              [&]{
+                                  optimizePathTo( l );
+                                });
+
+     futures.push_back(std::move(future));
   }
 
   for(auto &future: futures)
@@ -606,9 +608,9 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 {
   const auto N = leaf->data().beliefState.size();
 
-  pathKinFrames_[ leaf ] = rai::Array< rai::Array< rai::KinematicWorld > >( N );
-  pathXSolution_[ leaf ] = rai::Array< arr                               >( N );
-  pathCostsPerPhase_[ leaf ] = rai::Array< arr >( N );
+  pathKinFrames_[ leaf->id() ] = rai::Array< rai::Array< rai::KinematicWorld > >( N );
+  pathXSolution_[ leaf->id() ] = rai::Array< arr                               >( N );
+  pathCostsPerPhase_[ leaf->id() ] = rai::Array< arr >( N );
 
   //-- collect 'path nodes'
   auto treepath = getPathTo( leaf );
@@ -660,15 +662,15 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       double cost        = result.get<double>( {"total","sqrCosts"} );
       double constraints = result.get<double>( {"total","constraints"} );
 
-      pathCostsPerPhase_[ leaf ]( w ) = costs;
+      pathCostsPerPhase_[ leaf->id() ]( w ) = costs;
 
       for( auto s = 0; s < komo->configurations.N; ++s )
       {
         rai::KinematicWorld kin( *komo->configurations( s ) );
-        pathKinFrames_[ leaf ]( w ).append( kin );
+        pathKinFrames_[ leaf->id() ]( w ).append( kin );
       }
 
-      pathXSolution_[ leaf ]( w ) = komo->x;
+      pathXSolution_[ leaf->id() ]( w ) = komo->x;
 
       // free
       freeKomo( komo );
@@ -682,7 +684,7 @@ void KOMOPlanner::computePathQResult( const Policy& policy )
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
-    const auto& trajForW = pathKinFrames_.at(leaf).at(w);
+    const auto& trajForW = pathKinFrames_.at(leaf->id()).at(w);
     const uint nSteps = trajForW.size();
 
     pathQResult_.createTrajectory(w, nSteps);
@@ -698,24 +700,21 @@ void KOMOPlanner::optimizeJointPath( Policy & policy )
 {
   std::cout << "optimizing full joint path.." << std::endl;
 
-  std::list<std::future<bool>> futures;
-  for( const auto& l : policy.leafs() )
+  std::list<std::future<void>> futures;
+  auto leaves = policy.leaves();
+  for( const auto& l : leaves )
   {
-     futures.push_back(std::async(std::launch::async,
-                [&]{
-                    optimizeJointPathTo( l.lock() );
-                    return true;
-                  }));
+    auto future = std::async(executionPolicy_,
+                             [&]{
+      optimizeJointPathTo( l );
+    });
+    futures.push_back(std::move(future));
   }
 
   for(auto &future: futures)
   {
     future.get();
-  }/*
-  for( const auto& l : policy.leafs() )
-  {
-    optimizeJointPathTo( l.lock() );
-  }*/
+  }
 
   computeJointPathQResult( policy );
 }
@@ -724,8 +723,8 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 {
   const auto N = leaf->data().beliefState.size();
 
-  jointPathKinFrames_  [ leaf ] = rai::Array< rai::Array< rai::KinematicWorld > >( N );
-  jointPathCostsPerPhase_[ leaf ] = rai::Array< arr >( N );
+  jointPathKinFrames_  [ leaf->id() ] = rai::Array< rai::Array< rai::KinematicWorld > >( N );
+  jointPathCostsPerPhase_[ leaf->id() ] = rai::Array< arr >( N );
 
   //-- collect 'path nodes'
   auto treepath = getPathTo( leaf );
@@ -750,7 +749,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       {
         // set task
         auto start = ( node->parent() ? node->parent()->depth(): 0. );     // get parent time
-        komo->groundTasks( start, node->data().leadingKomoArgs, 1 );          // ground parent action (included in the initial state)
+        komo->groundTasks( start, node->data().leadingKomoArgs );          // ground parent action (included in the initial state)
 
         if( node->depth() > 0 )
         {
@@ -758,7 +757,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
           {
             uint stepsPerPhase = komo->stepsPerPhase; // get number of steps per phases
             uint nodeSlice = stepsPerPhase * node->depth() - s;
-            arr q = zeros( pathKinFrames_[ leaf ]( w )( nodeSlice ).q.N );
+            arr q = zeros( pathKinFrames_[ leaf->id() ]( w )( nodeSlice ).q.N );
 
             // set constraints enforcing the path equality among worlds
             uint nSupport = 0;
@@ -770,9 +769,9 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
                 const auto& terminalLeafx = bsToLeafs_( x );
 
-                CHECK( pathKinFrames_[ terminalLeafx ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
+                CHECK( pathKinFrames_[ terminalLeafx->id() ]( x ).N > 0, "one node along the solution path doesn't have a path solution already!" );
 
-                const auto & pathLeafx     = pathKinFrames_[ terminalLeafx ]( x );
+                const auto & pathLeafx     = pathKinFrames_[ terminalLeafx->id() ]( x );
 
                 CHECK_EQ( q.N, pathLeafx( nodeSlice ).q.N, "wrong q dimensions!" );
 
@@ -797,7 +796,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       }
 
       komo->applyRandomization( randomVec_ );
-      komo->set_x( pathXSolution_[ leaf ]( w ) );
+      komo->set_x( pathXSolution_[ leaf->id() ]( w ) );
       komo->reset();
 
       try{
@@ -823,13 +822,13 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       double constraints = result.get<double>({"total","constraints"});
 
       // store costs
-      jointPathCostsPerPhase_[ leaf ]( w ) = costs;
+      jointPathCostsPerPhase_[ leaf->id() ]( w ) = costs;
 
       // store result
       for( auto s = 0; s < komo->configurations.N; ++s )
       {
         const rai::KinematicWorld& kin( *komo->configurations( s ) );
-        jointPathKinFrames_[ leaf ]( w ).append( kin );
+        jointPathKinFrames_[ leaf->id() ]( w ).append( kin );
       }
 
       // free
@@ -844,7 +843,7 @@ void KOMOPlanner::computeJointPathQResult( const Policy& policy )
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
-    const auto& trajForW = jointPathKinFrames_.at(leaf).at(w);
+    const auto& trajForW = jointPathKinFrames_.at(leaf->id()).at(w);
     const uint nSteps = trajForW.size(); //  .at(w)->size();
 
     jointPathQResult_.createTrajectory(w, nSteps);
@@ -878,9 +877,9 @@ void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
       if( node->data().beliefState[ w ] > 0 )
       {
         const auto& leaf = bsToLeafs_( w );
-        auto tIt = pathCostsPerPhase.find(leaf);
+        auto tIt = pathCostsPerPhase.find(leaf->id());
 
-        CHECK( pathCostsPerPhase.find( leaf ) != pathCostsPerPhase.end(), "corruption in datastructure" );
+        CHECK( pathCostsPerPhase.find( leaf->id() ) != pathCostsPerPhase.end(), "corruption in datastructure" );
         CHECK(tIt!=pathCostsPerPhase.end(), "optimization results should be in the map");
 
         const auto& trajCosts = tIt->second( w );
@@ -941,20 +940,15 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   const auto nPhases = treeBuilder.n_nodes() - 1;
   komo->setTiming(nPhases, microSteps_, secPerPhase_, 2);
 
-  auto leafs = policy.leafs();
-//  std::sort(leafs.begin(), leafs.end(),
-//            [](std::weak_ptr< Policy::GraphNodeType >a, std::weak_ptr< Policy::GraphNodeType >b)->bool
-//              {return a.lock()->id() < b.lock()->id();}
-//  );
+  auto leaves = policy.leaves();
 
-  leafs.sort([](std::weak_ptr< Policy::GraphNodeType >a, std::weak_ptr< Policy::GraphNodeType >b)->bool
-  {return a.lock()->id() < b.lock()->id();});
+  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
+  {return a->id() < b->id();});
 
   std::vector<uint> visited(treeBuilder.n_nodes(), 0);
   std::list<Vars> allVars;
-  for(const auto& leaf: leafs)
+  for(const auto& l: leaves)
   {
-    auto l = leaf.lock();
     auto q = l;
     auto p = q->parent();
 

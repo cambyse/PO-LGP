@@ -432,9 +432,9 @@ TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WMarkovianPath_NodeSetAsPl
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
   EXPECT_EQ( policy.status(), Policy::INFORMED );
 
-  for(const auto & leaf: policy.leafs())
+  for(const auto & leaf: policy.leaves())
   {
-    auto path = getPathTo( leaf.lock() );
+    auto path = getPathTo( leaf );
     for( const auto & n: path )
     {
       if(n->data().markovianReturn != 0)

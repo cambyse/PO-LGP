@@ -120,6 +120,17 @@ uint Policy::nNodes() const
   return node_ids.size();
 }
 
+std::list<Policy::GraphNodeTypePtr> Policy::leaves() const
+{
+  std::list<Policy::GraphNodeTypePtr> leaves;
+  for( const auto& l : leafs_ )
+  {
+    leaves.push_back(l.lock());
+  }
+
+  return leaves;
+}
+
 void Policy::save( const std::string & file ) const
 {
   std::ofstream ofs( file );

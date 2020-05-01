@@ -149,6 +149,7 @@ public:
   using ptr = std::shared_ptr< GraphNode< PolicyNodeData > >;
   using GraphNodeType = GraphNode< PolicyNodeData >;
   using GraphNodeTypePtr = std::shared_ptr< GraphNode< PolicyNodeData > >;
+  using GraphNodeTypeWeakPtr = std::weak_ptr< GraphNode< PolicyNodeData > >;
 
   enum StatusType
   {
@@ -174,7 +175,8 @@ public:
   bool empty() const { return root_ == nullptr; }
   uint id() const { return id_; }
   GraphNodeTypePtr root() const { return root_; }
-  std::list< std::weak_ptr< GraphNodeType > >  leafs() const { return leafs_; }
+  std::list< std::weak_ptr< GraphNodeType > >  wleafs() const { return leafs_; }
+  std::list<GraphNodeTypePtr> leaves() const;
   double value() const { return value_; }
   QResult qresult() const { return qr_; }
   enum StatusType status() const { return status_; }

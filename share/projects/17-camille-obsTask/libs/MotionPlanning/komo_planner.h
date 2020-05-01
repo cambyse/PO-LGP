@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <future>
 
 #include <skeleton.h>
 #include <motion_planner.h>
@@ -15,6 +16,7 @@ namespace mp
 class KOMOPlanner : public MotionPlanner
 {
   using PolicyNodePtr = Policy::GraphNodeTypePtr;
+  using PolicyNodeWeakPtr = Policy::GraphNodeTypeWeakPtr;
 
 public:
   // modifiers
@@ -37,6 +39,7 @@ public:
   void setSecsPerPhase( double s ) { secPerPhase_ = s; }
   void setNSteps( uint n ) { microSteps_ = n; }
   void setMinMarkovianCost( double m ) { minMarkovianCost_ = m; }
+  void setExecutionPolicy(std::launch mode) { executionPolicy_ = mode; }
 
 private:
   void computeQMask();
@@ -56,12 +59,12 @@ private:
   void clearLastNonMarkovianResults();
   // path
   void optimizePath( Policy & );
-  void optimizePathTo( const PolicyNodePtr & );
+  void optimizePathTo( const PolicyNodePtr& );
   void computePathQResult( const Policy& policy );
 
   // joint path
   void optimizeJointPath( Policy & );
-  void optimizeJointPathTo( const PolicyNodePtr & );
+  void optimizeJointPathTo( const PolicyNodePtr& );
   void computeJointPathQResult( const Policy& policy );
   void saveJointPathOptimizationResults( Policy & ) const;
 
@@ -87,14 +90,14 @@ private:
   std::unordered_map< uint, double > markovianPathConstraints_; // node id -> averaged constraints
 
   // path
-  std::unordered_map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
-  std::unordered_map< PolicyNodePtr, rai::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
-  std::unordered_map< PolicyNodePtr, rai::Array< arr > > pathCostsPerPhase_;
+  std::unordered_map< uint, rai::Array< rai::Array< rai::KinematicWorld > > > pathKinFrames_; // node(leaf) -> trajectory for each world
+  std::unordered_map< uint, rai::Array< arr > > pathXSolution_; // node(leaf) -> x for each world
+  std::unordered_map< uint, rai::Array< arr > > pathCostsPerPhase_;
   QResult pathQResult_;
 
   // joint path
-  std::unordered_map< PolicyNodePtr, rai::Array< rai::Array< rai::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
-  std::unordered_map< PolicyNodePtr, rai::Array< arr > > jointPathCostsPerPhase_;
+  std::unordered_map< uint, rai::Array< rai::Array< rai::KinematicWorld > > > jointPathKinFrames_; // maps each leaf to its path // memory leak?
+  std::unordered_map< uint, rai::Array< arr > > jointPathCostsPerPhase_;
   rai::Array< PolicyNodePtr > bsToLeafs_; //indicates the leaf terminating for a given state
   QResult jointPathQResult_;
 
@@ -103,12 +106,12 @@ private:
 
   double kinEqualityWeight_  = 1e4;
   double secPerPhase_        = 10.;
-
   double maxConstraint_      = 10 * 0.8;
-
   double minMarkovianCost_   = 0;
 
   uint microSteps_     = 20; // per phase
+
+  std::launch executionPolicy_ = std::launch::async;
 };
 
 }

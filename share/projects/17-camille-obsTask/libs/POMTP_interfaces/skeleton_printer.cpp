@@ -14,10 +14,8 @@ void PolicyPrinter::print( const Policy & Policy )
   ss_ << "{" << std::endl;
   ss_ << Policy.root()->id() << " [style=filled, fillcolor=blue]" << std::endl;
 
-  for( auto weakN : Policy.leafs() )
+  for( auto n : Policy.leaves() )
   {
-    auto n = weakN.lock();
-
     if( n )
     {
       ss_ << n->id() << " [style=filled, fillcolor=green]" << std::endl;
