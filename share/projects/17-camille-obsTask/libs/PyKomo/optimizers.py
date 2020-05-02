@@ -51,6 +51,13 @@ class SquarePenaltySolver:
 
         return x
 
+class GaussNewtonFunction:
+    def value(self, x):
+        pass
+
+    def gradient(self, x):
+        pass
+
 class GaussNewton: # sum of square problems
     def __init__(self, function):
         self.function = function
@@ -58,13 +65,16 @@ class GaussNewton: # sum of square problems
         self.rho = 0.01
         self.eps = 0.01  # update size
 
+        assert issubclass(type(function), GaussNewtonFunction), "wrong function type"
+
     def run(self, x):
         _lambda = self.lambda_0
         _alpha = 1
 
         I = np.identity(x.shape[0])
         while True:
-            gamma, Jgamma = self.function(x)
+            gamma = self.function.value(x)
+            Jgamma = self.function.gradient(x)
 
             def matrix_preparation():
                 JgammaT = np.transpose(Jgamma)
@@ -85,10 +95,60 @@ class GaussNewton: # sum of square problems
             # plt.matshow(Jgamma!=0)
             # plt.show()
 
-            delta, _ = self.function(x + _alpha * d)   # line search
+            delta = self.function.value(x + _alpha * d)   # line search
             while np.dot(delta.T, delta) > np.dot(gamma.T, gamma) + self.rho * np.matmul(np.transpose(B), _alpha * d):
                 _alpha = _alpha * 0.5
-                delta, _ = self.function(x + _alpha * d)
+                delta = self.function.value(x + _alpha * d)  # line search
+
+            x = x + _alpha * d
+            _alpha = 1
+            if np.linalg.norm(_alpha * d) < self.eps:
+                break
+
+        return x
+
+class NewtonFunction:
+    def value(self, x):
+        pass
+
+    def gradient(self, x):
+        pass
+
+    def hessian(self, x):
+        pass
+
+class Newton: # sum of square problems
+    def __init__(self, function):
+        self.function = function
+        self.lambda_0 = 0.1
+        self.rho = 0.01
+        self.eps = 0.01  # update size
+
+        assert issubclass(type(function), NewtonFunction), "wrong function type"
+
+    def run(self, x):
+        _lambda = self.lambda_0
+        _alpha = 1
+
+        I = np.identity(x.shape[0])
+        while True:
+            def matrix_preparation():
+                hessian = self.function.hessian(x)
+                A = hessian + _lambda * I
+                B = 2 * self.function.gradient(x)
+                return A, B
+
+            def solve():
+                return np.linalg.solve(A, -B)
+
+            A, B = matrix_preparation()
+            d = solve()
+
+            v = self.function.value(x)
+            w = self.function.value(x + _alpha * d)   # line search
+            while w > v + self.rho * np.matmul(np.transpose(B), _alpha * d):
+                _alpha = _alpha * 0.5
+                w = self.function.value(x + _alpha * d)
 
             x = x + _alpha * d
             _alpha = 1
