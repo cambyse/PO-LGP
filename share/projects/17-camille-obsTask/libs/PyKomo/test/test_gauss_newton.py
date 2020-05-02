@@ -8,8 +8,8 @@ from optimizers import GaussNewton
 
 SHOW_PLOTS = True
 
-def affine(x):
-    return np.asarray([x-10.0]), np.asarray([1.0])
+def parabol(x):
+    return np.asarray([(x-10.0]), np.asarray([1.0])
 
 def test_affine():
     # minimize (x - 10)^2

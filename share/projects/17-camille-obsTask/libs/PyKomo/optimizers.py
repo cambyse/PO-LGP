@@ -2,10 +2,56 @@ import numpy as np
 
 def is_semi_pos_def(m):
     eigvals = np.linalg.eigvals(m)
-    return np.all( eigvals >= 0)
+    return np.all(eigvals >= 0)
 
+class ConstrainedProblem:
+    def __init__(self, f, g, h):
+        self.f = f
+        self.g = g
+        self.h = h
 
-class GaussNewton:
+def squarePenaltyConverter(pb, mu):
+    def fuse(x):
+        f, jf = pb.f(x)
+        h, jh = pb.h(x)
+
+        #gamma = f + mu * np.dot(h.T, h)
+        #jgamma = jf + mu * 2 * h * jh
+
+        gamma = np.vstack((f, mu * h))
+        jgamma = np.vstack((jf, mu* jh))
+
+        return gamma, jgamma
+
+    return lambda x: fuse(x)
+
+class SquarePenaltySolver:
+    def __init__(self, pb):
+        self.constrainedProblem = pb
+        self.eps_h = 0.001 #max constraint violation
+        self.mu = 1.0
+
+    def run(self, x):
+        print("mu={}".format(self.mu))
+
+        unconstrained = squarePenaltyConverter(self.constrainedProblem, self.mu)
+        gn = GaussNewton(unconstrained)
+        x = gn.run(x)
+        h, _ = self.constrainedProblem.h(x)
+
+        while np.dot(h.T, h) > self.eps_h:
+            self.mu *= 10
+
+            print("mu={}".format(self.mu))
+
+            unconstrained = squarePenaltyConverter(self.constrainedProblem, self.mu)
+            gn = GaussNewton(unconstrained)
+            x = gn.run(x)
+            h, _ = self.constrainedProblem.h(x)
+
+        return x
+
+class GaussNewton: # sum of square problems
     def __init__(self, function):
         self.function = function
         self.lambda_0 = 0.1
