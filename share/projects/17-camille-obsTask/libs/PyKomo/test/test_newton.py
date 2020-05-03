@@ -44,5 +44,9 @@ def test_Hyperbol():
 
     npt.assert_almost_equal(x, np.asarray([0.0]), 0.0001)
 
+def test_checkGradients():
+    f = Parabol()
+    nt.assert_true(f.checkGradients(np.array([10.0])))
+
 if __name__ == "__main__":
-     test_Hyperbol()
+     test_checkGradients()
