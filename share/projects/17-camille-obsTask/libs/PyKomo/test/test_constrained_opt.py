@@ -8,10 +8,10 @@ from optimizers import ConstrainedProblem, SquarePenaltySolver, NewtonFunction, 
 
 class ProjX(NewtonFunction):
     def value(self, x):
-        return np.asarray([x[0]])
+        return x[0] #np.asarray([x[0]])
 
     def gradient(self, x):
-        return np.asarray([[1.0, 0.0]])
+        return np.asarray([1.0, 0.0]) #np.asarray([[1.0, 0.0]])
 
 class SquareDistance(SquareCostFunction):
     def phi(self, x):
@@ -26,11 +26,10 @@ class SquareDistance(SquareCostFunction):
 def test_gradients_square_penalty():
     x0 = np.array([1.0, 1.0])
 
-    x0 = np.array([1.0, 1.0])
-
     pb = ConstrainedProblem(f=SquareDistance(), h=ProjX())
     sq = SquarePenaltySolver(pb)
     unconstrained = sq.convert(sq.constrainedProblem, sq.mu)
+
     nt.assert_true(unconstrained.checkGradients(x0))
 
 def test_constrained_squared_penalty():
@@ -51,6 +50,7 @@ def test_gradients_aula():
     al = AugmentedLagrangianSolver(pb)
     al.lambda_ = 1.0
     unconstrained = al.convert(al.constrainedProblem, al.mu, al.lambda_)
+
     nt.assert_true(unconstrained.checkGradients(x0))
 
 def test_constrained_aula():
@@ -66,4 +66,4 @@ def test_constrained_aula():
 
 if __name__ == "__main__":
      test_constrained_squared_penalty()
-     #test_constrained_aula()
+     test_constrained_aula()

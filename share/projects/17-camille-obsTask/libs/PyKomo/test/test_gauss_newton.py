@@ -56,4 +56,4 @@ def test_Parabol2D():
     npt.assert_almost_equal(x, np.asarray([7.5]), 0.0001)
 
 if __name__ == "__main__":
-     test_SquareDistance()
+     test_Parabol2D()
