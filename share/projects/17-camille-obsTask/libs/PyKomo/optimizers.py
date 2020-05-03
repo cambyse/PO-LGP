@@ -5,25 +5,9 @@ def is_semi_pos_def(m):
     return np.all(eigvals >= 0)
 
 class ConstrainedProblem:
-    def __init__(self, f, g, h):
+    def __init__(self, f, h):
         self.f = f
-        self.g = g
         self.h = h
-
-def squarePenaltyConverter(pb, mu):
-    def fuse(x):
-        f, jf = pb.f(x)
-        h, jh = pb.h(x)
-
-        #gamma = f + mu * np.dot(h.T, h)
-        #jgamma = jf + mu * 2 * h * jh
-
-        gamma = np.vstack((f, mu * h))
-        jgamma = np.vstack((jf, mu* jh))
-
-        return gamma, jgamma
-
-    return lambda x: fuse(x)
 
 class SquarePenaltySolver:
     def __init__(self, pb):
@@ -31,79 +15,96 @@ class SquarePenaltySolver:
         self.eps_h = 0.001 #max constraint violation
         self.mu = 1.0
 
+    @staticmethod
+    def convert(pb, mu):
+        class Augmented(NewtonFunction):
+            def value(self, x):
+                f = pb.f.value(x)
+                b = pb.h.value(x) ** 2  # barrier
+                return f + mu * b
+
+            def gradient(self, x):
+                jf = pb.f.gradient(x)
+                h = pb.h.value(x)
+                Jh = pb.h.gradient(x)
+                jb = 2 * np.dot(Jh.T, h)
+                return jf + mu * jb
+
+            def hessian(self, x):
+                Hf = pb.f.hessian(x)
+                Jh = pb.h.gradient(x)
+                Hb = 2 * np.dot(Jh.T, Jh)
+                return Hf + mu * Hb
+
+        return Augmented()
+
     def run(self, x):
         print("mu={}".format(self.mu))
 
-        unconstrained = squarePenaltyConverter(self.constrainedProblem, self.mu)
-        gn = GaussNewton(unconstrained)
+        unconstrained = self.convert(self.constrainedProblem, self.mu)
+        gn = Newton(unconstrained)
         x = gn.run(x)
-        h, _ = self.constrainedProblem.h(x)
+        h = self.constrainedProblem.h.value(x)
 
-        while np.dot(h.T, h) > self.eps_h:
+        while np.abs(h) > self.eps_h:
             self.mu *= 10
 
             print("mu={}".format(self.mu))
 
-            unconstrained = squarePenaltyConverter(self.constrainedProblem, self.mu)
-            gn = GaussNewton(unconstrained)
+            unconstrained = self.convert(self.constrainedProblem, self.mu)
+            gn = Newton(unconstrained)
             x = gn.run(x)
-            h, _ = self.constrainedProblem.h(x)
+            h = self.constrainedProblem.h.value(x)
 
         return x
 
-class GaussNewtonFunction:
-    def value(self, x):
-        pass
+class AugmentedLagrangianSolver:
+    def __init__(self, pb):
+        self.constrainedProblem = pb
+        self.eps_h = 0.001 #max constraint violation
+        self.mu = 1.0
+        self.lambda_ = 0.0
 
-    def gradient(self, x):
-        pass
+    @staticmethod
+    def convert(pb, mu, lambda_):
+        class Augmented(NewtonFunction):
+            def value(self, x):
+                f = pb.f.value(x)
+                h = pb.h.value(x)
+                return f + mu * h ** 2 + lambda_ * h
 
-class GaussNewton: # sum of square problems
-    def __init__(self, function):
-        self.function = function
-        self.lambda_0 = 0.1
-        self.rho = 0.01
-        self.eps = 0.01  # update size
+            def gradient(self, x):
+                Jf = pb.f.gradient(x)
+                h = pb.h.value(x)
+                Jh = pb.h.gradient(x)
+                Jb = 2 * np.dot(Jh.T, h)
+                return Jf + mu * Jb + lambda_ * Jh.flatten()
 
-        assert issubclass(type(function), GaussNewtonFunction), "wrong function type"
+            def hessian(self, x):
+                Hf = pb.f.hessian(x)
+                Jh = pb.h.gradient(x)
+                Hb = 2 * np.dot(Jh.T, Jh)
+                return Hf + mu * Hb
+
+        return Augmented()
 
     def run(self, x):
-        _lambda = self.lambda_0
-        _alpha = 1
+        print("lambda={}".format(self.lambda_))
 
-        I = np.identity(x.shape[0])
-        while True:
-            gamma = self.function.value(x)
-            Jgamma = self.function.gradient(x)
+        unconstrained = self.convert(self.constrainedProblem, self.mu, self.lambda_)
+        gn = Newton(unconstrained)
+        x = gn.run(x)
+        h = self.constrainedProblem.h.value(x)
 
-            def matrix_preparation():
-                JgammaT = np.transpose(Jgamma)
-                approxHessian = 2 * np.matmul(JgammaT, Jgamma)
-                A = approxHessian + _lambda * I
+        while np.abs(h) > self.eps_h:
+            self.lambda_ = self.lambda_ + 2 * self.mu * h
 
-                B = 2 * np.matmul(JgammaT, gamma)
+            print("lambda={}".format(self.lambda_))
 
-                return A, B
-
-            def solve():
-                return np.linalg.solve(A, -B)
-
-            A, B = matrix_preparation()
-            d = solve()
-
-            # import matplotlib.pyplot as plt
-            # plt.matshow(Jgamma!=0)
-            # plt.show()
-
-            delta = self.function.value(x + _alpha * d)   # line search
-            while np.dot(delta.T, delta) > np.dot(gamma.T, gamma) + self.rho * np.matmul(np.transpose(B), _alpha * d):
-                _alpha = _alpha * 0.5
-                delta = self.function.value(x + _alpha * d)  # line search
-
-            x = x + _alpha * d
-            _alpha = 1
-            if np.linalg.norm(_alpha * d) < self.eps:
-                break
+            unconstrained = self.convert(self.constrainedProblem, self.mu, self.lambda_)
+            gn = Newton(unconstrained)
+            x = gn.run(x)
+            h = self.constrainedProblem.h.value(x)
 
         return x
 
@@ -115,6 +116,26 @@ class NewtonFunction:
         pass
 
     def hessian(self, x):
+        pass
+
+class SquareCostFunction(NewtonFunction):
+    def value(self, x):
+        phi = self.phi(x)
+        return np.dot(phi.T, phi)
+
+    def gradient(self, x):
+        phi = self.phi(x)
+        Jphi = self.gradientPhi(x)
+        return 2 * np.dot(Jphi.T, phi)
+
+    def hessian(self, x):
+        Jphi = self.gradientPhi(x)
+        return 2 * np.matmul(Jphi.T, Jphi)
+
+    def phi(self, x):
+        pass
+
+    def gradientPhi(self, x):
         pass
 
 class Newton: # sum of square problems
@@ -134,15 +155,12 @@ class Newton: # sum of square problems
         while True:
             def matrix_preparation():
                 hessian = self.function.hessian(x)
-                A = hessian + _lambda * I
-                B = 2 * self.function.gradient(x)
+                A = hessian + _lambda * I # damping
+                B = -self.function.gradient(x)
                 return A, B
 
-            def solve():
-                return np.linalg.solve(A, -B)
-
             A, B = matrix_preparation()
-            d = solve()
+            d = np.linalg.solve(A, B)
 
             v = self.function.value(x)
             w = self.function.value(x + _alpha * d)   # line search

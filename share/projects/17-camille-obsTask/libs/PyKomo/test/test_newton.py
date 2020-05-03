@@ -31,18 +31,18 @@ class Hyperbol(NewtonFunction):
 def test_Parabol():
     f = Parabol()
     n = Newton(f)
-    x0 = np.array([[10.0]]).T
+    x0 = np.array([10.0])
     x = n.run(x0)
 
-    npt.assert_almost_equal(x, np.asarray([[0.0]]).T, 0.0001)
+    npt.assert_almost_equal(x, np.asarray([0.0]), 0.0001)
 
 def test_Hyperbol():
     f = Hyperbol()
     n = Newton(f)
-    x0 = np.array([[10.0]]).T
+    x0 = np.array([10.0])
     x = n.run(x0)
 
-    npt.assert_almost_equal(x, np.asarray([[0.0]]).T, 0.0001)
+    npt.assert_almost_equal(x, np.asarray([0.0]), 0.0001)
 
 if __name__ == "__main__":
      test_Hyperbol()
