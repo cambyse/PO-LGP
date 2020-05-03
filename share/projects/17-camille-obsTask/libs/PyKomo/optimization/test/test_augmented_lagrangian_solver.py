@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
 from augmented_lagrangian_solver import AugmentedLagrangianSolver
-from newton import NewtonFunction, ConstrainedProblem
+from optimization_problems import ConstrainedProblem
 from functions import SquareDistance, ProjX
 
 def test_gradients_aula():

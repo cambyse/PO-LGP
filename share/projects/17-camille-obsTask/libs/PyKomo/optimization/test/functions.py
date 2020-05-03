@@ -4,7 +4,7 @@ import numpy.testing as npt
 import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
-from newton import NewtonFunction, ConstrainedProblem
+from newton import NewtonFunction
 from gauss_newton import SquareCostFunction
 
 class ProjX(NewtonFunction):

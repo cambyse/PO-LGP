@@ -4,7 +4,7 @@ import numpy.testing as npt
 import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
-from newton import NewtonFunction, ConstrainedProblem
+from optimization_problems import ConstrainedProblem
 from square_penalty_solver import SquarePenaltySolver
 from functions import SquareDistance, ProjX
 

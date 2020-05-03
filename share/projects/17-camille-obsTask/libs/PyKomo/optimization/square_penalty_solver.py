@@ -6,7 +6,7 @@ class SquarePenaltySolver:
         self.constrainedProblem = pb
         self.eps_h = 0.001 #max constraint violation
         self.mu = 1.0
-        self.rho = 10 # how much we increase the sqzare penalty at each cycle (works also with one)
+        self.rho = 10 # how much we increase the square penalty at each cycle (works also with one)
 
     @staticmethod
     def convert(pb, mu):

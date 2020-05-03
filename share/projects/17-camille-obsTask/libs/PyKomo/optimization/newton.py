@@ -1,15 +1,6 @@
 import numpy as np
 import copy
 
-def is_semi_pos_def(m):
-    eigvals = np.linalg.eigvals(m)
-    return np.all(eigvals >= 0)
-
-class ConstrainedProblem:
-    def __init__(self, f, h):
-        self.f = f
-        self.h = h
-
 class NewtonFunction:
     def value(self, x):
         pass
