@@ -24,7 +24,7 @@ class NewtonFunction:
             y_ = self.value(x_)
             dy = y_ - y
             ji = dy / dx
-            close = close and np.abs(j[i] -ji) < 0.01
+            close = close and np.abs(j[i] - ji) < 0.01
 
         return close
 
@@ -43,13 +43,10 @@ class Newton: # sum of square problems
 
         I = np.identity(x.shape[0])
         while True:
-            def matrix_preparation():
-                hessian = self.function.hessian(x)
-                A = hessian + _lambda * I # damping
-                B = -self.function.gradient(x)
-                return A, B
+            hessian = self.function.hessian(x)
+            A = hessian + _lambda * I # damping
+            B = -self.function.gradient(x)
 
-            A, B = matrix_preparation()
             d = np.linalg.solve(A, B)
 
             v = self.function.value(x)

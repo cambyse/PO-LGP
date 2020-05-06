@@ -13,7 +13,7 @@ def test_Parabol():
     x0 = np.array([10.0])
     x = n.run(x0)
 
-    npt.assert_almost_equal(x, np.asarray([0.0]), 0.0001)
+    npt.assert_almost_equal(x, np.asarray([0.0]), decimal=1)
 
 def test_Hyperbol():
     f = Hyperbol()
@@ -21,7 +21,7 @@ def test_Hyperbol():
     x0 = np.array([10.0])
     x = n.run(x0)
 
-    npt.assert_almost_equal(x, np.asarray([0.0]), 0.0001)
+    npt.assert_almost_equal(x, np.asarray([0.0]), decimal=1)
 
 def test_checkGradients():
     f = PureParabol()

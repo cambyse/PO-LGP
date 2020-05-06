@@ -11,7 +11,7 @@ def test_Parabol():
     f = Parabol()
     gn = Newton(f)
     x = gn.run(np.asarray([1.0]))
-    npt.assert_almost_equal(x, np.asarray([10.0]), 0.0001)
+    npt.assert_almost_equal(x, np.asarray([10.0]), decimal=1)
 
 def test_SquareDistance():
     # minimize dist from center in 2d
@@ -20,14 +20,14 @@ def test_SquareDistance():
     gn = Newton(f)
     x0 = np.array([1.0, 1.0])
     x = gn.run(x0)
-    npt.assert_almost_equal(x, np.asarray([10.0, 2.0]), 0.0001)
+    npt.assert_almost_equal(x, np.asarray([10.0, 2.0]), decimal=1)
 
 def test_Parabol2D():
     f = Parabol2D()
     gn = Newton(f)
     x0 = np.array([1.0])
     x = gn.run(x0)
-    npt.assert_almost_equal(x, np.asarray([7.5]), 0.0001)
+    npt.assert_almost_equal(x, np.asarray([7.5]), decimal=1)
 
 if __name__ == "__main__":
      test_Parabol2D()

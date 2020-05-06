@@ -12,13 +12,30 @@ class ProjX(NewtonFunction):
         return x[0] #np.asarray([x[0]])
 
     def gradient(self, x):
-        return np.asarray([1.0, 0.0]) #np.asarray([[1.0, 0.0]])
+        return np.asarray([1.0, 0.0])
+
+    def hessian(self, x):
+        return np.zeros((2, 2))
+
+class ProjY(NewtonFunction):
+    def value(self, x):
+        return x[1] #np.asarray([x[0]])
+
+    def gradient(self, x):
+        return np.asarray([0.0, 1.0])
+
+    def hessian(self, x):
+        return np.zeros((2, 2))
 
 class SquareDistance(SquareCostFunction):
+    def __init__(self, px=10, py=2):
+        self.px = px
+        self.py = py
+
     def phi(self, x):
     # dist from center at (10, 5) in 2d
-        dx = x[0] - 10
-        dy = x[1] - 2
+        dx = x[0] - self.px
+        dy = x[1] - self.py
         return np.asarray([dx, dy])
 
     def gradientPhi(self, x):

@@ -12,7 +12,7 @@ def test_dummy_qp():
     solver = UnconstrainedQPSolver(qp)
     x = solver.run()
 
-    nt.assert_almost_equals(x, -0.5, 0.0001)
+    nt.assert_almost_equals(x, -0.5, delta=0.001)
 
 if __name__ == "__main__":
      test_dummy_qp()

@@ -26,7 +26,8 @@ def test_constrained_squared_penalty():
     sq = SquarePenaltySolver(pb)
     x = sq.run(x0)
 
-    npt.assert_almost_equal(x, np.array([0.0, 2.0]), 0.0001)
+    npt.assert_almost_equal(x, np.array([0.0, 2.0]), decimal=0)
+    nt.assert_almost_equals(x[0], 0, delta=0.001)
 
 if __name__ == "__main__":
      test_constrained_squared_penalty()
