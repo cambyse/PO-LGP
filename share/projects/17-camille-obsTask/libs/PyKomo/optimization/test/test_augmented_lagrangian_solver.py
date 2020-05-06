@@ -28,7 +28,7 @@ def test_constrained_aula_eq():
     npt.assert_almost_equal(x, np.array([0.0, 2.0]), decimal=1)
     nt.assert_almost_equals(x[0], 0, delta=0.001)
 
-def test_gradients_aula_ineq():
+def test_gradients_aula_ineq_active_constraint():
     x0 = np.array([1.0, 1.0])
 
     pb = ConstrainedProblem(f=SquareDistance(), g=ProjY())
@@ -47,6 +47,15 @@ def test_constrained_aula_ineq_active_constraint():
 
     npt.assert_almost_equal(x, np.array([10.0, 0.0]), decimal=1)
     nt.assert_almost_equals(x[1], 0, delta=0.001)
+
+def test_gradients_aula_ineq_inactive_constraint():
+    x0 = np.array([1.0, 1.0])
+
+    pb = ConstrainedProblem(f=SquareDistance(py=-1.0), g=ProjY())
+    al = AugmentedLagrangianSolverIneq(pb)
+    unconstrained = al.convert(al.constrainedProblem, al.mu, al.lambda_)
+
+    nt.assert_true(unconstrained.checkGradients(x0))
 
 def test_constrained_aula_ineq_inactive_constraint():
     x0 = np.array([1.0, -1.0])
