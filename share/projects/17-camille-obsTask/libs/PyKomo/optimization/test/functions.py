@@ -62,13 +62,13 @@ class Parabol2D(SquareCostFunction):
 
 class PureParabol(NewtonFunction):
     def value(self, x):
-        return x*x
+        return np.dot(x.T, x)
 
     def gradient(self, x):
-        return 2*x
+        return np.array([2*x[0]])
 
     def hessian(self, x):
-        return 2.0
+        return np.array([[2.0]])
 
 class Hyperbol(NewtonFunction):
     def value(self, x):

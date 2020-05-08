@@ -17,6 +17,7 @@ def test_gradients_aula_eq():
     unconstrained = al.convert(al.constrainedProblem, al.mu, al.lambda_)
 
     nt.assert_true(unconstrained.checkGradients(x0))
+    nt.assert_true(unconstrained.checkHessian(x0))
 
 def test_constrained_aula_eq():
     x0 = np.array([1.0, 1.0])
@@ -37,6 +38,7 @@ def test_gradients_aula_ineq_active_constraint():
     unconstrained = al.convert(al.constrainedProblem, al.mu, al.lambda_)
 
     nt.assert_true(unconstrained.checkGradients(x0))
+    nt.assert_true(unconstrained.checkHessian(x0))
 
 def test_constrained_aula_ineq_active_constraint():
     x0 = np.array([1.0, 1.0])

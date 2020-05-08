@@ -13,18 +13,37 @@ class NewtonFunction:
 
     def checkGradients(self, x):
         dx = 0.001
-        j = self.gradient(x)
         y = self.value(x)
+        j = self.gradient(x)
 
         close = True
 
         for i in range(0, x.shape[0]):
             x_ = copy.copy(x)
-            x_[i] = x_[i] + dx
+            x_[i] += dx
             y_ = self.value(x_)
             dy = y_ - y
             ji = dy / dx
             close = close and np.abs(j[i] - ji) < 0.01
+
+        return close
+
+    def checkHessian(self, x):
+        dx = 0.001
+        h  = self.hessian(x)
+
+        close = True
+
+        y = self.value(x)
+        for i in range(0, x.shape[0]):
+            xp = copy.copy(x)
+            xp[i] += dx
+            xm = copy.copy(x)
+            xm[i] -= dx
+            yp = self.value(xp)
+            ym = self.value(xm)
+            hii = (ym - 2*y + yp) / (dx * dx)
+            close = close and np.abs(h[i, i] - hii) < 0.01
 
         return close
 

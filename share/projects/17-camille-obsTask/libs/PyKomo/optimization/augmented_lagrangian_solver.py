@@ -27,8 +27,13 @@ class AugmentedLagrangianSolverEq:
             def hessian(self, x):
                 Hf = pb.f.hessian(x) # hessian of f
                 Jh = pb.h.gradient(x)
-                Hb = 2 * np.dot(Jh.T, Jh) # pseudo hessian of the barrier
+                _Jh = np.array([Jh])
+                Hb = 2 * _Jh.T * _Jh # pseudo hessian of the barrier
                 Hh = pb.h.hessian(x)
+
+                assert Hf.shape == Hb.shape, "wrong hessian shapes"
+                assert Hf.shape == Hh.shape, "wrong hessian shapes"
+
                 return Hf + mu * Hb + lambda_ * Hh
 
         return Augmented()
@@ -92,7 +97,9 @@ class AugmentedLagrangianSolverIneq:
                 if not activity:
                     g = 0
                     Jg = np.zeros(Jg.shape)
-                Hb = 2 * np.dot(Jg.T, Jg) # pseudo hessian of the barrier
+                #Hb = 2 * np.dot(Jg.T, Jg) # pseudo hessian of the barrier
+                _Jg = np.array([Jg])
+                Hb = 2 * _Jg.T * _Jg # pseudo hessian of the barrier
                 Hg = pb.g.hessian(x)
                 return Hf + mu * Hb + lambda_ * Hg
 

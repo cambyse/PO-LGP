@@ -18,6 +18,12 @@ class ConstrainedQP: # Ax <= u
         self.A = A
         self.u = u
 
+class ADMMProblem:
+    def __init__(self, f0, f1):
+        self.f0 = f0
+        self.f1 = f1
+
 def is_semi_pos_def(m):
     eigvals = np.linalg.eigvals(m)
     return np.all(eigvals >= 0)
+
