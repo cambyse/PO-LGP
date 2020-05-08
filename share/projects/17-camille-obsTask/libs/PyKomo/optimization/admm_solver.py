@@ -50,11 +50,12 @@ class ADMMSolver:
     def run(self, x):
         self.y = np.zeros(x.shape)
 
+        x0 = x
+        x1 = x
         while True:
-            pb0 = self.to_0(self.pb, x, self.y, self.rho)
-            assert pb0.checkGradients(x) and pb0.checkHessian(x)
-            x0 = Newton(pb0).run(x)
-
+            pb0 = self.to_0(self.pb, x1, self.y, self.rho)
+            assert pb0.checkGradients(x1) and pb0.checkHessian(x1)
+            x0 = Newton(pb0).run(x1)
 
             pb1 = self.to_1(self.pb, x0, self.y, self.rho)
             assert pb1.checkGradients(x0) and pb1.checkHessian(x0)
@@ -63,9 +64,7 @@ class ADMMSolver:
             delta = x0 - x1
             self.y += self.rho * delta
 
-            x = x1
-
             if np.abs(delta).max() < self.eps:
                 break
 
-        return x
+        return x1

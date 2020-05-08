@@ -1,127 +1,114 @@
 import numpy as np
 from newton import NewtonFunction, Newton
 
-class AugmentedLagrangianSolverEq:
+class AugmentedLagrangianSolver:
     def __init__(self, pb):
         self.constrainedProblem = pb
-        self.eps_h = 0.001 #max constraint violation
+        self.eps = 0.001 #max constraint violation
         self.mu = 1.0
-        self.lambda_ = 0.0
         self.rho = 2.0 # how much we increase the square penalty at each cycle
+        self.lambda_h = 0.0
+        self.lambda_g = 0.0
 
     @staticmethod
-    def convert(pb, mu, lambda_):
+    def convert(pb, mu=0.0, lambda_h=0.0, lambda_g=0.0):
         class Augmented(NewtonFunction):
             def value(self, x):
                 f = pb.f.value(x)
-                h = pb.h.value(x)
-                return f + mu * h ** 2 + lambda_ * h
+
+                if pb.h:
+                    h = pb.h.value(x)
+                    f += mu * h ** 2 + lambda_h * h
+
+                if pb.g:
+                    g = pb.g.value(x)
+                    activity = g >= 0 or lambda_g > 0
+                    if not activity:
+                        g = 0
+                    f += mu * g ** 2 + lambda_g * g
+
+                return f
 
             def gradient(self, x):
-                Jf = pb.f.gradient(x)
-                h = pb.h.value(x)
-                Jh = pb.h.gradient(x)
-                Jb = 2 * np.dot(Jh.T, h)
-                return Jf + mu * Jb + lambda_ * Jh
+                J = pb.f.gradient(x)
+
+                if pb.h:
+                    h = pb.h.value(x)
+                    Jh = pb.h.gradient(x)
+                    Jb = 2 * np.dot(Jh.T, h)
+
+                    J += mu * Jb + lambda_h * Jh
+
+                if pb.g:
+                    g = pb.g.value(x)
+                    Jg = pb.g.gradient(x)
+                    activity = g >= 0 or lambda_g > 0
+                    if not activity:
+                        g = 0
+                        Jg = np.zeros(Jg.shape)
+                    Jb = 2 * np.dot(Jg.T, g)
+                    J += mu * Jb + lambda_g * Jg
+
+                return J
 
             def hessian(self, x):
-                Hf = pb.f.hessian(x) # hessian of f
-                Jh = pb.h.gradient(x)
-                _Jh = np.array([Jh])
-                Hb = 2 * _Jh.T * _Jh # pseudo hessian of the barrier
-                Hh = pb.h.hessian(x)
+                H = pb.f.hessian(x) # hessian of f
 
-                assert Hf.shape == Hb.shape, "wrong hessian shapes"
-                assert Hf.shape == Hh.shape, "wrong hessian shapes"
+                if pb.h:
+                    Jh = pb.h.gradient(x)
+                    _Jh = np.array([Jh])
+                    Hb = 2 * _Jh.T * _Jh # pseudo hessian of the barrier
+                    Hh = pb.h.hessian(x)
 
-                return Hf + mu * Hb + lambda_ * Hh
+                    assert H.shape == Hb.shape, "wrong hessian shapes"
+                    assert H.shape == Hh.shape, "wrong hessian shapes"
+
+                    H += mu * Hb + lambda_h * Hh
+
+                if pb.g:
+                    g = pb.g.value(x)
+                    Jg = pb.g.gradient(x)
+                    activity = g >= 0 or lambda_g > 0
+                    if not activity:
+                        g = 0
+                        Jg = np.zeros(Jg.shape)
+                    #Hb = 2 * np.dot(Jg.T, Jg) # pseudo hessian of the barrier
+                    _Jg = np.array([Jg])
+                    Hb = 2 * _Jg.T * _Jg # pseudo hessian of the barrier
+                    Hg = pb.g.hessian(x)
+
+                    assert H.shape == Hb.shape, "wrong hessian shapes"
+                    assert H.shape == Hg.shape, "wrong hessian shapes"
+
+                    H += mu * Hb + lambda_g * Hg
+
+                return H
 
         return Augmented()
 
     def run(self, x):
-        print("lambda={}".format(self.lambda_))
+        print("lambda_h={}".format(self.lambda_h))
 
-        unconstrained = self.convert(self.constrainedProblem, self.mu, self.lambda_)
+        unconstrained = self.convert(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
         gn = Newton(unconstrained)
         x = gn.run(x)
-        h = self.constrainedProblem.h.value(x)
+        h = self.constrainedProblem.h.value(x) if self.constrainedProblem.h else 0
+        g = self.constrainedProblem.g.value(x) if self.constrainedProblem.g else 0
 
-        while np.abs(h) > self.eps_h:
-            self.lambda_ = self.lambda_ + 2 * self.mu * h
+        while True:
+            print("lambda_h={}, h={}, lambda_g={}, g={}".format(self.lambda_h, h, self.lambda_g, g))
+
+            unconstrained = self.convert(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
+            solver = Newton(unconstrained)
+            x = solver.run(x)
+            h = self.constrainedProblem.h.value(x) if self.constrainedProblem.h else 0
+            g = self.constrainedProblem.g.value(x) if self.constrainedProblem.g else 0
+
+            self.lambda_h = self.lambda_h + 2 * self.mu * h
+            self.lambda_g = self.lambda_g + 2 * self.mu * g
             self.mu *= self.rho
 
-            print("lambda={}, h={}".format(self.lambda_, h))
-
-            unconstrained = self.convert(self.constrainedProblem, self.mu, self.lambda_)
-            gn = Newton(unconstrained)
-            x = gn.run(x)
-            h = self.constrainedProblem.h.value(x)
-
-        return x
-
-class AugmentedLagrangianSolverIneq:
-    def __init__(self, pb):
-        self.constrainedProblem = pb
-        self.eps_g = 0.001 #max constraint violation
-        self.mu = 1.0
-        self.lambda_ = 0.0
-        self.rho = 2.0 # how much we increase the square penalty at each cycle
-
-    @staticmethod
-    def convert(pb, mu, lambda_):
-        class Augmented(NewtonFunction):
-            def value(self, x):
-                f = pb.f.value(x)
-                g = pb.g.value(x)
-                activity = g >= 0 or lambda_ > 0
-                if not activity:
-                    g = 0
-                return f + mu * g ** 2 + lambda_ * g
-
-            def gradient(self, x):
-                Jf = pb.f.gradient(x)
-                g = pb.g.value(x)
-                Jg = pb.g.gradient(x)
-                activity = g >= 0 or lambda_ > 0
-                if not activity:
-                    g = 0
-                    Jg = np.zeros(Jg.shape)
-                Jb = 2 * np.dot(Jg.T, g)
-                return Jf + mu * Jb + lambda_ * Jg
-
-            def hessian(self, x):
-                Hf = pb.f.hessian(x) # hessian of f
-                g = pb.g.value(x)
-                Jg = pb.g.gradient(x)
-                activity = g >= 0 or lambda_ > 0
-                if not activity:
-                    g = 0
-                    Jg = np.zeros(Jg.shape)
-                #Hb = 2 * np.dot(Jg.T, Jg) # pseudo hessian of the barrier
-                _Jg = np.array([Jg])
-                Hb = 2 * _Jg.T * _Jg # pseudo hessian of the barrier
-                Hg = pb.g.hessian(x)
-                return Hf + mu * Hb + lambda_ * Hg
-
-        return Augmented()
-
-    def run(self, x):
-        print("lambda={}".format(self.lambda_))
-
-        unconstrained = self.convert(self.constrainedProblem, self.mu, self.lambda_)
-        gn = Newton(unconstrained)
-        x = gn.run(x)
-        g = self.constrainedProblem.g.value(x)
-
-        while g > self.eps_g:
-            self.lambda_ = self.lambda_ + 2 * self.mu * g
-            self.mu *= self.rho
-
-            print("lambda={}".format(self.lambda_))
-
-            unconstrained = self.convert(self.constrainedProblem, self.mu, self.lambda_)
-            gn = Newton(unconstrained)
-            x = gn.run(x)
-            g = self.constrainedProblem.g.value(x)
+            if np.abs(h) < self.eps and g < self.eps:
+                break
 
         return x

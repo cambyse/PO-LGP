@@ -1,5 +1,5 @@
 import numpy as np
-from augmented_lagrangian_solver import AugmentedLagrangianSolverIneq
+from augmented_lagrangian_solver import AugmentedLagrangianSolver
 from newton import NewtonFunction
 from optimization_problems import UnconstrainedQP, ConstrainedQP, ConstrainedProblem
 
@@ -53,7 +53,7 @@ class ConstrainedQPSolver:
 
         pb = ConstrainedProblem(f=f, g=g)
 
-        al = AugmentedLagrangianSolverIneq(pb)
+        al = AugmentedLagrangianSolver(pb)
         x =  al.run(x)
 
         return x
