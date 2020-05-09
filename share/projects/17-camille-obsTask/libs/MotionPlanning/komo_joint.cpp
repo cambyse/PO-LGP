@@ -1,4 +1,4 @@
-#include <komo_wrapper.h>
+#include <komo_joint.h>
 #include <Kin/switch.h>
 #include <Kin/TM_angVel.h>
 #include <Kin/TM_default.h>
@@ -10,7 +10,7 @@ using namespace rai;
 
 namespace mp
 {
-void W::reset(const std::list<Vars>& branches, double initNoise)
+void KomoJoint::reset(const std::list<Vars>& branches, double initNoise)
 {
   CHECK(komo_->sparseOptimization, "valid only in sparse mode!");
 
@@ -28,7 +28,7 @@ void W::reset(const std::list<Vars>& branches, double initNoise)
   }
 }
 
-void W::setupConfigurations(const std::list<Vars>& branches)
+void KomoJoint::setupConfigurations(const std::list<Vars>& branches)
 {
   //IMPORTANT: The configurations need to include the k prefix configurations!
   //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
@@ -110,7 +110,7 @@ void W::setupConfigurations(const std::list<Vars>& branches)
   }
 }
 
-void W::addObjective(const Interval& it, const TreeBuilder& tb, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
+void KomoJoint::addObjective(const Interval& it, const TreeBuilder& tb, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
 {
   CHECK(scale != -1, "please put a meaningful scale");
 
@@ -121,7 +121,7 @@ void W::addObjective(const Interval& it, const TreeBuilder& tb, Feature* map, Ob
   obj->scales = spec.scales;
 }
 
-void W::addSwitch(const Interval& it, const TreeBuilder& tb, KinematicSwitch * sw)
+void KomoJoint::addSwitch(const Interval& it, const TreeBuilder& tb, KinematicSwitch * sw)
 {
   CHECK(it.time.from == it.time.to, "Wrong interval for a switch");
 

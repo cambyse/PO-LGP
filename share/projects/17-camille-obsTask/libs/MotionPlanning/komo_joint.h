@@ -7,10 +7,10 @@
 namespace mp
 {
 
-//komo wrapper
-struct W
+//komo joint wrapper
+struct KomoJoint
 {
-  W(KOMO_ext * komo)
+  KomoJoint(KOMO_ext * komo)
     : komo_(komo)
     , world_(komo->world)
   {

@@ -17,7 +17,7 @@
 #include <belief_state.h>
 #include <komo_planner_utils.h>
 #include <tree_builder.h>
-#include <komo_wrapper.h>
+#include <komo_joint.h>
 
 #include <thread>
 #include <future>
@@ -907,6 +907,8 @@ void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
 
 void KOMOPlanner::optimizeJointSparse( Policy & policy )
 {
+  using W = KomoJoint;
+
   TreeBuilder treeBuilder;
 
   std::list< Policy::GraphNodeTypePtr > fifo;
