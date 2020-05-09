@@ -87,6 +87,42 @@ TEST(ScalarFunction, Distance2DTestHG) {
   EXPECT_NEAR(1.0, x(1), eps_s);
 }
 
+struct ParabolWithFTerm : public ConstrainedProblem
+{
+  // min x^2 -x
+  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
+  {
+    if(!phi.p)
+    {
+      phi = arr(2);
+      J = arr(2, 1);
+      H = zeros(1, 1);
+      ot = ObjectiveTypeA(2);
+
+      ot(0) = OT_sos;
+      ot(1) = OT_f;
+    }
+
+    phi(0) = x(0);
+    J(0, 0) = 1.0;
+
+    phi(1) = -x(0);
+    J(1, 0) = -1.0;
+  }
+};
+
+TEST(ScalarFunction, SimpleParabolWithFTerm) {
+  arr x{1.0};
+  arr dual{0.0}; //dual
+
+  ParabolWithFTerm pb;
+
+  OptConstrained opt(x, dual, pb);
+  opt.run();
+
+  EXPECT_NEAR(0.5, x(0), eps_s);
+}
+
 //
 int main(int argc, char **argv)
 {
