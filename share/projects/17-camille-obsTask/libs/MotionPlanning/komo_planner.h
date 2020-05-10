@@ -68,8 +68,22 @@ private:
   void computeJointPathQResult( const Policy& policy );
   void saveJointPathOptimizationResults( Policy & ) const;
 
-  // joint sparse
+  // Sparse - direct tree opt
+  TreeBuilder buildTree( Policy & ) const;
+  std::shared_ptr< ExtensibleKOMO > intializeKOMO( const TreeBuilder & tree ) const;
+  std::vector<Vars> getSubProblems(const TreeBuilder & tree, Policy & policy) const;
+  std::vector<intA> getSubProblemMasks(const std::vector<Vars> & allVars, uint T) const;
+  void groundPolicyActionsJoint( const TreeBuilder & tree,
+                            Policy & policy,
+                            const std::shared_ptr< ExtensibleKOMO > & komo ) const;
+//  void groundPolicyActionsADMM( const TreeBuilder & tree,
+//                            Policy & policy,
+//                            const PolicyNodePtr& leaf,
+//                            const std::shared_ptr< ExtensibleKOMO > & komo) const;
+
+  void watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const;
   void optimizeJointSparse( Policy & );
+  void optimizeADMMSparse( Policy & );
 
 private:
   // state

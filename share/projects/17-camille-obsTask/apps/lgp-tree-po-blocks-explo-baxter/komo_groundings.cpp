@@ -1,4 +1,4 @@
-#include <komo_wrapper.h>
+#include <komo_joint.h>
 
 #include "komo_groundings.h"
 

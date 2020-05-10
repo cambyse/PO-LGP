@@ -164,6 +164,10 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   {
     optimizeJointSparse( policy );
   }
+  else if( po.getParam( "type" ) == "ADMMSparse" )
+  {
+    optimizeADMMSparse( policy );
+  }
   else
   {
     CHECK( false, "not implemented yet!" );
@@ -905,10 +909,10 @@ void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
   policy.setStatus( Policy::INFORMED );
 }
 
-void KOMOPlanner::optimizeJointSparse( Policy & policy )
-{
-  using W = KomoJoint;
+// SPARSE KOMO
 
+TreeBuilder KOMOPlanner::buildTree( Policy & policy ) const
+{
   TreeBuilder treeBuilder;
 
   std::list< Policy::GraphNodeTypePtr > fifo;
@@ -933,32 +937,79 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
     }
   }
 
-  // intialize komo
+  return treeBuilder;
+}
+
+std::shared_ptr< ExtensibleKOMO > KOMOPlanner::intializeKOMO(const TreeBuilder & tree) const
+{
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematics_.front());
   komo->sparseOptimization = true;
-  komo->groundInit(treeBuilder);
+  komo->groundInit(tree);
 
-  const auto nPhases = treeBuilder.n_nodes() - 1;
+  const auto nPhases = tree.n_nodes() - 1;
   komo->setTiming(nPhases, microSteps_, secPerPhase_, 2);
+
+  return komo;
+}
+
+std::vector<Vars> KOMOPlanner::getSubProblems( const TreeBuilder & tree, Policy & policy ) const
+{
+  std::vector<Vars> allVars;
+  allVars.reserve(policy.leaves().size());
 
   auto leaves = policy.leaves();
 
   leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
   {return a->id() < b->id();});
 
-  std::vector<uint> visited(treeBuilder.n_nodes(), 0);
-  std::list<Vars> allVars;
+  for(const auto& l: leaves)
+  {
+    auto vars0 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 0, microSteps_);
+    auto vars1 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 1, microSteps_);
+    auto vars2 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 2, microSteps_);
+    Vars branch{vars0, vars1, vars2, microSteps_};
+    allVars.push_back(branch);
+  }
+
+  return allVars;
+}
+
+std::vector<intA> KOMOPlanner::getSubProblemMasks(const std::vector<Vars> & allVars, uint T) const
+{
+  std::vector<intA> masks(allVars.size());
+  for(auto w = 0; w < allVars.size(); ++w)
+  {
+    auto & mask = masks[w];
+    auto & vars = allVars[w][0];
+
+    mask = intA(T);
+
+    for(auto i: vars)
+    {
+      mask(i) = 1;
+    }
+  }
+
+  return masks;
+}
+
+void KOMOPlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
+                                       Policy & policy,
+                                       const std::shared_ptr< ExtensibleKOMO > & komo ) const
+{
+  using W = KomoJoint;
+
+  auto leaves = policy.leaves();
+
+  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
+  {return a->id() < b->id();});
+
+  std::vector<uint> visited(tree.n_nodes(), 0);
   for(const auto& l: leaves)
   {
     auto q = l;
     auto p = q->parent();
-
-    auto vars0 = treeBuilder.get_vars({0, 1.0 * l->depth()}, l->id(), 0, microSteps_);
-    auto vars1 = treeBuilder.get_vars({0, 1.0 * l->depth()}, l->id(), 1, microSteps_);
-    auto vars2 = treeBuilder.get_vars({0, 1.0 * l->depth()}, l->id(), 2, microSteps_);
-    Vars branch{vars0, vars1, vars2, microSteps_};
-    allVars.push_back(branch);
 
     while(p)
     {
@@ -972,10 +1023,10 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
         interval.edge = {p->id(), q->id()};
 
         // square acc
-        W(komo.get()).addObjective(interval, treeBuilder, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
+        W(komo.get()).addObjective(interval, tree, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
 
         // ground other tasks
-        komo->groundTasks(interval, treeBuilder, q->data().leadingKomoArgs, 1);
+        komo->groundTasks(interval, tree, q->data().leadingKomoArgs, 1);
 
         visited[q->id()] = 1;
       }
@@ -983,17 +1034,94 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
       p = q->parent();
     }
   }
+}
 
+void KOMOPlanner::watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const
+{
+  //komo->displayTrajectory(0.1, true, false);
+  Var<WorldL> configs;
+  auto v = std::make_shared<KinPathViewer>(configs,  0.2, -0 );
+  v->setConfigurations(komo->configurations);
+  rai::wait();
+}
+
+void KOMOPlanner::optimizeJointSparse( Policy & policy )
+{
+  using W = KomoJoint;
+
+  // build tree
+  auto treeBuilder = buildTree(policy);
+
+  // prepare komo
+  auto komo = intializeKOMO(treeBuilder);
+
+  // ground policy actions
+  auto allVars = getSubProblems(treeBuilder, policy);
+  groundPolicyActionsJoint(treeBuilder, policy, komo);
+
+  // run optimization
   W(komo.get()).reset(allVars);
   komo->run();
 
   //komo->getReport(true);
   //for(auto c: komo->configurations) std::cout << c->q.N << std::endl;
 
-  //komo->displayTrajectory(0.1, true, false);
-  Var<WorldL> configs;
-  auto v = std::make_shared<KinPathViewer>(configs,  0.1, -0 );
-  v->setConfigurations(komo->configurations);
-  rai::wait();
+  watch(komo);
 }
+
+void KOMOPlanner::optimizeADMMSparse( Policy & policy )
+{
+  using W = KomoJoint;
+  using X = KomoADMM;
+
+  // build tree
+  auto tree = buildTree(policy);
+
+  // prepare komos
+  std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    auto komo = intializeKOMO(tree);
+    komos.push_back(komo);
+  }
+
+  // get subproblems
+  auto allVars = getSubProblems(tree, policy);
+  auto allMasks = getSubProblemMasks(allVars, komos.front()->T);
+
+  // ground each komo
+  for(uint w = 0; w < policy.leaves().size(); ++w)
+  {
+    groundPolicyActionsJoint(tree, policy, komos[w]);
+  }
+
+  // reset each komo
+  for(auto & komo: komos)
+  {
+    W(komo.get()).reset(allVars);
+  }
+
+  // SEQUENTIAL ADMM
+  auto x = komos.front()->x;
+
+  // run komos
+  arr y = zeros(komos.front()->x.d0); // admm multiplier
+  const double rho = 1.0;
+  //for(int i = 0; i < 2 ; ++i)
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    auto komo = komos[w];
+    auto mask = allMasks[w];
+    //auto dual = komo->dual;
+    komo->set_x(x);
+    W(komo.get()).reset(allVars, 0); // delete dual (bof)
+    //komo->dual = dual;
+    X(komo.get()).run(mask, x, y, rho);
+
+    x = komo->x;
+  }
+
+  watch(komos.back());
+}
+
 }

@@ -1,4 +1,4 @@
-#include <komo_wrapper.h>
+#include <komo_joint.h>
 
 #include "komo_groundings.h"
 
@@ -47,7 +47,6 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO_
     komo->addObjective(t_end, t_end, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
   else
     komo->addObjective(t_end, t_end, new TM_NoJumpFromParent(komo->world, object), OT_eq, NoArr, 1e2, 1, 0, 0);
-
 
   if( verbose > 0 )
   {

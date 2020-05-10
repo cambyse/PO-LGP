@@ -207,13 +207,14 @@ void komo_tree_dev()
 
   // load policy
   Policy policy;
-  //policy.load("policy-0-2w");
+  policy.load("policy-0-2w");
   //policy.load("policy-0-6w");
-  policy.load("policy-0");
+  //policy.load("policy-0");
 
   // plan
   auto po     = MotionPlanningParameters( policy.id() );
-  po.setParam( "type", "jointSparse" );
+//  po.setParam( "type", "jointSparse" );
+  po.setParam( "type", "ADMMSparse" );
   mp.solveAndInform( po, policy );
   //mp.display(policy, 200);
 }

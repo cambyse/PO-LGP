@@ -51,6 +51,26 @@ TEST(ScalarFunction, SimpleParabolNewton) {
   EXPECT_NEAR(0.0, x(0), eps_s);
 }
 
+TEST(ScalarFunction, SimpleParabolNewtonSeveralRuns) {
+  arr x{1.0};
+  arr g;
+  arr H;
+
+  ScalarFunction f{simple_parabol};
+  OptNewton opt(x, f, NOOPT, &std::cout);
+  std::cout << "phase 1" << std::endl;
+  opt.run();
+  std::cout << "phase 2" << std::endl;
+  opt.run();
+  std::cout << "phase 3" << std::endl;
+  opt.run();
+  std::cout << "phase 4" << std::endl;
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+}
+
+
 //
 int main(int argc, char **argv)
 {
