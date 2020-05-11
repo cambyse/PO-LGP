@@ -19,6 +19,11 @@ class ConstrainedQP: # Ax <= u
         self.u = u
 
 class ADMMProblem:
+    def __init__(self, pb0, pb1):
+        self.pb0 = pb0
+        self.pb1 = pb1
+
+class ADMMProblem_Newton:
     def __init__(self, f0, f1):
         self.f0 = f0
         self.f1 = f1

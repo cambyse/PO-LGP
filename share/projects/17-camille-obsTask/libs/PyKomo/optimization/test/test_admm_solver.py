@@ -5,8 +5,10 @@ import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
 from gauss_newton import SquareCostFunction
-from optimization_problems import ADMMProblem
-from admm_solver import ADMMSolver
+from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem
+from admm_solver import ADMMSolver_Newton, ADMMSolver
+from augmented_lagrangian_solver import AugmentedLagrangianSolver
+from functions import ProjX
 
 class SquareDistance3D(SquareCostFunction):
     def __init__(self, px=10, py=2, pz=1):
@@ -72,10 +74,19 @@ def test_distance_3d_decomp():
 def test_dist_3d_minimization():
     f0 = SquareDistance3DDecomp0(1, 1)
     f1 = SquareDistance3DDecomp1(1, 1)
-    pb = ADMMProblem(f0=f0, f1=f1)
-    solver = ADMMSolver(pb)
+    pb = ADMMProblem_Newton(f0=f0, f1=f1)
+    solver = ADMMSolver_Newton(pb)
     x = solver.run(np.array([0.0, 0.0, 0.0]))
     npt.assert_almost_equal(x, np.array([1.0, 1.0, 1.0]), decimal=1)
+
+def test_foo():
+    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
+    pb1 = ConstrainedProblem(f= SquareDistance3DDecomp1(1, 1))
+    pb = ADMMProblem(pb0=pb0, pb1=pb1)
+    solver = ADMMSolver(pb, solver_class=AugmentedLagrangianSolver)
+    x = solver.run(np.array([0.0, 0.0, 0.0]))
+    npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
+    nt.assert_almost_equals(x[0], 0, delta=0.001)
 
 if __name__ == "__main__":
      test_distance_3d()

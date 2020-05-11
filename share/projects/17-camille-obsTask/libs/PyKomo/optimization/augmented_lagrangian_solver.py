@@ -95,8 +95,9 @@ class AugmentedLagrangianSolver:
         h = self.constrainedProblem.h.value(x) if self.constrainedProblem.h else 0
         g = self.constrainedProblem.g.value(x) if self.constrainedProblem.g else 0
 
+        i = 0
         while True:
-            print("lambda_h={}, h={}, lambda_g={}, g={}".format(self.lambda_h, h, self.lambda_g, g))
+            print("it={}, lambda_h={}, h={}, lambda_g={}, g={}".format(i, self.lambda_h, h, self.lambda_g, g))
 
             unconstrained = self.convert(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
             solver = Newton(unconstrained)
@@ -110,5 +111,7 @@ class AugmentedLagrangianSolver:
 
             if np.abs(h) < self.eps and g < self.eps:
                 break
+
+            i += 1
 
         return x

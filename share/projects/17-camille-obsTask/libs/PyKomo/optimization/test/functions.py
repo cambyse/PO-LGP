@@ -12,10 +12,12 @@ class ProjX(NewtonFunction):
         return x[0] #np.asarray([x[0]])
 
     def gradient(self, x):
-        return np.asarray([1.0, 0.0])
+        g = np.zeros(x.shape)
+        g[0] = 1.0
+        return g
 
     def hessian(self, x):
-        return np.zeros((2, 2))
+        return np.zeros((x.shape[0], x.shape[0]))
 
 class ProjY(NewtonFunction):
     def value(self, x):
