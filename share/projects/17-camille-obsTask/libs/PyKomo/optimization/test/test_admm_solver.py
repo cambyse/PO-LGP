@@ -8,7 +8,7 @@ from gauss_newton import SquareCostFunction
 from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem
 from admm_solver import ADMMSolver_Newton, ADMMSolver
 from augmented_lagrangian_solver import AugmentedLagrangianSolver
-from functions import ProjX
+from functions import ProjX, Plotter3D
 
 class SquareDistance3D(SquareCostFunction):
     def __init__(self, px=10, py=2, pz=1):
@@ -58,6 +58,20 @@ def test_distance_3d():
     v = f.value(np.array([0, 0, 0]))
     nt.assert_almost_equals(v, 3, 0.0001)
 
+def test_constrained_dist_3d_no_decomp():
+    x0 = np.array([0.0, 0.0, 0.0])
+
+    p = Plotter3D()
+    p.add(x0)
+
+    pb = ConstrainedProblem(f=SquareDistance3D(1, 1), h=ProjX())
+    solver = AugmentedLagrangianSolver(pb)
+    x = solver.run(x0, observer=p)
+    npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
+    nt.assert_almost_equals(x[0], 0, delta=0.001)
+
+    p.plot()
+
 def test_distance_3d_decomp():
     f0 = SquareDistance3DDecomp0(1, 1)
     f1 = SquareDistance3DDecomp1(1, 1)
@@ -79,14 +93,21 @@ def test_dist_3d_minimization():
     x = solver.run(np.array([0.0, 0.0, 0.0]))
     npt.assert_almost_equal(x, np.array([1.0, 1.0, 1.0]), decimal=1)
 
-def test_foo():
+def test_constrained_dist_3d():
+    x0 = np.array([0.0, 0.0, 0.0])
+
+    p = Plotter3D()
+    p.add(x0)
+
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
-    pb1 = ConstrainedProblem(f= SquareDistance3DDecomp1(1, 1))
+    pb1 = ConstrainedProblem(f= SquareDistance3DDecomp1(1, 1), h=ProjX())
     pb = ADMMProblem(pb0=pb0, pb1=pb1)
     solver = ADMMSolver(pb, solver_class=AugmentedLagrangianSolver)
-    x = solver.run(np.array([0.0, 0.0, 0.0]))
+    x = solver.run(x0, observer=p)
     npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
     nt.assert_almost_equals(x[0], 0, delta=0.001)
+
+    p.plot()
 
 if __name__ == "__main__":
      test_distance_3d()

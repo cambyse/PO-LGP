@@ -56,9 +56,12 @@ class Newton: # sum of square problems
 
         assert issubclass(type(function), NewtonFunction), "wrong function type"
 
-    def run(self, x):
+    def run(self, x, observer=None):
         _lambda = self.lambda_0
         _alpha = 1
+
+        if observer:
+            observer.new_newton_run(x)
 
         I = np.identity(x.shape[0])
         while True:
@@ -76,6 +79,10 @@ class Newton: # sum of square problems
 
             x = x + _alpha * d
             _alpha = 1
+
+            if observer:
+                observer.add(x)
+
             if np.linalg.norm(_alpha * d) < self.eps:
                 break
 

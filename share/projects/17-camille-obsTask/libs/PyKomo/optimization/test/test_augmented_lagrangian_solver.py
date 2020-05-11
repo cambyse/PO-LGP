@@ -50,14 +50,19 @@ def test_gradients_aula_ineq_active_constraint():
     nt.assert_true(unconstrained.checkHessian(x0))
 
 def test_constrained_aula_ineq_active_constraint():
+    p = Plotter2D()
+
     x0 = np.array([1.0, 1.0])
+    p.add(x0)
 
     pb = ConstrainedProblem(f=SquareDistance(), g=ProjY())
     al = AugmentedLagrangianSolver(pb)
-    x = al.run(x0)
+    x = al.run(x0, callback=p.add)
 
     npt.assert_almost_equal(x, np.array([10.0, 0.0]), decimal=1)
     nt.assert_almost_equals(x[1], 0, delta=0.001)
+
+    p.plot()
 
 def test_gradients_aula_ineq_inactive_constraint():
     x0 = np.array([1.0, 1.0])

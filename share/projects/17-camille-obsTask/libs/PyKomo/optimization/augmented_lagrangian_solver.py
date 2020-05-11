@@ -6,7 +6,7 @@ class AugmentedLagrangianSolver:
         self.constrainedProblem = pb
         self.eps = 0.001 #max constraint violation
         self.mu = 1.0
-        self.rho = 2.0 # how much we increase the square penalty at each cycle
+        self.rho = 1.0 # how much we increase the square penalty at each cycle
         self.lambda_h = 0.0
         self.lambda_g = 0.0
 
@@ -86,8 +86,9 @@ class AugmentedLagrangianSolver:
 
         return Augmented()
 
-    def run(self, x):
-        print("lambda_h={}".format(self.lambda_h))
+    def run(self, x, observer=None):
+        if observer:
+            observer.new_aula_run(x)
 
         unconstrained = self.convert(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
         gn = Newton(unconstrained)
@@ -101,7 +102,7 @@ class AugmentedLagrangianSolver:
 
             unconstrained = self.convert(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
             solver = Newton(unconstrained)
-            x = solver.run(x)
+            x = solver.run(x, observer=observer)
             h = self.constrainedProblem.h.value(x) if self.constrainedProblem.h else 0
             g = self.constrainedProblem.g.value(x) if self.constrainedProblem.g else 0
 
