@@ -80,10 +80,10 @@ class Newton: # sum of square problems
             x = x + _alpha * d
             _alpha = 1
 
-            if observer:
-                observer.add(x)
-
             if np.linalg.norm(_alpha * d) < self.eps:
                 break
+
+        if observer:
+            observer.add(x)
 
         return x
