@@ -1,56 +1,21 @@
 import numpy as np
 from newton import NewtonFunction, Newton
 from optimization_problems import ConstrainedProblem
+from admm_solver import ADMMLagrangian0, ADMMLagrangian1
+from augmented_lagrangian_solver import Lagrangian
 
-
-class ADMMLagrangian0(NewtonFunction):
-    def __init__(self, f, xk, y, mu):
-        self.f = f
-        self.xk = xk
-        self.y = y
-        self.mu = mu
-
-    def value(self, x):
-        delta = x - self.xk
-        return self.f.value(x) + np.dot(self.y.T, delta) + 0.5 * self.mu * np.dot(delta.T, delta)
-
-    def gradient(self, x):
-        delta = x - self.xk
-        return self.f.gradient(x) + self.y.T + self.mu * delta
-
-    def hessian(self, x):
-        h = self.f.hessian(x)
-        Hb = np.identity(x.shape[0])
-        return h + self.mu * Hb
-
-
-class ADMMLagrangian1(NewtonFunction):
-    def __init__(self, f, xk, y, mu):
-        self.f = f
-        self.xk = xk
-        self.y = y
-        self.mu = mu
-
-    def value(self, x):
-        delta = self.xk - x
-        return self.f.value(x) + np.dot(self.y.T, delta) + 0.5 * self.mu * np.dot(delta.T, delta)
-
-    def gradient(self, x):
-        delta = self.xk - x
-        return self.f.gradient(x) - self.y.T - self.mu * delta
-
-    def hessian(self, x):
-        h = self.f.hessian(x)
-        Hb = np.identity(x.shape[0])
-        return h + self.mu * Hb
-
-class ADMMSolver:
-    def __init__(self, pb, solver_class=Newton):
+class DecentralizedAugmentedLagrangianSolver:
+    def __init__(self, pb):
         self.pb = pb
-        self.solver_class = solver_class
-        self.y = 0
-        self.rho = 1
+        # common
         self.eps = 0.001 #max constraint violation
+        self.mu = 1.0  # square penalty weight
+        self.nu = 1.0  # how much we increase the square penalty at each cycle
+        # admm
+        self.y = 0     # lagrange term
+        # aula
+        self.lambda_h = 0.0
+        self.lambda_g = 0.0
 
     def run(self, x, observer=None):
         self.y = np.zeros(x.shape)
@@ -59,23 +24,41 @@ class ADMMSolver:
         x0 = x
         x1 = x
         while True:
-            print("IT={}".format(i))
+            unconstrained_0 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb0, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=x1, y=self.y, mu=self.mu)
+            assert unconstrained_0.checkGradients(x0)
+            assert unconstrained_0.checkHessian(x0)
+            assert unconstrained_0.checkGradients(x1)
+            assert unconstrained_0.checkHessian(x1)
+            x0 = Newton(unconstrained_0).run(x1, observer=observer)
 
-            f0 = ADMMLagrangian0(self.pb.pb0.f, x1, self.y, self.rho)
-            pb0 = ConstrainedProblem(f=f0, h=self.pb.pb0.h, g=self.pb.pb0.g)
-            assert f0.checkGradients(x1) and f0.checkHessian(x1)
-            x0 = self.solver_class(pb0).run(x1, observer=observer)
+            unconstrained_1 = ADMMLagrangian1(Lagrangian(pb=self.pb.pb1, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=x0, y=self.y, mu=self.mu)
+            assert unconstrained_1.checkGradients(x0)
+            assert unconstrained_1.checkHessian(x0)
+            assert unconstrained_1.checkGradients(x1)
+            assert unconstrained_1.checkHessian(x1)
+            x1 = Newton(unconstrained_1).run(x0, observer=observer)
 
-            f1 = ADMMLagrangian1(self.pb.pb1.f, x0, self.y, self.rho)
-            pb1 = ConstrainedProblem(f=f1, h=self.pb.pb1.h, g=self.pb.pb1.g)
-            assert f1.checkGradients(x0) and f1.checkHessian(x1)
-            x1 = self.solver_class(pb1).run(x0, observer=observer)
-
+            # admm update
             delta = x0 - x1
-            self.y += self.rho * delta
+            self.y += self.mu * delta
 
-            if np.abs(delta).max() < self.eps:
+            # aula update
+            h = self.pb.pb1.h.value(x1) if self.pb.pb1.h else 0
+            g = self.pb.pb1.g.value(x1) if self.pb.pb1.g else 0
+
+            self.lambda_h = self.lambda_h + 2 * self.mu * h
+            self.lambda_g = self.lambda_g + 2 * self.mu * g
+
+            self.mu *= self.nu
+
+            print("IT={}, admm delta={}, h={}, lambda_h={}, g={}, lambda_g={}".format(i, delta, h, self.lambda_h, g, self.lambda_g))
+
+            if np.abs(delta).max() < self.eps and np.abs(h) < self.eps and g < self.eps:
                 break
+
+            if i > 50:
+                i = 0
+                print("weird")
 
             i+=1
 
@@ -141,6 +124,7 @@ class ADMMSolver_Newton:
             assert pb1.checkGradients(x0) and pb1.checkHessian(x0)
             x1 = self.solver_class(pb1).run(x0)
 
+            # admm update
             delta = x0 - x1
             self.y += self.rho * delta
 

@@ -15,8 +15,7 @@ class NewtonFunction:
         dx = 0.001
         y = self.value(x)
         j = self.gradient(x)
-
-        close = True
+        diff = np.zeros(x.shape[0])
 
         for i in range(0, x.shape[0]):
             x_ = copy.copy(x)
@@ -24,7 +23,11 @@ class NewtonFunction:
             y_ = self.value(x_)
             dy = y_ - y
             ji = dy / dx
-            close = close and np.abs(j[i] - ji) < 0.01
+            diff[i] = j[i] - ji
+
+        close = np.all(np.abs(diff) < 0.01)
+        if not close:
+            print("gradient problem, diff={}".format(diff))
 
         return close
 

@@ -154,3 +154,47 @@ class Hyperbol(NewtonFunction):
 
     def hessian(self, x):
         return 6*x
+
+
+class SquareDistance3D(SquareCostFunction):
+    def __init__(self, px=10, py=2, pz=1):
+        self.px = px
+        self.py = py
+        self.pz = pz
+
+    def phi(self, x):
+        dx = x[0] - self.px
+        dy = x[1] - self.py
+        dz = x[2] - self.pz
+        return np.asarray([dx, dy, dz])
+
+    def gradientPhi(self, x):
+        return np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+
+class SquareDistance3DDecomp0(SquareCostFunction):
+    def __init__(self, px=10, py=2):
+        self.px = px
+        self.py = py
+        self.x_factor = np.sqrt(0.5)
+
+    def phi(self, x):
+        dx = x[0] - self.px
+        dy = x[1] - self.py
+        return np.asarray([self.x_factor * dx, dy, 0])
+
+    def gradientPhi(self, x):
+        return np.asarray([[self.x_factor, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]])
+
+class SquareDistance3DDecomp1(SquareCostFunction):
+    def __init__(self, px=10, pz=1):
+        self.px = px
+        self.pz = pz
+        self.x_factor = np.sqrt(0.5)
+
+    def phi(self, x):
+        dx = x[0] - self.px
+        dz = x[2] - self.pz
+        return np.asarray([self.x_factor * dx, 0, dz])
+
+    def gradientPhi(self, x):
+        return np.asarray([[self.x_factor, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
