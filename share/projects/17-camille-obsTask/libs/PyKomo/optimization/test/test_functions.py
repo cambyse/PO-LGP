@@ -20,5 +20,5 @@ def test_SphereConstraint3D():
         nt.assert_almost_equals(d2, 0.0)
         nt.assert_true(h.checkGradients(p))
 
-    d2 = h.value(np.array([0, 0.5, 0.5])) # center
+    d2 = h.value(np.array([0, 0.5, 0.5])) # sphere center
     nt.assert_almost_equals(d2, -0.25)
