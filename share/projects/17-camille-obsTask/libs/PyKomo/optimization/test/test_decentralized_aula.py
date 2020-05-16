@@ -42,22 +42,6 @@ def test_constrained_dec_aula_3d():
 
     p.report(plot=True)
 
-def test_SphereConstraint3D():
-    h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
-
-    on_sphere = [
-        np.array([0, 0.5, 0.0]),
-        np.array([0, 0.5, 1.0]),
-        np.array([0.5, 0.5, 0.5])
-    ]
-
-    for p in on_sphere:
-        d2 = h.value(p) # on sphere
-        nt.assert_almost_equals(d2, 0.0)
-        nt.assert_true(h.checkGradients(p))
-
-    d2 = h.value(np.array([0, 0.5, 0.5])) # center
-    nt.assert_almost_equals(d2, -0.25)
 
 def test_constrained_dec_aula_3d_sphere():
     x0 = np.array([0.0, 0.0, 0.0])
