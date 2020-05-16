@@ -13,7 +13,7 @@ def test_unconstrained_dec_aula_3d():
     x0 = np.array([0.0, 0.0, 0.0])
 
     p = Plotter3D("dec aula (unconstrained)")
-    p.add(x0)
+    p.add_point(x0)
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1))
     pb1 = ConstrainedProblem(f= SquareDistance3DDecomp1(1, 1))
@@ -23,14 +23,14 @@ def test_unconstrained_dec_aula_3d():
 
     npt.assert_almost_equal(x, np.array([1.0, 1.0, 1.0]), decimal=1)
 
-    #p.plot()
+    p.report()
 
 
 def test_constrained_dec_aula_3d():
     x0 = np.array([0.0, 0.0, 0.0])
 
     p = Plotter3D("decentralized aula_(h:x=0)")
-    p.add(x0)
+    p.add_point(x0)
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
     pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=ProjX())
@@ -40,7 +40,7 @@ def test_constrained_dec_aula_3d():
 
     npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
 
-    p.plot()
+    p.report(plot=True)
 
 def test_SphereConstraint3D():
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
@@ -50,7 +50,6 @@ def test_SphereConstraint3D():
         np.array([0, 0.5, 1.0]),
         np.array([0.5, 0.5, 0.5])
     ]
-
 
     for p in on_sphere:
         d2 = h.value(p) # on sphere
@@ -64,7 +63,7 @@ def test_constrained_dec_aula_3d_sphere():
     x0 = np.array([0.0, 0.0, 0.0])
 
     p = Plotter3D("decentralized aula_(h:sphere)")
-    p.add(x0)
+    p.add_point(x0)
 
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=h)
@@ -75,4 +74,4 @@ def test_constrained_dec_aula_3d_sphere():
 
     nt.assert_almost_equals(h.value(x), 0, delta=0.001)
 
-    p.plot()
+    p.report(plot=True)

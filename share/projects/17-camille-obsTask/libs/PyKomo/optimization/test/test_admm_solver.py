@@ -19,7 +19,7 @@ def test_constrained_dist_3d_no_decomp():
     x0 = np.array([0.0, 0.0, 0.0])
 
     p = Plotter3D("aula (h:x=0)")
-    p.add(x0)
+    p.add_point(x0)
 
     pb = ConstrainedProblem(f=SquareDistance3D(1, 1), h=ProjX())
     solver = AugmentedLagrangianSolver(pb)
@@ -27,7 +27,7 @@ def test_constrained_dist_3d_no_decomp():
     npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
     nt.assert_almost_equals(x[0], 0, delta=0.001)
 
-    p.plot()
+    p.report()
 
 def test_distance_3d_decomp():
     f0 = SquareDistance3DDecomp0(1, 1)
@@ -54,7 +54,7 @@ def test_constrained_dist_3d():
     x0 = np.array([0.0, 0.0, 0.0])
 
     p = Plotter3D("admm (h:x=0)")
-    p.add(x0)
+    p.add_point(x0)
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
     pb1 = ConstrainedProblem(f= SquareDistance3DDecomp1(1, 1), h=ProjX())
@@ -64,13 +64,13 @@ def test_constrained_dist_3d():
     npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
     nt.assert_almost_equals(x[0], 0, delta=0.001)
 
-    p.plot()
+    p.report()
 
 def test_constrained_dist_3d_sphere():
     x0 = np.array([0.0, 0.0, 0.0])
 
     p = Plotter3D("admm (h:x=0)")
-    p.add(x0)
+    p.add_point(x0)
 
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=h)
@@ -81,7 +81,7 @@ def test_constrained_dist_3d_sphere():
 
     nt.assert_almost_equals(h.value(x), 0, delta=0.001)
 
-    #p.plot()
+    p.report()
 
 if __name__ == "__main__":
      test_distance_3d()

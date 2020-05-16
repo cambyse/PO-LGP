@@ -64,10 +64,13 @@ class Newton: # sum of square problems
         _alpha = 1
 
         if observer:
-            observer.new_newton_run(x)
+            observer.on_newton_start(x)
 
         I = np.identity(x.shape[0])
         while True:
+            if observer:
+                observer.on_newton_step(x)
+
             hessian = self.function.hessian(x)
             A = hessian + _lambda * I # damping
             B = -self.function.gradient(x)
@@ -87,6 +90,6 @@ class Newton: # sum of square problems
                 break
 
         if observer:
-            observer.add(x)
+            observer.on_newton_end(x)
 
         return x

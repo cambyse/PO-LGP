@@ -34,10 +34,10 @@ class Plotter3D:
 
         self.last_x = None
 
-    def new_aula_run(self, x):
-        self.aula_start_x.append(x[0])
-        self.aula_start_y.append(x[1])
-        self.aula_start_z.append(x[2])
+        self.n_evals = 0
+
+    def on_aula_end(self, x):
+        self.add_point(x)
 
         def c(x):
             return copy.deepcopy(x)
@@ -46,34 +46,44 @@ class Plotter3D:
         self.y.clear()
         self.z.clear()
 
-        self.add(x)
+    def on_aula_start(self, x):
+        self.aula_start_x.append(x[0])
+        self.aula_start_y.append(x[1])
+        self.aula_start_z.append(x[2])
 
-    def new_newton_run(self, x):
-        self.add(x)
+        self.add_point(x)
 
-    def add(self, x):
+    def on_newton_start(self, x):
+        self.add_point(x)
+
+    def on_newton_end(self, x):
+        self.add_point(x)
+
+    def on_newton_step(self, x): # x is value at start on newton step
+        self.n_evals += 1
+
+    def add_point(self, x):
         self.x.append(x[0])
         self.y.append(x[1])
         self.z.append(x[2])
 
         self.last_x = x
 
-    def close(self):
-        self.new_aula_run(self.last_x)
+    def report(self, plot=False):
+        print("Number of evaluations:{}".format(self.n_evals))
 
-    def plot(self):
-        self.close() # flush
-        from mpl_toolkits.mplot3d import Axes3D
+        if plot:
+            from mpl_toolkits.mplot3d import Axes3D
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_title(self.title)
-        #ax.set_aspect(aspect='equal')
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.set_title(self.title)
+            #ax.set_aspect(aspect='equal')
 
-        colors = ['r', 'g', 'b', 'gray', 'yellow']
+            colors = ['r', 'g', 'b', 'gray', 'yellow']
 
-        for i, (x, y, z) in enumerate(self.aula_runs):
-            ax.plot(x, y, z)
-            ax.scatter(x, y, z)
-        ax.plot(self.aula_start_x, self.aula_start_y, self.aula_start_z, linewidth=6)
-        plt.show()
+            for i, (x, y, z) in enumerate(self.aula_runs):
+                ax.plot(x, y, z)
+                ax.scatter(x, y, z)
+            ax.plot(self.aula_start_x, self.aula_start_y, self.aula_start_z, linewidth=6)
+            plt.show()

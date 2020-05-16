@@ -20,6 +20,9 @@ class DecentralizedAugmentedLagrangianSolver:
     def run(self, x, observer=None):
         self.y = np.zeros(x.shape)
 
+        if observer:
+            observer.on_aula_start(x)
+
         i = 0
         x0 = x
         x1 = x
@@ -61,6 +64,9 @@ class DecentralizedAugmentedLagrangianSolver:
                 print("weird")
 
             i+=1
+
+        if observer:
+            observer.on_aula_end(x1)
 
         return x1
 

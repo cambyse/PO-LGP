@@ -90,7 +90,7 @@ class AugmentedLagrangianSolver:
 
     def run(self, x, observer=None):
         if observer:
-            observer.new_aula_run(x)
+            observer.on_aula_start(x)
 
         lagrangian = Lagrangian(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
         gn = Newton(lagrangian)
@@ -116,5 +116,9 @@ class AugmentedLagrangianSolver:
                 break
 
             i += 1
+
+        if observer:
+            observer.on_aula_end(x)
+
 
         return x
