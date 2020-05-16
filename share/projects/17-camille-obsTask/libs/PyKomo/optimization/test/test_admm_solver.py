@@ -65,5 +65,22 @@ def test_constrained_dist_3d():
 
     p.plot()
 
+def test_constrained_dist_3d_sphere():
+    x0 = np.array([0.0, 0.0, 0.0])
+
+    p = Plotter3D()
+    p.add(x0)
+
+    h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
+    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=h)
+    pb1 = ConstrainedProblem(f= SquareDistance3DDecomp1(1, 1), h=h)
+    pb = ADMMProblem(pb0=pb0, pb1=pb1)
+    solver = ADMMSolver(pb, solver_class=AugmentedLagrangianSolver)
+    x = solver.run(x0, observer=p)
+
+    nt.assert_almost_equals(h.value(x), 0, delta=0.001)
+
+    #p.plot()
+
 if __name__ == "__main__":
      test_distance_3d()

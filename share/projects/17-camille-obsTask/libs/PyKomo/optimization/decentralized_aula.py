@@ -25,17 +25,17 @@ class DecentralizedAugmentedLagrangianSolver:
         x1 = x
         while True:
             unconstrained_0 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb0, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=x1, y=self.y, mu=self.mu)
-            assert unconstrained_0.checkGradients(x0)
-            assert unconstrained_0.checkHessian(x0)
-            assert unconstrained_0.checkGradients(x1)
-            assert unconstrained_0.checkHessian(x1)
+            #assert unconstrained_0.checkGradients(x0)
+            #assert unconstrained_0.checkHessian(x0)
+            #assert unconstrained_0.checkGradients(x1)
+            #assert unconstrained_0.checkHessian(x1)
             x0 = Newton(unconstrained_0).run(x1, observer=observer)
 
             unconstrained_1 = ADMMLagrangian1(Lagrangian(pb=self.pb.pb1, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=x0, y=self.y, mu=self.mu)
-            assert unconstrained_1.checkGradients(x0)
-            assert unconstrained_1.checkHessian(x0)
-            assert unconstrained_1.checkGradients(x1)
-            assert unconstrained_1.checkHessian(x1)
+            #assert unconstrained_1.checkGradients(x0)
+            #assert unconstrained_1.checkHessian(x0)
+            #assert unconstrained_1.checkGradients(x1)
+            #assert unconstrained_1.checkHessian(x1)
             x1 = Newton(unconstrained_1).run(x0, observer=observer)
 
             # admm update

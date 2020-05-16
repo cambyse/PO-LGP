@@ -67,7 +67,7 @@ def test_constrained_aula_ineq_active_constraint():
 def test_gradients_aula_ineq_inactive_constraint():
     x0 = np.array([1.0, 1.0])
 
-    pb = ConstrainedProblem(f=SquareDistance(py=-1.0), g=ProjY())
+    pb = ConstrainedProblem(f=SquareDistance(cy=-1.0), g=ProjY())
     al = AugmentedLagrangianSolver(pb)
     lagrangian = Lagrangian(al.constrainedProblem, mu=al.mu, lambda_g=al.lambda_g)
 
@@ -76,7 +76,7 @@ def test_gradients_aula_ineq_inactive_constraint():
 def test_gradients_aula_ineq_no_constraint():
     x0 = np.array([1.0, 1.0])
 
-    pb = ConstrainedProblem(f=SquareDistance(py=-1.0))
+    pb = ConstrainedProblem(f=SquareDistance(cy=-1.0))
     al = AugmentedLagrangianSolver(pb)
     unconstrained = Lagrangian(al.constrainedProblem, mu=al.mu, lambda_g=al.lambda_g)
 
@@ -85,7 +85,7 @@ def test_gradients_aula_ineq_no_constraint():
 def test_constrained_aula_ineq_inactive_constraint():
     x0 = np.array([1.0, -1.0])
 
-    pb = ConstrainedProblem(f=SquareDistance(py=-1.0), g=ProjY())
+    pb = ConstrainedProblem(f=SquareDistance(cy=-1.0), g=ProjY())
     al = AugmentedLagrangianSolver(pb)
     x = al.run(x0)
 
