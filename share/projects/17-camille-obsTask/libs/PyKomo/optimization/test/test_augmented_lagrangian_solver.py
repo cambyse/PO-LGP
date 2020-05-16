@@ -6,7 +6,8 @@ from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
 from augmented_lagrangian_solver import AugmentedLagrangianSolver, Lagrangian
 from optimization_problems import ConstrainedProblem
-from functions import SquareDistance, ProjX, ProjY, Plotter2D
+from functions import SquareDistance, ProjX, ProjY
+from observers import *
 
 def test_gradients_aula_eq():
     x0 = np.array([1.0, 1.0])

@@ -7,11 +7,12 @@ sys.path.append(str(Path('.').absolute().parent))
 from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem
 from decentralized_aula import DecentralizedAugmentedLagrangianSolver
 from functions import *
+from observers import *
 
 def test_unconstrained_dec_aula_3d():
     x0 = np.array([0.0, 0.0, 0.0])
 
-    p = Plotter3D()
+    p = Plotter3D("dec aula (unconstrained)")
     p.add(x0)
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1))
@@ -28,7 +29,7 @@ def test_unconstrained_dec_aula_3d():
 def test_constrained_dec_aula_3d():
     x0 = np.array([0.0, 0.0, 0.0])
 
-    p = Plotter3D()
+    p = Plotter3D("decentralized aula_(h:x=0)")
     p.add(x0)
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
@@ -37,7 +38,7 @@ def test_constrained_dec_aula_3d():
     solver = DecentralizedAugmentedLagrangianSolver(pb)
     x = solver.run(x0, observer=p)
 
-    #npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
+    npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
 
     p.plot()
 
@@ -62,7 +63,7 @@ def test_SphereConstraint3D():
 def test_constrained_dec_aula_3d_sphere():
     x0 = np.array([0.0, 0.0, 0.0])
 
-    p = Plotter3D()
+    p = Plotter3D("decentralized aula_(h:sphere)")
     p.add(x0)
 
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)

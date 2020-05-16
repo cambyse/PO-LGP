@@ -8,6 +8,7 @@ from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedPr
 from admm_solver import ADMMSolver_Newton, ADMMSolver
 from augmented_lagrangian_solver import AugmentedLagrangianSolver
 from functions import *
+from observers import *
 
 def test_distance_3d():
     f = SquareDistance3D(1, 1, 1)
@@ -17,7 +18,7 @@ def test_distance_3d():
 def test_constrained_dist_3d_no_decomp():
     x0 = np.array([0.0, 0.0, 0.0])
 
-    p = Plotter3D()
+    p = Plotter3D("aula (h:x=0)")
     p.add(x0)
 
     pb = ConstrainedProblem(f=SquareDistance3D(1, 1), h=ProjX())
@@ -52,7 +53,7 @@ def test_dist_3d_minimization():
 def test_constrained_dist_3d():
     x0 = np.array([0.0, 0.0, 0.0])
 
-    p = Plotter3D()
+    p = Plotter3D("admm (h:x=0)")
     p.add(x0)
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
@@ -68,7 +69,7 @@ def test_constrained_dist_3d():
 def test_constrained_dist_3d_sphere():
     x0 = np.array([0.0, 0.0, 0.0])
 
-    p = Plotter3D()
+    p = Plotter3D("admm (h:x=0)")
     p.add(x0)
 
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
