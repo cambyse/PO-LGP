@@ -80,6 +80,15 @@ class Hyperbol(NewtonFunction):
     def hessian(self, x):
         return 6*x
 
+class SquareDistanceND(SquareCostFunction):
+    def __init__(self, center):
+        self.center = center
+
+    def phi(self, x):
+        return x - self.center
+
+    def gradientPhi(self, _):
+        return np.identity(self.center.shape[0])
 
 class SquareDistance3D(SquareCostFunction):
     def __init__(self, cx=10, cy=2, cz=1):

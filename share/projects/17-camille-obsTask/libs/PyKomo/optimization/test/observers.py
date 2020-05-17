@@ -70,7 +70,7 @@ class Plotter3D:
         self.last_x = x
 
     def report(self, plot=False):
-        print("Number of evaluations:{}".format(self.n_evals))
+        print("{} - number of evaluations:{}".format(self.title, self.n_evals))
 
         if plot:
             from mpl_toolkits.mplot3d import Axes3D

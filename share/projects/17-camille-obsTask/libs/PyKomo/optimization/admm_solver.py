@@ -1,7 +1,7 @@
 import numpy as np
 from newton import NewtonFunction, Newton
 from optimization_problems import ConstrainedProblem
-
+from augmented_lagrangian_solver import AugmentedLagrangianSolver
 
 class ADMMLagrangian0(NewtonFunction):
     def __init__(self, f, xk, y, mu):
@@ -45,9 +45,8 @@ class ADMMLagrangian1(NewtonFunction):
         return h + self.mu * Hb
 
 class ADMMSolver:
-    def __init__(self, pb, solver_class=Newton):
+    def __init__(self, pb):
         self.pb = pb
-        self.solver_class = solver_class
         self.y = 0
         self.rho = 1
         self.eps = 0.001 #max constraint violation
@@ -64,12 +63,12 @@ class ADMMSolver:
             f0 = ADMMLagrangian0(self.pb.pb0.f, x1, self.y, self.rho)
             pb0 = ConstrainedProblem(f=f0, h=self.pb.pb0.h, g=self.pb.pb0.g)
             assert f0.checkGradients(x1) and f0.checkHessian(x1)
-            x0 = self.solver_class(pb0).run(x1, observer=observer)
+            x0 = AugmentedLagrangianSolver(pb0).run(x1, observer=observer)
 
             f1 = ADMMLagrangian1(self.pb.pb1.f, x0, self.y, self.rho)
             pb1 = ConstrainedProblem(f=f1, h=self.pb.pb1.h, g=self.pb.pb1.g)
             assert f1.checkGradients(x0) and f1.checkHessian(x1)
-            x1 = self.solver_class(pb1).run(x0, observer=observer)
+            x1 = AugmentedLagrangianSolver(pb1).run(x0, observer=observer)
 
             delta = x0 - x1
             self.y += self.rho * delta
