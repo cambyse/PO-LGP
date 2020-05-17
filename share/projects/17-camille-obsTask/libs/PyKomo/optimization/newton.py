@@ -50,6 +50,22 @@ class NewtonFunction:
 
         return close
 
+    def dim(self):
+        return 1
+
+class VectorizedNewtonFunction:
+    def value(self, x):
+        pass
+
+    def gradient(self, x):
+        pass
+
+    def hessian(self, x):
+        pass
+
+    def dim(self):
+        pass
+
 class Newton: # sum of square problems
     def __init__(self, function):
         self.function = function

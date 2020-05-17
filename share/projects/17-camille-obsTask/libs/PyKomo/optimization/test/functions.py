@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
-from newton import NewtonFunction
+from newton import NewtonFunction, VectorizedNewtonFunction
 from gauss_newton import SquareCostFunction
 
 class ProjX(NewtonFunction):
@@ -26,6 +26,28 @@ class ProjY(NewtonFunction):
 
     def hessian(self, x):
         return np.zeros((2, 2))
+
+class ProjXY(VectorizedNewtonFunction):
+    def value(self, x):
+        return x[:2]
+
+    def gradient(self, x):
+        gs = []
+        for i in range(self.dim()):
+            g = np.zeros(x.shape)
+            g[i] = 1.0
+            gs.append(g)
+        return np.array(gs)
+
+    def hessian(self, x):
+        hs = []
+        for i in range(self.dim()):
+            h = np.zeros((x.shape[0], x.shape[0]))
+            hs.append(h)
+        return hs
+
+    def dim(self):
+        return 2
 
 class SquareDistance(SquareCostFunction):
     def __init__(self, cx=10, cy=2):

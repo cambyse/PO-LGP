@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
 from augmented_lagrangian_solver import AugmentedLagrangianSolver, Lagrangian
 from optimization_problems import ConstrainedProblem
-from functions import SquareDistance, ProjX, ProjY
+from functions import SquareDistance, ProjX, ProjY, ProjXY
 from observers import *
 
 def test_gradients_aula_eq():
@@ -29,6 +29,15 @@ def test_constrained_aula_eq():
 
     npt.assert_almost_equal(x, np.array([0.0, 2.0]), decimal=1)
     nt.assert_almost_equals(x[0], 0, delta=0.001)
+
+def test_constrained_aula_eq_2_constraints():
+    x0 = np.array([1.0, 1.0])
+
+    pb = ConstrainedProblem(f=SquareDistance(), h=ProjXY(), g=ProjXY())
+    al = AugmentedLagrangianSolver(pb)
+    x = al.run(x0)
+
+    npt.assert_almost_equal(x, np.array([0.0, 0.0]), decimal=1)
 
 def test_constrained_aula_eq_no_constraint():
     x0 = np.array([1.0, 1.0])
@@ -92,8 +101,3 @@ def test_constrained_aula_ineq_inactive_constraint():
 
     npt.assert_almost_equal(x, np.array([10.0, -1.0]), decimal=1)
     nt.assert_almost_equals(x[1], -1.0, delta=0.001)
-
-if __name__ == "__main__":
-     test_constrained_squared_penalty()
-     test_constrained_aula_eq()
-     test_constrained_aula_ineq_inactive_constraint()

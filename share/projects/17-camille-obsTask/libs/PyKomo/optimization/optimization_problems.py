@@ -10,6 +10,8 @@ class UnconstrainedQP:
     def __init__(self, Q, c):
         self.Q = Q  # hessian
         self.c = c
+        self.Q.flags.writeable = False
+        self.c.flags.writeable = False
 
 class ConstrainedQP: # Ax <= u
     def __init__(self, Q, c, A, u):
@@ -17,6 +19,10 @@ class ConstrainedQP: # Ax <= u
         self.c = c
         self.A = A
         self.u = u
+        self.Q.flags.writeable = False
+        self.c.flags.writeable = False
+        self.A.flags.writeable = False
+        self.u.flags.writeable = False
 
 class ADMMProblem:
     def __init__(self, pb0, pb1):

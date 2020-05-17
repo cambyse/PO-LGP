@@ -32,6 +32,3 @@ def test_checkHessian():
     f = PureParabol()
 
     nt.assert_true(f.checkHessian(np.array([10.0])))
-
-if __name__ == "__main__":
-     test_checkGradients()

@@ -16,7 +16,6 @@ def test_unconstrained_qp():
 
     nt.assert_almost_equals(x, 0.5, delta=0.001)
 
-@nottest
 def test_constrained_qp():
     # min x^2 - x
     # s.t. x <= 0
@@ -25,7 +24,3 @@ def test_constrained_qp():
     x = solver.run(np.array([-1.0]))
 
     nt.assert_almost_equals(x, 0.2, delta=0.001)
-
-
-if __name__ == "__main__":
-     test_unconstrained_qp()

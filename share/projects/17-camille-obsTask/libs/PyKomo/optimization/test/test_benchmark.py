@@ -40,7 +40,7 @@ def test_dist_3d_planar_constraint():
 def test_dist_5d_planar_constraint():
     x0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
-    pb = ConstrainedProblem(f=SquareDistanceND(np.array([1, 1, 1, 1, 1])), h=ProjX())
+    pb = ConstrainedProblem(f=SquareDistanceND(np.array([1, 1, 1, 1, 1])), h=ProjXY())
 
     pbs = {
         AugmentedLagrangianSolver: pb,
@@ -53,6 +53,6 @@ def test_dist_5d_planar_constraint():
         solver = solver_class(pb)
         x = solver.run(x0, observer=p)
 
-        npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0, 1.0, 1.0]), decimal=1)
+        npt.assert_almost_equal(x, np.array([0.0, 0.0, 1.0, 1.0, 1.0]), decimal=1)
 
         p.report()

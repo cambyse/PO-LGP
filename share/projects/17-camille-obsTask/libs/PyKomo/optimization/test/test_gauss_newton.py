@@ -28,6 +28,3 @@ def test_Parabol2D():
     x0 = np.array([1.0])
     x = gn.run(x0)
     npt.assert_almost_equal(x, np.asarray([7.5]), decimal=1)
-
-if __name__ == "__main__":
-     test_Parabol2D()

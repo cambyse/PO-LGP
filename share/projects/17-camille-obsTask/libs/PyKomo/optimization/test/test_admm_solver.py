@@ -82,6 +82,3 @@ def test_constrained_dist_3d_sphere():
     nt.assert_almost_equals(h.value(x), 0, delta=0.001)
 
     p.report()
-
-if __name__ == "__main__":
-     test_distance_3d()
