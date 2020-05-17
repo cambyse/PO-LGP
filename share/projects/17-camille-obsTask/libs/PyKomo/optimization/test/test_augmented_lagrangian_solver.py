@@ -9,13 +9,11 @@ from optimization_problems import ConstrainedProblem
 from functions import SquareDistance, ProjX, ProjY, ProjXY
 from observers import *
 
-def test_gradients_aula_eq():
+def test_gradients_lagrangian_eq():
     x0 = np.array([1.0, 1.0])
 
     pb = ConstrainedProblem(f=SquareDistance(), h=ProjX())
-    al = AugmentedLagrangianSolver(pb)
-    al.lambda_h = 1.0
-    lagrangian = Lagrangian(al.constrainedProblem, mu=al.mu, lambda_h=al.lambda_h)
+    lagrangian = Lagrangian(pb, mu=1.0, lambda_h=1.0)
 
     nt.assert_true(lagrangian.checkGradients(x0))
     nt.assert_true(lagrangian.checkHessian(x0))
@@ -52,9 +50,7 @@ def test_gradients_aula_ineq_active_constraint():
     x0 = np.array([1.0, 1.0])
 
     pb = ConstrainedProblem(f=SquareDistance(), g=ProjY())
-    al = AugmentedLagrangianSolver(pb)
-    al.lambda_ = 1.0
-    lagrangian = Lagrangian(al.constrainedProblem, mu=al.mu, lambda_g=al.lambda_g)
+    lagrangian = Lagrangian(pb, mu=1.0, lambda_g=1.0)
 
     nt.assert_true(lagrangian.checkGradients(x0))
     nt.assert_true(lagrangian.checkHessian(x0))
@@ -78,19 +74,19 @@ def test_gradients_aula_ineq_inactive_constraint():
     x0 = np.array([1.0, 1.0])
 
     pb = ConstrainedProblem(f=SquareDistance(cy=-1.0), g=ProjY())
-    al = AugmentedLagrangianSolver(pb)
-    lagrangian = Lagrangian(al.constrainedProblem, mu=al.mu, lambda_g=al.lambda_g)
+    lagrangian = Lagrangian(pb, mu=1.0, lambda_g=1.0)
 
     nt.assert_true(lagrangian.checkGradients(x0))
+    nt.assert_true(lagrangian.checkHessian(x0))
 
 def test_gradients_aula_ineq_no_constraint():
     x0 = np.array([1.0, 1.0])
 
     pb = ConstrainedProblem(f=SquareDistance(cy=-1.0))
-    al = AugmentedLagrangianSolver(pb)
-    unconstrained = Lagrangian(al.constrainedProblem, mu=al.mu, lambda_g=al.lambda_g)
+    lagrangian = Lagrangian(pb, mu=1.0, lambda_g=1.0)
 
-    nt.assert_true(unconstrained.checkGradients(x0))
+    nt.assert_true(lagrangian.checkGradients(x0))
+    nt.assert_true(lagrangian.checkHessian(x0))
 
 def test_constrained_aula_ineq_inactive_constraint():
     x0 = np.array([1.0, -1.0])

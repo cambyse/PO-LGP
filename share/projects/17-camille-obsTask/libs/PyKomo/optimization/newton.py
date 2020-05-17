@@ -39,9 +39,9 @@ class NewtonFunction:
 
         y = self.value(x)
         for i in range(0, x.shape[0]):
-            xp = copy.copy(x)
+            xp = x.copy()
             xp[i] += dx
-            xm = copy.copy(x)
+            xm = x.copy()
             xm[i] -= dx
             yp = self.value(xp)
             ym = self.value(xm)

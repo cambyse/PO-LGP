@@ -128,7 +128,7 @@ class SquareDistance3D(SquareCostFunction):
         return np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
 
 class SquareDistance3DDecomp0(SquareCostFunction):
-    def __init__(self, cx=10, cy=2):
+    def __init__(self, cx, cy):
         self.cx = cx
         self.cy = cy
         self.x_factor = np.sqrt(0.5)
@@ -142,7 +142,7 @@ class SquareDistance3DDecomp0(SquareCostFunction):
         return np.asarray([[self.x_factor, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]])
 
 class SquareDistance3DDecomp1(SquareCostFunction):
-    def __init__(self, cx=10, cz=1):
+    def __init__(self, cx, cz):
         self.cx = cx
         self.cz = cz
         self.x_factor = np.sqrt(0.5)
