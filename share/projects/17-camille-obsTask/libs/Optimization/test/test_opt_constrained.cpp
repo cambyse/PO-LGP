@@ -7,7 +7,7 @@
 constexpr double eps = 0.0001;
 constexpr double eps_s = 0.01;
 
-TEST(ScalarFunction, SimpleParabolTestG) {
+TEST(AugmentedLagrangian, SimpleParabolTestG) {
   arr x{1.0};
   arr dual; //dual
 
@@ -19,7 +19,7 @@ TEST(ScalarFunction, SimpleParabolTestG) {
   EXPECT_NEAR(-0.5, x(0), eps_s);
 }
 
-TEST(ScalarFunction, Distance2DTestHG) {
+TEST(AugmentedLagrangian, Distance2DTestHG) {
   arr x{1.0, 2.0};
   arr dual; //dual
 
@@ -32,7 +32,7 @@ TEST(ScalarFunction, Distance2DTestHG) {
   EXPECT_NEAR(1.0, x(1), eps_s);
 }
 
-TEST(ScalarFunction, SimpleParabolWithFTerm) {
+TEST(AugmentedLagrangian, SimpleParabolWithFTerm) {
   arr x{1.0};
   arr dual; //dual
 
@@ -44,9 +44,9 @@ TEST(ScalarFunction, SimpleParabolWithFTerm) {
   EXPECT_NEAR(0.5, x(0), eps_s);
 }
 
-TEST(ScalarFunction, MultipleRuns) {
+TEST(AugmentedLagrangian, MultipleRuns) {
   arr x{1.0, 2.0};
-  arr dual; //dual
+  arr dual;
 
   Distance2D pb;
 

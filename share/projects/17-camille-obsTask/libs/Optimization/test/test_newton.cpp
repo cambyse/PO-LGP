@@ -25,7 +25,7 @@ double simple_parabol(arr& g, arr& H, const arr& x)
   return value;
 }
 
-TEST(ScalarFunction, SimpleParabolTestGH) {
+TEST(NewtonOptimizer, SimpleParabolTestGH) {
   arr x0{1.0};
   arr g;
   arr H;
@@ -39,7 +39,7 @@ TEST(ScalarFunction, SimpleParabolTestGH) {
   EXPECT_NEAR(2.0, H(0, 0), eps);
 }
 
-TEST(ScalarFunction, SimpleParabolNewton) {
+TEST(NewtonOptimizer, SimpleParabolNewton) {
   arr x{1.0};
   arr g;
   arr H;
@@ -51,7 +51,7 @@ TEST(ScalarFunction, SimpleParabolNewton) {
   EXPECT_NEAR(0.0, x(0), eps_s);
 }
 
-TEST(ScalarFunction, SimpleParabolNewtonSeveralRuns) {
+TEST(NewtonOptimizer, SimpleParabolNewtonSeveralRuns) {
   arr x{1.0};
   arr g;
   arr H;
