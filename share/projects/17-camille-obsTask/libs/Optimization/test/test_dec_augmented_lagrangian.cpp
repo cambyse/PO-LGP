@@ -11,8 +11,8 @@ TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
   const arr center0{1.0, 1.5, 1.0, 1.0};
   const arr center1{1.0, 0.5, 1.0, 1.0};
 
-  auto pb0 = std::make_shared<Distance4DMasked>(center0, arr{sqrt(1.0/2.0), sqrt(1.0/4.0), 0.0, 1.0});
-  auto pb1 = std::make_shared<Distance4DMasked>(center1, arr{sqrt(1.0/2.0), sqrt(3.0/4.0), 1.0, 0.0});
+  auto pb0 = std::make_shared<Distance4D>(center0, arr{sqrt(1.0/2.0), 0.3, 0.0, 1.0});
+  auto pb1 = std::make_shared<Distance4D>(center1, arr{sqrt(1.0/2.0), 0.3, 1.0, 0.0});
 
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb0);
@@ -34,9 +34,9 @@ TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
 
   const arr center{1.0, 1.0, 1.0, 1.0};
 
-  auto pb0 = std::make_shared<Distance4DMasked>(center, arr{sqrt(1.0/3.0), 1.0, 0.0, 0.0});
-  auto pb1 = std::make_shared<Distance4DMasked>(center, arr{sqrt(1.0/3.0), 0.0, 1.0, 0.0});
-  auto pb2 = std::make_shared<Distance4DMasked>(center, arr{sqrt(1.0/3.0), 0.0, 0.0, 1.0});
+  auto pb0 = std::make_shared<Distance4D>(center, arr{sqrt(1.0/3.0), 1.0, 0.0, 0.0});
+  auto pb1 = std::make_shared<Distance4D>(center, arr{sqrt(1.0/3.0), 0.0, 1.0, 0.0});
+  auto pb2 = std::make_shared<Distance4D>(center, arr{sqrt(1.0/3.0), 0.0, 0.0, 1.0});
 
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb0);
@@ -56,8 +56,10 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  auto pb0 = std::make_shared<Distance3DDecompXY>(arr{1.0, 1.0, 1.0});
-  auto pb1 = std::make_shared<Distance3DDecompXZ>(arr{1.0, 1.0, 1.0});
+  const arr center {1.0, 1.0, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center);
+  auto pb1 = std::make_shared<Distance3D>(center);
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb0);
   pbs.push_back(pb1);
@@ -74,7 +76,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  auto pb = std::make_shared<Distance3DDecompXY>(arr{1.0, 1.0, 1.0});
+  auto pb = std::make_shared<Distance3D>(arr{1.0, 1.0, 1.0}, arr{1.0, 1.0, 0.0});
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb);
 
@@ -104,7 +106,7 @@ TEST(DecentralizedAugmentedLagrangian, Distance3DDecompXYTestHG) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  Distance3DDecompXY pb(arr{1.0, 1.0, 1.0});
+  Distance3D pb(arr{1.0, 1.0, 1.0}, arr{1.0, 1.0, 0.0});
 
   OptConstrained opt(x, dual, pb);
   opt.run();
@@ -118,7 +120,7 @@ TEST(DecentralizedAugmentedLagrangian, Distance3DDecompXZTestHG) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  Distance3DDecompXZ pb(arr{1.0, 1.0, 1.0});
+  Distance3D pb(arr{1.0, 1.0, 1.0}, arr{1.0, 0.0, 1.0});
 
   OptConstrained opt(x, dual, pb);
   opt.run();

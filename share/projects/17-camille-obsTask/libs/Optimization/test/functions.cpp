@@ -88,10 +88,12 @@ struct Distance3D : public ConstrainedProblem
   // min dist to center
   // s.t. x = 0.0
   // s.t  y < 1
-  Distance3D(const arr& center)
+  Distance3D(const arr& center, arr mask = ones(3))
     : center_(center)
+    , mask_(mask)
   {
     CHECK_EQ(center.d0, 3, "wrong vector dimension")
+    CHECK_EQ(mask.d0, 3, "wrong vector dimension")
   }
 
   void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
@@ -109,14 +111,14 @@ struct Distance3D : public ConstrainedProblem
       //ot(4) = OT_ineq;
     }
 
-    phi(0) = x(0) - center_(0);
-    J(0, 0) = 1.0;
+    phi(0) = mask_(0) * (x(0) - center_(0));
+    J(0, 0) = mask_(0);
 
-    phi(1) = x(1) - center_(1);
-    J(1, 1) = 1.0;
+    phi(1) = mask_(1) * (x(1) - center_(1));
+    J(1, 1) = mask_(1);
 
-    phi(2) = x(2) - center_(2);
-    J(2, 2) = 1.0;
+    phi(2) = mask_(2) * (x(2) - center_(2));
+    J(2, 2) = mask_(2);
 
     phi(3) = x(0);
     J(3, 0) = 1.0;
@@ -126,92 +128,7 @@ struct Distance3D : public ConstrainedProblem
   }
 
   arr center_;
-};
-
-struct Distance3DDecompXY : public ConstrainedProblem
-{
-  // version of Distance3D decomposed (doesn't consider z axis)
-  // s.t. x = 0.0
-  // s.t  y < 1
-  Distance3DDecompXY(const arr& center)
-    : center_(center)
-    , scaleX_(sqrt(0.5))
-  {
-    CHECK_EQ(center.d0, 3, "wrong vector dimension")
-  }
-
-  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
-  {
-    if(!phi.p)
-    {
-      phi = arr(3);
-      J = zeros(3, 3);
-      ot = ObjectiveTypeA(3);
-
-      ot(0) = OT_sos;
-      ot(1) = OT_sos;
-      ot(2) = OT_eq;
-//      ot(3) = OT_ineq;
-    }
-
-    phi(0) = scaleX_ * (x(0) - center_(0));
-    J(0, 0) = scaleX_ * 1.0;
-
-    phi(1) = x(1) - center_(1);
-    J(1, 1) = 1.0;
-
-    phi(2) = x(0);
-    J(2, 0) = 1.0;
-
-//    phi(3) = x(1) - 1.0;
-//    J(3, 1) = 1.0;
-  }
-
-  arr center_;
-  double scaleX_;
-};
-
-struct Distance3DDecompXZ : public ConstrainedProblem
-{
-  // version of Distance3D decomposed (doesn't consider y axis)
-  // s.t. x = 0.0
-  // s.t  y < 1
-  Distance3DDecompXZ(const arr& center)
-    : center_(center)
-    , scaleX_(sqrt(0.5))
-  {
-    CHECK_EQ(center.d0, 3, "wrong vector dimension")
-  }
-
-  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
-  {
-    if(!phi.p)
-    {
-      phi = arr(3);
-      J = zeros(3, 3);
-      ot = ObjectiveTypeA(3);
-
-      ot(0) = OT_sos;
-      ot(1) = OT_sos;
-      ot(2) = OT_eq;
-//      ot(3) = OT_ineq;
-    }
-
-    phi(0) = scaleX_ * (x(0) - center_(0));
-    J(0, 0) = scaleX_ * 1.0;
-
-    phi(1) = x(2) - center_(2);
-    J(1, 2) = 1.0;
-
-    phi(2) = x(0);
-    J(2, 0) = 1.0;
-
-//    phi(3) = x(1) - 1.0;
-//    J(3, 1) = 1.0;
-  }
-
-  arr center_;
-  double scaleX_;
+  arr mask_;
 };
 
 struct Distance4D : public ConstrainedProblem
@@ -219,10 +136,12 @@ struct Distance4D : public ConstrainedProblem
   // min dist to center
   // s.t. x = 0.0
   // s.t  y < 1
-  Distance4D(const arr& center)
+  Distance4D(const arr& center, arr mask = ones(4))
     : center_(center)
+    , mask_(mask)
   {
     CHECK_EQ(center.d0, 4, "wrong vector dimension")
+    CHECK_EQ(mask.d0, 4, "wrong vector dimension")
   }
 
   void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
@@ -241,17 +160,17 @@ struct Distance4D : public ConstrainedProblem
       //ot(4) = OT_ineq;
     }
 
-    phi(0) = x(0) - center_(0);
-    J(0, 0) = 1.0;
+    phi(0) = mask_(0) * (x(0) - center_(0));
+    J(0, 0) = mask_(0);
 
-    phi(1) = x(1) - center_(1);
-    J(1, 1) = 1.0;
+    phi(1) = mask_(1) * (x(1) - center_(1));
+    J(1, 1) = mask_(1);
 
-    phi(2) = x(2) - center_(2);
-    J(2, 2) = 1.0;
+    phi(2) = mask_(2) * (x(2) - center_(2));
+    J(2, 2) = mask_(2);
 
-    phi(3) = x(3) - center_(3);
-    J(3, 3) = 1.0;
+    phi(3) = mask_(3) * (x(3) - center_(3));
+    J(3, 3) = mask_(3);
 
     phi(4) = x(0);
     J(4, 0) = 1.0;
@@ -261,27 +180,5 @@ struct Distance4D : public ConstrainedProblem
   }
 
   arr center_;
-};
-
-struct Distance4DMasked : public Distance4D
-{
-  Distance4DMasked(const arr& center, const arr& mask)
-    : Distance4D(center)
-    , mask_(mask)
-  {
-    CHECK_EQ(mask.d0, 4, "should be 4D");
-  }
-
-  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
-  {
-    Distance4D::phi(phi, J, H, ot, x, lambda);
-
-    for(auto i = 0; i < center_.d0; ++i)
-    {
-      phi(i) *= mask_(i);
-      J(i, i) *= mask_(i);
-    }
-  }
-
   arr mask_;
 };

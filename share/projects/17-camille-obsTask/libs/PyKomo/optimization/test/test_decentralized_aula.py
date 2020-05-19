@@ -80,8 +80,8 @@ def test_constrained_dec_aula_3d_n_battling_over_y_scaling_in_one_dir():
     p = Plotter3D("decentralized aula_(h:x=0)")
     p.add_point(x0)
 
-    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1.5, 1, sy=0.2), h=ProjX())
-    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 0.5, 1, sy=1.8), h=ProjX())
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1.5, 1, sy=0.3), h=ProjX())
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 0.5, 1, sy=0.3), h=ProjX())
     pb = ADMMProblem(pb0=pb0, pb1=pb1)
     solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
