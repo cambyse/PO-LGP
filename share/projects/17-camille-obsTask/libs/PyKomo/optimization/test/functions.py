@@ -113,19 +113,23 @@ class SquareDistanceND(SquareCostFunction):
         return np.identity(self.center.shape[0])
 
 class SquareDistance3D(SquareCostFunction):
-    def __init__(self, cx=10, cy=2, cz=1):
+    def __init__(self, cx=10, cy=2, cz=1, sx=1.0, sy=1.0, sz=1.0):
         self.cx = cx
         self.cy = cy
         self.cz = cz
+        # scales
+        self.sx = sx
+        self.sy = sy
+        self.sz = sz
 
     def phi(self, x):
-        dx = x[0] - self.cx
-        dy = x[1] - self.cy
-        dz = x[2] - self.cz
+        dx = self.sx* (x[0] - self.cx)
+        dy = self.sy* (x[1] - self.cy)
+        dz = self.sz* (x[2] - self.cz)
         return np.asarray([dx, dy, dz])
 
     def gradientPhi(self, x):
-        return np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        return np.asarray([[self.sx, 0.0, 0.0], [0.0, self.sy, 0.0], [0.0, 0.0, self.sz]])
 
 class SquareDistance3DDecomp0(SquareCostFunction):
     def __init__(self, cx, cy):
