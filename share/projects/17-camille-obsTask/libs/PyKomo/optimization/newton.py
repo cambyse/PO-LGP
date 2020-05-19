@@ -70,7 +70,7 @@ class Newton: # sum of square problems
     def __init__(self, function):
         self.function = function
         self.lambda_0 = 0.1
-        self.rho = 0.01
+        self.rho = 0.01  # wolfe
         self.eps = 0.01  # update size
 
         assert issubclass(type(function), NewtonFunction), "wrong function type"

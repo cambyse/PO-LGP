@@ -18,6 +18,7 @@
 #include <komo_planner_utils.h>
 #include <tree_builder.h>
 #include <komo_joint.h>
+#include <decentralized_aula.h>
 
 #include <thread>
 #include <future>
@@ -1072,7 +1073,6 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
 void KOMOPlanner::optimizeADMMSparse( Policy & policy )
 {
   using W = KomoJoint;
-  using X = KomoADMM;
 
   // build tree
   auto tree = buildTree(policy);
@@ -1103,25 +1103,46 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
 
   // SEQUENTIAL ADMM
   auto x = komos.front()->x;
+  arr dual;
 
-  // run komos
-  arr y = zeros(komos.front()->x.d0); // admm multiplier
-  const double rho = 1.0;
-  //for(int i = 0; i < 2 ; ++i)
+  std::vector<std::shared_ptr<GraphProblem>> converters;
+  std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
+  converters.reserve(policy.leaves().size());
+  constrained_problems.reserve(policy.leaves().size());
   for(auto w = 0; w < policy.leaves().size(); ++w)
   {
-    auto komo = komos[w];
-    auto mask = allMasks[w];
-    //auto dual = komo->dual;
-    komo->set_x(x);
-    W(komo.get()).reset(allVars, 0); // delete dual (bof)
-    //komo->dual = dual;
-    X(komo.get()).run(mask, x, y, rho);
+    auto& komo = *komos[w];
+    auto& mask = allMasks[w];
 
-    x = komo->x;
+    auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(komo);
+    gp->setSubProblem(mask);
+
+    auto pb = std::make_shared<Conv_Graph_ConstrainedProblem>(*gp, komo.logFile);
+
+    converters.emplace_back(gp);
+    constrained_problems.push_back(pb);
   }
 
-  watch(komos.back());
+  DecOptConstrained opt(x, dual, constrained_problems);
+  opt.run();
+//  // run komos
+//  arr y = zeros(komos.front()->x.d0); // admm multiplier
+//  const double rho = 1.0;
+//  //for(int i = 0; i < 2 ; ++i)
+//  for(auto w = 0; w < policy.leaves().size(); ++w)
+//  {
+//    auto komo = komos[w];
+//    auto mask = allMasks[w];
+//    //auto dual = komo->dual;
+//    komo->set_x(x);
+//    W(komo.get()).reset(allVars, 0); // delete dual (bof)
+//    //komo->dual = dual;
+//    X(komo.get()).run(mask, x, y, rho);
+
+//    x = komo->x;
+//  }
+
+  watch(komos.front());
 }
 
 }

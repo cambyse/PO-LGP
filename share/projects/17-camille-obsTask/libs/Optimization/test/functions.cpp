@@ -98,15 +98,15 @@ struct Distance3D : public ConstrainedProblem
   {
     if(!phi.p)
     {
-      phi = arr(5);
-      J = zeros(5, 3);
-      ot = ObjectiveTypeA(5);
+      phi = arr(4);
+      J = zeros(4, 3);
+      ot = ObjectiveTypeA(4);
 
       ot(0) = OT_sos;
       ot(1) = OT_sos;
       ot(2) = OT_sos;
       ot(3) = OT_eq;
-      ot(4) = OT_ineq;
+      //ot(4) = OT_ineq;
     }
 
     phi(0) = x(0) - center_(0);
@@ -121,8 +121,8 @@ struct Distance3D : public ConstrainedProblem
     phi(3) = x(0);
     J(3, 0) = 1.0;
 
-    phi(4) = x(1) - 1.0;
-    J(4, 1) = 1.0;
+//    phi(4) = x(1) - 1.0;
+//    J(4, 1) = 1.0;
   }
 
   arr center_;
@@ -144,14 +144,14 @@ struct Distance3DDecompXY : public ConstrainedProblem
   {
     if(!phi.p)
     {
-      phi = arr(4);
-      J = zeros(4, 3);
-      ot = ObjectiveTypeA(4);
+      phi = arr(3);
+      J = zeros(3, 3);
+      ot = ObjectiveTypeA(3);
 
       ot(0) = OT_sos;
       ot(1) = OT_sos;
       ot(2) = OT_eq;
-      ot(3) = OT_ineq;
+//      ot(3) = OT_ineq;
     }
 
     phi(0) = scaleX_ * (x(0) - center_(0));
@@ -163,8 +163,8 @@ struct Distance3DDecompXY : public ConstrainedProblem
     phi(2) = x(0);
     J(2, 0) = 1.0;
 
-    phi(3) = x(1) - 1.0;
-    J(3, 1) = 1.0;
+//    phi(3) = x(1) - 1.0;
+//    J(3, 1) = 1.0;
   }
 
   arr center_;
@@ -187,14 +187,14 @@ struct Distance3DDecompXZ : public ConstrainedProblem
   {
     if(!phi.p)
     {
-      phi = arr(4);
-      J = zeros(4, 3);
-      ot = ObjectiveTypeA(4);
+      phi = arr(3);
+      J = zeros(3, 3);
+      ot = ObjectiveTypeA(3);
 
       ot(0) = OT_sos;
       ot(1) = OT_sos;
       ot(2) = OT_eq;
-      ot(3) = OT_ineq;
+//      ot(3) = OT_ineq;
     }
 
     phi(0) = scaleX_ * (x(0) - center_(0));
@@ -206,8 +206,8 @@ struct Distance3DDecompXZ : public ConstrainedProblem
     phi(2) = x(0);
     J(2, 0) = 1.0;
 
-    phi(3) = x(1) - 1.0;
-    J(3, 1) = 1.0;
+//    phi(3) = x(1) - 1.0;
+//    J(3, 1) = 1.0;
   }
 
   arr center_;

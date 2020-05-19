@@ -27,6 +27,7 @@ target_link_libraries(
  Kin
  Gui
  Optim
+ Optimization
  KOMO
  POMTP_interfaces
  pthread

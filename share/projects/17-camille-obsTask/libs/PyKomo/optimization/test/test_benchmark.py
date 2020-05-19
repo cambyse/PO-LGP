@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
 from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem
-from decentralized_aula import DecentralizedAugmentedLagrangianSolver
+from decentralized_aula import DecentralizedAugmentedLagrangianSolver, DecentralizedAugmentedLagrangianSolverN
 from augmented_lagrangian_solver import AugmentedLagrangianSolver
 from admm_solver import ADMMSolver
 from functions import *
@@ -23,7 +23,8 @@ def test_dist_3d_planar_constraint():
     pbs = {
         AugmentedLagrangianSolver: pb,
         ADMMSolver: admm_pb,
-        DecentralizedAugmentedLagrangianSolver: admm_pb
+        DecentralizedAugmentedLagrangianSolver: admm_pb,
+        DecentralizedAugmentedLagrangianSolverN: admm_pb,
     }
 
     for solver_class, pb in pbs.items():
@@ -35,7 +36,7 @@ def test_dist_3d_planar_constraint():
 
         npt.assert_almost_equal(x, np.array([0.0, 1.0, 1.0]), decimal=1)
 
-        p.report()
+        p.report(plot=True)
 
 def test_dist_5d_planar_constraint():
     x0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0])

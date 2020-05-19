@@ -4,6 +4,77 @@ from optimization_problems import ConstrainedProblem
 from admm_solver import ADMMLagrangian0, ADMMLagrangian1
 from augmented_lagrangian_solver import Lagrangian
 
+class DecentralizedAugmentedLagrangianSolverN:
+    def __init__(self, pb):
+        self.pb = pb
+        # common
+        self.eps = 0.001 #max constraint violation
+        self.mu = 1.0  # square penalty weight
+        self.muInc = 1.0  # how much we increase the square penalty at each cycle
+        # admm
+        self.y0 = 0.0      # lagrange term
+        self.y1 = 0.0
+        # aula
+        self.lambda_h = 0.0
+        self.lambda_g = 0.0
+
+    def Z(self, x0, x1):
+        return 0.5 * (x0 + x1 + self.mu* self.y0 + self.mu* self.y1)
+
+    def run(self, x, observer=None):
+        self.y = np.zeros(x.shape)
+
+        if observer:
+            observer.on_aula_start(x)
+
+        i = 0
+        x0 = x
+        x1 = x
+        self.y0 = np.zeros(x0.shape[0])
+        self.y1 = np.zeros(x1.shape[0])
+        z = self.Z(x0, x1)
+        while True:
+            unconstrained_0 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb0, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y0, mu=self.mu)
+            assert unconstrained_0.checkGradients(x0)
+            #assert unconstrained_0.checkHessian(x0) # not possible to check for hessian, since the gauss newton approx, leads to, in general, approximated hessian
+            assert unconstrained_0.checkGradients(x1)
+            #assert unconstrained_0.checkHessian(x1)
+            x0 = Newton(unconstrained_0).run(x0, observer=observer)
+
+            unconstrained_1 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb1, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y1, mu=self.mu)
+            assert unconstrained_1.checkGradients(x0)
+            #assert unconstrained_1.checkHessian(x0)
+            assert unconstrained_1.checkGradients(x1)
+            #assert unconstrained_1.checkHessian(x1)
+            x1 = Newton(unconstrained_1).run(x1, observer=observer)
+
+            # admm update
+            z = self.Z(x0, x1)
+            self.y0 += self.mu * (x0 - z)
+            self.y1 += self.mu * (x1 - z)
+            delta = (x1 - z)
+
+            # aula update
+            h = self.pb.pb1.h.value(x1) if self.pb.pb1.h else 0
+            g = self.pb.pb1.g.value(x1) if self.pb.pb1.g else 0
+
+            self.lambda_h = self.lambda_h + 2 * self.mu * h
+            self.lambda_g = self.lambda_g + 2 * self.mu * g
+
+            self.mu *= self.muInc
+
+            print("IT={}, admm delta={}, h={}, lambda_h={}, g={}, lambda_g={}".format(i, delta, h, self.lambda_h, g, self.lambda_g))
+
+            if np.abs(delta).max() < self.eps and np.abs(h) < self.eps and g < self.eps:
+                break
+
+            i+=1
+
+        if observer:
+            observer.on_aula_end(x1)
+
+        return x1
+
 class DecentralizedAugmentedLagrangianSolver:
     def __init__(self, pb):
         self.pb = pb
@@ -58,10 +129,6 @@ class DecentralizedAugmentedLagrangianSolver:
 
             if np.abs(delta).max() < self.eps and np.abs(h) < self.eps and g < self.eps:
                 break
-
-            if i > 50:
-                i = 0
-                print("weird")
 
             i+=1
 

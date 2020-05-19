@@ -23,10 +23,10 @@ struct DecLagrangianProblem : ScalarFunction {
 
   DecLagrangianProblem(LagrangianProblem&L, const arr & z, OptOptions opt=NOOPT)
     : L(L)
-    , mu(1.0)
+    , mu(1.0) // first step done with 0 (to avoid fitting to a unset reference)
     , lambda(zeros(z.d0))
     , z(z)
-    , admmMuInc(1.1)
+    , admmMuInc(1.0) //opt.aulaMuInc)
     , Hb(eye(z.d0, z.d0))
   {
     ScalarFunction::operator=([this](arr& dL, arr& HL, const arr& x) -> double {
@@ -46,15 +46,30 @@ struct DecLagrangianProblem : ScalarFunction {
     dL += lambda + mu * delta;
 
     // hessian
-    HL += mu * Hb;
+    if(isSparseMatrix(HL))
+    {
+      auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
+      for(auto i = 0; i < x.d0; ++i)
+      {
+        Hs->elem(i, i) += mu;
+      }
+    }
+    else
+      HL += mu * Hb;
+
 
     return l;
   }
 
   void updateADMM(const arr& x, const arr& z)
   {
-    lambda += mu * (x - z);
-    mu *= admmMuInc;
+    if(mu==0.0)
+      mu = 1.0;
+    else
+    {
+      lambda += mu * (x - z);
+      mu *= admmMuInc;
+    }
   }
 };
 
@@ -72,7 +87,7 @@ struct DecOptConstrained
   uint its=0;
   ostream *logFile=NULL;
 
-  DecOptConstrained(arr&x, arr & dual, std::vector<ConstrainedProblem*> & Ps, int verbose=-1, OptOptions opt=NOOPT, ostream* _logFile=0)
+  DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, int verbose=-1, OptOptions opt=NOOPT, ostream* _logFile=0)
     : x(x)
     , z(x.copy())
     , opt(opt)
@@ -84,7 +99,7 @@ struct DecOptConstrained
     newtons.reserve(Ps.size());
     xs.reserve(Ps.size());
 
-    opt.nonStrictSteps = -1; // clarifiy why it is needed (drop wolfe conditions)
+    //this->opt.aulaMuInc = 1.0;
 
     for(auto & P: Ps)
     {
@@ -109,7 +124,10 @@ struct DecOptConstrained
     {
       auto& x = xs[i];
       auto& lambda = DLs[i]->lambda;
-      z += x + lambda / DLs[i]->mu;
+
+      z += x;
+      if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
+        z += lambda / DLs[i]->mu;
     }
 
     z *= 1.0 / xs.size();
@@ -142,13 +160,23 @@ struct DecOptConstrained
 
     // stop criterion
     updateZ();
-    double e = std::fabs(max(xs.back() - z));
-    stop = stop && e < 0.01;
 
     // update
+    double e = 0;
     for(auto i = 0; i < DLs.size(); ++i)
     {
+      OptNewton& newton = *newtons[i];
       DLs[i]->updateADMM(xs[i], z);
+      // update newton cache / state (necessary because we updated the underlying problem!)
+      newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
+      e = std::max(e, std::fabs(max(xs[i] - z)));
+    }
+
+    stop = stop && e < 0.01;
+
+    if(opt.verbose>0) {
+      cout <<"** DecOptConstr. ADMM \t|x-z|=" << e;
+      cout <<endl;
     }
 
     its++;
@@ -156,7 +184,7 @@ struct DecOptConstrained
     return stop;
   }
 
-  bool step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual)
+  bool step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual) const
   {
     auto& L = DL.L;
 
@@ -188,7 +216,7 @@ struct DecOptConstrained
 
     if(opt.verbose>0) {
       cout <<"** DecOptConstr. it=" <<its
-           <<' ' <<newton.evals
+           <<" evals=" <<newton.evals
            <<" f(x)=" <<L.get_costs()
            <<" \tg_compl=" <<L.get_sumOfGviolations()
            <<" \th_compl=" <<L.get_sumOfHviolations()

@@ -32,8 +32,6 @@ class Plotter3D:
         self.aula_start_y = []
         self.aula_start_z = []
 
-        self.last_x = None
-
         self.n_evals = 0
 
     def on_aula_end(self, x):
@@ -66,8 +64,6 @@ class Plotter3D:
         self.x.append(x[0])
         self.y.append(x[1])
         self.z.append(x[2])
-
-        self.last_x = x
 
     def report(self, plot=False):
         print("{} - number of evaluations:{}".format(self.title, self.n_evals))

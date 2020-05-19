@@ -37,18 +37,18 @@ struct ADMM_MotionProblem_GraphProblem : KOMO::Conv_MotionProblem_GraphProblem
   intA mask;
 };
 
-struct KomoADMM
-{
-  KomoADMM(KOMO_ext * komo)
-    : komo_(komo)
-    , admm_graph_problem(*komo)
-  {
+//struct KomoADMM
+//{
+//  KomoADMM(KOMO_ext * komo)
+//    : komo_(komo)
+//    , admm_graph_problem(*komo)
+//  {
 
-  }
+//  }
 
-  void run(const intA mask, const arr& x_ref, const arr& y, double rho);
+//  void run(const intA mask, const arr& x_ref, const arr& y, double rho);
 
-  KOMO_ext * komo_;
-  ADMM_MotionProblem_GraphProblem admm_graph_problem;
-};
+//  KOMO_ext * komo_;
+//  //ADMM_MotionProblem_GraphProblem admm_graph_problem;
+//};
 }

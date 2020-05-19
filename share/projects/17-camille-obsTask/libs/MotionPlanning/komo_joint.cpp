@@ -248,30 +248,34 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
 }
 
 
-void KomoADMM::run(const intA vars, const arr& x_ref, const arr& y, double rho)
-{
-  KinematicWorld::setJointStateCount=0;
-  double timeZero = timerStart();
-  CHECK(komo_->T,"");
-  if(komo_->logFile) (*komo_->logFile) <<"KOMO_run_log: [" <<std::endl;
+//void KomoADMM::run(const intA masks, const arr& x_ref, const arr& y, double rho)
+//{
+////  KinematicWorld::setJointStateCount=0;
+////  double timeZero = timerStart();
+////  CHECK(komo_->T,"");
+////  if(komo_->logFile) (*komo_->logFile) <<"KOMO_run_log: [" <<std::endl;
 
-  // optim
-  admm_graph_problem.setSubProblem(vars);
-  Conv_Graph_ConstrainedProblem C(admm_graph_problem, komo_->logFile);
-  OptConstrained _opt(komo_->x, komo_->dual, C);//, rai::MAX(komo_->verbose-2, 0), NOOPT, &std::cout);//komo_->logFile);
-  _opt.run();
-//  OptConstrained _opt2(komo_->x, komo_->dual, C);//, rai::MAX(komo_->verbose-2, 0), NOOPT, &std::cout);//komo_->logFile);
-//  _opt2.run();
+////  // optim
+////  for(const auto & mask: masks)
+////  {
+////    ADMM_MotionProblem_GraphProblem admm_graph_problem.setSubProblem(vars);
+////    Conv_Graph_ConstrainedProblem C(admm_graph_problem, komo_->logFile);
+////  }
 
-  // time bookeeping
-  double optimizationTime = timerRead(true, timeZero);
-  komo_->timeNewton += _opt.newton.timeNewton;
-  komo_->runTime += optimizationTime;
-  if(komo_->verbose>0) {
-    std::cout <<"** optimization time=" << optimizationTime
-         <<" (cumulated, total:" << komo_->runTime <<  " kin:" <<komo_->timeKinematics <<" coll:" <<komo_->timeCollisions <<" feat:" <<komo_->timeFeatures <<" newton: " <<komo_->timeNewton <<")"
-         <<" setJointStateCount=" <<KinematicWorld::setJointStateCount <<endl;
-  }
-  //if(komo_->verbose>0) std::cout <<komo_->getReport(komo_->verbose>1) <<endl;
-}
+////  DecOptConstrained _opt(komo_->x, komo_->dual, C);//, rai::MAX(komo_->verbose-2, 0), NOOPT, &std::cout);//komo_->logFile);
+////  _opt.run();
+//////  OptConstrained _opt2(komo_->x, komo_->dual, C);//, rai::MAX(komo_->verbose-2, 0), NOOPT, &std::cout);//komo_->logFile);
+//////  _opt2.run();
+
+////  // time bookeeping
+////  double optimizationTime = timerRead(true, timeZero);
+////  komo_->timeNewton += _opt.newton.timeNewton;
+////  komo_->runTime += optimizationTime;
+////  if(komo_->verbose>0) {
+////    std::cout <<"** optimization time=" << optimizationTime
+////         <<" (cumulated, total:" << komo_->runTime <<  " kin:" <<komo_->timeKinematics <<" coll:" <<komo_->timeCollisions <<" feat:" <<komo_->timeFeatures <<" newton: " <<komo_->timeNewton <<")"
+////         <<" setJointStateCount=" <<KinematicWorld::setJointStateCount <<endl;
+////  }
+//  //if(komo_->verbose>0) std::cout <<komo_->getReport(komo_->verbose>1) <<endl;
+//}
 }

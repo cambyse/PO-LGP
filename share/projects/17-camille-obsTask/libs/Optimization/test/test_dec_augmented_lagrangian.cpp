@@ -2,18 +2,17 @@
 #include <gtest/gtest.h>
 #include "functions.cpp"
 
-constexpr double eps = 0.0001;
-constexpr double eps_s = 0.01;
+constexpr double eps_s = 0.02;
 
 TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  Distance3DDecompXY pb0(arr{1.0, 1.0, 1.0});
-  Distance3DDecompXZ pb1(arr{1.0, 1.0, 1.0});
-  std::vector<ConstrainedProblem*> pbs;
-  pbs.push_back(&pb0);
-  pbs.push_back(&pb1);
+  auto pb0 = std::make_shared<Distance3DDecompXY>(arr{1.0, 1.0, 1.0});
+  auto pb1 = std::make_shared<Distance3DDecompXZ>(arr{1.0, 1.0, 1.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
 
   DecOptConstrained opt(x, dual, pbs);
   opt.run();
@@ -27,9 +26,9 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  Distance3DDecompXY pb(arr{1.0, 1.0, 1.0});
-  std::vector<ConstrainedProblem*> pbs;
-  pbs.push_back(&pb);
+  auto pb = std::make_shared<Distance3DDecompXY>(arr{1.0, 1.0, 1.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb);
 
   DecOptConstrained opt(x, dual, pbs);
   opt.run();
