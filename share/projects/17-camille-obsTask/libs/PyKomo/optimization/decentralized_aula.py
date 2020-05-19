@@ -14,12 +14,16 @@ class DecentralizedAugmentedLagrangianSolverN:
         # admm
         self.y0 = 0.0      # lagrange term
         self.y1 = 0.0
+        self.muADMM = 0.0
         # aula
         self.lambda_h = 0.0
         self.lambda_g = 0.0
 
     def Z(self, x0, x1):
-        return 0.5 * (x0 + x1 + self.mu* self.y0 + self.mu* self.y1)
+        z = 0.5 * (x0 + x1)
+        if self.muADMM != 0:
+            z += 0.5 * (self.y0 + self.y1) / self.muADMM
+        return z
 
     def run(self, x, observer=None):
         self.y = np.zeros(x.shape)
@@ -34,14 +38,14 @@ class DecentralizedAugmentedLagrangianSolverN:
         self.y1 = np.zeros(x1.shape[0])
         z = self.Z(x0, x1)
         while True:
-            unconstrained_0 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb0, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y0, mu=self.mu)
+            unconstrained_0 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb0, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y0, mu=self.muADMM)
             assert unconstrained_0.checkGradients(x0)
             #assert unconstrained_0.checkHessian(x0) # not possible to check for hessian, since the gauss newton approx, leads to, in general, approximated hessian
             assert unconstrained_0.checkGradients(x1)
             #assert unconstrained_0.checkHessian(x1)
             x0 = Newton(unconstrained_0).run(x0, observer=observer)
 
-            unconstrained_1 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb1, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y1, mu=self.mu)
+            unconstrained_1 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb1, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y1, mu=self.muADMM)
             assert unconstrained_1.checkGradients(x0)
             #assert unconstrained_1.checkHessian(x0)
             assert unconstrained_1.checkGradients(x1)
@@ -50,9 +54,11 @@ class DecentralizedAugmentedLagrangianSolverN:
 
             # admm update
             z = self.Z(x0, x1)
-            self.y0 += self.mu * (x0 - z)
-            self.y1 += self.mu * (x1 - z)
+            self.y0 += self.muADMM * (x0 - z)
+            self.y1 += self.muADMM * (x1 - z)
             delta = (x1 - z)
+            if self.muADMM == 0.0:
+                self.muADMM = 1.0
 
             # aula update
             h = self.pb.pb1.h.value(x1) if self.pb.pb1.h else 0

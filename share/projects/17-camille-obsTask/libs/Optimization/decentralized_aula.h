@@ -16,17 +16,15 @@ struct DecLagrangianProblem : ScalarFunction {
   arr lambda;        ///< ADMM lagrange multiplier
   arr z;             ///< external ADMM reference
 
-  const double admmMuInc;
   const arr Hb;            ///< constant hessian of barrier
 
   ostream *logFile=NULL;  ///< file for logging
 
   DecLagrangianProblem(LagrangianProblem&L, const arr & z, OptOptions opt=NOOPT)
     : L(L)
-    , mu(1.0) // first step done with 0 (to avoid fitting to a unset reference)
+    , mu(0.0) // first step done with 0 (to avoid fitting to a unset reference)
     , lambda(zeros(z.d0))
     , z(z)
-    , admmMuInc(1.0) //opt.aulaMuInc)
     , Hb(eye(z.d0, z.d0))
   {
     ScalarFunction::operator=([this](arr& dL, arr& HL, const arr& x) -> double {
@@ -63,13 +61,8 @@ struct DecLagrangianProblem : ScalarFunction {
 
   void updateADMM(const arr& x, const arr& z)
   {
-    if(mu==0.0)
-      mu = 1.0;
-    else
-    {
       lambda += mu * (x - z);
-      mu *= admmMuInc;
-    }
+      if(mu==0.0) mu=1.0;
   }
 };
 
@@ -99,7 +92,8 @@ struct DecOptConstrained
     newtons.reserve(Ps.size());
     xs.reserve(Ps.size());
 
-    //this->opt.aulaMuInc = 1.0;
+    // maybe preferable to have the same pace for ADMM and AULA terms
+    this->opt.aulaMuInc = 1.0;
 
     for(auto & P: Ps)
     {
@@ -175,7 +169,8 @@ struct DecOptConstrained
     stop = stop && e < 0.01;
 
     if(opt.verbose>0) {
-      cout <<"** DecOptConstr. ADMM \t|x-z|=" << e;
+      cout <<"** DecOptConstr. ADMM ";
+      cout <<"\t |x-z|=" << e << '\t' << "z=" << z;
       cout <<endl;
     }
 
