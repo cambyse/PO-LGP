@@ -1098,7 +1098,7 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
   // reset each komo
   for(auto & komo: komos)
   {
-    W(komo.get()).reset(allVars);
+    W(komo.get()).reset(allVars, 0);
   }
 
   // SEQUENTIAL ADMM

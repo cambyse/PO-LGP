@@ -5,14 +5,14 @@
 constexpr double eps_s = 0.02;
 
 TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
-  arr x{0.0, 0.0, 0.0, 0.0};
+  arr x{0.0, 0.0, 0.0};
   arr dual;
 
-  const arr center0{1.0, 1.5, 1.0, 1.0};
-  const arr center1{1.0, 0.5, 1.0, 1.0};
+  const arr center0{1.0, 1.5, 1.0};
+  const arr center1{1.0, 0.5, 1.0};
 
-  auto pb0 = std::make_shared<Distance4D>(center0, arr{sqrt(1.0/2.0), 0.3, 0.0, 1.0});
-  auto pb1 = std::make_shared<Distance4D>(center1, arr{sqrt(1.0/2.0), 0.3, 1.0, 0.0});
+  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.5, 1.0});
+  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 0.5, 1.0});
 
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb0);
@@ -22,9 +22,8 @@ TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_TRUE(x(1) > 1.0);
   EXPECT_NEAR(1.0, x(2), eps_s);
-  EXPECT_NEAR(1.0, x(3), eps_s);
 }
 
 

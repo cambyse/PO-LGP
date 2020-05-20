@@ -61,6 +61,7 @@ struct DecLagrangianProblem : ScalarFunction {
 
   void updateADMM(const arr& x, const arr& z)
   {
+      this->z = z;
       lambda += mu * (x - z);
       if(mu==0.0) mu=1.0;
   }
@@ -80,10 +81,10 @@ struct DecOptConstrained
   uint its=0;
   ostream *logFile=NULL;
 
-  DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, int verbose=-1, OptOptions opt=NOOPT, ostream* _logFile=0)
+  DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0)
     : x(x)
     , z(x.copy())
-    , opt(opt)
+    , opt(_opt)
     , stopTol(0.01)
     , logFile(_logFile)
   {
@@ -93,7 +94,12 @@ struct DecOptConstrained
     xs.reserve(Ps.size());
 
     // maybe preferable to have the same pace for ADMM and AULA terms
-    this->opt.aulaMuInc = 1.0;
+    opt.aulaMuInc = 1.0;
+
+    /// TO BE EQUIVALENT TO PYTHON
+    //opt.damping = 0.1;
+    //opt.maxStep = 10.0;
+    ///
 
     for(auto & P: Ps)
     {
@@ -139,8 +145,8 @@ struct DecOptConstrained
       // spawn // threads
       DL.z = z;
       futures.push_back(std::async(std::launch::async,
-      [&]{
-        return step(DL, newton, dual);
+      [&, i]{
+        return step(DL, newton, dual, i);
       }
       ));
     }
@@ -169,9 +175,10 @@ struct DecOptConstrained
     stop = stop && e < 0.01;
 
     if(opt.verbose>0) {
-      cout <<"** DecOptConstr. ADMM ";
-      cout <<"\t |x-z|=" << e << '\t' << "z=" << z;
-      cout <<endl;
+      cout <<"** DecOptConstr.[x] ADMM UPDATE";
+      cout <<"\t |x-z|=" << e;
+      if(z.d0 < 10) cout << '\t' << "z=" << z;
+      cout <<endl<<endl;
     }
 
     its++;
@@ -179,12 +186,12 @@ struct DecOptConstrained
     return stop;
   }
 
-  bool step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual) const
+  bool step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual, uint i) const
   {
     auto& L = DL.L;
 
     if(opt.verbose>0) {
-      cout <<"** DecOptConstr. it=" <<its
+      cout <<"** DecOptConstr.[" << i << "] it=" <<its
            <<" mu=" <<L.mu <<" nu=" <<L.nu <<" muLB=" <<L.muLB;
       if(newton.x.N<5) cout <<" \tlambda=" <<L.lambda;
       cout <<endl;
@@ -195,7 +202,7 @@ struct DecOptConstrained
     //check for no constraints
     bool newtonOnce=false;
     if(L.get_dimOfType(OT_ineq)==0 && L.get_dimOfType(OT_eq)==0) {
-      if(opt.verbose>0) cout <<"** optConstr. NO CONSTRAINTS -> run Newton once and stop" <<endl;
+      if(opt.verbose>0) cout <<"** [" << i << "] optConstr. NO CONSTRAINTS -> run Newton once and stop" <<endl;
       newtonOnce=true;
     }
 
@@ -210,7 +217,7 @@ struct DecOptConstrained
     }
 
     if(opt.verbose>0) {
-      cout <<"** DecOptConstr. it=" <<its
+      cout <<"** DecOptConstr.[" << i << "] it=" <<its
            <<" evals=" <<newton.evals
            <<" f(x)=" <<L.get_costs()
            <<" \tg_compl=" <<L.get_sumOfGviolations()
@@ -222,7 +229,7 @@ struct DecOptConstrained
 
     //check for squaredPenaltyFixed method
     if(opt.constrainedMethod==squaredPenaltyFixed) {
-      if(opt.verbose>0) cout <<"** optConstr. squaredPenaltyFixed stops after one outer iteration" <<endl;
+      if(opt.verbose>0) cout <<"** optConstr.[" << i << "] squaredPenaltyFixed stops after one outer iteration" <<endl;
       return true;
     }
 
@@ -233,26 +240,31 @@ struct DecOptConstrained
 
     //stopping criterons
     if(its>=2 && absMax(x_old-newton.x) < opt.stopTolerance) {
-      if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+      if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
       if(opt.stopGTolerance<0.
          || L.get_sumOfGviolations() + L.get_sumOfHviolations() < opt.stopGTolerance)
         return true;
     }
 
     if(newton.evals>=opt.stopEvals) {
-      if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion MAX EVALS" <<endl;
+      if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion MAX EVALS" <<endl;
       return true;
     }
     if(newton.its>=opt.stopIters) {
-      if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion MAX ITERS" <<endl;
+      if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion MAX ITERS" <<endl;
       return true;
     }
     if(its>=opt.stopOuters) {
-      if(opt.verbose>0) cout <<"** optConstr. StoppingCriterion MAX OUTERS" <<endl;
+      if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion MAX OUTERS" <<endl;
       return true;
     }
 
     double L_x_before = newton.fx;
+
+    if(opt.verbose>0) {
+      cout <<"** DecOptConstr.[" << i << "] AULA UPDATE";
+      cout <<endl;
+    }
 
     //upate Lagrange parameters
     switch(opt.constrainedMethod) {

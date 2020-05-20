@@ -93,6 +93,11 @@ class Newton: # sum of square problems
 
             d = np.linalg.solve(A, B)
 
+            # print("x:\n{}".format(x))
+            # print("A:\n{}".format(A))
+            # print("g:\n{}".format(-B))
+            # print("Delta:\n{}".format(d))
+
             v = self.function.value(x)
             w = self.function.value(x + _alpha * d)   # line search
             while w > v + self.rho * np.matmul(np.transpose(B), _alpha * d):
