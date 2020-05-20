@@ -16,8 +16,8 @@ def test_dist_3d_planar_constraint():
 
     pb = ConstrainedProblem(f=SquareDistance3D(1, 1, 1), h=ProjX())
 
-    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
-    pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=ProjX())
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, np.sqrt(0.5), 1, 0.0), h=ProjX())
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, np.sqrt(0.5), 0, 1.0), h=ProjX())
     admm_pb = ADMMProblem(pb0=pb0, pb1=pb1)
     admm_pb_n = ADMMProblemN([pb0, pb1])
 

@@ -131,34 +131,6 @@ class SquareDistance3D(SquareCostFunction):
     def gradientPhi(self, x):
         return np.asarray([[self.sx, 0.0, 0.0], [0.0, self.sy, 0.0], [0.0, 0.0, self.sz]])
 
-class SquareDistance3DDecomp0(SquareCostFunction):
-    def __init__(self, cx, cy):
-        self.cx = cx
-        self.cy = cy
-        self.x_factor = np.sqrt(0.5)
-
-    def phi(self, x):
-        dx = x[0] - self.cx
-        dy = x[1] - self.cy
-        return np.asarray([self.x_factor * dx, dy, 0])
-
-    def gradientPhi(self, x):
-        return np.asarray([[self.x_factor, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]])
-
-class SquareDistance3DDecomp1(SquareCostFunction):
-    def __init__(self, cx, cz):
-        self.cx = cx
-        self.cz = cz
-        self.x_factor = np.sqrt(0.5)
-
-    def phi(self, x):
-        dx = x[0] - self.cx
-        dz = x[2] - self.cz
-        return np.asarray([self.x_factor * dx, 0, dz])
-
-    def gradientPhi(self, x):
-        return np.asarray([[self.x_factor, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
-
 class SphereConstraint3D(SquareCostFunction):
     def __init__(self, cx, cy, cz, radius):
         self.sqdist = SquareDistance3D(cx, cy, cz)

@@ -1,10 +1,12 @@
 import numpy as np
 
 class ConstrainedProblem:
-    def __init__(self, f, h=None, g=None):
+    def __init__(self, f, h=None, g=None, m=None):
         self.f = f
         self.h = h
         self.g = g
+        self.m = m # mask, tells wether problem contributes to a given index i of x
+
 
 class UnconstrainedQP:
     def __init__(self, Q, c):

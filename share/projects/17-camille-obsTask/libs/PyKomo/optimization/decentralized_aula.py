@@ -18,11 +18,14 @@ class DecentralizedAugmentedLagrangianSolverN:
 
     def Z(self, ys, xs):
         z = np.zeros(xs[0].shape[0])
-        for x, y in zip(xs, ys):
-            z += x
+        masks = np.zeros(xs[0].shape[0]) # how much we didvide by (averaging)
+        for pb, x, y in zip(self.pb.pbs, xs, ys):
+            mask = pb.m if pb.m is not None else np.ones(x.shape[0])
+            z += np.multiply(x, mask)
             if self.muADMM != 0:
-                z += y / self.muADMM
-        z *= 1.0 / len(xs)
+                z += np.multiply(y / self.muADMM, mask)
+            masks += mask
+        z *= 1.0 / masks
         return z
 
     def ADMMupdate(self, ys, xs, z):

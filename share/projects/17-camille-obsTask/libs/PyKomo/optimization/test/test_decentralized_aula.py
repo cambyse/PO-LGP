@@ -15,8 +15,8 @@ def test_unconstrained_dec_aula_3d():
     p = Plotter3D("decentralized aula (unconstrained)")
     p.add_point(x0)
 
-    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1))
-    pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1))
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=1, sz=0.0))
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=0, sz=1.0))
     pb = ADMMProblem(pb0=pb0, pb1=pb1)
     solver = DecentralizedAugmentedLagrangianSolver(pb)
     x = solver.run(x0, observer=p)
@@ -32,8 +32,8 @@ def test_constrained_dec_aula_3d():
     p = Plotter3D("decentralized aula_(h:x=0)")
     p.add_point(x0)
 
-    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
-    pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=ProjX())
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=1, sz=0.0), h=ProjX())
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=0, sz=1.0), h=ProjX())
     pb = ADMMProblem(pb0=pb0, pb1=pb1)
     solver = DecentralizedAugmentedLagrangianSolver(pb)
     x = solver.run(x0, observer=p)
@@ -48,8 +48,8 @@ def test_constrained_dec_aula_3d_n():
     p = Plotter3D("decentralized aula_(h:x=0)")
     p.add_point(x0)
 
-    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
-    pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=ProjX())
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=1, sz=0.0), h=ProjX())
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=0, sz=1.0), h=ProjX())
     pb = ADMMProblemN(pbs=[pb0, pb1])
     solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
@@ -100,12 +100,26 @@ def test_constrained_dec_aula_3d_sphere():
     p.add_point(x0)
 
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
-    pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=h)
-    pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=h)
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=1, sz=0.0), h=h)
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=0, sz=1.0), h=h)
     pb = ADMMProblemN(pbs=[pb0, pb1])
     solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
 
     nt.assert_almost_equals(h.value(x), 0, delta=0.001)
+
+    p.report(plot=True)
+
+def test_constrained_dec_aula_3d_use_of_support():
+    x0 = np.array([0.0, 0.0, 0.0])
+
+    p = Plotter3D("decentralized aula use support(h:x=0)")
+    p.add_point(x0)
+
+    pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=1, sz=0.0), h=ProjX(), m=np.array([1.0, 1.0, 0.0]))
+    pb1 = ConstrainedProblem(f=SquareDistance3D(1, 1, 1, sx=np.sqrt(0.5), sy=0, sz=1.0), h=ProjX(), m=np.array([1.0, 0.0, 1.0]))
+    pb = ADMMProblemN(pbs=[pb0, pb1])
+    solver = DecentralizedAugmentedLagrangianSolverN(pb)
+    x = solver.run(x0, observer=p)
 
     p.report(plot=True)
