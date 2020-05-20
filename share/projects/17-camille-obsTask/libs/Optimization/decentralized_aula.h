@@ -7,7 +7,6 @@
 #include <future>
 #include <thread>
 
-
 struct DecLagrangianProblem : ScalarFunction {
   LagrangianProblem& L;
 
@@ -72,6 +71,7 @@ struct DecOptConstrained
   std::vector<std::unique_ptr<LagrangianProblem>> Ls;
   std::vector<std::unique_ptr<OptNewton>> newtons;
   std::vector<std::unique_ptr<DecLagrangianProblem>> DLs;
+  std::vector<arr> masks;
   arr&x; ///< last opt result
   arr z;
   std::vector<arr> xs;
@@ -81,7 +81,7 @@ struct DecOptConstrained
   uint its=0;
   ostream *logFile=NULL;
 
-  DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0)
+  DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & _masks = {}, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0)
     : x(x)
     , z(x.copy())
     , opt(_opt)
@@ -92,6 +92,7 @@ struct DecOptConstrained
     duals.reserve(Ps.size());
     newtons.reserve(Ps.size());
     xs.reserve(Ps.size());
+    masks.reserve(Ps.size());
 
     // maybe preferable to have the same pace for ADMM and AULA terms
     opt.aulaMuInc = 1.0;
@@ -101,8 +102,10 @@ struct DecOptConstrained
     //opt.maxStep = 10.0;
     ///
 
-    for(auto & P: Ps)
+    for(auto i = 0; i < Ps.size(); ++i)
     {
+      auto& P = Ps[i];
+
       xs.push_back(z.copy());
       duals.push_back(dual);
 
@@ -114,23 +117,36 @@ struct DecOptConstrained
       DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, opt)));
       DecLagrangianProblem& DL = *DLs.back();
       newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, opt, 0)));
+
+      masks.push_back( (i < _masks.size() && _masks[i].d0 == x.d0 ? _masks[i] : ones(x.d0) ) );
     }
   }
 
   void updateZ()
   {
     z = zeros(xs.front().d0);
+    arr contribs = zeros(xs.front().d0);
     for(auto i = 0; i < xs.size(); ++i)
     {
-      auto& x = xs[i];
-      auto& lambda = DLs[i]->lambda;
+      const auto& x = xs[i];
+      const auto& lambda = DLs[i]->lambda;
+      const auto& mask = masks[i];
 
-      z += x;
+      arr zinc = x;
       if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
-        z += lambda / DLs[i]->mu;
+        zinc += lambda / DLs[i]->mu;
+
+      // apply mask
+      for(uint i=0;i<zinc.N;i++) zinc.elem(i) *= mask.elem(i);
+
+      // add increment
+      z += zinc;
+
+      contribs += mask;
     }
 
-    z *= 1.0 / xs.size();
+    // correct for correct average
+    for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
   }
 
   bool step()

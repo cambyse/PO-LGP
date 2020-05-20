@@ -34,7 +34,7 @@ struct ADMM_MotionProblem_GraphProblem : KOMO::Conv_MotionProblem_GraphProblem
   virtual void getStructure(uintA& variableDimensions, intAA& featureVariables, ObjectiveTypeA& featureTypes) override;
   virtual void phi(arr& phi, arrA& J, arrA& H, const arr& x) override;
 
-  intA mask;
+  intA mask; // mask per step
 };
 
 //struct KomoADMM

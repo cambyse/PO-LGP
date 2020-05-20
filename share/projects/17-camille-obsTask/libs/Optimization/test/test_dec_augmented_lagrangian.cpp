@@ -4,6 +4,50 @@
 
 constexpr double eps_s = 0.02;
 
+TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUseSupport) {
+  arr x{0.0, 0.0, 0.0};
+  arr dual;
+
+  const arr center {1.0, 1.0, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center, arr{sqrt(0.5), 1.0, 0.0});
+  auto pb1 = std::make_shared<Distance3D>(center, arr{sqrt(0.5), 0.0, 1.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  std::vector<arr> masks;
+  masks.push_back(arr{1.0, 1.0, 0.0});
+  masks.push_back(arr{1.0, 0.0, 1.0});
+
+  DecOptConstrained opt(x, dual, pbs, masks);
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
+TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
+  arr x{0.0, 0.0, 0.0};
+  arr dual;
+
+  const arr center {1.0, 1.0, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center, arr{sqrt(0.5), 1.0, 0.0});
+  auto pb1 = std::make_shared<Distance3D>(center, arr{sqrt(0.5), 0.0, 1.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  DecOptConstrained opt(x, dual, pbs);
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
 TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
   arr x{0.0, 0.0, 0.0};
   arr dual;
@@ -49,26 +93,6 @@ TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
   EXPECT_NEAR(1.0, x(1), eps_s);
   EXPECT_NEAR(1.0, x(2), eps_s);
   EXPECT_NEAR(1.0, x(3), eps_s);
-}
-
-TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
-  arr x{0.0, 0.0, 0.0};
-  arr dual;
-
-  const arr center {1.0, 1.0, 1.0};
-
-  auto pb0 = std::make_shared<Distance3D>(center);
-  auto pb1 = std::make_shared<Distance3D>(center);
-  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
-  pbs.push_back(pb0);
-  pbs.push_back(pb1);
-
-  DecOptConstrained opt(x, dual, pbs);
-  opt.run();
-
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_NEAR(1.0, x(1), eps_s);
-  EXPECT_NEAR(1.0, x(2), eps_s);
 }
 
 TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
