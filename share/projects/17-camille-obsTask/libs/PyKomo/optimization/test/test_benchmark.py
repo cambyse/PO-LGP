@@ -4,7 +4,7 @@ import numpy.testing as npt
 import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
-from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem
+from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem, ADMMProblemN
 from decentralized_aula import DecentralizedAugmentedLagrangianSolver, DecentralizedAugmentedLagrangianSolverN
 from augmented_lagrangian_solver import AugmentedLagrangianSolver
 from admm_solver import ADMMSolver
@@ -19,12 +19,13 @@ def test_dist_3d_planar_constraint():
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
     pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=ProjX())
     admm_pb = ADMMProblem(pb0=pb0, pb1=pb1)
+    admm_pb_n = ADMMProblemN([pb0, pb1])
 
     pbs = {
         AugmentedLagrangianSolver: pb,
         ADMMSolver: admm_pb,
         DecentralizedAugmentedLagrangianSolver: admm_pb,
-        DecentralizedAugmentedLagrangianSolverN: admm_pb,
+        DecentralizedAugmentedLagrangianSolverN: admm_pb_n,
     }
 
     for solver_class, pb in pbs.items():

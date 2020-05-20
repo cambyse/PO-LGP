@@ -4,26 +4,56 @@ from optimization_problems import ConstrainedProblem
 from admm_solver import ADMMLagrangian0, ADMMLagrangian1
 from augmented_lagrangian_solver import Lagrangian
 
+
 class DecentralizedAugmentedLagrangianSolverN:
     def __init__(self, pb):
         self.pb = pb
         # common
         self.eps = 0.001 #max constraint violation
+        # admm
+        self.muADMM = 0.0 # penalty
+        # aula (for each of the sub problems)
         self.mu = 1.0  # square penalty weight
         self.muInc = 1.0  # how much we increase the square penalty at each cycle
-        # admm
-        self.y0 = 0.0      # lagrange term
-        self.y1 = 0.0
-        self.muADMM = 0.0
-        # aula
-        self.lambda_h = 0.0
-        self.lambda_g = 0.0
 
-    def Z(self, x0, x1):
-        z = 0.5 * (x0 + x1)
-        if self.muADMM != 0:
-            z += 0.5 * (self.y0 + self.y1) / self.muADMM
+    def Z(self, ys, xs):
+        z = np.zeros(xs[0].shape[0])
+        for x, y in zip(xs, ys):
+            z += x
+            if self.muADMM != 0:
+                z += y / self.muADMM
+        z *= 1.0 / len(xs)
         return z
+
+    def ADMMupdate(self, ys, xs, z):
+        e = 0
+        for i, x in enumerate(xs):
+            ys[i] += self.muADMM * (x - z)
+            e = max(np.abs(x - z).max(), e)
+
+        if self.muADMM == 0.0:
+            self.muADMM = 1.0
+
+        return ys, e
+
+    def AULAupdate(self, lambda_h, lambda_g, xs):
+        maxH = 0
+        maxG = 0
+
+        for i, x in enumerate(xs):
+            h = self.pb.pbs[i].h.value(x) if self.pb.pbs[i].h else 0
+            g = self.pb.pbs[i].f.value(x) if self.pb.pbs[i].g else 0
+
+            lambda_h[i] = lambda_h[i] + 2 * self.mu * h
+            lambda_g[i] = lambda_g[i] + 2 * self.mu * g
+
+            maxH = max(h, np.abs(maxH))
+            maxG = max(g, np.abs(maxG))
+
+        self.mu *= self.muInc
+
+        return lambda_h, lambda_g, maxH, maxG
+
 
     def run(self, x, observer=None):
         self.y = np.zeros(x.shape)
@@ -31,55 +61,50 @@ class DecentralizedAugmentedLagrangianSolverN:
         if observer:
             observer.on_aula_start(x)
 
-        i = 0
-        x0 = x
-        x1 = x
-        self.y0 = np.zeros(x0.shape[0])
-        self.y1 = np.zeros(x1.shape[0])
-        z = self.Z(x0, x1)
-        while True:
-            unconstrained_0 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb0, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y0, mu=self.muADMM)
-            #assert unconstrained_0.checkGradients(x0)
-            #assert unconstrained_0.checkHessian(x0) # not possible to check for hessian, since the gauss newton approx, leads to, in general, approximated hessian
-            #assert unconstrained_0.checkGradients(x1)
-            #assert unconstrained_0.checkHessian(x1)
-            x0 = Newton(unconstrained_0).run(x0, observer=observer)
+        its = 0
 
-            unconstrained_1 = ADMMLagrangian0(Lagrangian(pb=self.pb.pb1, lambda_h=self.lambda_h, lambda_g=self.lambda_g, mu=self.mu), xk=z, y=self.y1, mu=self.muADMM)
-            #assert unconstrained_1.checkGradients(x0)
-            #assert unconstrained_1.checkHessian(x0)
-            #assert unconstrained_1.checkGradients(x1)
-            #assert unconstrained_1.checkHessian(x1)
-            x1 = Newton(unconstrained_1).run(x1, observer=observer)
+        # init loop variables
+        xs = []
+        ys = [] # dual (admm lagrange terms)
+        lambda_hs = [] # dual eq (aula lagrange terms)
+        lambda_gs = [] # dual ineq
+        for _ in self.pb.pbs:
+            xs.append(x.copy())
+            ys.append(np.zeros(x.shape[0]))
+            lambda_hs.append(0.0)
+            lambda_gs.append(0.0)
+
+        z = self.Z(ys, xs)
+        while True:
+            for i, (pb, x, lambda_h, lambda_g, y) in enumerate(zip(self.pb.pbs, xs, lambda_hs, lambda_gs, ys)):
+                aula = ADMMLagrangian0(Lagrangian(pb=pb,
+                                                  lambda_h=lambda_h, lambda_g=lambda_g,
+                                                  mu=self.mu),
+                                       xk=z, y=y,
+                                       mu=self.muADMM)
+                #assert aula.checkGradients(x0)
+                #assert aula.checkHessian(x0) # not possible to check for hessian, since the gauss newton approx, leads to, in general, approximated hessian
+                xs[i] = Newton(aula).run(x, observer=observer)
+
 
             # admm update
-            z = self.Z(x0, x1)
-            self.y0 += self.muADMM * (x0 - z)
-            self.y1 += self.muADMM * (x1 - z)
-            e = max(np.abs(x0 - z).max(), np.abs(x1 - z).max())
-            if self.muADMM == 0.0:
-                self.muADMM = 1.0
+            z = self.Z(ys, xs)
+            ys, e = self.ADMMupdate(ys, xs, z)
 
             # aula update
-            h = self.pb.pb1.h.value(x1) if self.pb.pb1.h else 0
-            g = self.pb.pb1.g.value(x1) if self.pb.pb1.g else 0
+            lambda_hs, lambda_gs, h, g = self.AULAupdate(lambda_hs, lambda_gs, xs)
 
-            self.lambda_h = self.lambda_h + 2 * self.mu * h
-            self.lambda_g = self.lambda_g + 2 * self.mu * g
-
-            self.mu *= self.muInc
-
-            print("IT={}, admm |x-z|={}, h={}, lambda_h={}, g={}, lambda_g={}".format(i, e, h, self.lambda_h, g, self.lambda_g))
+            print("IT={}, admm |x-z|={}, h={}, lambda_h={}, g={}, lambda_g={}".format(its, e, h, lambda_h, g, lambda_g))
 
             if e < self.eps and np.abs(h) < self.eps and g < self.eps:
                 break
 
-            i+=1
+            its+=1
 
         if observer:
-            observer.on_aula_end(x1)
+            observer.on_aula_end(z)
 
-        return x1
+        return z
 
 class DecentralizedAugmentedLagrangianSolver:
     def __init__(self, pb):

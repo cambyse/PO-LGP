@@ -4,7 +4,7 @@ import numpy.testing as npt
 import numpy as np
 from pathlib import Path
 sys.path.append(str(Path('.').absolute().parent))
-from optimization_problems import ADMMProblem_Newton, ADMMProblem, ConstrainedProblem
+from optimization_problems import ADMMProblem_Newton, ADMMProblemN, ADMMProblem, ConstrainedProblem
 from decentralized_aula import DecentralizedAugmentedLagrangianSolver, DecentralizedAugmentedLagrangianSolverN
 from functions import *
 from observers import *
@@ -50,7 +50,7 @@ def test_constrained_dec_aula_3d_n():
 
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=ProjX())
     pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=ProjX())
-    pb = ADMMProblem(pb0=pb0, pb1=pb1)
+    pb = ADMMProblemN(pbs=[pb0, pb1])
     solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
 
@@ -66,7 +66,7 @@ def test_constrained_dec_aula_3d_n_battling_over_y():
 
     pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1.5, 1), h=ProjX())
     pb1 = ConstrainedProblem(f=SquareDistance3D(1, 0.5, 1), h=ProjX())
-    pb = ADMMProblem(pb0=pb0, pb1=pb1)
+    pb = ADMMProblemN(pbs=[pb0, pb1])
     solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
 
@@ -82,7 +82,7 @@ def test_constrained_dec_aula_3d_n_battling_over_y_scaling_in_one_dir():
 
     pb0 = ConstrainedProblem(f=SquareDistance3D(1, 1.5, 1, sy=1.5), h=ProjX())
     pb1 = ConstrainedProblem(f=SquareDistance3D(1, 0.5, 1, sy=0.5), h=ProjX())
-    pb = ADMMProblem(pb0=pb0, pb1=pb1)
+    pb = ADMMProblemN(pbs=[pb0, pb1])
     solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
 
@@ -102,8 +102,8 @@ def test_constrained_dec_aula_3d_sphere():
     h = SphereConstraint3D(cx=0, cy=0.5, cz=0.5, radius=0.5)
     pb0 = ConstrainedProblem(f=SquareDistance3DDecomp0(1, 1), h=h)
     pb1 = ConstrainedProblem(f=SquareDistance3DDecomp1(1, 1), h=h)
-    pb = ADMMProblem(pb0=pb0, pb1=pb1)
-    solver = DecentralizedAugmentedLagrangianSolver(pb)
+    pb = ADMMProblemN(pbs=[pb0, pb1])
+    solver = DecentralizedAugmentedLagrangianSolverN(pb)
     x = solver.run(x0, observer=p)
 
     nt.assert_almost_equals(h.value(x), 0, delta=0.001)

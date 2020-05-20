@@ -24,6 +24,10 @@ class ConstrainedQP: # Ax <= u
         self.A.flags.writeable = False
         self.u.flags.writeable = False
 
+class ADMMProblemN:
+    def __init__(self, pbs):
+        self.pbs = pbs
+
 class ADMMProblem:
     def __init__(self, pb0, pb1):
         self.pb0 = pb0
