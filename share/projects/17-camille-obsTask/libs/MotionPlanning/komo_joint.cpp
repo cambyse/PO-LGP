@@ -247,6 +247,37 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
   }
 }
 
+void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
+{
+  CHECK(komo.x.d0 > 0, "should reset first!");
+
+  xmask = zeros(komo.x.d0);
+
+  uint s=0;
+  std::vector<std::pair<uint, uint>> t_to_x_interval(komo.T);
+  for(uint t=0; t<komo.T; t++)// x.append(configurations(t+k_order)->getJointState());
+  {
+    uint n = komo.configurations(t+komo.k_order)->getJointStateDimension();
+    t_to_x_interval[t] = std::pair<uint, uint>(s, s+n);
+    s+=n;
+  }
+
+  for(Objective *ob:komo.objectives)
+  {
+    for(uint t=0;t<ob->vars.d0;t++)
+    {
+      auto global = ob->vars(t, -1);
+      if(mask(global))
+      {
+        const auto& xinterval = t_to_x_interval[global];
+        for(auto i = xinterval.first; i < xinterval.second; ++i)
+        {
+          xmask(i) = 1.0;
+        }
+      }
+    }
+  }
+}
 
 //void KomoADMM::run(const intA masks, const arr& x_ref, const arr& y, double rho)
 //{

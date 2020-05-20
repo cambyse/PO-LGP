@@ -14,17 +14,16 @@ struct DecLagrangianProblem : ScalarFunction {
   double mu;         ///< ADMM square penalty
   arr lambda;        ///< ADMM lagrange multiplier
   arr z;             ///< external ADMM reference
-
-  const arr Hb;            ///< constant hessian of barrier
+  const arr& xmask;  ///< where on x does this subproblem contribute
 
   ostream *logFile=NULL;  ///< file for logging
 
-  DecLagrangianProblem(LagrangianProblem&L, const arr & z, OptOptions opt=NOOPT)
+  DecLagrangianProblem(LagrangianProblem&L, const arr & z, const arr & xmask, OptOptions opt=NOOPT)
     : L(L)
     , mu(0.0) // first step done with 0 (to avoid fitting to a unset reference)
     , lambda(zeros(z.d0))
     , z(z)
-    , Hb(eye(z.d0, z.d0))
+    , xmask(xmask)
   {
     ScalarFunction::operator=([this](arr& dL, arr& HL, const arr& x) -> double {
       return this->decLagrangian(dL, HL, x);
@@ -35,6 +34,7 @@ struct DecLagrangianProblem : ScalarFunction {
     double l = L(dL, HL, x);
 
     arr delta = x - z;
+    for(uint i=0;i<delta.N;i++) delta.elem(i) *= xmask.elem(i);
 
     // value
     l += scalarProduct(lambda, delta) + 0.5 * mu * scalarProduct(delta, delta);
@@ -48,12 +48,16 @@ struct DecLagrangianProblem : ScalarFunction {
       auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
       for(auto i = 0; i < x.d0; ++i)
       {
-        Hs->elem(i, i) += mu;
+        if(xmask(i)) Hs->elem(i, i) += mu;
       }
     }
     else
-      HL += mu * Hb;
-
+    {
+      for(auto i = 0; i < x.d0; ++i)
+      {
+        if(xmask(i)) HL(i, i) += mu;
+      }
+    }
 
     return l;
   }
@@ -62,7 +66,9 @@ struct DecLagrangianProblem : ScalarFunction {
   {
       this->z = z;
       lambda += mu * (x - z);
+
       if(mu==0.0) mu=1.0;
+      //else mu *= 2.0;
   }
 };
 
@@ -95,7 +101,7 @@ struct DecOptConstrained
     masks.reserve(Ps.size());
 
     // maybe preferable to have the same pace for ADMM and AULA terms
-    opt.aulaMuInc = 1.0;
+    opt.aulaMuInc = 2.0;
 
     /// TO BE EQUIVALENT TO PYTHON
     //opt.damping = 0.1;
@@ -112,18 +118,19 @@ struct DecOptConstrained
       arr& x = xs.back();
       arr& _dual = duals.back();
 
+      masks.push_back( (i < _masks.size() && _masks[i].d0 == x.d0 ? _masks[i] : ones(x.d0) ));
+      arr& mask = masks.back();
       Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, opt, _dual)));
       LagrangianProblem& L = *Ls.back();
-      DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, opt)));
+      DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, mask, opt)));
       DecLagrangianProblem& DL = *DLs.back();
       newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, opt, 0)));
-
-      masks.push_back( (i < _masks.size() && _masks[i].d0 == x.d0 ? _masks[i] : ones(x.d0) ) );
     }
   }
 
-  void updateZ()
+  double updateZ()
   {
+    /// Z
     z = zeros(xs.front().d0);
     arr contribs = zeros(xs.front().d0);
     for(auto i = 0; i < xs.size(); ++i)
@@ -141,12 +148,35 @@ struct DecOptConstrained
 
       // add increment
       z += zinc;
-
       contribs += mask;
     }
 
     // correct for correct average
     for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
+
+    ///E
+    double e = 0;
+
+    for(auto i = 0; i < xs.size(); ++i)
+    {
+      arr es = fabs(xs[i] - z);
+      uint m = 0; double me = 0;
+      for(auto j = 0; j < es.d0; ++j)
+      {
+        if(fabs(es(j) - z(j)) > me)
+        {
+          me = fabs(es(j) - z(j));
+          m = j;
+        }
+      }
+
+      const auto& mask = masks[i];
+      for(uint i=0;i<es.N;i++) es.elem(i) *= mask.elem(i);
+
+      e = std::max(e, max(fabs(es)));
+    }
+
+    return e;
   }
 
   bool step()
@@ -175,26 +205,32 @@ struct DecOptConstrained
     }
 
     // stop criterion
-    updateZ();
+    auto z_old = z;
+    double e = updateZ();
 
     // update
-    double e = 0;
     for(auto i = 0; i < DLs.size(); ++i)
     {
       OptNewton& newton = *newtons[i];
       DLs[i]->updateADMM(xs[i], z);
       // update newton cache / state (necessary because we updated the underlying problem!)
       newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
-      e = std::max(e, std::fabs(max(xs[i] - z)));
     }
 
-    stop = stop && e < 0.01;
+    stop = stop && (e < 0.01);// || its > 5);
 
     if(opt.verbose>0) {
       cout <<"** DecOptConstr.[x] ADMM UPDATE";
       cout <<"\t |x-z|=" << e;
       if(z.d0 < 10) cout << '\t' << "z=" << z;
       cout <<endl<<endl;
+    }
+
+    if(its>=2 && absMax(z_old-z) < opt.stopTolerance) {
+      if(opt.verbose>0) cout <<"** ADMM] StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+      if(opt.stopGTolerance<0.
+         || e < opt.stopGTolerance)
+        return true;
     }
 
     its++;

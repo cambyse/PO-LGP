@@ -1107,8 +1107,10 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
 
   std::vector<std::shared_ptr<GraphProblem>> converters;
   std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
+  std::vector<arr> xmasks;
   converters.reserve(policy.leaves().size());
   constrained_problems.reserve(policy.leaves().size());
+  xmasks.reserve(policy.leaves().size());
   for(auto w = 0; w < policy.leaves().size(); ++w)
   {
     auto& komo = *komos[w];
@@ -1116,32 +1118,21 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
 
     auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(komo);
     gp->setSubProblem(mask);
+    arr xmask;
+    gp->getXMask(xmask);
 
     auto pb = std::make_shared<Conv_Graph_ConstrainedProblem>(*gp, komo.logFile);
 
     converters.emplace_back(gp);
     constrained_problems.push_back(pb);
+    xmasks.push_back(xmask);
   }
 
-  DecOptConstrained opt(x, dual, constrained_problems);
+  DecOptConstrained opt(x, dual, constrained_problems, xmasks);
   opt.run();
-//  // run komos
-//  arr y = zeros(komos.front()->x.d0); // admm multiplier
-//  const double rho = 1.0;
-//  //for(int i = 0; i < 2 ; ++i)
-//  for(auto w = 0; w < policy.leaves().size(); ++w)
-//  {
-//    auto komo = komos[w];
-//    auto mask = allMasks[w];
-//    //auto dual = komo->dual;
-//    komo->set_x(x);
-//    W(komo.get()).reset(allVars, 0); // delete dual (bof)
-//    //komo->dual = dual;
-//    X(komo.get()).run(mask, x, y, rho);
 
-//    x = komo->x;
-//  }
-
+  auto & komo = komos.front();
+  komo->set_x(x);
   watch(komos.front());
 }
 
