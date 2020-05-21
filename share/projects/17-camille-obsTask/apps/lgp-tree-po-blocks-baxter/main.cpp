@@ -98,14 +98,14 @@ void plan_graph_search()
 
     // checked, probably doesn't work with n steps = 5
     // B
-    tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-2w-one-table.g" );
     //tp.setFol( "LGP-blocks-fol-2w-one-table-no-precondition.g" );
-    mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
 
     // A
-    //tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
+    tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
     //tp.setFol( "LGP-blocks-fol-1w-one-table-no-precondition.g" );
-    //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
+    mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
 
     // 4 blocks linear
     //tp.setFol( "LGP-blocks-fol-4-blocks-1w-one-table.g" );
@@ -269,15 +269,16 @@ void komo_tree_dev()
   mp.registerTask( "stack"        , groundTreeStack );
   mp.registerTask( "unstack"      , groundTreeUnStack );
   //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
-  mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
-  //mp.setKin( "LGP-blocks-kin-one-table.g" );
+  //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+  mp.setKin( "LGP-blocks-kin-one-table.g" );
   //mp.setKin( "LGP-blocks-kin-4-blocks-24w-one-table.g" );
 
 
   // load policy
   Policy policy;
-  policy.load("policy-0-2w");
-  //policy.load("policy-0-6w");
+  //policy.load("policy-0-1w");
+  //policy.load("policy-0-2w");
+  policy.load("policy-0-6w");
   //policy.load("policy-0-24w");
 
   // plan

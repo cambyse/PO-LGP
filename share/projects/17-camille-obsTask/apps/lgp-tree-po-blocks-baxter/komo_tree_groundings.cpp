@@ -34,7 +34,6 @@ void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   const auto& object = facts[0].c_str();
 
   // approach
-  //mp::W(komo).addObjective(end - 0.3,end, branch, new TM_Default(TMT_vecAlign, komo->world, "baxterR", Vector(ARR( 1.0, 0.0, 0.0 )), nullptr, ARR( 0.0, 0.0, -1.0 )), OT_sos, ARR(1.), 1e2, 0); // pb quat normalization
   W(komo).addObjective({{it.time.to-0.3, it.time.to}, it.edge}, tb, new TM_InsideBox(komo->world, eff, NoVector, object, 0.04), OT_ineq, NoArr, 1e2, 0); // inside object at grasp moment
 
   // switch
@@ -43,8 +42,10 @@ void groundTreeUnStack(const mp::Interval& it, const mp::TreeBuilder& tb, const 
 
   // after (stay stable)
   mp::Interval future{{it.time.to, it.time.to + 2.0}, it.edge}; // fix for at least the 2 nexts
+  mp::Interval end{{it.time.to, it.time.to}, it.edge};
   W(komo).addObjective(future, tb, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
-  W(komo).addObjective(future, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
+  if(komo->k_order > 1)
+    W(komo).addObjective(end, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
 
   if(verbose > 0)
   {
@@ -70,7 +71,7 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   // after (stay stable)
   mp::Interval future{{it.time.to, -1.0}, it.edge}; // how to improve it? ground until the end sounds inefficient!
   W(komo).addObjective(future, tb, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
-  W(komo).addObjective(future, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
+  W(komo).addObjective(end, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
 
   if(verbose > 0)
   {

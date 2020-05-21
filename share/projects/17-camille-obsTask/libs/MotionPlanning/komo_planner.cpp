@@ -1,10 +1,6 @@
 #include <komo_planner.h>
 
-#include <list>
-#include <chrono>
-
 #include <kin_equality_task.h>
-
 #include <trajectory_tree_visualizer.h>
 
 #include <Kin/kin.h>
@@ -20,8 +16,13 @@
 #include <komo_joint.h>
 #include <decentralized_aula.h>
 
+#include <Core/util.h>
+
 #include <thread>
 #include <future>
+#include <list>
+#include <chrono>
+
 
 namespace mp
 {
@@ -647,6 +648,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
       komo->applyRandomization( randomVec_ );
       komo->reset();
+      komo->verbose = 3;
       try{
         komo->run();
       } catch(const char* msg){
@@ -1012,6 +1014,9 @@ void KOMOPlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
     auto q = l;
     auto p = q->parent();
 
+    //komo->setSquaredQAccelerations();
+    //komo->addObjective(0, -1.0, new TM_Transition(komo->world), OT_sos, NoArr, 1.0);
+
     while(p)
     {
       if(!visited[q->id()])
@@ -1061,6 +1066,7 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   groundPolicyActionsJoint(treeBuilder, policy, komo);
 
   // run optimization
+  komo->verbose = 3;
   W(komo.get()).reset(allVars);
   komo->run();
 
@@ -1128,8 +1134,20 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
     xmasks.push_back(xmask);
   }
 
+  // RUN
+  double timeZero = rai::timerStart();
+
   DecOptConstrained opt(x, dual, constrained_problems, xmasks);
   opt.run();
+
+  double optimizationTime = rai::timerRead(true, timeZero);
+
+  // LOGS
+  if(true) {
+    cout <<"** optimization time=" << optimizationTime
+         <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
+  }
+  //
 
   auto & komo = komos.front();
   komo->set_x(x);

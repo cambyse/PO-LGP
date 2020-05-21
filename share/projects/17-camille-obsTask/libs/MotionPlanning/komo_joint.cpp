@@ -222,10 +222,6 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
     }
   }
   // Add admm terms
-
-
-
-
   //
   komo.timeFeatures += rai::timerRead(true);
 
@@ -233,18 +229,6 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
   //  if(!!lambda) CHECK_EQ(prevLambda, lambda, ""); //this ASSERT only holds is none of the tasks is variable dim!
   komo.featureValues = phi;
   komo.featureDense = true;
-
-  if(komo.animateOptimization>0) {
-    if(komo.animateOptimization>1){
-      if(komo.animateOptimization>2)
-        cout <<komo.getReport(true) <<endl;
-      komo.displayPath(true);
-    }else{
-      komo.displayPath(false);
-    }
-    //    komo.plotPhaseTrajectory();
-    //    rai::wait();
-  }
 }
 
 void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const

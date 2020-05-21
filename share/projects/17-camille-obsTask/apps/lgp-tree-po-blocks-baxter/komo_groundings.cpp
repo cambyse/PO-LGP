@@ -73,9 +73,9 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_
   // after (stay stable)
   komo->addObjective(t_end, -1.0, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
   if(komo->k_order > 1)
-    komo->addObjective(t_end, -1.0, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
+    komo->addObjective(t_end, t_end, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
   else
-    komo->addObjective(t_end, -1.0, new TM_NoJumpFromParent(komo->world, object), OT_eq, NoArr, 1e2, 1, 0, 0);
+    komo->addObjective(t_end, t_end, new TM_NoJumpFromParent(komo->world, object), OT_eq, NoArr, 1e2, 1, 0, 0);
 
   if( verbose > 0 )
   {
@@ -105,54 +105,3 @@ void groundStack( double phase, const std::vector< std::string >& facts, KOMO_ex
 {
   groundPutDown(phase, facts, komo, verbose);
 }
-
-//const double fixEffJointsWeight = 1e3;
-
-//komo->setFixEffectiveJoints(-1., -1., fixEffJointsWeight );
-//komo->setFixSwitchedObjects();
-
-//komo->setAlign( t_end - 0.3, t_end, "baxterR", ARR( 1.0, 0.0, 0.0 ), nullptr, ARR( 0.0, 0.0, -1.0 ) );
-//komo->setGrasp( t_end, "baxterR", facts[0].c_str(), 0 );
-
-/*
-// down before pick
-//komo->setTask(t_start, t_start+.20, new TM_Default(TMT_pos, komo->world, "baxterR"), OT_sos, {0.,0.,-.1}, 1e1, 1); //move down
-
-//disconnect object from table
-//komo->setKinematicSwitch( t_end, true, "delete", facts[1].c_str(), facts[0].c_str() );
-//connect graspRef with object
-//komo->setKinematicSwitch( t_end, true, "ballZero", "baxterR", facts[0].c_str() );
-
-// lift after pick
-//komo->setTask(t_end+.10, t_end+.10, new TM_Default(TMT_pos, komo->world,"baxterR"), OT_sos, {0.,0.,+.1}, 1e1, 1); //move up
-*/
-
-//  const double radius = 0.25;
-
-  // hacky collision avoidance
-//  std::vector<std::string> blocks{"block_1", "block_2", "block_3"};
-
-//  for(const auto & fixed_block: blocks)
-//  {
-//    if(facts[0] != fixed_block)
-//    {
-//      komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), fixed_block.c_str(), radius ), OT_ineq );
-//    }
-//  }
-
-//  if( facts[0] != "block_1" )
-//    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_1", radius ), OT_ineq );
-
-//  if( facts[0] != "block_2" )
-//    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_2", radius ), OT_ineq );
-
-//  if( facts[0] != "block_3" )
-//    komo->addObjective( t_end - 0.5, t_end + 0.5, new ApproxShapeToSphere( komo->world, facts[0].c_str(), "block_3", radius ), OT_ineq );
-
-//  if( facts[0] != "block_4" )
-//    komo->setTask( t_end - 0.5, t_end, new ApproxPointToShape( komo->world, facts[0].c_str(), "block_4", radius ), OT_ineq );
-
-//  if(t_end == 7.0 )
-//    int a = 0;
-//  komo->setPlace( t_end, "baxterR", facts[0].c_str(), facts[1].c_str(), verbose );
-
