@@ -65,10 +65,13 @@ struct DecLagrangianProblem : ScalarFunction {
   void updateADMM(const arr& x, const arr& z)
   {
       this->z = z;
-      lambda += mu * (x - z);
+      lambda += mu * (x - z); // Is like doing gradient descent on the dual problem (mu is the step size, and x-z the gradient)
 
       if(mu==0.0) mu=1.0;
-      //else mu *= 2.0;
+      //else mu *= 2.0; // updating mu in a principeld way (increase, decrease) described in
+      //Distributed Optimization and Statistical
+      //Learning via the Alternating Direction
+      //Method of Multipliers (p.20)
   }
 };
 
@@ -78,6 +81,7 @@ struct DecOptConstrained
   std::vector<std::unique_ptr<OptNewton>> newtons;
   std::vector<std::unique_ptr<DecLagrangianProblem>> DLs;
   std::vector<arr> masks;
+  arr contribs; // number of contribution per portion of subproblem
   arr&x; ///< last opt result
   arr z;
   std::vector<arr> xs;
@@ -90,6 +94,7 @@ struct DecOptConstrained
   DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & _masks = {}, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0)
     : x(x)
     , z(x.copy())
+    , contribs(zeros(x.d0))
     , opt(_opt)
     , stopTol(0.01)
     , logFile(_logFile)
@@ -100,17 +105,23 @@ struct DecOptConstrained
     xs.reserve(Ps.size());
     masks.reserve(Ps.size());
 
-    // maybe preferable to have the same pace for ADMM and AULA terms
-    opt.aulaMuInc = 2.0;
+    // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to one, strange!
+    opt.aulaMuInc = 1.2;
 
     /// TO BE EQUIVALENT TO PYTHON
     //opt.damping = 0.1;
     //opt.maxStep = 10.0;
     ///
+    for(auto i = 0; i < Ps.size(); ++i)
+    {
+      masks.push_back( (i < _masks.size() && _masks[i].d0 == x.d0 ? _masks[i] : ones(x.d0) ));
+      contribs += masks.back();
+    }
 
     for(auto i = 0; i < Ps.size(); ++i)
     {
       auto& P = Ps[i];
+      auto& mask = masks[i];
 
       xs.push_back(z.copy());
       duals.push_back(dual);
@@ -118,8 +129,6 @@ struct DecOptConstrained
       arr& x = xs.back();
       arr& _dual = duals.back();
 
-      masks.push_back( (i < _masks.size() && _masks[i].d0 == x.d0 ? _masks[i] : ones(x.d0) ));
-      arr& mask = masks.back();
       Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, opt, _dual)));
       LagrangianProblem& L = *Ls.back();
       DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, mask, opt)));
@@ -132,7 +141,6 @@ struct DecOptConstrained
   {
     /// Z
     z = zeros(xs.front().d0);
-    arr contribs = zeros(xs.front().d0);
     for(auto i = 0; i < xs.size(); ++i)
     {
       const auto& x = xs[i];
@@ -148,35 +156,61 @@ struct DecOptConstrained
 
       // add increment
       z += zinc;
-      contribs += mask;
+      // sanity check // lagrange admm sum
+//      double s=0;
+//      for(auto j = 0; j < lambda.d0; ++j)
+//      {
+//        s+= lambda(j);
+//      }
+
+//      CHECK(fabs(s) < 0.001, "");
     }
 
     // correct for correct average
     for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
 
-    ///E
-    double e = 0;
+    ///Primal residual
+    double r = 0;
 
     for(auto i = 0; i < xs.size(); ++i)
     {
       arr es = fabs(xs[i] - z);
-      uint m = 0; double me = 0;
-      for(auto j = 0; j < es.d0; ++j)
-      {
-        if(fabs(es(j) - z(j)) > me)
-        {
-          me = fabs(es(j) - z(j));
-          m = j;
-        }
-      }
+
+//      uint m = 0; double me = 0;
+//      for(auto j = 0; j < es.d0; ++j)
+//      {
+//        if(fabs(es(j) - z(j)) > me)
+//        {
+//          me = fabs(es(j) - z(j));
+//          m = j;
+//        }
+//      }
 
       const auto& mask = masks[i];
       for(uint i=0;i<es.N;i++) es.elem(i) *= mask.elem(i);
 
-      e = std::max(e, max(fabs(es)));
+      r += length(es);
     }
+    r /= xs.size();
 
-    return e;
+    return r;
+  }
+
+  bool primalFeasibility(double r) const
+  {
+    const double eps = 1e-3 * sqrt(x.d0) + 1e-3 * max(fabs(z));
+    return r < eps;
+  }
+
+  bool dualFeasibility(double s) const
+  {
+    double ymax = 0;
+    for(const auto& dl: DLs)
+    {
+      ymax = std::max(ymax, max(fabs(dl->lambda)));
+    }
+    const double eps = 1e-3 * sqrt(x.d0) + 1e-3 * ymax;
+    return s < eps;
   }
 
   bool step()
@@ -198,15 +232,16 @@ struct DecOptConstrained
     }
 
     // synchro
-    bool stop = true;
+    bool subProblemsSolved = true;
     for(auto i = 0; i < DLs.size(); ++i)
     {
-      stop = futures[i].get() && stop;
+      subProblemsSolved = futures[i].get() && subProblemsSolved;
     }
 
     // stop criterion
     auto z_old = z;
-    double e = updateZ();
+    double r = updateZ(); // primal residual
+    double s = DLs.front()->mu * length(z - z_old); // dual residual
 
     // update
     for(auto i = 0; i < DLs.size(); ++i)
@@ -217,25 +252,29 @@ struct DecOptConstrained
       newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
     }
 
-    stop = stop && (e < 0.01);// || its > 5);
-
     if(opt.verbose>0) {
       cout <<"** DecOptConstr.[x] ADMM UPDATE";
-      cout <<"\t |x-z|=" << e;
+      cout <<"\t |x-z|=" << r;
       if(z.d0 < 10) cout << '\t' << "z=" << z;
       cout <<endl<<endl;
     }
 
-    if(its>=2 && absMax(z_old-z) < opt.stopTolerance) {
-      if(opt.verbose>0) cout <<"** ADMM] StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
-      if(opt.stopGTolerance<0.
-         || e < opt.stopGTolerance)
+    its++;
+
+    // nominal exit condition
+    if(subProblemsSolved && primalFeasibility(r) && dualFeasibility(s))
+    {
+      if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Primal Dual convergence" << std::endl;
+      return true;
+    }
+    // other exit conditions
+    if(subProblemsSolved && absMax(z_old-z) < opt.stopTolerance) { // stalled ADMM
+      if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+      if(opt.stopGTolerance<0. || r < opt.stopGTolerance)
         return true;
     }
 
-    its++;
-
-    return stop;
+    return false;
   }
 
   bool step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual, uint i) const
