@@ -31,9 +31,7 @@ public:
   std::pair< double, double > evaluateLastSolution();
 
   // ground symbols
-  void registerInit( const InitGrounder & grounder );
   void registerInit( const TreeInitGrounder & grounder );
-  void registerTask( const std::string & type, const SymbolGrounder & grounder );
   void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
 
   void setSecsPerPhase( double s ) { secPerPhase_ = s; }
@@ -76,10 +74,6 @@ private:
   void groundPolicyActionsJoint( const TreeBuilder & tree,
                             Policy & policy,
                             const std::shared_ptr< ExtensibleKOMO > & komo ) const;
-//  void groundPolicyActionsADMM( const TreeBuilder & tree,
-//                            Policy & policy,
-//                            const PolicyNodePtr& leaf,
-//                            const std::shared_ptr< ExtensibleKOMO > & komo) const;
 
   void watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const;
   void optimizeJointSparse( Policy & );

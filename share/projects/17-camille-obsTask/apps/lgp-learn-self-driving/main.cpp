@@ -22,7 +22,7 @@
 
 //===========================================================================
 
-void init( KOMO_ext * komo, int verbose )
+void init(  const mp::TreeBuilder& tb, KOMO_ext * komo, int verbose )
 {
   // ego car
   arr ego_start_speed{ 1.0, 0, 0 }; // 10 m/s
@@ -44,14 +44,16 @@ void init( KOMO_ext * komo, int verbose )
 //  komo->addObjective( 0.0, -1, new ApproxShapeToSphere( komo->world, "car_4", "car_5", radius ), OT_ineq );
 }
 
-void groundContinue( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundContinue( const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
 }
 
-void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundMergeBetween( const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   auto car_before = facts[0];
   auto car_next = facts[1];
+
+  double phase = it.time.from;
 
   komo->addObjective( phase+0.8, -1, new AxisDistance( std::string("car_ego"),  std::string("lane_2"), 0.05, AxisDistance::Y, AxisDistance::MAX, AxisDistance::ABS ), OT_ineq );
 

@@ -18,7 +18,6 @@
 #include <approx_shape_to_sphere.h>
 #include <observation_tasks.h>
 
-#include "komo_groundings.h"
 #include "komo_tree_groundings.h"
 
 
@@ -80,12 +79,12 @@ void plan_graph_search()
     mp.setMinMarkovianCost( 0.00 );
     ///
     // register symbols
-    mp.registerInit( groundInit );
-    mp.registerTask( "pick-up"      , groundPickUp );
-    mp.registerTask( "put-down"     , groundPutDown );
-    mp.registerTask( "check"        , groundCheck );
-    mp.registerTask( "stack"        , groundStack );
-    mp.registerTask( "unstack"      , groundUnStack );
+    mp.registerInit( groundTreeInit );
+    mp.registerTask( "pick-up"      , groundTreePickUp );
+    mp.registerTask( "put-down"     , groundTreePutDown );
+    mp.registerTask( "check"        , groundTreeCheck );
+    mp.registerTask( "stack"        , groundTreeStack );
+    mp.registerTask( "unstack"      , groundTreeUnStack );
 
     // set start configurations
     // D
@@ -255,13 +254,6 @@ void komo_tree_dev()
   mp.setExecutionPolicy(std::launch::async);
 
   // register symbols
-  mp.registerInit( groundInit );
-  mp.registerTask( "pick-up"      , groundPickUp );
-  mp.registerTask( "put-down"     , groundPutDown );
-  mp.registerTask( "check"        , groundCheck );
-  mp.registerTask( "stack"        , groundStack );
-  mp.registerTask( "unstack"      , groundUnStack );
-
   mp.registerInit( groundTreeInit );
   mp.registerTask( "pick-up"      , groundTreePickUp );
   mp.registerTask( "put-down"     , groundTreePutDown );
@@ -283,10 +275,10 @@ void komo_tree_dev()
 
   // plan
   auto po     = MotionPlanningParameters( policy.id() );
-  //po.setParam( "type", "jointSparse" );
-  po.setParam( "type", "ADMMSparse" );
-  mp.solveAndInform( po, policy );
-  //mp.display(policy, 200);
+  po.setParam( "type", "jointSparse" );
+  //po.setParam( "type", "ADMMSparse" );
+  //mp.solveAndInform( po, policy );
+  mp.display(policy, 200);
 }
 
 //===========================================================================

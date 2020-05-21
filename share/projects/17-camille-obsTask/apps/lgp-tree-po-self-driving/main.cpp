@@ -47,7 +47,7 @@ static void savePolicyToFile( const Policy & policy, const std::string & suffix 
 
 //==========Application specific grounders===================================
 
-void init( KOMO_ext * komo, int verbose  )
+void init( const mp::TreeBuilder& tb, KOMO_ext * komo, int verbose  )
 {
   // road bounds
   komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.15} );
@@ -82,13 +82,11 @@ void init( KOMO_ext * komo, int verbose  )
   komo->add_collision( true );
 }
 
-void groundLook( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundLook( const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  double duration=1.0;
-
   //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
   //
 
   // look
@@ -100,13 +98,13 @@ void groundLook( double phase, const std::vector< std::string >& facts, KOMO_ext
   }
 }
 
-void groundOvertake( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundOvertake( const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   double duration=1.0;
 
   //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
   //
 
   // overtake
@@ -119,13 +117,11 @@ void groundOvertake( double phase, const std::vector< std::string >& facts, KOMO
   }
 }
 
-void groundFollow( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundFollow( const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
-  double duration=1.0;
-
   //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
   //
 
   // overtake

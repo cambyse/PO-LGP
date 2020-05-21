@@ -105,7 +105,7 @@ public:
     komo->add_collision( true );
   }
 
-  virtual void groundInitSingleAgent( KOMO_ext* komo, int verbose )
+  virtual void groundInitSingleAgent( const TreeBuilder& tree, KOMO_ext* komo, int verbose )
   {
     init( komo, verbose );
 
@@ -114,7 +114,7 @@ public:
     komo->setVelocity( 0.0, -1, "car_op", NULL, OT_eq, op_speed );
   }
 
-  virtual void groundInitDoubleAgent( KOMO_ext* komo, int verbose )
+  virtual void groundInitDoubleAgent( const TreeBuilder& tree, KOMO_ext* komo, int verbose )
   {
     init( komo, verbose );
 
@@ -126,16 +126,16 @@ public:
 class InitGrounderMock : public InitialGrounder
 {
 public:
-  virtual void groundInitSingleAgent( KOMO_ext* komo, int verbose )
+  virtual void groundInitSingleAgent( const TreeBuilder& tree, KOMO_ext* komo, int verbose )
   {
-    InitialGrounder::groundInitSingleAgent( komo, verbose );
+    InitialGrounder::groundInitSingleAgent( tree, komo, verbose );
 
     nInitSingleAgent++;
   }
 
-  virtual void groundInitDoubleAgent( KOMO_ext* komo, int verbose )
+  virtual void groundInitDoubleAgent( const TreeBuilder& tree, KOMO_ext* komo, int verbose )
   {
-    InitialGrounder::groundInitDoubleAgent( komo, verbose );
+    InitialGrounder::groundInitDoubleAgent( tree, komo, verbose );
 
     nInitDoubleAgent++;
   }
@@ -144,11 +144,11 @@ public:
   uint nInitDoubleAgent = 0;
 };
 
-void groundLook( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
+void groundLook( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
-  const double t_start = phase;
-  const double t_end =   phase + 1;
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
   //
 
   // look
@@ -160,11 +160,11 @@ void groundLook( double phase, const std::vector< std::string > & args, KOMO_ext
   }
 }
 
-void groundOvertake( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
+void groundOvertake( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
-  const double t_start = phase;
-  const double t_end =   phase + 1.0;
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
   //
 
   // overtake
@@ -177,11 +177,11 @@ void groundOvertake( double phase, const std::vector< std::string > & args, KOMO
   }
 }
 
-void groundFollow( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
+void groundFollow( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
-  const double t_start = phase;
-  const double t_end =   phase + 1.0;
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
   //
 
   // overtake
@@ -193,11 +193,11 @@ void groundFollow( double phase, const std::vector< std::string > & args, KOMO_e
   }
 }
 
-void groundAccelerate( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
+void groundAccelerate( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
-  const double t_start = phase;
-  const double t_end =   phase + 1.0;
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
   //
 
   // opposite car speed
@@ -205,11 +205,11 @@ void groundAccelerate( double phase, const std::vector< std::string > & args, KO
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundContinue( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
+void groundContinue( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
-  const double t_start = phase;
-  const double t_end =   phase + 1.0;
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
   //
 
   // opposite car speed
@@ -217,11 +217,11 @@ void groundContinue( double phase, const std::vector< std::string > & args, KOMO
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundSlowDown( double phase, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
+void groundSlowDown( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string > & args, KOMO_ext* komo, int verbose )
 {
   //
-  const double t_start = phase;
-  const double t_end =   phase + 1.0;
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
   //
 
   // opposite car speed
@@ -229,13 +229,17 @@ void groundSlowDown( double phase, const std::vector< std::string > & args, KOMO
   komo->setVelocity( t_start, -1, "car_op", NULL, OT_eq, op_speed );
 }
 
-void groundMergeBetween( double phase, const std::vector< std::string >& facts, KOMO_ext* komo, int verbose )
+void groundMergeBetween( const mp::Interval& phase, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext* komo, int verbose )
 {
+  //
+  const double t_start = phase.time.from;
+  const double t_end =   phase.time.to;
+  //
   auto car_before = facts[0];
   auto car_next = facts[1];
 
-  komo->setPosition( phase+1, -1, "car_ego", car_next.c_str(), OT_sos, {-0.7, 0, 0} );
-  komo->setPosition( phase+1, -1, car_before.c_str(), "car_ego", OT_sos, {-0.7, 0, 0} );
+  komo->setPosition( t_start+1, -1, "car_ego", car_next.c_str(), OT_sos, {-0.7, 0, 0} );
+  komo->setPosition( t_start+1, -1, car_before.c_str(), "car_ego", OT_sos, {-0.7, 0, 0} );
 
   //setKeepDistanceTask( phase+1, -1, komo, car_successors );
   //std::cout << "merge between " << car_before << " and " << car_next << std::endl;
@@ -278,7 +282,7 @@ protected:
     using namespace std::placeholders;
 
     // register symbols
-    planner.registerInit( std::bind( &InitialGrounder::groundInitSingleAgent, &initGrounder, _1, _2 ) );
+    planner.registerInit( std::bind( &InitialGrounder::groundInitSingleAgent, &initGrounder, _1, _2, _3 ) );
   }
 };
 
@@ -292,7 +296,7 @@ protected:
     using namespace std::placeholders;
 
     // register symbols
-    planner.registerInit( std::bind( &InitialGrounder::groundInitDoubleAgent, &initGrounder, _1, _2 ) );
+    planner.registerInit( std::bind( &InitialGrounder::groundInitDoubleAgent, &initGrounder, _1, _2, _3 ) );
   }
 };
 

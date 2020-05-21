@@ -17,6 +17,9 @@
 #include <axis_alignment.h>
 #include <over_plane.h>
 #include <axis_bound.h>
+#include <komo_joint.h>
+
+using W = mp::KomoJoint;
 
 //===========================================================================
 
@@ -66,15 +69,13 @@ void groundPrefixIfNeeded( KOMO_ext * komo, int verbose  )
 //  }
 }
 
-void groundPickUp( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundPickUp( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
-  double duration=1.0;
-
   //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
   //
 
   //disconnect object from table
@@ -88,15 +89,13 @@ void groundPickUp( double phase, const std::vector< std::string >& facts, KOMO_e
   }
 }
 
-void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundUnStack( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
-  double duration=1.0;
-
   //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
   //
 
   //disconnect object from table
@@ -110,15 +109,13 @@ void groundUnStack( double phase, const std::vector< std::string >& facts, KOMO_
   }
 }
 
-void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundPutDown( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
-  double duration=1.0;
-
   //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
   //
 
   komo->setPlace( t_end, "handL", facts[0].c_str(), facts[1].c_str(), verbose );
@@ -129,16 +126,15 @@ void groundPutDown( double phase, const std::vector< std::string >& facts, KOMO_
   }
 }
 
-void groundCheck( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundCheck( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
-  double duration=1.0;
+  //
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
+  //
 
-  //
-  const double t_start = phase + 0.5;
-  const double t_end =   phase + duration;
-  //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
   komo->addObjective( t_start, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_sos, NoArr, 1e2 );
   komo->addObjective( t_end - 0.1, t_end, new ActiveGetSight( "manhead", facts[0].c_str(), ARR( 0, -0.05, 0 ), ARR( 0, -1, 0 ), 0.65 ), OT_eq, NoArr, 1e2 );
@@ -149,16 +145,15 @@ void groundCheck( double phase, const std::vector< std::string >& facts, KOMO_ex
   }
 }
 
-void groundStack( double phase, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+void groundStack( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
 {
   groundPrefixIfNeeded( komo, verbose );
 
-  double duration=1.0;
+  //
+  const double t_start = it.time.from;
+  const double t_end =   it.time.to;
+  //
 
-  //
-  const double t_start = phase;
-  const double t_end =   phase + duration;
-  //
   //std::cout << *symbols(0) << " place " << *symbols(1) << " on " << *symbols(2) << std::endl;
 
   komo->setPlace( t_end, "handL", facts[0].c_str(), facts[1].c_str(), verbose );

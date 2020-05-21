@@ -71,7 +71,8 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
   // after (stay stable)
   mp::Interval future{{it.time.to, -1.0}, it.edge}; // how to improve it? ground until the end sounds inefficient!
   W(komo).addObjective(future, tb, new TM_ZeroQVel(komo->world, object), OT_eq, NoArr, 3e1, 1, +1, -1);
-  W(komo).addObjective(end, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
+  if(komo->k_order > 1)
+    W(komo).addObjective(end, tb, new TM_LinAngVel(komo->world, object), OT_eq, NoArr, 1e1, 2, +0, +1);
 
   if(verbose > 0)
   {
@@ -82,7 +83,7 @@ void groundTreePutDown(const mp::Interval& it, const mp::TreeBuilder& tb, const 
 void groundTreeCheck(const mp::Interval& it, const mp::TreeBuilder& tb, const std::vector<std::string>& facts, KOMO_ext* komo, int verbose)
 {
   mp::Interval second_half{{it.time.to-0.5, it.time.to}, it.edge};
-  W(komo).addObjective(second_half, tb, new LimitsConstraint(0.05), OT_ineq, NoArr, 1e1, 0);
+  W(komo).addObjective(second_half, tb, new LimitsConstraint(0.05), OT_ineq, NoArr, 1.0, 0);
 
   //mp::W(komo).addObjective(start, end, branch, new ActiveGetSight( "head", facts[0].c_str(), ARR( 0.05, 0.01, 0 ), ARR( -1, 0, 0 ), 0.65 ), OT_sos, NoArr, 1e2,0 ); // slight offset (0.01) to break symmetry and avoid quternion normalization problem
   mp::Interval end{{it.time.to-0.1, it.time.to}, it.edge};

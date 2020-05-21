@@ -240,19 +240,9 @@ std::pair< double, double > KOMOPlanner::evaluateLastSolution()
   }
 }
 
-void KOMOPlanner::registerInit( const InitGrounder & grounder )
-{
-  komoFactory_.registerInit( grounder );
-}
-
 void KOMOPlanner::registerInit( const TreeInitGrounder & grounder )
 {
   komoFactory_.registerInit( grounder );
-}
-
-void KOMOPlanner::registerTask( const std::string & type, const SymbolGrounder & grounder )
-{
-  komoFactory_.registerTask( type, grounder );
 }
 
 void KOMOPlanner::registerTask( const std::string & type, const TreeSymbolGrounder & grounder )

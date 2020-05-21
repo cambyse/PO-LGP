@@ -18,7 +18,6 @@
 #include <approx_shape_to_sphere.h>
 #include <observation_tasks.h>
 
-#include "komo_groundings.h"
 #include "komo_tree_groundings.h"
 
 
@@ -80,10 +79,10 @@ void plan_graph_search()
     mp.setMinMarkovianCost( 0.00 );
     ///
     // register symbols
-    mp.registerInit( groundInit );
-    mp.registerTask( "pick-up"      , groundPickUp );
-    mp.registerTask( "put-down"     , groundPutDown );
-    mp.registerTask( "check"        , groundCheck );
+    mp.registerInit( groundTreeInit );
+    mp.registerTask( "pick-up"      , groundTreePickUp );
+    mp.registerTask( "put-down"     , groundTreePutDown );
+    mp.registerTask( "check"        , groundTreeCheck );
 
     // C
     tp.setFol( "LGP-blocks-fol-one-block.g" );
@@ -193,11 +192,6 @@ void komo_tree_dev()
   mp.setExecutionPolicy(std::launch::async);
 
   // register symbols
-  mp.registerInit( groundInit );
-  mp.registerTask( "pick-up"      , groundPickUp );
-  mp.registerTask( "put-down"     , groundPutDown );
-  mp.registerTask( "check"        , groundCheck );
-
   mp.registerInit( groundTreeInit );
   mp.registerTask( "pick-up"      , groundTreePickUp );
   mp.registerTask( "put-down"     , groundTreePutDown );

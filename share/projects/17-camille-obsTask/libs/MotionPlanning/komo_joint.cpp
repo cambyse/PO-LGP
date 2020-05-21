@@ -110,23 +110,38 @@ void KomoJoint::setupConfigurations(const std::vector<Vars>& branches)
   }
 }
 
-void KomoJoint::addObjective(const Interval& it, const TreeBuilder& tb, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
+void KomoJoint::addObjective(const Interval& it, const TreeBuilder& tree, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
 {
-  CHECK(scale != -1, "please put a meaningful scale");
+  if(tree.n_nodes())
+  {
+    CHECK(scale != -1, "please put a meaningful scale");
+    CHECK(order != -1, "please put a meaningful task order");
 
-  auto obj = komo_->addObjective(-123., -123., map, type, target, scale, order, deltaFromStep, deltaToStep);
-  auto spec = tb.get_spec(it.time, it.edge, order, komo_->stepsPerPhase);
+    auto obj = komo_->addObjective(-123., -123., map, type, target, scale, order, deltaFromStep, deltaToStep);
+    auto spec = tree.get_spec(it.time, it.edge, order, komo_->stepsPerPhase);
 
-  obj->vars = spec.vars;
-  obj->scales = spec.scales;
+    obj->vars = spec.vars;
+    obj->scales = spec.scales;
+  }
+  else
+  {
+    komo_->addObjective(it.time.from, it.time.to, map, type, target, scale, order, deltaFromStep, deltaToStep);
+  }
 }
 
-void KomoJoint::addSwitch(const Interval& it, const TreeBuilder& tb, KinematicSwitch * sw)
+void KomoJoint::addSwitch(const Interval& it, const TreeBuilder& tree, KinematicSwitch * sw)
 {
   CHECK(it.time.from == it.time.to, "Wrong interval for a switch");
 
-  sw->timeOfApplication = tb.get_step(it.time.to, it.edge, komo_->stepsPerPhase);
-  komo_->switches.append(sw);
+  if(tree.n_nodes())
+  {
+    sw->timeOfApplication = tree.get_step(it.time.to, it.edge, komo_->stepsPerPhase);
+    komo_->switches.append(sw);
+  }
+  else
+  {
+    komo_->addSwitch(it.time.from,true, sw);
+  }
 }
 
 void ADMM_MotionProblem_GraphProblem::getStructure(uintA& variableDimensions, intAA& featureVariables, ObjectiveTypeA& featureTypes)
@@ -263,34 +278,4 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
   }
 }
 
-//void KomoADMM::run(const intA masks, const arr& x_ref, const arr& y, double rho)
-//{
-////  KinematicWorld::setJointStateCount=0;
-////  double timeZero = timerStart();
-////  CHECK(komo_->T,"");
-////  if(komo_->logFile) (*komo_->logFile) <<"KOMO_run_log: [" <<std::endl;
-
-////  // optim
-////  for(const auto & mask: masks)
-////  {
-////    ADMM_MotionProblem_GraphProblem admm_graph_problem.setSubProblem(vars);
-////    Conv_Graph_ConstrainedProblem C(admm_graph_problem, komo_->logFile);
-////  }
-
-////  DecOptConstrained _opt(komo_->x, komo_->dual, C);//, rai::MAX(komo_->verbose-2, 0), NOOPT, &std::cout);//komo_->logFile);
-////  _opt.run();
-//////  OptConstrained _opt2(komo_->x, komo_->dual, C);//, rai::MAX(komo_->verbose-2, 0), NOOPT, &std::cout);//komo_->logFile);
-//////  _opt2.run();
-
-////  // time bookeeping
-////  double optimizationTime = timerRead(true, timeZero);
-////  komo_->timeNewton += _opt.newton.timeNewton;
-////  komo_->runTime += optimizationTime;
-////  if(komo_->verbose>0) {
-////    std::cout <<"** optimization time=" << optimizationTime
-////         <<" (cumulated, total:" << komo_->runTime <<  " kin:" <<komo_->timeKinematics <<" coll:" <<komo_->timeCollisions <<" feat:" <<komo_->timeFeatures <<" newton: " <<komo_->timeNewton <<")"
-////         <<" setJointStateCount=" <<KinematicWorld::setJointStateCount <<endl;
-////  }
-//  //if(komo_->verbose>0) std::cout <<komo_->getReport(komo_->verbose>1) <<endl;
-//}
 }
