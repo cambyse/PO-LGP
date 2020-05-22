@@ -76,9 +76,9 @@ private:
                             const std::shared_ptr< ExtensibleKOMO > & komo ) const;
 
   void watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const;
-  void optimizeJointSparse( Policy & );
-  void optimizeADMMSparse( Policy & );
-
+  void optimizeJointSparse( Policy & ) const;
+  void optimizeADMMSparse( Policy & ) const;
+  //
 private:
   // state
   rai::Array< std::shared_ptr< const rai::KinematicWorld > > startKinematics_;

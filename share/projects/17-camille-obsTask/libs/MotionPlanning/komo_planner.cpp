@@ -13,8 +13,8 @@
 #include <belief_state.h>
 #include <komo_planner_utils.h>
 #include <tree_builder.h>
-#include <komo_joint.h>
-#include <decentralized_aula.h>
+#include <komo_wrapper.h>
+#include <decentralized_optimizer.h>
 
 #include <Core/util.h>
 
@@ -638,7 +638,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
       komo->applyRandomization( randomVec_ );
       komo->reset();
-      komo->verbose = 3;
+      //komo->verbose = 3;
       try{
         komo->run();
       } catch(const char* msg){
@@ -991,7 +991,7 @@ void KOMOPlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
                                        Policy & policy,
                                        const std::shared_ptr< ExtensibleKOMO > & komo ) const
 {
-  using W = KomoJoint;
+  using W = KomoWrapper;
 
   auto leaves = policy.leaves();
 
@@ -1003,9 +1003,6 @@ void KOMOPlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
   {
     auto q = l;
     auto p = q->parent();
-
-    //komo->setSquaredQAccelerations();
-    //komo->addObjective(0, -1.0, new TM_Transition(komo->world), OT_sos, NoArr, 1.0);
 
     while(p)
     {
@@ -1041,9 +1038,9 @@ void KOMOPlanner::watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const
   rai::wait();
 }
 
-void KOMOPlanner::optimizeJointSparse( Policy & policy )
+void KOMOPlanner::optimizeJointSparse( Policy & policy ) const
 {
-  using W = KomoJoint;
+  using W = KomoWrapper;
 
   // build tree
   auto treeBuilder = buildTree(policy);
@@ -1066,9 +1063,9 @@ void KOMOPlanner::optimizeJointSparse( Policy & policy )
   watch(komo);
 }
 
-void KOMOPlanner::optimizeADMMSparse( Policy & policy )
+void KOMOPlanner::optimizeADMMSparse( Policy & policy ) const
 {
-  using W = KomoJoint;
+  using W = KomoWrapper;
 
   // build tree
   auto tree = buildTree(policy);
@@ -1099,7 +1096,6 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
 
   // SEQUENTIAL ADMM
   auto x = komos.front()->x;
-  arr dual;
 
   std::vector<std::shared_ptr<GraphProblem>> converters;
   std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
@@ -1127,7 +1123,7 @@ void KOMOPlanner::optimizeADMMSparse( Policy & policy )
   // RUN
   double timeZero = rai::timerStart();
 
-  DecOptConstrained opt(x, dual, constrained_problems, xmasks);
+  DecOptConstrained opt(x, constrained_problems, xmasks);
   opt.run();
 
   double optimizationTime = rai::timerRead(true, timeZero);

@@ -1,11 +1,11 @@
-#include "komo_tree.h"
+//#include "komo_tree.h"
+#include <Core/graph.h>
+#include <Core/array.h>
 #include <gtest/gtest.h>
 #include <functional>
 
 //#include <eigen3/Eigen/SparseCholesky>
 
-#include <Core/graph.h>
-#include <Core/array.h>
 
 #include <tree_builder.h>
 

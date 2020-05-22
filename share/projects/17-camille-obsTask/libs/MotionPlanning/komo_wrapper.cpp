@@ -1,4 +1,4 @@
-#include <komo_joint.h>
+#include <komo_wrapper.h>
 #include <Kin/switch.h>
 #include <Kin/TM_angVel.h>
 #include <Kin/TM_default.h>
@@ -10,7 +10,7 @@ using namespace rai;
 
 namespace mp
 {
-void KomoJoint::reset(const std::vector<Vars>& branches, double initNoise)
+void KomoWrapper::reset(const std::vector<Vars>& branches, double initNoise)
 {
   CHECK(komo_->sparseOptimization, "valid only in sparse mode!");
 
@@ -28,7 +28,7 @@ void KomoJoint::reset(const std::vector<Vars>& branches, double initNoise)
   }
 }
 
-void KomoJoint::setupConfigurations(const std::vector<Vars>& branches)
+void KomoWrapper::setupConfigurations(const std::vector<Vars>& branches)
 {
   //IMPORTANT: The configurations need to include the k prefix configurations!
   //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
@@ -110,10 +110,11 @@ void KomoJoint::setupConfigurations(const std::vector<Vars>& branches)
   }
 }
 
-void KomoJoint::addObjective(const Interval& it, const TreeBuilder& tree, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
+void KomoWrapper::addObjective(const Interval& it, const TreeBuilder& tree, Feature* map, ObjectiveType type, const arr& target, double scale, int order, int deltaFromStep, int deltaToStep)
 {
   if(tree.n_nodes())
   {
+    CHECK(komo_->sparseOptimization, "should be there in sparse mode only")
     CHECK(scale != -1, "please put a meaningful scale");
     CHECK(order != -1, "please put a meaningful task order");
 
@@ -129,12 +130,13 @@ void KomoJoint::addObjective(const Interval& it, const TreeBuilder& tree, Featur
   }
 }
 
-void KomoJoint::addSwitch(const Interval& it, const TreeBuilder& tree, KinematicSwitch * sw)
+void KomoWrapper::addSwitch(const Interval& it, const TreeBuilder& tree, KinematicSwitch * sw)
 {
   CHECK(it.time.from == it.time.to, "Wrong interval for a switch");
 
   if(tree.n_nodes())
   {
+    CHECK(komo_->sparseOptimization, "should be there in sparse mode only")
     sw->timeOfApplication = tree.get_step(it.time.to, it.edge, komo_->stepsPerPhase);
     komo_->switches.append(sw);
   }

@@ -3,6 +3,16 @@
 
 namespace mp
 {
+bool operator==(const _Branch& a, const _Branch& b)
+{
+  return (a.p == b.p) && (a.local_to_global == b.local_to_global) && (a.global_to_local == b.global_to_local) && (a.leaf_id == b.leaf_id);
+}
+
+bool operator<(const _Branch& a, const _Branch& b)
+{
+  return a.leaf_id < b.leaf_id;
+}
+
 bool operator==(const TaskSpec& a, const TaskSpec& b)
 {
   return (a.vars == b.vars) && (a.scales == b.scales);

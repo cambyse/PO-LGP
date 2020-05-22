@@ -7,10 +7,10 @@
 namespace mp
 {
 
-//komo joint wrapper
-struct KomoJoint
+//komo wrapper for tree optimization
+struct KomoWrapper
 {
-  KomoJoint(KOMO_ext * komo)
+  KomoWrapper(KOMO_ext * komo)
     : komo_(komo)
     , world_(komo->world)
   {
@@ -39,18 +39,4 @@ struct ADMM_MotionProblem_GraphProblem : KOMO::Conv_MotionProblem_GraphProblem
   intA mask; // mask per step
 };
 
-//struct KomoADMM
-//{
-//  KomoADMM(KOMO_ext * komo)
-//    : komo_(komo)
-//    , admm_graph_problem(*komo)
-//  {
-
-//  }
-
-//  void run(const intA mask, const arr& x_ref, const arr& y, double rho);
-
-//  KOMO_ext * komo_;
-//  //ADMM_MotionProblem_GraphProblem admm_graph_problem;
-//};
 }

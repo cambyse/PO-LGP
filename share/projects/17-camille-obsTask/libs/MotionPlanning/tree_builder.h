@@ -3,10 +3,24 @@
 #include <stdlib.h>
 #include <Core/array.h>
 
-#include "komo_tree.h"
+//#include "komo_tree.h"
 
 namespace mp
 {
+struct _Branch
+{
+    std::vector< int > local_to_global;
+    std::vector< int > global_to_local;
+    double p; // probability to reach the leaf
+    uint leaf_id;
+
+    static _Branch computeMicroStepBranch(const _Branch& a, int stepsPerPhase);
+    static _Branch linearTrajectory(int T);
+};
+
+bool operator==(const _Branch& a, const _Branch& b);
+bool operator<(const _Branch& a, const _Branch& b);
+
 struct Vars // Branch
 {
   intA order0;
