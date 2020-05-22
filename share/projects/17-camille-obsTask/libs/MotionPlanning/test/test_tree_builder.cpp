@@ -92,7 +92,7 @@ TEST(TreeBuilder, GetParents)
   EXPECT_EQ(std::vector<uint>({2}), tb.get_parents(4));
 }
 
-TEST(TreeBuilder, GetBranch)
+TEST(TreeBuilder, _GetBranch)
 {
   auto tb = build_simple_path_builder();
   _Branch expected_branch_to_3;
@@ -107,7 +107,7 @@ TEST(TreeBuilder, GetBranch)
   expected_branch_to_3.global_to_local.push_back(2);
   expected_branch_to_3.global_to_local.push_back(3);
   expected_branch_to_3.global_to_local.push_back(-1);
-  EXPECT_EQ(expected_branch_to_3, tb.get_branch(3));
+  EXPECT_EQ(expected_branch_to_3, tb._get_branch(3));
 
   _Branch expected_branch_to_4;
   expected_branch_to_4.p = 0.5;
@@ -121,7 +121,7 @@ TEST(TreeBuilder, GetBranch)
   expected_branch_to_4.global_to_local.push_back(2);
   expected_branch_to_4.global_to_local.push_back(-1);
   expected_branch_to_4.global_to_local.push_back(3);
-  EXPECT_EQ(expected_branch_to_4, tb.get_branch(4));
+  EXPECT_EQ(expected_branch_to_4, tb._get_branch(4));
 }
 
 TEST(TreeBuilder, GetBranchs)
@@ -379,7 +379,6 @@ TEST(TreeBuilder, SpecInterval)
   EXPECT_EQ(expected_spec1, spec1);
 }
 
-
 TEST(TreeBuilder, Step)
 {
   auto steps = 5;
@@ -389,6 +388,22 @@ TEST(TreeBuilder, Step)
   EXPECT_EQ(1, tb.get_step(0.5, {0, 1}, 5)); // should be 2??
 }
 
+TEST(TreeBuilder, GetBranch)
+{
+  auto tree = build_3_edges_1_branching();
+
+  auto b1 = tree.get_branch(2);
+
+  EXPECT_EQ(3, b1.n_nodes());
+  EXPECT_EQ(1, b1.get_leafs().size());
+  EXPECT_EQ(2, b1.get_leafs()[0]);
+
+  auto b2 = tree.get_branch(3);
+
+  EXPECT_EQ(3, b2.n_nodes());
+  EXPECT_EQ(1, b2.get_leafs().size());
+  EXPECT_EQ(3, b2.get_leafs()[0]);
+}
 
 ////////////////////////////////
 int main(int argc, char **argv)

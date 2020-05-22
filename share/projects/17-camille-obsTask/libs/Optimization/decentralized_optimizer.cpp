@@ -34,7 +34,7 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
   if(compressed) CHECK(xmasks.size() > 0, "In compressed mode, the masks should be provided!");
   for(auto i = 0; i < N; ++i)
   {
-    masks.push_back( (i < xmasks.size() && xmasks[i].d0 == z.d0 ? xmasks[i] : ones(z.d0) ));
+    masks.push_back( (i < xmasks.size() && xmasks[i].d0 == z.d0 ? xmasks[i] : ones(z.d0) ) );
     contribs += masks.back();
   }
 

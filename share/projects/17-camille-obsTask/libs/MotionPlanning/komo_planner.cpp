@@ -170,6 +170,11 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
     planner.optimize(policy, startKinematics_);
     //optimizeADMMSparse( policy );
   }
+  else if( po.getParam( "type" ) == "ADMMCompressed" )
+  {
+    ADMMCompressedPlanner planner(config_, komoFactory_);
+    planner.optimize(policy, startKinematics_);
+  }
   else
   {
     CHECK( false, "not implemented yet!" );

@@ -276,7 +276,8 @@ void komo_tree_dev()
   // plan
   auto po     = MotionPlanningParameters( policy.id() );
   //po.setParam( "type", "jointSparse" );
-  po.setParam( "type", "ADMMSparse" );
+  //po.setParam( "type", "ADMMSparse" );
+  po.setParam( "type", "ADMMCompressed" );
   mp.solveAndInform( po, policy );
   //mp.display(policy, 200);
 }

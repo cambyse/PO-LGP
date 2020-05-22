@@ -55,4 +55,13 @@ public:
   void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override;
 };
 
+class ADMMCompressedPlanner : KOMOSparsePlanner
+{
+public:
+  ADMMCompressedPlanner(const KOMOPlannerConfig& config, const KOMOFactory& factory)
+    : KOMOSparsePlanner(config, factory)
+  {};
+  void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override;
+};
+
 }

@@ -12,7 +12,7 @@
 
 namespace mp
 {
-
+/// COMMON: KOMOSparsePlanner
 TreeBuilder KOMOSparsePlanner::buildTree( Policy & policy ) const
 {
   TreeBuilder treeBuilder;
@@ -20,7 +20,7 @@ TreeBuilder KOMOSparsePlanner::buildTree( Policy & policy ) const
   std::list< Policy::GraphNodeTypePtr > fifo;
   fifo.push_back( policy.root() );
 
-  while( ! fifo.empty()  )
+  while( ! fifo.empty() )
   {
     auto b = fifo.back();
     fifo.pop_back();
@@ -144,6 +144,7 @@ void KOMOSparsePlanner::watch( const std::shared_ptr< ExtensibleKOMO > & komo ) 
   rai::wait();
 }
 
+/// JOINT
 void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics ) const
 {
   using W = KomoWrapper;
@@ -169,6 +170,7 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
   watch(komo);
 }
 
+/// ADMM SPARSE
 void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics ) const
 {
   using W = KomoWrapper;
@@ -245,5 +247,23 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   auto & komo = komos.front();
   komo->set_x(x);
   watch(komos.front());
+}
+
+/// ADMM COMPRESSED
+void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics ) const
+{
+  using W = KomoWrapper;
+
+  // build tree
+  auto tree = buildTree(policy);
+
+  // prepare komos
+  std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    auto komo = intializeKOMO(tree, startKinematics);
+    komos.push_back(komo);
+  }
+
 }
 }

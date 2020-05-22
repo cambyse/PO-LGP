@@ -116,8 +116,9 @@ public:
   std::vector<uint> get_parents(uint node) const;
   std::vector<uint> get_children(uint node) const;
   std::vector<uint> get_leaves_from(uint node) const;
-  _Branch get_branch(uint leaf) const;
+  _Branch _get_branch(uint leaf) const;
   std::vector<_Branch> get_branches() const;
+  TreeBuilder get_branch(uint leaf) const;
   intA get_vars0(const TimeInterval& interval, const _Branch& branch, uint steps=1) const;
   intA get_vars(const TimeInterval& interval, uint leaf, uint order=2, uint steps=1) const;
   arr get_scales(const TimeInterval& interval, uint leaf, uint steps=1) const;

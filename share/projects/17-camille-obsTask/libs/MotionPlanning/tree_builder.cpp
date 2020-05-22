@@ -38,6 +38,37 @@ static TimeInterval normalize(const TimeInterval & interval, const _Branch & bra
   return {from, to};
 }
 
+static bool empty_row(const arr & row)
+{
+  CHECK_EQ(row.d0, 1, "wrong row dimensions");
+
+  for(auto j = 0; j < row.d1; ++j)
+  {
+    if(row(0, j) != 0)
+    {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+static bool empty_col(const arr & col)
+{
+  CHECK_EQ(col.d1, 1, "wrong col dimensions");
+
+  for(auto j = 0; j < col.d0; ++j)
+  {
+    if(col(j, 0) != 0)
+    {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+
 TreeBuilder::TreeBuilder()
   : adjacency_matrix_ ( arr(uint(0), uint(0)) )
 {
@@ -46,7 +77,18 @@ TreeBuilder::TreeBuilder()
 
 uint TreeBuilder::n_nodes() const
 {
-  return adjacency_matrix_.d0;
+  //return adjacency_matrix_.d0;
+  uint n = 0;
+
+  for(auto i = 0; i < adjacency_matrix_.d0; ++i)
+  {
+    if(!empty_col(adjacency_matrix_.col(i)))
+    {
+      ++n;
+    }
+  }
+
+  return n + 1;
 }
 
 double TreeBuilder::p(uint from, uint to) const
@@ -58,24 +100,9 @@ std::vector<uint> TreeBuilder::get_leafs() const
 {
   std::vector<uint> leafs;
 
-  auto all_zeros = [](const arr & row)
-  {
-    CHECK_EQ(row.d0, 1, "wrong row dimensions");
-
-    for(auto j = 0; j < row.d1; ++j)
-    {
-      if(row(0, j) != 0)
-      {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   for(auto i = 0; i < adjacency_matrix_.d0; ++i)
   {
-    if(all_zeros(adjacency_matrix_.row(i)))
+    if(empty_row(adjacency_matrix_.row(i)) && !empty_col(adjacency_matrix_.col(i)))
     {
       leafs.push_back(i);
     }
@@ -145,7 +172,7 @@ std::vector<uint> TreeBuilder::get_leaves_from(uint node) const
   return leaves;
 }
 
-_Branch TreeBuilder::get_branch(uint leaf) const
+_Branch TreeBuilder::_get_branch(uint leaf) const
 {
   _Branch branch;
   auto current = leaf;
@@ -185,10 +212,34 @@ std::vector<_Branch> TreeBuilder::get_branches() const
 
   for(auto l : get_leafs())
   {
-    branches.push_back(get_branch(l));
+    branches.push_back(_get_branch(l));
   }
 
   return branches;
+}
+
+TreeBuilder TreeBuilder::get_branch(uint leaf) const
+{
+  TreeBuilder branch;
+
+  auto current = leaf;
+  auto parents = get_parents(current);
+
+  CHECK(parents.size() > 0, "No parents for this leaf!");
+  CHECK(parents.size() < 2, "Not implemented yet!, needs graph support!");
+
+  while(parents.size())
+  {
+    auto parent = parents[0];
+    auto p = this->p(parent, current);
+
+    branch.add_edge(parent, current, p);
+
+    current = parent;
+    parents = get_parents(current);
+  }
+
+  return branch;
 }
 
 intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch, uint steps) const
@@ -225,7 +276,7 @@ intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch,
 
 intA TreeBuilder::get_vars(const TimeInterval& interval, uint leaf, uint order, uint steps) const
 {
-  auto branch = get_branch(leaf);
+  auto branch = _get_branch(leaf);
   auto it = normalize(interval, branch, steps);
   auto from = it.from;
   auto to = it.to;
@@ -264,7 +315,7 @@ intA TreeBuilder::get_vars(const TimeInterval& interval, uint leaf, uint order, 
 
 arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps) const
 {
-  auto branch = get_branch(leaf);
+  auto branch = _get_branch(leaf);
 
   auto it = normalize(interval, branch, steps);
   const auto& from = it.from;
