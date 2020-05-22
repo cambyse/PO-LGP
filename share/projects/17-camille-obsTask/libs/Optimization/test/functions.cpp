@@ -1,6 +1,6 @@
 #include <Optim/newton.h>
 #include <Optim/constrained.h>
-#include <decentralized_aula.h>
+#include <decentralized_lagrangian.h>
 
 struct Parabol : public ConstrainedProblem
 {

@@ -1,4 +1,4 @@
-#include <decentralized_aula.h>
+#include <decentralized_optimizer.h>
 #include <gtest/gtest.h>
 #include "functions.cpp"
 
@@ -6,7 +6,6 @@ constexpr double eps_s = 0.02;
 
 TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUseSupport) {
   arr x{0.0, 0.0, 0.0};
-  arr dual;
 
   const arr center {1.0, 1.0, 1.0};
 
@@ -20,7 +19,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUseSupport) {
   masks.push_back(arr{1.0, 1.0, 0.0});
   masks.push_back(arr{1.0, 0.0, 1.0});
 
-  DecOptConstrained opt(x, dual, pbs, masks);
+  DecOptConstrained opt(x, pbs, masks);
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -30,7 +29,6 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUseSupport) {
 
 TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   arr x{0.0, 0.0, 0.0};
-  arr dual;
 
   const arr center {1.0, 1.0, 1.0};
 
@@ -40,7 +38,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained opt(x, dual, pbs);
+  DecOptConstrained opt(x, pbs);
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -50,7 +48,6 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
 
 TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
   arr x{0.0, 0.0, 0.0};
-  arr dual;
 
   const arr center0{1.0, 1.5, 1.0};
   const arr center1{1.0, 0.5, 1.0};
@@ -62,7 +59,7 @@ TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained opt(x, dual, pbs);
+  DecOptConstrained opt(x, pbs);
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -73,7 +70,6 @@ TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
 
 TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
   arr x{0.0, 0.0, 0.0, 0.0};
-  arr dual;
 
   const arr center{1.0, 1.0, 1.0, 1.0};
 
@@ -86,7 +82,7 @@ TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
   pbs.push_back(pb1);
   pbs.push_back(pb2);
 
-  DecOptConstrained opt(x, dual, pbs);
+  DecOptConstrained opt(x, pbs);
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -97,13 +93,12 @@ TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
 
 TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   arr x{0.0, 0.0, 0.0};
-  arr dual;
 
   auto pb = std::make_shared<Distance3D>(arr{1.0, 1.0, 1.0}, arr{1.0, 1.0, 0.0});
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb);
 
-  DecOptConstrained opt(x, dual, pbs);
+  DecOptConstrained opt(x, pbs);
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);

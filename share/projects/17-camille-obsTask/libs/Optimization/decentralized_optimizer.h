@@ -1,79 +1,13 @@
 #pragma once
 
+#include <decentralized_lagrangian.h>
+
 #include <Optim/newton.h>
 #include <Optim/constrained.h>
 
 #include <memory>
 #include <future>
 #include <thread>
-
-struct DecLagrangianProblem : ScalarFunction {
-  LagrangianProblem& L;
-
-  //-- parameters of the ADMM
-  double mu;         ///< ADMM square penalty
-  arr lambda;        ///< ADMM lagrange multiplier
-  arr z;             ///< external ADMM reference
-  const arr& xmask;  ///< where on x does this subproblem contribute
-
-  ostream *logFile=NULL;  ///< file for logging
-
-  DecLagrangianProblem(LagrangianProblem&L, const arr & z, const arr & xmask, OptOptions opt=NOOPT)
-    : L(L)
-    , mu(0.0) // first step done with 0 (to avoid fitting to a unset reference)
-    , lambda(zeros(z.d0))
-    , z(z)
-    , xmask(xmask)
-  {
-    ScalarFunction::operator=([this](arr& dL, arr& HL, const arr& x) -> double {
-      return this->decLagrangian(dL, HL, x);
-    });
-  }
-
-  double decLagrangian(arr& dL, arr& HL, const arr& x) {
-    double l = L(dL, HL, x);
-
-    arr delta = x - z;
-    for(uint i=0;i<delta.N;i++) delta.elem(i) *= xmask.elem(i);
-
-    // value
-    l += scalarProduct(lambda, delta) + 0.5 * mu * scalarProduct(delta, delta);
-
-    // jacobian
-    dL += lambda + mu * delta;
-
-    // hessian
-    if(isSparseMatrix(HL))
-    {
-      auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
-      for(auto i = 0; i < x.d0; ++i)
-      {
-        if(xmask(i)) Hs->elem(i, i) += mu;
-      }
-    }
-    else
-    {
-      for(auto i = 0; i < x.d0; ++i)
-      {
-        if(xmask(i)) HL(i, i) += mu;
-      }
-    }
-
-    return l;
-  }
-
-  void updateADMM(const arr& x, const arr& z)
-  {
-      this->z = z;
-      lambda += mu * (x - z); // Is like doing gradient descent on the dual problem (mu is the step size, and x-z the gradient)
-
-      if(mu==0.0) mu=1.0;
-      //else mu *= 2.0; // updating mu in a principeld way (increase, decrease) described in
-      //Distributed Optimization and Statistical
-      //Learning via the Alternating Direction
-      //Method of Multipliers (p.20)
-  }
-};
 
 struct DecOptConstrained
 {
@@ -87,25 +21,22 @@ struct DecOptConstrained
   std::vector<arr> xs;
   std::vector<arr> duals;
   OptOptions opt;
-  const double stopTol;
   uint its=0;
   ostream *logFile=NULL;
 
-  DecOptConstrained(arr&x, arr & dual, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & _masks = {}, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0)
+  DecOptConstrained(arr&x, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & _masks = {}, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0)
     : x(x)
     , z(x.copy())
     , contribs(zeros(x.d0))
     , opt(_opt)
-    , stopTol(0.01)
     , logFile(_logFile)
   {
     Ls.reserve(Ps.size());
-    duals.reserve(Ps.size());
     newtons.reserve(Ps.size());
     xs.reserve(Ps.size());
     masks.reserve(Ps.size());
 
-    // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to one, strange!
+    // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to 2.0, strange!
     opt.aulaMuInc = 1.2;
 
     /// TO BE EQUIVALENT TO PYTHON
@@ -124,7 +55,7 @@ struct DecOptConstrained
       auto& mask = masks[i];
 
       xs.push_back(z.copy());
-      duals.push_back(dual);
+      duals.push_back(arr());
 
       arr& x = xs.back();
       arr& _dual = duals.back();
@@ -156,14 +87,7 @@ struct DecOptConstrained
 
       // add increment
       z += zinc;
-      // sanity check // lagrange admm sum
-//      double s=0;
-//      for(auto j = 0; j < lambda.d0; ++j)
-//      {
-//        s+= lambda(j);
-//      }
-
-//      CHECK(fabs(s) < 0.001, "");
+      // sanity check // lagrange admm sum = 0 after one iteration
     }
 
     // correct for correct average
@@ -175,17 +99,6 @@ struct DecOptConstrained
     for(auto i = 0; i < xs.size(); ++i)
     {
       arr es = fabs(xs[i] - z);
-
-//      uint m = 0; double me = 0;
-//      for(auto j = 0; j < es.d0; ++j)
-//      {
-//        if(fabs(es(j) - z(j)) > me)
-//        {
-//          me = fabs(es(j) - z(j));
-//          m = j;
-//        }
-//      }
-
       const auto& mask = masks[i];
       for(uint i=0;i<es.N;i++) es.elem(i) *= mask.elem(i);
 
