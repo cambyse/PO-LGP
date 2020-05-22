@@ -1,4 +1,4 @@
-#include <komo_joint.h>
+#include <komo_wrapper.h>
 
 #include "komo_tree_groundings.h"
 
@@ -13,7 +13,7 @@
 #include <observation_tasks.h>
 
 using namespace rai;
-using W = mp::KomoJoint;
+using W = mp::KomoWrapper;
 
 double shapeSize(const KinematicWorld& K, const char* name, uint i=2);
 

@@ -4,18 +4,15 @@
 #include <thread>
 
 
-DecOptConstrained::DecOptConstrained(arr&x, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & _masks, int verbose, OptOptions _opt, ostream* _logFile)
-  : x(x)
-  , z(x.copy())
-  , contribs(zeros(x.d0))
+DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
+  : z_final(_z)
+  , N(Ps.size())
+  , compressed(compressed)
+  , contribs(zeros(z_final.d0))
+  , z(z_final.copy())
   , opt(_opt)
   , logFile(_logFile)
 {
-  Ls.reserve(Ps.size());
-  newtons.reserve(Ps.size());
-  xs.reserve(Ps.size());
-  masks.reserve(Ps.size());
-
   // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to 2.0, strange!
   opt.aulaMuInc = 1.2;
 
@@ -23,76 +20,120 @@ DecOptConstrained::DecOptConstrained(arr&x, std::vector<std::shared_ptr<Constrai
   //opt.damping = 0.1;
   //opt.maxStep = 10.0;
   ///
-  for(auto i = 0; i < Ps.size(); ++i)
+
+  initVars(masks);
+  initXs();
+  initLagrangians(Ps);
+}
+
+void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
+{
+  // fill masks with default values if not provided
+  std::vector<arr> masks;
+  masks.reserve(N);
+  if(compressed) CHECK(xmasks.size() > 0, "In compressed mode, the masks should be provided!");
+  for(auto i = 0; i < N; ++i)
   {
-    masks.push_back( (i < _masks.size() && _masks[i].d0 == x.d0 ? _masks[i] : ones(x.d0) ));
+    masks.push_back( (i < xmasks.size() && xmasks[i].d0 == z.d0 ? xmasks[i] : ones(z.d0) ));
     contribs += masks.back();
   }
 
-  for(auto i = 0; i < Ps.size(); ++i)
+  // fill vars with default values if not provided
+  vars.reserve(N);
+  for(auto i = 0; i < N; ++i)
+  {
+    intA var;
+    var.reserve(z.d0);
+
+    for(auto k = 0; k < masks[i].d0; ++k)
+    {
+      if(masks[i](k))
+      {
+        var.append(k);
+      }
+      else
+      {
+        if(!compressed)
+          var.append(-1);
+      }
+    }
+
+    vars.push_back(var);
+  }
+}
+
+void DecOptConstrained::initXs()
+{
+  xs.reserve(N);
+
+  for(auto i = 0; i < N; ++i)
+  {
+    if(compressed)
+    {
+      const auto& var = vars[i];
+      auto x = arr(var.d0);
+      for(auto j = 0; j < x.d0; ++j)
+      {
+        x(j) = z(var(j));
+      }
+      xs.push_back(x);
+    }
+    else
+    {
+      xs.push_back(z.copy());
+    }
+  }
+}
+
+void DecOptConstrained::initLagrangians(const std::vector<std::shared_ptr<ConstrainedProblem>> & Ps)
+{
+  duals.reserve(N);
+  Ls.reserve(N);
+  newtons.reserve(N);
+  for(auto i = 0; i < N; ++i)
   {
     auto& P = Ps[i];
-    auto& mask = masks[i];
+    auto& var = vars[i];
+    arr& x = xs[i];
 
-    xs.push_back(z.copy());
     duals.push_back(arr());
-
-    arr& x = xs.back();
     arr& _dual = duals.back();
-
     Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, opt, _dual)));
     LagrangianProblem& L = *Ls.back();
-    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, mask, opt)));
+    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, var, opt)));
     DecLagrangianProblem& DL = *DLs.back();
     newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, opt, 0)));
   }
 }
 
-double DecOptConstrained::updateZ()
+std::vector<uint> DecOptConstrained::run()
 {
-  /// Z
-  z = zeros(xs.front().d0);
-  for(auto i = 0; i < xs.size(); ++i)
+  // loop
+  while(!step());
+
+  // last step
+  for(auto& newton: newtons)
+    newton->beta *= 1e-3;
+
+  step();
+
+  // get solution
+  z_final = z;
+
+  // number of evaluations
+  std::vector<uint> evals;
+  evals.reserve(Ls.size());
+  for(const auto& newton: newtons)
   {
-    const auto& x = xs[i];
-    const auto& lambda = DLs[i]->lambda;
-    const auto& mask = masks[i];
-
-    arr zinc = x;
-    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
-      zinc += lambda / DLs[i]->mu;
-
-    // apply mask
-    for(uint i=0;i<zinc.N;i++) zinc.elem(i) *= mask.elem(i);
-
-    // add increment
-    z += zinc;
-    // sanity check // lagrange admm sum = 0 after one iteration
+    evals.push_back(newton->evals);
   }
-
-  // correct for correct average
-  for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
-
-  ///Primal residual
-  double r = 0;
-
-  for(auto i = 0; i < xs.size(); ++i)
-  {
-    arr es = fabs(xs[i] - z);
-    const auto& mask = masks[i];
-    for(uint i=0;i<es.N;i++) es.elem(i) *= mask.elem(i);
-
-    r += length(es);
-  }
-  r /= xs.size();
-
-  return r;
+  return evals;
 }
 
 bool DecOptConstrained::step()
 {
   std::vector<std::future<bool>> futures;
-  for(auto i = 0; i < DLs.size(); ++i)
+  for(auto i = 0; i < N; ++i)
   {
     DecLagrangianProblem& DL = *DLs[i];
     OptNewton& newton = *newtons[i];
@@ -109,24 +150,26 @@ bool DecOptConstrained::step()
 
   // synchro
   bool subProblemsSolved = true;
-  for(auto i = 0; i < DLs.size(); ++i)
+  for(auto i = 0; i < N; ++i)
   {
     subProblemsSolved = futures[i].get() && subProblemsSolved;
   }
 
   // stop criterion
-  auto z_old = z;
-  double r = updateZ(); // primal residual
-  double s = DLs.front()->mu * length(z - z_old); // dual residual
+  auto z_old = z; // copy
+  updateZ();
 
   // update
-  for(auto i = 0; i < DLs.size(); ++i)
+  for(auto i = 0; i < N; ++i)
   {
     OptNewton& newton = *newtons[i];
     DLs[i]->updateADMM(xs[i], z);
     // update newton cache / state (necessary because we updated the underlying problem!)
     newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
   }
+
+  double r = primalResidual();
+  double s = DLs.front()->mu * length(z - z_old); // dual residual
 
   if(opt.verbose>0) {
     cout <<"** DecOptConstr.[x] ADMM UPDATE";
@@ -152,6 +195,7 @@ bool DecOptConstrained::step()
 
   return false;
 }
+
 
 bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual, uint i) const
 {
@@ -253,33 +297,55 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
   return false;
 }
 
-std::vector<uint> DecOptConstrained::run()
+void DecOptConstrained::updateZ()
 {
-  // loop
-  while(!step());
-
-  // last step
-  for(auto& newton: newtons)
-    newton->beta *= 1e-3;
-
-  step();
-
-  // get solution
-  x = z;
-
-  // number of evaluations
-  std::vector<uint> evals;
-  evals.reserve(Ls.size());
-  for(const auto& newton: newtons)
+  /// Z
+  z = zeros(z.d0);
+  for(auto i = 0; i < N; ++i)
   {
-    evals.push_back(newton->evals);
+    const auto& x = xs[i];
+    const auto& lambda = DLs[i]->lambda;
+    const auto& var = vars[i];
+
+    arr zinc = x;
+    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
+      zinc += lambda / DLs[i]->mu;
+
+    // add increment
+    for(auto i = 0; i < var.d0; ++i)
+    {
+      const auto& I = var(i);
+      if(I!=-1)
+        z(I) += x(i);
+    }
+
+    // sanity check // lagrange admm sum = 0 after one iteration
   }
-  return evals;
+
+  // contrib scaling
+  // correct for correct average
+  for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
+}
+
+double DecOptConstrained::primalResidual() const
+{
+  ///Primal residual
+  double r = 0;
+
+  for(auto i = 0; i < N; ++i)
+  {
+    arr delta = DLs[i]->deltaZ(xs[i]);
+    r += length(delta);
+  }
+
+  r /= xs.size();
+
+  return r;
 }
 
 bool DecOptConstrained::primalFeasibility(double r) const
 {
-  const double eps = 1e-3 * sqrt(x.d0) + 1e-3 * max(fabs(z));
+  const double eps = 1e-3 * sqrt(z.d0) + 1e-3 * max(fabs(z));
   return r < eps;
 }
 
@@ -290,7 +356,7 @@ bool DecOptConstrained::dualFeasibility(double s) const
   {
     ymax = std::max(ymax, max(fabs(dl->lambda)));
   }
-  const double eps = 1e-3 * sqrt(x.d0) + 1e-3 * ymax;
+  const double eps = 1e-3 * sqrt(z.d0) + 1e-3 * ymax;
   return s < eps;
 }
 

@@ -7,7 +7,7 @@
 constexpr double eps = 0.0001;
 constexpr double eps_s = 0.01;
 
-TEST(AugmentedLagrangian, SimpleParabolTestG) {
+TEST(OptConstrained, SimpleParabolTestG) {
   arr x{1.0};
   arr dual; //dual
 
@@ -19,11 +19,11 @@ TEST(AugmentedLagrangian, SimpleParabolTestG) {
   EXPECT_NEAR(-0.5, x(0), eps_s);
 }
 
-TEST(AugmentedLagrangian, Distance2DTestHG) {
+TEST(OptConstrained, Distance2DTestHG) {
   arr x{1.0, 2.0};
   arr dual; //dual
 
-  Distance2D pb;
+  Distance2D pb({10.0, 2.0});
 
   OptConstrained opt(x, dual, pb);
   opt.run();
@@ -32,7 +32,7 @@ TEST(AugmentedLagrangian, Distance2DTestHG) {
   EXPECT_NEAR(1.0, x(1), eps_s);
 }
 
-TEST(AugmentedLagrangian, SimpleParabolWithFTerm) {
+TEST(OptConstrained, SimpleParabolWithFTerm) {
   arr x{1.0};
   arr dual; //dual
 
@@ -44,11 +44,11 @@ TEST(AugmentedLagrangian, SimpleParabolWithFTerm) {
   EXPECT_NEAR(0.5, x(0), eps_s);
 }
 
-TEST(AugmentedLagrangian, MultipleRuns) {
+TEST(OptConstrained, MultipleRuns) {
   arr x{1.0, 2.0};
   arr dual;
 
-  Distance2D pb;
+  Distance2D pb({10.0, 2.0});
 
   OptConstrained opt(x, dual, pb);
   std::cout << "phase 1" << std::endl;
@@ -63,6 +63,49 @@ TEST(AugmentedLagrangian, MultipleRuns) {
 
   EXPECT_NEAR(0.0, x(0), eps_s);
   EXPECT_NEAR(1.0, x(1), eps_s);
+}
+
+
+TEST(OptConstrained, Distance3DTestHG) {
+  arr x{0.0, 0.0, 0.0};
+  arr dual;
+
+  Distance3D pb(arr{1.0, 1.0, 1.0});
+
+  OptConstrained opt(x, dual, pb);
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
+TEST(OptConstrained, Distance3DDecompXYTestHG) {
+  arr x{0.0, 0.0, 0.0};
+  arr dual;
+
+  Distance3D pb(arr{1.0, 1.0, 1.0}, arr{1.0, 1.0, 0.0});
+
+  OptConstrained opt(x, dual, pb);
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_NEAR(0.0, x(2), eps_s);
+}
+
+TEST(OptConstrained, Distance3DDecompXZTestHG) {
+  arr x{0.0, 0.0, 0.0};
+  arr dual;
+
+  Distance3D pb(arr{1.0, 1.0, 1.0}, arr{1.0, 0.0, 1.0});
+
+  OptConstrained opt(x, dual, pb);
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(0.0, x(1), eps_s);
+  EXPECT_NEAR(1.0, x(2), eps_s);
 }
 
 //

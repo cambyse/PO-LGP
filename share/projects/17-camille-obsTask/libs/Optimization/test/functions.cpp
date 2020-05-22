@@ -32,6 +32,14 @@ struct Distance2D : public ConstrainedProblem
   // min dist to point (10, 2)
   // s.t. x = 0.0
   // s.t  y < 1
+  Distance2D(const arr& center, arr mask = ones(3))
+    : center_(center)
+    , mask_(mask)
+  {
+    CHECK_EQ(center.d0, 2, "wrong vector dimension")
+    CHECK_EQ(mask.d0, 2, "wrong vector dimension")
+  }
+
   void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
   {
     if(!phi.p)
@@ -58,6 +66,9 @@ struct Distance2D : public ConstrainedProblem
     phi(3) = x(1) - 1.0;
     J(3, 1) = 1.0;
   }
+
+  arr center_;
+  arr mask_;
 };
 
 struct ParabolWithFTerm : public ConstrainedProblem

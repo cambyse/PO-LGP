@@ -4,7 +4,36 @@
 
 constexpr double eps_s = 0.02;
 
-TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUseSupport) {
+
+TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUsingVars) {
+  // distance 3d decomposed in 2x dist 2d
+  arr x{0.0, 1.0, 2.0};
+
+  const arr center {1.0, 1.0};
+
+  auto pb0 = std::make_shared<Distance2D>(center, arr{sqrt(0.5), 1.0});
+  auto pb1 = std::make_shared<Distance2D>(center, arr{sqrt(0.5), 0.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  std::vector<arr> masks;
+  masks.push_back(arr{1.0, 1.0, 0.0});
+  masks.push_back(arr{1.0, 0.0, 1.0});
+
+  DecOptConstrained opt(x, pbs, masks, true);
+
+  EXPECT_EQ((intA{0, 1}), opt.vars[0]);
+  EXPECT_EQ((intA{0, 2}), opt.vars[1]);
+
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
+TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUsingMasks) {
   arr x{0.0, 0.0, 0.0};
 
   const arr center {1.0, 1.0, 1.0};
@@ -105,49 +134,6 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   EXPECT_NEAR(1.0, x(1), eps_s);
   EXPECT_NEAR(0.0, x(2), eps_s);
 }
-
-TEST(DecentralizedAugmentedLagrangian, Distance3DTestHG) {
-  arr x{0.0, 0.0, 0.0};
-  arr dual;
-
-  Distance3D pb(arr{1.0, 1.0, 1.0});
-
-  OptConstrained opt(x, dual, pb);
-  opt.run();
-
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_NEAR(1.0, x(1), eps_s);
-  EXPECT_NEAR(1.0, x(2), eps_s);
-}
-
-TEST(DecentralizedAugmentedLagrangian, Distance3DDecompXYTestHG) {
-  arr x{0.0, 0.0, 0.0};
-  arr dual;
-
-  Distance3D pb(arr{1.0, 1.0, 1.0}, arr{1.0, 1.0, 0.0});
-
-  OptConstrained opt(x, dual, pb);
-  opt.run();
-
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_NEAR(1.0, x(1), eps_s);
-  EXPECT_NEAR(0.0, x(2), eps_s);
-}
-
-TEST(DecentralizedAugmentedLagrangian, Distance3DDecompXZTestHG) {
-  arr x{0.0, 0.0, 0.0};
-  arr dual;
-
-  Distance3D pb(arr{1.0, 1.0, 1.0}, arr{1.0, 0.0, 1.0});
-
-  OptConstrained opt(x, dual, pb);
-  opt.run();
-
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_NEAR(0.0, x(1), eps_s);
-  EXPECT_NEAR(1.0, x(2), eps_s);
-}
-
 
 //
 int main(int argc, char **argv)

@@ -1,25 +1,18 @@
 #include <functional>
 #include <list>
-
 #include <chrono>
 
-//#include <policy_printer.h>
-
-//#include <policy_builder.h>
-
 #include <graph_planner.h>
-
 #include <komo_planner.h>
-
 #include <observation_tasks.h>
 #include <approx_shape_to_sphere.h>
 #include <vertical_velocity.h>
 #include <axis_alignment.h>
 #include <over_plane.h>
 #include <axis_bound.h>
-#include <komo_joint.h>
+#include <komo_wrapper.h>
 
-using W = mp::KomoJoint;
+using W = mp::KomoWrapper;
 
 //===========================================================================
 
