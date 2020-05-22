@@ -9,6 +9,7 @@
 
 #include <komo_factory.h>
 #include <path_evaluator.h>
+#include <komo_planner_config.h>
 
 namespace mp
 {
@@ -34,10 +35,10 @@ public:
   void registerInit( const TreeInitGrounder & grounder );
   void registerTask( const std::string & type, const TreeSymbolGrounder & grounder );
 
-  void setSecsPerPhase( double s ) { secPerPhase_ = s; }
-  void setNSteps( uint n ) { microSteps_ = n; }
-  void setMinMarkovianCost( double m ) { minMarkovianCost_ = m; }
-  void setExecutionPolicy(std::launch mode) { executionPolicy_ = mode; }
+  void setSecsPerPhase( double s ) { config_.secPerPhase_ = s; }
+  void setNSteps( uint n ) { config_.microSteps_ = n; }
+  void setMinMarkovianCost( double m ) { config_.minMarkovianCost_ = m; }
+  void setExecutionPolicy(std::launch mode) { config_.executionPolicy_ = mode; }
 
 private:
   void computeQMask();
@@ -66,19 +67,6 @@ private:
   void computeJointPathQResult( const Policy& policy );
   void saveJointPathOptimizationResults( Policy & ) const;
 
-  // Sparse - direct tree opt
-  TreeBuilder buildTree( Policy & ) const;
-  std::shared_ptr< ExtensibleKOMO > intializeKOMO( const TreeBuilder & tree ) const;
-  std::vector<Vars> getSubProblems(const TreeBuilder & tree, Policy & policy) const;
-  std::vector<intA> getSubProblemMasks(const std::vector<Vars> & allVars, uint T) const;
-  void groundPolicyActionsJoint( const TreeBuilder & tree,
-                            Policy & policy,
-                            const std::shared_ptr< ExtensibleKOMO > & komo ) const;
-
-  void watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const;
-  void optimizeJointSparse( Policy & ) const;
-  void optimizeADMMSparse( Policy & ) const;
-  //
 private:
   // state
   rai::Array< std::shared_ptr< const rai::KinematicWorld > > startKinematics_;
@@ -110,16 +98,7 @@ private:
   QResult jointPathQResult_;
 
   // params
-  const rai::String beliefStateTag_  = "BELIEF_START_STATE";
-
-  double kinEqualityWeight_  = 1e4;
-  double secPerPhase_        = 10.;
-  double maxConstraint_      = 10 * 0.8;
-  double minMarkovianCost_   = 0;
-
-  uint microSteps_     = 20; // per phase
-
-  std::launch executionPolicy_ = std::launch::async;
+  KOMOPlannerConfig config_;
 };
 
 }

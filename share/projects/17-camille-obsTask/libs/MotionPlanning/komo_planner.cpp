@@ -9,13 +9,9 @@
 #include <Kin/TM_FlagConstraints.h>
 #include <Kin/TM_FixSwitchedObjects.h>
 
-
 #include <belief_state.h>
 #include <komo_planner_utils.h>
-#include <tree_builder.h>
-#include <komo_wrapper.h>
-#include <decentralized_optimizer.h>
-
+#include <komo_sparse_planner.h>
 #include <Core/util.h>
 
 #include <thread>
@@ -34,7 +30,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
 {
   Graph G = loadKin(kinDescription);
 
-  if( G[ beliefStateTag_ ] == nullptr )
+  if( G[ config_.beliefStateTag_ ] == nullptr )
   {
     auto kin = std::make_shared< rai::KinematicWorld >();
     kin->init( kinDescription.c_str() );
@@ -46,7 +42,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
   }
   else
   {
-    const auto& bsGraph = &G.get<Graph>( beliefStateTag_ );
+    const auto& bsGraph = &G.get<Graph>(config_.beliefStateTag_ );
     const uint nWorlds = bsGraph->d0;
 
     // build the different worlds
@@ -62,7 +58,7 @@ void KOMOPlanner::setKin( const std::string & kinDescription )
         nn->newClone( kinG );
       }
 
-      const auto& bsNode = kinG.getNode( beliefStateTag_ );
+      const auto& bsNode = kinG.getNode( config_.beliefStateTag_ );
       kinG.removeValue(bsNode);
 
       auto kin = createKin(kinG);
@@ -164,11 +160,15 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   }
   else if( po.getParam( "type" ) == "jointSparse" )
   {
-    optimizeJointSparse( policy );
+    JointPlanner planner(config_, komoFactory_);
+    planner.optimize(policy, startKinematics_);
+    //optimizeJointSparse( policy );
   }
   else if( po.getParam( "type" ) == "ADMMSparse" )
   {
-    optimizeADMMSparse( policy );
+    ADMMSParsePlanner planner(config_, komoFactory_);
+    planner.optimize(policy, startKinematics_);
+    //optimizeADMMSparse( policy );
   }
   else
   {
@@ -208,7 +208,7 @@ void KOMOPlanner::display( const Policy & policy, double sec )
   // display
   if( sec > 0 )
   {
-    TrajectoryTreeVisualizer viz( frames, "policy", microSteps_ * secPerPhase_ );
+    TrajectoryTreeVisualizer viz( frames, "policy", config_.microSteps_ * config_.secPerPhase_ );
 
     rai::wait( sec, true );
   }
@@ -230,7 +230,7 @@ std::pair< double, double > KOMOPlanner::evaluateLastSolution()
   {
     for( auto l = 0; l < frames.at(k).N; ++l )
     {
-      auto eval = evaluate( frames.at(k).at(l), secPerPhase_ / microSteps_ );
+      auto eval = evaluate( frames.at(k).at(l), config_.secPerPhase_ / config_.microSteps_ );
 
       auto length = eval.first;
       auto acc_cost = eval.second;
@@ -330,7 +330,7 @@ void KOMOPlanner::optimizePosesFrom( const Policy::GraphNodeTypePtr & node )
       poseConstraints_[ node->data().decisionGraphNodeId ]( w ) = constraints;
 
       // what to do with the cost and constraints here??
-      if( constraints >= maxConstraint_ )
+      if( constraints >= config_.maxConstraint_ )
       {
         feasible = false;
       }
@@ -380,7 +380,7 @@ void KOMOPlanner::savePoseOptimizationResults( Policy & policy, bool & poseOptim
       maxConstraint = std::max( constraint, maxConstraint );
     }
 
-    if( maxConstraint >= maxConstraint_ )
+    if( maxConstraint >= config_.maxConstraint_ )
     {
       std::cout << "Pose Optimization failed on node " << node->id() << " max constraint:" << maxConstraint << std::endl;
       std::cout << "action: " << std::endl;
@@ -446,7 +446,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
 
         // set-up komo
         komo->setModel( kin, true/*, false, true, false, false*/ );
-        komo->setTiming( 1.0, microSteps_, secPerPhase_, 2 );
+        komo->setTiming( 1.0, config_.microSteps_, config_.secPerPhase_, 2 );
         komo->setSquaredQAccelerations();
 
         komo->groundInit();
@@ -478,7 +478,7 @@ void KOMOPlanner::optimizeMarkovianPathFrom( const Policy::GraphNodeTypePtr & no
         markovianPathConstraints_[ node->data().decisionGraphNodeId ] += node->data().beliefState[ w ] * constraints;
 
         // what to do with the cost and constraints here??
-        if( constraints >= maxConstraint_ )
+        if( constraints >= config_.maxConstraint_ )
         {
           feasible = false;
         }
@@ -527,7 +527,7 @@ void KOMOPlanner::saveMarkovianPathOptimizationResults( Policy & policy ) const
     double constraint = kIt->second;
     double cost = cIt->second;
 
-    if( constraint >= maxConstraint_ )
+    if( constraint >= config_.maxConstraint_ )
     {
       std::cout << "Markovian Optimization failed on node " << node->id() << " constraint:" << constraint << std::endl;
 
@@ -539,7 +539,7 @@ void KOMOPlanner::saveMarkovianPathOptimizationResults( Policy & policy ) const
     }
     else
     {
-      node->data().markovianReturn =  -( minMarkovianCost_ + cost );
+      node->data().markovianReturn =  -( config_.minMarkovianCost_ + cost );
       node->data().status = PolicyNodeData::INFORMED;
 
       // push children on list
@@ -584,7 +584,7 @@ void KOMOPlanner::optimizePath( Policy & policy )
   auto leaves = policy.leaves();
   for( const auto& l : leaves )
   {
-     auto future = std::async(executionPolicy_,
+     auto future = std::async(config_.executionPolicy_,
                               [&]{
                                   optimizePathTo( l );
                                 });
@@ -625,7 +625,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
       // set-up komo
       auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
-      komo->setTiming( leafTime, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( leafTime, config_.microSteps_, config_.secPerPhase_, 2 );
       komo->setSquaredQAccelerations();
 
       komo->groundInit();
@@ -677,7 +677,7 @@ void KOMOPlanner::optimizePathTo( const PolicyNodePtr & leaf )
 
 void KOMOPlanner::computePathQResult( const Policy& policy )
 {
-  pathQResult_ = QResult( policy.N(), qmask_, microSteps_ );
+  pathQResult_ = QResult( policy.N(), qmask_, config_.microSteps_ );
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
@@ -701,7 +701,7 @@ void KOMOPlanner::optimizeJointPath( Policy & policy )
   auto leaves = policy.leaves();
   for( const auto& l : leaves )
   {
-    auto future = std::async(executionPolicy_,
+    auto future = std::async(config_.executionPolicy_,
                              [&]{
       optimizeJointPathTo( l );
     });
@@ -737,7 +737,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
       // set-up komo
       auto leafTime = leaf->depth();
       komo->setModel( *startKinematics_( w ), true/*, false, true, false, false*/ );
-      komo->setTiming( leafTime, microSteps_, secPerPhase_, 2 );
+      komo->setTiming( leafTime, config_.microSteps_, config_.secPerPhase_, 2 );
       komo->setSquaredQAccelerations();
 
       komo->groundInit();
@@ -782,7 +782,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
             {
               AgentKinEquality * task = new AgentKinEquality( node->id(), q, qmask_ );  // tmp camille, think to delete it, or komo does it?
               double slice_t = node->depth() - double( s ) / stepsPerPhase;
-              komo->addObjective( slice_t, slice_t, task, OT_eq, NoArr, kinEqualityWeight_ );
+              komo->addObjective( slice_t, slice_t, task, OT_eq, NoArr, config_.kinEqualityWeight_ );
 
               //
               //std::cout << "depth:" << node->depth() << " slice:" << slice_t << " has kin equality, q size = " << qmask.size() << std::endl;
@@ -836,7 +836,7 @@ void KOMOPlanner::optimizeJointPathTo( const PolicyNodePtr & leaf )
 
 void KOMOPlanner::computeJointPathQResult( const Policy& policy )
 {
-  jointPathQResult_ = QResult( policy.N(), qmask_, microSteps_ );
+  jointPathQResult_ = QResult( policy.N(), qmask_, config_.microSteps_ );
   for( uint w = 0; w < bsToLeafs_.size(); ++w )
   {
     const PolicyNodePtr leaf = bsToLeafs_.at(w);
@@ -900,244 +900,6 @@ void KOMOPlanner::saveJointPathOptimizationResults( Policy & policy ) const
   updateValues( policy );
   policy.setQResult(policy.N()>1 ? jointPathQResult_ : pathQResult_);
   policy.setStatus( Policy::INFORMED );
-}
-
-// SPARSE KOMO
-
-TreeBuilder KOMOPlanner::buildTree( Policy & policy ) const
-{
-  TreeBuilder treeBuilder;
-
-  std::list< Policy::GraphNodeTypePtr > fifo;
-  fifo.push_back( policy.root() );
-
-  while( ! fifo.empty()  )
-  {
-    auto b = fifo.back();
-    fifo.pop_back();
-
-    const auto& a = b->parent();
-
-    if(a)
-    {
-      const auto& p = b->data().p;
-      treeBuilder.add_edge(a->id(), b->id(), p);
-    }
-
-    for(const auto&c : b->children())
-    {
-      fifo.push_back(c);
-    }
-  }
-
-  return treeBuilder;
-}
-
-std::shared_ptr< ExtensibleKOMO > KOMOPlanner::intializeKOMO(const TreeBuilder & tree) const
-{
-  auto komo = komoFactory_.createKomo();
-  komo->setModel(*startKinematics_.front());
-  komo->sparseOptimization = true;
-  komo->groundInit(tree);
-
-  const auto nPhases = tree.n_nodes() - 1;
-  komo->setTiming(nPhases, microSteps_, secPerPhase_, 2);
-
-  return komo;
-}
-
-std::vector<Vars> KOMOPlanner::getSubProblems( const TreeBuilder & tree, Policy & policy ) const
-{
-  std::vector<Vars> allVars;
-  allVars.reserve(policy.leaves().size());
-
-  auto leaves = policy.leaves();
-
-  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
-  {return a->id() < b->id();});
-
-  for(const auto& l: leaves)
-  {
-    auto vars0 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 0, microSteps_);
-    auto vars1 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 1, microSteps_);
-    auto vars2 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 2, microSteps_);
-    Vars branch{vars0, vars1, vars2, microSteps_};
-    allVars.push_back(branch);
-  }
-
-  return allVars;
-}
-
-std::vector<intA> KOMOPlanner::getSubProblemMasks(const std::vector<Vars> & allVars, uint T) const
-{
-  std::vector<intA> masks(allVars.size());
-  for(auto w = 0; w < allVars.size(); ++w)
-  {
-    auto & mask = masks[w];
-    auto & vars = allVars[w][0];
-
-    mask = intA(T);
-
-    for(auto i: vars)
-    {
-      mask(i) = 1;
-    }
-  }
-
-  return masks;
-}
-
-void KOMOPlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
-                                       Policy & policy,
-                                       const std::shared_ptr< ExtensibleKOMO > & komo ) const
-{
-  using W = KomoWrapper;
-
-  auto leaves = policy.leaves();
-
-  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
-  {return a->id() < b->id();});
-
-  std::vector<uint> visited(tree.n_nodes(), 0);
-  for(const auto& l: leaves)
-  {
-    auto q = l;
-    auto p = q->parent();
-
-    while(p)
-    {
-      if(!visited[q->id()])
-      {
-        double start = p->depth();
-        double end = q->depth();
-
-        Interval interval;
-        interval.time = {start, start + 1.0};
-        interval.edge = {p->id(), q->id()};
-
-        // square acc
-        W(komo.get()).addObjective(interval, tree, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
-
-        // ground other tasks
-        komo->groundTasks(interval, tree, q->data().leadingKomoArgs, 1);
-
-        visited[q->id()] = 1;
-      }
-      q = p;
-      p = q->parent();
-    }
-  }
-}
-
-void KOMOPlanner::watch( const std::shared_ptr< ExtensibleKOMO > & komo ) const
-{
-  //komo->displayTrajectory(0.1, true, false);
-  Var<WorldL> configs;
-  auto v = std::make_shared<KinPathViewer>(configs,  0.2, -0 );
-  v->setConfigurations(komo->configurations);
-  rai::wait();
-}
-
-void KOMOPlanner::optimizeJointSparse( Policy & policy ) const
-{
-  using W = KomoWrapper;
-
-  // build tree
-  auto treeBuilder = buildTree(policy);
-
-  // prepare komo
-  auto komo = intializeKOMO(treeBuilder);
-
-  // ground policy actions
-  auto allVars = getSubProblems(treeBuilder, policy);
-  groundPolicyActionsJoint(treeBuilder, policy, komo);
-
-  // run optimization
-  komo->verbose = 3;
-  W(komo.get()).reset(allVars);
-  komo->run();
-
-  //komo->getReport(true);
-  //for(auto c: komo->configurations) std::cout << c->q.N << std::endl;
-
-  watch(komo);
-}
-
-void KOMOPlanner::optimizeADMMSparse( Policy & policy ) const
-{
-  using W = KomoWrapper;
-
-  // build tree
-  auto tree = buildTree(policy);
-
-  // prepare komos
-  std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
-  for(auto w = 0; w < policy.leaves().size(); ++w)
-  {
-    auto komo = intializeKOMO(tree);
-    komos.push_back(komo);
-  }
-
-  // get subproblems
-  auto allVars = getSubProblems(tree, policy);
-  auto allMasks = getSubProblemMasks(allVars, komos.front()->T);
-
-  // ground each komo
-  for(uint w = 0; w < policy.leaves().size(); ++w)
-  {
-    groundPolicyActionsJoint(tree, policy, komos[w]);
-  }
-
-  // reset each komo
-  for(auto & komo: komos)
-  {
-    W(komo.get()).reset(allVars, 0);
-  }
-
-  // SEQUENTIAL ADMM
-  auto x = komos.front()->x;
-
-  std::vector<std::shared_ptr<GraphProblem>> converters;
-  std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
-  std::vector<arr> xmasks;
-  converters.reserve(policy.leaves().size());
-  constrained_problems.reserve(policy.leaves().size());
-  xmasks.reserve(policy.leaves().size());
-  for(auto w = 0; w < policy.leaves().size(); ++w)
-  {
-    auto& komo = *komos[w];
-    auto& mask = allMasks[w];
-
-    auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(komo);
-    gp->setSubProblem(mask);
-    arr xmask;
-    gp->getXMask(xmask);
-
-    auto pb = std::make_shared<Conv_Graph_ConstrainedProblem>(*gp, komo.logFile);
-
-    converters.emplace_back(gp);
-    constrained_problems.push_back(pb);
-    xmasks.push_back(xmask);
-  }
-
-  // RUN
-  double timeZero = rai::timerStart();
-
-  DecOptConstrained opt(x, constrained_problems, xmasks);
-  opt.run();
-
-  double optimizationTime = rai::timerRead(true, timeZero);
-
-  // LOGS
-  if(true) {
-    cout <<"** optimization time=" << optimizationTime
-         <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
-  }
-  //
-
-  auto & komo = komos.front();
-  komo->set_x(x);
-  watch(komos.front());
 }
 
 }
