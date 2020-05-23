@@ -10,6 +10,8 @@
 #include <Kin/TM_FlagConstraints.h>
 #include <Kin/TM_FixSwitchedObjects.h>
 
+#include <unordered_set>
+
 namespace mp
 {
 /// COMMON: KOMOSparsePlanner
@@ -41,10 +43,11 @@ TreeBuilder KOMOSparsePlanner::buildTree( Policy & policy ) const
 
   return treeBuilder;
 }
-std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBuilder & tree, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics ) const
+
+std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBuilder & tree, const std::shared_ptr< const rai::KinematicWorld > & startKinematic ) const
 {
   auto komo = komoFactory_.createKomo();
-  komo->setModel(*startKinematics.front());
+  komo->setModel(*startKinematic);
   komo->sparseOptimization = true;
   komo->groundInit(tree);
 
@@ -53,6 +56,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBu
 
   return komo;
 }
+
 std::vector<Vars> KOMOSparsePlanner::getSubProblems( const TreeBuilder & tree, Policy & policy ) const
 {
   std::vector<Vars> allVars;
@@ -74,6 +78,7 @@ std::vector<Vars> KOMOSparsePlanner::getSubProblems( const TreeBuilder & tree, P
 
   return allVars;
 }
+
 std::vector<intA> KOMOSparsePlanner::getSubProblemMasks( const std::vector<Vars> & allVars, uint T ) const
 {
   std::vector<intA> masks(allVars.size());
@@ -97,14 +102,13 @@ void KOMOSparsePlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
                                Policy & policy,
                                const std::shared_ptr< ExtensibleKOMO > & komo ) const
 {
-  using W = KomoWrapper;
-
+  // policy_tree and komo_tree may differ (komo_tree could be a subtree or branch only)
   auto leaves = policy.leaves();
-
-  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
+  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool // sort for convenience only
   {return a->id() < b->id();});
 
-  std::vector<uint> visited(tree.n_nodes(), 0);
+  // traverse tree and ground symbols
+  std::unordered_set<uint> visited;
   for(const auto& l: leaves)
   {
     auto q = l;
@@ -112,7 +116,7 @@ void KOMOSparsePlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
 
     while(p)
     {
-      if(!visited[q->id()])
+      if(visited.find(q->id()) == visited.end())
       {
         double start = p->depth();
         double end = q->depth();
@@ -127,7 +131,7 @@ void KOMOSparsePlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
         // ground other tasks
         komo->groundTasks(interval, tree, q->data().leadingKomoArgs, 1);
 
-        visited[q->id()] = 1;
+        visited.insert(q->id());
       }
       q = p;
       p = q->parent();
@@ -153,7 +157,7 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
   auto treeBuilder = buildTree(policy);
 
   // prepare komo
-  auto komo = intializeKOMO(treeBuilder, startKinematics);
+  auto komo = intializeKOMO(treeBuilder, startKinematics.front());
 
   // ground policy actions
   auto allVars = getSubProblems(treeBuilder, policy);
@@ -173,8 +177,6 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
 /// ADMM SPARSE
 void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics ) const
 {
-  using W = KomoWrapper;
-
   // build tree
   auto tree = buildTree(policy);
 
@@ -182,13 +184,9 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
   for(auto w = 0; w < policy.leaves().size(); ++w)
   {
-    auto komo = intializeKOMO(tree, startKinematics);
+    auto komo = intializeKOMO(tree, startKinematics.front());
     komos.push_back(komo);
   }
-
-  // get subproblems
-  auto allVars = getSubProblems(tree, policy);
-  auto allMasks = getSubProblemMasks(allVars, komos.front()->T);
 
   // ground each komo
   for(uint w = 0; w < policy.leaves().size(); ++w)
@@ -197,14 +195,15 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   }
 
   // reset each komo
+  auto allVars = getSubProblems(tree, policy);   // get subproblems
+  auto allTMasks = getSubProblemMasks(allVars, komos.front()->T);
+
   for(auto & komo: komos)
   {
     W(komo.get()).reset(allVars, 0);
   }
 
-  // SEQUENTIAL ADMM
-  auto x = komos.front()->x;
-
+  // ADMM
   std::vector<std::shared_ptr<GraphProblem>> converters;
   std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
   std::vector<arr> xmasks;
@@ -215,10 +214,10 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   for(auto w = 0; w < policy.leaves().size(); ++w)
   {
     auto& komo = *komos[w];
-    auto& mask = allMasks[w];
+    auto& tmask = allTMasks[w];
 
     auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(komo);
-    gp->setSubProblem(mask);
+    gp->setSubProblem(tmask);
     arr xmask;
     gp->getXMask(xmask);
 
@@ -232,6 +231,7 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   // RUN
   double timeZero = rai::timerStart();
 
+  auto x = komos.front()->x;
   DecOptConstrained opt(x, constrained_problems, xmasks);
   opt.run();
 
@@ -250,6 +250,53 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
 }
 
 /// ADMM COMPRESSED
+void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & policyTree,
+                                                           const TreeBuilder & komoTree,
+                                                           const Mapping & mapping,
+                                                           Policy & policy,
+                                                           const std::shared_ptr< ExtensibleKOMO > & komo ) const
+{
+  // policy_tree and komo_tree may differ (komo_tree could be a subtree or branch only)
+  auto leaves = policy.leaves();
+  leaves.remove_if([&](const Policy::GraphNodeTypePtr n){return !policyTree.has_node(n->id());});
+  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool // sort for convenience only
+  {return a->id() < b->id();});
+
+  // traverse tree and ground symbols
+  std::unordered_set<uint> visited;
+  for(const auto& l: leaves)
+  {
+    auto q = l;
+    auto p = q->parent();
+
+    while(p)
+    {
+      if(visited.find(q->id()) == visited.end() && policyTree.has_node(q->id()))
+      {
+        double start = p->depth();
+        double end = q->depth();
+
+        auto pid = mapping.orig_to_compressed(p->id());
+        auto qid = mapping.orig_to_compressed(q->id());
+
+        Interval interval;
+        interval.time = {start, start + 1.0};
+        interval.edge = {pid, qid};
+
+        // square acc
+        W(komo.get()).addObjective(interval, komoTree, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
+
+        // ground other tasks
+        komo->groundTasks(interval, komoTree, q->data().leadingKomoArgs, 1);
+
+        visited.insert(q->id());
+      }
+      q = p;
+      p = q->parent();
+    }
+  }
+}
+
 void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics ) const
 {
   using W = KomoWrapper;
@@ -258,12 +305,92 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   auto tree = buildTree(policy);
 
   // prepare komos
+  std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > branches;
   std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
-  for(auto w = 0; w < policy.leaves().size(); ++w)
+  auto witness = intializeKOMO(tree, startKinematics.front());
+  uint w = 0;
+  for(auto l: policy.leaves())
   {
-    auto komo = intializeKOMO(tree, startKinematics);
+    Mapping mapping;
+    auto policyBranch = tree.get_branch(l->id());
+    auto komoBranch = policyBranch.compressed(mapping);
+    auto komo = intializeKOMO(komoBranch, startKinematics(w));
+
+    std::cout << komoBranch << std::endl;
+
     komos.push_back(komo);
+    branches.push_back(std::tuple< TreeBuilder, TreeBuilder, Mapping >{policyBranch, komoBranch, mapping});
+
+    ++w;
   }
 
+  // ground each komo
+  groundPolicyActionsJoint(tree, policy, witness);
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    auto branchInfo = branches[w];
+    const auto& policyBranch = std::get<0>(branchInfo);
+    const auto& komoBranch = std::get<1>(branchInfo);
+    const auto& mapping = std::get<2>(branchInfo);
+    groundPolicyActionsCompressed(policyBranch, komoBranch, mapping, policy, komos[w]);
+  }
+
+  // get mask of subproblems using witness
+  auto allVars = getSubProblems(tree, policy);   // get subproblems
+  auto allTMasks = getSubProblemMasks(allVars, witness->T);
+
+  // reset
+  W(witness.get()).reset(allVars, 0);
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    komos[w]->reset();
+  }
+
+  std::vector<arr> xmasks;
+  xmasks.reserve(policy.leaves().size());
+  auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(*witness);
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    auto& tmask = allTMasks[w];
+    gp->setSubProblem(tmask);
+    arr xmask;
+    gp->getXMask(xmask);
+    xmasks.push_back(xmask);
+  }
+
+  // create subproblems
+  std::vector<std::shared_ptr<GraphProblem>> converters;
+  std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
+  converters.reserve(policy.leaves().size());
+  constrained_problems.reserve(policy.leaves().size());
+  for(auto w = 0; w < policy.leaves().size(); ++w)
+  {
+    auto& komo = *komos[w];
+    auto gp = std::make_shared<KOMO::Conv_MotionProblem_GraphProblem>(komo);
+    auto pb = std::make_shared<Conv_Graph_ConstrainedProblem>(*gp, komo.logFile);
+
+    converters.push_back(gp);
+    constrained_problems.push_back(pb);
+  }
+
+  // RUN
+  double timeZero = rai::timerStart();
+
+  auto x =witness->x;
+  DecOptConstrained opt(x, constrained_problems, xmasks, true);
+  opt.run();
+
+  double optimizationTime = rai::timerRead(true, timeZero);
+
+  // LOGS
+  if(true) {
+    cout <<"** optimization time=" << optimizationTime
+         <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
+  }
+  //
+  //witness->set_x(x);
+  //watch(witness);
+
+  watch(komos.front());
 }
 }

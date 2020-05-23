@@ -405,6 +405,88 @@ TEST(TreeBuilder, GetBranch)
   EXPECT_EQ(3, b2.get_leafs()[0]);
 }
 
+TEST(TreeBuilder, HasNode)
+{
+  auto tree = build_3_edges_1_branching();
+  auto b1 = tree.get_branch(2);
+
+  EXPECT_TRUE(tree.has_node(0));
+  EXPECT_FALSE(tree.has_node(5));
+  EXPECT_FALSE(b1.has_node(3));
+}
+
+TEST(TreeBuilder, Print)
+{
+  auto tree = build_3_edges_1_branching();
+  std::cout << tree << std::endl;
+}
+
+TEST(TreeBuilder, CompressedVar)
+{
+  auto tree = build_3_edges_1_branching();
+
+  auto b1 = tree.get_branch(2);
+  auto b2 = tree.get_branch(3);
+  auto var = b2.get_vars({0, 2}, 3, 0, 2);
+
+  Mapping mapping;
+  auto c_b2 = b2.compressed(mapping);
+
+  std::cout << b2 << std::endl;
+  std::cout << c_b2 << std::endl;
+
+  auto compressed_var = c_b2.get_vars({0, 2}, mapping.orig_to_compressed(3), 0, 2);
+
+  std::cout << var << std::endl;
+  std::cout << compressed_var << std::endl;
+
+  EXPECT_EQ(intA(4, 1, {0, 1, 4, 5}), var);
+  EXPECT_EQ(intA(4, 1, {0, 1, 2, 3}), compressed_var);
+}
+
+TEST(TreeBuilder, VariousTestsOnRealExample)
+{
+  TreeBuilder tb;
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(2, 3);
+  tb.add_edge(2, 8);
+  tb.add_edge(8, 9);
+  tb.add_edge(9, 10);
+  tb.add_edge(10, 11);
+  tb.add_edge(11, 12);
+  tb.add_edge(3, 4);
+  tb.add_edge(4, 5);
+  tb.add_edge(5, 6);
+  tb.add_edge(6, 7);
+
+  auto b1 = tb.get_branch(7);
+  auto b2 = tb.get_branch(12);
+
+  EXPECT_EQ(8, b1.n_nodes());
+  EXPECT_EQ(1, b1.get_leafs().size());
+  EXPECT_EQ(7, b1.get_leafs()[0]);
+
+  EXPECT_EQ(8, b2.n_nodes());
+  EXPECT_EQ(1, b2.get_children(2).size());
+  EXPECT_EQ(1, b2.get_leafs().size());
+  EXPECT_EQ(12, b2.get_leafs()[0]);
+
+  TimeInterval it;
+  it.from = 6;
+  it.to = 7;
+
+  b2.get_vars(it, 12, 2, 20);
+
+  Mapping mapping;
+  auto c_b2 = b2.compressed(mapping);
+
+  std::cout << c_b2 << std::endl;
+
+  auto compressed_var = c_b2.get_vars({0, 2}, mapping.orig_to_compressed(12), 0, 2);
+
+}
+
 ////////////////////////////////
 int main(int argc, char **argv)
 {

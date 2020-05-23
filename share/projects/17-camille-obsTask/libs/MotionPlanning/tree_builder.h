@@ -2,8 +2,7 @@
 
 #include <stdlib.h>
 #include <Core/array.h>
-
-//#include "komo_tree.h"
+#include <ostream>
 
 namespace mp
 {
@@ -105,12 +104,19 @@ struct TaskSpec
 
 bool operator==(const TaskSpec& a, const TaskSpec& b);
 
+struct Mapping
+{
+  intA compressed_to_orig;
+  intA orig_to_compressed;
+};
+
 class TreeBuilder
 {
 public:
   TreeBuilder();
 
   uint n_nodes() const;
+  bool has_node(uint n) const;
   double p(uint from, uint to) const;
   std::vector<uint> get_leafs() const;
   std::vector<uint> get_parents(uint node) const;
@@ -119,6 +125,7 @@ public:
   _Branch _get_branch(uint leaf) const;
   std::vector<_Branch> get_branches() const;
   TreeBuilder get_branch(uint leaf) const;
+  TreeBuilder compressed(Mapping & mapping) const; // remove non existing nodes, de-facto changing ids mapping is a mapping from compressed to initial tree
   intA get_vars0(const TimeInterval& interval, const _Branch& branch, uint steps=1) const;
   intA get_vars(const TimeInterval& interval, uint leaf, uint order=2, uint steps=1) const;
   arr get_scales(const TimeInterval& interval, uint leaf, uint steps=1) const;
@@ -130,4 +137,8 @@ public:
 private:
   arr adjacency_matrix_;
 };
+
+std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree);
+
 }
+

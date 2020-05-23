@@ -155,11 +155,10 @@ bool DecOptConstrained::step()
     subProblemsSolved = futures[i].get() && subProblemsSolved;
   }
 
-  // stop criterion
-  auto z_old = z; // copy
+  // update
+  auto z_old = z;
   updateZ();
 
-  // update
   for(auto i = 0; i < N; ++i)
   {
     OptNewton& newton = *newtons[i];
@@ -171,6 +170,7 @@ bool DecOptConstrained::step()
   double r = primalResidual();
   double s = DLs.front()->mu * length(z - z_old); // dual residual
 
+  // stop criterion
   if(opt.verbose>0) {
     cout <<"** DecOptConstr.[x] ADMM UPDATE";
     cout <<"\t |x-z|=" << r;
@@ -319,17 +319,15 @@ void DecOptConstrained::updateZ()
         z(I) += x(i);
     }
 
-    // sanity check // lagrange admm sum = 0 after one iteration
+    // TODO: sanity check // lagrange admm sum = 0 after one iteration
   }
 
   // contrib scaling
-  // correct for correct average
   for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
 }
 
 double DecOptConstrained::primalResidual() const
 {
-  ///Primal residual
   double r = 0;
 
   for(auto i = 0; i < N; ++i)

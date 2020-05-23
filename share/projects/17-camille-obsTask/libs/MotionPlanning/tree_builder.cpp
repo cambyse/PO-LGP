@@ -38,13 +38,13 @@ static TimeInterval normalize(const TimeInterval & interval, const _Branch & bra
   return {from, to};
 }
 
-static bool empty_row(const arr & row)
+static bool empty_row(const arr & m, uint i)
 {
-  CHECK_EQ(row.d0, 1, "wrong row dimensions");
+  CHECK(i < m.d0, "wrong row dimensions");
 
-  for(auto j = 0; j < row.d1; ++j)
+  for(auto j = 0; j < m.d1; ++j)
   {
-    if(row(0, j) != 0)
+    if(m(i, j) != 0)
     {
       return false;
     }
@@ -53,13 +53,13 @@ static bool empty_row(const arr & row)
   return true;
 };
 
-static bool empty_col(const arr & col)
+static bool empty_col(const arr & m, uint j)
 {
-  CHECK_EQ(col.d1, 1, "wrong col dimensions");
+  CHECK(j < m.d1, "wrong col dimensions");
 
-  for(auto j = 0; j < col.d0; ++j)
+  for(auto i = 0; i < m.d0; ++i)
   {
-    if(col(j, 0) != 0)
+    if(m(i, j) != 0)
     {
       return false;
     }
@@ -82,13 +82,21 @@ uint TreeBuilder::n_nodes() const
 
   for(auto i = 0; i < adjacency_matrix_.d0; ++i)
   {
-    if(!empty_col(adjacency_matrix_.col(i)))
+    if(!empty_col(adjacency_matrix_, i) || !empty_row(adjacency_matrix_, i))
     {
       ++n;
     }
   }
 
-  return n + 1;
+  return n;
+}
+
+bool TreeBuilder::has_node(uint n) const
+{
+  if(n == 0 && adjacency_matrix_.d1) return true;
+  if(n >= adjacency_matrix_.d1) return false;
+
+  return !empty_col(adjacency_matrix_, n);
 }
 
 double TreeBuilder::p(uint from, uint to) const
@@ -102,7 +110,7 @@ std::vector<uint> TreeBuilder::get_leafs() const
 
   for(auto i = 0; i < adjacency_matrix_.d0; ++i)
   {
-    if(empty_row(adjacency_matrix_.row(i)) && !empty_col(adjacency_matrix_.col(i)))
+    if(empty_row(adjacency_matrix_, i) && !empty_col(adjacency_matrix_, i))
     {
       leafs.push_back(i);
     }
@@ -117,7 +125,7 @@ std::vector<uint> TreeBuilder::get_parents(uint node) const
 
   auto col = adjacency_matrix_.col(node);
 
-  for(uint i = 0; i < n_nodes(); ++i)
+  for(uint i = 0; i < col.d0; ++i)
   {
     if(col(i, 0) != 0)
     {
@@ -134,7 +142,7 @@ std::vector<uint> TreeBuilder::get_children(uint node) const
 
   auto row = adjacency_matrix_.row(node);
 
-  for(uint i = 0; i < n_nodes(); ++i)
+  for(uint i = 0; i < row.d1; ++i)
   {
     if(row(0, i) != 0)
     {
@@ -196,7 +204,7 @@ _Branch TreeBuilder::_get_branch(uint leaf) const
   branch.local_to_global.push_back(0);
   std::reverse(branch.local_to_global.begin(), branch.local_to_global.end());
 
-  branch.global_to_local = std::vector< int >(n_nodes(), -1);
+  branch.global_to_local = std::vector< int >(adjacency_matrix_.d0, -1);
   for( auto local = 0; local < branch.local_to_global.size(); ++local )
   {
     auto global = branch.local_to_global[local];
@@ -204,6 +212,40 @@ _Branch TreeBuilder::_get_branch(uint leaf) const
   }
 
   return branch;
+}
+
+TreeBuilder TreeBuilder::compressed(Mapping & mapping) const
+{
+  mapping.orig_to_compressed = intA(adjacency_matrix_.d0);
+  for(auto i = 0; i < adjacency_matrix_.d0; ++i)
+  {
+    if(!empty_col(adjacency_matrix_, i) || !empty_row(adjacency_matrix_, i))
+    {
+      mapping.compressed_to_orig.append(i);
+      mapping.orig_to_compressed(i) = mapping.compressed_to_orig.d0 - 1;
+    }
+    else
+    {
+      mapping.orig_to_compressed(i) = -1;
+    }
+  }
+
+  arr adj = zeros(mapping.compressed_to_orig.d0, mapping.compressed_to_orig.d0);
+
+  for(auto i = 0; i < adj.d0; ++i)
+  {
+    auto I = mapping.compressed_to_orig(i);
+    for(auto j = 0; j < adj.d0; ++j)
+    {
+      auto J = mapping.compressed_to_orig(j);
+      adj(i, j) = adjacency_matrix_(I, J);
+    }
+  }
+
+  TreeBuilder compressed;
+  compressed.adjacency_matrix_ = adj;
+
+  return compressed;
 }
 
 std::vector<_Branch> TreeBuilder::get_branches() const
@@ -255,6 +297,8 @@ intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch,
 
   for(auto t=0; t < d0; ++t)
   {
+    CHECK(t < vars.d0, "bug");
+
     int k = from_step + t;
 
     if(k < 0) // prefix handling (we don't branch during the prefix)
@@ -263,8 +307,14 @@ intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch,
     }
     else
     {
-      int from_node = branch.local_to_global[floor(k / double(steps))];
-      int to_node   = branch.local_to_global[ceil(k / double(steps) + 0.00001)];
+      auto i = floor(k / double(steps));
+      auto j = ceil(k / double(steps) + 0.00001);
+
+      CHECK(i >= 0 && i < branch.local_to_global.size(), "bug");
+      CHECK(j >= 0 && j < branch.local_to_global.size(), "bug");
+
+      int from_node = branch.local_to_global[i];
+      int to_node   = branch.local_to_global[j];
       int r = k % steps;
 
       vars(t) = (steps > 1 ? to_node - 1 : from_node) * steps + r; // in new branched phase
@@ -370,10 +420,10 @@ TaskSpec TreeBuilder::get_spec(const TimeInterval& interval, const Edge& start_e
       {
         steps(j, 0) = vars(s, j);
       }
-      splitted_vars[s] = std::move(steps);
+      splitted_vars[s] = steps;
     }
-    slitted_varss[i] = std::move(splitted_vars);
-    scaless[i] = std::move(scales);
+    slitted_varss[i] = splitted_vars;
+    scaless[i] = scales;
   }
 
   // remove doubles
@@ -438,5 +488,27 @@ void TreeBuilder::add_edge(uint from, uint to, double p)
   }
 
   adjacency_matrix_(from, to) = p;
+}
+
+std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree)
+{
+  std::list<uint> queue;
+  queue.push_back(0);
+
+  while(!queue.empty())
+  {
+    auto p = queue.back();
+    queue.pop_back();
+
+    auto children = tree.get_children(p);
+    for(const auto& q: children)
+    {
+      std::cout << p << "->" << q << std::endl;
+
+      queue.push_back(q);
+    }
+  }
+
+  return os;
 }
 }

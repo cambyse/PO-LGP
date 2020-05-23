@@ -8,6 +8,7 @@
 
 #include <komo_factory.h>
 #include <komo_planner_config.h>
+#include <komo_wrapper.h>
 
 namespace mp
 {
@@ -22,7 +23,7 @@ public:
 
   // common parts between all strategies
   TreeBuilder buildTree( Policy & ) const;
-  std::shared_ptr< ExtensibleKOMO > intializeKOMO( const TreeBuilder & tree, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const;
+  std::shared_ptr< ExtensibleKOMO > intializeKOMO( const TreeBuilder & tree, const std::shared_ptr< const rai::KinematicWorld > & ) const;
   std::vector<Vars> getSubProblems( const TreeBuilder & tree, Policy & policy ) const;
   std::vector<intA> getSubProblemMasks( const std::vector<Vars> & allVars, uint T ) const;
   void groundPolicyActionsJoint( const TreeBuilder & tree,
@@ -33,6 +34,8 @@ public:
   virtual void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const = 0;
 
 protected:
+  using W = KomoWrapper;
+
   const KOMOPlannerConfig& config_;
   const KOMOFactory & komoFactory_;
 };
@@ -61,6 +64,11 @@ public:
   ADMMCompressedPlanner(const KOMOPlannerConfig& config, const KOMOFactory& factory)
     : KOMOSparsePlanner(config, factory)
   {};
+  void groundPolicyActionsCompressed( const TreeBuilder & policy_tree,
+                                      const TreeBuilder & komo_tree,
+                                      const Mapping & mapping,
+                                      Policy & policy,
+                                      const std::shared_ptr< ExtensibleKOMO > & komo ) const;
   void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override;
 };
 
