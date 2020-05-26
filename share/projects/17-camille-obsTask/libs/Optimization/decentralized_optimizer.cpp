@@ -60,6 +60,12 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
 
     vars.push_back(var);
   }
+
+  // count where admm comes into play (mainly for computing primal residual)
+  for(auto i = 0; i < contribs.d0; ++i)
+  {
+    if(contribs(i)>1) m++;
+  }
 }
 
 void DecOptConstrained::initXs()
@@ -343,7 +349,7 @@ double DecOptConstrained::primalResidual() const
 
 bool DecOptConstrained::primalFeasibility(double r) const
 {
-  const double eps = 1e-3 * sqrt(z.d0) + 1e-3 * max(fabs(z));
+  const double eps = 1e-2 * sqrt(m) + 1e-3 * max(fabs(z));
   return r < eps;
 }
 

@@ -16,6 +16,7 @@ struct DecOptConstrained
   std::vector<std::unique_ptr<DecLagrangianProblem>> DLs;
   std::vector<intA> vars; ///< how local xs maps to global opt variable
   arr contribs; ///< amount of contribution on x (on each index) - caching (deduced directly from masks)
+  uint m; ///< number of z indices where problems overlap
   arr z; ///< internal admm reference variable
   std::vector<arr> xs; ///< subproblems solutions
   std::vector<arr> duals;

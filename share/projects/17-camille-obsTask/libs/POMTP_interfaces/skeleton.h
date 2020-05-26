@@ -177,6 +177,7 @@ public:
   GraphNodeTypePtr root() const { return root_; }
   std::list< std::weak_ptr< GraphNodeType > >  wleafs() const { return leafs_; }
   std::list<GraphNodeTypePtr> leaves() const;
+  std::list<GraphNodeTypePtr> sleaves() const;  // sorted leaves
   double value() const { return value_; }
   QResult qresult() const { return qr_; }
   enum StatusType status() const { return status_; }

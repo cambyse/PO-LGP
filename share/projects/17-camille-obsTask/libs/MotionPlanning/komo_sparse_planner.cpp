@@ -62,12 +62,7 @@ std::vector<Vars> KOMOSparsePlanner::getSubProblems( const TreeBuilder & tree, P
   std::vector<Vars> allVars;
   allVars.reserve(policy.leaves().size());
 
-  auto leaves = policy.leaves();
-
-  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
-  {return a->id() < b->id();});
-
-  for(const auto& l: leaves)
+  for(const auto& l: policy.sleaves())
   {
     auto vars0 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 0, config_.microSteps_);
     auto vars1 = tree.get_vars({0, 1.0 * l->depth()}, l->id(), 1, config_.microSteps_);
@@ -102,14 +97,9 @@ void KOMOSparsePlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
                                Policy & policy,
                                const std::shared_ptr< ExtensibleKOMO > & komo ) const
 {
-  // policy_tree and komo_tree may differ (komo_tree could be a subtree or branch only)
-  auto leaves = policy.leaves();
-  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool // sort for convenience only
-  {return a->id() < b->id();});
-
   // traverse tree and ground symbols
   std::unordered_set<uint> visited;
-  for(const auto& l: leaves)
+  for(const auto& l: policy.sleaves())
   {
     auto q = l;
     auto p = q->parent();
@@ -166,8 +156,20 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
   // run optimization
   komo->verbose = 3;
   W(komo.get()).reset(allVars);
+
+  auto start = std::chrono::high_resolution_clock::now();
+
   komo->run();
 
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  double optimizationTime=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+
+  // LOGS
+  if(true) {
+    cout <<"** optimization time=" << optimizationTime
+         <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
+  }
+  //
   //komo->getReport(true);
   //for(auto c: komo->configurations) std::cout << c->q.N << std::endl;
 
@@ -229,13 +231,15 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   }
 
   // RUN
-  double timeZero = rai::timerStart();
+  auto start = std::chrono::high_resolution_clock::now();
 
   auto x = komos.front()->x;
   DecOptConstrained opt(x, constrained_problems, xmasks);
   opt.run();
 
-  double optimizationTime = rai::timerRead(true, timeZero);
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  double optimizationTime=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
+
 
   // LOGS
   if(true) {
@@ -256,15 +260,11 @@ void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & p
                                                            Policy & policy,
                                                            const std::shared_ptr< ExtensibleKOMO > & komo ) const
 {
-  // policy_tree and komo_tree may differ (komo_tree could be a subtree or branch only)
-  auto leaves = policy.leaves();
-  leaves.remove_if([&](const Policy::GraphNodeTypePtr n){return !policyTree.has_node(n->id());});
-  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool // sort for convenience only
-  {return a->id() < b->id();});
+  // policy_tree and komo_tree differ in general (komo_tree could be a subtree or branch only)
 
   // traverse tree and ground symbols
   std::unordered_set<uint> visited;
-  for(const auto& l: leaves)
+  for(const auto& l: policy.sleaves())
   {
     auto q = l;
     auto p = q->parent();
@@ -309,7 +309,8 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
   auto witness = intializeKOMO(tree, startKinematics.front());
   uint w = 0;
-  for(auto l: policy.leaves())
+
+  for(auto l: policy.sleaves())
   {
     Mapping mapping;
     auto policyBranch = tree.get_branch(l->id());
@@ -374,13 +375,14 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   }
 
   // RUN
-  double timeZero = rai::timerStart();
+  auto start = std::chrono::high_resolution_clock::now();
 
-  auto x =witness->x;
+  auto x = witness->x;
   DecOptConstrained opt(x, constrained_problems, xmasks, true);
   opt.run();
 
-  double optimizationTime = rai::timerRead(true, timeZero);
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  double optimizationTime=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 
   // LOGS
   if(true) {

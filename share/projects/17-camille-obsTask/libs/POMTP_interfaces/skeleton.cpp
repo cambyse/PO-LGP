@@ -131,6 +131,16 @@ std::list<Policy::GraphNodeTypePtr> Policy::leaves() const
   return leaves;
 }
 
+std::list<Policy::GraphNodeTypePtr> Policy::sleaves() const
+{
+  auto leaves = this->leaves();
+
+  leaves.sort([](Policy::GraphNodeTypePtr a, Policy::GraphNodeTypePtr b)->bool
+  {return a->id() < b->id();});
+
+  return leaves;
+}
+
 void Policy::save( const std::string & file ) const
 {
   std::ofstream ofs( file );
