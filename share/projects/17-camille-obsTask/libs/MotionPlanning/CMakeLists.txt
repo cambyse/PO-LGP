@@ -28,6 +28,7 @@ target_link_libraries(
  Gui
  Optim
  Optimization
+ HessianDecomposition
  KOMO
  POMTP_interfaces
  pthread

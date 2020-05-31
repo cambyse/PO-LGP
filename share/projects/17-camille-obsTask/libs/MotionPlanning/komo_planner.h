@@ -40,6 +40,11 @@ public:
   void setMinMarkovianCost( double m ) { config_.minMarkovianCost_ = m; }
   void setExecutionPolicy(std::launch mode) { config_.executionPolicy_ = mode; }
 
+  // testonly accessor
+  const KOMOPlannerConfig& config() const { return config_; }
+  const KOMOFactory& komoFactory() const { return komoFactory_; }
+  const rai::Array< std::shared_ptr< const rai::KinematicWorld > >& startKinematics() const { return startKinematics_; }
+
 private:
   void computeQMask();
 

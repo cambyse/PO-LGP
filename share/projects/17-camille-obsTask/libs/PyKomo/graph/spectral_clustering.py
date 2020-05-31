@@ -76,7 +76,7 @@ def build_graph_2():
     return G
 
 #G = build_graph_1()
-G = build_from_file('data/H_data')
+G = build_from_file('data/H_data_car_2w')
 #G = build_from_file('data/H_data_2w')
 
 # Number of connected components
@@ -97,7 +97,7 @@ nodes = list(G.nodes())
 
 
 # Cluster
-sc = SpectralClustering(3, affinity='precomputed', n_init=100)
+sc = SpectralClustering(2, affinity='precomputed', n_init=100)
 sc.fit(A)
 print('spectral clustering')
 print(sc.labels_)

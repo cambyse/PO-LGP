@@ -1,8 +1,9 @@
 #include "komo_planner_fixture.h"
+#include "komo_sub_problems_finder.h"
 
 /////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
 
-TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WJointPath)
+TEST_F(KomoPlannerSingleAgentFixture, DISABLED_PlanSingleAgent2WJointPath)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
@@ -14,6 +15,18 @@ TEST_F(KomoPlannerSingleAgentFixture, PlanSingleAgent2WJointPath)
 
   EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
   EXPECT_EQ( policy.status(), Policy::INFORMED );
+}
+
+TEST_F(KomoPlannerSingleAgentFixture, Foo)
+{
+  planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
+
+  Policy policy;
+  policy.load( "data/LGP-overtaking-single-agent-2w.po" );
+
+  KOMOSubProblemsFinder pf(planner.config(), planner.komoFactory());
+  pf.analyse(policy, planner.startKinematics());
+
 }
 
 ////////////////////////////////

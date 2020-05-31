@@ -1,9 +1,7 @@
-#include <KOMO/komo.h>
-
 #include <ngraph.h>
-
+#include <fstream>
+#include <Core/array.h>
 #include <gtest/gtest.h>
-#include <dlib/clustering.h>
 
 using namespace std;
 
@@ -186,118 +184,6 @@ TEST(Graph, BuildGraphOutOfHessianMediumLightCoupling)
 
   NGraph::to_file(G, "build_medium_light_coupling.gv", true);
 }
-
-
-std::vector<unsigned long> spectral_cluster (
-    const dlib::matrix<double>& A,
-    const unsigned long num_clusters
-)
-{
-    using namespace dlib;
-
-    DLIB_CASSERT(num_clusters > 1,
-        "\t std::vector<unsigned long> spectral_cluster(k,samples,num_clusters)"
-        << "\n\t num_clusters can't be 0."
-        );
-
-//    // compute the similarity matrix.
-//    matrix<double> K(samples.size(), samples.size());
-//    for (long r = 0; r < K.nr(); ++r)
-//        for (long c = r+1; c < K.nc(); ++c)
-//            K(r,c) = K(c,r) = (double)k(samples[r], samples[c]);
-//    for (long r = 0; r < K.nr(); ++r)
-//        K(r,r) = 0;
-
-    auto K = A; // copy
-
-    matrix<double,0,1> D(K.nr());
-    for (long r = 0; r < K.nr(); ++r)
-        D(r) = sum(rowm(K,r));
-    D = sqrt(reciprocal(D));
-    K = diagm(D)*K*diagm(D);
-    matrix<double> u,w,v;
-    // Use the normal SVD routine unless the matrix is really big, then use the fast
-    // approximate version.
-    if (K.nr() < 1000)
-        svd3(K,u,w,v);
-    else
-        svd_fast(K,u,w,v, num_clusters+100, 5);
-    // Pick out the eigenvectors associated with the largest eigenvalues.
-    rsort_columns(v,w);
-    v = colm(v, range(0,num_clusters-1));
-    // Now build the normalized spectral vectors, one for each input vector.
-    std::vector<matrix<double,0,1> > spec_samps, centers;
-    for (long r = 0; r < v.nr(); ++r)
-    {
-        spec_samps.push_back(trans(rowm(v,r)));
-        const double len = length(spec_samps.back());
-        if (len != 0)
-            spec_samps.back() /= len;
-    }
-    // Finally do the K-means clustering
-    pick_initial_centers(num_clusters, centers, spec_samps);
-    find_clusters_using_kmeans(spec_samps, centers);
-    // And then compute the cluster assignments based on the output of K-means.
-    std::vector<unsigned long> assignments;
-    for (unsigned long i = 0; i < spec_samps.size(); ++i)
-        assignments.push_back(nearest_center(centers, spec_samps[i]));
-
-    return assignments;
-}
-
-
-TEST(Graph, UseDLib)
-{
-  using namespace dlib;
-
-  auto H = build_medium_light_coupling();
-
-  auto add_edge = [](uint from, uint to, matrix<double> & A)
-  {
-    A(from, to) = A(to, from) = 1.0;
-  };
-
-  matrix<double> A(12, 12);
-
-  for(auto i = 0; i < A.nr(); ++i)
-    for(auto j = 0; j < A.nc(); ++j)
-      A(i, j) = 0.0;
-
-  add_edge(1, 0, A);
-  add_edge(3, 2, A);
-  add_edge(4, 0, A);
-  add_edge(4, 1, A);
-  add_edge(5, 0, A);
-  add_edge(5, 1, A);
-  add_edge(5, 4, A);
-  add_edge(6, 2, A);
-  add_edge(6, 3, A);
-  add_edge(6, 5, A);
-  add_edge(7, 2, A);
-  add_edge(7, 3, A);
-  add_edge(7, 6, A);
-  add_edge(8, 4, A);
-  add_edge(8, 5, A);
-  add_edge(9, 4, A);
-  add_edge(9, 5, A);
-  add_edge(9, 8, A);
-  add_edge(10, 6, A);
-  add_edge(10, 7, A);
-  add_edge(11, 6, A);
-  add_edge(11, 7, A);
-  add_edge(11, 10, A);
-  add_edge(11, 12, A);
-
-  std::cout << A << std::endl;
-
-  // Finally, we can also solve the same kind of non-linear clustering problem with
-  // spectral_cluster().  The output is a vector that indicates which cluster each sample
-  // belongs to.  Just like with kkmeans, it assigns each point to the correct cluster.
-  std::vector<unsigned long> assignments = spectral_cluster(A, 2);
-  cout << mat(assignments) << endl;
-}
-
-
 
 ////////////////////////////////
 int main(int argc, char **argv)

@@ -395,4 +395,5 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
 
   watch(komos.front());
 }
+
 }
