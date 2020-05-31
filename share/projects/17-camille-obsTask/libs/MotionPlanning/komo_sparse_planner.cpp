@@ -49,7 +49,6 @@ std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBu
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematic);
   komo->sparseOptimization = true;
-  komo->groundInit(tree);
 
   const auto nPhases = tree.n_nodes() - 1;
   komo->setTiming(nPhases, config_.microSteps_, config_.secPerPhase_, 2);
@@ -144,14 +143,15 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
   using W = KomoWrapper;
 
   // build tree
-  auto treeBuilder = buildTree(policy);
+  auto tree = buildTree(policy);
 
   // prepare komo
-  auto komo = intializeKOMO(treeBuilder, startKinematics.front());
+  auto komo = intializeKOMO(tree, startKinematics.front());
 
   // ground policy actions
-  auto allVars = getSubProblems(treeBuilder, policy);
-  groundPolicyActionsJoint(treeBuilder, policy, komo);
+  komo->groundInit(tree);
+  auto allVars = getSubProblems(tree, policy);
+  groundPolicyActionsJoint(tree, policy, komo);
 
   // run optimization
   komo->verbose = 3;

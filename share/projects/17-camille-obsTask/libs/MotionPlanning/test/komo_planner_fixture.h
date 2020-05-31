@@ -1,6 +1,8 @@
 #pragma one
 
 #include "komo_planner.h"
+#include <komo_wrapper.h>
+
 #include <gtest/gtest.h>
 #include <functional>
 
@@ -12,6 +14,8 @@ using namespace mp;
  * Tests of various komo configurations komo with car examples
  *
  */
+
+using W = mp::KomoWrapper;
 
 /////////////////Tasks////////////////////////
 struct AxisBound:Feature{
@@ -85,6 +89,8 @@ class InitialGrounder
 public:
   void init( KOMO_ext* komo, int verbose )
   {
+    mp::Interval always{{0, -1}, {0, 1}};
+
     // road bounds
     komo->addObjective( 0.0, -1, new AxisBound( "car_ego", -0.15, AxisBound::Y, AxisBound::MIN ), OT_ineq );
     komo->addObjective( 0.0, -1, new AxisBound( "car_ego",  0.15, AxisBound::Y, AxisBound::MAX ), OT_ineq );
@@ -158,7 +164,7 @@ void groundLook( const mp::Interval& phase, const mp::TreeBuilder& tree, const s
 
   if( verbose > 0 )
   {
-    std::cout << t_start << "->" << t_end << ": " << " look " << args[0] << " at " << args[1] << std::endl;
+    std::cout << t_start << "->" << t_end << ": " << " look " << " at " << args[0] << std::endl;
   }
 }
 
@@ -191,7 +197,7 @@ void groundFollow( const mp::Interval& phase, const mp::TreeBuilder& tree, const
 
   if( verbose > 0 )
   {
-    std::cout << t_start << "->" << t_end << ": " << " follow " << args[0] << " at " << args[1] << std::endl;
+    std::cout << t_start << "->" << t_end << ": " << " follow " << args[0] << std::endl;
   }
 }
 
