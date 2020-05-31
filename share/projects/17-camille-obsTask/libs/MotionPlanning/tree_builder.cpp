@@ -104,7 +104,7 @@ double TreeBuilder::p(uint from, uint to) const
   return adjacency_matrix_(from, to);
 }
 
-std::vector<uint> TreeBuilder::get_leafs() const
+std::vector<uint> TreeBuilder::get_leaves() const
 {
   std::vector<uint> leafs;
 
@@ -252,7 +252,7 @@ std::vector<_Branch> TreeBuilder::get_branches() const
 {
   std::vector<_Branch> branches;
 
-  for(auto l : get_leafs())
+  for(auto l : get_leaves())
   {
     branches.push_back(_get_branch(l));
   }

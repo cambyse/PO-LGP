@@ -79,7 +79,7 @@ TEST(TreeBuilder, AddEdge)
 TEST(TreeBuilder, GetLeafs)
 {
   auto tb =build_simple_path_builder();
-  EXPECT_EQ(std::vector<uint>({3, 4}), tb.get_leafs());
+  EXPECT_EQ(std::vector<uint>({3, 4}), tb.get_leaves());
 }
 
 TEST(TreeBuilder, GetParents)
@@ -395,14 +395,14 @@ TEST(TreeBuilder, GetBranch)
   auto b1 = tree.get_branch(2);
 
   EXPECT_EQ(3, b1.n_nodes());
-  EXPECT_EQ(1, b1.get_leafs().size());
-  EXPECT_EQ(2, b1.get_leafs()[0]);
+  EXPECT_EQ(1, b1.get_leaves().size());
+  EXPECT_EQ(2, b1.get_leaves()[0]);
 
   auto b2 = tree.get_branch(3);
 
   EXPECT_EQ(3, b2.n_nodes());
-  EXPECT_EQ(1, b2.get_leafs().size());
-  EXPECT_EQ(3, b2.get_leafs()[0]);
+  EXPECT_EQ(1, b2.get_leaves().size());
+  EXPECT_EQ(3, b2.get_leaves()[0]);
 }
 
 TEST(TreeBuilder, HasNode)
@@ -464,13 +464,13 @@ TEST(TreeBuilder, VariousTestsOnRealExample)
   auto b2 = tb.get_branch(12);
 
   EXPECT_EQ(8, b1.n_nodes());
-  EXPECT_EQ(1, b1.get_leafs().size());
-  EXPECT_EQ(7, b1.get_leafs()[0]);
+  EXPECT_EQ(1, b1.get_leaves().size());
+  EXPECT_EQ(7, b1.get_leaves()[0]);
 
   EXPECT_EQ(8, b2.n_nodes());
   EXPECT_EQ(1, b2.get_children(2).size());
-  EXPECT_EQ(1, b2.get_leafs().size());
-  EXPECT_EQ(12, b2.get_leafs()[0]);
+  EXPECT_EQ(1, b2.get_leaves().size());
+  EXPECT_EQ(12, b2.get_leaves()[0]);
 
   TimeInterval it;
   it.from = 6;
@@ -484,7 +484,6 @@ TEST(TreeBuilder, VariousTestsOnRealExample)
   std::cout << c_b2 << std::endl;
 
   auto compressed_var = c_b2.get_vars({0, 2}, mapping.orig_to_compressed(12), 0, 2);
-
 }
 
 ////////////////////////////////

@@ -60,7 +60,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBu
 std::vector<Vars> KOMOSparsePlanner::getSubProblems( const TreeBuilder & tree, Policy & policy ) const
 {
   std::vector<Vars> allVars;
-  allVars.reserve(policy.leaves().size());
+  allVars.reserve(tree.get_leaves().size());
 
   for(const auto& l: policy.sleaves())
   {

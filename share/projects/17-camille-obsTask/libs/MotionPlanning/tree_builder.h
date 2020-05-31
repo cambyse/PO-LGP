@@ -118,7 +118,7 @@ public:
   uint n_nodes() const;
   bool has_node(uint n) const;
   double p(uint from, uint to) const;
-  std::vector<uint> get_leafs() const;
+  std::vector<uint> get_leaves() const;
   std::vector<uint> get_parents(uint node) const;
   std::vector<uint> get_children(uint node) const;
   std::vector<uint> get_leaves_from(uint node) const;
