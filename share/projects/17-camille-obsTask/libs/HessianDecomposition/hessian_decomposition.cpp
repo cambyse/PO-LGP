@@ -79,10 +79,6 @@ dlib::matrix<double> buildAdjacancyMatrix(const arr& H)
 
       A(I, J) = 1;
     }
-    //      for(uint i=0;i<Hs->d0;i++)
-    //      {
-    //        A = Hs->elem(i, i);
-    //      }
   }
   else
   {
@@ -102,23 +98,94 @@ dlib::matrix<double> buildAdjacancyMatrix(const arr& H)
   return A;
 }
 
+dlib::matrix<double> buildAdjacancyMatrixFrom(const arr& H, uint & _from, Problem & pb)
+{
+  dlib::matrix<double> A = dlib::zeros_matrix<double>(H.d0, H.d1);
+  pb.xmasks.push_back(intV(H.d0, 0));
+  pb.sizes.push_back(0);
+  auto & xmask = pb.xmasks.back();
+  auto & size = pb.sizes.back();
+
+  std::queue<uint> froms;
+  froms.push(_from);
+
+  while(!froms.empty())
+  {
+    auto from = froms.front();
+    froms.pop();
+
+    if(from > _from) _from = from;
+
+    for(auto to = 0; to < H.d1; ++to)
+    {
+      if(fabs(H(from, to))>1e-7 && !A(from, to))
+      {
+        A(from, to) = A(to, from) = 1;
+        froms.push(to);
+
+        xmask[from] = 1;
+        xmask[to] = 1;
+
+        size++;
+      }
+    }
+  }
+
+  return A;
+}
+
+std::vector<dlib::matrix<double>> buildAdjacancyMatrices(const arr & H, std::vector<Problem>& pbs)
+{
+  std::vector<dlib::matrix<double>> As;
+  As.reserve(4);
+  pbs.reserve(4);
+
+  if(isSparseMatrix(H))
+  {
+    NIY;
+  }
+  else
+  {
+    uint from = 0;
+
+    while(from < H.d0)
+    {
+      Problem pb;
+      intV xmask(H.d0, 0);
+      dlib::matrix<double> A = buildAdjacancyMatrixFrom(H, from, pb);
+      As.push_back(A);
+      pbs.push_back(pb);
+
+      from++;
+    }
+  }
+
+  return As;
+}
+
 Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster)
 {
   Problem pb;
-  pb.xmasks = std::vector<intA>(numberOfCluster);
+  pb.xmasks = std::vector<intV>(numberOfCluster);
+  pb.sizes = std::vector<uint>(numberOfCluster);
+  pb.overlaps = std::vector<uint>(numberOfCluster);
+
   for(auto & xmask: pb.xmasks)
-    xmask.reserve(1.2 * sparsestCut.size() / (numberOfCluster)); // account for cluster unbalancing
+    xmask = intV(sparsestCut.size(), 0);
 
   for(auto i = 0; i < sparsestCut.size(); ++i)
   {
     const auto & k = sparsestCut[i];
-    pb.xmasks[k].append(i);
+    pb.xmasks[k][i] = 1;
+    pb.sizes[k]++;
 
     for(auto j = 0; j < A.nc(); ++j)
     {
       if(A(i, j) != 0 && sparsestCut[j] != k) // add the neighbors in other cut! crucial part for ADMM
       {
-        pb.xmasks[k].append(j);
+        pb.xmasks[k][j] = 1;
+        pb.sizes[k]++;
+        pb.overlaps[k]++;
       }
     }
   }
@@ -126,20 +193,34 @@ Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned l
   return pb;
 }
 
-Decomposition decomposeHessian(const arr& H, uint numberOfCluster)
+Decomposition decomposeHessian(const arr& H, uint splittingThreshold, uint numberOfCluster)
 {
   CHECK_EQ(H.d0, H.d1, "hessian should be a square matrix");
-
-  auto A = buildAdjacancyMatrix(H);
-
-  std::cout << A << std::endl;
-
-  auto sparsestCut = spectralCluster(A, numberOfCluster);
-
-  auto xmasks = buildDecomposition(A, sparsestCut, numberOfCluster);
-
   Decomposition decomp;
-  decomp.problems.push_back(xmasks);
+  decomp.problems.reserve(10);
+
+  std::vector<Problem> independant_pbs;
+  auto As = buildAdjacancyMatrices(H, independant_pbs);
+
+  for(auto i = 0; i < As.size(); ++i)
+  {
+    const auto& A = As[i];
+    auto& pb = independant_pbs[i];
+
+    std::cout << A << std::endl;
+
+    if(pb.sizes.front() > splittingThreshold)
+    {
+      auto sparsestCut = spectralCluster(A, numberOfCluster);
+      auto splitted = buildDecomposition(A, sparsestCut, numberOfCluster);
+
+      decomp.problems.push_back(splitted);
+    }
+    else
+    {
+      decomp.problems.push_back(pb);
+    }
+  }
 
   return decomp;
 }

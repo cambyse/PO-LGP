@@ -5,6 +5,8 @@
 
 namespace hessian_decomposition
 {
+using intV = std::vector<uint>;
+
 std::vector<unsigned long> spectralCluster (
     const dlib::matrix<double>& A,
     const unsigned long num_clusters
@@ -12,7 +14,9 @@ std::vector<unsigned long> spectralCluster (
 
 struct Problem
 {
-  std::vector<intA> xmasks; // vector of LOOSELY coupled subproblems
+  std::vector<intV> xmasks; // vector of LOOSELY coupled subproblems
+  std::vector<uint> sizes;  // number of non zeros in each xmask
+  std::vector<uint> overlaps; // overlap with other subproblems
 };
 
 struct Decomposition
@@ -22,7 +26,10 @@ struct Decomposition
 
 dlib::matrix<double> buildAdjacancyMatrix(const arr&);
 
+std::vector<dlib::matrix<double>> buildAdjacancyMatrices(const arr & H, std::vector<Problem>& pbs);
+
 Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster);
 
-Decomposition decomposeHessian(const arr& H, uint number_of_cluster);
+// each cluster bigger than splitting_threshold will be split into number_of_cluster
+Decomposition decomposeHessian(const arr& H, uint splittingThreshold, uint numberOfCluster);
 }

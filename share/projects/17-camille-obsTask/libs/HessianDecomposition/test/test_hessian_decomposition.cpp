@@ -67,6 +67,27 @@ arr buildOneLooselyCoupledProblem()
   return H;
 }
 
+arr buildTwoIndependantProblems()
+{
+  arr H(10, 10);
+
+  // cluster 1
+  addEdge(0, 1, H);
+  addEdge(1, 2, H);
+  addEdge(2, 3, H);
+  addEdge(3, 4, H);
+  addEdge(4, 2, H);
+
+  // cluster 2
+  addEdge(5, 6, H);
+  addEdge(6, 7, H);
+  addEdge(7, 8, H);
+  addEdge(8, 9, H);
+  addEdge(9, 6, H);
+
+  return H;
+}
+
 TEST(DLib, UseDLib)
 {
   using namespace dlib;
@@ -102,16 +123,32 @@ TEST(DecomposeHessian, SpectralCluster)
   EXPECT_EQ(H.d0, sparsestCut.size());
 }
 
-TEST(DecomposeHessian, HessianDecomposition)
+TEST(DecomposeHessian, OneLooselyCoupledProblem)
 {
   auto H = buildOneLooselyCoupledProblem();
 
-  auto decomp = decomposeHessian(H, 2);
+  auto decomp = decomposeHessian(H, H.d0 / 2 + 1, 2);
 
   EXPECT_EQ(1, decomp.problems.size());
   EXPECT_EQ(2, decomp.problems.front().xmasks.size());
-  EXPECT_EQ(intA(7, {0, 1, 4, 5, 6, 8, 9}), decomp.problems.front().xmasks[0]);
-  EXPECT_EQ(intA(8, {2, 3, 6, 5, 7, 10, 11, 12}), decomp.problems.front().xmasks[1]);
+  EXPECT_EQ(2, decomp.problems.front().sizes.size());
+  EXPECT_EQ(7, decomp.problems.front().sizes[0]);
+  EXPECT_EQ(8, decomp.problems.front().sizes[1]);
+  EXPECT_EQ(1, decomp.problems.front().overlaps[0]);
+  EXPECT_EQ(1, decomp.problems.front().overlaps[1]);
+  EXPECT_EQ(intV({1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0}), decomp.problems.front().xmasks[0]);
+  EXPECT_EQ(intV({0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1}), decomp.problems.front().xmasks[1]);
+}
+
+TEST(DecomposeHessian, TwoIndependantProblems)
+{
+  auto H = buildTwoIndependantProblems();
+
+  auto decomp = decomposeHessian(H, H.d0 / 2 + 1, 2);
+
+  EXPECT_EQ(2, decomp.problems.size());
+  EXPECT_EQ(intV({1, 1, 1, 1, 1, 0, 0, 0, 0, 0}), decomp.problems[0].xmasks[0]);
+  EXPECT_EQ(intV({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}), decomp.problems[1].xmasks[0]);
 }
 
 ////////////////////////////////
