@@ -10,7 +10,9 @@
 #include <Kin/TM_FlagConstraints.h>
 #include <Kin/TM_FixSwitchedObjects.h>
 
-#include <unordered_set>
+//#include <dlib/clustering.h>
+
+#include <hessian_decomposition.h>
 
 namespace mp
 {
@@ -37,7 +39,9 @@ void KOMOSubProblemsFinder::analyse(Policy & policy, const rai::Array< std::shar
   auto start = std::chrono::high_resolution_clock::now();
 
   komo->run();
-  komo->opt->newton.Hx;
+  const auto & H = komo->opt->newton.Hx;
+
+  auto xmasks = hessian_decomposition::decomposeHessian(H, 4);
 }
 
 }

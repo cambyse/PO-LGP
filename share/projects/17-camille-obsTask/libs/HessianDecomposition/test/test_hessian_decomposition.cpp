@@ -25,8 +25,11 @@ void addEdge(uint from, uint to, T & A)
 };
 
 template<typename T>
-void buildPb1(T & A)
+void buildOneLooselyCoupledProblem(T & A)
 {
+  // cluster 0: 0, 1, 4, 5, 8, 9
+  // cluster 1: 2, 3, 6, 7, 10, 11, 12
+
   CHECK_EQ(size(A), 13, "please build the matrix correctly");
 
   addEdge(1, 0, A);
@@ -53,9 +56,15 @@ void buildPb1(T & A)
   addEdge(11, 7, A);
   addEdge(11, 10, A);
   addEdge(11, 12, A);
+}
 
-  // cluster 0: 0, 1, 4, 5, 8, 9
-  // cluster 1: 2, 3, 6, 7, 10, 11, 12
+arr buildOneLooselyCoupledProblem()
+{
+  arr H(13, 13);
+
+  buildOneLooselyCoupledProblem(H);
+
+  return H;
 }
 
 TEST(DLib, UseDLib)
@@ -68,7 +77,7 @@ TEST(DLib, UseDLib)
     for(auto j = 0; j < A.nc(); ++j)
       A(i, j) = 0.0;
 
-  buildPb1(A);
+  buildOneLooselyCoupledProblem(A);
 
   std::cout << A << std::endl;
 
@@ -85,7 +94,7 @@ TEST(DecomposeHessian, SpectralCluster)
 {
   arr H(13, 13);
 
-  buildPb1(H);
+  buildOneLooselyCoupledProblem(H);
 
   auto A = buildAdjacancyMatrix(H);
   auto sparsestCut = spectralCluster(A, 2);
@@ -95,22 +104,21 @@ TEST(DecomposeHessian, SpectralCluster)
 
 TEST(DecomposeHessian, HessianDecomposition)
 {
-  arr H(13, 13);
+  auto H = buildOneLooselyCoupledProblem();
 
-  buildPb1(H);
+  auto decomp = decomposeHessian(H, 2);
 
-  auto xmasks = decomposeHessian(H, 2);
-
-  EXPECT_EQ(2, xmasks.size());
-  EXPECT_EQ(intA(7, {0, 1, 4, 5, 6, 8, 9}), xmasks[0]);
-  EXPECT_EQ(intA(8, {2, 3, 6, 5, 7, 10, 11, 12}), xmasks[1]);
+  EXPECT_EQ(1, decomp.problems.size());
+  EXPECT_EQ(2, decomp.problems.front().xmasks.size());
+  EXPECT_EQ(intA(7, {0, 1, 4, 5, 6, 8, 9}), decomp.problems.front().xmasks[0]);
+  EXPECT_EQ(intA(8, {2, 3, 6, 5, 7, 10, 11, 12}), decomp.problems.front().xmasks[1]);
 }
 
 ////////////////////////////////
 int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    int ret = RUN_ALL_TESTS();
-    return ret;
+  testing::InitGoogleTest(&argc, argv);
+  int ret = RUN_ALL_TESTS();
+  return ret;
 }
 

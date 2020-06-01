@@ -26,7 +26,6 @@ TEST_F(KomoPlannerSingleAgentFixture, Foo)
 
   KOMOSubProblemsFinder pf(planner.config(), planner.komoFactory());
   pf.analyse(policy, planner.startKinematics());
-
 }
 
 ////////////////////////////////

@@ -10,9 +10,19 @@ std::vector<unsigned long> spectralCluster (
     const unsigned long num_clusters
 );
 
+struct Problem
+{
+  std::vector<intA> xmasks; // vector of LOOSELY coupled subproblems
+};
+
+struct Decomposition
+{
+  std::vector<Problem> problems; // vector of INDEPENDANT subproblems
+};
+
 dlib::matrix<double> buildAdjacancyMatrix(const arr&);
 
-std::vector<intA> buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster);
+Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster);
 
-std::vector<intA> decomposeHessian(const arr& H, uint number_of_cluster);
+Decomposition decomposeHessian(const arr& H, uint number_of_cluster);
 }

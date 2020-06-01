@@ -58,15 +58,33 @@ dlib::matrix<double> buildAdjacancyMatrix(const arr& H)
   dlib::matrix<double> A(H.d0, H.d1);
 
   // hessian
-  //  if(isSparseMatrix(H))
-  //  {
-  //    auto Hs = dynamic_cast<rai::SparseMatrix*>(H.special);
-  //    for(uint i=0;i<Hs->d0;i++)
-  //    {
-  //      A = Hs->elem(i, i);
-  //    }
-  //  }
-  //  else
+  if(isSparseMatrix(H))
+  {
+    for(auto i = 0; i < H.d0; ++i)
+    {
+      for(auto j = 0; j < H.d1; ++j)
+      {
+        A(i, j) = 0;
+      }
+    }
+
+    auto Hs = dynamic_cast<rai::SparseMatrix*>(H.special);
+
+    const auto & nzs = Hs->elems;
+
+    for(auto i = 0; i < nzs.d0; ++i)
+    {
+      auto I = nzs(i, 0);
+      auto J = nzs(i, 1);
+
+      A(I, J) = 1;
+    }
+    //      for(uint i=0;i<Hs->d0;i++)
+    //      {
+    //        A = Hs->elem(i, i);
+    //      }
+  }
+  else
   {
     for(auto i = 0; i < H.d0; ++i)
     {
@@ -84,39 +102,45 @@ dlib::matrix<double> buildAdjacancyMatrix(const arr& H)
   return A;
 }
 
-std::vector<intA> buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster)
+Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster)
 {
-  std::vector<intA> xmasks(numberOfCluster);
-  for(auto & xmask: xmasks)
+  Problem pb;
+  pb.xmasks = std::vector<intA>(numberOfCluster);
+  for(auto & xmask: pb.xmasks)
     xmask.reserve(1.2 * sparsestCut.size() / (numberOfCluster)); // account for cluster unbalancing
 
   for(auto i = 0; i < sparsestCut.size(); ++i)
   {
     const auto & k = sparsestCut[i];
-    xmasks[k].append(i);
+    pb.xmasks[k].append(i);
 
     for(auto j = 0; j < A.nc(); ++j)
     {
       if(A(i, j) != 0 && sparsestCut[j] != k) // add the neighbors in other cut! crucial part for ADMM
       {
-        xmasks[k].append(j);
+        pb.xmasks[k].append(j);
       }
     }
   }
 
-  return xmasks;
+  return pb;
 }
 
-std::vector<intA> decomposeHessian(const arr& H, uint numberOfCluster)
+Decomposition decomposeHessian(const arr& H, uint numberOfCluster)
 {
   CHECK_EQ(H.d0, H.d1, "hessian should be a square matrix");
 
   auto A = buildAdjacancyMatrix(H);
 
+  std::cout << A << std::endl;
+
   auto sparsestCut = spectralCluster(A, numberOfCluster);
 
-  auto subProblems = buildDecomposition(A, sparsestCut, numberOfCluster);
+  auto xmasks = buildDecomposition(A, sparsestCut, numberOfCluster);
 
-  return subProblems;
+  Decomposition decomp;
+  decomp.problems.push_back(xmasks);
+
+  return decomp;
 }
 }
