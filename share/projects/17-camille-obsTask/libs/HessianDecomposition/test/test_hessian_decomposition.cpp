@@ -30,7 +30,7 @@ void buildOneLooselyCoupledProblem(T & A)
   // cluster 0: 0, 1, 4, 5, 8, 9
   // cluster 1: 2, 3, 6, 7, 10, 11, 12
 
-  CHECK_EQ(size(A), 13, "please build the matrix correctly");
+  CHECK(size(A) >= 13, "please build the matrix correctly");
 
   addEdge(1, 0, A);
   addEdge(3, 2, A);
@@ -88,6 +88,33 @@ arr buildTwoIndependantProblems()
   return H;
 }
 
+arr buildOneLooselyCoupledPlusOneIndependantProblem()
+{
+  arr H(20, 20);
+
+  buildOneLooselyCoupledProblem(H);
+
+  addEdge(13, 14, H);
+  addEdge(13, 15, H);
+  addEdge(15, 16, H);
+  addEdge(14, 16, H);
+
+  // space left in graph, left empty on purpose
+
+  return H;
+}
+
+arr buildTwoIndependantProblemsSparse()
+{
+  auto H = buildTwoIndependantProblems();
+
+  H.special = &H.sparse();
+
+  CHECK(isSparseMatrix(H), "should be a sparse matrix");
+
+  return H;
+}
+
 TEST(DLib, UseDLib)
 {
   using namespace dlib;
@@ -134,8 +161,8 @@ TEST(DecomposeHessian, OneLooselyCoupledProblem)
   EXPECT_EQ(2, decomp.problems.front().sizes.size());
   EXPECT_EQ(7, decomp.problems.front().sizes[0]);
   EXPECT_EQ(8, decomp.problems.front().sizes[1]);
-  EXPECT_EQ(1, decomp.problems.front().overlaps[0]);
-  EXPECT_EQ(1, decomp.problems.front().overlaps[1]);
+  EXPECT_EQ(1, decomp.problems.front().overlaps[0].size());
+  EXPECT_EQ(1, decomp.problems.front().overlaps[1].size());
   EXPECT_EQ(intV({1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0}), decomp.problems.front().xmasks[0]);
   EXPECT_EQ(intV({0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1}), decomp.problems.front().xmasks[1]);
 }
@@ -149,6 +176,26 @@ TEST(DecomposeHessian, TwoIndependantProblems)
   EXPECT_EQ(2, decomp.problems.size());
   EXPECT_EQ(intV({1, 1, 1, 1, 1, 0, 0, 0, 0, 0}), decomp.problems[0].xmasks[0]);
   EXPECT_EQ(intV({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}), decomp.problems[1].xmasks[0]);
+}
+
+TEST(DecomposeHessian, TwoIndependantProblemsSparse)
+{
+  auto H = buildTwoIndependantProblemsSparse();
+
+  auto decomp = decomposeSparseHessian(H, H.d0 / 2 + 1, 2);
+
+  EXPECT_EQ(2, decomp.problems.size());
+  EXPECT_EQ(intV({1, 1, 1, 1, 1, 0, 0, 0, 0, 0}), decomp.problems[0].xmasks[0]);
+  EXPECT_EQ(intV({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}), decomp.problems[1].xmasks[0]);
+}
+
+
+TEST(DecomposeHessian, OneLooselyCoupledPlusOneIndependantProblem)
+{
+  auto H = buildOneLooselyCoupledPlusOneIndependantProblem();
+  auto decomp = decomposeHessian(H, H.d0 / 2 + 1, 2);
+
+  EXPECT_EQ(2, decomp.problems.size());
 }
 
 ////////////////////////////////

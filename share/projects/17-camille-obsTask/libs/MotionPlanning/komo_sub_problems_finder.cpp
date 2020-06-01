@@ -17,7 +17,7 @@
 namespace mp
 {
 /// SUBPROBLEMS ANALYSER COMPRESSED
-void KOMOSubProblemsFinder::analyse(Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics)
+hessian_decomposition::Decomposition KOMOSubProblemsFinder::analyse(Policy & policy, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & startKinematics)
 {
   using W = KomoWrapper;
 
@@ -41,7 +41,14 @@ void KOMOSubProblemsFinder::analyse(Policy & policy, const rai::Array< std::shar
   komo->run();
   const auto & H = komo->opt->newton.Hx;
 
-  auto xmasks = hessian_decomposition::decomposeHessian(H, 4);
+  auto decomp = hessian_decomposition::decomposeSparseHessian(H, H.d0 / 2 + 1, 5);
+
+  // create as mayn komos as subpbs
+  // based on decomp, adjust the vars of each objectives
+  // re-extract xmasks
+  // optimize
+
+  return decomp;
 }
 
 }

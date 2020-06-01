@@ -233,13 +233,8 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
       //counter for features phi
       M += y.N;
     }
-    else
-    {
-      int a = 0;
-    }
   }
-  // Add admm terms
-  //
+
   komo.timeFeatures += rai::timerRead(true);
 
   CHECK_EQ(M, dimPhi, "");

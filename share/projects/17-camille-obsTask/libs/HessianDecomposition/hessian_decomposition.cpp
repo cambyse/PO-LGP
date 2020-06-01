@@ -4,6 +4,29 @@
 namespace hessian_decomposition
 {
 
+static bool sanityCheck(const arr& H, const Decomposition& decomp)
+{
+  uint n = 0;
+
+  for(auto pb: decomp.problems)
+  {
+    for(auto i = 0; i < pb.xmasks.size(); ++i)
+    {
+      n += pb.sizes[i] - pb.overlaps[i].size();
+
+      uint m = 0;
+      for(auto j = 0; j < pb.xmasks[i].size(); ++j)
+      {
+        if(pb.xmasks[i][j]) ++m;
+      }
+
+      CHECK_EQ(pb.sizes[i], m, "wrong size computation!");
+    }
+  }
+
+  return n <= H.d0;
+}
+
 std::vector<unsigned long> spectralCluster (
     const dlib::matrix<double>& A,
     const unsigned long num_clusters
@@ -98,7 +121,7 @@ dlib::matrix<double> buildAdjacancyMatrix(const arr& H)
   return A;
 }
 
-dlib::matrix<double> buildAdjacancyMatrixFrom(const arr& H, uint & _from, Problem & pb)
+dlib::matrix<double> buildAdjacancyMatrixFrom(const arr& H, uint from, Problem & pb)
 {
   dlib::matrix<double> A = dlib::zeros_matrix<double>(H.d0, H.d1);
   pb.xmasks.push_back(intV(H.d0, 0));
@@ -107,26 +130,31 @@ dlib::matrix<double> buildAdjacancyMatrixFrom(const arr& H, uint & _from, Proble
   auto & size = pb.sizes.back();
 
   std::queue<uint> froms;
-  froms.push(_from);
+  froms.push(from);
 
   while(!froms.empty())
   {
     auto from = froms.front();
     froms.pop();
 
-    if(from > _from) _from = from;
-
     for(auto to = 0; to < H.d1; ++to)
     {
-      if(fabs(H(from, to))>1e-7 && !A(from, to))
+      if(H(from, to) && !A(from, to))
       {
         A(from, to) = A(to, from) = 1;
         froms.push(to);
 
-        xmask[from] = 1;
-        xmask[to] = 1;
+        if(!xmask[from])
+        {
+          xmask[from] = 1;
+          size++;
+        }
 
-        size++;
+        if(!xmask[to])
+        {
+          xmask[to] = 1;
+          size++;
+        }
       }
     }
   }
@@ -140,52 +168,73 @@ std::vector<dlib::matrix<double>> buildAdjacancyMatrices(const arr & H, std::vec
   As.reserve(4);
   pbs.reserve(4);
 
-  if(isSparseMatrix(H))
-  {
-    NIY;
-  }
-  else
-  {
-    uint from = 0;
+  bool progressing = true;
+  uint from = 0;
 
-    while(from < H.d0)
+  intV all(H.d0);
+  while(from < H.d0 && progressing)
+  {
+    Problem pb;
+    dlib::matrix<double> A = buildAdjacancyMatrixFrom(H, from, pb);
+    if(pb.sizes[0]) // found supproblem
     {
-      Problem pb;
-      intV xmask(H.d0, 0);
-      dlib::matrix<double> A = buildAdjacancyMatrixFrom(H, from, pb);
       As.push_back(A);
+      pb.overlaps.push_back(std::set<uint>());
       pbs.push_back(pb);
 
-      from++;
+      // bookeeping on inddices assigned to a pb
+      for(auto i = 0; i < H.d0; ++i) // probably possible to improve a lot!!
+        if(pb.xmasks.front()[i])
+          all[i] = 1;
     }
+    else
+    {
+      all[from] = -1;
+    }
+
+    // advance from to possible start of next cluster
+    auto prevFrom = from;
+    for(from = 0; all[from] != 0 && from < all.size(); ++from) // probably possible to improve a lot!!
+    {}
+
+    progressing = from > prevFrom;
   }
 
   return As;
 }
 
-Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned long> & sparsestCut, uint numberOfCluster)
+Problem buildDecomposition(const dlib::matrix<double>& A, const Problem& orig, std::vector<unsigned long> & sparsestCut, uint numberOfCluster)
 {
   Problem pb;
   pb.xmasks = std::vector<intV>(numberOfCluster);
-  pb.sizes = std::vector<uint>(numberOfCluster);
-  pb.overlaps = std::vector<uint>(numberOfCluster);
+  pb.sizes = std::vector<uint>(numberOfCluster, 0);
+  pb.overlaps = std::vector<std::set<uint>>(numberOfCluster);
 
   for(auto & xmask: pb.xmasks)
     xmask = intV(sparsestCut.size(), 0);
 
-  for(auto i = 0; i < sparsestCut.size(); ++i)
+  for(auto i = 0; i < sparsestCut.size(); ++i) // quadratic here!!
   {
-    const auto & k = sparsestCut[i];
-    pb.xmasks[k][i] = 1;
-    pb.sizes[k]++;
-
-    for(auto j = 0; j < A.nc(); ++j)
+    if(orig.xmasks.front()[i]) // test needed ?
     {
-      if(A(i, j) != 0 && sparsestCut[j] != k) // add the neighbors in other cut! crucial part for ADMM
+      const auto & k = sparsestCut[i];
+      pb.xmasks[k][i] = 1;
+      pb.sizes[k]++;
+
+      for(auto j = 0; j < A.nc(); ++j)
       {
-        pb.xmasks[k][j] = 1;
-        pb.sizes[k]++;
-        pb.overlaps[k]++;
+        if(orig.xmasks.front()[j]) // test needed ?
+        {
+          if(A(i, j) != 0 && sparsestCut[j] != k) // add the neighbors in other cut! crucial part for ADMM
+          {
+            if(!pb.xmasks[k][j])
+            {
+              pb.xmasks[k][j] = 1;
+              pb.sizes[k]++;
+              pb.overlaps[k].insert(j);
+            }
+          }
+        }
       }
     }
   }
@@ -196,6 +245,8 @@ Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned l
 Decomposition decomposeHessian(const arr& H, uint splittingThreshold, uint numberOfCluster)
 {
   CHECK_EQ(H.d0, H.d1, "hessian should be a square matrix");
+  CHECK(!isSparseMatrix(H), "should NOT be a sparse matrix");
+
   Decomposition decomp;
   decomp.problems.reserve(10);
 
@@ -207,12 +258,12 @@ Decomposition decomposeHessian(const arr& H, uint splittingThreshold, uint numbe
     const auto& A = As[i];
     auto& pb = independant_pbs[i];
 
-    std::cout << A << std::endl;
+    //std::cout << A << std::endl;
 
     if(pb.sizes.front() > splittingThreshold)
     {
       auto sparsestCut = spectralCluster(A, numberOfCluster);
-      auto splitted = buildDecomposition(A, sparsestCut, numberOfCluster);
+      auto splitted = buildDecomposition(A, pb, sparsestCut, numberOfCluster);
 
       decomp.problems.push_back(splitted);
     }
@@ -222,6 +273,18 @@ Decomposition decomposeHessian(const arr& H, uint splittingThreshold, uint numbe
     }
   }
 
+  CHECK_EQ(true, sanityCheck(H, decomp), "wrong size computations")
+
   return decomp;
 }
+
+Decomposition decomposeSparseHessian(const arr& H, uint splittingThreshold, uint numberOfCluster) // to be improved
+{
+  CHECK(isSparseMatrix(H), "should be a sparse matrix");
+
+  auto HH = dynamic_cast<rai::SparseMatrix*>(H.special)->unsparse();
+
+  return decomposeHessian(HH, splittingThreshold, numberOfCluster);
+}
+
 }

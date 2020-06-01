@@ -11,6 +11,8 @@
 #include <komo_wrapper.h>
 #include <komo_sparse_planner.h>
 
+#include <hessian_decomposition.h>
+
 namespace mp
 {
 
@@ -20,7 +22,7 @@ public:
   KOMOSubProblemsFinder(const KOMOPlannerConfig& config, const KOMOFactory& factory)
     : KOMOSparsePlanner(config, factory) {};
 
-  void analyse(Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > &);
+  hessian_decomposition::Decomposition analyse(Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > &);
   void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override{};
 };
 

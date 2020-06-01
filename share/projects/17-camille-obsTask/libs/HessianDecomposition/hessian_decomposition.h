@@ -2,6 +2,7 @@
 
 #include <dlib/clustering.h>
 #include <Core/array.h>
+#include <set>
 
 namespace hessian_decomposition
 {
@@ -16,7 +17,7 @@ struct Problem
 {
   std::vector<intV> xmasks; // vector of LOOSELY coupled subproblems
   std::vector<uint> sizes;  // number of non zeros in each xmask
-  std::vector<uint> overlaps; // overlap with other subproblems
+  std::vector<std::set<uint>> overlaps; // overlap with other subproblems
 };
 
 struct Decomposition
@@ -32,4 +33,5 @@ Problem buildDecomposition(const dlib::matrix<double>& A, std::vector<unsigned l
 
 // each cluster bigger than splitting_threshold will be split into number_of_cluster
 Decomposition decomposeHessian(const arr& H, uint splittingThreshold, uint numberOfCluster);
+Decomposition decomposeSparseHessian(const arr& H, uint splittingThreshold, uint numberOfCluster); // to be improved
 }

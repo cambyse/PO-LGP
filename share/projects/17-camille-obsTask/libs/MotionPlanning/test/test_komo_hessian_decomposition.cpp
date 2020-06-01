@@ -25,7 +25,9 @@ TEST_F(KomoPlannerSingleAgentFixture, Foo)
   policy.load( "data/LGP-overtaking-single-agent-2w.po" );
 
   KOMOSubProblemsFinder pf(planner.config(), planner.komoFactory());
-  pf.analyse(policy, planner.startKinematics());
+  auto decomp = pf.analyse(policy, planner.startKinematics());
+
+
 }
 
 ////////////////////////////////
