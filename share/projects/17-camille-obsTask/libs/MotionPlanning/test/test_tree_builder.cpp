@@ -481,10 +481,41 @@ TEST(TreeBuilder, VariousTestsOnRealExample)
   Mapping mapping;
   auto c_b2 = b2.compressed(mapping);
 
-  std::cout << c_b2 << std::endl;
+  //std::cout << c_b2 << std::endl;
 
   auto compressed_var = c_b2.get_vars({0, 2}, mapping.orig_to_compressed(12), 0, 2);
 }
+
+TEST(TreeBuilder, BranchGenerator)
+{
+  auto tree = build_simple_path_builder();
+
+  auto gen = BranchGen(tree);
+
+  auto b1 = gen.next().get_nodes();
+  auto b2 = gen.next().get_nodes();
+
+  EXPECT_EQ(std::vector<uint>({0, 1, 2, 3}), b1);
+  EXPECT_EQ(std::vector<uint>({0, 1, 2, 4}), b2);
+
+  EXPECT_TRUE(gen.finished());
+}
+
+TEST(TreeBuilder, SubTreesAfterFirstBranching)
+{
+  auto tree = build_5_edges_2_branchings();
+
+  auto gen = SubTreesAfterFirstBranching(tree);
+
+  auto s1 = gen.next().get_nodes();
+  auto s2 = gen.next().get_nodes();
+
+  EXPECT_EQ(std::vector<uint>({0, 1, 2}), s1);
+  EXPECT_EQ(std::vector<uint>({0, 1, 3, 4, 5}), s2);
+
+  EXPECT_TRUE(gen.finished());
+}
+
 
 ////////////////////////////////
 int main(int argc, char **argv)

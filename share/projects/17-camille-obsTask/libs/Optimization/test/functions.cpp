@@ -54,10 +54,10 @@ struct Distance2D : public ConstrainedProblem
       ot(3) = OT_ineq;
     }
 
-    phi(0) = x(0) - 10.0;
+    phi(0) = x(0) - center_(0);
     J(0, 0) = 1.0;
 
-    phi(1) = x(1) - 2.0;
+    phi(1) = x(1) - center_(1);
     J(1, 1) = 1.0;
 
     phi(2) = x(0);

@@ -38,7 +38,7 @@ static TimeInterval normalize(const TimeInterval & interval, const _Branch & bra
   return {from, to};
 }
 
-static bool empty_row(const arr & m, uint i)
+bool empty_row(const arr & m, uint i)
 {
   CHECK(i < m.d0, "wrong row dimensions");
 
@@ -53,7 +53,7 @@ static bool empty_row(const arr & m, uint i)
   return true;
 };
 
-static bool empty_col(const arr & m, uint j)
+bool empty_col(const arr & m, uint j)
 {
   CHECK(j < m.d1, "wrong col dimensions");
 
@@ -77,18 +77,7 @@ TreeBuilder::TreeBuilder()
 
 uint TreeBuilder::n_nodes() const
 {
-  //return adjacency_matrix_.d0;
-  uint n = 0;
-
-  for(auto i = 0; i < adjacency_matrix_.d0; ++i)
-  {
-    if(!empty_col(adjacency_matrix_, i) || !empty_row(adjacency_matrix_, i))
-    {
-      ++n;
-    }
-  }
-
-  return n;
+  return get_nodes().size();
 }
 
 bool TreeBuilder::has_node(uint n) const
@@ -102,6 +91,21 @@ bool TreeBuilder::has_node(uint n) const
 double TreeBuilder::p(uint from, uint to) const
 {
   return adjacency_matrix_(from, to);
+}
+
+std::vector<uint> TreeBuilder::get_nodes() const
+{
+  std::vector<uint> nodes;
+
+  for(auto i = 0; i < adjacency_matrix_.d0; ++i)
+  {
+    if(!empty_row(adjacency_matrix_, i) || !empty_col(adjacency_matrix_, i))
+    {
+      nodes.push_back(i);
+    }
+  }
+
+  return nodes;
 }
 
 std::vector<uint> TreeBuilder::get_leaves() const
@@ -212,6 +216,28 @@ _Branch TreeBuilder::_get_branch(uint leaf) const
   }
 
   return branch;
+}
+
+TreeBuilder TreeBuilder::get_subtree_from(uint node) const
+{
+  TreeBuilder tree;
+  std::list<uint> queue;
+  queue.push_back(node);
+
+  while(!queue.empty())
+  {
+    auto p = queue.back();
+    queue.pop_back();
+
+    auto children = get_children(p);
+
+    for(const auto& q: children)
+    {
+      tree.add_edge(p, q);
+      queue.push_back(q);
+    }
+  }
+  return tree;
 }
 
 TreeBuilder TreeBuilder::compressed(Mapping & mapping) const

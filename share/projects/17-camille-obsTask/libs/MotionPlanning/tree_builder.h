@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <Core/array.h>
 #include <ostream>
+#include <list>
 
 namespace mp
 {
@@ -19,6 +20,9 @@ struct _Branch
 
 bool operator==(const _Branch& a, const _Branch& b);
 bool operator<(const _Branch& a, const _Branch& b);
+
+bool empty_row(const arr & m, uint i);
+bool empty_col(const arr & m, uint j);
 
 struct Vars // Branch
 {
@@ -115,9 +119,11 @@ class TreeBuilder
 public:
   TreeBuilder();
 
+  arr adjacency_matrix() const {return adjacency_matrix_;}
   uint n_nodes() const;
   bool has_node(uint n) const;
   double p(uint from, uint to) const;
+  std::vector<uint> get_nodes() const;
   std::vector<uint> get_leaves() const;
   std::vector<uint> get_parents(uint node) const;
   std::vector<uint> get_children(uint node) const;
@@ -125,6 +131,7 @@ public:
   _Branch _get_branch(uint leaf) const;
   std::vector<_Branch> get_branches() const;
   TreeBuilder get_branch(uint leaf) const;
+  TreeBuilder get_subtree_from(uint node) const;
   TreeBuilder compressed(Mapping & mapping) const; // remove non existing nodes, de-facto changing ids mapping is a mapping from compressed to initial tree
   intA get_vars0(const TimeInterval& interval, const _Branch& branch, uint steps=1) const;
   intA get_vars(const TimeInterval& interval, uint leaf, uint order=2, uint steps=1) const;
@@ -138,7 +145,90 @@ private:
   arr adjacency_matrix_;
 };
 
-std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree);
+struct BranchGen
+{
+  BranchGen(const TreeBuilder& tree)
+    : tree(tree)
+  {
+    leaves = tree.get_leaves();
+  }
 
+  bool finished() const
+  {
+    return (index == leaves.size());
+  }
+
+  TreeBuilder next()
+  {
+    CHECK(!finished(), "finished generator");
+
+    return tree.get_branch(leaves[index++]);
+  }
+
+  const TreeBuilder& tree;
+  std::vector<uint> leaves;
+  uint index = 0;
+};
+
+struct SubTreesAfterFirstBranching // common trunk
+{
+  SubTreesAfterFirstBranching(const TreeBuilder& tree)
+    : tree(tree)
+  {
+    uint branching_node = 0;
+
+    std::list<uint> queue;
+    queue.push_back(0);
+
+    while(!queue.empty())
+    {
+      auto p = queue.back();
+      queue.pop_back();
+
+      path_to_source.push_back(p);
+
+      auto children = tree.get_children(p);
+
+      if(children.size() > 1)
+      {
+        sources = children;
+        break;
+      }
+
+      for(const auto& c: children)
+      {
+        queue.push_back(c);
+      }
+    }
+  }
+
+  bool finished() const
+  {
+    return (index == sources.size());
+  }
+
+  TreeBuilder next()
+  {
+    CHECK(!finished(), "finished generator");
+
+    auto sub = tree.get_subtree_from(sources[index]);
+
+    for(auto i = 1; i < path_to_source.size(); ++i)
+    {
+      sub.add_edge(path_to_source[i-1], path_to_source[i]);
+    }
+
+    sub.add_edge(path_to_source.back(), sources[index++]);
+
+    return sub;
+  }
+
+  const TreeBuilder& tree;
+  std::vector<uint> path_to_source;
+  std::vector<uint> sources;
+  uint index = 0;
+};
+
+std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree);
 }
 

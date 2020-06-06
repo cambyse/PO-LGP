@@ -4,8 +4,80 @@
 
 constexpr double eps_s = 0.02;
 
+TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequential) {
+  arr x{0.0, 0.0, 0.0};
 
-TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUsingVars) {
+  const arr center0{1.0, 1.5, 1.0};
+  const arr center1{1.0, 0.5, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.5, 1.0});
+  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 0.5, 1.0});
+
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  DecOptConstrained opt(x, pbs, {}, DecOptConfig(SEQUENTIAL, false));
+
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_TRUE(x(1) > 1.0);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
+TEST(DecentralizedAugmentedLagrangian, DecAulaWithCompressedProblemSequential) {
+  // distance 3d decomposed in 2x dist 2d
+  arr x{0.0, 1.0, 2.0};
+
+  const arr center0 {1.0, 1.0};
+  const arr center1 {1.0, 0.5};
+
+  auto pb0 = std::make_shared<Distance2D>(center0, arr{sqrt(0.5), 1.0});
+  auto pb1 = std::make_shared<Distance2D>(center1, arr{sqrt(0.5), 1.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  std::vector<arr> masks;
+  masks.push_back(arr{1.0, 1.0, 0.0});
+  masks.push_back(arr{1.0, 0.0, 1.0});
+
+  DecOptConstrained opt(x, pbs, masks, DecOptConfig(SEQUENTIAL, true));
+
+  EXPECT_EQ((intA{0, 1}), opt.vars[0]);
+  EXPECT_EQ((intA{0, 2}), opt.vars[1]);
+
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_NEAR(1.0, x(1), eps_s);
+  EXPECT_NEAR(0.5, x(2), eps_s);
+}
+
+TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequentialAndParallel) {
+  arr x{0.0, 0.0, 0.0};
+
+  const arr center0{1.0, 1.5, 1.0};
+  const arr center1{1.0, 0.5, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.5, 1.0});
+  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 0.5, 1.0});
+
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  DecOptConstrained opt(x, pbs, {}, DecOptConfig(FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL, false));
+
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_TRUE(x(1) > 1.0);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
+TEST(DecentralizedAugmentedLagrangian, DecAulaWithCompressedProblemUsingVars) {
   // distance 3d decomposed in 2x dist 2d
   arr x{0.0, 1.0, 2.0};
 
@@ -21,7 +93,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUsingVars) {
   masks.push_back(arr{1.0, 1.0, 0.0});
   masks.push_back(arr{1.0, 0.0, 1.0});
 
-  DecOptConstrained opt(x, pbs, masks, true);
+  DecOptConstrained opt(x, pbs, masks, DecOptConfig(PARALLEL, true));
 
   EXPECT_EQ((intA{0, 1}), opt.vars[0]);
   EXPECT_EQ((intA{0, 2}), opt.vars[1]);
@@ -48,7 +120,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUsingMasks) {
   masks.push_back(arr{1.0, 1.0, 0.0});
   masks.push_back(arr{1.0, 0.0, 1.0});
 
-  DecOptConstrained opt(x, pbs, masks);
+  DecOptConstrained opt(x, pbs, masks, DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -67,7 +139,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained opt(x, pbs);
+  DecOptConstrained opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -75,7 +147,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   EXPECT_NEAR(1.0, x(2), eps_s);
 }
 
-TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
+TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverY) {
   arr x{0.0, 0.0, 0.0};
 
   const arr center0{1.0, 1.5, 1.0};
@@ -88,7 +160,8 @@ TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained opt(x, pbs);
+  DecOptConstrained opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
+
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -97,7 +170,7 @@ TEST(DecentralizedAugmentedLagrangian,DecAulaBattlingADMMoverY) {
 }
 
 
-TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
+TEST(DecentralizedAugmentedLagrangian, DecAula4D3Problems) {
   arr x{0.0, 0.0, 0.0, 0.0};
 
   const arr center{1.0, 1.0, 1.0, 1.0};
@@ -111,7 +184,7 @@ TEST(DecentralizedAugmentedLagrangian,DecAula4D3Problems) {
   pbs.push_back(pb1);
   pbs.push_back(pb2);
 
-  DecOptConstrained opt(x, pbs);
+  DecOptConstrained opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -127,7 +200,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb);
 
-  DecOptConstrained opt(x, pbs);
+  DecOptConstrained opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);

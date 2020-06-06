@@ -3,18 +3,44 @@
 #include <future>
 #include <thread>
 
+namespace
+{
+  arr getSub(const arr& zz, const intA& var) // extract sub-variable global zz
+  {
+    arr x(var.d0);
 
-DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
+    for(auto i = 0; i < var.d0; ++i)
+    {
+      const auto& I = var(i);
+      if(I!=-1)
+        x(i) = zz(I);
+    }
+
+    return x;
+  }
+
+  void setFromSub(const arr& x, const intA& var, arr & zz) // set global variable zz from sub x
+  {
+    for(auto i = 0; i < var.d0; ++i)
+    {
+      const auto& I = var(i);
+      if(I!=-1)
+        zz(I) = x(i);
+    }
+  }
+}
+
+DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
   : z_final(_z)
   , N(Ps.size())
-  , compressed(compressed)
   , contribs(zeros(z_final.d0))
   , z(z_final.copy())
-  , opt(_opt)
-  , logFile(_logFile)
+  , config(_config)
+//  , opt(_opt)
+//  , logFile(_logFile)
 {
   // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to 2.0, strange!
-  opt.aulaMuInc = 1.2;
+  config.opt.aulaMuInc = 1.2;
 
   /// TO BE EQUIVALENT TO PYTHON
   //opt.damping = 0.1;
@@ -31,7 +57,7 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
   // fill masks with default values if not provided
   std::vector<arr> masks;
   masks.reserve(N);
-  if(compressed) CHECK(xmasks.size() > 0, "In compressed mode, the masks should be provided!");
+  if(config.compressed) CHECK(xmasks.size() > 0, "In compressed mode, the masks should be provided!");
   for(auto i = 0; i < N; ++i)
   {
     masks.push_back( (i < xmasks.size() && xmasks[i].d0 == z.d0 ? xmasks[i] : ones(z.d0) ) );
@@ -53,7 +79,7 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
       }
       else
       {
-        if(!compressed)
+        if(!config.compressed)
           var.append(-1);
       }
     }
@@ -74,7 +100,7 @@ void DecOptConstrained::initXs()
 
   for(auto i = 0; i < N; ++i)
   {
-    if(compressed)
+    if(config.compressed)
     {
       const auto& var = vars[i];
       auto x = arr(var.d0);
@@ -104,11 +130,11 @@ void DecOptConstrained::initLagrangians(const std::vector<std::shared_ptr<Constr
 
     duals.push_back(arr());
     arr& _dual = duals.back();
-    Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, opt, _dual)));
+    Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, config.opt, _dual)));
     LagrangianProblem& L = *Ls.back();
-    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, var, opt)));
+    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, var, config.opt)));
     DecLagrangianProblem& DL = *DLs.back();
-    newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, opt, 0)));
+    newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, config.opt, 0)));
   }
 }
 
@@ -138,6 +164,47 @@ std::vector<uint> DecOptConstrained::run()
 
 bool DecOptConstrained::step()
 {
+  if(config.scheduling == SEQUENTIAL || (config.scheduling == FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL && its == 0))
+  {
+    stepSequential();
+  }
+  else if(config.scheduling == PARALLEL || (config.scheduling == FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL && its > 0))
+  {
+    stepParallel();
+  }
+  else NIY;
+
+  updateADMM(); // update lagrange parameters of ADMM terms based on updated Z (make all problem converge)
+
+  return stoppingCriterion();
+}
+
+bool DecOptConstrained::stepSequential()
+{
+  subProblemsSolved = true;
+  arr zz = z; // local z modified by each subproblem in sequence (we can't use the z here, which has to be consistent among all subproblems iterations)
+  for(auto i = 0; i < N; ++i)
+  {
+    DecLagrangianProblem& DL = *DLs[i];
+    OptNewton& newton = *newtons[i];
+    arr& dual = duals[i];
+    const auto& var = vars[i];
+
+    DL.z = z; // set global reference
+
+    auto x_start = getSub(zz, var);
+    newton.reinit(x_start);
+    subProblemsSolved = step(DL, newton, dual, i) && subProblemsSolved;
+    setFromSub(xs[i], var, zz);
+  }
+
+  // update
+  z_prev = z;
+  updateZ();
+}
+
+bool DecOptConstrained::stepParallel()
+{
   std::vector<std::future<bool>> futures;
   for(auto i = 0; i < N; ++i)
   {
@@ -155,59 +222,22 @@ bool DecOptConstrained::step()
   }
 
   // synchro
-  bool subProblemsSolved = true;
+  subProblemsSolved = true;
   for(auto i = 0; i < N; ++i)
   {
     subProblemsSolved = futures[i].get() && subProblemsSolved;
   }
 
   // update
-  auto z_old = z;
+  z_prev = z;
   updateZ();
-
-  for(auto i = 0; i < N; ++i)
-  {
-    OptNewton& newton = *newtons[i];
-    DLs[i]->updateADMM(xs[i], z);
-    // update newton cache / state (necessary because we updated the underlying problem by updating the ADMM params!!)
-    newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
-  }
-
-  double r = primalResidual();
-  double s = DLs.front()->mu * length(z - z_old); // dual residual
-
-  // stop criterion
-  if(opt.verbose>0) {
-    cout <<"** DecOptConstr.[x] ADMM UPDATE";
-    cout <<"\t |x-z|=" << r;
-    if(z.d0 < 10) cout << '\t' << "z=" << z;
-    cout <<endl<<endl;
-  }
-
-  its++;
-
-  // nominal exit condition
-  if(subProblemsSolved && primalFeasibility(r) && dualFeasibility(s))
-  {
-    if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Primal Dual convergence" << std::endl;
-    return true;
-  }
-  // other exit conditions
-  if(subProblemsSolved && absMax(z_old-z) < opt.stopTolerance) { // stalled ADMM
-    if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
-    if(opt.stopGTolerance<0. || r < opt.stopGTolerance)
-      return true;
-  }
-
-  return false;
 }
-
 
 bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual, uint i) const
 {
   auto& L = DL.L;
 
-  if(opt.verbose>0) {
+  if(config.opt.verbose>0) {
     cout <<"** DecOptConstr.[" << i << "] it=" <<its
          <<" mu=" <<L.mu <<" nu=" <<L.nu <<" muLB=" <<L.muLB;
     if(newton.x.N<5) cout <<" \tlambda=" <<L.lambda;
@@ -219,21 +249,21 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
   //check for no constraints
   bool newtonOnce=false;
   if(L.get_dimOfType(OT_ineq)==0 && L.get_dimOfType(OT_eq)==0) {
-    if(opt.verbose>0) cout <<"** [" << i << "] optConstr. NO CONSTRAINTS -> run Newton once and stop" <<endl;
+    if(config.opt.verbose>0) cout <<"** [" << i << "] optConstr. NO CONSTRAINTS -> run Newton once and stop" <<endl;
     newtonOnce=true;
   }
 
   //run newton on the Lagrangian problem
-  if(newtonOnce || opt.constrainedMethod==squaredPenaltyFixed) {
+  if(newtonOnce || config.opt.constrainedMethod==squaredPenaltyFixed) {
     newton.run();
   } else {
     double stopTol = newton.o.stopTolerance;
-    if(opt.constrainedMethod==anyTimeAula)  newton.run(20);
+    if(config.opt.constrainedMethod==anyTimeAula)  newton.run(20);
     else                                    newton.run();
     newton.o.stopTolerance = stopTol;
   }
 
-  if(opt.verbose>0) {
+  if(config.opt.verbose>0) {
     cout <<"** DecOptConstr.[" << i << "] it=" <<its
          <<" evals=" <<newton.evals
          <<" f(x)=" <<L.get_costs()
@@ -245,8 +275,8 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
   }
 
   //check for squaredPenaltyFixed method
-  if(opt.constrainedMethod==squaredPenaltyFixed) {
-    if(opt.verbose>0) cout <<"** optConstr.[" << i << "] squaredPenaltyFixed stops after one outer iteration" <<endl;
+  if(config.opt.constrainedMethod==squaredPenaltyFixed) {
+    if(config.opt.verbose>0) cout <<"** optConstr.[" << i << "] squaredPenaltyFixed stops after one outer iteration" <<endl;
     return true;
   }
 
@@ -256,7 +286,8 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
   }
 
   //stopping criterons
-  if(its>=2 && absMax(x_old-newton.x) < opt.stopTolerance) {
+  const auto & opt = config.opt;
+  if(its>=2 && absMax(x_old-newton.x) < config.opt.stopTolerance) {
     if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
     if(opt.stopGTolerance<0.
        || L.get_sumOfGviolations() + L.get_sumOfHviolations() < opt.stopGTolerance)
@@ -296,8 +327,8 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
 
   if(!!dual) dual=L.lambda;
 
-  if(logFile){
-    (*logFile) <<"{ optConstraint: " <<its <<", mu: " <<L.mu <<", nu: " <<L.nu <<", L_x_beforeUpdate: " <<L_x_before <<", L_x_afterUpdate: " <<newton.fx <<", errors: ["<<L.get_costs() <<", " <<L.get_sumOfGviolations() <<", " <<L.get_sumOfHviolations() <<"], lambda: " <<L.lambda <<" }," <<endl;
+  if(config.logFile){
+    (*config.logFile) <<"{ optConstraint: " <<its <<", mu: " <<L.mu <<", nu: " <<L.nu <<", L_x_beforeUpdate: " <<L_x_before <<", L_x_afterUpdate: " <<newton.fx <<", errors: ["<<L.get_costs() <<", " <<L.get_sumOfGviolations() <<", " <<L.get_sumOfHviolations() <<"], lambda: " <<L.lambda <<" }," <<endl;
   }
 
   return false;
@@ -305,7 +336,6 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
 
 void DecOptConstrained::updateZ()
 {
-  /// Z
   z = zeros(z.d0);
   for(auto i = 0; i < N; ++i)
   {
@@ -322,7 +352,7 @@ void DecOptConstrained::updateZ()
     {
       const auto& I = var(i);
       if(I!=-1)
-        z(I) += x(i);
+        z(I) += zinc(i);
     }
 
     // TODO: sanity check // lagrange admm sum = 0 after one iteration
@@ -330,6 +360,49 @@ void DecOptConstrained::updateZ()
 
   // contrib scaling
   for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
+}
+
+void DecOptConstrained::updateADMM()
+{
+  its++;
+
+  for(auto i = 0; i < N; ++i)
+  {
+    OptNewton& newton = *newtons[i];
+    DLs[i]->updateADMM(xs[i], z);
+    // update newton cache / state (necessary because we updated the underlying problem by updating the ADMM params!!)
+    newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
+  }
+}
+
+bool DecOptConstrained::stoppingCriterion() const
+{
+  double r = primalResidual();
+  double s = DLs.front()->mu * length(z - z_prev); // dual residual
+
+  // stop criterion
+  const auto& opt = config.opt;
+  if(opt.verbose>0) {
+    cout <<"** DecOptConstr.[x] ADMM UPDATE";
+    cout <<"\t |x-z|=" << r;
+    if(z.d0 < 10) cout << '\t' << "z=" << z;
+    cout <<endl<<endl;
+  }
+
+  // nominal exit condition
+  if(subProblemsSolved && primalFeasibility(r) && dualFeasibility(s))
+  {
+    if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Primal Dual convergence" << std::endl;
+    return true;
+  }
+  // other exit conditions
+  if(subProblemsSolved && absMax(z - z_prev) < opt.stopTolerance) { // stalled ADMM
+    if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+    if(opt.stopGTolerance<0. || r < opt.stopGTolerance)
+      return true;
+  }
+
+  return false;
 }
 
 double DecOptConstrained::primalResidual() const

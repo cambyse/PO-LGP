@@ -234,7 +234,7 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   auto start = std::chrono::high_resolution_clock::now();
 
   auto x = komos.front()->x;
-  DecOptConstrained opt(x, constrained_problems, xmasks);
+  DecOptConstrained opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, false));
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
@@ -305,34 +305,35 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   auto tree = buildTree(policy);
 
   // prepare komos
-  std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > branches;
+  std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > subproblems;
   std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
   auto witness = intializeKOMO(tree, startKinematics.front());
   uint w = 0;
 
-  for(auto l: policy.sleaves())
+  BranchGen gen(tree);
+  while(!gen.finished())
   {
-    Mapping mapping;
-    auto policyBranch = tree.get_branch(l->id());
-    auto komoBranch = policyBranch.compressed(mapping);
+    Mapping mapping; // from global opt variable to local and vie versa
+    auto policyBranch = gen.next(); // extract subtree (here a branch)
+    auto komoBranch = policyBranch.compressed(mapping); // compress so that it has its own opt variable
     auto komo = intializeKOMO(komoBranch, startKinematics(w));
 
-    std::cout << komoBranch << std::endl;
+    //std::cout << komoBranch << std::endl;
 
     komos.push_back(komo);
-    branches.push_back(std::tuple< TreeBuilder, TreeBuilder, Mapping >{policyBranch, komoBranch, mapping});
+    subproblems.push_back(std::tuple< TreeBuilder, TreeBuilder, Mapping >{policyBranch, komoBranch, mapping});
 
     ++w;
   }
 
   // ground each komo
   groundPolicyActionsJoint(tree, policy, witness);
-  for(auto w = 0; w < policy.leaves().size(); ++w)
+  for(auto w = 0; w < komos.size(); ++w)
   {
-    auto branchInfo = branches[w];
-    const auto& policyBranch = std::get<0>(branchInfo);
-    const auto& komoBranch = std::get<1>(branchInfo);
-    const auto& mapping = std::get<2>(branchInfo);
+    const auto& subInfo = subproblems[w];
+    const auto& policyBranch = std::get<0>(subInfo);
+    const auto& komoBranch = std::get<1>(subInfo);
+    const auto& mapping = std::get<2>(subInfo);
     groundPolicyActionsCompressed(policyBranch, komoBranch, mapping, policy, komos[w]);
   }
 
@@ -359,7 +360,7 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     xmasks.push_back(xmask);
   }
 
-  // create subproblems
+  // create sub-opt-problems
   std::vector<std::shared_ptr<GraphProblem>> converters;
   std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
   converters.reserve(policy.leaves().size());
@@ -378,7 +379,7 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   auto start = std::chrono::high_resolution_clock::now();
 
   auto x = witness->x;
-  DecOptConstrained opt(x, constrained_problems, xmasks, true);
+  DecOptConstrained opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, true));
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
