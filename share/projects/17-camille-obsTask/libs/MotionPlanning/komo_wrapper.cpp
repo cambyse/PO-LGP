@@ -161,7 +161,7 @@ void ADMM_MotionProblem_GraphProblem::getStructure(uintA& variableDimensions, in
   for(Objective *ob:komo.objectives) {
     CHECK_EQ(ob->vars.nd, 2, "in sparse mode, vars need to be tuples of variables");
     for(uint t=0;t<ob->vars.d0;t++)
-      if(mask(ob->vars(t, -1)))
+      if(tmask(ob->vars(t, -1)))
       {
         WorldL Ktuple = komo.configurations.sub(convert<uint,int>(ob->vars[t]+(int)komo.k_order));
         uint m = ob->map->__dim_phi(Ktuple); //dimensionality of this task
@@ -202,7 +202,7 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
   for(Objective *ob:komo.objectives) {
     CHECK_EQ(ob->vars.nd, 2, "in sparse mode, vars need to be tuples of variables");
     for(uint t=0;t<ob->vars.d0;t++)
-    if(mask(ob->vars(t, -1)))
+    if(tmask(ob->vars(t, -1)))
     {
       const auto scale = ob->scales.d0 ? ob->scales(t) : 1.0;
       WorldL Ktuple = komo.configurations.sub(convert<uint,int>(ob->vars[t]+(int)komo.k_order));
@@ -263,7 +263,7 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
     for(uint t=0;t<ob->vars.d0;t++)
     {
       auto global = ob->vars(t, -1);
-      if(mask(global))
+      if(tmask(global))
       {
         const auto& xinterval = t_to_x_interval[global];
         for(auto i = xinterval.first; i < xinterval.second; ++i)

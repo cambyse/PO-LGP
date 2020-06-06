@@ -1,5 +1,7 @@
 #include "komo_planner_fixture.h"
 #include "komo_sub_problems_finder.h"
+#include "komo_wrapper.h"
+#include "utils.h"
 
 /////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
 
@@ -17,7 +19,7 @@ TEST_F(KomoPlannerSingleAgentFixture, DISABLED_PlanSingleAgent2WJointPath)
   EXPECT_EQ( policy.status(), Policy::INFORMED );
 }
 
-TEST_F(KomoPlannerSingleAgentFixture, Foo)
+TEST_F(KomoPlannerSingleAgentFixture, DISABLED_HessianDecomp)
 {
   planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" );
 
@@ -26,8 +28,19 @@ TEST_F(KomoPlannerSingleAgentFixture, Foo)
 
   KOMOSubProblemsFinder pf(planner.config(), planner.komoFactory());
   auto decomp = pf.analyse(policy, planner.startKinematics());
+}
 
+TEST_F(KomoPlannerSingleAgentFixture, Foo)
+{
+  using namespace hessian_decomposition;
 
+  Objective o0(nullptr, OT_sos); // order 0
+  o0.vars = intA(5, 1, {0, 2, 4, 6, 8}); // axis 0, order 0
+
+  auto H = buildOneLooselyCoupledProblem();
+  auto decomp = decomposeHessian(H, H.d0 / 2 + 1, 2);
+
+  //mp::adaptVar(decomp.problems[0].xmasks.front(), o0);
 }
 
 ////////////////////////////////

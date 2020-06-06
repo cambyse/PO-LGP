@@ -25,18 +25,19 @@ struct KomoWrapper
   const rai::KinematicWorld & world_;
 };
 
+// Subproblems set-up by a tmask (used by sparse ADMM)
 struct ADMM_MotionProblem_GraphProblem : KOMO::Conv_MotionProblem_GraphProblem
 {
   ADMM_MotionProblem_GraphProblem(KOMO& _komo) : Conv_MotionProblem_GraphProblem(_komo) {}
 
-  void setSubProblem(const intA & _mask) { mask = _mask; }
+  void setSubProblem(const intA & _tmask) { tmask = _tmask; }
 
   virtual void getStructure(uintA& variableDimensions, intAA& featureVariables, ObjectiveTypeA& featureTypes) override;
   virtual void phi(arr& phi, arrA& J, arrA& H, const arr& x) override;
 
   void getXMask(arr & xmask) const; //   for(uint t=0; t<T; t++) x.append(configurations(t+k_order)->getJointState());
 
-  intA mask; // mask per step
+  intA tmask; // mask per step
 };
 
 }

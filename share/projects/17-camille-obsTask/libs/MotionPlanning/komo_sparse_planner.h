@@ -49,6 +49,7 @@ public:
   void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override;
 };
 
+// Ground all tasks, full opt variable, xmasks in ADMM-Graph-Problem reduce the pb
 class ADMMSParsePlanner : KOMOSparsePlanner
 {
 public:
@@ -58,6 +59,8 @@ public:
   void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override;
 };
 
+
+// Ground only the branches, compressed opt variable, use usual Graph problem
 class ADMMCompressedPlanner : KOMOSparsePlanner
 {
 public:

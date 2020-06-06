@@ -169,7 +169,7 @@ bool DecOptConstrained::step()
   {
     OptNewton& newton = *newtons[i];
     DLs[i]->updateADMM(xs[i], z);
-    // update newton cache / state (necessary because we updated the underlying problem!)
+    // update newton cache / state (necessary because we updated the underlying problem by updating the ADMM params!!)
     newton.fx = DLs[i]->decLagrangian(newton.gx, newton.Hx, xs[i]); // this is important!
   }
 
