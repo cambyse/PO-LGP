@@ -24,7 +24,8 @@ public:
   // common parts between all strategies
   TreeBuilder buildTree( Policy & ) const;
   std::shared_ptr< ExtensibleKOMO > intializeKOMO( const TreeBuilder & tree, const std::shared_ptr< const rai::KinematicWorld > & ) const;
-  std::vector<Vars> getSubProblems( const TreeBuilder & tree, Policy & policy ) const;
+  std::vector<Vars> getSubProblems( const TreeBuilder & tree, Policy & policy ) const; // deprecated
+  std::tuple< std::vector<Vars>, std::vector<Vars> > getAllVars(const std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > & subproblems) const;
   std::vector<intA> getSubProblemMasks( const std::vector<Vars> & allVars, uint T ) const;
   void groundPolicyActionsJoint( const TreeBuilder & tree,
                                  Policy & policy,

@@ -42,10 +42,10 @@ void GraphPlanner::solve()
 
   //graph_.saveGraphToFile( "graph.gv" );
 
-  if( rewards_.empty() )
-  {
-    initializeRewards();
-  }
+//  if( rewards_.empty() )
+//  {
+//    initializeRewards();
+//  }
 
   valueIteration();
 
@@ -77,7 +77,8 @@ void GraphPlanner::integrate( const Policy & policy )
         //std::cout << "integrate from " << n->data().decisionGraphNodeId << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
         if(c->data().status == PolicyNodeData::INFORMED)
         {
-          rewards_[ fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+          //rewards_[ fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+          rewards_.set(fromToIndex( n->data().decisionGraphNodeId, c->data().decisionGraphNodeId ), c->data().markovianReturn);
         }
         Q.push( c );
       }
@@ -102,7 +103,8 @@ void GraphPlanner::integrate( const Policy & policy )
 
               //std::cout << "integrate from " << id_right_parent << " to " << c->data().decisionGraphNodeId << " = " << c->data().markovianReturn << std::endl;
 
-              rewards_[ fromToIndex( id_right_parent, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+              //rewards_[ fromToIndex( id_right_parent, c->data().decisionGraphNodeId ) ] = c->data().markovianReturn;
+              rewards_.set( fromToIndex( id_right_parent, c->data().decisionGraphNodeId ), c->data().markovianReturn);
 
               Q.push( c );
 
@@ -130,7 +132,7 @@ Policy GraphPlanner::getPolicy() const
 
 double GraphPlanner::reward( uint from, uint to ) const
 {
-  return rewards_[ fromToIndex( from, to ) ];
+  return rewards_.get(fromToIndex(from, to));
 }
 
 void GraphPlanner::buildGraph( bool graph )
@@ -148,7 +150,7 @@ void GraphPlanner::buildGraph( bool graph )
 
 void GraphPlanner::initializeRewards()
 {
-  rewards_ = std::vector< double >( graph_.nodes().size() * graph_.nodes().size(), r0_ );
+  //rewards_ = std::vector< double >( graph_.nodes().size() * graph_.nodes().size(), r0_ );
 }
 
 PolicyNodeData GraphPlanner::decisionGraphtoPolicyData( const NodeData & dData, uint id ) const
@@ -204,7 +206,7 @@ void GraphPlanner::buildPolicy()
       auto edge = decidedGraph_.edges()[ v->id() ][ u->id() ];
       PolicyNodeData data = decisionGraphtoPolicyData( v->data(), v->id() );
       data.leadingKomoArgs = decisionArtifactToKomoArgs( edge.second );
-      data.markovianReturn = rewards_[ fromToIndex( u->id(), v->id() ) ];
+      data.markovianReturn = rewards_.get( fromToIndex( u->id(), v->id() ) );
       data.p = transitionProbability(uSke->data().beliefState, data.beliefState);
       auto vSke = uSke->makeChild( data );
 

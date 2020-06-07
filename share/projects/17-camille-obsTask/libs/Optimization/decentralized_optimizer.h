@@ -14,6 +14,8 @@ enum Mode
   FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL // doesn't seem to perform very well on komo problems
 };
 
+double sparsity(arr & H);
+
 struct DecOptConfig
 {
   DecOptConfig(const Mode& scheduling, bool compressed, OptOptions opt=NOOPT, ostream *logFile=nullptr, int verbose=-1)

@@ -9,7 +9,7 @@ static double m_inf() { return std::numeric_limits< double >::lowest(); }
 namespace matp
 {
 
-DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std::vector< double > & values, std::vector< double > & rewards )
+DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std::vector< double > & values, Rewards & rewards )
 {
   std::cout << "GraphPlanner::decideOnDecisionGraphCopy.." << std::endl;
 
@@ -47,9 +47,9 @@ DecisionGraph DecideOnGraphAlgorithm::process( const DecisionGraph & graph, std:
         uint bestId = -1;
         for( const auto& v : u->children() )
         {
-          if( rewards[ fromToIndex( u->id(), v->id() ) ] + values[ v->id() ] >= bestValue )
+          if( rewards.get( fromToIndex( u->id(), v->id() ) ) + values[ v->id() ] >= bestValue )
           {
-            bestValue = rewards[ fromToIndex( u->id(), v->id() ) ] + values[ v->id() ];
+            bestValue = rewards.get( fromToIndex( u->id(), v->id() ) ) + values[ v->id() ];
             bestId = v->id();
             //std::cout << "best child of " << u->id() << " is " << v->id() << std::endl;
           }

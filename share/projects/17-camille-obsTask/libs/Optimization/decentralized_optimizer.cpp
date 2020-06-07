@@ -30,14 +30,28 @@ namespace
   }
 }
 
+double sparsity(arr & H)
+{
+  if(isSparseMatrix(H))
+  {
+    auto Hs = dynamic_cast<rai::SparseMatrix*>(H.special);
+
+    return double(Hs->elems.d0) / (H.d0 * H.d0);
+  }
+  else
+  {
+    return H.sparsity();
+  }
+
+  return 0.0;
+}
+
 DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
   : z_final(_z)
   , N(Ps.size())
   , contribs(zeros(z_final.d0))
   , z(z_final.copy())
   , config(_config)
-//  , opt(_opt)
-//  , logFile(_logFile)
 {
   // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to 2.0, strange!
   config.opt.aulaMuInc = 1.2;
@@ -144,10 +158,10 @@ std::vector<uint> DecOptConstrained::run()
   while(!step());
 
   // last step
-  for(auto& newton: newtons)
-    newton->beta *= 1e-3;
+//  for(auto& newton: newtons)
+//    newton->beta *= 1e-3;
 
-  step();
+//  step();
 
   // get solution
   z_final = z;
@@ -261,6 +275,11 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
     if(config.opt.constrainedMethod==anyTimeAula)  newton.run(20);
     else                                    newton.run();
     newton.o.stopTolerance = stopTol;
+  }
+
+  if(config.opt.verbose>0) {
+    cout <<"** Hessian size.[" << newton.Hx.d0 << "] sparsity=" << sparsity(newton.Hx);
+    cout <<endl;
   }
 
   if(config.opt.verbose>0) {

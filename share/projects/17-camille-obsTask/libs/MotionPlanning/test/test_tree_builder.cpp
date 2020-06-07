@@ -7,6 +7,14 @@ using namespace mp;
 
 TreeBuilder build_simple_path_builder()
 {
+  /*   0
+   *   |
+   *   1
+   *   |
+   *   2
+   *  / \
+   * 3   4
+  */
   auto tb = TreeBuilder();
   tb.add_edge(0, 1);
   tb.add_edge(1, 2);
@@ -17,6 +25,14 @@ TreeBuilder build_simple_path_builder()
 
 TreeBuilder build_5_edges_2_branchings()
 {
+  /*   0
+   *   |
+   *   1
+   *  / \
+   * 2   3
+   *    / \
+   *   4   5
+  */
   TreeBuilder tb;
   tb.add_edge(0, 1);
   tb.add_edge(1, 2);
@@ -28,6 +44,14 @@ TreeBuilder build_5_edges_2_branchings()
 
 TreeBuilder build_5_edges_1_branching()
 {
+  /*   0
+   *   |
+   *   1
+   *  / \
+   * 2   4
+   * |   |
+   * 3   5
+  */
   TreeBuilder tb;
   tb.add_edge(0, 1);
   tb.add_edge(1, 2);
@@ -39,6 +63,12 @@ TreeBuilder build_5_edges_1_branching()
 
 TreeBuilder build_3_edges_1_branching()
 {
+  /*   0
+   *   |
+   *   1
+   *  / \
+   * 2   3
+  */
   TreeBuilder tb;
   tb.add_edge(0, 1);
   tb.add_edge(1, 2, 0.6);
@@ -377,6 +407,28 @@ TEST(TreeBuilder, SpecInterval)
                                    arr{1.0, 1.0, 1.0, 0.6, 0.6, 0.4, 0.4}};
   EXPECT_EQ(expected_spec0, spec0);
   EXPECT_EQ(expected_spec1, spec1);
+}
+
+TEST(TreeBuilder, Foo)
+{
+  auto steps = 5;
+
+  auto tree = build_5_edges_2_branchings();
+
+  auto gen = SubTreesAfterFirstBranching(tree);
+
+  auto s1 = gen.next();
+  Mapping m1;
+  auto s1c = s1.compressed(m1);
+
+  auto s2 = gen.next();
+  Mapping m2;
+  auto s2c = s2.compressed(m2);
+
+  auto spec = s2c.get_spec({0.0, -1.0}, {0, 1}, 1, 5);
+
+  std::cout << s1c.adjacency_matrix() << std::endl;
+  std::cout << s2c.adjacency_matrix() << std::endl;
 }
 
 TEST(TreeBuilder, Step)

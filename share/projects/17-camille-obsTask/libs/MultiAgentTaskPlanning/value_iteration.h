@@ -21,7 +21,7 @@ namespace matp
 class ValueIterationAlgorithm
 {
 public:
-  static std::vector< double > process( const DecisionGraph & decisionGraph, std::vector< double > & rewards );
+  static std::vector< double > process( const DecisionGraph & decisionGraph, Rewards & rewards );
 };
 
 } // namespace matp

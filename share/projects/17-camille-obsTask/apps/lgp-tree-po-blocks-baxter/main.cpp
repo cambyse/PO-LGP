@@ -102,17 +102,17 @@ void plan_graph_search()
     //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
 
     // A
-    tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
+    //tp.setFol( "LGP-blocks-fol-1w-one-table.g" );
     //tp.setFol( "LGP-blocks-fol-1w-one-table-no-precondition.g" );
-    mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
+    //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
 
     // 4 blocks linear
     //tp.setFol( "LGP-blocks-fol-4-blocks-1w-one-table.g" );
     //mp.setKin( "LGP-blocks-kin-4-blocks-1w-one-table.g" );
 
     // 4 blocks new version
-    //tp.setFol( "LGP-blocks-fol-4-blocks-24w-one-table.g" );
-    //mp.setKin( "LGP-blocks-kin-4-blocks-24w-one-table.g" );
+    tp.setFol( "LGP-blocks-fol-4-blocks-24w-one-table.g" );
+    mp.setKin( "LGP-blocks-kin-4-blocks-24w-one-table.g" );
     //tp.setFol( "LGP-blocks-fol-1w-unified-4-blocks-new.g" );
     //tp.setFol( "LGP-blocks-fol-2w-model-2-unified.g" );
     //mp.setKin( "LGP-blocks-kin-1w-unified-4-blocks-new.g" );
@@ -275,10 +275,10 @@ void komo_tree_dev()
 
   // plan
   auto po     = MotionPlanningParameters( policy.id() );
-  //po.setParam( "type", "jointSparse" );
+  po.setParam( "type", "jointSparse" );
   //po.setParam( "type", "ADMMDecompose" );
   //po.setParam( "type", "ADMMSparse" );
-  po.setParam( "type", "ADMMCompressed" );
+  //po.setParam( "type", "ADMMCompressed" );
   mp.solveAndInform( po, policy );
   //mp.display(policy, 200);
 }

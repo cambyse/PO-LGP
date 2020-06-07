@@ -21,7 +21,7 @@ namespace matp
 class DecideOnGraphAlgorithm
 {
 public:
-  static DecisionGraph process( const DecisionGraph & decisionGraph, std::vector< double > & values, std::vector< double > & rewards );
+  static DecisionGraph process( const DecisionGraph & decisionGraph, std::vector< double > & values, Rewards & rewards );
 };
 
 } // namespace matp

@@ -70,7 +70,7 @@ private:
 
   // value iteration
   double r0_ = -1;
-  std::vector< double > rewards_; // current state of rewards
+  mutable Rewards rewards_;//std::vector< double > rewards_; // current state of rewards
   std::vector< double > values_;
   DecisionGraph decidedGraph_;
 

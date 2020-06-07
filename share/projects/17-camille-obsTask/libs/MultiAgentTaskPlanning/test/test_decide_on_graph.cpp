@@ -45,11 +45,12 @@ TEST(DecideOnGraph, CorrectDecisionEvenWithInfiniteReward) {
 
   graph.saveGraphToFile( "CorrectDecisionEvenWithInfiniteReward.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
+  rewards.setR0(-1);
 
   auto rewardSetter = [&] ( uint from, uint to, double r )
   {
-    rewards[ from * graph.size() + to ] = r;
+    rewards.set(from * graph.size() + to, r);
   };
 
   rewardSetter( 6, 7, -1000.0 );
@@ -114,11 +115,12 @@ TEST(ValueIteration, DecideAfterObservationBranchingPoint2DisymmetricBranchesOne
 
   graph.saveGraphToFile( "DecideAfterObservationBranchingPoint2DisymmetricBranchesOneActionStepBefore.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
+  rewards.setR0(-1);
 
   auto rewardSetter = [&] ( uint from, uint to, double r )
   {
-    rewards[ from * graph.size() + to ] = r;
+    rewards.set(from * graph.size() + to, r);
   };
 
   rewardSetter( 7, 8, -1.0 );

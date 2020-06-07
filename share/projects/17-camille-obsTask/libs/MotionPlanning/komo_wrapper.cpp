@@ -60,8 +60,8 @@ void KomoWrapper::setupConfigurations(const std::vector<Vars>& branches)
     //std::cout << "branch " << i << std::endl;
     for(uint s=1; s<branch.order0.d0; s++)
     {
-      auto s_global = branch.order0(s,0);
-      auto s_m_1_global = branch.order0(s-1, 0);
+      auto s_global = branch.order1(s,1);
+      auto s_m_1_global = branch.order1(s,0);
 
       if(visited[s_global + komo_->k_order]) continue;
       visited[s_global + komo_->k_order] = 1;

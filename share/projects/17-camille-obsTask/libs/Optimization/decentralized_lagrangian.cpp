@@ -16,12 +16,13 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
   if(isSparseMatrix(HL))
   {
     auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
-    for(uint i=0;i<delta.d0;i++)
-    {
-      auto I = var(i);
-      if(I>0)
-        Hs->elem(i, i) += mu;
-    }
+
+    const auto& elems = Hs->elems;
+    const auto& Z = Hs->Z;
+
+    for(uint k=0;k<elems.d0;k++)
+      if(elems.p[2*k]== elems.p[2*k+1])
+        Z.elem(k) +=mu;
   }
   else
   {

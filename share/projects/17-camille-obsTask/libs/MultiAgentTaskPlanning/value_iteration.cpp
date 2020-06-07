@@ -9,7 +9,7 @@ static double m_inf() { return std::numeric_limits< double >::lowest(); }
 namespace matp
 {
 
-std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & graph, std::vector< double > & rewards )
+std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & graph, Rewards & rewards )
 {
   auto fromToIndex = [&graph] ( uint from, uint to )->uint
   {
@@ -86,7 +86,7 @@ std::vector< double > ValueIterationAlgorithm::process( const DecisionGraph & gr
             // max operation, choose the best child
             for( auto v : u->children() )
             {
-              const auto r = rewards[ fromToIndex( u->id(), v->id() ) ];
+              const auto r = rewards.get( fromToIndex( u->id(), v->id() ) );
 
               if( values[ v->id() ] + r > newTargetValue )
               {

@@ -12,6 +12,30 @@
 
 namespace matp
 {
+
+class Rewards
+{
+public:
+  void setR0(double r0) { r0_ = r0; }
+
+  double get(uint key)
+  {
+    if(rewards_.find(key) == rewards_.end())
+      rewards_[key] = r0_;
+
+    return rewards_[key];
+  }
+
+  void set(uint key, double r)
+  {
+    rewards_[key] = r;
+  }
+
+private:
+  std::unordered_map< uint, double > rewards_;
+  double r0_{-1.0};
+};
+
 struct NodeData
 {
   enum class NodeType

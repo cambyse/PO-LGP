@@ -73,6 +73,38 @@ std::vector<Vars> KOMOSparsePlanner::getSubProblems( const TreeBuilder & tree, P
   return allVars;
 }
 
+std::tuple< std::vector<Vars>, std::vector<Vars> > KOMOSparsePlanner::getAllVars(const std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > & subproblems) const
+{
+  std::tuple< std::vector<Vars>, std::vector<Vars> > allVars; // uncompressed, compressed
+  std::get<0>(allVars).reserve(subproblems.size());
+  std::get<0>(allVars).reserve(subproblems.size());
+
+  for(const auto & sub: subproblems)
+  {
+    TimeInterval all{0.0, -1.0};
+    Edge edge{0, 1};
+
+    {
+    auto uncompressed = std::get<0>(sub);
+    auto vars0 = uncompressed.get_spec(all, edge, 0, config_.microSteps_).vars;
+    auto vars1 = uncompressed.get_spec(all, edge, 1, config_.microSteps_).vars;
+    auto vars2 = uncompressed.get_spec(all, edge, 2, config_.microSteps_).vars;
+    Vars var{vars0, vars1, vars2, config_.microSteps_};
+    std::get<0>(allVars).push_back(var);
+    }
+    {
+    auto compressed = std::get<1>(sub);
+    auto vars0 = compressed.get_spec(all, edge, 0, config_.microSteps_).vars;
+    auto vars1 = compressed.get_spec(all, edge, 1, config_.microSteps_).vars;
+    auto vars2 = compressed.get_spec(all, edge, 2, config_.microSteps_).vars;
+    Vars var{vars0, vars1, vars2, config_.microSteps_};
+    std::get<1>(allVars).push_back(var);
+    }
+  }
+
+  return allVars;
+}
+
 std::vector<intA> KOMOSparsePlanner::getSubProblemMasks( const std::vector<Vars> & allVars, uint T ) const
 {
   std::vector<intA> masks(allVars.size());
@@ -165,10 +197,18 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
   double optimizationTime=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 
   // LOGS
-  if(true) {
+  auto log = true;
+  if(log) {
+    cout <<"** Hessian size.[" << komo->opt->newton.Hx.d0 << "] sparsity=" << sparsity(komo->opt->newton.Hx);
+    cout <<endl;
+  }
+
+  if(log) {
     cout <<"** optimization time=" << optimizationTime
          <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
+    cout <<" (kin:" << komo->timeKinematics <<" coll:" << komo->timeCollisions << " feat:" << komo->timeFeatures <<" newton: " << komo->timeNewton <<")" << std::endl;
   }
+
   //
   //komo->getReport(true);
   //for(auto c: komo->configurations) std::cout << c->q.N << std::endl;
@@ -305,23 +345,25 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   auto tree = buildTree(policy);
 
   // prepare komos
-  std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > subproblems;
+  std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > subproblems; // uncompressed pb, compressed pb, mapping
   std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
   auto witness = intializeKOMO(tree, startKinematics.front());
   uint w = 0;
 
-  BranchGen gen(tree);
+  SubTreesAfterFirstBranching gen(tree);
+  //BranchGen gen(tree);
+
   while(!gen.finished())
   {
     Mapping mapping; // from global opt variable to local and vie versa
-    auto policyBranch = gen.next(); // extract subtree (here a branch)
-    auto komoBranch = policyBranch.compressed(mapping); // compress so that it has its own opt variable
-    auto komo = intializeKOMO(komoBranch, startKinematics(w));
-
-    //std::cout << komoBranch << std::endl;
+    auto uncompressed = gen.next(); // extract subtree (here a branch)
+    auto compressed = uncompressed.compressed(mapping); // compress so that it has its own opt variable
+    auto komo = intializeKOMO(compressed, startKinematics(w));
 
     komos.push_back(komo);
-    subproblems.push_back(std::tuple< TreeBuilder, TreeBuilder, Mapping >{policyBranch, komoBranch, mapping});
+    subproblems.push_back(std::tuple< TreeBuilder, TreeBuilder, Mapping >{uncompressed, compressed, mapping});
+
+    std::cout << "uncompressed:\n" << uncompressed << std::endl;
 
     ++w;
   }
@@ -331,33 +373,37 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   for(auto w = 0; w < komos.size(); ++w)
   {
     const auto& subInfo = subproblems[w];
-    const auto& policyBranch = std::get<0>(subInfo);
-    const auto& komoBranch = std::get<1>(subInfo);
+    const auto& uncompressed = std::get<0>(subInfo);
+    const auto& compressed = std::get<1>(subInfo);
     const auto& mapping = std::get<2>(subInfo);
-    groundPolicyActionsCompressed(policyBranch, komoBranch, mapping, policy, komos[w]);
+    groundPolicyActionsCompressed(uncompressed, compressed, mapping, policy, komos[w]);
   }
 
   // get mask of subproblems using witness
-  auto allVars = getSubProblems(tree, policy);   // get subproblems
-  auto allTMasks = getSubProblemMasks(allVars, witness->T);
+  auto allVars = getAllVars(subproblems);   // get subproblem vars (local)
+  auto uncompressedTMasks = getSubProblemMasks(std::get<0>(allVars), witness->T); // use uncompressed
 
   // reset
-  W(witness.get()).reset(allVars, 0);
-  for(auto w = 0; w < policy.leaves().size(); ++w)
+  W(witness.get()).reset(std::get<0>(allVars), 0); // uncompressed
+  for(auto w = 0; w < komos.size(); ++w)
   {
-    komos[w]->reset();
+    std::vector<Vars> vars{std::get<1>(allVars)[w]}; // compressed
+    W(komos[w].get()).reset(vars);
   }
 
   std::vector<arr> xmasks;
   xmasks.reserve(policy.leaves().size());
   auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(*witness);
-  for(auto w = 0; w < policy.leaves().size(); ++w)
+  for(auto w = 0; w < komos.size(); ++w)
   {
-    auto& tmask = allTMasks[w];
+    auto& tmask = uncompressedTMasks[w];
     gp->setSubProblem(tmask);
     arr xmask;
     gp->getXMask(xmask);
     xmasks.push_back(xmask);
+
+//    if(w > 2)
+//    break;
   }
 
   // create sub-opt-problems
@@ -365,7 +411,7 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
   converters.reserve(policy.leaves().size());
   constrained_problems.reserve(policy.leaves().size());
-  for(auto w = 0; w < policy.leaves().size(); ++w)
+  for(auto w = 0; w < komos.size(); ++w)
   {
     auto& komo = *komos[w];
     auto gp = std::make_shared<KOMO::Conv_MotionProblem_GraphProblem>(komo);
@@ -373,6 +419,9 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
 
     converters.push_back(gp);
     constrained_problems.push_back(pb);
+
+//    if(w > 2)
+//    break;
   }
 
   // RUN
@@ -389,6 +438,13 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   if(true) {
     cout <<"** optimization time=" << optimizationTime
          <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
+
+    for(auto w = 0; w < opt.newtons.size(); ++w)
+    {
+      const auto& komo = *komos[w];
+      auto timeNewton = opt.newtons[w]->timeNewton;
+      std::cout <<" (kin:" << komo.timeKinematics <<" coll:" << komo.timeCollisions << " feat:" << komo.timeFeatures <<" newton: " << timeNewton <<")" << std::endl;
+    }
   }
   //
   //witness->set_x(x);
