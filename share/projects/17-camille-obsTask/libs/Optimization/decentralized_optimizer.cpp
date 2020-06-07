@@ -101,10 +101,28 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
     vars.push_back(var);
   }
 
-  // count where admm comes into play (mainly for computing primal residual)
+  // count where admm comes into play (for averagin contributions and computing primal residual)
   for(auto i = 0; i < contribs.d0; ++i)
   {
     if(contribs(i)>1) m++;
+  }
+
+  // fill admm vars
+  admmVars.reserve(N);
+  for(auto i = 0; i < N; ++i)
+  {
+    const auto & var = vars[i];
+    intA admmVar;
+
+    for(auto i = 0; i < var.d0; ++i)
+    {
+      if(contribs(var(i))>1) // another subproblem contributes here, we activate the ADMM term
+      {
+        admmVar.append(i);
+      }
+    }
+
+    admmVars.push_back(admmVar);
   }
 }
 
@@ -140,13 +158,14 @@ void DecOptConstrained::initLagrangians(const std::vector<std::shared_ptr<Constr
   {
     auto& P = Ps[i];
     auto& var = vars[i];
+    auto& admmVar = admmVars[i];
     arr& x = xs[i];
 
     duals.push_back(arr());
     arr& _dual = duals.back();
     Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, config.opt, _dual)));
     LagrangianProblem& L = *Ls.back();
-    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, var, config.opt)));
+    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, var, admmVar, config.opt)));
     DecLagrangianProblem& DL = *DLs.back();
     newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, config.opt, 0)));
   }
@@ -158,10 +177,10 @@ std::vector<uint> DecOptConstrained::run()
   while(!step());
 
   // last step
-//  for(auto& newton: newtons)
-//    newton->beta *= 1e-3;
+  for(auto& newton: newtons)
+    newton->beta *= 1e-3;
 
-//  step();
+  step();
 
   // get solution
   z_final = z;

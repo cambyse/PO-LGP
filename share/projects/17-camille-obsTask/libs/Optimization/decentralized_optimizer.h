@@ -44,6 +44,7 @@ struct DecOptConstrained
   std::vector<std::unique_ptr<OptNewton>> newtons;
   std::vector<std::unique_ptr<DecLagrangianProblem>> DLs;
   std::vector<intA> vars; ///< how local xs maps to global opt variable
+  std::vector<intA> admmVars; ///< where each subproblem needs admm lagrange terms
   arr contribs; ///< amount of contribution on x (on each index) - caching (deduced directly from masks)
   uint m; ///< number of z indices where problems overlap
   arr z_prev, z; ///< internal admm reference variable (z_prev is the one of the previous step)

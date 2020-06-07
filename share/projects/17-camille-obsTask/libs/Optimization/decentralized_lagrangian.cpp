@@ -20,13 +20,20 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
     const auto& elems = Hs->elems;
     const auto& Z = Hs->Z;
 
-    for(uint k=0;k<elems.d0;k++)
-      if(elems.p[2*k]== elems.p[2*k+1])
-        Z.elem(k) +=mu;
+    for(uint k=0; k < elems.d0; k++)
+    {
+      const auto i = elems.p[2*k];
+      const auto j = elems.p[2*k+1];
+      if(i == j && var(i) > 0)
+      {
+        if(admmMask(i))
+          Z.elem(i) +=mu;
+      }
+    }
   }
   else
   {
-    for(auto i = 0; i < x.d0; ++i)
+    for(auto i: admmVar)
     {
       auto I = var(i);
       if(I>0)
@@ -39,8 +46,8 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
 
 arr DecLagrangianProblem::deltaZ(const arr& x) const
 {
-  arr delta = zeros(var.d0);
-  for(uint i=0;i<var.d0;i++)
+  arr delta = zeros(x.d0);
+  for(uint i: admmVar)
   {
     auto I = var(i);
     if(I>0) // I < 0 indicates a no-contribution at this step

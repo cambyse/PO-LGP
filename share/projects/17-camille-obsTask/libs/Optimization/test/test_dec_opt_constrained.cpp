@@ -4,27 +4,27 @@
 
 constexpr double eps_s = 0.02;
 
-TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequential) {
-  arr x{0.0, 0.0, 0.0};
+//TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequential) {
+//  arr x{0.0, 0.0, 0.0};
 
-  const arr center0{1.0, 1.5, 1.0};
-  const arr center1{1.0, 0.5, 1.0};
+//  const arr center0{1.0, 1.5, 1.0};
+//  const arr center1{1.0, 0.5, 1.0};
 
-  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.5, 1.0});
-  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 0.5, 1.0});
+//  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.5, 1.0});
+//  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 0.5, 1.0});
 
-  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
-  pbs.push_back(pb0);
-  pbs.push_back(pb1);
+//  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+//  pbs.push_back(pb0);
+//  pbs.push_back(pb1);
 
-  DecOptConstrained opt(x, pbs, {}, DecOptConfig(SEQUENTIAL, false));
+//  DecOptConstrained opt(x, pbs, {}, DecOptConfig(SEQUENTIAL, false));
 
-  opt.run();
+//  opt.run();
 
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_TRUE(x(1) > 1.0);
-  EXPECT_NEAR(1.0, x(2), eps_s);
-}
+//  EXPECT_NEAR(0.0, x(0), eps_s);
+//  EXPECT_TRUE(x(1) > 1.0);
+//  EXPECT_NEAR(1.0, x(2), eps_s);
+//}
 
 TEST(DecentralizedAugmentedLagrangian, DecAulaWithCompressedProblemSequential) {
   // distance 3d decomposed in 2x dist 2d
