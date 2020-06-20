@@ -1,4 +1,5 @@
 #include <decentralized_lagrangian.h>
+#include <utils.h>
 
 double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
 {
@@ -13,32 +14,7 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
   dL += lambda + mu * delta;
 
   // hessian
-  if(isSparseMatrix(HL))
-  {
-    const auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
-    const auto& elems = Hs->elems;
-    const auto& Z = Hs->Z;
-
-    for(uint k=0; k < elems.d0; k++)
-    {
-      const auto i = elems.p[2*k];
-      const auto j = elems.p[2*k+1];
-      if(i == j && var(i) > 0)
-      {
-        if(admmMask(i))
-          Z.elem(i) +=mu;
-      }
-    }
-  }
-  else // not sparse
-  {
-    for(auto i: admmVar)
-    {
-      auto I = var(i);
-      if(I>0)
-        HL(i, i) += mu;
-    }
-  }
+  add(HL, mu, admmVar, admmMask);
 
   return l;
 }
