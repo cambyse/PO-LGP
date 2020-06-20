@@ -1,5 +1,5 @@
-#include <decentralized_lagrangian.h>
-#include <utils.h>
+#include <Optimization/decentralized_lagrangian.h>
+#include <Optimization/utils.h>
 
 double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
 {

@@ -22,7 +22,7 @@ find_package(Boost COMPONENTS system filesystem serialization REQUIRED)
 file(GLOB_RECURSE SOURCES *.cpp *.h)
 
 add_library(${project_name} ${SOURCES})
-target_include_directories(${project_name} PUBLIC ".")
+target_include_directories(${project_name} PUBLIC "include")
 target_link_libraries(
  ${project_name}
  ${Boost_LIBRARIES}

@@ -1,4 +1,4 @@
-#include <decentralized_optimizer.h>
+#include <Optimization/decentralized_optimizer.h>
 
 #include <future>
 #include <thread>
@@ -416,7 +416,7 @@ void DecOptConstrained::updateADMM()
 bool DecOptConstrained::stoppingCriterion() const
 {
   double r = primalResidual();
-  double s = DLs.front()->mu * length(z - z_prev); // dual residual
+  double s = dualResidual();
 
   // stop criterion
   const auto& opt = config.opt;
@@ -456,6 +456,11 @@ double DecOptConstrained::primalResidual() const
   r /= xs.size();
 
   return r;
+}
+
+double DecOptConstrained::dualResidual() const
+{
+  return DLs.front()->mu * length(z - z_prev);
 }
 
 bool DecOptConstrained::primalFeasibility(double r) const

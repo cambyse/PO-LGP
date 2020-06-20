@@ -1,7 +1,7 @@
 #include "komo_planner_fixture.h"
 #include "komo_sub_problems_finder.h"
 #include "komo_wrapper.h"
-#include "utils.h"
+#include <HessianDecomposition/utils.h>
 
 /////////////////////SINGLE AGENT PARTIALLY OBSERVABLE/////////////////////////////
 

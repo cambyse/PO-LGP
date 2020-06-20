@@ -19,7 +19,7 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 file(GLOB_RECURSE SOURCES *.cpp *.h)
 
 add_library(${project_name} ${SOURCES})
-target_include_directories(${project_name} PUBLIC ".")
+target_include_directories(${project_name} PUBLIC "include")
 target_link_libraries(
  ${project_name}
  Core

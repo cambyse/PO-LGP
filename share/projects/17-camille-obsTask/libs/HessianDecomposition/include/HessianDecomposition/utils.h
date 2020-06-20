@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Core/array.h>
 
 uint size(const arr& A)

@@ -11,7 +11,7 @@
 #include <komo_wrapper.h>
 #include <komo_sparse_planner.h>
 
-#include <hessian_decomposition.h>
+#include <HessianDecomposition/hessian_decomposition.h>
 
 namespace mp
 {

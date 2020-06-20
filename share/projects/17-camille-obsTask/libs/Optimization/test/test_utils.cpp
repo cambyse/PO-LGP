@@ -1,4 +1,4 @@
-#include <utils.h>
+#include <Optimization/utils.h>
 #include <gtest/gtest.h>
 
 TEST(AddMuOnHessian, NonSparse) {

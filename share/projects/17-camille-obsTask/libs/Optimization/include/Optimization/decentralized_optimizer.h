@@ -1,6 +1,6 @@
 #pragma once
 
-#include <decentralized_lagrangian.h>
+#include <Optimization/decentralized_lagrangian.h>
 
 #include <Optim/newton.h>
 #include <Optim/constrained.h>
@@ -78,6 +78,8 @@ private:
   bool stoppingCriterion() const;
 
   double primalResidual() const;
+  double dualResidual() const;
+
   bool primalFeasibility(double r) const;
   bool dualFeasibility(double s) const;
 };

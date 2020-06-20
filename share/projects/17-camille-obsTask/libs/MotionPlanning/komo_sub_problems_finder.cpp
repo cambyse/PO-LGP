@@ -2,7 +2,7 @@
 #include <tree_builder.h>
 #include <komo_wrapper.h>
 #include <trajectory_tree_visualizer.h>
-#include <decentralized_optimizer.h>
+#include <Optimization/decentralized_optimizer.h>
 
 #include <Kin/kin.h>
 #include <Kin/switch.h>
@@ -12,7 +12,7 @@
 
 //#include <dlib/clustering.h>
 
-#include <hessian_decomposition.h>
+#include <HessianDecomposition/hessian_decomposition.h>
 
 namespace mp
 {

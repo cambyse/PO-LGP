@@ -1,8 +1,7 @@
 #include <Core/array.h>
 
-#include <hessian_decomposition.h>
-
-#include <utils.h>
+#include <HessianDecomposition/hessian_decomposition.h>
+#include <HessianDecomposition/utils.h>
 
 #include <gtest/gtest.h>
 

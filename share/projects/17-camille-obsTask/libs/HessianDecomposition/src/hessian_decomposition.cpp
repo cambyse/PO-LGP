@@ -1,4 +1,5 @@
-#include <hessian_decomposition.h>
+#include <HessianDecomposition/hessian_decomposition.h>
+
 #include <unordered_map>
 
 namespace hessian_decomposition
