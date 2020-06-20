@@ -52,3 +52,19 @@ inline void add(arr& HL, double mu, const intA& admmVar, const arr& admmMask)
     }
   }
 }
+
+inline double sparsity(arr & H)
+{
+  if(isSparseMatrix(H))
+  {
+    auto Hs = dynamic_cast<rai::SparseMatrix*>(H.special);
+
+    return double(Hs->elems.d0) / (H.d0 * H.d0);
+  }
+  else
+  {
+    return H.sparsity();
+  }
+
+  return 0.0;
+}

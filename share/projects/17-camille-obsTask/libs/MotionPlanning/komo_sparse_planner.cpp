@@ -2,7 +2,9 @@
 #include <tree_builder.h>
 #include <komo_wrapper.h>
 #include <trajectory_tree_visualizer.h>
+
 #include <Optimization/decentralized_optimizer.h>
+#include <Optimization/utils.h>
 
 #include <Kin/kin.h>
 #include <Kin/switch.h>

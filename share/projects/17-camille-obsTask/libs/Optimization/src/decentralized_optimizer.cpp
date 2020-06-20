@@ -1,4 +1,5 @@
 #include <Optimization/decentralized_optimizer.h>
+#include <Optimization/utils.h>
 
 #include <future>
 #include <thread>
@@ -28,22 +29,6 @@ namespace
         zz(I) = x(i);
     }
   }
-}
-
-double sparsity(arr & H)
-{
-  if(isSparseMatrix(H))
-  {
-    auto Hs = dynamic_cast<rai::SparseMatrix*>(H.special);
-
-    return double(Hs->elems.d0) / (H.d0 * H.d0);
-  }
-  else
-  {
-    return H.sparsity();
-  }
-
-  return 0.0;
 }
 
 DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
