@@ -9,6 +9,7 @@
 #include <komo_factory.h>
 #include <komo_planner_config.h>
 #include <komo_wrapper.h>
+#include <subtree_generators.h>
 
 namespace mp
 {
@@ -68,12 +69,18 @@ public:
   ADMMCompressedPlanner(const KOMOPlannerConfig& config, const KOMOFactory& factory)
     : KOMOSparsePlanner(config, factory)
   {};
+  void setDecompositionStrategy(const std::string& strategy, const std::string& nJobs);
   void groundPolicyActionsCompressed( const TreeBuilder & policy_tree,
                                       const TreeBuilder & komo_tree,
                                       const Mapping & mapping,
                                       Policy & policy,
                                       const std::shared_ptr< ExtensibleKOMO > & komo ) const;
   void optimize( Policy &, const rai::Array< std::shared_ptr< const rai::KinematicWorld > > & ) const override;
+
+private:
+  GeneratorFactory generatorFactory_;
+  std::string decompositionStrategy_;
+  uint nJobs_{8};
 };
 
 }

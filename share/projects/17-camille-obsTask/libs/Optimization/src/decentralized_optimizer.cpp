@@ -86,7 +86,7 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
     vars.push_back(var);
   }
 
-  // count where admm comes into play (for averagin contributions and computing primal residual)
+  // count where admm comes into play (for averaging contributions and computing primal residual)
   for(auto i = 0; i < contribs.d0; ++i)
   {
     if(contribs(i)>1) m++;

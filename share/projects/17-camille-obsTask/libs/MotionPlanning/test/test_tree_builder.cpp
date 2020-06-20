@@ -1,89 +1,19 @@
 #include "komo_planner.h"
 #include <gtest/gtest.h>
 #include <tree_builder.h>
+#include <test/trees.h>
 
 using namespace std;
 using namespace mp;
 
-TreeBuilder build_simple_path_builder()
-{
-  /*   0
-   *   |
-   *   1
-   *   |
-   *   2
-   *  / \
-   * 3   4
-  */
-  auto tb = TreeBuilder();
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(2, 3, 0.5);
-  tb.add_edge(2, 4, 0.5);
-  return tb;
-}
-
-TreeBuilder build_5_edges_2_branchings()
-{
-  /*   0
-   *   |
-   *   1
-   *  / \
-   * 2   3
-   *    / \
-   *   4   5
-  */
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(1, 3);
-  tb.add_edge(3, 4);
-  tb.add_edge(3, 5);
-  return tb;
-}
-
-TreeBuilder build_5_edges_1_branching()
-{
-  /*   0
-   *   |
-   *   1
-   *  / \
-   * 2   4
-   * |   |
-   * 3   5
-  */
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2);
-  tb.add_edge(2, 3);
-  tb.add_edge(1, 4);
-  tb.add_edge(4, 5);
-  return tb;
-}
-
-TreeBuilder build_3_edges_1_branching()
-{
-  /*   0
-   *   |
-   *   1
-   *  / \
-   * 2   3
-  */
-  TreeBuilder tb;
-  tb.add_edge(0, 1);
-  tb.add_edge(1, 2, 0.6);
-  tb.add_edge(1, 3, 0.4);
-  return tb;
-}
-
 TEST(TreeBuilder, ClassCreation)
 {
-  auto tb = TreeBuilder();
+  auto tb = TreeBuilder(1.0);
 }
 
 TEST(TreeBuilder, AddEdge)
 {
-  auto tb = TreeBuilder();
+  auto tb = TreeBuilder(1.0);
   tb.add_edge(0, 1);
 
   EXPECT_EQ( tb.n_nodes(), 2 );
@@ -108,7 +38,7 @@ TEST(TreeBuilder, AddEdge)
 
 TEST(TreeBuilder, GetLeafs)
 {
-  auto tb =build_simple_path_builder();
+  auto tb = build_simple_path_builder();
   EXPECT_EQ(std::vector<uint>({3, 4}), tb.get_leaves());
 }
 
@@ -159,6 +89,37 @@ TEST(TreeBuilder, GetBranchs)
   auto tb = build_simple_path_builder();
   EXPECT_EQ(2, tb.get_branches().size());
 }
+
+TEST(TreeBuilder, GetP)
+{
+  auto tree = build_3_edges_1_branching();
+
+  EXPECT_EQ(tree.p(0, 3), 0.4);
+}
+
+TEST(TreeBuilder, GetPath)
+{
+  auto tree = build_3_edges_1_branching();
+
+  auto path = tree.get_path(0, 3);
+
+  EXPECT_EQ(path, std::vector<uint>({0, 1, 3}));
+}
+
+TEST(TreeBuilder, GetRoot)
+{
+  {
+    auto tree = build_3_edges_1_branching();
+    EXPECT_EQ(0, tree.get_root());
+  }
+
+  {
+    TreeBuilder tree(1.0);
+    tree.add_edge(1, 2);
+    EXPECT_EQ(1, tree.get_root());
+  }
+}
+
 
 TEST(TreeBuilder, GetVarsNSteps1)
 {
@@ -249,7 +210,7 @@ TEST(TreeBuilder, GetVarsNSteps10)
 
 TEST(TreeBuilder, GetVarsScalesNegativeTime)
 {
-  auto tb = build_3_edges_1_branching();
+  auto tree = build_3_edges_1_branching();
 
   auto stepss = {1, 10};
   auto orders = {0, 1, 2};
@@ -258,17 +219,29 @@ TEST(TreeBuilder, GetVarsScalesNegativeTime)
   {
     for(const auto& order: orders)
     {
-      auto a = tb.get_vars({0.0, 2.0}, 2, order, steps);
-      auto b = tb.get_vars({0.0, -1.0}, 2, order, steps);
+      auto a = tree.get_vars({0.0, 2.0}, 2, order, steps);
+      auto b = tree.get_vars({0.0, -1.0}, 2, order, steps);
 
       EXPECT_EQ(a, b);
     }
 
-    auto r = tb.get_scales({0.0, 2.0}, 2, steps);
-    auto s = tb.get_scales({0.0, -1.0}, 2, steps);
+    auto r = tree.get_scales({0.0, 2.0}, 2, steps);
+    auto s = tree.get_scales({0.0, -1.0}, 2, steps);
 
     EXPECT_EQ(r, s);
   }
+}
+
+TEST(TreeBuilder, GetVarsScalesOvertime)
+{
+  const auto steps = 5;
+
+  TreeBuilder tree(1.0);
+  tree.add_edge(0, 1);
+
+  auto a = tree.get_vars({2.0, 2.0}, 1, 2, steps);
+
+  EXPECT_EQ(0, a.d0);
 }
 
 TEST(TreeBuilder, GetVarsNSteps102Branchings)
@@ -344,12 +317,24 @@ TEST(TreeBuilder, GetScalesVarsAtEnd)
   EXPECT_EQ(intA(1, 2, {8, 9}), tb.get_vars({2.0, 5.0}, 2, 1, steps));
 }
 
+TEST(TreeBuilder, PrefixOfUnCompressedSubtree)
+{
+  auto steps = 5;
+
+  TreeBuilder tree(1.0);
+
+  tree.add_edge(1, 2);
+  auto vars1 = tree.get_vars(TimeInterval{0, 1}, 2, 1, steps);
+
+  EXPECT_EQ(intA(5, 2, {4, 5, 5, 6, 6, 7, 7, 8, 8, 9}), vars1);
+}
+
 // scales
 TEST(TreeBuilder, GetScaleNSteps5)
 {
   auto steps = 5;
 
-  TreeBuilder tb;
+  TreeBuilder tb(1.0);
   tb.add_edge(0, 1, 1.0);
 
   tb.add_edge(1, 2, 0.2);
@@ -383,8 +368,8 @@ TEST(TreeBuilder, SpecUntilLeaves)
 
   auto tb = build_3_edges_1_branching();
 
-  auto spec0 = tb.get_spec({0.0, -1.0}, {0, 1}, 0, steps);
-  auto spec1 = tb.get_spec({0.0, -1.0}, {0, 1}, 1, steps);
+  auto spec0 = tb.get_spec({0.0, -1.0}, Edge{0, 1}, 0, steps);
+  auto spec1 = tb.get_spec({0.0, -1.0}, Edge{0, 1}, 1, steps);
   TaskSpec expected_spec0{intA(15, 1, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}),
                           arr{1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.4, 0.4, 0.4, 0.4, 0.4}};
   TaskSpec expected_spec1{intA(15, 2, {-1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 4, 10, 10, 11, 11, 12, 12, 13, 13, 14}),
@@ -399,8 +384,8 @@ TEST(TreeBuilder, SpecInterval)
 
   auto tb = build_3_edges_1_branching();
 
-  auto spec0 = tb.get_spec({0.5, 1.5}, {0, 1}, 0, steps);
-  auto spec1 = tb.get_spec({0.5, 1.5}, {0, 1}, 1, steps);
+  auto spec0 = tb.get_spec({0.5, 1.5}, Edge{0, 1}, 0, steps);
+  auto spec1 = tb.get_spec({0.5, 1.5}, Edge{0, 1}, 1, steps);
   TaskSpec expected_spec0{intA(7, 1, {2, 3, 4, 5, 6, 10, 11}),
                                   arr{1.0, 1.0, 1.0, 0.6, 0.6, 0.4, 0.4}};
   TaskSpec expected_spec1{intA(7, 2, {1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 4, 10, 10, 11}),
@@ -409,26 +394,13 @@ TEST(TreeBuilder, SpecInterval)
   EXPECT_EQ(expected_spec1, spec1);
 }
 
-TEST(TreeBuilder, Foo)
+TEST(TreeBuilder, ScalesWithP0)
 {
   auto steps = 5;
 
-  auto tree = build_5_edges_2_branchings();
+  auto tb = build_3_edges_1_branching();
+  //tb.set
 
-  auto gen = SubTreesAfterFirstBranching(tree);
-
-  auto s1 = gen.next();
-  Mapping m1;
-  auto s1c = s1.compressed(m1);
-
-  auto s2 = gen.next();
-  Mapping m2;
-  auto s2c = s2.compressed(m2);
-
-  auto spec = s2c.get_spec({0.0, -1.0}, {0, 1}, 1, 5);
-
-  std::cout << s1c.adjacency_matrix() << std::endl;
-  std::cout << s2c.adjacency_matrix() << std::endl;
 }
 
 TEST(TreeBuilder, Step)
@@ -498,7 +470,7 @@ TEST(TreeBuilder, CompressedVar)
 
 TEST(TreeBuilder, VariousTestsOnRealExample)
 {
-  TreeBuilder tb;
+  TreeBuilder tb(1.0);
   tb.add_edge(0, 1);
   tb.add_edge(1, 2);
   tb.add_edge(2, 3);
@@ -537,37 +509,6 @@ TEST(TreeBuilder, VariousTestsOnRealExample)
 
   auto compressed_var = c_b2.get_vars({0, 2}, mapping.orig_to_compressed(12), 0, 2);
 }
-
-TEST(TreeBuilder, BranchGenerator)
-{
-  auto tree = build_simple_path_builder();
-
-  auto gen = BranchGen(tree);
-
-  auto b1 = gen.next().get_nodes();
-  auto b2 = gen.next().get_nodes();
-
-  EXPECT_EQ(std::vector<uint>({0, 1, 2, 3}), b1);
-  EXPECT_EQ(std::vector<uint>({0, 1, 2, 4}), b2);
-
-  EXPECT_TRUE(gen.finished());
-}
-
-TEST(TreeBuilder, SubTreesAfterFirstBranching)
-{
-  auto tree = build_5_edges_2_branchings();
-
-  auto gen = SubTreesAfterFirstBranching(tree);
-
-  auto s1 = gen.next().get_nodes();
-  auto s2 = gen.next().get_nodes();
-
-  EXPECT_EQ(std::vector<uint>({0, 1, 2}), s1);
-  EXPECT_EQ(std::vector<uint>({0, 1, 3, 4, 5}), s2);
-
-  EXPECT_TRUE(gen.finished());
-}
-
 
 ////////////////////////////////
 int main(int argc, char **argv)

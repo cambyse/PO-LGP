@@ -69,8 +69,9 @@ bool empty_col(const arr & m, uint j)
 };
 
 
-TreeBuilder::TreeBuilder()
+TreeBuilder::TreeBuilder(double p)
   : adjacency_matrix_ ( arr(uint(0), uint(0)) )
+  , p_(p)
 {
 
 }
@@ -90,7 +91,33 @@ bool TreeBuilder::has_node(uint n) const
 
 double TreeBuilder::p(uint from, uint to) const
 {
-  return adjacency_matrix_(from, to);
+  double p = 1.0;
+
+  auto path = get_path(from, to);
+
+  for(auto i = 1; i < path.size(); ++i)
+  {
+    p *= adjacency_matrix_(path[i-1], path[i]);
+  }
+
+  return p;
+}
+
+uint TreeBuilder::get_root() const
+{
+  std::vector<uint> roots;
+
+  for(auto i = 0; i < adjacency_matrix_.d0; ++i)
+  {
+    if(!empty_row(adjacency_matrix_, i) && empty_col(adjacency_matrix_, i))
+    {
+      roots.push_back(i);
+    }
+  }
+
+  CHECK_EQ(1, roots.size(), "tree should have exactly one root!");
+
+  return roots.front();
 }
 
 std::vector<uint> TreeBuilder::get_nodes() const
@@ -184,6 +211,31 @@ std::vector<uint> TreeBuilder::get_leaves_from(uint node) const
   return leaves;
 }
 
+std::vector<uint> TreeBuilder::get_path(uint from, uint to) const
+{
+  std::vector<uint> path;
+
+  uint current = to;
+
+  while(current!=from)
+  {
+    path.push_back(current);
+
+    auto parents = get_parents(current);
+
+    CHECK(parents.size() <= 1, "graph not yet supported");
+    CHECK(parents.size() > 0, "path doesn't exist");
+
+    current = parents.front();
+  }
+
+  path.push_back(from);
+
+  std::reverse(path.begin(), path.end());
+
+  return path;
+}
+
 _Branch TreeBuilder::_get_branch(uint leaf) const
 {
   _Branch branch;
@@ -205,7 +257,7 @@ _Branch TreeBuilder::_get_branch(uint leaf) const
     parents = get_parents(current);
   }
 
-  branch.local_to_global.push_back(0);
+  branch.local_to_global.push_back(get_root());
   std::reverse(branch.local_to_global.begin(), branch.local_to_global.end());
 
   branch.global_to_local = std::vector< int >(adjacency_matrix_.d0, -1);
@@ -220,7 +272,7 @@ _Branch TreeBuilder::_get_branch(uint leaf) const
 
 TreeBuilder TreeBuilder::get_subtree_from(uint node) const
 {
-  TreeBuilder tree;
+  TreeBuilder tree(p(0, node));
   std::list<uint> queue;
   queue.push_back(node);
 
@@ -268,7 +320,7 @@ TreeBuilder TreeBuilder::compressed(Mapping & mapping) const
     }
   }
 
-  TreeBuilder compressed;
+  TreeBuilder compressed(p_);
   compressed.adjacency_matrix_ = adj;
 
   return compressed;
@@ -288,7 +340,7 @@ std::vector<_Branch> TreeBuilder::get_branches() const
 
 TreeBuilder TreeBuilder::get_branch(uint leaf) const
 {
-  TreeBuilder branch;
+  TreeBuilder branch(p(0, leaf));
 
   auto current = leaf;
   auto parents = get_parents(current);
@@ -316,8 +368,8 @@ intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch,
   auto to = interval.to;
 
   const auto duration = to - from; //ceil(to - from);
-  uint d0 = ceil(duration * steps);
-  uint from_step = from * steps;
+  uint d0 = duration > 0 ? ceil(duration * steps) : 0;
+  int from_step = from * steps;
 
   intA vars(d0);
 
@@ -329,7 +381,9 @@ intA TreeBuilder::get_vars0(const TimeInterval& interval, const _Branch& branch,
 
     if(k < 0) // prefix handling (we don't branch during the prefix)
     {
-      vars(t) = k;
+      int from_node = branch.local_to_global[0];
+      int to_node   = branch.local_to_global[1];
+      vars(t) = from_node * steps + k;
     }
     else
     {
@@ -398,7 +452,7 @@ arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps)
   const auto& to = it.to;
 
   const auto duration = to - from;
-  uint d0 = ceil(duration * steps);
+  uint d0 = duration > 0 ? ceil(duration * steps) : 0;
   uint from_step = from * steps;
 
   arr full_scale = arr((branch.local_to_global.size() - 1) * steps);
@@ -425,13 +479,27 @@ arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps)
   return scale;
 }
 
+TaskSpec TreeBuilder::get_spec(uint order, uint steps) const
+{
+  // get leaves fron start_edge
+  std::vector<uint> leaves = get_leaves();
+  std::sort(leaves.begin(), leaves.end()); // unnecessary but easier to debug
+
+  return get_spec({0, -1.0}, leaves, order, steps);
+}
+
 TaskSpec TreeBuilder::get_spec(const TimeInterval& interval, const Edge& start_edge, uint order, uint steps) const
 {
   // get leaves fron start_edge
   std::vector<uint> leaves = get_leaves_from(start_edge.to);
   std::sort(leaves.begin(), leaves.end()); // unnecessary but easier to debug
 
-  // get vars for each leaves
+  return get_spec(interval, leaves, order, steps);
+}
+
+TaskSpec TreeBuilder::get_spec(const TimeInterval& interval, const std::vector<uint> & leaves, uint order, uint steps) const
+{
+  // get vars for each leaf
   std::vector<std::vector<intA>> slitted_varss(leaves.size());
   std::vector<arr> scaless(leaves.size());
   for(auto i = 0; i < leaves.size(); ++i)
@@ -493,10 +561,12 @@ int TreeBuilder::get_step(double time, const Edge& edge, uint steps) const
 
   auto spec = get_spec({time, time}, edge, 0, steps);
 
+  if(spec.vars.d0 == 0) // out of the time interval
+    return -1;
+
   CHECK(spec.vars.d0 == 1, "wrong spec!");
 
   return spec.vars.front();
-  //return 0;
 }
 
 void TreeBuilder::add_edge(uint from, uint to, double p)
@@ -533,6 +603,9 @@ std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree)
 
       queue.push_back(q);
     }
+
+    if(children.empty() && p < tree.adjacency_matrix().d0 - 1)
+      queue.push_back(p+1);
   }
 
   return os;

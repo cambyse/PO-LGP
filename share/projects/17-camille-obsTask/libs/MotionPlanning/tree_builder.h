@@ -117,17 +117,20 @@ struct Mapping
 class TreeBuilder
 {
 public:
-  TreeBuilder();
+  TreeBuilder(double p);
 
   arr adjacency_matrix() const {return adjacency_matrix_;}
   uint n_nodes() const;
   bool has_node(uint n) const;
+  double p() const { return p_; }
   double p(uint from, uint to) const;
+  uint get_root() const; // typically 0 but can be something else in case of uncompressed subtree
   std::vector<uint> get_nodes() const;
   std::vector<uint> get_leaves() const;
   std::vector<uint> get_parents(uint node) const;
   std::vector<uint> get_children(uint node) const;
   std::vector<uint> get_leaves_from(uint node) const;
+  std::vector<uint> get_path(uint from, uint to) const;
   _Branch _get_branch(uint leaf) const;
   std::vector<_Branch> get_branches() const;
   TreeBuilder get_branch(uint leaf) const;
@@ -136,97 +139,16 @@ public:
   intA get_vars0(const TimeInterval& interval, const _Branch& branch, uint steps=1) const;
   intA get_vars(const TimeInterval& interval, uint leaf, uint order=2, uint steps=1) const;
   arr get_scales(const TimeInterval& interval, uint leaf, uint steps=1) const;
+  TaskSpec get_spec(uint order=2, uint steps=1) const;
   TaskSpec get_spec(const TimeInterval& interval, const Edge& start_edge, uint order=2, uint steps=1) const;
+  TaskSpec get_spec(const TimeInterval& interval, const std::vector<uint> & leaves, uint order=2, uint steps=1) const;
   int get_step(double time, const Edge& edge, uint steps) const;
 
   void add_edge(uint from, uint to, double p = 1.0);
 
 private:
   arr adjacency_matrix_;
-};
-
-struct BranchGen
-{
-  BranchGen(const TreeBuilder& tree)
-    : tree(tree)
-  {
-    leaves = tree.get_leaves();
-  }
-
-  bool finished() const
-  {
-    return (index == leaves.size());
-  }
-
-  TreeBuilder next()
-  {
-    CHECK(!finished(), "finished generator");
-
-    return tree.get_branch(leaves[index++]);
-  }
-
-  const TreeBuilder& tree;
-  std::vector<uint> leaves;
-  uint index = 0;
-};
-
-struct SubTreesAfterFirstBranching // common trunk
-{
-  SubTreesAfterFirstBranching(const TreeBuilder& tree)
-    : tree(tree)
-  {
-    uint branching_node = 0;
-
-    std::list<uint> queue;
-    queue.push_back(0);
-
-    while(!queue.empty())
-    {
-      auto p = queue.back();
-      queue.pop_back();
-
-      path_to_source.push_back(p);
-
-      auto children = tree.get_children(p);
-
-      if(children.size() > 1)
-      {
-        sources = children;
-        break;
-      }
-
-      for(const auto& c: children)
-      {
-        queue.push_back(c);
-      }
-    }
-  }
-
-  bool finished() const
-  {
-    return (index == sources.size());
-  }
-
-  TreeBuilder next()
-  {
-    CHECK(!finished(), "finished generator");
-
-    auto sub = tree.get_subtree_from(sources[index]);
-
-    for(auto i = 1; i < path_to_source.size(); ++i)
-    {
-      sub.add_edge(path_to_source[i-1], path_to_source[i]);
-    }
-
-    sub.add_edge(path_to_source.back(), sources[index++]);
-
-    return sub;
-  }
-
-  const TreeBuilder& tree;
-  std::vector<uint> path_to_source;
-  std::vector<uint> sources;
-  uint index = 0;
+  double p_{1.0}; // existence probability of the tree (makes sense when built out of a subtree)
 };
 
 std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree);

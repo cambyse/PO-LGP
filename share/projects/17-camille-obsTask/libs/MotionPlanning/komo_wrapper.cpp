@@ -118,8 +118,8 @@ void KomoWrapper::addObjective(const Interval& it, const TreeBuilder& tree, Feat
     CHECK(scale != -1, "please put a meaningful scale");
     CHECK(order != -1, "please put a meaningful task order");
 
-    auto obj = komo_->addObjective(-123., -123., map, type, target, scale, order, deltaFromStep, deltaToStep);
     auto spec = tree.get_spec(it.time, it.edge, order, komo_->stepsPerPhase);
+    auto obj = komo_->addObjective(-123., -123., map, type, target, scale, order, deltaFromStep, deltaToStep);
 
     obj->vars = spec.vars;
     obj->scales = spec.scales;
@@ -142,7 +142,7 @@ void KomoWrapper::addSwitch(const Interval& it, const TreeBuilder& tree, Kinemat
   }
   else
   {
-    komo_->addSwitch(it.time.from,true, sw);
+    komo_->addSwitch(it.time.from, true, sw);
   }
 }
 

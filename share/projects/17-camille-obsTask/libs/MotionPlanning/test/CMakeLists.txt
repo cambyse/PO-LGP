@@ -4,7 +4,7 @@ get_filename_component(project_name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 string(REPLACE " " "_" project_name ${project_name})
 
 # list all tests
-file(GLOB_RECURSE tests *.cpp)
+file(GLOB_RECURSE tests *.cpp *.h)
 
 #find GTest
 find_package(GTest REQUIRED)

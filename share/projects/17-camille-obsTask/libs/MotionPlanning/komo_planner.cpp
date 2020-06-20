@@ -174,6 +174,7 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   else if( po.getParam( "type" ) == "ADMMCompressed" )
   {
     ADMMCompressedPlanner planner(config_, komoFactory_);
+    planner.setDecompositionStrategy(po.getParam("decompositionStrategy"), po.getParam("nJobs"));
     planner.optimize(policy, startKinematics_);
   }
   else if( po.getParam( "type" ) == "ADMMDecompose" )
