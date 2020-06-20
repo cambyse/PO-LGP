@@ -15,8 +15,7 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
   // hessian
   if(isSparseMatrix(HL))
   {
-    auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
-
+    const auto Hs = dynamic_cast<rai::SparseMatrix*>(HL.special);
     const auto& elems = Hs->elems;
     const auto& Z = Hs->Z;
 
@@ -31,7 +30,7 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
       }
     }
   }
-  else
+  else // not sparse
   {
     for(auto i: admmVar)
     {

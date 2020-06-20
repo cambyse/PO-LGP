@@ -32,7 +32,7 @@ struct Distance2D : public ConstrainedProblem
   // min dist to point (10, 2)
   // s.t. x = 0.0
   // s.t  y < 1
-  Distance2D(const arr& center, arr mask = ones(3))
+  Distance2D(const arr& center, arr mask = ones(2))
     : center_(center)
     , mask_(mask)
   {
@@ -46,6 +46,7 @@ struct Distance2D : public ConstrainedProblem
     {
       phi = arr(4);
       J = zeros(4, 2);
+      J.special = &J.sparse();
       ot = ObjectiveTypeA(4);
 
       ot(0) = OT_sos;
@@ -54,17 +55,19 @@ struct Distance2D : public ConstrainedProblem
       ot(3) = OT_ineq;
     }
 
-    phi(0) = x(0) - center_(0);
-    J(0, 0) = 1.0;
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
 
-    phi(1) = x(1) - center_(1);
-    J(1, 1) = 1.0;
+    phi(0) = mask_(0) * (x(0) - center_(0));
+    Js->elem(0, 0) = mask_(0);
+
+    phi(1) = mask_(1) * (x(1) - center_(1));
+    Js->elem(1, 1) = mask_(1);
 
     phi(2) = x(0);
-    J(2, 0) = 1.0;
+    Js->elem(2, 0) = 1.0;
 
     phi(3) = x(1) - 1.0;
-    J(3, 1) = 1.0;
+    Js->elem(3, 1) = 1.0;
   }
 
   arr center_;
@@ -80,18 +83,20 @@ struct ParabolWithFTerm : public ConstrainedProblem
     {
       phi = arr(2);
       J = arr(2, 1);
-      H = zeros(1, 1);
+      J.special = &J.sparse();
       ot = ObjectiveTypeA(2);
 
       ot(0) = OT_sos;
       ot(1) = OT_f;
     }
 
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
     phi(0) = x(0);
-    J(0, 0) = 1.0;
+    Js->elem(0, 0) = 1.0;
 
     phi(1) = -x(0);
-    J(1, 0) = -1.0;
+    Js->elem(1, 0) = -1.0;
   }
 };
 
@@ -114,6 +119,7 @@ struct Distance3D : public ConstrainedProblem
     {
       phi = arr(4);
       J = zeros(4, 3);
+      J.special = &J.sparse();
       ot = ObjectiveTypeA(4);
 
       ot(0) = OT_sos;
@@ -123,17 +129,19 @@ struct Distance3D : public ConstrainedProblem
       //ot(4) = OT_ineq;
     }
 
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
     phi(0) = mask_(0) * (x(0) - center_(0));
-    J(0, 0) = mask_(0);
+    Js->elem(0, 0) = mask_(0);
 
     phi(1) = mask_(1) * (x(1) - center_(1));
-    J(1, 1) = mask_(1);
+    Js->elem(1, 1) = mask_(1);
 
     phi(2) = mask_(2) * (x(2) - center_(2));
-    J(2, 2) = mask_(2);
+    Js->elem(2, 2) = mask_(2);
 
     phi(3) = x(0);
-    J(3, 0) = 1.0;
+    Js->elem(3, 0) = 1.0;
 
 //    phi(4) = x(1) - 1.0;
 //    J(4, 1) = 1.0;
@@ -162,6 +170,7 @@ struct Distance4D : public ConstrainedProblem
     {
       phi = arr(5);
       J = zeros(5, 4);
+      J.special = &J.sparse();
       ot = ObjectiveTypeA(5);
 
       ot(0) = OT_sos;
@@ -172,20 +181,22 @@ struct Distance4D : public ConstrainedProblem
       //ot(4) = OT_ineq;
     }
 
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
     phi(0) = mask_(0) * (x(0) - center_(0));
-    J(0, 0) = mask_(0);
+    Js->elem(0, 0) = mask_(0);
 
     phi(1) = mask_(1) * (x(1) - center_(1));
-    J(1, 1) = mask_(1);
+    Js->elem(1, 1) = mask_(1);
 
     phi(2) = mask_(2) * (x(2) - center_(2));
-    J(2, 2) = mask_(2);
+    Js->elem(2, 2) = mask_(2);
 
     phi(3) = mask_(3) * (x(3) - center_(3));
-    J(3, 3) = mask_(3);
+    Js->elem(3, 3) = mask_(3);
 
     phi(4) = x(0);
-    J(4, 0) = 1.0;
+    Js->elem(4, 0) = 1.0;
 
 //    phi(4) = x(1) - 1.0;
 //    J(4, 1) = 1.0;
