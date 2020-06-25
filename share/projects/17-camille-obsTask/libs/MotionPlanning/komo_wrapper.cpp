@@ -32,7 +32,7 @@ void KomoWrapper::setupConfigurations(const std::vector<Vars>& branches)
 {
   //IMPORTANT: The configurations need to include the k prefix configurations!
   //Therefore configurations(0) is for time=-k and configurations(k+t) is for time=t
-  CHECK(!komo_->configurations.N,"why setup again?");
+  CHECK(!komo_->configurations.N, "why setup again?");
 //    listDelete(configurations);
 
   computeMeshNormals(komo_->world.frames, true);
@@ -55,10 +55,12 @@ void KomoWrapper::setupConfigurations(const std::vector<Vars>& branches)
   komo_->configurations(2)->copy(*komo_->configurations(1), true);
   std::vector<int> visited(komo_->T+komo_->k_order, 0);
 
+  uint i = 0;
   for(const auto& branch: branches)
   {
-    //std::cout << "branch " << i << std::endl;
-    for(uint s=1; s<branch.order0.d0; s++)
+    std::cout << "branch " << i << std::endl; ++i;
+
+    for(uint s=0; s<branch.order0.d0; s++)
     {
       auto s_global = branch.order1(s,1);
       auto s_m_1_global = branch.order1(s,0);

@@ -260,16 +260,16 @@ void komo_tree_dev()
   mp.registerTask( "check"        , groundTreeCheck );
   mp.registerTask( "stack"        , groundTreeStack );
   mp.registerTask( "unstack"      , groundTreeUnStack );
-  mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
-  //mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
+  //mp.setKin( "LGP-blocks-kin-1w-one-table.g" );
+  mp.setKin( "LGP-blocks-kin-2w-one-table.g" );
   //mp.setKin( "LGP-blocks-kin-one-table.g" );
   //mp.setKin( "LGP-blocks-kin-4-blocks-24w-one-table.g" );
 
 
   // load policy
   Policy policy;
-  policy.load("policy-0-1w");
-  //policy.load("policy-0-2w");
+  //policy.load("policy-0-1w");
+  policy.load("policy-0-2w");
   //policy.load("policy-0-6w");
   //policy.load("policy-0-24w");
 
@@ -280,8 +280,8 @@ void komo_tree_dev()
   //po.setParam( "type", "ADMMSparse" );
   {
     po.setParam( "type", "ADMMCompressed" );
-    //po.setParam( "decompositionStrategy", "SubTreesAfterFirstBranching" ); // trees only
-    po.setParam( "decompositionStrategy", "LinearSplit" ); // trees only
+    po.setParam( "decompositionStrategy", "SubTreesAfterFirstBranching" ); // trees only because otherwise no subproblems!
+    //po.setParam( "decompositionStrategy", "LinearSplit" ); // ENABLE HERE AND PUT LINEAR TRAJ TO CONTINUE WORKING
     po.setParam( "nJobs", "8" );
   }
 
