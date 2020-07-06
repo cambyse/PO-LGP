@@ -74,7 +74,32 @@ TreeBuilder build_3_edges_1_branching()
   return tb;
 }
 
-TreeBuilder build_3_linear_edges()
+TreeBuilder build_3_edges_1_branching_sub_1()
+{
+  /*
+   *   1
+   *  /
+   * 2
+   */
+  TreeBuilder tb(1.0);
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2, 0.6);
+  return tb;
+}
+
+TreeBuilder build_3_edges_1_branching_sub_2()
+{
+  /*
+   *   1
+   *    \
+   *     3
+   */
+  TreeBuilder tb(1.0);
+  tb.add_edge(1, 3, 0.4);
+  return tb;
+}
+
+TreeBuilder build_2_linear_edges()
 {
   /*   0
    *   |
@@ -84,6 +109,28 @@ TreeBuilder build_3_linear_edges()
    */
   TreeBuilder tb(1.0);
   tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  return tb;
+}
+
+TreeBuilder build_2_linear_edges_sub_1()
+{
+  /*   0
+   *   |
+   *   1
+   */
+  TreeBuilder tb(1.0);
+  tb.add_edge(0, 1);
+  return tb;
+}
+
+TreeBuilder build_2_linear_edges_sub_2()
+{
+  /*   1
+   *   |
+   *   2
+   */
+  TreeBuilder tb(1.0);
   tb.add_edge(1, 2);
   return tb;
 }

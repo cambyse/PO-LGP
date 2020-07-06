@@ -58,7 +58,7 @@ void KomoWrapper::setupConfigurations(const std::vector<Vars>& branches)
   uint i = 0;
   for(const auto& branch: branches)
   {
-    std::cout << "branch " << i << std::endl; ++i;
+    std::cout << "setup configurations branch " << i << std::endl; ++i;
 
     for(uint s=0; s<branch.order0.d0; s++)
     {

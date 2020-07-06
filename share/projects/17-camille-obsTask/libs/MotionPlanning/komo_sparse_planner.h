@@ -70,8 +70,8 @@ public:
     : KOMOSparsePlanner(config, factory)
   {};
   void setDecompositionStrategy(const std::string& strategy, const std::string& nJobs);
-  void groundPolicyActionsCompressed( const TreeBuilder & policy_tree,
-                                      const TreeBuilder & komo_tree,
+  void groundPolicyActionsCompressed( const TreeBuilder & uncompressed,
+                                      const TreeBuilder & compressed,
                                       const Mapping & mapping,
                                       Policy & policy,
                                       const std::shared_ptr< ExtensibleKOMO > & komo ) const;

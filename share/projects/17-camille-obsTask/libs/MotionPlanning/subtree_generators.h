@@ -9,6 +9,9 @@
 namespace mp
 {
 
+// generates the edges of the full tree that can interact with the subtree (includes the path going to the subtree, and the branches after)
+std::vector<Edge> interactingEdges(const TreeBuilder& tree, const TreeBuilder& subtree);
+
 struct SubTreeGen
 {
   virtual bool finished() const = 0;

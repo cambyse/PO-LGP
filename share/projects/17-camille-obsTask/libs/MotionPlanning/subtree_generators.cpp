@@ -1,7 +1,53 @@
 #include <subtree_generators.h>
+#include <unordered_set>
 
 namespace mp
 {
+
+std::vector<Edge> interactingEdges(const TreeBuilder& tree, const TreeBuilder& subtree)
+{
+  std::vector<Edge> edges;
+
+  auto subleaves = subtree.get_leaves();
+  std::vector<uint> leaves;
+
+  for(auto n: subleaves)
+  {
+    auto extended = tree.get_leaves_from(n);
+    leaves.insert(leaves.begin(), extended.begin(), extended.end());
+  }
+
+  std::list<uint> lifo;
+  std::unordered_set<uint> visited;
+  for(const auto& l: leaves)
+  {
+    lifo.push_back(l);
+  }
+
+  while(!lifo.empty())
+  {
+    auto q = lifo.back();
+    lifo.pop_back();
+
+    if(visited.find(q) != visited.end())
+      continue;
+
+    auto ps = tree.get_parents(q);
+
+    for(const auto p: ps)
+    {
+      visited.insert(q);
+      lifo.push_back(p);
+
+      edges.push_back(Edge({p, q}));
+    }
+  }
+
+  std::reverse(edges.begin(), edges.end());
+
+  return edges;
+}
+
 /// SUBTREES AFTER FIRST BRANCHING (QMDP)
 SubTreesAfterFirstBranching::SubTreesAfterFirstBranching(const TreeBuilder& tree)
   : tree(tree)
@@ -31,6 +77,8 @@ SubTreesAfterFirstBranching::SubTreesAfterFirstBranching(const TreeBuilder& tree
       queue.push_back(c);
     }
   }
+
+  CHECK(sources.size() > 0, "No first branching!, check that the policy is not linear!");
 }
 
 bool SubTreesAfterFirstBranching::finished() const

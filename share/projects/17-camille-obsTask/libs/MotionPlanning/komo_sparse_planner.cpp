@@ -311,8 +311,8 @@ void ADMMCompressedPlanner::setDecompositionStrategy( const std::string& strateg
   }
 }
 
-void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & policyTree,
-                                                           const TreeBuilder & komoTree,
+void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & uncompressed,
+                                                           const TreeBuilder & compressed,
                                                            const Mapping & mapping,
                                                            Policy & policy,
                                                            const std::shared_ptr< ExtensibleKOMO > & komo ) const
@@ -328,7 +328,7 @@ void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & p
 
     while(p)
     {
-      if(visited.find(q->id()) == visited.end() && policyTree.has_node(q->id()))
+      if(visited.find(q->id()) == visited.end() && uncompressed.has_node(q->id()))
       {
         double start = p->depth();
         double end = q->depth();
@@ -341,10 +341,10 @@ void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & p
         interval.edge = {pid, qid};
 
         // square acc
-        W(komo.get()).addObjective(interval, komoTree, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
+        W(komo.get()).addObjective(interval, compressed, new TM_Transition(komo->world), OT_sos, NoArr, 1.0, 2);
 
         // ground other tasks
-        komo->groundTasks(interval, komoTree, q->data().leadingKomoArgs, 1);
+        komo->groundTasks(interval, compressed, q->data().leadingKomoArgs, 1);
 
         visited.insert(q->id());
       }
@@ -386,6 +386,8 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   groundPolicyActionsJoint(tree, policy, witness);
   for(auto w = 0; w < komos.size(); ++w)
   {
+    std::cout << "GROUND " << w << std::endl;
+
     const auto& subInfo = subproblems[w];
     const auto& uncompressed = std::get<0>(subInfo);
     const auto& compressed = std::get<1>(subInfo);
@@ -402,6 +404,10 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   for(auto w = 0; w < komos.size(); ++w)
   {
     std::vector<Vars> vars{std::get<1>(allVars)[w]}; // compressed
+
+    if(w>0)
+      komos[w]->world.copy(*komos[w-1]->configurations(-1));
+
     W(komos[w].get()).reset(vars);
   }
 
@@ -415,9 +421,6 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     arr xmask;
     gp->getXMask(xmask);
     xmasks.push_back(xmask);
-
-//    if(w > 2)
-//    break;
   }
 
   // create sub-opt-problems
@@ -433,10 +436,38 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
 
     converters.push_back(gp);
     constrained_problems.push_back(pb);
-
-//    if(w > 2)
-//    break;
   }
+
+  // check dim consistency
+  auto nz = [](const arr& x)
+  {
+    uint n = 0;
+    for(auto i = 0; i < x.d0; ++i)
+    {
+      if(x(i)!=0.0)
+        n++;
+    }
+    return n;
+  };
+
+  uint nx = 0;
+  uint nkx = 0;
+  for(auto w = 0; w < komos.size(); ++w)
+  {
+    const auto& x = xmasks[w];
+    const auto& kx = komos[w]->x;
+
+    const auto n = nz(x);
+    //CHECK_EQ(n, kx.d0, "corrupted dimensions");
+    //if(n != kx.d0)
+    std::cout << n << " vs. " << kx.d0 << std::endl;
+
+    nkx += kx.d0;
+    nx += n;
+  }
+
+  std::cout << nkx << " VS. " << nx << " VS. " << witness->x.d0 << std::endl;
+  //
 
   // RUN
   auto start = std::chrono::high_resolution_clock::now();

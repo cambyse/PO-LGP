@@ -67,7 +67,7 @@ TEST(TreeBuilder, SubTreesAfterFirstBranchingSpecs)
 TEST(TreeBuilder, LinearSplit)
 {
   auto steps = 5;
-  auto tree = build_3_linear_edges();
+  auto tree = build_2_linear_edges();
 
   auto gen = LinearSplit(tree, 8);
 
@@ -78,6 +78,42 @@ TEST(TreeBuilder, LinearSplit)
   EXPECT_EQ(std::vector<uint>({1, 2}), s2);
 
   EXPECT_TRUE(gen.finished());
+}
+
+TEST(InteractingEdges, LinearFullTree)
+{
+  auto steps = 5;
+  auto tree = build_2_linear_edges();
+  auto sub = build_2_linear_edges_sub_1();
+
+  auto edges = interactingEdges(tree, sub);
+
+  EXPECT_EQ(Edge({0, 1}), edges[0]);
+  EXPECT_EQ(Edge({1, 2}), edges[1]);
+}
+
+TEST(InteractingEdges, TreeSub1)
+{
+  auto steps = 5;
+  auto tree = build_3_edges_1_branching();
+  auto sub = build_3_edges_1_branching_sub_1();
+
+  auto edges = interactingEdges(tree, sub);
+
+  EXPECT_EQ(Edge({0, 1}), edges[0]);
+  EXPECT_EQ(Edge({1, 2}), edges[1]);
+}
+
+TEST(InteractingEdges, TreeSub2)
+{
+  auto steps = 5;
+  auto tree = build_3_edges_1_branching();
+  auto sub = build_3_edges_1_branching_sub_2();
+
+  auto edges = interactingEdges(tree, sub);
+
+  EXPECT_EQ(Edge({0, 1}), edges[0]);
+  EXPECT_EQ(Edge({1, 3}), edges[1]);
 }
 
 ////////////////////////////////

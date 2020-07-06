@@ -610,4 +610,9 @@ std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree)
 
   return os;
 }
+
+bool operator==(const Edge& a, const Edge& b)
+{
+  return a.from == b.from && a.to == b.to;
+}
 }
