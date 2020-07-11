@@ -20,7 +20,7 @@ namespace mp
 /// COMMON: KOMOSparsePlanner
 TreeBuilder KOMOSparsePlanner::buildTree( Policy & policy ) const
 {
-  TreeBuilder treeBuilder(1.0);
+  TreeBuilder treeBuilder(1.0, 0);
 
   std::list< Policy::GraphNodeTypePtr > fifo;
   fifo.push_back( policy.root() );
@@ -76,38 +76,6 @@ std::vector<Vars> KOMOSparsePlanner::getSubProblems( const TreeBuilder & tree, P
   return allVars;
 }
 
-std::tuple< std::vector<Vars>, std::vector<Vars> > KOMOSparsePlanner::getAllVars(const std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > & subproblems) const
-{
-  std::tuple< std::vector<Vars>, std::vector<Vars> > allVars; // uncompressed, compressed
-  std::get<0>(allVars).reserve(subproblems.size());
-  std::get<0>(allVars).reserve(subproblems.size());
-
-  for(const auto & sub: subproblems)
-  {
-    //TimeInterval all{0.0, -1.0};
-    //Edge edge{0, 1};
-
-    {
-    auto uncompressed = std::get<0>(sub);
-    auto vars0 = uncompressed.get_spec(0, config_.microSteps_).vars;
-    auto vars1 = uncompressed.get_spec(1, config_.microSteps_).vars;
-    auto vars2 = uncompressed.get_spec(2, config_.microSteps_).vars;
-    Vars var{vars0, vars1, vars2, config_.microSteps_};
-    std::get<0>(allVars).push_back(var);
-    }
-    {
-    auto compressed = std::get<1>(sub);
-    auto vars0 = compressed.get_spec(0, config_.microSteps_).vars;
-    auto vars1 = compressed.get_spec(1, config_.microSteps_).vars;
-    auto vars2 = compressed.get_spec(2, config_.microSteps_).vars;
-    Vars var{vars0, vars1, vars2, config_.microSteps_};
-    std::get<1>(allVars).push_back(var);
-    }
-  }
-
-  return allVars;
-}
-
 std::vector<intA> KOMOSparsePlanner::getSubProblemMasks( const std::vector<Vars> & allVars, uint T ) const
 {
   std::vector<intA> masks(allVars.size());
@@ -133,6 +101,9 @@ void KOMOSparsePlanner::groundPolicyActionsJoint( const TreeBuilder & tree,
 {
   // traverse tree and ground symbols
   std::unordered_set<uint> visited;
+
+  komo->groundInit(tree);
+
   for(const auto& l: policy.sleaves())
   {
     auto q = l;
@@ -311,13 +282,17 @@ void ADMMCompressedPlanner::setDecompositionStrategy( const std::string& strateg
   }
 }
 
-void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & uncompressed,
+void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & fullTree,
+                                                           const TreeBuilder & uncompressed,
                                                            const TreeBuilder & compressed,
                                                            const Mapping & mapping,
                                                            Policy & policy,
                                                            const std::shared_ptr< ExtensibleKOMO > & komo ) const
 {
-  // policy_tree and komo_tree differ in general (komo_tree could be a subtree or branch only)
+  komo->groundInit(compressed);
+
+  auto edges = interactingEdges(fullTree, uncompressed); // interacting edges and the closest edge on subtree
+  // interating edges are all the edges on which groundings have an influence on the subtree
 
   // traverse tree and ground symbols
   std::unordered_set<uint> visited;
@@ -328,16 +303,25 @@ void ADMMCompressedPlanner::groundPolicyActionsCompressed( const TreeBuilder & u
 
     while(p)
     {
-      if(visited.find(q->id()) == visited.end() && uncompressed.has_node(q->id()))
+      // check if p-q is part of the interacting edges
+      auto it = std::find_if(edges.begin(), edges.end(), [&](const std::pair<Edge, Edge> & es)
+      {
+        return es.first == Edge({p->id(), q->id()});
+      });
+      if(visited.find(q->id()) == visited.end()
+         && it != edges.end())
       {
         double start = p->depth();
+        double start_offset = uncompressed.d();
         double end = q->depth();
 
-        auto pid = mapping.orig_to_compressed(p->id());
-        auto qid = mapping.orig_to_compressed(q->id());
+        const auto& local_edge = it->second;
+
+        auto pid = mapping.orig_to_compressed(local_edge.from);
+        auto qid = mapping.orig_to_compressed(local_edge.to);
 
         Interval interval;
-        interval.time = {start, start + 1.0};
+        interval.time = {start - start_offset, start - start_offset + 1.0};
         interval.edge = {pid, qid};
 
         // square acc
@@ -361,54 +345,55 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   // build tree
   auto tree = buildTree(policy);
 
-  // prepare komos
-  std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > subproblems; // uncompressed pb, compressed pb, mapping
-  std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
-  auto witness = intializeKOMO(tree, startKinematics.front());
-  uint w = 0;
-
+  // split into subtrees
   auto gen = generatorFactory_.create(decompositionStrategy_, nJobs_, tree);
+  auto subproblems = get_subproblems(gen); // uncompressed pb, compressed pb, mapping
+  auto allVars = get_all_vars(subproblems, config_.microSteps_);   // get subproblem vars (local)
 
-  while(!gen->finished())
-  {
-    Mapping mapping; // from global opt variable to local and vice versa
-    auto uncompressed = gen->next(); // extract subtree (here a branch)
-    auto compressed = uncompressed.compressed(mapping); // compress so that it has its own opt variable
-    auto komo = intializeKOMO(compressed, startKinematics(0));
-
-    komos.push_back(komo);
-    subproblems.push_back(std::tuple< TreeBuilder, TreeBuilder, Mapping >{uncompressed, compressed, mapping});
-
-    std::cout << "uncompressed:\n" << uncompressed << std::endl;
-  }
-
-  // ground each komo
+  // prepare komos
+  auto witness = intializeKOMO(tree, startKinematics.front());
   groundPolicyActionsJoint(tree, policy, witness);
-  for(auto w = 0; w < komos.size(); ++w)
+
+  // init and ground each komo
+  std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
+  for(auto w = 0; w < subproblems.size(); ++w)
   {
     std::cout << "GROUND " << w << std::endl;
 
-    const auto& subInfo = subproblems[w];
-    const auto& uncompressed = std::get<0>(subInfo);
-    const auto& compressed = std::get<1>(subInfo);
-    const auto& mapping = std::get<2>(subInfo);
-    groundPolicyActionsCompressed(uncompressed, compressed, mapping, policy, komos[w]);
+    const auto& sub = subproblems[w];
+    const auto& uncompressed = std::get<0>(sub);
+    const auto& compressed = std::get<1>(sub);
+    const auto& mapping = std::get<2>(sub);
+
+    auto komo = intializeKOMO(compressed, startKinematics(0));
+    komos.push_back(komo);
+    groundPolicyActionsCompressed(tree, uncompressed, compressed, mapping, policy, komos[w]);
   }
 
   // get mask of subproblems using witness
-  auto allVars = getAllVars(subproblems);   // get subproblem vars (local)
   auto uncompressedTMasks = getSubProblemMasks(std::get<0>(allVars), witness->T); // use uncompressed
 
   // reset
-  W(witness.get()).reset(std::get<0>(allVars), 0); // uncompressed
+  const auto& witnessVars = std::get<2>(allVars); //fused
+  W(witness.get()).reset(std::get<0>(allVars), 0); // uncompressed -> used fused!
   for(auto w = 0; w < komos.size(); ++w)
   {
-    std::vector<Vars> vars{std::get<1>(allVars)[w]}; // compressed
+    const std::vector<Vars>& uncompressed{std::get<0>(allVars)[w]};
+    const std::vector<Vars>& compressed{std::get<1>(allVars)[w]};
 
-    if(w>0)
-      komos[w]->world.copy(*komos[w-1]->configurations(-1));
+    //if(w>0)
+    //  komos[w]->world.copy(*komos[w-1]->configurations(-1));
 
-    W(komos[w].get()).reset(vars);
+    const auto firstIndex = uncompressed.front().order0.front();
+
+    if(firstIndex>0)
+    {
+      const auto prev = witnessVars.getPreviousStep(firstIndex);
+      komos[w]->world.copy(*witness->configurations(prev + witness->k_order));
+    }
+    //else // if first index == 0, the start configuration is already well configured from the komo init
+
+    W(komos[w].get()).reset(compressed);
   }
 
   std::vector<arr> xmasks;

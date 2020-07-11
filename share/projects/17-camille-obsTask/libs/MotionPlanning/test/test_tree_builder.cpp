@@ -8,12 +8,12 @@ using namespace mp;
 
 TEST(TreeBuilder, ClassCreation)
 {
-  auto tb = TreeBuilder(1.0);
+  auto tb = TreeBuilder(1.0, 0);
 }
 
 TEST(TreeBuilder, AddEdge)
 {
-  auto tb = TreeBuilder(1.0);
+  auto tb = TreeBuilder(1.0, 0);
   tb.add_edge(0, 1);
 
   EXPECT_EQ( tb.n_nodes(), 2 );
@@ -114,7 +114,7 @@ TEST(TreeBuilder, GetRoot)
   }
 
   {
-    TreeBuilder tree(1.0);
+    TreeBuilder tree(1.0, 0);
     tree.add_edge(1, 2);
     EXPECT_EQ(1, tree.get_root());
   }
@@ -232,11 +232,24 @@ TEST(TreeBuilder, GetVarsScalesNegativeTime)
   }
 }
 
+TEST(TreeBuilder, VarsScalesNegativeTimes)
+{
+  auto steps = 5;
+
+  auto tb = build_3_edges_1_branching();
+
+  auto vars = tb.get_vars({-2.0, -1.0}, 2, 0, steps);
+  auto scales = tb.get_scales({-2.0, -1.0}, 2, steps);
+
+  EXPECT_EQ(intA(), vars);
+  EXPECT_EQ(arr(), scales);
+}
+
 TEST(TreeBuilder, GetVarsScalesOvertime)
 {
   const auto steps = 5;
 
-  TreeBuilder tree(1.0);
+  TreeBuilder tree(1.0, 0);
   tree.add_edge(0, 1);
 
   auto a = tree.get_vars({2.0, 2.0}, 1, 2, steps);
@@ -321,7 +334,7 @@ TEST(TreeBuilder, PrefixOfUnCompressedSubtree)
 {
   auto steps = 5;
 
-  TreeBuilder tree(1.0);
+  TreeBuilder tree(1.0, 0);
 
   tree.add_edge(1, 2);
   auto vars1 = tree.get_vars(TimeInterval{0, 1}, 2, 1, steps);
@@ -334,7 +347,7 @@ TEST(TreeBuilder, GetScaleNSteps5)
 {
   auto steps = 5;
 
-  TreeBuilder tb(1.0);
+  TreeBuilder tb(1.0, 0);
   tb.add_edge(0, 1, 1.0);
 
   tb.add_edge(1, 2, 0.2);
@@ -412,6 +425,16 @@ TEST(TreeBuilder, Step)
   EXPECT_EQ(1, tb.get_step(0.5, {0, 1}, 5)); // should be 2??
 }
 
+TEST(Vars, Step)
+{
+  Vars var;
+  var.k_order = 2;
+  var.microSteps = 5;
+  var.order0 = intA(5, 1, {0, 1, 2, 3, 4});
+
+  EXPECT_EQ(2, var.getPreviousStep(3));
+}
+
 TEST(TreeBuilder, GetBranch)
 {
   auto tree = build_3_edges_1_branching();
@@ -470,7 +493,7 @@ TEST(TreeBuilder, CompressedVar)
 
 TEST(TreeBuilder, VariousTestsOnRealExample)
 {
-  TreeBuilder tb(1.0);
+  TreeBuilder tb(1.0, 0);
   tb.add_edge(0, 1);
   tb.add_edge(1, 2);
   tb.add_edge(2, 3);

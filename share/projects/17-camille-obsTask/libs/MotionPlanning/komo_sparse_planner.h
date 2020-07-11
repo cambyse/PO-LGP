@@ -26,7 +26,6 @@ public:
   TreeBuilder buildTree( Policy & ) const;
   std::shared_ptr< ExtensibleKOMO > intializeKOMO( const TreeBuilder & tree, const std::shared_ptr< const rai::KinematicWorld > & ) const;
   std::vector<Vars> getSubProblems( const TreeBuilder & tree, Policy & policy ) const; // deprecated
-  std::tuple< std::vector<Vars>, std::vector<Vars> > getAllVars(const std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > & subproblems) const;
   std::vector<intA> getSubProblemMasks( const std::vector<Vars> & allVars, uint T ) const;
   void groundPolicyActionsJoint( const TreeBuilder & tree,
                                  Policy & policy,
@@ -70,7 +69,8 @@ public:
     : KOMOSparsePlanner(config, factory)
   {};
   void setDecompositionStrategy(const std::string& strategy, const std::string& nJobs);
-  void groundPolicyActionsCompressed( const TreeBuilder & uncompressed,
+  void groundPolicyActionsCompressed( const TreeBuilder & fullTree,
+                                      const TreeBuilder & uncompressed,
                                       const TreeBuilder & compressed,
                                       const Mapping & mapping,
                                       Policy & policy,

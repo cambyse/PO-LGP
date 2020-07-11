@@ -276,7 +276,7 @@ void komo_tree_dev()
   // plan
   auto po     = MotionPlanningParameters( policy.id() );
   //po.setParam( "type", "jointSparse" );
-  //po.setParam( "type", "ADMMDecompose" );
+  //po.setParam( "type", "ADMMDecompose" ); // decompose hessian only
   //po.setParam( "type", "ADMMSparse" );
   {
     po.setParam( "type", "ADMMCompressed" );

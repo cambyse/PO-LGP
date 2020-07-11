@@ -29,9 +29,11 @@ struct Vars // Branch
   intA order0;
   intA order1;
   intA order2;
-  uint microSteps;
-  const uint k_order = 2;
+  uint microSteps{0};
+  uint k_order = 2;
 
+  Vars() = default;
+  Vars(const Vars&) = default;
   Vars(const intA & order0, const intA& order1, const intA& order2, uint microSteps)
     : order0(order0)
     , order1(order1)
@@ -65,6 +67,16 @@ struct Vars // Branch
     return order0(step, 0);
   }
 
+  int getPreviousStep(uint step) const
+  {
+    auto it = std::find(order0.begin(), order0.end(), step);
+
+    if(it != order0.end())
+      return *(--it);
+
+    return -1;
+  }
+
   const intA& operator[](std::size_t i) const
   {
     CHECK(i <= 2, "wrong order request!");
@@ -79,6 +91,11 @@ struct Vars // Branch
       default:
         break;
     }
+  }
+
+  intA& order(std::size_t i)
+  {
+    return const_cast<intA&>((*this)[i]);
   }
 };
 
@@ -117,12 +134,13 @@ struct Mapping
 class TreeBuilder
 {
 public:
-  TreeBuilder(double p);
+  TreeBuilder(double p, uint d);
 
   arr adjacency_matrix() const {return adjacency_matrix_;}
   uint n_nodes() const;
   bool has_node(uint n) const;
   double p() const { return p_; }
+  uint d() const { return d_; }
   double p(uint from, uint to) const;
   uint get_root() const; // typically 0 but can be something else in case of uncompressed subtree
   std::vector<uint> get_nodes() const;
@@ -148,7 +166,8 @@ public:
 
 private:
   arr adjacency_matrix_;
-  double p_{1.0}; // existence probability of the tree (makes sense when built out of a subtree)
+  const double p_; // existence probability of the tree (makes sense when built out of a subtree)
+  const uint d_; // depth offset
 };
 
 std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree);

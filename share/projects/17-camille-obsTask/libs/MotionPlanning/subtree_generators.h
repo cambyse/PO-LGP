@@ -10,7 +10,8 @@ namespace mp
 {
 
 // generates the edges of the full tree that can interact with the subtree (includes the path going to the subtree, and the branches after)
-std::vector<Edge> interactingEdges(const TreeBuilder& tree, const TreeBuilder& subtree);
+// the pair contains the edge in the ful tree, and its closest edge in the subtree
+std::vector<std::pair<Edge, Edge>> interactingEdges(const TreeBuilder& tree, const TreeBuilder& subtree);
 
 struct SubTreeGen
 {
@@ -96,6 +97,18 @@ struct GeneratorFactory
     }
   }
 };
+
+Vars fuse(const std::vector<Vars> & vars);
+
+std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > get_subproblems(const std::shared_ptr<SubTreeGen> & gen);
+
+/**
+ * @brief get_all_vars
+ * @param subproblems
+ * @param steps
+ * @return vars (uncompressed and compressed, uncompressed-fused)
+ */
+std::tuple< std::vector<Vars>, std::vector<Vars>, Vars> get_all_vars(const std::vector< std::tuple< TreeBuilder, TreeBuilder, Mapping > > & subproblems, uint steps);
 
 }
 

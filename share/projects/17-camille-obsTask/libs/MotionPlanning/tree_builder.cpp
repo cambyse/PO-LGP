@@ -35,6 +35,11 @@ static TimeInterval normalize(const TimeInterval & interval, const _Branch & bra
     from -= (1.0 - 0.0001)/ steps;
   }
 
+  if(from < 0 && to > 0)
+  {
+    from = 0;
+  }
+
   return {from, to};
 }
 
@@ -69,9 +74,10 @@ bool empty_col(const arr & m, uint j)
 };
 
 
-TreeBuilder::TreeBuilder(double p)
+TreeBuilder::TreeBuilder(double p, uint d)
   : adjacency_matrix_ ( arr(uint(0), uint(0)) )
   , p_(p)
+  , d_(d)
 {
 
 }
@@ -83,10 +89,10 @@ uint TreeBuilder::n_nodes() const
 
 bool TreeBuilder::has_node(uint n) const
 {
-  if(n == 0 && adjacency_matrix_.d1) return true;
+  //if(n == 0 && adjacency_matrix_.d1) return true;
   if(n >= adjacency_matrix_.d1) return false;
 
-  return !empty_col(adjacency_matrix_, n);
+  return !empty_col(adjacency_matrix_, n) || !empty_row(adjacency_matrix_, n);
 }
 
 double TreeBuilder::p(uint from, uint to) const
@@ -224,7 +230,10 @@ std::vector<uint> TreeBuilder::get_path(uint from, uint to) const
     auto parents = get_parents(current);
 
     CHECK(parents.size() <= 1, "graph not yet supported");
-    CHECK(parents.size() > 0, "path doesn't exist");
+    //CHECK(parents.size() > 0, "path doesn't exist");
+
+    if(parents.empty())
+      return std::vector<uint>();
 
     current = parents.front();
   }
@@ -272,7 +281,7 @@ _Branch TreeBuilder::_get_branch(uint leaf) const
 
 TreeBuilder TreeBuilder::get_subtree_from(uint node) const
 {
-  TreeBuilder tree(p(0, node));
+  TreeBuilder tree(p(0, node), 0);
   std::list<uint> queue;
   queue.push_back(node);
 
@@ -320,7 +329,7 @@ TreeBuilder TreeBuilder::compressed(Mapping & mapping) const
     }
   }
 
-  TreeBuilder compressed(p_);
+  TreeBuilder compressed(p_, d_);
   compressed.adjacency_matrix_ = adj;
 
   return compressed;
@@ -340,7 +349,7 @@ std::vector<_Branch> TreeBuilder::get_branches() const
 
 TreeBuilder TreeBuilder::get_branch(uint leaf) const
 {
-  TreeBuilder branch(p(0, leaf));
+  TreeBuilder branch(p(0, leaf), 0);
 
   auto current = leaf;
   auto parents = get_parents(current);
@@ -411,16 +420,10 @@ intA TreeBuilder::get_vars(const TimeInterval& interval, uint leaf, uint order, 
   auto from = it.from;
   auto to = it.to;
 
-  // handle the case of to == -1
-  if(from > to && to < 0  || (to > branch.local_to_global.size() - 1))
+  // if frm and to are negative, return early
+  if(from < 0 && to <= 0)
   {
-    to = branch.local_to_global.size() - 1;
-  }
-
-  // handle the case of from == to
-  if(from == to)
-  {
-    from -= (1.0 - 0.0001)/ steps;
+    return intA();
   }
 
   std::vector<intA> splitted_vars(order+1);// = get_vars0(from, to, leaf, steps);
@@ -450,6 +453,12 @@ arr TreeBuilder::get_scales(const TimeInterval& interval, uint leaf, uint steps)
   auto it = normalize(interval, branch, steps);
   const auto& from = it.from;
   const auto& to = it.to;
+
+  // if frm and to are negative, return early
+  if(from < 0 && to <= 0)
+  {
+    return arr();
+  }
 
   const auto duration = to - from;
   uint d0 = duration > 0 ? ceil(duration * steps) : 0;

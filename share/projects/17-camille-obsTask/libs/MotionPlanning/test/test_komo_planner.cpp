@@ -12,6 +12,27 @@ TEST_F(KomoPlannerSingleAgentFixture, ParseKinFileDoesntThrow2w)
   EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" ) );
 }
 
+TEST_F(KomoPlannerSingleAgentFixture, FreePrefix)
+{
+  planner.setKin( "data/LGP-overtaking-kin.g" );
+
+  Policy policy;
+  policy.load( "data/LGP-overtaking-single-agent-1w.po" );
+
+  MotionPlanningParameters po( policy.id() );
+  po.setParam( "type", "ADMMCompressed" );
+  //po.setParam( "type", "jointSparse" );
+
+  //po.setParam( "decompositionStrategy", "SubTreesAfterFirstBranching" );
+  //po.setParam( "decompositionStrategy", "LinearSplit" ); // ENABLE HERE AND PUT LINEAR TRAJ TO CONTINUE WORKING
+  po.setParam( "decompositionStrategy", "BranchGen" );
+  po.setParam( "nJobs", "8" );
+
+  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+  EXPECT_TRUE( initGrounder.nInitSingleAgent > 1 );  // 3 (pose) + 3(markov)
+
+}
+
 TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithAtEachStageForMarkovianPaths)
 {
   planner.setKin( "data/LGP-overtaking-kin.g" );

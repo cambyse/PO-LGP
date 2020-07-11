@@ -65,7 +65,7 @@ void ExtensibleKOMO::registerInit( const TreeInitGrounder & grounder )
 
 void ExtensibleKOMO::groundInit( int verbose )
 {
-  TreeBuilder tree(1.0);
+  TreeBuilder tree(1.0, 0);
   groundInit( tree, verbose );
 }
 
@@ -79,7 +79,7 @@ void ExtensibleKOMO::groundInit( const TreeBuilder &tb, int verbose )
 
 void ExtensibleKOMO::groundTasks( double phase, const std::vector< std::string >& facts, int verbose )
 {
-  TreeBuilder tree(1.0);
+  TreeBuilder tree(1.0, 0);
   Interval it;
   it.time.from = phase;
   it.time.to = phase + 1.0;
