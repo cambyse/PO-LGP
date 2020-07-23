@@ -130,12 +130,12 @@ void KOMOPlanner::solveAndInform( const MotionPlanningParameters & po, Policy & 
   clearLastNonMarkovianResults();
 
   // solve on pose level
-  optimizePoses( policy );
+  //optimizePoses( policy );
 
   /// EARLY STOPPING, detect if pose level not possible
   bool poseOptimizationFailed = false;
   // if a node has a constraint which is not satisfied, we set the node to infeasible i.e. infinite cost!
-  savePoseOptimizationResults(policy, poseOptimizationFailed);
+  //savePoseOptimizationResults(policy, poseOptimizationFailed);
 
   if( poseOptimizationFailed )  // early stopping
     return;

@@ -251,7 +251,8 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
 
   xmask = zeros(komo.x.d0);
 
-  uint s=0;
+  // translate step time to
+  uint s = komo.freePrefix ? komo.k_order * komo.world.getJointStateDimension() : 0;
   std::vector<std::pair<uint, uint>> t_to_x_interval(komo.T);
   for(uint t=0; t<komo.T; t++)// x.append(configurations(t+k_order)->getJointState());
   {
@@ -260,6 +261,8 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
     s+=n;
   }
 
+  // fill mask based on objective
+  uint start_t = komo.T; // will be updated in the loop
   for(Objective *ob:komo.objectives)
   {
     for(uint t=0;t<ob->vars.d0;t++)
@@ -267,12 +270,28 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
       auto global = ob->vars(t, -1);
       if(tmask(global))
       {
+        if(global < start_t) start_t = global;
         const auto& xinterval = t_to_x_interval[global];
         for(auto i = xinterval.first; i < xinterval.second; ++i)
         {
           xmask(i) = 1.0;
         }
       }
+    }
+  }
+
+  // special handling for prefix (add the prefix in the optimization variable)
+  if(komo.freePrefix)
+  {
+    uint start_x = t_to_x_interval[start_t].first;
+    uint n = 0;
+    for(auto o = 0; o < komo.k_order; ++o)
+      n += komo.configurations(start_t - o + komo.k_order)->getJointStateDimension();
+    //uint nm1 = komo.configurations(start_t + komo.k_order)->getJointStateDimension();
+    //uint nm2 = komo.configurations(start_t - 1 + komo.k_order)->getJointStateDimension();
+    for(auto i = start_x - n; i < start_x; ++i)
+    {
+      xmask(i) = 1;
     }
   }
 }

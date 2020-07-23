@@ -52,6 +52,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBu
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematic);
   komo->sparseOptimization = true;
+  komo->freePrefix = true;
 
   const auto nPhases = tree.n_nodes() - 1;
   komo->setTiming(nPhases, config_.microSteps_, config_.secPerPhase_, 2);
@@ -260,11 +261,10 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
     cout <<"** optimization time=" << optimizationTime
          <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
   }
-  //
 
-  auto & komo = komos.front();
+  auto & komo = komos.back();
   komo->set_x(x);
-  watch(komos.front());
+  watch(komo);
 }
 
 /// ADMM COMPRESSED
@@ -370,9 +370,6 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     groundPolicyActionsCompressed(tree, uncompressed, compressed, mapping, policy, komos[w]);
   }
 
-  // get mask of subproblems using witness
-  auto uncompressedTMasks = getSubProblemMasks(std::get<0>(allVars), witness->T); // use uncompressed
-
   // reset
   const auto& witnessVars = std::get<2>(allVars); //fused
   W(witness.get()).reset(std::get<0>(allVars), 0); // uncompressed -> used fused!
@@ -395,6 +392,9 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
 
     W(komos[w].get()).reset(compressed);
   }
+
+  // get mask of subproblems using witness
+  auto uncompressedTMasks = getSubProblemMasks(std::get<0>(allVars), witness->T); // use uncompressed
 
   std::vector<arr> xmasks;
   xmasks.reserve(policy.leaves().size());
@@ -480,6 +480,12 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   //witness->set_x(x);
   //watch(witness);
 
+  //
+  auto komo = komos.front();
+  std::cout << "q[0]:" << komo->configurations(0)->q << std::endl;
+  std::cout << "q[1]:" << komo->configurations(1)->q << std::endl;
+  std::cout << "q[2]:" << komo->configurations(2)->q << std::endl;
+  //
   watch(komos.front());
 }
 
