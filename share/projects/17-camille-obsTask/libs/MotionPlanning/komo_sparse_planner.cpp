@@ -4,8 +4,8 @@
 #include <komo_wrapper.h>
 #include <trajectory_tree_visualizer.h>
 
-#include <Optimization/decentralized_optimizer.h>
 #include <Optimization/utils.h>
+#include <Optimization/decentralized_optimizer.h>
 
 #include <Kin/kin.h>
 #include <Kin/switch.h>
@@ -52,7 +52,7 @@ std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBu
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematic);
   komo->sparseOptimization = true;
-  komo->freePrefix = true;
+  komo->freePrefix = !(tree.d() == 0); // free prefix is used when decomposing the trajectory in several pieces and optimizing them independantly, this is NOT efficient
 
   const auto nPhases = tree.n_nodes() - 1;
   komo->setTiming(nPhases, config_.microSteps_, config_.secPerPhase_, 2);
@@ -161,7 +161,7 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
   groundPolicyActionsJoint(tree, policy, komo);
 
   // run optimization
-  komo->verbose = 3;
+  komo->verbose = 1;
   W(komo.get()).reset(allVars);
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -236,7 +236,7 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
     auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(komo);
     gp->setSubProblem(tmask);
     arr xmask;
-    gp->getXMask(xmask);
+    gp->getXMask(xmask, false);
 
     auto pb = std::make_shared<Conv_Graph_ConstrainedProblem>(*gp, komo.logFile);
 
@@ -345,16 +345,16 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   // build tree
   auto tree = buildTree(policy);
 
-  // split into subtrees
+  // 0 - SPLIT INTO SUBTREES
   auto gen = generatorFactory_.create(decompositionStrategy_, nJobs_, tree);
   auto subproblems = get_subproblems(gen); // uncompressed pb, compressed pb, mapping
   auto allVars = get_all_vars(subproblems, config_.microSteps_);   // get subproblem vars (local)
 
-  // prepare komos
+  // 1 - PREPARE KOMOS
   auto witness = intializeKOMO(tree, startKinematics.front());
   groundPolicyActionsJoint(tree, policy, witness);
 
-  // init and ground each komo
+  // 1.1 - init and ground each komo
   std::vector< std::shared_ptr< ExtensibleKOMO > > komos;
   for(auto w = 0; w < subproblems.size(); ++w)
   {
@@ -370,16 +370,13 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     groundPolicyActionsCompressed(tree, uncompressed, compressed, mapping, policy, komos[w]);
   }
 
-  // reset
-  const auto& witnessVars = std::get<2>(allVars); //fused
+  // 1.2 - reset komos
+  const auto& witnessVars = std::get<2>(allVars); // fused
   W(witness.get()).reset(std::get<0>(allVars), 0); // uncompressed -> used fused!
   for(auto w = 0; w < komos.size(); ++w)
   {
     const std::vector<Vars>& uncompressed{std::get<0>(allVars)[w]};
     const std::vector<Vars>& compressed{std::get<1>(allVars)[w]};
-
-    //if(w>0)
-    //  komos[w]->world.copy(*komos[w-1]->configurations(-1));
 
     const auto firstIndex = uncompressed.front().order0.front();
 
@@ -388,14 +385,15 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
       const auto prev = witnessVars.getPreviousStep(firstIndex);
       komos[w]->world.copy(*witness->configurations(prev + witness->k_order));
     }
-    //else // if first index == 0, the start configuration is already well configured from the komo init
+    //else // if first index == 0, the start configuration (world) is already well configured from the komo init
 
     W(komos[w].get()).reset(compressed);
   }
 
-  // get mask of subproblems using witness
+  // 2 - CREATE SUB-OPTIMIZATION-PROBLEMS
   auto uncompressedTMasks = getSubProblemMasks(std::get<0>(allVars), witness->T); // use uncompressed
 
+  // 2.1 - create xmasks
   std::vector<arr> xmasks;
   xmasks.reserve(policy.leaves().size());
   auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(*witness);
@@ -404,11 +402,11 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     auto& tmask = uncompressedTMasks[w];
     gp->setSubProblem(tmask);
     arr xmask;
-    gp->getXMask(xmask);
+    gp->getXMask(xmask, komos[w]->freePrefix);
     xmasks.push_back(xmask);
   }
 
-  // create sub-opt-problems
+  // 2.2 - create sub-opt-problems
   std::vector<std::shared_ptr<GraphProblem>> converters;
   std::vector<std::shared_ptr<ConstrainedProblem>> constrained_problems;
   converters.reserve(policy.leaves().size());
@@ -423,48 +421,30 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     constrained_problems.push_back(pb);
   }
 
-  // check dim consistency
-  auto nz = [](const arr& x)
-  {
-    uint n = 0;
-    for(auto i = 0; i < x.d0; ++i)
-    {
-      if(x(i)!=0.0)
-        n++;
-    }
-    return n;
-  };
-
-  uint nx = 0;
-  uint nkx = 0;
-  for(auto w = 0; w < komos.size(); ++w)
-  {
-    const auto& x = xmasks[w];
-    const auto& kx = komos[w]->x;
-
-    const auto n = nz(x);
-    //CHECK_EQ(n, kx.d0, "corrupted dimensions");
-    //if(n != kx.d0)
-    std::cout << n << " vs. " << kx.d0 << std::endl;
-
-    nkx += kx.d0;
-    nx += n;
-  }
-
-  std::cout << nkx << " VS. " << nx << " VS. " << witness->x.d0 << std::endl;
-  //
-
-  // RUN
+  // 3 - RUN
   auto start = std::chrono::high_resolution_clock::now();
 
   auto x = witness->x;
-  DecOptConstrained opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, true));
+
+  OptOptions options;
+  options.verbose = 1;
+//  options.stopTolerance = 0; // avoid ADMM to return too early if it seems stuck
+//  options.stopEvals = 20000; // avoid ADMM and optconstraintd solver to stop too early
+//  options.stopIters = 20000; // ..
+//  options.stopOuters = 20000; // ..
+
+  DecOptConfig decOptConfig(PARALLEL, true, options, false);
+  decOptConfig.scheduling = PARALLEL;
+  decOptConfig.compressed = true;
+  decOptConfig.checkGradients = false;
+
+  DecOptConstrained opt(x, constrained_problems, xmasks, decOptConfig);
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
   double optimizationTime=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0;
 
-  // LOGS
+  //4 - LOGS + PRINTS
   if(true) {
     cout <<"** optimization time=" << optimizationTime
          <<" setJointStateCount=" << rai::KinematicWorld::setJointStateCount <<endl;
@@ -477,16 +457,43 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     }
   }
   //
-  //witness->set_x(x);
-  //watch(witness);
+  witness->set_x(x);
+  witness->x = x;
+  watch(witness);
 
-  //
-  auto komo = komos.front();
-  std::cout << "q[0]:" << komo->configurations(0)->q << std::endl;
-  std::cout << "q[1]:" << komo->configurations(1)->q << std::endl;
-  std::cout << "q[2]:" << komo->configurations(2)->q << std::endl;
-  //
-  watch(komos.front());
+  //watch(komos.back());
+  //witness->plotVelocity();
+  //rai::wait( 30, true );
 }
+
+// for checking the dimension consistency
+//auto nz = [](const arr& x)
+//{
+//  uint n = 0;
+//  for(auto i = 0; i < x.d0; ++i)
+//  {
+//    if(x(i)!=0.0)
+//      n++;
+//  }
+//  return n;
+//};
+
+//uint nx = 0;
+//uint nkx = 0;
+//for(auto w = 0; w < komos.size(); ++w)
+//{
+//  const auto& x = xmasks[w];
+//  const auto& kx = komos[w]->x;
+
+//  const auto n = nz(x);
+//  //CHECK_EQ(n, kx.d0, "corrupted dimensions");
+//  //if(n != kx.d0)
+//  std::cout << n << " vs. " << kx.d0 << std::endl;
+
+//  nkx += kx.d0;
+//  nx += n;
+//}
+
+//std::cout << nkx << " VS. " << nx << " VS. " << witness->x.d0 << std::endl;
 
 }

@@ -11,10 +11,12 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
   l += scalarProduct(lambda, delta) + 0.5 * mu * scalarProduct(delta, delta);
 
   // jacobian
-  dL += lambda + mu * delta;
+  if(!!dL)
+    dL += lambda + mu * delta;
 
   // hessian
-  add(HL, mu, admmVar, admmMask);
+  if(!!HL)
+    add(HL, mu, admmVar, admmMask);
 
   return l;
 }

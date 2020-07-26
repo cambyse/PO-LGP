@@ -88,6 +88,26 @@ TEST(TreeBuilder, LinearSplit)
   EXPECT_TRUE(gen.finished());
 }
 
+
+TEST(TreeBuilder, LinearSplitInto2)
+{
+  auto steps = 5;
+  auto tree = build_3_linear_edges();
+
+  auto gen = LinearSplit(tree, 2);
+
+  auto s1 = gen.next();
+  auto s2 = gen.next();
+
+  EXPECT_EQ(std::vector<uint>({0, 1, 2}), s1.get_nodes());
+  EXPECT_EQ(std::vector<uint>({2, 3}), s2.get_nodes());
+
+  EXPECT_EQ(0, s1.d());
+  EXPECT_EQ(2, s2.d());
+
+  EXPECT_TRUE(gen.finished());
+}
+
 TEST(InteractingEdges, LinearSub1)
 {
   auto steps = 5;

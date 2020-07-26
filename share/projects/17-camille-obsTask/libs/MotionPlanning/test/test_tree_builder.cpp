@@ -120,6 +120,26 @@ TEST(TreeBuilder, GetRoot)
   }
 }
 
+TEST(TreeBuilder, GetGrandChildren)
+{
+    auto tree = build_3_edges_1_branching();
+
+    {
+      auto cs = tree.get_grand_children(0, 2);
+      EXPECT_EQ(cs, std::vector<uint>({2, 3}));
+    }
+
+    {
+      auto cs = tree.get_grand_children(0, 3); // no problem if step too big
+      EXPECT_EQ(cs, std::vector<uint>({}));
+    }
+
+    {
+      auto cs = tree.get_grand_children(1, 0); // returns itslef if no step
+      EXPECT_EQ(cs, std::vector<uint>({1}));
+    }
+}
+
 
 TEST(TreeBuilder, GetVarsNSteps1)
 {

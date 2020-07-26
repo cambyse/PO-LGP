@@ -147,6 +147,8 @@ public:
   std::vector<uint> get_leaves() const;
   std::vector<uint> get_parents(uint node) const;
   std::vector<uint> get_children(uint node) const;
+  std::vector<uint> get_grand_children(uint node, uint step) const;
+  std::vector<uint> get_grand_children_with_backtracking(uint node, uint step) const;
   std::vector<uint> get_leaves_from(uint node) const;
   std::vector<uint> get_path(uint from, uint to) const;
   _Branch _get_branch(uint leaf) const;

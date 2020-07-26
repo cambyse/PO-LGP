@@ -182,6 +182,11 @@ std::vector<uint> DecOptConstrained::run()
 
 bool DecOptConstrained::step()
 {
+  if(config.checkGradients)
+  {
+    checkGradients();
+  }
+
   if(config.scheduling == SEQUENTIAL || (config.scheduling == FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL && its == 0))
   {
     stepSequential();
@@ -281,7 +286,7 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
     newton.o.stopTolerance = stopTol;
   }
 
-  if(config.opt.verbose>0) {
+  if(config.opt.verbose>1) {
     cout <<"** Hessian size.[" << newton.Hx.d0 << "] sparsity=" << sparsity(newton.Hx);
     cout <<endl;
   }
@@ -418,9 +423,10 @@ bool DecOptConstrained::stoppingCriterion() const
     if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Primal Dual convergence" << std::endl;
     return true;
   }
+
   // other exit conditions
   if(subProblemsSolved && absMax(z - z_prev) < opt.stopTolerance) { // stalled ADMM
-    if(opt.verbose>0) cout <<"** ADMM StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
+    if(opt.verbose>0) cout <<"** ADMM Blocked! StoppingCriterion Delta<" << opt.stopTolerance <<endl;
     if(opt.stopGTolerance<0. || r < opt.stopGTolerance)
       return true;
   }
@@ -465,3 +471,10 @@ bool DecOptConstrained::dualFeasibility(double s) const
   return s < eps;
 }
 
+void DecOptConstrained::checkGradients() const
+{
+  for(auto w = 0; w < DLs.size(); ++w)
+  {
+    checkGradient(*DLs[w], xs[w], 1e-4, true);
+  }
+}

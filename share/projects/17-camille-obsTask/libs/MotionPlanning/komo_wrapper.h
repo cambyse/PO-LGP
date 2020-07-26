@@ -35,7 +35,7 @@ struct ADMM_MotionProblem_GraphProblem : KOMO::Conv_MotionProblem_GraphProblem
   virtual void getStructure(uintA& variableDimensions, intAA& featureVariables, ObjectiveTypeA& featureTypes) override;
   virtual void phi(arr& phi, arrA& J, arrA& H, const arr& x) override;
 
-  void getXMask(arr & xmask) const; //   for(uint t=0; t<T; t++) x.append(configurations(t+k_order)->getJointState());
+  void getXMask(arr & xmask, bool withPrefix) const; //   for(uint t=0; t<T; t++) x.append(configurations(t+k_order)->getJointState());
 
   intA tmask; // mask per step
 };

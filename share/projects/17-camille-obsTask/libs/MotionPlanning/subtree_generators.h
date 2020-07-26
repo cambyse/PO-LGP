@@ -58,7 +58,7 @@ struct SubTreesAfterFirstBranching : public SubTreeGen // common trunk
   uint index = 0;
 };
 
-struct LinearSplit : public SubTreeGen // common trunk
+struct LinearSplit : public SubTreeGen // NOT EFFICIENT
 {
   LinearSplit(const TreeBuilder& tree, uint n);
 

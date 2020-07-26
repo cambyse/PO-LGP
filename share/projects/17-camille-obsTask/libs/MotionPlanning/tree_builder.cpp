@@ -190,6 +190,50 @@ std::vector<uint> TreeBuilder::get_children(uint node) const
   return children;
 }
 
+std::vector<uint> TreeBuilder::get_grand_children(uint node, uint step) const
+{
+  std::vector<uint> parents;
+  std::vector<uint> children;
+
+  parents.push_back(node);
+
+  for(auto s = 1; s <= step; ++s)
+  {
+    children.clear();
+    for(auto n: parents)
+    {
+      auto _children = get_children(n);
+      children.insert(children.begin(), _children.begin(), _children.end());
+    }
+
+    if(s == step)
+    {
+      return children;
+    }
+    else
+    {
+      parents = children;
+    }
+  }
+
+  return std::vector<uint>({node});
+}
+
+std::vector<uint> TreeBuilder::get_grand_children_with_backtracking(uint node, uint step) const
+{
+  std::vector<uint> grand_children;
+  {
+    auto _step = step;
+    grand_children = get_grand_children(node, _step);
+    while(grand_children.empty() && _step > 1)
+    {
+      _step--;
+      grand_children = get_grand_children(node, _step);
+    }
+  }
+  return grand_children;
+}
+
 std::vector<uint> TreeBuilder::get_leaves_from(uint node) const
 {
   std::vector<uint> leaves;

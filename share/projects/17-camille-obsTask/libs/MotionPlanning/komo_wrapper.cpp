@@ -245,7 +245,7 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
   komo.featureDense = true;
 }
 
-void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
+void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask, bool withPrefix) const
 {
   CHECK(komo.x.d0 > 0, "should reset first!");
 
@@ -281,7 +281,7 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
   }
 
   // special handling for prefix (add the prefix in the optimization variable)
-  if(komo.freePrefix)
+  if(withPrefix)
   {
     uint start_x = t_to_x_interval[start_t].first;
     uint n = 0;

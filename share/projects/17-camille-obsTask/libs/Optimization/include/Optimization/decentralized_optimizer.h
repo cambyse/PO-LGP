@@ -16,12 +16,12 @@ enum Mode
 
 struct DecOptConfig
 {
-  DecOptConfig(const Mode& scheduling, bool compressed, OptOptions opt=NOOPT, ostream *logFile=nullptr, int verbose=-1)
+  DecOptConfig(const Mode& scheduling, bool compressed, OptOptions opt=NOOPT, bool checkGradients=false, ostream *logFile=nullptr)
     : scheduling(scheduling)
     , compressed(compressed)
     , opt(opt)
+    , checkGradients(checkGradients)
     , logFile(logFile)
-    , verbose(verbose)
   {
   }
 
@@ -29,9 +29,9 @@ struct DecOptConfig
 
   bool compressed; // wether xs.d0 == x.d0, if true subproblem optimizers act on smaller (local) x
   OptOptions opt;  // for newton and aula
-  ostream *logFile;
 
-  int verbose;
+  bool checkGradients;
+  ostream *logFile;
 };
 
 struct DecOptConstrained
@@ -80,4 +80,6 @@ private:
 
   bool primalFeasibility(double r) const;
   bool dualFeasibility(double s) const;
+
+  void checkGradients() const;
 };

@@ -114,6 +114,23 @@ TreeBuilder build_2_linear_edges()
   return tb;
 }
 
+TreeBuilder build_3_linear_edges()
+{
+  /*   0
+   *   |
+   *   1
+   *   |
+   *   2
+   *   |
+   *   3
+   */
+  TreeBuilder tb(1.0, 0);
+  tb.add_edge(0, 1);
+  tb.add_edge(1, 2);
+  tb.add_edge(2, 3);
+  return tb;
+}
+
 TreeBuilder build_2_linear_edges_sub_1()
 {
   /*   0

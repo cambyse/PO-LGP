@@ -125,7 +125,7 @@ TreeBuilder SubTreesAfterFirstBranching::next()
   return sub;
 }
 
-/// LINEAR SPLIT
+/// LINEAR SPLIT -> NOT EFFICIENT
 LinearSplit::LinearSplit(const TreeBuilder& tree, uint n)
   : tree(tree)
   , n(n)
@@ -133,12 +133,16 @@ LinearSplit::LinearSplit(const TreeBuilder& tree, uint n)
   std::list<uint> queue;
   queue.push_back(0);
 
+  const auto N = tree.n_nodes();
+  uint step = uint(N / n + 0.5000001);
+  if(!step) step = 1;
+
   while(!queue.empty())
   {
     auto p = queue.back();
     queue.pop_back();
 
-    for(const auto& q: tree.get_children(p))
+    for(const auto& q: tree.get_grand_children_with_backtracking(p, step))
     {
       splits.push_back(std::pair<uint, uint>(p, q));
       queue.push_back(q);
@@ -153,6 +157,8 @@ bool LinearSplit::finished() const
 
 TreeBuilder LinearSplit::next()
 {
+  CHECK(!finished(), "invalid call to next");
+
   auto pq = splits[index++];
   auto from = pq.first;
   auto to = pq.second;
@@ -160,7 +166,11 @@ TreeBuilder LinearSplit::next()
   auto d = tree.get_path(0, from).size() - 1;
 
   TreeBuilder sub(p, d);
-  sub.add_edge(from, to);
+  auto path = tree.get_path(from, to);
+  for(auto i = 1; i < path.size(); ++i)
+  {
+    sub.add_edge(path[i-1], path[i]);
+  }
   return sub;
 }
 
