@@ -7,7 +7,11 @@
 
 #include <axis_bound.h>
 
+#include <komo_wrapper.h>
+
 //===========================================================================
+
+using W = mp::KomoWrapper;
 
 static void generatePngImage( const std::string & name )
 {
@@ -206,6 +210,77 @@ void plan_graph_search()
 }
 
 //===========================================================================
+void groundSpeed1( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+{
+  arr speed{ 0.03, 0, 0 };
+  speed( 0 ) = 0.10;
+  W(komo).addObjective(it, tree, new TM_Default(TMT_pos, komo->world, "car_ego"), OT_eq, speed, 1e1, 1);
+  if( verbose > 0 )
+  {
+    std::cout << it.edge.from << "->" << it.edge.to << ": " << " speed1 " << facts[0] << std::endl;
+  }
+}
+
+void groundSpeed2( const mp::Interval& it, const mp::TreeBuilder& tree, const std::vector< std::string >& facts, KOMO_ext * komo, int verbose )
+{
+  arr speed{ 0.03, 0, 0 };
+  speed( 0 ) = 0.02;
+  W(komo).addObjective(it, tree, new TM_Default(TMT_pos, komo->world, "car_ego"), OT_eq, speed, 1e1, 1);
+  if( verbose > 0 )
+  {
+    std::cout << it.edge.from << "->" << it.edge.to << ": " << " speed2 " << facts[0] << std::endl;
+  }
+}
+
+void minimal_plan_admm()
+{
+  matp::GraphPlanner tp;
+  mp::KOMOPlanner mp;
+
+  // set planner specific parameters
+  mp.setNSteps( 50 );
+
+  // register symbols
+  mp.registerTask( "speed1"  , groundSpeed1 );
+  mp.registerTask( "speed2"  , groundSpeed2 );
+  mp.registerTask( "speed3"  , groundSpeed1 );
+  mp.registerTask( "speed4"  , groundSpeed2 );
+  mp.registerTask( "speed5"  , groundSpeed1 );
+  mp.registerTask( "speed6"  , groundSpeed2 );
+  mp.registerTask( "speed7"  , groundSpeed1 );
+  mp.registerTask( "speed8"  , groundSpeed2 );
+  mp.registerTask( "speed9"  , groundSpeed1 );
+  mp.registerTask( "speed10"  , groundSpeed2 );
+
+  mp.setKin( "LGP-speed-kin-1w.g" ); // needs another init!!
+  tp.setFol( "LGP-speed-1w.g" );
+
+  /// DECISION GRAPH
+  tp.setMaxDepth(10);
+  tp.setR0( -0.001 );  // balance exploration
+  tp.buildGraph();
+
+  tp.saveGraphToFile( "graph.gv" );
+  generatePngImage( "graph.gv" );
+
+  /// LOOP
+  Policy policy, lastPolicy;
+  tp.solve();
+  policy = tp.getPolicy();
+  savePolicyToFile( policy, "-" );
+
+  /// MOTION PLANNING
+  auto po     = MotionPlanningParameters( policy.id() );
+
+  //po.setParam( "type", "jointSparse" );
+  po.setParam( "type", "ADMMCompressed" );
+  po.setParam( "decompositionStrategy", "LinearSplit" ); // ENABLE HERE AND PUT LINEAR TRAJ TO CONTINUE WORKING
+  po.setParam( "nJobs", "8" );
+
+  mp.solveAndInform( po, policy );
+}
+
+//===========================================================================
 
 int main(int argc,char **argv)
 {
@@ -213,7 +288,8 @@ int main(int argc,char **argv)
 
   rnd.clockSeed();
 
-  plan_graph_search();
+  //plan_graph_search();
+  minimal_plan_admm();
 
   return 0;
 }
