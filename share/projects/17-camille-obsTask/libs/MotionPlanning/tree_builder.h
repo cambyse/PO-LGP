@@ -174,6 +174,7 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree);
 bool operator==(const Edge& a, const Edge& b);
+bool operator==(const TreeBuilder& a, const TreeBuilder& b);
 
 }
 

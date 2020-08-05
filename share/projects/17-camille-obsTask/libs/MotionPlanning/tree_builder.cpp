@@ -404,9 +404,9 @@ TreeBuilder TreeBuilder::get_branch(uint leaf) const
   while(parents.size())
   {
     auto parent = parents[0];
-    auto p = this->p(parent, current);
+    //auto p = this->p(parent, current);
 
-    branch.add_edge(parent, current, p);
+    branch.add_edge(parent, current, 1.0); // could be p here eventually, but here we assume here that we are on the common part "knowing that we will branch"
 
     current = parent;
     parents = get_parents(current);
@@ -667,5 +667,10 @@ std::ostream& operator<<(std::ostream& os, const TreeBuilder & tree)
 bool operator==(const Edge& a, const Edge& b)
 {
   return a.from == b.from && a.to == b.to;
+}
+
+bool operator==(const TreeBuilder& a, const TreeBuilder& b)
+{
+  return a.adjacency_matrix() == b.adjacency_matrix() && a.p() == b.p() && a.d() == b.d();
 }
 }

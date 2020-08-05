@@ -52,7 +52,9 @@ std::shared_ptr< ExtensibleKOMO > KOMOSparsePlanner::intializeKOMO( const TreeBu
   auto komo = komoFactory_.createKomo();
   komo->setModel(*startKinematic);
   komo->sparseOptimization = true;
-  komo->freePrefix = !(tree.d() == 0); // free prefix is used when decomposing the trajectory in several pieces and optimizing them independantly, this is NOT efficient
+
+  CHECK(tree.d() == 0, "support for free prefix komo deactivated!");
+  //komo->freePrefix = !(tree.d() == 0); // free prefix is used when decomposing the trajectory in several pieces and optimizing them independantly, this is NOT efficient
 
   const auto nPhases = tree.n_nodes() - 1;
   komo->setTiming(nPhases, config_.microSteps_, config_.secPerPhase_, 2);
@@ -236,7 +238,7 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
     auto gp = std::make_shared<ADMM_MotionProblem_GraphProblem>(komo);
     gp->setSubProblem(tmask);
     arr xmask;
-    gp->getXMask(xmask, false);
+    gp->getXMask(xmask);//, false);
 
     auto pb = std::make_shared<Conv_Graph_ConstrainedProblem>(*gp, komo.logFile);
 
@@ -402,7 +404,7 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
     auto& tmask = uncompressedTMasks[w];
     gp->setSubProblem(tmask);
     arr xmask;
-    gp->getXMask(xmask, komos[w]->freePrefix);
+    gp->getXMask(xmask);//, komos[w]->freePrefix);
     xmasks.push_back(xmask);
   }
 
@@ -495,5 +497,37 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
 //}
 
 //std::cout << nkx << " VS. " << nx << " VS. " << witness->x.d0 << std::endl;
+
+// debug
+//{
+//  auto gen2 = generatorFactory_.create("BranchGen", nJobs_, tree);
+//  auto subproblems2 = get_subproblems(gen2); // uncompressed pb, compressed pb, mapping
+//  auto allVars2 = get_all_vars(subproblems2, config_.microSteps_);   // get subproblem vars (local)
+
+//  for(auto w = 0; w < subproblems.size(); ++w)
+//  {
+//    const auto& sub = subproblems[w];
+//    const auto& uncompressed = std::get<0>(sub);
+//    const auto& compressed = std::get<1>(sub);
+//    const auto& mapping = std::get<2>(sub);
+
+//    const auto& sub2 = subproblems2[w];
+//    const auto& uncompressed2 = std::get<0>(sub2);
+//    const auto& compressed2 = std::get<1>(sub2);
+//    const auto& mapping2 = std::get<2>(sub2);
+
+//    std::cout << uncompressed.adjacency_matrix() << std::endl << std::endl;
+//    std::cout << uncompressed2.adjacency_matrix() << std::endl << std::endl;
+
+
+//    std::cout << compressed.adjacency_matrix() << std::endl << std::endl;
+//    std::cout << compressed2.adjacency_matrix() << std::endl << std::endl;
+
+//    //CHECK_EQ(uncompressed, uncompressed2, "");
+//    //CHECK_EQ(compressed, compressed2, "");
+
+//  }
+//}
+
 
 }

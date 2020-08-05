@@ -12,21 +12,21 @@ TEST_F(KomoPlannerSingleAgentFixture, ParseKinFileDoesntThrow2w)
   EXPECT_NO_THROW( planner.setKin( "data/LGP-overtaking-kin-2w_bis.g" ) );
 }
 
-TEST_F(KomoPlannerSingleAgentFixture, FreePrefixLinearSplit) // NOT EFFICIENT
-{
-  planner.setKin( "data/LGP-overtaking-kin.g" );
+//TEST_F(KomoPlannerSingleAgentFixture, FreePrefixLinearSplit) // NOT EFFICIENT
+//{
+//  planner.setKin( "data/LGP-overtaking-kin.g" );
 
-  Policy policy;
-  policy.load( "data/LGP-overtaking-single-agent-1w.po" );
+//  Policy policy;
+//  policy.load( "data/LGP-overtaking-single-agent-1w.po" );
 
-  MotionPlanningParameters po( policy.id() );
-  po.setParam( "type", "ADMMCompressed" );
-  po.setParam( "decompositionStrategy", "LinearSplit" ); // ENABLE HERE AND PUT LINEAR TRAJ TO CONTINUE WORKING
-  po.setParam( "nJobs", "2" );
+//  MotionPlanningParameters po( policy.id() );
+//  po.setParam( "type", "ADMMCompressed" );
+//  po.setParam( "decompositionStrategy", "LinearSplit" ); // ENABLE HERE AND PUT LINEAR TRAJ TO CONTINUE WORKING
+//  po.setParam( "nJobs", "2" );
 
-  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
-  EXPECT_TRUE( initGrounder.nInitSingleAgent > 1 );
-}
+//  EXPECT_NO_THROW( planner.solveAndInform( po, policy ) );
+//  EXPECT_TRUE( initGrounder.nInitSingleAgent > 1 );
+//}
 
 TEST_F(KomoPlannerSingleAgentFixture, InitialGroundingIsCalledWithAtEachStageForMarkovianPaths)
 {

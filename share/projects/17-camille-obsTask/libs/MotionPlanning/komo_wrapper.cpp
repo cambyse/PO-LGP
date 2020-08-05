@@ -245,14 +245,16 @@ void ADMM_MotionProblem_GraphProblem::phi(arr& phi, arrA& J, arrA& H, const arr&
   komo.featureDense = true;
 }
 
-void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask, bool withPrefix) const
+//void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask, bool withPrefix) const
+void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask) const
 {
   CHECK(komo.x.d0 > 0, "should reset first!");
 
   xmask = zeros(komo.x.d0);
 
   // translate step time to
-  uint s = komo.freePrefix ? komo.k_order * komo.world.getJointStateDimension() : 0;
+  //uint s = komo.freePrefix ? komo.k_order * komo.world.getJointStateDimension() : 0; // freePrefix deactivated
+  uint s = 0;
   std::vector<std::pair<uint, uint>> t_to_x_interval(komo.T);
   for(uint t=0; t<komo.T; t++)// x.append(configurations(t+k_order)->getJointState());
   {
@@ -281,19 +283,19 @@ void ADMM_MotionProblem_GraphProblem::getXMask(arr & xmask, bool withPrefix) con
   }
 
   // special handling for prefix (add the prefix in the optimization variable)
-  if(withPrefix)
-  {
-    uint start_x = t_to_x_interval[start_t].first;
-    uint n = 0;
-    for(auto o = 0; o < komo.k_order; ++o)
-      n += komo.configurations(start_t - o + komo.k_order)->getJointStateDimension();
-    //uint nm1 = komo.configurations(start_t + komo.k_order)->getJointStateDimension();
-    //uint nm2 = komo.configurations(start_t - 1 + komo.k_order)->getJointStateDimension();
-    for(auto i = start_x - n; i < start_x; ++i)
-    {
-      xmask(i) = 1;
-    }
-  }
+//  if(withPrefix)
+//  {
+//    uint start_x = t_to_x_interval[start_t].first;
+//    uint n = 0;
+//    for(auto o = 0; o < komo.k_order; ++o)
+//      n += komo.configurations(start_t - o + komo.k_order)->getJointStateDimension();
+//    //uint nm1 = komo.configurations(start_t + komo.k_order)->getJointStateDimension();
+//    //uint nm2 = komo.configurations(start_t - 1 + komo.k_order)->getJointStateDimension();
+//    for(auto i = start_x - n; i < start_x; ++i)
+//    {
+//      xmask(i) = 1;
+//    }
+//  }
 }
 
 }
