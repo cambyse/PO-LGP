@@ -175,10 +175,10 @@ void JointPlanner::optimize( Policy & policy, const rai::Array< std::shared_ptr<
 
   // LOGS
   auto log = true;
-  if(log) {
-    cout <<"** Hessian size.[" << komo->opt->newton.Hx.d0 << "] sparsity=" << sparsity(komo->opt->newton.Hx);
-    cout <<endl;
-  }
+//  if(log) {
+//    cout <<"** Hessian size.[" << komo->opt->newton.Hx.d0 << "] sparsity=" << sparsity(komo->opt->newton.Hx);
+//    cout <<endl;
+//  }
 
   if(log) {
     cout <<"** optimization time=" << optimizationTime
