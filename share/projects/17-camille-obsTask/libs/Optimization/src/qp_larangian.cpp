@@ -74,46 +74,35 @@ double QP_Lagrangian::lagrangian(arr& dL, arr& HL, const arr& _x) ///< CORE METH
     x = _x;
   }
 
-  const auto& K = qp.K;
-  const auto& u = qp.u;
+  double L = c = qp(dL, HL, x);
 
-  double l = c = qp(dL, HL, x);
-
-  // compute K*x
-  if(K.d1)
+  // handle inequality constraints
+  if(qp.K.d0)
   {
-    g = K * x - u; // Jg = K
+    g = qp.K * x - qp.u; // Jg = K
     g_violations = extractGreaterThan0(g, g);
-    const auto& Jg = K;
+    const auto& Jg = qp.K;
     const auto Jg_violations = extractGreaterThan0(Jg, g);
 
     // add value
-    l += scalarProduct(lambda, g);                       // lagrange term
-    l += mu * scalarProduct(g_violations, g_violations); // square penalty
+    L += scalarProduct(lambda, g);                        // lagrange term
+    L += mu * scalarProduct(g_violations, g_violations);  // square penalty
 
     // jacobian
     if(!!dL)
     {
-      //
-      arr g_violationsT;
-      transpose(g_violationsT, g_violations);
-      arr lambdaT;
-      transpose(lambdaT, lambda);
-      //
-      dL += lambdaT * Jg;                               // lagrange term
-      dL += 2.0 * mu * (g_violationsT * Jg_violations); // square penalty
+      dL += comp_At_x(lambda, Jg);                             // lagrange term
+      dL += 2.0 * mu * comp_At_x(g_violations, Jg_violations); // square penalty
     }
 
     // hessian
     if(!!HL)
     {
-      arr Jg_violationsT;
-      transpose(Jg_violationsT, Jg_violations);
-      HL += 2.0 * mu * (Jg_violationsT * Jg_violations); // square penalty
+      HL += 2.0 * mu * comp_At_A(Jg_violations);              // square penalty
     }
   }
 
-  return l;
+  return L;
 }
 
 double QP_Lagrangian::get_costs()
