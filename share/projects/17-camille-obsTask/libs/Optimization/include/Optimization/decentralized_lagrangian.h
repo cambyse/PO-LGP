@@ -3,8 +3,9 @@
 #include <Optim/newton.h>
 #include <Optim/constrained.h>
 
+template <typename T>
 struct DecLagrangianProblem : ScalarFunction {
-  LagrangianProblem& L;
+  T& L;
 
   //-- parameters of the ADMM
   double mu;         ///< ADMM square penalty
@@ -14,7 +15,7 @@ struct DecLagrangianProblem : ScalarFunction {
   intA admmVar;      ///< indices where on x do we have ADMM multipliers
   arr admmMask;      ///< 0 or 1 depending on whether we have an addm mutl at this index
 
-  DecLagrangianProblem(LagrangianProblem&L, const arr & z, const intA & _var, const intA & _admmVar, OptOptions opt=NOOPT)
+  DecLagrangianProblem(T& L, const arr & z, const intA & _var, const intA & _admmVar, OptOptions opt=NOOPT)
     : L(L)
     , mu(0.0) // first step done with 0 (to avoid fitting to a unset reference)
     , z(z)
@@ -40,3 +41,5 @@ struct DecLagrangianProblem : ScalarFunction {
 
   void updateADMM(const arr& x, const arr& z);
 };
+
+#include <Optimization/decentralized_lagrangian.tpp>

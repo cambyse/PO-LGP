@@ -31,7 +31,8 @@ namespace
   }
 }
 
-DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
+template <typename T>
+DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
   : z_final(_z)
   , N(Ps.size())
   , contribs(zeros(z_final.d0))
@@ -51,7 +52,8 @@ DecOptConstrained::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<Constr
   initLagrangians(Ps);
 }
 
-void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
+template <typename T>
+void DecOptConstrained<T>::initVars(const std::vector<arr> & xmasks)
 {
   // fill masks with default values if not provided
   std::vector<arr> masks;
@@ -111,7 +113,8 @@ void DecOptConstrained::initVars(const std::vector<arr> & xmasks)
   }
 }
 
-void DecOptConstrained::initXs()
+template <typename T>
+void DecOptConstrained<T>::initXs()
 {
   xs.reserve(N);
 
@@ -134,7 +137,8 @@ void DecOptConstrained::initXs()
   }
 }
 
-void DecOptConstrained::initLagrangians(const std::vector<std::shared_ptr<ConstrainedProblem>> & Ps)
+template <typename T>
+void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>> & Ps)
 {
   duals.reserve(N);
   Ls.reserve(N);
@@ -148,15 +152,16 @@ void DecOptConstrained::initLagrangians(const std::vector<std::shared_ptr<Constr
 
     duals.push_back(arr());
     arr& _dual = duals.back();
-    Ls.push_back(std::unique_ptr<LagrangianProblem>(new LagrangianProblem(*P, config.opt, _dual)));
-    LagrangianProblem& L = *Ls.back();
-    DLs.push_back(std::unique_ptr<DecLagrangianProblem>(new DecLagrangianProblem(L, z, var, admmVar, config.opt)));
-    DecLagrangianProblem& DL = *DLs.back();
+    Ls.push_back(std::unique_ptr<LagrangianType>(new LagrangianType(*P, config.opt, _dual)));
+    LagrangianType& L = *Ls.back();
+    DLs.push_back(std::unique_ptr<DecLagrangianType>(new DecLagrangianType(L, z, var, admmVar, config.opt)));
+    DecLagrangianType& DL = *DLs.back();
     newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, config.opt, 0)));
   }
 }
 
-std::vector<uint> DecOptConstrained::run()
+template <typename T>
+std::vector<uint> DecOptConstrained<T>::run()
 {
   // loop
   while(!step());
@@ -180,7 +185,8 @@ std::vector<uint> DecOptConstrained::run()
   return evals;
 }
 
-bool DecOptConstrained::step()
+template <typename T>
+bool DecOptConstrained<T>::step()
 {
   if(config.checkGradients)
   {
@@ -202,13 +208,14 @@ bool DecOptConstrained::step()
   return stoppingCriterion();
 }
 
-bool DecOptConstrained::stepSequential()
+template <typename T>
+bool DecOptConstrained<T>::stepSequential()
 {
   subProblemsSolved = true;
   arr zz = z; // local z modified by each subproblem in sequence (we can't use the z here, which has to be consistent among all subproblems iterations)
   for(auto i = 0; i < N; ++i)
   {
-    DecLagrangianProblem& DL = *DLs[i];
+    DecLagrangianType& DL = *DLs[i];
     OptNewton& newton = *newtons[i];
     arr& dual = duals[i];
     const auto& var = vars[i];
@@ -226,12 +233,13 @@ bool DecOptConstrained::stepSequential()
   updateZ();
 }
 
-bool DecOptConstrained::stepParallel()
+template <typename T>
+bool DecOptConstrained<T>::stepParallel()
 {
   std::vector<std::future<bool>> futures;
   for(auto i = 0; i < N; ++i)
   {
-    DecLagrangianProblem& DL = *DLs[i];
+    DecLagrangianType& DL = *DLs[i];
     OptNewton& newton = *newtons[i];
     arr& dual = duals[i];
 
@@ -256,13 +264,14 @@ bool DecOptConstrained::stepParallel()
   updateZ();
 }
 
-bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual, uint i) const
+template <typename T>
+bool DecOptConstrained<T>::step(DecLagrangianType& DL, OptNewton& newton, arr& dual, uint i) const
 {
   auto& L = DL.L;
 
   if(config.opt.verbose>0) {
     cout <<"** DecOptConstr.[" << i << "] it=" <<its
-         <<" mu=" <<L.mu <<" nu=" <<L.nu <<" muLB=" <<L.muLB;
+         <<" mu=" <<L.mu <<" nu=" <<L.nu;/* <<" muLB=" <<L.muLB;*/
     if(newton.x.N<5) cout <<" \tlambda=" <<L.lambda;
     cout <<endl;
   }
@@ -348,7 +357,7 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
     case squaredPenalty: L.aulaUpdate(false, -1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
     case augmentedLag:   L.aulaUpdate(false, 1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
     case anyTimeAula:    L.aulaUpdate(true,  1., opt.aulaMuInc, &newton.fx, newton.gx, newton.Hx);  break;
-    case logBarrier:     L.muLB /= 2.;  break;
+    //case logBarrier:     L.muLB /= 2.;  break;
     case squaredPenaltyFixed: HALT("you should not be here"); break;
     case noMethod: HALT("need to set method before");  break;
   }
@@ -362,7 +371,8 @@ bool DecOptConstrained::step(DecLagrangianProblem& DL, OptNewton& newton, arr& d
   return false;
 }
 
-void DecOptConstrained::updateZ()
+template <typename T>
+void DecOptConstrained<T>::updateZ()
 {
   z = zeros(z.d0);
   for(auto i = 0; i < N; ++i)
@@ -390,7 +400,8 @@ void DecOptConstrained::updateZ()
   for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
 }
 
-void DecOptConstrained::updateADMM()
+template <typename T>
+void DecOptConstrained<T>::updateADMM()
 {
   its++;
 
@@ -403,7 +414,8 @@ void DecOptConstrained::updateADMM()
   }
 }
 
-bool DecOptConstrained::stoppingCriterion() const
+template <typename T>
+bool DecOptConstrained<T>::stoppingCriterion() const
 {
   double r = primalResidual();
   double s = dualResidual();
@@ -434,7 +446,8 @@ bool DecOptConstrained::stoppingCriterion() const
   return false;
 }
 
-double DecOptConstrained::primalResidual() const
+template <typename T>
+double DecOptConstrained<T>::primalResidual() const
 {
   double r = 0;
 
@@ -449,18 +462,21 @@ double DecOptConstrained::primalResidual() const
   return r;
 }
 
-double DecOptConstrained::dualResidual() const
+template <typename T>
+double DecOptConstrained<T>::dualResidual() const
 {
   return DLs.front()->mu * length(z - z_prev);
 }
 
-bool DecOptConstrained::primalFeasibility(double r) const
+template <typename T>
+bool DecOptConstrained<T>::primalFeasibility(double r) const
 {
   const double eps = 1e-2 * sqrt(m) + 1e-3 * max(fabs(z));
   return r < eps;
 }
 
-bool DecOptConstrained::dualFeasibility(double s) const
+template <typename T>
+bool DecOptConstrained<T>::dualFeasibility(double s) const
 {
   double ymax = 0;
   for(const auto& dl: DLs)
@@ -471,7 +487,8 @@ bool DecOptConstrained::dualFeasibility(double s) const
   return s < eps;
 }
 
-void DecOptConstrained::checkGradients() const
+template <typename T>
+void DecOptConstrained<T>::checkGradients() const
 {
   for(auto w = 0; w < DLs.size(); ++w)
   {

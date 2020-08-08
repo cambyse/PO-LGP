@@ -1,7 +1,8 @@
 #include <Optimization/decentralized_lagrangian.h>
 #include <Optimization/utils.h>
 
-double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
+template<typename T>
+double DecLagrangianProblem<T>::decLagrangian(arr& dL, arr& HL, const arr& x) const
 {
   double l = L(dL, HL, x);
 
@@ -21,7 +22,8 @@ double DecLagrangianProblem::decLagrangian(arr& dL, arr& HL, const arr& x) const
   return l;
 }
 
-arr DecLagrangianProblem::deltaZ(const arr& x) const
+template<typename T>
+arr DecLagrangianProblem<T>::deltaZ(const arr& x) const
 {
   arr delta = zeros(x.d0);
   for(uint i: admmVar)
@@ -33,7 +35,8 @@ arr DecLagrangianProblem::deltaZ(const arr& x) const
   return delta;
 }
 
-void DecLagrangianProblem::updateADMM(const arr& x, const arr& z)
+template<typename T>
+void DecLagrangianProblem<T>::updateADMM(const arr& x, const arr& z)
 {
     this->z = z;
     auto delta = deltaZ(x);

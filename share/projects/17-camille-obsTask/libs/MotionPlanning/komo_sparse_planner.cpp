@@ -15,6 +15,8 @@
 
 #include <unordered_set>
 
+using T = ConstrainedProblem;
+
 namespace mp
 {
 /// COMMON: KOMOSparsePlanner
@@ -251,7 +253,7 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   auto start = std::chrono::high_resolution_clock::now();
 
   auto x = komos.front()->x;
-  DecOptConstrained opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T> opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, false));
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
@@ -440,7 +442,7 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   decOptConfig.compressed = true;
   decOptConfig.checkGradients = false;
 
-  DecOptConstrained opt(x, constrained_problems, xmasks, decOptConfig);
+  DecOptConstrained<T> opt(x, constrained_problems, xmasks, decOptConfig);
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;

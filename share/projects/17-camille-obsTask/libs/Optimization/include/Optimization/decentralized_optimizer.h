@@ -34,13 +34,30 @@ struct DecOptConfig
   ostream *logFile;
 };
 
+template< typename T>
+struct LagrangianTypes
+{
+};
+
+template<>
+struct LagrangianTypes<ConstrainedProblem>
+{
+  typedef LagrangianProblem Lagrangian;
+  typedef DecLagrangianProblem<Lagrangian> DecLagrangian;
+};
+
+
+template< typename T>
 struct DecOptConstrained
 {
+  typedef typename LagrangianTypes<T>::Lagrangian LagrangianType;
+  typedef typename LagrangianTypes<T>::DecLagrangian DecLagrangianType;
+
   arr&z_final; ///< init and solution
   const uint N; ///< number of subproblems
-  std::vector<std::unique_ptr<LagrangianProblem>> Ls;
+  std::vector<std::unique_ptr<LagrangianType>> Ls;
   std::vector<std::unique_ptr<OptNewton>> newtons;
-  std::vector<std::unique_ptr<DecLagrangianProblem>> DLs;
+  std::vector<std::unique_ptr<DecLagrangianType>> DLs;
   std::vector<intA> vars; ///< how local xs maps to global opt variable
   std::vector<intA> admmVars; ///< where each subproblem needs admm lagrange terms
   arr contribs; ///< amount of contribution on x (on each index) - caching (deduced directly from masks)
@@ -54,20 +71,20 @@ struct DecOptConstrained
   DecOptConfig config;
 
 public:
-  DecOptConstrained(arr&_z, std::vector<std::shared_ptr<ConstrainedProblem>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
+  DecOptConstrained(arr&_z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
 
   std::vector<uint> run();
 
 private:
   void initVars(const std::vector<arr> & xmasks);
   void initXs();  // init xs based on z (typicaly called once at the start)
-  void initLagrangians(const std::vector<std::shared_ptr<ConstrainedProblem>> & Ps);
+  void initLagrangians(const std::vector<std::shared_ptr<T>> & Ps);
 
   bool step(); // outer step
   bool stepSequential(); // step each subproblem and update Z in sequence
   bool stepParallel();   // step each subproblem and update Z in //
 
-  bool step(DecLagrangianProblem& DL, OptNewton& newton, arr& dual, uint i) const; // inner step
+  bool step(DecLagrangianType& DL, OptNewton& newton, arr& dual, uint i) const; // inner step
 
   //void updateZSequential(uint i); // updating z usinmg last result of subproblem i
   void updateZ(); // update z given the xs
@@ -83,3 +100,5 @@ private:
 
   void checkGradients() const;
 };
+
+#include <Optimization/decentralized_optimizer.tpp>
