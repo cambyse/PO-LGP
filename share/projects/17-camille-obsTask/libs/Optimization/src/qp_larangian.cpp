@@ -26,6 +26,7 @@ arr extractGreaterThan0(const arr& a, const arr& mask)
   return b;
 }
 }
+
 QP_Problem::QP_Problem(const arr& P, const arr& q, const arr& K, const arr& u)
   : P(P)
   , q(q)
@@ -87,7 +88,7 @@ double QP_Lagrangian::lagrangian(arr& dL, arr& HL, const arr& _x) ///< CORE METH
     const auto Jg_violations = extractGreaterThan0(Jg, g);
 
     // add value
-    l += scalarProduct(lambda, g); // lagrange term
+    l += scalarProduct(lambda, g);                       // lagrange term
     l += mu * scalarProduct(g_violations, g_violations); // square penalty
 
     // jacobian
@@ -99,7 +100,7 @@ double QP_Lagrangian::lagrangian(arr& dL, arr& HL, const arr& _x) ///< CORE METH
       arr lambdaT;
       transpose(lambdaT, lambda);
       //
-      dL += lambdaT * Jg; // lagrange
+      dL += lambdaT * Jg;                               // lagrange term
       dL += 2.0 * mu * (g_violationsT * Jg_violations); // square penalty
     }
 
@@ -138,6 +139,7 @@ uint QP_Lagrangian::get_dimOfType(const ObjectiveType& tt)
     return 0;
   if(tt == OT_sos)
     return 1;
+  return 0;
 }
 
 void QP_Lagrangian::aulaUpdate(bool anyTimeVariant, double _, double muInc, double *L_x, arr &dL_x, arr &HL_x)
@@ -145,14 +147,15 @@ void QP_Lagrangian::aulaUpdate(bool anyTimeVariant, double _, double muInc, doub
   for(auto i = 0; i < lambda.d0; ++i)
   {
     lambda(i) += 2.0 * mu * g_violations(i);
-    // see A tutorial on Newton methods for constrained trajectory optimization and relations to SLAM,
-    // Gaussian Process smoothing, optimal control, and probabilistic inference p.7
+    // see "A tutorial on Newton methods for constrained trajectory optimization and relations to SLAM,
+    // Gaussian Process smoothing, optimal control, and probabilistic inference" p.7
   }
 
   if(muInc>1. && mu<1e6) mu *= muInc;
 
   //-- recompute the Lagrangian with the new parameters (its current value, gradient & hessian)
-  if(L_x || !!dL_x || !!HL_x) {
+  if(L_x || !!dL_x || !!HL_x)
+  {
     double L = lagrangian(dL_x, HL_x, x); //reevaluate gradients and hessian (using buffered info)
     if(L_x) *L_x = L;
   }

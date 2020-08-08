@@ -29,7 +29,7 @@ struct QP_Lagrangian : ScalarFunction
 
   //-- parameters of the unconstrained (Lagrangian) scalar function
   double mu;         ///< penalty parameter for inequalities g
-  double nu{0};      ///< NIY penalty parameter for equalities h
+  double nu{0};      ///< NIY! penalty parameter for equalities h
   arr lambda;        ///< lagrange multipliers for inequalities g and equalities h
 
   double get_costs();            ///< info on the terms from last call
@@ -39,10 +39,10 @@ struct QP_Lagrangian : ScalarFunction
   void aulaUpdate(bool anyTimeVariant, double lambdaStepsize=1., double muInc=1., double *L_x=NULL, arr &dL_x=NoArr, arr &HL_x=NoArr);
 
 private:
-  arr x;
-  double c{0.0}; // last evaluated cost
-  arr g; // Kx - u
-  arr g_violations; // Kx - u if > 0 else 0
+  arr x;            ///< last evaluated x
+  double c{0.0};    ///< last evaluated cost
+  arr g;            ///< Kx - u
+  arr g_violations; ///< Kx - u if > 0 else 0
 };
 
 template<>
