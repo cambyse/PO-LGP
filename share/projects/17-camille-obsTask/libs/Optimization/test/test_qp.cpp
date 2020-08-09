@@ -4,16 +4,23 @@
 #include <Optimization/qp_lagrangian.h>
 #include <gtest/gtest.h>
 
-#include "functions.cpp"
+#include "qp_problems.cpp"
 
 constexpr double eps = 0.0001;
 constexpr double eps_s = 0.01;
 
 namespace
 {
-  DecOptConfig buildOptions()
+  DecOptConfig buildUncompressedOptions()
   {
     DecOptConfig options(PARALLEL, false, NOOPT, true);
+    options.opt.stopTolerance = 0.001;
+    return options;
+  }
+
+  DecOptConfig buildCompressedOptions()
+  {
+    DecOptConfig options(PARALLEL, true, NOOPT, true);
     options.opt.stopTolerance = 0.001;
     return options;
   }
@@ -30,7 +37,7 @@ TEST(QP, Unconstrained) {
   std::vector<std::shared_ptr<QP_Problem>> pbs;
   pbs.push_back(qp);
 
-  auto options = buildOptions();
+  auto options = buildUncompressedOptions();
   DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
@@ -51,7 +58,7 @@ TEST(QP, OneDimOneConstrained) {
   std::vector<std::shared_ptr<QP_Problem>> pbs;
   pbs.push_back(qp);
 
-  auto options = buildOptions();
+  auto options = buildUncompressedOptions();
   DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
@@ -72,7 +79,7 @@ TEST(QP, OneDimTwoConstrained) {
   std::vector<std::shared_ptr<QP_Problem>> pbs;
   pbs.push_back(qp);
 
-  auto options = buildOptions();
+  auto options = buildUncompressedOptions();
   DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
@@ -80,43 +87,83 @@ TEST(QP, OneDimTwoConstrained) {
   EXPECT_NEAR(0.2, x(0), eps_s);
 }
 
-// 2 dims
-
+// 2 dims - 1 prob
 TEST(QP, TwoDimTwoConstrained) {
   arr x = arr(2);
   x(0) = 0;
   x(1) = 1;
 
-  arr P(2,2);
-  P(0,0) = 2;
-  P(1,1) = 2;
+  // unconstrained min at (0.5, 0.5), constraints: x[0] < 0.2, x[1] > 0.8
 
-  arr q(2);
-  q(0) = -1;
-  q(1) = -1;
-
-  arr K(2, 2);
-  K(0, 0) = 1;
-  K(1, 1) = -1;
-
-  arr u(2);
-  u(0) = 0.2;
-  u(1) = -0.8;
-
-  // unconstrained min at (0.5, 0.5)
-
-  auto qp = std::make_shared<QP_Problem>(P, q, K, u);
+  auto qp = createConstrained2d(0.5);
 
   std::vector<std::shared_ptr<QP_Problem>> pbs;
   pbs.push_back(qp);
 
-  auto options = buildOptions();
+  auto options = buildUncompressedOptions();
   DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
 
   EXPECT_NEAR(0.2, x(0), eps_s);
   EXPECT_NEAR(0.8, x(1), eps_s);
+}
+
+// 2 dims - 2 probs
+TEST(QP, TwoProblemsBattlingOverX) { // cost battling
+  arr x = arr(3);
+  x(0) = 0;
+  x(1) = 0;
+  x(2) = 0;
+
+  // unconstrained min at (0.5, 0.5), constraints: x[0] < 0.2, x[1] > 0.8
+  auto qp1 = createUnconstrained2d(0.4);
+  auto qp2 = createUnconstrained2d(0.6);
+
+  std::vector<std::shared_ptr<QP_Problem>> pbs;
+  pbs.push_back(qp1);
+  pbs.push_back(qp2);
+
+  std::vector<arr> masks;
+  masks.push_back(arr{1.0, 1.0, 0.0});
+  masks.push_back(arr{1.0, 0.0, 1.0});
+
+  auto options = buildCompressedOptions();
+  DecOptConstrained<QP_Problem> opt(x, pbs, masks, options);
+
+  opt.run();
+
+  EXPECT_NEAR(0.5, x(0), eps_s);
+  EXPECT_NEAR(0.4, x(1), eps_s);
+  EXPECT_NEAR(0.6, x(2), eps_s);
+}
+
+TEST(QP, TwoProblemsBattlingOverXWithConstraints) {
+  arr x = arr(3);
+  x(0) = 0;
+  x(1) = 0;
+  x(2) = 0;
+
+  // unconstrained min at (0.5, 0.5), constraints: x[0] < 0.2, x[1] > 0.8
+  auto qp1 = createConstrained2d(0.5);
+  auto qp2 = createUnconstrained2d(0.5);
+
+  std::vector<std::shared_ptr<QP_Problem>> pbs;
+  pbs.push_back(qp1);
+  pbs.push_back(qp2);
+
+  std::vector<arr> masks;
+  masks.push_back(arr{1.0, 1.0, 0.0});
+  masks.push_back(arr{1.0, 0.0, 1.0});
+
+  auto options = buildCompressedOptions();
+  DecOptConstrained<QP_Problem> opt(x, pbs, masks, options);
+
+  opt.run();
+
+  EXPECT_NEAR(0.2, x(0), 2 * eps_s);
+  EXPECT_NEAR(0.8, x(1), eps_s);
+  EXPECT_NEAR(0.5, x(2), eps_s);
 }
 
 //

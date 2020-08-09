@@ -29,7 +29,7 @@ arr DecLagrangianProblem<T>::deltaZ(const arr& x) const
   for(uint i: admmVar)
   {
     auto I = var(i);
-    if(I>0) // I < 0 indicates a no-contribution at this step
+    if(I>=0) // I < 0 indicates a no-contribution at this step
       delta(i) = x(i) - z(I);
   }
   return delta;
