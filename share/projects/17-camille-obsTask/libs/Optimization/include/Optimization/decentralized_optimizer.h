@@ -5,7 +5,10 @@
 #include <Optim/newton.h>
 #include <Optim/constrained.h>
 
+#include <functional>
 #include <memory>
+
+using CallBackType = std::function<void()>;
 
 enum Mode
 {
@@ -16,11 +19,12 @@ enum Mode
 
 struct DecOptConfig
 {
-  DecOptConfig(const Mode& scheduling, bool compressed, OptOptions opt=NOOPT, bool checkGradients=false, ostream *logFile=nullptr)
+  DecOptConfig(const Mode& scheduling, bool compressed, OptOptions opt=NOOPT, bool checkGradients=false, CallBackType callback = CallBackType(), ostream *logFile=nullptr)
     : scheduling(scheduling)
     , compressed(compressed)
     , opt(opt)
     , checkGradients(checkGradients)
+    , callback(callback)
     , logFile(logFile)
   {
   }
@@ -31,6 +35,7 @@ struct DecOptConfig
   OptOptions opt;  // for newton and aula
 
   bool checkGradients;
+  CallBackType callback; // called after each step() (for debugging)
   ostream *logFile;
 };
 

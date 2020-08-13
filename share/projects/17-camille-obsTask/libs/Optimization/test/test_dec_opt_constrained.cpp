@@ -210,6 +210,25 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   EXPECT_NEAR(0.0, x(2), eps_s);
 }
 
+TEST(DecentralizedAugmentedLagrangian, CallbackCall) {
+  arr x{0.0, 0.0, 0.0};
+
+  auto pb = std::make_shared<Distance3D>(arr{1.0, 1.0, 1.0}, arr{1.0, 1.0, 0.0});
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb);
+
+  bool called=false;
+  DecOptConfig options(PARALLEL, false);
+  options.callback = [&called]()
+  {
+    called = true;
+  };
+  DecOptConstrained<T> opt(x, pbs, {}, options);
+  opt.run();
+
+  EXPECT_TRUE(called);
+}
+
 //
 int main(int argc, char **argv)
 {

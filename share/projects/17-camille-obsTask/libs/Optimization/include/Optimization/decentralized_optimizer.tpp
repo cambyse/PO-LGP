@@ -164,7 +164,14 @@ template <typename T>
 std::vector<uint> DecOptConstrained<T>::run()
 {
   // loop
-  while(!step());
+  while(!step())
+  {
+    if(config.callback)
+    {
+      z_final = z;
+      config.callback();
+    }
+  }
 
   // last step
   for(auto& newton: newtons)
@@ -203,7 +210,7 @@ bool DecOptConstrained<T>::step()
   }
   else NIY;
 
-  updateADMM(); // update lagrange parameters of ADMM terms based on updated Z (make all problem converge)
+  updateADMM(); // update lagrange parameters of ADMM terms based on updated Z (make all problems converge)
 
   return stoppingCriterion();
 }
@@ -243,7 +250,7 @@ bool DecOptConstrained<T>::stepParallel()
     OptNewton& newton = *newtons[i];
     arr& dual = duals[i];
 
-    // spawn // threads
+    // spawn threads
     DL.z = z;
     futures.push_back(std::async(std::launch::async,
     [&, i]{
@@ -325,22 +332,22 @@ bool DecOptConstrained<T>::step(DecLagrangianType& DL, OptNewton& newton, arr& d
   //stopping criterons
   const auto & opt = config.opt;
   if(its>=2 && absMax(x_old-newton.x) < config.opt.stopTolerance) {
-    if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
-    if(opt.stopGTolerance<0.
-       || L.get_sumOfGviolations() + L.get_sumOfHviolations() < opt.stopGTolerance)
+    if(opt.stopGTolerance<0. || L.get_sumOfGviolations() + L.get_sumOfHviolations() < opt.stopGTolerance) {
+      if(opt.verbose>0) cout <<"** DecOptConstr.[" << i << "] StoppingCriterion Delta<" <<opt.stopTolerance <<endl;
       return true;
+    }
   }
 
   if(newton.evals>=opt.stopEvals) {
-    if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion MAX EVALS" <<endl;
+    if(opt.verbose>0) cout <<"** DecOptConstr.[" << i << "] StoppingCriterion MAX EVALS" <<endl;
     return true;
   }
   if(newton.its>=opt.stopIters) {
-    if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion MAX ITERS" <<endl;
+    if(opt.verbose>0) cout <<"** DecOptConstr.[" << i << "] StoppingCriterion MAX ITERS" <<endl;
     return true;
   }
   if(its>=opt.stopOuters) {
-    if(opt.verbose>0) cout <<"** optConstr.[" << i << "] StoppingCriterion MAX OUTERS" <<endl;
+    if(opt.verbose>0) cout <<"** DecOptConstr.[" << i << "] StoppingCriterion MAX OUTERS" <<endl;
     return true;
   }
 
@@ -365,7 +372,7 @@ bool DecOptConstrained<T>::step(DecLagrangianType& DL, OptNewton& newton, arr& d
   if(!!dual) dual=L.lambda;
 
   if(config.logFile){
-    (*config.logFile) <<"{ optConstraint: " <<its <<", mu: " <<L.mu <<", nu: " <<L.nu <<", L_x_beforeUpdate: " <<L_x_before <<", L_x_afterUpdate: " <<newton.fx <<", errors: ["<<L.get_costs() <<", " <<L.get_sumOfGviolations() <<", " <<L.get_sumOfHviolations() <<"], lambda: " <<L.lambda <<" }," <<endl;
+    (*config.logFile) <<"{ DecOptConstr: " <<its <<", mu: " <<L.mu <<", nu: " <<L.nu <<", L_x_beforeUpdate: " <<L_x_before <<", L_x_afterUpdate: " <<newton.fx <<", errors: ["<<L.get_costs() <<", " <<L.get_sumOfGviolations() <<", " <<L.get_sumOfHviolations() <<"], lambda: " <<L.lambda <<" }," <<endl;
   }
 
   return false;
