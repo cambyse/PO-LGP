@@ -135,9 +135,12 @@ void QP_Lagrangian::aulaUpdate(bool anyTimeVariant, double _, double muInc, doub
 {
   for(auto i = 0; i < lambda.d0; ++i)
   {
-    lambda(i) += 2.0 * mu * g_violations(i);
+    lambda(i) = std::max(lambda(i) + 2.0 * mu * g(i), 0.0);
     // see "A tutorial on Newton methods for constrained trajectory optimization and relations to SLAM,
     // Gaussian Process smoothing, optimal control, and probabilistic inference" p.7
+
+    // if g(i) negative, the value of lambda will decrease (less need to push away ro the constraint!).
+    // lambda(i) can't become negative though as it would mean pushing towards the constraints
   }
 
   if(muInc>1. && mu<1e6) mu *= muInc;
