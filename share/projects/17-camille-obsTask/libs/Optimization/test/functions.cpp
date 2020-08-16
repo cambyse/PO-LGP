@@ -277,3 +277,69 @@ struct Valley2DSideWays : public ConstrainedProblem
   double xstart = 0;
   double alpha = 0.1;
 };
+
+struct Valley2DSideWaysDecomposed0 : public ConstrainedProblem
+{
+  // min (y - slpha * x)^2
+  // x = x_start
+  Valley2DSideWaysDecomposed0()
+  {
+
+  }
+
+  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
+  {
+    if(!phi.p)
+    {
+      phi = arr(2);
+      J = zeros(2, 2);
+      J.special = &J.sparse();
+      ot = ObjectiveTypeA(2);
+
+      ot(0) = OT_sos;
+      ot(1) = OT_eq;
+    }
+
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
+    phi(0) = x(1) - alpha * x(0);
+    Js->elem(0, 0) = -alpha;
+    Js->elem(0, 1) = 1.0;
+
+    phi(1) = x(0) - xstart;
+    Js->elem(1, 0) = 1.0;
+  }
+
+  double alpha = 0.1;
+  double xstart = 0;
+};
+
+struct Valley2DSideWaysDecomposed1 : public ConstrainedProblem
+{
+  // s.t  y < -1 - alpha * x
+  Valley2DSideWaysDecomposed1()
+  {
+
+  }
+
+  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
+  {
+    if(!phi.p)
+    {
+      phi = arr(1);
+      J = zeros(1, 2);
+      J.special = &J.sparse();
+      ot = ObjectiveTypeA(1);
+
+      ot(0) = OT_ineq;
+    }
+
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
+    phi(0) = x(1) + 1.0 + alpha * x(0);
+    Js->elem(0, 0) = alpha;
+    Js->elem(0, 1) = 1.0;
+  }
+
+  double alpha = 0.1;
+};

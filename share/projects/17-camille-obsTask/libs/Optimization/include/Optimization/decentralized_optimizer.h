@@ -51,6 +51,11 @@ struct LagrangianTypes<ConstrainedProblem>
   typedef DecLagrangianProblem<Lagrangian> DecLagrangian;
 };
 
+struct DualState
+{
+  std::vector<arr> duals;
+  std::vector<arr> admmDuals;
+};
 
 template< typename T>
 struct DecOptConstrained
@@ -69,7 +74,7 @@ struct DecOptConstrained
   uint m; ///< number of z indices where problems overlap
   arr z_prev, z; ///< internal admm reference variable (z_prev is the one of the previous step)
   std::vector<arr> xs; ///< subproblems solutions
-  std::vector<arr> duals;
+  std::vector<arr> duals; ///< duals of the subproblems
   bool subProblemsSolved{false}; ///< indicates whether the stopping criterion of each sub-problem is met (necessary for overall stopping condition)
   uint its{0}; ///< number of ADMM iterations
 
@@ -79,19 +84,20 @@ public:
   /**
    * @brief DecOptConstrained
    * @param _z optimization variable
-   * @param _dual dual (splitted by subproblems)
    * @param Ps subproblems
    * @param masks where each subproblem contributes on optimization variable
    * @param _config
    */
-  DecOptConstrained(arr&_z, std::vector<arr>& _duals, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
+  DecOptConstrained(arr&_z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
 
   std::vector<uint> run();
+
+  DualState get_dual_state() const; // for enabling warm start
+  void set_dual_state(const DualState& state);
 
 private:
   void initVars(const std::vector<arr> & xmasks);
   void initXs();  // init xs based on z (typicaly called once at the start)
-  void initDuals(); // inital duals (mainly create duals if none are provided)
   void initLagrangians(const std::vector<std::shared_ptr<T>> & Ps);
 
   bool step(); // outer step

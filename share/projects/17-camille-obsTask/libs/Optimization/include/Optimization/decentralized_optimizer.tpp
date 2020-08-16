@@ -32,16 +32,15 @@ namespace
 }
 
 template <typename T>
-DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<arr>& _duals, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
+DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
   : z_final(_z)
-  , duals(_duals)
   , N(Ps.size())
   , contribs(zeros(z_final.d0))
   , z(z_final.copy())
   , config(_config)
 {
   // maybe preferable to have the same pace for ADMM and AULA terms -> breaks convergence is set to 2.0, strange!
-  config.opt.aulaMuInc = 1.2;
+  if(config.opt.aulaMuInc != 1.0) config.opt.aulaMuInc = std::min(1.2, config.opt.aulaMuInc);
 
   /// TO BE EQUIVALENT TO PYTHON
   //opt.damping = 0.1;
@@ -50,7 +49,6 @@ DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<arr>& _duals, std::
 
   initVars(masks);
   initXs();
-  initDuals();
   initLagrangians(Ps);
 }
 
@@ -140,28 +138,21 @@ void DecOptConstrained<T>::initXs()
 }
 
 template <typename T>
-void DecOptConstrained<T>::initDuals() // inital duals (mainly create duals if none are provided)
-{
-  duals.reserve(N);
-  for(auto i = 0; i < N; ++i)
-  {
-    duals.push_back(arr());
-  }
-}
-
-template <typename T>
 void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>> & Ps)
 {
   Ls.reserve(N);
   newtons.reserve(N);
+  duals.reserve(N);
+
   for(auto i = 0; i < N; ++i)
   {
     auto& P = Ps[i];
     auto& var = vars[i];
     auto& admmVar = admmVars[i];
     arr& x = xs[i];
-    arr& dual = duals[i];
 
+    duals.push_back(arr());
+    arr& dual = duals.back();
     Ls.push_back(std::unique_ptr<LagrangianType>(new LagrangianType(*P, config.opt, dual)));
     LagrangianType& L = *Ls.back();
     DLs.push_back(std::unique_ptr<DecLagrangianType>(new DecLagrangianType(L, z, var, admmVar, config.opt)));
@@ -200,6 +191,42 @@ std::vector<uint> DecOptConstrained<T>::run()
     evals.push_back(newton->evals);
   }
   return evals;
+}
+
+template <typename T>
+DualState DecOptConstrained<T>::get_dual_state() const
+{
+  DualState state;
+
+  state.duals = std::vector<arr>(N);
+  state.admmDuals = std::vector<arr>(N);
+
+  for(auto i = 0; i < N; ++i)
+  {
+    state.duals[i] = duals[i];
+    state.admmDuals[i] = DLs[i]->lambda;
+
+    CHECK_EQ(Ls[i]->mu, 1.0, "not a lot of sense if mu is increased");
+  }
+
+  return state;
+}
+
+template <typename T>
+void DecOptConstrained<T>::set_dual_state(const DualState& state)
+{
+  for(auto i = 0; i < N; ++i)
+  {
+    CHECK_EQ(Ls[i]->mu, 1.0, "not a lot of sense if mu is increased");
+
+    duals[i] = state.duals[i]; // needed?
+    Ls[i]->lambda = state.duals[i];
+    Ls[i]->x = arr(); // force revaluation of langrangian
+    DLs[i]->lambda = state.admmDuals[i];
+
+    // update newton cache / state (necessary because we updated the underlying problem by updating the ADMM params!!)
+    newtons[i]->fx = DLs[i]->decLagrangian(newtons[i]->gx, newtons[i]->Hx, xs[i]); // this is important!
+  }
 }
 
 template <typename T>

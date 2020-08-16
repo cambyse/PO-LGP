@@ -38,8 +38,7 @@ TEST(QP, Unconstrained) {
   pbs.push_back(qp);
 
   auto options = buildUncompressedOptions();
-  std::vector<arr> duals;
-  DecOptConstrained<QP_Problem> opt(x, duals, pbs, {}, options);
+  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
 
@@ -61,8 +60,7 @@ TEST(QP, OneDimOneConstrained) {
 
   auto options = buildUncompressedOptions();
 
-  std::vector<arr> duals;
-  DecOptConstrained<QP_Problem> opt(x, duals, pbs, {}, options);
+  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
 
@@ -84,8 +82,7 @@ TEST(QP, OneDimTwoConstrained) {
 
   auto options = buildUncompressedOptions();
 
-  std::vector<arr> duals;
-  DecOptConstrained<QP_Problem> opt(x, duals, pbs, {}, options);
+  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
 
@@ -107,8 +104,7 @@ TEST(QP, TwoDimTwoConstrained) {
 
   auto options = buildUncompressedOptions();
 
-  std::vector<arr> duals;
-  DecOptConstrained<QP_Problem> opt(x, duals, pbs, {}, options);
+  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
 
   opt.run();
 
@@ -137,8 +133,7 @@ TEST(QP, TwoProblemsBattlingOverX) { // cost battling
 
   auto options = buildCompressedOptions();
 
-  std::vector<arr> duals;
-  DecOptConstrained<QP_Problem> opt(x, duals, pbs, masks, options);
+  DecOptConstrained<QP_Problem> opt(x, pbs, masks, options);
 
   opt.run();
 
@@ -167,8 +162,7 @@ TEST(QP, TwoProblemsBattlingOverXWithConstraints) {
 
   auto options = buildCompressedOptions();
 
-  std::vector<arr> duals;
-  DecOptConstrained<QP_Problem> opt(x, duals, pbs, masks, options);
+  DecOptConstrained<QP_Problem> opt(x, pbs, masks, options);
 
   opt.run();
 
