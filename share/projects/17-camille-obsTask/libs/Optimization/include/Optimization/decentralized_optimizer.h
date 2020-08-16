@@ -76,13 +76,22 @@ struct DecOptConstrained
   DecOptConfig config;
 
 public:
-  DecOptConstrained(arr&_z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
+  /**
+   * @brief DecOptConstrained
+   * @param _z optimization variable
+   * @param _dual dual (splitted by subproblems)
+   * @param Ps subproblems
+   * @param masks where each subproblem contributes on optimization variable
+   * @param _config
+   */
+  DecOptConstrained(arr&_z, std::vector<arr>& _duals, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
 
   std::vector<uint> run();
 
 private:
   void initVars(const std::vector<arr> & xmasks);
   void initXs();  // init xs based on z (typicaly called once at the start)
+  void initDuals(); // inital duals (mainly create duals if none are provided)
   void initLagrangians(const std::vector<std::shared_ptr<T>> & Ps);
 
   bool step(); // outer step

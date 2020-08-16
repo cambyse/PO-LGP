@@ -108,6 +108,65 @@ TEST(OptConstrained, Distance3DDecompXZTestHG) {
   EXPECT_NEAR(1.0, x(2), eps_s);
 }
 
+// WARM START
+TEST(OptConstrained, Valley2DWarmStart) {
+  arr x{0.0, 0.0};
+  arr dual;
+
+  Valley2D pb;
+
+  uint its1 = 0;
+  OptOptions options=NOOPT;
+  options.aulaMuInc = 1.0;
+  {
+  OptConstrained opt(x, dual, pb, -1, options);
+  opt.run();
+  its1 = opt.its;
+  }
+
+  uint its2 = 0;
+  {
+  x(0)+=1; // shift in the direction of the valley
+  OptConstrained opt(x, dual, pb, -1, options);
+  opt.run();
+  its2 = opt.its;
+  }
+
+  EXPECT_NEAR(1.0, x(0), eps_s);
+  EXPECT_NEAR(-1.0, x(1), eps_s);
+  EXPECT_TRUE(its1 > its2);
+}
+
+TEST(OptConstrained, Valley2DSideWaysWarmStart) {
+  arr x{0.0, 0.0};
+  arr dual;
+
+  Valley2DSideWays pb;
+
+  uint its1 = 0;
+  OptOptions options=NOOPT;
+  options.aulaMuInc = 1.0;
+  {
+  pb.xstart = x(0);
+  OptConstrained opt(x, dual, pb, -1, options);
+  opt.run();
+  its1 = opt.its;
+  }
+
+  uint its2 = 0;
+  {
+  x(0)+=1; // shift in the direction of the valley
+  pb.xstart = x(0);
+  OptConstrained opt(x, dual, pb, -1, options);
+  opt.run();
+  its2 = opt.its;
+  }
+
+//  EXPECT_NEAR(1.0, x(0), eps_s);
+//  EXPECT_NEAR(-1.0, x(1), eps_s);
+  EXPECT_TRUE(its1 > its2);
+}
+
 //
 int main(int argc, char **argv)
 {

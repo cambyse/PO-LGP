@@ -32,8 +32,9 @@ namespace
 }
 
 template <typename T>
-DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
+DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<arr>& _duals, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
   : z_final(_z)
+  , duals(_duals)
   , N(Ps.size())
   , contribs(zeros(z_final.d0))
   , z(z_final.copy())
@@ -49,6 +50,7 @@ DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>>
 
   initVars(masks);
   initXs();
+  initDuals();
   initLagrangians(Ps);
 }
 
@@ -138,9 +140,18 @@ void DecOptConstrained<T>::initXs()
 }
 
 template <typename T>
-void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>> & Ps)
+void DecOptConstrained<T>::initDuals() // inital duals (mainly create duals if none are provided)
 {
   duals.reserve(N);
+  for(auto i = 0; i < N; ++i)
+  {
+    duals.push_back(arr());
+  }
+}
+
+template <typename T>
+void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>> & Ps)
+{
   Ls.reserve(N);
   newtons.reserve(N);
   for(auto i = 0; i < N; ++i)
@@ -149,10 +160,9 @@ void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>>
     auto& var = vars[i];
     auto& admmVar = admmVars[i];
     arr& x = xs[i];
+    arr& dual = duals[i];
 
-    duals.push_back(arr());
-    arr& _dual = duals.back();
-    Ls.push_back(std::unique_ptr<LagrangianType>(new LagrangianType(*P, config.opt, _dual)));
+    Ls.push_back(std::unique_ptr<LagrangianType>(new LagrangianType(*P, config.opt, dual)));
     LagrangianType& L = *Ls.back();
     DLs.push_back(std::unique_ptr<DecLagrangianType>(new DecLagrangianType(L, z, var, admmVar, config.opt)));
     DecLagrangianType& DL = *DLs.back();

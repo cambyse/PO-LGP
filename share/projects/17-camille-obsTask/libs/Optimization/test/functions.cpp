@@ -104,7 +104,6 @@ struct Distance3D : public ConstrainedProblem
 {
   // min dist to center
   // s.t. x = 0.0
-  // s.t  y < 1
   Distance3D(const arr& center, arr mask = ones(3))
     : center_(center)
     , mask_(mask)
@@ -204,4 +203,77 @@ struct Distance4D : public ConstrainedProblem
 
   arr center_;
   arr mask_;
+};
+
+struct Valley2D : public ConstrainedProblem
+{
+  // min y^2
+  // s.t  y < -1
+  Valley2D()
+  {
+  }
+
+  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
+  {
+    if(!phi.p)
+    {
+      phi = arr(2);
+      J = zeros(2, 2);
+      J.special = &J.sparse();
+      ot = ObjectiveTypeA(2);
+
+      ot(0) = OT_sos;
+      ot(1) = OT_ineq;
+    }
+
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
+    phi(0) = x(1);
+    Js->elem(0, 1) = 1.0;
+
+    phi(1) = x(1) + 1.0;
+    Js->elem(1, 1) = 1.0;
+  }
+};
+
+struct Valley2DSideWays : public ConstrainedProblem
+{
+  // min (y - slpha * x)^2
+  // x = x_start
+  // s.t  y < -1 - alpha * x
+  Valley2DSideWays()
+  {
+
+  }
+
+  void phi(arr& phi, arr& J, arr& H, ObjectiveTypeA& ot, const arr& x, arr& lambda)
+  {
+    if(!phi.p)
+    {
+      phi = arr(3);
+      J = zeros(3, 2);
+      J.special = &J.sparse();
+      ot = ObjectiveTypeA(3);
+
+      ot(0) = OT_sos;
+      ot(1) = OT_eq;
+      ot(2) = OT_ineq;
+    }
+
+    const auto Js = dynamic_cast<rai::SparseMatrix*>(J.special);
+
+    phi(0) = x(1) - alpha * x(0);
+    Js->elem(0, 0) = -alpha;
+    Js->elem(0, 1) = 1.0;
+
+    phi(1) = x(0) - xstart;
+    Js->elem(1, 0) = 1.0;
+
+    phi(2) = x(1) + 1.0 + alpha * x(0);
+    Js->elem(2, 0) = alpha;
+    Js->elem(2, 1) = 1.0;
+  }
+
+  double xstart = 0;
+  double alpha = 0.1;
 };

@@ -253,7 +253,9 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
   auto start = std::chrono::high_resolution_clock::now();
 
   auto x = komos.front()->x;
-  DecOptConstrained<T> opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, false));
+
+  std::vector<arr> duals;
+  DecOptConstrained<T> opt(x, duals, constrained_problems, xmasks, DecOptConfig(PARALLEL, false));
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
@@ -442,7 +444,8 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   decOptConfig.compressed = true;
   decOptConfig.checkGradients = false;
 
-  DecOptConstrained<T> opt(x, constrained_problems, xmasks, decOptConfig);
+  std::vector<arr> duals;
+  DecOptConstrained<T> opt(x, duals, constrained_problems, xmasks, decOptConfig);
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
