@@ -27,7 +27,7 @@ void init(  const mp::TreeBuilder& tb, KOMO_ext * komo, int verbose )
   // ego car
   arr ego_start_speed{ 1.0, 0, 0 }; // 10 m/s
   komo->setVelocity( 0.0, 0.5, "car_ego", NULL, OT_sos, ego_start_speed );
-  komo->addObjective( 0.0, -1.0, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
+  komo->addObjective( 0.0, -1.0, new CarKinematic( "car_ego", komo->world ), OT_eq, NoArr, 1e2, 1 );
 
   // car speeds
   arr desired_speed{ 1.0, 0, 0 };

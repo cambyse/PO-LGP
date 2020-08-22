@@ -1,25 +1,23 @@
-#pragma once
-
-#include <KOMO/komo.h>
-
-#include <eigen3/Eigen/Dense>
+#include <geom_utility.h>
 
 using namespace std;
 
-struct Vector2D
+uint getFrameIndex(const rai::KinematicWorld& G, const std::string& object_name)
 {
-    double x;
-    double y;
-};
+  const auto object = G.getFrameByName( object_name.c_str() );
+  for(auto i = 0; i < G.frames.size(); ++i )
+  {
+    if(object == G.frames(i))
+    {
+      return i;
+    }
+  }
 
-struct Pose2D
-{
-    double x;
-    double y;
-    double yaw;
-};
+  throw("object not found!");
+}
 
-bool near(const Pose2D & a, const Pose2D & b, double eps = 0.0001)
+/*
+bool near(const Pose2D & a, const Pose2D & b, double eps)
 {
     bool close = true;
 
@@ -144,4 +142,4 @@ std::vector< Pose2D > to_1d_trajectory(const KOMO & komo)
     }
 
     return trajectory;
-}
+}*/

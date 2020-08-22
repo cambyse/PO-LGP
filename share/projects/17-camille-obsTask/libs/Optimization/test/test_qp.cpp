@@ -38,7 +38,7 @@ TEST(QP, Unconstrained) {
   pbs.push_back(qp);
 
   auto options = buildUncompressedOptions();
-  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
+  DecOptConstrained<QP_Problem, AverageUpdater> opt(x, pbs, {}, AverageUpdater(), options);
 
   opt.run();
 
@@ -60,7 +60,7 @@ TEST(QP, OneDimOneConstrained) {
 
   auto options = buildUncompressedOptions();
 
-  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
+  DecOptConstrained<QP_Problem, AverageUpdater> opt(x, pbs, {}, AverageUpdater(), options);
 
   opt.run();
 
@@ -82,7 +82,7 @@ TEST(QP, OneDimTwoConstrained) {
 
   auto options = buildUncompressedOptions();
 
-  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
+  DecOptConstrained<QP_Problem, AverageUpdater> opt(x, pbs, {}, AverageUpdater(), options);
 
   opt.run();
 
@@ -104,7 +104,7 @@ TEST(QP, TwoDimTwoConstrained) {
 
   auto options = buildUncompressedOptions();
 
-  DecOptConstrained<QP_Problem> opt(x, pbs, {}, options);
+  DecOptConstrained<QP_Problem, AverageUpdater> opt(x, pbs, {}, AverageUpdater(), options);
 
   opt.run();
 
@@ -133,7 +133,7 @@ TEST(QP, TwoProblemsBattlingOverX) { // cost battling
 
   auto options = buildCompressedOptions();
 
-  DecOptConstrained<QP_Problem> opt(x, pbs, masks, options);
+  DecOptConstrained<QP_Problem, AverageUpdater> opt(x, pbs, masks, AverageUpdater(), options);
 
   opt.run();
 
@@ -162,7 +162,7 @@ TEST(QP, TwoProblemsBattlingOverXWithConstraints) {
 
   auto options = buildCompressedOptions();
 
-  DecOptConstrained<QP_Problem> opt(x, pbs, masks, options);
+  DecOptConstrained<QP_Problem, AverageUpdater> opt(x, pbs, masks, AverageUpdater(), options);
 
   opt.run();
 

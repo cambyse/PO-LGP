@@ -12,34 +12,6 @@
     <http://www.gnu.org/licenses/>
     --------------------------------------------------------------  */
 
-#pragma once
+#include <road_bound.h>
 
-#include <math_utility.h>
 
-#include <Kin/feature.h>
-#include <Kin/kin.h>
-#include <Kin/taskMaps.h>
-#include <Kin/proxy.h>
-#include <Kin/frame.h>
-
-//===========================================================================
-
-struct CarKinematic:Feature{
-
-  CarKinematic( const std::string & object, const rai::KinematicWorld& G );
-
-  virtual rai::String shortTag(const rai::KinematicWorld& G)
-  {
-    return rai::String("CarKinematic");
-  }
-
-  virtual void phi(arr& y, arr& J, const WorldL& Gs) override;
-
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G) override;
-
-  virtual uint dim_phi(const rai::KinematicWorld& K) override;
-
-private:
-  static const uint dim_ = 1;
-  const uint object_index_;
-};

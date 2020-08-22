@@ -1,11 +1,14 @@
 #include <Optimization/decentralized_optimizer.h>
-#include <gtest/gtest.h>
 #include "functions.cpp"
+#include <stdexcept>
+
+#include <gtest/gtest.h>
 
 constexpr double eps_s = 0.02;
 
 using T = ConstrainedProblem;
-/*
+using U = AverageUpdater;
+
 TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequential) {
   arr x{0.0, 0.0, 0.0};
 
@@ -19,7 +22,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequential) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained<T> opt(x, pbs, {}, DecOptConfig(SEQUENTIAL, false));
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(SEQUENTIAL, false));
 
   opt.run();
 
@@ -45,7 +48,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithCompressedProblemSequential) {
   masks.push_back(arr{1.0, 1.0, 0.0});
   masks.push_back(arr{1.0, 0.0, 1.0});
 
-  DecOptConstrained<T> opt(x, pbs, masks, DecOptConfig(SEQUENTIAL, true));
+  DecOptConstrained<T, U> opt(x, pbs, masks, U(), DecOptConfig(SEQUENTIAL, true));
 
   EXPECT_EQ((intA{0, 1}), opt.vars[0]);
   EXPECT_EQ((intA{0, 2}), opt.vars[1]);
@@ -70,7 +73,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequentialAndPara
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained<T> opt(x, pbs, {}, DecOptConfig(FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL, false));
 
   opt.run();
 
@@ -95,7 +98,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithCompressedProblemUsingVars) {
   masks.push_back(arr{1.0, 1.0, 0.0});
   masks.push_back(arr{1.0, 0.0, 1.0});
 
-  DecOptConstrained<T> opt(x, pbs, masks, DecOptConfig(PARALLEL, true));
+  DecOptConstrained<T, U> opt(x, pbs, masks, U(), DecOptConfig(PARALLEL, true));
 
   EXPECT_EQ((intA{0, 1}), opt.vars[0]);
   EXPECT_EQ((intA{0, 2}), opt.vars[1]);
@@ -122,7 +125,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblemUsingMasks) {
   masks.push_back(arr{1.0, 1.0, 0.0});
   masks.push_back(arr{1.0, 0.0, 1.0});
 
-  DecOptConstrained<T> opt(x, pbs, masks, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, pbs, masks, U(), DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -141,7 +144,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithDecomposedProblem) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained<T> opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -162,7 +165,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverY) {
   pbs.push_back(pb0);
   pbs.push_back(pb1);
 
-  DecOptConstrained<T> opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(PARALLEL, false));
 
   opt.run();
 
@@ -186,7 +189,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAula4D3Problems) {
   pbs.push_back(pb1);
   pbs.push_back(pb2);
 
-  DecOptConstrained<T> opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -202,7 +205,7 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
   pbs.push_back(pb);
 
-  DecOptConstrained<T> opt(x, pbs, {}, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(PARALLEL, false));
   opt.run();
 
   EXPECT_NEAR(0.0, x(0), eps_s);
@@ -210,6 +213,58 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaWithOneProblem) {
   EXPECT_NEAR(0.0, x(2), eps_s);
 }
 
+// Belief state updater
+TEST(DecentralizedAugmentedLagrangian, ErrorIfWrongBeliefstate) {
+  arr x{0.0, 0.0, 0.0};
+
+  const arr center0{1.0, 1.5, 1.0};
+  const arr center1{1.0, 0.5, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.0, 1.0});
+  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 1.0, 1.0});
+
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  auto wrong_bs = [&]()
+  {
+    DecOptConstrained<T, BeliefState> opt(x, pbs, {}, BeliefState(ARR(0.75)), DecOptConfig(PARALLEL, false));
+  };
+
+  EXPECT_THROW(wrong_bs(), std::runtime_error);
+
+  auto wrong_bs_sum = [&]()
+  {
+    DecOptConstrained<T, BeliefState> opt(x, pbs, {}, BeliefState(ARR(0.75, 0.1)), DecOptConfig(PARALLEL, false));
+  };
+
+  EXPECT_THROW(wrong_bs_sum(), std::runtime_error);
+}
+
+TEST(DecentralizedAugmentedLagrangian, BeliefStateUpdater) {
+  arr x{0.0, 0.0, 0.0};
+
+  const arr center0{1.0, 1.5, 1.0};
+  const arr center1{1.0, 0.5, 1.0};
+
+  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.0, 1.0});
+  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 1.0, 1.0});
+
+  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+  pbs.push_back(pb0);
+  pbs.push_back(pb1);
+
+  DecOptConstrained<T, BeliefState> opt(x, pbs, {}, BeliefState(ARR(0.75, 0.25)), DecOptConfig(PARALLEL, false));
+
+  opt.run();
+
+  EXPECT_NEAR(0.0, x(0), eps_s);
+  EXPECT_TRUE(x(1) > 1.0);
+  EXPECT_NEAR(1.0, x(2), eps_s);
+}
+
+// CALLBACK
 TEST(DecentralizedAugmentedLagrangian, CallbackCall) {
   arr x{0.0, 0.0, 0.0};
 
@@ -224,11 +279,11 @@ TEST(DecentralizedAugmentedLagrangian, CallbackCall) {
     called = true;
   };
 
-  DecOptConstrained<T> opt(x, pbs, {}, options);
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), options);
   opt.run();
 
   EXPECT_TRUE(called);
-}*/
+}
 
 // WARM START
 TEST(DecentralizedAugmentedLagrangian, CallbackCallWarmStart) {
@@ -253,7 +308,7 @@ TEST(DecentralizedAugmentedLagrangian, CallbackCallWarmStart) {
 
   DualState state;
   {
-  DecOptConstrained<T> opt(x, pbs, {}, options);
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), options);
   opt.run();
   state = opt.get_dual_state();
   n1 = n_called;
@@ -265,7 +320,7 @@ TEST(DecentralizedAugmentedLagrangian, CallbackCallWarmStart) {
   x(0)+=1;
   pb1->xstart=1.0;
   {
-  DecOptConstrained<T> opt(x, pbs, {}, options);
+  DecOptConstrained<T, U> opt(x, pbs, {}, U(), options);
   opt.set_dual_state(state);
   opt.run();
   }

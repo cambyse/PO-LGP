@@ -23,14 +23,14 @@ void overtake()
   //komo.addObjective( 0.0, -1, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.15} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.15} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // overtake constraints
   komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { 0.6, 0, 0 } );
@@ -71,17 +71,17 @@ void carkin()
 
   // general settings
   komo.setSquaredQAccelerations();
-  komo.addObjective( 0.0, -1, new CarKinematic( "car_ego" ), OT_eq, NoArr, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new CarKinematic( "car_ego", komo.world ), OT_eq, NoArr, 1e2, 1 );
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.15} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.15} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // overtake constraints
   komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.6, 0, 0 } );
@@ -126,14 +126,14 @@ void attempt()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.15} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.15} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // move back constraints
   komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { -0.6, 0, 0 } );
@@ -178,22 +178,22 @@ void cooperative()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_sos, {0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // overtake constraints
   komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { 0.6, 0, 0 } );
@@ -237,26 +237,26 @@ void cooperative_2()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_sos, {0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 2.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // overtake constraints
   komo.setPosition( 4.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
@@ -264,7 +264,7 @@ void cooperative_2()
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
   komo.setVelocity( 0.0, -1, "truck", NULL, OT_eq, truck_speed );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // distance between vehicle
   //komo.addObjective( 0.0, -1, new AxisDistance( "truck_2", "car_ego", 0.5, AxisDistance::Y, AxisDistance::MIN ), OT_ineq );
@@ -304,26 +304,26 @@ void cooperative_3()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_sos, {0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 3.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 3.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // overtake constraints
   //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
@@ -332,9 +332,9 @@ void cooperative_3()
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
   komo.setVelocity( 0.0, 0.1, "truck", NULL, OT_eq, truck_speed );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // distance between vehicle
   //komo.addObjective( 0.0, -1, new AxisDistance( "truck_2", "car_ego", 0.5, AxisDistance::Y, AxisDistance::MIN ), OT_ineq );
@@ -374,26 +374,26 @@ void cooperative_3_bis()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN ), OT_sos, {-0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {-0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN ), OT_sos, {0.075} ); // , 0.1
-  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos, {0.075} ); // , 0.1
+  komo.addObjective( 0.0, -1, new AxisBound( "car_op", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // get sight
-  komo.addObjective( 3.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo.addObjective( 3.0, 3.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_sos );
 
   // overtake constraints
   //komo.setPosition( 5.0, -1, "car_ego", "truck", OT_sos, { 0.4, 0, 0 } );
@@ -402,9 +402,9 @@ void cooperative_3_bis()
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
   komo.setVelocity( 0.0, 0.1, "truck", NULL, OT_eq, truck_speed );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck_2", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // distance between vehicle
   //komo.addObjective( 0.0, -1, new AxisDistance( "truck_2", "car_ego", 0.5, AxisDistance::Y, AxisDistance::MIN ), OT_ineq );
@@ -446,24 +446,24 @@ void cooperative_4()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
   //komo.addObjective( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.06 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.06 }, 1e2, 1 );
 
   // get sight
   //komo.addObjective( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
@@ -473,17 +473,17 @@ void cooperative_4()
   //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // vehicle speeds
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
 
 
   komo.activateCollisions( "car_ego", "truck" );
@@ -526,21 +526,21 @@ void cooperative_5()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
   //komo.addObjective( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
   //komo.addObjective( 0.0, -1, new AxisBound( "car_ego",  0.00, AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.06 }, 1e2, 1 );
@@ -561,14 +561,14 @@ void cooperative_5()
   //komo.setVelocity( 0.0, -1, "car_3", NULL, OT_sos, { 0.03, 0, 0 } );
 
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.045 }, 1e2, 1 );
 
 
   komo.activateCollisions( "car_ego", "truck" );
@@ -611,24 +611,24 @@ void cooperative_flying()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.12} );
   //komo.addObjective( 0.0, -1, new AxisBound( "truck", -0.075, AxisBound::Y, AxisBound::MIN, 0.1 ), OT_sos );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.12} );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.12} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.05 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.05 }, 1e2, 1 );
 
   // get sight
   //komo.addObjective( 3.0, 3.0, new AxisBound( "car_ego", 0.0, AxisBound::Y, AxisBound::MIN ), OT_sos );
@@ -638,16 +638,16 @@ void cooperative_flying()
   //komo.setPosition( 7.0, -1, "car_ego", "truck_2", OT_sos, { 0.4, 0, 0 } );
 
   // vehicle speeds
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
-  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "truck", AxisBound::X, AxisBound::MAX, komo.world ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_1", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
   //komo.addObjective( 0.0, -1, new AxisBound( "car_1",  0.00, AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_2", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
   //komo.addObjective( 0.0, -1, new AxisBound( "car_2",  0.00, AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
 
-  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_3", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025 }, 1e2, 1 );
   //komo.addObjective( 0.0, -1, new AxisBound( "car_3",  0.00, AxisBound::X, AxisBound::MAX ), OT_ineq,  arr{ 0.04 }, 1e2, 1 );
 
 
@@ -694,11 +694,11 @@ void lane_insertion()
   komo.setSquaredQAccelerations();
 
   // road bounds
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.15} );
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, {0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo.world ), OT_ineq, {-0.15} );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo.world ), OT_ineq, {0.15} );
 
   // min speed
-  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.025}, 1e2, 1 );
+  komo.addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo.world ), OT_ineq, - arr{ 0.025}, 1e2, 1 );
 
   // overtake constraints
   komo.setPosition( 7.0, -1, "car_ego", "car_1", OT_sos, { 0.225, 0, 0 } );

@@ -86,7 +86,7 @@ TEST(KOMO_realtime, box)
     first_traj_poses.push_back({kin.q(0), kin.q(1), kin.q(2)});
 
     auto * vel = new Velocity("car_ego", 0.5);
-    auto * car_kin = new CarKinematic("car_ego");
+    auto * car_kin = new CarKinematic("car_ego", kin);
     auto * circular_cage = new CircularCage("car_ego", {0.0, 0.0}, 2.5);
     auto * ocg = new OccupancyGrid("car_ego");
     ocg->setMapFromFile(map);

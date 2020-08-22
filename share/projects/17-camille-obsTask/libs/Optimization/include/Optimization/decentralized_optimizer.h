@@ -57,7 +57,51 @@ struct DualState
   std::vector<arr> admmDuals;
 };
 
-template< typename T>
+struct AverageUpdater
+{
+  void checkApplicability(const arr& contribs) const {/*always applicable*/}
+
+  template<typename V>
+  void updateZ(arr& z,
+               const std::vector<arr>& xs,
+               const std::vector<std::unique_ptr<V>>& DLs,
+               const std::vector<intA>& vars,
+               const arr& contribs) const;
+};
+
+struct BeliefState
+{
+  BeliefState(const arr& bs)
+    : beliefState(bs)
+  {}
+
+  arr beliefState;
+
+  void checkApplicability(const arr& contribs) const
+  {
+    bool valid = true;
+    for(const auto& c: contribs)
+    {
+      valid = valid && (c == 1 || c == beliefState.d0);
+    }
+
+    CHECK(valid, "Beliefstate z-updater not applicable");
+
+    double sum = 0;
+    for(const auto s: beliefState) sum += s;
+
+    CHECK(fabs(sum-1.0) < 0.0001, "Corrupted belief state");
+  }
+
+  template<typename V>
+  void updateZ(arr& z,
+               const std::vector<arr>& xs,
+               const std::vector<std::unique_ptr<V>>& DLs,
+               const std::vector<intA>& vars,
+               const arr& contribs) const;
+};
+
+template< typename T, typename U>
 struct DecOptConstrained
 {
   typedef typename LagrangianTypes<T>::Lagrangian LagrangianType;
@@ -73,6 +117,7 @@ struct DecOptConstrained
   arr contribs; ///< amount of contribution on x (on each index) - caching (deduced directly from masks)
   uint m; ///< number of z indices where problems overlap
   arr z_prev, z; ///< internal admm reference variable (z_prev is the one of the previous step)
+  const U zUpdater;
   std::vector<arr> xs; ///< subproblems solutions
   std::vector<arr> duals; ///< duals of the subproblems
   bool subProblemsSolved{false}; ///< indicates whether the stopping criterion of each sub-problem is met (necessary for overall stopping condition)
@@ -88,7 +133,7 @@ public:
    * @param masks where each subproblem contributes on optimization variable
    * @param _config
    */
-  DecOptConstrained(arr&_z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
+  DecOptConstrained(arr&_z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, const U & _zUpdater, DecOptConfig _config); //bool compressed = false, int verbose=-1, OptOptions _opt=NOOPT, ostream* _logFile=0);
 
   std::vector<uint> run();
 

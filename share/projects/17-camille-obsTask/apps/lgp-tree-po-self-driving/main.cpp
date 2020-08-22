@@ -54,11 +54,11 @@ static void savePolicyToFile( const Policy & policy, const std::string & suffix 
 void init( const mp::TreeBuilder& tb, KOMO_ext * komo, int verbose  )
 {
   // road bounds
-  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_ineq, {-0.15} );
-  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_ineq, { 0.15} );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo->world ), OT_ineq, {-0.15} );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo->world ), OT_ineq, { 0.15} );
 
   // min speed
-  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{0.03}, 1e2, 1 );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo->world ), OT_ineq, - arr{0.03}, 1e2, 1 );
 
   // truck speed
   arr truck_speed{ 0.03, 0, 0 };
@@ -77,8 +77,8 @@ void init( const mp::TreeBuilder& tb, KOMO_ext * komo, int verbose  )
   komo->activateCollisions( "car_ego", "car_op" );
 
   // min speed
-  komo->addObjective( 0.0, 1.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX ), OT_sos, arr{-0.1} );
-  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
+  komo->addObjective( 0.0, 1.0, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MAX, komo->world ), OT_sos, arr{-0.1} );
+  komo->addObjective( 0.0, -1, new AxisBound( "car_ego", AxisBound::X, AxisBound::MIN, komo->world ), OT_ineq, - arr{ 0.03 }, 1e2, 1 );
 
   // collision
   komo->activateCollisions( "car_ego", "truck" );
@@ -94,7 +94,7 @@ void groundLook( const mp::Interval& it, const mp::TreeBuilder& tb, const std::v
   //
 
   // look
-  komo->addObjective( t_start + 0.9, t_end, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN ), OT_sos );
+  komo->addObjective( t_start + 0.9, t_end, new AxisBound( "car_ego", AxisBound::Y, AxisBound::MIN, komo->world ), OT_sos );
 
   if( verbose > 0 )
   {

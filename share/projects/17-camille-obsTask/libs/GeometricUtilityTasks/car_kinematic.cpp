@@ -1,18 +1,18 @@
 #include <car_kinematic.h>
+#include <geom_utility.h>
 
-CarKinematic::CarKinematic( const std::string & object )
-  : object_( object )
+CarKinematic::CarKinematic( const std::string & object, const rai::KinematicWorld& G )
+  : object_index_(getFrameIndex(G, object))
 {
 
 }
 
 void CarKinematic::phi(arr& y, arr& J, const WorldL& Gs)
 {
-  //TaskMap::phi(y,J,Ks,tau,t);
   CHECK(order==1,"");
   CHECK(Gs.size() >= 1,"");
 
-  rai::Frame *object = Gs(1)->getFrameByName( object_.c_str() );
+  rai::Frame *object = Gs(1)->frames(object_index_);
   const auto Xoffset = -0.5 * object->shape->size(0);
 
   // initialize y and J

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <math_utility.h>
+#include <geom_utility.h>
 
 #include <Kin/feature.h>
 #include <Kin/taskMaps.h>
@@ -39,32 +40,36 @@ struct AxisBound:Feature{
     EQUAL
   };
 
-  AxisBound( const std::string & object, const enum Axis & axis, const enum BoundType & boundType )
-    : object_( object )
+  AxisBound( const std::string & object, const enum Axis & axis, const enum BoundType & boundType, const rai::KinematicWorld& G )
+    : object_index_(getFrameIndex(G, object))
     , boundType_( boundType )
   {
     if( axis == X ) id_ = 0;
     else if( axis == Y ) id_ = 1;
     else if( axis == Z ) id_ = 2;
+
+    sign_ = ( ( boundType_ == MIN ) ? -1 : 1 );
   }
 
   virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G)
   {
-    rai::Frame *object = G.getFrameByName( object_.c_str() );
+    rai::Frame * object = G.frames(object_index_); // avoid doing that all the time (save frma index)
     arr posObject, posJObject;
     G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
 
-    const double sign = ( ( boundType_ == MIN ) ? -1 : 1 );
+    // fast version
+//    posObject = G.q;
+//    posJObject = diag(1, 3);
+    //
 
-    arr tmp_y = zeros( dim_ );
-    tmp_y( 0 ) = sign * posObject( id_ );
+    y.resize( dim_ );
+    y( 0 ) = sign_ * posObject( id_ );
 
-    arr tmp_J = zeros( dim_, posJObject.dim(1) );
-    tmp_J.setMatrixBlock( sign * posJObject.row( id_ ), 0 , 0 );    // jacobian
-
-    // commit results
-    y = tmp_y;
-    if(&J) J = tmp_J;
+    if(&J)
+    {
+      J.resize( dim_, posJObject.dim(1) );
+      J.setMatrixBlock( sign_ * posJObject.row( id_ ), 0 , 0 );    // jacobian
+    }
   }
 
   virtual uint dim_phi(const rai::KinematicWorld& G)
@@ -79,7 +84,8 @@ struct AxisBound:Feature{
 
 private:
   static const uint dim_ = 1;
-  std::string object_;
+  const uint object_index_;
   const BoundType boundType_;
   std::size_t id_= 0;
+  double sign_ = 1;
 };

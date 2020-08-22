@@ -31,11 +31,79 @@ namespace
   }
 }
 
-template <typename T>
-DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
+template<typename V>
+void AverageUpdater::updateZ(arr& z,
+                       const std::vector<arr> & xs,
+                       const std::vector<std::unique_ptr<V>> & DLs,
+                       const std::vector<intA>& vars, const arr& contribs) const
+{
+  const auto N = xs.size();
+  z = zeros(z.d0);
+  for(auto i = 0; i < N; ++i)
+  {
+    const auto& x = xs[i];
+    const auto& lambda = DLs[i]->lambda;
+    const auto& var = vars[i];
+
+    arr zinc = x;
+    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
+      zinc += lambda / DLs[i]->mu;
+
+    // add increment
+    for(auto i = 0; i < var.d0; ++i)
+    {
+      const auto& I = var(i);
+      if(I!=-1)
+        z(I) += zinc(i);
+    }
+
+    // TODO: sanity check // lagrange admm sum = 0 after one iteration
+  }
+
+  // contrib scaling
+  for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
+}
+
+template<typename V>
+void BeliefState::updateZ(arr& z,
+                       const std::vector<arr> & xs,
+                       const std::vector<std::unique_ptr<V>> & DLs,
+                       const std::vector<intA>& vars, const arr& contribs) const
+{
+  const auto N = xs.size();
+  z = zeros(z.d0);
+  for(auto i = 0; i < N; ++i)
+  {
+    const auto& x = xs[i];
+    const auto& lambda = DLs[i]->lambda;
+    const auto& var = vars[i];
+
+    arr zinc = x;
+    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
+      zinc += lambda / DLs[i]->mu;
+
+    // add increment
+    for(auto j = 0; j < var.d0; ++j)
+    {
+      const auto& J = var(j);
+      if(J!=-1)
+      {
+        const auto s = contribs(J) > 1 ? beliefState(i) : 1.0;
+        z(J) += s * zinc(j);
+      }
+    }
+
+    // TODO: sanity check // lagrange admm sum = 0 after one iteration
+  }
+}
+
+
+template <typename T, typename U>
+DecOptConstrained<T, U>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>> & Ps, const std::vector<arr> & masks, const U & _zUpdater, DecOptConfig _config)//bool compressed, int verbose, OptOptions _opt, ostream* _logFile)
   : z_final(_z)
   , N(Ps.size())
   , contribs(zeros(z_final.d0))
+  , zUpdater(_zUpdater)
   , z(z_final.copy())
   , config(_config)
 {
@@ -52,8 +120,8 @@ DecOptConstrained<T>::DecOptConstrained(arr& _z, std::vector<std::shared_ptr<T>>
   initLagrangians(Ps);
 }
 
-template <typename T>
-void DecOptConstrained<T>::initVars(const std::vector<arr> & xmasks)
+template <typename T, typename U>
+void DecOptConstrained<T, U>::initVars(const std::vector<arr> & xmasks)
 {
   // fill masks with default values if not provided
   std::vector<arr> masks;
@@ -111,10 +179,12 @@ void DecOptConstrained<T>::initVars(const std::vector<arr> & xmasks)
 
     admmVars.push_back(admmVar);
   }
+
+  zUpdater.checkApplicability(contribs);
 }
 
-template <typename T>
-void DecOptConstrained<T>::initXs()
+template <typename T, typename U>
+void DecOptConstrained<T, U>::initXs()
 {
   xs.reserve(N);
 
@@ -137,8 +207,8 @@ void DecOptConstrained<T>::initXs()
   }
 }
 
-template <typename T>
-void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>> & Ps)
+template <typename T, typename U>
+void DecOptConstrained<T, U>::initLagrangians(const std::vector<std::shared_ptr<T>> & Ps)
 {
   Ls.reserve(N);
   newtons.reserve(N);
@@ -161,8 +231,8 @@ void DecOptConstrained<T>::initLagrangians(const std::vector<std::shared_ptr<T>>
   }
 }
 
-template <typename T>
-std::vector<uint> DecOptConstrained<T>::run()
+template <typename T, typename U>
+std::vector<uint> DecOptConstrained<T, U>::run()
 {
   // loop
   while(!step())
@@ -193,8 +263,8 @@ std::vector<uint> DecOptConstrained<T>::run()
   return evals;
 }
 
-template <typename T>
-DualState DecOptConstrained<T>::get_dual_state() const
+template <typename T, typename U>
+DualState DecOptConstrained<T, U>::get_dual_state() const
 {
   DualState state;
 
@@ -212,8 +282,8 @@ DualState DecOptConstrained<T>::get_dual_state() const
   return state;
 }
 
-template <typename T>
-void DecOptConstrained<T>::set_dual_state(const DualState& state)
+template <typename T, typename U>
+void DecOptConstrained<T, U>::set_dual_state(const DualState& state)
 {
   for(auto i = 0; i < N; ++i)
   {
@@ -229,8 +299,8 @@ void DecOptConstrained<T>::set_dual_state(const DualState& state)
   }
 }
 
-template <typename T>
-bool DecOptConstrained<T>::step()
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::step()
 {
   if(config.checkGradients)
   {
@@ -252,8 +322,8 @@ bool DecOptConstrained<T>::step()
   return stoppingCriterion();
 }
 
-template <typename T>
-bool DecOptConstrained<T>::stepSequential()
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::stepSequential()
 {
   subProblemsSolved = true;
   arr zz = z; // local z modified by each subproblem in sequence (we can't use the z here, which has to be consistent among all subproblems iterations)
@@ -277,8 +347,8 @@ bool DecOptConstrained<T>::stepSequential()
   updateZ();
 }
 
-template <typename T>
-bool DecOptConstrained<T>::stepParallel()
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::stepParallel()
 {
   std::vector<std::future<bool>> futures;
   for(auto i = 0; i < N; ++i)
@@ -308,8 +378,8 @@ bool DecOptConstrained<T>::stepParallel()
   updateZ();
 }
 
-template <typename T>
-bool DecOptConstrained<T>::step(DecLagrangianType& DL, OptNewton& newton, arr& dual, uint i) const
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::step(DecLagrangianType& DL, OptNewton& newton, arr& dual, uint i) const
 {
   auto& L = DL.L;
 
@@ -415,37 +485,14 @@ bool DecOptConstrained<T>::step(DecLagrangianType& DL, OptNewton& newton, arr& d
   return false;
 }
 
-template <typename T>
-void DecOptConstrained<T>::updateZ()
+template <typename T, typename U>
+void DecOptConstrained<T, U>::updateZ()
 {
-  z = zeros(z.d0);
-  for(auto i = 0; i < N; ++i)
-  {
-    const auto& x = xs[i];
-    const auto& lambda = DLs[i]->lambda;
-    const auto& var = vars[i];
-
-    arr zinc = x;
-    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
-      zinc += lambda / DLs[i]->mu;
-
-    // add increment
-    for(auto i = 0; i < var.d0; ++i)
-    {
-      const auto& I = var(i);
-      if(I!=-1)
-        z(I) += zinc(i);
-    }
-
-    // TODO: sanity check // lagrange admm sum = 0 after one iteration
-  }
-
-  // contrib scaling
-  for(uint i=0;i<z.d0;i++) z.elem(i) /= contribs.elem(i);
+  zUpdater.updateZ(z, xs, DLs, vars, contribs);
 }
 
-template <typename T>
-void DecOptConstrained<T>::updateADMM()
+template <typename T, typename U>
+void DecOptConstrained<T, U>::updateADMM()
 {
   its++;
 
@@ -458,8 +505,8 @@ void DecOptConstrained<T>::updateADMM()
   }
 }
 
-template <typename T>
-bool DecOptConstrained<T>::stoppingCriterion() const
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::stoppingCriterion() const
 {
   double r = primalResidual();
   double s = dualResidual();
@@ -490,8 +537,8 @@ bool DecOptConstrained<T>::stoppingCriterion() const
   return false;
 }
 
-template <typename T>
-double DecOptConstrained<T>::primalResidual() const
+template <typename T, typename U>
+double DecOptConstrained<T, U>::primalResidual() const
 {
   double r = 0;
 
@@ -506,21 +553,21 @@ double DecOptConstrained<T>::primalResidual() const
   return r;
 }
 
-template <typename T>
-double DecOptConstrained<T>::dualResidual() const
+template <typename T, typename U>
+double DecOptConstrained<T, U>::dualResidual() const
 {
   return DLs.front()->mu * length(z - z_prev);
 }
 
-template <typename T>
-bool DecOptConstrained<T>::primalFeasibility(double r) const
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::primalFeasibility(double r) const
 {
   const double eps = 1e-2 * sqrt(m) + 1e-3 * max(fabs(z));
   return r < eps;
 }
 
-template <typename T>
-bool DecOptConstrained<T>::dualFeasibility(double s) const
+template <typename T, typename U>
+bool DecOptConstrained<T, U>::dualFeasibility(double s) const
 {
   double ymax = 0;
   for(const auto& dl: DLs)
@@ -531,8 +578,8 @@ bool DecOptConstrained<T>::dualFeasibility(double s) const
   return s < eps;
 }
 
-template <typename T>
-void DecOptConstrained<T>::checkGradients() const
+template <typename T, typename U>
+void DecOptConstrained<T, U>::checkGradients() const
 {
   for(auto w = 0; w < DLs.size(); ++w)
   {

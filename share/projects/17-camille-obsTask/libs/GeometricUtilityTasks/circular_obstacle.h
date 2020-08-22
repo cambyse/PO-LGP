@@ -1,15 +1,14 @@
 #pragma once
 
 #include <KOMO/komo.h>
-
+#include <geom_utility.h>
 
 struct CircularObstacle:Feature{
 
-  CircularObstacle( const std::string & agent_object, const arr & position, double radius, double safety_distance = 0.5 )
-    : agent_object_( agent_object )
+  CircularObstacle( const std::string & agent_object, const arr & position, double radius, const rai::KinematicWorld& G)
+    : object_index_(getFrameIndex(G, agent_object))
     , position_( position )
     , radius_( radius )
-    , safety_distance_( safety_distance )
     , car_circle_radius_(2.15)
     , circle_relative_position_(1.25, 0, 0)
   {
@@ -22,7 +21,7 @@ struct CircularObstacle:Feature{
 
   virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G) override
   {
-    rai::Frame *object = G.getFrameByName(agent_object_.c_str());
+    rai::Frame *object = G.frames(object_index_);
     // init
     y.resize(1);//zeros(dim_phi(Gs, t));
     y(0) = 0;
@@ -41,8 +40,13 @@ struct CircularObstacle:Feature{
       arr pos, Jpos;
       G.kinematicsPos(pos, Jpos, object, rel);
 
-      const auto radius = sqrt(pow(pos(0)-position_(0), 2.0) + pow(pos(1)-position_(1), 2.0));
-      y(0) += - radius + radius_ + car_circle_radius_ + safety_distance_;
+      //
+      //pos = G.q;
+      //Jpos = diag(1, 3);
+      //
+
+      const auto dist = sqrt(pow(pos(0)-position_(0), 2.0) + pow(pos(1)-position_(1), 2.0));
+      y(0) += - dist + radius_ + car_circle_radius_;
 
       //std::cout << "pos " << pos(0) << " " << pos(1) << std::endl;
       //std::cout << "y(0)" << y(0) << std::endl;
@@ -68,10 +72,9 @@ struct CircularObstacle:Feature{
 
 private:
   static const uint dim_ = 1;
-  std::string agent_object_;
-  double radius_;
+  const uint object_index_;
+  const double radius_;
   arr position_;
-  double safety_distance_;
   rai::Vector circle_relative_position_;
   const double car_circle_radius_;
 };
@@ -80,13 +83,13 @@ private:
 
 struct Car3CirclesCircularObstacle:Feature{
 
-  Car3CirclesCircularObstacle( const std::string & agent_object, const arr & position, double radius, double safety_distance = 0.5 )
-    : agent_object_( agent_object )
-    , position_( position )
+  Car3CirclesCircularObstacle( const std::string & agent_object, const std::vector<arr> & positions, double radius, const rai::KinematicWorld& G )
+    : dim_(3* positions.size())
+    , object_index_(getFrameIndex(G, agent_object))
     , radius_( radius )
-    , safety_distance_( safety_distance )
     , car_circle_radius_(1.5)
-//    , circle_relative_position_(1.25, 0, 0)
+    , positions_( positions )
+
   {
       circle_relative_positions_[0] = (1.25, 0, 0);
       circle_relative_positions_[1] = (-0.9, 0, 0);
@@ -100,19 +103,19 @@ struct Car3CirclesCircularObstacle:Feature{
 
   virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G) override
   {
-    rai::Frame *object = G.getFrameByName(agent_object_.c_str());
+    rai::Frame *object = G.frames(object_index_);
     // init
     y.resize(dim_);//zeros(dim_phi(Gs, t));
     y(0) = 0;
     if(&J)
     {
-      J = zeros(dim_, G.q.d0);
+      J.resize(dim_, G.q.d0);
     }
 
     // compute cost
-    for(auto i = 0; i < dim_; ++i)
+    for(auto i = 0; i < circle_relative_positions_.size(); ++i)
     {
-        punctual_phi(object, circle_relative_positions_[i], i, y, J, G);
+      punctual_phi(object, circle_relative_positions_[i], i, y, J, G);
     }
   }
 
@@ -122,37 +125,43 @@ struct Car3CirclesCircularObstacle:Feature{
       arr pos, Jpos;
       G.kinematicsPos(pos, Jpos, object, rel);
 
-      const auto radius = sqrt(pow(pos(0)-position_(0), 2.0) + pow(pos(1)-position_(1), 2.0));
-      y(i) = - radius + radius_ + car_circle_radius_ + safety_distance_;
-
-      //std::cout << "pos " << pos(0) << " " << pos(1) << std::endl;
-      //std::cout << "y(0)" << y(0) << std::endl;
-
-      if(&J)
+      for(auto j = 0; j < positions_.size(); ++j)
       {
-        auto theta = std::atan2(pos(1)-position_(1), pos(0)-position_(0));
+        uint I = j * 3 + i;
+        const auto& position = positions_[j];
+        const auto dist = sqrt(pow(pos(0)-position(0), 2.0) + pow(pos(1)-position(1), 2.0));
+        y(I) = - dist + radius_ + car_circle_radius_;
 
-        J(i, 0) = - cos(theta) * Jpos(0, 0);
-        J(i, 1) = - sin(theta) * Jpos(1, 1);
+        //std::cout << "pos " << pos(0) << " " << pos(1) << std::endl;
+        //std::cout << "y(0)" << y(0) << std::endl;
+
+        if(&J)
+        {
+          const auto theta = std::atan2(pos(1)-position(1), pos(0)-position(0));
+
+          J(I, 0) = - cos(theta) * Jpos(0, 0);
+          J(I, 1) = - sin(theta) * Jpos(1, 1);
+          J(I, 2) = 0;
+        }
       }
   }
 
   virtual uint dim_phi(const rai::KinematicWorld& K) override
   {
-    return dim_;
+      return dim_;
   }
 
-  void set_obstacle_position(const arr & position)
+  void set_obstacle_positions(const std::vector<arr> & positions)
   {
-      position_ = position;
+      CHECK_EQ(positions_.size(), positions.size(), "should have the same number of obstacles");
+      positions_ = positions;
   }
 
 private:
-  static constexpr uint dim_ = 3;
-  std::string agent_object_;
-  double radius_;
-  arr position_;
-  double safety_distance_;
-  std::array<rai::Vector, dim_> circle_relative_positions_;
+  const uint dim_;
+  const uint object_index_;
+  const double radius_;
   const double car_circle_radius_;
+  std::array<rai::Vector, 3> circle_relative_positions_;
+  std::vector<arr> positions_;
 };

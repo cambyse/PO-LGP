@@ -16,6 +16,7 @@
 #include <unordered_set>
 
 using T = ConstrainedProblem;
+using U = AverageUpdater;
 
 namespace mp
 {
@@ -254,7 +255,7 @@ void ADMMSParsePlanner::optimize( Policy & policy, const rai::Array< std::shared
 
   auto x = komos.front()->x;
 
-  DecOptConstrained<T> opt(x, constrained_problems, xmasks, DecOptConfig(PARALLEL, false));
+  DecOptConstrained<T, U> opt(x, constrained_problems, xmasks, U(), DecOptConfig(PARALLEL, false));
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
@@ -443,7 +444,7 @@ void ADMMCompressedPlanner::optimize( Policy & policy, const rai::Array< std::sh
   decOptConfig.compressed = true;
   decOptConfig.checkGradients = false;
 
-  DecOptConstrained<T> opt(x, constrained_problems, xmasks, decOptConfig);
+  DecOptConstrained<T, U> opt(x, constrained_problems, xmasks, U(), decOptConfig);
   opt.run();
 
   auto elapsed = std::chrono::high_resolution_clock::now() - start;
