@@ -38,26 +38,26 @@ void AverageUpdater::updateZ(arr& z,
                        const std::vector<intA>& vars, const arr& contribs) const
 {
   const auto N = xs.size();
-  z = zeros(z.d0);
+  z.setZero();
+
   for(auto i = 0; i < N; ++i)
   {
     const auto& x = xs[i];
     const auto& lambda = DLs[i]->lambda;
     const auto& var = vars[i];
 
-    arr zinc = x;
-    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
-      zinc += lambda / DLs[i]->mu;
+    //arr zinc = x;
+    //if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
+    //  zinc += lambda / DLs[i]->mu;
+    // lagrange admm sum = 0 (guaranteed see part 7. Consensus and Sharing)
 
     // add increment
     for(auto i = 0; i < var.d0; ++i)
     {
       const auto& I = var(i);
       if(I!=-1)
-        z(I) += zinc(i);
+        z(I) += x(i);//zinc(i);
     }
-
-    // TODO: sanity check // lagrange admm sum = 0 after one iteration
   }
 
   // contrib scaling
@@ -71,16 +71,18 @@ void BeliefState::updateZ(arr& z,
                        const std::vector<intA>& vars, const arr& contribs) const
 {
   const auto N = xs.size();
-  z = zeros(z.d0);
+  z.setZero();
+
   for(auto i = 0; i < N; ++i)
   {
     const auto& x = xs[i];
     const auto& lambda = DLs[i]->lambda;
     const auto& var = vars[i];
 
-    arr zinc = x;
-    if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
-      zinc += lambda / DLs[i]->mu;
+    //arr zinc = x;
+    //if(DLs[i]->mu > 0.0) // add term based on admm lagrange term always except in the first step
+    //  zinc += lambda / DLs[i]->mu;
+    // lagrange weighted admm sum = 0 (guaranteed see part 7. Consensus and Sharing)
 
     // add increment
     for(auto j = 0; j < var.d0; ++j)
@@ -89,11 +91,9 @@ void BeliefState::updateZ(arr& z,
       if(J!=-1)
       {
         const auto s = contribs(J) > 1 ? beliefState(i) : 1.0;
-        z(J) += s * zinc(j);
+        z(J) += s * x(j);
       }
     }
-
-    // TODO: sanity check // lagrange admm sum = 0 after one iteration
   }
 }
 
@@ -264,7 +264,7 @@ std::vector<uint> DecOptConstrained<T, U>::run()
 }
 
 template <typename T, typename U>
-DualState DecOptConstrained<T, U>::get_dual_state() const
+DualState DecOptConstrained<T, U>::getDualState() const
 {
   DualState state;
 
@@ -283,7 +283,7 @@ DualState DecOptConstrained<T, U>::get_dual_state() const
 }
 
 template <typename T, typename U>
-void DecOptConstrained<T, U>::set_dual_state(const DualState& state)
+void DecOptConstrained<T, U>::setDualState(const DualState& state)
 {
   for(auto i = 0; i < N; ++i)
   {

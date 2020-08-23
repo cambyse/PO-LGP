@@ -137,8 +137,8 @@ public:
 
   std::vector<uint> run();
 
-  DualState get_dual_state() const; // for enabling warm start
-  void set_dual_state(const DualState& state);
+  DualState getDualState() const; // for enabling warm start
+  void setDualState(const DualState& state);
 
 private:
   void initVars(const std::vector<arr> & xmasks);

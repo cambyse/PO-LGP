@@ -9,6 +9,13 @@ constexpr double eps_s = 0.02;
 using T = ConstrainedProblem;
 using U = AverageUpdater;
 
+namespace{
+double barycenter(double a, double b, double lambda)
+{
+  return (lambda) * a + (1 - lambda) * b;
+}
+}
+
 TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverYSequential) {
   arr x{0.0, 0.0, 0.0};
 
@@ -158,20 +165,26 @@ TEST(DecentralizedAugmentedLagrangian, DecAulaBattlingADMMoverY) {
   const arr center0{1.0, 1.5, 1.0};
   const arr center1{1.0, 0.5, 1.0};
 
-  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.5, 1.0});
-  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 0.5, 1.0});
+  std::vector<double> ps{0.01, 0.1, 0.3, 0.5, 0.7, 0.9, 0.99};
 
-  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
-  pbs.push_back(pb0);
-  pbs.push_back(pb1);
+  for(const auto p: ps)
+  {
+    auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, sqrt(p), 1.0});
+    auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, sqrt(1 - p), 1.0});
 
-  DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(PARALLEL, false));
+    std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+    pbs.push_back(pb0);
+    pbs.push_back(pb1);
 
-  opt.run();
+    DecOptConstrained<T, U> opt(x, pbs, {}, U(), DecOptConfig(PARALLEL, false));
 
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_TRUE(x(1) > 1.0);
-  EXPECT_NEAR(1.0, x(2), eps_s);
+    opt.run();
+
+    std::cout << "x:" << x << std::endl;
+    EXPECT_NEAR(0.0, x(0), eps_s);
+    EXPECT_TRUE(fabs(x(1) - barycenter(center0(1), center1(1), p)) < 0.05);
+    EXPECT_NEAR(1.0, x(2), eps_s);
+  }
 }
 
 
@@ -248,20 +261,25 @@ TEST(DecentralizedAugmentedLagrangian, BeliefStateUpdater) {
   const arr center0{1.0, 1.5, 1.0};
   const arr center1{1.0, 0.5, 1.0};
 
-  auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.0, 1.0});
-  auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 1.0, 1.0});
+  std::vector<double> ps{0.01, 0.1, 0.3, 0.5, 0.7, 0.9, 0.99};
 
-  std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
-  pbs.push_back(pb0);
-  pbs.push_back(pb1);
+  for(const auto p: ps)
+  {
+    auto pb0 = std::make_shared<Distance3D>(center0, arr{1.0, 1.0, 1.0});
+    auto pb1 = std::make_shared<Distance3D>(center1, arr{1.0, 1.0, 1.0});
 
-  DecOptConstrained<T, BeliefState> opt(x, pbs, {}, BeliefState(ARR(0.75, 0.25)), DecOptConfig(PARALLEL, false));
+    std::vector<std::shared_ptr<ConstrainedProblem>> pbs;
+    pbs.push_back(pb0);
+    pbs.push_back(pb1);
 
-  opt.run();
+    DecOptConstrained<T, BeliefState> opt(x, pbs, {}, BeliefState(ARR(p, 1 - p)), DecOptConfig(PARALLEL, false));
 
-  EXPECT_NEAR(0.0, x(0), eps_s);
-  EXPECT_TRUE(x(1) > 1.0);
-  EXPECT_NEAR(1.0, x(2), eps_s);
+    opt.run();
+
+    EXPECT_NEAR(0.0, x(0), eps_s);
+    EXPECT_TRUE(fabs(x(1) - barycenter(center0(1), center1(1), p)) < 0.05);
+    EXPECT_NEAR(1.0, x(2), eps_s);
+  }
 }
 
 // CALLBACK
@@ -310,7 +328,7 @@ TEST(DecentralizedAugmentedLagrangian, CallbackCallWarmStart) {
   {
   DecOptConstrained<T, U> opt(x, pbs, {}, U(), options);
   opt.run();
-  state = opt.get_dual_state();
+  state = opt.getDualState();
   n1 = n_called;
   n_called = 0;
   }
@@ -321,7 +339,7 @@ TEST(DecentralizedAugmentedLagrangian, CallbackCallWarmStart) {
   pb1->xstart=1.0;
   {
   DecOptConstrained<T, U> opt(x, pbs, {}, U(), options);
-  opt.set_dual_state(state);
+  opt.setDualState(state);
   opt.run();
   }
   n2 = n_called;
