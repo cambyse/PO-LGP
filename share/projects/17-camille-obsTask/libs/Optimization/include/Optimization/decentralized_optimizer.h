@@ -8,36 +8,6 @@
 #include <functional>
 #include <memory>
 
-using CallBackType = std::function<void()>;
-
-enum Mode
-{
-  SEQUENTIAL = 0,
-  PARALLEL,
-  FIRST_ITERATION_SEQUENTIAL_THEN_PARALLEL // doesn't seem to perform very well on komo problems
-};
-
-struct DecOptConfig
-{
-  DecOptConfig(const Mode& scheduling, bool compressed, OptOptions opt=NOOPT, bool checkGradients=false, CallBackType callback = CallBackType(), ostream *logFile=nullptr)
-    : scheduling(scheduling)
-    , compressed(compressed)
-    , opt(opt)
-    , checkGradients(checkGradients)
-    , callback(callback)
-    , logFile(logFile)
-  {
-  }
-
-  Mode scheduling;
-
-  bool compressed; // wether xs.d0 == x.d0, if true subproblem optimizers act on smaller (local) x
-  OptOptions opt;  // for newton and aula
-
-  bool checkGradients;
-  CallBackType callback; // called after each step() (for debugging)
-  ostream *logFile;
-};
 
 template< typename T>
 struct LagrangianTypes

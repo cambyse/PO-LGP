@@ -100,11 +100,19 @@ class Newton: # sum of square problems
 
             v = self.function.value(x)
             w = self.function.value(x + _alpha * d)   # line search
+
+            if observer:
+                observer.on_newton_line_search(x)
+
             while w > v + self.rho * np.matmul(np.transpose(B), _alpha * d):
                 _alpha = _alpha * 0.5
                 w = self.function.value(x + _alpha * d)
 
+                if observer:
+                    observer.on_newton_line_search(x)
+
             x = x + _alpha * d
+
             _alpha = 1
 
             if np.linalg.norm(_alpha * d) < self.eps:

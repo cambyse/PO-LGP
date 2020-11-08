@@ -107,10 +107,10 @@ class Lagrangian(NewtonFunction):
         return H
 
 class AugmentedLagrangianSolver:
-    def __init__(self, pb):
+    def __init__(self, pb, mu=1.0):
         self.constrainedProblem = pb
         self.eps = 0.001 #max constraint violation
-        self.mu = 1.0
+        self.mu = mu
         self.rho = 1.0 # how much we increase the square penalty at each cycle
         self.lambda_h = 0.0
         self.lambda_g = 0.0
@@ -121,7 +121,7 @@ class AugmentedLagrangianSolver:
 
         lagrangian = Lagrangian(self.constrainedProblem, mu=self.mu, lambda_h=self.lambda_h, lambda_g=self.lambda_g)
         gn = Newton(lagrangian)
-        x = gn.run(x)
+        x = gn.run(x, observer=observer)
         h = self.constrainedProblem.h.value(x) if self.constrainedProblem.h else 0
         g = self.constrainedProblem.g.value(x) if self.constrainedProblem.g else 0
 
@@ -146,6 +146,5 @@ class AugmentedLagrangianSolver:
 
         if observer:
             observer.on_aula_end(x)
-
 
         return x

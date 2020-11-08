@@ -225,7 +225,7 @@ void DecOptConstrained<T, U>::initLagrangians(const std::vector<std::shared_ptr<
     arr& dual = duals.back();
     Ls.push_back(std::unique_ptr<LagrangianType>(new LagrangianType(*P, config.opt, dual)));
     LagrangianType& L = *Ls.back();
-    DLs.push_back(std::unique_ptr<DecLagrangianType>(new DecLagrangianType(L, z, var, admmVar, config.opt)));
+    DLs.push_back(std::unique_ptr<DecLagrangianType>(new DecLagrangianType(L, z, var, admmVar, config)));
     DecLagrangianType& DL = *DLs.back();
     newtons.push_back(std::unique_ptr<OptNewton>(new OptNewton(x, DL, config.opt, 0)));
   }
@@ -359,7 +359,7 @@ bool DecOptConstrained<T, U>::stepParallel()
 
     // spawn threads
     DL.z = z;
-    futures.push_back(std::async(std::launch::async,
+    futures.push_back(std::async((i > 0 ? std::launch::async : std::launch::deferred),
     [&, i]{
       return step(DL, newton, dual, i);
     }

@@ -37,7 +37,7 @@ struct RoadBound:Feature{
   {
     rai::Frame * object = G.frames(object_index_);//G.getFrameByName( object_.c_str() ); // avoid doing that all the time (save frma index)
     arr posObject, posJObject;
-    G.kinematicsPos(posObject, posJObject, object);    // get function to minimize and its jacobian in state G
+    G.kinematicsPos(posObject, posJObject, object, offset_);    // get function to minimize and its jacobian in state G
     //
     //posObject = G.q;
     //posJObject = diag(1, 3);
@@ -90,5 +90,6 @@ struct RoadBound:Feature{
 private:
   static const uint dim_ = 2; //3; (with centerline)
   const double max_y_ = 1.5;
+  const rai::Vector offset_{4.0, 0, 0}; // part of the vehicle which should stay within the boundaries (here car front)
   uint object_index_{0};
 };

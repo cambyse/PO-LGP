@@ -63,6 +63,7 @@ struct AxisBound:Feature{
     //
 
     y.resize( dim_ );
+
     y( 0 ) = sign_ * posObject( id_ );
 
     if(&J)

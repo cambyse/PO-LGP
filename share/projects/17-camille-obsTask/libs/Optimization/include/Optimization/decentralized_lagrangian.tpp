@@ -42,8 +42,8 @@ void DecLagrangianProblem<T>::updateADMM(const arr& x, const arr& z)
     auto delta = deltaZ(x);
     lambda += mu * delta; // Is like doing gradient descent on the dual problem (mu is the step size, and x-z the gradient)
 
-    if(mu==0.0) mu=1.0;
-    //else mu *= 2.0; // updating mu in a principeld way (increase, decrease) described in
+    if(mu==0.0) mu=config_.muInit;
+    else mu *= config_.muInc; // updating mu in a principeld way (increase, decrease) described in
     //Distributed Optimization and Statistical
     //Learning via the Alternating Direction
     //Method of Multipliers (p.20)

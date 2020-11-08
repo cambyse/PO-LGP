@@ -13,7 +13,6 @@ void CarKinematic::phi(arr& y, arr& J, const WorldL& Gs)
   CHECK(Gs.size() >= 1,"");
 
   rai::Frame *object = Gs(1)->frames(object_index_);
-  const auto Xoffset = -0.5 * object->shape->size(0);
 
   // initialize y and J
   y.resize(1);//zeros(dim_phi(Gs, t));
@@ -26,7 +25,7 @@ void CarKinematic::phi(arr& y, arr& J, const WorldL& Gs)
 
   // get speed vector
   arr y_vel,Jvel;
-  TM_Default vel(TMT_posDiff, object->ID, rai::Vector(Xoffset,0,0));
+  TM_Default vel(TMT_posDiff, object->ID); // consider (0, 0) point per default
   vel.order = 1;
   vel.__phi(y_vel, Jvel, Gs);
 

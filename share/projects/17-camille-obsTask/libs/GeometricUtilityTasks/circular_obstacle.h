@@ -3,6 +3,13 @@
 #include <KOMO/komo.h>
 #include <geom_utility.h>
 
+struct Obstacle
+{
+  arr position;
+  double p;
+  double radius;
+};
+
 struct CircularObstacle:Feature{
 
   CircularObstacle( const std::string & agent_object, const arr & position, double radius, const rai::KinematicWorld& G)
@@ -83,13 +90,11 @@ private:
 
 struct Car3CirclesCircularObstacle:Feature{
 
-  Car3CirclesCircularObstacle( const std::string & agent_object, const std::vector<arr> & positions, double radius, const rai::KinematicWorld& G )
-    : dim_(3* positions.size())
+  Car3CirclesCircularObstacle( const std::string & agent_object, const std::vector<Obstacle> & obstacles, const rai::KinematicWorld& G )
+    : dim_(3* obstacles.size())
     , object_index_(getFrameIndex(G, agent_object))
-    , radius_( radius )
-    , car_circle_radius_(1.5)
-    , positions_( positions )
-
+    , car_circle_radius_(1.4)
+    , obstacles_( obstacles )
   {
       circle_relative_positions_[0] = (1.25, 0, 0);
       circle_relative_positions_[1] = (-0.9, 0, 0);
@@ -125,12 +130,13 @@ struct Car3CirclesCircularObstacle:Feature{
       arr pos, Jpos;
       G.kinematicsPos(pos, Jpos, object, rel);
 
-      for(auto j = 0; j < positions_.size(); ++j)
+      for(auto j = 0; j < obstacles_.size(); ++j)
       {
         uint I = j * 3 + i;
-        const auto& position = positions_[j];
+        const auto& position = obstacles_[j].position;
+        const auto& radius = obstacles_[j].radius;
         const auto dist = sqrt(pow(pos(0)-position(0), 2.0) + pow(pos(1)-position(1), 2.0));
-        y(I) = - dist + radius_ + car_circle_radius_;
+        y(I) = - dist + radius + car_circle_radius_;
 
         //std::cout << "pos " << pos(0) << " " << pos(1) << std::endl;
         //std::cout << "y(0)" << y(0) << std::endl;
@@ -151,17 +157,16 @@ struct Car3CirclesCircularObstacle:Feature{
       return dim_;
   }
 
-  void set_obstacle_positions(const std::vector<arr> & positions)
+  void set_obstacles(std::vector<Obstacle> & obstacles)
   {
-      CHECK_EQ(positions_.size(), positions.size(), "should have the same number of obstacles");
-      positions_ = positions;
+      CHECK_EQ(obstacles_.size(), obstacles.size(), "should have the same number of obstacles");
+      obstacles_ = obstacles;
   }
 
 private:
   const uint dim_;
   const uint object_index_;
-  const double radius_;
   const double car_circle_radius_;
   std::array<rai::Vector, 3> circle_relative_positions_;
-  std::vector<arr> positions_;
+  std::vector<Obstacle> obstacles_;
 };
