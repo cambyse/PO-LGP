@@ -35,6 +35,7 @@ TEST(ValueIteration, OnUnsolvedRootCyclicGraphValuesAreInfinity) {
   graph.saveGraphToFile( "OnUnsolvedRootCyclicGraphValuesAreInfinity.gv" );
 
   std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //Rewards rewards;
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );

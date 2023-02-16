@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 2.8.12)
 get_filename_component(project_name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${project_name})
 
-add_definitions(-std=c++11)
+add_definitions(-std=c++14)
 
 #################################
 # Locate MLR libs
@@ -18,7 +18,8 @@ link_directories(    ${MLR_LIBRARIES_DIR} )
 #find_package(fcl REQUIRED)
 
 #find OpenCV
-find_package(OpenCV 3.3.1 REQUIRED)
+#find_package(OpenCV 3.3.1 REQUIRED)
+find_package(OpenCV 4.2.0 REQUIRED)
 
 #message(STATUS "OpenCV library status:")
 #message(STATUS "    version: ${OpenCV_VERSION}")

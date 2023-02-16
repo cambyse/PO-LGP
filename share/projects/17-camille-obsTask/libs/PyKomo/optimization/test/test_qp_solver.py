@@ -16,6 +16,14 @@ def test_unconstrained_qp():
 
     nt.assert_almost_equals(x, 0.5, delta=0.001)
 
+def test_unconstrained_with_constrained_solver():
+    # min x^2 - x
+    qp = UnconstrainedQP(Q=np.array([[2.0]]), c=np.array([-1.0]))
+    solver = ConstrainedQPSolver(qp)
+    x = solver.run(np.array([-1.0]))
+
+    nt.assert_almost_equals(x, 0.5, delta=0.001)
+
 def test_constrained_qp():
     # min x^2 - x
     # s.t. x <= 0
@@ -26,8 +34,7 @@ def test_constrained_qp():
     nt.assert_almost_equals(x, 0.2, delta=0.001)
 
 def test_constrained_2d_qp():
-    # s.t. x(0) >= 3
-    #      x(1) >= 1
+    # s.t. x + y >= 3
     x0 = np.array([10.0, 1.5])
 
     def background(ax):
@@ -52,13 +59,39 @@ def test_constrained_2d_qp():
         CS = ax.contour(X, Y, Z, [1.0, 2.0, 3.0])
         ax.clabel(CS, inline=1, fontsize=10)
 
-    p = Plotter2D("2d qp", background=background)
-    p.add_point(x0)
+    p = Plotter2DSimple("2d qp", background=background)
 
-    qp = ConstrainedQP(Q=np.array([[1.0, 0.0], [0.0, 20.0]]), c=np.array([0.0, 0.0]), A=np.array([[-1.0, 0.0], [0.0, -1.0]]), u=np.array([-3.0, -1.0]))
+    #qp = ConstrainedQP(Q=np.array([[1.0, 1.0], [1.0, 10.0]]), c=np.array([0.0, 0.0]), A=np.array([[-1.0, 0.0]]), u=np.array([-3.0])) # 1 constraint
+    #qp = ConstrainedQP(Q=np.array([[1.0, 1.0], [1.0, 10.0]]), c=np.array([0.0, 0.0]), A=np.array([[-1.0, 0.0], [0.0, -1.0]]), u=np.array([-3.0, -1.0])) # 2 constraints
+    #qp = ConstrainedQP(Q=np.array([[1.0, 1.0], [1.0, 10.0]]), c=np.array([0.0, 0.0]), A=np.array([[-1.0, 0.0], [0.0, -1.0], [0.0, -1.0]]), u=np.array([-3.0, -1.0, -1.0])) # 1 constraint
+
+    qp = ConstrainedQP(Q=np.array([[1.0, 0.0], [0.0, 1.0]]), c=np.array([-1.0, 0.5]), A=np.array([[-1.0, -1.0]]), u=np.array([-3.0])) # 1 constraints over 2 variables
+
     solver = ConstrainedQPSolver(qp)
     x = solver.run(x0, observer=p)
 
     p.report(plot=True)
 
-    nt.assert_true(np.allclose(x, np.array([3.0, 1.0]), rtol=1e-03, atol=1e-03))
+    print("x={}".format(x))
+
+    nt.assert_true(np.allclose(x, np.array([2.24957629, 0.74957629]), rtol=1e-03, atol=1e-03))
+
+
+def test_constrained_3d_qp():
+    x0 = np.array([10.0, 1.5, 2.0])
+
+    def background(ax):
+        pass
+
+    p = Plotter2DSimple("3d qp", background=background)
+
+    qp = ConstrainedQP(Q=np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]), c=np.array([-1.0, 0.5, 1.0]), A=np.array([[-1.0, -1.0, -1.0]]), u=np.array([-3.0])) # 1 constraints over 2 variables
+
+    solver = ConstrainedQPSolver(qp)
+    x = solver.run(x0, observer=p)
+
+    p.report(plot=False)
+
+    print("x={}".format(x))
+
+    #nt.assert_true(np.allclose(x, np.array([2.24957629, 0.74957629]), rtol=1e-03, atol=1e-03))

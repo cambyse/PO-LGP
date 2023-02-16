@@ -77,11 +77,11 @@ void OccupancyGrid::computeDistanceMap()
   const int delta = 0;
   const int ddepth = -1;
 
-  cv::distanceTransform(sensor_map_bw_, dist_, CV_DIST_L2, CV_DIST_MASK_PRECISE); //
+  cv::distanceTransform(sensor_map_bw_, dist_, cv::DIST_L2, cv::DIST_MASK_PRECISE); //
   cv::Sobel(dist_, grad_x_, ddepth, 1, 0, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
   cv::Sobel(dist_, grad_y_, ddepth, 0, 1, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
 
-  cv::distanceTransform(sensor_map_bw_inv_, dist_inv_, CV_DIST_L2, CV_DIST_MASK_PRECISE); //CV_DIST_L2
+  cv::distanceTransform(sensor_map_bw_inv_, dist_inv_, cv::DIST_L2, cv::DIST_MASK_PRECISE); //CV_DIST_L2
   cv::Sobel(dist_inv_, grad_x_inv_, ddepth, 1, 0, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
   cv::Sobel(dist_inv_, grad_y_inv_, ddepth, 0, 1, 3, 1.0 / 8, delta, cv::BORDER_DEFAULT);
 
