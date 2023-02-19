@@ -16,7 +16,7 @@
 
 //-----AxisAlignment----------------//
 
-void AxisAlignment::phi( arr& y, arr& J, const rai::KinematicWorld& G, int t )
+void AxisAlignment::phi( arr& y, arr& J, const rai::KinematicWorld& G)
 {
   arr tmp_y = zeros( 1 );
   arr tmp_J = zeros( 1, G.q.N );

@@ -162,8 +162,8 @@ void plan_graph_search()
   //mp.setKin( "LGP-overtaking-kin-3w.g" ); // needs another init!!
   //tp.setFol( "LGP-overtaking-3w.g" );
 
-  mp.setKin( "LGP-overtaking-kin-1w.g" ); // needs another init!!
-  tp.setFol( "LGP-overtaking-1w.g" );
+  mp.setKin( "LGP-overtaking-kin-2w.g" ); // needs another init!!
+  tp.setFol( "LGP-overtaking-2w.g" );
 
   /// DECISION GRAPH
   tp.setR0( -0.001 );  // balance exploration
@@ -288,8 +288,8 @@ int main(int argc,char **argv)
 
   rnd.clockSeed();
 
-  //plan_graph_search();
-  minimal_plan_admm();
+  plan_graph_search();
+  //minimal_plan_admm();
 
   return 0;
 }

@@ -9,6 +9,7 @@
 #include <nearest_neighbor.h>
 #include <sample_space.h>
 #include <common.h>
+#include <vector>
 
 template <std::size_t N>
 struct RRTStarNode

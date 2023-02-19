@@ -168,7 +168,7 @@ TEST_F(GraphPlannerTest, PolicySaveDoubleAgent1WTweaked) {
 
   auto policy = tp.getPolicy();
   const std::string policyFileName( "LGP-overtaking-double-agent-1w-tweaked" );
-  auto leafs = policy.leafs();
+  auto leafs = policy.wleafs();
   leafs.front().lock()->data().leadingKomoArgs = { "__AGENT_0__follow", "truck" };
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
@@ -205,7 +205,7 @@ TEST_F(GraphPlannerTest, PolicyLeafs) {
   const std::string policyFileName( "LGP-overtaking-single-agent-1w" );
   policy.save( policyFileName + ".po" );
   policy.saveToGraphFile( policyFileName + ".gv" );
-  auto leafs = policy.leafs();
+  auto leafs = policy.wleafs();
   auto leaf = leafs.front();
   EXPECT_EQ( leafs.size(), 1 );
   EXPECT_EQ( leaf.lock()->id(), 2 );

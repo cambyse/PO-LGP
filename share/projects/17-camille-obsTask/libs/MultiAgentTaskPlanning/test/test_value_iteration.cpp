@@ -34,8 +34,8 @@ TEST(ValueIteration, OnUnsolvedRootCyclicGraphValuesAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedRootCyclicGraphValuesAreInfinity.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
-  //Rewards rewards;
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -83,7 +83,8 @@ TEST(ValueIteration, OnUnsolvedCyclicGraphValuesAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedCyclicGraphValuesAreInfinity.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -142,7 +143,8 @@ TEST(ValueIteration, OnUnsolvedBranchValuesAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedBranchValuesAreInfinity.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -189,7 +191,8 @@ TEST(ValueIteration, OnSolvedAcyclicGraph) {
 
   graph.saveGraphToFile( "OnSolvedAcyclicGraph.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -234,7 +237,8 @@ TEST(ValueIteration, OnUnsolvedAcyclicGraphValueAreInfinity) {
 
   graph.saveGraphToFile( "OnUnsolvedAcyclicGraph.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   /////
   auto values = ValueIterationAlgorithm::process( graph, rewards );
@@ -288,11 +292,12 @@ TEST(ValueIteration, OnActionBranchingValueIterationChosesRightAction) {
   graph.saveGraphToFile( "OnActionBranchingValueIterationChosesRightAction.gv" );
 
   //std::vector< double > rewards =  { -1.0, -1.0, -1.0, -1.0, -1.0, -1000.0, -1.0, -1.0, -1.0 };
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   auto rewardSetter = [&] ( uint from, uint to, double r )
   {
-    rewards[ from * graph.size() + to ] = r;
+    rewards.set(from * graph.size() + to, r);
   };
 
   rewardSetter( 6, 7, -1000.0 );
@@ -344,7 +349,8 @@ TEST(ValueIteration, ValueAfterObservationBranchingPoint) {
 
   graph.saveGraphToFile( "ValueAfterObservationBranchingPoint.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+//  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
 //  auto rewardSetter = [&] ( uint from, uint to, double r )
 //  {
@@ -397,11 +403,12 @@ TEST(ValueIteration, ValueAfterObservationBranchingPoint2DisymmetricBranches) {
 
   graph.saveGraphToFile( "ValueAfterObservationBranchingPoint2DisymmetricBranches.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+//  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   auto rewardSetter = [&] ( uint from, uint to, double r )
   {
-    rewards[ from * graph.size() + to ] = r;
+    rewards.set(from * graph.size() + to, r);
   };
 
   rewardSetter( 5, 6, -1000.0 );
@@ -456,11 +463,12 @@ TEST(ValueIteration, ValueAfterObservationBranchingPoint2DisymmetricBranchesOneA
 
   graph.saveGraphToFile( "ValueAfterObservationBranchingPoint2DisymmetricBranchesOneActionStepBefore.gv" );
 
-  std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  //std::vector< double > rewards( graph.size() * graph.size(), -1.0 );
+  Rewards rewards;
 
   auto rewardSetter = [&] ( uint from, uint to, double r )
   {
-    rewards[ from * graph.size() + to ] = r;
+    rewards.set(from * graph.size() + to, r);
   };
 
   rewardSetter( 7, 8, -1000.0 );

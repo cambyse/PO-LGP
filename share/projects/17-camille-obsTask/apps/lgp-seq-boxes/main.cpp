@@ -1,7 +1,7 @@
 #include <KOMO/komo.h>
 
 #include <observation_tasks.h>
-#include <approx_point_to_shape.h>
+#include <approx_shape_to_sphere.h>
 #include <over_plane.h>
 #include <axis_alignment.h>
 
@@ -11,20 +11,20 @@ using namespace std;
 
 static void setRigid( double time, rai::String const& object1Name, rai::String const& object2Name, KOMO& komo )
 {
-  rai::Shape * s1 = komo.world.getShapeByName( object1Name );
-  rai::Shape * s2 = komo.world.getShapeByName( object2Name );
+  rai::Frame * s1 = komo.world.getFrameByName( object1Name );
+  rai::Frame * s2 = komo.world.getFrameByName( object2Name );
   rai::Transformation t;
   arr relPos;
   arr relPosJ;
 
-  s1->rel.pos.write( std::cout );
-  std::cout << std::endl;
-  s2->rel.pos.write( std::cout );
-  std::cout << std::endl;
+//  s1->rel.pos.write( std::cout );
+//  std::cout << std::endl;
+//  s2->rel.pos.write( std::cout );
+//  std::cout << std::endl;
 
-  komo.world.kinematicsRelPos( relPos, relPosJ, s2->body, s2->rel.pos, s1->body, s1->rel.pos );
+  komo.world.kinematicsRelPos( relPos, relPosJ, s2, s2->getRelativePosition(), s1, s1->getRelativePosition() );
   t.pos = relPos;
-  komo.setKinematicSwitch( time, true, "addRigid", s1->name, s2->name, t );
+  komo.addSwitch( time, true, "addRigid", s1->name, s2->name, t );
 
   /*auto * object1 = komo.world.getBodyByName( object1Name );
   auto * object2 = komo.world.getBodyByName( object2Name );
@@ -137,7 +137,7 @@ void move_0(){
   {
     const double time = start_time + 0.0;
 
-    komo.setTask( time, time + 1.0, new ActiveGetSight      ( "manhead",
+    komo.addObjective( time, time + 1.0, new ActiveGetSight      ( "manhead",
                                                               "container_0",
                                                               ARR( -0.0, 0.2, 0.4 ),// pivot position  in container frame
                                                               ARR(  0.0, -1.0,0 )), // aiming dir
@@ -152,8 +152,8 @@ void move_0(){
 
   }
 
-  komo.setTask( 1.0, start_time + 8.0, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
-  komo.setTask( 1.0, start_time + 8.0, new OverPlaneConstraint ( komo.world,
+  komo.addObjective( 1.0, start_time + 8.0, new AxisAlignment( "container_0", ARR( 1.0, 0, 0 ) ), OT_eq, NoArr, 1e2 );
+  komo.addObjective( 1.0, start_time + 8.0, new OverPlaneConstraint ( komo.world,
                                                                  "container_0",
                                                                  "tableC",
                                                                  0.01
@@ -167,9 +167,9 @@ void move_0(){
     //komo.setTask( time, time, new TM_Default( TMT_vec, komo.world, "handL", Vector_x ), OT_sos, {0.,0.,1.}, 1e1 );
 
     //disconnect object from table
-    komo.setKinematicSwitch( time, true, "delete", "tableC", "container_0_bottom" );
+    komo.addSwitch( time, true, "delete", "tableC", "container_0_bottom" );
     //connect graspRef with object
-    komo.setKinematicSwitch( time, true, "ballZero", "handL", "container_0_left" );
+    komo.addSwitch( time, true, "ballZero", "handL", "container_0_left" );
     //komo.setKinematicSwitch( time, true, "addRigid", "handL", "container_1_handle", NoTransformation, NoTransformation );
 //  }
 
@@ -324,9 +324,9 @@ void move_1(){
       */
 
       //disconnect object from container
-      komo.setKinematicSwitch( 2.5/*8.0*/, true, "delete", NULL, "target" );
+      komo.addSwitch( 2.5/*8.0*/, true, "delete", NULL, "target" );
       //connect graspRef with object
-      komo.setKinematicSwitch( 2.5/*8.0*/, true, "ballZero", "handL", "target" );
+      komo.addSwitch( 2.5/*8.0*/, true, "ballZero", "handL", "target" );
       // null velocity
       //komo.setTask( 2.5, 2.7, new TM_Default(TMT_pos, komo.world, "handL" ), OT_eq, {0.,0.,0.},  1e1, 1);
 
@@ -334,11 +334,11 @@ void move_1(){
       //komo.setTask( 2.7, 3.0, new TM_Default(TMT_pos, komo.world, "handL", NoVector, "container_1_bottom", {0.,0.,0.45}), OT_sos, NoArr, 1e2);
 
       // collision avoidance
-      komo.setTask( 0.0, 9.0, new ApproxPointToShape( komo.world, "humanL", "container_1_front", 0.03 ), OT_ineq, NoArr, 1e2 );
-      komo.setTask( 0.0, 9.0, new ApproxPointToShape( komo.world, "humanL", "container_1_left",  0.03  ),OT_ineq, NoArr, 1e2 );
-      komo.setTask( 0.0, 9.0, new ApproxPointToShape( komo.world, "humanL", "container_1_right", 0.03 ), OT_ineq, NoArr, 1e2 );
+      komo.addObjective( 0.0, 9.0, new ApproxShapeToSphere( komo.world, "humanL", "container_1_front", 0.03 ), OT_ineq, NoArr, 1e2 );
+      komo.addObjective( 0.0, 9.0, new ApproxShapeToSphere( komo.world, "humanL", "container_1_left",  0.03  ),OT_ineq, NoArr, 1e2 );
+      komo.addObjective( 0.0, 9.0, new ApproxShapeToSphere( komo.world, "humanL", "container_1_right", 0.03 ), OT_ineq, NoArr, 1e2 );
 
-      komo.setTask( 0.0, 9.0, new ApproxPointToShape( komo.world, "humanL", "tableC", 0.03 ), OT_ineq, NoArr, 1e2 );
+      komo.addObjective( 0.0, 9.0, new ApproxShapeToSphere( komo.world, "humanL", "tableC", 0.03 ), OT_ineq, NoArr, 1e2 );
 
 
 
@@ -460,7 +460,7 @@ void move_debug(){
   //arr targetArr1 = HeadPoseMap::buildTarget( rai::Vector( 0, -0.3, 1.7 ), 80 );
   //komo.setTask(1.0, 3.0, new HeadPoseMap(), OT_sos, targetArr1, 1e2);
 
-  komo.setGrasp( 1.0, "humanR", "occluding_object_1" );
+  komo.add_grasp( 1.0, "humanR", "occluding_object_1" );
 //  komo.setTask( 1.0, 2.0, new HeadGetSight    ( ARR(  0.0, -1.0, 1.6 ),    // object position
 //                                                ARR( -0.2, -0.6, 1.9 ) ),  // pivot position
 //                                                OT_sos, NoArr, 1e2 );
@@ -516,16 +516,16 @@ void move_blocks()
 
   ///GRASP A, PUT IT on TABLE
   //grasp A
-  komo.setKinematicSwitch( 3.0, true, "delete",   NULL, "block_r" );
-  komo.setKinematicSwitch( 3.0, true, "ballZero", "handL", "block_r" );
+  komo.addSwitch( 3.0, true, "delete",   NULL, "block_r" );
+  komo.addSwitch( 3.0, true, "ballZero", "handL", "block_r" );
 
   //place on table
-  komo.setPlace( 4.0, "handL", "block_r", "tableC" );
+  komo.add_place( 4.0, "handL", "block_r", "tableC" );
 
   ///GRASP O, PUT IT on A
   //grasp
-  komo.setKinematicSwitch( 5.0, true, "delete",   NULL, "block_o" );
-  komo.setKinematicSwitch( 5.0, true, "ballZero", "handL", "block_o" );
+  komo.addSwitch( 5.0, true, "delete",   NULL, "block_o" );
+  komo.addSwitch( 5.0, true, "ballZero", "handL", "block_o" );
 
   //put on A
   komo.setPlace( 6.0, "handL", "block_o", "block_r" );

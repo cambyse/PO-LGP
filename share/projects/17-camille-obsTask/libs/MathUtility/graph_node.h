@@ -76,6 +76,7 @@ public:
 
       return siblings;
     }
+    return {}; // logic??
   }
   uint id() const { return id_; }
   void setId( uint id ) { id_ = id; }

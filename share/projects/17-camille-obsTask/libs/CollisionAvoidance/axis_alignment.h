@@ -30,7 +30,7 @@ struct AxisAlignment:Feature
 
   }
 
-  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G, int t );
+  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G );
 
   uint dim_phi( const rai::KinematicWorld& G ) { return 1; }
 

@@ -37,7 +37,7 @@ struct OverPlaneConstraint:Feature
     collisionModel_.append( rai::Vector(  0.15, 0.15, 0 ) );
   }
 
-  virtual void phi(arr& y, arr& J, const rai::KinematicWorld& G, int t)
+  virtual void phi( arr& y, arr& J, const rai::KinematicWorld& G )
   {
     auto body = G.getFrameByName( iBobyName_ );
     auto plane = G.getFrameByName( jPlaneBodyName_ );
